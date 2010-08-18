@@ -1,0 +1,383 @@
+/***************************************************************************
+ *   Copyright (C) 2009 by Syron                                           *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+#ifndef genmoduleH
+#define genmoduleH
+
+#include "genbase.h"
+#include "genchannel.h"
+
+/**
+ * @file
+ * @ingroup GenMod
+ * @brief General/common module definitions
+ * @note Volumes are from 0x00 to 0x40
+ * @note Panning values are from 0x00 to 0x80, where 0x40
+ * is the center
+ * @note A panning value of 0xa4 indicates surround sound
+ *
+ * @details
+ * Structure is as follows: ::GenPattern contains ::GenTrack's contains
+ * ::GenCell's. @n
+ * A Track is a column within a Pattern, whereas a Cell is a Row
+ * within a Track. @n
+ * This structure is caused by the simple fact that a row is accessed
+ * through the tracks, and a track is accessed through the patterns.
+ */
+
+namespace ppp {
+
+	/**
+	 * @struct GenPlaybackInfo
+	 * @ingroup GenMod
+	 * @brief Playback info
+	 */
+	typedef struct {
+		int16_t tick; //!< @brief Current tick
+		int16_t order; //!< @brief Current Order
+		int16_t pattern; //!< @brief Current pattern
+		int16_t row; //!< @brief Current row
+		int16_t speed; //!< @brief Current speed
+		int16_t tempo; //!< @brief Current tempo
+		int16_t globalVolume; //!< @brief Current global volume
+	} GenPlaybackInfo;
+
+	/**
+	 * @class GenMultiTrack
+	 * @ingroup GenMod
+	 * @brief Storage class for multitracks
+	 */
+	class GenMultiTrack {
+		public:
+			typedef std::shared_ptr<GenMultiTrack> Ptr; //!< @brief Class pointer
+		public:
+			std::size_t length; //!< @brief Track length in sample frames
+			uint16_t startOrder; //!< @brief Start order of this track
+			/**
+			 * @brief Constructor
+			 */
+			GenMultiTrack() : length(0), startOrder(0) {
+			}
+			static const uint16_t stopHere = ~0; //!< @brief Const to define unused track
+	};
+
+	/**
+	 * @class GenModule
+	 * @ingroup GenMod
+	 * @brief An abstract class for all module classes
+	 * @todo Create a function to retrieve only the module's title without loading the whole module
+	 * @todo Multi-track: Reset module/channels on each new track?
+	 * @todo Multi-track: Get length of each track, not only the first one
+	 */
+	class GenModule {
+		public:
+			typedef std::shared_ptr<GenModule> Ptr; //!< @brief Class pointer
+		private:
+			std::string m_fileName; //!< @brief Filename of the loaded module, empty if none loaded
+			std::string m_title; //!< @brief Title of the module
+			std::string m_trackerInfo; //!< @brief Tracker information (Name and Version)
+			GenOrderList m_orders; //!< @brief Order list @note @b Not @b initialized @b here!
+			GenChannelList m_channels; //!< @brief Channel data @note @b Not @b initialized @b here!
+			GenPatternList m_patterns; //!< @brief Pattern list @note @b Not @b initialized @b here!
+			GenSampleList::Ptr m_samples; //!< @brief Sample list @note @b Not @b initialized @b here!
+			uint16_t m_maxRepeat; //!< @brief Maximum module loops if module patterns are played multiple times
+			Frequency m_playbackFrequency; //!< @brief Playback frequency
+			std::size_t m_playedFrames; //!< @brief Played Sample frames
+			std::vector<GenMultiTrack> m_tracks; //!< @brief Per-track infos
+			uint16_t m_currentTrack; //!< @brief The current track index
+			uint16_t m_channelCount; //!< @brief Number of channels used
+			bool m_multiTrack; //!< @brief @c true if module could be a multi-track one
+		//protected:
+			GenPlaybackInfo m_playbackInfo; //!< @brief General playback info @todo Make private
+		public:
+			AudioFifo playbackFifo; //!< @brief FIFO Playback Buffer
+			/**
+			 * @brief The constructor
+			 * @param[in] frq Playback frequency, clipped to a value between 11025 and 44800
+			 * @param[in] maxRpt Maximum repeat count for repeating modules
+			 * @pre @c maxRpt>0
+			 * @see GenChannel::GenChannel
+			 */
+			GenModule(const uint32_t frq = 44100, const uint8_t maxRpt = 1) throw(PppException);
+			/**
+			 * @brief Member list initialization constructor
+			 * @param[in] src Instance to be inited from
+			 */
+			GenModule(const GenModule &src) throw(PppException);
+			/**
+			 * @brief Assignment operator
+			 * @param[in] src Source instance to be copied from...
+			 * @return Reference to this instance
+			 * @warning No clean-up steps are done
+			 */
+			GenModule &operator=(const GenModule &src) throw(PppException);
+			/**
+			 * @brief The destructor
+			 */
+			virtual ~GenModule() throw();
+			/**
+			 * @brief Loads a module
+			 * @param[in] fn Filename of the module to be loaded
+			 * @return @c true on success
+			 * @pre @a fn contains a valid filename
+			 */
+			virtual bool load(const std::string &fn) throw(PppException) = 0;
+			/**
+			 * @brief Returns the filename without the path
+			 * @return Filename, or empty if no module loaded
+			 * @todo Implement OS-independent filename splitting
+			 */
+			virtual std::string getFileName() throw(PppException);
+			/**
+			 * @brief Returns the title
+			 * @return The title of the module
+			 */
+			virtual std::string getTitle() const throw();
+			/**
+			 * @brief Returns the title without left and right spaces
+			 * @return The trimmed title of the module
+			 */
+			virtual std::string getTrimTitle() const throw();
+			/**
+			 * @brief Get the number of physical channels
+			 * @return Number of physical channels in the module, 0 if not present
+			 * @see #virtChannels
+			 */
+			virtual int32_t physChannels() const throw();
+			/**
+			 * @brief Get the number of virtual channels
+			 * @return Number of virtual channels in the module, -1 if not supported
+			 * @see #physChannels
+			 */
+			virtual int32_t virtChannels() const throw();
+			/**
+			 * @brief Get the number of samples
+			 * @return Number of samples, or 0 if not present
+			 * @see #instrCount
+			 */
+			virtual int32_t sampleCount() const throw();
+			/**
+			 * @brief Get the number of instruments
+			 * @return Number of Instruments, or -1 if not supported
+			 * @see #sampleCount
+			 */
+			virtual int32_t instrCount() const throw();
+			/**
+			 * @brief Check if a sample exists
+			 * @param[in] idx Sample index
+			 * @return @c true if sample exists
+			 * @see #existsInstr
+			 */
+			virtual bool existsSample(int16_t idx) throw() = 0;
+			/**
+			 * @brief Get the name of a sample
+			 * @param[in] idx Sample index
+			 * @return Name of the sample
+			 * @see #getInstrName
+			 */
+			virtual std::string getSampleName(int16_t idx) throw() = 0;
+			/**
+			 * @brief Check if an instrument exists
+			 * @param[in] idx Instrument index
+			 * @return @c true if instrument exists
+			 * @see #existsSample
+			 */
+			virtual bool existsInstr(int16_t idx) const throw() = 0;
+			/**
+			 * @brief Get the name of an instrument
+			 * @param[in] idx Instrument index
+			 * @return Name of the instrument
+			 * @see #getSampleName
+			 */
+			virtual std::string getInstrName(int16_t idx) const throw() = 0;
+			/**
+			 * @brief Get the frame count of a tick
+			 * @return Sample frames per tick
+			 * @note Time-critical
+			 */
+			virtual uint16_t getTickBufLen() const throw(PppException) = 0;
+			/**
+			 * @brief Get a tick
+			 * @param[out] buf Reference to a pointer
+			 * @param[out] bufLen Number of sample frames in the created buffer @a buf
+			 * @post The caller has to free @a buf after every call with the @c delete[] operator
+			 * @note Time-critical
+			 */
+			virtual void getTick(AudioFrameBuffer &buf ) throw(PppException) = 0;
+			/**
+			 * @brief Get a tick without mixing for length calculation
+			 * @param[out] bufLen Number of sample frames in the current tick
+			 */
+			virtual void getTickNoMixing(std::size_t &bufLen) throw(PppException) = 0;
+			/**
+			 * @brief Map an order number to a pattern number
+			 * @param[in] order The order to map
+			 * @return Pattern number for @a order
+			 * @note Time-critical
+			 */
+			virtual GenOrder::Ptr mapOrder(int16_t order) throw(PppException) = 0;
+			/**
+			 * @brief Returns the channel status string for a channel
+			 * @param[in] idx Requested channel
+			 */
+			virtual std::string getChanStatus(int16_t idx) throw() = 0;
+			/**
+			 * @brief Initialise the FIFO buffer
+			 * @param[in] nFrames Number of sample frames to allocate
+			 * @pre @c nFrames>0
+			 */
+			virtual void initFifo(std::size_t nFrames) throw(PppException);
+			/**
+			 * @brief Read data from the FIFO buffer
+			 * @param[in,out] buffer Buffer to fill
+			 * @return @c true if there is more data available, @c false if the module is done playing
+			 * @see #initFifo
+			 * @note Time-critical
+			 * @pre Make sure you have called #initFifo
+			 * @pre @c buffer!=NULL
+			 */
+			virtual bool getFifo(AudioFrameBuffer &buffer, std::size_t count) throw(PppException);
+			/**
+			 * @brief Get playback time in seconds
+			 * @return Playback time in seconds
+			 */
+			virtual std::size_t timeElapsed() const throw(PppException);
+			/**
+			 * @brief Returns the current track's length
+			 * @return The current track's length
+			 * @see timeElapsed()
+			 */
+			virtual std::size_t getLength() const throw();
+			/**
+			 * @brief Get information about the tracker
+			 * @return Tracker type and version, i.e. "ScreamTracker v3.20"
+			 */
+			virtual std::string getTrackerInfo() const throw();
+			/**
+			 * @brief Get playback information
+			 * @return aPlaybackInfo
+			 */
+			GenPlaybackInfo getPlaybackInfo() const throw();
+			/**
+			 * @brief Returns @c true if this module contains normally not played orders
+			 * @return aMultiTrack
+			 */
+			bool isMultiTrack() const throw();
+			/**
+			 * @brief Jump to the next track if possible
+			 * @return @c false if there are no tracks left
+			 */
+			virtual bool jumpNextTrack() throw(PppException) = 0;
+			/**
+			 * @brief Jump to the previous track if possible
+			 * @return @c false if this operation fails
+			 */
+			virtual bool jumpPrevTrack() throw(PppException) = 0;
+			/**
+			 * @brief Jump to the next order if possible
+			 * @return @c false if the end of the current track is reached
+			 */
+			virtual bool jumpNextOrder() throw() = 0;
+			//virtual bool jumpPrevOrder() throw() = 0;
+			/**
+			 * @brief Get the current playback position in sample frames
+			 * @return aPlayedFrames
+			 */
+			inline std::size_t getPosition() const throw() { return m_playedFrames; }
+			/**
+			 * @brief Get the number of tracks in this module
+			 * @return Number of tracks
+			 */
+			uint16_t getTrackCount() const throw() { return m_tracks.size(); }
+			/**
+			 * @brief Get the currently playing track index
+			 * @return aCurrentTrack
+			 */
+			uint16_t getCurrentTrack() const throw() { return m_currentTrack; }
+			/**
+			 * @brief Get the channel cell string
+			 * @param[in] idx Channel index
+			 * @return String representation of the channel's cell
+			 * @see GenChannel::getCellString
+			 */
+			virtual std::string getChanCellString(int16_t idx) throw() = 0;
+			/**
+			 * @brief Saves the current state to the current order's BinStream
+			 * @return Reference to the used BinStream
+			 * @see GenOrder
+			 */
+			virtual BinStream &saveState() throw(PppException);
+			/**
+			 * @brief Restores the state from a given order
+			 * @param[in] ordindex Order index of the order to restore the state from
+			 * @param[in] cnt Repeat count
+			 * @return Reference to the used BinStream
+			 * @see GenOrder
+			 */
+			virtual BinStream &restoreState(uint16_t ordindex, uint8_t cnt) throw(PppException);
+		protected:
+			/**
+			 * @brief Removes empty tracks from the track list and resets the orders' repeat count
+			 */
+			void removeEmptyTracks();
+			void setPlaybackFrq(Frequency f) throw() { m_playbackFrequency = f; }
+			Frequency getPlaybackFrq() const throw() { return m_playbackFrequency; }
+			void setPosition(std::size_t p) throw() { m_playedFrames = p; }
+			void addOrder(const GenOrder::Ptr &o) { m_orders.push_back(o); }
+			void addPattern(const GenPattern::Ptr &p = GenPattern::Ptr()) { m_patterns.push_back(p); }
+			void addSample(const GenSample::Ptr &s) { m_samples->push_back(s); }
+			void addChannel(const GenChannel::Ptr &c) { m_channels.push_back(c); }
+			GenSampleList::Ptr getSamples() const { return m_samples; }
+			std::string getFilename() const { return m_fileName; }
+			void setFilename(const std::string &f) { m_fileName = f; }
+			void setTrackerInfo(const std::string &t) { m_trackerInfo = t; }
+			GenOrder::Ptr getOrder(size_t idx) const { return m_orders[idx]; }
+			void resetSample(size_t idx, GenSample *s) { m_samples->at(idx).reset(s); }
+			GenSample::Ptr getSample(size_t idx) const { return m_samples->at(idx); }
+			void resetPattern(size_t idx, GenPattern *p) { m_patterns[idx].reset(p); }
+			GenPattern::Ptr getPattern(size_t idx) const { if(idx>=m_patterns.size()) return GenPattern::Ptr(); return m_patterns[idx]; }
+			int16_t getPatternIndex() const { return m_playbackInfo.pattern; }
+			void setPatternIndex(int16_t i) { m_playbackInfo.pattern=i; }
+			void resetChannel(size_t idx, GenChannel *c) { m_channels[idx].reset(c); }
+			GenChannel::Ptr getChannel(size_t idx) const { return m_channels[idx]; }
+			size_t getOrderCount() const { return m_orders.size(); }
+			uint16_t getMappedChannelCount() const { return m_channelCount; }
+			void setMappedChannelCount(uint16_t c) { m_channelCount=c; }
+			void setCurrentTrack(uint16_t t) { m_currentTrack=t; }
+			void setTitle(const std::string &t) { m_title = t; }
+			void setMultiTrack(bool m) { m_multiTrack = m; }
+			GenMultiTrack &getMultiTrack(size_t idx) { return m_tracks[idx]; }
+			void addMultiTrack(const GenMultiTrack &t) { m_tracks.push_back(t); }
+			uint16_t getMaxRepeat() const { return m_maxRepeat; }
+			size_t getPatternCount() const { return m_patterns.size(); }
+			void setSpeed(uint8_t s) { if(s==0) return; m_playbackInfo.speed=s; }
+			void setTempo(uint8_t t) { if(t==0) return; m_playbackInfo.tempo=t; }
+			void setOrder(int16_t o) { m_playbackInfo.order=o; }
+			void setRow(int16_t r) { m_playbackInfo.row=r; }
+			void nextTick() { m_playbackInfo.tick = (m_playbackInfo.tick+1) % m_playbackInfo.speed; }
+			void setGlobalVolume(int16_t v) { m_playbackInfo.globalVolume=v; }
+	};
+} // namespace ppp
+
+PVECTOR_TEMPLATE_DECL(ppp::GenMultiTrack)
+
+SHARED_PTR_DECL(ppp::GenMultiTrack)
+SHARED_PTR_DECL(ppp::GenModule)
+
+#endif
