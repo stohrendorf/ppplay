@@ -1,1 +1,1 @@
-add_library(phaser STATIC phaser.h phaser.cpp)
+add_library(phaser STATIC phaser.cpp)
