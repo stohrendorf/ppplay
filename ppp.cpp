@@ -40,8 +40,6 @@
 
 using namespace std;
 
-static const char SvnRevision[] = "$Revision: 70 $";
-
 static const std::size_t BUFFERSIZE = 4096;
 static const std::size_t SAMPLECOUNT = BUFFERSIZE/2;
 static const std::size_t FRAMECOUNT = SAMPLECOUNT/2;
