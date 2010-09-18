@@ -58,7 +58,10 @@ INCLUDE(CPack)
 #########
 # setting compiler flags
 #########
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtual -pedantic -std=c++0x -fvisibility=hidden")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtual -pedantic -std=c++0x")
+if(MINGW OR WIN32)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
+endif()
 # set(CMAKE_CXX_FLAGS_DEBUG   "-g ${CMAKE_CXX_FLAGS}")
 # set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -mtune=native -march=native ${CMAKE_CXX_FLAGS}")
 if(CMAKE_BUILD_TYPE STREQUAL "profilegenerate")
@@ -73,7 +76,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "profileuse")
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
-	message(WARNING "Build type is undefined, assuming 'Debug'")
+	message(STATUS "Build type is undefined, assuming 'Debug'")
 	set(CMAKE_BUILD_TYPE "Debug")
 else()
 	message(STATUS "Build type is '${CMAKE_BUILD_TYPE}'")
@@ -86,6 +89,12 @@ message(STATUS "CXX Flags (Release): ${CMAKE_CXX_FLAGS_RELEASE}")
 # init main application target settings
 #########
 ADD_EXECUTABLE(ppp ppp.cpp config.h)
+target_link_libraries(ppp stdc++)
+
+if(MINGW OR WIN32)
+	target_link_libraries(ppp mingw32)
+endif()
+
 add_dependencies(ppp logger genmod s3mmod
 	#stmmod
 	#modmod
@@ -98,42 +107,14 @@ target_link_libraries(ppp logger genmod s3mmod
 #########
 # add SDL
 #########
-INCLUDE(FindSDL)
-if(NOT SDL_FOUND)
-	message(FATAL_ERROR "Could not find the SDL libraries")
-endif(NOT SDL_FOUND)
-message(STATUS "SDL Main Library: ${SDLMAIN_LIBRARY}")
-add_library(SDL SHARED IMPORTED)
-target_link_libraries(ppp ${SDL_LIBRARY})
-
-#########
-# add link/include dirs
-#########
-include_directories(
-	${CMAKE_CURRENT_SOURCE_DIR}
-	${SDL_INCLUDE_DIR}
-	src/logger
-	src/genmod
-	src/genmod/phaser
-	src/s3mmod
-	#src/stmmod
-	#src/modmod
-	src/ppg
-	src/stream
-	src/output
-	src/stuff
-)
-
-add_subdirectory(src/logger)
-add_subdirectory(src/genmod)
-#add_subdirectory(src/genmod/phaser)
-add_subdirectory(src/s3mmod)
-#add_subdirectory(src/stmmod)
-#add_subdirectory(src/modmod)
-add_subdirectory(src/stream)
-add_subdirectory(src/ppg)
-add_subdirectory(src/output)
-add_subdirectory(src/stuff)
+#INCLUDE(FindSDL)
+#if(NOT SDL_FOUND OR NOT SDLMAIN_LIBRARY)
+#	message(STATUS "${SDL_INCLUDE_DIR}")
+#	message(FATAL_ERROR "Could not find the SDL libraries")
+#endif()
+#message(STATUS "SDL Main Library: ${SDLMAIN_LIBRARY}")
+#add_library(SDL SHARED IMPORTED)
+#target_link_libraries(ppp ${SDL_LIBRARY})
 
 #########
 # link libraries
@@ -151,7 +132,7 @@ function(trylinklib LIBNAME ATTRIBS)
 		/opt
 	)
 	if(NOT "${LIBNAME}_LIB")
-		message(WARNING "${LIBNAME} Library not found")
+		message(STATUS "${LIBNAME} Library not found")
 	else(NOT "${LIBNAME}_LIB")
 		message(STATUS "${LIBNAME} Library found: ${${LIBNAME}_LIB}")
 		add_library("${LIBNAME}" ${ATTRIBS} IMPORTED)
@@ -161,15 +142,26 @@ endfunction(trylinklib)
 trylinklib("mp3lame" SHARED)
 if(NOT mp3lame_LIB)
 	set(WITH_MP3LAME FALSE)
-	message(WARNING "MP3Lame _not_ found, Quick-MP3 will not be available")
+	message(STATUS "MP3Lame _not_ found, Quick-MP3 will not be available")
 else()
 	set(WITH_MP3LAME TRUE)
 	message(STATUS "MP3Lame found, Quick-MP3 will be available")
 endif()
 
-include(FindBoost)
+find_package(SDL REQUIRED)
+if(NOT SDL_FOUND)
+	message(FATAL_ERROR "SDL not found")
+endif()
+include_directories(${SDL_INCLUDE_DIR})
+if(MINGW OR WIN32)
+	target_link_libraries(ppp mingw32)
+endif()
+target_link_libraries(ppp ${SDL_LIBRARY})
+
 set(Boost_USE_STATIC_LIBS FALSE)
 set(Boost_USE_MULTITHREADED TRUE)
+set(Boost_ADDITIONAL_VERSIONS "1.44")
+include(FindBoost)
 find_package(Boost COMPONENTS program_options system)
 if(Boost_FOUND)
 	message(STATUS "Boost Include Dirs: ${Boost_INCLUDE_DIRS}")
@@ -181,12 +173,42 @@ else()
 endif()
 
 #########
+# add link/include dirs
+#########
+include_directories(
+	${CMAKE_CURRENT_SOURCE_DIR}
+	src/logger
+	src/genmod
+	src/genmod/phaser
+	src/s3mmod
+	#src/stmmod
+	#src/modmod
+	src/ppg
+	src/stream
+	src/output
+	src/stuff
+)
+
+add_subdirectory(src/logger)
+add_subdirectory(src/genmod)
+add_subdirectory(src/genmod/phaser)
+add_subdirectory(src/s3mmod)
+#add_subdirectory(src/stmmod)
+#add_subdirectory(src/modmod)
+add_subdirectory(src/stream)
+add_subdirectory(src/ppg)
+add_subdirectory(src/output)
+add_subdirectory(src/stuff)
+
+#########
 # set install command
 #########
 install(TARGETS ppp RUNTIME DESTINATION bin COMPONENT application)
 cpack_add_component(application DISPLAY_NAME PeePeePlayer REQUIRED)
-install(FILES peepeeplayer.desktop DESTINATION share/applications COMPONENT desktopfile)
-cpack_add_component(desktopfile DISPLAY_NAME .desktop file REQUIRED)
+if(NOT MINGW AND NOT WIN32)
+	install(FILES peepeeplayer.desktop DESTINATION share/applications COMPONENT desktopfile)
+	cpack_add_component(desktopfile DISPLAY_NAME .desktop file REQUIRED)
+endif()
 
 #########
 # add docs target & configuration
