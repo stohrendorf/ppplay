@@ -191,7 +191,7 @@ include_directories(
 
 add_subdirectory(src/logger)
 add_subdirectory(src/genmod)
-add_subdirectory(src/genmod/phaser)
+#add_subdirectory(src/genmod/phaser)
 add_subdirectory(src/s3mmod)
 #add_subdirectory(src/stmmod)
 #add_subdirectory(src/modmod)
