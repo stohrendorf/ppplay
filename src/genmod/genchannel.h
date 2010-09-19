@@ -102,7 +102,7 @@ namespace ppp {
 			 * @return #aActive
 			 * @note Time-critical
 			 */
-			inline bool isActive() const throw() { return m_active; }
+			inline bool isActive() throw();
 			/**
 			 * @brief Check if the channel is disabled
 			 * @return #aDisabled
@@ -238,6 +238,12 @@ namespace ppp {
 			void setStatusString(const std::string &s) { m_statusString = s; }
 			int32_t getCurrentSmpIdx() const throw() { return m_currSmpIndex; }
 	};
+	
+	inline bool GenChannel::isActive() throw() {
+		if(m_frequency==0)
+			m_active = false;
+		return m_active;
+	}
 
 	/**
 	* @brief Contains the channels

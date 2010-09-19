@@ -1,7 +1,7 @@
 #include "binstream.h"
 
 FBinStream::FBinStream(const std::string& filename) :
-	BinStream(SpIoStream(new std::fstream(filename.c_str(),std::ios::in|std::ios::out|std::ios::binary))),
+	BinStream(SpIoStream(new std::fstream(filename.c_str(),std::ios::in|std::ios::binary))),
 	m_filename(filename)
 {
 }
