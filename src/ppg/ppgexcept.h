@@ -46,19 +46,19 @@ class PpgException : public std::exception {
 		 * @param[in] lineno Line number (use @c __LINE__ here)
 		 * @param[in] function Function (use @c __PRETTY_FUNCTION__ or @c __FUNCTION__ here)
 		 */
-		PpgException(const std::string &msg, const char file[], const int lineno, const char function[]) throw();
+		PpgException(const std::string &msg, const int lineno, const char function[]) throw();
 		/**
 		 * @brief Constructor with additional information for Re-Throws
 		 * @param[in] previous Previous PppException
 		 * @param[in] file File name (use @c __BASE_FILE__ or @c __FILE__ here)
 		 * @param[in] lineno Line number (use @c __LINE__ here)
 		 * @param[in] function Function (use @c __PRETTY_FUNCTION__ or @c __FUNCTION__ here)
-		 * @see PPP_RETHROW
+		 * @see PPG_RETHROW
 		 * @details
 		 * Appends the parameters from this contructor to @a previous, giving the possibility
 		 * to trace the exception
 		 */
-		PpgException(const PpgException &previous, const char file[], const int lineno, const char function[]) throw();
+		PpgException(const PpgException &previous, const int lineno, const char function[]) throw();
 		/**
 		 * @brief Destructor, no operation
 		 */
@@ -70,25 +70,20 @@ class PpgException : public std::exception {
 		virtual const char *what() const throw();
 };
 
+#define PPG_CATCH_STD(extype, postcmd) catch(std::extype &e) { postcmd; throw PppException(std::string(#extype "[")+e.what()+"]",__LINE__,__PRETTY_FUNCTION__); }
+
 /**
  * @brief Catch PeePeeGUI exceptions
  * @ingroup Ppg
  * @details
  * Catches general exceptions and throws a ::PpgException for tracing the exception
  */
-#define PPG_CATCH_ALL() \
-	catch(PpgException &e) { throw PpgException(e,__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::bad_alloc &e) { throw PpgException(std::string("bad_alloc[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::bad_cast &e) { throw PpgException(std::string("bad_cast[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::bad_exception &e) { throw PpgException(std::string("bad_exception[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::bad_typeid &e) { throw PpgException(std::string("bad_typeid[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::ios_base::failure &e) { throw PpgException(std::string("ios_base::failure[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::domain_error &e) { throw PpgException(std::string("domain_error[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::invalid_argument &e) { throw PpgException(std::string("invalid_argument[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::length_error &e) { throw PpgException(std::string("length_error[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::out_of_range &e) { throw PpgException(std::string("out_of_range[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::exception &e) { throw PpgException(std::string("exception[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(...) { throw PpgException("Unknown Exception",__FILE__,__LINE__,__PRETTY_FUNCTION__); }
+#define PPG_CATCH_ALL(postcmd) \
+	catch(PppException &e) { postcmd; throw PppException(e,__LINE__,__PRETTY_FUNCTION__); } \
+	PPG_CATCH_STD(bad_alloc, postcmd) PPG_CATCH_STD(bad_cast, postcmd) PPG_CATCH_STD(bad_exception, postcmd) PPG_CATCH_STD(bad_typeid, postcmd) \
+	PPG_CATCH_STD(ios_base::failure, postcmd) PPG_CATCH_STD(domain_error, postcmd) PPG_CATCH_STD(invalid_argument, postcmd) \
+	PPG_CATCH_STD(length_error, postcmd) PPG_CATCH_STD(out_of_range, postcmd) PPG_CATCH_STD(exception, postcmd) \
+	catch(...) { postcmd; throw PppException("Unknown Exception",__LINE__,__PRETTY_FUNCTION__); }
 
 /**
  * @brief Test & throw
@@ -96,18 +91,18 @@ class PpgException : public std::exception {
  * @details
  * Throws a ::PpgException if @a condition is true, containing the condition in the message
  */
-#define PPG_TEST(condition) if(condition) throw PpgException("[PPP_TEST] " #condition,__FILE__,__LINE__,__PRETTY_FUNCTION__);
+#define PPG_TEST(condition) if(condition) throw PpgException("[PPG_TEST] " #condition,__LINE__,__PRETTY_FUNCTION__);
 
 /**
  * @brief Catch and re-throw a PpgException
  */
 #define PPG_RETHROW() \
-	catch(PppException &e) { throw PpgException(e,__FILE__,__LINE__,__PRETTY_FUNCTION__); }
+	catch(PppException &e) { throw PpgException(e,__LINE__,__PRETTY_FUNCTION__); }
 
 /**
  * @brief Throw a PpgException with position information
  * @param[in] msg Message passed to the constructor of the PpgException
  */
-#define PPG_THROW(msg) throw PpgException(msg,__FILE__,__LINE__,__PRETTY_FUNCTION__);
+#define PPG_THROW(msg) throw PpgException(msg,__LINE__,__PRETTY_FUNCTION__);
 
 #endif

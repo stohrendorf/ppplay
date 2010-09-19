@@ -19,21 +19,28 @@
  ***************************************************************************/
 
 #include "ppgexcept.h"
-#include <stdio.h>
+#include <iostream>
+#include <sstream>
+
+static std::string makePos(const unsigned int lineno, const char function[]) {
+	std::ostringstream out;
+	out << std::dec << lineno << ":" << function;
+	return out.str();
+}
 
 PpgException::PpgException(const std::string &msg) throw() : exception(), m_msg(msg) {
 }
 
-PpgException::PpgException(const std::string &msg, const char file[], const int lineno, const char function[]) throw(): exception(), m_msg(msg) {
-	char cMsg[256];
-	sprintf(cMsg, "(PpgException) %s:%u:%s - %s", file, lineno, function, msg.c_str());
-	m_msg = cMsg;
+PpgException::PpgException(const std::string &msg, const int lineno, const char function[]) throw(): exception(), m_msg(msg) {
+	std::ostringstream buf;
+	buf << "(PpgException) Backtrace, most recent call first:" << std::endl << "\tfrom " << makePos(lineno,function) << " - " << msg;
+	m_msg.assign(buf.str());
 }
 
-PpgException::PpgException(const PpgException &previous, const char file[], const int lineno, const char function[]) throw(): exception(), m_msg(previous.what()) {
-	char cMsg[256];
-	sprintf(cMsg, "%s\n\tfrom %s:%u:%s", previous.what(), file, lineno, function);
-	m_msg = cMsg;
+PpgException::PpgException(const PpgException &previous, const int lineno, const char function[]) throw(): exception(), m_msg(previous.what()) {
+	std::ostringstream buf;
+	buf << std::endl << "\tfrom " << makePos(lineno,function);
+	m_msg.append(buf.str());
 }
 
 PpgException::~PpgException() throw() {

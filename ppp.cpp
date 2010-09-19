@@ -40,7 +40,7 @@
 
 using namespace std;
 
-static const std::size_t BUFFERSIZE = 8192;
+static const std::size_t BUFFERSIZE = 2048;
 static const std::size_t SAMPLECOUNT = BUFFERSIZE / sizeof(ppp::BasicSample);
 static const std::size_t FRAMECOUNT = BUFFERSIZE / sizeof(ppp::BasicSampleFrame);
 
