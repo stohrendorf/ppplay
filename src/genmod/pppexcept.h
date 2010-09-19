@@ -95,19 +95,6 @@ class PppException : public std::exception {
 	PPP_CATCH_STD(ios_base::failure, postcmd) PPP_CATCH_STD(domain_error, postcmd) PPP_CATCH_STD(invalid_argument, postcmd) \
 	PPP_CATCH_STD(length_error, postcmd) PPP_CATCH_STD(out_of_range, postcmd) PPP_CATCH_STD(exception, postcmd) \
 	catch(...) { postcmd; throw PppException("Unknown Exception",__LINE__,__PRETTY_FUNCTION__); }
-#if 0
-	catch(std::bad_alloc &e) { postcmd; throw PppException(std::string("bad_alloc[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::bad_cast &e) { postcmd; throw PppException(std::string("bad_cast[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::bad_exception &e) { postcmd; throw PppException(std::string("bad_exception[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::bad_typeid &e) { postcmd; throw PppException(std::string("bad_typeid[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::ios_base::failure &e) { postcmd; throw PppException(std::string("ios_base::failure[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::domain_error &e) { postcmd; throw PppException(std::string("domain_error[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::invalid_argument &e) { postcmd; throw PppException(std::string("invalid_argument[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::length_error &e) { postcmd; throw PppException(std::string("length_error[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::out_of_range &e) { postcmd; throw PppException(std::string("out_of_range[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(std::exception &e) { postcmd; throw PppException(std::string("exception[")+e.what()+"]",__FILE__,__LINE__,__PRETTY_FUNCTION__); } \
-	catch(...) { postcmd; throw PppException("Unknown Exception",__FILE__,__LINE__,__PRETTY_FUNCTION__); }
-#endif
 
 /**
  * @brief Test & throw
