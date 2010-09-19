@@ -155,7 +155,7 @@ class BinStream {
  * @class FBinStream
  * @ingroup Common
  * @brief Class derived from ::BinStream for files
- * 
+ * note
  */
 class FBinStream : public BinStream {
 	private:
