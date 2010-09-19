@@ -34,6 +34,8 @@
 #include <string>
 #include <boost/scope_exit.hpp>
 
+#include "utils.h"
+
 /**
  * @ingroup Logger
  * @brief Disables function call tracing
@@ -83,9 +85,9 @@ LogLevel getLogLevel();
  * @param[in] ll Message's log level
  */
 #ifdef LOG_NOTRACE
-#	define LOG(msg,ll) logger(std::string(__PRETTY_FUNCTION__) + " // " + msg,ll)
+#	define LOG(ll,fmt,...) logger(ppp::stringf("%s // " fmt, __PRETTY_FUNCTION__, ##__VA_ARGS__), ll)
 #else
-#	define LOG(msg,ll) logger(msg,ll)
+#	define LOG(ll,fmt,...) logger(ppp::stringf(fmt, ##__VA_ARGS__), ll)
 #endif
 
 /**
@@ -93,21 +95,24 @@ LogLevel getLogLevel();
  * @brief Log a message with log level ::llMessage
  * @param[in] msg Message
  */
-#define LOG_MESSAGE(msg) LOG(msg,llMessage)
+#define LOG_MESSAGE(fmt, ...) LOG(llMessage, fmt, ##__VA_ARGS__)
+#define LOG_TEST_MESSAGE(condition) if(condition) LOG_MESSAGE("[LOG_TEST_MESSAGE] %s", #condition)
 
 /**
 * @ingroup Logger
 * @brief Log a message with log level ::llWarning
 * @param[in] msg Message
 */
-#define LOG_WARNING(msg) LOG(msg,llWarning)
+#define LOG_WARNING(fmt, ...) LOG(llWarning, fmt, ##__VA_ARGS__)
+#define LOG_TEST_WARN(condition) if(condition) LOG_WARNING("[LOG_TEST_WARN] %s", #condition)
 
 /**
 * @ingroup Logger
 * @brief Log a message with log level ::llError
 * @param[in] msg Message
 */
-#define LOG_ERROR(msg) LOG(msg,llError)
+#define LOG_ERROR(fmt, ...) LOG(llError, fmt, ##__VA_ARGS__)
+#define LOG_TEST_ERROR(condition) if(condition) LOG_ERROR("[LOG_TEST_ERROR] %s", #condition)
 
 #ifndef LOG_NOTRACE
 /**
@@ -141,9 +146,9 @@ int decLogLevel();
  */
 
 #ifndef NDEBUG
-#	define LOG_DEBUG(msg) logger(std::string(__PRETTY_FUNCTION__) + " // " + msg, llDebug)
+#	define LOG_DEBUG(fmt, ...) LOG(llDebug, fmt, ##__VA_ARGS__)
 #else
-#	define LOG_DEBUG(msg)
+#	define LOG_DEBUG(fmt, ...)
 #endif
 
 /**

@@ -128,17 +128,4 @@ extern template class std::allocator< tparam >;
 template class std::vector< tparam >; \
 template class std::allocator< tparam >;
 
-struct SimpleTypeIdentifier {
-	const std::string m_baseFile;
-	const int m_line;
-	bool operator==(const SimpleTypeIdentifier &rhs) const { return (m_baseFile==rhs.m_baseFile)&&(m_line==rhs.m_line); }
-	bool operator!=(const SimpleTypeIdentifier &rhs) const { return (m_baseFile!=rhs.m_baseFile)||(m_line!=rhs.m_line); }
-	SimpleTypeIdentifier(const std::string &bf, int ln) : m_baseFile(bf), m_line(ln) {}
-};
-
-#define HAS_TYPE_IDENTIFIER \
-static const SimpleTypeIdentifier TypeIdentifier; \
-virtual const SimpleTypeIdentifier &getTypeIdentifier() const { return TypeIdentifier; }
-#define INIT_TYPE_IDENTIFIER(T) const SimpleTypeIdentifier T::TypeIdentifier(__BASE_FILE__,__LINE__)
-
 #endif

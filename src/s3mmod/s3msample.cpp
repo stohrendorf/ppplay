@@ -93,7 +93,7 @@ bool S3mSample::load(BinStream& str, const std::size_t pos) throw(PppException) 
 			return false;
 		}
 		if (smpHdr.type != 1) {
-			LOG_WARNING(stringf("Sample Type not 0x01 (is 0x%.2x), assuming empty.", smpHdr.type));
+			LOG_WARNING("Sample Type not 0x01 (is 0x%.2x), assuming empty.", smpHdr.type);
 			return true;
 		}
 		/// @warning This could be a much too high value...

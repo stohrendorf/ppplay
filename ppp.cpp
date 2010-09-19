@@ -40,9 +40,9 @@
 
 using namespace std;
 
-static const std::size_t BUFFERSIZE = 4096;
-static const std::size_t SAMPLECOUNT = BUFFERSIZE/2;
-static const std::size_t FRAMECOUNT = SAMPLECOUNT/2;
+static const std::size_t BUFFERSIZE = 8192;
+static const std::size_t SAMPLECOUNT = BUFFERSIZE / sizeof(ppp::BasicSample);
+static const std::size_t FRAMECOUNT = BUFFERSIZE / sizeof(ppp::BasicSampleFrame);
 
 #ifdef WITH_MP3LAME
 static lame_global_flags *lgf;
@@ -69,6 +69,12 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 		PPP_TEST(stream == NULL);
 		PPP_TEST(len_bytes == 0);
 		PPP_TEST(s3m == NULL);
+		
+		if(nFrames > s3m->playbackFifo.getMinFrameCount()) {
+			LOG_MESSAGE("Adjusting FIFO buffer length from %d frames to %d frames", s3m->playbackFifo.getMinFrameCount(), nFrames);
+			s3m->playbackFifo.setMinFrameCount(nFrames);
+		}
+		
 		std::fill_n(stream, len_bytes, 0);
 		ppp::AudioFrameBuffer frameBuffer;
 		if (!s3m->getFifo(frameBuffer, nFrames)) {
@@ -150,13 +156,12 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 				SDL_PushEvent(&x);
 			}
 		}
-		if(len_bytes != nFrames*sizeof(ppp::BasicSampleFrame))
-			LOG_WARNING("len_bytes != nFrames*sizeof(ppp::BasicSampleFrame)");
+		LOG_TEST_WARN(len_bytes != nFrames*sizeof(ppp::BasicSampleFrame));
 		std::copy(frameBuffer->begin(), frameBuffer->begin()+nFrames, reinterpret_cast<ppp::BasicSampleFrame*>(stream));
 		//memcpy(stream, &frameBuffer->front().left, nFrames*sizeof(ppp::BasicSampleFrame));
 	}
 	catch (PppException &e) {
-		LOG_ERROR(string("Audio Callback: ") + e.what());
+		LOG_ERROR("Audio Callback: %s", e.what());
 		SDL_Event x;
 		x.type = SDL_KEYDOWN;
 		x.key.keysym.sym = SDLK_ESCAPE;
@@ -164,7 +169,7 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 		playbackStopped = true;
 	}
 	catch (PpgException &e) {
-		LOG_ERROR(string("Audio Callback: ") + e.what());
+		LOG_ERROR("Audio Callback: %s", e.what());
 		SDL_Event x;
 		x.type = SDL_KEYDOWN;
 		x.key.keysym.sym = SDLK_ESCAPE;
@@ -183,9 +188,13 @@ static bool initAudio(void *userData) {
 	desired->callback = my_audio_callback;
 	desired->userdata = userData;
 	if (SDL_OpenAudio(desired, obtained) < 0) {
-		LOG_ERROR(string("Couldn't open audio: ") + SDL_GetError());
+		LOG_ERROR("Couldn't open audio: %s", SDL_GetError());
 		return false;
 	}
+	LOG_TEST_ERROR(desired->freq != obtained->freq);
+	LOG_TEST_ERROR(desired->channels != obtained->channels);
+	LOG_TEST_ERROR(desired->format != obtained->format);
+	LOG_TEST_WARN(desired->samples != obtained->samples);
 	delete desired;
 	return true;
 }
@@ -285,14 +294,18 @@ static string parseCmdLine(int argc, char *argv[]) {
 	#ifdef WITH_MP3LAME
     quickMp3 = vm.count("quick-mp3");
 	#endif
-    switch(getLogLevel()) {
-        case llMessage: cout << "Log level is: VERY Verbose" << endl; break;
-        case llWarning: cout << "Log level is: Verbose" << endl; break;
-        case llError: cout << "Log level is: Normal" << endl; break;
-        case llNone: /* logging disabled... */ break;
+	#ifdef NDEBUG
+	switch(getLogLevel()) {
+		case llMessage: cout << "Log level is: VERY Verbose" << endl; break;
+		case llWarning: cout << "Log level is: Verbose" << endl; break;
+		case llError: cout << "Log level is: Normal" << endl; break;
+		case llNone: /* logging disabled... */ break;
 		default: break;
-    }
-    return vm["file"].as<string>();
+	}
+	#else
+	setLogLevel(llMessage);
+	#endif
+	return vm["file"].as<string>();
 }
 
 int main(int argc, char *argv[]) {
@@ -303,7 +316,7 @@ int main(int argc, char *argv[]) {
 			return EXIT_SUCCESS;
 		LOG_MESSAGE("Initializing SDL");
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
-			LOG_ERROR(string("Could not initialize SDL: ") + SDL_GetError());
+			LOG_ERROR("Could not initialize SDL: %s", SDL_GetError());
 			SDL_Quit();
 			return EXIT_FAILURE;
 		}
@@ -373,11 +386,11 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		catch (PppException &e) {
-			LOG_ERROR(string("Main: ") + e.what());
+			LOG_ERROR("Main: %s", e.what());
 			return EXIT_FAILURE;
 		}
 		catch (PpgException &e) {
-			LOG_ERROR(string("Main: ") + e.what());
+			LOG_ERROR("Main: %s", e.what());
 			return EXIT_FAILURE;
 		}
 		l = new PpgLabel("TrackerInfo", ppp::stringf("Tracker: %s - Channels: %d", s3m->getTrackerInfo().c_str(), s3m->physChannels()));
@@ -564,11 +577,11 @@ int main(int argc, char *argv[]) {
 		SDL_Quit();
 	}
 	catch (PppException &e) {
-		LOG_ERROR(string("Main (end): ")+e.what());
+		LOG_ERROR("Main (end): %s", e.what());
 		return EXIT_FAILURE;
 	}
 	catch (PpgException &e) {
-		LOG_ERROR(string("Main (end): ")+e.what());
+		LOG_ERROR("Main (end): %s", e.what());
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;

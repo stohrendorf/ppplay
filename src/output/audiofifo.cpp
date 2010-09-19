@@ -70,6 +70,7 @@ void AudioFifo::feedChunk(const AudioFrameBuffer& data) throw(PppException) {
 	*cp = *data;
 	m_queuedFrames += cp->size();
 	m_queue.push_back(cp);
+	LOG_DEBUG("Added %d frames to the queue, now queued %d frames", cp->size(), m_queuedFrames);
 }
 
 std::size_t AudioFifo::getAll(AudioFrameBuffer& data) {
@@ -77,6 +78,7 @@ std::size_t AudioFifo::getAll(AudioFrameBuffer& data) {
 }
 
 std::size_t ppp::AudioFifo::get(AudioFrameBuffer& data, std::size_t size) {
+	LOG_DEBUG("Requested %d frames", size);
 	if(needsData())
 		return 0;
 	calcVolume(m_volumeLeft, m_volumeRight);
@@ -105,6 +107,7 @@ std::size_t ppp::AudioFifo::get(AudioFrameBuffer& data, std::size_t size) {
 		AudioFrameBuffer &current = m_queue.front();
 		current->erase(current->begin(), current->begin()+toCopy);
 	}
+	LOG_DEBUG(" -- copied %d frames", copied);
 	return copied;
 }
 
