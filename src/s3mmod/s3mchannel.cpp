@@ -888,7 +888,11 @@ void S3mChannel::simTick( const std::size_t bufSize, const uint8_t volume ) {
 	}
 	PPP_TEST( getPlaybackFrq()==0 );
 	PPP_TEST( bufSize==0);
-	PPP_TEST( getAdjustedFrq()==0 );
+	if( getAdjustedFrq()==0 ) {
+		setActive(false);
+		setPosition(0);
+		return;
+	}
 	int32_t pos = getPosition() + ( FRQ_VALUE / getPlaybackFrq() * bufSize * getAdjustedFrq() / FRQ_VALUE );
 	getCurrentSample()->adjustPos( pos );
 	if ( pos == GenSample::EndOfSample )
