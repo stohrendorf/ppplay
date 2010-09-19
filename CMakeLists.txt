@@ -10,13 +10,15 @@ if(IS_BIG_ENDIAN)
 	message(FATAL_ERROR "This is a big-endian machine. Big Endian is not supported, sorry.")
 endif()
 
-INCLUDE(CheckCXXSourceCompiles)
-CHECK_CXX_SOURCE_COMPILES(
-	"#if (__GNUC__*100)+__GNUC_MINOR__ < 405 \n#error \"GCC Version < 4.5.0\" \n#endif \nint main() { return 0; } \n"
-	IS_GCC_VERSION_45
-)
-if(NOT IS_GCC_VERSION_45)
-	message(FATAL_ERROR "Sorry, you need at least GCC 4.5.")
+if(CMAKE_COMPILER_IS_GNUCXX)
+	execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE _gcc_version)
+	string(STRIP ${_gcc_version} _gcc_version)
+	message(STATUS "Your GCC Version is ${_gcc_version}, required is 4.5.0")
+	if(${_gcc_version} VERSION_LESS "4.5.0")
+		message(FATAL_ERROR "Please update your GCC to at least version 4.5.0")
+	endif()
+else()
+	message(FATAL_ERROR "Sorry, you need at least GCC 4.5.0")
 endif()
 
 INCLUDE(InstallRequiredSystemLibraries)
@@ -58,47 +60,47 @@ INCLUDE(CPack)
 #########
 # setting compiler flags
 #########
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtual -pedantic -std=c++0x")
+set(CMAKE_CXX_FLAGS "-Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtual -pedantic -std=c++0x")
 if(MINGW OR WIN32)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
 endif()
-# set(CMAKE_CXX_FLAGS_DEBUG   "-g ${CMAKE_CXX_FLAGS}")
-# set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -mtune=native -march=native ${CMAKE_CXX_FLAGS}")
+
 if(CMAKE_BUILD_TYPE STREQUAL "profilegenerate")
-	set(CMAKE_CXX_FLAGS "-fprofile-generate -O3 ${CMAKE_CXX_FLAGS}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-generate -O3")
 	set(LINK_FLAGS "-fprofile-generate")
 	message(STATUS "Profiling enabled - after test run, recompile with CMAKE_BUILD_TYPE=profileuse")
 endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL "profileuse")
-	set(CMAKE_CXX_FLAGS "-fprofile-use -O3 ${CMAKE_CXX_FLAGS}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-use -O3")
 	set(LINK_FLAGS "-fprofile-use")
 	message(STATUS "Profile data usage")
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
-	message(STATUS "Build type is undefined, assuming 'Debug'")
-	set(CMAKE_BUILD_TYPE "Debug")
+	message(STATUS "Build type is undefined, assuming 'RelWithDebInfo'")
+	set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 else()
 	message(STATUS "Build type is '${CMAKE_BUILD_TYPE}'")
 endif()
-message(STATUS "CXX Flags: ${CMAKE_CXX_FLAGS}")
-message(STATUS "CXX Flags (Debug): ${CMAKE_CXX_FLAGS_DEBUG}")
-message(STATUS "CXX Flags (Release): ${CMAKE_CXX_FLAGS_RELEASE}")
+
+message(STATUS "CXX Flags (Debug)       : ${CMAKE_CXX_FLAGS_DEBUG}")
+message(STATUS "CXX Flags (Release)     : ${CMAKE_CXX_FLAGS_RELEASE}")
+message(STATUS "CXX Flags (Min. Size)   : ${CMAKE_CXX_FLAGS_MINSIZEREL}")
+message(STATUS "CXX Flags (Rel. w. Dbg.): ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+message(STATUS "CXX Flags (Additional)  : ${CMAKE_CXX_FLAGS}")
 
 #########
 # init main application target settings
 #########
 ADD_EXECUTABLE(ppp ppp.cpp config.h)
-target_link_libraries(ppp stdc++)
 
 if(MINGW OR WIN32)
-	target_link_libraries(ppp mingw32)
+	target_link_libraries(ppp stdc++ mingw32)
 endif()
 
-add_dependencies(ppp logger genmod s3mmod
-	ppg binstream phaser fifoout fft utils)
-target_link_libraries(ppp logger genmod s3mmod
-	ppg binstream phaser fifoout fft utils)
+add_dependencies(ppp logger genmod s3mmod ppg binstream phaser fifoout fft utils)
+target_link_libraries(ppp logger genmod s3mmod ppg binstream phaser fifoout fft utils)
 
 #########
 # link libraries
@@ -140,9 +142,6 @@ if(NOT SDL_FOUND)
 	message(FATAL_ERROR "SDL not found")
 endif()
 include_directories(${SDL_INCLUDE_DIR})
-if(MINGW OR WIN32)
-	target_link_libraries(ppp mingw32)
-endif()
 target_link_libraries(ppp ${SDL_LIBRARY})
 
 set(Boost_USE_STATIC_LIBS FALSE)
@@ -151,8 +150,8 @@ set(Boost_ADDITIONAL_VERSIONS "1.44")
 include(FindBoost)
 find_package(Boost COMPONENTS program_options system)
 if(Boost_FOUND)
-	message(STATUS "Boost Include Dirs: ${Boost_INCLUDE_DIRS}")
-	message(STATUS "Boost Libraries: ${Boost_LIBRARIES}")
+	#message(STATUS "Boost Include Dirs: ${Boost_INCLUDE_DIRS}")
+	#message(STATUS "Boost Libraries: ${Boost_LIBRARIES}")
 	include_directories(${Boost_INCLUDE_DIRS})
 	target_link_libraries(ppp ${Boost_LIBRARIES})
 else()
