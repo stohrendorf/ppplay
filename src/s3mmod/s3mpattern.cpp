@@ -29,8 +29,6 @@
 using namespace ppp;
 using namespace ppp::s3m;
 
-INIT_TYPE_IDENTIFIER(ppp::s3m::S3mCell);
-
 S3mCell::S3mCell() throw() : GenCell(), m_note( s3mEmptyNote ), m_instr( s3mEmptyInstr ), m_volume( s3mEmptyVolume ),
 		m_effect( s3mEmptyCommand ), m_effectValue( 0x00 ) {
 }
@@ -49,7 +47,7 @@ bool S3mCell::load( BinStream &str ) throw( PppException ) {
 			str.read( &buf );
 			m_note = buf;
 			if (( m_note >= 0x9b ) && ( m_note != s3mEmptyNote ) && ( m_note != s3mKeyOffNote ) ) {
-				LOG_WARNING( stringf( "File Position %.8x: Note out of range: %.2x", str.pos(), m_note ) );
+				LOG_WARNING( "File Position %.8x: Note out of range: %.2x", str.pos(), m_note );
 				m_note = s3mEmptyNote;
 			}
 			str.read( &buf );
@@ -59,7 +57,7 @@ bool S3mCell::load( BinStream &str ) throw( PppException ) {
 			str.read( &buf );
 			m_volume = buf;
 			if ( buf > 0x40 ) {
-				LOG_WARNING( stringf( "File Position %.8x: Volume out of range: %d", str.pos(), m_volume ) );
+				LOG_WARNING( "File Position %.8x: Volume out of range: %d", str.pos(), m_volume );
 				m_volume = s3mEmptyVolume;
 			}
 		}

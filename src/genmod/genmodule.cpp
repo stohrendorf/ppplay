@@ -83,7 +83,7 @@ BinStream &GenModule::saveState() throw( PppException ) {
 	LOG_BEGIN();
 	GenOrder::Ptr ord = m_orders[m_playbackInfo.order];
 	PPP_TEST( !ord );
-	LOG_MESSAGE( stringf( "Saving state for order %d, loop count %d", m_playbackInfo.order, ord->getCount() ) );
+	LOG_MESSAGE( "Saving state for order %d, loop count %d", m_playbackInfo.order, ord->getCount() );
 	std::cout << std::flush;
 	BinStream::SpBinStream str = ord->getCurrentState();
 	PPP_TEST( !str );
@@ -111,7 +111,7 @@ BinStream &GenModule::restoreState( uint16_t ordindex, uint8_t cnt ) throw( PppE
 	LOG_BEGIN();
 	GenOrder::Ptr ord = m_orders[ordindex];
 	PPP_TEST( !ord );
-	LOG_MESSAGE( stringf( "Loading state for order %d, loop count %d", ordindex, cnt ) );
+	LOG_MESSAGE( "Loading state for order %d, loop count %d", ordindex, cnt );
 	std::cout << std::flush;
 	BinStream::SpBinStream str = ord->getState( cnt );
 	PPP_TEST( !str );
@@ -139,7 +139,7 @@ BinStream &GenModule::restoreState( uint16_t ordindex, uint8_t cnt ) throw( PppE
 void GenModule::initFifo( std::size_t nFrames ) throw( PppException ) {
 	PPP_TEST( nFrames <= 0 );
 	playbackFifo.setMinFrameCount( nFrames );
-	LOG_MESSAGE( stringf( "Set FIFO length to %lu frames", nFrames ) );
+	LOG_MESSAGE( "Set FIFO length to %ld frames", nFrames );
 	/*	aPlaybackBuffer.reset(new short[nFrames*2]);
 		aPlaybackBufferSize = nFrames;*/
 }

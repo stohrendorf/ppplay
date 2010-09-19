@@ -170,10 +170,10 @@ S3mModule::~S3mModule() throw() {
 bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 	try {
 		LOG_BEGIN();
-		LOG_MESSAGE( "Opening '" + fn + "'" );
+		LOG_MESSAGE( "Opening '%s'", fn.c_str() );
 		FBinStream str( fn );
 		if(!str.isOpen()) {
-			LOG_WARNING(fn+" could not be opened");
+			LOG_WARNING("%s could not be opened", fn.c_str());
 			return false;
 		}
 		setFilename(fn);
@@ -204,7 +204,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 		s3mHdr.patNum &= 0xff;
 		s3mHdr.smpNum &= 0xff;
 		if ( s3mHdr.type[0] != 0x1a ) {
-			LOG_ERROR( stringf( "Header Type Error: Expected 0x1a, got 0x%.2x", s3mHdr.type[0] ) );
+			LOG_ERROR( "Header Type Error: Expected 0x1a, got 0x%.2x", s3mHdr.type[0] );
 			return false;
 		}
 		if ( s3mHdr.createdWith == 0x1300 )
@@ -363,7 +363,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 		// calculate total length...
 		LOG_MESSAGE( "Calculating track lengths and preparing seek operations..." );
 		do {
-			LOG_MESSAGE( stringf( "Pre-processing Track %d", getCurrentTrack() ) );
+			LOG_MESSAGE( "Pre-processing Track %d", getCurrentTrack() );
 			std::size_t currTickLen = 0;
 			getMultiTrack(getCurrentTrack()).startOrder = getPlaybackInfo().order;
 			do {
@@ -513,7 +513,7 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 			}
 			else if ( fx == s3mFxBreakPat ) {
 				m_breakRow = highNibble( fxVal ) * 10 + lowNibble( fxVal );
-				LOG_MESSAGE( stringf( "Row %d: Break pattern to row %d", getPlaybackInfo().row, m_breakRow ) );
+				LOG_MESSAGE( "Row %d: Break pattern to row %d", getPlaybackInfo().row, m_breakRow );
 			}
 		}
 	}
@@ -627,11 +627,7 @@ void S3mModule::getTick( AudioFrameBuffer &buf ) throw( PppException ) {
 		GenPattern::Ptr currPat = getPattern( getPlaybackInfo().pattern );
 		if ( !currPat )
 			return;
-		//const unsigned short SAMPLESIZE = sizeof( int );
-		//const unsigned short FRAMESIZE = SAMPLESIZE * 2;
 		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( getTickBufLen(), {0,0} ) );
-		//std::fill(mixerBuffer->begin(), mixerBuffer->end(), MixerSampleFrame{0,0});
-		//memset( mixerBuffer.get(), 0, bufLen * FRAMESIZE );
 		for ( unsigned short currTrack = 0; currTrack < getMappedChannelCount(); currTrack++ ) {
 			GenChannel::Ptr chan = getMappedChannel( currTrack );
 			PPP_TEST( !chan );
@@ -649,10 +645,7 @@ void S3mModule::getTick( AudioFrameBuffer &buf ) throw( PppException ) {
 		adjustPosition( true, false );
 		setPosition( getPosition() + mixerBuffer->size() );
 	}
-	catch ( ... ) {
-		LOG_ERROR( "EXCEPTION" );
-	}
-//	PPP_CATCH_ALL();
+	PPP_CATCH_ALL();
 // 	PPP_RETHROW()
 }
 

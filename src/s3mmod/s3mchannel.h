@@ -145,7 +145,7 @@ namespace ppp {
 				virtual ~S3mChannel() throw();
 				virtual std::string getNoteName() throw(PppException);
 				virtual std::string getFxName() const throw();
-				virtual Frequency getAdjustedFrq() const throw();
+				virtual Frequency getAdjustedFrq() throw();
 				/**
 				 * @copydoc GenChannel::update
 				 * @remarks A new value in the Instrument Column changes the instrument with the old playback position

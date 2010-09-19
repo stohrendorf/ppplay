@@ -259,14 +259,17 @@ std::string S3mChannel::getFxName() const throw() {
 	if ( fxRangeOk )
 		return stringf( "%c%.2x", fx + 'A' - 1, s3mcell->getEffectValue() );
 	else {
-		LOG_ERROR( stringf( "Effect out of range: 0x%.2x", fx ) );
+		LOG_ERROR( "Effect out of range: 0x%.2x", fx );
 		return stringf( "?%.2x", s3mcell->getEffectValue() );
 	}
 }
 
-Frequency S3mChannel::getAdjustedFrq() const throw() {
+Frequency S3mChannel::getAdjustedFrq() throw() {
 	Frequency r = deltaFrq( getBareFrq(), m_deltaFrq );
-	return clip<Frequency>( r, m_minFrequency, m_maxFrequency );
+	r = clip<Frequency>( r, m_minFrequency, m_maxFrequency );
+	if(r==0)
+		setActive(false);
+	return r;
 }
 
 void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRetrigger ) throw() {
@@ -422,7 +425,7 @@ void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRet
 				doVolumeFx( s3mFxPortVolSlide, s3mcell->getEffectValue() );
 				break;
 			default:
-				LOG_WARNING( "UNSUPPORTED FX FOUND: " + getFxName() );
+				LOG_WARNING( "UNSUPPORTED FX FOUND: %s", getFxName().c_str() );
 				break;
 		}
 	}
@@ -794,7 +797,7 @@ void S3mChannel::doSpecialFx( const uint8_t fx, uint8_t fxVal ) throw( PppExcept
 					LOG_MESSAGE( "Set Glissando Control not supported" );
 					break;
 				default:
-					LOG_WARNING( "UNSUPPORTED SPECIAL FX FOUND: " + getFxName() );
+					LOG_WARNING( "UNSUPPORTED SPECIAL FX FOUND: %s", getFxName().c_str() );
 					break;
 			}
 			break;
@@ -802,7 +805,7 @@ void S3mChannel::doSpecialFx( const uint8_t fx, uint8_t fxVal ) throw( PppExcept
 			if (( fxVal <= 0x80 ) || ( fxVal == 0xa4 ) )
 				setPanning( fxVal );
 			else
-				LOG_WARNING( stringf( "Panning value out of range: 0x%.2x", fxVal ) );
+				LOG_WARNING( "Panning value out of range: 0x%.2x", fxVal );
 	}
 }
 
@@ -848,8 +851,16 @@ void S3mChannel::mixTick( MixerFrameBuffer &mixBuffer, const uint8_t volume ) th
 		m_note = s3mEmptyNote;
 		return;
 	}
-	PPP_TEST(( getPlaybackFrq() * mixBuffer->size() * getAdjustedFrq() ) == 0 );
-	BresenInterpolation bres( mixBuffer->size(), FRQ_VALUE / getPlaybackFrq()*mixBuffer->size()*getAdjustedFrq() / FRQ_VALUE );
+	Frequency adjFrq = getAdjustedFrq();
+	if(!isActive())
+		return;
+	LOG_TEST_ERROR(getPlaybackFrq() == 0);
+	LOG_TEST_ERROR(mixBuffer->size() == 0);
+	if( getPlaybackFrq() * mixBuffer->size() == 0 ) {
+		setActive(false);
+		return;
+	}
+	BresenInterpolation bres( mixBuffer->size(), FRQ_VALUE/getPlaybackFrq() * mixBuffer->size()*adjFrq / FRQ_VALUE );
 	uint16_t currVol = clip( getVolume() + m_deltaVolume, 0, 0x40 ) * m_globalVol;
 	MixerSample *mixBufferPtr = &mixBuffer->front().left;
 	GenSample::Ptr currSmp = getCurrentSample();

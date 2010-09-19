@@ -96,25 +96,9 @@ if(MINGW OR WIN32)
 endif()
 
 add_dependencies(ppp logger genmod s3mmod
-	#stmmod
-	#modmod
 	ppg binstream phaser fifoout fft utils)
 target_link_libraries(ppp logger genmod s3mmod
-	#stmmod
-	#modmod
 	ppg binstream phaser fifoout fft utils)
-
-#########
-# add SDL
-#########
-#INCLUDE(FindSDL)
-#if(NOT SDL_FOUND OR NOT SDLMAIN_LIBRARY)
-#	message(STATUS "${SDL_INCLUDE_DIR}")
-#	message(FATAL_ERROR "Could not find the SDL libraries")
-#endif()
-#message(STATUS "SDL Main Library: ${SDLMAIN_LIBRARY}")
-#add_library(SDL SHARED IMPORTED)
-#target_link_libraries(ppp ${SDL_LIBRARY})
 
 #########
 # link libraries
@@ -148,6 +132,9 @@ else()
 	message(STATUS "MP3Lame found, Quick-MP3 will be available")
 endif()
 
+#########
+# add SDL
+#########
 find_package(SDL REQUIRED)
 if(NOT SDL_FOUND)
 	message(FATAL_ERROR "SDL not found")
@@ -181,8 +168,6 @@ include_directories(
 	src/genmod
 	src/genmod/phaser
 	src/s3mmod
-	#src/stmmod
-	#src/modmod
 	src/ppg
 	src/stream
 	src/output
@@ -191,10 +176,7 @@ include_directories(
 
 add_subdirectory(src/logger)
 add_subdirectory(src/genmod)
-#add_subdirectory(src/genmod/phaser)
 add_subdirectory(src/s3mmod)
-#add_subdirectory(src/stmmod)
-#add_subdirectory(src/modmod)
 add_subdirectory(src/stream)
 add_subdirectory(src/ppg)
 add_subdirectory(src/output)

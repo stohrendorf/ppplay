@@ -40,7 +40,6 @@ namespace ppp {
 		class S3mCell : public GenCell {
 			public:
 				typedef std::shared_ptr<S3mCell> Ptr;
-				HAS_TYPE_IDENTIFIER
 			private:
 				uint8_t m_note; //!< @brief Note value
 				uint8_t m_instr; //!< @brief Instrument value
