@@ -177,12 +177,6 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			return false;
 		}
 		setFilename(fn);
-//		str.open(fn.c_str(), ios::binary | ios::in);
-//		if (!str.is_open()) {
-//			PPP_THROW("File Open Error");
-//		}
-//		BOOST_SCOPE_EXIT( (&str) ) { str.close(); } BOOST_SCOPE_EXIT_END;
-//		str.exceptions(ifstream::eofbit | ifstream::failbit | ifstream::badbit);
 		S3mModuleHeader s3mHdr;
 		try {
 			str.seek( 0 );
@@ -195,7 +189,6 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			LOG_WARNING( "Header Error" );
 			return false;
 		}
-		//if ( memcmp( s3mHdr.id, "SCRM", 4 ) ) { // check ID
 		if(!std::equal(s3mHdr.id, s3mHdr.id+4, "SCRM")) {
 			LOG_WARNING( "Header ID Error" );
 			return false;
@@ -203,10 +196,8 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 		s3mHdr.ordNum &= 0xff;
 		s3mHdr.patNum &= 0xff;
 		s3mHdr.smpNum &= 0xff;
-		if ( s3mHdr.type[0] != 0x1a ) {
-			LOG_ERROR( "Header Type Error: Expected 0x1a, got 0x%.2x", s3mHdr.type[0] );
-			return false;
-		}
+		// many modules have 0x00 here, but they_re still correct
+		LOG_TEST_WARN( s3mHdr.type[0] != 0x1a );
 		if ( s3mHdr.createdWith == 0x1300 )
 			s3mHdr.flags |= s3mFlag300Slides;
 		if ( s3mHdr.flags&s3mFlagSt2Vibrato ) LOG_WARNING( "ST2 Vibrato (not supported)" );
