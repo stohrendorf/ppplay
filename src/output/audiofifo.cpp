@@ -111,6 +111,32 @@ std::size_t ppp::AudioFifo::get(AudioFrameBuffer& data, std::size_t size) {
 	return copied;
 }
 
+std::size_t ppp::AudioFifo::copy(AudioFrameBuffer& data, std::size_t size) {
+	LOG_DEBUG("Requested %d frames", size);
+	if(needsData())
+		return 0;
+	if(size==nsize)
+		size = m_queuedFrames;
+	if(!data)
+		data.reset( new AudioFrameBuffer::element_type(size, {0,0}) );
+	std::size_t copied = 0;
+	AudioFrameBufferQueue::iterator queueIt = m_queue.begin();
+	std::size_t toCopy = (*queueIt)->size();
+	while(queueIt!=m_queue.end() && size!=0) {
+		AudioFrameBuffer &current = *queueIt;
+		toCopy = std::min(current->size(), size);
+		std::copy(current->begin(), current->begin()+toCopy, data->begin()+copied);
+		copied += toCopy;
+		size -= toCopy;
+		if(toCopy == current->size())
+			queueIt++;
+		else
+			break;
+	}
+	LOG_DEBUG(" -- copied %d frames", copied);
+	return copied;
+}
+
 VECTOR_IMPL(ppp::BasicSampleFrame)
 VECTOR_IMPL(ppp::MixerSampleFrame)
 

@@ -38,9 +38,9 @@
 #	include <lame/lame.h>
 #endif
 
-using namespace std;
+//using namespace std;
 
-static const std::size_t BUFFERSIZE = 2048;
+static const std::size_t BUFFERSIZE = 4096;
 static const std::size_t SAMPLECOUNT = BUFFERSIZE / sizeof(ppp::BasicSample);
 static const std::size_t FRAMECOUNT = BUFFERSIZE / sizeof(ppp::BasicSampleFrame);
 
@@ -51,7 +51,7 @@ static ofstream mp3File;
 #endif
 
 static volatile bool playbackStopped = true;
-static std::shared_ptr< std::vector<unsigned short> > FL, FR;
+static ppp::AudioFrameBuffer fftBuffer;
 
 static std::shared_ptr<PpgScreen> dosScreen;
 static std::size_t updateFrameCounter = 0;
@@ -76,8 +76,7 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 		}
 		
 		std::fill_n(stream, len_bytes, 0);
-		ppp::AudioFrameBuffer frameBuffer;
-		if (!s3m->getFifo(frameBuffer, nFrames)) {
+		if (!s3m->fillFifo()) {
 			LOG_MESSAGE("getFifo failed");
 			if (!s3m->jumpNextTrack()) {
 				SDL_Event x;
@@ -88,7 +87,7 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 				LOG_MESSAGE("jumpNextTrack failed");
 				return;
 			}
-			else if (!s3m->getFifo(frameBuffer, nFrames)) {
+			else if (!s3m->fillFifo()) {
 				SDL_Event x;
 				x.type = SDL_KEYDOWN;
 				x.key.keysym.sym = SDLK_ESCAPE;
@@ -98,12 +97,12 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 				return;
 			}
 		}
+		s3m->playbackFifo.copy(fftBuffer, ppp::FFT::fftSampleCount);
+		ppp::AudioFrameBuffer frameBuffer;
+		s3m->getFifo(frameBuffer, nFrames);
 		updateFrameCounter += nFrames;
 		if (updateFrameCounter >= FRAMECOUNT) {
 			updateFrameCounter = 0;
-			//LOG_DEBUG("doing FFT");
-			//ppp::FFT::doFFT(xBuffer,FL,FR);
-			//LOG_DEBUG("FFT done.");
 			#ifdef WITH_MP3LAME
 			if (mp3File.is_open()) {
 				int res = lame_encode_buffer_interleaved(lgf, &frameBuffer->front().left, nFrames*2, mp3Buffer, BUFFERSIZE);
@@ -205,7 +204,7 @@ static bool quickMp3 = false;
 
 namespace bpo = boost::program_options;
 using namespace bpo;
-static string parseCmdLine(int argc, char *argv[]) {
+static std::string parseCmdLine(int argc, char *argv[]) {
     bpo::options_description genOpts("General Options");
     genOpts.add_options()
             ("help,h","Shows this help and exits")
@@ -217,7 +216,7 @@ static string parseCmdLine(int argc, char *argv[]) {
             ;
     bpo::options_description ioOpts("Input/Output Options");
     ioOpts.add_options()
-            ("file,f",bpo::value<string>(),"Module file to play")
+            ("file,f",bpo::value<std::string>(),"Module file to play")
             #ifdef WITH_MP3LAME
             ("quick-mp3,q","Produces only an mp3 without sound output")
             #endif
@@ -231,6 +230,8 @@ static string parseCmdLine(int argc, char *argv[]) {
     bpo::variables_map vm;
     bpo::store(bpo::command_line_parser(argc,argv).options(allOpts).positional(p).run(),vm);
     bpo::notify(vm);
+	using std::cout;
+	using std::endl;
     if(vm.count("warranty")) {
         cout << "**** The following is part of the GNU General Public License version 2 ****" << endl;
         cout << "  11. BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY" << endl;
@@ -252,7 +253,7 @@ static string parseCmdLine(int argc, char *argv[]) {
         cout << "YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER" << endl;
         cout << "PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE" << endl;
         cout << "POSSIBILITY OF SUCH DAMAGES." << endl;
-        return string();
+        return std::string();
     }
     if(vm.count("copyright")) {
         cout << "*   This program is free software; you can redistribute it and/or modify  *" << endl;
@@ -269,11 +270,11 @@ static string parseCmdLine(int argc, char *argv[]) {
         cout << "*   along with this program; if not, write to the                         *" << endl;
         cout << "*   Free Software Foundation, Inc.,                                       *" << endl;
         cout << "*   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *" << endl;
-        return string();
+        return std::string();
     }
     if(vm.count("version")) {
         cout << PACKAGE_STRING << " - (C) 2010 " << PACKAGE_VENDOR << endl;
-        return string();
+        return std::string();
     }
     if(vm.count("help")||!vm.count("file")) {
         cout << "Usage: ppp [options] <file>" << endl;
@@ -282,7 +283,7 @@ static string parseCmdLine(int argc, char *argv[]) {
         cout << "This is free software, and you are welcome to redistribute it" << endl;
         cout << "under certain conditions; type `ppp --copyright' for details." << endl;
         cout << genOpts << ioOpts;
-        return string();
+        return std::string();
     }
     if(vm.count("verbose")) {
         setLogLevel(llWarning);
@@ -305,13 +306,13 @@ static string parseCmdLine(int argc, char *argv[]) {
 	#else
 	setLogLevel(llMessage);
 	#endif
-	return vm["file"].as<string>();
+	return vm["file"].as<std::string>();
 }
 
 int main(int argc, char *argv[]) {
 	try {
 		LOG_BEGIN();
-		string modFileName = parseCmdLine(argc,argv);
+		std::string modFileName = parseCmdLine(argc,argv);
 		if(modFileName.empty())
 			return EXIT_SUCCESS;
 		LOG_MESSAGE("Initializing SDL");
@@ -404,9 +405,9 @@ int main(int argc, char *argv[]) {
 		dosScreen->addChild(*l);
 		l = new PpgLabel("ModTitle", "");
 		if (s3m->getTrimTitle() != "")
-			*l = string(" -=\xf0[ ") + s3m->getFileName() + " : " + s3m->getTrimTitle() + " ]\xf0=- ";
+			*l = std::string(" -=\xf0[ ") + s3m->getFileName() + " : " + s3m->getTrimTitle() + " ]\xf0=- ";
 		else
-			*l = string(" -=\xf0[ ") + s3m->getFileName() + " ]\xf0=- ";
+			*l = std::string(" -=\xf0[ ") + s3m->getFileName() + " ]\xf0=- ";
 		l->setFgColor(0, dcBrightWhite, 0);
 		l->setWidth(dosScreen->getWidth() - 4);
 		l->setPosition(2, 0);
@@ -415,7 +416,9 @@ int main(int argc, char *argv[]) {
 		dosScreen->addChild(*l);
 		dosScreen->show();
 		LOG_MESSAGE("Init Fifo");
-		s3m->initFifo(FRAMECOUNT);
+		s3m->initFifo(ppp::FFT::fftSampleCount);
+		fftBuffer.reset( new ppp::AudioFrameBuffer::element_type );
+		fftBuffer->resize( ppp::FFT::fftSampleCount );
 		playbackStopped = false;
 		LOG_MESSAGE("Init Audio");
 		if (!initAudio(s3m.get())) {
@@ -423,7 +426,6 @@ int main(int argc, char *argv[]) {
 			SDL_Quit();
 		}
 		#ifdef WITH_MP3LAME
-// 		quickMp3 = false;
 		if(!quickMp3) {
 		#endif
 			LOG_MESSAGE("Default Output Mode");
@@ -467,10 +469,16 @@ int main(int argc, char *argv[]) {
 						playbackStopped = true;
 					}
 					else if (event.type == SDL_USEREVENT && event.user.code == 1) {
-/*						dosScreen->clearOverlay();
-						unsigned short dlen = ppp::FFT::fftLength;
-						for(unsigned short i=0; i<dlen; i++) {
-							unsigned short h = FL->at(i)>>4;
+						dosScreen->clearOverlay();
+						LOG_DEBUG("doing FFT");
+						ppp::FFT::AmpsData FL, FR;
+						ppp::FFT::doFFT(fftBuffer,FL,FR);
+						LOG_DEBUG("FFT done.");
+						uint16_t *pL = &FL->front();
+						uint16_t *pR = &FR->front();
+						int dlen = FL->size();
+						for(int i=0; i<dlen; i++) {
+							uint16_t h = (*(pL++))>>4;
 							unsigned char color;
 							if(h<10)
 								color = dcGreen;
@@ -480,10 +488,10 @@ int main(int argc, char *argv[]) {
 								color = dcYellow;
 							else
 								color = dcLightRed;
-							for(unsigned short y=0; y<h; y++) {
+							for(int y=0; y<h; y++) {
 								dosScreen->drawPixel(i*320/dlen,400-1-y,color);
 							}
-							h = FR->at(i)>>4;
+							h = (*(pR++))>>4;
 							if(h<10)
 								color = dcGreen;
 							else if(h<20)
@@ -492,17 +500,18 @@ int main(int argc, char *argv[]) {
 								color = dcYellow;
 							else
 								color = dcLightRed;
-							for(unsigned short y=0; y<h; y++)
+							for(int y=0; y<h; y++)
 								dosScreen->drawPixel(320+i*320/dlen,400-1-y,color);
-						}*/
-/*						ppp::BasicSample *smpPtr = &xBuffer->front().left;
-						for(unsigned short i=0; i<SAMPLECOUNT; i++) {
+						}
+						ppp::BasicSample *smpPtr = &fftBuffer->front().left;
+						dlen = fftBuffer->size()*2;
+						for(int i=0; i<dlen; i++) {
 							ppp::BasicSample y = *(smpPtr++) >> 10;
 							if(i&1)
-								dosScreen->drawPixel(320+i*320/SAMPLECOUNT,400-64+y,dcLightBlue);
+								dosScreen->drawPixel(320+i*320/dlen,400-64+y,dcLightBlue);
 							else
-								dosScreen->drawPixel(i*320/SAMPLECOUNT,400-64+y,dcLightGreen);
-						}*/
+								dosScreen->drawPixel(i*320/dlen,400-64+y,dcLightGreen);
+						}
 						dosScreen->draw();
 					}
 				}

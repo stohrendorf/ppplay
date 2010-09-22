@@ -111,6 +111,7 @@ namespace ppp {
 			 */
 			std::size_t getAll(AudioFrameBuffer &data);
 			std::size_t get(AudioFrameBuffer &data, std::size_t size);
+			std::size_t copy(AudioFrameBuffer &data, std::size_t size);
 			/**
 			 * @brief Set the FIFO buffer length
 			 * @param[in] len The requested buffer length
