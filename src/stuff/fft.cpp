@@ -33,6 +33,9 @@ using namespace ppp::FFT;
 static const uint8_t inputBits     = 11;
 static const uint16_t inputLength  = 1 << inputBits;
 static const uint16_t inputLength2 = inputLength / 2;
+namespace ppp { namespace FFT {
+	const size_t fftSampleCount = inputLength;
+} }
 /*
 copied and modified from: http://local.wasp.uwa.edu.au/~pbourke/miscellaneous/dft/fft_ms.c
 
@@ -62,12 +65,8 @@ static void DFFT() {
 		j += k;
 	}
 	std::complex<float> c(-1,0);
-/*	c.real( -1.0 );
-	c.imag( 0.0 );*/
 	for ( uint8_t l = 0; l < inputBits; l++ ) {
 		std::complex<float> u(1,0);
-/*		u.real( 1.0 );
-		u.imag( 0.0 );*/
 		for ( j = 0; j < ( 1 << l ); j++ ) {
 			for ( uint16_t i = j; i < inputLength; i += 2 << l ) {
 				uint16_t i1 = i + ( 1 << l );
@@ -94,7 +93,7 @@ static void prepare( ppp::BasicSample *smpPtr) {
 		cArr[i] = std::complex<float>( *( smpPtr += 2 ) / 32768.0f, 0 );
 }
 
-static void post( std::shared_ptr< std::vector<uint16_t> > &amps ) {
+static void post( AmpsData &amps ) {
 	amps.reset( new std::vector<uint16_t>(inputLength2) );
 	uint16_t *ampsPtr = &amps->front();
 	for ( uint16_t i = 0; i < inputLength2; i++ ) {
@@ -104,7 +103,7 @@ static void post( std::shared_ptr< std::vector<uint16_t> > &amps ) {
 
 namespace ppp {
 	namespace FFT {
-		void doFFT( AudioFrameBuffer &samples, std::shared_ptr< std::vector<uint16_t> > &L, std::shared_ptr< std::vector<uint16_t> > &R ) {
+		void doFFT( AudioFrameBuffer &samples, AmpsData &L,AmpsData &R ) {
 			prepare( &samples->front().left );
 			DFFT();
 			post( L );

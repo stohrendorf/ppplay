@@ -252,7 +252,8 @@ namespace ppp {
 			 * @pre Make sure you have called #initFifo
 			 * @pre @c buffer!=NULL
 			 */
-			virtual bool getFifo(AudioFrameBuffer &buffer, std::size_t count) throw(PppException);
+			bool getFifo(AudioFrameBuffer &buffer, std::size_t count) throw(PppException);
+			bool fillFifo() throw(PppException);
 			/**
 			 * @brief Get playback time in seconds
 			 * @return Playback time in seconds
