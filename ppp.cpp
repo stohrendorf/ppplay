@@ -47,7 +47,7 @@ static const std::size_t FRAMECOUNT = BUFFERSIZE / sizeof(ppp::BasicSampleFrame)
 #ifdef WITH_MP3LAME
 static lame_global_flags *lgf;
 static unsigned char mp3Buffer[BUFFERSIZE];
-static ofstream mp3File;
+static std::ofstream mp3File;
 #endif
 
 static volatile bool playbackStopped = true;
@@ -550,9 +550,9 @@ int main(int argc, char *argv[]) {
 				return EXIT_FAILURE;
 			}
 			LOG_MESSAGE("Opening MP3 file...");
-			mp3File.open((modFileName + ".mp3").c_str(), ios::in);
+			mp3File.open((modFileName + ".mp3").c_str(), std::ios::in);
 			if (!mp3File.is_open())
-				mp3File.open((modFileName + ".mp3").c_str(), ios::out | ios::binary | ios::trunc);
+				mp3File.open((modFileName + ".mp3").c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
 			ppp::AudioFrameBuffer xBuffer;
 			while(true) {
 				if (!s3m->getFifo(xBuffer, FRAMECOUNT)) {
