@@ -155,7 +155,7 @@ class BinStream {
  * @class FBinStream
  * @ingroup Common
  * @brief Class derived from ::BinStream for files
- * note
+ * @note This is a read-only stream
  */
 class FBinStream : public BinStream {
 	private:
