@@ -93,7 +93,6 @@ set(ppp_SRCS ppp.cpp)
 if(WIN32 OR MINGW)
 	set(ppp_SRCS ${ppp_SRCS} ppp.rc)
 endif()
-message(STATUS "${ppp_SRCS}")
 ADD_EXECUTABLE(ppp ${ppp_SRCS})
 
 if(MINGW)
