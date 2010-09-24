@@ -1,0 +1,24 @@
+1 VERSIONINFO
+FILEVERSION     0,1,1,1
+PRODUCTVERSION  0,1,1,1
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "CompanyName", "Open Source"
+      VALUE "FileDescription", "S3M Module Player"
+      VALUE "FileVersion", "1.0"
+      VALUE "InternalName", "peepeeplayer"
+      VALUE "LegalCopyright", "Steffen Ohrendorf"
+      VALUE "OriginalFilename", "ppp.exe"
+      VALUE "ProductName", "PeePeePlayer"
+      VALUE "ProductVersion", "0.1.1"
+    END
+  END
+
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1252
+  END
+END

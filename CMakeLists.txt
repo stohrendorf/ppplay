@@ -1,8 +1,14 @@
-PROJECT(PeePeePlayer CXX C)
+PROJECT(PeePeePlayer CXX C RC)
 
 cmake_minimum_required(VERSION 2.8)
 cmake_policy(SET CMP0003 NEW)
 cmake_policy(SET CMP0015 NEW)
+
+if(MINGW)
+	set(CMAKE_RC_COMPILER_INIT windres)
+	ENABLE_LANGUAGE(RC)
+	SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <FLAGS> <DEFINES> -O coff -o <OBJECT> <SOURCE>")
+endif(MINGW)
 
 INCLUDE(TestBigEndian)
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
@@ -11,7 +17,7 @@ if(IS_BIG_ENDIAN)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-	execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE _gcc_version)
+	execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE _gcc_version)
 	string(STRIP ${_gcc_version} _gcc_version)
 	message(STATUS "Your GCC Version is ${_gcc_version}, required is 4.5.0")
 	if(${_gcc_version} VERSION_LESS "4.5.0")
@@ -42,18 +48,20 @@ SET(CPACK_PACKAGE_EXECUTABLES "ppp" "PeePeePlayer")
 SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_PROCESSOR}")
 SET(CPACK_PACKAGE_SOURCE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-src")
 
-SET(CPACK_BINARY_RPM "ON")
-SET(CPACK_RPM_PACKAGE_RELEASE "1")
-SET(CPACK_RPM_PACKAGE_LICENSE "LGPLv3")
-SET(CPACK_RPM_PACKAGE_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
-SET(CPACK_RPM_PACKAGE_GROUP "Productivity/Multimedia/Sound/Players")
-SET(CPACK_RPM_PACKAGE_DESCRIPTION
+if(LINUX OR UNIX)
+	SET(CPACK_BINARY_RPM "ON")
+	SET(CPACK_RPM_PACKAGE_RELEASE "1")
+	SET(CPACK_RPM_PACKAGE_LICENSE "LGPLv3")
+	SET(CPACK_RPM_PACKAGE_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
+	SET(CPACK_RPM_PACKAGE_GROUP "Productivity/Multimedia/Sound/Players")
+	SET(CPACK_RPM_PACKAGE_DESCRIPTION
 "PeePeePlayer aims to be an \\\"original\\\" sounding, DOS-like looking Music Tracker Modules player.
 
 Authors:
 --------
     Syron <mr.syron@googlemail.com>"
 )
+endif()
 
 INCLUDE(CPack)
 
@@ -61,20 +69,8 @@ INCLUDE(CPack)
 # setting compiler flags
 #########
 set(CMAKE_CXX_FLAGS "-Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtual -pedantic -std=c++0x")
-if(MINGW OR WIN32)
+if(MINGW)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "profilegenerate")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-generate -O3")
-	set(LINK_FLAGS "-fprofile-generate")
-	message(STATUS "Profiling enabled - after test run, recompile with CMAKE_BUILD_TYPE=profileuse")
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "profileuse")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-use -O3")
-	set(LINK_FLAGS "-fprofile-use")
-	message(STATUS "Profile data usage")
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -93,9 +89,14 @@ message(STATUS "CXX Flags (Additional)  : ${CMAKE_CXX_FLAGS}")
 #########
 # init main application target settings
 #########
-ADD_EXECUTABLE(ppp ppp.cpp config.h)
+set(ppp_SRCS ppp.cpp)
+if(WIN32 OR MINGW)
+	set(ppp_SRCS ${ppp_SRCS} ppp.rc)
+endif()
+message(STATUS "${ppp_SRCS}")
+ADD_EXECUTABLE(ppp ${ppp_SRCS})
 
-if(MINGW OR WIN32)
+if(MINGW)
 	target_link_libraries(ppp stdc++ mingw32)
 endif()
 
@@ -186,7 +187,7 @@ add_subdirectory(src/stuff)
 #########
 install(TARGETS ppp RUNTIME DESTINATION bin COMPONENT application)
 cpack_add_component(application DISPLAY_NAME PeePeePlayer REQUIRED)
-if(NOT MINGW AND NOT WIN32)
+if(LINUX OR UNIX)
 	install(FILES peepeeplayer.desktop DESTINATION share/applications COMPONENT desktopfile)
 	cpack_add_component(desktopfile DISPLAY_NAME .desktop file REQUIRED)
 endif()
