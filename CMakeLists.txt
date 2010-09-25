@@ -1,5 +1,3 @@
-PROJECT(PeePeePlayer CXX C RC)
-
 cmake_minimum_required(VERSION 2.8)
 cmake_policy(SET CMP0003 NEW)
 cmake_policy(SET CMP0015 NEW)
@@ -8,6 +6,9 @@ if(MINGW)
 	set(CMAKE_RC_COMPILER_INIT windres)
 	ENABLE_LANGUAGE(RC)
 	SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <FLAGS> <DEFINES> -O coff -o <OBJECT> <SOURCE>")
+	PROJECT(PeePeePlayer CXX C RC)
+else()
+	PROJECT(PeePeePlayer CXX C)
 endif(MINGW)
 
 INCLUDE(TestBigEndian)
