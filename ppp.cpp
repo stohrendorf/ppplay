@@ -71,7 +71,7 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 		PPP_TEST(s3m == NULL);
 		
 		if(nFrames > s3m->playbackFifo.getMinFrameCount()) {
-			LOG_MESSAGE("Adjusting FIFO buffer length from %d frames to %d frames", s3m->playbackFifo.getMinFrameCount(), nFrames);
+			LOG_MESSAGE("Adjusting FIFO buffer length from %zu frames to %zu frames", s3m->playbackFifo.getMinFrameCount(), nFrames);
 			s3m->playbackFifo.setMinFrameCount(nFrames);
 		}
 		
@@ -420,14 +420,14 @@ int main(int argc, char *argv[]) {
 		fftBuffer.reset( new ppp::AudioFrameBuffer::element_type );
 		fftBuffer->resize( ppp::FFT::fftSampleCount );
 		playbackStopped = false;
-		LOG_MESSAGE("Init Audio");
-		if (!initAudio(s3m.get())) {
-			LOG_ERROR("Audio Init failed");
-			SDL_Quit();
-		}
 		#ifdef WITH_MP3LAME
 		if(!quickMp3) {
 		#endif
+			LOG_MESSAGE("Init Audio");
+			if (!initAudio(s3m.get())) {
+				LOG_ERROR("Audio Init failed");
+				SDL_Quit();
+			}
 			LOG_MESSAGE("Default Output Mode");
 			SDL_PauseAudio(0);
 			SDL_Event event;
