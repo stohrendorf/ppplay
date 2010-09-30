@@ -195,6 +195,9 @@ static bool initAudio(void *userData) {
 	LOG_TEST_ERROR(desired->format != obtained->format);
 	LOG_TEST_WARN(desired->samples != obtained->samples);
 	delete desired;
+	char driverName[1024];
+	if(SDL_AudioDriverName(driverName, 1023))
+		LOG_MESSAGE("Using audio driver '%s'", driverName);
 	return true;
 }
 
@@ -426,7 +429,7 @@ int main(int argc, char *argv[]) {
 			LOG_MESSAGE("Init Audio");
 			if (!initAudio(s3m.get())) {
 				LOG_ERROR("Audio Init failed");
-				SDL_Quit();
+				return EXIT_FAILURE;
 			}
 			LOG_MESSAGE("Default Output Mode");
 			SDL_PauseAudio(0);
