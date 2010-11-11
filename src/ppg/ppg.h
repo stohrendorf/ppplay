@@ -36,6 +36,8 @@
 #include "ppgbase.h"
 #include "ppglabel.h"
 
+namespace ppg {
+
 /**
  * @ingroup Ppg
  * @brief Dos Color Values
@@ -57,7 +59,7 @@ enum {
  * @ingroup Ppg
  * @brief A stereo bar with peaks
  */
-class PpgStereoPeakBar : public PpgLabel {
+class StereoPeakBar : public Label {
 	protected:
 		std::vector<int> m_interArrL; //!< @brief Left bar interpolation array
 		std::vector<int> m_interArrR; //!< @brief Right bar interpolation array
@@ -80,35 +82,35 @@ class PpgStereoPeakBar : public PpgLabel {
 		 * @pre @c width>=8
 		 * @pre @c interLen>=1
 		 */
-		PpgStereoPeakBar(const std::string &name, int width, int max, int interLen, bool showPeak) throw(PpgException);
+		StereoPeakBar(const std::string &name, int width, int max, int interLen, bool showPeak) throw(Exception);
 		/**
 		 * @brief Copy constructor
 		 * @param[in] src Source to copy from
 		 */
-		PpgStereoPeakBar(const PpgStereoPeakBar &src) throw(PpgException);
+		StereoPeakBar(const StereoPeakBar &src) throw(Exception);
 		/**
 		 * @brief Copy operator
 		 * @param[in] src Source to copy from
 		 * @return Reference to *this
 		 */
-		PpgStereoPeakBar &operator=(const PpgStereoPeakBar &src) throw();
+		StereoPeakBar &operator=(const StereoPeakBar &src) throw();
 		/**
 		 * @brief Destructor
 		 */
-		virtual ~PpgStereoPeakBar() throw();
+		virtual ~StereoPeakBar() throw();
 		/**
 		 * @brief Shift values into the interpolation array
 		 * @param[in] lval Left value
 		 * @param[in] rval Right value
 		 */
-		void shift(int lval, int rval) throw(PpgException);
+		void shift(int lval, int rval) throw(Exception);
 		/**
 		 * @brief Shift fractional values into the interpolation array
 		 * @param[in] lval Left value
 		 * @param[in] rval Right value
 		 * @pre @code (0<=lval<=1)&&(0<=rval<=1) @endcode
 		 */
-		void shiftFrac(float lval, float rval) throw(PpgException);
+		void shiftFrac(float lval, float rval) throw(Exception);
 		/**
 		 * @brief Get the right value
 		 * @return The right value
@@ -126,7 +128,7 @@ class PpgStereoPeakBar : public PpgLabel {
  * @ingroup Ppg
  * @brief The virtual DOS screen
  */
-class PpgScreen : public PpgWidget {
+class Screen : public Widget {
 	protected:
 		std::shared_ptr< std::vector<unsigned char> > m_pixelOverlay; //!< @brief Pixel overlay buffer
 		int m_pixW; //!< @brief Pixel overlay buffer width
@@ -140,13 +142,13 @@ class PpgScreen : public PpgWidget {
 		 * @param[in] background Background color
 		 * @param[in] opaque Set to @c false to draw a transparent char
 		 */
-		void drawChar8(int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque = true) throw() __attribute__((hot));
+		void drawChar8(int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque = true) throw();
 		/**
 		 * @copydoc PpgScreen::drawChar8
 		 * @brief Draw an 8x16 char
 		 */
-		void drawChar16(int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque = true) throw() __attribute__((hot));
-		virtual void drawThis() throw(PpgException);
+		void drawChar16(int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque = true) throw();
+		virtual void drawThis() throw(Exception);
 	public:
 		/**
 		 * @brief Create a new virtual DOS screen
@@ -154,19 +156,19 @@ class PpgScreen : public PpgWidget {
 		 * @param[in] h Height in characters
 		 * @param[in] title Title of the screen
 		 */
-		PpgScreen(const int w, const int h, const std::string& title) throw(PpgException);
+		Screen(const int w, const int h, const std::string& title) throw(Exception);
 		/**
 		 * @brief Copy constructor
 		 * @param[in] src Source to copy from
 		 */
-		PpgScreen(const PpgScreen &src) throw(PpgException);
-		virtual ~PpgScreen() throw();
+		Screen(const Screen &src) throw(Exception);
+		virtual ~Screen() throw();
 		/**
 		 * @brief Assignment operator
 		 * @param[in] src Source to copy from
 		 * @return Reference to *this
 		 */
-		virtual PpgScreen &operator=(const PpgScreen &src) throw();
+		virtual Screen &operator=(const Screen &src) throw();
 		/**
 		 * @brief Clear the screen
 		 * @param[in] c Character to overwrite the screen with
@@ -190,13 +192,15 @@ class PpgScreen : public PpgWidget {
 		void clearOverlay();
 };
 
-inline void PpgScreen::drawPixel(const int x, const int y, const unsigned char c) const throw() {
+inline void Screen::drawPixel(const int x, const int y, const unsigned char c) const throw() {
 	if((x < 0) || (y < 0) || (y >= m_pixH) || (x >= m_pixW))
 		return;
 	m_pixelOverlay->at(y*m_pixW + x) = c;
 }
 
-extern template PpgStereoPeakBar *PpgWidget::getByPath(const std::string &path) throw();
-extern template PpgScreen *PpgWidget::getByPath(const std::string &path) throw();
+} // namespace ppg
+
+extern template ppg::StereoPeakBar *ppg::Widget::getByPath(const std::string &path) throw();
+extern template ppg::Screen *ppg::Widget::getByPath(const std::string &path) throw();
 
 #endif // ppgH

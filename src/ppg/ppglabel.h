@@ -24,12 +24,14 @@
 #include "ppgbase.h"
 #include <vector>
 
+namespace ppg {
+
 /**
  * @class PpgLabel
  * @ingroup Ppg
  * @brief A colored text label
  */
-class PpgLabel : public PpgWidget {
+class Label : public Widget {
 	private:
 		/**
 		 * @brief Resizes #aFgColors and #aBgColors if the new text is longer than the arrays' sizes
@@ -39,7 +41,7 @@ class PpgLabel : public PpgWidget {
 		std::string m_text; //!< @brief The text in this label
 		std::vector<uint8_t> m_fgColors; //!< @brief Text chars' foreground colors @see PpgElement::ESC_NOCHANGE #setFgColor
 		std::vector<uint8_t> m_bgColors; //!< @brief Text chars' background colors @see PpgElement::ESC_NOCHANGE #setBgColor
-		virtual void drawThis() throw(PpgException);
+		virtual void drawThis() throw(Exception);
 	public:
 		/**
 		 * @brief Label alignment enumeration class
@@ -53,14 +55,14 @@ class PpgLabel : public PpgWidget {
 		 * @param[in] name Label's unique name
 		 * @param[in] text Initial text
 		 */
-		PpgLabel(const std::string &name, const std::string &text) throw();
+		Label(const std::string &name, const std::string &text) throw();
 		/**
 		 * @brief Copy constructor
 		 * @param[in] src Source label
 		 */
-		PpgLabel(const PpgLabel &src) throw();
+		Label(const Label &src) throw();
 		//! @copydoc PpgWidget::~PpgWidget
-		virtual ~PpgLabel() throw();
+		virtual ~Label() throw();
 		/**
 		 * @brief Get the label's text length
 		 * @return Text length
@@ -71,26 +73,26 @@ class PpgLabel : public PpgWidget {
 		 * @param[in] src Source to copy from
 		 * @return Reference to *this
 		 */
-		PpgLabel &operator=(const PpgLabel &src) throw();
+		Label &operator=(const Label &src) throw();
 		/**
 		 * @brief Assignment operator for std::string's
 		 * @param[in] src String to assign to this label
 		 * @return Reference to *this
 		 */
-		PpgLabel &operator=(const std::string &src) throw();
+		Label &operator=(const std::string &src) throw();
 		/**
 		 * @brief Append-Assignment operator for std::string's
 		 * @param[in] src String to append to this label
 		 * @return Reference to *this
 		 */
-		PpgLabel &operator+=(const std::string &src) throw();
+		Label &operator+=(const std::string &src) throw();
 		/**
 		 * @brief Char access
 		 * @param[in] index Index of the char of the text to access
 		 * @return Reference to the char
 		 * @exception PpgException if @a index is out of range
 		 */
-		virtual char &operator[](const unsigned int index) throw(PpgException);
+		virtual char &operator[](const unsigned int index) throw(Exception);
 		/**
 		 * @brief Set's the foreground color of @a len chars from position @a pos to @a color
 		 * @param[in] pos Starting position
@@ -105,10 +107,12 @@ class PpgLabel : public PpgWidget {
 		 * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
 		 */
 		virtual void setBgColor(unsigned int pos, unsigned char color = ESC_NOCHANGE, unsigned int len = 1) throw();
-		virtual int setHeight(const int h) throw(PpgException);
-		virtual int setWidth(const int w) throw(PpgException);
+		virtual int setHeight(const int h) throw(Exception);
+		virtual int setWidth(const int w) throw(Exception);
 };
 
-extern template PpgLabel *PpgWidget::getByPath(const std::string &path) throw();
+extern template Label *Widget::getByPath(const std::string &path) throw();
+
+} // namespace ppg
 
 #endif

@@ -21,6 +21,8 @@
 #include <algorithm>
 #include <vector>
 
+namespace ppg {
+
 static Uint32 gDosColors[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static std::shared_ptr< std::vector<char> > gaChars;
 static std::shared_ptr< std::vector<uint8_t> > gaColorsF;
@@ -33,15 +35,15 @@ static inline void DrawPixel( const int x, const int y, const Uint32 color ) thr
 	reinterpret_cast<Uint32*>( gaScreen->pixels )[(( y*gaScreen->pitch ) >> 2 ) + x] = color;
 }
 
-static inline void DrawPixelRGB( const int x, const int y, const Uint8 R, const Uint8 G, const Uint8 B ) throw( PpgException ) {
+static inline void DrawPixelRGB( const int x, const int y, const Uint8 R, const Uint8 G, const Uint8 B ) throw( Exception ) {
 	DrawPixel( x, y, SDL_MapRGB( gaScreen->format, R, G, B ) );
 }
 
-void PpgScreen::clearOverlay() {
+void Screen::clearOverlay() {
 	std::fill_n(m_pixelOverlay->begin(), gaScreen->w*gaScreen->h, 0xff);
 }
 
-PpgScreen::PpgScreen( const int w, const int h, const std::string &title ) throw( PpgException ) : PpgWidget( "" ), m_pixelOverlay(), m_pixW(0), m_pixH(0) {
+Screen::Screen( const int w, const int h, const std::string &title ) throw( Exception ) : Widget( "" ), m_pixelOverlay(), m_pixW(0), m_pixH(0) {
 	if ( gaScreen ) {
 		std::cerr << "Uh-oh... creating a second screen o.O" << std::endl << std::flush;
 	}
@@ -84,22 +86,22 @@ PpgScreen::PpgScreen( const int w, const int h, const std::string &title ) throw
 	m_right = gaScreen->w / 8 - 1;
 }
 
-PpgScreen::~PpgScreen() throw() {
+Screen::~Screen() throw() {
 }
 
-PpgScreen::PpgScreen( const PpgScreen &src ) throw( PpgException ) : PpgWidget( src ), m_pixelOverlay(), m_pixW(0), m_pixH(0) {
+Screen::Screen( const Screen &src ) throw( Exception ) : Widget( src ), m_pixelOverlay(), m_pixW(0), m_pixH(0) {
 	if ( gaScreen )
 		PPG_THROW( "A PpgScreen has already been created" );
 }
 
-PpgScreen &PpgScreen::operator=( const PpgScreen & src ) throw() {
-	PpgWidget::operator=( src );
+Screen &Screen::operator=( const Screen & src ) throw() {
+	Widget::operator=( src );
 	return *this;
 }
 
 #include "pfonts.inc"
 
-void PpgScreen::drawChar8( int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque ) throw() {
+void Screen::drawChar8( int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque ) throw() {
 	x <<= 3;
 	y <<= 3;
 	for ( unsigned char py = 0; py < 8; py++ ) {
@@ -112,7 +114,7 @@ void PpgScreen::drawChar8( int x, int y, uint8_t c, Uint32 foreground, Uint32 ba
 	}
 }
 
-void PpgScreen::drawChar16( int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque ) throw() {
+void Screen::drawChar16( int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque ) throw() {
 	x <<= 3;
 	y <<= 4;
 	for ( unsigned char py = 0; py < 16; py++ ) {
@@ -125,14 +127,14 @@ void PpgScreen::drawChar16( int x, int y, uint8_t c, Uint32 foreground, Uint32 b
 	}
 }
 
-void PpgScreen::clear( uint8_t c, uint8_t foreground, uint8_t background ) throw() {
+void Screen::clear( uint8_t c, uint8_t foreground, uint8_t background ) throw() {
 	std::size_t size = getWidth()*getHeight();
 	std::fill_n(gaChars->begin(), size, c);
 	std::fill_n(gaColorsF->begin(), size, foreground);
 	std::fill_n(gaColorsB->begin(), size, background);
 }
 
-void PpgScreen::drawThis() throw( PpgException ) {
+void Screen::drawThis() throw( Exception ) {
 	if ( SDL_MUSTLOCK( gaScreen ) ) {
 		if ( SDL_LockSurface( gaScreen ) < 0 )
 			return;
@@ -161,7 +163,7 @@ void PpgScreen::drawThis() throw( PpgException ) {
 		PPG_THROW( "Flip failed" );
 }
 
-void PpgScreen::drawChar( const int x, const int y, const char c ) throw() {
+void Screen::drawChar( const int x, const int y, const char c ) throw() {
 	int w = getWidth();
 	int h = getHeight();
 	if (( x < 0 ) || ( x >= w ) || ( y < 0 ) || ( y >= h ) )
@@ -169,7 +171,7 @@ void PpgScreen::drawChar( const int x, const int y, const char c ) throw() {
 	gaChars->at(x+y*w) = c;
 }
 
-void PpgScreen::drawFgColor( const int x, const int y, const unsigned char c ) throw() {
+void Screen::drawFgColor( const int x, const int y, const unsigned char c ) throw() {
 	int w = getWidth();
 	int h = getHeight();
 	if (( x < 0 ) || ( x >= w ) || ( y < 0 ) || ( y >= h ) )
@@ -177,7 +179,7 @@ void PpgScreen::drawFgColor( const int x, const int y, const unsigned char c ) t
 	gaColorsF->at(x+y*w) = c;
 }
 
-void PpgScreen::drawBgColor( const int x, const int y, const unsigned char c ) throw() {
+void Screen::drawBgColor( const int x, const int y, const unsigned char c ) throw() {
 	int w = getWidth();
 	int h = getHeight();
 	if (( x < 0 ) || ( x >= w ) || ( y < 0 ) || ( y >= h ) )
@@ -185,7 +187,7 @@ void PpgScreen::drawBgColor( const int x, const int y, const unsigned char c ) t
 	gaColorsB->at(x+y*w) = c;
 }
 
-PpgStereoPeakBar::PpgStereoPeakBar( const std::string &name, int width, int max, int interLen, bool showPeak ) throw( PpgException ) : PpgLabel( name, " " ),
+StereoPeakBar::StereoPeakBar( const std::string &name, int width, int max, int interLen, bool showPeak ) throw( Exception ) : Label( name, " " ),
 		m_interArrL(), m_interArrR(), m_max( 0 ), m_barLength( 0 ), m_showPeak( false ),
 		m_peakPosL( 0 ), m_peakPosR( 0 ), m_peakFalloffSpeedL( 0 ), m_peakFalloffSpeedR( 0 ) {
 	PPG_TEST( width < 8 || interLen < 1 );
@@ -234,14 +236,14 @@ PpgStereoPeakBar::PpgStereoPeakBar( const std::string &name, int width, int max,
 	setFgColor( length() - 1, dcGreen );
 }
 
-PpgStereoPeakBar::PpgStereoPeakBar( const PpgStereoPeakBar &src ) throw( PpgException ) :  PpgLabel( src.m_name, src.m_text ),
+StereoPeakBar::StereoPeakBar( const StereoPeakBar &src ) throw( Exception ) :  Label( src.m_name, src.m_text ),
 		m_interArrL(src.m_interArrL), m_interArrR(src.m_interArrR), m_max( src.m_max ), m_barLength( src.m_barLength ), m_showPeak( src.m_showPeak ),
 		m_peakPosL( src.m_peakPosL ), m_peakPosR( src.m_peakPosR ), m_peakFalloffSpeedL( src.m_peakFalloffSpeedL ), m_peakFalloffSpeedR( src.m_peakFalloffSpeedR ) {
 	//PpgLabel::operator=( src );
 }
 
-PpgStereoPeakBar &PpgStereoPeakBar::operator=( const PpgStereoPeakBar & src ) throw() {
-	PpgLabel::operator=( src );
+StereoPeakBar &StereoPeakBar::operator=( const StereoPeakBar & src ) throw() {
+	Label::operator=( src );
 	m_interArrL = src.m_interArrL;
 	m_interArrR = src.m_interArrR;
 	m_max = src.m_max;
@@ -255,10 +257,10 @@ PpgStereoPeakBar &PpgStereoPeakBar::operator=( const PpgStereoPeakBar & src ) th
 }
 
 
-PpgStereoPeakBar::~PpgStereoPeakBar() throw() {
+StereoPeakBar::~StereoPeakBar() throw() {
 }
 
-void PpgStereoPeakBar::shift( int lval, int rval ) throw( PpgException ) {
+void StereoPeakBar::shift( int lval, int rval ) throw( Exception ) {
 	PPG_TEST( m_interArrL.size()==0 || m_interArrR.size()!=m_interArrL.size() );
 	m_interArrL.erase(m_interArrL.begin());
 	m_interArrR.erase(m_interArrR.begin());
@@ -305,11 +307,11 @@ void PpgStereoPeakBar::shift( int lval, int rval ) throw( PpgException ) {
 	}
 }
 
-void PpgStereoPeakBar::shiftFrac( const float lval, const float rval ) throw( PpgException ) {
+void StereoPeakBar::shiftFrac( const float lval, const float rval ) throw( Exception ) {
 	shift( static_cast<int>( lval*m_max ), static_cast<int>( rval*m_max ) );
 }
 
-int PpgStereoPeakBar::getValLeft() const throw() {
+int StereoPeakBar::getValLeft() const throw() {
 	int res = 0;
 	int div = 0;
 	int i = 0;
@@ -321,7 +323,7 @@ int PpgStereoPeakBar::getValLeft() const throw() {
 	return res / div;
 }
 
-int PpgStereoPeakBar::getValRight() const throw() {
+int StereoPeakBar::getValRight() const throw() {
 	int res = 0;
 	int div = 0;
 	int i = 0;
@@ -333,5 +335,7 @@ int PpgStereoPeakBar::getValRight() const throw() {
 	return res / div;
 }
 
-template PpgStereoPeakBar *PpgWidget::getByPath(const std::string &path) throw();
-template PpgScreen *PpgWidget::getByPath(const std::string &path) throw();
+template StereoPeakBar *Widget::getByPath(const std::string &path) throw();
+template Screen *Widget::getByPath(const std::string &path) throw();
+
+} // namespace ppg
