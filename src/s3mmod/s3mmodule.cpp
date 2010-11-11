@@ -186,11 +186,11 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			PPP_THROW( "Header could not be read" );
 		}
 		if ( str.fail() ) { // header read completely?
-			LOG_WARNING( "Header Error" );
+			LOG_WARNING_( "Header Error" );
 			return false;
 		}
 		if(!std::equal(s3mHdr.id, s3mHdr.id+4, "SCRM")) {
-			LOG_WARNING( "Header ID Error" );
+			LOG_WARNING_( "Header ID Error" );
 			return false;
 		}
 		s3mHdr.ordNum &= 0xff;
@@ -200,14 +200,14 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 		LOG_TEST_WARN( s3mHdr.type[0] != 0x1a );
 		if ( s3mHdr.createdWith == 0x1300 )
 			s3mHdr.flags |= s3mFlag300Slides;
-		if ( s3mHdr.flags&s3mFlagSt2Vibrato ) LOG_WARNING( "ST2 Vibrato (not supported)" );
-		if ( s3mHdr.flags&s3mFlagSt2Tempo ) LOG_MESSAGE( "ST2 Tempo (not supported)" );
-		if ( s3mHdr.flags&s3mFlag300Slides ) LOG_MESSAGE( "ST v3.00 Volume Slides" );
-		if ( s3mHdr.flags&s3mFlag0volOpt ) LOG_MESSAGE( "Zero-volume Optimization" );
-		if ( s3mHdr.flags&s3mFlagAmigaSlides ) LOG_WARNING( "Amiga slides (not supported)" );
-		if ( s3mHdr.flags&s3mFlagAmigaLimits ) LOG_MESSAGE( "Amiga limits" );
-		if ( s3mHdr.flags&s3mFlagSpecial ) LOG_MESSAGE( "Special data present" );
-		if ( s3mHdr.defaultPannings == 0xFC ) LOG_MESSAGE( "Default Pannings present" );
+		if ( s3mHdr.flags&s3mFlagSt2Vibrato ) LOG_WARNING_( "ST2 Vibrato (not supported)" );
+		if ( s3mHdr.flags&s3mFlagSt2Tempo ) LOG_MESSAGE_( "ST2 Tempo (not supported)" );
+		if ( s3mHdr.flags&s3mFlag300Slides ) LOG_MESSAGE_( "ST v3.00 Volume Slides" );
+		if ( s3mHdr.flags&s3mFlag0volOpt ) LOG_MESSAGE_( "Zero-volume Optimization" );
+		if ( s3mHdr.flags&s3mFlagAmigaSlides ) LOG_WARNING_( "Amiga slides (not supported)" );
+		if ( s3mHdr.flags&s3mFlagAmigaLimits ) LOG_MESSAGE_( "Amiga limits" );
+		if ( s3mHdr.flags&s3mFlagSpecial ) LOG_MESSAGE_( "Special data present" );
+		if ( s3mHdr.defaultPannings == 0xFC ) LOG_MESSAGE_( "Default Pannings present" );
 		switch (( s3mHdr.createdWith >> 12 )&0x0f ) {
 			case s3mTIdScreamTracker:
 				setTrackerInfo( "ScreamTracker v" );
@@ -260,7 +260,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			}
 		}
 		// load the samples
-		LOG_MESSAGE( "Loading samples..." );
+		LOG_MESSAGE_( "Loading samples..." );
 		for ( int i = 0; i < s3mHdr.smpNum; i++ ) {
 			if ( !str.good() )
 				PPP_THROW( "Stream Error: Samples" );
@@ -278,10 +278,10 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			schismTest |= (getSample(i)->isHighQuality() || getSample(i)->isStereo() );
 		}
 		if (( schismTest != 0 ) && ( s3mHdr.createdWith == 0x1320 ) ) {
-			LOG_MESSAGE( "Could be schismtracker..." );
+			LOG_MESSAGE_( "Enabling Schism Tracker compatibility mode" );
 		}
 		// ok, samples loaded, now load the patterns...
-		LOG_MESSAGE( "Loading patterns..." );
+		LOG_MESSAGE_( "Loading patterns..." );
 		for ( int i = 0; i < s3mHdr.patNum; i++ ) {
 			str.seek( s3mHdr.ordNum + 2*s3mHdr.smpNum + 0x60 + 2*i );
 			ParaPointer pp;
@@ -295,7 +295,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 		}
 		//str.close();
 		// set pannings...
-		LOG_MESSAGE( "Preparing channels..." );
+		LOG_MESSAGE_( "Preparing channels..." );
 		int chanMapPos = 0;
 		setMappedChannelCount(0);
 		for ( int i = 0; i < 32; i++ ) {
@@ -352,7 +352,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 		setTitle( stringncpy( s3mHdr.title, 28 ) );
 		saveState();
 		// calculate total length...
-		LOG_MESSAGE( "Calculating track lengths and preparing seek operations..." );
+		LOG_MESSAGE_( "Calculating track lengths and preparing seek operations..." );
 		do {
 			LOG_MESSAGE( "Pre-processing Track %d", getCurrentTrack() );
 			std::size_t currTickLen = 0;
@@ -361,7 +361,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 				getTickNoMixing( currTickLen );
 				getMultiTrack(getCurrentTrack()).length += currTickLen;
 			} while ( currTickLen != 0 );
-			LOG_MESSAGE( "Preprocessed." );
+			LOG_MESSAGE_( "Preprocessed." );
 			int nCount = 0;
 			for ( unsigned short i = 0; i < getOrderCount(); i++ ) {
 				PPP_TEST( !getOrder(i) );
@@ -371,12 +371,12 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 					nCount++;
 				}
 			}
-			LOG_MESSAGE( "Trying to jump to the next track" );
+			LOG_MESSAGE_( "Trying to jump to the next track" );
 		} while ( jumpNextTrack() );
-		LOG_MESSAGE( "Lengths calculated, resetting module." );
+		LOG_MESSAGE_( "Lengths calculated, resetting module." );
 		if ( getTrackCount() > 0 )
 			restoreState( getMultiTrack(0).startOrder, 0 );
-		LOG_MESSAGE( "Removing empty tracks" );
+		LOG_MESSAGE_( "Removing empty tracks" );
 		removeEmptyTracks();
 //		if (aMultiTrack)
 //			LOG_MESSAGE("Hmmm... This could be a multi-song module, there are never played orders");
@@ -465,7 +465,7 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 					else { // we got an "infinite" loop...
 						m_patLoopCount = 127;
 						m_breakRow = m_patLoopRow;
-						LOG_WARNING( "!! Infinite pattern loop detected" );
+						LOG_WARNING_( "Infinite pattern loop detected" );
 					}
 				}
 			}
@@ -565,7 +565,7 @@ bool S3mModule::adjustPosition( const bool increaseTick, const bool doStore ) th
 	// skip "--" and "++" marks
 	while ( getPlaybackInfo().pattern >= 254 ) {
 		if ( getPlaybackInfo().pattern == s3mOrderEnd ) {
-			LOG_MESSAGE( "aPlaybackInfo.pattern == s3mOrderEnd" );
+			LOG_TEST_MESSAGE( getPlaybackInfo().pattern == s3mOrderEnd );
 			return false;
 		}
 		if ( !mapOrder( getPlaybackInfo().order ) )
@@ -574,7 +574,7 @@ bool S3mModule::adjustPosition( const bool increaseTick, const bool doStore ) th
 		setOrder( getPlaybackInfo().order+1 );
 		orderChanged = true;
 		if ( getPlaybackInfo().order >= getOrderCount() ) {
-			LOG_MESSAGE( "Song end reached: End of orders" );
+			LOG_MESSAGE_( "Song end reached: End of orders" );
 			return false;
 		}
 		setPatternIndex( mapOrder( getPlaybackInfo().order )->getIndex() );
@@ -606,11 +606,11 @@ void S3mModule::getTick( AudioFrameBuffer &buf ) throw( PppException ) {
 		//buf->resize(getTickBufLen());
 		//buf->clear();
 		if ( !adjustPosition( false, false ) ) {
-			LOG_MESSAGE( "Song end reached: adjustPosition() failed" );
+			LOG_MESSAGE_( "Song end reached: adjustPosition() failed" );
 			return;
 		}
 		if ( mapOrder( getPlaybackInfo().order )->getCount() >= getMaxRepeat() ) {
-			LOG_MESSAGE( "Song end reached: Maximum repeat count reached" );
+			LOG_MESSAGE_( "Song end reached: Maximum repeat count reached" );
 			return;
 		}
 		// update channels...
@@ -721,7 +721,7 @@ std::string S3mModule::getChanCellString( int16_t idx ) throw() {
 bool S3mModule::jumpNextTrack() throw( PppException ) {
 	LOG_BEGIN();
 	if ( !isMultiTrack() ) {
-		LOG_MESSAGE( "This is not a multi-track" );
+		LOG_MESSAGE_( "This is not a multi-track" );
 		return false;
 	}
 	PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
@@ -748,7 +748,7 @@ bool S3mModule::jumpNextTrack() throw( PppException ) {
 	}
 	else {
 		if ( getMultiTrack(getCurrentTrack()).startOrder == GenMultiTrack::stopHere ) {
-			LOG_MESSAGE( "No more tracks" );
+			LOG_MESSAGE_( "No more tracks" );
 			return false;
 		}
 		setOrder( getMultiTrack(getCurrentTrack()).startOrder );
@@ -758,18 +758,18 @@ bool S3mModule::jumpNextTrack() throw( PppException ) {
 		restoreState( getPlaybackInfo().order, 0 );
 		return true;
 	}
-	LOG_ERROR( "This should definitively NOT have happened..." );
+	LOG_ERROR_( "This should definitively NOT have happened..." );
 	return false;
 }
 
 bool S3mModule::jumpPrevTrack() throw( PppException ) {
 	LOG_BEGIN();
 	if ( !isMultiTrack() ) {
-		LOG_MESSAGE( "This is not a multi-track" );
+		LOG_MESSAGE_( "This is not a multi-track" );
 		return false;
 	}
 	if ( getCurrentTrack() == 0 ) {
-		LOG_MESSAGE( "Already on first track" );
+		LOG_MESSAGE_( "Already on first track" );
 		return false;
 	}
 	setCurrentTrack( getCurrentTrack()-1 );

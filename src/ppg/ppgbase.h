@@ -56,7 +56,7 @@ class Widget {
 		int m_right; //!< @brief Relative right position of this widget to the parent
 		std::vector<Widget*> m_children; //!< @brief Children within this container @see ppg::Widget::aIsContainer
 		virtual void drawThis() throw(Exception); //!< @brief Internal drawing method, called by PppWidet::draw() @see draw()
-		void isFinalNode() throw() { m_isContainer = false; } //!< @brief Call this if your widget should not contain other widgets
+		void markAsFinalNode() throw() { m_isContainer = false; } //!< @brief Call this if your widget should not contain other widgets
 	public:
 		/**
 		* @brief Value that marks a non-changing color

@@ -85,11 +85,11 @@ bool S3mSample::load(BinStream& str, const std::size_t pos) throw(PppException) 
 			return true;
 		//if (memcmp(smpHdr.ID, "SCRS", 4)) {
 		if(!std::equal(smpHdr.ID, smpHdr.ID+4, "SCRS")) {
-			LOG_WARNING("Sample ID not 'SCRS', assuming empty.");
+			LOG_WARNING_("Sample ID not 'SCRS', assuming empty.");
 			return true;
 		}
 		if (smpHdr.pack != 0) {
-			LOG_ERROR("Packed sample, not supported.");
+			LOG_ERROR_("Packed sample, not supported.");
 			return false;
 		}
 		if (smpHdr.type != 1) {
@@ -114,7 +114,7 @@ bool S3mSample::load(BinStream& str, const std::size_t pos) throw(PppException) 
 		PPP_TEST(getLength() == 0);
 		if (str.fail()) {
 			setBaseFrq( 0 );
-			LOG_WARNING("Seek failed or length is zero, assuming empty.");
+			LOG_WARNING_("Seek failed or length is zero, assuming empty.");
 			return true;
 		}
 		if(loadStereo) {
@@ -128,24 +128,24 @@ bool S3mSample::load(BinStream& str, const std::size_t pos) throw(PppException) 
 			std::fill_n(getNonConstDataR(), getLength(), 0);
 		}
 		if (smpHdr.flags&s3mFlagSmp16bit) {
-			LOG_MESSAGE("Loading 16-bit sample");
+			LOG_MESSAGE_("Loading 16-bit sample");
 			uint16_t smp16;
 			int16_t* smpPtr = getNonConstDataL();
 			for (uint32_t i = 0; i < getLength(); i++) {
 				str.read(&smp16);
 				if (str.fail()) {
-					LOG_WARNING("EOF reached before Sample Data read completely, assuming zeroes.");
+					LOG_WARNING_("EOF reached before Sample Data read completely, assuming zeroes.");
 					return true;
 				}
 				*(smpPtr++) = clip(smp16 - 32768, -32767, 32767); // negating -32768 fails otherwise in surround mode
 			}
 			if (loadStereo) {
-				LOG_MESSAGE("Loading Stereo...");
+				LOG_MESSAGE_("Loading Stereo...");
 				smpPtr = getNonConstDataR();
 				for (uint32_t i = 0; i < getLength(); i++) {
 					str.read(&smp16);
 					if(str.fail()) {
-						LOG_WARNING("EOF reached before Sample Data read completely, assuming zeroes.");
+						LOG_WARNING_("EOF reached before Sample Data read completely, assuming zeroes.");
 						return true;
 					}
 					*(smpPtr++) = clip(smp16 - 32768, -32767, 32767); // negating -32768 fails otherwise in surround mode
@@ -153,24 +153,24 @@ bool S3mSample::load(BinStream& str, const std::size_t pos) throw(PppException) 
 			}
 		}
 		else { // convert 8-bit samples to 16-bit ones
-			LOG_MESSAGE("Loading 8-bit sample");
+			LOG_MESSAGE_("Loading 8-bit sample");
 			uint8_t smp8;
 			int16_t* smpPtr = getNonConstDataL();
 			for (uint32_t i = 0; i < getLength(); i++) {
 				str.read(&smp8);
 				if(str.fail()) {
-					LOG_WARNING("EOF reached before Sample Data read completely, assuming zeroes.");
+					LOG_WARNING_("EOF reached before Sample Data read completely, assuming zeroes.");
 					return true;
 				}
 				*(smpPtr++) = clip((smp8 - 128) << 8, -32767, 32767); // negating -32768 fails otherwise in surround mode
 			}
 			if (loadStereo) {
-				LOG_MESSAGE("Loading Stereo...");
+				LOG_MESSAGE_("Loading Stereo...");
 				smpPtr = getNonConstDataR();
 				for (uint32_t i = 0; i < getLength(); i++) {
 					str.read(&smp8);
 					if(str.fail()) {
-						LOG_WARNING("EOF reached before Sample Data read completely, assuming zeroes.");
+						LOG_WARNING_("EOF reached before Sample Data read completely, assuming zeroes.");
 						return true;
 					}
 					*(smpPtr++) = clip((smp8 - 128) << 8, -32767, 32767); // negating -32768 fails otherwise in surround mode
