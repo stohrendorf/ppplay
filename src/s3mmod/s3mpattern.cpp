@@ -69,7 +69,7 @@ bool S3mCell::load( BinStream &str ) throw( PppException ) {
 		}
 	}
 	catch ( ... ) {
-		LOG_ERROR( "EXCEPTION" );
+		LOG_ERROR_( "EXCEPTION" );
 		setActive( false );
 		return false;
 	}
@@ -186,12 +186,12 @@ bool S3mPattern::load( BinStream& str, std::size_t pos ) throw( PppException ) {
 			currTrack = master & 31;
 			str.seekrel( -1 );
 			if ( str.fail() ) {
-				LOG_ERROR( "str.fail()..." );
+				LOG_ERROR_( "str.fail()..." );
 				return false;
 			}
 			GenCell::Ptr cell = createCell( currTrack, currRow );
 			if ( !cell->load( str ) ) {
-				LOG_ERROR( "Cell loading: ERROR" );
+				LOG_ERROR_( "Cell loading: ERROR" );
 				return false;
 			}
 		}

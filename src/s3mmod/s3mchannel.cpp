@@ -347,7 +347,7 @@ void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRet
 				m_minFrequency = 0;
 				m_maxFrequency = 0;
 				setActive( false );
-				LOG_ERROR( "Exception" );
+				LOG_ERROR_( "Exception" );
 				return;
 			}
 			setVolume( getCurrentSample()->getVolume() );
@@ -785,16 +785,16 @@ void S3mChannel::doSpecialFx( const uint8_t fx, uint8_t fxVal ) throw( PppExcept
 					}
 					break;
 				case s3mSFxFunkRpt:
-					LOG_MESSAGE( "Funk Repeat not supported" );
+					LOG_MESSAGE_( "Funk Repeat not supported" );
 					break;
 				case s3mSFxSetFilter:
-					LOG_MESSAGE( "Set Filter not supported" );
+					LOG_MESSAGE_( "Set Filter not supported" );
 					break;
 				case s3mSFxSetFinetune:
-					LOG_WARNING( "Set Finetune (currently) not implemented" );
+					LOG_WARNING_( "Set Finetune (currently) not implemented" );
 					break;
 				case s3mSFxSetGlissando:
-					LOG_MESSAGE( "Set Glissando Control not supported" );
+					LOG_MESSAGE_( "Set Glissando Control not supported" );
 					break;
 				default:
 					LOG_WARNING( "UNSUPPORTED SPECIAL FX FOUND: %s", getFxName().c_str() );

@@ -77,14 +77,14 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 		
 		std::fill_n(stream, len_bytes, 0);
 		if (!s3m->fillFifo()) {
-			LOG_MESSAGE("getFifo failed");
+			LOG_MESSAGE_("getFifo failed");
 			if (!s3m->jumpNextTrack()) {
 				SDL_Event x;
 				x.type = SDL_KEYDOWN;
 				x.key.keysym.sym = SDLK_ESCAPE;
 				SDL_PushEvent(&x);
 				playbackStopped = true;
-				LOG_MESSAGE("jumpNextTrack failed");
+				LOG_MESSAGE_("jumpNextTrack failed");
 				return;
 			}
 			else if (!s3m->fillFifo()) {
@@ -93,7 +93,7 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 				x.key.keysym.sym = SDLK_ESCAPE;
 				SDL_PushEvent(&x);
 				playbackStopped = true;
-				LOG_MESSAGE("getFifo failed");
+				LOG_MESSAGE_("getFifo failed");
 				return;
 			}
 		}
@@ -108,9 +108,9 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 				int res = lame_encode_buffer_interleaved(lgf, &frameBuffer->front().left, nFrames*2, mp3Buffer, BUFFERSIZE);
 				if (res < 0) {
 					if (res == -1)
-						LOG_ERROR("Lame Encoding Buffer too small!");
+						LOG_ERROR_("Lame Encoding Buffer too small!");
 					else
-						LOG_ERROR("Unknown Lame Error.");
+						LOG_ERROR_("Unknown Lame Error.");
 				}
 				else {
 					mp3File.write(reinterpret_cast<char*>(mp3Buffer), res);
@@ -318,13 +318,13 @@ int main(int argc, char *argv[]) {
 		std::string modFileName = parseCmdLine(argc,argv);
 		if(modFileName.empty())
 			return EXIT_SUCCESS;
-		LOG_MESSAGE("Initializing SDL");
+		LOG_MESSAGE_("Initializing SDL");
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
 			LOG_ERROR("Could not initialize SDL: %s", SDL_GetError());
 			SDL_Quit();
 			return EXIT_FAILURE;
 		}
-		LOG_MESSAGE("Initializing PeePeeGUI Elements.");
+		LOG_MESSAGE_("Initializing PeePeeGUI Elements.");
 		ppg::Label *l;
 		dosScreen.reset(new ppg::Screen(80, 25, PACKAGE_STRING " - Built " __DATE__ " " __TIME__));
 		l = new ppg::Label("Position", "");
@@ -375,7 +375,7 @@ int main(int argc, char *argv[]) {
 			l->show();
 			dosScreen->addChild(*l);
 		}
-		LOG_MESSAGE("Loading the module.");
+		LOG_MESSAGE_("Loading the module.");
 		ppp::GenModule::Ptr s3m;
 		try {
 			s3m.reset(new ppp::s3m::S3mModule(44100, 2));
@@ -383,7 +383,7 @@ int main(int argc, char *argv[]) {
 /*				s3m.reset(new ppp::stm::StmModule(44100, 2));
 				if (!s3m->load(modFileName)) {*/
 					s3m.reset();
-					LOG_ERROR("Error on loading the mod...");
+					LOG_ERROR_("Error on loading the mod...");
 					SDL_Quit();
 					return EXIT_FAILURE;
 /*				}*/
@@ -418,7 +418,7 @@ int main(int argc, char *argv[]) {
 		l->show();
 		dosScreen->addChild(*l);
 		dosScreen->show();
-		LOG_MESSAGE("Init Fifo");
+		LOG_MESSAGE_("Init Fifo");
 		s3m->initFifo(ppp::FFT::fftSampleCount);
 		fftBuffer.reset( new ppp::AudioFrameBuffer::element_type );
 		fftBuffer->resize( ppp::FFT::fftSampleCount );
@@ -426,12 +426,12 @@ int main(int argc, char *argv[]) {
 		#ifdef WITH_MP3LAME
 		if(!quickMp3) {
 		#endif
-			LOG_MESSAGE("Init Audio");
+			LOG_MESSAGE_("Init Audio");
 			if (!initAudio(s3m.get())) {
 				LOG_ERROR("Audio Init failed");
 				return EXIT_FAILURE;
 			}
-			LOG_MESSAGE("Default Output Mode");
+			LOG_MESSAGE_("Default Output Mode");
 			SDL_PauseAudio(0);
 			SDL_Event event;
 			while (true) {
@@ -473,10 +473,10 @@ int main(int argc, char *argv[]) {
 					}
 					else if (event.type == SDL_USEREVENT && event.user.code == 1) {
 						dosScreen->clearOverlay();
-						LOG_DEBUG("doing FFT");
+						LOG_DEBUG_("doing FFT");
 						ppp::FFT::AmpsData FL, FR;
 						ppp::FFT::doFFT(fftBuffer,FL,FR);
-						LOG_DEBUG("FFT done.");
+						LOG_DEBUG_("FFT done.");
 						uint16_t *pL = &FL->front();
 						uint16_t *pR = &FR->front();
 						int dlen = FL->size();
@@ -525,16 +525,16 @@ int main(int argc, char *argv[]) {
 		#ifdef WITH_MP3LAME
 		}
 		else {// if(mp3File.is_open()) { // quickMp3
-			LOG_MESSAGE("QuickMP3 Output Mode");
-			LOG_MESSAGE("Init LAME");
+			LOG_MESSAGE_("QuickMP3 Output Mode");
+			LOG_MESSAGE_("Init LAME");
 			lgf = lame_init();
 			if (!lgf) {
-				LOG_ERROR("LAME Init Failed");
+				LOG_ERROR_("LAME Init Failed");
 				// 			delete s3m;
 				SDL_Quit();
 				return EXIT_FAILURE;
 			}
-			LOG_MESSAGE("Setting up LAME Parameters");
+			LOG_MESSAGE_("Setting up LAME Parameters");
 			lame_set_in_samplerate(lgf, 44100);
 			lame_set_num_channels(lgf, 2);
 			lame_set_quality(lgf, 5);
@@ -547,12 +547,12 @@ int main(int argc, char *argv[]) {
 			id3tag_set_album(lgf, PACKAGE_STRING);
 			if (lame_init_params(lgf) < 0) {
 				lame_close(lgf);
-				LOG_ERROR("LAME Init Step 2 Failed");
+				LOG_ERROR_("LAME Init Step 2 Failed");
 				// 			delete s3m;
 				SDL_Quit();
 				return EXIT_FAILURE;
 			}
-			LOG_MESSAGE("Opening MP3 file...");
+			LOG_MESSAGE_("Opening MP3 file...");
 			mp3File.open((modFileName + ".mp3").c_str(), std::ios::in);
 			if (!mp3File.is_open())
 				mp3File.open((modFileName + ".mp3").c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
@@ -571,9 +571,9 @@ int main(int argc, char *argv[]) {
 				int res = lame_encode_buffer_interleaved(lgf, &xBuffer->front().left, FRAMECOUNT, mp3Buffer, BUFFERSIZE);
 				if (res < 0) {
 					if (res == -1)
-						LOG_ERROR("Lame Encoding Buffer too small!");
+						LOG_ERROR_("Lame Encoding Buffer too small!");
 					else
-						LOG_ERROR("Unknown Lame Error.");
+						LOG_ERROR_("Unknown Lame Error.");
 				}
 				else {
 					mp3File.write(reinterpret_cast<char*>(mp3Buffer), res);

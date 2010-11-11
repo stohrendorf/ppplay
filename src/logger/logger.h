@@ -86,8 +86,10 @@ LogLevel getLogLevel();
  */
 #ifdef LOG_NOTRACE
 #	define LOG(ll,fmt,...) logger(ppp::stringf("%s // " fmt, __PRETTY_FUNCTION__, ##__VA_ARGS__), ll)
+#	define LOG_(ll,fmt) logger(ppp::stringf("%s // " fmt, __PRETTY_FUNCTION__), ll)
 #else
 #	define LOG(ll,fmt,...) logger(ppp::stringf(fmt, ##__VA_ARGS__), ll)
+#	define LOG_(ll,fmt) logger(ppp::stringf(fmt), ll)
 #endif
 
 /**
@@ -96,6 +98,7 @@ LogLevel getLogLevel();
  * @param[in] msg Message
  */
 #define LOG_MESSAGE(fmt, ...) LOG(llMessage, fmt, ##__VA_ARGS__)
+#define LOG_MESSAGE_(fmt) LOG_(llMessage, fmt)
 #define LOG_TEST_MESSAGE(condition) if(condition) LOG_MESSAGE("[LOG_TEST_MESSAGE] %s", #condition)
 
 /**
@@ -104,6 +107,7 @@ LogLevel getLogLevel();
 * @param[in] msg Message
 */
 #define LOG_WARNING(fmt, ...) LOG(llWarning, fmt, ##__VA_ARGS__)
+#define LOG_WARNING_(fmt) LOG_(llWarning, fmt)
 #define LOG_TEST_WARN(condition) if(condition) LOG_WARNING("[LOG_TEST_WARN] %s", #condition)
 
 /**
@@ -112,6 +116,7 @@ LogLevel getLogLevel();
 * @param[in] msg Message
 */
 #define LOG_ERROR(fmt, ...) LOG(llError, fmt, ##__VA_ARGS__)
+#define LOG_ERROR_(fmt) LOG_(llError, fmt)
 #define LOG_TEST_ERROR(condition) if(condition) LOG_ERROR("[LOG_TEST_ERROR] %s", #condition)
 
 #ifndef LOG_NOTRACE
@@ -147,8 +152,10 @@ int decLogLevel();
 
 #ifndef NDEBUG
 #	define LOG_DEBUG(fmt, ...) LOG(llDebug, fmt, ##__VA_ARGS__)
+#	define LOG_DEBUG_(fmt) LOG(llDebug, fmt)
 #else
 #	define LOG_DEBUG(fmt, ...)
+#	define LOG_DEBUG_(fmt)
 #endif
 
 /**

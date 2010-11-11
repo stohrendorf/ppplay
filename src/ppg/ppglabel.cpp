@@ -30,7 +30,7 @@ Label::Label(const std::string &name, const std::string &text) throw() :
 		m_bgColors(),
 		alignment(Alignment::alLeft)
 {
-	isFinalNode();
+	markAsFinalNode();
 	if (length() != 0)
 		setWidth(length());
 	else
@@ -70,7 +70,7 @@ Label &Label::operator+=(const std::string & src) throw() {
 
 Label::Label(const Label &src) throw() :
 		Widget(src.m_name), m_text(src.m_text), m_fgColors(src.m_fgColors), m_bgColors(src.m_bgColors), alignment(src.alignment) {
-	isFinalNode();
+	markAsFinalNode();
 	m_bottom = src.m_bottom;
 	m_top = src.m_top;
 	m_left = src.m_left;
@@ -120,32 +120,28 @@ void Label::drawThis() throw(Exception) {
 	if(length()==0)
 		return;
 	int offset;
-	int w = getWidth();
 	switch (alignment) {
 		case Alignment::alLeft:
 			offset = 0;
 			break;
 		case Alignment::alRight:
-			offset = w - length();
+			offset = getWidth() - length();
 			break;
 		case Alignment::alCenter:
-			offset = (w - length()) / 2;
+			offset = (getWidth() - length()) / 2;
 			break;
 		default:
 			PPG_THROW("Invalid alignment");
 	}
-	for (int i = 0; i < w; i++) {
-		if (i - offset < 0)
+	for (int localX = 0; localX < getWidth(); localX++) {
+		int textPos = localX-offset;
+		if (textPos < 0 || textPos >= static_cast<long>(length()))
 			continue;
-		else if (i - offset >= static_cast<long>(length()))
-			continue;
-		else {
-			drawChar(i, 0, m_text[i-offset]);
-			if (m_fgColors[i-offset] != ESC_NOCHANGE)
-				drawFgColor(i, 0, m_fgColors[i-offset]);
-			if (m_bgColors[i-offset] != ESC_NOCHANGE)
-				drawBgColor(i, 0, m_bgColors[i-offset]);
-		}
+		drawChar(localX, 0, m_text[textPos]);
+		if (m_fgColors[textPos] != ESC_NOCHANGE)
+			drawFgColor(localX, 0, m_fgColors[textPos]);
+		if (m_bgColors[textPos] != ESC_NOCHANGE)
+			drawBgColor(localX, 0, m_bgColors[textPos]);
 	}
 }
 
