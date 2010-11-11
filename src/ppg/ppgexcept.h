@@ -26,11 +26,12 @@
 #include <exception>
 #include <stdexcept>
 
+namespace ppg {
 /**
  * @ingroup Ppg
  * @brief A simple tracing exception for PeePeeGUI
  */
-class PpgException : public std::exception {
+class Exception : public std::exception {
 	private:
 		std::string m_msg; //!< @brief Exception message
 	public:
@@ -38,7 +39,7 @@ class PpgException : public std::exception {
 		* @brief Constructor with initial message
 		* @param[in] msg Initial exception message
 		 */
-		PpgException(const std::string &msg) throw();
+		Exception(const std::string &msg) throw();
 		/**
 		 * @brief Constructor with additional information
 		 * @param[in] msg Initial Message
@@ -46,7 +47,7 @@ class PpgException : public std::exception {
 		 * @param[in] lineno Line number (use @c __LINE__ here)
 		 * @param[in] function Function (use @c __PRETTY_FUNCTION__ or @c __FUNCTION__ here)
 		 */
-		PpgException(const std::string &msg, const int lineno, const char function[]) throw();
+		Exception(const std::string &msg, const int lineno, const char function[]) throw();
 		/**
 		 * @brief Constructor with additional information for Re-Throws
 		 * @param[in] previous Previous PppException
@@ -58,11 +59,11 @@ class PpgException : public std::exception {
 		 * Appends the parameters from this contructor to @a previous, giving the possibility
 		 * to trace the exception
 		 */
-		PpgException(const PpgException &previous, const int lineno, const char function[]) throw();
+		Exception(const Exception &previous, const int lineno, const char function[]) throw();
 		/**
 		 * @brief Destructor, no operation
 		 */
-		virtual ~PpgException() throw();
+		virtual ~Exception() throw();
 		/**
 		 * @brief Get the exception message
 		 * @return Message
@@ -70,7 +71,7 @@ class PpgException : public std::exception {
 		virtual const char *what() const throw();
 };
 
-#define PPG_CATCH_STD(extype, postcmd) catch(std::extype &e) { postcmd; throw PppException(std::string(#extype "[")+e.what()+"]",__LINE__,__PRETTY_FUNCTION__); }
+#define PPG_CATCH_STD(extype, postcmd) catch(std::extype &e) { postcmd; throw ppg::Exception(std::string(#extype "[")+e.what()+"]",__LINE__,__PRETTY_FUNCTION__); }
 
 /**
  * @brief Catch PeePeeGUI exceptions
@@ -79,11 +80,11 @@ class PpgException : public std::exception {
  * Catches general exceptions and throws a ::PpgException for tracing the exception
  */
 #define PPG_CATCH_ALL(postcmd) \
-	catch(PppException &e) { postcmd; throw PppException(e,__LINE__,__PRETTY_FUNCTION__); } \
+	catch(ppg::Exception &e) { postcmd; throw ppg::Exception(e,__LINE__,__PRETTY_FUNCTION__); } \
 	PPG_CATCH_STD(bad_alloc, postcmd) PPG_CATCH_STD(bad_cast, postcmd) PPG_CATCH_STD(bad_exception, postcmd) PPG_CATCH_STD(bad_typeid, postcmd) \
 	PPG_CATCH_STD(ios_base::failure, postcmd) PPG_CATCH_STD(domain_error, postcmd) PPG_CATCH_STD(invalid_argument, postcmd) \
 	PPG_CATCH_STD(length_error, postcmd) PPG_CATCH_STD(out_of_range, postcmd) PPG_CATCH_STD(exception, postcmd) \
-	catch(...) { postcmd; throw PppException("Unknown Exception",__LINE__,__PRETTY_FUNCTION__); }
+	catch(...) { postcmd; throw ppg::Exception("Unknown Exception",__LINE__,__PRETTY_FUNCTION__); }
 
 /**
  * @brief Test & throw
@@ -91,18 +92,20 @@ class PpgException : public std::exception {
  * @details
  * Throws a ::PpgException if @a condition is true, containing the condition in the message
  */
-#define PPG_TEST(condition) if(condition) throw PpgException("[PPG_TEST] " #condition,__LINE__,__PRETTY_FUNCTION__);
+#define PPG_TEST(condition) if(condition) throw ppg::Exception("[PPG_TEST] " #condition,__LINE__,__PRETTY_FUNCTION__);
 
 /**
  * @brief Catch and re-throw a PpgException
  */
 #define PPG_RETHROW() \
-	catch(PppException &e) { throw PpgException(e,__LINE__,__PRETTY_FUNCTION__); }
+	catch(ppg::Exception &e) { throw ppg::Exception(e,__LINE__,__PRETTY_FUNCTION__); }
 
 /**
  * @brief Throw a PpgException with position information
  * @param[in] msg Message passed to the constructor of the PpgException
  */
-#define PPG_THROW(msg) throw PpgException(msg,__LINE__,__PRETTY_FUNCTION__);
+#define PPG_THROW(msg) throw ppg::Exception(msg,__LINE__,__PRETTY_FUNCTION__);
+
+} // namespace ppg
 
 #endif

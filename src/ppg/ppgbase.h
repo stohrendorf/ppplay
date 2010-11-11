@@ -24,7 +24,8 @@
 #include "ppgexcept.h"
 
 #include <vector>
-//#include <cstring>
+
+namespace ppg {
 
 /**
  * @defgroup Ppg The PeePeeGUI Definitions
@@ -32,29 +33,29 @@
  * @todo Check all @c operator= for self-assignments (strong guarantee?)
  */
 
-class PpgContainer;
+class Container;
 
 /**
- * @class PpgWidget
+ * @class Widget
  * @ingroup Ppg
  * @brief The abstract base class for all PeePeeGUI classes
  * @details
  * Every PeePeeGUI class is derived from this class.
  */
-class PpgWidget {
+class Widget {
 	private:
 		bool m_isContainer; //!< @brief This is @c true if this widget is a container
 	protected:
 		std::string m_name; //!< @brief (Unique) Name of the instance
-		std::string m_type; //!< @brief Class type. Empty for ::PpgWidget
+		std::string m_type; //!< @brief Class type. Empty for ppg::Widget
 		bool m_visible; //!< @brief @c false if this widget and it's children should not be drawn
-		PpgWidget *m_parent; //!< @brief Pointer to the parent widget, or @c NULL if it's the top widget
+		Widget *m_parent; //!< @brief Pointer to the parent widget, or @c NULL if it's the top widget
 		int m_left; //!< @brief Relative X position of this widget to the parent
 		int m_top; //!< @brief Relative Y position of this widget to the parent
 		int m_bottom; //!< @brief Relative bottom position of this widget to the parent
 		int m_right; //!< @brief Relative right position of this widget to the parent
-		std::vector<PpgWidget*> m_children; //!< @brief Children within this container @see PpgWidget::aIsContainer
-		virtual void drawThis() throw(PpgException); //!< @brief Internal drawing method, called by PppWidet::draw() @see draw()
+		std::vector<Widget*> m_children; //!< @brief Children within this container @see ppg::Widget::aIsContainer
+		virtual void drawThis() throw(Exception); //!< @brief Internal drawing method, called by PppWidet::draw() @see draw()
 		void isFinalNode() throw() { m_isContainer = false; } //!< @brief Call this if your widget should not contain other widgets
 	public:
 		/**
@@ -65,24 +66,24 @@ class PpgWidget {
 		 * @brief Constructor
 		 * @param[in] name Name of this widget
 		 */
-		PpgWidget(const std::string &name) throw();
+		Widget(const std::string &name) throw();
 		/**
 		 * @brief Copy constructor
 		 * @param[in] src Source to copy from
 		 */
-		PpgWidget(const PpgWidget& src) throw();
+		Widget(const Widget& src) throw();
 		/**
 		 * @brief Copy operator
 		 * @param[in] src Source to copy from
 		 * @return Reference to *this
 		 */
-		PpgWidget &operator=(const PpgWidget &src) throw();
+		Widget &operator=(const Widget &src) throw();
 		/**
 		 * @brief Destructor. No operation.
 		 */
-		virtual ~PpgWidget() throw();
+		virtual ~Widget() throw();
 		/**
-		 * @brief Get PpgWidget::aName
+		 * @brief Get ppg::Widget::aName
 		 * @return Widget's name
 		 */
 		virtual std::string getName() const throw();
@@ -92,9 +93,9 @@ class PpgWidget {
 		 */
 		virtual std::string getType() const throw();
 		/**
-		 * @brief Calls PpgWidget::drawThis(), but only when PpgWidget::aVisible is @c true
+		 * @brief Calls ppg::Widget::drawThis(), but only when ppg::Widget::aVisible is @c true
 		 */
-		virtual void draw() throw(PpgException);
+		virtual void draw() throw(Exception);
 		/**
 		 * @brief Make this widget visible
 		 */
@@ -112,7 +113,7 @@ class PpgWidget {
 		virtual void drawChar(const int x, const int y, const char c) throw();
 		/**
 		 * @brief Is this widget visible?
-		 * @return PpgWidget::aVisible
+		 * @return ppg::Widget::aVisible
 		 */
 		bool isVisible() const throw();
 		/**
@@ -130,7 +131,7 @@ class PpgWidget {
 		 */
 		virtual void drawBgColor(const int x, const int y, const unsigned char c) throw();
 		/**
-		 * @brief Sets PpgWidget::aLeft, adjusts PpgWidget::aRight
+		 * @brief Sets ppg::Widget::aLeft, adjusts PpgWidget::aRight
 		 * @param[in] x Left position
 		 * @param[in] absolute Set to @c true to calculate the position relative to the top parent widget
 		 * @return New left position
@@ -181,14 +182,14 @@ class PpgWidget {
 		 * @return New width
 		 * @exception PpgException is thrown if @c w\<=0
 		 */
-		virtual int setWidth(const int w) throw(PpgException);
+		virtual int setWidth(const int w) throw(Exception);
 		/**
 		 * @brief Adjusts PpgWidget::aBottom
 		 * @param[in] h Wanted height
 		 * @return New height
 		 * @exception PpgException is thrown if @c h\<=0
 		 */
-		virtual int setHeight(const int h) throw(PpgException);
+		virtual int setHeight(const int h) throw(Exception);
 		/**
 		 * @brief Adjusts PpgWidget::aRight and PpgWidget::aBottom
 		 * @param[in] w Width
@@ -196,42 +197,42 @@ class PpgWidget {
 		 * @return @c false if nothing happened (no changes in width and height)
 		 * @exception PpgException See PpgWidget::setWidth and PpgWidget::setHeight
 		 */
-		virtual bool setDimensions(int w, int h) throw(PpgException);
+		virtual bool setDimensions(int w, int h) throw(Exception);
 		/**
 		 * @brief Get PpgWidget::aLeft
 		 * @return Relative left position
 		 */
-		virtual int getLeft() const throw() __attribute__((const));
+		virtual int getLeft() const throw();
 		/**
 		 * @brief Get PpgWidget::aTop
 		 * @return Relative top position
 		 */
-		virtual int getTop() const throw() __attribute__((const));
+		virtual int getTop() const throw();
 		/**
 		 * @brief Get PpgWidget::aRight
 		 * @return Relative right position
 		 */
-		virtual int getRight() const throw() __attribute__((const));
+		virtual int getRight() const throw();
 		/**
 		 * @brief Get PpgWidget::aBottom
 		 * @return Relative bottom position
 		 */
-		virtual int getBottom() const throw() __attribute__((const));
+		virtual int getBottom() const throw();
 		/**
 		 * @brief Get width
 		 * @return Widget's width
 		 */
-		virtual int getWidth() const throw() __attribute__((const));
+		virtual int getWidth() const throw();
 		/**
 		 * @brief Get height
 		 * @return Widget's height
 		 */
-		virtual int getHeight() const throw() __attribute__((const));
+		virtual int getHeight() const throw();
 		/**
 		 * @brief Get the top parent
 		 * @return Pointer to the top parent
 		 */
-		virtual PpgWidget *getTopParent() throw();
+		virtual Widget *getTopParent() throw();
 		/**
 		 * @brief Map widget's coordinates to the parent ones
 		 * @param[in,out] x Left coordinate
@@ -249,7 +250,7 @@ class PpgWidget {
 		 * @param[in,out] newParent Widget's parent container
 		 * @param[in] caller Pointer to the caller to prevent infinite cyclic calls
 		 */
-		virtual void setParent(PpgWidget *newParent, PpgWidget *caller = NULL) throw();
+		virtual void setParent(Widget *newParent, Widget *caller = NULL) throw();
 		/**
 		 * @brief Returns ::aIsContainer
 		 * @return ::aIsContainer;
@@ -270,19 +271,19 @@ class PpgWidget {
 		 * @pre @c child!=NULL
 		 * @exception PpgException is thrown if @a child is @c NULL
 		 */
-		virtual void addChild(PpgWidget &child) throw(PpgException);
+		virtual void addChild(Widget &child) throw(Exception);
 		/**
 		 * @brief Removes @a child from this container's element list, doesn't change its PpgElement::aParent value
 		 * @param child Pointer to the element to remove from PpgWidget::aChildren
 		 * @return @c true if @a child was found and removed, @c false otherwise
 		 */
-		virtual bool removeChild(PpgWidget *child) throw();
+		virtual bool removeChild(Widget *child) throw();
 		/**
 		 * @brief Returns the top level child
 		 * @return Top level child
 		 * @see PpgWidget::toTop
 		 */
-		virtual PpgWidget *firstChild() throw();
+		virtual Widget *firstChild() throw();
 		/**
 		 * @brief Move an element to the top
 		 * @param[in] name Name of the element to move to the top
@@ -292,7 +293,7 @@ class PpgWidget {
 		 * @brief Move an element to the top
 		 * @param[in] vp Pointer to the element to move to the top
 		 */
-		virtual void toTop(PpgWidget &vp) throw();
+		virtual void toTop(Widget &vp) throw();
 		/**
 		 * @brief Move an element to the top
 		 * @param[in] zOrder Z-Order index of the element to move to the top
@@ -301,8 +302,8 @@ class PpgWidget {
 };
 
 template<class T>
-T *PpgWidget::getByPath(const std::string &path) throw() {
-	static_assert(__is_base_of(PpgWidget,T), "Error: Template Parameter T of template function 'T* PpgWidget::getByPath(string)' is not a derived child of PpgWidget" );
+T *Widget::getByPath(const std::string &path) throw() {
+	static_assert(__is_base_of(Widget,T), "Error: Template Parameter T of template function 'T* Widget::getByPath(string)' is not a derived child of ppg::Widget" );
 	//PPG_TEST(!isContainer());
 	if(!isContainer())
 		return NULL;
@@ -317,7 +318,7 @@ T *PpgWidget::getByPath(const std::string &path) throw() {
 		}
 	}
 	else if (pos == 0) {
-		PpgWidget *tp = getTopParent();
+		Widget *tp = getTopParent();
 		if(!tp)
 			return NULL;
 		if(!tp->isContainer())
@@ -327,7 +328,7 @@ T *PpgWidget::getByPath(const std::string &path) throw() {
 	else {
 		std::string subName(path, pos + 1);
 		for (unsigned int i = 0; i < m_children.size(); i++) {
-			PpgWidget *con = dynamic_cast<T*>(m_children[i]);
+			Widget *con = dynamic_cast<T*>(m_children[i]);
 			if (con) {
 				T *res = con->getByPath<T>(subName);
 				if (res)
@@ -338,6 +339,8 @@ T *PpgWidget::getByPath(const std::string &path) throw() {
 	return NULL;
 }
 
-extern template class std::vector<PpgWidget*>;
+} // namespace ppg
+
+extern template class std::vector<ppg::Widget*>;
 
 #endif // ppgbaseH

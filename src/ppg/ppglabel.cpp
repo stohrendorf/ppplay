@@ -21,8 +21,10 @@
 #include "ppglabel.h"
 #include <algorithm>
 
-PpgLabel::PpgLabel(const std::string &name, const std::string &text) throw() :
-		PpgWidget(name),
+namespace ppg {
+
+Label::Label(const std::string &name, const std::string &text) throw() :
+		Widget(name),
 		m_text(text),
 		m_fgColors(),
 		m_bgColors(),
@@ -35,17 +37,17 @@ PpgLabel::PpgLabel(const std::string &name, const std::string &text) throw() :
 		setWidth(1);
 }
 
-PpgLabel::~PpgLabel() throw() {
+Label::~Label() throw() {
 }
 
-void PpgLabel::sizeColorsToMax() {
+void Label::sizeColorsToMax() {
 	m_fgColors.resize(std::max<std::size_t>(m_text.length(), getWidth()), ESC_NOCHANGE);
 	m_bgColors.resize(std::max<std::size_t>(m_text.length(), getWidth()), ESC_NOCHANGE);
 }
 
 
-PpgLabel &PpgLabel::operator=(const PpgLabel & src) throw() {
-	PpgWidget::operator=(src);
+Label &Label::operator=(const Label & src) throw() {
+	Widget::operator=(src);
 	m_text = src.m_text;
 	alignment = src.alignment;
 	m_fgColors = src.m_fgColors;
@@ -54,20 +56,20 @@ PpgLabel &PpgLabel::operator=(const PpgLabel & src) throw() {
 	return *this;
 }
 
-PpgLabel &PpgLabel::operator=(const std::string & ass) throw() {
+Label &Label::operator=(const std::string & ass) throw() {
 	m_text = ass;
 	sizeColorsToMax();
 	return *this;
 }
 
-PpgLabel &PpgLabel::operator+=(const std::string & src) throw() {
+Label &Label::operator+=(const std::string & src) throw() {
 	m_text += src;
 	sizeColorsToMax();
 	return *this;
 }
 
-PpgLabel::PpgLabel(const PpgLabel &src) throw() :
-		PpgWidget(src.m_name), m_text(src.m_text), m_fgColors(src.m_fgColors), m_bgColors(src.m_bgColors), alignment(src.alignment) {
+Label::Label(const Label &src) throw() :
+		Widget(src.m_name), m_text(src.m_text), m_fgColors(src.m_fgColors), m_bgColors(src.m_bgColors), alignment(src.alignment) {
 	isFinalNode();
 	m_bottom = src.m_bottom;
 	m_top = src.m_top;
@@ -75,26 +77,26 @@ PpgLabel::PpgLabel(const PpgLabel &src) throw() :
 	m_right = src.m_right;
 }
 
-int PpgLabel::setHeight(const int /*h*/) throw(PpgException) {
+int Label::setHeight(const int /*h*/) throw(Exception) {
 	return 1;
 }
 
-int PpgLabel::setWidth(const int w) throw(PpgException) {
-	PpgWidget::setWidth(w);
+int Label::setWidth(const int w) throw(Exception) {
+	Widget::setWidth(w);
 	sizeColorsToMax();
 	return getWidth();
 }
 
-unsigned int PpgLabel::length() const throw() {
+unsigned int Label::length() const throw() {
 	return m_text.length();
 }
 
-char &PpgLabel::operator[](const unsigned int index) throw(PpgException) {
+char &Label::operator[](const unsigned int index) throw(Exception) {
 	PPG_TEST(index>=m_text.length());
 	return m_text[index];
 }
 
-void PpgLabel::setFgColor(unsigned int pos, const unsigned char color, unsigned int len) throw() {
+void Label::setFgColor(unsigned int pos, const unsigned char color, unsigned int len) throw() {
 	if (pos >= m_bgColors.size())
 		return;
 	if ((len == 0) || (len + pos > m_bgColors.size()))
@@ -102,7 +104,7 @@ void PpgLabel::setFgColor(unsigned int pos, const unsigned char color, unsigned 
 	std::fill_n(&m_fgColors[pos], len, color);
 }
 
-void PpgLabel::setBgColor(unsigned int pos, const unsigned char color, unsigned int len) throw() {
+void Label::setBgColor(unsigned int pos, const unsigned char color, unsigned int len) throw() {
 	if (pos >= m_bgColors.size())
 		return;
 	if ((len == 0) || (len + pos > m_bgColors.size()))
@@ -110,7 +112,7 @@ void PpgLabel::setBgColor(unsigned int pos, const unsigned char color, unsigned 
 	std::fill_n(&m_bgColors[pos], len, color);
 }
 
-void PpgLabel::drawThis() throw(PpgException) {
+void Label::drawThis() throw(Exception) {
 	if (!m_parent) {
 		std::cerr << "PpgLabel: no parent" << std::endl;
 		return;
@@ -147,4 +149,6 @@ void PpgLabel::drawThis() throw(PpgException) {
 	}
 }
 
-template PpgLabel *PpgWidget::getByPath(const std::string &path) throw();
+template Label *Widget::getByPath(const std::string &path) throw();
+
+} // namespace ppg
