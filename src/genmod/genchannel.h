@@ -33,20 +33,6 @@
 
 namespace ppp {
 	/**
-	 * @ingroup GenMod
-	 * @brief Vibrato types
-	 */
-	enum class GenVibratoType : uint8_t {
-		vtSine = 0x00, //!< @brief Sine wave, retriggered with each new note
-		vtRamp = 0x01, //!< @brief Ramp wave, retriggered with each new note
-		vtSquare = 0x02, //!< @brief Square wave, retriggered with each new note
-		vtRandom = 0x03, //!< @brief Random wave, retriggered with each new note
-		vtSineNoRetrigger = 0x04, //!< @brief Sine wave, @b not retriggered with each new note
-		vtRampNoRetrigger = 0x05, //!< @brief Ramp wave, @b not retriggered with each new note
-		vtSquareNoRetrigger = 0x06, //!< @brief Square wave, @b not retriggered with each new note
-		vtRandomNoRetrigger = 0x07 //!< @brief Random wave, @b not retriggered with each new note
-	};
-	/**
 	 * @class GenChannel
 	 * @ingroup GenMod
 	 * @brief A general channel
