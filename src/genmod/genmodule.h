@@ -94,7 +94,6 @@ namespace ppp {
 			std::string m_trackerInfo; //!< @brief Tracker information (Name and Version)
 			GenOrder::List m_orders; //!< @brief Order list @note @b Not @b initialized @b here!
 			GenChannel::List m_channels; //!< @brief Channel data @note @b Not @b initialized @b here!
-			GenPattern::List m_patterns; //!< @brief Pattern list @note @b Not @b initialized @b here!
 			uint16_t m_maxRepeat; //!< @brief Maximum module loops if module patterns are played multiple times
 			Frequency m_playbackFrequency; //!< @brief Playback frequency
 			std::size_t m_playedFrames; //!< @brief Played Sample frames
@@ -334,14 +333,11 @@ namespace ppp {
 			Frequency getPlaybackFrq() const throw() { return m_playbackFrequency; }
 			void setPosition(std::size_t p) throw() { m_playedFrames = p; }
 			void addOrder(const GenOrder::Ptr &o) { m_orders.push_back(o); }
-			void addPattern(const GenPattern::Ptr &p = GenPattern::Ptr()) { m_patterns.push_back(p); }
 			void addChannel(const GenChannel::Ptr &c) { m_channels.push_back(c); }
 			std::string getFilename() const { return m_fileName; }
 			void setFilename(const std::string &f) { m_fileName = f; }
 			void setTrackerInfo(const std::string &t) { m_trackerInfo = t; }
 			GenOrder::Ptr getOrder(size_t idx) const { return m_orders[idx]; }
-			void resetPattern(size_t idx, GenPattern *p) { m_patterns[idx].reset(p); }
-			GenPattern::Ptr getPattern(size_t idx) const { if(idx>=m_patterns.size()) return GenPattern::Ptr(); return m_patterns[idx]; }
 			int16_t getPatternIndex() const { return m_playbackInfo.pattern; }
 			void setPatternIndex(int16_t i) { m_playbackInfo.pattern=i; }
 			void resetChannel(size_t idx, GenChannel *c) { m_channels[idx].reset(c); }
@@ -355,7 +351,6 @@ namespace ppp {
 			GenMultiTrack &getMultiTrack(size_t idx) { return m_tracks[idx]; }
 			void addMultiTrack(const GenMultiTrack &t) { m_tracks.push_back(t); }
 			uint16_t getMaxRepeat() const { return m_maxRepeat; }
-			size_t getPatternCount() const { return m_patterns.size(); }
 			void setSpeed(uint8_t s) { if(s==0) return; m_playbackInfo.speed=s; }
 			void setTempo(uint8_t t) { if(t==0) return; m_playbackInfo.tempo=t; }
 			void setOrder(int16_t o) { m_playbackInfo.order=o; }

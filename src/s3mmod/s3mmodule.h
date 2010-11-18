@@ -51,6 +51,8 @@ namespace ppp {
 				bool m_customData;     //!< @brief @c true if module contains special custom data
 				int8_t m_channelMappings[32]; //!< @brief Channel mappings for unused channels
 				S3mSample::List::Ptr m_samples;
+				S3mPattern::List m_patterns;
+				S3mPattern::Ptr getPattern(size_t idx) const { if(idx>=m_patterns.size()) return S3mPattern::Ptr(); return m_patterns[idx]; }
 				/**
 				 * @brief Get a channel
 				 * @param[in] n Channel index
