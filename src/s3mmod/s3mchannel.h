@@ -45,7 +45,7 @@ namespace ppp {
 				S3mChannel() = delete; //!< @brief No default constructor
 				S3mChannel(const S3mChannel&) = delete; //!< @brief No copy constructor
 				S3mChannel& operator=(const S3mChannel&) = delete; //!< @brief No assignment operator
-			protected:
+			//protected:
 				uint8_t m_note;          //!< @brief Currently playing note
 				uint8_t m_lastFx;        //!< @brief Last FX Value
 				uint8_t m_lastPortaFx;   //!< @brief Last Pitch FX
@@ -69,6 +69,7 @@ namespace ppp {
 				bool m_maybeSchism;            //!< @brief Schism Tracker compatibility (when 16 bit or stereo samples are found and the tracker ID is ScreamTracker 3.20)
 				int16_t m_zeroVolCounter;        //!< @brief Zero Volume Optimization counter, -1 if disabled
 				S3mSample::List::Ptr m_sampleList;
+				S3mSample::Ptr currentSample() throw(PppException);
 				/**
 				 * @brief Apply Volume Effect
 				 * @param[in] fx Effect
