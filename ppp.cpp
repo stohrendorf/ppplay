@@ -25,10 +25,8 @@
 #include <boost/program_options.hpp>
 #include "ppg.h"
 
-// #include "fft.h"
 #include "genmodule.h"
 #include "s3mmodule.h"
-//#include "stmmodule.h"
 
 #include "fft.h"
 
@@ -473,10 +471,8 @@ int main(int argc, char *argv[]) {
 					}
 					else if (event.type == SDL_USEREVENT && event.user.code == 1) {
 						dosScreen->clearOverlay();
-						LOG_DEBUG_("doing FFT");
 						ppp::FFT::AmpsData FL, FR;
 						ppp::FFT::doFFT(fftBuffer,FL,FR);
-						LOG_DEBUG_("FFT done.");
 						uint16_t *pL = &FL->front();
 						uint16_t *pR = &FR->front();
 						int dlen = FL->size();
