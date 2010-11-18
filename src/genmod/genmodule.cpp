@@ -30,7 +30,7 @@
 using namespace ppp;
 
 GenModule::GenModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) :
-		m_fileName( "" ), m_title( "" ), m_trackerInfo( "" ), m_orders(), m_channels(), m_maxRepeat( maxRpt ),
+		m_fileName( "" ), m_title( "" ), m_trackerInfo( "" ), m_orders(), m_maxRepeat( maxRpt ),
 		m_playbackFrequency( clip<unsigned int>( frq, 11025, 44800 ) ), m_playedFrames( 0 ), m_tracks(),
 		m_currentTrack( 0 ), m_channelCount( 0 ), m_playbackInfo(), m_multiTrack( false ), playbackFifo( 2048 ) {
 	PPP_TEST( maxRpt==0 );
@@ -42,7 +42,7 @@ GenModule::GenModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppExcep
 }
 
 GenModule::GenModule( const GenModule &src ) throw( PppException ) :
-		m_fileName( src.m_fileName ), m_title( src.m_title ), m_trackerInfo( src.m_trackerInfo ), m_orders( src.m_orders ), m_channels( src.m_channels ),
+		m_fileName( src.m_fileName ), m_title( src.m_title ), m_trackerInfo( src.m_trackerInfo ), m_orders( src.m_orders ),
 		m_maxRepeat( src.m_maxRepeat ), m_playbackFrequency( src.m_playbackFrequency ),
 		m_playedFrames( src.m_playedFrames ), m_tracks( src.m_tracks ), m_currentTrack( src.m_currentTrack ),
 		m_channelCount( src.m_channelCount ), m_playbackInfo( src.m_playbackInfo ), m_multiTrack( src.m_multiTrack ), playbackFifo( 2048 ) {
@@ -60,7 +60,6 @@ GenModule &GenModule::operator=( const GenModule & src ) throw( PppException ) {
 		m_title = src.m_title;
 		m_trackerInfo = src.m_trackerInfo;
 		m_orders = src.m_orders;
-		m_channels = src.m_channels;
 		m_maxRepeat = src.m_maxRepeat;
 		m_playbackFrequency = src.m_playbackFrequency;
 		m_playedFrames = src.m_playedFrames;
@@ -96,12 +95,6 @@ BinStream &GenModule::saveState() throw( PppException ) {
 		unsigned char tmp = m_orders[i]->getCount();
 		str->write( &tmp );
 	}
-	// save channels
-	for ( uint_fast16_t i = 0; i < m_channels.size(); i++ ) {
-		if ( !m_channels[i] )
-			continue;
-		m_channels[i]->saveState( *str );
-	}
 	return *str;
 }
 
@@ -124,12 +117,6 @@ BinStream &GenModule::restoreState( uint16_t ordindex, uint8_t cnt ) throw( PppE
 		unsigned char tmp;
 		str->read( &tmp );
 		m_orders[i]->setCount( tmp );
-	}
-	// load channels
-	for ( uint_fast16_t i = 0; i < m_channels.size(); i++ ) {
-		if ( !m_channels[i] )
-			continue;
-		m_channels[i]->restoreState( *str );
 	}
 	return *str;
 }

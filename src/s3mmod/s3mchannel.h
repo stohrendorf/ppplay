@@ -41,6 +41,7 @@ namespace ppp {
 		class S3mChannel : public GenChannel {
 			public:
 				typedef std::shared_ptr<S3mChannel> Ptr;
+				typedef PVector<S3mChannel> List;
 			private:
 				S3mChannel() = delete; //!< @brief No default constructor
 				S3mChannel(const S3mChannel&) = delete; //!< @brief No copy constructor
