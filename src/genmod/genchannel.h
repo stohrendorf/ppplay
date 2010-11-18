@@ -53,21 +53,18 @@ namespace ppp {
 			Frequency m_frequency; //!< @brief Frequency
 			uint8_t m_tick; //!< @brief Current tick
 			int32_t m_position; //!< @brief Current sample position
-			GenSample::List::Ptr m_sampleList; //!< @brief Pointer to the sample list
 			std::string m_statusString; //!< @brief Status string
 			int32_t m_currSmpIndex; //!< @brief Sample index
 			GenCell::Ptr m_currCell; //!< @brief Copy of the currently playing cell
 			Frequency m_playbackFrequency; //!< @brief Playback frequency, default is 44100 @see GenModule::GenModule
-			virtual void updateSamplePtr( int n ) throw( PppException ); //!< @brief Updates the sample pointer if the sample index has changed
 		public:
 			/**
 			 * @brief The constructor
 			 * @param[in] frq Playback frequency
-			 * @param[in] smp Pointer to the sample list used in this channel
 			 * @pre @c smp!=NULL
 			 * @see GenModule::GenModule()
 			 */
-			GenChannel( const Frequency frq, const GenSample::List::Ptr &smp ) throw( PppException );
+			GenChannel( const Frequency frq ) throw( PppException );
 			/**
 			 * @brief Member list initialization constructor
 			 * @param[in] src Source instance
@@ -207,7 +204,6 @@ namespace ppp {
 		protected:
 			void setCurrentCell(const GenCell::Ptr &cell) { m_currCell = cell; }
 			GenCell::Ptr getCurrentCell() const throw() { return m_currCell; }
-			GenSample::Ptr getCurrentSample() throw( PppException );
 			uint8_t getTick() const throw() { return m_tick; }
 			void setTick(uint8_t t) throw() { m_tick = t; }
 			void setActive(bool a) throw() { m_active = a; }
@@ -215,7 +211,7 @@ namespace ppp {
 			Phaser &vibrato() throw() { return m_vibrato; }
 			const Phaser &tremolo() const throw() { return m_tremolo; }
 			Phaser &tremolo() throw() { return m_tremolo; }
-			void setSampleIndex(int idx) { updateSamplePtr(idx); }
+			void setSampleIndex(int32_t idx) { m_currSmpIndex = idx; }
 			uint8_t getVolume() const throw() { return m_volume; }
 			void setVolume(uint8_t v) throw() { m_volume = v; }
 			void setBareFrq(Frequency f) throw() { m_frequency = f; }

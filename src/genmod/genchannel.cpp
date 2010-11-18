@@ -27,18 +27,19 @@
 
 using namespace ppp;
 
-GenChannel::GenChannel( const ppp::Frequency frq, const GenSample::List::Ptr& smp ) throw( PppException ) :
+GenChannel::GenChannel( const ppp::Frequency frq ) throw( PppException ) :
 		m_active( false ), m_disabled( true ), m_vibrato( ProtrackerLookup, 256, 256 ), m_tremolo( ProtrackerLookup, 256, 256 ), m_panning( 0x40 ),
-		m_volume( 0 ), m_frequency( 0 ), m_tick( 0 ), m_position( 0 ), m_sampleList( smp ),
-		m_statusString( "" ), m_currSmpIndex( -1 ), m_currCell(), m_playbackFrequency( frq ) {
-	PPP_TEST( !m_sampleList );
+		m_volume( 0 ), m_frequency( 0 ), m_tick( 0 ), m_position( 0 ),
+		m_statusString( "" ), m_currSmpIndex( -1 ), m_currCell(), m_playbackFrequency( frq )
+{
 }
 
 GenChannel::GenChannel( const GenChannel &src ) throw() :
 		m_active( src.m_active ), m_disabled( src.m_disabled ), m_vibrato( src.m_vibrato ), m_tremolo( src.m_tremolo ),
 		m_panning( src.m_panning ), m_volume( src.m_volume ), m_frequency( src.m_frequency ), m_tick( src.m_tick ),
-		m_position( src.m_position ), m_sampleList( src.m_sampleList ), m_statusString( src.m_statusString ),
-		m_currSmpIndex( src.m_currSmpIndex ), m_currCell( src.m_currCell ), m_playbackFrequency( src.m_playbackFrequency ) {
+		m_position( src.m_position ), m_statusString( src.m_statusString ),
+		m_currSmpIndex( src.m_currSmpIndex ), m_currCell( src.m_currCell ), m_playbackFrequency( src.m_playbackFrequency )
+{
 }
 
 GenChannel &GenChannel::operator=( const GenChannel & src ) throw() {
@@ -49,7 +50,6 @@ GenChannel &GenChannel::operator=( const GenChannel & src ) throw() {
 	m_frequency = src.m_frequency;
 	m_tick = src.m_tick;
 	m_position = src.m_position;
-	m_sampleList = src.m_sampleList;
 	m_statusString = src.m_statusString;
 	m_currSmpIndex = src.m_currSmpIndex;
 	*m_currCell = *src.m_currCell;
@@ -58,26 +58,6 @@ GenChannel &GenChannel::operator=( const GenChannel & src ) throw() {
 }
 
 GenChannel::~GenChannel() throw() {
-}
-
-GenSample::Ptr GenChannel::getCurrentSample() throw( PppException ) {
-	PPP_TEST( !m_sampleList );
-	if ( !inRange<int>( m_currSmpIndex, 0, m_sampleList->size() - 1 ) ) {
-		m_active = false;
-		return GenSample::Ptr();
-	}
-	return m_sampleList->at(m_currSmpIndex);
-}
-
-void GenChannel::updateSamplePtr( int32_t n ) throw( PppException ) {
-	try {
-		PPP_TEST( !m_sampleList );
-		m_currSmpIndex = n;
-	}
-	PPP_RETHROW()
-	catch ( ... ) {
-		PPP_THROW( "Unknown Exception" );
-	}
 }
 
 BinStream &GenChannel::saveState( BinStream &str ) const throw( PppException ) {

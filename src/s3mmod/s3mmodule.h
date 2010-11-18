@@ -50,6 +50,7 @@ namespace ppp {
 				int16_t m_patDelayCount; //!< @brief Delay counter for Pattern Delay, -1 if unused
 				bool m_customData;     //!< @brief @c true if module contains special custom data
 				int8_t m_channelMappings[32]; //!< @brief Channel mappings for unused channels
+				S3mSample::List::Ptr m_samples;
 				/**
 				 * @brief Get a channel
 				 * @param[in] n Channel index

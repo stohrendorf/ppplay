@@ -150,15 +150,15 @@ struct S3mModuleHeader {
 
 S3mModule::S3mModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) : GenModule( frq, maxRpt ),
 		m_breakRow( -1 ), m_breakOrder( -1 ), m_patLoopRow( -1 ), m_patLoopCount( -1 ), m_patDelayCount( -1 ),
-		m_customData( false ) {
+		m_customData( false ), m_samples(new S3mSample::List()) {
 	try {
 		for ( uint16_t i = 0; i < 256; i++ ) {
 			addOrder( GenOrder::Ptr( new GenOrder( s3mOrderEnd ) ) );
 			addPattern();
-			addSample( S3mSample::Ptr( static_cast<S3mSample*>( 0 ) ) );
+			m_samples->push_back( S3mSample::Ptr() );
 		}
 		for ( uint8_t i = 0; i < 32; i++ ) {
-			addChannel( S3mChannel::Ptr( new S3mChannel( getPlaybackFrq(), getSamples() ) ) );
+			addChannel( S3mChannel::Ptr( new S3mChannel( getPlaybackFrq(), m_samples ) ) );
 		}
 	}
 	PPP_CATCH_ALL();
@@ -270,12 +270,12 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			}
 			ParaPointer pp;
 			str.read( &pp );
-			resetSample( i, new S3mSample() );
-			if ( !(getSample(i)->load( str, pp*16 ) ) )
+			m_samples->at(i).reset(new S3mSample());
+			if ( !(m_samples->at(i)->load( str, pp*16 ) ) )
 				PPP_THROW( "Sample Error" );
 			if ( !str.good() )
 				PPP_THROW( "Stream Error: Samples / Load" );
-			schismTest |= (getSample(i)->isHighQuality() || getSample(i)->isStereo() );
+			schismTest |= (m_samples->at(i)->isHighQuality() || m_samples->at(i)->isStereo() );
 		}
 		if (( schismTest != 0 ) && ( s3mHdr.createdWith == 0x1320 ) ) {
 			LOG_MESSAGE_( "Enabling Schism Tracker compatibility mode" );
@@ -299,7 +299,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 		int chanMapPos = 0;
 		setMappedChannelCount(0);
 		for ( int i = 0; i < 32; i++ ) {
-			S3mChannel *s3mChan = new S3mChannel( getPlaybackFrq(), getSamples() );
+			S3mChannel *s3mChan = new S3mChannel( getPlaybackFrq(), m_samples );
 			resetChannel( i, s3mChan );
 			s3mChan->setGlobalVolume( s3mHdr.globalVolume, true );
 			if (( s3mHdr.flags&s3mFlagAmigaLimits ) != 0 )
@@ -387,15 +387,15 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 
 bool S3mModule::existsSample( int16_t idx ) throw() {
 	idx--;
-	if ( !inRange<int>( idx, 0, getSamples()->size() - 1 ) )
+	if ( !inRange<int>( idx, 0, m_samples->size() - 1 ) )
 		return false;
-	return getSample(idx).get();
+	return m_samples->at(idx).get();
 }
 
 std::string S3mModule::getSampleName( int16_t idx ) throw() {
 	if ( !existsSample( idx ) )
 		return "";
-	return getSample(idx-1)->getTitle();
+	return m_samples->at(idx-1)->getTitle();
 }
 
 bool S3mModule::existsInstr( int16_t ) const throw() {
