@@ -150,11 +150,11 @@ struct S3mModuleHeader {
 
 S3mModule::S3mModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) : GenModule( frq, maxRpt ),
 		m_breakRow( -1 ), m_breakOrder( -1 ), m_patLoopRow( -1 ), m_patLoopCount( -1 ), m_patDelayCount( -1 ),
-		m_customData( false ), m_samples(new S3mSample::List()) {
+		m_customData( false ), m_samples(new S3mSample::List()), m_patterns() {
 	try {
 		for ( uint16_t i = 0; i < 256; i++ ) {
 			addOrder( GenOrder::Ptr( new GenOrder( s3mOrderEnd ) ) );
-			addPattern();
+			m_patterns.push_back(S3mPattern::Ptr());
 			m_samples->push_back( S3mSample::Ptr() );
 		}
 		for ( uint8_t i = 0; i < 32; i++ ) {
@@ -287,7 +287,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			ParaPointer pp;
 			str.read( &pp );
 			S3mPattern* pat = new S3mPattern();
-			resetPattern(i,pat);
+			m_patterns[i].reset( pat );
 			if ( !( pat->load( str, pp*16 ) ) )
 				PPP_THROW( "Pattern Error" );
 			if ( !str.good() )
