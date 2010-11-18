@@ -33,16 +33,16 @@ GenPattern::GenPattern() throw(PppException) : m_tracks() {
 GenPattern::~GenPattern() throw() {
 }
 
-GenTrack::Ptr GenPattern::getTrack(int16_t idx) throw() {
+GenCell::List::Ptr GenPattern::getTrack(int16_t idx) throw() {
 	if (!inRange<int16_t>(idx, 0, m_tracks.size() - 1))
-		return GenTrack::Ptr();
+		return GenCell::List::Ptr();
 	return m_tracks[idx];
 }
 
 GenCell::Ptr GenPattern::getCell(int16_t trackIndex, int16_t row) throw() {
 	if (row < 0)
 		return GenCell::Ptr();
-	GenTrack::Ptr track = getTrack(trackIndex);
+	GenCell::List::Ptr track = getTrack(trackIndex);
 	if (!track)
 		return GenCell::Ptr();
 	GenCell::Ptr cell = track->at(row);
@@ -79,10 +79,3 @@ BinStream &GenCell::serialize(BinStream &str) const {
 BinStream &GenCell::unserialize(BinStream &str) {
 	return str.read(&m_active);
 }
-
-PVECTOR_TEMPLATE_IMPL(ppp::GenPattern)
-PVECTOR_TEMPLATE_IMPL(ppp::GenTrack)
-PVECTOR_TEMPLATE_IMPL(ppp::GenCell)
-
-SHARED_PTR_IMPL(ppp::GenCell)
-SHARED_PTR_IMPL(ppp::GenPattern)

@@ -122,10 +122,4 @@ namespace ppp {
 	};
 }
 
-VECTOR_DECL(ppp::BasicSampleFrame)
-VECTOR_DECL(ppp::MixerSampleFrame)
-
-SHARED_PTR_DECL(std::vector<ppp::BasicSampleFrame>)
-SHARED_PTR_DECL(std::vector<ppp::MixerSampleFrame>)
-
 #endif //audiofifoH

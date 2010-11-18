@@ -810,5 +810,3 @@ BinStream &S3mModule::restoreState( unsigned short ordindex, unsigned char cnt )
 	}
 	PPP_CATCH_ALL();
 }
-
-SHARED_PTR_IMPL(ppp::s3m::S3mModule)

@@ -27,7 +27,7 @@
 
 using namespace ppp;
 
-GenChannel::GenChannel( const ppp::Frequency frq, const GenSampleList::Ptr& smp ) throw( PppException ) :
+GenChannel::GenChannel( const ppp::Frequency frq, const GenSample::List::Ptr& smp ) throw( PppException ) :
 		m_active( false ), m_disabled( true ), m_vibrato( ProtrackerLookup, 256, 256 ), m_tremolo( ProtrackerLookup, 256, 256 ), m_panning( 0x40 ),
 		m_volume( 0 ), m_frequency( 0 ), m_tick( 0 ), m_position( 0 ), m_sampleList( smp ),
 		m_statusString( "" ), m_currSmpIndex( -1 ), m_currCell(), m_playbackFrequency( frq ) {
@@ -116,7 +116,3 @@ BinStream &GenChannel::restoreState( BinStream &str ) throw( PppException ) {
 	PPP_CATCH_ALL();
 	return str;
 }
-
-PVECTOR_TEMPLATE_IMPL(ppp::GenChannel)
-
-SHARED_PTR_IMPL(ppp::GenChannel)

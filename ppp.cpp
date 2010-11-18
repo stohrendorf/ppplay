@@ -428,7 +428,7 @@ int main(int argc, char *argv[]) {
 		#endif
 			LOG_MESSAGE_("Init Audio");
 			if (!initAudio(s3m.get())) {
-				LOG_ERROR("Audio Init failed");
+				LOG_ERROR_("Audio Init failed");
 				return EXIT_FAILURE;
 			}
 			LOG_MESSAGE_("Default Output Mode");

@@ -141,7 +141,7 @@ namespace ppp {
 				/**
 				 * @copydoc GenChannel::GenChannel
 				 */
-				S3mChannel(Frequency frq, const GenSampleList::Ptr &smp) throw();
+				S3mChannel(Frequency frq, const GenSample::List::Ptr &smp) throw();
 				virtual ~S3mChannel() throw();
 				virtual std::string getNoteName() throw(PppException);
 				virtual std::string getFxName() const throw();

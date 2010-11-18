@@ -116,16 +116,4 @@ TSPEC(double)
 #undef TSPEC
 #endif
 
-#define SHARED_PTR_DECL(tparam) \
-extern template class std::shared_ptr< tparam >;
-#define SHARED_PTR_IMPL(tparam) \
-template class std::shared_ptr< tparam >;
-
-#define VECTOR_DECL(tparam) \
-extern template class std::vector< tparam >; \
-extern template class std::allocator< tparam >;
-#define VECTOR_IMPL(tparam) \
-template class std::vector< tparam >; \
-template class std::allocator< tparam >;
-
 #endif

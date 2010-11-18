@@ -99,6 +99,4 @@ namespace ppp {
 	} // namespace s3m
 } // namespace ppp
 
-SHARED_PTR_DECL(ppp::s3m::S3mModule)
-
 #endif

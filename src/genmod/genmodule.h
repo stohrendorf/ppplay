@@ -92,10 +92,10 @@ namespace ppp {
 			std::string m_fileName; //!< @brief Filename of the loaded module, empty if none loaded
 			std::string m_title; //!< @brief Title of the module
 			std::string m_trackerInfo; //!< @brief Tracker information (Name and Version)
-			GenOrderList m_orders; //!< @brief Order list @note @b Not @b initialized @b here!
-			GenChannelList m_channels; //!< @brief Channel data @note @b Not @b initialized @b here!
-			GenPatternList m_patterns; //!< @brief Pattern list @note @b Not @b initialized @b here!
-			GenSampleList::Ptr m_samples; //!< @brief Sample list @note @b Not @b initialized @b here!
+			GenOrder::List m_orders; //!< @brief Order list @note @b Not @b initialized @b here!
+			GenChannel::List m_channels; //!< @brief Channel data @note @b Not @b initialized @b here!
+			GenPattern::List m_patterns; //!< @brief Pattern list @note @b Not @b initialized @b here!
+			GenSample::List::Ptr m_samples; //!< @brief Sample list @note @b Not @b initialized @b here!
 			uint16_t m_maxRepeat; //!< @brief Maximum module loops if module patterns are played multiple times
 			Frequency m_playbackFrequency; //!< @brief Playback frequency
 			std::size_t m_playedFrames; //!< @brief Played Sample frames
@@ -344,7 +344,7 @@ namespace ppp {
 			void addPattern(const GenPattern::Ptr &p = GenPattern::Ptr()) { m_patterns.push_back(p); }
 			void addSample(const GenSample::Ptr &s) { m_samples->push_back(s); }
 			void addChannel(const GenChannel::Ptr &c) { m_channels.push_back(c); }
-			GenSampleList::Ptr getSamples() const { return m_samples; }
+			GenSample::List::Ptr getSamples() const { return m_samples; }
 			std::string getFilename() const { return m_fileName; }
 			void setFilename(const std::string &f) { m_fileName = f; }
 			void setTrackerInfo(const std::string &t) { m_trackerInfo = t; }
@@ -375,10 +375,5 @@ namespace ppp {
 			void setGlobalVolume(int16_t v) { m_playbackInfo.globalVolume=v; }
 	};
 } // namespace ppp
-
-PVECTOR_TEMPLATE_DECL(ppp::GenMultiTrack)
-
-SHARED_PTR_DECL(ppp::GenMultiTrack)
-SHARED_PTR_DECL(ppp::GenModule)
 
 #endif

@@ -181,5 +181,3 @@ bool S3mSample::load(BinStream& str, const std::size_t pos) throw(PppException) 
 	}
 	PPP_CATCH_ALL();
 }
-
-SHARED_PTR_IMPL(ppp::s3m::S3mSample)

@@ -136,9 +136,3 @@ std::size_t ppp::AudioFifo::copy(AudioFrameBuffer& data, std::size_t size) {
 	//LOG_DEBUG(" -- copied %zd frames", copied);
 	return copied;
 }
-
-VECTOR_IMPL(ppp::BasicSampleFrame)
-VECTOR_IMPL(ppp::MixerSampleFrame)
-
-SHARED_PTR_IMPL(std::vector<ppp::BasicSampleFrame>)
-SHARED_PTR_IMPL(std::vector<ppp::MixerSampleFrame>)

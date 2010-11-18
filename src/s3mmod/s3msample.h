@@ -47,6 +47,4 @@ namespace ppp {
 	} // namespace ppp
 } // namespace s3m
 
-SHARED_PTR_DECL(ppp::s3m::S3mSample)
-
 #endif
