@@ -144,7 +144,7 @@ uint8_t S3mCell::getEffectValue() const throw() {
 S3mPattern::S3mPattern() throw( PppException ) : GenPattern() {
 	try {
 		for ( uint8_t i = 0; i < 32; i++ ) {
-			GenTrack::Ptr track( new GenTrack );
+			GenCell::List::Ptr track( new GenCell::List() );
 			for ( uint8_t i = 0; i < 64; i++ )
 				track->push_back( GenCell::Ptr() );
 			addTrack( track );
@@ -160,7 +160,7 @@ S3mPattern::~S3mPattern() throw() {
 
 GenCell::Ptr S3mPattern::createCell( int16_t trackIndex, int16_t row ) throw( PppException ) {
 	PPP_TEST(( row < 0 ) || ( row > 63 ) );
-	GenTrack::Ptr track = getTrack( trackIndex );
+	GenCell::List::Ptr track = getTrack( trackIndex );
 	PPP_TEST( !track );
 	GenCell::Ptr cell = ( *track )[row];
 	if ( cell )
@@ -202,6 +202,3 @@ bool S3mPattern::load( BinStream& str, std::size_t pos ) throw( PppException ) {
 		PPP_THROW( "Unknown Exception" );
 	}
 }
-
-SHARED_PTR_IMPL(ppp::s3m::S3mCell)
-SHARED_PTR_IMPL(ppp::s3m::S3mPattern)

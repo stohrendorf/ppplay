@@ -112,6 +112,7 @@ namespace ppp {
 	class GenOrder {
 		public:
 			typedef std::shared_ptr<GenOrder> Ptr; //!< @brief Class pointer
+			typedef PVector<GenOrder> List;
 		private:
 			uint8_t m_index; //!< @brief Pattern index of this order
 			uint8_t m_count; //!< @brief Playback count of this order
@@ -168,12 +169,6 @@ namespace ppp {
 	};
 
 	/**
-	 * @brief A list of ::GenOrder to represent an order list
-	 * @ingroup GenMod
-	 */
-	typedef PVector<GenOrder> GenOrderList;
-
-	/**
 	 * @ingroup Common
 	 * @brief Sinus lookup table
 	 * @note Length is 256, amplitude is 64
@@ -202,10 +197,5 @@ namespace ppp {
 	extern const int16_t ProtrackerLookup[256];
 
 } // namespace ppp
-
-PVECTOR_TEMPLATE_DECL(BinStream)
-PVECTOR_TEMPLATE_DECL(ppp::GenOrder)
-
-SHARED_PTR_DECL(ppp::GenOrder)
 
 #endif

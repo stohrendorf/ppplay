@@ -133,8 +133,3 @@ namespace ppp {
 		m_count = 0;
 	}
 }
-
-PVECTOR_TEMPLATE_IMPL(BinStream)
-PVECTOR_TEMPLATE_IMPL(ppp::GenOrder)
-
-SHARED_PTR_IMPL(ppp::GenOrder)

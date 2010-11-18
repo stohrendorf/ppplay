@@ -30,7 +30,7 @@
 using namespace ppp;
 
 GenModule::GenModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) :
-		m_fileName( "" ), m_title( "" ), m_trackerInfo( "" ), m_orders(), m_channels(), m_patterns(), m_samples( new GenSampleList() ), m_maxRepeat( maxRpt ),
+		m_fileName( "" ), m_title( "" ), m_trackerInfo( "" ), m_orders(), m_channels(), m_patterns(), m_samples( new GenSample::List() ), m_maxRepeat( maxRpt ),
 		m_playbackFrequency( clip<unsigned int>( frq, 11025, 44800 ) ), m_playedFrames( 0 ), m_tracks(),
 		m_currentTrack( 0 ), m_channelCount( 0 ), m_playbackInfo(), m_multiTrack( false ), playbackFifo( 2048 ) {
 	PPP_TEST( maxRpt==0 );
@@ -237,9 +237,3 @@ void GenModule::removeEmptyTracks() {
 	for ( uint_fast16_t i = 0; i < m_orders.size(); i++ )
 		m_orders[i]->resetCount();
 }
-
-// template specifications
-PVECTOR_TEMPLATE_IMPL(ppp::GenMultiTrack)
-
-SHARED_PTR_IMPL(ppp::GenMultiTrack)
-SHARED_PTR_IMPL(ppp::GenModule)

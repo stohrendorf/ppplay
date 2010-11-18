@@ -42,6 +42,7 @@ namespace ppp {
 	class GenChannel {
 		public:
 			typedef std::shared_ptr<GenChannel> Ptr; //!< @brief Class pointer
+			typedef PVector<GenChannel> List;
 		private:
 			bool m_active; //!< @brief @c true if channel is active
 			bool m_disabled; //!< @brief @c true if channel is disabled
@@ -52,7 +53,7 @@ namespace ppp {
 			Frequency m_frequency; //!< @brief Frequency
 			uint8_t m_tick; //!< @brief Current tick
 			int32_t m_position; //!< @brief Current sample position
-			GenSampleList::Ptr m_sampleList; //!< @brief Pointer to the sample list
+			GenSample::List::Ptr m_sampleList; //!< @brief Pointer to the sample list
 			std::string m_statusString; //!< @brief Status string
 			int32_t m_currSmpIndex; //!< @brief Sample index
 			GenCell::Ptr m_currCell; //!< @brief Copy of the currently playing cell
@@ -66,7 +67,7 @@ namespace ppp {
 			 * @pre @c smp!=NULL
 			 * @see GenModule::GenModule()
 			 */
-			GenChannel( const Frequency frq, const GenSampleList::Ptr &smp ) throw( PppException );
+			GenChannel( const Frequency frq, const GenSample::List::Ptr &smp ) throw( PppException );
 			/**
 			 * @brief Member list initialization constructor
 			 * @param[in] src Source instance
@@ -231,15 +232,6 @@ namespace ppp {
 		return m_active;
 	}
 
-	/**
-	* @brief Contains the channels
-	* @ingroup GenMod
-	*/
-	typedef PVector<GenChannel> GenChannelList;
 } // namespace ppp
-
-PVECTOR_TEMPLATE_DECL(ppp::GenChannel)
-
-SHARED_PTR_DECL(ppp::GenChannel)
 
 #endif

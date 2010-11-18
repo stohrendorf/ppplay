@@ -38,6 +38,7 @@ namespace ppp {
 	class GenCell : public ISerializable {
 		public:
 			typedef std::shared_ptr<GenCell> Ptr; //!< @brief Class pointer
+			typedef PVector<GenCell> List;
 		private:
 			bool m_active; //!< @brief Is this cell used/relevant?
 		public:
@@ -81,17 +82,10 @@ namespace ppp {
 	};
 
 	/**
-	 * @brief A list of pointers to ppp::GenCell to represent a channel with its note cells
-	 * @ingroup GenMod
-	 * @details The ::pvector template class is used to handle patterns with dynamic lengths
-	 */
-	typedef PVector<GenCell> GenTrack;
-
-	/**
 	 * @brief A list of tracks to represent a pattern
 	 * @ingroup GenMod
 	 */
-	typedef PVector<GenTrack> GenTrackList;
+	typedef PVector<GenCell::List> GenTrackList;
 
 	/**
 	 * @class GenPattern
@@ -101,6 +95,7 @@ namespace ppp {
 	class GenPattern {
 		public:
 			typedef std::shared_ptr<GenPattern> Ptr; //!< @brief Class pointer
+			typedef PVector<GenPattern> List;
 		private:
 			GenTrackList m_tracks; //!< @brief contains the tracks
 			/**
@@ -131,7 +126,7 @@ namespace ppp {
 			 * @param[in] idx Index of the track
 			 * @return Pointer to the track
 			 */
-			virtual GenTrack::Ptr getTrack(int16_t idx) throw();
+			virtual GenCell::List::Ptr getTrack(int16_t idx) throw();
 			/**
 			 * @brief Get a cell within the pattern
 			 * @param[in] trackIndex Index of the track
@@ -139,23 +134,9 @@ namespace ppp {
 			 * @return Pointer to the cell
 			 */
 			virtual GenCell::Ptr getCell(int16_t trackIndex, int16_t row) throw();
-			void addTrack(const GenTrack::Ptr &t) { m_tracks.push_back(t); }
+			void addTrack(const GenCell::List::Ptr &t) { m_tracks.push_back(t); }
 	};
 
-	/**
-	 * @brief Contains the patterns
-	 * @ingroup GenMod
-	 */
-	typedef PVector<GenPattern> GenPatternList;
-
 } // namespace ppp
-
-
-PVECTOR_TEMPLATE_DECL(ppp::GenPattern)
-PVECTOR_TEMPLATE_DECL(ppp::GenTrack)
-PVECTOR_TEMPLATE_DECL(ppp::GenCell)
-
-SHARED_PTR_DECL(ppp::GenCell)
-SHARED_PTR_DECL(ppp::GenPattern)
 
 #endif

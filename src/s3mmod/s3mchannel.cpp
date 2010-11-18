@@ -203,7 +203,7 @@ namespace ppp {
 using namespace ppp;
 using namespace ppp::s3m;
 
-S3mChannel::S3mChannel( const Frequency frq, const GenSampleList::Ptr &smp ) throw() : GenChannel( frq, smp ),
+S3mChannel::S3mChannel( const Frequency frq, const GenSample::List::Ptr &smp ) throw() : GenChannel( frq, smp ),
 		m_note( ::s3mEmptyNote ), m_lastFx( 0 ), m_lastPortaFx( 0 ), m_lastVibratoFx( 0 ), m_lastVibVolFx( 0 ), m_lastPortVolFx( 0 ),
 		m_tremorVolume( 0 ), m_targetNote( ::s3mEmptyNote ), m_noteChanged( false ), m_deltaFrq( 0 ),
 		m_deltaVolume( 0 ), m_minFrequency( 0 ), m_maxFrequency( 0 ), m_globalVol( 0x40 ), m_nextGlobalVol( 0x40 ),

@@ -73,14 +73,4 @@ class PVector {
 		void push_back(TypePtr val) { m_data.push_back(val); }
 };
 
-#define PVECTOR_TEMPLATE_DECL(defname) \
-extern template class PVector< defname >; \
-extern template class std::shared_ptr< PVector< defname > >; \
-extern template class std::vector< std::shared_ptr< defname > >;
-
-#define PVECTOR_TEMPLATE_IMPL(defname) \
-template class PVector< defname >; \
-template class std::shared_ptr< PVector< defname > >; \
-template class std::vector< std::shared_ptr< defname > >;
-
 #endif

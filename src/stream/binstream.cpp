@@ -26,8 +26,6 @@ BinStream &BinStream::write( const TW *data, const std::size_t count) {
 }
 
 #ifndef WITHIN_DOXYGEN
-SHARED_PTR_IMPL(std::iostream)
-SHARED_PTR_IMPL(BinStream)
 
 #define BINSTREAM_RW_IMPL(tn)\
 template BinStream &BinStream::read<tn>(tn *, const std::size_t); \

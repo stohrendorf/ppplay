@@ -216,8 +216,6 @@ class SBinStream : public BinStream {
 };
 
 #ifndef WITHIN_DOXYGEN
-SHARED_PTR_DECL(std::iostream)
-SHARED_PTR_DECL(BinStream)
 
 #define BINSTREAM_RW_DECL(tn)\
 extern template BinStream &BinStream::read<tn>(tn *, const std::size_t); \

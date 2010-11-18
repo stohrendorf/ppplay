@@ -98,7 +98,3 @@ void GenSample::setDataMono(const int16_t data[]) throw() {
 	setDataL(data);
 	m_dataR = m_dataL;
 }
-
-PVECTOR_TEMPLATE_IMPL(ppp::GenSample)
-
-SHARED_PTR_IMPL(ppp::GenSample)
