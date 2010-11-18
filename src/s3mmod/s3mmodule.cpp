@@ -157,8 +157,8 @@ S3mModule::S3mModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppExcep
 			m_patterns.push_back(S3mPattern::Ptr());
 			m_samples->push_back( S3mSample::Ptr() );
 		}
-		for ( uint8_t i = 0; i < 32; i++ ) {
-			addChannel( S3mChannel::Ptr( new S3mChannel( getPlaybackFrq(), m_samples ) ) );
+		for ( uint8_t i = 0; i < m_channels.size(); i++ ) {
+			m_channels[i].reset( new S3mChannel( getPlaybackFrq(), m_samples ) );
 		}
 	}
 	PPP_CATCH_ALL();
@@ -208,6 +208,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 		if ( s3mHdr.flags&s3mFlagAmigaLimits ) LOG_MESSAGE_( "Amiga limits" );
 		if ( s3mHdr.flags&s3mFlagSpecial ) LOG_MESSAGE_( "Special data present" );
 		if ( s3mHdr.defaultPannings == 0xFC ) LOG_MESSAGE_( "Default Pannings present" );
+		unsigned char schismTest = 0;
 		switch (( s3mHdr.createdWith >> 12 )&0x0f ) {
 			case s3mTIdScreamTracker:
 				setTrackerInfo( "ScreamTracker v" );
@@ -221,6 +222,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 				// the following IDs were found in the Schism Tracker sources
 			case s3mTIdSchismTracker:
 				setTrackerInfo( "Schism Tracker v" );
+				schismTest = 1;
 				break;  // some versions of Schism Tracker use ID 1
 			case s3mTIdOpenMPT:
 				setTrackerInfo( "OpenMPT v" );
@@ -246,7 +248,6 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			getOrder(i)->setIndex( tmpOrd );
 		}
 		unsigned char defPans[32];
-		unsigned char schismTest = 0;
 		if ( s3mHdr.defaultPannings == 0xFC ) {
 			try {
 				str.seek( 0x60 + s3mHdr.ordNum + 2*s3mHdr.smpNum + 2*s3mHdr.patNum );
@@ -277,7 +278,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 				PPP_THROW( "Stream Error: Samples / Load" );
 			schismTest |= (m_samples->at(i)->isHighQuality() || m_samples->at(i)->isStereo() );
 		}
-		if (( schismTest != 0 ) && ( s3mHdr.createdWith == 0x1320 ) ) {
+		if (schismTest != 0) {
 			LOG_MESSAGE_( "Enabling Schism Tracker compatibility mode" );
 		}
 		// ok, samples loaded, now load the patterns...
@@ -300,7 +301,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 		setMappedChannelCount(0);
 		for ( int i = 0; i < 32; i++ ) {
 			S3mChannel *s3mChan = new S3mChannel( getPlaybackFrq(), m_samples );
-			resetChannel( i, s3mChan );
+			m_channels[i].reset(s3mChan);
 			s3mChan->setGlobalVolume( s3mHdr.globalVolume, true );
 			if (( s3mHdr.flags&s3mFlagAmigaLimits ) != 0 )
 				s3mChan->enableAmigaLimits();
@@ -313,39 +314,39 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			if (( schismTest != 0 ) && ( s3mHdr.createdWith == 0x1320 ) )
 				s3mChan->maybeSchism();
 			if (( s3mHdr.pannings[i]&0x80 ) != 0 ) {
-				getChannel(i)->disable();
+				m_channels[i]->disable();
 				continue;
 			}
 			else {
-				getChannel(i)->enable();
+				m_channels[i]->enable();
 				m_channelMappings[chanMapPos++] = i;
 				setMappedChannelCount(getMappedChannelCount()+1);
 			}
 			if ( s3mHdr.defaultPannings != 0xFC ) { // no pannings
 				if (( s3mHdr.masterVolume&0x80 ) != 0 ) { // stereo
 					if (( s3mHdr.pannings[i]&0x08 ) != 0 ) // left channel
-						getChannel(i)->setPanning( 0x03*0x80 / 0x0f );
+						m_channels[i]->setPanning( 0x03*0x80 / 0x0f );
 					else // right channel
-						getChannel(i)->setPanning( 0x0c*0x80 / 0x0f );
+						m_channels[i]->setPanning( 0x0c*0x80 / 0x0f );
 				}
 				else { // mono
-					getChannel(i)->setPanning( 0x40 );
+					m_channels[i]->setPanning( 0x40 );
 				}
 			}
 			else { // panning settings are there...
 				if (( defPans[i]&0x20 ) == 0 ) { // use defaults
 					if (( s3mHdr.masterVolume&0x80 ) != 0 ) { // stereo
 						if (( s3mHdr.pannings[i]&0x08 ) != 0 ) // left channel
-							getChannel(i)->setPanning( 0x03*0x80 / 0x0f );
+							m_channels[i]->setPanning( 0x03*0x80 / 0x0f );
 						else // right channel
-							getChannel(i)->setPanning( 0x0c*0x80 / 0x0f );
+							m_channels[i]->setPanning( 0x0c*0x80 / 0x0f );
 					}
 					else { // mono
-						getChannel(i)->setPanning( 0x40 );
+						m_channels[i]->setPanning( 0x40 );
 					}
 				}
 				else { // use panning settings...
-					getChannel(i)->setPanning(( defPans[i]&0x0f )*0x80 / 0x0f );
+					m_channels[i]->setPanning(( defPans[i]&0x0f )*0x80 / 0x0f );
 				}
 			}
 		}
@@ -686,23 +687,11 @@ GenOrder::Ptr S3mModule::mapOrder( int16_t order ) throw() {
 	return getOrder(order);
 }
 
-// GenPattern::Ptr S3mModule::getPattern( int16_t n ) throw() {
-// 	if ( !inRange<int16_t>( n, 0, getPatternCount() - 1 ) )
-// 		return GenPattern::Ptr();
-// 	return getPattern(n);
-// }
-
 GenChannel::Ptr S3mModule::getMappedChannel( int16_t n ) throw() {
 	if ( !inRange<int16_t>( n, 0, getMappedChannelCount() - 1 ) )
 		return GenChannel::Ptr();
-	return getChannel(m_channelMappings[n]);
+	return m_channels[m_channelMappings[n]];
 }
-
-// GenSample::Ptr S3mModule::getSmp( int16_t n ) throw() {
-// 	if ( !existsSample( n ) )
-// 		return GenSample::Ptr();
-// 	return getSample(n);
-// }
 
 std::string S3mModule::getChanStatus( int16_t idx ) throw() {
 	GenChannel::Ptr x = getMappedChannel( idx );
@@ -791,6 +780,8 @@ BinStream &S3mModule::saveState() throw( PppException ) {
 		.write( &m_patDelayCount )
 		.write( &m_customData )
 		.write( m_channelMappings, 32 );
+		for(int i=0; i<m_channels.size(); i++)
+			m_channels[i]->saveState(str);
 		return str;
 	}
 	PPP_CATCH_ALL();
@@ -806,6 +797,8 @@ BinStream &S3mModule::restoreState( unsigned short ordindex, unsigned char cnt )
 		.read( &m_patDelayCount )
 		.read( &m_customData )
 		.read( m_channelMappings, 32 );
+		for(int i=0; i<m_channels.size(); i++)
+			m_channels[i]->restoreState(str);
 		return str;
 	}
 	PPP_CATCH_ALL();

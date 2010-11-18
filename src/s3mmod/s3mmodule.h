@@ -25,6 +25,8 @@
 #include "s3mpattern.h"
 #include "s3msample.h"
 
+#include <array>
+
 /**
  * @file
  * @ingroup S3mMod
@@ -52,6 +54,7 @@ namespace ppp {
 				int8_t m_channelMappings[32]; //!< @brief Channel mappings for unused channels
 				S3mSample::List::Ptr m_samples;
 				S3mPattern::List m_patterns;
+				std::array<S3mChannel::Ptr, 32> m_channels;
 				S3mPattern::Ptr getPattern(size_t idx) const { if(idx>=m_patterns.size()) return S3mPattern::Ptr(); return m_patterns[idx]; }
 				/**
 				 * @brief Get a channel
