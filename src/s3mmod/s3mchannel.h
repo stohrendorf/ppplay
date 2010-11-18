@@ -22,6 +22,7 @@
 
 #include "genchannel.h"
 #include "s3mbase.h"
+#include "s3msample.h"
 
 /**
 * @file
@@ -67,6 +68,7 @@ namespace ppp {
 				bool m_immediateGlobalVol;     //!< @brief Apply global volume immediately for non-ST3 modules
 				bool m_maybeSchism;            //!< @brief Schism Tracker compatibility (when 16 bit or stereo samples are found and the tracker ID is ScreamTracker 3.20)
 				int16_t m_zeroVolCounter;        //!< @brief Zero Volume Optimization counter, -1 if disabled
+				S3mSample::List::Ptr m_sampleList;
 				/**
 				 * @brief Apply Volume Effect
 				 * @param[in] fx Effect
@@ -141,7 +143,7 @@ namespace ppp {
 				/**
 				 * @copydoc GenChannel::GenChannel
 				 */
-				S3mChannel(Frequency frq, const GenSample::List::Ptr &smp) throw();
+				S3mChannel(Frequency frq, const S3mSample::List::Ptr &smp) throw();
 				virtual ~S3mChannel() throw();
 				virtual std::string getNoteName() throw(PppException);
 				virtual std::string getFxName() const throw();

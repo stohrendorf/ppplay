@@ -95,7 +95,6 @@ namespace ppp {
 			GenOrder::List m_orders; //!< @brief Order list @note @b Not @b initialized @b here!
 			GenChannel::List m_channels; //!< @brief Channel data @note @b Not @b initialized @b here!
 			GenPattern::List m_patterns; //!< @brief Pattern list @note @b Not @b initialized @b here!
-			GenSample::List::Ptr m_samples; //!< @brief Sample list @note @b Not @b initialized @b here!
 			uint16_t m_maxRepeat; //!< @brief Maximum module loops if module patterns are played multiple times
 			Frequency m_playbackFrequency; //!< @brief Playback frequency
 			std::size_t m_playedFrames; //!< @brief Played Sample frames
@@ -166,12 +165,6 @@ namespace ppp {
 			 * @see #physChannels
 			 */
 			virtual int32_t virtChannels() const throw();
-			/**
-			 * @brief Get the number of samples
-			 * @return Number of samples, or 0 if not present
-			 * @see #instrCount
-			 */
-			virtual int32_t sampleCount() const throw();
 			/**
 			 * @brief Get the number of instruments
 			 * @return Number of Instruments, or -1 if not supported
@@ -342,15 +335,11 @@ namespace ppp {
 			void setPosition(std::size_t p) throw() { m_playedFrames = p; }
 			void addOrder(const GenOrder::Ptr &o) { m_orders.push_back(o); }
 			void addPattern(const GenPattern::Ptr &p = GenPattern::Ptr()) { m_patterns.push_back(p); }
-			void addSample(const GenSample::Ptr &s) { m_samples->push_back(s); }
 			void addChannel(const GenChannel::Ptr &c) { m_channels.push_back(c); }
-			GenSample::List::Ptr getSamples() const { return m_samples; }
 			std::string getFilename() const { return m_fileName; }
 			void setFilename(const std::string &f) { m_fileName = f; }
 			void setTrackerInfo(const std::string &t) { m_trackerInfo = t; }
 			GenOrder::Ptr getOrder(size_t idx) const { return m_orders[idx]; }
-			void resetSample(size_t idx, GenSample *s) { m_samples->at(idx).reset(s); }
-			GenSample::Ptr getSample(size_t idx) const { return m_samples->at(idx); }
 			void resetPattern(size_t idx, GenPattern *p) { m_patterns[idx].reset(p); }
 			GenPattern::Ptr getPattern(size_t idx) const { if(idx>=m_patterns.size()) return GenPattern::Ptr(); return m_patterns[idx]; }
 			int16_t getPatternIndex() const { return m_playbackInfo.pattern; }

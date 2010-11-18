@@ -30,7 +30,7 @@
 using namespace ppp;
 
 GenModule::GenModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) :
-		m_fileName( "" ), m_title( "" ), m_trackerInfo( "" ), m_orders(), m_channels(), m_patterns(), m_samples( new GenSample::List() ), m_maxRepeat( maxRpt ),
+		m_fileName( "" ), m_title( "" ), m_trackerInfo( "" ), m_orders(), m_channels(), m_patterns(), m_maxRepeat( maxRpt ),
 		m_playbackFrequency( clip<unsigned int>( frq, 11025, 44800 ) ), m_playedFrames( 0 ), m_tracks(),
 		m_currentTrack( 0 ), m_channelCount( 0 ), m_playbackInfo(), m_multiTrack( false ), playbackFifo( 2048 ) {
 	PPP_TEST( maxRpt==0 );
@@ -43,7 +43,7 @@ GenModule::GenModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppExcep
 
 GenModule::GenModule( const GenModule &src ) throw( PppException ) :
 		m_fileName( src.m_fileName ), m_title( src.m_title ), m_trackerInfo( src.m_trackerInfo ), m_orders( src.m_orders ), m_channels( src.m_channels ),
-		m_patterns( src.m_patterns ), m_samples( src.m_samples ), m_maxRepeat( src.m_maxRepeat ), m_playbackFrequency( src.m_playbackFrequency ),
+		m_patterns( src.m_patterns ), m_maxRepeat( src.m_maxRepeat ), m_playbackFrequency( src.m_playbackFrequency ),
 		m_playedFrames( src.m_playedFrames ), m_tracks( src.m_tracks ), m_currentTrack( src.m_currentTrack ),
 		m_channelCount( src.m_channelCount ), m_playbackInfo( src.m_playbackInfo ), m_multiTrack( src.m_multiTrack ), playbackFifo( 2048 ) {
 	try {
@@ -62,7 +62,6 @@ GenModule &GenModule::operator=( const GenModule & src ) throw( PppException ) {
 		m_orders = src.m_orders;
 		m_channels = src.m_channels;
 		m_patterns = src.m_patterns;
-		m_samples = src.m_samples;
 		m_maxRepeat = src.m_maxRepeat;
 		m_playbackFrequency = src.m_playbackFrequency;
 		m_playedFrames = src.m_playedFrames;
@@ -191,10 +190,6 @@ int32_t GenModule::physChannels() const throw() {
 
 int32_t GenModule::virtChannels() const throw() {
 	return -1;
-}
-
-int32_t GenModule::sampleCount() const throw() {
-	return m_samples->size();
 }
 
 int32_t GenModule::instrCount() const throw() {
