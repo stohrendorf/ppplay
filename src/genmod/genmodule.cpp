@@ -170,18 +170,6 @@ std::string GenModule::getTrimTitle() const throw() {
 	return res.substr( startpos, endpos - startpos + 1 );
 }
 
-int32_t GenModule::physChannels() const throw() {
-	return m_channelCount;
-}
-
-int32_t GenModule::virtChannels() const throw() {
-	return -1;
-}
-
-int32_t GenModule::instrCount() const throw() {
-	return -1;
-}
-
 std::size_t GenModule::timeElapsed() const throw( PppException ) {
 	PPP_TEST( m_playbackFrequency == 0 );
 	return static_cast<uint32_t>( m_playedFrames / m_playbackFrequency );

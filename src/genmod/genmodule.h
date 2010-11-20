@@ -152,52 +152,6 @@ namespace ppp {
 			 */
 			virtual std::string getTrimTitle() const throw();
 			/**
-			 * @brief Get the number of physical channels
-			 * @return Number of physical channels in the module, 0 if not present
-			 * @see #virtChannels
-			 */
-			virtual int32_t physChannels() const throw();
-			/**
-			 * @brief Get the number of virtual channels
-			 * @return Number of virtual channels in the module, -1 if not supported
-			 * @see #physChannels
-			 */
-			virtual int32_t virtChannels() const throw();
-			/**
-			 * @brief Get the number of instruments
-			 * @return Number of Instruments, or -1 if not supported
-			 * @see #sampleCount
-			 */
-			virtual int32_t instrCount() const throw();
-			/**
-			 * @brief Check if a sample exists
-			 * @param[in] idx Sample index
-			 * @return @c true if sample exists
-			 * @see #existsInstr
-			 */
-			virtual bool existsSample(int16_t idx) throw() = 0;
-			/**
-			 * @brief Get the name of a sample
-			 * @param[in] idx Sample index
-			 * @return Name of the sample
-			 * @see #getInstrName
-			 */
-			virtual std::string getSampleName(int16_t idx) throw() = 0;
-			/**
-			 * @brief Check if an instrument exists
-			 * @param[in] idx Instrument index
-			 * @return @c true if instrument exists
-			 * @see #existsSample
-			 */
-			virtual bool existsInstr(int16_t idx) const throw() = 0;
-			/**
-			 * @brief Get the name of an instrument
-			 * @param[in] idx Instrument index
-			 * @return Name of the instrument
-			 * @see #getSampleName
-			 */
-			virtual std::string getInstrName(int16_t idx) const throw() = 0;
-			/**
 			 * @brief Get the frame count of a tick
 			 * @return Sample frames per tick
 			 * @note Time-critical
@@ -323,6 +277,7 @@ namespace ppp {
 			 * @see GenOrder
 			 */
 			virtual BinStream &restoreState(uint16_t ordindex, uint8_t cnt) throw(PppException);
+			uint16_t channelCount() const { return m_channelCount; }
 		protected:
 			/**
 			 * @brief Removes empty tracks from the track list and resets the orders' repeat count

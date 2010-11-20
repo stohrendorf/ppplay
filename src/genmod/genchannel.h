@@ -50,7 +50,6 @@ namespace ppp {
 			Phaser m_tremolo; //!< @brief Tremolo effect helper
 			uint8_t m_panning; //!< @brief Panning (0x00..0x80)
 			uint8_t m_volume; //!< @brief Volume (0x00..0x40)
-			Frequency m_frequency; //!< @brief Frequency
 			uint8_t m_tick; //!< @brief Current tick
 			int32_t m_position; //!< @brief Current sample position
 			std::string m_statusString; //!< @brief Status string
@@ -116,12 +115,6 @@ namespace ppp {
 			 * @note Time-critical
 			 */
 			int32_t getPosition() const throw() { return m_position; }
-			/**
-			 * @brief Get the bare base frequency
-			 * @return Frequency, 0 if channel is disabled or inactive
-			 * @note Time-critical
-			 */
-			virtual Frequency getBareFrq() const throw() { return m_frequency; }
 			/**
 			 * @brief Update the channel
 			 * @param[in] cell Pointer to a note cell
@@ -214,7 +207,6 @@ namespace ppp {
 			void setSampleIndex(int32_t idx) { m_currSmpIndex = idx; }
 			uint8_t getVolume() const throw() { return m_volume; }
 			void setVolume(uint8_t v) throw() { m_volume = v; }
-			void setBareFrq(Frequency f) throw() { m_frequency = f; }
 			void setPosition(int32_t p) throw() { m_position = p; }
 			uint8_t getPanning() const throw() { return m_panning; }
 			Frequency getPlaybackFrq() const throw() { return m_playbackFrequency; }
@@ -223,8 +215,6 @@ namespace ppp {
 	};
 	
 	inline bool GenChannel::isActive() throw() {
-		if(m_frequency==0)
-			m_active = false;
 		return m_active;
 	}
 

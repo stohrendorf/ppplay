@@ -67,37 +67,6 @@ namespace ppp {
 		static const uint32_t FRQ_VALUE = 14317056;
 
 		/**
-		 * @brief The highest available note (B-9)
-		 * @ingroup S3mMod
-		 * @remarks Even if ST says that the maximum note is B-7 (and it
-		 * accepts only octave 7), this value is more accurate. Seems to be
-		 * used by other trackers.
-		 * @remarks And some other trackers don't even care about B-9... If
-		 * the frequency value is not a floating point value, the maximum
-		 * frequency should be ::FRQ_VALUE there.
-		 */
-		static const uint8_t MAX_NOTE = 0x9b;
-
-		/**
-		 * @brief The lowest available note (C-0)
-		 * @ingroup S3mMod
-		 */
-		static const uint8_t MIN_NOTE = 0x00;
-
-		/**
-		 * @brief The highest available Amiga note (B-5)
-		 * @ingroup S3mMod
-		 * @remarks In "Return 2the Dream:Nightbeat" this should be C-6.
-		 */
-		static const uint8_t MAX_NOTE_AMIGA = 0x5b;
-
-		/**
-		 * @brief The lowest available Amiga note (C-2)
-		 * @ingroup S3mMod
-		 */
-		static const uint8_t MIN_NOTE_AMIGA = 0x20;
-
-		/**
 		 * @brief Calculate the period for a given note and base frequency
 		 * @ingroup S3mMod
 		 * @param[in] note Note value
@@ -149,20 +118,20 @@ namespace ppp {
 		 * @note Time-critical
 		 * @todo OPTIMIZE!!!
 		 */
-		static inline std::string frequencyToNote( const Frequency frq, const Frequency c2spd ) throw() {
-			if ( frq == 0 )
-				return "f??";
+		static inline std::string periodToNote( const uint16_t per, const Frequency c2spd ) throw() {
+			if ( per == 0 )
+				return "p??";
 			if ( c2spd == 0 )
 				return "c??";
-			float nper = ( c2spd * FRQ_VALUE ) / ( frq * 16.0f * 8363.0f );
 			// nper = Periods[note] / 2^oct
 			// note = totalnote % 12; oct = totalnote / 12
 			// -> nper = Periods[0] / 2^(totalnote/12)
 			// -> 2^(totalnote/12) = Periods[0]/nper
 			// -> totalnote = log2(Periods[0]/nper)*12
-			float totalnote = log2( Periods[0] / nper ) * 12.0f;
-			uint8_t minoct = totalnote / 12.0f;
-			uint8_t minnote = std::fmod(totalnote, 12);
+			float totalnote = log2( static_cast<float>(Periods[0]<<2) / per );
+			float intPart;
+			uint8_t minnote = std::modf(totalnote, &intPart)*12;
+			uint8_t minoct = intPart;
 			if (( minoct > 9 ) || ( minnote > 11 ) ) {
 				return "???";
 			}
@@ -205,8 +174,8 @@ using namespace ppp::s3m;
 
 S3mChannel::S3mChannel( const Frequency frq, const S3mSample::Vector* const smp ) throw() : GenChannel( frq ),
 		m_note( ::s3mEmptyNote ), m_lastFx( 0 ), m_lastPortaFx( 0 ), m_lastVibratoFx( 0 ), m_lastVibVolFx( 0 ), m_lastPortVolFx( 0 ),
-		m_tremorVolume( 0 ), m_targetNote( ::s3mEmptyNote ), m_noteChanged( false ), m_deltaFrq( 0 ),
-		m_deltaVolume( 0 ), m_minFrequency( 0 ), m_maxFrequency( 0 ), m_globalVol( 0x40 ), m_nextGlobalVol( 0x40 ),
+		m_tremorVolume( 0 ), m_targetNote( ::s3mEmptyNote ), m_noteChanged( false ), m_deltaPeriod( 0 ),
+		m_deltaVolume( 0 ), m_globalVol( 0x40 ), m_nextGlobalVol( 0x40 ),
 		m_retrigCount( -1 ), m_tremorCount( -1 ), m_300VolSlides( false ), m_amigaLimits( false ), m_immediateGlobalVol( false ),
 		m_maybeSchism( false ), m_zeroVolCounter( -1 ), m_sampleList(smp) {
 	setCurrentCell(GenCell::Ptr(new S3mCell()));
@@ -250,7 +219,7 @@ std::string S3mChannel::getNoteName() throw( PppException ) {
 	if (( !isActive() ) || isDisabled() )
 		return "   ";
 // 	return NoteNames[S3M_NOTE(aNote)]+toString(S3M_OCTAVE(aNote));
-	return frequencyToNote( getAdjustedFrq(), currentSample()->getBaseFrq() );
+	return periodToNote( getAdjustedPeriod(), currentSample()->getBaseFrq() );
 }
 
 std::string S3mChannel::getFxName() const throw() {
@@ -273,12 +242,11 @@ std::string S3mChannel::getFxName() const throw() {
 	}
 }
 
-Frequency S3mChannel::getAdjustedFrq() throw() {
-	Frequency r = deltaFrq( getBareFrq(), m_deltaFrq );
-	r = clip<Frequency>( r, m_minFrequency, m_maxFrequency );
-	if(r==0)
+uint16_t S3mChannel::getAdjustedPeriod() throw() {
+	uint16_t p = clip<int32_t>( m_period+m_deltaPeriod, 0, 0x7fff );
+	if(p==0)
 		setActive(false);
-	return r;
+	return p;
 }
 
 void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRetrigger ) throw() {
@@ -315,7 +283,7 @@ void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRet
 	if (( s3mcell->getEffect() == s3mEmptyCommand ) && ( s3mcell->getEffectValue() != 0x00 ) )
 		m_lastFx = s3mcell->getEffectValue();
 	if (( s3mcell->getEffect() != s3mFxVibrato ) && ( s3mcell->getEffect() != s3mFxFineVibrato ) && ( s3mcell->getEffect() != s3mFxVibVolSlide ) ) {
-		m_deltaFrq = 0;
+		m_deltaPeriod = 0;
 		vibrato().resetPhase();
 	}
 	if ( s3mcell->getEffect() != s3mFxTremolo ) {
@@ -330,35 +298,7 @@ void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRet
 				setActive( false );
 				return;
 			}
-			try {
-				if ( !m_amigaLimits ) {
-					m_minFrequency = st3Frequency( MIN_NOTE, currentSample()->getBaseFrq() );
-					if ( m_minFrequency == 0 ) {
-						m_maxFrequency = 0;
-						setActive( false );
-						return;
-					}
-					else
-						m_maxFrequency = FRQ_VALUE;
-				}
-				else {
-					m_minFrequency = st3Frequency( MIN_NOTE_AMIGA, currentSample()->getBaseFrq() );
-					if ( m_minFrequency == 0 ) {
-						m_maxFrequency = 0;
-						setActive( false );
-						return;
-					}
-					else
-						m_maxFrequency = FRQ_VALUE >> 2;
-				}
-			}
-			catch ( ... ) {
-				m_minFrequency = 0;
-				m_maxFrequency = 0;
-				setActive( false );
-				LOG_ERROR_( "Exception" );
-				return;
-			}
+			//! @todo Adjust min and max periods for amiga limits
 			setVolume( currentSample()->getVolume() );
 		}
 		if ( s3mcell->getVolume() != s3mEmptyVolume ) {
@@ -369,11 +309,11 @@ void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRet
 			if ( s3mcell->getEffect() != s3mFxPorta ) {
 				m_note = s3mcell->getNote();
 				if ( currentSample() ) {
-					setBareFrq( clip<Frequency>(st3Frequency( m_note, currentSample()->getBaseFrq() ), m_minFrequency, m_maxFrequency) );
+					m_period = clip<int32_t>(st3Period( m_note, currentSample()->getBaseFrq() ), 0, 0x7fff);
 				}
 				setPosition( 0 );
 			}
-			m_deltaFrq = 0;
+			m_deltaPeriod = 0;
 			vibrato().resetPhase();
 		}
 	}
@@ -383,7 +323,7 @@ void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRet
 		if (( m_note == s3mEmptyNote ) && ( m_targetNote != s3mEmptyNote ) ) {
 			m_note = m_targetNote;
 			if ( currentSample() ) {
-				setBareFrq( clip<Frequency>(st3Frequency( m_note, currentSample()->getBaseFrq() ), m_minFrequency, m_maxFrequency) );
+				m_period = clip<int32_t>(st3Period( m_note, currentSample()->getBaseFrq() ), 0, 0x7fff);
 			}
 		}
 	}
@@ -510,14 +450,14 @@ void S3mChannel::doVibratoFx( const uint8_t fx, uint8_t fxVal ) throw() {
 			fxVal = m_lastVibratoFx;
 			if ( getTick() != 0 ) {
 				vibrato() += highNibble( fxVal ) << 2;
-				m_deltaFrq = vibrato().get() * lowNibble( fxVal ) >> 5;
+				m_deltaPeriod = vibrato().get() * lowNibble( fxVal ) >> 5;
 			}
 			break;
 		case s3mFxFineVibrato:
 			combineLastFxData( m_lastVibratoFx, fxVal );
 			if ( getTick() != 0 ) {
 				vibrato() += highNibble( fxVal ) << 2;
-				m_deltaFrq = vibrato().get() * lowNibble( fxVal ) >> 7;
+				m_deltaPeriod = vibrato().get() * lowNibble( fxVal ) >> 7;
 			}
 			break;
 	}
@@ -563,32 +503,34 @@ void S3mChannel::doPitchFx( const uint8_t fx, uint8_t fxVal ) throw() {
 			}
 			fxVal = m_lastPortaFx;
 			if ( currentSample() && ( getTick() != 0 ) ) {
-				Frequency baseFrq = 0;
-				Frequency targetFrq = 0;
-				targetFrq = st3Frequency( m_targetNote, currentSample()->getBaseFrq() ); // calculate target frq
-				targetFrq = clip<Frequency>( targetFrq, m_minFrequency, m_maxFrequency );
-				if ( getBareFrq() == 0 )
-					setBareFrq( targetFrq );
+				int32_t basePer = 0;
+				int32_t targetPer = 0;
+				targetPer = st3Period( m_targetNote, currentSample()->getBaseFrq() ); // calculate target frq
+				targetPer = clip<int32_t>( targetPer, 0, 0x7fff );
+				if ( m_period == 0 )
+					m_period = targetPer;
 				else {
-					if ( targetFrq < getBareFrq() ) { // pitch down...
-						baseFrq = getBareFrq();
-						pitchDown( baseFrq, fxVal << 2 );
-						if ( baseFrq <= targetFrq ) {
-							setBareFrq( targetFrq );
+					if ( targetPer > m_period ) { // pitch down...
+						basePer = m_period + (fxVal<<2);
+						if( basePer > 0x7ffff )
+							basePer = 0x7ffff;
+						if ( basePer >= targetPer ) {
+							m_period = targetPer;
 							m_note = m_targetNote;
 						}
 						else
-							setBareFrq( baseFrq );
+							m_period = basePer;
 					}
 					else { // pitch up...
-						baseFrq = getBareFrq();
-						pitchUp( baseFrq, fxVal << 2 );
-						if ( baseFrq >= targetFrq ) {
-							setBareFrq( targetFrq );
+						basePer = m_period - (fxVal<<2);
+						if( basePer < 0 )
+							basePer = 0;
+						if ( basePer <= targetPer ) {
+							m_period = targetPer;
 							m_note = m_targetNote;
 						}
 						else
-							setBareFrq( baseFrq );
+							m_period = basePer;
 					}
 				}
 			}
@@ -688,16 +630,16 @@ void S3mChannel::doSpecialFx( const uint8_t fx, uint8_t fxVal ) throw( PppExcept
 			useLastFxData( m_lastFx, fxVal );
 			switch ( getTick() % 3 ) {
 				case 0: // normal note
-					setBareFrq( st3Frequency( m_note, currentSample()->getBaseFrq() ) );
+					m_period = st3Period(m_note, currentSample()->getBaseFrq());
 					break;
 				case 1: // +x half notes...
-					setBareFrq( st3Frequency( deltaNote( m_note, highNibble( m_lastFx ) ), currentSample()->getBaseFrq() ) );
+					m_period = st3Period( deltaNote( m_note, highNibble( m_lastFx ) ), currentSample()->getBaseFrq() );
 					break;
 				case 2: // +y half notes...
-					setBareFrq( st3Frequency( deltaNote( m_note, lowNibble( m_lastFx ) ), currentSample()->getBaseFrq() ) );
+					m_period = st3Period( deltaNote( m_note, lowNibble( m_lastFx ) ), currentSample()->getBaseFrq() );
 					break;
 			}
-			setBareFrq( clip<Frequency>( getBareFrq(), m_minFrequency, m_maxFrequency ) );
+			m_period = clip<int32_t>(m_period, 0, 0x7fff);
 			break;
 		case s3mFxPanSlide:
 			useLastFxData( m_lastFx, fxVal );
@@ -819,32 +761,26 @@ void S3mChannel::doSpecialFx( const uint8_t fx, uint8_t fxVal ) throw( PppExcept
 }
 
 void S3mChannel::pitchUp( const int16_t delta ) throw() {
-	Frequency f = getBareFrq();
-	pitchUp( f, delta );
-	setBareFrq(f);
+	m_period -= delta;
 }
 
 void S3mChannel::pitchDown( const int16_t delta ) throw() {
-	Frequency f = getBareFrq();
-	pitchDown( f, delta );
-	setBareFrq(f);
+	m_period += delta;
 }
 
-void S3mChannel::pitchUp( Frequency& frq, const int16_t delta ) throw() {
-	frq = deltaFrq( frq, -delta );
-	frq = clip<Frequency>( frq, m_minFrequency, m_maxFrequency );
+void S3mChannel::pitchUp( uint16_t &per, const int16_t delta ) throw() {
+	per -= delta;
 }
 
-void S3mChannel::pitchDown( Frequency& frq, const int16_t delta ) throw() {
-	frq = deltaFrq( frq, delta );
-	frq = clip<Frequency>( frq, m_minFrequency, m_maxFrequency );
+void S3mChannel::pitchDown( uint16_t &per, const int16_t delta ) throw() {
+	per += delta;
 }
 
 void S3mChannel::mixTick( MixerFrameBuffer &mixBuffer, const uint8_t volume ) throw( PppException ) {
 	if ( isDisabled() )
 		return;
 	setGlobalVolume( volume, m_immediateGlobalVol );
-	if (( !isActive() ) || ( !currentSample() ) || ( getBareFrq() == 0 ) ) {
+	if (( !isActive() ) || ( !currentSample() ) || ( m_period == 0 ) ) {
 		setActive( false );
 		return;
 	}
@@ -860,7 +796,7 @@ void S3mChannel::mixTick( MixerFrameBuffer &mixBuffer, const uint8_t volume ) th
 		m_note = s3mEmptyNote;
 		return;
 	}
-	Frequency adjFrq = getAdjustedFrq();
+	uint16_t adjPer = getAdjustedPeriod();
 	if(!isActive())
 		return;
 	LOG_TEST_ERROR(getPlaybackFrq() == 0);
@@ -869,7 +805,7 @@ void S3mChannel::mixTick( MixerFrameBuffer &mixBuffer, const uint8_t volume ) th
 		setActive(false);
 		return;
 	}
-	BresenInterpolation bres( mixBuffer->size(), FRQ_VALUE/getPlaybackFrq() * mixBuffer->size()*adjFrq / FRQ_VALUE );
+	BresenInterpolation bres( mixBuffer->size(), FRQ_VALUE/getPlaybackFrq() * mixBuffer->size() / adjPer );
 	uint16_t currVol = clip( getVolume() + m_deltaVolume, 0, 0x40 ) * m_globalVol;
 	MixerSample *mixBufferPtr = &mixBuffer->front().left;
 	S3mSample::Ptr currSmp = currentSample();
@@ -892,7 +828,7 @@ void S3mChannel::simTick( const std::size_t bufSize, const uint8_t volume ) {
 	if ( isDisabled() )
 		return;
 	setGlobalVolume( volume, m_immediateGlobalVol );
-	if (( !isActive() ) || ( !currentSample() ) || ( getBareFrq() == 0 ) )
+	if (( !isActive() ) || ( !currentSample() ) || ( m_period == 0 ) )
 		return setActive( false );
 	if (( getTick() == 0 ) && ( m_zeroVolCounter != -1 ) && ( currentSample() ) && isActive() ) {
 		if (( currentSample()->isLooped() ) && ( getVolume() == 0 ) )
@@ -908,12 +844,12 @@ void S3mChannel::simTick( const std::size_t bufSize, const uint8_t volume ) {
 	}
 	PPP_TEST( getPlaybackFrq()==0 );
 	PPP_TEST( bufSize==0);
-	if( getAdjustedFrq()==0 ) {
+	if( m_period==0 ) {
 		setActive(false);
 		setPosition(0);
 		return;
 	}
-	int32_t pos = getPosition() + ( FRQ_VALUE / getPlaybackFrq() * bufSize * getAdjustedFrq() / FRQ_VALUE );
+	int32_t pos = getPosition() + ( FRQ_VALUE / getPlaybackFrq() * bufSize / getAdjustedPeriod() );
 	currentSample()->adjustPos( pos );
 	if ( pos == GenSample::EndOfSample )
 		setActive( false );
@@ -1097,11 +1033,10 @@ BinStream &S3mChannel::saveState( BinStream &str ) const throw( PppException ) {
 		.write( &m_noteChanged )
 		.write( &m_300VolSlides )
 		.write( &m_amigaLimits )
-		.write( &m_deltaFrq )
+		.write( &m_deltaPeriod )
 		.write( &m_deltaVolume )
 		.write( &m_zeroVolCounter )
-		.write( &m_minFrequency )
-		.write( &m_maxFrequency );
+		.write( &m_period );
 	}
 	PPP_CATCH_ALL();
 	return str;
@@ -1125,11 +1060,10 @@ BinStream &S3mChannel::restoreState( BinStream &str ) throw( PppException ) {
 		.read( &m_noteChanged )
 		.read( &m_300VolSlides )
 		.read( &m_amigaLimits )
-		.read( &m_deltaFrq )
+		.read( &m_deltaPeriod )
 		.read( &m_deltaVolume )
 		.read( &m_zeroVolCounter )
-		.read( &m_minFrequency )
-		.read( &m_maxFrequency );
+		.read( &m_period );
 	}
 	PPP_CATCH_ALL();
 	return str;
