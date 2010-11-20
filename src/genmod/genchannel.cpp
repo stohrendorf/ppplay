@@ -29,14 +29,14 @@ using namespace ppp;
 
 GenChannel::GenChannel( const ppp::Frequency frq ) throw( PppException ) :
 		m_active( false ), m_disabled( true ), m_vibrato( ProtrackerLookup, 256, 256 ), m_tremolo( ProtrackerLookup, 256, 256 ), m_panning( 0x40 ),
-		m_volume( 0 ), m_frequency( 0 ), m_tick( 0 ), m_position( 0 ),
+		m_volume( 0 ), m_tick( 0 ), m_position( 0 ),
 		m_statusString( "" ), m_currSmpIndex( -1 ), m_currCell(), m_playbackFrequency( frq )
 {
 }
 
 GenChannel::GenChannel( const GenChannel &src ) throw() :
 		m_active( src.m_active ), m_disabled( src.m_disabled ), m_vibrato( src.m_vibrato ), m_tremolo( src.m_tremolo ),
-		m_panning( src.m_panning ), m_volume( src.m_volume ), m_frequency( src.m_frequency ), m_tick( src.m_tick ),
+		m_panning( src.m_panning ), m_volume( src.m_volume ), m_tick( src.m_tick ),
 		m_position( src.m_position ), m_statusString( src.m_statusString ),
 		m_currSmpIndex( src.m_currSmpIndex ), m_currCell( src.m_currCell ), m_playbackFrequency( src.m_playbackFrequency )
 {
@@ -47,7 +47,6 @@ GenChannel &GenChannel::operator=( const GenChannel & src ) throw() {
 	m_disabled = src.m_disabled;
 	m_panning = src.m_panning;
 	m_volume = src.m_volume;
-	m_frequency = src.m_frequency;
 	m_tick = src.m_tick;
 	m_position = src.m_position;
 	m_statusString = src.m_statusString;
@@ -65,7 +64,6 @@ BinStream &GenChannel::saveState( BinStream &str ) const throw( PppException ) {
 		str.write( &m_active )
 		.write( &m_disabled )
 		.write( &m_volume )
-		.write( &m_frequency )
 		.write( &m_panning )
 		.write( &m_currSmpIndex )
 		.writeSerialisable( m_currCell.get() )
@@ -83,7 +81,6 @@ BinStream &GenChannel::restoreState( BinStream &str ) throw( PppException ) {
 		str.read( &m_active )
 		.read( &m_disabled )
 		.read( &m_volume )
-		.read( &m_frequency )
 		.read( &m_panning )
 		.read( &m_currSmpIndex )
 		//! @warning THIS IS VERY DANGEROUS! Needs dynamic update...

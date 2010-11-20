@@ -56,10 +56,8 @@ namespace ppp {
 				uint8_t m_tremorVolume;  //!< @brief Backup variable for Tremor FX
 				uint8_t m_targetNote;    //!< @brief Target note for pitch slides
 				bool m_noteChanged;            //!< @brief @c true when a new note triggered in the current frame
-				int16_t m_deltaFrq;              //!< @brief Vibrato delta period
+				int16_t m_deltaPeriod;              //!< @brief Vibrato delta period
 				int16_t m_deltaVolume;           //!< @brief Tremolo delta volume
-				Frequency m_minFrequency;      //!< @brief Minimum frequency (C-0)
-				Frequency m_maxFrequency;      //!< @brief Maximum frequency (B-9)
 				uint8_t m_globalVol;     //!< @brief Global volume
 				uint8_t m_nextGlobalVol; //!< @brief Next Global volume to be applied with a new note
 				int8_t m_retrigCount;     //!< @brief Used for Retrigger Effect
@@ -70,6 +68,7 @@ namespace ppp {
 				bool m_maybeSchism;            //!< @brief Schism Tracker compatibility (when 16 bit or stereo samples are found and the tracker ID is ScreamTracker 3.20)
 				int16_t m_zeroVolCounter;        //!< @brief Zero Volume Optimization counter, -1 if disabled
 				const S3mSample::Vector* const m_sampleList;
+				uint16_t m_period;
 				S3mSample::Ptr currentSample() throw(PppException);
 				/**
 				 * @brief Apply Volume Effect
@@ -107,7 +106,7 @@ namespace ppp {
 				 * @param[in] delta Value to pitch up
 				 * @note Time-critical
 				 */
-				void pitchUp(Frequency& frq, int16_t delta) throw();
+				void pitchUp(uint16_t& per, int16_t delta) throw();
 				/**
 				 * @brief Pitch up
 				 * @param[in] delta Value to pitch up
@@ -120,7 +119,7 @@ namespace ppp {
 				 * @param[in] delta Value to pitch down
 				 * @note Time-critical
 				 */
-				void pitchDown(Frequency& frq, int16_t delta) throw();
+				void pitchDown(uint16_t& per, int16_t delta) throw();
 				/**
 				 * @brief Pitch down
 				 * @param[in] delta Value to pitch down
@@ -149,7 +148,7 @@ namespace ppp {
 				virtual ~S3mChannel() throw();
 				virtual std::string getNoteName() throw(PppException);
 				virtual std::string getFxName() const throw();
-				virtual Frequency getAdjustedFrq() throw();
+				virtual uint16_t getAdjustedPeriod() throw();
 				/**
 				 * @copydoc GenChannel::update
 				 * @remarks A new value in the Instrument Column changes the instrument with the old playback position

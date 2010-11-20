@@ -134,9 +134,7 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 			lb = dosScreen->getByPath<ppg::Label>("PlaybackInfo");
 			PPG_TEST(!lb);
 			*lb = ppp::stringf("Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", pbi.speed, pbi.tempo, pbi.globalVolume * 100 / 0x40);
-			for (int i = 0; i < 16; i++) {
-				if (i >= s3m->physChannels())
-					break;
+			for (int i = 0; i < s3m->channelCount(); i++) {
 				lb = dosScreen->getByPath<ppg::Label>(ppp::stringf("ChanInfo_%d", i));
 				PPG_TEST(!lb);
 				*lb = s3m->getChanStatus(i);
@@ -395,7 +393,7 @@ int main(int argc, char *argv[]) {
 			LOG_ERROR("Main: %s", e.what());
 			return EXIT_FAILURE;
 		}
-		l = new ppg::Label("TrackerInfo", ppp::stringf("Tracker: %s - Channels: %d", s3m->getTrackerInfo().c_str(), s3m->physChannels()));
+		l = new ppg::Label("TrackerInfo", ppp::stringf("Tracker: %s - Channels: %d", s3m->getTrackerInfo().c_str(), s3m->channelCount()));
 		if (s3m->isMultiTrack())
 			*l += " - Multi-track";
 		l->setPosition(2, dosScreen->getBottom() - 1);
