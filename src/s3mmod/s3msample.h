@@ -39,7 +39,7 @@ namespace ppp {
 		class S3mSample : public GenSample {
 			public:
 				typedef std::shared_ptr<S3mSample> Ptr;
-				typedef PVector<S3mSample> List;
+				typedef std::vector<Ptr> Vector;
 			public:
 				S3mSample() throw();
 				virtual ~S3mSample() throw();

@@ -40,7 +40,7 @@ namespace ppp {
 		class S3mCell : public GenCell {
 			public:
 				typedef std::shared_ptr<S3mCell> Ptr;
-				typedef PVector<S3mCell> List;
+				typedef std::vector<Ptr> Vector;
 			private:
 				uint8_t m_note; //!< @brief Note value
 				uint8_t m_instr; //!< @brief Instrument value
@@ -94,7 +94,7 @@ namespace ppp {
 		class S3mPattern : public GenPattern {
 			public:
 				typedef std::shared_ptr<S3mPattern> Ptr;
-				typedef PVector<S3mPattern> List;
+				typedef std::vector<Ptr> Vector;
 			protected:
 				virtual GenCell::Ptr createCell(int16_t trackIndex, int16_t row) throw(PppException);
 			public:

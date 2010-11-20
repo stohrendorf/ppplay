@@ -38,7 +38,7 @@ namespace ppp {
 	class GenCell : public ISerializable {
 		public:
 			typedef std::shared_ptr<GenCell> Ptr; //!< @brief Class pointer
-			typedef PVector<GenCell> List;
+			typedef std::vector<Ptr> Vector;
 		private:
 			bool m_active; //!< @brief Is this cell used/relevant?
 		public:
@@ -85,7 +85,7 @@ namespace ppp {
 	 * @brief A list of tracks to represent a pattern
 	 * @ingroup GenMod
 	 */
-	typedef PVector<GenCell::List> GenTrackList;
+	typedef std::vector<GenCell::Vector> GenTrackVector;
 
 	/**
 	 * @class GenPattern
@@ -95,9 +95,9 @@ namespace ppp {
 	class GenPattern {
 		public:
 			typedef std::shared_ptr<GenPattern> Ptr; //!< @brief Class pointer
-			typedef PVector<GenPattern> List;
+			typedef std::vector<Ptr> Vector;
 		private:
-			GenTrackList m_tracks; //!< @brief contains the tracks
+			GenTrackVector m_tracks; //!< @brief contains the tracks
 			/**
 			 * @brief Create a cell within the pattern
 			 * @param[in] trackIndex Index of the track
@@ -126,7 +126,7 @@ namespace ppp {
 			 * @param[in] idx Index of the track
 			 * @return Pointer to the track
 			 */
-			virtual GenCell::List::Ptr getTrack(int16_t idx) throw();
+			virtual GenCell::Vector* getTrack(int16_t idx) throw();
 			/**
 			 * @brief Get a cell within the pattern
 			 * @param[in] trackIndex Index of the track
@@ -134,7 +134,7 @@ namespace ppp {
 			 * @return Pointer to the cell
 			 */
 			virtual GenCell::Ptr getCell(int16_t trackIndex, int16_t row) throw();
-			void addTrack(const GenCell::List::Ptr &t) { m_tracks.push_back(t); }
+			void addTrack(const GenCell::Vector &t) { m_tracks.push_back(t); }
 	};
 
 } // namespace ppp

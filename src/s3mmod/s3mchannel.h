@@ -41,7 +41,7 @@ namespace ppp {
 		class S3mChannel : public GenChannel {
 			public:
 				typedef std::shared_ptr<S3mChannel> Ptr;
-				typedef PVector<S3mChannel> List;
+				typedef std::vector<Ptr> Vector;
 			private:
 				S3mChannel() = delete; //!< @brief No default constructor
 				S3mChannel(const S3mChannel&) = delete; //!< @brief No copy constructor
@@ -69,7 +69,7 @@ namespace ppp {
 				bool m_immediateGlobalVol;     //!< @brief Apply global volume immediately for non-ST3 modules
 				bool m_maybeSchism;            //!< @brief Schism Tracker compatibility (when 16 bit or stereo samples are found and the tracker ID is ScreamTracker 3.20)
 				int16_t m_zeroVolCounter;        //!< @brief Zero Volume Optimization counter, -1 if disabled
-				S3mSample::List::Ptr m_sampleList;
+				const S3mSample::Vector* const m_sampleList;
 				S3mSample::Ptr currentSample() throw(PppException);
 				/**
 				 * @brief Apply Volume Effect
@@ -145,7 +145,7 @@ namespace ppp {
 				/**
 				 * @copydoc GenChannel::GenChannel
 				 */
-				S3mChannel(Frequency frq, const S3mSample::List::Ptr &smp) throw();
+				S3mChannel(Frequency frq, const S3mSample::Vector* const smp) throw();
 				virtual ~S3mChannel() throw();
 				virtual std::string getNoteName() throw(PppException);
 				virtual std::string getFxName() const throw();

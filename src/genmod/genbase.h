@@ -26,7 +26,6 @@
 #include <cstdint>
 
 #include "utils.h"
-#include "pvector.h"
 #include "pppexcept.h"
 #include "logger.h"
 #include "binstream.h"
@@ -112,11 +111,11 @@ namespace ppp {
 	class GenOrder {
 		public:
 			typedef std::shared_ptr<GenOrder> Ptr; //!< @brief Class pointer
-			typedef PVector<GenOrder> List;
+			typedef std::vector<Ptr> Vector;
 		private:
 			uint8_t m_index; //!< @brief Pattern index of this order
 			uint8_t m_count; //!< @brief Playback count of this order
-			PVector<BinStream> m_states; //!< @brief Buffer for storing channel states for seeking
+			std::vector<BinStream::SpBinStream> m_states; //!< @brief Buffer for storing channel states for seeking
 		public:
 			/**
 			 * @brief Constructor
