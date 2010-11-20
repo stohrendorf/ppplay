@@ -92,7 +92,7 @@ namespace ppp {
 			std::string m_fileName; //!< @brief Filename of the loaded module, empty if none loaded
 			std::string m_title; //!< @brief Title of the module
 			std::string m_trackerInfo; //!< @brief Tracker information (Name and Version)
-			GenOrder::List m_orders; //!< @brief Order list @note @b Not @b initialized @b here!
+			GenOrder::Vector m_orders; //!< @brief Order list @note @b Not @b initialized @b here!
 			uint16_t m_maxRepeat; //!< @brief Maximum module loops if module patterns are played multiple times
 			Frequency m_playbackFrequency; //!< @brief Playback frequency
 			std::size_t m_playedFrames; //!< @brief Played Sample frames

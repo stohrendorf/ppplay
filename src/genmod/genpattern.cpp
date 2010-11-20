@@ -33,16 +33,16 @@ GenPattern::GenPattern() throw(PppException) : m_tracks() {
 GenPattern::~GenPattern() throw() {
 }
 
-GenCell::List::Ptr GenPattern::getTrack(int16_t idx) throw() {
+GenCell::Vector* GenPattern::getTrack(int16_t idx) throw() {
 	if (!inRange<int16_t>(idx, 0, m_tracks.size() - 1))
-		return GenCell::List::Ptr();
-	return m_tracks[idx];
+		return NULL;
+	return &m_tracks[idx];
 }
 
 GenCell::Ptr GenPattern::getCell(int16_t trackIndex, int16_t row) throw() {
 	if (row < 0)
 		return GenCell::Ptr();
-	GenCell::List::Ptr track = getTrack(trackIndex);
+	GenCell::Vector* track = getTrack(trackIndex);
 	if (!track)
 		return GenCell::Ptr();
 	GenCell::Ptr cell = track->at(row);

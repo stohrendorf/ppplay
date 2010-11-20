@@ -42,7 +42,7 @@ namespace ppp {
 	class GenChannel {
 		public:
 			typedef std::shared_ptr<GenChannel> Ptr; //!< @brief Class pointer
-			typedef PVector<GenChannel> List;
+			typedef std::vector<Ptr> Vector;
 		private:
 			bool m_active; //!< @brief @c true if channel is active
 			bool m_disabled; //!< @brief @c true if channel is disabled

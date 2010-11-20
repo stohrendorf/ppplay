@@ -38,7 +38,7 @@ namespace ppp {
 	class GenSample {
 		public:
 			typedef std::shared_ptr<GenSample> Ptr; //!< @brief Class pointer
-			typedef PVector<GenSample> List;
+			typedef std::vector<Ptr> Vector;
 			enum class LoopType {
 				None, //!< @brief not looped
 				Forward, //!< @brief Forward looped
