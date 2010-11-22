@@ -75,6 +75,7 @@ namespace ppp {
 				uint16_t m_basePeriod; //!< @brief The channel's period without the sample's c4speed applied
 				uint16_t basePeriod();
 				void setBasePeriod(uint16_t per);
+				bool m_glissando;
 				S3mSample::Ptr currentSample() throw(PppException);
 				/**
 				 * @brief Apply Volume Effect
@@ -146,6 +147,8 @@ namespace ppp {
 				 * @note Time-critical
 				 */
 				void combineLastFxData(uint8_t &oldFx, uint8_t &newFx) const throw();
+			protected:
+				virtual void setSampleIndex(int32_t idx);
 			public:
 				/**
 				 * @copydoc GenChannel::GenChannel
