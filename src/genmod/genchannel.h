@@ -195,8 +195,10 @@ namespace ppp {
 				return m_currCell->trackerString();
 			}
 		protected:
-			void setCurrentCell(const GenCell::Ptr &cell) { m_currCell = cell; }
-			GenCell::Ptr getCurrentCell() const throw() { return m_currCell; }
+			void setCurrentCell(const GenCell::Ptr &cell) __attribute__((deprecated("Will be removed in future versions")))
+			{ m_currCell = cell; }
+			GenCell::Ptr getCurrentCell() const throw() __attribute__((deprecated("Will be removed in future versions")))
+			{ return m_currCell; }
 			uint8_t getTick() const throw() { return m_tick; }
 			void setTick(uint8_t t) throw() { m_tick = t; }
 			void setActive(bool a) throw() { m_active = a; }
@@ -204,14 +206,16 @@ namespace ppp {
 			Phaser &vibrato() throw() { return m_vibrato; }
 			const Phaser &tremolo() const throw() { return m_tremolo; }
 			Phaser &tremolo() throw() { return m_tremolo; }
-			virtual void setSampleIndex(int32_t idx) { m_currSmpIndex = idx; }
+			virtual void setSampleIndex(int32_t idx) __attribute__((deprecated("Will be removed in future versions")))
+			{ m_currSmpIndex = idx; }
 			uint8_t getVolume() const throw() { return m_volume; }
 			void setVolume(uint8_t v) throw() { m_volume = v; }
 			void setPosition(int32_t p) throw() { m_position = p; }
 			uint8_t getPanning() const throw() { return m_panning; }
 			uint16_t getPlaybackFrq() const throw() { return m_playbackFrequency; }
 			void setStatusString(const std::string &s) { m_statusString = s; }
-			int32_t getCurrentSmpIdx() const throw() { return m_currSmpIndex; }
+			int32_t getCurrentSmpIdx() const throw() __attribute__((deprecated("Will be removed in future versions")))
+			{ return m_currSmpIndex; }
 	};
 	
 	inline bool GenChannel::isActive() throw() {

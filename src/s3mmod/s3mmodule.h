@@ -51,18 +51,11 @@ namespace ppp {
 				int16_t m_patLoopCount;  //!< @brief Loop counter for pattern loop, -1 if unused
 				int16_t m_patDelayCount; //!< @brief Delay counter for Pattern Delay, -1 if unused
 				bool m_customData;     //!< @brief @c true if module contains special custom data
-				int8_t m_channelMappings[32]; //!< @brief Channel mappings for unused channels
 				S3mSample::Vector m_samples;
 				S3mPattern::Vector m_patterns;
 				std::array<S3mChannel::Ptr, 32> m_channels;
+				uint8_t m_usedChannels;
 				S3mPattern::Ptr getPattern(size_t idx) const { if(idx>=m_patterns.size()) return S3mPattern::Ptr(); return m_patterns[idx]; }
-				/**
-				 * @brief Get a channel
-				 * @param[in] n Channel index
-				 * @return Pointer to the channel
-				 * @note Time-critical
-				 */
-				GenChannel::Ptr getMappedChannel(int16_t n) throw();
 				/**
 				 * @brief Apply global effects
 				 * @note Time-critical
@@ -82,6 +75,7 @@ namespace ppp {
 				 */
 				S3mModule(const uint32_t frq = 44100, const uint8_t maxRpt = 2) throw(PppException);
 				virtual ~S3mModule() throw();
+				virtual uint8_t channelCount() const;
 				virtual bool load(const std::string &fn) throw(PppException);
 				virtual bool existsSample(int16_t idx) throw();
 				virtual std::string getSampleName(int16_t idx) throw();

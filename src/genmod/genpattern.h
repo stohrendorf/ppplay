@@ -75,7 +75,7 @@ namespace ppp {
 			 * @param[in] src Source cell
 			 * @return Reference to this instance
 			 */
-			virtual GenCell &operator=(const GenCell &src) throw();
+			virtual GenCell &operator=(const GenCell &src) throw() __attribute__((deprecated("Will be removed in future versions")));
 			virtual BinStream &serialize(BinStream &str) const;
 			virtual BinStream &unserialize(BinStream &str);
 			void setActive(bool a) throw() { m_active = a; }
@@ -104,7 +104,7 @@ namespace ppp {
 			 * @param[in] row Row within the track
 			 * @return Pointer to the created (or already existing) cell
 			 */
-			virtual GenCell::Ptr createCell(int16_t trackIndex, int16_t row) throw(PppException) = 0;
+			virtual GenCell::Ptr createCell(int16_t trackIndex, int16_t row) throw(PppException) __attribute__((deprecated("Will be removed in future versions"))) = 0;
 		public:
 			/**
 			 * @brief The constructor
@@ -133,8 +133,8 @@ namespace ppp {
 			 * @param[in] row Row within the track
 			 * @return Pointer to the cell
 			 */
-			virtual GenCell::Ptr getCell(int16_t trackIndex, int16_t row) throw();
-			void addTrack(const GenCell::Vector &t) { m_tracks.push_back(t); }
+			virtual GenCell::Ptr getCell(int16_t trackIndex, int16_t row) throw() __attribute__((deprecated("Will be removed in future versions")));
+			void addTrack(const GenCell::Vector &t) __attribute__((deprecated("Will be removed in future versions"))) { m_tracks.push_back(t); }
 	};
 
 } // namespace ppp

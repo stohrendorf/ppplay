@@ -98,7 +98,6 @@ namespace ppp {
 			std::size_t m_playedFrames; //!< @brief Played Sample frames
 			std::vector<GenMultiTrack> m_tracks; //!< @brief Per-track infos
 			uint16_t m_currentTrack; //!< @brief The current track index
-			uint16_t m_channelCount; //!< @brief Number of channels used
 			bool m_multiTrack; //!< @brief @c true if module could be a multi-track one
 		//protected:
 			GenPlaybackInfo m_playbackInfo; //!< @brief General playback info @todo Make private
@@ -277,7 +276,7 @@ namespace ppp {
 			 * @see GenOrder
 			 */
 			virtual BinStream &restoreState(uint16_t ordindex, uint8_t cnt) throw(PppException);
-			uint16_t channelCount() const { return m_channelCount; }
+			virtual uint8_t channelCount() const = 0;
 		protected:
 			/**
 			 * @brief Removes empty tracks from the track list and resets the orders' repeat count
@@ -294,8 +293,6 @@ namespace ppp {
 			int16_t getPatternIndex() const { return m_playbackInfo.pattern; }
 			void setPatternIndex(int16_t i) { m_playbackInfo.pattern=i; }
 			size_t getOrderCount() const { return m_orders.size(); }
-			uint16_t getMappedChannelCount() const { return m_channelCount; }
-			void setMappedChannelCount(uint16_t c) { m_channelCount=c; }
 			void setCurrentTrack(uint16_t t) { m_currentTrack=t; }
 			void setTitle(const std::string &t) { m_title = t; }
 			void setMultiTrack(bool m) { m_multiTrack = m; }

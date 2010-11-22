@@ -150,7 +150,7 @@ struct S3mModuleHeader {
 
 S3mModule::S3mModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) : GenModule( frq, maxRpt ),
 		m_breakRow( -1 ), m_breakOrder( -1 ), m_patLoopRow( -1 ), m_patLoopCount( -1 ), m_patDelayCount( -1 ),
-		m_customData( false ), m_samples(), m_patterns() {
+		m_customData( false ), m_samples(), m_patterns(), m_channels(), m_usedChannels(0) {
 	try {
 		for ( uint16_t i = 0; i < 256; i++ ) {
 			addOrder( GenOrder::Ptr( new GenOrder( s3mOrderEnd ) ) );
@@ -297,8 +297,6 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 		//str.close();
 		// set pannings...
 		LOG_MESSAGE_( "Preparing channels..." );
-		int chanMapPos = 0;
-		setMappedChannelCount(0);
 		for ( int i = 0; i < 32; i++ ) {
 			S3mChannel *s3mChan = new S3mChannel( getPlaybackFrq(), &m_samples );
 			m_channels[i].reset(s3mChan);
@@ -319,8 +317,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			}
 			else {
 				m_channels[i]->enable();
-				m_channelMappings[chanMapPos++] = i;
-				setMappedChannelCount(getMappedChannelCount()+1);
+				m_usedChannels = i+1;
 			}
 			if ( s3mHdr.defaultPannings != 0xFC ) { // no pannings
 				if (( s3mHdr.masterVolume&0x80 ) != 0 ) { // stereo
@@ -407,6 +404,11 @@ std::string S3mModule::getInstrName( int16_t ) const throw() {
 	return "";
 }
 
+uint8_t S3mModule::channelCount() const {
+	return m_usedChannels;
+}
+
+
 void S3mModule::checkGlobalFx() throw( PppException ) {
 	try {
 		setPatternIndex( mapOrder( getPlaybackInfo().order )->getIndex() );
@@ -414,8 +416,8 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 		if ( !currPat )
 			return;
 		std::string data;
-		for ( unsigned int currTrack = 0; currTrack < getMappedChannelCount(); currTrack++ ) {
-			S3mCell::Ptr cell = std::static_pointer_cast<S3mCell>( currPat->getCell( m_channelMappings[currTrack], getPlaybackInfo().row ) );
+		for ( unsigned int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+			S3mCell::Ptr cell = std::static_pointer_cast<S3mCell>( currPat->getCell( currTrack, getPlaybackInfo().row ) );
 			if ( !cell )
 				continue;
 			if ( !cell->isActive() )
@@ -435,8 +437,8 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 		}
 		// check for pattern loops
 		int patLoopCounter = 0;
-		for ( unsigned int currTrack = 0; currTrack < getMappedChannelCount(); currTrack++ ) {
-			S3mCell::Ptr cell = std::static_pointer_cast<S3mCell>( currPat->getCell( m_channelMappings[currTrack], getPlaybackInfo().row ) );
+		for ( unsigned int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+			S3mCell::Ptr cell = std::static_pointer_cast<S3mCell>( currPat->getCell( currTrack, getPlaybackInfo().row ) );
 			if ( !cell ) continue;
 			if ( !cell->isActive() ) continue;
 			if ( cell->getEffect() == s3mEmptyCommand ) continue;
@@ -473,8 +475,8 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 		}
 		// check for pattern delays
 		int patDelayCounter = 0;
-		for ( unsigned int currTrack = 0; currTrack < getMappedChannelCount(); currTrack++ ) {
-			S3mCell::Ptr cell = std::static_pointer_cast<S3mCell>( currPat->getCell( m_channelMappings[currTrack], getPlaybackInfo().row ) );
+		for ( unsigned int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+			S3mCell::Ptr cell = std::static_pointer_cast<S3mCell>( currPat->getCell( currTrack, getPlaybackInfo().row ) );
 			if ( !cell ) continue;
 			if ( !cell->isActive() ) continue;
 			if ( cell->getEffect() == s3mEmptyCommand ) continue;
@@ -492,9 +494,9 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 		else
 			m_patDelayCount = -1;
 		// now check for breaking effects
-		for ( unsigned int currTrack = 0; currTrack < getMappedChannelCount(); currTrack++ ) {
+		for ( unsigned int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			if ( m_patLoopCount != -1 ) break;
-			S3mCell::Ptr cell = std::static_pointer_cast<S3mCell>( currPat->getCell( m_channelMappings[currTrack], getPlaybackInfo().row ) );
+			S3mCell::Ptr cell = std::static_pointer_cast<S3mCell>( currPat->getCell( currTrack, getPlaybackInfo().row ) );
 			if ( !cell ) continue;
 			if ( !cell->isActive() ) continue;
 			if ( cell->getEffect() == s3mEmptyCommand ) continue;
@@ -620,10 +622,10 @@ void S3mModule::getTick( AudioFrameBuffer &buf ) throw( PppException ) {
 		if ( !currPat )
 			return;
 		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( getTickBufLen(), {0,0} ) );
-		for ( unsigned short currTrack = 0; currTrack < getMappedChannelCount(); currTrack++ ) {
-			GenChannel::Ptr chan = getMappedChannel( currTrack );
+		for ( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+			GenChannel::Ptr chan = m_channels[currTrack];
 			PPP_TEST( !chan );
-			GenCell::Ptr cell = currPat->getCell( m_channelMappings[currTrack], getPlaybackInfo().row );
+			GenCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
 			chan->update( cell, getPlaybackInfo().tick, m_patDelayCount != -1 );
 			chan->mixTick( mixerBuffer, getPlaybackInfo().globalVolume );
 		}
@@ -657,10 +659,10 @@ void S3mModule::getTickNoMixing( std::size_t& bufLen ) throw( PppException ) {
 		if ( !currPat )
 			return;
 		bufLen = getTickBufLen(); // in frames
-		for ( unsigned short currTrack = 0; currTrack < getMappedChannelCount(); currTrack++ ) {
-			GenChannel::Ptr chan = getMappedChannel( currTrack );
+		for ( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+			GenChannel::Ptr chan = m_channels[currTrack];
 			PPP_TEST( !chan );
-			GenCell::Ptr cell = currPat->getCell( m_channelMappings[currTrack], getPlaybackInfo().row );
+			GenCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
 			chan->update( cell, getPlaybackInfo().tick, m_patDelayCount != -1 );
 			chan->simTick( bufLen, getPlaybackInfo().globalVolume );
 		}
@@ -687,21 +689,15 @@ GenOrder::Ptr S3mModule::mapOrder( int16_t order ) throw() {
 	return getOrder(order);
 }
 
-GenChannel::Ptr S3mModule::getMappedChannel( int16_t n ) throw() {
-	if ( !inRange<int16_t>( n, 0, getMappedChannelCount() - 1 ) )
-		return GenChannel::Ptr();
-	return m_channels[m_channelMappings[n]];
-}
-
 std::string S3mModule::getChanStatus( int16_t idx ) throw() {
-	GenChannel::Ptr x = getMappedChannel( idx );
+	GenChannel::Ptr x = m_channels[idx];
 	if ( !x )
 		return "";
 	return x->getStatus();
 }
 
 std::string S3mModule::getChanCellString( int16_t idx ) throw() {
-	GenChannel::Ptr x = getMappedChannel( idx );
+	GenChannel::Ptr x = m_channels[idx];
 	if ( !x )
 		return "";
 	return x->getCellString();
@@ -778,8 +774,7 @@ BinStream &S3mModule::saveState() throw( PppException ) {
 		.write( &m_patLoopRow )
 		.write( &m_patLoopCount )
 		.write( &m_patDelayCount )
-		.write( &m_customData )
-		.write( m_channelMappings, 32 );
+		.write( &m_customData );
 		for(int i=0; i<m_channels.size(); i++)
 			m_channels[i]->saveState(str);
 		return str;
@@ -795,8 +790,7 @@ BinStream &S3mModule::restoreState( unsigned short ordindex, unsigned char cnt )
 		.read( &m_patLoopRow )
 		.read( &m_patLoopCount )
 		.read( &m_patDelayCount )
-		.read( &m_customData )
-		.read( m_channelMappings, 32 );
+		.read( &m_customData );
 		for(int i=0; i<m_channels.size(); i++)
 			m_channels[i]->restoreState(str);
 		return str;
