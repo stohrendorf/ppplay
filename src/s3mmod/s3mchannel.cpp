@@ -32,11 +32,39 @@
 
 namespace ppp {
 	namespace s3m {
+		
+		const std::array<const int16_t, 64> S3mWaveSine = {{
+			0, 24, 49, 74, 97, 120, 141, 161, 180, 197, 212, 224,
+			235, 244, 250, 253, 255, 253, 250, 244, 235, 224, 212,
+			197, 180, 161, 141, 120, 97, 74, 49, 24, 0, -24, -49,
+			-74, -97, -120, -141, -161, -180, -197, -212, -224,
+			-235, -244, -250, -253, -255, -253, -250, -244, -235,
+			-224, -212, -197, -180, -161, -141, -120, -97, -74,
+			-49, -24
+		}};
+		const std::array<const int16_t, 64> S3mWaveRamp = {{
+			0, -0xF8, -0xF0, -0xE8, -0xE0, -0xD8, -0xD0, -0xC8,
+			-0xC0, -0xB8, -0xB0, -0xA8, -0xA0, -0x98, -0x90, -0x88,
+			-0x80, -0x78, -0x70, -0x68, -0x60, -0x58, -0x50, -0x48, -0x40,
+			-0x38, -0x30, -0x28, -0x20, -0x18, -0x10, -0x8, 0x0, 0x8, 0x10, 0x18,
+			0x20, 0x28, 0x30, 0x38, 0x40, 0x48, 0x50, 0x58, 0x60, 0x68, 0x70,
+			0x78, 0x80, 0x88, 0x90, 0x98, 0xA0, 0xA8, 0xB0, 0xB8, 0xC0,
+			0xC8, 0xD0, 0xD8, 0xE0, 0xE8, 0xF0, 0xF8
+		}};
+		const std::array<const int16_t, 64> S3mWaveSquare = {{
+			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+			0xff, 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0
+		}};
+
 		/**
 		 * @ingroup S3mMod
 		 * @brief Note periodic table for frequency calculations
 		 */
-		static const uint16_t Periods[12] = {1712, 1616, 1524, 1440, 1356, 1280, 1208, 1140, 1076, 1016,  960,  907};
+		static const std::array<uint16_t, 12> Periods = {{1712, 1616, 1524, 1440, 1356, 1280, 1208, 1140, 1076, 1016,  960,  907}};
 
 		/**
 		 * @brief Get the octave out of a note
@@ -75,9 +103,9 @@ namespace ppp {
 		 * @see ::S3mSample
 		 * @note Time-critical
 		 */
-		static inline Frequency st3Period( const uint8_t note, const Frequency c2spd ) throw( PppException ) {
+		static inline uint16_t st3Period( const uint8_t note, const uint16_t c2spd ) throw( PppException ) {
 			PPP_TEST( c2spd == 0 );
-			return static_cast<Frequency>( 8363 << 4 )*( Periods[S3M_NOTE( note )] >> S3M_OCTAVE( note ) ) / c2spd;
+			return (8363<<4)*( Periods[S3M_NOTE( note )] >> S3M_OCTAVE( note ) ) / c2spd;
 		}
 
 		/**
@@ -89,7 +117,7 @@ namespace ppp {
 		 * @see ::S3mSample
 		 * @note Time-critical
 		 */
-		static inline Frequency st3AmigaPeriod( const uint8_t note, const Frequency c2spd ) throw( PppException ) {
+		static inline uint16_t st3AmigaPeriod( const uint8_t note, const uint16_t c2spd ) throw( PppException ) {
 			PPP_TEST( c2spd == 0 );
 			return (( 8363 << 2 )*Periods[S3M_NOTE( note )] >> S3M_OCTAVE( note ) ) / c2spd;
 		}
@@ -103,10 +131,10 @@ namespace ppp {
 		 * @see ::S3mSample
 		 * @note Time-critical
 		 */
-		static inline Frequency st3Frequency( const uint8_t note, const Frequency c2spd ) throw() {
+		static inline uint16_t st3Frequency( const uint8_t note, const uint16_t c2spd ) throw() {
 			if ( c2spd == 0 )
 				return 0;
-			return ( FRQ_VALUE / 16.0f ) / 8363.0f * ( static_cast<int>( c2spd ) << S3M_OCTAVE( note ) ) / Periods[S3M_NOTE( note )];
+			return ( FRQ_VALUE / 16.0f ) / 8363.0f * ( c2spd << S3M_OCTAVE( note ) ) / Periods[S3M_NOTE( note )];
 		}
 
 		/**
@@ -118,7 +146,7 @@ namespace ppp {
 		 * @note Time-critical
 		 * @todo OPTIMIZE!!!
 		 */
-		static inline std::string periodToNote( const uint16_t per, const Frequency c2spd ) throw() {
+		static inline std::string periodToNote( const uint16_t per, const uint16_t c2spd ) throw() {
 			if ( per == 0 )
 				return "p??";
 			if ( c2spd == 0 )
@@ -128,7 +156,7 @@ namespace ppp {
 			// -> nper = Periods[0] / 2^(totalnote/12)
 			// -> 2^(totalnote/12) = Periods[0]/nper
 			// -> totalnote = log2(Periods[0]/nper)*12
-			float totalnote = log2( static_cast<float>(Periods[0]<<2) / per );
+			float totalnote = log2( static_cast<float>(Periods[0]<<4) / per );
 			float intPart;
 			uint8_t minnote = std::modf(totalnote, &intPart)*12;
 			uint8_t minoct = intPart;
@@ -158,10 +186,10 @@ namespace ppp {
 		 * @return New frequency
 		 * @note Time-critical
 		 */
-		static inline Frequency deltaFrq( const Frequency frq, const int16_t delta ) throw() {
+		static inline uint16_t deltaFrq( const uint16_t frq, const int16_t delta ) throw() {
 			if ( frq == 0 )
 				return 0;
-			double x = ( static_cast<double>( FRQ_VALUE ) / frq ) + delta;
+			float x = ( static_cast<float>( FRQ_VALUE ) / frq ) + delta;
 			if ( x <= 1 )
 				x = 1;
 			return std::ceil( FRQ_VALUE / x );
@@ -172,12 +200,12 @@ namespace ppp {
 using namespace ppp;
 using namespace ppp::s3m;
 
-S3mChannel::S3mChannel( const Frequency frq, const S3mSample::Vector* const smp ) throw() : GenChannel( frq ),
+S3mChannel::S3mChannel( const uint16_t frq, const S3mSample::Vector* const smp ) throw() : GenChannel( frq ),
 		m_note( ::s3mEmptyNote ), m_lastFx( 0 ), m_lastPortaFx( 0 ), m_lastVibratoFx( 0 ), m_lastVibVolFx( 0 ), m_lastPortVolFx( 0 ),
 		m_tremorVolume( 0 ), m_targetNote( ::s3mEmptyNote ), m_noteChanged( false ), m_deltaPeriod( 0 ),
 		m_deltaVolume( 0 ), m_globalVol( 0x40 ), m_nextGlobalVol( 0x40 ),
 		m_retrigCount( -1 ), m_tremorCount( -1 ), m_300VolSlides( false ), m_amigaLimits( false ), m_immediateGlobalVol( false ),
-		m_maybeSchism( false ), m_zeroVolCounter( -1 ), m_sampleList(smp) {
+		m_maybeSchism( false ), m_zeroVolCounter( -1 ), m_sampleList(smp), m_period(0) {
 	setCurrentCell(GenCell::Ptr(new S3mCell()));
 }
 
@@ -243,7 +271,7 @@ std::string S3mChannel::getFxName() const throw() {
 }
 
 uint16_t S3mChannel::getAdjustedPeriod() throw() {
-	uint16_t p = clip<int32_t>( m_period+m_deltaPeriod, 0, 0x7fff );
+	uint16_t p = clip<int32_t>( m_period+m_deltaPeriod, 0x40, 0x7fff );
 	if(p==0)
 		setActive(false);
 	return p;
@@ -309,7 +337,7 @@ void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRet
 			if ( s3mcell->getEffect() != s3mFxPorta ) {
 				m_note = s3mcell->getNote();
 				if ( currentSample() ) {
-					m_period = clip<int32_t>(st3Period( m_note, currentSample()->getBaseFrq() ), 0, 0x7fff);
+					m_period = clip<int32_t>(st3Period( m_note, currentSample()->getBaseFrq() ), 0x40, 0x7fff);
 				}
 				setPosition( 0 );
 			}
@@ -323,7 +351,7 @@ void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRet
 		if (( m_note == s3mEmptyNote ) && ( m_targetNote != s3mEmptyNote ) ) {
 			m_note = m_targetNote;
 			if ( currentSample() ) {
-				m_period = clip<int32_t>(st3Period( m_note, currentSample()->getBaseFrq() ), 0, 0x7fff);
+				m_period = clip<int32_t>(st3Period( m_note, currentSample()->getBaseFrq() ), 0x40, 0x7fff);
 			}
 		}
 	}
@@ -506,7 +534,7 @@ void S3mChannel::doPitchFx( const uint8_t fx, uint8_t fxVal ) throw() {
 				int32_t basePer = 0;
 				int32_t targetPer = 0;
 				targetPer = st3Period( m_targetNote, currentSample()->getBaseFrq() ); // calculate target frq
-				targetPer = clip<int32_t>( targetPer, 0, 0x7fff );
+				targetPer = clip<int32_t>( targetPer, 0x40, 0x7fff );
 				if ( m_period == 0 )
 					m_period = targetPer;
 				else {
@@ -639,7 +667,7 @@ void S3mChannel::doSpecialFx( const uint8_t fx, uint8_t fxVal ) throw( PppExcept
 					m_period = st3Period( deltaNote( m_note, lowNibble( m_lastFx ) ), currentSample()->getBaseFrq() );
 					break;
 			}
-			m_period = clip<int32_t>(m_period, 0, 0x7fff);
+			m_period = clip<int32_t>(m_period, 0x40, 0x7fff);
 			break;
 		case s3mFxPanSlide:
 			useLastFxData( m_lastFx, fxVal );
@@ -709,28 +737,20 @@ void S3mChannel::doSpecialFx( const uint8_t fx, uint8_t fxVal ) throw( PppExcept
 					break;
 				case s3mSFxSetVibWave:
 					switch ( fxVal&3 ) {
-						case 0:
-							vibrato().resetWave( ProtrackerLookup, 256, 256 );
-						case 1:
-							vibrato().resetWave( RampLookup, 256, 64 );
-						case 2:
-							vibrato().resetWave( SquareLookup, 256, 64 );
-						case 3:
-							vibrato().resetWave( ProtrackerLookup, 256, 256 );
+						case 0: vibrato().resetWave( S3mWaveSine, 256 ); break;
+						case 1: vibrato().resetWave( S3mWaveRamp, 256 ); break;
+						case 2: vibrato().resetWave( S3mWaveSquare, 256 ); break;
+						case 3: vibrato().resetWave( ProtrackerLookup, 256, 256 ); break;
 						default:
 							break;
 					}
 					break;
 				case s3mSFxSetTremWave:
 					switch ( fxVal&3 ) {
-						case 0:
-							tremolo().resetWave( ProtrackerLookup, 256, 256 );
-						case 1:
-							tremolo().resetWave( RampLookup, 256, 64 );
-						case 2:
-							tremolo().resetWave( SquareLookup, 256, 64 );
-						case 3:
-							tremolo().resetWave( ProtrackerLookup, 256, 256 );
+						case 0: tremolo().resetWave( S3mWaveSine, 256 ); break;
+						case 1: tremolo().resetWave( S3mWaveRamp, 256 ); break;
+						case 2: tremolo().resetWave( S3mWaveSquare, 256 ); break;
+						case 3: tremolo().resetWave( ProtrackerLookup, 256, 256 ); break;
 						default:
 							break;
 					}

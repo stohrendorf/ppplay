@@ -98,13 +98,6 @@ namespace ppp {
 	}
 
 	/**
-	 * @brief The Frequency Type
-	 * @remarks This typedef saved my live as I discovered that a float is MUCH better than an integer...
-	 * @ingroup GenMod
-	 */
-	typedef float Frequency;
-
-	/**
 	 * @brief An order list item
 	 * @ingroup GenMod
 	 */

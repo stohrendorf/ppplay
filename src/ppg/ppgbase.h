@@ -313,7 +313,9 @@ T *Widget::getByPath(const std::string &path) throw() {
 	if (pos == std::string::npos) {
 		for (unsigned int i = 0; i < m_children.size(); i++) {
 			if (m_children[i]->getName() == path) {
-				return dynamic_cast<T*>(m_children[i]);
+				if(typeid(*m_children[i]) != typeid(T))
+					return NULL;
+				return static_cast<T*>(m_children[i]);
 			}
 		}
 	}
@@ -328,7 +330,9 @@ T *Widget::getByPath(const std::string &path) throw() {
 	else {
 		std::string subName(path, pos + 1);
 		for (unsigned int i = 0; i < m_children.size(); i++) {
-			Widget *con = dynamic_cast<T*>(m_children[i]);
+			Widget *con = m_children[i];
+			if(typeid(*con) != typeid(T))
+				continue;
 			if (con) {
 				T *res = con->getByPath<T>(subName);
 				if (res)

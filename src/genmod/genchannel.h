@@ -55,7 +55,7 @@ namespace ppp {
 			std::string m_statusString; //!< @brief Status string
 			int32_t m_currSmpIndex; //!< @brief Sample index
 			GenCell::Ptr m_currCell; //!< @brief Copy of the currently playing cell
-			Frequency m_playbackFrequency; //!< @brief Playback frequency, default is 44100 @see GenModule::GenModule
+			uint16_t m_playbackFrequency; //!< @brief Playback frequency, default is 44100 @see GenModule::GenModule
 		public:
 			/**
 			 * @brief The constructor
@@ -63,7 +63,7 @@ namespace ppp {
 			 * @pre @c smp!=NULL
 			 * @see GenModule::GenModule()
 			 */
-			GenChannel( const Frequency frq ) throw( PppException );
+			GenChannel( const uint16_t frq ) throw( PppException );
 			/**
 			 * @brief Member list initialization constructor
 			 * @param[in] src Source instance
@@ -209,7 +209,7 @@ namespace ppp {
 			void setVolume(uint8_t v) throw() { m_volume = v; }
 			void setPosition(int32_t p) throw() { m_position = p; }
 			uint8_t getPanning() const throw() { return m_panning; }
-			Frequency getPlaybackFrq() const throw() { return m_playbackFrequency; }
+			uint16_t getPlaybackFrq() const throw() { return m_playbackFrequency; }
 			void setStatusString(const std::string &s) { m_statusString = s; }
 			int32_t getCurrentSmpIdx() const throw() { return m_currSmpIndex; }
 	};
