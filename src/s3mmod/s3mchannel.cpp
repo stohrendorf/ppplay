@@ -103,9 +103,13 @@ namespace ppp {
 		 * @see ::S3mSample
 		 * @note Time-critical
 		 */
-		static inline uint16_t st3Period( const uint8_t note, const uint16_t c2spd ) throw( PppException ) {
+/*		static inline uint16_t st3Period( const uint8_t note, const uint16_t c2spd ) throw( PppException ) {
 			PPP_TEST( c2spd == 0 );
 			return (8363<<4)*( Periods[S3M_NOTE( note )] >> S3M_OCTAVE( note ) ) / c2spd;
+		}*/
+		static inline uint16_t st3Period( const uint8_t note, uint16_t c4spd ) throw( PppException ) {
+			PPP_TEST(c4spd==0);
+			return (8363<<4)*( Periods[S3M_NOTE( note )] >> S3M_OCTAVE( note ) ) / c4spd;
 		}
 
 		/**
@@ -156,7 +160,12 @@ namespace ppp {
 			// -> nper = Periods[0] / 2^(totalnote/12)
 			// -> 2^(totalnote/12) = Periods[0]/nper
 			// -> totalnote = log2(Periods[0]/nper)*12
-			float totalnote = log2( static_cast<float>(Periods[0]<<4) / per );
+				
+			// per = (8363<<4)*( Periods[S3M_NOTE( note )] >> S3M_OCTAVE( note ) ) / c4spd;
+			// per*c4spd/(8363<<4) == Periods[note] * (2^-octave)
+			//                     ~= Periods[0] * (2^-(octave+note/12))
+			// log2( per*c4spd/(8363<<4 * Periods[0]) ) == -(octave+note/12)
+			float totalnote = -log2( static_cast<float>(per)*c2spd/((8363<<4)*Periods[0]) );
 			float intPart;
 			uint8_t minnote = std::modf(totalnote, &intPart)*12;
 			uint8_t minoct = intPart;
@@ -205,7 +214,7 @@ S3mChannel::S3mChannel( const uint16_t frq, const S3mSample::Vector* const smp )
 		m_tremorVolume( 0 ), m_targetNote( ::s3mEmptyNote ), m_noteChanged( false ), m_deltaPeriod( 0 ),
 		m_deltaVolume( 0 ), m_globalVol( 0x40 ), m_nextGlobalVol( 0x40 ),
 		m_retrigCount( -1 ), m_tremorCount( -1 ), m_300VolSlides( false ), m_amigaLimits( false ), m_immediateGlobalVol( false ),
-		m_maybeSchism( false ), m_zeroVolCounter( -1 ), m_sampleList(smp), m_period(0) {
+		m_maybeSchism( false ), m_zeroVolCounter( -1 ), m_sampleList(smp), m_basePeriod(0) {
 	setCurrentCell(GenCell::Ptr(new S3mCell()));
 }
 
@@ -270,11 +279,31 @@ std::string S3mChannel::getFxName() const throw() {
 	}
 }
 
-uint16_t S3mChannel::getAdjustedPeriod() throw() {
-	uint16_t p = clip<int32_t>( m_period+m_deltaPeriod, 0x40, 0x7fff );
-	if(p==0)
+uint16_t S3mChannel::basePeriod() {
+	if(!currentSample() || currentSample()->getBaseFrq()==0) {
 		setActive(false);
-	return p;
+		return 0;
+	}
+	return m_basePeriod;
+}
+
+void S3mChannel::setBasePeriod(uint16_t per) {
+	if(per==0)
+		return setActive(false);
+	if(!m_amigaLimits)
+		m_basePeriod = clip<uint16_t>(per, 0x40, 0x7fff);
+	else
+		m_basePeriod = clip<uint16_t>(per, 0x1c5, 0xd60);
+}
+
+uint16_t S3mChannel::getAdjustedPeriod() throw() {
+	int base = basePeriod()+m_deltaPeriod;
+	if(!isActive())
+		return 0;
+	if(!m_amigaLimits)
+		return clip<int>(base, 0x40, 0x7fff);
+	else
+		return clip<int>(base, 0x1c5, 0xd60);
 }
 
 void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRetrigger ) throw() {
@@ -336,9 +365,7 @@ void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRet
 		if (( s3mcell->getNote() != s3mEmptyNote ) && ( s3mcell->getNote() != s3mKeyOffNote ) ) {
 			if ( s3mcell->getEffect() != s3mFxPorta ) {
 				m_note = s3mcell->getNote();
-				if ( currentSample() ) {
-					m_period = clip<int32_t>(st3Period( m_note, currentSample()->getBaseFrq() ), 0x40, 0x7fff);
-				}
+				setBasePeriod(st3Period(m_note, currentSample()->getBaseFrq()));
 				setPosition( 0 );
 			}
 			m_deltaPeriod = 0;
@@ -350,9 +377,7 @@ void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRet
 			m_targetNote = s3mcell->getNote();
 		if (( m_note == s3mEmptyNote ) && ( m_targetNote != s3mEmptyNote ) ) {
 			m_note = m_targetNote;
-			if ( currentSample() ) {
-				m_period = clip<int32_t>(st3Period( m_note, currentSample()->getBaseFrq() ), 0x40, 0x7fff);
-			}
+			setBasePeriod(st3Period(m_note, currentSample()->getBaseFrq()));
 		}
 	}
 	if ( getTick() == smpDelay ) {
@@ -534,31 +559,28 @@ void S3mChannel::doPitchFx( const uint8_t fx, uint8_t fxVal ) throw() {
 				int32_t basePer = 0;
 				int32_t targetPer = 0;
 				targetPer = st3Period( m_targetNote, currentSample()->getBaseFrq() ); // calculate target frq
-				targetPer = clip<int32_t>( targetPer, 0x40, 0x7fff );
-				if ( m_period == 0 )
-					m_period = targetPer;
+				if ( m_basePeriod == 0 )
+					setBasePeriod(targetPer);
 				else {
-					if ( targetPer > m_period ) { // pitch down...
-						basePer = m_period + (fxVal<<2);
-						if( basePer > 0x7ffff )
-							basePer = 0x7ffff;
+					if ( targetPer > m_basePeriod ) { // pitch down...
+						basePer = m_basePeriod + (fxVal<<2);
 						if ( basePer >= targetPer ) {
-							m_period = targetPer;
+							setBasePeriod(targetPer);
 							m_note = m_targetNote;
 						}
 						else
-							m_period = basePer;
+							setBasePeriod(basePer);
 					}
 					else { // pitch up...
-						basePer = m_period - (fxVal<<2);
+						basePer = m_basePeriod - (fxVal<<2);
 						if( basePer < 0 )
 							basePer = 0;
 						if ( basePer <= targetPer ) {
-							m_period = targetPer;
+							setBasePeriod(targetPer);
 							m_note = m_targetNote;
 						}
 						else
-							m_period = basePer;
+							setBasePeriod(basePer);
 					}
 				}
 			}
@@ -658,16 +680,15 @@ void S3mChannel::doSpecialFx( const uint8_t fx, uint8_t fxVal ) throw( PppExcept
 			useLastFxData( m_lastFx, fxVal );
 			switch ( getTick() % 3 ) {
 				case 0: // normal note
-					m_period = st3Period(m_note, currentSample()->getBaseFrq());
+					setBasePeriod(st3Period(m_note, currentSample()->getBaseFrq()));
 					break;
 				case 1: // +x half notes...
-					m_period = st3Period( deltaNote( m_note, highNibble( m_lastFx ) ), currentSample()->getBaseFrq() );
+					setBasePeriod(st3Period( deltaNote(m_note, highNibble(m_lastFx)), currentSample()->getBaseFrq() ));
 					break;
 				case 2: // +y half notes...
-					m_period = st3Period( deltaNote( m_note, lowNibble( m_lastFx ) ), currentSample()->getBaseFrq() );
+					setBasePeriod(st3Period( deltaNote(m_note, lowNibble(m_lastFx)), currentSample()->getBaseFrq() ));
 					break;
 			}
-			m_period = clip<int32_t>(m_period, 0x40, 0x7fff);
 			break;
 		case s3mFxPanSlide:
 			useLastFxData( m_lastFx, fxVal );
@@ -781,11 +802,11 @@ void S3mChannel::doSpecialFx( const uint8_t fx, uint8_t fxVal ) throw( PppExcept
 }
 
 void S3mChannel::pitchUp( const int16_t delta ) throw() {
-	m_period -= delta;
+	setBasePeriod(m_basePeriod - delta);
 }
 
 void S3mChannel::pitchDown( const int16_t delta ) throw() {
-	m_period += delta;
+	setBasePeriod(m_basePeriod + delta);
 }
 
 void S3mChannel::pitchUp( uint16_t &per, const int16_t delta ) throw() {
@@ -800,7 +821,7 @@ void S3mChannel::mixTick( MixerFrameBuffer &mixBuffer, const uint8_t volume ) th
 	if ( isDisabled() )
 		return;
 	setGlobalVolume( volume, m_immediateGlobalVol );
-	if (( !isActive() ) || ( !currentSample() ) || ( m_period == 0 ) ) {
+	if (( !isActive() ) || ( !currentSample() ) || ( m_basePeriod == 0 ) ) {
 		setActive( false );
 		return;
 	}
@@ -848,7 +869,7 @@ void S3mChannel::simTick( const std::size_t bufSize, const uint8_t volume ) {
 	if ( isDisabled() )
 		return;
 	setGlobalVolume( volume, m_immediateGlobalVol );
-	if (( !isActive() ) || ( !currentSample() ) || ( m_period == 0 ) )
+	if (( !isActive() ) || ( !currentSample() ) || ( m_basePeriod == 0 ) )
 		return setActive( false );
 	if (( getTick() == 0 ) && ( m_zeroVolCounter != -1 ) && ( currentSample() ) && isActive() ) {
 		if (( currentSample()->isLooped() ) && ( getVolume() == 0 ) )
@@ -864,7 +885,7 @@ void S3mChannel::simTick( const std::size_t bufSize, const uint8_t volume ) {
 	}
 	PPP_TEST( getPlaybackFrq()==0 );
 	PPP_TEST( bufSize==0);
-	if( m_period==0 ) {
+	if( m_basePeriod==0 ) {
 		setActive(false);
 		setPosition(0);
 		return;
@@ -1056,7 +1077,7 @@ BinStream &S3mChannel::saveState( BinStream &str ) const throw( PppException ) {
 		.write( &m_deltaPeriod )
 		.write( &m_deltaVolume )
 		.write( &m_zeroVolCounter )
-		.write( &m_period );
+		.write( &m_basePeriod );
 	}
 	PPP_CATCH_ALL();
 	return str;
@@ -1083,7 +1104,7 @@ BinStream &S3mChannel::restoreState( BinStream &str ) throw( PppException ) {
 		.read( &m_deltaPeriod )
 		.read( &m_deltaVolume )
 		.read( &m_zeroVolCounter )
-		.read( &m_period );
+		.read( &m_basePeriod );
 	}
 	PPP_CATCH_ALL();
 	return str;

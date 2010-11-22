@@ -294,7 +294,6 @@ static std::string parseCmdLine(int argc, char *argv[]) {
 	#ifdef WITH_MP3LAME
     quickMp3 = vm.count("quick-mp3");
 	#endif
-	#ifdef NDEBUG
 	switch(getLogLevel()) {
 		case llMessage: cout << "Log level is: VERY Verbose" << endl; break;
 		case llWarning: cout << "Log level is: Verbose" << endl; break;
@@ -302,9 +301,6 @@ static std::string parseCmdLine(int argc, char *argv[]) {
 		case llNone: /* logging disabled... */ break;
 		default: break;
 	}
-	#else
-	setLogLevel(llMessage);
-	#endif
 	return vm["file"].as<std::string>();
 }
 

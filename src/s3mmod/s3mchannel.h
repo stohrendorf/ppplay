@@ -72,7 +72,9 @@ namespace ppp {
 				bool m_maybeSchism;            //!< @brief Schism Tracker compatibility (when 16 bit or stereo samples are found and the tracker ID is ScreamTracker 3.20)
 				int16_t m_zeroVolCounter;        //!< @brief Zero Volume Optimization counter, -1 if disabled
 				const S3mSample::Vector* const m_sampleList;
-				uint16_t m_period;
+				uint16_t m_basePeriod; //!< @brief The channel's period without the sample's c4speed applied
+				uint16_t basePeriod();
+				void setBasePeriod(uint16_t per);
 				S3mSample::Ptr currentSample() throw(PppException);
 				/**
 				 * @brief Apply Volume Effect
