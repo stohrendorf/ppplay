@@ -50,7 +50,7 @@ namespace ppp {
 			int32_t m_loopStart; //!< @brief Loop start sample
 			int32_t m_loopEnd; //!< @brief Loop end sample (points to 1 frame @e after the loop end)
 			uint8_t m_volume; //!< @brief Volume of the sample
-			Frequency m_baseFrq; //!< @brief Base frequency of the sample
+			uint16_t m_baseFrq; //!< @brief Base frequency of the sample
 			BasicSample *m_dataL; //!< @brief Left sample data
 			BasicSample *m_dataR; //!< @brief Right sample data
 			std::string m_filename; //!< @brief Sample filename
@@ -128,7 +128,7 @@ namespace ppp {
 			 * @brief Get the sample's Base Frequency
 			 * @return Base frequency
 			 */
-			inline Frequency getBaseFrq() const throw() { return m_baseFrq; }
+			inline uint16_t getBaseFrq() const throw() { return m_baseFrq; }
 			/**
 			 * @brief Get the sample's default volume
 			 * @return Default volume
@@ -172,7 +172,7 @@ namespace ppp {
 			void setLoopStart(std::size_t s) throw() { m_loopStart = s; }
 			void setLoopEnd(std::size_t e) throw() { m_loopEnd = e; }
 			void setVolume(uint8_t v) throw() { m_volume = v; }
-			void setBaseFrq(Frequency f) throw() { m_baseFrq = f; }
+			void setBaseFrq(uint16_t f) throw() { m_baseFrq = f; }
 	};
 
 	inline BasicSample GenSample::getSampleAt( int32_t &pos ) const throw() {

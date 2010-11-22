@@ -24,6 +24,8 @@
 #include "s3mbase.h"
 #include "s3msample.h"
 
+#include <array>
+
 /**
 * @file
 * @ingroup S3mMod
@@ -32,7 +34,9 @@
 
 namespace ppp {
 	namespace s3m {
-
+		extern const std::array<const int16_t, 64> S3mWaveSine;
+		extern const std::array<const int16_t, 64> S3mWaveRamp;
+		extern const std::array<const int16_t, 64> S3mWaveSquare;
 		/**
 		 * @class S3mChannel
 		 * @ingroup S3mMod
@@ -144,7 +148,7 @@ namespace ppp {
 				/**
 				 * @copydoc GenChannel::GenChannel
 				 */
-				S3mChannel(Frequency frq, const S3mSample::Vector* const smp) throw();
+				S3mChannel(uint16_t frq, const S3mSample::Vector* const smp) throw();
 				virtual ~S3mChannel() throw();
 				virtual std::string getNoteName() throw(PppException);
 				virtual std::string getFxName() const throw();

@@ -10,10 +10,7 @@ namespace ppp {
 	Phaser::Phaser() throw() : m_lookup(), m_amplitude( 0 ), m_phase( 0 ) {
 	}
 	Phaser::Phaser( const int16_t table[], const uint32_t length, const int16_t amp, float multiplier ) throw() : m_lookup(), m_amplitude( amp ), m_phase( 0 ) {
-		//m_lookup.reset( new int16_t[length] );
-		m_lookup.resize(length);
-		for ( uint32_t i = 0; i < length; i++ )
-			m_lookup[i] = static_cast<int16_t>( table[i] * multiplier );
+		resetWave(table, length, amp, multiplier);
 	}
 	Phaser &Phaser::operator+=( const int16_t delta ) throw( PppException ) {
 		PPP_TEST( m_lookup.size() == 0 );

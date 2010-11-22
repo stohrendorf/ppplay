@@ -94,7 +94,7 @@ namespace ppp {
 			std::string m_trackerInfo; //!< @brief Tracker information (Name and Version)
 			GenOrder::Vector m_orders; //!< @brief Order list @note @b Not @b initialized @b here!
 			uint16_t m_maxRepeat; //!< @brief Maximum module loops if module patterns are played multiple times
-			Frequency m_playbackFrequency; //!< @brief Playback frequency
+			uint16_t m_playbackFrequency; //!< @brief Playback frequency
 			std::size_t m_playedFrames; //!< @brief Played Sample frames
 			std::vector<GenMultiTrack> m_tracks; //!< @brief Per-track infos
 			uint16_t m_currentTrack; //!< @brief The current track index
@@ -283,8 +283,8 @@ namespace ppp {
 			 * @brief Removes empty tracks from the track list and resets the orders' repeat count
 			 */
 			void removeEmptyTracks();
-			void setPlaybackFrq(Frequency f) throw() { m_playbackFrequency = f; }
-			Frequency getPlaybackFrq() const throw() { return m_playbackFrequency; }
+			void setPlaybackFrq(uint16_t f) throw() { m_playbackFrequency = f; }
+			uint16_t getPlaybackFrq() const throw() { return m_playbackFrequency; }
 			void setPosition(std::size_t p) throw() { m_playedFrames = p; }
 			void addOrder(const GenOrder::Ptr &o) { m_orders.push_back(o); }
 			std::string getFilename() const { return m_fileName; }
