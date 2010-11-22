@@ -64,7 +64,7 @@ namespace ppp {
 		 * @ingroup S3mMod
 		 * @brief Note periodic table for frequency calculations
 		 */
-		static const std::array<uint16_t, 12> Periods = {{1712, 1616, 1524, 1440, 1356, 1280, 1208, 1140, 1076, 1016,  960,  907}};
+		static const std::array<uint16_t, 12> Periods = {{1712<<4, 1616<<4, 1524<<4, 1440<<4, 1356<<4, 1280<<4, 1208<<4, 1140<<4, 1076<<4, 1016<<4,  960<<4,  907<<4}};
 
 		/**
 		 * @brief Get the octave out of a note
@@ -103,46 +103,16 @@ namespace ppp {
 		 * @see ::S3mSample
 		 * @note Time-critical
 		 */
-		static inline uint16_t st3Period( const uint8_t note, uint16_t c4spd ) throw( PppException ) {
-			PPP_TEST(c4spd==0);
-			return (8363<<4)*( Periods[S3M_NOTE( note )] >> S3M_OCTAVE( note ) ) / c4spd;
-		}
 		static inline uint16_t st3PeriodEx( const uint8_t note, const uint8_t oct, uint16_t c4spd ) throw( PppException ) {
 			PPP_TEST(c4spd==0);
-			return (8363<<4)*( Periods[note] >> oct ) / c4spd;
+			return (Periods[note] >> oct) * 8363 / c4spd;
+		}
+		static inline uint16_t st3Period( const uint8_t note, uint16_t c4spd ) throw( PppException ) {
+			return st3PeriodEx(S3M_NOTE(note), S3M_OCTAVE(note), c4spd);
 		}
 
-		/**
-		 * @brief Calculate the amiga period for a given note and base frequency
-		 * @ingroup S3mMod
-		 * @param[in] note Note value
-		 * @param[in] c2spd Base frequency of the sample
-		 * @return Amiga Period for note @a note and base frequency @a c2spd
-		 * @see ::S3mSample
-		 * @note Time-critical
-		 */
-		static inline uint16_t st3AmigaPeriod( const uint8_t note, const uint16_t c2spd ) throw( PppException ) {
-			PPP_TEST( c2spd == 0 );
-			return (( 8363 << 2 )*Periods[S3M_NOTE( note )] >> S3M_OCTAVE( note ) ) / c2spd;
-		}
-
-		/**
-		 * @brief Calculate the frequency for a given note and base frequency
-		 * @ingroup S3mMod
-		 * @param[in] note Note value
-		 * @param[in] c2spd Base frequency of the sample
-		 * @return Frequency for note @a note and base frequency @a c2spd
-		 * @see ::S3mSample
-		 * @note Time-critical
-		 */
-		static inline uint16_t st3Frequency( const uint8_t note, const uint16_t c2spd ) throw() {
-			if ( c2spd == 0 )
-				return 0;
-			return ( FRQ_VALUE / 16.0f ) / 8363.0f * ( c2spd << S3M_OCTAVE( note ) ) / Periods[S3M_NOTE( note )];
-		}
-		
 		static inline uint8_t periodToNoteOffset( const uint16_t per, const uint16_t c4spd) {
-			return -std::log2( static_cast<float>(per)*c4spd/((8363<<4)*Periods[0]) )*12;
+			return -std::log2( static_cast<float>(per)*c4spd/(8363*Periods[0]) )*12;
 		}
 
 		/**
@@ -183,22 +153,6 @@ namespace ppp {
 		static inline uint8_t deltaNote( const uint8_t note, const int8_t delta ) throw() {
 			uint16_t x = S3M_OCTAVE( note ) * 12 + S3M_NOTE( note ) + delta;
 			return (( x / 12 ) << 4 ) | ( x % 12 );
-		}
-
-		/**
-		 * @brief Apply a delta period to a frequency
-		 * @param[in] frq Base frequency
-		 * @param[in] delta Delta period
-		 * @return New frequency
-		 * @note Time-critical
-		 */
-		static inline uint16_t deltaFrq( const uint16_t frq, const int16_t delta ) throw() {
-			if ( frq == 0 )
-				return 0;
-			float x = ( static_cast<float>( FRQ_VALUE ) / frq ) + delta;
-			if ( x <= 1 )
-				x = 1;
-			return std::ceil( FRQ_VALUE / x );
 		}
 	} // namespace s3m
 } // namespace ppp
