@@ -98,18 +98,18 @@ namespace ppp {
 		 * @brief Calculate the period for a given note and base frequency
 		 * @ingroup S3mMod
 		 * @param[in] note Note value
-		 * @param[in] c2spd Base frequency of the sample
-		 * @return S3M Period for note @a note and base frequency @a c2spd
+		 * @param[in] c4spd Base frequency of the sample
+		 * @return S3M Period for note @a note and base frequency @a c4spd
 		 * @see ::S3mSample
 		 * @note Time-critical
 		 */
-/*		static inline uint16_t st3Period( const uint8_t note, const uint16_t c2spd ) throw( PppException ) {
-			PPP_TEST( c2spd == 0 );
-			return (8363<<4)*( Periods[S3M_NOTE( note )] >> S3M_OCTAVE( note ) ) / c2spd;
-		}*/
 		static inline uint16_t st3Period( const uint8_t note, uint16_t c4spd ) throw( PppException ) {
 			PPP_TEST(c4spd==0);
 			return (8363<<4)*( Periods[S3M_NOTE( note )] >> S3M_OCTAVE( note ) ) / c4spd;
+		}
+		static inline uint16_t st3PeriodEx( const uint8_t note, const uint8_t oct, uint16_t c4spd ) throw( PppException ) {
+			PPP_TEST(c4spd==0);
+			return (8363<<4)*( Periods[note] >> oct ) / c4spd;
 		}
 
 		/**
@@ -140,6 +140,10 @@ namespace ppp {
 				return 0;
 			return ( FRQ_VALUE / 16.0f ) / 8363.0f * ( c2spd << S3M_OCTAVE( note ) ) / Periods[S3M_NOTE( note )];
 		}
+		
+		static inline uint8_t periodToNoteOffset( const uint16_t per, const uint16_t c4spd) {
+			return -std::log2( static_cast<float>(per)*c4spd/((8363<<4)*Periods[0]) )*12;
+		}
 
 		/**
 		 * @brief Reverse-calculate the Note from the given frequency
@@ -155,20 +159,13 @@ namespace ppp {
 				return "p??";
 			if ( c2spd == 0 )
 				return "c??";
-			// nper = Periods[note] / 2^oct
-			// note = totalnote % 12; oct = totalnote / 12
-			// -> nper = Periods[0] / 2^(totalnote/12)
-			// -> 2^(totalnote/12) = Periods[0]/nper
-			// -> totalnote = log2(Periods[0]/nper)*12
-				
 			// per = (8363<<4)*( Periods[S3M_NOTE( note )] >> S3M_OCTAVE( note ) ) / c4spd;
 			// per*c4spd/(8363<<4) == Periods[note] * (2^-octave)
 			//                     ~= Periods[0] * (2^-(octave+note/12))
 			// log2( per*c4spd/(8363<<4 * Periods[0]) ) == -(octave+note/12)
-			float totalnote = -log2( static_cast<float>(per)*c2spd/((8363<<4)*Periods[0]) );
-			float intPart;
-			uint8_t minnote = std::modf(totalnote, &intPart)*12;
-			uint8_t minoct = intPart;
+			uint8_t totalnote = periodToNoteOffset(per,c2spd);
+			uint8_t minnote = totalnote%12;
+			uint8_t minoct = totalnote/12;
 			if (( minoct > 9 ) || ( minnote > 11 ) ) {
 				return "???";
 			}
@@ -209,12 +206,18 @@ namespace ppp {
 using namespace ppp;
 using namespace ppp::s3m;
 
+void S3mChannel::setSampleIndex(int32_t idx) {
+	GenChannel::setSampleIndex(idx);
+	if(!currentSample() || currentSample()->getBaseFrq()==0)
+		setActive(false);
+}
+
 S3mChannel::S3mChannel( const uint16_t frq, const S3mSample::Vector* const smp ) throw() : GenChannel( frq ),
 		m_note( ::s3mEmptyNote ), m_lastFx( 0 ), m_lastPortaFx( 0 ), m_lastVibratoFx( 0 ), m_lastVibVolFx( 0 ), m_lastPortVolFx( 0 ),
 		m_tremorVolume( 0 ), m_targetNote( ::s3mEmptyNote ), m_noteChanged( false ), m_deltaPeriod( 0 ),
 		m_deltaVolume( 0 ), m_globalVol( 0x40 ), m_nextGlobalVol( 0x40 ),
 		m_retrigCount( -1 ), m_tremorCount( -1 ), m_300VolSlides( false ), m_amigaLimits( false ), m_immediateGlobalVol( false ),
-		m_maybeSchism( false ), m_zeroVolCounter( -1 ), m_sampleList(smp), m_basePeriod(0) {
+		m_maybeSchism( false ), m_zeroVolCounter( -1 ), m_sampleList(smp), m_basePeriod(0), m_glissando(false) {
 	setCurrentCell(GenCell::Ptr(new S3mCell()));
 }
 
@@ -297,13 +300,18 @@ void S3mChannel::setBasePeriod(uint16_t per) {
 }
 
 uint16_t S3mChannel::getAdjustedPeriod() throw() {
-	int base = basePeriod()+m_deltaPeriod;
+	int res = basePeriod()+m_deltaPeriod;
 	if(!isActive())
 		return 0;
+	if(m_glissando) {
+		uint8_t no = periodToNoteOffset(res, currentSample()->getBaseFrq());
+		res = st3PeriodEx(no%12, no/12, currentSample()->getBaseFrq());
+	}
 	if(!m_amigaLimits)
-		return clip<int>(base, 0x40, 0x7fff);
+		res = clip<int>(res, 0x40, 0x7fff);
 	else
-		return clip<int>(base, 0x1c5, 0xd60);
+		res = clip<int>(res, 0x1c5, 0xd60);
+	return res;
 }
 
 void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRetrigger ) throw() {
@@ -351,11 +359,10 @@ void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRet
 	if (( tick == smpDelay ) && !noRetrigger ) {
 		if ( s3mcell->getInstr() != s3mEmptyInstr ) {
 			setSampleIndex( s3mcell->getInstr() - 1 );
-			if ( !currentSample() ) {
+			if ( !currentSample() || currentSample()->getBaseFrq()==0 ) {
 				setActive( false );
 				return;
 			}
-			//! @todo Adjust min and max periods for amiga limits
 			setVolume( currentSample()->getVolume() );
 		}
 		if ( s3mcell->getVolume() != s3mEmptyVolume ) {
@@ -786,7 +793,8 @@ void S3mChannel::doSpecialFx( const uint8_t fx, uint8_t fxVal ) throw( PppExcept
 					LOG_WARNING_( "Set Finetune (currently) not implemented" );
 					break;
 				case s3mSFxSetGlissando:
-					LOG_MESSAGE_( "Set Glissando Control not supported" );
+					m_glissando = fxVal!=0;
+					LOG_WARNING_( "Set Glissando Control is experimental" );
 					break;
 				default:
 					LOG_WARNING( "UNSUPPORTED SPECIAL FX FOUND: %s", getFxName().c_str() );
@@ -890,7 +898,10 @@ void S3mChannel::simTick( const std::size_t bufSize, const uint8_t volume ) {
 		setPosition(0);
 		return;
 	}
-	int32_t pos = getPosition() + ( FRQ_VALUE / getPlaybackFrq() * bufSize / getAdjustedPeriod() );
+	uint16_t adj = getAdjustedPeriod();
+	if(!isActive())
+		return;
+	int32_t pos = getPosition() + ( FRQ_VALUE / getPlaybackFrq() * bufSize / adj );
 	currentSample()->adjustPos( pos );
 	if ( pos == GenSample::EndOfSample )
 		setActive( false );

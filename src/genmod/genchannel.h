@@ -204,7 +204,7 @@ namespace ppp {
 			Phaser &vibrato() throw() { return m_vibrato; }
 			const Phaser &tremolo() const throw() { return m_tremolo; }
 			Phaser &tremolo() throw() { return m_tremolo; }
-			void setSampleIndex(int32_t idx) { m_currSmpIndex = idx; }
+			virtual void setSampleIndex(int32_t idx) { m_currSmpIndex = idx; }
 			uint8_t getVolume() const throw() { return m_volume; }
 			void setVolume(uint8_t v) throw() { m_volume = v; }
 			void setPosition(int32_t p) throw() { m_position = p; }
