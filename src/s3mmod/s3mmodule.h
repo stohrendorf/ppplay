@@ -79,11 +79,9 @@ namespace ppp {
 				virtual bool load(const std::string &fn) throw(PppException);
 				virtual bool existsSample(int16_t idx) throw();
 				virtual std::string getSampleName(int16_t idx) throw();
-				virtual bool existsInstr(int16_t idx) const throw();
-				virtual std::string getInstrName(int16_t idx) const throw();
 				virtual inline uint16_t getTickBufLen() const throw(PppException);
-				virtual void getTick(AudioFrameBuffer &buf ) throw(PppException) __attribute__((hot));
-				virtual void getTickNoMixing(std::size_t& bufLen) throw(PppException) __attribute__((hot));
+				virtual void getTick(AudioFrameBuffer &buf ) throw(PppException);
+				virtual void getTickNoMixing(std::size_t& bufLen) throw(PppException);
 				virtual GenOrder::Ptr mapOrder(int16_t order) throw();
 				virtual std::string getChanStatus(int16_t idx) throw();
 				virtual bool jumpNextTrack() throw(PppException);

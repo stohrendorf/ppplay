@@ -387,21 +387,13 @@ bool S3mModule::existsSample( int16_t idx ) throw() {
 	idx--;
 	if ( !inRange<int>( idx, 0, m_samples.size() - 1 ) )
 		return false;
-	return !!m_samples[idx].get();
+	return m_samples[idx].get()!=NULL;
 }
 
 std::string S3mModule::getSampleName( int16_t idx ) throw() {
 	if ( !existsSample( idx ) )
 		return std::string();
 	return m_samples[idx-1]->getTitle();
-}
-
-bool S3mModule::existsInstr( int16_t ) const throw() {
-	return false;
-}
-
-std::string S3mModule::getInstrName( int16_t ) const throw() {
-	return "";
 }
 
 uint8_t S3mModule::channelCount() const {
