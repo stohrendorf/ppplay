@@ -135,6 +135,8 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 			PPG_TEST(!lb);
 			*lb = ppp::stringf("Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", pbi.speed, pbi.tempo, pbi.globalVolume * 100 / 0x40);
 			for (int i = 0; i < s3m->channelCount(); i++) {
+				if(i>=16)
+					break;
 				lb = dosScreen->getByPath<ppg::Label>(ppp::stringf("ChanInfo_%d", i));
 				PPG_TEST(!lb);
 				*lb = s3m->getChanStatus(i);
