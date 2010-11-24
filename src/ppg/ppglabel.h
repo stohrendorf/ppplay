@@ -37,7 +37,7 @@ class Label : public Widget {
 		 * @brief Resizes #aFgColors and #aBgColors if the new text is longer than the arrays' sizes
 		 */
 		void sizeColorsToMax();
-	protected:
+	//protected:
 		std::string m_text; //!< @brief The text in this label
 		std::vector<uint8_t> m_fgColors; //!< @brief Text chars' foreground colors @see PpgElement::ESC_NOCHANGE #setFgColor
 		std::vector<uint8_t> m_bgColors; //!< @brief Text chars' background colors @see PpgElement::ESC_NOCHANGE #setBgColor
@@ -55,12 +55,7 @@ class Label : public Widget {
 		 * @param[in] name Label's unique name
 		 * @param[in] text Initial text
 		 */
-		Label(const std::string &name, const std::string &text) throw();
-		/**
-		 * @brief Copy constructor
-		 * @param[in] src Source label
-		 */
-		Label(const Label &src) throw();
+		Label(Widget*parent, const std::string &text = std::string());
 		//! @copydoc PpgWidget::~PpgWidget
 		virtual ~Label() throw();
 		/**
@@ -69,17 +64,14 @@ class Label : public Widget {
 		 */
 		virtual unsigned int length() const throw();
 		/**
-		 * @brief Copy operator
-		 * @param[in] src Source to copy from
-		 * @return Reference to *this
-		 */
-		Label &operator=(const Label &src) throw();
-		/**
 		 * @brief Assignment operator for std::string's
 		 * @param[in] src String to assign to this label
 		 * @return Reference to *this
 		 */
 		Label &operator=(const std::string &src) throw();
+		void setText(const std::string &txt);
+		char &charAt(std::size_t pos);
+		char charAt(std::size_t pos) const;
 		/**
 		 * @brief Append-Assignment operator for std::string's
 		 * @param[in] src String to append to this label
@@ -110,8 +102,6 @@ class Label : public Widget {
 		virtual int setHeight(const int h) throw(Exception);
 		virtual int setWidth(const int w) throw(Exception);
 };
-
-extern template Label *Widget::getByPath(const std::string &path) throw();
 
 } // namespace ppg
 
