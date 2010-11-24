@@ -22,8 +22,9 @@
 #define ppgbaseH
 
 #include "ppgexcept.h"
+#include "utils.h"
 
-#include <vector>
+#include <list>
 
 namespace ppg {
 
@@ -44,19 +45,17 @@ class Container;
  */
 class Widget {
 	private:
-		bool m_isContainer; //!< @brief This is @c true if this widget is a container
-	protected:
-		std::string m_name; //!< @brief (Unique) Name of the instance
-		std::string m_type; //!< @brief Class type. Empty for ppg::Widget
+		Widget(const Widget&) = delete;
+		Widget& operator=(const Widget&) = delete;
+	private:
 		bool m_visible; //!< @brief @c false if this widget and it's children should not be drawn
 		Widget *m_parent; //!< @brief Pointer to the parent widget, or @c NULL if it's the top widget
 		int m_left; //!< @brief Relative X position of this widget to the parent
 		int m_top; //!< @brief Relative Y position of this widget to the parent
 		int m_bottom; //!< @brief Relative bottom position of this widget to the parent
 		int m_right; //!< @brief Relative right position of this widget to the parent
-		std::vector<Widget*> m_children; //!< @brief Children within this container @see ppg::Widget::aIsContainer
-		virtual void drawThis() throw(Exception); //!< @brief Internal drawing method, called by PppWidet::draw() @see draw()
-		void markAsFinalNode() throw() { m_isContainer = false; } //!< @brief Call this if your widget should not contain other widgets
+		std::list<Widget*> m_children; //!< @brief Children within this container
+		virtual void drawThis() throw(Exception) = 0; //!< @brief Internal drawing method, called by PppWidet::draw() @see draw()
 	public:
 		/**
 		* @brief Value that marks a non-changing color
@@ -66,32 +65,11 @@ class Widget {
 		 * @brief Constructor
 		 * @param[in] name Name of this widget
 		 */
-		Widget(const std::string &name) throw();
-		/**
-		 * @brief Copy constructor
-		 * @param[in] src Source to copy from
-		 */
-		Widget(const Widget& src) throw();
-		/**
-		 * @brief Copy operator
-		 * @param[in] src Source to copy from
-		 * @return Reference to *this
-		 */
-		Widget &operator=(const Widget &src) throw();
+		explicit Widget(Widget* parent);
 		/**
 		 * @brief Destructor. No operation.
 		 */
 		virtual ~Widget() throw();
-		/**
-		 * @brief Get ppg::Widget::aName
-		 * @return Widget's name
-		 */
-		virtual std::string getName() const throw();
-		/**
-		 * @brief Get PppWidget::aType
-		 * @return Widget's type
-		 */
-		virtual std::string getType() const throw();
 		/**
 		 * @brief Calls ppg::Widget::drawThis(), but only when ppg::Widget::aVisible is @c true
 		 */
@@ -246,105 +224,12 @@ class Widget {
 		 */
 		virtual void mapToAbsolute(int *x, int *y) throw();
 		/**
-		 * @brief Sets the widget's parent container
-		 * @param[in,out] newParent Widget's parent container
-		 * @param[in] caller Pointer to the caller to prevent infinite cyclic calls
-		 */
-		virtual void setParent(Widget *newParent, Widget *caller = NULL) throw();
-		/**
-		 * @brief Returns ::aIsContainer
-		 * @return ::aIsContainer;
-		 */
-		bool isContainer() { return m_isContainer; }
-		/**
-		 * @brief Get an element by it's named path, i.e. @code "/mainwindow/subwindow/labelXY" @endcode
-		 * @tparam T Widget's type to retrieve
-		 * @param[in] path Path to the widget
-		 * @return Pointer to the child, or @c NULL if no compatible widget was found
-		 * @see PpgWidget::aName
-		 */
-		template<class T>
-		T *getByPath(const std::string &path) throw();
-		/**
-		 * @brief Adds a child to this container
-		 * @param[in,out] child Child to add, sets it's PpgElement::aParent value to @c this
-		 * @pre @c child!=NULL
-		 * @exception PpgException is thrown if @a child is @c NULL
-		 */
-		virtual void addChild(Widget &child) throw(Exception);
-		/**
-		 * @brief Removes @a child from this container's element list, doesn't change its PpgElement::aParent value
-		 * @param child Pointer to the element to remove from PpgWidget::aChildren
-		 * @return @c true if @a child was found and removed, @c false otherwise
-		 */
-		virtual bool removeChild(Widget *child) throw();
-		/**
-		 * @brief Returns the top level child
-		 * @return Top level child
-		 * @see PpgWidget::toTop
-		 */
-		virtual Widget *firstChild() throw();
-		/**
-		 * @brief Move an element to the top
-		 * @param[in] name Name of the element to move to the top
-		 */
-		virtual void toTop(const std::string &name) throw();
-		/**
 		 * @brief Move an element to the top
 		 * @param[in] vp Pointer to the element to move to the top
 		 */
-		virtual void toTop(Widget &vp) throw();
-		/**
-		 * @brief Move an element to the top
-		 * @param[in] zOrder Z-Order index of the element to move to the top
-		 */
-		virtual void toTop(unsigned int zOrder) throw();
+		virtual void toTop(ppg::Widget* vp) throw();
 };
 
-template<class T>
-T *Widget::getByPath(const std::string &path) throw() {
-	static_assert(__is_base_of(Widget,T), "Error: Template Parameter T of template function 'T* Widget::getByPath(string)' is not a derived child of ppg::Widget" );
-	//PPG_TEST(!isContainer());
-	if(!isContainer())
-		return NULL;
-	if (path.length() == 0)
-		return NULL;
-	size_t pos = path.find("/");
-	if (pos == std::string::npos) {
-		for (unsigned int i = 0; i < m_children.size(); i++) {
-			if (m_children[i]->getName() == path) {
-				if(typeid(*m_children[i]) != typeid(T))
-					return NULL;
-				return static_cast<T*>(m_children[i]);
-			}
-		}
-	}
-	else if (pos == 0) {
-		Widget *tp = getTopParent();
-		if(!tp)
-			return NULL;
-		if(!tp->isContainer())
-			return NULL;
-		return tp->getByPath<T>(std::string(path, 1));
-	}
-	else {
-		std::string subName(path, pos + 1);
-		for (unsigned int i = 0; i < m_children.size(); i++) {
-			Widget *con = m_children[i];
-			if(typeid(*con) != typeid(T))
-				continue;
-			if (con) {
-				T *res = con->getByPath<T>(subName);
-				if (res)
-					return res;
-			}
-		}
-	}
-	return NULL;
-}
-
 } // namespace ppg
-
-extern template class std::vector<ppg::Widget*>;
 
 #endif // ppgbaseH

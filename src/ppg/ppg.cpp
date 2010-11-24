@@ -43,7 +43,7 @@ void Screen::clearOverlay() {
 	std::fill_n(m_pixelOverlay->begin(), gaScreen->w*gaScreen->h, 0xff);
 }
 
-Screen::Screen( const int w, const int h, const std::string &title ) throw( Exception ) : Widget( "" ), m_pixelOverlay(), m_pixW(0), m_pixH(0) {
+Screen::Screen( const int w, const int h, const std::string &title ) throw( Exception ) : Widget( NULL ), m_pixelOverlay(), m_pixW(0), m_pixH(0) {
 	if ( gaScreen ) {
 		std::cerr << "Uh-oh... creating a second screen o.O" << std::endl << std::flush;
 	}
@@ -54,9 +54,10 @@ Screen::Screen( const int w, const int h, const std::string &title ) throw( Exce
 		}
 		m_pixW = gaScreen->w;
 		m_pixH = gaScreen->h;
-		m_left = m_top = 0;
-		m_bottom = gaScreen->h / 16 - 1;
-		m_right = gaScreen->w / 8 - 1;
+		setTop(0);
+		setLeft(0);
+		setPosition(0, 0);
+		setDimensions(gaScreen->w/8, gaScreen->h/16);
 		m_pixelOverlay.reset(new std::vector<uint8_t>(gaScreen->w*gaScreen->h, 0xff));
 		clearOverlay();
 		SDL_WM_SetCaption( title.c_str(), NULL );
@@ -70,7 +71,7 @@ Screen::Screen( const int w, const int h, const std::string &title ) throw( Exce
 		gDosColors[dcWhite]       = SDL_MapRGB( gaScreen->format, 0xaa, 0xaa, 0xaa ); // white
 		gDosColors[dcGray]        = SDL_MapRGB( gaScreen->format, 0x55, 0x55, 0x55 ); // gray
 		gDosColors[dcLightBlue]   = SDL_MapRGB( gaScreen->format, 0x55, 0x55, 0xff ); // light blue
-		gDosColors[dcLightGreen]  = SDL_MapRGB( gaScreen->format, 0x55, 0xff, 0x40 ); // light green
+		gDosColors[dcLightGreen]  = SDL_MapRGB( gaScreen->format, 0x55, 0xff, 0x55 ); // light green
 		gDosColors[dcLightAqua]   = SDL_MapRGB( gaScreen->format, 0x55, 0xff, 0xff ); // light aqua
 		gDosColors[dcLightRed]    = SDL_MapRGB( gaScreen->format, 0xff, 0x55, 0x55 ); // light red (orange?)
 		gDosColors[dcLightPurple] = SDL_MapRGB( gaScreen->format, 0xff, 0x55, 0xff ); // light purple
@@ -81,22 +82,11 @@ Screen::Screen( const int w, const int h, const std::string &title ) throw( Exce
 		gaColorsB.reset( new std::vector<uint8_t>(getWidth()*getHeight()) );
 		clear( ' ', dcWhite, dcBlack );
 	}
-	m_left = m_top = 0;
-	m_bottom = gaScreen->h / 16 - 1;
-	m_right = gaScreen->w / 8 - 1;
+	setPosition(0,0);
+	setDimensions(gaScreen->w/8, gaScreen->h/16);
 }
 
 Screen::~Screen() throw() {
-}
-
-Screen::Screen( const Screen &src ) throw( Exception ) : Widget( src ), m_pixelOverlay(), m_pixW(0), m_pixH(0) {
-	if ( gaScreen )
-		PPG_THROW( "A PpgScreen has already been created" );
-}
-
-Screen &Screen::operator=( const Screen & src ) throw() {
-	Widget::operator=( src );
-	return *this;
 }
 
 #include "pfonts.inc"
@@ -187,7 +177,7 @@ void Screen::drawBgColor( const int x, const int y, const unsigned char c ) thro
 	gaColorsB->at(x+y*w) = c;
 }
 
-StereoPeakBar::StereoPeakBar( const std::string &name, int width, int max, int interLen, bool showPeak ) throw( Exception ) : Label( name, " " ),
+StereoPeakBar::StereoPeakBar( Widget*parent, int width, int max, int interLen, bool showPeak ) throw( Exception ) : Label( parent, " " ),
 		m_interArrL(), m_interArrR(), m_max( 0 ), m_barLength( 0 ), m_showPeak( false ),
 		m_peakPosL( 0 ), m_peakPosR( 0 ), m_peakFalloffSpeedL( 0 ), m_peakFalloffSpeedR( 0 ) {
 	PPG_TEST( width < 8 || interLen < 1 );
@@ -198,18 +188,15 @@ StereoPeakBar::StereoPeakBar( const std::string &name, int width, int max, int i
 	m_peakPosL = m_peakFalloffSpeedL = 0;
 	m_peakPosR = m_peakFalloffSpeedR = 0;
 	m_max = max;
-	m_text = "[";
+	std::string txt = "[";
 	for ( int i = 0; i < width*2; i++ ) {
-		m_text += " ";
+		txt += " ";
 		if ( i + 1 == width )
-			m_text += "|";
+			txt += "|";
 	}
-	m_text += "]";
+	txt += "]";
+	setText(txt);
 	setDimensions( length(), getHeight() );
-	m_fgColors.clear();
-	m_fgColors.resize(length(), ESC_NOCHANGE);
-	m_bgColors.clear();
-	m_bgColors.resize(length(), ESC_NOCHANGE);
 	int mpoint = length() / 2;
 	for ( int i = 0; i < width; i++ ) {
 		switch ( i*4 / width ) {
@@ -235,27 +222,6 @@ StereoPeakBar::StereoPeakBar( const std::string &name, int width, int max, int i
 	setFgColor( mpoint, dcGreen );
 	setFgColor( length() - 1, dcGreen );
 }
-
-StereoPeakBar::StereoPeakBar( const StereoPeakBar &src ) throw( Exception ) :  Label( src.m_name, src.m_text ),
-		m_interArrL(src.m_interArrL), m_interArrR(src.m_interArrR), m_max( src.m_max ), m_barLength( src.m_barLength ), m_showPeak( src.m_showPeak ),
-		m_peakPosL( src.m_peakPosL ), m_peakPosR( src.m_peakPosR ), m_peakFalloffSpeedL( src.m_peakFalloffSpeedL ), m_peakFalloffSpeedR( src.m_peakFalloffSpeedR ) {
-	//PpgLabel::operator=( src );
-}
-
-StereoPeakBar &StereoPeakBar::operator=( const StereoPeakBar & src ) throw() {
-	Label::operator=( src );
-	m_interArrL = src.m_interArrL;
-	m_interArrR = src.m_interArrR;
-	m_max = src.m_max;
-	m_barLength = src.m_barLength;
-	m_showPeak = src.m_showPeak;
-	m_peakPosL = src.m_peakPosL;
-	m_peakPosR = src.m_peakPosR;
-	m_peakFalloffSpeedL = src.m_peakFalloffSpeedL;
-	m_peakFalloffSpeedR = src.m_peakFalloffSpeedR;
-	return *this;
-}
-
 
 StereoPeakBar::~StereoPeakBar() throw() {
 }
@@ -293,17 +259,17 @@ void StereoPeakBar::shift( int lval, int rval ) throw( Exception ) {
 	int mpoint = length() / 2;
 	for ( int i = 0; i < m_barLength; i++ ) {
 		if ( valL > i*m_max / m_barLength )
-			m_text[mpoint-1-i] = static_cast<char>( 0xfe );
+			(*this)[mpoint-1-i] = static_cast<char>( 0xfe );
 		else
-			m_text[mpoint-1-i] = static_cast<char>( 0xf9 );
+			(*this)[mpoint-1-i] = static_cast<char>( 0xf9 );
 		if (( m_peakPosL != 0 ) && m_showPeak )
-			m_text[mpoint-1-m_peakPosL*m_barLength/m_max] = static_cast<char>( 0x04 );
+			(*this)[mpoint-1-m_peakPosL*m_barLength/m_max] = static_cast<char>( 0x04 );
 		if ( valR > i*m_max / m_barLength )
-			m_text[mpoint+1+i] = static_cast<char>( 0xfe );
+			(*this)[mpoint+1+i] = static_cast<char>( 0xfe );
 		else
-			m_text[mpoint+1+i] = static_cast<char>( 0xf9 );
+			(*this)[mpoint+1+i] = static_cast<char>( 0xf9 );
 		if (( m_peakPosR != 0 ) && m_showPeak )
-			m_text[mpoint+1+m_peakPosR*m_barLength/m_max] = static_cast<char>( 0x04 );
+			(*this)[mpoint+1+m_peakPosR*m_barLength/m_max] = static_cast<char>( 0x04 );
 	}
 }
 
@@ -334,8 +300,5 @@ int StereoPeakBar::getValRight() const throw() {
 		);
 	return res / div;
 }
-
-template StereoPeakBar *Widget::getByPath(const std::string &path) throw();
-template Screen *Widget::getByPath(const std::string &path) throw();
 
 } // namespace ppg

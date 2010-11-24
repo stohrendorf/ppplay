@@ -23,36 +23,25 @@
 
 namespace ppg {
 
-Widget::Widget(const std::string &name) throw() :
-		m_isContainer(true),
-		m_name(name), m_type("Pure Virtual"),
+Widget::Widget(Widget* parent) :
 		m_visible(false),
-		m_parent(),
+		m_parent(parent),
 		m_left(0), m_top(0), m_bottom(0), m_right(0),
-		m_children() {
-	return;
-}
-
-Widget::Widget(const Widget& src) throw() :
-		m_isContainer(src.m_isContainer),
-		m_name(src.m_name), m_type(src.m_type), m_visible(false), m_parent(src.m_parent),
-		m_left(src.m_left), m_top(src.m_top), m_bottom(src.m_bottom), m_right(src.m_right),
-		m_children(src.m_children) {
+		m_children()
+{
+	if(parent)
+		parent->m_children.push_back(this);
 }
 
 Widget::~Widget() throw() {
-	if(isContainer()) {
-		std::for_each(
-			m_children.begin(),
-			m_children.end(),
-			[](Widget*w){delete w;}
-		);
-	}
-}
-
-Widget &Widget::operator=(const Widget & /*src*/) throw() {
-	// here are no values that should be copied...
-	return *this;
+	if(m_parent)
+		m_parent->m_children.remove(this);
+	std::list<Widget*> backup = m_children;
+	std::for_each(
+		backup.begin(),
+		backup.end(),
+		[](Widget*w){delete w;}
+	);
 }
 
 int Widget::setLeft(const int x, const bool absolute) throw() {
@@ -129,12 +118,11 @@ void Widget::draw() throw(Exception) {
 	if (!isVisible())
 		return;
 	// draw from bottom to top so that top elements are drawn over bottom ones
-	if(isContainer()) {
-		for (int i = m_children.size() - 1; i >= 0; i--) {
-			if (!m_children[i]->isVisible())
-				continue;
-			m_children[i]->draw();
-		}
+	for(std::list<Widget*>::reverse_iterator revIt = m_children.rbegin(); revIt!=m_children.rend(); revIt++) {
+		Widget* w = *revIt;
+		if( !w->isVisible() )
+			continue;
+		w->draw();
 	}
 	drawThis();
 }
@@ -161,14 +149,6 @@ int Widget::getWidth() const throw() {
 
 int Widget::getHeight() const throw() {
 	return m_bottom - m_top + 1;
-}
-
-std::string Widget::getName() const throw() {
-	return m_name;
-}
-
-std::string Widget::getType() const throw() {
-	return m_type;
 }
 
 void Widget::show() throw() {
@@ -226,18 +206,6 @@ void Widget::mapToAbsolute(int *x, int *y) throw() {
 	m_parent->mapToAbsolute(x, y);
 }
 
-void Widget::setParent(Widget *newParent, Widget *caller) throw() {
-	PPG_TEST(newParent==NULL);
-	if (m_parent)
-		m_parent->removeChild(newParent);
-	m_parent = newParent;
-	if (m_parent != caller)
-		m_parent->addChild(*newParent);
-}
-
-void Widget::drawThis() throw(Exception) {
-}
-
 Widget *Widget::getTopParent() throw() {
 	if (!m_parent)
 		return NULL;
@@ -245,63 +213,10 @@ Widget *Widget::getTopParent() throw() {
 		return m_parent->getTopParent();
 }
 
-void Widget::addChild(Widget &child) throw(Exception) {
-	PPG_TEST(!isContainer());
-	m_children.push_back(&child);
-	child.setParent(this, this);
-}
-
-
-bool Widget::removeChild(Widget *child) throw() {
-	PPG_TEST(!isContainer());
-	std::vector<Widget*>::iterator it = std::find(m_children.begin(), m_children.end(), child);
-	if(it!=m_children.end()) {
-		delete *it;
-		m_children.erase(it);
-		return true;
-	}
-	return false;
-}
-
-Widget *Widget::firstChild() throw() {
-	PPG_TEST(!isContainer())
-	if (m_children.empty())
-		return NULL;
-	return m_children[0];
-}
-
-void Widget::toTop(const std::string &name) throw() {
-	PPG_TEST(!isContainer());
-	for (unsigned int i = 0; i < m_children.size(); i++) {
-		if (m_children[i]->getName() == name) {
-			toTop(i);
-			break;
-		}
-	}
-}
-
-void Widget::toTop(Widget &vp) throw() {
-	PPG_TEST(!isContainer());
-	for (unsigned int i = 0; i < m_children.size(); i++) {
-		if (m_children[i] == &vp) {
-			toTop(i);
-			break;
-		}
-	}
-}
-
-void Widget::toTop(unsigned int zOrder) throw() {
-	PPG_TEST(!isContainer());
-	if ((zOrder < 1) || (zOrder >= m_children.size()))
+void Widget::toTop(ppg::Widget* vp) throw() {
+	if(std::find(m_children.begin(), m_children.end(), vp)==m_children.end())
 		return;
-	while (zOrder > 1) {
-		Widget *tmp = m_children[zOrder-1];
-		m_children[zOrder-1] = m_children[zOrder];
-		m_children[zOrder] = tmp;
-		zOrder--;
-	}
+	m_children.remove(vp);
+	m_children.push_front(vp);
 }
-
 } // namespace ppg
-
-template class std::vector<ppg::Widget*>;

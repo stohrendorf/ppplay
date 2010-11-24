@@ -60,7 +60,7 @@ enum {
  * @brief A stereo bar with peaks
  */
 class StereoPeakBar : public Label {
-	protected:
+	private:
 		std::vector<int> m_interArrL; //!< @brief Left bar interpolation array
 		std::vector<int> m_interArrR; //!< @brief Right bar interpolation array
 		//int m_interLen; //!< @brief Interpolation array size
@@ -82,18 +82,7 @@ class StereoPeakBar : public Label {
 		 * @pre @c width>=8
 		 * @pre @c interLen>=1
 		 */
-		StereoPeakBar(const std::string &name, int width, int max, int interLen, bool showPeak) throw(Exception);
-		/**
-		 * @brief Copy constructor
-		 * @param[in] src Source to copy from
-		 */
-		StereoPeakBar(const StereoPeakBar &src) throw(Exception);
-		/**
-		 * @brief Copy operator
-		 * @param[in] src Source to copy from
-		 * @return Reference to *this
-		 */
-		StereoPeakBar &operator=(const StereoPeakBar &src) throw();
+		StereoPeakBar(Widget*parent, int width, int max, int interLen, bool showPeak) throw(Exception);
 		/**
 		 * @brief Destructor
 		 */
@@ -129,7 +118,9 @@ class StereoPeakBar : public Label {
  * @brief The virtual DOS screen
  */
 class Screen : public Widget {
-	protected:
+		Screen(const Screen&) = delete;
+		Screen &operator=(const Screen&) = delete;
+	private:
 		std::shared_ptr< std::vector<unsigned char> > m_pixelOverlay; //!< @brief Pixel overlay buffer
 		int m_pixW; //!< @brief Pixel overlay buffer width
 		int m_pixH; //!< @brief Pixel overlay buffer height
@@ -157,18 +148,7 @@ class Screen : public Widget {
 		 * @param[in] title Title of the screen
 		 */
 		Screen(const int w, const int h, const std::string& title) throw(Exception);
-		/**
-		 * @brief Copy constructor
-		 * @param[in] src Source to copy from
-		 */
-		Screen(const Screen &src) throw(Exception);
 		virtual ~Screen() throw();
-		/**
-		 * @brief Assignment operator
-		 * @param[in] src Source to copy from
-		 * @return Reference to *this
-		 */
-		virtual Screen &operator=(const Screen &src) throw();
 		/**
 		 * @brief Clear the screen
 		 * @param[in] c Character to overwrite the screen with
@@ -199,8 +179,5 @@ inline void Screen::drawPixel(const int x, const int y, const unsigned char c) c
 }
 
 } // namespace ppg
-
-extern template ppg::StereoPeakBar *ppg::Widget::getByPath(const std::string &path) throw();
-extern template ppg::Screen *ppg::Widget::getByPath(const std::string &path) throw();
 
 #endif // ppgH

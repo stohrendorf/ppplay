@@ -90,7 +90,7 @@ message(STATUS "CXX Flags (Additional)  : ${CMAKE_CXX_FLAGS}")
 #########
 # init main application target settings
 #########
-set(ppp_SRCS ppp.cpp)
+set(ppp_SRCS ppp.cpp src/ui_main.cpp)
 if(WIN32 OR MINGW)
 	set(ppp_SRCS ${ppp_SRCS} ppp.rc)
 endif()

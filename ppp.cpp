@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <boost/program_options.hpp>
 #include "ppg.h"
+#include "src/ui_main.h"
 
 #include "genmodule.h"
 #include "s3mmodule.h"
@@ -52,6 +53,7 @@ static volatile bool playbackStopped = true;
 static ppp::AudioFrameBuffer fftBuffer;
 
 static std::shared_ptr<ppg::Screen> dosScreen;
+static UIMain* uiMain;
 static std::size_t updateFrameCounter = 0;
 
 static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
@@ -99,7 +101,8 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 		ppp::AudioFrameBuffer frameBuffer;
 		s3m->getFifo(frameBuffer, nFrames);
 		updateFrameCounter += nFrames;
-		if (updateFrameCounter >= FRAMECOUNT) {
+		// TODO make this non-magic...
+		if (updateFrameCounter >= (44100/50)) {
 			updateFrameCounter = 0;
 			#ifdef WITH_MP3LAME
 			if (mp3File.is_open()) {
@@ -117,31 +120,35 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 			#endif
 			dosScreen->clear(' ', ppg::dcWhite, ppg::dcBlack);
 			{
-				ppg::StereoPeakBar *p = dosScreen->getByPath<ppg::StereoPeakBar>("VolBar");
-				PPG_TEST(!p);
-				p->shift(s3m->playbackFifo.getVolumeLeft()>>8, s3m->playbackFifo.getVolumeRight()>>8);
+				//ppg::StereoPeakBar *p = dosScreen->getByPath<ppg::StereoPeakBar>("VolBar");
+				//PPG_TEST(!p);
+				uiMain->volBar()->shift(s3m->playbackFifo.getVolumeLeft()>>8, s3m->playbackFifo.getVolumeRight()>>8);
 			}
 			int msecs = s3m->getPosition() / 441;
 			int msecslen = s3m->getLength() / 441;
 			ppp::GenPlaybackInfo pbi = s3m->getPlaybackInfo();
-			lb = dosScreen->getByPath<ppg::Label>("Position");
-			PPG_TEST(!lb);
+			//lb = dosScreen->getByPath<ppg::Label>("Position");
+			//PPG_TEST(!lb);
+			lb = uiMain->posLabel();
 			*lb = ppp::stringf("%3d(%3d)/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Track %d/%d",
 								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
 								msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
 								s3m->getCurrentTrack() + 1, s3m->getTrackCount()
 								);
-			lb = dosScreen->getByPath<ppg::Label>("PlaybackInfo");
-			PPG_TEST(!lb);
+			//lb = dosScreen->getByPath<ppg::Label>("PlaybackInfo");
+			//PPG_TEST(!lb);
+			lb = uiMain->playbackInfo();
 			*lb = ppp::stringf("Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", pbi.speed, pbi.tempo, pbi.globalVolume * 100 / 0x40);
 			for (int i = 0; i < s3m->channelCount(); i++) {
 				if(i>=16)
 					break;
-				lb = dosScreen->getByPath<ppg::Label>(ppp::stringf("ChanInfo_%d", i));
-				PPG_TEST(!lb);
+				//lb = dosScreen->getByPath<ppg::Label>(ppp::stringf("ChanInfo_%d", i));
+				//PPG_TEST(!lb);
+				lb = uiMain->chanInfo(i);
 				*lb = s3m->getChanStatus(i);
-				lb = dosScreen->getByPath<ppg::Label>(ppp::stringf("ChanCell_%d", i));
-				PPG_TEST(!lb);
+				//lb = dosScreen->getByPath<ppg::Label>(ppp::stringf("ChanCell_%d", i));
+				//PPG_TEST(!lb);
+				lb = uiMain->chanCell(i);
 				*lb = s3m->getChanCellString(i);
 			}
 // 				dosScreen->draw();
@@ -321,36 +328,37 @@ int main(int argc, char *argv[]) {
 		LOG_MESSAGE_("Initializing PeePeeGUI Elements.");
 		ppg::Label *l;
 		dosScreen.reset(new ppg::Screen(80, 25, PACKAGE_STRING " - Built " __DATE__ " " __TIME__));
-		l = new ppg::Label("Position", "");
+		uiMain = new UIMain(dosScreen.get());
+/*		l = new ppg::Label("Position", "");
 		l->setWidth(dosScreen->getWidth() - 4);
 		l->setPosition(2, 2);
 		l->setFgColor(0, ppg::dcBrightWhite, 0);
 		l->setFgColor(3, ppg::dcWhite, 5);
 		l->show();
-		dosScreen->addChild(*l);
-		l = new ppg::Label("ScreenSeparator", " \xc4 \xc4\xc4  \xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4  \xc4\xc4 \xc4 ");
+		dosScreen->addChild(*l);*/
+/*		l = new ppg::Label("ScreenSeparator", " \xc4 \xc4\xc4  \xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4  \xc4\xc4 \xc4 ");
 		l->setPosition(0, 1);
 		l->setFgColor(0, ppg::dcBrightWhite, 0);
 		l->show();
-		dosScreen->addChild(*l);
-		l = new ppg::Label("ScreenSeparator2", " \xc4 \xc4\xc4  \xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4  \xc4\xc4 \xc4 ");
+		dosScreen->addChild(*l);*/
+/*		l = new ppg::Label("ScreenSeparator2", " \xc4 \xc4\xc4  \xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4  \xc4\xc4 \xc4 ");
 		l->setPosition(0, 3);
 		l->setFgColor(0, ppg::dcBrightWhite, 0);
 		l->show();
-		dosScreen->addChild(*l);
-		l = new ppg::Label("PlaybackInfo", "");
+		dosScreen->addChild(*l);*/
+/*		l = new ppg::Label("PlaybackInfo", "");
 		l->setWidth(dosScreen->getWidth() - 4);
 		l->setPosition(2, 2);
 		l->alignment = ppg::Label::Alignment::alRight;
 		l->setFgColor(0, ppg::dcBrightWhite, 0);
 		l->show();
-		dosScreen->addChild(*l);
-		ppg::StereoPeakBar *p = new ppg::StereoPeakBar("VolBar", 16, 256, 1, true);
+		dosScreen->addChild(*l);*/
+/*		ppg::StereoPeakBar *p = new ppg::StereoPeakBar("VolBar", 16, 256, 1, true);
 		p->setPosition((dosScreen->getWidth() - p->length()) / 2, 4);
 		p->show();
-		dosScreen->addChild(*p);
+		dosScreen->addChild(*p);*/
 		for (int i = 0; i < 16; i++) {
-			l = new ppg::Label(ppp::stringf("ChanInfo_%d", i), "");
+/*			l = new ppg::Label(ppp::stringf("ChanInfo_%d", i), "");
 			l->setWidth(dosScreen->getWidth() - 4);
 			l->setPosition(2, 5 + i);
 			l->setFgColor(4, ppg::dcLightRed);
@@ -360,14 +368,14 @@ int main(int argc, char *argv[]) {
 			l->setFgColor(13, ppg::dcLightGreen, 6);
 			l->setFgColor(35, ppg::dcBrightWhite, 0);
 			l->show();
-			dosScreen->addChild(*l);
-			l = new ppg::Label(ppp::stringf("ChanCell_%d", i), "");
+			dosScreen->addChild(*l);*/
+/*			l = new ppg::Label(ppp::stringf("ChanCell_%d", i), "");
 			l->setWidth(dosScreen->getWidth() - 4);
 			l->setPosition(2, 5 + i);
 			l->alignment = ppg::Label::Alignment::alRight;
 			l->setFgColor(0, ppg::dcWhite, 0);
 			l->show();
-			dosScreen->addChild(*l);
+			dosScreen->addChild(*l);*/
 		}
 		LOG_MESSAGE_("Loading the module.");
 		ppp::GenModule::Ptr s3m;
@@ -391,7 +399,11 @@ int main(int argc, char *argv[]) {
 			LOG_ERROR("Main: %s", e.what());
 			return EXIT_FAILURE;
 		}
-		l = new ppg::Label("TrackerInfo", ppp::stringf("Tracker: %s - Channels: %d", s3m->getTrackerInfo().c_str(), s3m->channelCount()));
+		l = uiMain->trackerInfo();
+		*l = ppp::stringf("Tracker: %s - Channels: %d", s3m->getTrackerInfo().c_str(), s3m->channelCount());
+		if (s3m->isMultiTrack())
+			*l += " - Multi-track";
+/*		l = new ppg::Label("TrackerInfo", ppp::stringf("Tracker: %s - Channels: %d", s3m->getTrackerInfo().c_str(), s3m->channelCount()));
 		if (s3m->isMultiTrack())
 			*l += " - Multi-track";
 		l->setPosition(2, dosScreen->getBottom() - 1);
@@ -399,8 +411,13 @@ int main(int argc, char *argv[]) {
 		l->alignment = ppg::Label::Alignment::alCenter;
 		l->setFgColor(0, ppg::dcAqua, 0);
 		l->show();
-		dosScreen->addChild(*l);
-		l = new ppg::Label("ModTitle", "");
+		dosScreen->addChild(*l);*/
+		l = uiMain->modTitle();
+		if (s3m->getTrimTitle() != "")
+			*l = std::string(" -=\xf0[ ") + s3m->getFileName() + " : " + s3m->getTrimTitle() + " ]\xf0=- ";
+		else
+			*l = std::string(" -=\xf0[ ") + s3m->getFileName() + " ]\xf0=- ";
+/*		l = new ppg::Label("ModTitle", "");
 		if (s3m->getTrimTitle() != "")
 			*l = std::string(" -=\xf0[ ") + s3m->getFileName() + " : " + s3m->getTrimTitle() + " ]\xf0=- ";
 		else
@@ -410,7 +427,7 @@ int main(int argc, char *argv[]) {
 		l->setPosition(2, 0);
 		l->alignment = ppg::Label::Alignment::alCenter;
 		l->show();
-		dosScreen->addChild(*l);
+		dosScreen->addChild(*l);*/
 		dosScreen->show();
 		LOG_MESSAGE_("Init Fifo");
 		s3m->initFifo(ppp::FFT::fftSampleCount);
