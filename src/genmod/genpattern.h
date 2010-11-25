@@ -75,6 +75,7 @@ namespace ppp {
 			void setActive(bool a) throw() { m_active = a; }
 	};
 
+#if 0
 	/**
 	 * @brief A list of tracks to represent a pattern
 	 * @ingroup GenMod
@@ -130,7 +131,7 @@ namespace ppp {
 			virtual GenCell::Ptr getCell(int16_t trackIndex, int16_t row) throw() __attribute__((deprecated("Will be removed in future versions")));
 			void addTrack(const GenCell::Vector &t) __attribute__((deprecated("Will be removed in future versions"))) { m_tracks.push_back(t); }
 	};
-
+#endif
 } // namespace ppp
 
 #endif

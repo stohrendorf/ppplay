@@ -26,13 +26,12 @@
 */
 
 using namespace ppp;
-
+#if 0
 GenPattern::GenPattern() throw(PppException) : m_tracks() {
 }
 
 GenPattern::~GenPattern() throw() {
 }
-
 GenCell::Vector* GenPattern::getTrack(int16_t idx) throw() {
 	if (!inRange<int16_t>(idx, 0, m_tracks.size() - 1))
 		return NULL;
@@ -48,6 +47,7 @@ GenCell::Ptr GenPattern::getCell(int16_t trackIndex, int16_t row) throw() {
 	GenCell::Ptr cell = track->at(row);
 	return cell;
 }
+#endif
 
 GenCell::GenCell() throw() : m_active(false) {
 }
