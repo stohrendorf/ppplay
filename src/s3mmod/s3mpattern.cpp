@@ -110,16 +110,6 @@ std::string S3mCell::trackerString() const throw() {
 	return xmsg;
 }
 
-S3mCell &S3mCell::operator=( const S3mCell & src ) throw() {
-	GenCell::operator=( src );
-	m_note = src.m_note;
-	m_instr = src.m_instr;
-	m_volume = src.m_volume;
-	m_effect = src.m_effect;
-	m_effectValue = src.m_effectValue;
-	return *this;
-}
-
 uint8_t S3mCell::getNote() const throw() {
 	return m_note;
 }

@@ -54,12 +54,6 @@ namespace ppp {
 				virtual void reset() throw();
 				virtual std::string trackerString() const throw();
 				/**
-				 * @brief Assignment operator
-				 * @param[in] src Source cell
-				 * @return Reference to *this
-				 */
-				S3mCell &operator=(const S3mCell &src) throw();
-				/**
 				 * @brief Get the cell's note
 				 * @return #aNote
 				 */

@@ -25,6 +25,7 @@
 #include "s3msample.h"
 
 #include <array>
+#include "s3mpattern.h"
 
 /**
 * @file
@@ -50,7 +51,6 @@ namespace ppp {
 				S3mChannel() = delete; //!< @brief No default constructor
 				S3mChannel(const S3mChannel&) = delete; //!< @brief No copy constructor
 				S3mChannel& operator=(const S3mChannel&) = delete; //!< @brief No assignment operator
-			//protected:
 				uint8_t m_note;          //!< @brief Currently playing note
 				uint8_t m_lastFx;        //!< @brief Last FX Value
 				uint8_t m_lastPortaFx;   //!< @brief Last Pitch FX
@@ -76,6 +76,7 @@ namespace ppp {
 				uint16_t basePeriod();
 				void setBasePeriod(uint16_t per);
 				bool m_glissando;
+				S3mCell::Ptr m_currentCell;
 				S3mSample::Ptr currentSample() throw(PppException);
 				/**
 				 * @brief Apply Volume Effect
@@ -159,11 +160,14 @@ namespace ppp {
 				virtual std::string getFxName() const throw();
 				virtual uint16_t getAdjustedPeriod() throw();
 				/**
-				 * @copydoc GenChannel::update
+				 * @brief Update the channel
+				 * @param[in] cell Pointer to a note cell
+				 * @param[in] tick Current tick
+				 * @param[in] noRetrigger Don't trigger new notes, only apply effects (i.e. for Pattern Delays)
 				 * @remarks A new value in the Instrument Column changes the instrument with the old playback position
 				 * @note Time-critical
 				 */
-				virtual void update(GenCell::Ptr const cell, const uint8_t tick, bool noRetrigger = false) throw();
+				void update(S3mCell::Ptr const cell, const uint8_t tick, bool noRetrigger = false) throw();
 				virtual void mixTick(MixerFrameBuffer& mixBuffer, const uint8_t volume) throw(PppException);
 				virtual void simTick(const std::size_t bufSize, const uint8_t volume);
 				virtual void updateStatus() throw();
@@ -209,6 +213,7 @@ namespace ppp {
 				void disableGlobalVolDelay() { m_immediateGlobalVol = true; }
 				virtual BinStream &saveState(BinStream &str) const throw(PppException);
 				virtual BinStream &restoreState(BinStream &str) throw(PppException);
+				virtual std::string getCellString();
 		};
 	} // namespace s3m
 } // namespace ppp
