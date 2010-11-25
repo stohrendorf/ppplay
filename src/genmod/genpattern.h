@@ -70,12 +70,6 @@ namespace ppp {
 			 * @return Tracker-like string
 			 */
 			virtual std::string trackerString() const throw();
-			/**
-			 * @brief Assignmend operator
-			 * @param[in] src Source cell
-			 * @return Reference to this instance
-			 */
-			virtual GenCell &operator=(const GenCell &src) throw() __attribute__((deprecated("Will be removed in future versions")));
 			virtual BinStream &serialize(BinStream &str) const;
 			virtual BinStream &unserialize(BinStream &str);
 			void setActive(bool a) throw() { m_active = a; }

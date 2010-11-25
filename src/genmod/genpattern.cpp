@@ -67,11 +67,6 @@ std::string GenCell::trackerString() const throw() {
 	return "";
 }
 
-GenCell &GenCell::operator=(const GenCell & src) throw() {
-	m_active = src.m_active;
-	return *this;
-}
-
 BinStream &GenCell::serialize(BinStream &str) const {
 	return str.write(&m_active);
 }

@@ -271,6 +271,8 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			}
 			ParaPointer pp;
 			str.read( &pp );
+			if(pp==0)
+				continue;
 			m_samples[i].reset(new S3mSample());
 			if ( !(m_samples[i]->load( str, pp*16 ) ) )
 				PPP_THROW( "Sample Error" );
@@ -287,6 +289,8 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			str.seek( s3mHdr.ordNum + 2*s3mHdr.smpNum + 0x60 + 2*i );
 			ParaPointer pp;
 			str.read( &pp );
+			if(pp==0)
+				continue;
 			S3mPattern* pat = new S3mPattern();
 			m_patterns[i].reset( pat );
 			if ( !( pat->load( str, pp*16 ) ) )
@@ -615,9 +619,9 @@ void S3mModule::getTick( AudioFrameBuffer &buf ) throw( PppException ) {
 			return;
 		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( getTickBufLen(), {0,0} ) );
 		for ( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			GenChannel::Ptr chan = m_channels[currTrack];
+			S3mChannel::Ptr chan = m_channels[currTrack];
 			PPP_TEST( !chan );
-			GenCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
+			S3mCell::Ptr cell = std::static_pointer_cast<S3mCell>( currPat->getCell( currTrack, getPlaybackInfo().row ) );
 			chan->update( cell, getPlaybackInfo().tick, m_patDelayCount != -1 );
 			chan->mixTick( mixerBuffer, getPlaybackInfo().globalVolume );
 		}
@@ -652,9 +656,9 @@ void S3mModule::getTickNoMixing( std::size_t& bufLen ) throw( PppException ) {
 			return;
 		bufLen = getTickBufLen(); // in frames
 		for ( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			GenChannel::Ptr chan = m_channels[currTrack];
+			S3mChannel::Ptr chan = m_channels[currTrack];
 			PPP_TEST( !chan );
-			GenCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
+			S3mCell::Ptr cell = std::static_pointer_cast<S3mCell>( currPat->getCell( currTrack, getPlaybackInfo().row ) );
 			chan->update( cell, getPlaybackInfo().tick, m_patDelayCount != -1 );
 			chan->simTick( bufLen, getPlaybackInfo().globalVolume );
 		}

@@ -54,7 +54,6 @@ namespace ppp {
 			int32_t m_position; //!< @brief Current sample position
 			std::string m_statusString; //!< @brief Status string
 			int32_t m_currSmpIndex; //!< @brief Sample index
-			GenCell::Ptr m_currCell; //!< @brief Copy of the currently playing cell
 			uint16_t m_playbackFrequency; //!< @brief Playback frequency, default is 44100 @see GenModule::GenModule
 		public:
 			/**
@@ -115,13 +114,6 @@ namespace ppp {
 			 * @note Time-critical
 			 */
 			int32_t getPosition() const throw() { return m_position; }
-			/**
-			 * @brief Update the channel
-			 * @param[in] cell Pointer to a note cell
-			 * @param[in] tick Current tick
-			 * @param[in] noRetrigger Don't trigger new notes, only apply effects (i.e. for Pattern Delays)
-			 */
-			virtual void update( GenCell::Ptr const cell, const uint8_t tick, bool noRetrigger = false ) throw( PppException ) = 0;
 			/**
 			 * @brief Disables this channel.
 			 */
@@ -189,16 +181,8 @@ namespace ppp {
 			 * @brief Get a string representation of the current cell as displayed in the tracker
 			 * @return String representation of the current cell like in the tracker
 			 */
-			std::string getCellString() {
-				if ( !m_currCell )
-					return "";
-				return m_currCell->trackerString();
-			}
+			virtual std::string getCellString() = 0;
 		protected:
-			void setCurrentCell(const GenCell::Ptr &cell) __attribute__((deprecated("Will be removed in future versions")))
-			{ m_currCell = cell; }
-			GenCell::Ptr getCurrentCell() const throw() __attribute__((deprecated("Will be removed in future versions")))
-			{ return m_currCell; }
 			uint8_t getTick() const throw() { return m_tick; }
 			void setTick(uint8_t t) throw() { m_tick = t; }
 			void setActive(bool a) throw() { m_active = a; }
