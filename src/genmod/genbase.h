@@ -24,6 +24,7 @@
 #include <sstream>
 #include <string>
 #include <cstdint>
+#include <array>
 
 #include "utils.h"
 #include "pppexcept.h"
@@ -84,7 +85,7 @@ namespace ppp {
 	 * @brief General note names
 	 * @ingroup Common
 	 */
-	extern const char NoteNames[12][3];
+	extern const std::array<const char[3], 12> NoteNames;
 
 	/**
 	 * @brief Clip/convert a signed sample to a signed 16-bit PCM value
@@ -159,27 +160,6 @@ namespace ppp {
 			 */
 			void resetCount() throw();
 	};
-
-	/**
-	 * @ingroup Common
-	 * @brief Sinus lookup table
-	 * @note Length is 256, amplitude is 64
-	 */
-	extern const int16_t SinLookup[256];
-
-	/**
-	 * @ingroup Common
-	 * @brief Linear ramp lookup table
-	 * @note Length is 256, amplitude is 64
-	 */
-	extern const int16_t RampLookup[256];
-
-	/**
-	 * @ingroup Common
-	 * @brief Square lookup table
-	 * @note Length is 256, amplitude is 64
-	 */
-	extern const int16_t SquareLookup[256];
 
 	/**
 	 * @ingroup Common
