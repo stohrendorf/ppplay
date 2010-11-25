@@ -33,7 +33,7 @@
 #include <memory>
 #include <vector>
 
-#include "ppgbase.h"
+#include "widget.h"
 #include "ppglabel.h"
 
 namespace ppg {

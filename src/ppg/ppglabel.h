@@ -21,7 +21,7 @@
 #ifndef ppglabelH
 #define ppglabelH
 
-#include "ppgbase.h"
+#include "widget.h"
 #include <vector>
 
 namespace ppg {

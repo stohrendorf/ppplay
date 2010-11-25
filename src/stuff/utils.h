@@ -116,4 +116,8 @@ TSPEC(double)
 #undef TSPEC
 #endif
 
+#define DISABLE_COPY(classname) \
+	classname(const classname&) = delete; \
+	classname& operator=(const classname&) = delete;
+
 #endif

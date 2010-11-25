@@ -40,8 +40,9 @@ Label::~Label() throw() {
 }
 
 void Label::sizeColorsToMax() {
-	m_fgColors.resize(std::max<std::size_t>(m_text.length(), getWidth()), ESC_NOCHANGE);
-	m_bgColors.resize(std::max<std::size_t>(m_text.length(), getWidth()), ESC_NOCHANGE);
+	int w = area().width();
+	m_fgColors.resize(std::max<std::size_t>(m_text.length(), w), ESC_NOCHANGE);
+	m_bgColors.resize(std::max<std::size_t>(m_text.length(), w), ESC_NOCHANGE);
 }
 
 Label &Label::operator=(const std::string & ass) throw() {
@@ -67,7 +68,7 @@ int Label::setHeight(const int /*h*/) throw(Exception) {
 int Label::setWidth(const int w) throw(Exception) {
 	Widget::setWidth(w);
 	sizeColorsToMax();
-	return getWidth();
+	return area().width();
 }
 
 unsigned int Label::length() const throw() {
@@ -104,15 +105,15 @@ void Label::drawThis() throw(Exception) {
 			offset = 0;
 			break;
 		case Alignment::alRight:
-			offset = getWidth() - length();
+			offset = area().width() - length();
 			break;
 		case Alignment::alCenter:
-			offset = (getWidth() - length()) / 2;
+			offset = (area().width() - length()) / 2;
 			break;
 		default:
 			PPG_THROW("Invalid alignment");
 	}
-	for (int localX = 0; localX < getWidth(); localX++) {
+	for (int localX = 0; localX < area().width(); localX++) {
 		int textPos = localX-offset;
 		if (textPos < 0 || textPos >= static_cast<long>(length()))
 			continue;
