@@ -85,16 +85,18 @@ namespace ppp {
 		 * @ingroup S3mMod
 		 * @brief Pattern class for S3M Patterns
 		 */
-		class S3mPattern : public GenPattern {
+		class S3mPattern {
 			public:
 				typedef std::shared_ptr<S3mPattern> Ptr;
 				typedef std::vector<Ptr> Vector;
-			protected:
-				virtual GenCell::Ptr createCell(int16_t trackIndex, int16_t row) throw(PppException);
+			private:
+				std::vector<S3mCell::Vector> m_tracks;
+				S3mCell::Ptr createCell(int16_t trackIndex, int16_t row) throw(PppException);
 			public:
 				S3mPattern() throw(PppException);
-				virtual ~S3mPattern() throw();
-				virtual bool load(BinStream& str, std::size_t pos) throw(PppException);
+				~S3mPattern() throw();
+				bool load(BinStream& str, std::size_t pos) throw(PppException);
+				S3mCell::Ptr getCell(int16_t trackIndex, int16_t row) throw();
 		};
 	} // namespace s3m
 } // namespace ppp
