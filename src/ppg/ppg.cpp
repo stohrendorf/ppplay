@@ -57,7 +57,7 @@ Screen::Screen( const int w, const int h, const std::string &title ) throw( Exce
 		setTop(0);
 		setLeft(0);
 		setPosition(0, 0);
-		setDimensions(gaScreen->w/8, gaScreen->h/16);
+		setSize(gaScreen->w/8, gaScreen->h/16);
 		m_pixelOverlay.reset(new std::vector<uint8_t>(gaScreen->w*gaScreen->h, 0xff));
 		clearOverlay();
 		SDL_WM_SetCaption( title.c_str(), NULL );
@@ -77,13 +77,14 @@ Screen::Screen( const int w, const int h, const std::string &title ) throw( Exce
 		gDosColors[dcLightPurple] = SDL_MapRGB( gaScreen->format, 0xff, 0x55, 0xff ); // light purple
 		gDosColors[dcYellow]      = SDL_MapRGB( gaScreen->format, 0xff, 0xff, 0x55 ); // yellow
 		gDosColors[dcBrightWhite] = SDL_MapRGB( gaScreen->format, 0xff, 0xff, 0xff ); // bright white
-		gaChars.reset( new std::vector<char>(getWidth()*getHeight()) );
-		gaColorsF.reset( new std::vector<uint8_t>(getWidth()*getHeight()) );
-		gaColorsB.reset( new std::vector<uint8_t>(getWidth()*getHeight()) );
+		int size = area().width() * area().height();
+		gaChars.reset( new std::vector<char>(size) );
+		gaColorsF.reset( new std::vector<uint8_t>(size) );
+		gaColorsB.reset( new std::vector<uint8_t>(size) );
 		clear( ' ', dcWhite, dcBlack );
 	}
 	setPosition(0,0);
-	setDimensions(gaScreen->w/8, gaScreen->h/16);
+	setSize(gaScreen->w/8, gaScreen->h/16);
 }
 
 Screen::~Screen() throw() {
@@ -118,7 +119,7 @@ void Screen::drawChar16( int x, int y, uint8_t c, Uint32 foreground, Uint32 back
 }
 
 void Screen::clear( uint8_t c, uint8_t foreground, uint8_t background ) throw() {
-	std::size_t size = getWidth()*getHeight();
+	std::size_t size = area().width()*area().height();
 	std::fill_n(gaChars->begin(), size, c);
 	std::fill_n(gaColorsF->begin(), size, foreground);
 	std::fill_n(gaColorsB->begin(), size, background);
@@ -129,8 +130,8 @@ void Screen::drawThis() throw( Exception ) {
 		if ( SDL_LockSurface( gaScreen ) < 0 )
 			return;
 	}
-	int w = getWidth();
-	int h = getHeight();
+	int w = area().width();
+	int h = area().height();
 	for ( int y = 0; y < h; y++ ) {
 		for ( int x = 0; x < w; x++ ) {
 			drawChar16( x, y, gaChars->at(x+y*w), gDosColors[gaColorsF->at(x+y*w)], gDosColors[gaColorsB->at(x+y*w)], true );
@@ -154,24 +155,24 @@ void Screen::drawThis() throw( Exception ) {
 }
 
 void Screen::drawChar( const int x, const int y, const char c ) throw() {
-	int w = getWidth();
-	int h = getHeight();
+	int w = area().width();
+	int h = area().height();
 	if (( x < 0 ) || ( x >= w ) || ( y < 0 ) || ( y >= h ) )
 		return;
 	gaChars->at(x+y*w) = c;
 }
 
 void Screen::drawFgColor( const int x, const int y, const unsigned char c ) throw() {
-	int w = getWidth();
-	int h = getHeight();
+	int w = area().width();
+	int h = area().height();
 	if (( x < 0 ) || ( x >= w ) || ( y < 0 ) || ( y >= h ) )
 		return;
 	gaColorsF->at(x+y*w) = c;
 }
 
 void Screen::drawBgColor( const int x, const int y, const unsigned char c ) throw() {
-	int w = getWidth();
-	int h = getHeight();
+	int w = area().width();
+	int h = area().height();
 	if (( x < 0 ) || ( x >= w ) || ( y < 0 ) || ( y >= h ) )
 		return;
 	gaColorsB->at(x+y*w) = c;
@@ -196,7 +197,7 @@ StereoPeakBar::StereoPeakBar( Widget*parent, int width, int max, int interLen, b
 	}
 	txt += "]";
 	setText(txt);
-	setDimensions( length(), getHeight() );
+	setSize( length(), area().height() );
 	int mpoint = length() / 2;
 	for ( int i = 0; i < width; i++ ) {
 		switch ( i*4 / width ) {

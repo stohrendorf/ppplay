@@ -20,13 +20,13 @@ private:
 	virtual void drawThis() throw(ppg::Exception) {}
 public:
 	UIMain(ppg::Widget*parent);
-	ppg::Label* const posLabel() { return m_position; }
-	ppg::Label* const playbackInfo() { return m_playbackInfo; }
-	ppg::StereoPeakBar* const volBar() { return m_volBar; }
-	ppg::Label* const chanInfo(std::size_t idx) { return m_chanInfos[idx]; }
-	ppg::Label* const chanCell(std::size_t idx) { return m_chanCells[idx]; }
-	ppg::Label* const trackerInfo() { return m_trackerInfo; }
-	ppg::Label* const modTitle() { return m_modTitle; }
+	ppg::Label* posLabel() { return m_position; }
+	ppg::Label* playbackInfo() { return m_playbackInfo; }
+	ppg::StereoPeakBar* volBar() { return m_volBar; }
+	ppg::Label* chanInfo(std::size_t idx) { return m_chanInfos[idx]; }
+	ppg::Label* chanCell(std::size_t idx) { return m_chanCells[idx]; }
+	ppg::Label* trackerInfo() { return m_trackerInfo; }
+	ppg::Label* modTitle() { return m_modTitle; }
 };
 
 #endif // UI_MAIN_H
