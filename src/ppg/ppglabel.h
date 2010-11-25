@@ -62,7 +62,7 @@ class Label : public Widget {
 		 * @brief Get the label's text length
 		 * @return Text length
 		 */
-		virtual unsigned int length() const throw();
+		virtual std::size_t length() const throw();
 		/**
 		 * @brief Assignment operator for std::string's
 		 * @param[in] src String to assign to this label
@@ -84,23 +84,23 @@ class Label : public Widget {
 		 * @return Reference to the char
 		 * @exception PpgException if @a index is out of range
 		 */
-		virtual char &operator[](const unsigned int index) throw(Exception);
+		virtual char &operator[](std::size_t index) throw(Exception);
 		/**
 		 * @brief Set's the foreground color of @a len chars from position @a pos to @a color
 		 * @param[in] pos Starting position
 		 * @param[in] color New foreground color
 		 * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
 		 */
-		virtual void setFgColor(unsigned int pos, unsigned char color = ESC_NOCHANGE, unsigned int len = 1) throw();
+		virtual void setFgColor(std::size_t pos, unsigned char color = ESC_NOCHANGE, std::size_t len = 1) throw();
 		/**
 		 * @brief Set's the background color of @a len chars from position @a pos to @a color
 		 * @param[in] pos Starting position
 		 * @param[in] color New background color
 		 * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
 		 */
-		virtual void setBgColor(unsigned int pos, unsigned char color = ESC_NOCHANGE, unsigned int len = 1) throw();
-		virtual int setHeight(const int h) throw(Exception);
-		virtual int setWidth(const int w) throw(Exception);
+		virtual void setBgColor(std::size_t pos, unsigned char color = ESC_NOCHANGE, std::size_t len = 1) throw();
+		virtual int setHeight(int h) throw(Exception);
+		virtual int setWidth(int w) throw(Exception);
 };
 
 } // namespace ppg
