@@ -686,14 +686,14 @@ GenOrder::Ptr S3mModule::mapOrder( int16_t order ) throw() {
 }
 
 std::string S3mModule::getChanStatus( int16_t idx ) throw() {
-	GenChannel::Ptr x = m_channels[idx];
+	S3mChannel::Ptr x = m_channels[idx];
 	if ( !x )
 		return "";
 	return x->getStatus();
 }
 
 std::string S3mModule::getChanCellString( int16_t idx ) throw() {
-	GenChannel::Ptr x = m_channels[idx];
+	S3mChannel::Ptr x = m_channels[idx];
 	if ( !x )
 		return "";
 	return x->getCellString();
