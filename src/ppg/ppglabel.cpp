@@ -21,6 +21,8 @@
 #include "ppglabel.h"
 #include <algorithm>
 
+#include "logger.h"
+
 namespace ppg {
 
 Label::Label(Widget*parent, const std::string &text) :
@@ -34,6 +36,7 @@ Label::Label(Widget*parent, const std::string &text) :
 		setWidth(length());
 	else
 		setWidth(1);
+	Widget::setHeight(1);
 }
 
 Label::~Label() throw() {
@@ -61,26 +64,26 @@ Label &Label::operator+=(const std::string & src) throw() {
 	return *this;
 }
 
-int Label::setHeight(const int /*h*/) throw(Exception) {
+int Label::setHeight(int /*h*/) throw(Exception) {
 	return 1;
 }
 
-int Label::setWidth(const int w) throw(Exception) {
+int Label::setWidth(int w) throw(Exception) {
 	Widget::setWidth(w);
 	sizeColorsToMax();
 	return area().width();
 }
 
-unsigned int Label::length() const throw() {
+std::size_t Label::length() const throw() {
 	return m_text.length();
 }
 
-char &Label::operator[](const unsigned int index) throw(Exception) {
+char &Label::operator[](std::size_t index) throw(Exception) {
 	PPG_TEST(index>=m_text.length());
 	return m_text[index];
 }
 
-void Label::setFgColor(unsigned int pos, const unsigned char color, unsigned int len) throw() {
+void Label::setFgColor(std::size_t pos, unsigned char color, std::size_t len) throw() {
 	if (pos >= m_bgColors.size())
 		return;
 	if ((len == 0) || (len + pos > m_bgColors.size()))
@@ -88,7 +91,7 @@ void Label::setFgColor(unsigned int pos, const unsigned char color, unsigned int
 	std::fill_n(&m_fgColors[pos], len, color);
 }
 
-void Label::setBgColor(unsigned int pos, const unsigned char color, unsigned int len) throw() {
+void Label::setBgColor(std::size_t pos, unsigned char color, std::size_t len) throw() {
 	if (pos >= m_bgColors.size())
 		return;
 	if ((len == 0) || (len + pos > m_bgColors.size()))
@@ -113,10 +116,12 @@ void Label::drawThis() throw(Exception) {
 		default:
 			PPG_THROW("Invalid alignment");
 	}
-	for (int localX = 0; localX < area().width(); localX++) {
-		int textPos = localX-offset;
-		if (textPos < 0 || textPos >= static_cast<long>(length()))
-			continue;
+	int w = area().width();
+	//LOG_DEBUG("area: topleft=%d,%d bottomright=%d,%d", area().left(), area().top(), area().right(), area().bottom());
+	for (std::size_t localX = offset; localX < w; localX++) {
+		std::size_t textPos = localX-offset;
+		if(textPos >= length())
+			break;
 		drawChar(localX, 0, m_text[textPos]);
 		if (m_fgColors[textPos] != ESC_NOCHANGE)
 			drawFgColor(localX, 0, m_fgColors[textPos]);
