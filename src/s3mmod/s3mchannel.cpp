@@ -397,6 +397,7 @@ void S3mChannel::update( GenCell::Ptr const cell, const uint8_t tick, bool noRet
 
 void S3mChannel::doVolumeFx( const uint8_t fx, uint8_t fxVal ) throw() {
 	int16_t tempVar;
+	uint8_t H, L;
 	switch ( fx ) {
 		case s3mFxVolSlide:
 		case s3mFxVibVolSlide:
@@ -414,25 +415,25 @@ void S3mChannel::doVolumeFx( const uint8_t fx, uint8_t fxVal ) throw() {
 			else
 				useLastFxData( m_lastFx, fxVal );
 			tempVar = getVolume();
-			if ( highNibble( fxVal ) == 0x00 ) { // slide down
-				if (( getTick() != 0 ) || m_300VolSlides )
-					tempVar -= lowNibble( fxVal );
+			H = highNibble(fxVal);
+			L = lowNibble(fxVal);
+			if(H==0x0f) {
+				if(L==0)
+					tempVar += H;
+				else if(getTick()==0)
+					tempVar -= L;
 			}
-			else if ( lowNibble( fxVal ) == 0x00 ) { // slide up
-				if (( getTick() != 0 ) || m_300VolSlides )
-					tempVar += highNibble( fxVal );
+			else if(L==0x0f) {
+				if(H==0)
+					tempVar -= L;
+				else if(getTick()==0)
+					tempVar += H;
 			}
-			else if ( highNibble( fxVal ) == 0x0f ) { // fine slide down
-				if ( getTick() == 0 )
-					tempVar -= lowNibble( fxVal );
-			}
-			else if ( lowNibble( fxVal ) == 0x0f ) { // fine slide up
-				if ( getTick() == 0 )
-					tempVar += highNibble( fxVal );
-			}
-			else { // slide down
-				if (( getTick() != 0 ) || m_300VolSlides )
-					tempVar -= lowNibble( fxVal );
+			else if(getTick()!=0 || m_300VolSlides) {
+				if(H==0)
+					tempVar -= L;
+				else
+					tempVar += H;
 			}
 			setVolume( clip<int16_t>( tempVar, 0, 0x40 ) );
 			break;
@@ -877,16 +878,24 @@ std::string S3mChannel::getFxDesc() const throw( PppException ) {
 		case s3mFxBreakPat:
 			return "PBrk \xf6";
 		case s3mFxVolSlide:
-			if ( highNibble( m_lastFx ) == 0x00 )  // slide down
-				return "VSld \x1f";
-			else if ( lowNibble( m_lastFx ) == 0x00 ) // slide up
-				return "VSld \x1e";
-			else if ( highNibble( m_lastFx ) == 0x0f ) // fine slide down
-				return "VSld \x19";
-			else if ( lowNibble( m_lastFx ) == 0x0f ) // fine slide up
-				return "VSld \x18";
-			else // slide down
-				return "VSld \x1f";
+			if(highNibble(m_lastFx)==0x0f) {
+				if(lowNibble(m_lastFx)==0)
+					return "VSld \x1e";
+				else
+					return "VSld \x19";
+			}
+			else if(lowNibble(m_lastFx)==0x0f) {
+				if(highNibble(m_lastFx)==0)
+					return "VSld \x1f";
+				else
+					return "VSld \x18";
+			}
+			else {
+				if(highNibble(m_lastFx)==0)
+					return "VSld \x1f";
+				else
+					return "VSld \x1e";
+			}
 		case s3mFxPitchDown:
 			if ( highNibble( m_lastFx ) == 0x0f )
 				return "Ptch \x1f";
