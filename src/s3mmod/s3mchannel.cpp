@@ -480,17 +480,19 @@ void S3mChannel::doPitchFx( const uint8_t fx, uint8_t fxVal ) throw() {
 	switch ( fx ) {
 		case s3mFxPitchDown:
 			useLastFxData( m_lastFx, fxVal );
-			if(getTick()!=0) {
-				if(fxVal<0xe0)
+			if(getTick()==0) {
+				if(fxVal<=0xe0)
+					break;
+				if(fxVal<=0xf0)
 					pitchDown(lowNibble(fxVal)<<2);
-				break;
+				else
+					pitchDown(lowNibble(fxVal));
 			}
-			if(fxVal<=0xe0)
-				break;
-			if(fxVal<=0xf0)
-				pitchDown(lowNibble(fxVal));
-			else
-				pitchDown(lowNibble(fxVal)<<2);
+			else {
+				if(fxVal>=0xe0)
+					break;
+				pitchDown(fxVal<<2);
+			}
 /*			if ( highNibble( fxVal ) == 0x0f ) { // fine slide down
 				if ( getTick() == 0 )
 					pitchDown( lowNibble( fxVal ) << 2 );
@@ -504,17 +506,19 @@ void S3mChannel::doPitchFx( const uint8_t fx, uint8_t fxVal ) throw() {
 			break;
 		case s3mFxPitchUp:
 			useLastFxData( m_lastFx, fxVal );
-			if(getTick()!=0) {
-				if(fxVal<0xe0)
+			if(getTick()==0) {
+				if(fxVal<=0xe0)
+					break;
+				if(fxVal<=0xf0)
 					pitchUp(lowNibble(fxVal)<<2);
-				break;
+				else
+					pitchUp(lowNibble(fxVal));
 			}
-			if(fxVal<=0xe0)
-				break;
-			if(fxVal<=0xf0)
-				pitchUp(lowNibble(fxVal));
-			else
-				pitchUp(lowNibble(fxVal)<<2);
+			else {
+				if(fxVal>=0xe0)
+					break;
+				pitchUp(fxVal<<2);
+			}
 /*			if ( highNibble( fxVal ) == 0x0f ) { // fine slide up
 				if ( getTick() == 0 )
 					pitchUp( lowNibble( fxVal ) << 2 );
