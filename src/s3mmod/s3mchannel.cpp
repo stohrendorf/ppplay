@@ -167,7 +167,7 @@ void S3mChannel::setSampleIndex(int32_t idx) {
 }
 
 S3mChannel::S3mChannel( const uint16_t frq, const S3mSample::Vector* const smp ) throw() : GenChannel( frq ),
-		m_note( ::s3mEmptyNote ), m_lastFx( 0 ), m_lastPortaFx( 0 ), m_lastVibratoFx( 0 ), m_lastVibVolFx( 0 ), m_lastPortVolFx( 0 ),
+		m_note( ::s3mEmptyNote ), m_lastFx( 0 ), m_lastPortaSpeed( 0 ), m_lastVibratoData( 0 ),
 		m_tremorVolume( 0 ), m_targetNote( ::s3mEmptyNote ), m_noteChanged( false ), m_deltaPeriod( 0 ),
 		m_deltaVolume( 0 ), m_globalVol( 0x40 ), m_nextGlobalVol( 0x40 ),
 		m_retrigCount( -1 ), m_tremorCount( -1 ), m_300VolSlides( false ), m_amigaLimits( false ), m_immediateGlobalVol( false ),
@@ -249,7 +249,7 @@ void S3mChannel::setBasePeriod(uint16_t per) {
 	if(!m_amigaLimits)
 		m_basePeriod = clip<uint16_t>(per, 0x40, 0x7fff);
 	else
-		m_basePeriod = clip<uint16_t>(per, 0x1c5, 0xd60);
+		m_basePeriod = clip<uint16_t>(per, 0xda, 0xd60);
 }
 
 uint16_t S3mChannel::getAdjustedPeriod() throw() {
@@ -378,12 +378,12 @@ void S3mChannel::update( S3mCell::Ptr const cell, const uint8_t tick, bool noRet
 					doSpecialFx( m_currentCell->getEffect(), m_currentCell->getEffectValue() );
 				break;
 			case s3mFxVibVolSlide:
-				doVibratoFx( s3mFxVibVolSlide, 0 );
 				doVolumeFx( s3mFxVibVolSlide, m_currentCell->getEffectValue() );
+				doVibratoFx( s3mFxVibVolSlide, m_lastVibratoData );
 				break;
 			case s3mFxPortVolSlide:
-				doPitchFx( s3mFxPortVolSlide, 0 );
 				doVolumeFx( s3mFxPortVolSlide, m_currentCell->getEffectValue() );
+				doPitchFx( s3mFxPortVolSlide, m_lastPortaSpeed );
 				break;
 			default:
 				LOG_WARNING( "UNSUPPORTED FX FOUND: %s", getFxName().c_str() );
@@ -400,17 +400,12 @@ void S3mChannel::doVolumeFx( const uint8_t fx, uint8_t fxVal ) throw() {
 		case s3mFxVolSlide:
 		case s3mFxVibVolSlide:
 		case s3mFxPortVolSlide:
-			if ( fx == s3mFxVibVolSlide ) {
-				useLastFxData( m_lastVibVolFx, fxVal );
-				if (( highNibble( fxVal ) == 0x0f ) || ( lowNibble( fxVal ) == 0x0f ) )
+/*			if ( fx == s3mFxVibVolSlide || fx==s3mFxPortVolSlide ) {
+				if(getTick()==0)
 					break;
+				useLastFxData( m_lastVolFx, fxVal );
 			}
-			else if ( fx == s3mFxPortVolSlide ) {
-				useLastFxData( m_lastPortVolFx, fxVal );
-				if (( highNibble( fxVal ) == 0x0f ) || ( lowNibble( fxVal ) == 0x0f ) )
-					break;
-			}
-			else
+			else*/
 				useLastFxData( m_lastFx, fxVal );
 			tempVar = getVolume();
 			H = highNibble(fxVal);
@@ -439,7 +434,7 @@ void S3mChannel::doVolumeFx( const uint8_t fx, uint8_t fxVal ) throw() {
 			combineLastFxData( m_lastFx, fxVal );
 			if ( getTick() != 0 ) {
 				tremolo() += highNibble( fxVal ) << 2;
-				m_deltaVolume = ( tremolo().get() * lowNibble( fxVal ) >> 7 );
+				m_deltaVolume = ( tremolo().get() * lowNibble( fxVal ) ) >> 7;
 			}
 			break;
 		case s3mFxChanVolume:
@@ -452,26 +447,18 @@ void S3mChannel::doVibratoFx( const uint8_t fx, uint8_t fxVal ) throw() {
 	switch ( fx ) {
 		case s3mFxVibrato:
 		case s3mFxVibVolSlide:
-			if ( fx == s3mFxVibVolSlide ) {
-				if (( highNibble( m_lastVibVolFx ) == 0x0f ) || ( lowNibble( m_lastVibVolFx ) == 0x0f ) )
-					break;
-			}
-			else {
-				combineLastFxData( m_lastVibratoFx, fxVal );
-				m_lastVibVolFx = m_lastVibratoFx;
-			}
-			fxVal = m_lastVibratoFx;
-			if ( getTick() != 0 ) {
-				vibrato() += highNibble( fxVal ) << 2;
-				m_deltaPeriod = vibrato().get() * lowNibble( fxVal ) >> 5;
-			}
+			combineLastFxData(m_lastVibratoData, fxVal);
+			if(getTick()==0)
+				break;
+			vibrato() += highNibble( fxVal ) << 2;
+			m_deltaPeriod = vibrato().get() * lowNibble( fxVal ) >> 5;
 			break;
 		case s3mFxFineVibrato:
-			combineLastFxData( m_lastVibratoFx, fxVal );
-			if ( getTick() != 0 ) {
-				vibrato() += highNibble( fxVal ) << 2;
-				m_deltaPeriod = vibrato().get() * lowNibble( fxVal ) >> 7;
-			}
+			combineLastFxData( m_lastVibratoData, fxVal );
+			if ( getTick() == 0 )
+				break;
+			vibrato() += highNibble( fxVal ) << 2;
+			m_deltaPeriod = vibrato().get() * lowNibble( fxVal ) >> 7;
 			break;
 	}
 }
@@ -493,16 +480,6 @@ void S3mChannel::doPitchFx( const uint8_t fx, uint8_t fxVal ) throw() {
 					break;
 				pitchDown(fxVal<<2);
 			}
-/*			if ( highNibble( fxVal ) == 0x0f ) { // fine slide down
-				if ( getTick() == 0 )
-					pitchDown( lowNibble( fxVal ) << 2 );
-			}
-			else if ( highNibble( fxVal ) == 0x0e ) { // extra fine slide down
-				if ( getTick() == 0 )
-					pitchDown( lowNibble( fxVal ) );
-			}
-			else if ( getTick() != 0 ) // slide down
-				pitchDown( fxVal << 2 );*/
 			break;
 		case s3mFxPitchUp:
 			useLastFxData( m_lastFx, fxVal );
@@ -519,28 +496,18 @@ void S3mChannel::doPitchFx( const uint8_t fx, uint8_t fxVal ) throw() {
 					break;
 				pitchUp(fxVal<<2);
 			}
-/*			if ( highNibble( fxVal ) == 0x0f ) { // fine slide up
-				if ( getTick() == 0 )
-					pitchUp( lowNibble( fxVal ) << 2 );
-			}
-			else if ( highNibble( fxVal ) == 0x0e ) { // extra fine slide up
-				if ( getTick() == 0 )
-					pitchUp( lowNibble( fxVal ) );
-			}
-			else if ( getTick() != 0 ) // slide up
-				pitchUp( fxVal << 2 );*/
 			break;
 		case s3mFxPorta:
+			useLastFxData( m_lastPortaSpeed, fxVal );
 		case s3mFxPortVolSlide:
-			if ( fx == s3mFxPortVolSlide ) {
-				if (( highNibble( m_lastPortVolFx ) == 0x0f ) || ( lowNibble( m_lastPortVolFx ) == 0x0f ) )
-					break;
+/*			if ( fx == s3mFxPortVolSlide && getTick()==0) {
+				break;
 			}
 			else {
-				useLastFxData( m_lastPortaFx, fxVal );
-				m_lastPortVolFx = m_lastPortaFx;
+				useLastFxData( m_lastPortaSpeed, fxVal );
+				m_lastVolFx = m_lastPortaSpeed;
 			}
-			fxVal = m_lastPortaFx;
+			fxVal = m_lastPortaSpeed;*/
 			if ( currentSample() && ( getTick() != 0 ) ) {
 				int32_t basePer = 0;
 				int32_t targetPer = 0;
@@ -1063,10 +1030,8 @@ BinStream &S3mChannel::saveState( BinStream &str ) const throw( PppException ) {
 		GenChannel::saveState( str )
 		.write( &m_note )
 		.write( &m_lastFx )
-		.write( &m_lastPortaFx )
-		.write( &m_lastVibratoFx )
-		.write( &m_lastVibVolFx )
-		.write( &m_lastPortVolFx )
+		.write( &m_lastPortaSpeed )
+		.write( &m_lastVibratoData )
 		.write( &m_tremorVolume )
 		.write( &m_targetNote )
 		.write( &m_globalVol )
@@ -1092,10 +1057,8 @@ BinStream &S3mChannel::restoreState( BinStream &str ) throw( PppException ) {
 		GenChannel::restoreState( str )
 		.read( &m_note )
 		.read( &m_lastFx )
-		.read( &m_lastPortaFx )
-		.read( &m_lastVibratoFx )
-		.read( &m_lastVibVolFx )
-		.read( &m_lastPortVolFx )
+		.read( &m_lastPortaSpeed )
+		.read( &m_lastVibratoData )
 		.read( &m_tremorVolume )
 		.read( &m_targetNote )
 		.read( &m_globalVol )
