@@ -53,10 +53,8 @@ namespace ppp {
 				S3mChannel& operator=(const S3mChannel&) = delete; //!< @brief No assignment operator
 				uint8_t m_note;          //!< @brief Currently playing note
 				uint8_t m_lastFx;        //!< @brief Last FX Value
-				uint8_t m_lastPortaFx;   //!< @brief Last Pitch FX
-				uint8_t m_lastVibratoFx; //!< @brief Last Vibrato FX
-				uint8_t m_lastVibVolFx;  //!< @brief Last Vibrato/Volume FX
-				uint8_t m_lastPortVolFx; //!< @brief Last Porta/Volume FX
+				uint8_t m_lastVibratoData; //!< @brief Last Vibrato FX
+				uint8_t m_lastPortaSpeed;
 				uint8_t m_tremorVolume;  //!< @brief Backup variable for Tremor FX
 				uint8_t m_targetNote;    //!< @brief Target note for pitch slides
 				bool m_noteChanged;            //!< @brief @c true when a new note triggered in the current frame
