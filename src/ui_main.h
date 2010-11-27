@@ -2,7 +2,6 @@
 #define UI_MAIN_H
 
 #include "ppg/ppg.h"
-#include "ppg/ppgbase.h"
 
 #include <array>
 

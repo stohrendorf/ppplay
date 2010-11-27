@@ -40,7 +40,7 @@ static inline void DrawPixelRGB( const int x, const int y, const Uint8 R, const 
 }
 
 void Screen::clearOverlay() {
-	std::fill_n(m_pixelOverlay->begin(), gaScreen->w*gaScreen->h, 0xff);
+	std::fill_n(m_pixelOverlay, gaScreen->w*gaScreen->h, 0xff);
 }
 
 Screen::Screen( const int w, const int h, const std::string &title ) throw( Exception ) : Widget( NULL ), m_pixelOverlay(), m_pixW(0), m_pixH(0) {
@@ -58,7 +58,7 @@ Screen::Screen( const int w, const int h, const std::string &title ) throw( Exce
 		setLeft(0);
 		setPosition(0, 0);
 		setSize(gaScreen->w/8, gaScreen->h/16);
-		m_pixelOverlay.reset(new std::vector<uint8_t>(gaScreen->w*gaScreen->h, 0xff));
+		m_pixelOverlay = new uint8_t[gaScreen->w*gaScreen->h];
 		clearOverlay();
 		SDL_WM_SetCaption( title.c_str(), NULL );
 		gDosColors[dcBlack]       = SDL_MapRGB( gaScreen->format, 0x00, 0x00, 0x00 ); // black
@@ -88,6 +88,7 @@ Screen::Screen( const int w, const int h, const std::string &title ) throw( Exce
 }
 
 Screen::~Screen() throw() {
+	delete[] m_pixelOverlay;
 }
 
 #include "pfonts.inc"
@@ -142,9 +143,9 @@ void Screen::drawThis() throw( Exception ) {
 	for ( int y = 0; y < h; y++ ) {
 		for ( int x = 0; x < w; x++ ) {
 			int pos = w * y + x;
-			if ( m_pixelOverlay->at(pos) == 0xff )
+			if ( m_pixelOverlay[pos] == 0xff )
 				continue;
-			DrawPixel( x, y, gDosColors[m_pixelOverlay->at(pos)] );
+			DrawPixel( x, y, gDosColors[m_pixelOverlay[pos]] );
 		}
 	}
 	if ( SDL_MUSTLOCK( gaScreen ) ) {

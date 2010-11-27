@@ -34,7 +34,7 @@
 #include <vector>
 
 #include "widget.h"
-#include "ppglabel.h"
+#include "label.h"
 
 namespace ppg {
 
@@ -121,7 +121,7 @@ class Screen : public Widget {
 		Screen(const Screen&) = delete;
 		Screen &operator=(const Screen&) = delete;
 	private:
-		std::shared_ptr< std::vector<unsigned char> > m_pixelOverlay; //!< @brief Pixel overlay buffer
+		uint8_t* m_pixelOverlay; //!< @brief Pixel overlay buffer
 		int m_pixW; //!< @brief Pixel overlay buffer width
 		int m_pixH; //!< @brief Pixel overlay buffer height
 		/**
@@ -175,7 +175,7 @@ class Screen : public Widget {
 inline void Screen::drawPixel(const int x, const int y, const unsigned char c) const throw() {
 	if((x < 0) || (y < 0) || (y >= m_pixH) || (x >= m_pixW))
 		return;
-	m_pixelOverlay->at(y*m_pixW + x) = c;
+	m_pixelOverlay[y*m_pixW + x] = c;
 }
 
 } // namespace ppg
