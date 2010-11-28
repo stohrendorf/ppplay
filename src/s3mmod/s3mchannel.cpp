@@ -899,9 +899,9 @@ std::string S3mChannel::getFxDesc() const throw( PppException ) {
 			else
 				return "Ptch\x1f\x1f";
 		case s3mFxPitchUp:
-			if ( lowNibble( m_lastFx ) == 0x0f )
+			if ( highNibble( m_lastFx ) == 0x0f )
 				return "Ptch \x1e";
-			else if ( lowNibble( m_lastFx ) == 0x0e )
+			else if ( highNibble( m_lastFx ) == 0x0e )
 				return "Ptch \x18";
 			else
 				return "Ptch\x1e\x1e";
