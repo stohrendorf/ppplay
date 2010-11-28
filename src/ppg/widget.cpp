@@ -21,6 +21,8 @@
 #include "widget.h"
 #include <algorithm>
 
+#include "logger.h"
+
 namespace ppg {
 
 Point::Point() :m_x(0), m_y(0)
@@ -177,30 +179,30 @@ bool Widget::isVisible() const throw() {
 }
 
 void Widget::drawChar(int x, int y, char c) throw() {
-	if ((x < 0) || (x >= m_area.width()) || (y < 0) || (y >= m_area.height()))
+	if(!m_parent)
 		return;
-	if (m_parent) {
-		mapToParent(&x, &y);
-		m_parent->drawChar(x, y, c);
-	}
+	mapToParent(&x, &y);
+	if(!m_area.contains(x,y))
+		return;
+	m_parent->drawChar(x, y, c);
 }
 
 void Widget::drawFgColor(int x, int y, unsigned char c) throw() {
-	if ((x < 0) || (x >= m_area.width()) || (y < 0) || (y >= m_area.height()))
+	if(!m_parent)
 		return;
-	if (m_parent) {
-		mapToParent(&x, &y);
-		m_parent->drawFgColor(x, y, c);
-	}
+	mapToParent(&x, &y);
+	if(!m_area.contains(x,y))
+		return;
+	m_parent->drawFgColor(x, y, c);
 }
 
 void Widget::drawBgColor(int x, int y, unsigned char c) throw() {
-	if ((x < 0) || (x >= m_area.width()) || (y < 0) || (y >= m_area.height()))
+	if(!m_parent)
 		return;
-	if (m_parent) {
-		mapToParent(&x, &y);
-		m_parent->drawBgColor(x, y, c);
-	}
+	mapToParent(&x, &y);
+	if(!m_area.contains(x,y))
+		return;
+	m_parent->drawBgColor(x, y, c);
 }
 
 void Widget::mapToParent(int* x, int* y) const {

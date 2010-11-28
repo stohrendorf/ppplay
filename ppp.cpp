@@ -18,12 +18,15 @@
  ***************************************************************************/
 
 
+#include <SDL.h>
+
 #include "config.h"
 
 #include <iostream>
 #include <algorithm>
 #include <boost/program_options.hpp>
 #include "ppg.h"
+#include "screen.h"
 #include "src/ui_main.h"
 
 #include "genmodule.h"

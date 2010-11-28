@@ -115,7 +115,7 @@ void Label::drawThis() throw(Exception) {
 			PPG_THROW("Invalid alignment");
 	}
 	int w = area().width();
-	for (std::size_t localX = offset; localX < w; localX++) {
+	for (int localX = offset; localX < w; localX++) {
 		std::size_t textPos = localX-offset;
 		if(textPos >= length())
 			break;
