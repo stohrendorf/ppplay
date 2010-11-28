@@ -74,6 +74,8 @@ class Rect {
 		Point bottomRight() const;
 		Point& bottomRight();
 		Point size() const;
+		bool contains(const Point &pt) const { return contains(pt.x(), pt.y()); }
+		bool contains(int x, int y) const { return x>=m_topLeft.x() && x<=m_bottomRight.x() && y>=m_topLeft.y() && y<=m_bottomRight.y(); }
 };
 
 /**
@@ -108,15 +110,15 @@ class Widget {
 		/**
 		 * @brief Calls ppg::Widget::drawThis(), but only when ppg::Widget::aVisible is @c true
 		 */
-		virtual void draw() throw(Exception);
+		void draw() throw(Exception);
 		/**
 		 * @brief Make this widget visible
 		 */
-		virtual void show() throw();
+		void show() throw();
 		/**
 		 * @brief Make this widget invisible
 		 */
-		virtual void hide() throw();
+		void hide() throw();
 		/**
 		 * @brief Draw a char relative to the widget's position
 		 * @param[in] x Left position

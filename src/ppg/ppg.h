@@ -26,9 +26,6 @@
 #ifndef ppgH
 #define ppgH
 
-#include <SDL.h>
-#include <SDL_endian.h>
-
 #include <string>
 #include <memory>
 #include <vector>
@@ -37,12 +34,6 @@
 #include "label.h"
 
 namespace ppg {
-
-/**
- * @ingroup Ppg
- * @brief Dos Color Values
- */
-extern Uint32 dosColors[16];
 
 /**
  * @ingroup Ppg
@@ -111,72 +102,6 @@ class StereoPeakBar : public Label {
 		 */
 		int getValRight() const throw();
 };
-
-/**
- * @class PpgScreen
- * @ingroup Ppg
- * @brief The virtual DOS screen
- */
-class Screen : public Widget {
-		Screen(const Screen&) = delete;
-		Screen &operator=(const Screen&) = delete;
-	private:
-		uint8_t* m_pixelOverlay; //!< @brief Pixel overlay buffer
-		int m_pixW; //!< @brief Pixel overlay buffer width
-		int m_pixH; //!< @brief Pixel overlay buffer height
-		/**
-		 * @brief Draw an 8x8 char
-		 * @param[in] x Left position
-		 * @param[in] y Top position
-		 * @param[in] c Char to drawBgColor
-		 * @param[in] foreground Foreground color
-		 * @param[in] background Background color
-		 * @param[in] opaque Set to @c false to draw a transparent char
-		 */
-		void drawChar8(int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque = true) throw();
-		/**
-		 * @copydoc PpgScreen::drawChar8
-		 * @brief Draw an 8x16 char
-		 */
-		void drawChar16(int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque = true) throw();
-		virtual void drawThis() throw(Exception);
-	public:
-		/**
-		 * @brief Create a new virtual DOS screen
-		 * @param[in] w Width in characters
-		 * @param[in] h Height in characters
-		 * @param[in] title Title of the screen
-		 */
-		Screen(const int w, const int h, const std::string& title) throw(Exception);
-		virtual ~Screen() throw();
-		/**
-		 * @brief Clear the screen
-		 * @param[in] c Character to overwrite the screen with
-		 * @param[in] foreground Foreground color
-		 * @param[in] background Background color
-		 */
-		void clear(uint8_t c, uint8_t foreground, uint8_t background ) throw();
-		virtual void drawChar(const int x, const int y, const char c) throw();
-		virtual void drawFgColor(const int x, const int y, const unsigned char c) throw();
-		virtual void drawBgColor(const int x, const int y, const unsigned char c) throw();
-		/**
-		 * @brief Draw a pixel
-		 * @param[in] x Left position
-		 * @param[in] y Top position
-		 * @param[in] c Dos color code of the pixel
-		 */
-		inline void drawPixel(const int x, const int y, const unsigned char c) const throw();
-		/**
-		 * @brief Clear the pixel overlay (make it fully transparent)
-		 */
-		void clearOverlay();
-};
-
-inline void Screen::drawPixel(const int x, const int y, const unsigned char c) const throw() {
-	if((x < 0) || (y < 0) || (y >= m_pixH) || (x >= m_pixW))
-		return;
-	m_pixelOverlay[y*m_pixW + x] = c;
-}
 
 } // namespace ppg
 

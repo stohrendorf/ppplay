@@ -3,4 +3,5 @@ add_library(ppg STATIC
 	widget.cpp
 	ppgexcept.cpp
 	label.cpp
+	screen.cpp
 )
