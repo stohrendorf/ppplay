@@ -65,9 +65,13 @@ Screen::Screen( int w, int h, const std::string &title ) throw( Exception ) : Wi
 
 Screen::~Screen() throw() {
 	delete[] g_pixelOverlay;
+	g_pixelOverlay = NULL;
 	delete[] g_chars;
+	g_chars = NULL;
 	delete[] g_colorsF;
+	g_colorsF = NULL;
 	delete[] g_colorsB;
+	g_colorsB = NULL;
 }
 
 #include "pfonts.inc"

@@ -103,15 +103,15 @@ namespace ppp {
 		 * @see ::S3mSample
 		 * @note Time-critical
 		 */
-		static inline uint16_t st3PeriodEx( const uint8_t note, const uint8_t oct, uint16_t c4spd ) throw( PppException ) {
+		static inline uint16_t st3PeriodEx( uint8_t note, uint8_t oct, uint16_t c4spd ) throw( PppException ) {
 			PPP_TEST(c4spd==0);
 			return (Periods[note] >> oct) * 8363 / c4spd;
 		}
-		static inline uint16_t st3Period( const uint8_t note, uint16_t c4spd ) throw( PppException ) {
+		static inline uint16_t st3Period( uint8_t note, uint16_t c4spd ) throw( PppException ) {
 			return st3PeriodEx(S3M_NOTE(note), S3M_OCTAVE(note), c4spd);
 		}
 
-		static inline uint8_t periodToNoteOffset( const uint16_t per, const uint16_t c4spd) {
+		static inline uint8_t periodToNoteOffset( uint16_t per, uint16_t c4spd) {
 			return -std::log2( static_cast<float>(per)*c4spd/(8363*Periods[0]) )*12;
 		}
 
@@ -124,7 +124,7 @@ namespace ppp {
 		 * @note Time-critical
 		 * @todo OPTIMIZE!!!
 		 */
-		static inline std::string periodToNote( const uint16_t per, const uint16_t c2spd ) throw() {
+		static inline std::string periodToNote( uint16_t per, uint16_t c2spd ) throw() {
 			if ( per == 0 )
 				return "p??";
 			if ( c2spd == 0 )
