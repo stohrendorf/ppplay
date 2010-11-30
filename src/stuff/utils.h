@@ -103,25 +103,6 @@ namespace ppp {
 	}
 }
 
-#ifndef WITHIN_DOXYGEN
-#define TSPEC(tn) \
-extern template const tn &std::min<tn>(const tn&, const tn&);\
-extern template const tn &std::max<tn>(const tn&, const tn&);\
-extern template const tn &ppp::clip<tn>(const tn&, const tn&, const tn&);\
-extern template bool ppp::inRange<tn>(const tn, const tn, const tn);
-TSPEC(int8_t)
-TSPEC(int16_t)
-TSPEC(int32_t)
-TSPEC(int64_t)
-TSPEC(uint8_t)
-TSPEC(uint16_t)
-TSPEC(uint32_t)
-TSPEC(uint64_t)
-TSPEC(float)
-TSPEC(double)
-#undef TSPEC
-#endif
-
 #define DISABLE_COPY(classname) \
 	classname(const classname&) = delete; \
 	classname& operator=(const classname&) = delete;

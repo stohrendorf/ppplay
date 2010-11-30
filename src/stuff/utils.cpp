@@ -29,30 +29,3 @@ namespace ppp {
 			std::swap(data[i], data[size-i-1]);
 	}
 }
-
-/**
- * @def TSPEC
- * @ingroup Common
- * @brief Helper macro for template specialization
- * @param[in] tn Typename
- */
-#define TSPEC(tn) \
-namespace std { \
-	template const tn &min<tn>(const tn&, const tn&);\
-	template const tn &max<tn>(const tn&, const tn&);\
-} \
-namespace ppp { \
-	template const tn &clip<tn>(const tn&, const tn&, const tn&);\
-	template bool inRange<tn>(const tn, const tn, const tn); \
-}
-TSPEC(int8_t)
-TSPEC(int16_t)
-TSPEC(int32_t)
-TSPEC(int64_t)
-TSPEC(uint8_t)
-TSPEC(uint16_t)
-TSPEC(uint32_t)
-TSPEC(uint64_t)
-TSPEC(float)
-TSPEC(double)
-#undef TSPEC
