@@ -23,7 +23,7 @@
 #include <cstdint>
 #include "gensample.h"
 #include "genpattern.h"
-#include "phaser.h"
+#include "phaser/phaser.h"
 
 /**
  * @file

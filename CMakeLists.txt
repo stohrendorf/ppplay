@@ -100,7 +100,7 @@ if(MINGW)
 	target_link_libraries(ppp stdc++ mingw32)
 endif()
 
-add_dependencies(ppp logger genmod s3mmod ppg binstream phaser fifoout fft utils)
+# add_dependencies(ppp logger genmod s3mmod ppg binstream phaser fifoout fft utils)
 target_link_libraries(ppp logger genmod s3mmod ppg binstream phaser fifoout fft utils)
 
 #########
@@ -159,28 +159,8 @@ else()
 	message(FATAL_ERROR "Boost Libraries not found!")
 endif()
 
-#########
-# add link/include dirs
-#########
-include_directories(
-	${CMAKE_CURRENT_SOURCE_DIR}
-	src/logger
-	src/genmod
-	src/genmod/phaser
-	src/s3mmod
-	src/ppg
-	src/stream
-	src/output
-	src/stuff
-)
-
-add_subdirectory(src/logger)
-add_subdirectory(src/genmod)
-add_subdirectory(src/s3mmod)
-add_subdirectory(src/stream)
-add_subdirectory(src/ppg)
-add_subdirectory(src/output)
-add_subdirectory(src/stuff)
+include_directories(src)
+add_subdirectory(src)
 
 #########
 # set install command

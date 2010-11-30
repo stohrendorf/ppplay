@@ -1,8 +1,8 @@
 #ifndef phaserH
 #define phaserH
 
-#include "pppexcept.h"
-#include "binstream.h"
+#include "stuff/pppexcept.h"
+#include "stream/binstream.h"
 
 #include <array>
 

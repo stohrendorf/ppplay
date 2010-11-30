@@ -24,7 +24,7 @@
 #include <memory>
 #include <vector>
 
-#include "audiofifo.h"
+#include "output/audiofifo.h"
 
 namespace ppp {
 	namespace FFT {

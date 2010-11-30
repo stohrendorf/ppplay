@@ -20,7 +20,7 @@
 #ifndef s3mpatternH
 #define s3mpatternH
 
-#include "genpattern.h"
+#include "genmod/genpattern.h"
 #include "s3mbase.h"
 
 /**

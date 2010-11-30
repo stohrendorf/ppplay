@@ -9,7 +9,7 @@
 #include <memory>
 #include <cstdint>
 
-#include "utils.h"
+#include "stuff/utils.h"
 
 #ifndef WITHIN_DOXYGEN
 class BinStream;

@@ -4,7 +4,7 @@
 #include "screen.h"
 #include "ppg.h"
 
-#include "logger.h"
+#include "logger/logger.h"
 
 namespace ppg {
 

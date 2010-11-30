@@ -20,7 +20,7 @@
 #ifndef s3mchannelH
 #define s3mchannelH
 
-#include "genchannel.h"
+#include "genmod/genchannel.h"
 #include "s3mbase.h"
 #include "s3msample.h"
 

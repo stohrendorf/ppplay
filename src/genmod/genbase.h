@@ -26,11 +26,11 @@
 #include <cstdint>
 #include <array>
 
-#include "utils.h"
-#include "pppexcept.h"
-#include "logger.h"
-#include "binstream.h"
-#include "audiofifo.h"
+#include "stuff/utils.h"
+#include "stuff/pppexcept.h"
+#include "logger/logger.h"
+#include "stream/binstream.h"
+#include "output/audiofifo.h"
 
 /**
  * @example ppp.cpp

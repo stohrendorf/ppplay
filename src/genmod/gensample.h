@@ -27,7 +27,7 @@
  */
 
 #include "genbase.h"
-#include "audiofifo.h"
+#include "output/audiofifo.h"
 
 namespace ppp {
 	/**
