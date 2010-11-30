@@ -6,10 +6,12 @@ namespace ppp {
 	std::string stringf(const char *fmt, ...) {
 		va_list args;
 		va_start(args, fmt);
-		char tmp[1024];
+		char* tmp = new char[1024];
 		vsnprintf(tmp, 1024, fmt, args);
 		va_end(args);
-		return tmp;
+		std::string res(tmp);
+		delete[] tmp;
+		return res;
 	}
 	
 	std::string stringncpy(const char src[], const std::size_t maxlen) {
