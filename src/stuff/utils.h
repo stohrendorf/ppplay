@@ -95,6 +95,12 @@ namespace ppp {
 	inline uint8_t highNibble(const uint8_t x) throw() {
 		return x >> 4;
 	}
+	
+	void swapEndian(char data[], std::size_t size);
+	template<class T>
+	void swapEndian(T* data) {
+		swapEndian(reinterpret_cast<char*>(data), sizeof(T));
+	}
 }
 
 #ifndef WITHIN_DOXYGEN

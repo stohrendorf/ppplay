@@ -311,43 +311,41 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 				s3mChan->enable300VolSlides();
 			if (( s3mHdr.flags&s3mFlag0volOpt ) != 0 )
 				s3mChan->enableZeroVol();
-			if ((( s3mHdr.createdWith >> 12 )&0x0f ) != s3mTIdScreamTracker )
-				s3mChan->disableGlobalVolDelay();
 			if (( schismTest != 0 ) && ( s3mHdr.createdWith == 0x1320 ) )
 				s3mChan->maybeSchism();
 			if (( s3mHdr.pannings[i]&0x80 ) != 0 ) {
-				m_channels[i]->disable();
+				s3mChan->disable();
 				continue;
 			}
 			else {
-				m_channels[i]->enable();
+				s3mChan->enable();
 				m_usedChannels = i+1;
 			}
 			if ( s3mHdr.defaultPannings != 0xFC ) { // no pannings
 				if (( s3mHdr.masterVolume&0x80 ) != 0 ) { // stereo
 					if (( s3mHdr.pannings[i]&0x08 ) != 0 ) // left channel
-						m_channels[i]->setPanning( 0x03*0x80 / 0x0f );
+						s3mChan->setPanning( 0x03*0x80 / 0x0f );
 					else // right channel
-						m_channels[i]->setPanning( 0x0c*0x80 / 0x0f );
+						s3mChan->setPanning( 0x0c*0x80 / 0x0f );
 				}
 				else { // mono
-					m_channels[i]->setPanning( 0x40 );
+					s3mChan->setPanning( 0x40 );
 				}
 			}
 			else { // panning settings are there...
 				if (( defPans[i]&0x20 ) == 0 ) { // use defaults
 					if (( s3mHdr.masterVolume&0x80 ) != 0 ) { // stereo
 						if (( s3mHdr.pannings[i]&0x08 ) != 0 ) // left channel
-							m_channels[i]->setPanning( 0x03*0x80 / 0x0f );
+							s3mChan->setPanning( 0x03*0x80 / 0x0f );
 						else // right channel
-							m_channels[i]->setPanning( 0x0c*0x80 / 0x0f );
+							s3mChan->setPanning( 0x0c*0x80 / 0x0f );
 					}
 					else { // mono
-						m_channels[i]->setPanning( 0x40 );
+						s3mChan->setPanning( 0x40 );
 					}
 				}
 				else { // use panning settings...
-					m_channels[i]->setPanning(( defPans[i]&0x0f )*0x80 / 0x0f );
+					s3mChan->setPanning(( defPans[i]&0x0f )*0x80 / 0x0f );
 				}
 			}
 		}

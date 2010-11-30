@@ -21,6 +21,11 @@ namespace ppp {
 		}
 		return res;
 	}
+	
+	void swapEndian(char* data, std::size_t size) {
+		for(std::size_t i=0; i<size/2; i++)
+			std::swap(data[i], data[size-i-1]);
+	}
 }
 
 /**
