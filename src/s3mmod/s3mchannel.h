@@ -66,7 +66,6 @@ namespace ppp {
 				int8_t m_tremorCount;     //!< @brief Used for Tremor Effect
 				bool m_300VolSlides;           //!< @brief Use STv3.00 Volume Slides
 				bool m_amigaLimits;            //!< @brief Limit notes between C-2 and B-5
-				bool m_immediateGlobalVol;     //!< @brief Apply global volume immediately for non-ST3 modules
 				bool m_maybeSchism;            //!< @brief Schism Tracker compatibility (when 16 bit or stereo samples are found and the tracker ID is ScreamTracker 3.20)
 				int16_t m_zeroVolCounter;        //!< @brief Zero Volume Optimization counter, -1 if disabled
 				const S3mSample::Vector* const m_sampleList;
@@ -205,10 +204,6 @@ namespace ppp {
 				 * @see ppp::s3m::s3mFxGlobalVol
 				 */
 				void setGlobalVolume(const uint8_t gVol, const bool applyNow = false) throw();
-				/**
-				 * @brief Disables delayed apply of the global volume
-				 */
-				void disableGlobalVolDelay() { m_immediateGlobalVol = true; }
 				virtual BinStream &saveState(BinStream &str) const throw(PppException);
 				virtual BinStream &restoreState(BinStream &str) throw(PppException);
 				virtual std::string getCellString();

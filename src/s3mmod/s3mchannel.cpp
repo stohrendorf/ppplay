@@ -22,7 +22,6 @@
 #include "s3mpattern.h"
 #include "breseninter.h"
 #include "logger.h"
-//#include <cmath>
 
 /**
  * @file
@@ -170,7 +169,7 @@ S3mChannel::S3mChannel( const uint16_t frq, const S3mSample::Vector* const smp )
 		m_note( ::s3mEmptyNote ), m_lastFx( 0 ), m_lastPortaSpeed( 0 ), m_lastVibratoData( 0 ),
 		m_tremorVolume( 0 ), m_targetNote( ::s3mEmptyNote ), m_noteChanged( false ), m_deltaPeriod( 0 ),
 		m_deltaVolume( 0 ), m_globalVol( 0x40 ), m_nextGlobalVol( 0x40 ),
-		m_retrigCount( -1 ), m_tremorCount( -1 ), m_300VolSlides( false ), m_amigaLimits( false ), m_immediateGlobalVol( false ),
+		m_retrigCount( -1 ), m_tremorCount( -1 ), m_300VolSlides( false ), m_amigaLimits( false ),
 		m_maybeSchism( false ), m_zeroVolCounter( -1 ), m_sampleList(smp), m_basePeriod(0), m_glissando(false), m_currentCell(new S3mCell())
 {
 }
@@ -773,7 +772,7 @@ void S3mChannel::pitchDown( uint16_t &per, const int16_t delta ) throw() {
 void S3mChannel::mixTick( MixerFrameBuffer &mixBuffer, const uint8_t volume ) throw( PppException ) {
 	if ( isDisabled() )
 		return;
-	setGlobalVolume( volume, m_immediateGlobalVol );
+	setGlobalVolume( volume, false );
 	if (( !isActive() ) || ( !currentSample() ) || ( m_basePeriod == 0 ) ) {
 		setActive( false );
 		return;
@@ -821,7 +820,7 @@ void S3mChannel::mixTick( MixerFrameBuffer &mixBuffer, const uint8_t volume ) th
 void S3mChannel::simTick( const std::size_t bufSize, const uint8_t volume ) {
 	if ( isDisabled() )
 		return;
-	setGlobalVolume( volume, m_immediateGlobalVol );
+	setGlobalVolume( volume, false );
 	if (( !isActive() ) || ( !currentSample() ) || ( m_basePeriod == 0 ) )
 		return setActive( false );
 	if (( getTick() == 0 ) && ( m_zeroVolCounter != -1 ) && ( currentSample() ) && isActive() ) {
