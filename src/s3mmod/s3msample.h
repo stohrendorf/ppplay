@@ -20,7 +20,7 @@
 #ifndef s3msampleH
 #define s3msampleH
 
-#include "gensample.h"
+#include "genmod/gensample.h"
 
 /**
 * @file

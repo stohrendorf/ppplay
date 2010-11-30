@@ -21,7 +21,7 @@
 #include "widget.h"
 #include <algorithm>
 
-#include "logger.h"
+#include "logger/logger.h"
 
 namespace ppg {
 

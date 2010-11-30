@@ -27,8 +27,8 @@
  */
 
 //#include <cstring>
-#include "pppexcept.h"
-#include "utils.h"
+#include "stuff/pppexcept.h"
+#include "stuff/utils.h"
 #include <algorithm>
 #include <vector>
 #include <memory>

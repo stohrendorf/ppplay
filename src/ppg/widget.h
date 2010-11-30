@@ -22,7 +22,7 @@
 #define ppgwidgetH
 
 #include "ppgexcept.h"
-#include "utils.h"
+#include "stuff/utils.h"
 
 #include <list>
 

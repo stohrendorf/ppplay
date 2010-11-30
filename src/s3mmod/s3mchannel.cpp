@@ -17,11 +17,11 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "genbase.h"
+#include "genmod/genbase.h"
 #include "s3mchannel.h"
 #include "s3mpattern.h"
-#include "breseninter.h"
-#include "logger.h"
+#include "genmod/breseninter.h"
+#include "logger/logger.h"
 
 /**
  * @file

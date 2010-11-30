@@ -49,7 +49,7 @@ namespace ppp {
 			/**
 			 * @brief Destructor, does nothing
 			 */
-			virtual ~GenCell() throw();
+			virtual ~GenCell();
 			/**
 			 * @brief Loads a cell from an input file stream
 			 * @param[in,out] str File stream to load from

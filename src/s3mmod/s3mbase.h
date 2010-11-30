@@ -20,7 +20,7 @@
 #ifndef s3mbaseH
 #define s3mbaseH
 
-#include "genbase.h"
+#include "genmod/genbase.h"
 #include <cstdint>
 
 /**

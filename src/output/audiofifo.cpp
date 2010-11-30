@@ -18,7 +18,7 @@
  ***************************************************************************/
 
 #include "audiofifo.h"
-#include "genbase.h"
+//#include "genbase.h"
 
 #include <algorithm>
 

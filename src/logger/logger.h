@@ -34,7 +34,7 @@
 #include <string>
 #include <boost/scope_exit.hpp>
 
-#include "utils.h"
+#include "stuff/utils.h"
 
 /**
  * @ingroup Logger

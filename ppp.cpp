@@ -25,16 +25,16 @@
 #include <iostream>
 #include <algorithm>
 #include <boost/program_options.hpp>
-#include "ppg.h"
-#include "screen.h"
+#include "src/ppg/ppg.h"
+#include "src/ppg/screen.h"
 #include "src/ui_main.h"
 
-#include "genmodule.h"
-#include "s3mmodule.h"
+#include "src/genmod/genmodule.h"
+#include "src/s3mmod/s3mmodule.h"
 
-#include "fft.h"
+#include "src/stuff/fft.h"
 
-#include "audiofifo.h"
+#include "src/output/audiofifo.h"
 
 #ifdef WITH_MP3LAME
 #	include <lame/lame.h>
