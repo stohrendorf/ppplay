@@ -44,13 +44,12 @@ namespace ppp {
 		 * @brief The S3M Channel
 		 */
 		class S3mChannel : public GenChannel {
+				S3mChannel() = delete; //!< @brief No default constructor
+				DISABLE_COPY(S3mChannel)
 			public:
 				typedef std::shared_ptr<S3mChannel> Ptr;
 				typedef std::vector<Ptr> Vector;
 			private:
-				S3mChannel() = delete; //!< @brief No default constructor
-				S3mChannel(const S3mChannel&) = delete; //!< @brief No copy constructor
-				S3mChannel& operator=(const S3mChannel&) = delete; //!< @brief No assignment operator
 				uint8_t m_note;          //!< @brief Currently playing note
 				uint8_t m_lastFx;        //!< @brief Last FX Value
 				uint8_t m_lastVibratoData; //!< @brief Last Vibrato FX
