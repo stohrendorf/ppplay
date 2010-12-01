@@ -445,8 +445,8 @@ void S3mChannel::doVolumeFx( const uint8_t fx, uint8_t fxVal ) throw() {
 void S3mChannel::doVibratoFx( const uint8_t fx, uint8_t fxVal ) throw() {
 	switch ( fx ) {
 		case s3mFxVibrato:
-		case s3mFxVibVolSlide:
 			combineLastFxData(m_lastVibratoData, fxVal);
+		case s3mFxVibVolSlide:
 			if(getTick()==0)
 				break;
 			vibrato() += highNibble( fxVal ) << 2;
