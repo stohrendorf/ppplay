@@ -998,7 +998,7 @@ void S3mChannel::updateStatus() throw() {
 			panStr = stringf( "%4d%%", ( getPanning() - 0x40 ) * 100 / 0x40 );
 		std::string volStr = stringf( "%3d%%", clip( getVolume() + m_deltaVolume, 0, 0x40 ) * 100 / 0x40 );
 		setStatusString( stringf( "%.2d: %s%s %s %s P:%s V:%s %s",
-		                         m_sampleIndex,
+		                         m_sampleIndex+1,
 		                         ( m_noteChanged ? "*" : " " ),
 		                         getNoteName().c_str(),
 		                         getFxName().c_str(),
