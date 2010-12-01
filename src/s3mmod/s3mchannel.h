@@ -145,8 +145,8 @@ namespace ppp {
 				 * @note Time-critical
 				 */
 				void combineLastFxData(uint8_t &oldFx, uint8_t &newFx) const throw();
-			protected:
-				virtual void setSampleIndex(int32_t idx);
+				int m_sampleIndex;
+				void setSampleIndex(int32_t idx);
 			public:
 				/**
 				 * @copydoc GenChannel::GenChannel
@@ -155,7 +155,7 @@ namespace ppp {
 				virtual ~S3mChannel() throw();
 				virtual std::string getNoteName() throw(PppException);
 				virtual std::string getFxName() const throw();
-				virtual uint16_t getAdjustedPeriod() throw();
+				uint16_t getAdjustedPeriod() throw();
 				/**
 				 * @brief Update the channel
 				 * @param[in] cell Pointer to a note cell

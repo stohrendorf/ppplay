@@ -24,6 +24,7 @@
 #include "gensample.h"
 #include "genpattern.h"
 #include "phaser/phaser.h"
+#include "stuff/utils.h"
 
 /**
  * @file
@@ -40,6 +41,7 @@ namespace ppp {
 	 * base class.
 	 */
 	class GenChannel {
+		DISABLE_COPY(GenChannel)
 		public:
 			typedef std::shared_ptr<GenChannel> Ptr; //!< @brief Class pointer
 			typedef std::vector<Ptr> Vector;
@@ -53,7 +55,6 @@ namespace ppp {
 			uint8_t m_tick; //!< @brief Current tick
 			int32_t m_position; //!< @brief Current sample position
 			std::string m_statusString; //!< @brief Status string
-			int32_t m_currSmpIndex; //!< @brief Sample index
 			uint16_t m_playbackFrequency; //!< @brief Playback frequency, default is 44100 @see GenModule::GenModule
 		public:
 			/**
@@ -64,18 +65,6 @@ namespace ppp {
 			 */
 			GenChannel( const uint16_t frq ) throw( PppException );
 			/**
-			 * @brief Member list initialization constructor
-			 * @param[in] src Source instance
-			 */
-			GenChannel( const GenChannel &src ) throw();
-			/**
-			 * @brief Assignment operator
-			 * @param[in] src Source instance
-			 * @return Reference to this instance
-			 * @warning No clean-up steps are made
-			 */
-			GenChannel &operator=( const GenChannel &src ) throw();
-			/**
 			 * @brief The destructor
 			 */
 			virtual ~GenChannel() throw();
@@ -84,7 +73,7 @@ namespace ppp {
 			 * @return #aActive
 			 * @note Time-critical
 			 */
-			inline bool isActive() throw();
+			inline bool isActive() const throw() { return m_active; }
 			/**
 			 * @brief Check if the channel is disabled
 			 * @return #aDisabled
@@ -190,21 +179,13 @@ namespace ppp {
 			Phaser &vibrato() throw() { return m_vibrato; }
 			const Phaser &tremolo() const throw() { return m_tremolo; }
 			Phaser &tremolo() throw() { return m_tremolo; }
-			virtual void setSampleIndex(int32_t idx) __attribute__((deprecated("Will be removed in future versions")))
-			{ m_currSmpIndex = idx; }
 			uint8_t getVolume() const throw() { return m_volume; }
 			void setVolume(uint8_t v) throw() { m_volume = v; }
 			void setPosition(int32_t p) throw() { m_position = p; }
 			uint8_t getPanning() const throw() { return m_panning; }
 			uint16_t getPlaybackFrq() const throw() { return m_playbackFrequency; }
 			void setStatusString(const std::string &s) { m_statusString = s; }
-			int32_t getCurrentSmpIdx() const throw() __attribute__((deprecated("Will be removed in future versions")))
-			{ return m_currSmpIndex; }
 	};
-	
-	inline bool GenChannel::isActive() throw() {
-		return m_active;
-	}
 
 } // namespace ppp
 

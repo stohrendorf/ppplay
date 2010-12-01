@@ -160,7 +160,7 @@ using namespace ppp;
 using namespace ppp::s3m;
 
 void S3mChannel::setSampleIndex(int32_t idx) {
-	GenChannel::setSampleIndex(idx);
+	m_sampleIndex = idx;
 	if(!currentSample() || currentSample()->getBaseFrq()==0)
 		setActive(false);
 }
@@ -170,7 +170,7 @@ S3mChannel::S3mChannel( const uint16_t frq, const S3mSample::Vector* const smp )
 		m_tremorVolume( 0 ), m_targetNote( ::s3mEmptyNote ), m_noteChanged( false ), m_deltaPeriod( 0 ),
 		m_deltaVolume( 0 ), m_globalVol( 0x40 ), m_nextGlobalVol( 0x40 ),
 		m_retrigCount( -1 ), m_tremorCount( -1 ), m_300VolSlides( false ), m_amigaLimits( false ),
-		m_maybeSchism( false ), m_zeroVolCounter( -1 ), m_sampleList(smp), m_basePeriod(0), m_glissando(false), m_currentCell(new S3mCell())
+		m_maybeSchism( false ), m_zeroVolCounter( -1 ), m_sampleList(smp), m_basePeriod(0), m_glissando(false), m_currentCell(new S3mCell()), m_sampleIndex(-1)
 {
 }
 
@@ -179,11 +179,11 @@ S3mChannel::~S3mChannel() throw() {
 
 S3mSample::Ptr S3mChannel::currentSample() throw(PppException) {
 	PPP_TEST( !m_sampleList );
-	if(!inRange<int>(getCurrentSmpIdx(), 0, m_sampleList->size()-1)) {
+	if(!inRange<int>(m_sampleIndex, 0, m_sampleList->size()-1)) {
 		setActive(false);
 		return S3mSample::Ptr();
 	}
-	return m_sampleList->at(getCurrentSmpIdx());
+	return m_sampleList->at(m_sampleIndex);
 }
 
 void S3mChannel::useLastFxData( uint8_t &oldFx, uint8_t &newFx ) const throw() {
@@ -997,8 +997,8 @@ void S3mChannel::updateStatus() throw() {
 		else
 			panStr = stringf( "%4d%%", ( getPanning() - 0x40 ) * 100 / 0x40 );
 		std::string volStr = stringf( "%3d%%", clip( getVolume() + m_deltaVolume, 0, 0x40 ) * 100 / 0x40 );
-		setStatusString( stringf( "%.2x: %s%s %s %s P:%s V:%s %s",
-		                         getCurrentSmpIdx(),
+		setStatusString( stringf( "%.2d: %s%s %s %s P:%s V:%s %s",
+		                         m_sampleIndex,
 		                         ( m_noteChanged ? "*" : " " ),
 		                         getNoteName().c_str(),
 		                         getFxName().c_str(),
@@ -1045,6 +1045,7 @@ BinStream &S3mChannel::saveState( BinStream &str ) const throw( PppException ) {
 		.write( &m_zeroVolCounter )
 		.write( &m_basePeriod )
 		.write( &m_glissando )
+		.write( &m_sampleIndex )
 		.writeSerialisable( m_currentCell.get() );
 	}
 	PPP_CATCH_ALL();
@@ -1072,6 +1073,7 @@ BinStream &S3mChannel::restoreState( BinStream &str ) throw( PppException ) {
 		.read( &m_zeroVolCounter )
 		.read( &m_basePeriod )
 		.read( &m_glissando )
+		.read( &m_sampleIndex )
 		.readSerialisable( m_currentCell.get() );
 	}
 	PPP_CATCH_ALL();
