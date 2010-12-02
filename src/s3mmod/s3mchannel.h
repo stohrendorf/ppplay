@@ -35,9 +35,6 @@
 
 namespace ppp {
 	namespace s3m {
-		extern const std::array<const int16_t, 64> S3mWaveSine;
-		extern const std::array<const int16_t, 64> S3mWaveRamp;
-		extern const std::array<const int16_t, 64> S3mWaveSquare;
 		/**
 		 * @class S3mChannel
 		 * @ingroup S3mMod
