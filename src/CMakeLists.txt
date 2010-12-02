@@ -10,3 +10,4 @@ add_subdirectory(ppg)
 
 add_subdirectory(genmod)
 add_subdirectory(s3mmod)
+add_subdirectory(xmmod)

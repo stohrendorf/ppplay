@@ -31,6 +31,7 @@
 
 #include "src/genmod/genmodule.h"
 #include "src/s3mmod/s3mmodule.h"
+#include "src/xmmod/xmmodule.h"
 
 #include "src/stuff/fft.h"
 
@@ -385,13 +386,13 @@ int main(int argc, char *argv[]) {
 		try {
 			s3m.reset(new ppp::s3m::S3mModule(44100, 2));
 			if (!s3m->load(modFileName)) {
-/*				s3m.reset(new ppp::stm::StmModule(44100, 2));
-				if (!s3m->load(modFileName)) {*/
+				s3m.reset(new ppp::xm::XmModule(44100, 2));
+				if (!s3m->load(modFileName)) {
 					s3m.reset();
 					LOG_ERROR_("Error on loading the mod...");
 					SDL_Quit();
 					return EXIT_FAILURE;
-/*				}*/
+				}
 			}
 		}
 		catch (PppException &e) {
