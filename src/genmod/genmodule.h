@@ -126,7 +126,7 @@ namespace ppp {
 			/**
 			 * @brief The destructor
 			 */
-			virtual ~GenModule() throw();
+			virtual ~GenModule();
 			/**
 			 * @brief Loads a module
 			 * @param[in] fn Filename of the module to be loaded

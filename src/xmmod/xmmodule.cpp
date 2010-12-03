@@ -50,6 +50,7 @@ bool XmModule::load(const std::string& filename) throw(PppException) {
 	setSpeed(hdr.defaultSpeed & 0xff);
 	setGlobalVolume(0x40);
 	m_amiga = (hdr.flags&1)==0;
+	
 	return false;
 }
 
