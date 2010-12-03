@@ -72,7 +72,7 @@ GenModule &GenModule::operator=( const GenModule & src ) throw( PppException ) {
 	PPP_CATCH_ALL();
 }
 
-GenModule::~GenModule() throw() {
+GenModule::~GenModule() {
 }
 
 BinStream &GenModule::saveState() throw( PppException ) {
