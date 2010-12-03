@@ -1,10 +1,13 @@
 #include "xmmodule.h"
+#include "stream/binstream.h"
+#include "logger/logger.h"
 
 using namespace ppp;
 using namespace ppp::xm;
 
 #pragma pack(push,1)
 struct XmHeader {
+	static const std::string Identifier;
 	char id[17]; // "Extended Module: "
 	char title[20];
 	uint8_t endOfFile; // 0x1a
@@ -20,14 +23,33 @@ struct XmHeader {
 	uint16_t defaultTempo;
 	uint16_t defaultSpeed;
 	uint8_t orders[256];
-	
 };
+const std::string XmHeader::Identifier = "Extended Module: ";
 #pragma pack(pop)
 
-XmModule::XmModule(const uint32_t frq = 44100, const uint8_t maxRpt = 2) throw(PppException) : GenModule() {
+XmModule::XmModule(const uint32_t frq, const uint8_t maxRpt) throw(PppException) : GenModule(frq, maxRpt), m_amiga(false) {
 }
 
 bool XmModule::load(const std::string& filename) throw(PppException) {
+	XmHeader hdr;
+	FBinStream file(filename);
+	setFilename(filename);
+	file.read(reinterpret_cast<char*>(&hdr), sizeof(hdr));
+	if(hdr.id != XmHeader::Identifier || hdr.endOfFile!=0x1a) {
+		LOG_WARNING_("Header ID error");
+		return false;
+	}
+	{
+		std::string title = stringncpy(hdr.title, 20);
+		while(title.length()>0 && title[title.length()-1]==' ')
+			title.erase(title.length()-1, 1);
+		setTitle(title);
+	}
+	setTrackerInfo(stringncpy(hdr.trackerName, 20));
+	setTempo(hdr.defaultTempo & 0xff);
+	setSpeed(hdr.defaultSpeed & 0xff);
+	setGlobalVolume(0x40);
+	m_amiga = (hdr.flags&1)==0;
 	return false;
 }
 
