@@ -39,7 +39,7 @@ namespace ppp {
 				XmPattern() = delete;
 				XmPattern(int16_t chans) throw(PppException);
 				~XmPattern() throw();
-				bool load(BinStream& str, std::size_t pos) throw(PppException);
+				bool load(BinStream& str) throw(PppException);
 				XmCell::Ptr getCell(int16_t trackIndex, int16_t row) throw();
 				std::size_t numRows() const;
 				std::size_t numChannels() const;
