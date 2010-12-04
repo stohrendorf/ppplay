@@ -7,7 +7,6 @@ using namespace ppp::xm;
 
 #pragma pack(push,1)
 struct XmHeader {
-	static const std::string Identifier;
 	char id[17]; // "Extended Module: "
 	char title[20];
 	uint8_t endOfFile; // 0x1a
@@ -20,11 +19,10 @@ struct XmHeader {
 	uint16_t numPatterns;
 	uint16_t numInstruments;
 	uint16_t flags;
-	uint16_t defaultTempo;
 	uint16_t defaultSpeed;
+	uint16_t defaultTempo;
 	uint8_t orders[256];
 };
-const std::string XmHeader::Identifier = "Extended Module: ";
 #pragma pack(pop)
 
 XmModule::XmModule(const uint32_t frq, const uint8_t maxRpt) throw(PppException) : GenModule(frq, maxRpt), m_amiga(false) {
@@ -35,7 +33,7 @@ bool XmModule::load(const std::string& filename) throw(PppException) {
 	FBinStream file(filename);
 	setFilename(filename);
 	file.read(reinterpret_cast<char*>(&hdr), sizeof(hdr));
-	if(hdr.id != XmHeader::Identifier || hdr.endOfFile!=0x1a) {
+	if(!std::equal(hdr.id, hdr.id+17, "Extended Module: ") || hdr.endOfFile!=0x1a) {
 		LOG_WARNING_("Header ID error");
 		return false;
 	}
@@ -50,7 +48,14 @@ bool XmModule::load(const std::string& filename) throw(PppException) {
 	setSpeed(hdr.defaultSpeed & 0xff);
 	setGlobalVolume(0x40);
 	m_amiga = (hdr.flags&1)==0;
-	
+	for(uint16_t i=0; i<hdr.numPatterns; i++) {
+		XmPattern::Ptr pat(new XmPattern(hdr.numChannels));
+		if(!pat->load(file)) {
+			LOG_ERROR_("Pattern loading error");
+			return false;
+		}
+		m_patterns.push_back(pat);
+	}
 	return false;
 }
 

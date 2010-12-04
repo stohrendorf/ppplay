@@ -100,8 +100,7 @@ XmPattern::XmPattern(int16_t chans) throw(PppException) : m_tracks(chans) {
 XmPattern::~XmPattern() throw() {
 }
 
-bool XmPattern::load(BinStream& str, std::size_t pos) throw(PppException) {
-	str.seek(pos);
+bool XmPattern::load(BinStream& str) throw(PppException) {
 	uint32_t hdrLen;
 	str.read(&hdrLen);
 	uint8_t packType;
