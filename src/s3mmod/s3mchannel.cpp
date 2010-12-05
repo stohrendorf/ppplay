@@ -289,12 +289,12 @@ void S3mChannel::update( S3mCell::Ptr const cell, const uint8_t tick, bool noRet
 	else
 		m_tremorCount++;
 	char smpDelay = 0;
-	if (( m_currentCell->getEffect() == s3mFxSpecial ) && ( highNibble( m_currentCell->getEffectValue() ) == s3mSFxNoteDelay ) ) {
+	if ( m_currentCell->getEffect()==s3mFxSpecial && highNibble(m_currentCell->getEffectValue())==s3mSFxNoteDelay ) {
 		smpDelay = lowNibble( m_currentCell->getEffectValue() );
 		if ( smpDelay == 0 )
 			return;
 	}
-	if (( m_currentCell->getEffect() == s3mEmptyCommand ) && ( m_currentCell->getEffectValue() != 0x00 ) )
+	if ( m_currentCell->getEffect()==s3mEmptyCommand && m_currentCell->getEffectValue()!=0x00 )
 		m_lastFx = m_currentCell->getEffectValue();
 /*	if (( m_currentCell->getEffect() != s3mFxVibrato ) && ( m_currentCell->getEffect() != s3mFxFineVibrato ) && ( m_currentCell->getEffect() != s3mFxVibVolSlide ) ) {
 		m_deltaPeriod = 0;
@@ -305,7 +305,7 @@ void S3mChannel::update( S3mCell::Ptr const cell, const uint8_t tick, bool noRet
 		tremolo().resetPhase();
 	}*/
 	m_noteChanged = ( m_currentCell->getNote() != s3mEmptyNote ) && ( m_currentCell->getNote() != s3mKeyOffNote ) && !noRetrigger;
-	if (( tick == smpDelay ) && !noRetrigger ) {
+	if ( tick==smpDelay && !noRetrigger ) {
 		if(m_noteChanged)
 			m_deltaPeriod = 0;
 		if ( m_currentCell->getInstr() != s3mEmptyInstr ) {
@@ -321,6 +321,10 @@ void S3mChannel::update( S3mCell::Ptr const cell, const uint8_t tick, bool noRet
 			m_deltaVolume = 0;
 		}
 		if (( m_currentCell->getNote() != s3mEmptyNote ) && ( m_currentCell->getNote() != s3mKeyOffNote ) ) {
+			if(!currentSample()) {
+				setActive(false);
+				return;
+			}
 			if ( m_currentCell->getEffect() != s3mFxPorta ) {
 				m_note = m_currentCell->getNote();
 				setBasePeriod(st3Period(m_note, currentSample()->getBaseFrq()));
@@ -773,12 +777,12 @@ void S3mChannel::mixTick( MixerFrameBuffer &mixBuffer, const uint8_t volume ) th
 	if ( isDisabled() )
 		return;
 	setGlobalVolume( volume, false );
-	if (( !isActive() ) || ( !currentSample() ) || ( m_basePeriod == 0 ) ) {
+	if ( !isActive() || !currentSample() || m_basePeriod==0 ) {
 		setActive( false );
 		return;
 	}
-	if (( getTick() == 0 ) && ( m_zeroVolCounter != -1 ) && ( currentSample() ) && isActive() ) {
-		if (( currentSample()->isLooped() ) && ( getVolume() == 0 ) )
+	if ( getTick()==0 && m_zeroVolCounter!=-1 && currentSample() && isActive() ) {
+		if ( currentSample()->isLooped() && getVolume()==0 )
 			m_zeroVolCounter++;
 		else
 			m_zeroVolCounter = 0;
