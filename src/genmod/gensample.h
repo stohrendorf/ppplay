@@ -114,7 +114,7 @@ namespace ppp {
 			 * @note Time-critical
 			 * @pre @c (0x00\<=panPos\<=0x80)||(panPos==0xa4)
 			 */
-			inline BasicSample getLeftSampleAt( int32_t &pos, const uint8_t panPos = 0 ) const throw();
+			inline BasicSample getLeftSampleAt( int32_t &pos ) const throw();
 			/**
 			 * @brief Get a right channel sample
 			 * @param[in,out] pos Position of the requested sample
@@ -123,7 +123,7 @@ namespace ppp {
 			 * @note Time-critical
 			 * @pre @c (0x00\<=panPos\<=0x80)||(panPos==0xa4)
 			 */
-			inline BasicSample getRightSampleAt( int32_t &pos, const uint8_t panPos = 0 ) const throw();
+			inline BasicSample getRightSampleAt( int32_t &pos ) const throw();
 			/**
 			 * @brief Get the sample's Base Frequency
 			 * @return Base frequency
@@ -182,23 +182,15 @@ namespace ppp {
 		return m_dataL[makeRealPos( pos )];
 	}
 
-	inline BasicSample GenSample::getLeftSampleAt( int32_t &pos, const uint8_t panPos ) const throw() {
-		if (( panPos <= 0x40 ) || ( panPos == 0xa4 ) )
-			return getSampleAt( pos );
-		else
-			return getSampleAt( pos )*( 0x80 - panPos ) >> 6;
+	inline BasicSample GenSample::getLeftSampleAt( int32_t &pos ) const throw() {
+		return getSampleAt( pos );
 	}
 
-	inline BasicSample GenSample::getRightSampleAt( int32_t &pos, const uint8_t panPos ) const throw() {
+	inline BasicSample GenSample::getRightSampleAt( int32_t &pos ) const throw() {
 		adjustPos( pos );
 		if (( pos == EndOfSample ) || ( !m_dataR ) )
 			return 0;
-		if ( panPos < 0x40 )
-			return m_dataR[makeRealPos( pos )]*panPos >> 6;
-		else if ( panPos == 0xa4 )
-			return -m_dataR[makeRealPos( pos )];
-		else
-			return m_dataR[makeRealPos( pos )];
+		return m_dataR[makeRealPos( pos )];
 	}
 
 	inline int32_t GenSample::adjustPos( int32_t &pos ) const throw() {
