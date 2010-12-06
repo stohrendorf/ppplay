@@ -56,6 +56,14 @@ bool XmModule::load(const std::string& filename) throw(PppException) {
 		}
 		m_patterns.push_back(pat);
 	}
+	for(uint16_t i=0; i<hdr.numInstruments; i++) {
+		XmInstrument::Ptr ins(new XmInstrument());
+		if(!ins->load(file)) {
+			LOG_ERROR_("Instrument loading error");
+			return false;
+		}
+		m_instruments.push_back(ins);
+	}
 	return false;
 }
 
