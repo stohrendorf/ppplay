@@ -32,12 +32,12 @@ namespace ppg {
  * @brief A colored text label
  */
 class Label : public Widget {
+		DISABLE_COPY(Label)
 	private:
 		/**
 		 * @brief Resizes #aFgColors and #aBgColors if the new text is longer than the arrays' sizes
 		 */
 		void sizeColorsToMax();
-	//protected:
 		std::string m_text; //!< @brief The text in this label
 		std::vector<uint8_t> m_fgColors; //!< @brief Text chars' foreground colors @see PpgElement::ESC_NOCHANGE #setFgColor
 		std::vector<uint8_t> m_bgColors; //!< @brief Text chars' background colors @see PpgElement::ESC_NOCHANGE #setBgColor

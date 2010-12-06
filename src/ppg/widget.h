@@ -31,7 +31,6 @@ namespace ppg {
 /**
  * @defgroup Ppg The PeePeeGUI Definitions
  * @brief This module contains definitions for the PeePeeGUI User Interface
- * @todo Check all @c operator= for self-assignments (strong guarantee?)
  */
 
 class Point {

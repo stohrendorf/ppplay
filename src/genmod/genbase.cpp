@@ -43,7 +43,7 @@ namespace ppp {
 		   -180,-180,-180,-180,-161,-161,-161,-161,-141,-141,-141,-141,-120,-120,-120,-120,- 97,- 97,- 97,- 97,- 74,- 74,- 74,- 74,- 49,- 49,- 49,- 49,- 24,- 24,- 24,- 24,
 	};
 
-	GenOrder::GenOrder(uint8_t idx) throw() : m_index{idx}, m_count{0}, m_states{} {
+	GenOrder::GenOrder(uint8_t idx) throw() : m_index(idx), m_count(0), m_states() {
 		m_states.push_back(BinStream::SpBinStream(new SBinStream()));
 	}
 	BinStream::SpBinStream GenOrder::getState(uint16_t idx) throw(PppException) {
