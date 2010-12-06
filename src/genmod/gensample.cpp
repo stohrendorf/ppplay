@@ -28,45 +28,8 @@
 using namespace ppp;
 
 GenSample::GenSample() throw() :
-		m_16bit( false ), m_length( 0 ), m_loopStart( 0 ), m_loopEnd( 0 ), m_volume( 0 ),
+		m_length( 0 ), m_loopStart( 0 ), m_loopEnd( 0 ), m_volume( 0 ),
 		m_baseFrq( 0 ), m_dataL(NULL), m_dataR(NULL), m_filename( "" ), m_title( "" ), m_looptype( LoopType::None ) {
-}
-
-GenSample::GenSample( const GenSample &src ) throw( PppException ) :
-		m_16bit( src.m_16bit ), m_length( src.m_length ), m_loopStart( src.m_loopStart ),
-		m_loopEnd( src.m_loopEnd ), m_volume( src.m_volume ), m_baseFrq( src.m_baseFrq ), m_dataL(NULL), m_dataR(NULL),
-		m_filename( src.m_filename ), m_title( src.m_title ), m_looptype( src.m_looptype ) {
-	try {
-		if(src.isStereo()) {
-			setDataL(src.m_dataL);
-			setDataR(src.m_dataR);
-		}
-		else
-			setDataMono(src.m_dataL);
-	}
-	PPP_CATCH_ALL()
-}
-
-GenSample &GenSample::operator=( const GenSample & src ) throw( PppException ) {
-	try {
-		m_16bit = src.m_16bit;
-		m_length = src.m_length;
-		m_loopStart = src.m_loopStart;
-		m_loopEnd = src.m_loopEnd;
-		m_volume = src.m_volume;
-		m_baseFrq = src.m_baseFrq;
-		if(src.isStereo()) {
-			setDataL(src.m_dataL);
-			setDataR(src.m_dataR);
-		}
-		else
-			setDataMono(src.m_dataL);
-		m_filename = src.m_filename;
-		m_title = src.m_title;
-		m_looptype = src.m_looptype;
-		return *this;
-	}
-	PPP_CATCH_ALL()
 }
 
 GenSample::~GenSample() throw() {

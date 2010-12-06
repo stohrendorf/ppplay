@@ -36,6 +36,7 @@ namespace ppp {
 	 * @brief An abstract sample class
 	 */
 	class GenSample {
+			DISABLE_COPY(GenSample)
 		public:
 			typedef std::shared_ptr<GenSample> Ptr; //!< @brief Class pointer
 			typedef std::vector<Ptr> Vector;
@@ -45,7 +46,6 @@ namespace ppp {
 				Pingpong //!< @brief Ping pong looped
 			}; //!< @brief Loop type definitions
 		private:
-			bool m_16bit; //!< @brief Sample is 16 bit, else 8 bit @note Doesn't matter because samples are converted to 16 bit when loaded
 			int32_t m_length; //!< @brief Length of the sample in frames
 			int32_t m_loopStart; //!< @brief Loop start sample
 			int32_t m_loopEnd; //!< @brief Loop end sample (points to 1 frame @e after the loop end)
@@ -72,18 +72,6 @@ namespace ppp {
 			 * @brief Constructor
 			 */
 			GenSample() throw();
-			/**
-			 * @brief Member list initialization Constructor
-			 * @param[in] src Source instance
-			 */
-			GenSample( const GenSample &src ) throw( PppException );
-			/**
-			 * @brief Assignment Operator
-			 * @param[in] src Source instance
-			 * @return Reference to this instance
-			 * @note Performs a deep copy of the sample data
-			 */
-			GenSample &operator=( const GenSample &src ) throw( PppException );
 			/**
 			 * @brief Destructor
 			 */
@@ -146,11 +134,6 @@ namespace ppp {
 			 */
 			virtual const std::string getTitle() const throw() { return m_title; }
 			/**
-			 * @brief Check if it's a high-quality sample
-			 * @return @c true if sample is 16-bit
-			 */
-			bool isHighQuality() const throw() { return m_16bit; }
-			/**
 			 * @brief Is the sample looped?
 			 * @return @c true if the sample is looped
 			 */
@@ -160,8 +143,10 @@ namespace ppp {
 		protected:
 			void setLoopType(LoopType l) throw() { m_looptype = l; }
 			const BasicSample *getDataL() const throw() { return m_dataL; }
+			const BasicSample *getDataMono() const throw() { return m_dataL; }
 			const BasicSample *getDataR() const throw() { return m_dataR; }
 			BasicSample *getNonConstDataL() const throw() { return m_dataL; }
+			BasicSample *getNonConstDataMono() const throw() { return m_dataL; }
 			BasicSample *getNonConstDataR() const throw() { return m_dataR; }
 			void setDataL(const BasicSample b[]) throw();
 			void setDataR(const BasicSample b[]) throw();

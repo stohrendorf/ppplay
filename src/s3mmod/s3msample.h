@@ -40,10 +40,13 @@ namespace ppp {
 			public:
 				typedef std::shared_ptr<S3mSample> Ptr;
 				typedef std::vector<Ptr> Vector;
+			private:
+				bool m_highQuality;
 			public:
 				S3mSample() throw();
 				virtual ~S3mSample() throw();
 				virtual bool load(BinStream& str, std::size_t pos) throw(PppException);
+				bool isHighQuality() const { return m_highQuality; }
 		};
 	} // namespace ppp
 } // namespace s3m

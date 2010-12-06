@@ -262,12 +262,11 @@ uint16_t S3mChannel::getAdjustedPeriod() throw() {
 	if(!m_amigaLimits)
 		res = clip<int>(res, 0x40, 0x7fff);
 	else
-		res = clip<int>(res, 0x1c5, 0xd60);
+		res = clip<int>(res, 0xda, 0xd60);
 	return res;
 }
 
 void S3mChannel::update( S3mCell::Ptr const cell, const uint8_t tick, bool noRetrigger ) throw() {
-	LOG_BEGIN();
 	if ( isDisabled() )
 		return;
 	setTick(tick);
@@ -545,7 +544,6 @@ void S3mChannel::doPitchFx( const uint8_t fx, uint8_t fxVal ) throw() {
 }
 
 void S3mChannel::doSpecialFx( const uint8_t fx, uint8_t fxVal ) throw( PppException ) {
-	LOG_BEGIN();
 	int16_t nvol = getVolume();
 	int16_t tempVar;
 	PPP_TEST( !m_currentCell );
