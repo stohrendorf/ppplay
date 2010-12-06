@@ -31,9 +31,29 @@ void Screen::clearOverlay() {
 
 Screen::Screen( int w, int h, const std::string &title ) throw( Exception ) : Widget( NULL ) {
 	PPG_TEST(g_screenSurface != NULL);
-	g_screenSurface = SDL_SetVideoMode( w * 8, h * 16, 32, SDL_SWSURFACE );
+	if(!SDL_WasInit(SDL_INIT_VIDEO)) {
+		if(SDL_Init(SDL_INIT_VIDEO)==-1) {
+			PPG_THROW("Initialization of SDL Video surface failed");
+		}
+	}
+	Uint8 bestBpp = 32;
+	Uint32 bestFlags = SDL_DOUBLEBUF;
+	{
+		const SDL_VideoInfo* info = SDL_GetVideoInfo();
+		if(info->vfmt)
+			bestBpp = info->vfmt->BitsPerPixel;
+		if(info->hw_available)
+			bestFlags |= SDL_HWSURFACE;
+	}
+	g_screenSurface = SDL_SetVideoMode( w * 8, h * 16, bestBpp, bestFlags );
 	if ( !g_screenSurface ) {
 		PPG_THROW( "Screen Initialization failed" );
+	}
+	{
+		char videoDrv[256];
+		if(SDL_VideoDriverName(videoDrv, 255)) {
+			LOG_MESSAGE("Using video driver '%s'", videoDrv);
+		}
 	}
 	setPosition(0, 0);
 	setSize(g_screenSurface->w/8, g_screenSurface->h/16);
