@@ -32,15 +32,8 @@
 #define loggerH
 
 #include <string>
-#include <boost/scope_exit.hpp>
 
 #include "stuff/utils.h"
-
-/**
- * @ingroup Logger
- * @brief Disables function call tracing
- */
-#define LOG_NOTRACE
 
 /**
  * @enum LogLevel
@@ -84,13 +77,8 @@ LogLevel getLogLevel();
  * @param[in] msg Message
  * @param[in] ll Message's log level
  */
-#ifdef LOG_NOTRACE
-#	define LOG(ll,fmt,...) logger(ppp::stringf("%s // " fmt, __PRETTY_FUNCTION__, ##__VA_ARGS__), ll)
-#	define LOG_(ll,fmt) logger(ppp::stringf("%s // " fmt, __PRETTY_FUNCTION__), ll)
-#else
-#	define LOG(ll,fmt,...) logger(ppp::stringf(fmt, ##__VA_ARGS__), ll)
-#	define LOG_(ll,fmt) logger(ppp::stringf(fmt), ll)
-#endif
+#define LOG(ll,fmt,...) logger(ppp::stringf("%s // " fmt, __PRETTY_FUNCTION__, ##__VA_ARGS__), ll)
+#define LOG_(ll,fmt) logger(ppp::stringf("%s // " fmt, __PRETTY_FUNCTION__), ll)
 
 /**
  * @ingroup Logger
@@ -102,53 +90,22 @@ LogLevel getLogLevel();
 #define LOG_TEST_MESSAGE(condition) if(condition) LOG_MESSAGE("[LOG_TEST_MESSAGE] %s", #condition)
 
 /**
-* @ingroup Logger
-* @brief Log a message with log level ::llWarning
-* @param[in] msg Message
-*/
+ * @ingroup Logger
+ * @brief Log a message with log level ::llWarning
+ * @param[in] msg Message
+ */
 #define LOG_WARNING(fmt, ...) LOG(llWarning, fmt, ##__VA_ARGS__)
 #define LOG_WARNING_(fmt) LOG_(llWarning, fmt)
 #define LOG_TEST_WARN(condition) if(condition) LOG_WARNING("[LOG_TEST_WARN] %s", #condition)
 
 /**
-* @ingroup Logger
-* @brief Log a message with log level ::llError
-* @param[in] msg Message
-*/
+ * @ingroup Logger
+ * @brief Log a message with log level ::llError
+ * @param[in] msg Message
+ */
 #define LOG_ERROR(fmt, ...) LOG(llError, fmt, ##__VA_ARGS__)
 #define LOG_ERROR_(fmt) LOG_(llError, fmt)
 #define LOG_TEST_ERROR(condition) if(condition) LOG_ERROR("[LOG_TEST_ERROR] %s", #condition)
-
-#ifndef LOG_NOTRACE
-/**
- * @ingroup Logger
- * @brief Increase log depth
- * @param[in] func Function name for tracing
- * @return The new log depth
- */
-int incLogLevel(string func);
-
-/**
- * @ingroup Logger
- * @brief Decrease log depth
- * @return The new log depth
- */
-int decLogLevel();
-
-#	define LOG_BEGIN(atReturn) \
-		incLogLevel(__PRETTY_FUNCTION__); \
-		BOOST_SCOPE_EXIT( ) { atReturn; decLogLevel(); } BOOST_SCOPE_EXIT_END;
-#else
-#	define LOG_BEGIN(atReturn)
-#endif
-
-/**
- * @def LOG_BEGIN(atReturn)
- * @ingroup Logger
- * @brief Begin a function trace
- * @details Uses BOOST_SCOPE_EXIT for automatically decreasing the log depth at scope exit
- * @param[in] atReturn Commands to execute before decreasing the log depth
- */
 
 #ifndef NDEBUG
 #	define LOG_DEBUG(fmt, ...) LOG(llDebug, fmt, ##__VA_ARGS__)

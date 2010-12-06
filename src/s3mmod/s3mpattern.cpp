@@ -165,7 +165,6 @@ S3mCell::Ptr S3mPattern::getCell(int16_t trackIndex, int16_t row) throw() {
 }
 
 bool S3mPattern::load( BinStream& str, std::size_t pos ) throw( PppException ) {
-	LOG_BEGIN();
 	try {
 		uint16_t patSize;
 		str.seek( pos );

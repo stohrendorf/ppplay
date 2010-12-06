@@ -68,7 +68,7 @@ struct S3mSampleHeader {
 };
 #pragma pack(pop)
 
-S3mSample::S3mSample() throw() : GenSample() {
+S3mSample::S3mSample() throw() : GenSample(), m_highQuality(false) {
 }
 
 S3mSample::~S3mSample() throw() {
@@ -76,7 +76,7 @@ S3mSample::~S3mSample() throw() {
 
 bool S3mSample::load(BinStream& str, const std::size_t pos) throw(PppException) {
 	try {
-		LOG_BEGIN();
+		PPP_TEST(getDataL()!=NULL || getDataR()!=NULL);
 		str.seek(pos);
 		S3mSampleHeader smpHdr;
 		str.read(reinterpret_cast<char*>(&smpHdr), sizeof(smpHdr));
@@ -129,8 +129,9 @@ bool S3mSample::load(BinStream& str, const std::size_t pos) throw(PppException) 
 		}
 		if (smpHdr.flags&s3mFlagSmp16bit) {
 			LOG_MESSAGE_("Loading 16-bit sample");
+			m_highQuality = true;
 			uint16_t smp16;
-			int16_t* smpPtr = getNonConstDataL();
+			BasicSample* smpPtr = getNonConstDataL();
 			for (uint32_t i = 0; i < getLength(); i++) {
 				str.read(&smp16);
 				if (str.fail()) {
@@ -155,7 +156,7 @@ bool S3mSample::load(BinStream& str, const std::size_t pos) throw(PppException) 
 		else { // convert 8-bit samples to 16-bit ones
 			LOG_MESSAGE_("Loading 8-bit sample");
 			uint8_t smp8;
-			int16_t* smpPtr = getNonConstDataL();
+			BasicSample* smpPtr = getNonConstDataL();
 			for (uint32_t i = 0; i < getLength(); i++) {
 				str.read(&smp8);
 				if(str.fail()) {

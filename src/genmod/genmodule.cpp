@@ -76,7 +76,6 @@ GenModule::~GenModule() {
 }
 
 BinStream &GenModule::saveState() throw( PppException ) {
-	LOG_BEGIN();
 	GenOrder::Ptr ord = m_orders[m_playbackInfo.order];
 	PPP_TEST( !ord );
 	LOG_MESSAGE( "Saving state for order %d, loop count %d", m_playbackInfo.order, ord->getCount() );
@@ -98,7 +97,6 @@ BinStream &GenModule::saveState() throw( PppException ) {
 }
 
 BinStream &GenModule::restoreState( uint16_t ordindex, uint8_t cnt ) throw( PppException ) {
-	LOG_BEGIN();
 	GenOrder::Ptr ord = m_orders[ordindex];
 	PPP_TEST( !ord );
 	LOG_MESSAGE( "Loading state for order %d, loop count %d", ordindex, cnt );

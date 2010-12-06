@@ -62,7 +62,6 @@ static std::size_t updateFrameCounter = 0;
 
 static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 	try {
-		LOG_BEGIN();
 		ppg::Label *lb;
 		ppp::GenModule *s3m = NULL;
 		std::size_t nFrames = len_bytes / sizeof(ppp::BasicSampleFrame);
@@ -319,7 +318,6 @@ static std::string parseCmdLine(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
 	try {
-		LOG_BEGIN();
 		std::string modFileName = parseCmdLine(argc,argv);
 		if(modFileName.empty())
 			return EXIT_SUCCESS;

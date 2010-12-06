@@ -169,7 +169,6 @@ S3mModule::~S3mModule() throw() {
 
 bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 	try {
-		LOG_BEGIN();
 		LOG_MESSAGE( "Opening '%s'", fn.c_str() );
 		FBinStream str( fn );
 		if(!str.isOpen()) {
@@ -512,7 +511,6 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 }
 
 bool S3mModule::adjustPosition( const bool increaseTick, const bool doStore ) throw( PppException ) {
-	LOG_BEGIN();
 	PPP_TEST( getOrderCount() == 0 );
 	bool orderChanged = false;
 	//! @todo Implement saving of the last order for back-jumping
@@ -593,7 +591,6 @@ bool S3mModule::adjustPosition( const bool increaseTick, const bool doStore ) th
 }
 
 void S3mModule::getTick( AudioFrameBuffer &buf ) throw( PppException ) {
-	LOG_BEGIN();
 	try {
 		//PPP_TEST(!buf);
 		if(!buf)
@@ -698,7 +695,6 @@ std::string S3mModule::getChanCellString( int16_t idx ) throw() {
 }
 
 bool S3mModule::jumpNextTrack() throw( PppException ) {
-	LOG_BEGIN();
 	if ( !isMultiTrack() ) {
 		LOG_MESSAGE_( "This is not a multi-track" );
 		return false;
@@ -742,7 +738,6 @@ bool S3mModule::jumpNextTrack() throw( PppException ) {
 }
 
 bool S3mModule::jumpPrevTrack() throw( PppException ) {
-	LOG_BEGIN();
 	if ( !isMultiTrack() ) {
 		LOG_MESSAGE_( "This is not a multi-track" );
 		return false;
