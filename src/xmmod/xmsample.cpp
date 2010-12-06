@@ -3,6 +3,9 @@
 using namespace ppp;
 using namespace ppp::xm;
 
+XmSample::XmSample() : m_finetune(0), m_panning(128), m_relativeNote(0)
+{ }
+
 bool XmSample::load(BinStream& str, const std::size_t) throw(PppException) {
 	int32_t tmp;
 	str.read(&tmp);
