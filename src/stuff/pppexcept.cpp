@@ -21,7 +21,7 @@
 #include <cstdio>
 #include <sstream>
 
-static std::string makePos(const unsigned int lineno, const char function[]) {
+static std::string makePos(unsigned int lineno, const char function[]) {
 	std::ostringstream out;
 	out << std::dec << lineno << ":" << function;
 	return out.str();
@@ -30,13 +30,13 @@ static std::string makePos(const unsigned int lineno, const char function[]) {
 PppException::PppException(const std::string &msg) throw() : exception(), m_msg(msg) {
 }
 
-PppException::PppException(const std::string& msg, const unsigned int lineno, const char function[]) throw(): exception(), m_msg() {
+PppException::PppException(const std::string& msg, unsigned int lineno, const char function[]) throw(): exception(), m_msg() {
 	std::ostringstream buf;
 	buf << "(PppException) Backtrace, most recent call first:" << std::endl << "\tfrom " << makePos(lineno,function) << " - " << msg;
 	m_msg.assign(buf.str());
 }
 
-PppException::PppException( const PppException& previous, const unsigned int lineno, const char function[]) throw(): exception(), m_msg(previous.what()) {
+PppException::PppException( const PppException& previous, unsigned int lineno, const char function[]) throw(): exception(), m_msg(previous.what()) {
 	std::ostringstream buf;
 	buf << std::endl << "\tfrom " << makePos(lineno,function);
 	m_msg.append(buf.str());
