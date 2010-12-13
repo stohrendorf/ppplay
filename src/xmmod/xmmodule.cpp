@@ -33,8 +33,13 @@ bool XmModule::load(const std::string& filename) throw(PppException) {
 	FBinStream file(filename);
 	setFilename(filename);
 	file.read(reinterpret_cast<char*>(&hdr), sizeof(hdr));
-	if(!std::equal(hdr.id, hdr.id+17, "Extended Module: ") || hdr.endOfFile!=0x1a) {
-		LOG_WARNING_("Header ID error");
+	LOG_DEBUG("Header end @ 0x%.8x", file.pos());
+	if(!std::equal(hdr.id, hdr.id+17, "Extended Module: ") || hdr.endOfFile!=0x1a || hdr.numChannels>32) {
+		LOG_WARNING_("XM Header invalid");
+		return false;
+	}
+	if(hdr.version!=0x0104) {
+		LOG_WARNING("Unsupported XM Version 0x%.4x", hdr.version);
 		return false;
 	}
 	{
@@ -48,6 +53,7 @@ bool XmModule::load(const std::string& filename) throw(PppException) {
 	setSpeed(hdr.defaultSpeed & 0xff);
 	setGlobalVolume(0x40);
 	m_amiga = (hdr.flags&1)==0;
+	m_channelCount = hdr.numChannels;
 	for(uint16_t i=0; i<hdr.numPatterns; i++) {
 		XmPattern::Ptr pat(new XmPattern(hdr.numChannels));
 		if(!pat->load(file)) {
@@ -64,6 +70,7 @@ bool XmModule::load(const std::string& filename) throw(PppException) {
 		}
 		m_instruments.push_back(ins);
 	}
+	// WARNING Remove this when player code exists!
 	return false;
 }
 
@@ -102,5 +109,5 @@ std::string XmModule::getChanCellString(int16_t) throw() {
 }
 
 uint8_t XmModule::channelCount() const {
-	return 0;
+	return m_channelCount;
 }
