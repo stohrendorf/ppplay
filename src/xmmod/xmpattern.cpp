@@ -32,7 +32,7 @@ bool XmCell::load(BinStream& str) throw(PppException) {
 
 void XmCell::reset() throw() {
 	m_note = 0;
-	m_instr = 0;
+	m_instr = 0xff;
 	m_volume = 0;
 	m_effect = 0;
 	m_effectValue = 0;
@@ -105,17 +105,22 @@ bool XmPattern::load(BinStream& str) throw(PppException) {
 	str.read(&hdrLen);
 	uint8_t packType;
 	str.read(&packType);
-	if(packType!=0)
+	if(packType!=0) {
+		LOG_WARNING("Unsupported Pattern pack type: %d", packType);
 		return false;
+	}
 	uint16_t rows;
 	str.read(&rows);
-	if(rows<1 || rows>256)
+	if(rows<1 || rows>256) {
+		LOG_WARNING("Number of rows out of range: %d", rows);
 		return false;
+	}
 	for(std::size_t chan=0; chan<m_tracks.size(); chan++) {
 		m_tracks[chan].resize(rows);
 	}
 	uint16_t packedSize;
 	str.read(&packedSize);
+	str.seekrel(hdrLen-9); // copied from schismtracker
 	if(packedSize==0) {
 		return true;
 	}

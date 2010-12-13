@@ -29,6 +29,7 @@ namespace ppp {
 		};
 
 		class XmPattern {
+				DISABLE_COPY(XmPattern)
 			public:
 				typedef std::shared_ptr<XmPattern> Ptr;
 				typedef std::vector<Ptr> Vector;

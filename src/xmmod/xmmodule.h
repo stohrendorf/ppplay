@@ -11,6 +11,7 @@ namespace ppp {
 				DISABLE_COPY(XmModule)
 			private:
 				bool m_amiga;
+				uint8_t m_channelCount;
 				XmPattern::Vector m_patterns;
 				XmInstrument::Vector m_instruments;
 			public:
