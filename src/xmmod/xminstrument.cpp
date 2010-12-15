@@ -38,7 +38,6 @@ bool XmInstrument::load(BinStream& str) {
 	InstrumentHeader hdr;
 	LOG_DEBUG("Loading Instrument header @ 0x%.8x", str.pos());
 	str.read(reinterpret_cast<char*>(&hdr), sizeof(hdr));
-	LOG_DEBUG(" -- %d", hdr.size);
 /*	if(hdr.type!=0) {
 		LOG_WARNING("Instrument header type error @ 0x%.8x", str.pos()-sizeof(hdr));
 		return false;
@@ -50,9 +49,8 @@ bool XmInstrument::load(BinStream& str) {
 	PPP_TEST(hdr.numSamples>255);
 	m_samples.resize(hdr.numSamples);
 	InstrumentHeader2 hdr2;
-	LOG_DEBUG("Loading Instrument header part 2 @ 0x%.8x -- %d / %d", str.pos(), sizeof(hdr2), sizeof(hdr)+sizeof(hdr2));
+	LOG_DEBUG("Loading Instrument header part 2 @ 0x%.8x", str.pos());
 	str.read(reinterpret_cast<char*>(&hdr2), sizeof(hdr2));
-	LOG_DEBUG(" -- %d", hdr2.size);
 	std::copy(hdr2.indices, hdr2.indices+96, m_map);
 	LOG_DEBUG("Loading %d samples", hdr.numSamples);
 	str.seek(startPos + hdr.size);
