@@ -50,7 +50,7 @@ bool XmSample::load(BinStream& str, const std::size_t) throw(PppException) {
 }
 
 bool XmSample::loadData(BinStream& str) {
-	LOG_DEBUG("Loading xm sample data @ 0x%.8x (%d bytes)", str.pos(), getLength());
+	LOG_DEBUG("Loading xm sample data @ 0x%.8x (%d samples)", str.pos(), getLength());
 	if(getLength()==0)
 		return true;
 	if(m_16bit) { // 16 bit

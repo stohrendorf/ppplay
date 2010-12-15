@@ -75,17 +75,27 @@ bool XmModule::load(const std::string& filename) throw(PppException) {
 }
 
 uint16_t XmModule::getTickBufLen() const throw(PppException) {
-	return 0;
+	PPP_TEST(getPlaybackInfo().tempo < 0x20);
+	return getPlaybackFrq()*5 / (getPlaybackInfo().tempo<<1);
 }
 
 void XmModule::getTick(ppp::AudioFrameBuffer& buffer) throw(PppException) {
+#warning Stub - implement me
+	if(!buffer)
+		buffer.reset(new AudioFrameBuffer::element_type);
 }
 
-void XmModule::getTickNoMixing(std::size_t&) throw(PppException) {
+void XmModule::getTickNoMixing(std::size_t& len) throw(PppException) {
+#warning Stub - implement me
+	len = getTickBufLen();
 }
 
-GenOrder::Ptr XmModule::mapOrder(int16_t) throw(PppException) {
-	return GenOrder::Ptr();
+GenOrder::Ptr XmModule::mapOrder(int16_t order) throw(PppException) {
+	static GenOrder::Ptr xxx( new GenOrder( 0xff ) );
+	xxx->setCount( 0xff );
+	if ( !inRange<int16_t>( order, 0, getOrderCount() - 1 ) )
+		return xxx;
+	return getOrder(order);
 }
 
 std::string XmModule::getChanStatus(int16_t) throw() {
