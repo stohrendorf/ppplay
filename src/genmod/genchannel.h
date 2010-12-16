@@ -40,7 +40,7 @@ namespace ppp {
 	 * @details Every module must be compatible with this abstract
 	 * base class.
 	 */
-	class GenChannel {
+	class GenChannel : public ISerializable {
 		DISABLE_COPY(GenChannel)
 		public:
 			typedef std::shared_ptr<GenChannel> Ptr; //!< @brief Class pointer
@@ -154,18 +154,7 @@ namespace ppp {
 			 * @see #getFxName()
 			 */
 			virtual std::string getFxDesc() const throw( PppException ) = 0;
-			/**
-			 * @brief Save the channel's state to a BinStream
-			 * @param[in,out] str Stream to save the state to
-			 * @return @a str for pipelining
-			 */
-			virtual BinStream &saveState( BinStream &str ) const throw( PppException );
-			/**
-			 * @brief Load the channel's state from a BinStream
-			 * @param[in,out] str Stream to load the state from
-			 * @return @a str for pipelining
-			 */
-			virtual BinStream &restoreState( BinStream &str ) throw( PppException );
+			virtual IArchive& serialize(IArchive* data);
 			/**
 			 * @brief Get a string representation of the current cell as displayed in the tracker
 			 * @return String representation of the current cell like in the tracker

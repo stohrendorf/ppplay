@@ -200,8 +200,7 @@ namespace ppp {
 				 * @see ppp::s3m::s3mFxGlobalVol
 				 */
 				void setGlobalVolume(const uint8_t gVol, const bool applyNow = false) throw();
-				virtual BinStream &saveState(BinStream &str) const throw(PppException);
-				virtual BinStream &restoreState(BinStream &str) throw(PppException);
+				virtual IArchive& serialize(IArchive* data);
 				virtual std::string getCellString();
 		};
 	} // namespace s3m

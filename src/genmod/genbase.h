@@ -102,33 +102,18 @@ namespace ppp {
 	 * @brief An order list item
 	 * @ingroup GenMod
 	 */
-	class GenOrder {
+	class GenOrder : public ISerializable {
 		public:
 			typedef std::shared_ptr<GenOrder> Ptr; //!< @brief Class pointer
 			typedef std::vector<Ptr> Vector;
 		private:
 			uint8_t m_index; //!< @brief Pattern index of this order
-			uint8_t m_count; //!< @brief Playback count of this order
-			std::vector<BinStream::SpBinStream> m_states; //!< @brief Buffer for storing channel states for seeking
 		public:
 			/**
 			 * @brief Constructor
 			 * @param[in] idx Order index
 			 */
 			GenOrder(uint8_t idx) throw();
-			/**
-			 * @brief Get a state buffer
-			 * @param[in] idx Buffer index
-			 * @return Pointer to the buffer
-			 * @exception PppException Thrown if @a idx is out of range
-			 */
-			BinStream::SpBinStream getState(uint16_t idx) throw(PppException);
-			/**
-			 * @brief Get the current state buffer
-			 * @return Pointer to the buffer
-			 * @exception PppException Thrown if GenOrder::m_count is out of range
-			 */
-			BinStream::SpBinStream getCurrentState() throw(PppException);
 			/**
 			 * @brief Return the pattern index associated with this order
 			 * @return GenOrder::m_index
@@ -139,26 +124,7 @@ namespace ppp {
 			 * @param[in] n New index
 			 */
 			void setIndex(const uint8_t n) throw();
-			/**
-			 * @brief Get the playback count
-			 * @return GenOrder::m_count
-			 */
-			uint8_t getCount() const throw();
-			/**
-			 * @brief Set the playback count
-			 * @param[in] n New playback count
-			 */
-			void setCount(const uint8_t n) throw();
-			/**
-			 * @brief Increase GenOrder::m_count
-			 * @return New count
-			 * @exception PppException Thrown if @c GenOrder::m_count==0xff before increasement
-			 */
-			uint8_t incCount() throw(PppException);
-			/**
-			 * @brief Sets GenOrder::m_count to 0
-			 */
-			void resetCount() throw();
+			virtual IArchive& serialize(IArchive* data) { return *data & m_index; }
 	};
 
 	/**

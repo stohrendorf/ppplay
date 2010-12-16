@@ -66,15 +66,22 @@ namespace ppp {
 	class GenMultiTrack {
 		public:
 			typedef std::shared_ptr<GenMultiTrack> Ptr; //!< @brief Class pointer
+		private:
+			IArchive::Vector m_states;
+			std::size_t m_stateIndex;
 		public:
 			std::size_t length; //!< @brief Track length in sample frames
 			uint16_t startOrder; //!< @brief Start order of this track
 			/**
 			 * @brief Constructor
 			 */
-			GenMultiTrack() : length(0), startOrder(0) {
+			GenMultiTrack() : length(0), startOrder(0), m_stateIndex(0) {
 			}
 			static const uint16_t stopHere = ~0; //!< @brief Const to define unused track
+			IArchive* newState();
+			IArchive::Vector states() const { return m_states; }
+			std::size_t stateIndex() const { return m_stateIndex; }
+			IArchive* nextState();
 	};
 
 	/**
@@ -85,7 +92,7 @@ namespace ppp {
 	 * @todo Multi-track: Reset module/channels on each new track?
 	 * @todo Multi-track: Get length of each track, not only the first one
 	 */
-	class GenModule {
+	class GenModule : public ISerializable {
 		public:
 			typedef std::shared_ptr<GenModule> Ptr; //!< @brief Class pointer
 		private:
@@ -99,7 +106,6 @@ namespace ppp {
 			std::vector<GenMultiTrack> m_tracks; //!< @brief Per-track infos
 			uint16_t m_currentTrack; //!< @brief The current track index
 			bool m_multiTrack; //!< @brief @c true if module could be a multi-track one
-		//protected:
 			GenPlaybackInfo m_playbackInfo; //!< @brief General playback info @todo Make private
 		public:
 			AudioFifo playbackFifo; //!< @brief FIFO Playback Buffer
@@ -262,21 +268,8 @@ namespace ppp {
 			 * @see GenChannel::getCellString
 			 */
 			virtual std::string getChanCellString(int16_t idx) throw() = 0;
-			/**
-			 * @brief Saves the current state to the current order's BinStream
-			 * @return Reference to the used BinStream
-			 * @see GenOrder
-			 */
-			virtual BinStream &saveState() throw(PppException);
-			/**
-			 * @brief Restores the state from a given order
-			 * @param[in] ordindex Order index of the order to restore the state from
-			 * @param[in] cnt Repeat count
-			 * @return Reference to the used BinStream
-			 * @see GenOrder
-			 */
-			virtual BinStream &restoreState(uint16_t ordindex, uint8_t cnt) throw(PppException);
 			virtual uint8_t channelCount() const = 0;
+			virtual IArchive& serialize(IArchive* data);
 		protected:
 			/**
 			 * @brief Removes empty tracks from the track list and resets the orders' repeat count

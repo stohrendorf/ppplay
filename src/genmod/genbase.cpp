@@ -43,36 +43,12 @@ namespace ppp {
 		   -180,-180,-180,-180,-161,-161,-161,-161,-141,-141,-141,-141,-120,-120,-120,-120,- 97,- 97,- 97,- 97,- 74,- 74,- 74,- 74,- 49,- 49,- 49,- 49,- 24,- 24,- 24,- 24,
 	};
 
-	GenOrder::GenOrder(uint8_t idx) throw() : m_index(idx), m_count(0), m_states() {
-		m_states.push_back(BinStream::SpBinStream(new SBinStream()));
-	}
-	BinStream::SpBinStream GenOrder::getState(uint16_t idx) throw(PppException) {
-		PPP_TEST(idx>=m_states.size());
-		return m_states[idx];
-	}
-	BinStream::SpBinStream GenOrder::getCurrentState() throw(PppException) {
-		return getState(m_count);
-	}
+	GenOrder::GenOrder(uint8_t idx) throw() : m_index(idx)
+	{ }
 	uint8_t GenOrder::getIndex() const throw() {
 		return m_index;
 	}
 	void GenOrder::setIndex(const uint8_t n) throw() {
 		m_index = n;
-	}
-	uint8_t GenOrder::getCount() const throw() {
-		return m_count;
-	}
-	void GenOrder::setCount(const uint8_t n) throw() {
-		m_count = n;
-	}
-	uint8_t GenOrder::incCount() throw(PppException) {
-		PPP_TEST(m_count==0xff);
-		m_count++;
-		while(m_count>=m_states.size())
-			m_states.push_back( BinStream::SpBinStream(new SBinStream()) );
-		return m_count;
-	}
-	void GenOrder::resetCount() throw() {
-		m_count = 0;
 	}
 }

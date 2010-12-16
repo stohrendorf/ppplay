@@ -29,6 +29,20 @@
 
 using namespace ppp;
 
+IArchive* GenMultiTrack::newState() {
+	IArchive::Ptr p(new MemArchive());
+	m_states.push_back(p);
+	return p.get();
+}
+
+IArchive* GenMultiTrack::nextState() {
+	if(m_stateIndex>=m_states.size()) {
+		LOG_ERROR("%d >= %d", m_stateIndex, m_states.size());
+		return NULL;
+	}
+	return m_states[m_stateIndex++].get();
+}
+
 GenModule::GenModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) :
 		m_fileName( "" ), m_title( "" ), m_trackerInfo( "" ), m_orders(), m_maxRepeat( maxRpt ),
 		m_playbackFrequency( clip<unsigned int>( frq, 11025, 44800 ) ), m_playedFrames( 0 ), m_tracks(),
@@ -75,47 +89,14 @@ GenModule &GenModule::operator=( const GenModule & src ) throw( PppException ) {
 GenModule::~GenModule() {
 }
 
-BinStream &GenModule::saveState() throw( PppException ) {
-	GenOrder::Ptr ord = m_orders[m_playbackInfo.order];
-	PPP_TEST( !ord );
-	LOG_MESSAGE( "Saving state for order %d, loop count %d", m_playbackInfo.order, ord->getCount() );
-	std::cout << std::flush;
-	BinStream::SpBinStream str = ord->getCurrentState();
-	PPP_TEST( !str );
-	str->seek( 0 );
-	str->clear();
-	// save playback info
-	str->write( reinterpret_cast<const char*>(&m_playbackInfo), sizeof(m_playbackInfo) ).write( &m_playedFrames ).write( &m_currentTrack );
-	// save order counts
+IArchive& GenModule::serialize(IArchive* data) {
+	data->array(reinterpret_cast<char*>(&m_playbackInfo), sizeof(m_playbackInfo)) & m_playedFrames & m_currentTrack;
 	for ( uint_fast16_t i = 0; i < m_orders.size(); i++ ) {
 		if ( !m_orders[i] )
 			continue;
-		unsigned char tmp = m_orders[i]->getCount();
-		str->write( &tmp );
+		data->archive(m_orders[i].get());
 	}
-	return *str;
-}
-
-BinStream &GenModule::restoreState( uint16_t ordindex, uint8_t cnt ) throw( PppException ) {
-	GenOrder::Ptr ord = m_orders[ordindex];
-	PPP_TEST( !ord );
-	LOG_MESSAGE( "Loading state for order %d, loop count %d", ordindex, cnt );
-	std::cout << std::flush;
-	BinStream::SpBinStream str = ord->getState( cnt );
-	PPP_TEST( !str );
-	str->clear();
-	str->seek( 0 );
-	// load playback info
-	str->read( reinterpret_cast<char*>(&m_playbackInfo), sizeof(m_playbackInfo) ).read( &m_playedFrames ).read( &m_currentTrack );
-	// load order counts
-	for ( uint_fast16_t i = 0; i < m_orders.size(); i++ ) {
-		if ( !m_orders[i] )
-			continue;
-		unsigned char tmp;
-		str->read( &tmp );
-		m_orders[i]->setCount( tmp );
-	}
-	return *str;
+	return *data;
 }
 
 void GenModule::initFifo( std::size_t nFrames ) throw( PppException ) {
@@ -200,6 +181,4 @@ void GenModule::removeEmptyTracks() {
 	}*/
 	m_tracks = nTr;
 	m_multiTrack = getTrackCount() > 1;
-	for ( uint_fast16_t i = 0; i < m_orders.size(); i++ )
-		m_orders[i]->resetCount();
 }

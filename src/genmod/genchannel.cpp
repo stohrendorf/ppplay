@@ -37,32 +37,8 @@ GenChannel::GenChannel( const uint16_t frq ) throw( PppException ) :
 GenChannel::~GenChannel() throw() {
 }
 
-BinStream &GenChannel::saveState( BinStream &str ) const throw( PppException ) {
-	try {
-		str.write( &m_active )
-		.write( &m_disabled )
-		.write( &m_volume )
-		.write( &m_panning )
-		.write( &m_position )
-		.write( &m_tick )
-		.writeSerialisable( &m_tremolo )
-		.writeSerialisable( &m_vibrato );
-	}
-	PPP_CATCH_ALL();
-	return str;
-}
-
-BinStream &GenChannel::restoreState( BinStream &str ) throw( PppException ) {
-	try {
-		str.read( &m_active )
-		.read( &m_disabled )
-		.read( &m_volume )
-		.read( &m_panning )
-		.read( &m_position )
-		.read( &m_tick )
-		.readSerialisable( &m_tremolo )
-		.readSerialisable( &m_vibrato );
-	}
-	PPP_CATCH_ALL();
-	return str;
+IArchive& GenChannel::serialize(IArchive* data) {
+	*data & m_active & m_disabled & m_volume & m_panning & m_position & m_tick;
+	data->archive(&m_tremolo).archive(&m_vibrato);
+	return *data;
 }

@@ -92,7 +92,6 @@ void XmModule::getTickNoMixing(std::size_t& len) throw(PppException) {
 
 GenOrder::Ptr XmModule::mapOrder(int16_t order) throw(PppException) {
 	static GenOrder::Ptr xxx( new GenOrder( 0xff ) );
-	xxx->setCount( 0xff );
 	if ( !inRange<int16_t>( order, 0, getOrderCount() - 1 ) )
 		return xxx;
 	return getOrder(order);

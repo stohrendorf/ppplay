@@ -1034,58 +1034,12 @@ void S3mChannel::setGlobalVolume( const uint8_t gVol, const bool applyNow ) thro
 		m_globalVol = m_nextGlobalVol;
 }
 
-BinStream &S3mChannel::saveState( BinStream &str ) const throw( PppException ) {
-	try {
-		GenChannel::saveState( str )
-		.write( &m_note )
-		.write( &m_lastFx )
-		.write( &m_lastPortaSpeed )
-		.write( &m_lastVibratoData )
-		.write( &m_tremorVolume )
-		.write( &m_targetNote )
-		.write( &m_globalVol )
-		.write( &m_nextGlobalVol )
-		.write( &m_retrigCount )
-		.write( &m_tremorCount )
-		.write( &m_noteChanged )
-		.write( &m_300VolSlides )
-		.write( &m_amigaLimits )
-		.write( &m_deltaPeriod )
-		.write( &m_deltaVolume )
-		.write( &m_zeroVolCounter )
-		.write( &m_basePeriod )
-		.write( &m_glissando )
-		.write( &m_sampleIndex )
-		.writeSerialisable( m_currentCell.get() );
-	}
-	PPP_CATCH_ALL();
-	return str;
-}
-
-BinStream &S3mChannel::restoreState( BinStream &str ) throw( PppException ) {
-	try {
-		GenChannel::restoreState( str )
-		.read( &m_note )
-		.read( &m_lastFx )
-		.read( &m_lastPortaSpeed )
-		.read( &m_lastVibratoData )
-		.read( &m_tremorVolume )
-		.read( &m_targetNote )
-		.read( &m_globalVol )
-		.read( &m_nextGlobalVol )
-		.read( &m_retrigCount )
-		.read( &m_tremorCount )
-		.read( &m_noteChanged )
-		.read( &m_300VolSlides )
-		.read( &m_amigaLimits )
-		.read( &m_deltaPeriod )
-		.read( &m_deltaVolume )
-		.read( &m_zeroVolCounter )
-		.read( &m_basePeriod )
-		.read( &m_glissando )
-		.read( &m_sampleIndex )
-		.readSerialisable( m_currentCell.get() );
-	}
-	PPP_CATCH_ALL();
-	return str;
+IArchive& S3mChannel::serialize(IArchive* data) {
+	GenChannel::serialize(data)
+	& m_note & m_lastFx & m_lastPortaSpeed & m_lastVibratoData & m_tremorVolume
+	& m_targetNote & m_globalVol & m_nextGlobalVol & m_retrigCount
+	& m_tremorCount & m_noteChanged & m_300VolSlides & m_amigaLimits
+	& m_deltaPeriod & m_deltaVolume & m_zeroVolCounter & m_basePeriod
+	& m_glissando & m_sampleIndex;
+	return data->archive(m_currentCell.get());
 }

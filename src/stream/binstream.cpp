@@ -25,11 +25,9 @@ BinStream &BinStream::write( const TW *data, const std::size_t count) {
 	return *this;
 }
 
-#ifndef WITHIN_DOXYGEN
-
 #define BINSTREAM_RW_IMPL(tn)\
-template BinStream &BinStream::read<tn>(tn *, const std::size_t); \
-template BinStream &BinStream::write<tn>(const tn*, const std::size_t);
+template BinStream &BinStream::read<tn>(tn *, std::size_t); \
+template BinStream &BinStream::write<tn>(const tn*, std::size_t);
 
 BINSTREAM_RW_IMPL(int8_t)
 BINSTREAM_RW_IMPL(uint8_t)
@@ -42,4 +40,13 @@ BINSTREAM_RW_IMPL(uint64_t)
 BINSTREAM_RW_IMPL(char)
 BINSTREAM_RW_IMPL(bool)
 BINSTREAM_RW_IMPL(float)
-#endif // WITHIN_DOXYGEN
+
+IArchive::IArchive(const BinStream::SpBinStream& stream) : m_loading(false), m_stream(stream)
+{ }
+IArchive::~IArchive()
+{ }
+
+MemArchive::MemArchive() : IArchive(BinStream::SpBinStream(new SBinStream()))
+{
+
+}
