@@ -166,7 +166,7 @@ void S3mChannel::setSampleIndex(int32_t idx) {
 }
 
 S3mChannel::S3mChannel( const uint16_t frq, const S3mSample::Vector* const smp ) throw() : GenChannel( frq ),
-		m_note( ::s3mEmptyNote ), m_lastFx( 0 ), m_lastPortaSpeed( 0 ), m_lastVibratoData( 0 ),
+		m_note( ::s3mEmptyNote ), m_lastFx( 0 ), m_lastVibratoData( 0 ), m_lastPortaSpeed( 0 ),
 		m_tremorVolume( 0 ), m_targetNote( ::s3mEmptyNote ), m_noteChanged( false ), m_deltaPeriod( 0 ),
 		m_deltaVolume( 0 ), m_globalVol( 0x40 ), m_nextGlobalVol( 0x40 ),
 		m_retrigCount( -1 ), m_tremorCount( -1 ), m_300VolSlides( false ), m_amigaLimits( false ),
@@ -266,7 +266,7 @@ uint16_t S3mChannel::getAdjustedPeriod() throw() {
 	return res;
 }
 
-void S3mChannel::update( S3mCell::Ptr const cell, const uint8_t tick, bool noRetrigger ) throw() {
+void S3mChannel::update( S3mCell::Ptr const cell, uint8_t tick, bool noRetrigger ) throw() {
 	if ( isDisabled() )
 		return;
 	setTick(tick);
@@ -395,7 +395,7 @@ void S3mChannel::update( S3mCell::Ptr const cell, const uint8_t tick, bool noRet
 	setActive( isActive() && ( m_currentCell->getNote() != s3mKeyOffNote ) );
 }
 
-void S3mChannel::doVolumeFx( const uint8_t fx, uint8_t fxVal ) throw() {
+void S3mChannel::doVolumeFx( uint8_t fx, uint8_t fxVal ) throw() {
 	int16_t tempVar;
 	uint8_t H, L;
 	switch ( fx ) {
@@ -445,7 +445,7 @@ void S3mChannel::doVolumeFx( const uint8_t fx, uint8_t fxVal ) throw() {
 	}
 }
 
-void S3mChannel::doVibratoFx( const uint8_t fx, uint8_t fxVal ) throw() {
+void S3mChannel::doVibratoFx( uint8_t fx, uint8_t fxVal ) throw() {
 	switch ( fx ) {
 		case s3mFxVibrato:
 			combineLastFxData(m_lastVibratoData, fxVal);
@@ -465,7 +465,7 @@ void S3mChannel::doVibratoFx( const uint8_t fx, uint8_t fxVal ) throw() {
 	}
 }
 
-void S3mChannel::doPitchFx( const uint8_t fx, uint8_t fxVal ) throw() {
+void S3mChannel::doPitchFx( uint8_t fx, uint8_t fxVal ) throw() {
 	switch ( fx ) {
 		case s3mFxPitchDown:
 			useLastFxData( m_lastFx, fxVal );
@@ -543,7 +543,7 @@ void S3mChannel::doPitchFx( const uint8_t fx, uint8_t fxVal ) throw() {
 	}
 }
 
-void S3mChannel::doSpecialFx( const uint8_t fx, uint8_t fxVal ) throw( PppException ) {
+void S3mChannel::doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException ) {
 	int16_t nvol = getVolume();
 	int16_t tempVar;
 	PPP_TEST( !m_currentCell );
@@ -755,23 +755,23 @@ void S3mChannel::doSpecialFx( const uint8_t fx, uint8_t fxVal ) throw( PppExcept
 	}
 }
 
-void S3mChannel::pitchUp( const int16_t delta ) throw() {
+void S3mChannel::pitchUp( int16_t delta ) throw() {
 	setBasePeriod(m_basePeriod - delta);
 }
 
-void S3mChannel::pitchDown( const int16_t delta ) throw() {
+void S3mChannel::pitchDown( int16_t delta ) throw() {
 	setBasePeriod(m_basePeriod + delta);
 }
 
-void S3mChannel::pitchUp( uint16_t &per, const int16_t delta ) throw() {
+void S3mChannel::pitchUp( uint16_t &per, int16_t delta ) throw() {
 	per -= delta;
 }
 
-void S3mChannel::pitchDown( uint16_t &per, const int16_t delta ) throw() {
+void S3mChannel::pitchDown( uint16_t &per, int16_t delta ) throw() {
 	per += delta;
 }
 
-void S3mChannel::mixTick( MixerFrameBuffer &mixBuffer, const uint8_t volume ) throw( PppException ) {
+void S3mChannel::mixTick( MixerFrameBuffer &mixBuffer, uint8_t volume ) throw( PppException ) {
 	if ( isDisabled() )
 		return;
 	setGlobalVolume( volume, false );
@@ -827,7 +827,7 @@ void S3mChannel::mixTick( MixerFrameBuffer &mixBuffer, const uint8_t volume ) th
 		setActive( false );
 }
 
-void S3mChannel::simTick( const std::size_t bufSize, const uint8_t volume ) {
+void S3mChannel::simTick( std::size_t bufSize, uint8_t volume ) {
 	if ( isDisabled() )
 		return;
 	setGlobalVolume( volume, false );
@@ -1027,7 +1027,7 @@ void S3mChannel::updateStatus() throw() {
 	}
 }
 
-void S3mChannel::setGlobalVolume( const uint8_t gVol, const bool applyNow ) throw() {
+void S3mChannel::setGlobalVolume( uint8_t gVol, bool applyNow ) throw() {
 	if ( getTick() == 0 )
 		m_nextGlobalVol = gVol;
 	if ( m_noteChanged || applyNow )
@@ -1036,10 +1036,9 @@ void S3mChannel::setGlobalVolume( const uint8_t gVol, const bool applyNow ) thro
 
 IArchive& S3mChannel::serialize(IArchive* data) {
 	GenChannel::serialize(data)
-	& m_note & m_lastFx & m_lastPortaSpeed & m_lastVibratoData & m_tremorVolume
-	& m_targetNote & m_globalVol & m_nextGlobalVol & m_retrigCount
-	& m_tremorCount & m_noteChanged & m_300VolSlides & m_amigaLimits
-	& m_deltaPeriod & m_deltaVolume & m_zeroVolCounter & m_basePeriod
-	& m_glissando & m_sampleIndex;
+	& m_note & m_lastFx & m_lastVibratoData & m_lastPortaSpeed & m_tremorVolume
+	& m_noteChanged & m_deltaPeriod & m_deltaVolume & m_globalVol & m_nextGlobalVol
+	& m_retrigCount & m_tremorCount & m_300VolSlides & m_amigaLimits & m_maybeSchism
+	& m_zeroVolCounter & m_basePeriod & m_glissando;
 	return data->archive(m_currentCell.get());
 }

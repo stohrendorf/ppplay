@@ -6,6 +6,7 @@
 #include <array>
 
 class UIMain : public ppg::Widget {
+	DISABLE_COPY(UIMain)
 private:
 	ppg::Label* m_position;
 	ppg::Label* m_screenSep1;

@@ -103,6 +103,8 @@ namespace ppp {
 	 * @ingroup GenMod
 	 */
 	class GenOrder : public ISerializable {
+			DISABLE_COPY(GenOrder)
+			GenOrder() = delete;
 		public:
 			typedef std::shared_ptr<GenOrder> Ptr; //!< @brief Class pointer
 			typedef std::vector<Ptr> Vector;
@@ -124,7 +126,7 @@ namespace ppp {
 			 * @param[in] n New index
 			 */
 			void setIndex(const uint8_t n) throw();
-			virtual IArchive& serialize(IArchive* data) { return *data & m_index; }
+			virtual IArchive& serialize(IArchive* data);
 	};
 
 	/**

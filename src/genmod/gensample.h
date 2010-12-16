@@ -77,13 +77,6 @@ namespace ppp {
 			 */
 			virtual ~GenSample() throw();
 			/**
-			 * @brief Load a sample from a file position
-			 * @param[in,out] str Stream to load sample from
-			 * @param[in] pos Position in the stream
-			 * @return @c true on success
-			 */
-			virtual bool load( BinStream& str, const std::size_t pos ) throw( PppException ) = 0;
-			/**
 			 * @brief Check if sample is stereo
 			 * @return @c true if sample is stereo
 			 */
@@ -116,7 +109,7 @@ namespace ppp {
 			 * @brief Get the sample's Base Frequency
 			 * @return Base frequency
 			 */
-			inline uint16_t getBaseFrq() const throw() { return m_baseFrq; }
+			uint16_t getBaseFrq() const throw() { return m_baseFrq; }
 			/**
 			 * @brief Get the sample's default volume
 			 * @return Default volume
@@ -132,7 +125,7 @@ namespace ppp {
 			 * @brief Get the sample's name
 			 * @return Sample's name
 			 */
-			virtual const std::string getTitle() const throw() { return m_title; }
+			const std::string getTitle() const throw() { return m_title; }
 			/**
 			 * @brief Is the sample looped?
 			 * @return @c true if the sample is looped

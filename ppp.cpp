@@ -64,7 +64,7 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 	try {
 		ppg::Label *lb;
 		ppp::GenModule *s3m = NULL;
-		std::size_t nFrames = len_bytes / sizeof(ppp::BasicSampleFrame);
+		int nFrames = len_bytes / sizeof(ppp::BasicSampleFrame);
 		s3m = reinterpret_cast<ppp::GenModule*>(userdata);
 		if ((s3m == NULL) || playbackStopped) {
 			return;
@@ -74,7 +74,7 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 		PPP_TEST(s3m == NULL);
 		
 		if(nFrames > s3m->playbackFifo.getMinFrameCount()) {
-			LOG_MESSAGE("Adjusting FIFO buffer length from %zu frames to %zu frames", s3m->playbackFifo.getMinFrameCount(), nFrames);
+			LOG_MESSAGE("Adjusting FIFO buffer length from %d frames to %d frames", s3m->playbackFifo.getMinFrameCount(), nFrames);
 			s3m->playbackFifo.setMinFrameCount(nFrames);
 		}
 		

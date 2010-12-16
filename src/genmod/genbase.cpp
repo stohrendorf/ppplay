@@ -51,4 +51,7 @@ namespace ppp {
 	void GenOrder::setIndex(const uint8_t n) throw() {
 		m_index = n;
 	}
+	IArchive& GenOrder::serialize(IArchive* data) {
+		return *data & m_index;
+	}
 }

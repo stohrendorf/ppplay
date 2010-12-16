@@ -77,7 +77,7 @@ namespace ppp {
 				 * @param[in] fxVal Effect data
 				 * @note Time-critical
 				 */
-				void doVolumeFx(const uint8_t fx, uint8_t fxVal) throw();
+				void doVolumeFx(uint8_t fx, uint8_t fxVal) throw();
 				/**
 				 * @brief Apply Vibrato Effect
 				 * @param[in] fx Effect
@@ -85,7 +85,7 @@ namespace ppp {
 				 * @see ::s3mFxVibVolSlide
 				 * @note Time-critical
 				 */
-				void doVibratoFx(const uint8_t fx, uint8_t fxVal) throw();
+				void doVibratoFx(uint8_t fx, uint8_t fxVal) throw();
 				/**
 				 * @brief Apply Pitch Effect
 				 * @param[in] fx Effect
@@ -100,7 +100,7 @@ namespace ppp {
 				 * @param[in] fxVal Effect data
 				 * @note Time-critical
 				 */
-				void doSpecialFx(const uint8_t fx, uint8_t fxVal) throw(PppException);
+				void doSpecialFx(uint8_t fx, uint8_t fxVal) throw(PppException);
 				/**
 				 * @brief Pitch up
 				 * @param[in] frq The base frequency
@@ -160,9 +160,9 @@ namespace ppp {
 				 * @remarks A new value in the Instrument Column changes the instrument with the old playback position
 				 * @note Time-critical
 				 */
-				void update(S3mCell::Ptr const cell, const uint8_t tick, bool noRetrigger = false) throw();
-				virtual void mixTick(MixerFrameBuffer& mixBuffer, const uint8_t volume) throw(PppException);
-				virtual void simTick(const std::size_t bufSize, const uint8_t volume);
+				void update(S3mCell::Ptr const cell, uint8_t tick, bool noRetrigger = false) throw();
+				virtual void mixTick(MixerFrameBuffer& mixBuffer, uint8_t volume) throw(PppException);
+				virtual void simTick(const std::size_t bufSize, uint8_t volume);
 				virtual void updateStatus() throw();
 				virtual std::string getFxDesc() const throw(PppException);
 				/**
@@ -199,7 +199,7 @@ namespace ppp {
 				 * @param[in] applyNow Set to @c true to apply @a gVol instantly
 				 * @see ppp::s3m::s3mFxGlobalVol
 				 */
-				void setGlobalVolume(const uint8_t gVol, const bool applyNow = false) throw();
+				void setGlobalVolume(uint8_t gVol, bool applyNow = false) throw();
 				virtual IArchive& serialize(IArchive* data);
 				virtual std::string getCellString();
 		};

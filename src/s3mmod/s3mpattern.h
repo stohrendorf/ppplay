@@ -50,7 +50,7 @@ namespace ppp {
 			public:
 				S3mCell() throw();
 				virtual ~S3mCell() throw();
-				virtual bool load(BinStream &str) throw(PppException);
+				bool load(BinStream &str) throw(PppException);
 				virtual void reset() throw();
 				virtual std::string trackerString() const throw();
 				/**
@@ -78,6 +78,7 @@ namespace ppp {
 				 * @return #aEffectValue
 				 */
 				uint8_t getEffectValue() const throw();
+				virtual IArchive& serialize(IArchive* data);
 		};
 
 		/**
@@ -91,12 +92,12 @@ namespace ppp {
 				typedef std::vector<Ptr> Vector;
 			private:
 				std::vector<S3mCell::Vector> m_tracks;
-				S3mCell::Ptr createCell(int16_t trackIndex, int16_t row) throw(PppException);
+				S3mCell::Ptr createCell(uint16_t trackIndex, int16_t row) throw(PppException);
 			public:
 				S3mPattern() throw(PppException);
 				~S3mPattern() throw();
 				bool load(BinStream& str, std::size_t pos) throw(PppException);
-				S3mCell::Ptr getCell(int16_t trackIndex, int16_t row) throw();
+				S3mCell::Ptr getCell(uint16_t trackIndex, int16_t row) throw();
 		};
 	} // namespace s3m
 } // namespace ppp

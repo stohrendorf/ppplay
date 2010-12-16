@@ -130,6 +130,12 @@ uint8_t S3mCell::getEffectValue() const throw() {
 	return m_effectValue;
 }
 
+IArchive& S3mCell::serialize(IArchive* data) {
+	GenCell::serialize(data)
+	& m_note & m_instr & m_volume & m_effect & m_effectValue;
+	return *data;
+}
+
 
 S3mPattern::S3mPattern() throw( PppException ) : m_tracks() {
 	try {
@@ -145,9 +151,9 @@ S3mPattern::S3mPattern() throw( PppException ) : m_tracks() {
 S3mPattern::~S3mPattern() throw() {
 }
 
-S3mCell::Ptr S3mPattern::createCell( int16_t trackIndex, int16_t row ) throw( PppException ) {
+S3mCell::Ptr S3mPattern::createCell( uint16_t trackIndex, int16_t row ) throw( PppException ) {
 	PPP_TEST(( row < 0 ) || ( row > 63 ) );
-	PPP_TEST(trackIndex<0 || trackIndex>=m_tracks.size());
+	PPP_TEST(trackIndex>=m_tracks.size());
 	S3mCell::Vector* track = &m_tracks[trackIndex];
 	S3mCell::Ptr &cell = track->at(row);
 	if ( cell )
@@ -156,10 +162,10 @@ S3mCell::Ptr S3mPattern::createCell( int16_t trackIndex, int16_t row ) throw( Pp
 	return cell;
 }
 
-S3mCell::Ptr S3mPattern::getCell(int16_t trackIndex, int16_t row) throw() {
+S3mCell::Ptr S3mPattern::getCell(uint16_t trackIndex, int16_t row) throw() {
 	if (row < 0)
 		return S3mCell::Ptr();
-	if(trackIndex<0 || trackIndex>=m_tracks.size())
+	if(trackIndex>=m_tracks.size())
 		return S3mCell::Ptr();
 	return m_tracks[trackIndex][row];
 }
@@ -183,7 +189,7 @@ bool S3mPattern::load( BinStream& str, std::size_t pos ) throw( PppException ) {
 				LOG_ERROR_( "str.fail()..." );
 				return false;
 			}
-			GenCell::Ptr cell = createCell( currTrack, currRow );
+			S3mCell::Ptr cell = createCell( currTrack, currRow );
 			if ( !cell->load( str ) ) {
 				LOG_ERROR_( "Cell loading: ERROR" );
 				return false;

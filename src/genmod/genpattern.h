@@ -51,12 +51,6 @@ namespace ppp {
 			 */
 			virtual ~GenCell();
 			/**
-			 * @brief Loads a cell from an input file stream
-			 * @param[in,out] str File stream to load from
-			 * @return @c true if the cell was successfully loaded
-			 */
-			virtual bool load(BinStream &str) throw(PppException) = 0;
-			/**
 			 * @brief Reset the cell so that it is practically "unused"
 			 */
 			virtual void reset() throw();
@@ -69,68 +63,11 @@ namespace ppp {
 			 * @brief Get the tracker-like string representation of this cell
 			 * @return Tracker-like string
 			 */
-			virtual std::string trackerString() const throw();
+			virtual std::string trackerString() const throw() = 0;
 			virtual IArchive& serialize(IArchive* data);
 			void setActive(bool a) throw() { m_active = a; }
 	};
 
-#if 0
-	/**
-	 * @brief A list of tracks to represent a pattern
-	 * @ingroup GenMod
-	 */
-	typedef std::vector<GenCell::Vector> GenTrackVector;
-
-	/**
-	 * @class GenPattern
-	 * @ingroup GenMod
-	 * @brief An abstract pattern class
-	 */
-	class GenPattern {
-		public:
-			typedef std::shared_ptr<GenPattern> Ptr; //!< @brief Class pointer
-			typedef std::vector<Ptr> Vector;
-		private:
-			GenTrackVector m_tracks; //!< @brief contains the tracks
-			/**
-			 * @brief Create a cell within the pattern
-			 * @param[in] trackIndex Index of the track
-			 * @param[in] row Row within the track
-			 * @return Pointer to the created (or already existing) cell
-			 */
-			virtual GenCell::Ptr createCell(int16_t trackIndex, int16_t row) throw(PppException) __attribute__((deprecated("Will be removed in future versions"))) = 0;
-		public:
-			/**
-			 * @brief The constructor
-			 */
-			GenPattern() throw(PppException);
-			/**
-			 * @brief The destructor
-			 */
-			virtual ~GenPattern() throw();
-			/**
-			 * @brief Load a pattern from a file position
-			 * @param[in,out] str The stream to load the pattern from
-			 * @param[in] pos Position in the stream
-			 * @return @c true on success
-			 */
-			virtual bool load(BinStream& str, const std::size_t pos) throw(PppException) = 0;
-			/**
-			 * @brief Get a track within the pattern
-			 * @param[in] idx Index of the track
-			 * @return Pointer to the track
-			 */
-			virtual GenCell::Vector* getTrack(int16_t idx) throw();
-			/**
-			 * @brief Get a cell within the pattern
-			 * @param[in] trackIndex Index of the track
-			 * @param[in] row Row within the track
-			 * @return Pointer to the cell
-			 */
-			virtual GenCell::Ptr getCell(int16_t trackIndex, int16_t row) throw() __attribute__((deprecated("Will be removed in future versions")));
-			void addTrack(const GenCell::Vector &t) __attribute__((deprecated("Will be removed in future versions"))) { m_tracks.push_back(t); }
-	};
-#endif
 } // namespace ppp
 
 #endif

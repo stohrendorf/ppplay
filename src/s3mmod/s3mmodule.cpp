@@ -150,7 +150,8 @@ struct S3mModuleHeader {
 
 S3mModule::S3mModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) : GenModule( frq, maxRpt ),
 		m_breakRow( -1 ), m_breakOrder( -1 ), m_patLoopRow( -1 ), m_patLoopCount( -1 ), m_patDelayCount( -1 ),
-		m_customData( false ), m_samples(), m_patterns(), m_channels(), m_usedChannels(0) {
+		m_customData( false ), m_samples(), m_patterns(), m_channels(), m_usedChannels(0), m_orderPlaybackCounts()
+{
 	try {
 		for ( uint16_t i = 0; i < 256; i++ ) {
 			addOrder( GenOrder::Ptr( new GenOrder( s3mOrderEnd ) ) );
@@ -160,7 +161,7 @@ S3mModule::S3mModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppExcep
 		for ( uint8_t i = 0; i < m_channels.size(); i++ ) {
 			m_channels[i].reset( new S3mChannel( getPlaybackFrq(), &m_samples ) );
 		}
-		for(int i=0; i<m_orderPlaybackCounts.size(); i++)
+		for(std::size_t i=0; i<m_orderPlaybackCounts.size(); i++)
 			m_orderPlaybackCounts[i]=0;
 	}
 	PPP_CATCH_ALL();

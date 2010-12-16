@@ -30,7 +30,7 @@ using namespace ppp;
 GenChannel::GenChannel( const uint16_t frq ) throw( PppException ) :
 		m_active( false ), m_disabled( true ), m_vibrato( ProtrackerLookup, 256, 256 ), m_tremolo( ProtrackerLookup, 256, 256 ), m_panning( 0x40 ),
 		m_volume( 0 ), m_tick( 0 ), m_position( 0 ),
-		m_statusString( "" ), m_playbackFrequency( frq )
+		m_statusString(), m_playbackFrequency( frq )
 {
 }
 

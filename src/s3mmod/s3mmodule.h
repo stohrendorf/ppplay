@@ -43,6 +43,7 @@ namespace ppp {
 		 */
 		class S3mModule : public GenModule {
 				DISABLE_COPY(S3mModule)
+				S3mModule() = delete;
 			public:
 				typedef std::shared_ptr<S3mModule> Ptr;
 			private:
