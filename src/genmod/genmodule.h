@@ -75,7 +75,7 @@ namespace ppp {
 			/**
 			 * @brief Constructor
 			 */
-			GenMultiTrack() : length(0), startOrder(0), m_stateIndex(0) {
+			GenMultiTrack() : m_states(), m_stateIndex(0), length(0), startOrder(0) {
 			}
 			static const uint16_t stopHere = ~0; //!< @brief Const to define unused track
 			IArchive* newState();
@@ -93,6 +93,8 @@ namespace ppp {
 	 * @todo Multi-track: Get length of each track, not only the first one
 	 */
 	class GenModule : public ISerializable {
+			DISABLE_COPY(GenModule)
+			GenModule() = delete;
 		public:
 			typedef std::shared_ptr<GenModule> Ptr; //!< @brief Class pointer
 		private:
@@ -118,18 +120,6 @@ namespace ppp {
 			 */
 			GenModule(const uint32_t frq = 44100, const uint8_t maxRpt = 1) throw(PppException);
 			/**
-			 * @brief Member list initialization constructor
-			 * @param[in] src Instance to be inited from
-			 */
-			GenModule(const GenModule &src) throw(PppException);
-			/**
-			 * @brief Assignment operator
-			 * @param[in] src Source instance to be copied from...
-			 * @return Reference to this instance
-			 * @warning No clean-up steps are done
-			 */
-			GenModule &operator=(const GenModule &src) throw(PppException);
-			/**
 			 * @brief The destructor
 			 */
 			virtual ~GenModule();
@@ -145,17 +135,17 @@ namespace ppp {
 			 * @return Filename, or empty if no module loaded
 			 * @todo Implement OS-independent filename splitting
 			 */
-			virtual std::string getFileName() throw(PppException);
+			std::string getFileName() throw(PppException);
 			/**
 			 * @brief Returns the title
 			 * @return The title of the module
 			 */
-			virtual std::string getTitle() const throw();
+			std::string getTitle() const throw();
 			/**
 			 * @brief Returns the title without left and right spaces
 			 * @return The trimmed title of the module
 			 */
-			virtual std::string getTrimTitle() const throw();
+			std::string getTrimTitle() const throw();
 			/**
 			 * @brief Get the frame count of a tick
 			 * @return Sample frames per tick
@@ -192,7 +182,7 @@ namespace ppp {
 			 * @param[in] nFrames Number of sample frames to allocate
 			 * @pre @c nFrames>0
 			 */
-			virtual void initFifo(std::size_t nFrames) throw(PppException);
+			void initFifo(std::size_t nFrames) throw(PppException);
 			/**
 			 * @brief Read data from the FIFO buffer
 			 * @param[in,out] buffer Buffer to fill
@@ -208,18 +198,18 @@ namespace ppp {
 			 * @brief Get playback time in seconds
 			 * @return Playback time in seconds
 			 */
-			virtual std::size_t timeElapsed() const throw(PppException);
+			std::size_t timeElapsed() const throw(PppException);
 			/**
 			 * @brief Returns the current track's length
 			 * @return The current track's length
 			 * @see timeElapsed()
 			 */
-			virtual std::size_t getLength() const throw();
+			std::size_t getLength() const throw();
 			/**
 			 * @brief Get information about the tracker
 			 * @return Tracker type and version, i.e. "ScreamTracker v3.20"
 			 */
-			virtual std::string getTrackerInfo() const throw();
+			std::string getTrackerInfo() const throw();
 			/**
 			 * @brief Get playback information
 			 * @return aPlaybackInfo
@@ -250,7 +240,7 @@ namespace ppp {
 			 * @brief Get the current playback position in sample frames
 			 * @return aPlayedFrames
 			 */
-			inline std::size_t getPosition() const throw() { return m_playedFrames; }
+			std::size_t getPosition() const throw() { return m_playedFrames; }
 			/**
 			 * @brief Get the number of tracks in this module
 			 * @return Number of tracks

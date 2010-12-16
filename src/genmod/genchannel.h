@@ -41,7 +41,8 @@ namespace ppp {
 	 * base class.
 	 */
 	class GenChannel : public ISerializable {
-		DISABLE_COPY(GenChannel)
+			DISABLE_COPY(GenChannel)
+			GenChannel() = delete;
 		public:
 			typedef std::shared_ptr<GenChannel> Ptr; //!< @brief Class pointer
 			typedef std::vector<Ptr> Vector;
@@ -73,13 +74,13 @@ namespace ppp {
 			 * @return #aActive
 			 * @note Time-critical
 			 */
-			inline bool isActive() const throw() { return m_active; }
+			bool isActive() const throw() { return m_active; }
 			/**
 			 * @brief Check if the channel is disabled
 			 * @return #aDisabled
 			 * @note Time-critical
 			 */
-			inline bool isDisabled() const throw() { return m_disabled; }
+			bool isDisabled() const throw() { return m_disabled; }
 			/**
 			 * @brief Get the name of the note
 			 * @return String containing note and octave (i.e. "C-3")
@@ -106,11 +107,11 @@ namespace ppp {
 			/**
 			 * @brief Disables this channel.
 			 */
-			inline void disable() throw() { m_disabled = true; }
+			void disable() throw() { m_disabled = true; }
 			/**
 			 * @brief Enables this channel.
 			 */
-			inline void enable() throw() { m_disabled = false; }
+			void enable() throw() { m_disabled = false; }
 			/**
 			 * @brief Sets the panning of this channel.
 			 * @param[in] pan Panning value
@@ -147,7 +148,7 @@ namespace ppp {
 			 * @brief Returns the status string
 			 * @return #aStatusString
 			 */
-			inline std::string getStatus() const throw() { return m_statusString; }
+			std::string getStatus() const throw() { return m_statusString; }
 			/**
 			 * @brief Get a short description of the current effect
 			 * @return The current effect in the format @c xxxxxS, where @c x is a short description and @c S is a symbol

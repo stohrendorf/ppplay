@@ -44,9 +44,10 @@ IArchive* GenMultiTrack::nextState() {
 }
 
 GenModule::GenModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) :
-		m_fileName( "" ), m_title( "" ), m_trackerInfo( "" ), m_orders(), m_maxRepeat( maxRpt ),
+		m_fileName(), m_title(), m_trackerInfo(), m_orders(), m_maxRepeat( maxRpt ),
 		m_playbackFrequency( clip<unsigned int>( frq, 11025, 44800 ) ), m_playedFrames( 0 ), m_tracks(),
-		m_currentTrack( 0 ), m_playbackInfo(), m_multiTrack( false ), playbackFifo( 2048 ) {
+		m_currentTrack( 0 ), m_multiTrack( false ), m_playbackInfo(), playbackFifo( 2048 )
+{
 	PPP_TEST( maxRpt==0 );
 	m_playbackInfo.tick = m_playbackInfo.order = m_playbackInfo.pattern = 0;
 	m_playbackInfo.row = m_playbackInfo.speed = m_playbackInfo.tempo = 0;
@@ -55,47 +56,16 @@ GenModule::GenModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppExcep
 	m_tracks.push_back( nulltrack );
 }
 
-GenModule::GenModule( const GenModule &src ) throw( PppException ) :
-		m_fileName( src.m_fileName ), m_title( src.m_title ), m_trackerInfo( src.m_trackerInfo ), m_orders( src.m_orders ),
-		m_maxRepeat( src.m_maxRepeat ), m_playbackFrequency( src.m_playbackFrequency ),
-		m_playedFrames( src.m_playedFrames ), m_tracks( src.m_tracks ), m_currentTrack( src.m_currentTrack ),
-		m_playbackInfo( src.m_playbackInfo ), m_multiTrack( src.m_multiTrack ), playbackFifo( 2048 ) {
-	try {
-		playbackFifo.setMinFrameCount(src.playbackFifo.getMinFrameCount());
-		GenMultiTrack nulltrack;
-		m_tracks.push_back( nulltrack );
-	}
-	PPP_CATCH_ALL();
-}
-
-GenModule &GenModule::operator=( const GenModule & src ) throw( PppException ) {
-	try {
-		m_fileName = src.m_fileName;
-		m_title = src.m_title;
-		m_trackerInfo = src.m_trackerInfo;
-		m_orders = src.m_orders;
-		m_maxRepeat = src.m_maxRepeat;
-		m_playbackFrequency = src.m_playbackFrequency;
-		m_playedFrames = src.m_playedFrames;
-		m_tracks = src.m_tracks;
-		m_currentTrack = src.m_currentTrack;
-		m_playbackInfo = src.m_playbackInfo;
-		m_multiTrack = src.m_multiTrack;
-		return *this;
-	}
-	PPP_CATCH_ALL();
-}
-
 GenModule::~GenModule() {
 }
 
 IArchive& GenModule::serialize(IArchive* data) {
 	data->array(reinterpret_cast<char*>(&m_playbackInfo), sizeof(m_playbackInfo)) & m_playedFrames & m_currentTrack;
-	for ( uint_fast16_t i = 0; i < m_orders.size(); i++ ) {
+/*	for ( uint_fast16_t i = 0; i < m_orders.size(); i++ ) {
 		if ( !m_orders[i] )
 			continue;
 		data->archive(m_orders[i].get());
-	}
+	}*/
 	return *data;
 }
 

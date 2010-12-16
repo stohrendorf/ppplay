@@ -40,10 +40,6 @@ bool GenCell::isActive() const throw() {
 	return m_active;
 }
 
-std::string GenCell::trackerString() const throw() {
-	return "";
-}
-
 IArchive& GenCell::serialize(IArchive* data) {
 	*data & m_active;
 	return *data;
