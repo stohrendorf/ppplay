@@ -59,18 +59,17 @@ namespace ppp {
 		PPP_TEST( m_amplitude == 0 );
 		return static_cast<float>( get() ) / m_amplitude;
 	}
-	BinStream &Phaser::serialize( BinStream &dest ) const {
-		std::size_t s = m_lookup.size();
-		dest.write( &s ).write( &m_amplitude ).write( &m_phase );
-		dest.write( &m_lookup.front(), m_lookup.size() );
-		return dest;
-	}
-	BinStream &Phaser::unserialize( BinStream &src ) {
-		std::size_t len;
-		src.read( &len ).read( &m_amplitude ).read( &m_phase );
-		//m_lookup.reset( new int16_t[m_length] );
-		m_lookup.resize(len);
-		src.read( &m_lookup.front(), len );
-		return src;
+	IArchive& Phaser::serialize(IArchive* data) {
+		if(data->isSaving()) {
+			std::size_t s = m_lookup.size();
+			*data & s & m_amplitude & m_phase;
+			return data->array(&m_lookup.front(), m_lookup.size());
+		}
+		else {
+			std::size_t len;
+			*data & len & m_amplitude & m_phase;
+			m_lookup.resize(len);
+			return data->array(&m_lookup.front(), m_lookup.size());
+		}
 	}
 }

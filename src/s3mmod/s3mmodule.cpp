@@ -160,6 +160,8 @@ S3mModule::S3mModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppExcep
 		for ( uint8_t i = 0; i < m_channels.size(); i++ ) {
 			m_channels[i].reset( new S3mChannel( getPlaybackFrq(), &m_samples ) );
 		}
+		for(int i=0; i<m_orderPlaybackCounts.size(); i++)
+			m_orderPlaybackCounts[i]=0;
 	}
 	PPP_CATCH_ALL();
 }
@@ -349,7 +351,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			}
 		}
 		setTitle( stringncpy( s3mHdr.title, 28 ) );
-		saveState();
+		getMultiTrack(getCurrentTrack()).newState()->archive(this).finishSave();
 		// calculate total length...
 		LOG_MESSAGE_( "Calculating track lengths and preparing seek operations..." );
 		do {
@@ -364,7 +366,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			int nCount = 0;
 			for ( unsigned short i = 0; i < getOrderCount(); i++ ) {
 				PPP_TEST( !getOrder(i) );
-				if (( getOrder(i)->getIndex() != s3mOrderEnd ) && ( getOrder(i)->getIndex() != s3mOrderSkip ) && ( getOrder(i)->getCount() == 0 ) ) {
+				if (( getOrder(i)->getIndex() != s3mOrderEnd ) && ( getOrder(i)->getIndex() != s3mOrderSkip ) && ( m_orderPlaybackCounts[i] == 0 ) ) {
 					if ( nCount == 0 )
 						setMultiTrack(true);
 					nCount++;
@@ -374,7 +376,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 		} while ( jumpNextTrack() );
 		LOG_MESSAGE_( "Lengths calculated, resetting module." );
 		if ( getTrackCount() > 0 )
-			restoreState( getMultiTrack(0).startOrder, 0 );
+			getMultiTrack(0).states()[0]->archive(this);
 		LOG_MESSAGE_( "Removing empty tracks" );
 		removeEmptyTracks();
 //		if (aMultiTrack)
@@ -524,7 +526,7 @@ bool S3mModule::adjustPosition( const bool increaseTick, const bool doStore ) th
 	if (( getPlaybackInfo().tick == 0 ) && increaseTick ) {
 		m_patDelayCount = -1;
 		if ( m_breakOrder != -1 ) {
-			mapOrder( getPlaybackInfo().order )->incCount();
+			m_orderPlaybackCounts[getPlaybackInfo().order]++;
 			if ( m_breakOrder < getOrderCount() ) {
 				setOrder( m_breakOrder );
 				orderChanged = true;
@@ -537,7 +539,7 @@ bool S3mModule::adjustPosition( const bool increaseTick, const bool doStore ) th
 			}
 			if ( m_breakOrder == -1 ) {
 				if ( m_patLoopCount == -1 ) {
-					mapOrder( getPlaybackInfo().order )->incCount();
+					m_orderPlaybackCounts[getPlaybackInfo().order]++;
 					setOrder( getPlaybackInfo().order+1 );
 					orderChanged = true;
 				}
@@ -549,9 +551,9 @@ bool S3mModule::adjustPosition( const bool increaseTick, const bool doStore ) th
 		if (( m_breakRow == -1 ) && ( m_breakOrder == -1 ) && ( m_patDelayCount == -1 ) ) {
 			setRow( (getPlaybackInfo().row+1) & 0x3f );
 			if ( getPlaybackInfo().row == 0 ) {
-				mapOrder( getPlaybackInfo().order )->incCount();
-					setOrder( getPlaybackInfo().order+1 );
-					orderChanged = true;
+				m_orderPlaybackCounts[getPlaybackInfo().order]++;
+				setOrder( getPlaybackInfo().order+1 );
+				orderChanged = true;
 			}
 		}
 		m_breakRow = m_breakOrder = -1;
@@ -565,7 +567,7 @@ bool S3mModule::adjustPosition( const bool increaseTick, const bool doStore ) th
 		}
 		if ( !mapOrder( getPlaybackInfo().order ) )
 			return false;
-		mapOrder( getPlaybackInfo().order )->incCount();
+		m_orderPlaybackCounts[getPlaybackInfo().order]++;
 		setOrder( getPlaybackInfo().order+1 );
 		orderChanged = true;
 		if ( getPlaybackInfo().order >= getOrderCount() ) {
@@ -579,10 +581,10 @@ bool S3mModule::adjustPosition( const bool increaseTick, const bool doStore ) th
 		m_patLoopCount = -1;
 		try {
 			if ( doStore )
-				saveState();
+				getMultiTrack(getCurrentTrack()).newState()->archive(this).finishSave();
 			else {
-				PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
-				restoreState( getPlaybackInfo().order, mapOrder( getPlaybackInfo().order )->getCount() );
+				//PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
+				getMultiTrack(getCurrentTrack()).nextState()->archive(this);
 			}
 		}
 		PPP_CATCH_ALL()
@@ -603,7 +605,7 @@ void S3mModule::getTick( AudioFrameBuffer &buf ) throw( PppException ) {
 			LOG_MESSAGE_( "Song end reached: adjustPosition() failed" );
 			return;
 		}
-		if ( mapOrder( getPlaybackInfo().order )->getCount() >= getMaxRepeat() ) {
+		if (m_orderPlaybackCounts[getPlaybackInfo().order] >= getMaxRepeat() ) {
 			LOG_MESSAGE_( "Song end reached: Maximum repeat count reached" );
 			return;
 		}
@@ -642,7 +644,7 @@ void S3mModule::getTickNoMixing( std::size_t& bufLen ) throw( PppException ) {
 		if ( !adjustPosition( false, true ) )
 			return;
 		PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
-		if ( mapOrder( getPlaybackInfo().order )->getCount() >= getMaxRepeat() )
+		if ( m_orderPlaybackCounts[getPlaybackInfo().order] >= getMaxRepeat() )
 			return;
 		// update channels...
 		setPatternIndex( mapOrder( getPlaybackInfo().order )->getIndex() );
@@ -674,7 +676,6 @@ bool S3mModule::jumpNextOrder() throw() {
 
 GenOrder::Ptr S3mModule::mapOrder( int16_t order ) throw() {
 	static GenOrder::Ptr xxx( new GenOrder( s3mOrderEnd ) );
-	xxx->setCount( 0xff );
 	if ( !inRange<int16_t>( order, 0, getOrderCount() - 1 ) )
 		return xxx;
 	return getOrder(order);
@@ -700,20 +701,20 @@ bool S3mModule::jumpNextTrack() throw( PppException ) {
 		return false;
 	}
 	PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
-	mapOrder( getPlaybackInfo().order )->incCount();
+	m_orderPlaybackCounts[getPlaybackInfo().order]++;
 	setCurrentTrack( getCurrentTrack()+1 );
 	if ( getCurrentTrack() >= getTrackCount() ) {
 		GenMultiTrack nulltrack;
 		for ( uint16_t i = 0; i < getOrderCount(); i++ ) {
 			PPP_TEST( !getOrder(i) );
-			if (( getOrder(i)->getIndex() != s3mOrderEnd ) && ( getOrder(i)->getIndex() != s3mOrderSkip ) && ( getOrder(i)->getCount() == 0 ) ) {
+			if (( getOrder(i)->getIndex() != s3mOrderEnd ) && ( getOrder(i)->getIndex() != s3mOrderSkip ) && ( m_orderPlaybackCounts[getPlaybackInfo().order] == 0 ) ) {
 				PPP_TEST( !mapOrder( i ) );
 				setPatternIndex( mapOrder( i )->getIndex() );
 				setOrder( i );
 				nulltrack.startOrder = i;
 				addMultiTrack( nulltrack );
 				setPosition( 0 );
-				saveState();
+				getMultiTrack(getCurrentTrack()).newState()->archive(this).finishSave();
 				return true;
 			}
 		}
@@ -730,7 +731,8 @@ bool S3mModule::jumpNextTrack() throw( PppException ) {
 		PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
 		setPatternIndex( mapOrder( getPlaybackInfo().order )->getIndex() );
 		setPosition( 0 );
-		restoreState( getPlaybackInfo().order, 0 );
+		getMultiTrack(getCurrentTrack()).nextState()->archive(this);
+		//restoreState( getPlaybackInfo().order, 0 );
 		return true;
 	}
 	LOG_ERROR_( "This should definitively NOT have happened..." );
@@ -751,38 +753,20 @@ bool S3mModule::jumpPrevTrack() throw( PppException ) {
 	PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
 	setPatternIndex( mapOrder( getPlaybackInfo().order )->getIndex() );
 	setPosition( 0 );
-	restoreState( getPlaybackInfo().order, 0 );
+	getMultiTrack(getCurrentTrack()).nextState()->archive(this);
+	//restoreState( getPlaybackInfo().order, 0 );
 	return true;
 }
 
-BinStream &S3mModule::saveState() throw( PppException ) {
-	try {
-		BinStream &str = GenModule::saveState();
-		str.write( &m_breakRow )
-		.write( &m_breakOrder )
-		.write( &m_patLoopRow )
-		.write( &m_patLoopCount )
-		.write( &m_patDelayCount )
-		.write( &m_customData );
-		for(std::size_t i=0; i<m_channels.size(); i++)
-			m_channels[i]->saveState(str);
-		return str;
+IArchive& S3mModule::serialize(IArchive* data) {
+	GenModule::serialize(data)
+	& m_breakRow & m_breakOrder & m_patLoopRow & m_patLoopCount
+	& m_patDelayCount & m_customData;
+	for(std::size_t i=0; i<m_channels.size(); i++) {
+		if(!m_channels[i])
+			continue;
+		data->archive(m_channels[i].get());
 	}
-	PPP_CATCH_ALL();
-}
-
-BinStream &S3mModule::restoreState( unsigned short ordindex, unsigned char cnt ) throw( PppException ) {
-	try {
-		BinStream &str = GenModule::restoreState( ordindex, cnt );
-		str.read( &m_breakRow )
-		.read( &m_breakOrder )
-		.read( &m_patLoopRow )
-		.read( &m_patLoopCount )
-		.read( &m_patDelayCount )
-		.read( &m_customData );
-		for(std::size_t i=0; i<m_channels.size(); i++)
-			m_channels[i]->restoreState(str);
-		return str;
-	}
-	PPP_CATCH_ALL();
+	data->array(&m_orderPlaybackCounts.front(), m_orderPlaybackCounts.size());
+	return *data;
 }

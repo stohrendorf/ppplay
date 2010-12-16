@@ -10,6 +10,7 @@
 #include <cstdint>
 
 #include "stuff/utils.h"
+#include "stuff/pppexcept.h"
 
 #ifndef WITHIN_DOXYGEN
 class BinStream;
@@ -26,17 +27,11 @@ class ISerializable {
 		 * @param[in,out] stream BinStream to serialize this object to
 		 * @return Reference to @a stream for pipelining
 		 */
-		virtual BinStream &serialize(BinStream &stream) const = 0;
-		/**
-		 * @brief Unserialise this object
-		 * @param[in,out] stream BinStream to serialize this object from
-		 * @return Reference to @a stream for pipelining
-		 */
-		virtual BinStream &unserialize(BinStream &stream) = 0;
+		virtual class IArchive& serialize(class IArchive* archive) = 0;
 		/**
 		 * @brief Destructor
 		 */
-		virtual inline ~ISerializable() {}
+		virtual ~ISerializable() {}
 };
 
 /**
@@ -87,7 +82,7 @@ class BinStream {
 		 * @param[in] count Count of data elements (NOT the byte size)
 		 * @return Reference to *this for pipelining
 		 */
-		template<typename TR> BinStream &read(TR *data, const std::size_t count = 1) __attribute__((nonnull(1)));
+		template<typename TR> BinStream &read(TR *data, std::size_t count = 1) __attribute__((nonnull(1)));
 		/**
 		 * @brief Write array data to the stream
 		 * @tparam TW Data type
@@ -95,19 +90,7 @@ class BinStream {
 		 * @param[in] count Count of data elements (NOT the byte size)
 		 * @return Reference to *this for pipelining
 		 */
-		template<typename TW> BinStream &write(const TW *data, const std::size_t count = 1) __attribute__((nonnull(1)));
-		/**
-		 * @brief Serialise an ISerialisable object
-		 * @param[in] str Reference to the object
-		 * @return Reference to *this for pipelining
-		 */
-		BinStream &writeSerialisable(const ISerializable *str) { return str->serialize(*this); }
-		/**
-		 * @brief Unserialise an ISerialisable object
-		 * @param[in,out] str Reference to the object
-		 * @return Reference to *this for pipelining
-		 */
-		BinStream &readSerialisable(ISerializable *str) { return str->unserialize(*this); }
+		template<typename TW> BinStream &write(const TW *data, std::size_t count = 1) __attribute__((nonnull(1)));
 		/**
 		 * @brief Get the failbit of the IO Stream
 		 * @return @c true on error
@@ -215,11 +198,9 @@ class SBinStream : public BinStream {
 		virtual ~SBinStream() {}
 };
 
-#ifndef WITHIN_DOXYGEN
-
 #define BINSTREAM_RW_DECL(tn)\
-extern template BinStream &BinStream::read<tn>(tn *, const std::size_t); \
-extern template BinStream &BinStream::write<tn>(const tn*, const std::size_t);
+extern template BinStream &BinStream::read<tn>(tn *, std::size_t); \
+extern template BinStream &BinStream::write<tn>(const tn*, std::size_t);
 
 BINSTREAM_RW_DECL(int8_t)
 BINSTREAM_RW_DECL(uint8_t)
@@ -235,6 +216,46 @@ BINSTREAM_RW_DECL(float)
 
 #undef BINSTREAM_RW_DECL
 
-#endif // WITHIN_DOXYGEN
+class IArchive {
+		DISABLE_COPY(IArchive)
+		IArchive() = delete;
+	public:
+		typedef std::shared_ptr<IArchive> Ptr;
+		typedef std::vector<Ptr> Vector;
+	private:
+		bool m_loading;
+		BinStream::SpBinStream m_stream;
+	public:
+		IArchive(const BinStream::SpBinStream& stream);
+		virtual ~IArchive() = 0;
+		bool isLoading() const { return m_loading; }
+		bool isSaving() const { return !m_loading; }
+		template<class T> IArchive& operator&(T& data) {
+			if(m_loading)
+				m_stream->read(&data,1);
+			else
+				m_stream->write(&data,1);
+			return *this;
+		}
+		template<class T> IArchive& array(T* data, std::size_t count) {
+			PPP_TEST(data==NULL);
+			if(m_loading)
+				m_stream->read(data,count);
+			else
+				m_stream->write(data,count);
+			return *this;
+		}
+		IArchive& archive(ISerializable* data) {
+			PPP_TEST(data==NULL);
+			return data->serialize(this);
+		}
+		void finishSave() { m_stream->seek(0); m_loading=true; }
+};
+class MemArchive : public IArchive {
+		DISABLE_COPY(MemArchive)
+	public:
+		MemArchive();
+		virtual ~MemArchive() {}
+};
 
 #endif // binstreamH

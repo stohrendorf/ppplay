@@ -56,6 +56,7 @@ namespace ppp {
 				S3mPattern::Vector m_patterns;
 				std::array<S3mChannel::Ptr, 32> m_channels;
 				uint8_t m_usedChannels;
+				std::array<uint16_t, 256> m_orderPlaybackCounts;
 				S3mPattern::Ptr getPattern(size_t idx) const { if(idx>=m_patterns.size()) return S3mPattern::Ptr(); return m_patterns[idx]; }
 				/**
 				 * @brief Apply global effects
@@ -68,8 +69,7 @@ namespace ppp {
 				 * @param[in] doStore Set this to @c true to store the current state, and to @c false to restore it
 				 */
 				bool adjustPosition(const bool increaseTick, const bool doStore) throw(PppException);
-				virtual BinStream &saveState() throw(PppException);
-				virtual BinStream &restoreState(uint16_t ordindex, uint8_t cnt) throw(PppException);
+				virtual IArchive& serialize(IArchive* data);
 			public:
 				/**
 				 * @copydoc GenModule::GenModule

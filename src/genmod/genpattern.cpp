@@ -44,10 +44,7 @@ std::string GenCell::trackerString() const throw() {
 	return "";
 }
 
-BinStream &GenCell::serialize(BinStream &str) const {
-	return str.write(&m_active);
-}
-
-BinStream &GenCell::unserialize(BinStream &str) {
-	return str.read(&m_active);
+IArchive& GenCell::serialize(IArchive* data) {
+	*data & m_active;
+	return *data;
 }

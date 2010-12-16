@@ -70,8 +70,7 @@ namespace ppp {
 			 * @return Tracker-like string
 			 */
 			virtual std::string trackerString() const throw();
-			virtual BinStream &serialize(BinStream &str) const;
-			virtual BinStream &unserialize(BinStream &str);
+			virtual IArchive& serialize(IArchive* data);
 			void setActive(bool a) throw() { m_active = a; }
 	};
 

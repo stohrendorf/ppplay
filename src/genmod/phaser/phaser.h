@@ -105,13 +105,7 @@ namespace ppp {
 			 * @param[in,out] dest BinStream to save the state in
 			 * @return Reference to @a dest for pipelining
 			 */
-			virtual BinStream &serialize(BinStream &dest) const;
-			/**
-			 * @brief Restores a state from @a src
-			 * @param[in] src BinStream to restore the state from
-			 * @return Reference to @a src for pipelining
-			 */
-			virtual BinStream &unserialize(BinStream &src);
+			virtual IArchive& serialize(IArchive* archive);
 	};
 }
 

@@ -6,4 +6,5 @@ add_library(genmod STATIC
 	genpattern.cpp
 	genchannel.cpp
 	genmodule.cpp)
-#target_link_libraries(genmod binstream fifoout)
+
+# target_link_libraries(genmod binstream)
