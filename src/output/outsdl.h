@@ -21,14 +21,7 @@
 #define outsdlH
 
 #include <SDL.h>
-//#include <SDL_Sound.h>
 #include "outgen.h"
-
-/**
- * @file
- * @ingroup Output
- * @brief SDL output class (definition)
- */
 
 namespace ppp {
 	/**
@@ -37,20 +30,12 @@ namespace ppp {
 	 * @brief Output class for SDL
 	 */
 	class OutputSDL : public OutputGen {
-		/**
-		 * @copydoc ppp::OutputGen::OutputGen
-		 * @details Initializes the SDL Audio Subsystem
-		 */
-		OutputSDL() : OutputGen() {
-			PPP_TEST(0!=SDL_InitSubSystem(SDL_INIT_AUDIO));
-		}
-		/**
-		 * @brief Destructor; Quits the SDL Audio Subsystem
-		 */
-		virtual ~OutputSDL() {
-			SDL_QuitSubSystem(SDL_INIT_AUDIO);
-		}
-	}
+			DISABLE_COPY(OutputSDL)
+			OutputSDL() = delete;
+		public:
+			OutputSDL(GenModule* mod);
+			virtual int init(int desiredFrq);
+	};
 }
 
 

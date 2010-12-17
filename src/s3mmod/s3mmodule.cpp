@@ -352,7 +352,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			}
 		}
 		setTitle( stringncpy( s3mHdr.title, 28 ) );
-		getMultiTrack(getCurrentTrack()).newState()->archive(this).finishSave();
+		//getMultiTrack(getCurrentTrack()).newState()->archive(this).finishSave();
 		// calculate total length...
 		LOG_MESSAGE_( "Calculating track lengths and preparing seek operations..." );
 		do {
@@ -377,7 +377,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 		} while ( jumpNextTrack() );
 		LOG_MESSAGE_( "Lengths calculated, resetting module." );
 		if ( getTrackCount() > 0 )
-			getMultiTrack(0).states()[0]->archive(this);
+			getMultiTrack(0).nextState()->archive(this);
 		LOG_MESSAGE_( "Removing empty tracks" );
 		removeEmptyTracks();
 //		if (aMultiTrack)

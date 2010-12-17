@@ -41,12 +41,15 @@ BINSTREAM_RW_IMPL(char)
 BINSTREAM_RW_IMPL(bool)
 BINSTREAM_RW_IMPL(float)
 
-IArchive::IArchive(const BinStream::SpBinStream& stream) : m_loading(false), m_stream(stream)
+ISerializable::~ISerializable()
+{ }
+IArchive::IArchive(const BinStream::Ptr& stream) : m_loading(false), m_stream(stream)
 { }
 IArchive::~IArchive()
 { }
 
-MemArchive::MemArchive() : IArchive(BinStream::SpBinStream(new SBinStream()))
-{
-
-}
+MemArchive::MemArchive() : IArchive(BinStream::Ptr
+(new SBinStream()))
+{ }
+MemArchive::~MemArchive()
+{ }

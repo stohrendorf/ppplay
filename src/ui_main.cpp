@@ -55,9 +55,9 @@ UIMain::UIMain(ppg::Widget* parent): Widget(parent)
 	m_trackerInfo->setFgColor(0, ppg::dcAqua, 0);
 	m_trackerInfo->show();
 	m_modTitle = new ppg::Label(this);
-	m_modTitle->setFgColor(0, ppg::dcBrightWhite, 0);
 	m_modTitle->setWidth(area().width() - 4);
 	m_modTitle->setPosition(2, 0);
 	m_modTitle->alignment = ppg::Label::Alignment::alCenter;
+	m_modTitle->setFgColor(0, ppg::dcBrightWhite, 0);
 	m_modTitle->show();
 }

@@ -123,34 +123,24 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 			#endif
 			dosScreen->clear(' ', ppg::dcWhite, ppg::dcBlack);
 			{
-				//ppg::StereoPeakBar *p = dosScreen->getByPath<ppg::StereoPeakBar>("VolBar");
-				//PPG_TEST(!p);
 				uiMain->volBar()->shift(s3m->playbackFifo.getVolumeLeft()>>8, s3m->playbackFifo.getVolumeRight()>>8);
 			}
 			int msecs = s3m->getPosition() / 441;
 			int msecslen = s3m->getLength() / 441;
 			ppp::GenPlaybackInfo pbi = s3m->getPlaybackInfo();
-			//lb = dosScreen->getByPath<ppg::Label>("Position");
-			//PPG_TEST(!lb);
 			lb = uiMain->posLabel();
 			*lb = ppp::stringf("%3d(%3d)/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Track %d/%d",
 								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
 								msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
 								s3m->getCurrentTrack() + 1, s3m->getTrackCount()
 								);
-			//lb = dosScreen->getByPath<ppg::Label>("PlaybackInfo");
-			//PPG_TEST(!lb);
 			lb = uiMain->playbackInfo();
 			*lb = ppp::stringf("Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", pbi.speed, pbi.tempo, pbi.globalVolume * 100 / 0x40);
 			for (int i = 0; i < s3m->channelCount(); i++) {
 				if(i>=16)
 					break;
-				//lb = dosScreen->getByPath<ppg::Label>(ppp::stringf("ChanInfo_%d", i));
-				//PPG_TEST(!lb);
 				lb = uiMain->chanInfo(i);
 				*lb = s3m->getChanStatus(i);
-				//lb = dosScreen->getByPath<ppg::Label>(ppp::stringf("ChanCell_%d", i));
-				//PPG_TEST(!lb);
 				lb = uiMain->chanCell(i);
 				*lb = s3m->getChanCellString(i);
 			}
@@ -165,7 +155,6 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 		}
 		LOG_TEST_WARN(len_bytes != nFrames*sizeof(ppp::BasicSampleFrame));
 		std::copy(frameBuffer->begin(), frameBuffer->begin()+nFrames, reinterpret_cast<ppp::BasicSampleFrame*>(stream));
-		//memcpy(stream, &frameBuffer->front().left, nFrames*sizeof(ppp::BasicSampleFrame));
 	}
 	catch (PppException &e) {
 		LOG_ERROR("Audio Callback: %s", e.what());
@@ -331,53 +320,7 @@ int main(int argc, char *argv[]) {
 		ppg::Label *l;
 		dosScreen.reset(new ppg::Screen(80, 25, PACKAGE_STRING " - Built " __DATE__ " " __TIME__));
 		uiMain = new UIMain(dosScreen.get());
-/*		l = new ppg::Label("Position", "");
-		l->setWidth(dosScreen->getWidth() - 4);
-		l->setPosition(2, 2);
-		l->setFgColor(0, ppg::dcBrightWhite, 0);
-		l->setFgColor(3, ppg::dcWhite, 5);
-		l->show();
-		dosScreen->addChild(*l);*/
-/*		l = new ppg::Label("ScreenSeparator", " \xc4 \xc4\xc4  \xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4  \xc4\xc4 \xc4 ");
-		l->setPosition(0, 1);
-		l->setFgColor(0, ppg::dcBrightWhite, 0);
-		l->show();
-		dosScreen->addChild(*l);*/
-/*		l = new ppg::Label("ScreenSeparator2", " \xc4 \xc4\xc4  \xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4  \xc4\xc4 \xc4 ");
-		l->setPosition(0, 3);
-		l->setFgColor(0, ppg::dcBrightWhite, 0);
-		l->show();
-		dosScreen->addChild(*l);*/
-/*		l = new ppg::Label("PlaybackInfo", "");
-		l->setWidth(dosScreen->getWidth() - 4);
-		l->setPosition(2, 2);
-		l->alignment = ppg::Label::Alignment::alRight;
-		l->setFgColor(0, ppg::dcBrightWhite, 0);
-		l->show();
-		dosScreen->addChild(*l);*/
-/*		ppg::StereoPeakBar *p = new ppg::StereoPeakBar("VolBar", 16, 256, 1, true);
-		p->setPosition((dosScreen->getWidth() - p->length()) / 2, 4);
-		p->show();
-		dosScreen->addChild(*p);*/
 		for (int i = 0; i < 16; i++) {
-/*			l = new ppg::Label(ppp::stringf("ChanInfo_%d", i), "");
-			l->setWidth(dosScreen->getWidth() - 4);
-			l->setPosition(2, 5 + i);
-			l->setFgColor(4, ppg::dcLightRed);
-			l->setFgColor(5, ppg::dcBrightWhite, 3);
-			l->setFgColor(9, ppg::dcLightBlue);
-			l->setFgColor(10, ppg::dcAqua, 2);
-			l->setFgColor(13, ppg::dcLightGreen, 6);
-			l->setFgColor(35, ppg::dcBrightWhite, 0);
-			l->show();
-			dosScreen->addChild(*l);*/
-/*			l = new ppg::Label(ppp::stringf("ChanCell_%d", i), "");
-			l->setWidth(dosScreen->getWidth() - 4);
-			l->setPosition(2, 5 + i);
-			l->alignment = ppg::Label::Alignment::alRight;
-			l->setFgColor(0, ppg::dcWhite, 0);
-			l->show();
-			dosScreen->addChild(*l);*/
 		}
 		LOG_MESSAGE_("Loading the module.");
 		ppp::GenModule::Ptr s3m;
@@ -405,31 +348,11 @@ int main(int argc, char *argv[]) {
 		*l = ppp::stringf("Tracker: %s - Channels: %d", s3m->getTrackerInfo().c_str(), s3m->channelCount());
 		if (s3m->isMultiTrack())
 			*l += " - Multi-track";
-/*		l = new ppg::Label("TrackerInfo", ppp::stringf("Tracker: %s - Channels: %d", s3m->getTrackerInfo().c_str(), s3m->channelCount()));
-		if (s3m->isMultiTrack())
-			*l += " - Multi-track";
-		l->setPosition(2, dosScreen->getBottom() - 1);
-		l->setWidth(dosScreen->getWidth() - 4);
-		l->alignment = ppg::Label::Alignment::alCenter;
-		l->setFgColor(0, ppg::dcAqua, 0);
-		l->show();
-		dosScreen->addChild(*l);*/
 		l = uiMain->modTitle();
 		if (s3m->getTrimTitle() != "")
 			*l = std::string(" -=\xf0[ ") + s3m->getFileName() + " : " + s3m->getTrimTitle() + " ]\xf0=- ";
 		else
 			*l = std::string(" -=\xf0[ ") + s3m->getFileName() + " ]\xf0=- ";
-/*		l = new ppg::Label("ModTitle", "");
-		if (s3m->getTrimTitle() != "")
-			*l = std::string(" -=\xf0[ ") + s3m->getFileName() + " : " + s3m->getTrimTitle() + " ]\xf0=- ";
-		else
-			*l = std::string(" -=\xf0[ ") + s3m->getFileName() + " ]\xf0=- ";
-		l->setFgColor(0, ppg::dcBrightWhite, 0);
-		l->setWidth(dosScreen->getWidth() - 4);
-		l->setPosition(2, 0);
-		l->alignment = ppg::Label::Alignment::alCenter;
-		l->show();
-		dosScreen->addChild(*l);*/
 		dosScreen->show();
 		LOG_MESSAGE_("Init Fifo");
 		s3m->initFifo(ppp::FFT::fftSampleCount);
@@ -559,7 +482,6 @@ int main(int argc, char *argv[]) {
 			if (lame_init_params(lgf) < 0) {
 				lame_close(lgf);
 				LOG_ERROR_("LAME Init Step 2 Failed");
-				// 			delete s3m;
 				SDL_Quit();
 				return EXIT_FAILURE;
 			}
@@ -596,7 +518,6 @@ int main(int argc, char *argv[]) {
 		#endif
 		while(SDL_GetAudioStatus()==SDL_AUDIO_PLAYING)
 			;
-// 		dosScreen.reset();
 		SDL_Quit();
 	}
 	catch (PppException &e) {
