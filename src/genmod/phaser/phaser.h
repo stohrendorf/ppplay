@@ -37,9 +37,9 @@ namespace ppp {
 			 * @param[in] amp Amplitude of the lookup table
 			 * @param[in] multiplier Factor to multiply the table values with when copying the values
 			 */
-			Phaser(const int16_t table[], const uint32_t length, const int16_t amp, float multiplier = 1) throw();
+			Phaser(const int16_t table[], uint32_t length, int16_t amp, float multiplier = 1) throw();
 			template<std::size_t length>
-			Phaser(const std::array<const int16_t, length>& data, const int16_t amp, float multiplier = 1) {
+			Phaser(const std::array<const int16_t, length>& data, int16_t amp, float multiplier = 1) {
 				resetWave(data, amp, multiplier);
 			}
 			/**
@@ -47,7 +47,7 @@ namespace ppp {
 			 * @param[in] delta Value to add to the phase
 			 * @return Reference to @c *this
 			 */
-			Phaser &operator+=(const int16_t delta) throw(PppException);
+			Phaser &operator+=(int16_t delta) throw(PppException);
 			/**
 			 * @brief Increment the phase
 			 * @return Reference to @c *this
@@ -85,9 +85,9 @@ namespace ppp {
 			 * @param[in] amp Amplitude of the lookup table
 			 * @param[in] multiplier Factor to multiply the table values with when copying the values
 			 */
-			void resetWave(const int16_t table[], const uint32_t length, const int16_t amp, float multiplier = 1) throw(PppException);
+			void resetWave(const int16_t table[], const uint32_t length, int16_t amp, float multiplier = 1) throw(PppException);
 			template<std::size_t length>
-			void resetWave(const std::array<const int16_t, length>& data, const int16_t amp, float multiplier = 1) throw(PppException) {
+			void resetWave(const std::array<const int16_t, length>& data, int16_t amp, float multiplier = 1) throw(PppException) {
 				resetWave(&data.front(), length, amp, multiplier);
 			}
 			/**
