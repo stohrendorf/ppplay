@@ -31,6 +31,7 @@ using namespace ppp;
 
 IArchive* GenMultiTrack::newState() {
 	IArchive::Ptr p(new MemArchive());
+	LOG_MESSAGE("Creating new state %u", m_states.size());
 	m_states.push_back(p);
 	return p.get();
 }
@@ -40,6 +41,7 @@ IArchive* GenMultiTrack::nextState() {
 		LOG_ERROR("%d >= %d", m_stateIndex, m_states.size());
 		return NULL;
 	}
+	LOG_MESSAGE("Loading state %u", m_stateIndex);
 	return m_states[m_stateIndex++].get();
 }
 
