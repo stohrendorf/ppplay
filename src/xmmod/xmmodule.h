@@ -26,6 +26,7 @@ namespace ppp {
 				virtual bool jumpNextTrack() throw(PppException);
 				virtual bool jumpPrevTrack() throw(PppException);
 				virtual bool jumpNextOrder() throw();
+				virtual bool jumpPrevOrder() throw();
 				virtual std::string getChanCellString(int16_t) throw();
 				virtual uint8_t channelCount() const;
 		};

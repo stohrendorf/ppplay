@@ -150,7 +150,7 @@ namespace ppp {
 		 * @return New note
 		 * @note Time-critical
 		 */
-		static inline uint8_t deltaNote( const uint8_t note, const int8_t delta ) throw() {
+		static inline uint8_t deltaNote( uint8_t note, int8_t delta ) throw() {
 			uint16_t x = S3M_OCTAVE( note ) * 12 + S3M_NOTE( note ) + delta;
 			return (( x / 12 ) << 4 ) | ( x % 12 );
 		}
@@ -166,7 +166,7 @@ void S3mChannel::setSampleIndex(int32_t idx) {
 		setActive(false);
 }
 
-S3mChannel::S3mChannel( const uint16_t frq, const S3mSample::Vector* const smp ) throw() : GenChannel( frq ),
+S3mChannel::S3mChannel( uint16_t frq, const S3mSample::Vector* const smp ) throw() : GenChannel( frq ),
 		m_note( ::s3mEmptyNote ), m_lastFx( 0 ), m_lastVibratoData( 0 ), m_lastPortaSpeed( 0 ),
 		m_tremorVolume( 0 ), m_targetNote( ::s3mEmptyNote ), m_noteChanged( false ), m_deltaPeriod( 0 ),
 		m_deltaVolume( 0 ), m_globalVol( 0x40 ), m_nextGlobalVol( 0x40 ),

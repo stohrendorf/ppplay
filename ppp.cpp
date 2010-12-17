@@ -398,7 +398,7 @@ int main(int argc, char *argv[]) {
 								}
 								break;
 							case SDLK_PAGEUP:
-								// TODO: jumpPreviousOrder;
+								s3m->jumpPrevOrder();
 								break;
 							default:
 								break;
