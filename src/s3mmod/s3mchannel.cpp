@@ -779,17 +779,17 @@ void S3mChannel::mixTick( MixerFrameBuffer &mixBuffer, uint8_t volume ) throw( P
 		setActive( false );
 		return;
 	}
-	if ( getTick()==0 && m_zeroVolCounter!=-1 && currentSample() && isActive() ) {
-		if ( currentSample()->isLooped() && getVolume()==0 )
+	if ( getTick()==0 && m_zeroVolCounter!=-1 && isActive() ) {
+		if ( getVolume()==0 )
 			m_zeroVolCounter++;
 		else
 			m_zeroVolCounter = 0;
-	}
-	if ( m_zeroVolCounter == 3 ) {
-		m_zeroVolCounter = 0;
-		setActive( false );
-		m_note = s3mEmptyNote;
-		return;
+		if ( m_zeroVolCounter == 3 ) {
+			m_zeroVolCounter = 0;
+			setActive( false );
+			m_note = s3mEmptyNote;
+			return;
+		}
 	}
 	uint16_t adjPer = getAdjustedPeriod();
 	if(!isActive())
@@ -805,15 +805,20 @@ void S3mChannel::mixTick( MixerFrameBuffer &mixBuffer, uint8_t volume ) throw( P
 	MixerSample *mixBufferPtr = &mixBuffer->front().left;
 	S3mSample::Ptr currSmp = currentSample();
 	int32_t pos = getPosition();
+	uint8_t volL=0x40, volR=0x40;
+	if ( getPanning() > 0x40 && getPanning() != 0xa4 )
+		volL = 0x80 - getPanning();
+	if ( getPanning() < 0x40 )
+		volR = getPanning();
+	else if( getPanning()==0xa4 )
+		volR = 0xa4;
 	for ( std::size_t i = 0; i < mixBuffer->size(); i++ ) {
 		int16_t sampleVal = currSmp->getLeftSampleAt(pos);
-		if ( getPanning() > 0x40 && getPanning() != 0xa4 )
-			sampleVal = sampleVal*( 0x80 - getPanning() ) >> 6;
+		sampleVal = (sampleVal*volL) >> 6;
 		*( mixBufferPtr++ ) += ( sampleVal * currVol ) >> 12;
 		sampleVal = currSmp->getRightSampleAt(pos);
-		if ( getPanning() < 0x40 )
-			sampleVal = sampleVal*getPanning() >> 6;
-		else if ( getPanning() == 0xa4 )
+		sampleVal = (sampleVal*volR) >> 6;
+		if ( volR == 0xa4 )
 			sampleVal = -sampleVal;
 		*( mixBufferPtr++ ) += ( sampleVal * currVol ) >> 12;
 		if ( pos == GenSample::EndOfSample )
@@ -831,19 +836,19 @@ void S3mChannel::simTick( std::size_t bufSize, uint8_t volume ) {
 	if ( isDisabled() )
 		return;
 	setGlobalVolume( volume, false );
-	if (( !isActive() ) || ( !currentSample() ) || ( m_basePeriod == 0 ) )
+	if ( !isActive() || !currentSample() || m_basePeriod==0 )
 		return setActive( false );
-	if (( getTick() == 0 ) && ( m_zeroVolCounter != -1 ) && ( currentSample() ) && isActive() ) {
-		if (( currentSample()->isLooped() ) && ( getVolume() == 0 ) )
+	if ( getTick()==0 && m_zeroVolCounter!=-1 && isActive() ) {
+		if ( getVolume()==0 )
 			m_zeroVolCounter++;
 		else
 			m_zeroVolCounter = 0;
-	}
-	if ( m_zeroVolCounter == 3 ) {
-		m_zeroVolCounter = 0;
-		setActive( false );
-		m_note = s3mEmptyNote;
-		return;
+		if ( m_zeroVolCounter == 3 ) {
+			m_zeroVolCounter = 0;
+			setActive( false );
+			m_note = s3mEmptyNote;
+			return;
+		}
 	}
 	PPP_TEST( getPlaybackFrq()==0 );
 	PPP_TEST( bufSize==0);

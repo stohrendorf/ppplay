@@ -352,7 +352,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 			}
 		}
 		setTitle( stringncpy( s3mHdr.title, 28 ) );
-		//getMultiTrack(getCurrentTrack()).newState()->archive(this).finishSave();
+		getMultiTrack(getCurrentTrack()).newState()->archive(this).finishSave();
 		// calculate total length...
 		LOG_MESSAGE_( "Calculating track lengths and preparing seek operations..." );
 		do {
