@@ -20,18 +20,11 @@
 #ifndef outgenH
 #define outgenH
 
-#include "pppexcept.h"
-#include "audiofifo.h"
+#include "genmod/genmodule.h"
 
 /**
  * @defgroup Output Output routines
  * @brief Output routines
- */
-
-/**
- * @file
- * @ingroup Output
- * @brief General output class (definition)
  */
 
 namespace ppp {
@@ -41,28 +34,20 @@ namespace ppp {
 	 * @brief Abstract base class for sound output
 	 */
 	class OutputGen {
+			DISABLE_COPY(OutputGen)
+			OutputGen() = delete;
+		private:
+			GenModule* m_module;
 		public:
-			/**
-			 * @brief Default constructor
-			 */
-			OutputGen() = default;
+			OutputGen(GenModule* mod) : m_module(mod) {}
+			virtual ~OutputGen() = default;
 			/**
 			 * @brief Prepare output
 			 * @param[in] desiredFrq Desired output frequency
 			 * @return Either the real output frequency, or -1 if init() failed
 			 */
 			virtual int init(int desiredFrq) = 0;
-			/**
-			 * @brief Feed data into the output
-			 * @param[in] samples Sample data
-			 * @param[in] frameCount Sample frames
-			 */
-			virtual void feedData(AudioFifo::AudioBuffer samples, unsigned int frameCount) = 0;
-			/**
-			 * @brief Hm...
-			 * @return ?
-			 */
-			virtual int done() = 0;
+			GenModule* const module() const { return m_module; }
 	}
 }
 

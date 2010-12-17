@@ -143,7 +143,7 @@ void GenModule::removeEmptyTracks() {
 	std::vector<GenMultiTrack> nTr;
 	std::for_each(
 		m_tracks.begin(), m_tracks.end(),
-		[&nTr](GenMultiTrack mt){ if(mt.length!=0 && mt.startOrder!=GenMultiTrack::stopHere) nTr.push_back(mt); }
+		[&nTr](const GenMultiTrack &mt){ if(mt.length!=0 && mt.startOrder!=GenMultiTrack::stopHere) nTr.push_back(mt); }
 	);
 /*	for(std::vector<GenMultiTrack>::iterator it = m_tracks.begin(); it!=m_tracks.end(); it++) {
 		if (( it->length != 0 ) && ( it->startOrder != GenMultiTrack::stopHere ) )

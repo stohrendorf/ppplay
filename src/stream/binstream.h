@@ -12,28 +12,6 @@
 #include "stuff/utils.h"
 #include "stuff/pppexcept.h"
 
-#ifndef WITHIN_DOXYGEN
-class BinStream;
-#endif
-/**
- * @class IStreamable
- * @ingroup Common
- * @brief Interface class for complex objects
- */
-class ISerializable {
-	public:
-		/**
-		 * @brief Serialise this object
-		 * @param[in,out] stream BinStream to serialize this object to
-		 * @return Reference to @a stream for pipelining
-		 */
-		virtual class IArchive& serialize(class IArchive* archive) = 0;
-		/**
-		 * @brief Destructor
-		 */
-		virtual ~ISerializable() {}
-};
-
 /**
  * @class BinStream
  * @ingroup Common
@@ -42,7 +20,7 @@ class ISerializable {
 class BinStream {
 	public:
 		typedef std::shared_ptr<std::iostream> SpIoStream; //!< @brief Shared IO Stream Pointer
-		typedef std::shared_ptr<BinStream> SpBinStream; //!< @brief Shared BinStream Pointer
+		typedef std::shared_ptr<BinStream> Ptr; //!< @brief Shared BinStream Pointer
 	private:
 		SpIoStream m_stream; //!< @brief The IO Stream associated with this BinStream
 		/**
@@ -216,6 +194,25 @@ BINSTREAM_RW_DECL(float)
 
 #undef BINSTREAM_RW_DECL
 
+/**
+ * @class ISerializable
+ * @ingroup Common
+ * @brief Interface class for complex objects
+ */
+class ISerializable {
+	public:
+		/**
+		 * @brief Serialise this object
+		 * @param[in,out] stream BinStream to serialize this object to
+		 * @return Reference to @a stream for pipelining
+		 */
+		virtual class IArchive& serialize(class IArchive* archive) = 0;
+		/**
+		 * @brief Destructor
+		 */
+		virtual ~ISerializable() = 0;
+};
+
 class IArchive {
 		DISABLE_COPY(IArchive)
 		IArchive() = delete;
@@ -224,9 +221,9 @@ class IArchive {
 		typedef std::vector<Ptr> Vector;
 	private:
 		bool m_loading;
-		BinStream::SpBinStream m_stream;
+		BinStream::Ptr m_stream;
 	public:
-		IArchive(const BinStream::SpBinStream& stream);
+		IArchive(const BinStream::Ptr& stream);
 		virtual ~IArchive() = 0;
 		bool isLoading() const { return m_loading; }
 		bool isSaving() const { return !m_loading; }
@@ -255,7 +252,7 @@ class MemArchive : public IArchive {
 		DISABLE_COPY(MemArchive)
 	public:
 		MemArchive();
-		virtual ~MemArchive() {}
+		virtual ~MemArchive();
 };
 
 #endif // binstreamH
