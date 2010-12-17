@@ -33,13 +33,14 @@ namespace ppp {
 	namespace s3m {
 		
 		static const std::array<const int16_t, 64> S3mWaveSine = {{
-			0, 24, 49, 74, 97, 120, 141, 161, 180, 197, 212, 224,
-			235, 244, 250, 253, 255, 253, 250, 244, 235, 224, 212,
-			197, 180, 161, 141, 120, 97, 74, 49, 24, 0, -24, -49,
-			-74, -97, -120, -141, -161, -180, -197, -212, -224,
-			-235, -244, -250, -253, -255, -253, -250, -244, -235,
-			-224, -212, -197, -180, -161, -141, -120, -97, -74,
-			-49, -24
+			0, 24, 49, 74, 97, 120, 141, 161,
+			180, 197, 212, 224, 235, 244, 250, 253,
+			255, 253, 250, 244, 235, 224, 212, 197,
+			180, 161, 141, 120, 97, 74, 49, 24,
+			0, -24, -49, -74, -97, -120, -141, -161,
+			-180, -197, -212, -224, -235, -244, -250, -253,
+			-255, -253, -250, -244, -235, -224, -212, -197,
+			-180, -161, -141, -120, -97, -74, -49, -24
 		}};
 		static const std::array<const int16_t, 64> S3mWaveRamp = {{
 			0, -0xF8, -0xF0, -0xE8, -0xE0, -0xD8, -0xD0, -0xC8,
@@ -111,7 +112,7 @@ namespace ppp {
 		}
 
 		static inline uint8_t periodToNoteOffset( uint16_t per, uint16_t c4spd) {
-			return -std::log2( static_cast<float>(per)*c4spd/(8363*Periods[0]) )*12;
+			return -12*std::log2( static_cast<float>(per)*c4spd/(8363*Periods[0]) );
 		}
 
 		/**
@@ -172,6 +173,8 @@ S3mChannel::S3mChannel( const uint16_t frq, const S3mSample::Vector* const smp )
 		m_retrigCount( -1 ), m_tremorCount( -1 ), m_300VolSlides( false ), m_amigaLimits( false ),
 		m_maybeSchism( false ), m_zeroVolCounter( -1 ), m_sampleList(smp), m_basePeriod(0), m_glissando(false), m_currentCell(new S3mCell()), m_sampleIndex(-1)
 {
+	vibrato().resetWave(S3mWaveSine, 256);
+	tremolo().resetWave(S3mWaveSine, 256);
 }
 
 S3mChannel::~S3mChannel() throw() {
@@ -435,7 +438,7 @@ void S3mChannel::doVolumeFx( uint8_t fx, uint8_t fxVal ) throw() {
 		case s3mFxTremolo:
 			combineLastFxData( m_lastFx, fxVal );
 			if ( getTick() != 0 ) {
-				tremolo() += highNibble( fxVal ) << 2;
+				tremolo() += highNibble( fxVal );
 				m_deltaVolume = ( tremolo().get() * lowNibble( fxVal ) ) >> 7;
 			}
 			break;
@@ -452,14 +455,14 @@ void S3mChannel::doVibratoFx( uint8_t fx, uint8_t fxVal ) throw() {
 		case s3mFxVibVolSlide:
 			if(getTick()==0)
 				break;
-			vibrato() += highNibble( fxVal ) << 2;
+			vibrato() += highNibble( fxVal );
 			m_deltaPeriod = vibrato().get() * lowNibble( fxVal ) >> 5;
 			break;
 		case s3mFxFineVibrato:
 			combineLastFxData( m_lastVibratoData, fxVal );
 			if ( getTick() == 0 )
 				break;
-			vibrato() += highNibble( fxVal ) << 2;
+			vibrato() += highNibble( fxVal );
 			m_deltaPeriod = vibrato().get() * lowNibble( fxVal ) >> 7;
 			break;
 	}
@@ -714,7 +717,7 @@ void S3mChannel::doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException ) 
 						case 0: vibrato().resetWave( S3mWaveSine, 256 ); break;
 						case 1: vibrato().resetWave( S3mWaveRamp, 256 ); break;
 						case 2: vibrato().resetWave( S3mWaveSquare, 256 ); break;
-						case 3: vibrato().resetWave( ProtrackerLookup, 256, 256 ); break;
+						case 3: vibrato().resetWave( ProtrackerLookup, 256 ); break;
 						default:
 							break;
 					}
@@ -724,7 +727,7 @@ void S3mChannel::doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException ) 
 						case 0: tremolo().resetWave( S3mWaveSine, 256 ); break;
 						case 1: tremolo().resetWave( S3mWaveRamp, 256 ); break;
 						case 2: tremolo().resetWave( S3mWaveSquare, 256 ); break;
-						case 3: tremolo().resetWave( ProtrackerLookup, 256, 256 ); break;
+						case 3: tremolo().resetWave( ProtrackerLookup, 256 ); break;
 						default:
 							break;
 					}

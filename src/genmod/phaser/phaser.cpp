@@ -9,10 +9,10 @@
 namespace ppp {
 	Phaser::Phaser() throw() : m_lookup(), m_amplitude( 0 ), m_phase( 0 ) {
 	}
-	Phaser::Phaser( const int16_t table[], const uint32_t length, const int16_t amp, float multiplier ) throw() : m_lookup(), m_amplitude( amp ), m_phase( 0 ) {
+	Phaser::Phaser( const int16_t table[], uint32_t length, int16_t amp, float multiplier ) throw() : m_lookup(), m_amplitude( amp ), m_phase( 0 ) {
 		resetWave(table, length, amp, multiplier);
 	}
-	Phaser &Phaser::operator+=( const int16_t delta ) throw( PppException ) {
+	Phaser &Phaser::operator+=( int16_t delta ) throw( PppException ) {
 		PPP_TEST( m_lookup.size() == 0 );
 		m_phase += delta;
 		m_phase %= m_lookup.size();
@@ -42,12 +42,13 @@ namespace ppp {
 	void Phaser::resetPhase() throw() {
 		m_phase = 0;
 	}
-	void Phaser::resetWave( const int16_t *table, const uint32_t length, const int16_t amp, float multiplier ) throw( PppException ) {
+	void Phaser::resetWave( const int16_t *table, const uint32_t length, int16_t amp, float multiplier ) throw( PppException ) {
 		PPP_TEST( length == 0 );
 		//m_lookup.reset( new int16_t[length] );
 		m_lookup.resize(length);
-		for ( uint32_t i = 0; i < length; i++ )
+		for ( uint32_t i = 0; i < length; i++ ) {
 			m_lookup[i] = static_cast<int16_t>( table[i] * multiplier );
+		}
 		//m_length = length;
 		m_amplitude = amp;
 	}
