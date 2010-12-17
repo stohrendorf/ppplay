@@ -41,8 +41,21 @@ IArchive* GenMultiTrack::nextState() {
 		LOG_ERROR("%d >= %d", m_stateIndex, m_states.size());
 		return NULL;
 	}
+	m_stateIndex++;
 	LOG_MESSAGE("Loading state %u", m_stateIndex);
-	return m_states[m_stateIndex++].get();
+	IArchive* result = m_states[m_stateIndex].get();
+	return result;
+}
+
+IArchive* GenMultiTrack::prevState() {
+	if(m_stateIndex<=1) {
+		LOG_ERROR_("m_stateIndex <= 1");
+		return NULL;
+	}
+	m_stateIndex--;
+	LOG_MESSAGE("Loading state %u", m_stateIndex);
+	IArchive* result = m_states[m_stateIndex].get();
+	return result;
 }
 
 GenModule::GenModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) :

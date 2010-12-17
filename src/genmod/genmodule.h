@@ -76,12 +76,14 @@ namespace ppp {
 			 * @brief Constructor
 			 */
 			GenMultiTrack() : m_states(), m_stateIndex(0), length(0), startOrder(0) {
+				m_states.resize(1);
 			}
 			static const uint16_t stopHere = ~0; //!< @brief Const to define unused track
 			IArchive* newState();
 			IArchive::Vector states() const { return m_states; }
 			std::size_t stateIndex() const { return m_stateIndex; }
 			IArchive* nextState();
+			IArchive* prevState();
 	};
 
 	/**
@@ -235,7 +237,7 @@ namespace ppp {
 			 * @return @c false if the end of the current track is reached
 			 */
 			virtual bool jumpNextOrder() throw() = 0;
-			//virtual bool jumpPrevOrder() throw() = 0;
+			virtual bool jumpPrevOrder() throw() = 0;
 			/**
 			 * @brief Get the current playback position in sample frames
 			 * @return aPlayedFrames

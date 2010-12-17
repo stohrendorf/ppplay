@@ -113,6 +113,10 @@ bool XmModule::jumpNextOrder() throw() {
 	return false;
 }
 
+bool XmModule::jumpPrevOrder() throw() {
+	return false;
+}
+
 std::string XmModule::getChanCellString(int16_t) throw() {
 	return std::string();
 }

@@ -246,7 +246,8 @@ class IArchive {
 			PPP_TEST(data==NULL);
 			return data->serialize(this);
 		}
-		void finishSave() { m_stream->seek(0); m_loading=true; }
+		void finishSave() { PPP_TEST(m_loading); m_stream->seek(0); m_loading=true; }
+		void finishLoad() { PPP_TEST(!m_loading); m_stream->seek(0); }
 };
 class MemArchive : public IArchive {
 		DISABLE_COPY(MemArchive)

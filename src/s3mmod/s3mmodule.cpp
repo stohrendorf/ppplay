@@ -377,7 +377,7 @@ bool S3mModule::load( const std::string &fn ) throw( PppException ) {
 		} while ( jumpNextTrack() );
 		LOG_MESSAGE_( "Lengths calculated, resetting module." );
 		if ( getTrackCount() > 0 )
-			getMultiTrack(0).nextState()->archive(this);
+			getMultiTrack(0).nextState()->archive(this).finishLoad();
 		LOG_MESSAGE_( "Removing empty tracks" );
 		removeEmptyTracks();
 //		if (aMultiTrack)
@@ -585,7 +585,7 @@ bool S3mModule::adjustPosition( const bool increaseTick, const bool doStore ) th
 				getMultiTrack(getCurrentTrack()).newState()->archive(this).finishSave();
 			else {
 				//PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
-				getMultiTrack(getCurrentTrack()).nextState()->archive(this);
+				getMultiTrack(getCurrentTrack()).nextState()->archive(this).finishLoad();
 			}
 		}
 		PPP_CATCH_ALL()
@@ -667,11 +667,18 @@ void S3mModule::getTickNoMixing( std::size_t& bufLen ) throw( PppException ) {
 }
 
 bool S3mModule::jumpNextOrder() throw() {
-	int currOrder = getPlaybackInfo().order;
-	while ( currOrder == getPlaybackInfo().order ) {
-		if ( !adjustPosition( true, false ) )
-			return false;
-	}
+	IArchive* next = getMultiTrack(getCurrentTrack()).nextState();
+	if(next==NULL)
+		return false;
+	next->archive(this).finishLoad();
+	return true;
+}
+
+bool S3mModule::jumpPrevOrder() throw() {
+	IArchive* next = getMultiTrack(getCurrentTrack()).prevState();
+	if(next==NULL)
+		return false;
+	next->archive(this).finishLoad();
 	return true;
 }
 
@@ -732,7 +739,7 @@ bool S3mModule::jumpNextTrack() throw( PppException ) {
 		PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
 		setPatternIndex( mapOrder( getPlaybackInfo().order )->getIndex() );
 		setPosition( 0 );
-		getMultiTrack(getCurrentTrack()).nextState()->archive(this);
+		getMultiTrack(getCurrentTrack()).nextState()->archive(this).finishLoad();
 		//restoreState( getPlaybackInfo().order, 0 );
 		return true;
 	}
@@ -754,7 +761,7 @@ bool S3mModule::jumpPrevTrack() throw( PppException ) {
 	PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
 	setPatternIndex( mapOrder( getPlaybackInfo().order )->getIndex() );
 	setPosition( 0 );
-	getMultiTrack(getCurrentTrack()).nextState()->archive(this);
+	getMultiTrack(getCurrentTrack()).nextState()->archive(this).finishLoad();
 	//restoreState( getPlaybackInfo().order, 0 );
 	return true;
 }
