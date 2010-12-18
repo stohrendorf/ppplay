@@ -404,6 +404,9 @@ int main(int argc, char *argv[]) {
 								break;
 						}
 					}
+					else if (event.type == SDL_MOUSEMOTION) {
+						dosScreen->setCursor(event.motion.x/8, event.motion.y/16);
+					}
 					else if (event.type == SDL_QUIT) {
 						playbackStopped = true;
 					}
