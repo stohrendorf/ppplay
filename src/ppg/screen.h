@@ -25,6 +25,8 @@ class Screen : public Widget {
 		 */
 		void drawChar16(int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque = true) throw();
 		virtual void drawThis() throw(Exception);
+		int m_cursorX;
+		int m_cursorY;
 	public:
 		/**
 		 * @brief Create a new virtual DOS screen
@@ -49,5 +51,6 @@ class Screen : public Widget {
 		 */
 		void clearOverlay();
 		void drawPixel(int x, int y, uint8_t color);
+		void setCursor(int x, int y) { m_cursorX=x; m_cursorY=y; }
 };
 } // namespace ppg

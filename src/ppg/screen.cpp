@@ -29,7 +29,7 @@ void Screen::clearOverlay() {
 	std::fill_n(g_pixelOverlay, g_screenSurface->w*g_screenSurface->h, 0xff);
 }
 
-Screen::Screen( int w, int h, const std::string &title ) throw( Exception ) : Widget( NULL ) {
+Screen::Screen( int w, int h, const std::string &title ) throw( Exception ) : Widget( NULL ), m_cursorX(0), m_cursorY(0) {
 	PPG_TEST(g_screenSurface != NULL);
 	if(!SDL_WasInit(SDL_INIT_VIDEO)) {
 		if(SDL_Init(SDL_INIT_VIDEO)==-1) {
@@ -81,6 +81,7 @@ Screen::Screen( int w, int h, const std::string &title ) throw( Exception ) : Wi
 	g_colorsF = new uint8_t[size];
 	g_colorsB = new uint8_t[size];
 	clear( ' ', dcWhite, dcBlack );
+	SDL_ShowCursor(0);
 }
 
 Screen::~Screen() throw() {
@@ -140,6 +141,12 @@ void Screen::drawThis() throw( Exception ) {
 		for ( int x = 0; x < w; x++ ) {
 			drawChar16( x, y, g_chars[x+y*w], g_dosColors[g_colorsF[x+y*w]], g_dosColors[g_colorsB[x+y*w]], true );
 		}
+	}
+	if(area().contains(m_cursorX, m_cursorY)) {
+		std::size_t ofs = m_cursorX+m_cursorY*w;
+		Uint32 c1 = g_dosColors[(g_colorsF[ofs]&7)^7];
+		Uint32 c2 = g_dosColors[(g_colorsB[ofs]&7)^7];
+		drawChar16(m_cursorX, m_cursorY, g_chars[ofs], c1, c2, true);
 	}
 	h = g_screenSurface->h;
 	w = g_screenSurface->w;
