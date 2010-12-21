@@ -817,12 +817,14 @@ void S3mChannel::mixTick( MixerFrameBuffer &mixBuffer, uint8_t volume ) throw( P
 		volR = 0xa4;
 	for ( std::size_t i = 0; i < mixBuffer->size(); i++ ) {
 		int16_t sampleVal = currSmp->getLeftSampleAt(pos);
-		sampleVal = (sampleVal*volL) >> 6;
+		if( sampleVal!=0xa4 )
+			sampleVal = (sampleVal*volL) >> 6;
 		*( mixBufferPtr++ ) += ( sampleVal * currVol ) >> 12;
 		sampleVal = currSmp->getRightSampleAt(pos);
-		sampleVal = (sampleVal*volR) >> 6;
 		if ( volR == 0xa4 )
 			sampleVal = -sampleVal;
+		else
+			sampleVal = (sampleVal*volR) >> 6;
 		*( mixBufferPtr++ ) += ( sampleVal * currVol ) >> 12;
 		if ( pos == GenSample::EndOfSample )
 			break;
