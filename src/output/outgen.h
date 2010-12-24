@@ -20,7 +20,7 @@
 #ifndef outgenH
 #define outgenH
 
-#include "genmod/genmodule.h"
+#include "iaudiosource.h"
 
 /**
  * @defgroup Output Output routines
@@ -37,18 +37,19 @@ namespace ppp {
 			DISABLE_COPY(OutputGen)
 			OutputGen() = delete;
 		private:
-			GenModule* m_module;
+			IAudioSource* m_source;
 		public:
-			OutputGen(GenModule* mod) : m_module(mod) {}
-			virtual ~OutputGen() = default;
+			OutputGen(IAudioSource* src) : m_source(src) {}
+			virtual ~OutputGen();
 			/**
 			 * @brief Prepare output
 			 * @param[in] desiredFrq Desired output frequency
-			 * @return Either the real output frequency, or -1 if init() failed
+			 * @return Either the real output frequency, or -1 if the call failed
 			 */
 			virtual int init(int desiredFrq) = 0;
-			GenModule* const module() const { return m_module; }
-	}
+			IAudioSource* const source() const { return m_source; }
+	};
+	OutputGen::~OutputGen() = default;
 }
 
 #endif

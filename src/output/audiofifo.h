@@ -29,38 +29,22 @@
 //#include <cstring>
 #include "stuff/pppexcept.h"
 #include "stuff/utils.h"
+
+#include "audiotypes.h"
+
 #include <algorithm>
-#include <vector>
 #include <memory>
-#include <deque>
 
 namespace ppp {
-	typedef int16_t BasicSample;
-	struct __attribute__((packed)) BasicSampleFrame { BasicSample left,right; };
-	typedef int32_t MixerSample;
-	struct __attribute__((packed)) MixerSampleFrame { MixerSample left,right; };
-	typedef std::shared_ptr< std::vector<BasicSampleFrame> > AudioFrameBuffer; //!< @brief Audio buffer
-	typedef std::shared_ptr< std::vector<MixerSampleFrame> > MixerFrameBuffer; //!< @brief Mixer buffer
-	typedef std::deque< AudioFrameBuffer > AudioFrameBufferQueue;
 	/**
 	 * @class AudioFifo
 	 * @ingroup Output
 	 * @brief Audio FIFO buffer
 	 */
 	class AudioFifo {
-		private:
-			/**
-			 * @brief Deny copy operator
-			 */
-			AudioFifo &operator=(const AudioFifo &) = delete;
-			/**
-			 * @brief Deny default constructor
-			 */
+			DISABLE_COPY(AudioFifo)
 			AudioFifo() = delete;
-			/**
-			 * @brief Deny copy constructor
-			 */
-			AudioFifo(const AudioFifo&) = delete;
+		private:
 			/**
 			 * @brief Adjusts volume values
 			 * @param[in,out] leftVol Left channel volume
