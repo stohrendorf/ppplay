@@ -33,7 +33,8 @@ namespace ppp {
 			DISABLE_COPY(OutputSDL)
 			OutputSDL() = delete;
 		public:
-			OutputSDL(GenModule* mod);
+			OutputSDL(IAudioSource* src);
+			virtual ~OutputSDL();
 			virtual int init(int desiredFrq);
 	};
 }

@@ -1,4 +1,5 @@
 #include "outsdl.h"
+#include "logger/logger.h"
 
 using namespace ppp;
 
@@ -6,17 +7,22 @@ static void sdlAudioCallback(void *userdata, Uint8 *stream, int len_bytes) {
 	OutputSDL* outpSdl = static_cast<OutputSDL*>(userdata);
 }
 
-OutputSDL::OutputSDL (GenModule* mod) : OutputGen(mod)
+OutputSDL::OutputSDL(IAudioSource* src) : OutputGen(src)
 {
+}
+
+OutputSDL::~OutputSDL() {
+	SDL_CloseAudio();
+	SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
 
 int OutputSDL::init (int desiredFrq) {
 	if(!SDL_WasInit(SDL_INIT_AUDIO)) {
-		if(-1==SDL_Init(SDL_INIT_AUDIO))
+		if(-1 == SDL_Init(SDL_INIT_AUDIO))
 			return -1;
 	}
 	else {
-		// in case audio was inited, shut down the callbacks
+		// in case audio was already inited, shut down the callbacks
 		SDL_CloseAudio();
 	}
 	SDL_AudioSpec *desired = new SDL_AudioSpec;
