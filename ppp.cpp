@@ -377,7 +377,8 @@ int main(int argc, char *argv[]) {
 				return EXIT_FAILURE;
 			}
 			LOG_MESSAGE_("Default Output Mode");
-			SDL_PauseAudio(0);
+			//SDL_PauseAudio(0);
+			output->play();
 			SDL_Event event;
 			while (true) {
 				if (SDL_WaitEvent(&event)) {
@@ -387,10 +388,14 @@ int main(int argc, char *argv[]) {
 								playbackStopped = true;
 								break;
 							case SDLK_SPACE:
-								if (SDL_GetAudioStatus() != SDL_AUDIO_PLAYING)
+								if(output->isPlaying())
+									output->pause();
+								else
+									output->play();
+/*								if (SDL_GetAudioStatus() != SDL_AUDIO_PLAYING)
 									SDL_PauseAudio(0);
 								else
-									SDL_PauseAudio(1);
+									SDL_PauseAudio(1);*/
 								break;
 							case SDLK_END:
 								if (!s3m->jumpNextTrack())
