@@ -192,5 +192,11 @@ void Screen::drawPixel(int x, int y, uint8_t color) {
 	g_pixelOverlay[x+y*g_screenSurface->w] = color;
 }
 
+bool Screen::onMouseMove(int x, int y) {
+	m_cursorX = x;
+	m_cursorY = y;
+    Widget::onMouseMove(x, y);
+	return true;
+}
 
 } // namespace ppg

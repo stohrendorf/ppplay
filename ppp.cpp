@@ -377,7 +377,6 @@ int main(int argc, char *argv[]) {
 				return EXIT_FAILURE;
 			}
 			LOG_MESSAGE_("Default Output Mode");
-			//SDL_PauseAudio(0);
 			output->play();
 			SDL_Event event;
 			while (true) {
@@ -392,10 +391,6 @@ int main(int argc, char *argv[]) {
 									output->pause();
 								else
 									output->play();
-/*								if (SDL_GetAudioStatus() != SDL_AUDIO_PLAYING)
-									SDL_PauseAudio(0);
-								else
-									SDL_PauseAudio(1);*/
 								break;
 							case SDLK_END:
 								if (!s3m->jumpNextTrack())
@@ -419,7 +414,7 @@ int main(int argc, char *argv[]) {
 						}
 					}
 					else if (event.type == SDL_MOUSEMOTION) {
-						dosScreen->setCursor(event.motion.x/8, event.motion.y/16);
+						dosScreen->onMouseMove(event.motion.x/8, event.motion.y/16);
 					}
 					else if (event.type == SDL_QUIT) {
 						playbackStopped = true;

@@ -217,6 +217,7 @@ class Widget {
 		 * @param[in] vp Pointer to the element to move to the top
 		 */
 		virtual void toTop(ppg::Widget* vp) throw();
+		virtual bool onMouseMove(int x, int y);
 };
 
 } // namespace ppg

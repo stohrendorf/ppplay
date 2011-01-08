@@ -51,6 +51,6 @@ class Screen : public Widget {
 		 */
 		void clearOverlay();
 		void drawPixel(int x, int y, uint8_t color);
-		void setCursor(int x, int y) { m_cursorX=x; m_cursorY=y; }
+		virtual bool onMouseMove(int x, int y);
 };
 } // namespace ppg
