@@ -244,4 +244,17 @@ void Widget::toTop(ppg::Widget* vp) throw() {
 	m_children.remove(vp);
 	m_children.push_front(vp);
 }
+
+bool Widget::onMouseMove(int x, int y) {
+	for(std::list< Widget* >::iterator it = m_children.begin(); it!=m_children.end(); it++) {
+		Widget* current = *it;
+		if(!current)
+			continue;
+		Rect currentArea = current->area();
+		if(current->onMouseMove(x+currentArea.left(), y+currentArea.top()))
+			break;
+	}
+}
+
+
 } // namespace ppg
