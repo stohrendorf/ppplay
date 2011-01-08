@@ -39,7 +39,7 @@
 #include "src/stuff/fft.h"
 
 #include "src/output/audiofifo.h"
-#include "src/output/outsdl.h"
+#include "src/output/sdlaudiooutput.h"
 
 #ifdef WITH_MP3LAME
 #	include <lame/lame.h>
@@ -203,7 +203,7 @@ static bool initAudio(void *userData) {
 	return true;
 }
 #else
-static ppp::OutputGen::Ptr output;
+static IAudioOutput::Ptr output;
 #endif
 
 #ifdef WITH_MP3LAME
@@ -371,7 +371,7 @@ int main(int argc, char *argv[]) {
 		if(!quickMp3) {
 		#endif
 			LOG_MESSAGE_("Init Audio");
-			output.reset(new ppp::OutputSDL(s3m.get()));
+			output.reset(new SDLAudioOutput(s3m.get()));
 			if (!output->init(44100)) {
 				LOG_ERROR_("Audio Init failed");
 				return EXIT_FAILURE;

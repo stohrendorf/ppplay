@@ -23,18 +23,16 @@
 #include "stuff/utils.h"
 #include "audiotypes.h"
 
-namespace ppp {
-	class IAudioSource {
-		public:
-			/**
-			 * @brief Get audio data from the source
-			 * @param[out] buffer The buffer containing the data
-			 * @param[in] requestedFrames Number of requested frames
-			 * @returns The number of frames actually returned - should be equal to @code buffer->size() @endcode
-			 */
-			virtual std::size_t getAudioData(AudioFrameBuffer& buffer, std::size_t requestedFrames) = 0;
-			virtual ~IAudioSource();
-	};
-} // namespace ppp
+class IAudioSource {
+	public:
+		/**
+		 * @brief Get audio data from the source
+		 * @param[out] buffer The buffer containing the data
+		 * @param[in] requestedFrames Number of requested frames
+		 * @returns The number of frames actually returned - should be equal to @code buffer->size() @endcode
+		 */
+		virtual std::size_t getAudioData(ppp::AudioFrameBuffer& buffer, std::size_t requestedFrames) = 0;
+		virtual ~IAudioSource();
+};
 
 #endif // IAUDIOSOURCE_H
