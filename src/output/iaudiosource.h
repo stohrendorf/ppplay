@@ -25,8 +25,6 @@
 
 namespace ppp {
 	class IAudioSource {
-			DISABLE_COPY(IAudioSource)
-			IAudioSource() = delete;
 		public:
 			/**
 			 * @brief Get audio data from the source
@@ -34,7 +32,7 @@ namespace ppp {
 			 * @param[in] requestedFrames Number of requested frames
 			 * @returns The number of frames actually returned - should be equal to @code buffer->size() @endcode
 			 */
-			virtual std::size_t getAudioData(AudioFrameBuffer& buffer, std::size_t requestedFrames);
+			virtual std::size_t getAudioData(AudioFrameBuffer& buffer, std::size_t requestedFrames) = 0;
 			virtual ~IAudioSource();
 	};
 	IAudioSource::~IAudioSource() = default;

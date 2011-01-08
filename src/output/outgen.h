@@ -21,6 +21,7 @@
 #define outgenH
 
 #include "iaudiosource.h"
+#include <memory>
 
 /**
  * @defgroup Output Output routines
@@ -39,6 +40,7 @@ namespace ppp {
 		private:
 			IAudioSource* m_source; //!< @brief The audio source
 		public:
+			typedef std::shared_ptr<OutputGen> Ptr;
 			explicit OutputGen(IAudioSource* src) : m_source(src) {}
 			virtual ~OutputGen();
 			/**
@@ -47,6 +49,9 @@ namespace ppp {
 			 * @return Either the real output frequency, or -1 if the call failed
 			 */
 			virtual int init(int desiredFrq) = 0;
+			virtual bool isPlaying() = 0;
+			virtual void play() = 0;
+			virtual void pause() = 0;
 			IAudioSource* source() const { return m_source; }
 	};
 	OutputGen::~OutputGen() = default;

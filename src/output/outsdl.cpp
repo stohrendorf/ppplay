@@ -63,3 +63,15 @@ void OutputSDL::fillFifo() {
 		m_fifo.push(buf);
 	}
 }
+
+bool OutputSDL::isPlaying() {
+	return SDL_GetAudioStatus() == SDL_AUDIO_PLAYING;
+}
+
+void OutputSDL::play() {
+	SDL_PauseAudio(0);
+}
+
+void OutputSDL::pause() {
+	SDL_PauseAudio(1);
+}

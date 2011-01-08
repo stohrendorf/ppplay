@@ -37,6 +37,9 @@ namespace ppp {
 			OutputSDL(IAudioSource* src);
 			virtual ~OutputSDL();
 			virtual int init(int desiredFrq);
+			virtual bool isPlaying();
+			virtual void play();
+			virtual void pause();
 		private:
 			static void sdlAudioCallback(void *userdata, Uint8 *stream, int len_bytes);
 			AudioFifo m_fifo;
