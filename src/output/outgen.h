@@ -47,7 +47,7 @@ namespace ppp {
 			 * @return Either the real output frequency, or -1 if the call failed
 			 */
 			virtual int init(int desiredFrq) = 0;
-			IAudioSource* const source() const { return m_source; }
+			IAudioSource* source() const { return m_source; }
 	};
 	OutputGen::~OutputGen() = default;
 }

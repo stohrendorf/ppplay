@@ -18,7 +18,6 @@
  ***************************************************************************/
 
 #include "audiofifo.h"
-//#include "genbase.h"
 
 #include <algorithm>
 
@@ -77,7 +76,14 @@ std::size_t AudioFifo::pullAll(AudioFrameBuffer& data) {
 	return pull(data, nsize);
 }
 
-std::size_t ppp::AudioFifo::pull(AudioFrameBuffer& data, std::size_t size) {
+std::size_t AudioFifo::pull(BasicSampleFrame* data, std::size_t size) {
+	AudioFrameBuffer buffer;
+	pull(buffer, size);
+	std::copy(buffer->begin(), buffer->end(), data);
+	return buffer->size();
+}
+
+std::size_t AudioFifo::pull(AudioFrameBuffer& data, std::size_t size) {
 	//LOG_DEBUG("Requested %zd frames", size);
 	if(needsData())
 		return 0;
@@ -86,6 +92,8 @@ std::size_t ppp::AudioFifo::pull(AudioFrameBuffer& data, std::size_t size) {
 		size = m_queuedFrames;
 	if(!data)
 		data.reset( new AudioFrameBuffer::element_type(size, {0,0}) );
+	if(data->size() < size)
+		data->resize(size, {0,0});
 	std::size_t copied = 0;
 	std::size_t toCopy = m_queue.front()->size();
 	while(!m_queue.empty() && size!=0) {

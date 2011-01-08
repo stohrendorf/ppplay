@@ -114,6 +114,14 @@ namespace ppp {
 			 */
 			std::size_t pull(AudioFrameBuffer &data, std::size_t size);
 			/**
+			 * @brief Copy part of the internal FIFO buffer to @a data
+			 * @param[out] data Destination buffer
+			 * @param[in] size Number of frames to copy
+			 * @return Copied frames
+			 * @details This also updates the volumes
+			 */
+			std::size_t pull(BasicSampleFrame* data, std::size_t size);
+			/**
 			 * @brief Copy part of the internal FIFO buffer to @a data without removing them from the queue
 			 * @param[out] data Destination buffer
 			 * @param[in] size Number of frames to copy

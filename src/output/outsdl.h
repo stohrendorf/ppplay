@@ -22,6 +22,7 @@
 
 #include <SDL.h>
 #include "outgen.h"
+#include "audiofifo.h"
 
 namespace ppp {
 	/**
@@ -38,6 +39,8 @@ namespace ppp {
 			virtual int init(int desiredFrq);
 		private:
 			static void sdlAudioCallback(void *userdata, Uint8 *stream, int len_bytes);
+			AudioFifo m_fifo;
+			void fillFifo();
 	};
 }
 

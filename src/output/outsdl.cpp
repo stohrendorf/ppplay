@@ -5,10 +5,15 @@ using namespace ppp;
 
 void OutputSDL::sdlAudioCallback(void *userdata, Uint8 *stream, int len_bytes) {
 	OutputSDL* outpSdl = static_cast<OutputSDL*>(userdata);
-	
+	while(len_bytes>0) {
+		outpSdl->fillFifo();
+		std::size_t copied = outpSdl->m_fifo.pull(reinterpret_cast<BasicSampleFrame*>(stream), len_bytes/sizeof(BasicSampleFrame));
+		len_bytes -= copied*sizeof(BasicSampleFrame);
+		LOG_TEST_ERROR(copied==0);
+	}
 }
 
-OutputSDL::OutputSDL(IAudioSource* src) : OutputGen(src)
+OutputSDL::OutputSDL(IAudioSource* src) : OutputGen(src), m_fifo(2048)
 {
 }
 
@@ -47,4 +52,14 @@ int OutputSDL::init(int desiredFrq) {
 	if(SDL_AudioDriverName(driverName, 1023))
 		LOG_MESSAGE("Using audio driver '%s'", driverName);
 	return desiredFrq;
+}
+
+void OutputSDL::fillFifo() {
+	while(m_fifo.needsData()) {
+		AudioFrameBuffer buf;
+		source()->getAudioData(buf, m_fifo.minFrameCount() - m_fifo.queuedLength());
+		if(buf->size()==0)
+			break;
+		m_fifo.push(buf);
+	}
 }
