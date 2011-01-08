@@ -35,6 +35,8 @@
 #include <algorithm>
 #include <memory>
 
+#include <SDL_mutex.h>
+
 namespace ppp {
 	/**
 	 * @class AudioFifo
@@ -63,6 +65,7 @@ namespace ppp {
 			std::size_t m_minFrameCount; //!< @brief Minimum number of frames the queue should contain
 			uint16_t m_volumeLeft; //!< @brief Left volume
 			uint16_t m_volumeRight; //!< @brief Right volume
+			SDL_mutex* m_queueMutex;
 		public:
 			/**
 			 * @brief Alias for "No size specified" for where a size parameter is needed
@@ -73,6 +76,7 @@ namespace ppp {
 			 * @param[in] minFrameCount Initial value for m_minFrameCount
 			 */
 			AudioFifo(std::size_t minFrameCount);
+			~AudioFifo();
 			/**
 			 * @brief Get the number of buffered frames
 			 * @return Number of buffered frames
