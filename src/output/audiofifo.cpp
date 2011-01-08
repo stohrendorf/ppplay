@@ -18,6 +18,7 @@
  ***************************************************************************/
 
 #include "audiofifo.h"
+#include "stuff/sdlmutexlocker.h"
 
 #include <algorithm>
 
@@ -25,6 +26,7 @@ using namespace ppp;
 
 void AudioFifo::calcVolume( uint16_t& leftVol, uint16_t& rightVol ) throw( PppException ) {
 	PPP_TEST( m_queuedFrames == 0 );
+	SDLMutexLocker mutexLock(m_queueMutex);
 	leftVol = rightVol = 0;
 	uint64_t leftSum = 0, rightSum = 0;
 	std::size_t totalProcessed = 0;
@@ -60,11 +62,18 @@ void AudioFifo::logify(uint16_t& leftVol, uint16_t& rightVol) throw () {
 	rightVol = tmp>0xffff?0xffff:tmp;
 }
 
-AudioFifo::AudioFifo( std::size_t frameCount ) : m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_volumeLeft(0), m_volumeRight(0) {
+AudioFifo::AudioFifo( std::size_t frameCount ) : m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_volumeLeft(0), m_volumeRight(0), m_queueMutex(NULL) {
+	m_queueMutex = SDL_CreateMutex();
 }
+
+AudioFifo::~AudioFifo() {
+	SDL_DestroyMutex(m_queueMutex);
+}
+
 
 void AudioFifo::push(const AudioFrameBuffer& data) throw(PppException) {
 	// copy, because AudioFrameBuffer is a shared_ptr that may be modified
+	SDLMutexLocker mutexLock(m_queueMutex);
 	AudioFrameBuffer cp(new AudioFrameBuffer::element_type);
 	*cp = *data;
 	m_queuedFrames += cp->size();
@@ -85,6 +94,7 @@ std::size_t AudioFifo::pull(BasicSampleFrame* data, std::size_t size) {
 
 std::size_t AudioFifo::pull(AudioFrameBuffer& data, std::size_t size) {
 	//LOG_DEBUG("Requested %zd frames", size);
+	SDLMutexLocker mutexLock(m_queueMutex);
 	if(needsData())
 		return 0;
 	calcVolume(m_volumeLeft, m_volumeRight);
@@ -121,6 +131,7 @@ std::size_t AudioFifo::pull(AudioFrameBuffer& data, std::size_t size) {
 
 std::size_t ppp::AudioFifo::copy(AudioFrameBuffer& data, std::size_t size) {
 	//LOG_DEBUG("Requested %zd frames", size);
+	SDLMutexLocker mutexLock(m_queueMutex);
 	if(needsData())
 		return 0;
 	if(size==nsize)
