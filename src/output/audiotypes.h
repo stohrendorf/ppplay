@@ -1,3 +1,6 @@
+#ifndef AUDIOTYPES_H
+#define AUDIOTYPES_H
+
 #include <vector>
 #include <deque>
 #include <memory>
@@ -11,3 +14,5 @@ namespace ppp {
 	typedef std::shared_ptr< std::vector<MixerSampleFrame> > MixerFrameBuffer; //!< @brief Mixer buffer
 	typedef std::deque< AudioFrameBuffer > AudioFrameBufferQueue;
 }
+
+#endif // AUDIOTYPES_H
