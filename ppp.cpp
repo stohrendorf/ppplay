@@ -73,8 +73,8 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 		PPP_TEST(len_bytes == 0);
 		PPP_TEST(s3m == NULL);
 		
-		if(nFrames > s3m->playbackFifo.getMinFrameCount()) {
-			LOG_MESSAGE("Adjusting FIFO buffer length from %d frames to %d frames", s3m->playbackFifo.getMinFrameCount(), nFrames);
+		if(nFrames > s3m->playbackFifo.minFrameCount()) {
+			LOG_MESSAGE("Adjusting FIFO buffer length from %d frames to %d frames", s3m->playbackFifo.minFrameCount(), nFrames);
 			s3m->playbackFifo.setMinFrameCount(nFrames);
 		}
 		
@@ -123,7 +123,7 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 			#endif
 			dosScreen->clear(' ', ppg::dcWhite, ppg::dcBlack);
 			{
-				uiMain->volBar()->shift(s3m->playbackFifo.getVolumeLeft()>>8, s3m->playbackFifo.getVolumeRight()>>8);
+				uiMain->volBar()->shift(s3m->playbackFifo.volumeLeft()>>8, s3m->playbackFifo.volumeRight()>>8);
 			}
 			int msecs = s3m->getPosition() / 441;
 			int msecslen = s3m->getLength() / 441;

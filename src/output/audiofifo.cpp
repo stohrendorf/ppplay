@@ -49,7 +49,7 @@ void AudioFifo::calcVolume( uint16_t& leftVol, uint16_t& rightVol ) throw( PppEx
 }
 
 void AudioFifo::logify(uint16_t& leftVol, uint16_t& rightVol) throw () {
-	unsigned long tmp = leftVol<<1;
+	uint32_t tmp = leftVol<<1;
 	if(tmp>0x8000) tmp = (0x8000+tmp)>>1;
 	if(tmp>0xb000) tmp = (0xb000+tmp)>>1;
 	if(tmp>0xe000) tmp = (0xe000+tmp)>>1;
@@ -61,10 +61,10 @@ void AudioFifo::logify(uint16_t& leftVol, uint16_t& rightVol) throw () {
 	rightVol = tmp>0xffff?0xffff:tmp;
 }
 
-AudioFifo::AudioFifo( const size_t frameCount ) : m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_volumeLeft(0), m_volumeRight(0) {
+AudioFifo::AudioFifo( std::size_t frameCount ) : m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_volumeLeft(0), m_volumeRight(0) {
 }
 
-void AudioFifo::feedChunk(const AudioFrameBuffer& data) throw(PppException) {
+void AudioFifo::push(const AudioFrameBuffer& data) throw(PppException) {
 	// copy, because AudioFrameBuffer is a shared_ptr that may be modified
 	AudioFrameBuffer cp(new AudioFrameBuffer::element_type);
 	*cp = *data;
@@ -73,11 +73,11 @@ void AudioFifo::feedChunk(const AudioFrameBuffer& data) throw(PppException) {
 	//LOG_DEBUG("Added %zd frames to the queue, now queued %zd frames", cp->size(), m_queuedFrames);
 }
 
-std::size_t AudioFifo::getAll(AudioFrameBuffer& data) {
-	return get(data, nsize);
+std::size_t AudioFifo::pullAll(AudioFrameBuffer& data) {
+	return pull(data, nsize);
 }
 
-std::size_t ppp::AudioFifo::get(AudioFrameBuffer& data, std::size_t size) {
+std::size_t ppp::AudioFifo::pull(AudioFrameBuffer& data, std::size_t size) {
 	//LOG_DEBUG("Requested %zd frames", size);
 	if(needsData())
 		return 0;

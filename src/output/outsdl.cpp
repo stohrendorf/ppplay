@@ -3,8 +3,9 @@
 
 using namespace ppp;
 
-static void sdlAudioCallback(void *userdata, Uint8 *stream, int len_bytes) {
+void OutputSDL::sdlAudioCallback(void *userdata, Uint8 *stream, int len_bytes) {
 	OutputSDL* outpSdl = static_cast<OutputSDL*>(userdata);
+	
 }
 
 OutputSDL::OutputSDL(IAudioSource* src) : OutputGen(src)
