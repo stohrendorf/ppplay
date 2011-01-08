@@ -37,12 +37,12 @@ namespace ppp {
 			DISABLE_COPY(OutputGen)
 			OutputGen() = delete;
 		private:
-			IAudioSource* m_source;
+			IAudioSource* m_source; //!< @brief The audio source
 		public:
-			OutputGen(IAudioSource* src) : m_source(src) {}
+			explicit OutputGen(IAudioSource* src) : m_source(src) {}
 			virtual ~OutputGen();
 			/**
-			 * @brief Prepare output
+			 * @brief Initialize output
 			 * @param[in] desiredFrq Desired output frequency
 			 * @return Either the real output frequency, or -1 if the call failed
 			 */
