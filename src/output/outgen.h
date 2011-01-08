@@ -54,7 +54,6 @@ namespace ppp {
 			virtual void pause() = 0;
 			IAudioSource* source() const { return m_source; }
 	};
-	OutputGen::~OutputGen() = default;
 }
 
 #endif

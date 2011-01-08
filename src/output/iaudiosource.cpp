@@ -19,3 +19,5 @@
 
 #include "iaudiosource.h"
 
+ppp::IAudioSource::~IAudioSource() {
+}
