@@ -95,7 +95,7 @@ void GenModule::initFifo( std::size_t nFrames ) throw( PppException ) {
 bool GenModule::getFifo( AudioFrameBuffer& buffer, std::size_t count ) throw( PppException ) {
 	if(!fillFifo())
 		return false;
-	playbackFifo.get( buffer, count );
+	playbackFifo.pull( buffer, count );
 	return true;
 }
 
@@ -105,7 +105,7 @@ bool GenModule::fillFifo() throw(PppException) {
 		getTick( td );
 		if ( !td || td->empty() )
 			return false;
-		playbackFifo.feedChunk( td );
+		playbackFifo.push( td );
 	}
 	return true;
 }
