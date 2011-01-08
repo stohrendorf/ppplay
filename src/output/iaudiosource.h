@@ -35,7 +35,6 @@ namespace ppp {
 			virtual std::size_t getAudioData(AudioFrameBuffer& buffer, std::size_t requestedFrames) = 0;
 			virtual ~IAudioSource();
 	};
-	IAudioSource::~IAudioSource() = default;
 } // namespace ppp
 
 #endif // IAUDIOSOURCE_H

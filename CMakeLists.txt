@@ -101,7 +101,7 @@ if(MINGW)
 endif()
 
 # add_dependencies(ppp logger genmod s3mmod ppg binstream phaser fifoout fft utils)
-target_link_libraries(ppp logger genmod s3mmod xmmod ppg binstream phaser fifoout fft utils)
+target_link_libraries(ppp logger genmod s3mmod xmmod ppg binstream phaser fifoout fft utils audioout)
 
 #########
 # link libraries
