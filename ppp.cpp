@@ -22,6 +22,9 @@
 
 #include "config.h"
 
+//! @todo Remove this when output code is stable/finished
+#undef WITH_MP3LAME
+
 #include <iostream>
 #include <algorithm>
 #include <boost/program_options.hpp>
@@ -36,6 +39,7 @@
 #include "src/stuff/fft.h"
 
 #include "src/output/audiofifo.h"
+#include "src/output/outsdl.h"
 
 #ifdef WITH_MP3LAME
 #	include <lame/lame.h>
@@ -60,6 +64,7 @@ static std::shared_ptr<ppg::Screen> dosScreen;
 static UIMain* uiMain;
 static std::size_t updateFrameCounter = 0;
 
+#if 0
 static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 	try {
 		ppg::Label *lb;
@@ -197,6 +202,9 @@ static bool initAudio(void *userData) {
 		LOG_MESSAGE("Using audio driver '%s'", driverName);
 	return true;
 }
+#else
+static ppp::OutputGen::Ptr output;
+#endif
 
 #ifdef WITH_MP3LAME
 static bool quickMp3 = false;
@@ -354,8 +362,8 @@ int main(int argc, char *argv[]) {
 		else
 			*l = std::string(" -=\xf0[ ") + s3m->getFileName() + " ]\xf0=- ";
 		dosScreen->show();
-		LOG_MESSAGE_("Init Fifo");
-		s3m->initFifo(ppp::FFT::fftSampleCount);
+		//LOG_MESSAGE_("Init Fifo");
+		//s3m->initFifo(ppp::FFT::fftSampleCount);
 		fftBuffer.reset( new ppp::AudioFrameBuffer::element_type );
 		fftBuffer->resize( ppp::FFT::fftSampleCount );
 		playbackStopped = false;
@@ -363,7 +371,8 @@ int main(int argc, char *argv[]) {
 		if(!quickMp3) {
 		#endif
 			LOG_MESSAGE_("Init Audio");
-			if (!initAudio(s3m.get())) {
+			output.reset(new ppp::OutputSDL(s3m.get()));
+			if (!output->init(44100)) {
 				LOG_ERROR_("Audio Init failed");
 				return EXIT_FAILURE;
 			}

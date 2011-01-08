@@ -23,6 +23,8 @@
 #include "genbase.h"
 #include "genchannel.h"
 
+#include "output/iaudiosource.h"
+
 /**
  * @file
  * @ingroup GenMod
@@ -94,7 +96,7 @@ namespace ppp {
 	 * @todo Multi-track: Reset module/channels on each new track?
 	 * @todo Multi-track: Get length of each track, not only the first one
 	 */
-	class GenModule : public ISerializable {
+	class GenModule : public ISerializable, public IAudioSource {
 			DISABLE_COPY(GenModule)
 			GenModule() = delete;
 		public:
@@ -112,7 +114,6 @@ namespace ppp {
 			bool m_multiTrack; //!< @brief @c true if module could be a multi-track one
 			GenPlaybackInfo m_playbackInfo; //!< @brief General playback info @todo Make private
 		public:
-			AudioFifo playbackFifo; //!< @brief FIFO Playback Buffer
 			/**
 			 * @brief The constructor
 			 * @param[in] frq Playback frequency, clipped to a value between 11025 and 44800
@@ -161,7 +162,7 @@ namespace ppp {
 			 * @post The caller has to free @a buf after every call with the @c delete[] operator
 			 * @note Time-critical
 			 */
-			virtual void getTick(AudioFrameBuffer &buf ) throw(PppException) = 0;
+			virtual void getTick(AudioFrameBuffer &buf) throw(PppException) = 0;
 			/**
 			 * @brief Get a tick without mixing for length calculation
 			 * @param[out] bufLen Number of sample frames in the current tick
@@ -179,23 +180,6 @@ namespace ppp {
 			 * @param[in] idx Requested channel
 			 */
 			virtual std::string getChanStatus(int16_t idx) throw() = 0;
-			/**
-			 * @brief Initialise the FIFO buffer
-			 * @param[in] nFrames Number of sample frames to allocate
-			 * @pre @c nFrames>0
-			 */
-			void initFifo(std::size_t nFrames) throw(PppException);
-			/**
-			 * @brief Read data from the FIFO buffer
-			 * @param[in,out] buffer Buffer to fill
-			 * @return @c true if there is more data available, @c false if the module is done playing
-			 * @see #initFifo
-			 * @note Time-critical
-			 * @pre Make sure you have called #initFifo
-			 * @pre @c buffer!=NULL
-			 */
-			bool getFifo(AudioFrameBuffer &buffer, std::size_t count) throw(PppException);
-			bool fillFifo() throw(PppException);
 			/**
 			 * @brief Get playback time in seconds
 			 * @return Playback time in seconds
@@ -262,6 +246,7 @@ namespace ppp {
 			virtual std::string getChanCellString(int16_t idx) throw() = 0;
 			virtual uint8_t channelCount() const = 0;
 			virtual IArchive& serialize(IArchive* data);
+			virtual std::size_t getAudioData(AudioFrameBuffer& buffer, std::size_t size);
 		protected:
 			/**
 			 * @brief Removes empty tracks from the track list and resets the orders' repeat count

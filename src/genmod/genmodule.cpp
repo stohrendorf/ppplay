@@ -61,7 +61,7 @@ IArchive* GenMultiTrack::prevState() {
 GenModule::GenModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) :
 		m_fileName(), m_title(), m_trackerInfo(), m_orders(), m_maxRepeat( maxRpt ),
 		m_playbackFrequency( clip<unsigned int>( frq, 11025, 44800 ) ), m_playedFrames( 0 ), m_tracks(),
-		m_currentTrack( 0 ), m_multiTrack( false ), m_playbackInfo(), playbackFifo( 2048 )
+		m_currentTrack( 0 ), m_multiTrack( false ), m_playbackInfo()
 {
 	PPP_TEST( maxRpt==0 );
 	m_playbackInfo.tick = m_playbackInfo.order = m_playbackInfo.pattern = 0;
@@ -82,32 +82,6 @@ IArchive& GenModule::serialize(IArchive* data) {
 		data->archive(m_orders[i].get());
 	}*/
 	return *data;
-}
-
-void GenModule::initFifo( std::size_t nFrames ) throw( PppException ) {
-	PPP_TEST( nFrames <= 0 );
-	playbackFifo.setMinFrameCount( nFrames );
-	LOG_MESSAGE( "Set FIFO length to %ld frames", nFrames );
-	/*	aPlaybackBuffer.reset(new short[nFrames*2]);
-		aPlaybackBufferSize = nFrames;*/
-}
-
-bool GenModule::getFifo( AudioFrameBuffer& buffer, std::size_t count ) throw( PppException ) {
-	if(!fillFifo())
-		return false;
-	playbackFifo.pull( buffer, count );
-	return true;
-}
-
-bool GenModule::fillFifo() throw(PppException) {
-	AudioFrameBuffer td(new AudioFrameBuffer::element_type);
-	while ( playbackFifo.needsData() ) {
-		getTick( td );
-		if ( !td || td->empty() )
-			return false;
-		playbackFifo.push( td );
-	}
-	return true;
 }
 
 std::string GenModule::getFileName() throw( PppException ) {
@@ -166,4 +140,13 @@ void GenModule::removeEmptyTracks() {
 	}*/
 	m_tracks = nTr;
 	m_multiTrack = getTrackCount() > 1;
+}
+
+std::size_t GenModule::getAudioData(AudioFrameBuffer& buffer, std::size_t size) {
+	AudioFrameBuffer tmpBuf;
+	while(buffer->size() < size) {
+		getTick(tmpBuf);
+		buffer->insert(buffer->end(), tmpBuf->begin(), tmpBuf->end());
+	}
+	return buffer->size();
 }
