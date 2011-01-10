@@ -1,6 +1,6 @@
 #include "ui_main.h"
 
-UIMain::UIMain(ppg::Widget* parent): Widget(parent)
+UIMain::UIMain(ppg::Widget* parent): Widget(parent), m_position(NULL), m_screenSep1(NULL), m_screenSep2(NULL), m_playbackInfo(NULL), m_volBar(NULL), m_chanInfos(), m_chanCells(), m_trackerInfo(NULL), m_modTitle(NULL)
 {
 	setSize(parent->area().size());
 	setPosition(0,0);

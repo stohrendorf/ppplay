@@ -36,7 +36,9 @@ class SDLAudioOutput : public IAudioOutput {
 		SDLAudioOutput(IAudioSource* src);
 		virtual ~SDLAudioOutput();
 		virtual int init(int desiredFrq);
-		virtual bool isPlaying();
+		virtual bool playing();
+		virtual bool paused();
+		virtual bool stopped();
 		virtual void play();
 		virtual void pause();
 		virtual uint16_t volumeLeft() const;

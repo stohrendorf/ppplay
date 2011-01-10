@@ -18,8 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef ppglabelH
-#define ppglabelH
+#ifndef PPGLABEL_H
+#define PPGLABEL_H
 
 #include "widget.h"
 #include <vector>
@@ -35,12 +35,12 @@ class Label : public Widget {
 		DISABLE_COPY(Label)
 	private:
 		/**
-		 * @brief Resizes #aFgColors and #aBgColors if the new text is longer than the arrays' sizes
+		 * @brief Resizes m_fgColors and m_bgColors if the new text length or the widget's width are greater than the arrays' sizes
 		 */
 		void sizeColorsToMax();
 		std::string m_text; //!< @brief The text in this label
-		std::vector<uint8_t> m_fgColors; //!< @brief Text chars' foreground colors @see PpgElement::ESC_NOCHANGE #setFgColor
-		std::vector<uint8_t> m_bgColors; //!< @brief Text chars' background colors @see PpgElement::ESC_NOCHANGE #setBgColor
+		std::vector<uint8_t> m_fgColors; //!< @brief Text chars' foreground colors
+		std::vector<uint8_t> m_bgColors; //!< @brief Text chars' background colors
 		virtual void drawThis() throw(Exception);
 	public:
 		/**
@@ -52,7 +52,7 @@ class Label : public Widget {
 		Alignment alignment; //!< @brief Label's alignment
 		/**
 		 * @brief Constructor
-		 * @param[in] name Label's unique name
+		 * @param[in] parent Parent widget
 		 * @param[in] text Initial text
 		 */
 		Label(Widget*parent, const std::string &text = std::string());
@@ -84,7 +84,7 @@ class Label : public Widget {
 		 * @return Reference to the char
 		 * @exception PpgException if @a index is out of range
 		 */
-		virtual char &operator[](std::size_t index) throw(Exception);
+		char &operator[](std::size_t index) throw(Exception);
 		/**
 		 * @brief Set's the foreground color of @a len chars from position @a pos to @a color
 		 * @param[in] pos Starting position

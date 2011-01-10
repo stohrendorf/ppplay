@@ -82,6 +82,9 @@ std::size_t AudioFifo::pullAll(AudioFrameBuffer& data) {
 std::size_t AudioFifo::pull(BasicSampleFrame* data, std::size_t size) {
 	AudioFrameBuffer buffer;
 	pull(buffer, size);
+	if(!buffer) {
+		return 0;
+	}
 	std::copy(buffer->begin(), buffer->end(), data);
 	return buffer->size();
 }

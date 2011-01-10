@@ -604,10 +604,12 @@ void S3mModule::getTick( AudioFrameBuffer &buf ) throw( PppException ) {
 		//buf->clear();
 		if ( !adjustPosition( false, false ) ) {
 			LOG_MESSAGE_( "Song end reached: adjustPosition() failed" );
+			buf.reset();
 			return;
 		}
 		if (m_orderPlaybackCounts[getPlaybackInfo().order] >= getMaxRepeat() ) {
 			LOG_MESSAGE_( "Song end reached: Maximum repeat count reached" );
+			buf.reset();
 			return;
 		}
 		// update channels...
