@@ -43,15 +43,17 @@ class IAudioOutput {
 		explicit IAudioOutput(IAudioSource* src) : m_source(src) {}
 		virtual ~IAudioOutput();
 		/**
-			* @brief Initialize output
-			* @param[in] desiredFrq Desired output frequency
-			* @return Either the real output frequency, or -1 if the call failed
-			*/
+		 * @brief Initialize output
+		 * @param[in] desiredFrq Desired output frequency
+		 * @return Either the real output frequency, or 0 if the call failed
+		 */
 		virtual int init(int desiredFrq) = 0;
 		virtual bool isPlaying() = 0;
 		virtual void play() = 0;
 		virtual void pause() = 0;
 		IAudioSource* source() const { return m_source; }
+		virtual uint16_t volumeLeft() const = 0;
+		virtual uint16_t volumeRight() const = 0;
 };
 
 #endif

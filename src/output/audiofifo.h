@@ -29,13 +29,12 @@
 //#include <cstring>
 #include "stuff/pppexcept.h"
 #include "stuff/utils.h"
+#include "stuff/mutex.h"
 
 #include "audiotypes.h"
 
 #include <algorithm>
 #include <memory>
-
-#include <SDL_mutex.h>
 
 namespace ppp {
 	/**
@@ -65,7 +64,7 @@ namespace ppp {
 			std::size_t m_minFrameCount; //!< @brief Minimum number of frames the queue should contain
 			uint16_t m_volumeLeft; //!< @brief Left volume
 			uint16_t m_volumeRight; //!< @brief Right volume
-			SDL_mutex* m_queueMutex;
+			Mutex m_queueMutex;
 		public:
 			/**
 			 * @brief Alias for "No size specified" for where a size parameter is needed

@@ -17,8 +17,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef outsdlH
-#define outsdlH
+#ifndef SDLAUDIOOUTPUT_H
+#define SDLAUDIOOUTPUT_H
 
 #include <SDL.h>
 #include "iaudiooutput.h"
@@ -39,6 +39,8 @@ class SDLAudioOutput : public IAudioOutput {
 		virtual bool isPlaying();
 		virtual void play();
 		virtual void pause();
+		virtual uint16_t volumeLeft() const;
+		virtual uint16_t volumeRight() const;
 	private:
 		static void sdlAudioCallback(void *userdata, Uint8 *stream, int len_bytes);
 		ppp::AudioFifo m_fifo;
