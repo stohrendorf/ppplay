@@ -62,7 +62,6 @@ static ppp::AudioFrameBuffer fftBuffer;
 
 static std::shared_ptr<ppg::Screen> dosScreen;
 static UIMain* uiMain;
-static std::size_t updateFrameCounter = 0;
 
 #if 0
 		ppg::Label *lb;
@@ -110,6 +109,40 @@ static std::size_t updateFrameCounter = 0;
 
 #else
 static IAudioOutput::Ptr output;
+static SDL_TimerID updateTimer = NULL;
+
+static void updateDisplay(ppp::GenModule* module) {
+	if(!module || playbackStopped)
+		return;
+	dosScreen->clear(' ', ppg::dcWhite, ppg::dcBlack);
+	uiMain->volBar()->shift(output->volumeLeft()>>8, output->volumeRight()>>8);
+	std::size_t msecs = module->getPosition() / 441;
+	std::size_t msecslen = module->getLength() / 441;
+	ppp::GenPlaybackInfo pbi = module->getPlaybackInfo();
+	ppg::Label* lb = uiMain->posLabel();
+	*lb = ppp::stringf("%3d(%3d)/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Track %d/%d",
+						pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
+						msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
+						module->getCurrentTrack() + 1, module->getTrackCount()
+						);
+	lb = uiMain->playbackInfo();
+	*lb = ppp::stringf("Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", pbi.speed, pbi.tempo, pbi.globalVolume * 100 / 0x40);
+	for (uint8_t i = 0; i < module->channelCount(); i++) {
+		if(i>=16)
+			break;
+		lb = uiMain->chanInfo(i);
+		*lb = module->getChanStatus(i);
+		lb = uiMain->chanCell(i);
+		*lb = module->getChanCellString(i);
+	}
+	//dosScreen->draw();
+}
+
+static Uint32 sdlTimerCallback(Uint32 interval, void* param) {
+	updateDisplay(static_cast<ppp::GenModule*>(param));
+	dosScreen->draw();
+	return interval;
+}
 #endif
 
 #ifdef WITH_MP3LAME
@@ -224,7 +257,7 @@ int main(int argc, char *argv[]) {
 		if(modFileName.empty())
 			return EXIT_SUCCESS;
 		LOG_MESSAGE_("Initializing SDL");
-		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
+		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER) < 0) {
 			LOG_ERROR("Could not initialize SDL: %s", SDL_GetError());
 			SDL_Quit();
 			return EXIT_FAILURE;
@@ -282,6 +315,7 @@ int main(int argc, char *argv[]) {
 				return EXIT_FAILURE;
 			}
 			LOG_MESSAGE_("Default Output Mode");
+			updateTimer = SDL_AddTimer(1000/30, sdlTimerCallback, s3m.get());
 			output->play();
 			SDL_Event event;
 			while (true) {
@@ -372,7 +406,9 @@ int main(int argc, char *argv[]) {
 				if (playbackStopped)
 					break;
 			}
-			SDL_PauseAudio(1);
+			output->pause();
+			SDL_RemoveTimer(updateTimer);
+			updateTimer = NULL;
 		#ifdef WITH_MP3LAME
 		}
 		else {// if(mp3File.is_open()) { // quickMp3
