@@ -30,20 +30,16 @@ void AudioFifo::calcVolume( uint16_t& leftVol, uint16_t& rightVol ) throw( PppEx
 	leftVol = rightVol = 0;
 	uint64_t leftSum = 0, rightSum = 0;
 	std::size_t totalProcessed = 0;
-	std::for_each(
-		m_queue.begin(), m_queue.end(),
-		[&](AudioFrameBuffer buf) {
-			if(totalProcessed>m_minFrameCount)
-				return;
-			BasicSample *bPtr = &buf->front().left;
-			std::size_t len = buf->size();
-			for ( std::size_t i = 0; i < len; i++ ) {
-				leftSum  += abs( *( bPtr++ ) );
-				rightSum += abs( *( bPtr++ ) );
-			}
-			totalProcessed+=len;
+	for(AudioFrameBufferQueue::iterator it=m_queue.begin(); it!=m_queue.end(); it++) {
+		const AudioFrameBuffer& buf = *it;
+		const BasicSample* bPtr = &buf->front().left;
+		std::size_t bLen = buf->size();
+		for(std::size_t i=0; i<bLen; i++) {
+			leftSum  += abs(*(bPtr++));
+			rightSum += abs(*(bPtr++));
 		}
-	);
+		totalProcessed += bLen;
+	}
 	leftVol = ( leftSum << 2 ) / totalProcessed;
 	rightVol = ( rightSum << 2 ) / totalProcessed;
 	logify(leftVol,rightVol);
