@@ -25,7 +25,7 @@ SDLAudioOutput::~SDLAudioOutput() {
 int SDLAudioOutput::init(int desiredFrq) {
 	if(!SDL_WasInit(SDL_INIT_AUDIO)) {
 		if(-1 == SDL_Init(SDL_INIT_AUDIO))
-			return -1;
+			return 0;
 	}
 	else {
 		// in case audio was already inited, shut down the callbacks
@@ -41,7 +41,7 @@ int SDLAudioOutput::init(int desiredFrq) {
 	desired->userdata = this;
 	if (SDL_OpenAudio(desired.get(), obtained.get()) < 0) {
 		LOG_ERROR("Couldn't open audio: %s", SDL_GetError());
-		return -1;
+		return 0;
 	}
 	LOG_TEST_ERROR(desired->freq != obtained->freq);
 	LOG_TEST_ERROR(desired->channels != obtained->channels);
@@ -74,4 +74,12 @@ void SDLAudioOutput::play() {
 
 void SDLAudioOutput::pause() {
 	SDL_PauseAudio(1);
+}
+
+uint16_t SDLAudioOutput::volumeLeft() const {
+	return m_fifo.volumeLeft();
+}
+
+uint16_t SDLAudioOutput::volumeRight() const {
+	return m_fifo.volumeRight();
 }
