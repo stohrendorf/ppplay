@@ -65,8 +65,6 @@ static UIMain* uiMain;
 static std::size_t updateFrameCounter = 0;
 
 #if 0
-static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
-	try {
 		ppg::Label *lb;
 		ppp::GenModule *s3m = NULL;
 		int nFrames = len_bytes / sizeof(ppp::BasicSampleFrame);
@@ -74,58 +72,16 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 		if ((s3m == NULL) || playbackStopped) {
 			return;
 		}
-		PPP_TEST(stream == NULL);
-		PPP_TEST(len_bytes == 0);
 		PPP_TEST(s3m == NULL);
 		
 		if(nFrames > s3m->playbackFifo.minFrameCount()) {
 			LOG_MESSAGE("Adjusting FIFO buffer length from %d frames to %d frames", s3m->playbackFifo.minFrameCount(), nFrames);
 			s3m->playbackFifo.setMinFrameCount(nFrames);
 		}
-		
-		std::fill_n(stream, len_bytes, 0);
-		if (!s3m->fillFifo()) {
-			LOG_MESSAGE_("getFifo failed");
-			if (!s3m->jumpNextTrack()) {
-				SDL_Event x;
-				x.type = SDL_KEYDOWN;
-				x.key.keysym.sym = SDLK_ESCAPE;
-				SDL_PushEvent(&x);
-				playbackStopped = true;
-				LOG_MESSAGE_("jumpNextTrack failed");
-				return;
-			}
-			else if (!s3m->fillFifo()) {
-				SDL_Event x;
-				x.type = SDL_KEYDOWN;
-				x.key.keysym.sym = SDLK_ESCAPE;
-				SDL_PushEvent(&x);
-				playbackStopped = true;
-				LOG_MESSAGE_("getFifo failed");
-				return;
-			}
-		}
-		s3m->playbackFifo.copy(fftBuffer, ppp::FFT::fftSampleCount);
-		ppp::AudioFrameBuffer frameBuffer;
-		s3m->getFifo(frameBuffer, nFrames);
 		updateFrameCounter += nFrames;
 		// TODO make this non-magic...
 		if (updateFrameCounter >= (44100/50)) {
 			updateFrameCounter = 0;
-			#ifdef WITH_MP3LAME
-			if (mp3File.is_open()) {
-				int res = lame_encode_buffer_interleaved(lgf, &frameBuffer->front().left, nFrames*2, mp3Buffer, BUFFERSIZE);
-				if (res < 0) {
-					if (res == -1)
-						LOG_ERROR_("Lame Encoding Buffer too small!");
-					else
-						LOG_ERROR_("Unknown Lame Error.");
-				}
-				else {
-					mp3File.write(reinterpret_cast<char*>(mp3Buffer), res);
-				}
-			}
-			#endif
 			dosScreen->clear(' ', ppg::dcWhite, ppg::dcBlack);
 			{
 				uiMain->volBar()->shift(s3m->playbackFifo.volumeLeft()>>8, s3m->playbackFifo.volumeRight()>>8);
@@ -149,59 +105,9 @@ static void my_audio_callback(void *userdata, Uint8 *stream, int len_bytes) {
 				lb = uiMain->chanCell(i);
 				*lb = s3m->getChanCellString(i);
 			}
-// 				dosScreen->draw();
-			// $$$$$
-			{
-				static SDL_Event x;
-				x.type = SDL_USEREVENT;
-				x.user.code = 1;
-				SDL_PushEvent(&x);
-			}
+				dosScreen->draw();
 		}
-		LOG_TEST_WARN(len_bytes != nFrames*sizeof(ppp::BasicSampleFrame));
-		std::copy(frameBuffer->begin(), frameBuffer->begin()+nFrames, reinterpret_cast<ppp::BasicSampleFrame*>(stream));
-	}
-	catch (PppException &e) {
-		LOG_ERROR("Audio Callback: %s", e.what());
-		SDL_Event x;
-		x.type = SDL_KEYDOWN;
-		x.key.keysym.sym = SDLK_ESCAPE;
-		SDL_PushEvent(&x);
-		playbackStopped = true;
-	}
-	catch (ppg::Exception &e) {
-		LOG_ERROR("Audio Callback: %s", e.what());
-		SDL_Event x;
-		x.type = SDL_KEYDOWN;
-		x.key.keysym.sym = SDLK_ESCAPE;
-		SDL_PushEvent(&x);
-		playbackStopped = true;
-	}
-}
 
-static bool initAudio(void *userData) {
-	SDL_AudioSpec *desired = new SDL_AudioSpec;
-	SDL_AudioSpec *obtained = new SDL_AudioSpec;
-	desired->freq = 44100;
-	desired->channels = 2;
-	desired->format = AUDIO_S16LSB;
-	desired->samples = SAMPLECOUNT;
-	desired->callback = my_audio_callback;
-	desired->userdata = userData;
-	if (SDL_OpenAudio(desired, obtained) < 0) {
-		LOG_ERROR("Couldn't open audio: %s", SDL_GetError());
-		return false;
-	}
-	LOG_TEST_ERROR(desired->freq != obtained->freq);
-	LOG_TEST_ERROR(desired->channels != obtained->channels);
-	LOG_TEST_ERROR(desired->format != obtained->format);
-	LOG_TEST_WARN(desired->samples != obtained->samples);
-	delete desired;
-	char driverName[1024];
-	if(SDL_AudioDriverName(driverName, 1023))
-		LOG_MESSAGE("Using audio driver '%s'", driverName);
-	return true;
-}
 #else
 static IAudioOutput::Ptr output;
 #endif
@@ -210,9 +116,8 @@ static IAudioOutput::Ptr output;
 static bool quickMp3 = false;
 #endif
 
-namespace bpo = boost::program_options;
-using namespace bpo;
 static std::string parseCmdLine(int argc, char *argv[]) {
+	namespace bpo = boost::program_options;
     bpo::options_description genOpts("General Options");
     genOpts.add_options()
             ("help,h","Shows this help and exits")
