@@ -18,12 +18,12 @@ class Screen : public Widget {
 		 * @param[in] background Background color
 		 * @param[in] opaque Set to @c false to draw a transparent char
 		 */
-		void drawChar8(int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque = true) throw();
+		void drawChar8(int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque = true) throw();
 		/**
 		 * @copydoc PpgScreen::drawChar8
 		 * @brief Draw an 8x16 char
 		 */
-		void drawChar16(int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque = true) throw();
+		void drawChar16(int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque = true) throw();
 		virtual void drawThis() throw(Exception);
 		int m_cursorX;
 		int m_cursorY;
@@ -34,7 +34,7 @@ class Screen : public Widget {
 		 * @param[in] h Height in characters
 		 * @param[in] title Title of the screen
 		 */
-		Screen(const int w, const int h, const std::string& title) throw(Exception);
+		Screen(int w, int h, const std::string& title) throw(Exception);
 		virtual ~Screen() throw();
 		/**
 		 * @brief Clear the screen

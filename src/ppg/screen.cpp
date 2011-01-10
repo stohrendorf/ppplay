@@ -44,6 +44,8 @@ Screen::Screen( int w, int h, const std::string &title ) throw( Exception ) : Wi
 			bestBpp = info->vfmt->BitsPerPixel;
 		if(info->hw_available)
 			bestFlags |= SDL_HWSURFACE;
+		else
+			bestFlags |= SDL_SWSURFACE;
 	}
 	g_screenSurface = SDL_SetVideoMode( w * 8, h * 16, bestBpp, bestFlags );
 	if ( !g_screenSurface ) {
@@ -97,7 +99,7 @@ Screen::~Screen() throw() {
 
 #include "pfonts.inc"
 
-void Screen::drawChar8( int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque ) throw() {
+void Screen::drawChar8( int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque ) throw() {
 	x <<= 3;
 	y <<= 3;
 	for ( unsigned char py = 0; py < 8; py++ ) {
@@ -110,7 +112,7 @@ void Screen::drawChar8( int x, int y, uint8_t c, Uint32 foreground, Uint32 backg
 	}
 }
 
-void Screen::drawChar16( int x, int y, uint8_t c, Uint32 foreground, Uint32 background, bool opaque ) throw() {
+void Screen::drawChar16( int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque ) throw() {
 	x <<= 3;
 	y <<= 4;
 	for ( unsigned char py = 0; py < 16; py++ ) {
