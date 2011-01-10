@@ -318,7 +318,7 @@ int main(int argc, char *argv[]) {
 			updateTimer = SDL_AddTimer(1000/30, sdlTimerCallback, s3m.get());
 			output->play();
 			SDL_Event event;
-			while (true) {
+			while (!output->stopped() && !playbackStopped) {
 				if (SDL_WaitEvent(&event)) {
 					if(event.type == SDL_KEYDOWN) {
 						switch(event.key.keysym.sym) {
@@ -326,9 +326,9 @@ int main(int argc, char *argv[]) {
 								playbackStopped = true;
 								break;
 							case SDLK_SPACE:
-								if(output->isPlaying())
+								if(output->playing())
 									output->pause();
-								else
+								else if(output->paused())
 									output->play();
 								break;
 							case SDLK_END:
@@ -403,8 +403,6 @@ int main(int argc, char *argv[]) {
 						dosScreen->draw();
 					}
 				}
-				if (playbackStopped)
-					break;
 			}
 			output->pause();
 			SDL_RemoveTimer(updateTimer);

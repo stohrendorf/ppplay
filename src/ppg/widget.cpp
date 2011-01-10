@@ -89,7 +89,7 @@ Widget::Widget(Widget* parent) :
 Widget::~Widget() throw() {
 	if(m_parent)
 		m_parent->m_children.remove(this);
-	std::list<Widget*> backup = m_children;
+	Widget::List backup = m_children;
 	std::for_each(
 		backup.begin(),
 		backup.end(),
@@ -150,7 +150,7 @@ void Widget::draw() throw(Exception) {
 	if (!isVisible())
 		return;
 	// draw from bottom to top so that top elements are drawn over bottom ones
-	for(std::list<Widget*>::reverse_iterator revIt = m_children.rbegin(); revIt!=m_children.rend(); revIt++) {
+	for(Widget::List::reverse_iterator revIt = m_children.rbegin(); revIt!=m_children.rend(); revIt++) {
 		Widget* w = *revIt;
 		if( !w->isVisible() )
 			continue;
@@ -187,7 +187,7 @@ void Widget::drawChar(int x, int y, char c) throw() {
 	m_parent->drawChar(x, y, c);
 }
 
-void Widget::drawFgColor(int x, int y, unsigned char c) throw() {
+void Widget::drawFgColor(int x, int y, uint8_t c) throw() {
 	if(!m_parent)
 		return;
 	mapToParent(&x, &y);
@@ -196,7 +196,7 @@ void Widget::drawFgColor(int x, int y, unsigned char c) throw() {
 	m_parent->drawFgColor(x, y, c);
 }
 
-void Widget::drawBgColor(int x, int y, unsigned char c) throw() {
+void Widget::drawBgColor(int x, int y, uint8_t c) throw() {
 	if(!m_parent)
 		return;
 	mapToParent(&x, &y);
@@ -246,14 +246,15 @@ void Widget::toTop(ppg::Widget* vp) throw() {
 }
 
 bool Widget::onMouseMove(int x, int y) {
-	for(std::list< Widget* >::iterator it = m_children.begin(); it!=m_children.end(); it++) {
+	for(Widget::List::iterator it = m_children.begin(); it!=m_children.end(); it++) {
 		Widget* current = *it;
 		if(!current)
 			continue;
 		Rect currentArea = current->area();
-		if(current->onMouseMove(x+currentArea.left(), y+currentArea.top()))
-			break;
+		if(current->onMouseMove(x-currentArea.left(), y-currentArea.top()))
+			return true;
 	}
+	return false;
 }
 
 

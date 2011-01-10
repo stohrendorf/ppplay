@@ -18,8 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef ppgwidgetH
-#define ppgwidgetH
+#ifndef PPGWIDGET_H
+#define PPGWIDGET_H
 
 #include "ppgexcept.h"
 #include "stuff/utils.h"
@@ -86,28 +86,30 @@ class Rect {
  */
 class Widget {
 		DISABLE_COPY(Widget)
+	public:
+		typedef std::list<Widget*> List; //!< @brief List of widgets
 	private:
 		bool m_visible; //!< @brief @c false if this widget and it's children should not be drawn
 		Widget *m_parent; //!< @brief Pointer to the parent widget, or @c NULL if it's the top widget
-		Rect m_area;
-		std::list<Widget*> m_children; //!< @brief Children within this container
+		Rect m_area; //!< @brief Area of this widget within the parent's space
+		List m_children; //!< @brief Children within this container
 		virtual void drawThis() throw(Exception) = 0; //!< @brief Internal drawing method, called by PppWidet::draw() @see draw()
 	public:
 		/**
-		* @brief Value that marks a non-changing color
+		 * @brief Value that marks a non-changing color
 		 */
 		static const int ESC_NOCHANGE = 0xff;
 		/**
 		 * @brief Constructor
-		 * @param[in] name Name of this widget
+		 * @param[in] parent Parent widget
 		 */
 		explicit Widget(Widget* parent);
 		/**
-		 * @brief Destructor. No operation.
+		 * @brief Destructor. Deletes all children.
 		 */
 		virtual ~Widget() throw();
 		/**
-		 * @brief Calls ppg::Widget::drawThis(), but only when ppg::Widget::aVisible is @c true
+		 * @brief Calls ppg::Widget::drawThis(), but only when ppg::Widget::m_visible is @c true
 		 */
 		void draw() throw(Exception);
 		/**
@@ -127,7 +129,7 @@ class Widget {
 		virtual void drawChar(int x, int y, char c) throw();
 		/**
 		 * @brief Is this widget visible?
-		 * @return ppg::Widget::aVisible
+		 * @return ppg::Widget::m_visible
 		 */
 		bool isVisible() const throw();
 		/**
@@ -136,60 +138,69 @@ class Widget {
 		 * @param[in] y Top position
 		 * @param[in] c Dos Color Value
 		 */
-		virtual void drawFgColor(int x, int y, unsigned char c) throw();
+		virtual void drawFgColor(int x, int y, uint8_t c) throw();
 		/**
 		 * @brief Sets the background color relative to the widget's position
 		 * @param[in] x Left position
 		 * @param[in] y Top position
 		 * @param[in] c Dos Color Value
 		 */
-		virtual void drawBgColor(int x, int y, unsigned char c) throw();
+		virtual void drawBgColor(int x, int y, uint8_t c) throw();
 		/**
-		 * @brief Sets ppg::Widget::aLeft, adjusts PpgWidget::aRight
+		 * @brief Sets the widget's left position
 		 * @param[in] x Left position
 		 * @param[in] absolute Set to @c true to calculate the position relative to the top parent widget
 		 * @return New left position
 		 */
 		virtual int setLeft(int x, bool absolute = false) throw();
 		/**
-		 * @brief Sets PpgWidget::aTop, adjusts PpgWidget::aBottom
+		 * @brief Sets the widget's top position
 		 * @param[in] y Top position
 		 * @param[in] absolute Set to @c true to calculate the position relative to the top parent widget
 		 * @return New top position
 		 */
 		virtual int setTop(int y, bool absolute = false) throw();
 		/**
-		 * @brief Sets PpgWidget::aLeft and PpgWidget::aTop, adjusts PpgWidget::aRight and PpgWidget::aBottom
+		 * @brief Sets the widget's position
 		 * @param[in] x Left position
 		 * @param[in] y Top position
 		 * @param[in] absolute Set to @c true to calculate the position relative to the top parent widget
-		 * @return @c false if nothing happened (no changes in PpgWidget::aLeft or PpgWidget::aTop)
-		 * @warning The returned value is (in most cases) not valid if @a absolute is @c true
+		 * @return @c false if the position did not change
 		 */
 		virtual bool setPosition(int x, int y, bool absolute = false) throw();
+		/**
+		 * @brief Sets the widget's position
+		 * @param[in] pos Position
+		 * @param[in] absolute Set to @c true to calculate the position relative to the top parent widget
+		 * @return @c false if the position did not change
+		 */
 		virtual bool setPosition(const Point& pos, bool absolute = false);
 		/**
-		 * @brief Adjusts PpgWidget::aRight
+		 * @brief Sets the widget's width
 		 * @param[in] w Wanted width
 		 * @return New width
 		 * @exception PpgException is thrown if @c w\<=0
 		 */
 		virtual int setWidth(int w) throw(Exception);
 		/**
-		 * @brief Adjusts PpgWidget::aBottom
+		 * @brief Sets the widget's height
 		 * @param[in] h Wanted height
 		 * @return New height
 		 * @exception PpgException is thrown if @c h\<=0
 		 */
 		virtual int setHeight(int h) throw(Exception);
 		/**
-		 * @brief Adjusts PpgWidget::aRight and PpgWidget::aBottom
+		 * @brief Sets the widget's size
 		 * @param[in] w Width
 		 * @param[in] h Height
-		 * @return @c false if nothing happened (no changes in width and height)
-		 * @exception PpgException See PpgWidget::setWidth and PpgWidget::setHeight
+		 * @return @c false if nothing changed
 		 */
 		virtual bool setSize(int w, int h) throw(Exception);
+		/**
+		 * @brief Sets the widget's size
+		 * @param[in] pt Size
+		 * @return @c false if nothing changed
+		 */
 		virtual bool setSize(const Point& pt) throw(Exception);
 		Rect area() const;
 		Rect& area();
@@ -204,6 +215,10 @@ class Widget {
 		 * @param[in,out] y Top coordinate
 		 */
 		virtual void mapToParent(int *x, int *y) const;
+		/**
+		 * @brief Map widget's coordinates to the parent ones
+		 * @param[in,out] pt Coordinates to map
+		 */
 		virtual void mapToParent(Point* pt) const;
 		/**
 		 * @brief Map widget's coordinates to the top parent ones
@@ -211,12 +226,25 @@ class Widget {
 		 * @param[in,out] y Top coordinate
 		 */
 		virtual void mapToAbsolute(int *x, int *y) const;
+		/**
+		 * @brief Map widget's coordinates to the top parent ones
+		 * @param[in,out] pt Coordinates to map
+		 */
 		virtual void mapToAbsolute(Point* pt) const;
 		/**
 		 * @brief Move an element to the top
 		 * @param[in] vp Pointer to the element to move to the top
 		 */
-		virtual void toTop(ppg::Widget* vp) throw();
+		virtual void toTop(Widget* vp) throw();
+		/**
+		 * @brief Mouse movement event handler
+		 * @param[in] x X coordinate
+		 * @param[in] y Y coordinate
+		 * @return @c true if the event was handled
+		 * @note Coordinates are relative to the parent's ones
+		 * @details
+		 * The default implementation calls the children's event handlers
+		 */
 		virtual bool onMouseMove(int x, int y);
 };
 

@@ -48,7 +48,9 @@ class IAudioOutput {
 		 * @return Either the real output frequency, or 0 if the call failed
 		 */
 		virtual int init(int desiredFrq) = 0;
-		virtual bool isPlaying() = 0;
+		virtual bool playing() = 0;
+		virtual bool paused() = 0;
+		virtual bool stopped() = 0;
 		virtual void play() = 0;
 		virtual void pause() = 0;
 		IAudioSource* source() const { return m_source; }

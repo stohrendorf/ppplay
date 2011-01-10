@@ -23,8 +23,8 @@
  * @brief PeePeeGUI Classes
  */
 
-#ifndef ppgH
-#define ppgH
+#ifndef PPG_H
+#define PPG_H
 
 #include <string>
 #include <memory>
@@ -54,7 +54,6 @@ class StereoPeakBar : public Label {
 	private:
 		std::vector<int> m_interArrL; //!< @brief Left bar interpolation array
 		std::vector<int> m_interArrR; //!< @brief Right bar interpolation array
-		//int m_interLen; //!< @brief Interpolation array size
 		int m_max; //!< @brief Maximum input values @see shift
 		int m_barLength; //!< @brief Length of a half bar
 		bool m_showPeak; //!< @brief If @c true, the bar shows peak values
@@ -65,7 +64,7 @@ class StereoPeakBar : public Label {
 	public:
 		/**
 		 * @brief Constructor
-		 * @param[in] name Unique name
+		 * @param[in] parent Parent widget
 		 * @param[in] width Width of each bar
 		 * @param[in] max Maximum input value
 		 * @param[in] interLen Interpolation length
@@ -73,7 +72,7 @@ class StereoPeakBar : public Label {
 		 * @pre @c width>=8
 		 * @pre @c interLen>=1
 		 */
-		StereoPeakBar(Widget*parent, int width, int max, int interLen, bool showPeak) throw(Exception);
+		StereoPeakBar(Widget* parent, int width, int max, int interLen, bool showPeak) throw(Exception);
 		/**
 		 * @brief Destructor
 		 */
@@ -92,13 +91,13 @@ class StereoPeakBar : public Label {
 		 */
 		void shiftFrac(float lval, float rval) throw(Exception);
 		/**
-		 * @brief Get the right value
-		 * @return The right value
+		 * @brief Get the left value
+		 * @return The left value
 		 */
 		int getValLeft() const throw();
 		/**
-		 * @brief Get the left value
-		 * @return The left value
+		 * @brief Get the right value
+		 * @return The right value
 		 */
 		int getValRight() const throw();
 };

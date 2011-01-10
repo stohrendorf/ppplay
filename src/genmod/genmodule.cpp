@@ -145,9 +145,11 @@ void GenModule::removeEmptyTracks() {
 std::size_t GenModule::getAudioData(AudioFrameBuffer& buffer, std::size_t size) {
 	if(!buffer)
 		buffer.reset(new AudioFrameBuffer::element_type);
-	AudioFrameBuffer tmpBuf;
 	while(buffer->size() < size) {
+		AudioFrameBuffer tmpBuf;
 		getTick(tmpBuf);
+		if(!tmpBuf || tmpBuf->size()==0)
+			return 0;
 		buffer->insert(buffer->end(), tmpBuf->begin(), tmpBuf->end());
 	}
 	return buffer->size();

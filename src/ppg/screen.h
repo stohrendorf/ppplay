@@ -1,3 +1,6 @@
+#ifndef PPGSCREEN_H
+#define PPGSCREEN_H
+
 #include "widget.h"
 
 namespace ppg {
@@ -13,20 +16,20 @@ class Screen : public Widget {
 		 * @brief Draw an 8x8 char
 		 * @param[in] x Left position
 		 * @param[in] y Top position
-		 * @param[in] c Char to drawBgColor
+		 * @param[in] c Char to draw
 		 * @param[in] foreground Foreground color
 		 * @param[in] background Background color
 		 * @param[in] opaque Set to @c false to draw a transparent char
 		 */
 		void drawChar8(int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque = true) throw();
 		/**
-		 * @copydoc PpgScreen::drawChar8
+		 * @copydoc ppg::Screen::drawChar8
 		 * @brief Draw an 8x16 char
 		 */
 		void drawChar16(int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque = true) throw();
 		virtual void drawThis() throw(Exception);
-		int m_cursorX;
-		int m_cursorY;
+		int m_cursorX; //!< @brief Cursor X position
+		int m_cursorY; //!< @brief Cursor Y position
 	public:
 		/**
 		 * @brief Create a new virtual DOS screen
@@ -50,7 +53,15 @@ class Screen : public Widget {
 		 * @brief Clear the pixel overlay (make it fully transparent)
 		 */
 		void clearOverlay();
+		/**
+		 * @brief Draw a pixel on the overlay
+		 * @param[in] x X coordinate
+		 * @param[in] y Y coordinate
+		 * @param[in] color DOS Color of the pixel
+		 */
 		void drawPixel(int x, int y, uint8_t color);
 		virtual bool onMouseMove(int x, int y);
 };
 } // namespace ppg
+
+#endif

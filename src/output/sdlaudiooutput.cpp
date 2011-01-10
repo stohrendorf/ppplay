@@ -8,8 +8,9 @@ void SDLAudioOutput::sdlAudioCallback(void *userdata, Uint8 *stream, int len_byt
 	while(len_bytes>0) {
 		outpSdl->fillFifo();
 		std::size_t copied = outpSdl->m_fifo.pull(reinterpret_cast<BasicSampleFrame*>(stream), len_bytes/sizeof(BasicSampleFrame));
+		if(copied==0)
+			break;
 		len_bytes -= copied*sizeof(BasicSampleFrame);
-		LOG_TEST_ERROR(copied==0);
 	}
 }
 
@@ -57,15 +58,23 @@ int SDLAudioOutput::init(int desiredFrq) {
 void SDLAudioOutput::fillFifo() {
 	while(m_fifo.needsData()) {
 		AudioFrameBuffer buf;
-		source()->getAudioData(buf, m_fifo.minFrameCount() - m_fifo.queuedLength());
-		if(buf->size()==0)
+		if(0 == source()->getAudioData(buf, m_fifo.minFrameCount() - m_fifo.queuedLength())) {
+			SDL_CloseAudio();
+			//SDL_QuitSubSystem(SDL_INIT_AUDIO);
 			break;
+		}
 		m_fifo.push(buf);
 	}
 }
 
-bool SDLAudioOutput::isPlaying() {
+bool SDLAudioOutput::playing() {
 	return SDL_GetAudioStatus() == SDL_AUDIO_PLAYING;
+}
+bool SDLAudioOutput::paused() {
+	return SDL_GetAudioStatus() == SDL_AUDIO_PAUSED;
+}
+bool SDLAudioOutput::stopped() {
+	return SDL_GetAudioStatus() == SDL_AUDIO_STOPPED;
 }
 
 void SDLAudioOutput::play() {
