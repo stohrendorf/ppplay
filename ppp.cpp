@@ -57,7 +57,6 @@ static unsigned char mp3Buffer[BUFFERSIZE];
 static std::ofstream mp3File;
 #endif
 
-static volatile bool playbackStopped = true;
 static ppp::AudioFrameBuffer fftBuffer;
 
 static std::shared_ptr<ppg::Screen> dosScreen;
@@ -111,8 +110,8 @@ static UIMain* uiMain;
 static IAudioOutput::Ptr output;
 static SDL_TimerID updateTimer = NULL;
 
-static void updateDisplay(ppp::GenModule* module) {
-	if(!module || playbackStopped)
+static void updateDisplay(ppp::GenModule::Ptr& module) {
+	if(!module || output->stopped())
 		return;
 	dosScreen->clear(' ', ppg::dcWhite, ppg::dcBlack);
 	uiMain->volBar()->shift(output->volumeLeft()>>8, output->volumeRight()>>8);
@@ -139,7 +138,7 @@ static void updateDisplay(ppp::GenModule* module) {
 }
 
 static Uint32 sdlTimerCallback(Uint32 interval, void* param) {
-	updateDisplay(static_cast<ppp::GenModule*>(param));
+	updateDisplay(*static_cast<ppp::GenModule::Ptr*>(param));
 	dosScreen->draw();
 	return interval;
 }
@@ -304,7 +303,6 @@ int main(int argc, char *argv[]) {
 		//s3m->initFifo(ppp::FFT::fftSampleCount);
 		fftBuffer.reset( new ppp::AudioFrameBuffer::element_type );
 		fftBuffer->resize( ppp::FFT::fftSampleCount );
-		playbackStopped = false;
 		#ifdef WITH_MP3LAME
 		if(!quickMp3) {
 		#endif
@@ -315,15 +313,15 @@ int main(int argc, char *argv[]) {
 				return EXIT_FAILURE;
 			}
 			LOG_MESSAGE_("Default Output Mode");
-			updateTimer = SDL_AddTimer(1000/30, sdlTimerCallback, s3m.get());
+			updateTimer = SDL_AddTimer(1000/30, sdlTimerCallback, &s3m);
 			output->play();
 			SDL_Event event;
-			while (!output->stopped() && !playbackStopped) {
-				if (SDL_WaitEvent(&event)) {
+			while (!output->stopped()) {
+				if (SDL_PollEvent(&event)) {
 					if(event.type == SDL_KEYDOWN) {
 						switch(event.key.keysym.sym) {
 							case SDLK_ESCAPE:
-								playbackStopped = true;
+								output->stop();
 								break;
 							case SDLK_SPACE:
 								if(output->playing())
@@ -333,7 +331,7 @@ int main(int argc, char *argv[]) {
 								break;
 							case SDLK_END:
 								if (!s3m->jumpNextTrack())
-									playbackStopped = true;
+									output->stop();
 								break;
 							case SDLK_HOME:
 								s3m->jumpPrevTrack();
@@ -342,7 +340,7 @@ int main(int argc, char *argv[]) {
 								if (!s3m->jumpNextOrder()) {
 									// if jumpNextOrder fails, maybe jumpNextTrack works...
 									if (!s3m->jumpNextTrack())
-										playbackStopped = true;
+										output->stop();
 								}
 								break;
 							case SDLK_PAGEUP:
@@ -356,7 +354,7 @@ int main(int argc, char *argv[]) {
 						dosScreen->onMouseMove(event.motion.x/8, event.motion.y/16);
 					}
 					else if (event.type == SDL_QUIT) {
-						playbackStopped = true;
+						output->stop();
 					}
 					else if (event.type == SDL_USEREVENT && event.user.code == 1) {
 						dosScreen->clearOverlay();
@@ -404,9 +402,10 @@ int main(int argc, char *argv[]) {
 					}
 				}
 			}
-			output->pause();
 			SDL_RemoveTimer(updateTimer);
 			updateTimer = NULL;
+			if(!output->stopped())
+				output->stop();
 		#ifdef WITH_MP3LAME
 		}
 		else {// if(mp3File.is_open()) { // quickMp3
@@ -467,7 +466,7 @@ int main(int argc, char *argv[]) {
 			mp3File.close();
 		}
 		#endif
-		while(SDL_GetAudioStatus()==SDL_AUDIO_PLAYING)
+		while(output->playing())
 			;
 		SDL_Quit();
 	}

@@ -36,17 +36,19 @@ class SDLAudioOutput : public IAudioOutput {
 		SDLAudioOutput(IAudioSource* src);
 		virtual ~SDLAudioOutput();
 		virtual int init(int desiredFrq);
-		virtual bool playing();
-		virtual bool paused();
-		virtual bool stopped();
+		virtual bool playing() volatile;
+		virtual bool paused() volatile;
+		virtual bool stopped() volatile;
 		virtual void play();
 		virtual void pause();
+		virtual void stop();
 		virtual uint16_t volumeLeft() const;
 		virtual uint16_t volumeRight() const;
 	private:
 		static void sdlAudioCallback(void *userdata, Uint8 *stream, int len_bytes);
 		ppp::AudioFifo m_fifo;
-		void fillFifo();
+		bool fillFifo();
+		bool m_stop;
 };
 
 #endif

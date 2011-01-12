@@ -81,10 +81,10 @@ std::size_t AudioFifo::pullAll(AudioFrameBuffer& data) {
 
 std::size_t AudioFifo::pull(BasicSampleFrame* data, std::size_t size) {
 	AudioFrameBuffer buffer;
-	pull(buffer, size);
-	if(!buffer) {
+	if(0==pull(buffer, size))
 		return 0;
-	}
+	if(!buffer || buffer->size()==0)
+		return 0;
 	std::copy(buffer->begin(), buffer->end(), data);
 	return buffer->size();
 }
@@ -95,7 +95,7 @@ std::size_t AudioFifo::pull(AudioFrameBuffer& data, std::size_t size) {
 	if(needsData())
 		return 0;
 	calcVolume(m_volumeLeft, m_volumeRight);
-	if(size==nsize)
+	if(size==nsize || size>m_queuedFrames)
 		size = m_queuedFrames;
 	if(!data)
 		data.reset( new AudioFrameBuffer::element_type(size, {0,0}) );
@@ -131,10 +131,12 @@ std::size_t ppp::AudioFifo::copy(AudioFrameBuffer& data, std::size_t size) {
 	MutexLocker mutexLock(m_queueMutex);
 	if(needsData())
 		return 0;
-	if(size==nsize)
+	if(size==nsize || size>m_queuedFrames)
 		size = m_queuedFrames;
 	if(!data)
 		data.reset( new AudioFrameBuffer::element_type(size, {0,0}) );
+	if(data->size() < size)
+		data->resize(size, {0,0});
 	std::size_t copied = 0;
 	AudioFrameBufferQueue::iterator queueIt = m_queue.begin();
 	std::size_t toCopy = (*queueIt)->size();

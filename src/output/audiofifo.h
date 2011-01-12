@@ -64,7 +64,7 @@ namespace ppp {
 			std::size_t m_minFrameCount; //!< @brief Minimum number of frames the queue should contain
 			uint16_t m_volumeLeft; //!< @brief Left volume
 			uint16_t m_volumeRight; //!< @brief Right volume
-			Mutex m_queueMutex;
+			Mutex m_queueMutex; //!< @brief Mutex to lock queue access
 		public:
 			/**
 			 * @brief Alias for "No size specified" for where a size parameter is needed
@@ -147,6 +147,7 @@ namespace ppp {
 			 * @return The right channel's volume
 			 */
 			uint16_t volumeRight() const { return m_volumeRight; }
+			bool empty() const { return m_queuedFrames==0; }
 	};
 }
 
