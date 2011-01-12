@@ -4,17 +4,25 @@
 using namespace ppp;
 
 void SDLAudioOutput::sdlAudioCallback(void *userdata, Uint8 *stream, int len_bytes) {
+	std::fill_n(stream, len_bytes, 0);
 	SDLAudioOutput* outpSdl = static_cast<SDLAudioOutput*>(userdata);
 	while(len_bytes>0) {
-		outpSdl->fillFifo();
-		std::size_t copied = outpSdl->m_fifo.pull(reinterpret_cast<BasicSampleFrame*>(stream), len_bytes/sizeof(BasicSampleFrame));
-		if(copied==0)
+		if(!outpSdl->fillFifo()) {
+			outpSdl->stop();
 			break;
-		len_bytes -= copied*sizeof(BasicSampleFrame);
+		}
+		std::size_t copied = outpSdl->m_fifo.pull(reinterpret_cast<BasicSampleFrame*>(stream), len_bytes/sizeof(BasicSampleFrame));
+		if(copied==0) {
+			outpSdl->stop();
+			break;
+		}
+		copied *= sizeof(BasicSampleFrame);
+		len_bytes -= copied;
+		stream += copied;
 	}
 }
 
-SDLAudioOutput::SDLAudioOutput(IAudioSource* src) : IAudioOutput(src), m_fifo(2048)
+SDLAudioOutput::SDLAudioOutput(IAudioSource* src) : IAudioOutput(src), m_fifo(2048), m_stop(false)
 {
 }
 
@@ -55,34 +63,35 @@ int SDLAudioOutput::init(int desiredFrq) {
 	return desiredFrq;
 }
 
-void SDLAudioOutput::fillFifo() {
+bool SDLAudioOutput::fillFifo() {
 	while(m_fifo.needsData()) {
 		AudioFrameBuffer buf;
-		if(0 == source()->getAudioData(buf, m_fifo.minFrameCount() - m_fifo.queuedLength())) {
-			SDL_CloseAudio();
-			//SDL_QuitSubSystem(SDL_INIT_AUDIO);
-			break;
-		}
+		if(0 == source()->getAudioData(buf, m_fifo.minFrameCount() - m_fifo.queuedLength()))
+			return false;
 		m_fifo.push(buf);
 	}
+	return true;
 }
 
-bool SDLAudioOutput::playing() {
+bool SDLAudioOutput::playing() volatile {
 	return SDL_GetAudioStatus() == SDL_AUDIO_PLAYING;
 }
-bool SDLAudioOutput::paused() {
+bool SDLAudioOutput::paused() volatile {
 	return SDL_GetAudioStatus() == SDL_AUDIO_PAUSED;
 }
-bool SDLAudioOutput::stopped() {
-	return SDL_GetAudioStatus() == SDL_AUDIO_STOPPED;
+bool SDLAudioOutput::stopped() volatile {
+	return m_stop || (SDL_GetAudioStatus() == SDL_AUDIO_STOPPED);
 }
 
 void SDLAudioOutput::play() {
 	SDL_PauseAudio(0);
 }
-
 void SDLAudioOutput::pause() {
 	SDL_PauseAudio(1);
+}
+void SDLAudioOutput::stop() {
+	LOG_DEBUG_("Call");
+	m_stop = true;
 }
 
 uint16_t SDLAudioOutput::volumeLeft() const {

@@ -109,7 +109,7 @@ LogLevel getLogLevel();
 
 #ifndef NDEBUG
 #	define LOG_DEBUG(fmt, ...) LOG(llDebug, fmt, ##__VA_ARGS__)
-#	define LOG_DEBUG_(fmt) LOG(llDebug, fmt)
+#	define LOG_DEBUG_(fmt) LOG_(llDebug, fmt)
 #else
 #	define LOG_DEBUG(fmt, ...)
 #	define LOG_DEBUG_(fmt)

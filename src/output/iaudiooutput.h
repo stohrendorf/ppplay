@@ -48,11 +48,12 @@ class IAudioOutput {
 		 * @return Either the real output frequency, or 0 if the call failed
 		 */
 		virtual int init(int desiredFrq) = 0;
-		virtual bool playing() = 0;
-		virtual bool paused() = 0;
-		virtual bool stopped() = 0;
+		virtual bool playing() volatile = 0;
+		virtual bool paused() volatile = 0;
+		virtual bool stopped() volatile = 0;
 		virtual void play() = 0;
 		virtual void pause() = 0;
+		virtual void stop() = 0;
 		IAudioSource* source() const { return m_source; }
 		virtual uint16_t volumeLeft() const = 0;
 		virtual uint16_t volumeRight() const = 0;
