@@ -111,7 +111,7 @@ static IAudioOutput::Ptr output;
 static SDL_TimerID updateTimer = NULL;
 
 static void updateDisplay(ppp::GenModule::Ptr& module) {
-	if(!module || output->stopped())
+	if(!module || !output)
 		return;
 	dosScreen->clear(' ', ppg::dcWhite, ppg::dcBlack);
 	uiMain->volBar()->shift(output->volumeLeft()>>8, output->volumeRight()>>8);
@@ -316,12 +316,13 @@ int main(int argc, char *argv[]) {
 			updateTimer = SDL_AddTimer(1000/30, sdlTimerCallback, &s3m);
 			output->play();
 			SDL_Event event;
-			while (!output->stopped()) {
+			while (output && output->errorCode()==IAudioOutput::NoError) {
+				usleep(1000);
 				if (SDL_PollEvent(&event)) {
 					if(event.type == SDL_KEYDOWN) {
 						switch(event.key.keysym.sym) {
 							case SDLK_ESCAPE:
-								output->stop();
+								output.reset();
 								break;
 							case SDLK_SPACE:
 								if(output->playing())
@@ -331,7 +332,7 @@ int main(int argc, char *argv[]) {
 								break;
 							case SDLK_END:
 								if (!s3m->jumpNextTrack())
-									output->stop();
+									output.reset();
 								break;
 							case SDLK_HOME:
 								s3m->jumpPrevTrack();
@@ -340,7 +341,7 @@ int main(int argc, char *argv[]) {
 								if (!s3m->jumpNextOrder()) {
 									// if jumpNextOrder fails, maybe jumpNextTrack works...
 									if (!s3m->jumpNextTrack())
-										output->stop();
+										output.reset();
 								}
 								break;
 							case SDLK_PAGEUP:
@@ -354,7 +355,7 @@ int main(int argc, char *argv[]) {
 						dosScreen->onMouseMove(event.motion.x/8, event.motion.y/16);
 					}
 					else if (event.type == SDL_QUIT) {
-						output->stop();
+						output.reset();
 					}
 					else if (event.type == SDL_USEREVENT && event.user.code == 1) {
 						dosScreen->clearOverlay();
@@ -404,8 +405,8 @@ int main(int argc, char *argv[]) {
 			}
 			SDL_RemoveTimer(updateTimer);
 			updateTimer = NULL;
-			if(!output->stopped())
-				output->stop();
+			if(output)
+				output.reset();
 		#ifdef WITH_MP3LAME
 		}
 		else {// if(mp3File.is_open()) { // quickMp3
@@ -466,8 +467,6 @@ int main(int argc, char *argv[]) {
 			mp3File.close();
 		}
 		#endif
-		while(output->playing())
-			;
 		SDL_Quit();
 	}
 	catch (PppException &e) {

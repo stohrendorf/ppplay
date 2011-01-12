@@ -8,12 +8,14 @@ void SDLAudioOutput::sdlAudioCallback(void *userdata, Uint8 *stream, int len_byt
 	SDLAudioOutput* outpSdl = static_cast<SDLAudioOutput*>(userdata);
 	while(len_bytes>0) {
 		if(!outpSdl->fillFifo()) {
-			outpSdl->stop();
+			outpSdl->setErrorCode(InputDry);
+			outpSdl->pause();
 			break;
 		}
 		std::size_t copied = outpSdl->m_fifo.pull(reinterpret_cast<BasicSampleFrame*>(stream), len_bytes/sizeof(BasicSampleFrame));
 		if(copied==0) {
-			outpSdl->stop();
+			outpSdl->setErrorCode(InputDry);
+			outpSdl->pause();
 			break;
 		}
 		copied *= sizeof(BasicSampleFrame);
@@ -22,7 +24,7 @@ void SDLAudioOutput::sdlAudioCallback(void *userdata, Uint8 *stream, int len_byt
 	}
 }
 
-SDLAudioOutput::SDLAudioOutput(IAudioSource* src) : IAudioOutput(src), m_fifo(2048), m_stop(false)
+SDLAudioOutput::SDLAudioOutput(IAudioSource* src) : IAudioOutput(src), m_fifo(2048)
 {
 }
 
@@ -73,14 +75,11 @@ bool SDLAudioOutput::fillFifo() {
 	return true;
 }
 
-bool SDLAudioOutput::playing() volatile {
+bool SDLAudioOutput::playing() {
 	return SDL_GetAudioStatus() == SDL_AUDIO_PLAYING;
 }
-bool SDLAudioOutput::paused() volatile {
+bool SDLAudioOutput::paused() {
 	return SDL_GetAudioStatus() == SDL_AUDIO_PAUSED;
-}
-bool SDLAudioOutput::stopped() volatile {
-	return m_stop || (SDL_GetAudioStatus() == SDL_AUDIO_STOPPED);
 }
 
 void SDLAudioOutput::play() {
@@ -88,10 +87,6 @@ void SDLAudioOutput::play() {
 }
 void SDLAudioOutput::pause() {
 	SDL_PauseAudio(1);
-}
-void SDLAudioOutput::stop() {
-	LOG_DEBUG_("Call");
-	m_stop = true;
 }
 
 uint16_t SDLAudioOutput::volumeLeft() const {
