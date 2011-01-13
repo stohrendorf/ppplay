@@ -18,7 +18,6 @@
  ***************************************************************************/
 
 #include "audiofifo.h"
-#include "stuff/mutexlocker.h"
 
 #include <algorithm>
 
@@ -26,7 +25,8 @@ using namespace ppp;
 
 void AudioFifo::calcVolume( uint16_t& leftVol, uint16_t& rightVol ) throw( PppException ) {
 	PPP_TEST( m_queuedFrames == 0 );
-	MutexLocker mutexLock(m_queueMutex);
+	//MutexLocker mutexLock(m_queueMutex);
+	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
 	leftVol = rightVol = 0;
 	uint64_t leftSum = 0, rightSum = 0;
 	std::size_t totalProcessed = 0;
@@ -67,9 +67,9 @@ AudioFifo::~AudioFifo() {
 
 void AudioFifo::push(const AudioFrameBuffer& data) throw(PppException) {
 	// copy, because AudioFrameBuffer is a shared_ptr that may be modified
-	MutexLocker mutexLock(m_queueMutex);
 	AudioFrameBuffer cp(new AudioFrameBuffer::element_type);
 	*cp = *data;
+	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
 	m_queuedFrames += cp->size();
 	m_queue.push_back(cp);
 	//LOG_DEBUG("Added %zd frames to the queue, now queued %zd frames", cp->size(), m_queuedFrames);
@@ -91,10 +91,10 @@ std::size_t AudioFifo::pull(BasicSampleFrame* data, std::size_t size) {
 
 std::size_t AudioFifo::pull(AudioFrameBuffer& data, std::size_t size) {
 	//LOG_DEBUG("Requested %zd frames", size);
-	MutexLocker mutexLock(m_queueMutex);
 	if(needsData())
 		return 0;
 	calcVolume(m_volumeLeft, m_volumeRight);
+	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
 	if(size==nsize || size>m_queuedFrames)
 		size = m_queuedFrames;
 	if(!data)
@@ -128,9 +128,9 @@ std::size_t AudioFifo::pull(AudioFrameBuffer& data, std::size_t size) {
 
 std::size_t ppp::AudioFifo::copy(AudioFrameBuffer& data, std::size_t size) {
 	//LOG_DEBUG("Requested %zd frames", size);
-	MutexLocker mutexLock(m_queueMutex);
 	if(needsData())
 		return 0;
+	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
 	if(size==nsize || size>m_queuedFrames)
 		size = m_queuedFrames;
 	if(!data)

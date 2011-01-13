@@ -30,7 +30,8 @@ using namespace ppp;
 GenChannel::GenChannel( const uint16_t frq ) throw( PppException ) :
 		m_active( false ), m_disabled( true ), m_vibrato( ProtrackerLookup, 256 ), m_tremolo( ProtrackerLookup, 256 ), m_panning( 0x40 ),
 		m_volume( 0 ), m_tick( 0 ), m_position( 0 ),
-		m_statusString(), m_playbackFrequency( frq )
+		m_statusString(), m_playbackFrequency( frq ),
+		m_statusStringMutex()
 {
 }
 
@@ -41,4 +42,14 @@ IArchive& GenChannel::serialize(IArchive* data) {
 	*data & m_active & m_disabled & m_volume & m_panning & m_position & m_tick;
 	data->archive(&m_tremolo).archive(&m_vibrato);
 	return *data;
+}
+
+std::string GenChannel::getStatus() throw() {
+	std::lock_guard<std::mutex> lock(m_statusStringMutex);
+	return m_statusString;
+}
+
+void GenChannel::setStatusString(const std::string& s) {
+	std::lock_guard<std::mutex> lock(m_statusStringMutex);
+	m_statusString = s;
 }
