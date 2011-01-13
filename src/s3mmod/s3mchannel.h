@@ -23,9 +23,9 @@
 #include "genmod/genchannel.h"
 #include "s3mbase.h"
 #include "s3msample.h"
+#include "s3mpattern.h"
 
 #include <array>
-#include "s3mpattern.h"
 
 /**
 * @file

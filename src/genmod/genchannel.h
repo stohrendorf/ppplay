@@ -25,6 +25,7 @@
 #include "genpattern.h"
 #include "phaser/phaser.h"
 #include "stuff/utils.h"
+#include <mutex>
 
 /**
  * @file
@@ -57,6 +58,7 @@ namespace ppp {
 			int32_t m_position; //!< @brief Current sample position
 			std::string m_statusString; //!< @brief Status string
 			uint16_t m_playbackFrequency; //!< @brief Playback frequency, default is 44100 @see GenModule::GenModule
+			std::mutex m_statusStringMutex;
 		public:
 			/**
 			 * @brief The constructor
@@ -148,7 +150,7 @@ namespace ppp {
 			 * @brief Returns the status string
 			 * @return #aStatusString
 			 */
-			std::string getStatus() const throw() { return m_statusString; }
+			std::string getStatus() throw();
 			/**
 			 * @brief Get a short description of the current effect
 			 * @return The current effect in the format @c xxxxxS, where @c x is a short description and @c S is a symbol
@@ -174,7 +176,7 @@ namespace ppp {
 			void setPosition(int32_t p) throw() { m_position = p; }
 			uint8_t getPanning() const throw() { return m_panning; }
 			uint16_t getPlaybackFrq() const throw() { return m_playbackFrequency; }
-			void setStatusString(const std::string &s) { m_statusString = s; }
+			void setStatusString(const std::string &s);
 	};
 
 } // namespace ppp
