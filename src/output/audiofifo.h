@@ -100,7 +100,7 @@ namespace ppp {
 			 * @brief Push data into the buffer
 			 * @param[in] data Source of the data
 			 */
-			void push(const ppp::AudioFrameBuffer& data) throw(PppException);
+			void push(const AudioFrameBuffer& data) throw(PppException);
 			/**
 			 * @brief Copy the internal FIFO buffer to @a data
 			 * @param[out] data Destination buffer
