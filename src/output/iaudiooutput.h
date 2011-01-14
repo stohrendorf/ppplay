@@ -29,7 +29,13 @@
  */
 
 /**
- * @class OutputGen
+ * @file
+ * @ingroup Output
+ * @brief Audio output interface definition
+ */
+
+/**
+ * @interface IAudioOutput
  * @ingroup Output
  * @brief Abstract base class for sound output
  */
@@ -45,28 +51,68 @@ class IAudioOutput {
 			OutputError, //!< @brief General output error
 			OutputDry //!< @brief Output device needs more data than available
 		};
+		//! @brief Class pointer
 		typedef std::shared_ptr<IAudioOutput> Ptr;
+		/**
+		 * @brief Constructor
+		 * @param[in] src Pointer to an audio data source
+		 */
 		explicit IAudioOutput(IAudioSource* src) : m_source(src), m_errorCode(NoError) {}
+		//! @brief Destructor
 		virtual ~IAudioOutput();
 		/**
-		 * @brief Initialize output
+		 * @brief Initialize output device
 		 * @param[in] desiredFrq Desired output frequency
 		 * @return Either the real output frequency, or 0 if the call failed
 		 */
 		virtual int init(int desiredFrq) = 0;
+		/**
+		 * @brief Check if the output is in playing state
+		 * @return @c true if the output is in playing state
+		 */
 		virtual bool playing() = 0;
+		/**
+		 * @brief Check if the output is in paused state
+		 * @return @c true if the output is in paused state
+		 */
 		virtual bool paused() = 0;
+		/**
+		 * @brief Start playback
+		 */
 		virtual void play() = 0;
+		/**
+		 * @brief Pause playback
+		 */
 		virtual void pause() = 0;
+		/**
+		 * @brief Get the attached audio source
+		 * @return Pointer to the attached audio source
+		 */
 		IAudioSource* source() const { return m_source; }
+		/**
+		 * @brief Get the left channel's volume
+		 * @return Left channel's volume
+		 */
 		virtual uint16_t volumeLeft() const = 0;
+		/**
+		 * @brief Get the right channel's volume
+		 * @return Right channel's volume
+		 */
 		virtual uint16_t volumeRight() const = 0;
+		/**
+		 * @brief Get the internal error code
+		 * @return Internal error code
+		 */
 		ErrorCode errorCode() const;
 	protected:
+		/**
+		 * @brief Set the internal error code
+		 * @param[in] ec New error code
+		 */
 		void setErrorCode(ErrorCode ec);
 	private:
 		IAudioSource* m_source; //!< @brief The audio source
-		ErrorCode m_errorCode;
+		ErrorCode m_errorCode; //!< @brief Internal error code
 };
 
 #endif

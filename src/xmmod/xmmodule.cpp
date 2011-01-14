@@ -79,7 +79,7 @@ uint16_t XmModule::getTickBufLen() const throw(PppException) {
 	return getPlaybackFrq()*5 / (getPlaybackInfo().tempo<<1);
 }
 
-void XmModule::getTick(ppp::AudioFrameBuffer& buffer) throw(PppException) {
+void XmModule::getTick(AudioFrameBuffer& buffer) throw(PppException) {
 #warning Stub - implement me
 	if(!buffer)
 		buffer.reset(new AudioFrameBuffer::element_type);

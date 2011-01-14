@@ -88,7 +88,7 @@ static void DFFT() {
 		}   */
 }
 
-static void prepare( ppp::BasicSample *smpPtr) {
+static void prepare( BasicSample *smpPtr) {
 	for ( uint16_t i = 0; i < inputLength; i++ )
 		cArr[i] = std::complex<float>( *( smpPtr += 2 ) / 32768.0f, 0 );
 }

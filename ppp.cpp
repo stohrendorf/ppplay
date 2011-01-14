@@ -48,8 +48,8 @@
 //using namespace std;
 
 static const std::size_t BUFFERSIZE = 4096;
-static const std::size_t SAMPLECOUNT = BUFFERSIZE / sizeof(ppp::BasicSample);
-static const std::size_t FRAMECOUNT = BUFFERSIZE / sizeof(ppp::BasicSampleFrame);
+static const std::size_t SAMPLECOUNT = BUFFERSIZE / sizeof(BasicSample);
+static const std::size_t FRAMECOUNT = BUFFERSIZE / sizeof(BasicSampleFrame);
 
 #ifdef WITH_MP3LAME
 static lame_global_flags *lgf;
@@ -57,7 +57,7 @@ static unsigned char mp3Buffer[BUFFERSIZE];
 static std::ofstream mp3File;
 #endif
 
-static ppp::AudioFrameBuffer fftBuffer;
+static AudioFrameBuffer fftBuffer;
 
 static std::shared_ptr<ppg::Screen> dosScreen;
 static UIMain* uiMain;
@@ -301,7 +301,7 @@ int main(int argc, char *argv[]) {
 		dosScreen->show();
 		//LOG_MESSAGE_("Init Fifo");
 		//s3m->initFifo(ppp::FFT::fftSampleCount);
-		fftBuffer.reset( new ppp::AudioFrameBuffer::element_type );
+		fftBuffer.reset( new AudioFrameBuffer::element_type );
 		fftBuffer->resize( ppp::FFT::fftSampleCount );
 		#ifdef WITH_MP3LAME
 		if(!quickMp3) {
@@ -390,10 +390,10 @@ int main(int argc, char *argv[]) {
 							for(int y=0; y<h; y++)
 								dosScreen->drawPixel(320+i*320/dlen,400-1-y,color);
 						}
-						ppp::BasicSample *smpPtr = &fftBuffer->front().left;
+						BasicSample *smpPtr = &fftBuffer->front().left;
 						dlen = fftBuffer->size()*2;
 						for(int i=0; i<dlen; i++) {
-							ppp::BasicSample y = *(smpPtr++) >> 10;
+							BasicSample y = *(smpPtr++) >> 10;
 							if(i&1)
 								dosScreen->drawPixel(320+i*320/dlen,400-64+y,ppg::dcLightBlue);
 							else

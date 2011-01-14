@@ -23,16 +23,29 @@
 #include "stuff/utils.h"
 #include "audiotypes.h"
 
+/**
+ * @file
+ * @ingroup Output
+ * @brief Audio source interface definition
+ */
+
+/**
+ * @interface IAudioSource
+ * @ingroup Output
+ * @brief Audio source for IAudioOutput
+ */
+
 class IAudioSource {
 	public:
 		/**
 		 * @brief Get audio data from the source
-		 * @param[out] buffer The buffer containing the data
+		 * @param[out] buffer The buffer containing the retrieved data
 		 * @param[in] requestedFrames Number of requested frames
 		 * @returns The number of frames actually returned - should be equal to @code buffer->size() @endcode
 		 * @note If this function returns 0, the audio output device should stop playback
 		 */
-		virtual std::size_t getAudioData(ppp::AudioFrameBuffer& buffer, std::size_t requestedFrames) = 0;
+		virtual std::size_t getAudioData(AudioFrameBuffer& buffer, std::size_t requestedFrames) = 0;
+		//! @brief Destructor
 		virtual ~IAudioSource();
 };
 
