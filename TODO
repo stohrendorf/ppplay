@@ -1,0 +1,25 @@
+* Review docs
+  
+  Relatively much information is outdated or simply wrong, much documentation is missing.
+  Main focus is to check already existing doxygen docs and then start writing docs for undocumented entities.
+  
+
+* Thread safety
+  
+  There are many places where thread safety is missing or badly implemented.
+
+
+* Parameters
+  
+  Check if basic types are marked as const when passed as parameters and remove the qualifier.
+  Check if complex types can be passed as reference to const.
+  
+  
+* Exceptions, errors
+  
+  Too many exceptions are catched and thrown, many are errors recoverable, that means they're not putting the program into an unstable state.
+
+
+* SDL related
+  
+  Check if video output can be improved for speed.
