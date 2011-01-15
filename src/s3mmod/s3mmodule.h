@@ -69,18 +69,19 @@ namespace ppp {
 				 * @param[in] increaseTick Whether to increase the tick value
 				 * @param[in] doStore Set this to @c true to store the current state, and to @c false to restore it
 				 */
-				bool adjustPosition(const bool increaseTick, const bool doStore) throw(PppException);
+				bool adjustPosition(bool increaseTick, bool doStore) throw(PppException);
+			protected:
 				virtual IArchive& serialize(IArchive* data);
 			public:
 				/**
 				 * @copydoc GenModule::GenModule
 				 */
-				S3mModule(const uint32_t frq = 44100, const uint8_t maxRpt = 2) throw(PppException);
+				S3mModule(uint32_t frq = 44100, uint8_t maxRpt = 2) throw(PppException);
 				virtual ~S3mModule() throw();
 				virtual uint8_t channelCount() const;
-				virtual bool load(const std::string &fn) throw(PppException);
-				virtual bool existsSample(int16_t idx) throw();
-				virtual std::string getSampleName(int16_t idx) throw();
+				bool load(const std::string &fn) throw(PppException);
+				bool existsSample(int16_t idx) throw();
+				std::string getSampleName(int16_t idx) throw();
 				virtual inline uint16_t getTickBufLen() const throw(PppException);
 				virtual void getTick(AudioFrameBuffer &buf ) throw(PppException);
 				virtual void getTickNoMixing(std::size_t& bufLen) throw(PppException);

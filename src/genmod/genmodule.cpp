@@ -58,7 +58,7 @@ IArchive* GenMultiTrack::prevState() {
 	return result;
 }
 
-GenModule::GenModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) :
+GenModule::GenModule( uint32_t frq, uint8_t maxRpt ) throw( PppException ) :
 		m_fileName(), m_title(), m_trackerInfo(), m_orders(), m_maxRepeat( maxRpt ),
 		m_playbackFrequency( clip<unsigned int>( frq, 11025, 44800 ) ), m_playedFrames( 0 ), m_tracks(),
 		m_currentTrack( 0 ), m_multiTrack( false ), m_playbackInfo()
@@ -107,12 +107,12 @@ std::string GenModule::getTrimTitle() const throw() {
 	return res.substr( startpos, endpos - startpos + 1 );
 }
 
-std::size_t GenModule::timeElapsed() const throw( PppException ) {
+uint32_t GenModule::timeElapsed() const throw( PppException ) {
 	PPP_TEST( m_playbackFrequency == 0 );
 	return static_cast<uint32_t>( m_playedFrames / m_playbackFrequency );
 }
 
-std::size_t GenModule::getLength() const throw() {
+uint32_t GenModule::getLength() const throw() {
 	return m_tracks[m_currentTrack].length;
 }
 

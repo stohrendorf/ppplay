@@ -1,7 +1,7 @@
 #ifndef XMPATTERN_H
 #define XMPATTERN_H
 
-#include "genmod/genpattern.h"
+#include "genmod/gencell.h"
 
 namespace ppp {
 	namespace xm {
@@ -35,13 +35,13 @@ namespace ppp {
 				typedef std::vector<Ptr> Vector;
 			private:
 				std::vector<XmCell::Vector> m_tracks;
-				XmCell::Ptr createCell(int16_t trackIndex, int16_t row) throw(PppException);
+				XmCell::Ptr createCell(uint16_t trackIndex, uint16_t row) throw(PppException);
 			public:
 				XmPattern() = delete;
 				XmPattern(int16_t chans) throw(PppException);
 				~XmPattern() throw();
 				bool load(BinStream& str) throw(PppException);
-				XmCell::Ptr getCell(int16_t trackIndex, int16_t row) throw();
+				XmCell::Ptr getCell(uint16_t trackIndex, uint16_t row) throw();
 				std::size_t numRows() const;
 				std::size_t numChannels() const;
 		};

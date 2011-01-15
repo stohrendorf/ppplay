@@ -18,23 +18,13 @@
  * @brief A binary stream helper
  */
 class BinStream {
+		DISABLE_COPY(BinStream)
+		BinStream() = delete;
 	public:
 		typedef std::shared_ptr<std::iostream> SpIoStream; //!< @brief Shared IO Stream Pointer
 		typedef std::shared_ptr<BinStream> Ptr; //!< @brief Shared BinStream Pointer
 	private:
 		SpIoStream m_stream; //!< @brief The IO Stream associated with this BinStream
-		/**
-		 * @brief Deny default constructor
-		 */
-		BinStream() = delete;
-		/**
-		 * @brief Deny copy constructor
-		 */
-		BinStream(const BinStream &) = delete;
-		/**
-		 * @brief Deny copy operator
-		 */
-		BinStream &operator=(const BinStream &) = delete;
 	public:
 		/**
 		 * @brief Default constructor
@@ -42,19 +32,19 @@ class BinStream {
 		 */
 		explicit BinStream(SpIoStream stream) : m_stream(stream) { }
 		/**
-		 * @brief Pure virtual destructor
+		 * @brief Destructor
 		 */
 		virtual ~BinStream() {}
 		/**
 		 * @brief Constructor with stream destructor
-		 * @tparam D Stream destructor typedef
+		 * @tparam D Stream destructor type
 		 * @param[in] stream Shared pointer to the std::iostream to associate with this BinStream
 		 * @param[in] d Destructor
 		 */
 		template<class D>
 		explicit BinStream(SpIoStream stream, D d) : m_stream(stream, d) { }
 		/**
-		 * @brief Read array data from the stream
+		 * @brief Read data from the stream
 		 * @tparam TR Data type
 		 * @param[out] data Pointer to the data array
 		 * @param[in] count Count of data elements (NOT the byte size)
@@ -62,7 +52,7 @@ class BinStream {
 		 */
 		template<typename TR> BinStream &read(TR *data, std::size_t count = 1) __attribute__((nonnull(1)));
 		/**
-		 * @brief Write array data to the stream
+		 * @brief Write data to the stream
 		 * @tparam TW Data type
 		 * @param[in] data Pointer to the data array
 		 * @param[in] count Count of data elements (NOT the byte size)
@@ -87,12 +77,12 @@ class BinStream {
 		 * @brief Seek to a stream position
 		 * @param[in] pos Position to seek to
 		 */
-		void seek(std::size_t pos) { m_stream->seekg(pos); m_stream->seekp(pos); }
+		void seek(uint32_t pos) { m_stream->seekg(pos); m_stream->seekp(pos); }
 		/**
 		 * @brief Seek to a relative stream position
 		 * @param[in] delta Relative seek position
 		 */
-		void seekrel(int delta) { uint32_t p = pos(); m_stream->seekg(p+delta); m_stream->seekp(p+delta); }
+		void seekrel(int32_t delta) { uint32_t p = pos(); m_stream->seekg(p+delta); m_stream->seekp(p+delta); }
 		/**
 		 * @brief Get the stream position
 		 * @return The IO Stream position
@@ -115,24 +105,14 @@ class BinStream {
 /**
  * @class FBinStream
  * @ingroup Common
- * @brief Class derived from ::BinStream for files
+ * @brief Class derived from BinStream for files
  * @note This is a read-only stream
  */
 class FBinStream : public BinStream {
+		DISABLE_COPY(FBinStream)
+		FBinStream() = delete;
 	private:
 		std::string m_filename; //!< @brief Filename of the file
-		/**
-		 * @brief Deny default constructor
-		 */
-		FBinStream() = delete;
-		/**
-		 * @brief Deny copy constructor
-		 */
-		FBinStream(const FBinStream &) = delete;
-		/**
-		 * @brief Deny copy operator
-		 */
-		FBinStream &operator=(const FBinStream &) = delete;
 	public:
 		/**
 		 * @brief Default contructor
@@ -153,18 +133,10 @@ class FBinStream : public BinStream {
 /**
  * @class SBinStream
  * @ingroup Common
- * @brief Class derived from ::BinStream for a ::stringstream
+ * @brief Class derived from BinStream for a std::stringstream
  */
 class SBinStream : public BinStream {
-	private:
-		/**
-		 * @brief Deny copy constructor
-		 */
-		SBinStream(const SBinStream &) = delete;
-		/**
-		 * @brief Deny copy operator
-		 */
-		SBinStream &operator=(const SBinStream &) = delete;
+		DISABLE_COPY(SBinStream)
 	public:
 		/**
 		 * @brief Default constructor
@@ -195,16 +167,16 @@ BINSTREAM_RW_DECL(float)
 #undef BINSTREAM_RW_DECL
 
 /**
- * @class ISerializable
+ * @interface ISerializable
  * @ingroup Common
- * @brief Interface class for complex objects
+ * @brief Interface for serialisable classes
  */
 class ISerializable {
 	public:
 		/**
 		 * @brief Serialise this object
-		 * @param[in,out] stream BinStream to serialize this object to
-		 * @return Reference to @a stream for pipelining
+		 * @param[in,out] archive IArchive to serialize this object to
+		 * @return Reference to @a archive for pipelining
 		 */
 		virtual class IArchive& serialize(class IArchive* archive) = 0;
 		/**

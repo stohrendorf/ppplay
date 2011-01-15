@@ -83,9 +83,9 @@ uint8_t XmCell::getEffectValue() const throw() {
 	return m_effectValue;
 }
 
-XmCell::Ptr XmPattern::createCell( int16_t trackIndex, int16_t row ) throw( PppException ) {
-	PPP_TEST(( row < 0 ) || ( row >= numRows() ) );
-	PPP_TEST(trackIndex<0 || trackIndex>=numChannels());
+XmCell::Ptr XmPattern::createCell( uint16_t trackIndex, uint16_t row ) throw( PppException ) {
+	PPP_TEST(row >= numRows());
+	PPP_TEST(trackIndex>=numChannels());
 	XmCell::Vector* track = &m_tracks[trackIndex];
 	XmCell::Ptr &cell = track->at(row);
 	if ( cell )
@@ -135,8 +135,8 @@ bool XmPattern::load(BinStream& str) throw(PppException) {
 	return true;
 }
 
-XmCell::Ptr XmPattern::getCell(int16_t trackIndex, int16_t row) throw() {
-	if(trackIndex>=numChannels() || row>=numRows() || trackIndex<0 || row<0)
+XmCell::Ptr XmPattern::getCell(uint16_t trackIndex, uint16_t row) throw() {
+	if(trackIndex>=numChannels() || row>=numRows())
 		return XmCell::Ptr();
 	return m_tracks[trackIndex][row];
 }

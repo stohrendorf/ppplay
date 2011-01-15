@@ -148,7 +148,7 @@ struct S3mModuleHeader {
 	uint8_t pannings[32];//!< @brief Channel pannings
 } __attribute__((packed));
 
-S3mModule::S3mModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) : GenModule( frq, maxRpt ),
+S3mModule::S3mModule( uint32_t frq, uint8_t maxRpt ) throw( PppException ) : GenModule( frq, maxRpt ),
 		m_breakRow( -1 ), m_breakOrder( -1 ), m_patLoopRow( -1 ), m_patLoopCount( -1 ), m_patDelayCount( -1 ),
 		m_customData( false ), m_samples(), m_patterns(), m_channels(), m_usedChannels(0), m_orderPlaybackCounts()
 {
@@ -513,11 +513,9 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 	}
 }
 
-bool S3mModule::adjustPosition( const bool increaseTick, const bool doStore ) throw( PppException ) {
+bool S3mModule::adjustPosition( bool increaseTick, bool doStore ) throw( PppException ) {
 	PPP_TEST( getOrderCount() == 0 );
 	bool orderChanged = false;
-	//! @todo Implement saving of the last order for back-jumping
-//	short lastOrder = aPlaybackInfo.order;
 	if ( increaseTick ) {
 		nextTick();
 /*		m_playbackInfo.tick++;

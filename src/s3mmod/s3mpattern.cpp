@@ -18,7 +18,7 @@
  ***************************************************************************/
 
 #include "s3mpattern.h"
-#include "genmod/genpattern.h"
+#include "genmod/gencell.h"
 
 /**
 * @file
