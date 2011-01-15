@@ -24,10 +24,12 @@ typedef int16_t BasicSample;
  * @details
  * Combination of two BasicSample's for stereo storage
  */
-struct __attribute__((packed)) BasicSampleFrame {
+#pragma pack(push, 1)
+struct BasicSampleFrame {
 	BasicSample left; //!< @brief Left channel sample
 	BasicSample right; //!< @brief Right channel sample
 };
+#pragma pack(pop)
 /**
  * @ingroup Output
  * @brief Mixer sample
@@ -42,10 +44,12 @@ typedef int32_t MixerSample;
  * @details
  * Combination of two MixerSample's for stereo storage
  */
-struct __attribute__((packed)) MixerSampleFrame {
+#pragma pack(push,1)
+struct MixerSampleFrame {
 	MixerSample left; //!< @brief Left channel sample
 	MixerSample right; //!< @brief Right channel sample
 };
+#pragma pack(pop)
 /**
  * @ingroup Output
  * @brief Shared pointer to a vector of BasicSampleFrame's

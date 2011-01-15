@@ -271,9 +271,9 @@ int main(int argc, char *argv[]) {
 		ppp::GenModule::Ptr s3m;
 		try {
 			s3m.reset(new ppp::s3m::S3mModule(44100, 2));
-			if (!s3m->load(modFileName)) {
+			if (!std::static_pointer_cast<ppp::s3m::S3mModule>(s3m)->load(modFileName)) {
 				s3m.reset(new ppp::xm::XmModule(44100, 2));
-				if (!s3m->load(modFileName)) {
+				if (!std::static_pointer_cast<ppp::xm::XmModule>(s3m)->load(modFileName)) {
 					s3m.reset();
 					LOG_ERROR_("Error on loading the mod...");
 					SDL_Quit();

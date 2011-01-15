@@ -112,7 +112,7 @@ namespace ppp {
 			std::vector<GenMultiTrack> m_tracks; //!< @brief Per-track infos
 			uint16_t m_currentTrack; //!< @brief The current track index
 			bool m_multiTrack; //!< @brief @c true if module could be a multi-track one
-			GenPlaybackInfo m_playbackInfo; //!< @brief General playback info @todo Make private
+			GenPlaybackInfo m_playbackInfo; //!< @brief General playback info
 		public:
 			/**
 			 * @brief The constructor
@@ -121,18 +121,11 @@ namespace ppp {
 			 * @pre @c maxRpt>0
 			 * @see GenChannel::GenChannel
 			 */
-			GenModule(const uint32_t frq = 44100, const uint8_t maxRpt = 1) throw(PppException);
+			GenModule(uint32_t frq = 44100, uint8_t maxRpt = 1) throw(PppException);
 			/**
 			 * @brief The destructor
 			 */
 			virtual ~GenModule();
-			/**
-			 * @brief Loads a module
-			 * @param[in] fn Filename of the module to be loaded
-			 * @return @c true on success
-			 * @pre @a fn contains a valid filename
-			 */
-			virtual bool load(const std::string &fn) throw(PppException) = 0;
 			/**
 			 * @brief Returns the filename without the path
 			 * @return Filename, or empty if no module loaded
@@ -152,14 +145,11 @@ namespace ppp {
 			/**
 			 * @brief Get the frame count of a tick
 			 * @return Sample frames per tick
-			 * @note Time-critical
 			 */
 			virtual uint16_t getTickBufLen() const throw(PppException) = 0;
 			/**
 			 * @brief Get a tick
-			 * @param[out] buf Reference to a pointer
-			 * @param[out] bufLen Number of sample frames in the created buffer @a buf
-			 * @post The caller has to free @a buf after every call with the @c delete[] operator
+			 * @param[out] buf Reference to the destination buffer
 			 * @note Time-critical
 			 */
 			virtual void getTick(AudioFrameBuffer &buf) throw(PppException) = 0;
@@ -169,10 +159,9 @@ namespace ppp {
 			 */
 			virtual void getTickNoMixing(std::size_t &bufLen) throw(PppException) = 0;
 			/**
-			 * @brief Map an order number to a pattern number
+			 * @brief Map an order number to a pattern
 			 * @param[in] order The order to map
 			 * @return Pattern number for @a order
-			 * @note Time-critical
 			 */
 			virtual GenOrder::Ptr mapOrder(int16_t order) throw(PppException) = 0;
 			/**
@@ -184,13 +173,13 @@ namespace ppp {
 			 * @brief Get playback time in seconds
 			 * @return Playback time in seconds
 			 */
-			std::size_t timeElapsed() const throw(PppException);
+			uint32_t timeElapsed() const throw(PppException);
 			/**
 			 * @brief Returns the current track's length
 			 * @return The current track's length
 			 * @see timeElapsed()
 			 */
-			std::size_t getLength() const throw();
+			uint32_t getLength() const throw();
 			/**
 			 * @brief Get information about the tracker
 			 * @return Tracker type and version, i.e. "ScreamTracker v3.20"
@@ -198,12 +187,12 @@ namespace ppp {
 			std::string getTrackerInfo() const throw();
 			/**
 			 * @brief Get playback information
-			 * @return aPlaybackInfo
+			 * @return m_playbackInfo
 			 */
 			GenPlaybackInfo getPlaybackInfo() const throw();
 			/**
-			 * @brief Returns @c true if this module contains normally not played orders
-			 * @return aMultiTrack
+			 * @brief Returns @c true if this module contains additional tracks
+			 * @return m_multiTrack
 			 */
 			bool isMultiTrack() const throw();
 			/**
@@ -221,10 +210,14 @@ namespace ppp {
 			 * @return @c false if the end of the current track is reached
 			 */
 			virtual bool jumpNextOrder() throw() = 0;
+			/**
+			 * @brief Jump to the previous order if possible
+			 * @return @c false if the current order is already the first one
+			 */
 			virtual bool jumpPrevOrder() throw() = 0;
 			/**
 			 * @brief Get the current playback position in sample frames
-			 * @return aPlayedFrames
+			 * @return m_playedFrames
 			 */
 			std::size_t getPosition() const throw() { return m_playedFrames; }
 			/**
@@ -234,7 +227,7 @@ namespace ppp {
 			uint16_t getTrackCount() const throw() { return m_tracks.size(); }
 			/**
 			 * @brief Get the currently playing track index
-			 * @return aCurrentTrack
+			 * @return m_currentTrack
 			 */
 			uint16_t getCurrentTrack() const throw() { return m_currentTrack; }
 			/**
@@ -244,10 +237,20 @@ namespace ppp {
 			 * @see GenChannel::getCellString
 			 */
 			virtual std::string getChanCellString(int16_t idx) throw() = 0;
+			/**
+			 * @brief Get the number of actually used channels
+			 * @return Number of actually used channels
+			 */
 			virtual uint8_t channelCount() const = 0;
-			virtual IArchive& serialize(IArchive* data);
 			virtual std::size_t getAudioData(AudioFrameBuffer& buffer, std::size_t size);
 		protected:
+			/**
+			 * @brief Serialize this module to an archive
+			 * @param[in,out] data The archive to serialize to
+			 * @return Reference to @c *data
+			 * @pre @c data!=NULL
+			 */
+			virtual IArchive& serialize(IArchive* data);
 			/**
 			 * @brief Removes empty tracks from the track list and resets the orders' repeat count
 			 */
@@ -262,7 +265,7 @@ namespace ppp {
 			GenOrder::Ptr getOrder(size_t idx) const { return m_orders[idx]; }
 			int16_t getPatternIndex() const { return m_playbackInfo.pattern; }
 			void setPatternIndex(int16_t i) { m_playbackInfo.pattern=i; }
-			size_t getOrderCount() const { return m_orders.size(); }
+			int getOrderCount() const { return m_orders.size(); }
 			void setCurrentTrack(uint16_t t) { m_currentTrack=t; }
 			void setTitle(const std::string &t) { m_title = t; }
 			void setMultiTrack(bool m) { m_multiTrack = m; }

@@ -22,7 +22,7 @@
 
 #include <cstdint>
 #include "gensample.h"
-#include "genpattern.h"
+#include "gencell.h"
 #include "phaser/phaser.h"
 #include "stuff/utils.h"
 #include <mutex>
