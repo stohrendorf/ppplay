@@ -74,8 +74,8 @@ LogLevel getLogLevel();
  * @def LOG(msg,ll)
  * @ingroup Logger
  * @brief Log a message
- * @param[in] msg Message
  * @param[in] ll Message's log level
+ * @param[in] fmt Message
  */
 #define LOG(ll,fmt,...) logger(ppp::stringf("%s // " fmt, __PRETTY_FUNCTION__, ##__VA_ARGS__), ll)
 #define LOG_(ll,fmt) logger(ppp::stringf("%s // " fmt, __PRETTY_FUNCTION__), ll)
@@ -83,7 +83,7 @@ LogLevel getLogLevel();
 /**
  * @ingroup Logger
  * @brief Log a message with log level ::llMessage
- * @param[in] msg Message
+ * @param[in] fmt Message
  */
 #define LOG_MESSAGE(fmt, ...) LOG(llMessage, fmt, ##__VA_ARGS__)
 #define LOG_MESSAGE_(fmt) LOG_(llMessage, fmt)
@@ -92,7 +92,7 @@ LogLevel getLogLevel();
 /**
  * @ingroup Logger
  * @brief Log a message with log level ::llWarning
- * @param[in] msg Message
+ * @param[in] fmt Message
  */
 #define LOG_WARNING(fmt, ...) LOG(llWarning, fmt, ##__VA_ARGS__)
 #define LOG_WARNING_(fmt) LOG_(llWarning, fmt)
@@ -101,7 +101,7 @@ LogLevel getLogLevel();
 /**
  * @ingroup Logger
  * @brief Log a message with log level ::llError
- * @param[in] msg Message
+ * @param[in] fmt Message
  */
 #define LOG_ERROR(fmt, ...) LOG(llError, fmt, ##__VA_ARGS__)
 #define LOG_ERROR_(fmt) LOG_(llError, fmt)

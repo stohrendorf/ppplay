@@ -77,7 +77,7 @@ class Exception : public std::exception {
  * @brief Catch PeePeeGUI exceptions
  * @ingroup Ppg
  * @details
- * Catches general exceptions and throws a ::PpgException for tracing the exception
+ * Catches general exceptions and throws a ppg::Exception for tracing the exception
  */
 #define PPG_CATCH_ALL(postcmd) \
 	catch(ppg::Exception &e) { postcmd; throw ppg::Exception(e,__LINE__,__PRETTY_FUNCTION__); } \

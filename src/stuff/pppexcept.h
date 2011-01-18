@@ -78,6 +78,7 @@ class PppException : public std::exception {
  * @brief Generator for @c std exceptions
  * @ingroup Common
  * @param[in] extype Name of the exception type in @c std to catch
+ * @param[in] postcmd Optional commands to execute before throwing the PppException
  * @see PPP_CATCH_ALL
  */
 #define PPP_CATCH_STD(extype, postcmd) catch(std::extype &e) { postcmd; throw PppException(std::string(#extype "[")+e.what()+"]",__LINE__,__PRETTY_FUNCTION__); }

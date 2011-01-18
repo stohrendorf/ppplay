@@ -42,7 +42,7 @@ namespace ppp {
 	void Phaser::resetPhase() throw() {
 		m_phase = 0;
 	}
-	void Phaser::resetWave( const int16_t *table, const uint32_t length, int16_t amp, float multiplier ) throw( PppException ) {
+	void Phaser::resetWave( const int16_t table[], const uint32_t length, int16_t amp, float multiplier ) throw( PppException ) {
 		PPP_TEST( length == 0 );
 		//m_lookup.reset( new int16_t[length] );
 		m_lookup.resize(length);

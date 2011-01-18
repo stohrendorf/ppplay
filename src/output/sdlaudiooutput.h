@@ -33,7 +33,8 @@ class SDLAudioOutput : public IAudioOutput {
 		DISABLE_COPY(SDLAudioOutput)
 		SDLAudioOutput() = delete;
 	public:
-		SDLAudioOutput(IAudioSource* src);
+		//! @copydoc IAudioOutput::IAudioOutput(IAudioSource*)
+		explicit SDLAudioOutput(IAudioSource* src);
 		virtual ~SDLAudioOutput();
 		virtual int init(int desiredFrq);
 		virtual bool playing();
@@ -43,8 +44,18 @@ class SDLAudioOutput : public IAudioOutput {
 		virtual uint16_t volumeLeft() const;
 		virtual uint16_t volumeRight() const;
 	private:
+		/**
+		 * @brief SDL Audio callback handler
+		 * @param[in] userdata Pointer to SDLAudioOutput
+		 * @param[out] stream Audio buffer pointer
+		 * @param[in] len_bytes Byte length of @a stream
+		 */
 		static void sdlAudioCallback(void *userdata, Uint8 *stream, int len_bytes);
-		ppp::AudioFifo m_fifo;
+		ppp::AudioFifo m_fifo; //!< @brief FIFO buffer
+		/**
+		 * @brief Fills m_fifo
+		 * @return @c false if the FIFO could not be filled
+		 */
 		bool fillFifo();
 };
 

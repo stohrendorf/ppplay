@@ -95,30 +95,45 @@ namespace ppp {
 		static const uint32_t FRQ_VALUE = 14317056;
 
 		/**
-		 * @brief Calculate the period for a given note and base frequency
+		 * @brief Calculate the period for a given note, octave and base frequency
 		 * @ingroup S3mMod
 		 * @param[in] note Note value
+		 * @param[in] oct Note octave
 		 * @param[in] c4spd Base frequency of the sample
 		 * @return S3M Period for note @a note and base frequency @a c4spd
-		 * @see ::S3mSample
-		 * @note Time-critical
+		 * @see S3mSample st3Period
 		 */
 		static inline uint16_t st3PeriodEx( uint8_t note, uint8_t oct, uint16_t c4spd ) throw( PppException ) {
 			PPP_TEST(c4spd==0);
 			return (Periods[note] >> oct) * 8363 / c4spd;
 		}
+		/**
+		 * @brief Calculate the period for a given note and base frequency
+		 * @ingroup S3mMod
+		 * @param[in] note Note value
+		 * @param[in] c4spd Base frequency of the sample
+		 * @return S3M Period for note @a note and base frequency @a c4spd
+		 * @see S3mSample st3PeriodEx
+		 */
 		static inline uint16_t st3Period( uint8_t note, uint16_t c4spd ) throw( PppException ) {
 			return st3PeriodEx(S3M_NOTE(note), S3M_OCTAVE(note), c4spd);
 		}
 
+		/**
+		 * @brief Reverse calculate a note from a given period and C4 frequency
+		 * @ingroup S3mMod
+		 * @param[in] per Note period
+		 * @param[in] c4spd Base frequency of the sample
+		 * @return Note offset (12*octave+note)
+		 */
 		static inline uint8_t periodToNoteOffset( uint16_t per, uint16_t c4spd) {
 			return -12*std::log2( static_cast<float>(per)*c4spd/(8363*Periods[0]) );
 		}
 
 		/**
-		 * @brief Reverse-calculate the Note from the given frequency
+		 * @brief Reverse-calculate the Note from the given period
 		 * @ingroup S3mMod
-		 * @param[in] frq Playback frequency
+		 * @param[in] per Period
 		 * @param[in] c2spd Base frequency of the sample
 		 * @return Note string
 		 * @note Time-critical
@@ -148,7 +163,6 @@ namespace ppp {
 		 * @param[in] note Base note
 		 * @param[in] delta Delta value
 		 * @return New note
-		 * @note Time-critical
 		 */
 		static inline uint8_t deltaNote( uint8_t note, int8_t delta ) throw() {
 			uint16_t x = S3M_OCTAVE( note ) * 12 + S3M_NOTE( note ) + delta;
