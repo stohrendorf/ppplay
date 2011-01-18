@@ -22,7 +22,7 @@ class BinStream {
 		BinStream() = delete;
 	public:
 		typedef std::shared_ptr<std::iostream> SpIoStream; //!< @brief Shared IO Stream Pointer
-		typedef std::shared_ptr<BinStream> Ptr; //!< @brief Shared BinStream Pointer
+		typedef std::shared_ptr<BinStream> Ptr; //!< @brief Class pointer
 	private:
 		SpIoStream m_stream; //!< @brief The IO Stream associated with this BinStream
 	public:
@@ -138,13 +138,7 @@ class FBinStream : public BinStream {
 class SBinStream : public BinStream {
 		DISABLE_COPY(SBinStream)
 	public:
-		/**
-		 * @brief Default constructor
-		 */
 		explicit SBinStream() : BinStream(BinStream::SpIoStream(new std::stringstream(std::ios::in|std::ios::out|std::ios::binary))) {};
-		/**
-		 * @brief Destructor
-		 */
 		virtual ~SBinStream() {}
 };
 
@@ -185,20 +179,46 @@ class ISerializable {
 		virtual ~ISerializable() = 0;
 };
 
+/**
+ * @interface IArchive
+ * @ingroup Common
+ * @brief Interface for archives used by ISerializable inherited classes
+ */
 class IArchive {
 		DISABLE_COPY(IArchive)
 		IArchive() = delete;
 	public:
-		typedef std::shared_ptr<IArchive> Ptr;
-		typedef std::vector<Ptr> Vector;
+		typedef std::shared_ptr<IArchive> Ptr; //!< @brief Class pointer
+		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 	private:
-		bool m_loading;
-		BinStream::Ptr m_stream;
+		bool m_loading; //!< @brief @c true for read-only access, @c false for write-only access
+		BinStream::Ptr m_stream; //!< @brief The associated BinStream for storage
 	public:
+		/**
+		 * @brief Constructor
+		 * @param[in] stream The storage stream
+		 */
 		IArchive(const BinStream::Ptr& stream);
 		virtual ~IArchive() = 0;
+		/**
+		 * @brief Whether this archive is read-only
+		 * @return m_loading
+		 * @see isSaving()
+		 */
 		bool isLoading() const { return m_loading; }
+		/**
+		 * @brief Whether this archive is write-only
+		 * @return !m_loading
+		 * @see isLoading()
+		 */
 		bool isSaving() const { return !m_loading; }
+		/**
+		 * @brief Serialization operator
+		 * @tparam T Data type
+		 * @param[in,out] data Data to save or load
+		 * @return Reference to *this
+		 * @note Operation depends on m_loading
+		 */
 		template<class T> IArchive& operator&(T& data) {
 			if(m_loading)
 				m_stream->read(&data,1);
@@ -206,6 +226,14 @@ class IArchive {
 				m_stream->write(&data,1);
 			return *this;
 		}
+		/**
+		 * @brief Serialization operator for arrays
+		 * @tparam T Data type
+		 * @param[in,out] data Data array to save or load
+		 * @param[in] count Number of elements in @a data
+		 * @return Reference to *this
+		 * @note Operation depends on m_loading
+		 */
 		template<class T> IArchive& array(T* data, std::size_t count) {
 			PPP_TEST(data==NULL);
 			if(m_loading)
@@ -214,16 +242,43 @@ class IArchive {
 				m_stream->write(data,count);
 			return *this;
 		}
+		/**
+		 * @brief Serialization operator for other archives
+		 * @param[in,out] data Archive to save or load
+		 * @return Reference to *this
+		 * @note Operation depends on m_loading
+		 */
 		IArchive& archive(ISerializable* data) {
 			PPP_TEST(data==NULL);
 			return data->serialize(this);
 		}
+		/**
+		 * @brief Finish saving operation
+		 * @details
+		 * Resets the stream pointer to 0 and sets m_loading to @c true.
+		 * @see finishLoad()
+		 */
 		void finishSave() { PPP_TEST(m_loading); m_stream->seek(0); m_loading=true; }
+		/**
+		 * @brief Finish loading operation
+		 * @details
+		 * Resets the stream pointer to 0. The archive remains read-only.
+		 * @see finishSave()
+		 */
 		void finishLoad() { PPP_TEST(!m_loading); m_stream->seek(0); }
 };
+
+/**
+ * @class MemArchive
+ * @ingroup Common
+ * @brief Specialization of IArchive for memory storage
+ */
 class MemArchive : public IArchive {
 		DISABLE_COPY(MemArchive)
 	public:
+		/**
+		 * @brief Constructs this archive using a SBinStream
+		 */
 		MemArchive();
 		virtual ~MemArchive();
 };
