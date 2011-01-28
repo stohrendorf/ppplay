@@ -49,7 +49,8 @@ class IAudioOutput {
 			InputError, //!< @brief General input error
 			InputDry, //!< @brief Audio source can't provide data
 			OutputError, //!< @brief General output error
-			OutputDry //!< @brief Output device needs more data than available
+			OutputDry, //!< @brief Output device needs more data than available
+			OutputUnavailable //!< @brief Output device is unavailable
 		};
 		//! @brief Class pointer
 		typedef std::shared_ptr<IAudioOutput> Ptr;
