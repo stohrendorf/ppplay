@@ -22,9 +22,6 @@
 
 #include "config.h"
 
-//! @todo Remove this when output code is stable/finished
-#undef WITH_MP3LAME
-
 #include <iostream>
 #include <algorithm>
 #include <boost/program_options.hpp>
@@ -42,71 +39,18 @@
 #include "src/output/sdlaudiooutput.h"
 
 #ifdef WITH_MP3LAME
-#	include <lame/lame.h>
+#include "src/output/mp3audiooutput.h"
 #endif
-
-//using namespace std;
 
 static const std::size_t BUFFERSIZE = 4096;
 static const std::size_t SAMPLECOUNT = BUFFERSIZE / sizeof(BasicSample);
 static const std::size_t FRAMECOUNT = BUFFERSIZE / sizeof(BasicSampleFrame);
-
-#ifdef WITH_MP3LAME
-static lame_global_flags *lgf;
-static unsigned char mp3Buffer[BUFFERSIZE];
-static std::ofstream mp3File;
-#endif
 
 static AudioFrameBuffer fftBuffer;
 
 static std::shared_ptr<ppg::Screen> dosScreen;
 static UIMain* uiMain;
 
-#if 0
-		ppg::Label *lb;
-		ppp::GenModule *s3m = NULL;
-		int nFrames = len_bytes / sizeof(ppp::BasicSampleFrame);
-		s3m = reinterpret_cast<ppp::GenModule*>(userdata);
-		if ((s3m == NULL) || playbackStopped) {
-			return;
-		}
-		PPP_TEST(s3m == NULL);
-		
-		if(nFrames > s3m->playbackFifo.minFrameCount()) {
-			LOG_MESSAGE("Adjusting FIFO buffer length from %d frames to %d frames", s3m->playbackFifo.minFrameCount(), nFrames);
-			s3m->playbackFifo.setMinFrameCount(nFrames);
-		}
-		updateFrameCounter += nFrames;
-		// TODO make this non-magic...
-		if (updateFrameCounter >= (44100/50)) {
-			updateFrameCounter = 0;
-			dosScreen->clear(' ', ppg::dcWhite, ppg::dcBlack);
-			{
-				uiMain->volBar()->shift(s3m->playbackFifo.volumeLeft()>>8, s3m->playbackFifo.volumeRight()>>8);
-			}
-			int msecs = s3m->getPosition() / 441;
-			int msecslen = s3m->getLength() / 441;
-			ppp::GenPlaybackInfo pbi = s3m->getPlaybackInfo();
-			lb = uiMain->posLabel();
-			*lb = ppp::stringf("%3d(%3d)/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Track %d/%d",
-								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
-								msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
-								s3m->getCurrentTrack() + 1, s3m->getTrackCount()
-								);
-			lb = uiMain->playbackInfo();
-			*lb = ppp::stringf("Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", pbi.speed, pbi.tempo, pbi.globalVolume * 100 / 0x40);
-			for (int i = 0; i < s3m->channelCount(); i++) {
-				if(i>=16)
-					break;
-				lb = uiMain->chanInfo(i);
-				*lb = s3m->getChanStatus(i);
-				lb = uiMain->chanCell(i);
-				*lb = s3m->getChanCellString(i);
-			}
-				dosScreen->draw();
-		}
-
-#else
 static IAudioOutput::Ptr output;
 static SDL_TimerID updateTimer = NULL;
 
@@ -142,7 +86,6 @@ static Uint32 sdlTimerCallback(Uint32 interval, void* param) {
 	dosScreen->draw();
 	return interval;
 }
-#endif
 
 #ifdef WITH_MP3LAME
 static bool quickMp3 = false;
@@ -411,60 +354,21 @@ int main(int argc, char *argv[]) {
 		}
 		else {// if(mp3File.is_open()) { // quickMp3
 			LOG_MESSAGE_("QuickMP3 Output Mode");
-			LOG_MESSAGE_("Init LAME");
-			lgf = lame_init();
-			if (!lgf) {
-				LOG_ERROR_("LAME Init Failed");
-				// 			delete s3m;
+			MP3AudioOutput* mp3out = new MP3AudioOutput(s3m.get(), modFileName+".mp3");
+			output.reset(mp3out);
+			mp3out->setID3(s3m->getTrimTitle(), PACKAGE_STRING, s3m->getTrackerInfo());
+			if(0 == mp3out->init(44100)) {
+				if(mp3out->errorCode() == IAudioOutput::OutputUnavailable)
+					LOG_ERROR_("LAME unavailable: Maybe cannot create MP3 File");
+				else
+					LOG_ERROR("LAME initialization error: %d", mp3out->errorCode());
 				SDL_Quit();
 				return EXIT_FAILURE;
 			}
-			LOG_MESSAGE_("Setting up LAME Parameters");
-			lame_set_in_samplerate(lgf, 44100);
-			lame_set_num_channels(lgf, 2);
-			lame_set_quality(lgf, 5);
-			lame_set_mode(lgf, STEREO);
-			lame_set_VBR(lgf, vbr_off);
-			id3tag_init(lgf);
-			id3tag_add_v2(lgf);
-			id3tag_set_title(lgf, s3m->getTrimTitle().c_str());
-			id3tag_set_artist(lgf, s3m->getTrackerInfo().c_str());
-			id3tag_set_album(lgf, PACKAGE_STRING);
-			if (lame_init_params(lgf) < 0) {
-				lame_close(lgf);
-				LOG_ERROR_("LAME Init Step 2 Failed");
-				SDL_Quit();
-				return EXIT_FAILURE;
+			output->play();
+			while(output->playing()) {
+				// ...
 			}
-			LOG_MESSAGE_("Opening MP3 file...");
-			mp3File.open((modFileName + ".mp3").c_str(), std::ios::in);
-			if (!mp3File.is_open())
-				mp3File.open((modFileName + ".mp3").c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-			ppp::AudioFrameBuffer xBuffer;
-			while(true) {
-				if (!s3m->getFifo(xBuffer, FRAMECOUNT)) {
-					if (!s3m->jumpNextTrack()) {
-						playbackStopped = true;
-					}
-					else if (!s3m->getFifo(xBuffer,FRAMECOUNT)) {
-						playbackStopped = true;
-					}
-				}
-				if(playbackStopped)
-					break;
-				int res = lame_encode_buffer_interleaved(lgf, &xBuffer->front().left, FRAMECOUNT, mp3Buffer, BUFFERSIZE);
-				if (res < 0) {
-					if (res == -1)
-						LOG_ERROR_("Lame Encoding Buffer too small!");
-					else
-						LOG_ERROR_("Unknown Lame Error.");
-				}
-				else {
-					mp3File.write(reinterpret_cast<char*>(mp3Buffer), res);
-				}
-			}
-			lame_close(lgf);
-			mp3File.close();
 		}
 		#endif
 		SDL_Quit();
