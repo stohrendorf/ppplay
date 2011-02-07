@@ -246,6 +246,7 @@ int main(int argc, char *argv[]) {
 		//s3m->initFifo(ppp::FFT::fftSampleCount);
 		fftBuffer.reset( new AudioFrameBuffer::element_type );
 		fftBuffer->resize( ppp::FFT::fftSampleCount );
+		updateTimer = SDL_AddTimer(1000/30, sdlTimerCallback, &s3m);
 		#ifdef WITH_MP3LAME
 		if(!quickMp3) {
 		#endif
@@ -256,7 +257,6 @@ int main(int argc, char *argv[]) {
 				return EXIT_FAILURE;
 			}
 			LOG_MESSAGE_("Default Output Mode");
-			updateTimer = SDL_AddTimer(1000/30, sdlTimerCallback, &s3m);
 			output->play();
 			SDL_Event event;
 			while (output && output->errorCode()==IAudioOutput::NoError) {
@@ -346,8 +346,6 @@ int main(int argc, char *argv[]) {
 					}
 				}
 			}
-			SDL_RemoveTimer(updateTimer);
-			updateTimer = NULL;
 			if(output)
 				output.reset();
 		#ifdef WITH_MP3LAME
@@ -371,6 +369,8 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		#endif
+		SDL_RemoveTimer(updateTimer);
+		updateTimer = NULL;
 		SDL_Quit();
 	}
 	catch (PppException &e) {

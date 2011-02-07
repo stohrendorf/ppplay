@@ -27,9 +27,9 @@ void MP3AudioOutput::encodeThread(MP3AudioOutput* src) {
 	while(true) {
 		while(src->m_paused)
 			usleep(1000);
-		// FIXME implement encoding
 		AudioFrameBuffer buffer;
 		if(src->source()->getAudioData(buffer, 1024)==0) {
+			//! @bug This shows "terminate called without an active exception"
 			std::terminate();
 			return;
 		}
@@ -107,6 +107,7 @@ int MP3AudioOutput::init(int desiredFrq) {
 	if(lame_init_params(m_lameGlobalFlags)<0)
 		return 0;
 	m_encoderThread = std::thread(encodeThread, this);
+	m_encoderThread.detach();
 	return desiredFrq;
 }
 
