@@ -732,7 +732,7 @@ void S3mChannel::doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException ) 
 						case 0: vibrato().resetWave( S3mWaveSine, 256 ); break;
 						case 1: vibrato().resetWave( S3mWaveRamp, 256 ); break;
 						case 2: vibrato().resetWave( S3mWaveSquare, 256 ); break;
-						case 3: vibrato().resetWave( ProtrackerLookup, 256 ); break;
+						case 3: vibrato().resetWave( S3mWaveSine, 256 ); break;
 						default:
 							break;
 					}
@@ -742,7 +742,7 @@ void S3mChannel::doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException ) 
 						case 0: tremolo().resetWave( S3mWaveSine, 256 ); break;
 						case 1: tremolo().resetWave( S3mWaveRamp, 256 ); break;
 						case 2: tremolo().resetWave( S3mWaveSquare, 256 ); break;
-						case 3: tremolo().resetWave( ProtrackerLookup, 256 ); break;
+						case 3: tremolo().resetWave( S3mWaveSine, 256 ); break;
 						default:
 							break;
 					}
