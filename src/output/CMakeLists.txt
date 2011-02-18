@@ -5,4 +5,4 @@ endif()
 
 add_library(audioout STATIC ${audioout_SRCS})
 
-target_link_libraries(audioout utils)
+# target_link_libraries(audioout utils)
