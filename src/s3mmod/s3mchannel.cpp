@@ -262,10 +262,11 @@ uint16_t S3mChannel::basePeriod() {
 void S3mChannel::setBasePeriod(uint16_t per) {
 	if(per==0)
 		return setActive(false);
-	if(!m_amigaLimits)
+/*	if(!m_amigaLimits)
 		m_basePeriod = clip<uint16_t>(per, 0x40, 0x7fff);
 	else
-		m_basePeriod = clip<uint16_t>(per, 0xda, 0xd60);
+		m_basePeriod = clip<uint16_t>(per, 0xda, 0xd60);*/
+	m_basePeriod = per;
 }
 
 uint16_t S3mChannel::getAdjustedPeriod() throw() {
