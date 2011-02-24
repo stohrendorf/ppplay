@@ -38,10 +38,10 @@ static LogLevel currentLogLevel = llError;
 using std::cout;
 using std::flush;
 using std::endl;
-void logger(const std::string &msg, LogLevel ll) {
-	if(ll<currentLogLevel && ll!=-1)
+void logger( const std::string& msg, LogLevel ll ) {
+	if( ll < currentLogLevel && ll != -1 )
 		return;
-	switch(ll) {
+	switch( ll ) {
 		case llDebug:
 			cout << "-- ";
 			break;
@@ -60,7 +60,7 @@ void logger(const std::string &msg, LogLevel ll) {
 	cout << msg << endl << flush;
 }
 
-void setLogLevel(LogLevel ll) {
+void setLogLevel( LogLevel ll ) {
 	currentLogLevel = ll;
 }
 

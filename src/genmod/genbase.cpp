@@ -27,10 +27,11 @@
 
 namespace ppp {
 	const std::array<const char[3], 12> NoteNames = {{
-		"C-", "C#", "D-", "D#",
-		"E-", "F-", "F#", "G-",
-		"G#", "A-", "A#", "B-"
-	}};
+			"C-", "C#", "D-", "D#",
+			"E-", "F-", "F#", "G-",
+			"G#", "A-", "A#", "B-"
+		}
+	};
 
 // 	const std::array<const int16_t, 64> ProtrackerLookup = {{
 // 		      0,  24,  49,  74,  97, 120, 141, 161,
@@ -43,15 +44,15 @@ namespace ppp {
 // 		   -180,-161,-141,-120,- 97,- 74,- 49,- 24
 // 	}};
 
-	GenOrder::GenOrder(uint8_t idx) throw() : m_index(idx)
+	GenOrder::GenOrder( uint8_t idx ) throw() : m_index( idx )
 	{ }
 	uint8_t GenOrder::getIndex() const throw() {
 		return m_index;
 	}
-	void GenOrder::setIndex(const uint8_t n) throw() {
+	void GenOrder::setIndex( const uint8_t n ) throw() {
 		m_index = n;
 	}
-	IArchive& GenOrder::serialize(IArchive* data) {
+	IArchive& GenOrder::serialize( IArchive* data ) {
 		return *data & m_index;
 	}
 }

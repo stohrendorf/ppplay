@@ -41,7 +41,7 @@
  * @brief Log level
  */
 typedef enum {
-	llMessage=0, //!< @brief Log all messages
+	llMessage = 0, //!< @brief Log all messages
 	llWarning, //!< @brief Log only warnings and errors
 	llError, //!< @brief Log only errors
 	llNone, //!< @brief Don't log anything
@@ -54,14 +54,14 @@ typedef enum {
  * @param[in] msg Message to logger
  * @param[in] ll Log level of the message
  */
-void logger(const std::string &msg, LogLevel ll = llMessage);
+void logger( const std::string& msg, LogLevel ll = llMessage );
 
 /**
  * @ingroup Logger
  * @brief Set the log level
  * @param[in] ll Log level
  */
-void setLogLevel(LogLevel ll);
+void setLogLevel( LogLevel ll );
 
 /**
  * @ingroup Logger

@@ -37,28 +37,28 @@ namespace ppp {
 			 * @param[in] amp Amplitude of the lookup table
 			 * @param[in] multiplier Factor to multiply the table values with when copying the values
 			 */
-			Phaser(const int16_t table[], uint32_t length, int16_t amp, float multiplier = 1) throw();
+			Phaser( const int16_t table[], uint32_t length, int16_t amp, float multiplier = 1 ) throw();
 			template<std::size_t length>
-			Phaser(const std::array<const int16_t, length>& data, int16_t amp, float multiplier = 1) {
-				resetWave(data, amp, multiplier);
+			Phaser( const std::array<const int16_t, length>& data, int16_t amp, float multiplier = 1 ) {
+				resetWave( data, amp, multiplier );
 			}
 			/**
 			 * @brief Add @a delta to the phase
 			 * @param[in] delta Value to add to the phase
 			 * @return Reference to @c *this
 			 */
-			Phaser &operator+=(int16_t delta) throw(PppException);
+			Phaser& operator+=( int16_t delta ) throw( PppException );
 			/**
 			 * @brief Increment the phase
 			 * @return Reference to @c *this
 			 */
-			Phaser &operator++() throw(PppException);
+			Phaser& operator++() throw( PppException );
 			/**
 			 * @brief Read a value from the lookup table
 			 * @param[in] index Index, automatically fitted into lookup table size range
 			 * @return Reference to the value
 			 */
-			int16_t &operator[](uint32_t index) throw(PppException);
+			int16_t& operator[]( uint32_t index ) throw( PppException );
 			/**
 			 * @brief Get the length of the lookup table
 			 * @return Length of the lookup table
@@ -85,27 +85,27 @@ namespace ppp {
 			 * @param[in] amp Amplitude of the lookup table
 			 * @param[in] multiplier Factor to multiply the table values with when copying the values
 			 */
-			void resetWave(const int16_t table[], const uint32_t length, int16_t amp, float multiplier = 1) throw(PppException);
+			void resetWave( const int16_t table[], const uint32_t length, int16_t amp, float multiplier = 1 ) throw( PppException );
 			template<std::size_t length>
-			void resetWave(const std::array<const int16_t, length>& data, int16_t amp, float multiplier = 1) throw(PppException) {
-				resetWave(&data.front(), length, amp, multiplier);
+			void resetWave( const std::array<const int16_t, length>& data, int16_t amp, float multiplier = 1 ) throw( PppException ) {
+				resetWave( &data.front(), length, amp, multiplier );
 			}
 			/**
 			 * @brief Get the current phase value
 			 * @return The current phase value
 			 */
-			int16_t get() const throw(PppException);
+			int16_t get() const throw( PppException );
 			/**
 			 * @brief Get the current phase value divided by the amplitude
 			 * @return The current phase value divided by the amplitude
 			 */
-			float getf() const throw(PppException);
+			float getf() const throw( PppException );
 			/**
 			 * @brief Saves the current state to @a dest
 			 * @param[in,out] dest BinStream to save the state in
 			 * @return Reference to @a dest for pipelining
 			 */
-			virtual IArchive& serialize(IArchive* archive);
+			virtual IArchive& serialize( IArchive* archive );
 	};
 }
 
