@@ -28,6 +28,7 @@
 
 namespace ppg {
 	/**
+	 * @class Exception
 	 * @ingroup Ppg
 	 * @brief A simple tracing exception for PeePeeGUI
 	 */
@@ -95,14 +96,14 @@ namespace ppg {
 #define PPG_TEST(condition) if(condition) throw ppg::Exception("[PPG_TEST] " #condition,__LINE__,__PRETTY_FUNCTION__);
 
 	/**
-	 * @brief Catch and re-throw a PpgException
+	 * @brief Catch and re-throw a ppg::Exception
 	 */
 #define PPG_RETHROW() \
 	catch(ppg::Exception &e) { throw ppg::Exception(e,__LINE__,__PRETTY_FUNCTION__); }
 
 	/**
-	 * @brief Throw a PpgException with position information
-	 * @param[in] msg Message passed to the constructor of the PpgException
+	 * @brief Throw a ppg::Exception with position information
+	 * @param[in] msg Message passed to the constructor of the ppg::Exception
 	 */
 #define PPG_THROW(msg) throw ppg::Exception(msg,__LINE__,__PRETTY_FUNCTION__);
 

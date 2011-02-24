@@ -46,7 +46,7 @@ namespace ppg {
 	};
 
 	/**
-	 * @class PpgStereoPeakBar
+	 * @class StereoPeakBar
 	 * @ingroup Ppg
 	 * @brief A stereo bar with peaks
 	 */

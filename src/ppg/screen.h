@@ -5,7 +5,7 @@
 
 namespace ppg {
 	/**
-	 * @class PpgScreen
+	 * @class Screen
 	 * @ingroup Ppg
 	 * @brief The virtual DOS screen
 	 */
