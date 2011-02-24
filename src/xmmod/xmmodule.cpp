@@ -25,6 +25,21 @@ using namespace ppp::xm;
 
 #pragma pack(push,1)
 struct XmHeader {
+	char id[17]; // "Extended Module: "
+	char title[20];
+	uint8_t endOfFile; // 0x1a
+	char trackerName[20];
+	uint16_t version;
+	uint32_t headerSize;
+	uint16_t songLength;
+	uint16_t restartPos;
+	uint16_t numChannels;
+	uint16_t numPatterns;
+	uint16_t numInstruments;
+	uint16_t flags;
+	uint16_t defaultSpeed;
+	uint16_t defaultTempo;
+	uint8_t orders[256];
 };
 #pragma pack(pop)
 
