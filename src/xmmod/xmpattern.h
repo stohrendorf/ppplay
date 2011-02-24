@@ -18,7 +18,7 @@ namespace ppp {
 			public:
 				XmCell() throw();
 				virtual ~XmCell() throw();
-				virtual bool load(BinStream &str) throw(PppException);
+				virtual bool load( BinStream& str ) throw( PppException );
 				virtual void reset() throw();
 				virtual std::string trackerString() const throw();
 				uint8_t getNote() const throw();
@@ -29,19 +29,19 @@ namespace ppp {
 		};
 
 		class XmPattern {
-				DISABLE_COPY(XmPattern)
+				DISABLE_COPY( XmPattern )
 			public:
 				typedef std::shared_ptr<XmPattern> Ptr;
 				typedef std::vector<Ptr> Vector;
 			private:
 				std::vector<XmCell::Vector> m_tracks;
-				XmCell::Ptr createCell(uint16_t trackIndex, uint16_t row) throw(PppException);
+				XmCell::Ptr createCell( uint16_t trackIndex, uint16_t row ) throw( PppException );
 			public:
 				XmPattern() = delete;
-				XmPattern(int16_t chans) throw(PppException);
+				XmPattern( int16_t chans ) throw( PppException );
 				~XmPattern() throw();
-				bool load(BinStream& str) throw(PppException);
-				XmCell::Ptr getCell(uint16_t trackIndex, uint16_t row) throw();
+				bool load( BinStream& str ) throw( PppException );
+				XmCell::Ptr getCell( uint16_t trackIndex, uint16_t row ) throw();
 				std::size_t numRows() const;
 				std::size_t numChannels() const;
 		};

@@ -44,14 +44,14 @@ class PppException : public std::exception {
 		 * @brief Constructor with initial message
 		 * @param[in] msg Initial exception message
 		 */
-		PppException(const std::string &msg) throw();
+		PppException( const std::string& msg ) throw();
 		/**
 		 * @brief Constructor with additional information
 		 * @param[in] msg Initial Message
 		 * @param[in] lineno Line number (use @c __LINE__ here)
 		 * @param[in] function Function (use @c __PRETTY_FUNCTION__ or @c __FUNCTION__ here)
 		 */
-		PppException(const std::string& msg, unsigned int lineno, const char function[]) throw();
+		PppException( const std::string& msg, unsigned int lineno, const char function[] ) throw();
 		/**
 		 * @brief Constructor with additional information for Re-Throws
 		 * @param[in] previous Previous PppException
@@ -62,7 +62,7 @@ class PppException : public std::exception {
 		 * Appends the parameters from this contructor to @a previous, giving the possibility
 		 * to trace the exception
 		 */
-		PppException(const PppException& previous, unsigned int lineno, const char function[]) throw();
+		PppException( const PppException& previous, unsigned int lineno, const char function[] ) throw();
 		/**
 		 * @brief Destructor, no operation
 		 */
@@ -71,7 +71,7 @@ class PppException : public std::exception {
 		 * @brief Get the exception message
 		 * @return Message
 		 */
-		virtual const char *what() const throw();
+		virtual const char* what() const throw();
 };
 
 /**

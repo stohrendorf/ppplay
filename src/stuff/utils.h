@@ -36,10 +36,10 @@ namespace ppp {
 	 * @note Time-critical
 	 */
 	template<typename T>
-	inline const T &clip(const T &v, const T &a, const T &b) throw() {
-		return std::min(b, std::max(v, a));
+	inline const T& clip( const T& v, const T& a, const T& b ) throw() {
+		return std::min( b, std::max( v, a ) );
 	}
-	
+
 	/**
 	 * @brief Check if @a v is between @a a and @a b
 	 * @ingroup Common
@@ -51,8 +51,8 @@ namespace ppp {
 	 * @note Time-critical
 	 */
 	template<typename T>
-	inline bool inRange(const T v, const T a, const T b) throw() {
-		return (v >= a) && (v <= b);
+	inline bool inRange( const T v, const T a, const T b ) throw() {
+		return ( v >= a ) && ( v <= b );
 	}
 
 	/**
@@ -62,8 +62,8 @@ namespace ppp {
 	 * @return Formatted string
 	 * @note Time-critical
 	 */
-	std::string stringf(const char *fmt, ...) __attribute__(( format(printf,1,2), nonnull(1) ));
-	
+	std::string stringf( const char* fmt, ... ) __attribute__( ( format( printf, 1, 2 ), nonnull( 1 ) ) );
+
 	/**
 	 * @brief Helper function like strncpy, but returns a std::string
 	 * @ingroup Common
@@ -72,8 +72,8 @@ namespace ppp {
 	 * @return Copied string
 	 * @note Stops at the NUL character
 	 */
-	std::string stringncpy(const char src[], const std::size_t maxlen) __attribute__(( nonnull(1) ));
-	
+	std::string stringncpy( const char src[], const std::size_t maxlen ) __attribute__( ( nonnull( 1 ) ) );
+
 	/**
 	 * @brief Get low nibble of a byte
 	 * @ingroup Common
@@ -81,10 +81,10 @@ namespace ppp {
 	 * @return Low nibble of @a x
 	 * @note Time-critical
 	 */
-	inline uint8_t lowNibble(const uint8_t x) throw() {
+	inline uint8_t lowNibble( const uint8_t x ) throw() {
 		return x & 0x0f;
 	}
-	
+
 	/**
 	 * @brief Get high nibble of a byte
 	 * @ingroup Common
@@ -92,14 +92,14 @@ namespace ppp {
 	 * @return High nibble of @a x
 	 * @note Time-critical
 	 */
-	inline uint8_t highNibble(const uint8_t x) throw() {
+	inline uint8_t highNibble( const uint8_t x ) throw() {
 		return x >> 4;
 	}
-	
-	void swapEndian(char data[], std::size_t size);
+
+	void swapEndian( char data[], std::size_t size );
 	template<class T>
-	void swapEndian(T* data) {
-		swapEndian(reinterpret_cast<char*>(data), sizeof(T));
+	void swapEndian( T* data ) {
+		swapEndian( reinterpret_cast<char*>( data ), sizeof( T ) );
 	}
 }
 

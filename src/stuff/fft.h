@@ -31,7 +31,7 @@ namespace ppp {
 // 		const int FFT_LEN = 512;
 		extern const size_t fftSampleCount;
 		typedef std::shared_ptr< std::vector<uint16_t> > AmpsData;
-		void doFFT(AudioFrameBuffer &samples, AmpsData &L, AmpsData &R);
+		void doFFT( AudioFrameBuffer& samples, AmpsData& L, AmpsData& R );
 	}
 }
 

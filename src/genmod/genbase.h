@@ -94,8 +94,8 @@ namespace ppp {
 	 * @return Clipped 16-bit sample
 	 * @note Time-critical
 	 */
-	inline int16_t clipSample(int32_t smp) throw() {
-		return clip(smp, -32768, 32767);
+	inline int16_t clipSample( int32_t smp ) throw() {
+		return clip( smp, -32768, 32767 );
 	}
 
 	/**
@@ -103,7 +103,7 @@ namespace ppp {
 	 * @ingroup GenMod
 	 */
 	class GenOrder : public ISerializable {
-			DISABLE_COPY(GenOrder)
+			DISABLE_COPY( GenOrder )
 			GenOrder() = delete;
 		public:
 			typedef std::shared_ptr<GenOrder> Ptr; //!< @brief Class pointer
@@ -115,7 +115,7 @@ namespace ppp {
 			 * @brief Constructor
 			 * @param[in] idx Order index
 			 */
-			GenOrder(uint8_t idx) throw();
+			GenOrder( uint8_t idx ) throw();
 			/**
 			 * @brief Return the pattern index associated with this order
 			 * @return GenOrder::m_index
@@ -125,8 +125,8 @@ namespace ppp {
 			 * @brief Set the pattern index
 			 * @param[in] n New index
 			 */
-			void setIndex(const uint8_t n) throw();
-			virtual IArchive& serialize(IArchive* data);
+			void setIndex( const uint8_t n ) throw();
+			virtual IArchive& serialize( IArchive* data );
 	};
 
 	/* *
