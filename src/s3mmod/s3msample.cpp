@@ -47,6 +47,24 @@ uint8_t {
  * @brief S3M Sample Header
  */
 struct S3mSampleHeader {
+	uint8_t type;         //!< @brief Sample type, only type 1 supported
+	char filename[12];    //!< @brief DOS filename, no ending @c NUL character
+	uint8_t memSeg[3];    //!< @brief Parapointer to sample data
+	uint16_t length;      //!< @brief Sample length in bytes
+	uint16_t hiLength;    //!< @brief Sample length in bytes, high nibble
+	uint16_t loopStart;   //!< @brief Loop start offset in bytes
+	uint16_t hiLoopStart; //!< @brief Loop start offset in bytes, high nibble
+	uint16_t loopEnd;     //!< @brief Loop end offset in bytes
+	uint16_t hiLoopEnd;   //!< @brief Loop end offset in bytes, high nibble
+	uint8_t volume;       //!< @brief Sample volume
+	uint8_t rsvd1;        //!< @brief Reserved
+	uint8_t pack;         //!< @brief 1 if DP30ADPCM packed @warning Not supported
+	uint8_t flags;        //!< @brief Sample flags
+	uint16_t c2spd;       //!< @brief Base frequency
+	uint16_t hiC2spd;     //!< @brief Base frequency, high nibble
+	uint8_t rsvd2[12];    //!< @brief Reserved
+	char sampleName[28];  //!< @brief Sample title, including @c NUL character
+	char ID[4];           //!< @brief @c 'SCRS'
 };
 #pragma pack(pop)
 
