@@ -27,7 +27,7 @@
 namespace ppg {
 
 	/**
-	 * @class PpgLabel
+	 * @class Label
 	 * @ingroup Ppg
 	 * @brief A colored text label
 	 */
