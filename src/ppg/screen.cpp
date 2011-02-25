@@ -124,9 +124,8 @@ namespace ppg {
 			for( unsigned char px = 0; px < 8; px++ ) {
 				if( plFont88[c][py] & ( 0x80 >> px ) )
 					g_drawPixel( x + px, y + py, foreground );
-				else
-					if( opaque )
-						g_drawPixel( x + px, y + py, background );
+				else if( opaque )
+					g_drawPixel( x + px, y + py, background );
 			}
 		}
 	}
@@ -138,9 +137,8 @@ namespace ppg {
 			for( unsigned char px = 0; px < 8; px++ ) {
 				if( plFont816[c][py] & ( 0x80 >> px ) )
 					g_drawPixel( x + px, y + py, foreground );
-				else
-					if( opaque )
-						g_drawPixel( x + px, y + py, background );
+				else if( opaque )
+					g_drawPixel( x + px, y + py, background );
 			}
 		}
 	}

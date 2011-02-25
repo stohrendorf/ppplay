@@ -39,13 +39,13 @@
  * @ingroup Logger
  * @brief Log level
  */
-typedef enum {
+enum LogLevel {
 	llMessage = 0, //!< @brief Log all messages
 	llWarning, //!< @brief Log only warnings and errors
 	llError, //!< @brief Log only errors
 	llNone, //!< @brief Don't log anything
 	llDebug = 0xff
-} LogLevel;
+};
 
 /**
  * @ingroup Logger
@@ -53,7 +53,7 @@ typedef enum {
  * @param[in] msg Message to logger
  * @param[in] ll Log level of the message
  */
-void logger( const std::string& msg, LogLevel ll = llMessage );
+void logger( const std::string& where, const std::string& msg, LogLevel ll = llMessage );
 
 /**
  * @ingroup Logger
@@ -76,16 +76,14 @@ LogLevel getLogLevel();
  * @param[in] ll Message's log level
  * @param[in] fmt Message
  */
-#define LOG(ll,fmt,...) logger(ppp::stringf("%s // " fmt, __PRETTY_FUNCTION__, ##__VA_ARGS__), ll)
-#define LOG_(ll,fmt) logger(ppp::stringf("%s // " fmt, __PRETTY_FUNCTION__), ll)
+#define LOG(ll, ...) logger(__PRETTY_FUNCTION__, ppp::stringf(__VA_ARGS__), ll)
 
 /**
  * @ingroup Logger
  * @brief Log a message with log level ::llMessage
  * @param[in] fmt Message
  */
-#define LOG_MESSAGE(fmt, ...) LOG(llMessage, fmt, ##__VA_ARGS__)
-#define LOG_MESSAGE_(fmt) LOG_(llMessage, fmt)
+#define LOG_MESSAGE(...) LOG(llMessage, __VA_ARGS__)
 #define LOG_TEST_MESSAGE(condition) if(condition) LOG_MESSAGE("[LOG_TEST_MESSAGE] %s", #condition)
 
 /**
@@ -93,8 +91,7 @@ LogLevel getLogLevel();
  * @brief Log a message with log level ::llWarning
  * @param[in] fmt Message
  */
-#define LOG_WARNING(fmt, ...) LOG(llWarning, fmt, ##__VA_ARGS__)
-#define LOG_WARNING_(fmt) LOG_(llWarning, fmt)
+#define LOG_WARNING(...) LOG(llWarning, __VA_ARGS__)
 #define LOG_TEST_WARN(condition) if(condition) LOG_WARNING("[LOG_TEST_WARN] %s", #condition)
 
 /**
@@ -102,16 +99,13 @@ LogLevel getLogLevel();
  * @brief Log a message with log level ::llError
  * @param[in] fmt Message
  */
-#define LOG_ERROR(fmt, ...) LOG(llError, fmt, ##__VA_ARGS__)
-#define LOG_ERROR_(fmt) LOG_(llError, fmt)
+#define LOG_ERROR(...) LOG(llError, __VA_ARGS__)
 #define LOG_TEST_ERROR(condition) if(condition) LOG_ERROR("[LOG_TEST_ERROR] %s", #condition)
 
 #ifndef NDEBUG
-#	define LOG_DEBUG(fmt, ...) LOG(llDebug, fmt, ##__VA_ARGS__)
-#	define LOG_DEBUG_(fmt) LOG_(llDebug, fmt)
+#	define LOG_DEBUG(fmt, ...) LOG(llDebug, fmt, __VA_ARGS__)
 #else
 #	define LOG_DEBUG(fmt, ...)
-#	define LOG_DEBUG_(fmt)
 #endif
 
 /**

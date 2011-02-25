@@ -68,7 +68,7 @@ bool S3mCell::load( BinStream& str ) throw( PppException ) {
 		}
 	}
 	catch( ... ) {
-		LOG_ERROR_( "EXCEPTION" );
+		LOG_ERROR( "EXCEPTION" );
 		setActive( false );
 		return false;
 	}
@@ -90,11 +90,10 @@ std::string S3mCell::trackerString() const throw() {
 	std::string xmsg = "";
 	if( m_note == s3mEmptyNote )
 		xmsg += "... ";
+	else if( m_note == s3mKeyOffNote )
+		xmsg += "^^  ";
 	else
-		if( m_note == s3mKeyOffNote )
-			xmsg += "^^  ";
-		else
-			xmsg += stringf( "%s%d ", NoteNames[m_note & 0x0f], m_note >> 4 );
+		xmsg += stringf( "%s%d ", NoteNames[m_note & 0x0f], m_note >> 4 );
 	if( m_instr != s3mEmptyInstr )
 		xmsg += stringf( "%.2d ", m_instr );
 	else
@@ -186,12 +185,12 @@ bool S3mPattern::load( BinStream& str, std::size_t pos ) throw( PppException ) {
 			currTrack = master & 31;
 			str.seekrel( -1 );
 			if( str.fail() ) {
-				LOG_ERROR_( "str.fail()..." );
+				LOG_ERROR( "str.fail()..." );
 				return false;
 			}
 			S3mCell::Ptr cell = createCell( currTrack, currRow );
 			if( !cell->load( str ) ) {
-				LOG_ERROR_( "Cell loading: ERROR" );
+				LOG_ERROR( "Cell loading: ERROR" );
 				return false;
 			}
 		}

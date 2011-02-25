@@ -103,7 +103,7 @@ namespace ppp {
 			 * @param[in] amp Amplitude of the lookup table
 			 * @param[in] multiplier Factor to multiply the table values with when copying the values
 			 */
-			void resetWave( const int16_t table[], const uint32_t length, int16_t amp, float multiplier = 1 ) throw( PppException );
+			void resetWave( const int16_t table[], uint32_t length, int16_t amp, float multiplier = 1 ) throw( PppException );
 			template<std::size_t length>
 			void resetWave( const std::array<const int16_t, length>& data, int16_t amp, float multiplier = 1 ) throw( PppException ) {
 				resetWave( &data.front(), length, amp, multiplier );

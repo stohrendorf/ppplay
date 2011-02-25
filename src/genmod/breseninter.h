@@ -21,6 +21,8 @@
 
 #include <cstdint>
 
+#include "stuff/utils.h"
+
 namespace ppp {
 	/**
 	 * @class BresenInterpolation
@@ -35,6 +37,7 @@ namespace ppp {
 	 * heavy speed-up.
 	 */
 	class BresenInterpolation {
+			DISABLE_COPY(BresenInterpolation)
 		private:
 			int32_t m_dx; //!< @brief Width of the line
 			int32_t m_dy; //!< @brief Height of the line
@@ -45,16 +48,14 @@ namespace ppp {
 			 * @param[in] dx Width of the interpolation line
 			 * @param[in] dy Height of the interpolation line
 			 */
-			BresenInterpolation(const int32_t dx, const int32_t dy) : m_dx(dx), m_dy(dy), m_err(m_dx/2) { }
+			BresenInterpolation( int32_t dx, int32_t dy ) : m_dx( dx ), m_dy( dy ), m_err( m_dx / 2 ) { }
 			BresenInterpolation() = delete; //!< @brief No default constructor
-			BresenInterpolation(const BresenInterpolation &) = default; //!< @brief Default constructor
-			BresenInterpolation &operator=(const BresenInterpolation &) = default; //!< @brief Default assignment operator
 			/**
 			 * @brief Calculates the next interpolation step
 			 * @param[in,out] pos Interpolation Y point to adjust
 			 */
-			inline void next(int32_t &pos) throw() {
-				for(m_err-=m_dy; m_err<0; m_err+=m_dx)
+			inline void next( int32_t& pos ) throw() {
+				for( m_err -= m_dy; m_err < 0; m_err += m_dx )
 					pos++;
 			}
 	};

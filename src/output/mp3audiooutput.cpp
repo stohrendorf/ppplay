@@ -36,9 +36,9 @@ void MP3AudioOutput::encodeThread( MP3AudioOutput* src ) {
 		int res = lame_encode_buffer_interleaved( src->m_lameGlobalFlags, &buffer->front().left, buffer->size(), src->m_buffer, BufferSize );
 		if( res < 0 ) {
 			if( res == -1 )
-				LOG_ERROR_( "Lame Encoding Buffer too small!" );
+				LOG_ERROR( "Lame Encoding Buffer too small!" );
 			else
-				LOG_ERROR_( "Unknown Lame Error." );
+				LOG_ERROR( "Unknown Lame Error." );
 		}
 		else {
 			src->m_file.write( reinterpret_cast<char*>( src->m_buffer ), res );
@@ -87,13 +87,13 @@ int MP3AudioOutput::init( int desiredFrq ) {
 	m_file.open( m_filename, std::ios::in );
 	if( m_file.is_open() ) {
 		m_file.close();
-		LOG_ERROR_( "Output file already exists" );
+		LOG_ERROR( "Output file already exists" );
 		setErrorCode( OutputUnavailable );
 		return 0;
 	}
 	m_file.open( m_filename, std::ios::out | std::ios::binary );
 	if( !m_file.is_open() ) {
-		LOG_ERROR_( "Cannot open output file for writing" );
+		LOG_ERROR( "Cannot open output file for writing" );
 		setErrorCode( OutputUnavailable );
 		return 0;
 	}

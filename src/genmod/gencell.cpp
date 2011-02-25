@@ -25,7 +25,8 @@
 */
 
 using namespace ppp;
-GenCell::GenCell() throw() : m_active(false) {
+
+GenCell::GenCell() throw() : m_active( false ) {
 }
 
 GenCell::~GenCell() {
@@ -39,7 +40,7 @@ bool GenCell::isActive() const throw() {
 	return m_active;
 }
 
-IArchive& GenCell::serialize(IArchive* data) {
-	*data & m_active;
+IArchive& GenCell::serialize( IArchive* data ) {
+	*data& m_active;
 	return *data;
 }

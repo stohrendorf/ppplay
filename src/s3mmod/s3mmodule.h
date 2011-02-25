@@ -41,7 +41,7 @@ namespace ppp {
 		 * @brief Module class for S3M Modules
 		 */
 		class S3mModule : public GenModule {
-				DISABLE_COPY(S3mModule)
+				DISABLE_COPY( S3mModule )
 				S3mModule() = delete;
 			public:
 				typedef std::shared_ptr<S3mModule> Ptr;
@@ -57,45 +57,48 @@ namespace ppp {
 				std::array<S3mChannel::Ptr, 32> m_channels;
 				uint8_t m_usedChannels;
 				std::array<uint16_t, 256> m_orderPlaybackCounts;
-				S3mPattern::Ptr getPattern(size_t idx) const { if(idx>=m_patterns.size()) return S3mPattern::Ptr(); return m_patterns[idx]; }
+				S3mPattern::Ptr getPattern( size_t idx ) const {
+					if( idx >= m_patterns.size() ) return S3mPattern::Ptr();
+					return m_patterns[idx];
+				}
 				/**
 				 * @brief Apply global effects
 				 * @note Time-critical
 				 */
-				void checkGlobalFx() throw(PppException);
+				void checkGlobalFx() throw( PppException );
 				/**
 				 * @brief Adjust the playback position
 				 * @param[in] increaseTick Whether to increase the tick value
 				 * @param[in] doStore Set this to @c true to store the current state, and to @c false to restore it
 				 */
-				bool adjustPosition(bool increaseTick, bool doStore) throw(PppException);
+				bool adjustPosition( bool increaseTick, bool doStore ) throw( PppException );
 			protected:
-				virtual IArchive& serialize(IArchive* data);
+				virtual IArchive& serialize( IArchive* data );
 			public:
 				/**
 				 * @copydoc GenModule::GenModule
 				 */
-				S3mModule(uint32_t frq = 44100, uint8_t maxRpt = 2) throw(PppException);
+				S3mModule( uint32_t frq = 44100, uint8_t maxRpt = 2 ) throw( PppException );
 				virtual ~S3mModule() throw();
 				virtual uint8_t channelCount() const;
-				bool load(const std::string &fn) throw(PppException);
-				bool existsSample(int16_t idx) throw();
-				std::string getSampleName(int16_t idx) throw();
-				virtual inline uint16_t getTickBufLen() const throw(PppException);
-				virtual void getTick(AudioFrameBuffer &buf ) throw(PppException);
-				virtual void getTickNoMixing(std::size_t& bufLen) throw(PppException);
-				virtual GenOrder::Ptr mapOrder(int16_t order) throw();
-				virtual std::string getChanStatus(int16_t idx) throw();
-				virtual bool jumpNextTrack() throw(PppException);
-				virtual bool jumpPrevTrack() throw(PppException);
+				bool load( const std::string& fn ) throw( PppException );
+				bool existsSample( int16_t idx ) throw();
+				std::string getSampleName( int16_t idx ) throw();
+				virtual inline uint16_t getTickBufLen() const throw( PppException );
+				virtual void getTick( AudioFrameBuffer& buf ) throw( PppException );
+				virtual void getTickNoMixing( std::size_t& bufLen ) throw( PppException );
+				virtual GenOrder::Ptr mapOrder( int16_t order ) throw();
+				virtual std::string getChanStatus( int16_t idx ) throw();
+				virtual bool jumpNextTrack() throw( PppException );
+				virtual bool jumpPrevTrack() throw( PppException );
 				virtual bool jumpNextOrder() throw();
 				virtual bool jumpPrevOrder() throw();
-				virtual std::string getChanCellString(int16_t idx) throw();
+				virtual std::string getChanCellString( int16_t idx ) throw();
 		};
-		
-		inline uint16_t S3mModule::getTickBufLen() const throw(PppException) {
-			PPP_TEST(getPlaybackInfo().tempo < 0x20);
-			return getPlaybackFrq()*5 / (getPlaybackInfo().tempo<<1);
+
+		inline uint16_t S3mModule::getTickBufLen() const throw( PppException ) {
+			PPP_TEST( getPlaybackInfo().tempo < 0x20 );
+			return getPlaybackFrq() * 5 / ( getPlaybackInfo().tempo << 1 );
 		}
 	} // namespace s3m
 } // namespace ppp

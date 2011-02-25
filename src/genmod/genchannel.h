@@ -41,7 +41,7 @@ namespace ppp {
 	 * base class.
 	 */
 	class GenChannel : public ISerializable {
-			DISABLE_COPY(GenChannel)
+			DISABLE_COPY( GenChannel )
 			GenChannel() = delete;
 		public:
 			typedef std::shared_ptr<GenChannel> Ptr; //!< @brief Class pointer
@@ -75,13 +75,17 @@ namespace ppp {
 			 * @return #aActive
 			 * @note Time-critical
 			 */
-			bool isActive() const throw() { return m_active; }
+			bool isActive() const throw() {
+				return m_active;
+			}
 			/**
 			 * @brief Check if the channel is disabled
 			 * @return #aDisabled
 			 * @note Time-critical
 			 */
-			bool isDisabled() const throw() { return m_disabled; }
+			bool isDisabled() const throw() {
+				return m_disabled;
+			}
 			/**
 			 * @brief Get the name of the note
 			 * @return String containing note and octave (i.e. "C-3")
@@ -104,15 +108,21 @@ namespace ppp {
 			 * @return Playback position in the channel's sample
 			 * @note Time-critical
 			 */
-			int32_t getPosition() const throw() { return m_position; }
+			int32_t getPosition() const throw() {
+				return m_position;
+			}
 			/**
 			 * @brief Disables this channel.
 			 */
-			void disable() throw() { m_disabled = true; }
+			void disable() throw() {
+				m_disabled = true;
+			}
 			/**
 			 * @brief Enables this channel.
 			 */
-			void enable() throw() { m_disabled = false; }
+			void enable() throw() {
+				m_disabled = false;
+			}
 			/**
 			 * @brief Sets the panning of this channel.
 			 * @param[in] pan Panning value
@@ -132,7 +142,7 @@ namespace ppp {
 			 * @pre @c bufSize>0
 			 * @note Time-critical
 			 */
-			virtual void mixTick( MixerFrameBuffer &mixBuffer, const uint8_t volume ) throw( PppException ) = 0;
+			virtual void mixTick( MixerFrameBuffer& mixBuffer, const uint8_t volume ) throw( PppException ) = 0;
 			/**
 			 * @brief Simulates a tick without mixing
 			 * @param[in] bufSize Buffer size
@@ -156,26 +166,50 @@ namespace ppp {
 			 * @see #getFxName()
 			 */
 			virtual std::string getFxDesc() const throw( PppException ) = 0;
-			virtual IArchive& serialize(IArchive* data);
+			virtual IArchive& serialize( IArchive* data );
 			/**
 			 * @brief Get a string representation of the current cell as displayed in the tracker
 			 * @return String representation of the current cell like in the tracker
 			 */
 			virtual std::string getCellString() = 0;
 		protected:
-			uint8_t getTick() const throw() { return m_tick; }
-			void setTick(uint8_t t) throw() { m_tick = t; }
-			void setActive(bool a) throw() { m_active = a; }
-			const Phaser &vibrato() const throw() { return m_vibrato; }
-			Phaser &vibrato() throw() { return m_vibrato; }
-			const Phaser &tremolo() const throw() { return m_tremolo; }
-			Phaser &tremolo() throw() { return m_tremolo; }
-			uint8_t getVolume() const throw() { return m_volume; }
-			void setVolume(uint8_t v) throw() { m_volume = v; }
-			void setPosition(int32_t p) throw() { m_position = p; }
-			uint8_t getPanning() const throw() { return m_panning; }
-			uint16_t getPlaybackFrq() const throw() { return m_playbackFrequency; }
-			void setStatusString(const std::string &s);
+			uint8_t getTick() const throw() {
+				return m_tick;
+			}
+			void setTick( uint8_t t ) throw() {
+				m_tick = t;
+			}
+			void setActive( bool a ) throw() {
+				m_active = a;
+			}
+			const Phaser& vibrato() const throw() {
+				return m_vibrato;
+			}
+			Phaser& vibrato() throw() {
+				return m_vibrato;
+			}
+			const Phaser& tremolo() const throw() {
+				return m_tremolo;
+			}
+			Phaser& tremolo() throw() {
+				return m_tremolo;
+			}
+			uint8_t getVolume() const throw() {
+				return m_volume;
+			}
+			void setVolume( uint8_t v ) throw() {
+				m_volume = v;
+			}
+			void setPosition( int32_t p ) throw() {
+				m_position = p;
+			}
+			uint8_t getPanning() const throw() {
+				return m_panning;
+			}
+			uint16_t getPlaybackFrq() const throw() {
+				return m_playbackFrequency;
+			}
+			void setStatusString( const std::string& s );
 	};
 
 } // namespace ppp

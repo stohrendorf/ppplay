@@ -41,7 +41,7 @@ namespace ppp {
 		 */
 		class S3mChannel : public GenChannel {
 				S3mChannel() = delete; //!< @brief No default constructor
-				DISABLE_COPY(S3mChannel)
+				DISABLE_COPY( S3mChannel )
 			public:
 				typedef std::shared_ptr<S3mChannel> Ptr;
 				typedef std::vector<Ptr> Vector;
@@ -66,17 +66,17 @@ namespace ppp {
 				const S3mSample::Vector* const m_sampleList;
 				uint16_t m_basePeriod; //!< @brief The channel's period without the sample's c4speed applied
 				uint16_t basePeriod();
-				void setBasePeriod(uint16_t per);
+				void setBasePeriod( uint16_t per );
 				bool m_glissando;
 				S3mCell::Ptr m_currentCell;
-				S3mSample::Ptr currentSample() throw(PppException);
+				S3mSample::Ptr currentSample() throw( PppException );
 				/**
 				 * @brief Apply Volume Effect
 				 * @param[in] fx Effect
 				 * @param[in] fxVal Effect data
 				 * @note Time-critical
 				 */
-				void doVolumeFx(uint8_t fx, uint8_t fxVal) throw();
+				void doVolumeFx( uint8_t fx, uint8_t fxVal ) throw();
 				/**
 				 * @brief Apply Vibrato Effect
 				 * @param[in] fx Effect
@@ -84,7 +84,7 @@ namespace ppp {
 				 * @see ::s3mFxVibVolSlide
 				 * @note Time-critical
 				 */
-				void doVibratoFx(uint8_t fx, uint8_t fxVal) throw();
+				void doVibratoFx( uint8_t fx, uint8_t fxVal ) throw();
 				/**
 				 * @brief Apply Pitch Effect
 				 * @param[in] fx Effect
@@ -92,63 +92,63 @@ namespace ppp {
 				 * @see ::s3mFxPortVolSlide
 				 * @note Time-critical
 				 */
-				void doPitchFx(uint8_t fx, uint8_t fxVal) throw();
+				void doPitchFx( uint8_t fx, uint8_t fxVal ) throw();
 				/**
 				 * @brief Apply Special Effect
 				 * @param[in] fx Effect
 				 * @param[in] fxVal Effect data
 				 * @note Time-critical
 				 */
-				void doSpecialFx(uint8_t fx, uint8_t fxVal) throw(PppException);
+				void doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException );
 				/**
 				 * @brief Pitch up
 				 * @param[in] frq The base frequency
 				 * @param[in] delta Value to pitch up
 				 * @note Time-critical
 				 */
-				void pitchUp(uint16_t& per, int16_t delta) throw();
+				void pitchUp( uint16_t& per, int16_t delta ) throw();
 				/**
 				 * @brief Pitch up
 				 * @param[in] delta Value to pitch up
 				 * @note Time-critical
 				 */
-				void pitchUp(int16_t delta) throw();
+				void pitchUp( int16_t delta ) throw();
 				/**
 				 * @brief Pitch down
 				 * @param[in] frq The base frequency
 				 * @param[in] delta Value to pitch down
 				 * @note Time-critical
 				 */
-				void pitchDown(uint16_t& per, int16_t delta) throw();
+				void pitchDown( uint16_t& per, int16_t delta ) throw();
 				/**
 				 * @brief Pitch down
 				 * @param[in] delta Value to pitch down
 				 * @note Time-critical
 				 */
-				void pitchDown(int16_t delta) throw();
+				void pitchDown( int16_t delta ) throw();
 				/**
 				 * @brief Use the old Effect data if the new one is 0x00
 				 * @param[in,out] oldFx Old Effect Data
 				 * @param[in,out] newFx New Effect Data
 				 * @note Time-critical
 				 */
-				void useLastFxData(uint8_t &oldFx, uint8_t &newFx) const throw();
+				void useLastFxData( uint8_t& oldFx, uint8_t& newFx ) const throw();
 				/**
 				 * @brief Use the old Effect data nibble if one of the new Effect nibbles is 0
 				 * @param[in,out] oldFx Old Effect Data
 				 * @param[in,out] newFx New Effect Data
 				 * @note Time-critical
 				 */
-				void combineLastFxData(uint8_t &oldFx, uint8_t &newFx) const throw();
+				void combineLastFxData( uint8_t& oldFx, uint8_t& newFx ) const throw();
 				int m_sampleIndex;
-				void setSampleIndex(int32_t idx);
+				void setSampleIndex( int32_t idx );
 			public:
 				/**
 				 * @copydoc GenChannel::GenChannel
 				 */
-				S3mChannel(uint16_t frq, const S3mSample::Vector* const smp) throw();
+				S3mChannel( uint16_t frq, const S3mSample::Vector* const smp ) throw();
 				virtual ~S3mChannel() throw();
-				virtual std::string getNoteName() throw(PppException);
+				virtual std::string getNoteName() throw( PppException );
 				virtual std::string getFxName() const throw();
 				uint16_t getAdjustedPeriod() throw();
 				/**
@@ -159,11 +159,11 @@ namespace ppp {
 				 * @remarks A new value in the Instrument Column changes the instrument with the old playback position
 				 * @note Time-critical
 				 */
-				void update(S3mCell::Ptr const cell, uint8_t tick, bool noRetrigger = false) throw();
-				virtual void mixTick(MixerFrameBuffer& mixBuffer, uint8_t volume) throw(PppException);
-				virtual void simTick(const std::size_t bufSize, uint8_t volume);
+				void update( S3mCell::Ptr const cell, uint8_t tick, bool noRetrigger = false ) throw();
+				virtual void mixTick( MixerFrameBuffer& mixBuffer, uint8_t volume ) throw( PppException );
+				virtual void simTick( const std::size_t bufSize, uint8_t volume );
 				virtual void updateStatus() throw();
-				virtual std::string getFxDesc() const throw(PppException);
+				virtual std::string getFxDesc() const throw( PppException );
 				/**
 				 * @brief Enable volume slides on tick 0
 				 * @see S3mChannel::m_300VolSlides
@@ -198,8 +198,8 @@ namespace ppp {
 				 * @param[in] applyNow Set to @c true to apply @a gVol instantly
 				 * @see ppp::s3m::s3mFxGlobalVol
 				 */
-				void setGlobalVolume(uint8_t gVol, bool applyNow = false) throw();
-				virtual IArchive& serialize(IArchive* data);
+				void setGlobalVolume( uint8_t gVol, bool applyNow = false ) throw();
+				virtual IArchive& serialize( IArchive* data );
 				virtual std::string getCellString();
 		};
 	} // namespace s3m
