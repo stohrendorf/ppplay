@@ -984,7 +984,7 @@ std::string S3mChannel::getFxDesc() const throw( PppException ) {
 		case s3mFxTremolo:
 			return "Tremo\xec";
 		case s3mFxSpecial:
-			switch( highNibble( m_currentCell->getEffectValue() ) ) {
+			switch( highNibble( m_lastFx ) ) {
 				case s3mSFxSetFilter:
 					return "Fltr \xe0";
 				case s3mSFxSetGlissando:
