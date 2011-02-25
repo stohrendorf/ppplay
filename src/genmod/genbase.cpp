@@ -25,7 +25,8 @@
 */
 
 namespace ppp {
-	const std::array<const char[3], 12> NoteNames = {{
+	const std::array<const char[3], 12> NoteNames = {
+		{
 			"C-", "C#", "D-", "D#",
 			"E-", "F-", "F#", "G-",
 			"G#", "A-", "A#", "B-"
@@ -45,12 +46,15 @@ namespace ppp {
 
 	GenOrder::GenOrder( uint8_t idx ) throw() : m_index( idx )
 	{ }
+
 	uint8_t GenOrder::getIndex() const throw() {
 		return m_index;
 	}
+
 	void GenOrder::setIndex( const uint8_t n ) throw() {
 		m_index = n;
 	}
+
 	IArchive& GenOrder::serialize( IArchive* data ) {
 		return *data & m_index;
 	}

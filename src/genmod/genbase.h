@@ -128,13 +128,6 @@ namespace ppp {
 			virtual IArchive& serialize( IArchive* data );
 	};
 
-	/* *
-	 * @ingroup Common
-	 * @brief Protracker compatible Sinus lookup table
-	 * @note Length is 256, amplitude is 256
-	 */
-	//extern const std::array<const int16_t, 64> ProtrackerLookup;
-
 } // namespace ppp
 
 #endif

@@ -204,19 +204,19 @@ int main( int argc, char* argv[] ) {
 		std::string modFileName = parseCmdLine( argc, argv );
 		if( modFileName.empty() )
 			return EXIT_SUCCESS;
-		LOG_MESSAGE_( "Initializing SDL" );
+		LOG_MESSAGE( "Initializing SDL" );
 		if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER ) < 0 ) {
 			LOG_ERROR( "Could not initialize SDL: %s", SDL_GetError() );
 			SDL_Quit();
 			return EXIT_FAILURE;
 		}
-		LOG_MESSAGE_( "Initializing PeePeeGUI Elements." );
+		LOG_MESSAGE( "Initializing PeePeeGUI Elements." );
 		ppg::Label* l;
 		dosScreen.reset( new ppg::Screen( 80, 25, PACKAGE_STRING " - Built " __DATE__ " " __TIME__ ) );
 		uiMain = new UIMain( dosScreen.get() );
 		for( int i = 0; i < 16; i++ ) {
 		}
-		LOG_MESSAGE_( "Loading the module." );
+		LOG_MESSAGE( "Loading the module." );
 		ppp::GenModule::Ptr s3m;
 		try {
 			s3m.reset( new ppp::s3m::S3mModule( 44100, 2 ) );
@@ -224,7 +224,7 @@ int main( int argc, char* argv[] ) {
 				s3m.reset( new ppp::xm::XmModule( 44100, 2 ) );
 				if( !std::static_pointer_cast<ppp::xm::XmModule>( s3m )->load( modFileName ) ) {
 					s3m.reset();
-					LOG_ERROR_( "Error on loading the mod..." );
+					LOG_ERROR( "Error on loading the mod..." );
 					SDL_Quit();
 					return EXIT_FAILURE;
 				}
@@ -256,13 +256,13 @@ int main( int argc, char* argv[] ) {
 #ifdef WITH_MP3LAME
 		if( !quickMp3 ) {
 #endif
-			LOG_MESSAGE_( "Init Audio" );
+			LOG_MESSAGE( "Init Audio" );
 			output.reset( new SDLAudioOutput( s3m.get() ) );
 			if( !output->init( 44100 ) ) {
-				LOG_ERROR_( "Audio Init failed" );
+				LOG_ERROR( "Audio Init failed" );
 				return EXIT_FAILURE;
 			}
-			LOG_MESSAGE_( "Default Output Mode" );
+			LOG_MESSAGE( "Default Output Mode" );
 			output->play();
 			SDL_Event event;
 			while( output && output->errorCode() == IAudioOutput::NoError ) {
@@ -276,9 +276,8 @@ int main( int argc, char* argv[] ) {
 							case SDLK_SPACE:
 								if( output->playing() )
 									output->pause();
-								else
-									if( output->paused() )
-										output->play();
+								else if( output->paused() )
+									output->play();
 								break;
 							case SDLK_END:
 								if( !s3m->jumpNextTrack() )
@@ -301,77 +300,70 @@ int main( int argc, char* argv[] ) {
 								break;
 						}
 					}
-					else
-						if( event.type == SDL_MOUSEMOTION ) {
-							dosScreen->onMouseMove( event.motion.x / 8, event.motion.y / 16 );
-						}
-						else
-							if( event.type == SDL_QUIT ) {
-								output.reset();
-							}
+					else if( event.type == SDL_MOUSEMOTION ) {
+						dosScreen->onMouseMove( event.motion.x / 8, event.motion.y / 16 );
+					}
+					else if( event.type == SDL_QUIT ) {
+						output.reset();
+					}
+					else if( event.type == SDL_USEREVENT && event.user.code == 1 ) {
+						dosScreen->clearOverlay();
+						ppp::FFT::AmpsData FL, FR;
+						ppp::FFT::doFFT( fftBuffer, FL, FR );
+						uint16_t* pL = &FL->front();
+						uint16_t* pR = &FR->front();
+						int dlen = FL->size();
+						for( int i = 0; i < dlen; i++ ) {
+							uint16_t h = ( *( pL++ ) ) >> 4;
+							unsigned char color;
+							if( h < 10 )
+								color = ppg::dcGreen;
+							else if( h < 20 )
+								color = ppg::dcLightGreen;
+							else if( h < 40 )
+								color = ppg::dcYellow;
 							else
-								if( event.type == SDL_USEREVENT && event.user.code == 1 ) {
-									dosScreen->clearOverlay();
-									ppp::FFT::AmpsData FL, FR;
-									ppp::FFT::doFFT( fftBuffer, FL, FR );
-									uint16_t* pL = &FL->front();
-									uint16_t* pR = &FR->front();
-									int dlen = FL->size();
-									for( int i = 0; i < dlen; i++ ) {
-										uint16_t h = ( *( pL++ ) ) >> 4;
-										unsigned char color;
-										if( h < 10 )
-											color = ppg::dcGreen;
-										else
-											if( h < 20 )
-												color = ppg::dcLightGreen;
-											else
-												if( h < 40 )
-													color = ppg::dcYellow;
-												else
-													color = ppg::dcLightRed;
-										for( int y = 0; y < h; y++ ) {
-											dosScreen->drawPixel( i * 320 / dlen, 400 - 1 - y, color );
-										}
-										h = ( *( pR++ ) ) >> 4;
-										if( h < 10 )
-											color = ppg::dcGreen;
-										else
-											if( h < 20 )
-												color = ppg::dcLightGreen;
-											else
-												if( h < 40 )
-													color = ppg::dcYellow;
-												else
-													color = ppg::dcLightRed;
-										for( int y = 0; y < h; y++ )
-											dosScreen->drawPixel( 320 + i * 320 / dlen, 400 - 1 - y, color );
-									}
-									BasicSample* smpPtr = &fftBuffer->front().left;
-									dlen = fftBuffer->size() * 2;
-									for( int i = 0; i < dlen; i++ ) {
-										BasicSample y = *( smpPtr++ ) >> 10;
-										if( i & 1 )
-											dosScreen->drawPixel( 320 + i * 320 / dlen, 400 - 64 + y, ppg::dcLightBlue );
-										else
-											dosScreen->drawPixel( i * 320 / dlen, 400 - 64 + y, ppg::dcLightGreen );
-									}
-									dosScreen->draw();
-								}
+								color = ppg::dcLightRed;
+							for( int y = 0; y < h; y++ ) {
+								dosScreen->drawPixel( i * 320 / dlen, 400 - 1 - y, color );
+							}
+							h = ( *( pR++ ) ) >> 4;
+							if( h < 10 )
+								color = ppg::dcGreen;
+							else if( h < 20 )
+								color = ppg::dcLightGreen;
+							else if( h < 40 )
+								color = ppg::dcYellow;
+							else
+								color = ppg::dcLightRed;
+							for( int y = 0; y < h; y++ )
+								dosScreen->drawPixel( 320 + i * 320 / dlen, 400 - 1 - y, color );
+						}
+						BasicSample* smpPtr = &fftBuffer->front().left;
+						dlen = fftBuffer->size() * 2;
+						for( int i = 0; i < dlen; i++ ) {
+							BasicSample y = *( smpPtr++ ) >> 10;
+							if( i & 1 )
+								dosScreen->drawPixel( 320 + i * 320 / dlen, 400 - 64 + y, ppg::dcLightBlue );
+							else
+								dosScreen->drawPixel( i * 320 / dlen, 400 - 64 + y, ppg::dcLightGreen );
+						}
+						dosScreen->draw();
+					}
 				}
 			}
 			if( output )
 				output.reset();
 #ifdef WITH_MP3LAME
 		}
-		else {// if(mp3File.is_open()) { // quickMp3
-			LOG_MESSAGE_( "QuickMP3 Output Mode" );
+		else {   // if(mp3File.is_open()) { // quickMp3
+			LOG_MESSAGE( "QuickMP3 Output Mode" );
 			MP3AudioOutput* mp3out = new MP3AudioOutput( s3m.get(), modFileName + ".mp3" );
 			output.reset( mp3out );
 			mp3out->setID3( s3m->getTrimTitle(), PACKAGE_STRING, s3m->getTrackerInfo() );
 			if( 0 == mp3out->init( 44100 ) ) {
 				if( mp3out->errorCode() == IAudioOutput::OutputUnavailable )
-					LOG_ERROR_( "LAME unavailable: Maybe cannot create MP3 File" );
+					LOG_ERROR( "LAME unavailable: Maybe cannot create MP3 File" );
 				else
 					LOG_ERROR( "LAME initialization error: %d", mp3out->errorCode() );
 				SDL_Quit();

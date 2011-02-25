@@ -27,36 +27,36 @@
 using namespace ppp;
 
 GenSample::GenSample() throw() :
-		m_length( 0 ), m_loopStart( 0 ), m_loopEnd( 0 ), m_volume( 0 ),
-		m_baseFrq( 0 ), m_dataL(NULL), m_dataR(NULL), m_filename( "" ), m_title( "" ), m_looptype( LoopType::None ) {
+	m_length( 0 ), m_loopStart( 0 ), m_loopEnd( 0 ), m_volume( 0 ),
+	m_baseFrq( 0 ), m_dataL( NULL ), m_dataR( NULL ), m_filename( "" ), m_title( "" ), m_looptype( LoopType::None ) {
 }
 
 GenSample::~GenSample() throw() {
-	if(isStereo())
+	if( isStereo() )
 		delete[] m_dataR;
 	delete[] m_dataL;
 }
 
-void GenSample::setDataL(const int16_t data[]) throw() {
-	if(m_dataL)
+void GenSample::setDataL( const int16_t data[] ) throw() {
+	if( m_dataL )
 		delete[] m_dataL;
 	m_dataL = new int16_t[m_length];
-	std::copy(data, data+m_length, m_dataL);
+	std::copy( data, data + m_length, m_dataL );
 }
 
-void GenSample::setDataR(const int16_t data[]) throw() {
-	if(m_dataR)
+void GenSample::setDataR( const int16_t data[] ) throw() {
+	if( m_dataR )
 		delete[] m_dataR;
 	m_dataR = new int16_t[m_length];
-	std::copy(data, data+m_length, m_dataR);
+	std::copy( data, data + m_length, m_dataR );
 }
 
-void GenSample::setDataMono(const int16_t data[]) throw() {
-	if(isStereo())
+void GenSample::setDataMono( const int16_t data[] ) throw() {
+	if( isStereo() )
 		delete[] m_dataR;
 	m_dataR = NULL;
 	delete[] m_dataL;
 	m_dataL = NULL;
-	setDataL(data);
+	setDataL( data );
 	m_dataR = m_dataL;
 }

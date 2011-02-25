@@ -37,7 +37,7 @@ static LogLevel currentLogLevel = llError;
 using std::cout;
 using std::flush;
 using std::endl;
-void logger( const std::string& msg, LogLevel ll ) {
+void logger( const std::string& where, const std::string& msg, LogLevel ll ) {
 	if( ll < currentLogLevel && ll != -1 )
 		return;
 	switch( ll ) {
@@ -56,7 +56,7 @@ void logger( const std::string& msg, LogLevel ll ) {
 		default:
 			cout << "?? ";
 	}
-	cout << msg << endl << flush;
+	cout << where << " // " << msg << endl << flush;
 }
 
 void setLogLevel( LogLevel ll ) {

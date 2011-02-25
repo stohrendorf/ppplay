@@ -56,7 +56,7 @@ namespace ppp {
 			s3mOrderEnd     = 0xff, //!< @brief "--" Marker (End of Song)
 			s3mOrderSkip    = 0xfe  //!< @brief "++" Marker (Skip this order)
 		};
-		
+
 		/**
 		 * @brief Tracker IDs
 		 * @ingroup S3mMod
@@ -266,3 +266,4 @@ namespace ppp {
 } // namespace ppp
 
 #endif
+

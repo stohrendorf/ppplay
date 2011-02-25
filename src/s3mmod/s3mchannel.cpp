@@ -31,7 +31,8 @@
 namespace ppp {
 	namespace s3m {
 
-		static const std::array<const int16_t, 64> S3mWaveSine = {{
+		static const std::array<const int16_t, 64> S3mWaveSine = {
+			{
 				0, 24, 49, 74, 97, 120, 141, 161,
 				180, 197, 212, 224, 235, 244, 250, 253,
 				255, 253, 250, 244, 235, 224, 212, 197,
@@ -42,7 +43,8 @@ namespace ppp {
 				-180, -161, -141, -120, -97, -74, -49, -24
 			}
 		};
-		static const std::array<const int16_t, 64> S3mWaveRamp = {{
+		static const std::array<const int16_t, 64> S3mWaveRamp = {
+			{
 				0, -0xF8, -0xF0, -0xE8, -0xE0, -0xD8, -0xD0, -0xC8,
 				-0xC0, -0xB8, -0xB0, -0xA8, -0xA0, -0x98, -0x90, -0x88,
 				-0x80, -0x78, -0x70, -0x68, -0x60, -0x58, -0x50, -0x48, -0x40,
@@ -52,7 +54,8 @@ namespace ppp {
 				0xC8, 0xD0, 0xD8, 0xE0, 0xE8, 0xF0, 0xF8
 			}
 		};
-		static const std::array<const int16_t, 64> S3mWaveSquare = {{
+		static const std::array<const int16_t, 64> S3mWaveSquare = {
+			{
 				0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 				0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 				0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -215,14 +218,12 @@ void S3mChannel::useLastFxData( uint8_t& oldFx, uint8_t& newFx ) const throw() {
 void S3mChannel::combineLastFxData( uint8_t& oldFx, uint8_t& newFx ) const throw() {
 	if( newFx == 0 )
 		newFx = oldFx;
+	else if( highNibble( newFx ) == 0 )
+		oldFx = ( newFx & 0x0f ) | ( oldFx & 0xf0 );
+	else if( lowNibble( newFx ) == 0 )
+		oldFx = ( newFx & 0xf0 ) | ( oldFx & 0x0f );
 	else
-		if( highNibble( newFx ) == 0 )
-			oldFx = ( newFx & 0x0f ) | ( oldFx & 0xf0 );
-		else
-			if( lowNibble( newFx ) == 0 )
-				oldFx = ( newFx & 0xf0 ) | ( oldFx & 0x0f );
-			else
-				oldFx = newFx;
+		oldFx = newFx;
 	newFx = oldFx;
 }
 
@@ -436,25 +437,21 @@ void S3mChannel::doVolumeFx( uint8_t fx, uint8_t fxVal ) throw() {
 			if( H == 0x0f ) {
 				if( L == 0 )
 					tempVar += H;
-				else
-					if( getTick() == 0 )
-						tempVar -= L;
+				else if( getTick() == 0 )
+					tempVar -= L;
 			}
-			else
-				if( L == 0x0f ) {
-					if( H == 0 )
-						tempVar -= L;
-					else
-						if( getTick() == 0 )
-							tempVar += H;
-				}
+			else if( L == 0x0f ) {
+				if( H == 0 )
+					tempVar -= L;
+				else if( getTick() == 0 )
+					tempVar += H;
+			}
+			else if( getTick() != 0 || m_300VolSlides ) {
+				if( H == 0 )
+					tempVar -= L;
 				else
-					if( getTick() != 0 || m_300VolSlides ) {
-						if( H == 0 )
-							tempVar -= L;
-						else
-							tempVar += H;
-					}
+					tempVar += H;
+			}
 			setVolume( clip<int16_t>( tempVar, 0, 0x40 ) );
 			break;
 		case s3mFxTremolo:
@@ -649,9 +646,8 @@ void S3mChannel::doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException ) 
 			nvol = m_tremorCount % ( lowNibble( fxVal ) + highNibble( fxVal ) + 2 );
 			if( nvol == lowNibble( fxVal ) + 1 )
 				setVolume( 0 );
-			else
-				if( nvol == 0 )
-					setVolume( m_tremorVolume );
+			else if( nvol == 0 )
+				setVolume( m_tremorVolume );
 			break;
 		case s3mFxArpeggio:
 			if( !currentSample() )
@@ -680,40 +676,37 @@ void S3mChannel::doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException ) 
 					setPanning( std::max<int16_t>( tempVar, 0 ) );
 				}
 			}
-			else
-				if( lowNibble( fxVal ) == 0x00 ) {  // panning slide right
-					if( getTick() != 0 ) {
-						fxVal = highNibble( fxVal );
-						tempVar = getPanning();
-						if( tempVar != 0xa4 )
-							tempVar += ( fxVal << 2 );
-						setPanning( std::min<int16_t>( tempVar, 0x80 ) );
-					}
+			else if( lowNibble( fxVal ) == 0x00 ) { // panning slide right
+				if( getTick() != 0 ) {
+					fxVal = highNibble( fxVal );
+					tempVar = getPanning();
+					if( tempVar != 0xa4 )
+						tempVar += ( fxVal << 2 );
+					setPanning( std::min<int16_t>( tempVar, 0x80 ) );
 				}
-				else
-					if( highNibble( fxVal ) == 0x0f ) {  // fine panning slide left
-						if( getTick() == 0 ) {
-							fxVal = lowNibble( fxVal );
-							if( fxVal == 0x00 )
-								fxVal = 0x0f;
-							tempVar = getPanning();
-							if( tempVar != 0xa4 )
-								tempVar -= fxVal;
-							setPanning( std::max<int16_t>( tempVar, 0 ) );
-						}
-					}
-					else
-						if( lowNibble( fxVal ) == 0x0f ) {  // fine panning slide right
-							if( getTick() == 0 ) {
-								fxVal = highNibble( fxVal );
-								if( fxVal == 0x00 )
-									fxVal = 0x0f;
-								tempVar = getPanning();
-								if( tempVar != 0xa4 )
-									tempVar += fxVal;
-								setPanning( std::min<int16_t>( tempVar, 0x80 ) );
-							}
-						}
+			}
+			else if( highNibble( fxVal ) == 0x0f ) { // fine panning slide left
+				if( getTick() == 0 ) {
+					fxVal = lowNibble( fxVal );
+					if( fxVal == 0x00 )
+						fxVal = 0x0f;
+					tempVar = getPanning();
+					if( tempVar != 0xa4 )
+						tempVar -= fxVal;
+					setPanning( std::max<int16_t>( tempVar, 0 ) );
+				}
+			}
+			else if( lowNibble( fxVal ) == 0x0f ) { // fine panning slide right
+				if( getTick() == 0 ) {
+					fxVal = highNibble( fxVal );
+					if( fxVal == 0x00 )
+						fxVal = 0x0f;
+					tempVar = getPanning();
+					if( tempVar != 0xa4 )
+						tempVar += fxVal;
+					setPanning( std::min<int16_t>( tempVar, 0x80 ) );
+				}
+			}
 			break;
 		case s3mFxSpecial:
 			useLastFxData( m_lastFx, fxVal );
@@ -775,17 +768,17 @@ void S3mChannel::doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException ) 
 					}
 					break;
 				case s3mSFxFunkRpt:
-					LOG_MESSAGE_( "Funk Repeat not supported" );
+					LOG_MESSAGE( "Funk Repeat not supported" );
 					break;
 				case s3mSFxSetFilter:
-					LOG_MESSAGE_( "Set Filter not supported" );
+					LOG_MESSAGE( "Set Filter not supported" );
 					break;
 				case s3mSFxSetFinetune:
-					LOG_WARNING_( "Set Finetune (currently) not implemented" );
+					LOG_WARNING( "Set Finetune (currently) not implemented" );
 					break;
 				case s3mSFxSetGlissando:
 					m_glissando = fxVal != 0;
-					LOG_WARNING_( "Set Glissando Control is experimental" );
+					LOG_WARNING( "Set Glissando Control is experimental" );
 					break;
 				default:
 					LOG_WARNING( "UNSUPPORTED SPECIAL FX FOUND: %s", getFxName().c_str() );
@@ -855,9 +848,8 @@ void S3mChannel::mixTick( MixerFrameBuffer& mixBuffer, uint8_t volume ) throw( P
 		volL = 0x80 - getPanning();
 	if( getPanning() < 0x40 )
 		volR = getPanning();
-	else
-		if( getPanning() == 0xa4 )
-			volR = 0xa4;
+	else if( getPanning() == 0xa4 )
+		volR = 0xa4;
 	for( std::size_t i = 0; i < mixBuffer->size(); i++ ) {
 		int16_t sampleVal = currSmp->getLeftSampleAt( pos );
 		if( sampleVal != 0xa4 )
@@ -941,35 +933,32 @@ std::string S3mChannel::getFxDesc() const throw( PppException ) {
 				else
 					return "VSld \x19";
 			}
-			else
-				if( lowNibble( m_lastFx ) == 0x0f ) {
-					if( highNibble( m_lastFx ) == 0 )
-						return "VSld \x1f";
-					else
-						return "VSld \x18";
-				}
-				else {
-					if( highNibble( m_lastFx ) == 0 )
-						return "VSld \x1f";
-					else
-						return "VSld \x1e";
-				}
+			else if( lowNibble( m_lastFx ) == 0x0f ) {
+				if( highNibble( m_lastFx ) == 0 )
+					return "VSld \x1f";
+				else
+					return "VSld \x18";
+			}
+			else {
+				if( highNibble( m_lastFx ) == 0 )
+					return "VSld \x1f";
+				else
+					return "VSld \x1e";
+			}
 		case s3mFxPitchDown:
 			if( highNibble( m_lastFx ) == 0x0f )
 				return "Ptch \x1f";
+			else if( highNibble( m_lastFx ) == 0x0e )
+				return "Ptch \x19";
 			else
-				if( highNibble( m_lastFx ) == 0x0e )
-					return "Ptch \x19";
-				else
-					return "Ptch\x1f\x1f";
+				return "Ptch\x1f\x1f";
 		case s3mFxPitchUp:
 			if( highNibble( m_lastFx ) == 0x0f )
 				return "Ptch \x1e";
+			else if( highNibble( m_lastFx ) == 0x0e )
+				return "Ptch \x18";
 			else
-				if( highNibble( m_lastFx ) == 0x0e )
-					return "Ptch \x18";
-				else
-					return "Ptch\x1e\x1e";
+				return "Ptch\x1e\x1e";
 		case s3mFxPorta:
 			return "Porta\x12";
 		case s3mFxVibrato:
@@ -1054,17 +1043,14 @@ void S3mChannel::updateStatus() throw() {
 		std::string panStr;
 		if( getPanning() == 0xa4 )
 			panStr = "Srnd ";
+		else if( getPanning() == 0x00 )
+			panStr = "Left ";
+		else if( getPanning() == 0x40 )
+			panStr = "Centr";
+		else if( getPanning() == 0x80 )
+			panStr = "Right";
 		else
-			if( getPanning() == 0x00 )
-				panStr = "Left ";
-			else
-				if( getPanning() == 0x40 )
-					panStr = "Centr";
-				else
-					if( getPanning() == 0x80 )
-						panStr = "Right";
-					else
-						panStr = stringf( "%4d%%", ( getPanning() - 0x40 ) * 100 / 0x40 );
+			panStr = stringf( "%4d%%", ( getPanning() - 0x40 ) * 100 / 0x40 );
 		std::string volStr = stringf( "%3d%%", clip( getVolume() + m_deltaVolume, 0, 0x40 ) * 100 / 0x40 );
 		setStatusString( stringf( "%.2d: %s%s %s %s P:%s V:%s %s",
 		                          m_sampleIndex + 1,

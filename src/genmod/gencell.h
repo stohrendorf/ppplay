@@ -63,8 +63,10 @@ namespace ppp {
 			 * @return Tracker-like string
 			 */
 			virtual std::string trackerString() const throw() = 0;
-			virtual IArchive& serialize(IArchive* data);
-			void setActive(bool a) throw() { m_active = a; }
+			virtual IArchive& serialize( IArchive* data );
+			void setActive( bool a ) throw() {
+				m_active = a;
+			}
 	};
 
 } // namespace ppp

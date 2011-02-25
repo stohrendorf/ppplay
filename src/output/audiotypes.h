@@ -44,8 +44,8 @@ typedef int16_t BasicSample;
  */
 #pragma pack(push, 1)
 struct BasicSampleFrame {
-	BasicSample left; //!< @brief Left channel sample
-	BasicSample right; //!< @brief Right channel sample
+	BasicSample left;
+	BasicSample right;
 };
 #pragma pack(pop)
 /**
@@ -64,8 +64,8 @@ typedef int32_t MixerSample;
  */
 #pragma pack(push,1)
 struct MixerSampleFrame {
-	MixerSample left; //!< @brief Left channel sample
-	MixerSample right; //!< @brief Right channel sample
+	MixerSample left;
+	MixerSample right;
 };
 #pragma pack(pop)
 /**

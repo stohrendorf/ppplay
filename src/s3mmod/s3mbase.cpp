@@ -19,7 +19,7 @@
 #include "s3mbase.h"
 
 /**
-* @file
-* @ingroup S3mMod
-* @brief This file contains the base definitions for S3M Modules
-*/
+ * @file
+ * @ingroup S3mMod
+ * @brief This file contains the base definitions for S3M Modules
+ */

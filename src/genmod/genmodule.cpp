@@ -29,40 +29,39 @@
 using namespace ppp;
 
 IArchive* GenMultiTrack::newState() {
-	IArchive::Ptr p(new MemArchive());
-	LOG_MESSAGE("Creating new state %u", m_states.size());
-	m_states.push_back(p);
+	IArchive::Ptr p( new MemArchive() );
+	LOG_MESSAGE( "Creating new state %u", m_states.size() );
+	m_states.push_back( p );
 	return p.get();
 }
 
 IArchive* GenMultiTrack::nextState() {
-	if(m_stateIndex>=m_states.size()) {
-		LOG_ERROR("%d >= %d", m_stateIndex, m_states.size());
+	if( m_stateIndex >= m_states.size() ) {
+		LOG_ERROR( "%d >= %d", m_stateIndex, m_states.size() );
 		return NULL;
 	}
 	m_stateIndex++;
-	LOG_MESSAGE("Loading state %u", m_stateIndex);
+	LOG_MESSAGE( "Loading state %u", m_stateIndex );
 	IArchive* result = m_states[m_stateIndex].get();
 	return result;
 }
 
 IArchive* GenMultiTrack::prevState() {
-	if(m_stateIndex<=1) {
-		LOG_ERROR_("m_stateIndex <= 1");
+	if( m_stateIndex <= 1 ) {
+		LOG_ERROR( "m_stateIndex <= 1" );
 		return NULL;
 	}
 	m_stateIndex--;
-	LOG_MESSAGE("Loading state %u", m_stateIndex);
+	LOG_MESSAGE( "Loading state %u", m_stateIndex );
 	IArchive* result = m_states[m_stateIndex].get();
 	return result;
 }
 
 GenModule::GenModule( uint32_t frq, uint8_t maxRpt ) throw( PppException ) :
-		m_fileName(), m_title(), m_trackerInfo(), m_orders(), m_maxRepeat( maxRpt ),
-		m_playbackFrequency( clip<unsigned int>( frq, 11025, 44800 ) ), m_playedFrames( 0 ), m_tracks(),
-		m_currentTrack( 0 ), m_multiTrack( false ), m_playbackInfo()
-{
-	PPP_TEST( maxRpt==0 );
+	m_fileName(), m_title(), m_trackerInfo(), m_orders(), m_maxRepeat( maxRpt ),
+	m_playbackFrequency( clip<unsigned int>( frq, 11025, 44800 ) ), m_playedFrames( 0 ), m_tracks(),
+	m_currentTrack( 0 ), m_multiTrack( false ), m_playbackInfo() {
+	PPP_TEST( maxRpt == 0 );
 	m_playbackInfo.tick = m_playbackInfo.order = m_playbackInfo.pattern = 0;
 	m_playbackInfo.row = m_playbackInfo.speed = m_playbackInfo.tempo = 0;
 	m_playbackInfo.globalVolume = 0x40;
@@ -73,21 +72,21 @@ GenModule::GenModule( uint32_t frq, uint8_t maxRpt ) throw( PppException ) :
 GenModule::~GenModule() {
 }
 
-IArchive& GenModule::serialize(IArchive* data) {
-	data->array(reinterpret_cast<char*>(&m_playbackInfo), sizeof(m_playbackInfo)) & m_playedFrames & m_currentTrack;
-/*	for ( uint_fast16_t i = 0; i < m_orders.size(); i++ ) {
-		if ( !m_orders[i] )
-			continue;
-		data->archive(m_orders[i].get());
-	}*/
+IArchive& GenModule::serialize( IArchive* data ) {
+	data->array( reinterpret_cast<char*>( &m_playbackInfo ), sizeof( m_playbackInfo ) ) & m_playedFrames & m_currentTrack;
+	/*	for ( uint_fast16_t i = 0; i < m_orders.size(); i++ ) {
+			if ( !m_orders[i] )
+				continue;
+			data->archive(m_orders[i].get());
+		}*/
 	return *data;
 }
 
 std::string GenModule::getFileName() throw( PppException ) {
 	try {
-		std::size_t lastPos = m_fileName.find_last_of("/\\");
-		if(lastPos != std::string::npos)
-			return m_fileName.substr(lastPos+1);
+		std::size_t lastPos = m_fileName.find_last_of( "/\\" );
+		if( lastPos != std::string::npos )
+			return m_fileName.substr( lastPos + 1 );
 		return m_fileName;
 	}
 	PPP_CATCH_ALL();
@@ -101,7 +100,7 @@ std::string GenModule::getTrimTitle() const throw() {
 	std::string res = m_title;
 	std::size_t startpos = res.find_first_not_of( " \t" );
 	std::size_t endpos = res.find_last_not_of( " \t" );
-	if (( std::string::npos == startpos ) || ( std::string::npos == endpos ) )
+	if( ( std::string::npos == startpos ) || ( std::string::npos == endpos ) )
 		return std::string();
 	return res.substr( startpos, endpos - startpos + 1 );
 }
@@ -130,26 +129,28 @@ bool GenModule::isMultiTrack() const throw() {
 void GenModule::removeEmptyTracks() {
 	std::vector<GenMultiTrack> nTr;
 	std::for_each(
-		m_tracks.begin(), m_tracks.end(),
-		[&nTr](const GenMultiTrack &mt){ if(mt.length!=0 && mt.startOrder!=GenMultiTrack::stopHere) nTr.push_back(mt); }
+	    m_tracks.begin(), m_tracks.end(),
+	[&nTr]( const GenMultiTrack & mt ) {
+		if( mt.length != 0 && mt.startOrder != GenMultiTrack::stopHere ) nTr.push_back( mt );
+	}
 	);
-/*	for(std::vector<GenMultiTrack>::iterator it = m_tracks.begin(); it!=m_tracks.end(); it++) {
-		if (( it->length != 0 ) && ( it->startOrder != GenMultiTrack::stopHere ) )
-			nTr.push_back( *it );
-	}*/
+	/*	for(std::vector<GenMultiTrack>::iterator it = m_tracks.begin(); it!=m_tracks.end(); it++) {
+			if (( it->length != 0 ) && ( it->startOrder != GenMultiTrack::stopHere ) )
+				nTr.push_back( *it );
+		}*/
 	m_tracks = nTr;
 	m_multiTrack = getTrackCount() > 1;
 }
 
-std::size_t GenModule::getAudioData(AudioFrameBuffer& buffer, std::size_t size) {
-	if(!buffer)
-		buffer.reset(new AudioFrameBuffer::element_type);
-	while(buffer->size() < size) {
+std::size_t GenModule::getAudioData( AudioFrameBuffer& buffer, std::size_t size ) {
+	if( !buffer )
+		buffer.reset( new AudioFrameBuffer::element_type );
+	while( buffer->size() < size ) {
 		AudioFrameBuffer tmpBuf;
-		getTick(tmpBuf);
-		if(!tmpBuf || tmpBuf->size()==0)
+		getTick( tmpBuf );
+		if( !tmpBuf || tmpBuf->size() == 0 )
 			return 0;
-		buffer->insert(buffer->end(), tmpBuf->begin(), tmpBuf->end());
+		buffer->insert( buffer->end(), tmpBuf->begin(), tmpBuf->end() );
 	}
 	return buffer->size();
 }

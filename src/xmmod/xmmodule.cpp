@@ -53,7 +53,7 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 	file.read( reinterpret_cast<char*>( &hdr ), sizeof( hdr ) );
 	LOG_DEBUG( "Header end @ 0x%.8x", file.pos() );
 	if( !std::equal( hdr.id, hdr.id + 17, "Extended Module: " ) || hdr.endOfFile != 0x1a || hdr.numChannels > 32 ) {
-		LOG_WARNING_( "XM Header invalid" );
+		LOG_WARNING( "XM Header invalid" );
 		return false;
 	}
 	if( hdr.version != 0x0104 ) {
@@ -75,7 +75,7 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 	for( uint16_t i = 0; i < hdr.numPatterns; i++ ) {
 		XmPattern::Ptr pat( new XmPattern( hdr.numChannels ) );
 		if( !pat->load( file ) ) {
-			LOG_ERROR_( "Pattern loading error" );
+			LOG_ERROR( "Pattern loading error" );
 			return false;
 		}
 		m_patterns.push_back( pat );
@@ -83,12 +83,12 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 	for( uint16_t i = 0; i < hdr.numInstruments; i++ ) {
 		XmInstrument::Ptr ins( new XmInstrument() );
 		if( !ins->load( file ) ) {
-			LOG_ERROR_( "Instrument loading error" );
+			LOG_ERROR( "Instrument loading error" );
 			return false;
 		}
 		m_instruments.push_back( ins );
 	}
-	// WARNING Remove this when player code exists!
+	// TODO Remove this when player code exists!
 	return false;
 }
 

@@ -62,11 +62,10 @@ std::string XmCell::trackerString() const throw() {
 	std::string xmsg = "";
 	if( m_note == 0 )
 		xmsg += "... ";
+	else if( m_note == 97 )
+		xmsg += "===";
 	else
-		if( m_note == 97 )
-			xmsg += "===";
-		else
-			xmsg += stringf( "%s%d ", NoteNames[m_note & 0x0f], m_note >> 4 );
+		xmsg += stringf( "%s%d ", NoteNames[m_note & 0x0f], m_note >> 4 );
 	if( m_instr != 0 )
 		xmsg += stringf( "%.2d ", m_instr );
 	else
