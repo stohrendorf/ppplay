@@ -47,13 +47,15 @@ static const std::size_t FRAMECOUNT = BUFFERSIZE / sizeof( BasicSampleFrame );
 static AudioFrameBuffer fftBuffer;
 
 static std::shared_ptr<ppg::Screen> dosScreen;
-static UIMain* uiMain;
+static UIMain* uiMain = NULL;
 
 static IAudioOutput::Ptr output;
 static SDL_TimerID updateTimer = NULL;
 
+static bool noGUI = false;
+
 static void updateDisplay( ppp::GenModule::Ptr& module ) {
-	if( !module || !output )
+	if( !module || !output || noGUI )
 		return;
 	dosScreen->clear( ' ', ppg::dcWhite, ppg::dcBlack );
 	uiMain->volBar()->shift( output->volumeLeft() >> 8, output->volumeRight() >> 8 );
@@ -76,12 +78,13 @@ static void updateDisplay( ppp::GenModule::Ptr& module ) {
 		lb = uiMain->chanCell( i );
 		*lb = module->getChanCellString( i );
 	}
-	//dosScreen->draw();
 }
 
 static Uint32 sdlTimerCallback( Uint32 interval, void* param ) {
-	updateDisplay( *static_cast<ppp::GenModule::Ptr*>( param ) );
-	dosScreen->draw();
+	if( !noGUI ) {
+		updateDisplay( *static_cast<ppp::GenModule::Ptr*>( param ) );
+		dosScreen->draw();
+	}
 	return interval;
 }
 
@@ -99,6 +102,7 @@ static std::string parseCmdLine( int argc, char* argv[] ) {
 	( "copyright", "Shows copyright information and exits" )
 	( "verbose,v", "Be verbose (includes warnings)" )
 	( "very-verbose,V", "FOR DEBUG PURPOSES ONLY! (implies -v, includes all messages)" )
+	( "no-gui,n", "No GUI" )
 	;
 	bpo::options_description ioOpts( "Input/Output Options" );
 	ioOpts.add_options()
@@ -171,6 +175,9 @@ static std::string parseCmdLine( int argc, char* argv[] ) {
 		cout << genOpts << ioOpts;
 		return std::string();
 	}
+	if( vm.count( "no-gui" ) ) {
+		noGUI = true;
+	}
 	if( vm.count( "verbose" ) ) {
 		setLogLevel( llWarning );
 	}
@@ -212,8 +219,10 @@ int main( int argc, char* argv[] ) {
 		}
 		LOG_MESSAGE( "Initializing PeePeeGUI Elements." );
 		ppg::Label* l;
-		dosScreen.reset( new ppg::Screen( 80, 25, PACKAGE_STRING " - Built " __DATE__ " " __TIME__ ) );
-		uiMain = new UIMain( dosScreen.get() );
+		if( !noGUI ) {
+			dosScreen.reset( new ppg::Screen( 80, 25, PACKAGE_STRING ) );
+			uiMain = new UIMain( dosScreen.get() );
+		}
 		for( int i = 0; i < 16; i++ ) {
 		}
 		LOG_MESSAGE( "Loading the module." );
@@ -238,16 +247,18 @@ int main( int argc, char* argv[] ) {
 			LOG_ERROR( "Main: %s", e.what() );
 			return EXIT_FAILURE;
 		}
-		l = uiMain->trackerInfo();
-		*l = ppp::stringf( "Tracker: %s - Channels: %d", s3m->getTrackerInfo().c_str(), s3m->channelCount() );
-		if( s3m->isMultiTrack() )
-			*l += " - Multi-track";
-		l = uiMain->modTitle();
-		if( s3m->getTrimTitle() != "" )
-			*l = std::string( " -=\xf0[ " ) + s3m->getFileName() + " : " + s3m->getTrimTitle() + " ]\xf0=- ";
-		else
-			*l = std::string( " -=\xf0[ " ) + s3m->getFileName() + " ]\xf0=- ";
-		dosScreen->show();
+		if( !noGUI ) {
+			l = uiMain->trackerInfo();
+			*l = ppp::stringf( "Tracker: %s - Channels: %d", s3m->getTrackerInfo().c_str(), s3m->channelCount() );
+			if( s3m->isMultiTrack() )
+				*l += " - Multi-track";
+			l = uiMain->modTitle();
+			if( s3m->getTrimTitle() != "" )
+				*l = std::string( " -=\xf0[ " ) + s3m->getFileName() + " : " + s3m->getTrimTitle() + " ]\xf0=- ";
+			else
+				*l = std::string( " -=\xf0[ " ) + s3m->getFileName() + " ]\xf0=- ";
+			dosScreen->show();
+		}
 		//LOG_MESSAGE_("Init Fifo");
 		//s3m->initFifo(ppp::FFT::fftSampleCount);
 		fftBuffer.reset( new AudioFrameBuffer::element_type );
@@ -300,13 +311,13 @@ int main( int argc, char* argv[] ) {
 								break;
 						}
 					}
-					else if( event.type == SDL_MOUSEMOTION ) {
+					else if( !noGUI && event.type == SDL_MOUSEMOTION ) {
 						dosScreen->onMouseMove( event.motion.x / 8, event.motion.y / 16 );
 					}
 					else if( event.type == SDL_QUIT ) {
 						output.reset();
 					}
-					else if( event.type == SDL_USEREVENT && event.user.code == 1 ) {
+					else if( !noGUI && event.type == SDL_USEREVENT && event.user.code == 1 ) {
 						dosScreen->clearOverlay();
 						ppp::FFT::AmpsData FL, FR;
 						ppp::FFT::doFFT( fftBuffer, FL, FR );
