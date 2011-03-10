@@ -22,4 +22,4 @@
 
 * SDL related
   
-  Check if video output can be improved for speed.
+  Check if video output can be improved for speed. (==> Make a diff against what's already drawn on the screen and re-draw only what's needed.)
