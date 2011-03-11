@@ -365,7 +365,7 @@ bool S3mModule::load( const std::string& fn ) throw( PppException ) {
 			while( currTickLen != 0 );
 			LOG_MESSAGE( "Preprocessed." );
 			int nCount = 0;
-			for( unsigned short i = 0; i < getOrderCount(); i++ ) {
+			for( int i = 0; i < getOrderCount(); i++ ) {
 				PPP_TEST( !getOrder( i ) );
 				if( ( getOrder( i )->getIndex() != s3mOrderEnd ) && ( getOrder( i )->getIndex() != s3mOrderSkip ) && ( m_orderPlaybackCounts[i] == 0 ) ) {
 					if( nCount == 0 )
@@ -716,7 +716,7 @@ bool S3mModule::jumpNextTrack() throw( PppException ) {
 		GenMultiTrack nulltrack;
 		for( uint16_t i = 0; i < getOrderCount(); i++ ) {
 			PPP_TEST( !getOrder( i ) );
-			if( ( getOrder( i )->getIndex() != s3mOrderEnd ) && ( getOrder( i )->getIndex() != s3mOrderSkip ) && ( m_orderPlaybackCounts[getPlaybackInfo().order] == 0 ) ) {
+			if( ( getOrder( i )->getIndex() != s3mOrderEnd ) && ( getOrder( i )->getIndex() != s3mOrderSkip ) && ( m_orderPlaybackCounts[i] == 0 ) ) {
 				PPP_TEST( !mapOrder( i ) );
 				setPatternIndex( mapOrder( i )->getIndex() );
 				setOrder( i );
