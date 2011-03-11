@@ -28,8 +28,11 @@ namespace ppg {
 
 	static Uint32 g_dosColors[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	static char* g_chars = NULL;
+	static char* g_currentChars = NULL;
 	static uint8_t* g_colorsF = NULL;
+	static uint8_t* g_currentColorsF = NULL;
 	static uint8_t* g_colorsB = NULL;
+	static uint8_t* g_currentColorsB = NULL;
 	static uint8_t* g_pixelOverlay = NULL; //!< @brief Pixel overlay buffer
 	static SDL_Surface* g_screenSurface = NULL;
 
@@ -98,9 +101,15 @@ namespace ppg {
 		g_dosColors[dcBrightWhite] = SDL_MapRGB( g_screenSurface->format, 0xff, 0xff, 0xff ); // bright white
 		int size = area().width() * area().height();
 		g_chars = new char[size];
+		g_currentChars = new char[size];
 		g_colorsF = new uint8_t[size];
+		g_currentColorsF = new uint8_t[size];
 		g_colorsB = new uint8_t[size];
+		g_currentColorsB = new uint8_t[size];
 		clear( ' ', dcWhite, dcBlack );
+		std::fill_n( g_currentChars, size, ' ' );
+		std::fill_n( g_currentColorsF, size, dcWhite );
+		std::fill_n( g_currentColorsB, size, dcBlack );
 		SDL_ShowCursor( 0 );
 	}
 
@@ -109,10 +118,16 @@ namespace ppg {
 		g_pixelOverlay = NULL;
 		delete[] g_chars;
 		g_chars = NULL;
+		delete[] g_currentChars;
+		g_currentChars = NULL;
 		delete[] g_colorsF;
 		g_colorsF = NULL;
+		delete[] g_currentColorsF;
+		g_currentColorsF = NULL;
 		delete[] g_colorsB;
 		g_colorsB = NULL;
+		delete[] g_currentColorsB;
+		g_currentColorsB = NULL;
 	}
 
 #include "pfonts.inc"
@@ -159,7 +174,9 @@ namespace ppg {
 		int h = area().height();
 		for( int y = 0; y < h; y++ ) {
 			for( int x = 0; x < w; x++ ) {
-				drawChar16( x, y, g_chars[x + y * w], g_dosColors[g_colorsF[x + y * w]], g_dosColors[g_colorsB[x + y * w]], true );
+				int o = x + y * w;
+				if(g_chars[o]!=g_currentChars[o] || g_colorsF[o]!=g_currentColorsF[o] || g_colorsB[o]!=g_currentColorsB[o])
+					drawChar16( x, y, g_chars[o], g_dosColors[g_colorsF[o]], g_dosColors[g_colorsB[o]], true );
 			}
 		}
 		if( area().contains( m_cursorX, m_cursorY ) ) {

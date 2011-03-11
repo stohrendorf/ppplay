@@ -57,7 +57,7 @@ static bool noGUI = false;
 static void updateDisplay( ppp::GenModule::Ptr& module ) {
 	if( !module || !output || noGUI )
 		return;
-	dosScreen->clear( ' ', ppg::dcWhite, ppg::dcBlack );
+	//dosScreen->clear( ' ', ppg::dcWhite, ppg::dcBlack );
 	uiMain->volBar()->shift( output->volumeLeft() >> 8, output->volumeRight() >> 8 );
 	std::size_t msecs = module->getPosition() / 441;
 	std::size_t msecslen = module->getLength() / 441;
