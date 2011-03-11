@@ -43,11 +43,6 @@ namespace ppg {
 		m_bgColors.resize( std::max<std::size_t>( m_text.length(), w ), ESC_NOCHANGE );
 	}
 
-	Label& Label::operator=( const std::string& ass ) throw() {
-		setText( ass );
-		return *this;
-	}
-
 	void Label::setText( const std::string& txt ) {
 		m_text = txt;
 		sizeColorsToMax();
