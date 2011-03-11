@@ -22,7 +22,7 @@
 
 namespace ppg {
 
-	static std::string makePos( const unsigned int lineno, const char function[] ) {
+	static std::string makePos( int lineno, const char function[] ) {
 		std::ostringstream out;
 		out << std::dec << lineno << ":" << function;
 		return out.str();
@@ -31,13 +31,13 @@ namespace ppg {
 	Exception::Exception( const std::string& msg ) throw() : exception(), m_msg( msg ) {
 	}
 
-	Exception::Exception( const std::string& msg, const int lineno, const char function[] ) throw(): exception(), m_msg( msg ) {
+	Exception::Exception( const std::string& msg, int lineno, const char function[] ) throw(): exception(), m_msg( msg ) {
 		std::ostringstream buf;
 		buf << "(ppg::Exception) Backtrace, most recent call first:" << std::endl << "\tfrom " << makePos( lineno, function ) << " - " << msg;
 		m_msg.assign( buf.str() );
 	}
 
-	Exception::Exception( const Exception& previous, const int lineno, const char function[] ) throw(): exception(), m_msg( previous.what() ) {
+	Exception::Exception( const Exception& previous, int lineno, const char function[] ) throw(): exception(), m_msg( previous.what() ) {
 		std::ostringstream buf;
 		buf << std::endl << "\tfrom " << makePos( lineno, function );
 		m_msg.append( buf.str() );

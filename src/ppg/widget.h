@@ -31,49 +31,181 @@ namespace ppg {
 	 * @brief This module contains definitions for the PeePeeGUI User Interface
 	 */
 
+	/**
+	 * @class Point
+	 * @ingroup Ppg
+	 * @brief Represents a point on screen or in a widget
+	 */
 	class Point {
 		private:
-			int m_x;
-			int m_y;
+			int m_x; //!< @brief X position
+			int m_y; //!< @brief Y position
 		public:
+			/**
+			 * @brief Default constructor, sets m_x and m_y to 0
+			 */
 			Point();
+			/**
+			 * @overload
+			 */
 			Point( int x, int y );
+			/**
+			 * @brief Adds the coordinates of @a rhs to this
+			 * @param[in] rhs The coordinates to add
+			 * @return Reference to *this
+			 */
 			const Point& operator+=( const Point& rhs );
+			/**
+			 * @brief Add two points
+			 * @param[in] rhs The coordinates to add
+			 * @return New Point
+			 */
 			const Point operator+( const Point& rhs ) const;
+			/**
+			 * @brief Subtracts the coordinates of @a rhs from this
+			 * @param[in] rhs The coordinates to subtract
+			 * @return Reference to *this
+			 */
 			const Point& operator-=( const Point& rhs );
+			/**
+			 * @brief Subtract two points
+			 * @param[in] rhs The coordinates to subtract
+			 * @return New Point
+			 */
 			const Point operator-( const Point& rhs ) const;
+			/**
+			 * @brief Get the X coordinate
+			 * @return The X coordinate
+			 */
 			int x() const;
+			/**
+			 * @brief Get the Y coordinate
+			 * @return The Y coordinate
+			 */
 			int y() const;
+			/**
+			 * @brief Set the X coordinate
+			 * @param[in] x The new X coordinate
+			 */
 			void setX( int x );
+			/**
+			 * @brief Set the Y coordinate
+			 * @param[in] y The new Y coordinate
+			 */
 			void setY( int y );
 	};
 
+	/**
+	 * @class Rect
+	 * @ingroup Ppg
+	 * @brief Represents an area on screen or in a widget
+	 */
 	class Rect {
 		private:
-			Point m_topLeft;
-			Point m_bottomRight;
+			Point m_topLeft; //!< @brief The top left point
+			Point m_bottomRight; //!< @brief The bottom right point
 		public:
+			/**
+			 * @brief Constructor
+			 * @param[in] x Top left X coordinate
+			 * @param[in] y Top left Y coordinate
+			 * @param[in] width The width of the area
+			 * @param[in] height The height of the area
+			 */
 			Rect( int x, int y, int width, int height );
+			/**
+			 * @brief Get the top coordinate
+			 * @return The top coordinate
+			 */
 			int top() const;
+			/**
+			 * @brief Set the top coordinate
+			 * @param[in] top The top coordinate
+			 */
 			void setTop( int top );
+			/**
+			 * @brief Get the left coordinate
+			 * @return The left coordinate
+			 */
 			int left() const;
+			/**
+			 * @brief Set the left coordinate
+			 * @param[in] left The left coordinate
+			 */
 			void setLeft( int left );
+			/**
+			 * @brief Get the bottom coordinate
+			 * @return The bottom coordinate
+			 */
 			int bottom() const;
+			/**
+			 * @brief Set the bottom coordinate
+			 * @param[in] bottom The bottom coordinate
+			 */
 			void setBottom( int bottom );
+			/**
+			 * @brief Get the right coordinate
+			 * @return The right coordinate
+			 */
 			int right() const;
+			/**
+			 * @brief Set the right coordinate
+			 * @param[in] right The right coordinate
+			 */
 			void setRight( int right );
+			/**
+			 * @brief Get the area's width
+			 * @return The area's width
+			 */
 			int width() const;
+			/**
+			 * @brief Set the area's width
+			 * @param[in] width The new area's width
+			 */
 			void setWidth( int width );
+			/**
+			 * @brief Get the area's height
+			 * @return The area's height
+			 */
 			int height() const;
+			/**
+			 * @brief Set the area's height
+			 * @param[in] height The new area's height
+			 */
 			void setHeight( int height );
+			/**
+			 * @brief Get the top left point
+			 * @return The top left point
+			 */
 			Point topLeft() const;
+			/**
+			 * @overload
+			 */
 			Point& topLeft();
+			/**
+			 * @brief Get the bottom right point
+			 * @return The bottom right point
+			 */
 			Point bottomRight() const;
+			/**
+			 * @overload
+			 */
 			Point& bottomRight();
+			/**
+			 * @brief Get the area's size
+			 * @return The area's size
+			 */
 			Point size() const;
+			/**
+			 * @brief Check if this rect contains a point
+			 * @return @c true if the area contains the point
+			 */
 			bool contains( const Point& pt ) const {
 				return contains( pt.x(), pt.y() );
 			}
+			/**
+			 * @overload
+			 */
 			bool contains( int x, int y ) const {
 				return x >= m_topLeft.x() && x <= m_bottomRight.x() && y >= m_topLeft.y() && y <= m_bottomRight.y();
 			}
@@ -94,7 +226,7 @@ namespace ppg {
 			bool m_visible; //!< @brief @c false if this widget and it's children should not be drawn
 			Widget* m_parent; //!< @brief Pointer to the parent widget, or @c NULL if it's the top widget
 			Rect m_area; //!< @brief Area of this widget within the parent's space
-			List m_children; //!< @brief Children within this container
+			List m_children; //!< @brief Children within this widget
 			virtual void drawThis() throw( Exception ) = 0; //!< @brief Internal drawing method, called by PppWidet::draw() @see draw()
 		public:
 			/**
@@ -171,10 +303,7 @@ namespace ppg {
 			 */
 			virtual bool setPosition( int x, int y, bool absolute = false ) throw();
 			/**
-			 * @brief Sets the widget's position
-			 * @param[in] pos Position
-			 * @param[in] absolute Set to @c true to calculate the position relative to the top parent widget
-			 * @return @c false if the position did not change
+			 * @overload
 			 */
 			virtual bool setPosition( const Point& pos, bool absolute = false );
 			/**
@@ -199,12 +328,17 @@ namespace ppg {
 			 */
 			virtual bool setSize( int w, int h ) throw( Exception );
 			/**
-			 * @brief Sets the widget's size
-			 * @param[in] pt Size
-			 * @return @c false if nothing changed
+			 * @overload
 			 */
 			virtual bool setSize( const Point& pt ) throw( Exception );
+			/**
+			 * @brief Get the widget's area
+			 * @return The widget's area
+			 */
 			Rect area() const;
+			/**
+			 * @overload
+			 */
 			Rect& area();
 			/**
 			 * @brief Get the top parent
@@ -218,8 +352,7 @@ namespace ppg {
 			 */
 			virtual void mapToParent( int* x, int* y ) const;
 			/**
-			 * @brief Map widget's coordinates to the parent ones
-			 * @param[in,out] pt Coordinates to map
+			 * @overload
 			 */
 			virtual void mapToParent( Point* pt ) const;
 			/**
@@ -229,8 +362,7 @@ namespace ppg {
 			 */
 			virtual void mapToAbsolute( int* x, int* y ) const;
 			/**
-			 * @brief Map widget's coordinates to the top parent ones
-			 * @param[in,out] pt Coordinates to map
+			 * @overload
 			 */
 			virtual void mapToAbsolute( Point* pt ) const;
 			/**

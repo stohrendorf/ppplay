@@ -104,17 +104,17 @@ namespace ppg {
 		int mpoint = length() / 2;
 		for( int i = 0; i < m_barLength; i++ ) {
 			if( valL > i * m_max / m_barLength )
-				( *this )[mpoint - 1 - i] = static_cast<char>( 0xfe );
+				charAt(mpoint - 1 - i) = static_cast<char>( 0xfe );
 			else
-				( *this )[mpoint - 1 - i] = static_cast<char>( 0xf9 );
+				charAt(mpoint - 1 - i) = static_cast<char>( 0xf9 );
 			if( ( m_peakPosL != 0 ) && m_showPeak )
-				( *this )[mpoint - 1 - m_peakPosL * m_barLength / m_max] = static_cast<char>( 0x04 );
+				charAt(mpoint - 1 - m_peakPosL * m_barLength / m_max) = static_cast<char>( 0x04 );
 			if( valR > i * m_max / m_barLength )
-				( *this )[mpoint + 1 + i] = static_cast<char>( 0xfe );
+				charAt(mpoint + 1 + i) = static_cast<char>( 0xfe );
 			else
-				( *this )[mpoint + 1 + i] = static_cast<char>( 0xf9 );
+				charAt(mpoint + 1 + i) = static_cast<char>( 0xf9 );
 			if( ( m_peakPosR != 0 ) && m_showPeak )
-				( *this )[mpoint + 1 + m_peakPosR * m_barLength / m_max] = static_cast<char>( 0x04 );
+				charAt(mpoint + 1 + m_peakPosR * m_barLength / m_max) = static_cast<char>( 0x04 );
 		}
 	}
 

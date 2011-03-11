@@ -251,7 +251,7 @@ int main( int argc, char* argv[] ) {
 			l = uiMain->trackerInfo();
 			l->setText( ppp::stringf( "Tracker: %s - Channels: %d", s3m->getTrackerInfo().c_str(), s3m->channelCount() ) );
 			if( s3m->isMultiTrack() )
-				*l += " - Multi-track";
+				l->setText( l->text() + " - Multi-track" );
 			l = uiMain->modTitle();
 			if( s3m->getTrimTitle() != "" )
 				l->setText( std::string( " -=\xf0[ " ) + s3m->getFileName() + " : " + s3m->getTrimTitle() + " ]\xf0=- " );

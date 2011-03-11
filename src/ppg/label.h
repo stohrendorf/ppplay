@@ -54,7 +54,7 @@ namespace ppg {
 			 * @param[in] text Initial text
 			 */
 			Label( Widget* parent, const std::string& text = std::string() );
-			//! @copydoc PpgWidget::~PpgWidget
+			//! @copydoc ppg::Widget::~Widget
 			virtual ~Label() throw();
 			/**
 			 * @brief Get the label's text length
@@ -66,35 +66,35 @@ namespace ppg {
 			 * @param[in] txt Text to assign to this label
 			 */
 			void setText( const std::string& txt );
+			/**
+			 * @brief Get the label's text
+			 * @return The label's text
+			 */
+			std::string text() const;
+			/**
+			 * @brief Get the character at position @a pos
+			 * @param[in] pos Position of the requested character
+			 * @return The character at position @a pos
+			 */
 			char& charAt( std::size_t pos );
+			/**
+			 * @overload
+			 */
 			char charAt( std::size_t pos ) const;
-			/**
-			 * @brief Append-Assignment operator for std::string's
-			 * @param[in] src String to append to this label
-			 * @return Reference to *this
-			 */
-			Label& operator+=( const std::string& src ) throw();
-			/**
-			 * @brief Char access
-			 * @param[in] index Index of the char of the text to access
-			 * @return Reference to the char
-			 * @exception PpgException if @a index is out of range
-			 */
-			char& operator[]( std::size_t index ) throw( Exception );
 			/**
 			 * @brief Set's the foreground color of @a len chars from position @a pos to @a color
 			 * @param[in] pos Starting position
 			 * @param[in] color New foreground color
 			 * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
 			 */
-			virtual void setFgColor( std::size_t pos, unsigned char color = ESC_NOCHANGE, std::size_t len = 1 ) throw();
+			virtual void setFgColor( std::size_t pos, uint8_t color = ESC_NOCHANGE, std::size_t len = 1 ) throw();
 			/**
 			 * @brief Set's the background color of @a len chars from position @a pos to @a color
 			 * @param[in] pos Starting position
 			 * @param[in] color New background color
 			 * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
 			 */
-			virtual void setBgColor( std::size_t pos, unsigned char color = ESC_NOCHANGE, std::size_t len = 1 ) throw();
+			virtual void setBgColor( std::size_t pos, uint8_t color = ESC_NOCHANGE, std::size_t len = 1 ) throw();
 			virtual int setHeight( int h ) throw( Exception );
 			virtual int setWidth( int w ) throw( Exception );
 	};
