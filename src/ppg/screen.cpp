@@ -179,11 +179,19 @@ namespace ppg {
 					drawChar16( x, y, g_chars[o], g_dosColors[g_colorsF[o]], g_dosColors[g_colorsB[o]], true );
 			}
 		}
+		{
+			std::size_t size = w * h;
+			std::copy(g_chars, g_chars+size, g_currentChars);
+			std::copy(g_colorsF, g_colorsF+size, g_currentColorsF);
+			std::copy(g_colorsB, g_colorsB+size, g_currentColorsB);
+		}
 		if( area().contains( m_cursorX, m_cursorY ) ) {
 			std::size_t ofs = m_cursorX + m_cursorY * w;
 			Uint32 c1 = g_dosColors[( g_colorsF[ofs] & 7 ) ^ 7];
 			Uint32 c2 = g_dosColors[( g_colorsB[ofs] & 7 ) ^ 7];
 			drawChar16( m_cursorX, m_cursorY, g_chars[ofs], c1, c2, true );
+			g_currentColorsF[ofs] = ( g_colorsF[ofs] & 7 ) ^ 7;
+			g_currentColorsB[ofs] = ( g_colorsB[ofs] & 7 ) ^ 7;
 		}
 		h = g_screenSurface->h;
 		w = g_screenSurface->w;
