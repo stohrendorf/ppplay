@@ -18,8 +18,3 @@
 * Exceptions, errors
   
   Too many exceptions are catched and thrown, many are errors recoverable, that means they're not putting the program into an unstable state.
-
-
-* SDL related
-  
-  Check if video output can be improved for speed. (==> Make a diff against what's already drawn on the screen and re-draw only what's needed.)
