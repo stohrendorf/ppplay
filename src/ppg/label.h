@@ -62,11 +62,9 @@ namespace ppg {
 			 */
 			std::size_t length() const throw();
 			/**
-			 * @brief Assignment operator for std::string's
-			 * @param[in] src String to assign to this label
-			 * @return Reference to *this
+			 * @brief Sets the label's text
+			 * @param[in] txt Text to assign to this label
 			 */
-			Label& operator=( const std::string& src ) throw();
 			void setText( const std::string& txt );
 			char& charAt( std::size_t pos );
 			char charAt( std::size_t pos ) const;
