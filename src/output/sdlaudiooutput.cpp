@@ -68,7 +68,7 @@ int SDLAudioOutput::init( int desiredFrq ) {
 	desired->callback = sdlAudioCallback;
 	desired->userdata = this;
 	if( SDL_OpenAudio( desired.get(), obtained.get() ) < 0 ) {
-		LOG_ERROR( "Couldn't open audio: %s", SDL_GetError() );
+		LOG_ERROR( "Couldn't open audio. SDL reports '%s'", SDL_GetError() );
 		return 0;
 	}
 	LOG_TEST_ERROR( desired->freq != obtained->freq );
