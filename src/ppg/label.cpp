@@ -48,12 +48,6 @@ namespace ppg {
 		sizeColorsToMax();
 	}
 
-	Label& Label::operator+=( const std::string& src ) throw() {
-		m_text += src;
-		sizeColorsToMax();
-		return *this;
-	}
-
 	int Label::setHeight( int /*h*/ ) throw( Exception ) {
 		return 1;
 	}
@@ -68,12 +62,7 @@ namespace ppg {
 		return m_text.length();
 	}
 
-	char& Label::operator[]( std::size_t index ) throw( Exception ) {
-		PPG_TEST( index >= m_text.length() );
-		return m_text[index];
-	}
-
-	void Label::setFgColor( std::size_t pos, unsigned char color, std::size_t len ) throw() {
+	void Label::setFgColor( std::size_t pos, uint8_t color, std::size_t len ) throw() {
 		if( pos >= m_bgColors.size() )
 			return;
 		if( ( len == 0 ) || ( len + pos > m_bgColors.size() ) )
@@ -81,7 +70,7 @@ namespace ppg {
 		std::fill_n( &m_fgColors[pos], len, color );
 	}
 
-	void Label::setBgColor( std::size_t pos, unsigned char color, std::size_t len ) throw() {
+	void Label::setBgColor( std::size_t pos, uint8_t color, std::size_t len ) throw() {
 		if( pos >= m_bgColors.size() )
 			return;
 		if( ( len == 0 ) || ( len + pos > m_bgColors.size() ) )
@@ -117,6 +106,17 @@ namespace ppg {
 			if( m_bgColors[textPos] != ESC_NOCHANGE )
 				drawBgColor( localX, 0, m_bgColors[textPos] );
 		}
+	}
+	
+	char& Label::charAt(std::size_t pos) {
+		return m_text[pos];
+	}
+	char Label::charAt(std::size_t pos) const {
+		return m_text[pos];
+	}
+	
+	std::string Label::text() const {
+		return m_text;
 	}
 
 } // namespace ppg

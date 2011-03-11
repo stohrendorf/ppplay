@@ -46,7 +46,7 @@ namespace ppg {
 			 * @param[in] lineno Line number (use @c __LINE__ here)
 			 * @param[in] function Function (use @c __PRETTY_FUNCTION__ or @c __FUNCTION__ here)
 			 */
-			Exception( const std::string& msg, const int lineno, const char function[] ) throw();
+			Exception( const std::string& msg, int lineno, const char function[] ) throw();
 			/**
 			 * @brief Constructor with additional information for Re-Throws
 			 * @param[in] previous Previous PppException
@@ -58,7 +58,7 @@ namespace ppg {
 			 * Appends the parameters from this contructor to @a previous, giving the possibility
 			 * to trace the exception
 			 */
-			Exception( const Exception& previous, const int lineno, const char function[] ) throw();
+			Exception( const Exception& previous, int lineno, const char function[] ) throw();
 			/**
 			 * @brief Destructor, no operation
 			 */
