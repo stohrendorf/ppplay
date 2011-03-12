@@ -29,9 +29,6 @@
 
 #include "src/genmod/genmodule.h"
 #include "src/s3mmod/s3mmodule.h"
-#include "src/xmmod/xmmodule.h"
-
-#include "src/stuff/fft.h"
 
 #include "src/output/audiofifo.h"
 #include "src/output/sdlaudiooutput.h"
@@ -43,8 +40,6 @@
 static const std::size_t BUFFERSIZE = 4096;
 static const std::size_t SAMPLECOUNT = BUFFERSIZE / sizeof( BasicSample );
 static const std::size_t FRAMECOUNT = BUFFERSIZE / sizeof( BasicSampleFrame );
-
-static AudioFrameBuffer fftBuffer;
 
 static std::shared_ptr<ppg::Screen> dosScreen;
 static UIMain* uiMain = NULL;
@@ -230,13 +225,10 @@ int main( int argc, char* argv[] ) {
 		try {
 			s3m.reset( new ppp::s3m::S3mModule( 44100, 2 ) );
 			if( !std::static_pointer_cast<ppp::s3m::S3mModule>( s3m )->load( modFileName ) ) {
-				s3m.reset( new ppp::xm::XmModule( 44100, 2 ) );
-				if( !std::static_pointer_cast<ppp::xm::XmModule>( s3m )->load( modFileName ) ) {
-					s3m.reset();
-					LOG_ERROR( "Error on loading the mod..." );
-					SDL_Quit();
-					return EXIT_FAILURE;
-				}
+				s3m.reset();
+				LOG_ERROR( "Error on loading the mod..." );
+				SDL_Quit();
+				return EXIT_FAILURE;
 			}
 		}
 		catch( PppException& e ) {
@@ -261,8 +253,6 @@ int main( int argc, char* argv[] ) {
 		}
 		//LOG_MESSAGE_("Init Fifo");
 		//s3m->initFifo(ppp::FFT::fftSampleCount);
-		fftBuffer.reset( new AudioFrameBuffer::element_type );
-		fftBuffer->resize( ppp::FFT::fftSampleCount );
 		updateTimer = SDL_AddTimer( 1000 / 30, sdlTimerCallback, &s3m );
 #ifdef WITH_MP3LAME
 		if( !quickMp3 ) {
@@ -316,50 +306,6 @@ int main( int argc, char* argv[] ) {
 					}
 					else if( event.type == SDL_QUIT ) {
 						output.reset();
-					}
-					else if( !noGUI && event.type == SDL_USEREVENT && event.user.code == 1 ) {
-						dosScreen->clearOverlay();
-						ppp::FFT::AmpsData FL, FR;
-						ppp::FFT::doFFT( fftBuffer, FL, FR );
-						uint16_t* pL = &FL->front();
-						uint16_t* pR = &FR->front();
-						int dlen = FL->size();
-						for( int i = 0; i < dlen; i++ ) {
-							uint16_t h = ( *( pL++ ) ) >> 4;
-							unsigned char color;
-							if( h < 10 )
-								color = ppg::dcGreen;
-							else if( h < 20 )
-								color = ppg::dcLightGreen;
-							else if( h < 40 )
-								color = ppg::dcYellow;
-							else
-								color = ppg::dcLightRed;
-							for( int y = 0; y < h; y++ ) {
-								dosScreen->drawPixel( i * 320 / dlen, 400 - 1 - y, color );
-							}
-							h = ( *( pR++ ) ) >> 4;
-							if( h < 10 )
-								color = ppg::dcGreen;
-							else if( h < 20 )
-								color = ppg::dcLightGreen;
-							else if( h < 40 )
-								color = ppg::dcYellow;
-							else
-								color = ppg::dcLightRed;
-							for( int y = 0; y < h; y++ )
-								dosScreen->drawPixel( 320 + i * 320 / dlen, 400 - 1 - y, color );
-						}
-						BasicSample* smpPtr = &fftBuffer->front().left;
-						dlen = fftBuffer->size() * 2;
-						for( int i = 0; i < dlen; i++ ) {
-							BasicSample y = *( smpPtr++ ) >> 10;
-							if( i & 1 )
-								dosScreen->drawPixel( 320 + i * 320 / dlen, 400 - 64 + y, ppg::dcLightBlue );
-							else
-								dosScreen->drawPixel( i * 320 / dlen, 400 - 64 + y, ppg::dcLightGreen );
-						}
-						dosScreen->draw();
 					}
 				}
 			}
