@@ -20,6 +20,7 @@
 #define S3MCHANNEL_H
 
 #include "genmod/genchannel.h"
+#include "genmod/breseninter.h"
 #include "s3mbase.h"
 #include "s3msample.h"
 #include "s3mpattern.h"
@@ -69,6 +70,7 @@ namespace ppp {
 				void setBasePeriod( uint16_t per );
 				bool m_glissando;
 				S3mCell::Ptr m_currentCell;
+				BresenInterpolation m_bresen;
 				S3mSample::Ptr currentSample() throw( PppException );
 				/**
 				 * @brief Apply Volume Effect
