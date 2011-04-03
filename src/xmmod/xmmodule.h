@@ -22,6 +22,7 @@
 #include "genmod/genmodule.h"
 #include "xmpattern.h"
 #include "xminstrument.h"
+#include "xmchannel.h"
 
 namespace ppp {
 	namespace xm {
@@ -29,9 +30,9 @@ namespace ppp {
 				DISABLE_COPY( XmModule )
 			private:
 				bool m_amiga;
-				uint8_t m_channelCount;
 				XmPattern::Vector m_patterns;
 				XmInstrument::Vector m_instruments;
+				XmChannel::Vector m_channels;
 			public:
 				typedef std::shared_ptr<XmModule> Ptr;
 				XmModule( const uint32_t frq = 44100, const uint8_t maxRpt = 2 ) throw( PppException );
