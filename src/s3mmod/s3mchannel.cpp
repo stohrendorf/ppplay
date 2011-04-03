@@ -207,26 +207,6 @@ S3mSample::Ptr S3mChannel::currentSample() throw( PppException ) {
 	return m_sampleList->at( m_sampleIndex );
 }
 
-void S3mChannel::useLastFxData( uint8_t& oldFx, uint8_t& newFx ) const throw() {
-	if( newFx == 0 )
-		newFx = oldFx;
-	else
-		oldFx = newFx;
-	newFx = oldFx;
-}
-
-void S3mChannel::combineLastFxData( uint8_t& oldFx, uint8_t& newFx ) const throw() {
-	if( newFx == 0 )
-		newFx = oldFx;
-	else if( highNibble( newFx ) == 0 )
-		oldFx = ( newFx & 0x0f ) | ( oldFx & 0xf0 );
-	else if( lowNibble( newFx ) == 0 )
-		oldFx = ( newFx & 0xf0 ) | ( oldFx & 0x0f );
-	else
-		oldFx = newFx;
-	newFx = oldFx;
-}
-
 std::string S3mChannel::getNoteName() throw( PppException ) {
 	if( m_note == s3mEmptyNote )
 		return "   ";
@@ -430,7 +410,7 @@ void S3mChannel::doVolumeFx( uint8_t fx, uint8_t fxVal ) throw() {
 							useLastFxData( m_lastVolFx, fxVal );
 						}
 						else*/
-			useLastFxData( m_lastFx, fxVal );
+			combineIfZero( m_lastFx, fxVal );
 			tempVar = getVolume();
 			H = highNibble( fxVal );
 			L = lowNibble( fxVal );
@@ -455,7 +435,7 @@ void S3mChannel::doVolumeFx( uint8_t fx, uint8_t fxVal ) throw() {
 			setVolume( clip<int16_t>( tempVar, 0, 0x40 ) );
 			break;
 		case s3mFxTremolo:
-			combineLastFxData( m_lastFx, fxVal );
+			combineNibblesIfZero( m_lastFx, fxVal );
 			if( getTick() != 0 ) {
 				tremolo() += highNibble( fxVal );
 				m_deltaVolume = ( tremolo().get() * lowNibble( fxVal ) ) >> 7;
@@ -470,7 +450,7 @@ void S3mChannel::doVolumeFx( uint8_t fx, uint8_t fxVal ) throw() {
 void S3mChannel::doVibratoFx( uint8_t fx, uint8_t fxVal ) throw() {
 	switch( fx ) {
 		case s3mFxVibrato:
-			combineLastFxData( m_lastVibratoData, fxVal );
+			combineNibblesIfZero( m_lastVibratoData, fxVal );
 		case s3mFxVibVolSlide:
 			if( getTick() == 0 )
 				break;
@@ -478,7 +458,7 @@ void S3mChannel::doVibratoFx( uint8_t fx, uint8_t fxVal ) throw() {
 			m_deltaPeriod = vibrato().get() * lowNibble( fxVal ) >> 5;
 			break;
 		case s3mFxFineVibrato:
-			combineLastFxData( m_lastVibratoData, fxVal );
+			combineNibblesIfZero( m_lastVibratoData, fxVal );
 			if( getTick() == 0 )
 				break;
 			vibrato() += highNibble( fxVal );
@@ -490,7 +470,7 @@ void S3mChannel::doVibratoFx( uint8_t fx, uint8_t fxVal ) throw() {
 void S3mChannel::doPitchFx( uint8_t fx, uint8_t fxVal ) throw() {
 	switch( fx ) {
 		case s3mFxPitchDown:
-			useLastFxData( m_lastFx, fxVal );
+			combineIfZero( m_lastFx, fxVal );
 			if( getTick() == 0 ) {
 				if( fxVal <= 0xe0 )
 					break;
@@ -506,7 +486,7 @@ void S3mChannel::doPitchFx( uint8_t fx, uint8_t fxVal ) throw() {
 			}
 			break;
 		case s3mFxPitchUp:
-			useLastFxData( m_lastFx, fxVal );
+			combineIfZero( m_lastFx, fxVal );
 			if( getTick() == 0 ) {
 				if( fxVal <= 0xe0 )
 					break;
@@ -522,7 +502,7 @@ void S3mChannel::doPitchFx( uint8_t fx, uint8_t fxVal ) throw() {
 			}
 			break;
 		case s3mFxPorta:
-			useLastFxData( m_lastPortaSpeed, fxVal );
+			combineIfZero( m_lastPortaSpeed, fxVal );
 		case s3mFxPortVolSlide:
 			/*			if ( fx == s3mFxPortVolSlide && getTick()==0) {
 							break;
@@ -571,7 +551,7 @@ void S3mChannel::doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException ) 
 	PPP_TEST( !m_currentCell );
 	switch( fx ) {
 		case s3mFxOffset:
-			useLastFxData( m_lastFx, fxVal );
+			combineIfZero( m_lastFx, fxVal );
 			if( ( getTick() == 0 ) && ( currentSample() ) && ( m_currentCell->getNote() != s3mEmptyNote ) ) {
 				setPosition( fxVal << 8 );
 				int32_t pos = getPosition();
@@ -583,7 +563,7 @@ void S3mChannel::doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException ) 
 			}
 			break;
 		case s3mFxRetrig:
-			useLastFxData( m_lastFx, fxVal );
+			combineIfZero( m_lastFx, fxVal );
 			if( lowNibble( fxVal ) == 0 )
 				break;
 			m_retrigCount %= lowNibble( fxVal );
@@ -640,7 +620,7 @@ void S3mChannel::doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException ) 
 			setVolume( clip<int16_t>( nvol, 0, 0x40 ) );
 			break;
 		case s3mFxTremor:
-			useLastFxData( m_lastFx, fxVal );
+			combineIfZero( m_lastFx, fxVal );
 			if( ( m_tremorCount == 0 ) && ( m_tremorVolume == 0 ) )
 				m_tremorVolume = getVolume();
 			nvol = m_tremorCount % ( lowNibble( fxVal ) + highNibble( fxVal ) + 2 );
@@ -652,7 +632,7 @@ void S3mChannel::doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException ) 
 		case s3mFxArpeggio:
 			if( !currentSample() )
 				break;
-			useLastFxData( m_lastFx, fxVal );
+			combineIfZero( m_lastFx, fxVal );
 			switch( getTick() % 3 ) {
 				case 0: // normal note
 					setBasePeriod( st3Period( m_note, currentSample()->getBaseFrq() ) );
@@ -666,7 +646,7 @@ void S3mChannel::doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException ) 
 			}
 			break;
 		case s3mFxPanSlide:
-			useLastFxData( m_lastFx, fxVal );
+			combineIfZero( m_lastFx, fxVal );
 			if( highNibble( fxVal ) == 0x00 ) {  // panning slide left
 				if( getTick() != 0 ) {
 					fxVal = lowNibble( fxVal );
@@ -709,7 +689,7 @@ void S3mChannel::doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException ) 
 			}
 			break;
 		case s3mFxSpecial:
-			useLastFxData( m_lastFx, fxVal );
+			combineIfZero( m_lastFx, fxVal );
 			switch( highNibble( fxVal ) ) {
 				case s3mSFxNoteDelay:
 				case s3mSFxPatLoop:

@@ -126,20 +126,6 @@ namespace ppp {
 				 * @note Time-critical
 				 */
 				void pitchDown( int16_t delta ) throw();
-				/**
-				 * @brief Use the old Effect data if the new one is 0x00
-				 * @param[in,out] oldFx Old Effect Data
-				 * @param[in,out] newFx New Effect Data
-				 * @note Time-critical
-				 */
-				void useLastFxData( uint8_t& oldFx, uint8_t& newFx ) const throw();
-				/**
-				 * @brief Use the old Effect data nibble if one of the new Effect nibbles is 0
-				 * @param[in,out] oldFx Old Effect Data
-				 * @param[in,out] newFx New Effect Data
-				 * @note Time-critical
-				 */
-				void combineLastFxData( uint8_t& oldFx, uint8_t& newFx ) const throw();
 				int m_sampleIndex;
 				void setSampleIndex( int32_t idx );
 			public:
