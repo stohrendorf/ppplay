@@ -71,7 +71,9 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 	setSpeed( hdr.defaultSpeed & 0xff );
 	setGlobalVolume( 0x40 );
 	m_amiga = ( hdr.flags & 1 ) == 0;
-	m_channelCount = hdr.numChannels;
+	m_channels.clear();
+	for(int i=0; i<hdr.numChannels; i++)
+		m_channels.push_back( XmChannel::Ptr( new XmChannel(m_instruments) ) );
 	for( uint16_t i = 0; i < hdr.numPatterns; i++ ) {
 		XmPattern::Ptr pat( new XmPattern( hdr.numChannels ) );
 		if( !pat->load( file ) ) {
@@ -140,5 +142,5 @@ std::string XmModule::getChanCellString( int16_t ) throw() {
 }
 
 uint8_t XmModule::channelCount() const {
-	return m_channelCount;
+	return m_channels.size();
 }

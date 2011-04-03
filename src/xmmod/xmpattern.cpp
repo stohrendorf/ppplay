@@ -33,7 +33,7 @@ bool XmCell::load( BinStream& str ) throw( PppException ) {
 	if( ( data & 0x80 ) == 0 ) {
 		m_note = data;
 		str.read( &m_instr ).read( &m_volume ).read( &m_effect ).read( &m_effectValue );
-		return true;
+		return !str.fail();
 	}
 	if( data & 0x01 )
 		str.read( &m_note );
@@ -45,7 +45,7 @@ bool XmCell::load( BinStream& str ) throw( PppException ) {
 		str.read( &m_effect );
 	if( data & 0x10 )
 		str.read( &m_effectValue );
-	return true;
+	return !str.fail();
 }
 
 void XmCell::reset() throw() {
@@ -150,7 +150,7 @@ bool XmPattern::load( BinStream& str ) throw( PppException ) {
 			m_tracks[chan][row] = cell;
 		}
 	}
-	return true;
+	return !str.fail();
 }
 
 XmCell::Ptr XmPattern::getCell( uint16_t trackIndex, uint16_t row ) throw() {
