@@ -48,6 +48,7 @@ namespace ppp {
 				virtual bool jumpPrevOrder() throw();
 				virtual std::string getChanCellString( int16_t ) throw();
 				virtual uint8_t channelCount() const;
+				XmInstrument::Ptr getInstrument(int idx) const;
 		};
 	} // namespace xm
 } // namespace ppp

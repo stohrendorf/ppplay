@@ -38,6 +38,7 @@ namespace ppp {
 			uint16_t m_basePeriod;
 			uint16_t m_deltaPeriod;
 			uint16_t m_portaTargetPeriod;
+			uint16_t m_currentPeriod;
 			uint8_t m_lastVolSlideFx;
 			uint8_t m_lastFineVolSlideUpFx;
 			uint8_t m_lastFineVolSlideDownFx;
@@ -47,9 +48,13 @@ namespace ppp {
 			uint8_t m_lastFinePortaDownFx;
 			uint8_t m_lastExtraFinePortaUpFx;
 			uint8_t m_lastExtraFinePortaDownFx;
-			const XmInstrument::Vector& m_instruments;
+			uint8_t m_lastPanSlideFx;
+			uint8_t m_baseNote;
+			uint8_t m_instrumentIndex;
+			int8_t m_relativeNote;
+			class XmModule* m_module;
 		public:
-			XmChannel(const XmInstrument::Vector& instruments);
+			XmChannel(class XmModule* module);
 			virtual std::string getNoteName() throw( PppException );
 			virtual std::string getFxName() const throw( PppException );
 			virtual void mixTick( MixerFrameBuffer& mixBuffer, const uint8_t volume ) throw( PppException );
@@ -58,6 +63,13 @@ namespace ppp {
 			virtual std::string getFxDesc() const throw( PppException );
 			virtual std::string getCellString();
 			void update( XmCell::Ptr const cell, uint8_t tick, bool noRetrigger = false );
+		private:
+			void doPortaUp(uint8_t fxByte);
+			void doPortaDown(uint8_t fxByte);
+			void doVolSlide(uint8_t fxByte);
+			void doPanSlide(uint8_t fxByte);
+			void triggerNote(uint8_t note);
+			void doKeyOff();
 		};
 	}
 }
