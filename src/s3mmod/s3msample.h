@@ -44,7 +44,7 @@ namespace ppp {
 			public:
 				S3mSample() throw();
 				virtual ~S3mSample() throw();
-				bool load( BinStream& str, std::size_t pos ) throw( PppException );
+				bool load( BinStream& str, std::size_t pos, bool imagoLoopEnd ) throw( PppException );
 				bool isHighQuality() const {
 					return m_highQuality;
 				}
