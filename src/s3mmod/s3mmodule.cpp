@@ -275,7 +275,7 @@ bool S3mModule::load( const std::string& fn ) throw( PppException ) {
 			if( pp == 0 )
 				continue;
 			m_samples[i].reset( new S3mSample() );
-			if( !( m_samples[i]->load( str, pp * 16 ) ) )
+			if( !( m_samples[i]->load( str, pp * 16, (( s3mHdr.createdWith >> 12 ) & 0x0f) == s3mTIdImagoOrpheus ) ) )
 				PPP_THROW( "Sample Error" );
 			if( !str.good() )
 				PPP_THROW( "Stream Error: Samples / Load" );
