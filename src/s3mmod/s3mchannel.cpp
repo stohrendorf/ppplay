@@ -19,7 +19,6 @@
 #include "genmod/genbase.h"
 #include "s3mchannel.h"
 #include "s3mpattern.h"
-#include "genmod/breseninter.h"
 #include "logger/logger.h"
 
 /**
@@ -190,7 +189,9 @@ S3mChannel::S3mChannel( uint16_t frq, const S3mSample::Vector* const smp ) throw
 	m_tremorVolume( 0 ), m_targetNote( ::s3mEmptyNote ), m_noteChanged( false ), m_deltaPeriod( 0 ),
 	m_deltaVolume( 0 ), m_globalVol( 0x40 ), m_nextGlobalVol( 0x40 ),
 	m_retrigCount( -1 ), m_tremorCount( -1 ), m_300VolSlides( false ), m_amigaLimits( false ),
-	m_maybeSchism( false ), m_zeroVolCounter( -1 ), m_sampleList( smp ), m_basePeriod( 0 ), m_glissando( false ), m_currentCell( new S3mCell() ), m_sampleIndex( -1 ) {
+	m_maybeSchism( false ), m_zeroVolCounter( -1 ), m_sampleList( smp ), m_basePeriod( 0 ), m_glissando( false ), m_currentCell( new S3mCell() ), m_sampleIndex( -1 ),
+	m_bresen(0,0)
+{
 	vibrato().resetWave( S3mWaveSine, 256 );
 	tremolo().resetWave( S3mWaveSine, 256 );
 }
@@ -818,7 +819,7 @@ void S3mChannel::mixTick( MixerFrameBuffer& mixBuffer, uint8_t volume ) throw( P
 		setActive( false );
 		return;
 	}
-	BresenInterpolation bres( mixBuffer->size(), FRQ_VALUE / getPlaybackFrq() * mixBuffer->size() / adjPer );
+	m_bresen.reset( mixBuffer->size(), FRQ_VALUE / getPlaybackFrq() * mixBuffer->size() / adjPer );
 	uint16_t currVol = clip( getVolume() + m_deltaVolume, 0, 0x40 ) * m_globalVol;
 	MixerSample* mixBufferPtr = &mixBuffer->front().left;
 	S3mSample::Ptr currSmp = currentSample();
@@ -843,7 +844,7 @@ void S3mChannel::mixTick( MixerFrameBuffer& mixBuffer, uint8_t volume ) throw( P
 		*( mixBufferPtr++ ) += ( sampleVal * currVol ) >> 12;
 		if( pos == GenSample::EndOfSample )
 			break;
-		bres.next( pos );
+		m_bresen.next( pos );
 	}
 	if( pos != GenSample::EndOfSample )
 		currentSample()->adjustPos( pos );
@@ -1065,5 +1066,6 @@ IArchive& S3mChannel::serialize( IArchive* data ) {
 	& m_noteChanged& m_deltaPeriod& m_deltaVolume& m_globalVol& m_nextGlobalVol
 	& m_retrigCount& m_tremorCount& m_300VolSlides& m_amigaLimits& m_maybeSchism
 	& m_zeroVolCounter& m_basePeriod& m_glissando;
+	data->archive( &m_bresen );
 	return data->archive( m_currentCell.get() );
 }

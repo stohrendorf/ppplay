@@ -73,7 +73,7 @@ S3mSample::S3mSample() throw() : GenSample(), m_highQuality( false ) {
 S3mSample::~S3mSample() throw() {
 }
 
-bool S3mSample::load( BinStream& str, const std::size_t pos ) throw( PppException ) {
+bool S3mSample::load( BinStream& str, const std::size_t pos, bool imagoLoopEnd ) throw( PppException ) {
 	try {
 		PPP_TEST( getDataL() != NULL || getDataR() != NULL );
 		str.seek( pos );
@@ -100,7 +100,10 @@ bool S3mSample::load( BinStream& str, const std::size_t pos ) throw( PppExceptio
 		//	aLength = (aLength>64000) ? 64000 : aLength;
 		setLoopStart( ( smpHdr.hiLoopStart << 16 ) | smpHdr.loopStart );
 		//	aLoopStart = (aLoopStart>64000) ? 64000 : aLoopStart;
-		setLoopEnd( ( smpHdr.hiLoopEnd << 16 ) | smpHdr.loopEnd );
+		if( !imagoLoopEnd )
+			setLoopEnd( ( smpHdr.hiLoopEnd << 16 ) | smpHdr.loopEnd );
+		else
+			setLoopEnd( ( smpHdr.hiLoopEnd << 16 ) | smpHdr.loopEnd + 1 );
 		//	aLoopEnd = (aLoopEnd>64000) ? 64000 : aLoopEnd;
 		setVolume( smpHdr.volume );
 		setBaseFrq( smpHdr.c2spd );
