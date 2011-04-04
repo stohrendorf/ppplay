@@ -22,6 +22,7 @@
 #include <cstdint>
 
 #include "stuff/utils.h"
+#include "stream/binstream.h"
 
 namespace ppp {
 	/**
@@ -36,7 +37,7 @@ namespace ppp {
 	 * algorithm that uses only additions and substractions instead of divisions and multiplications, it's a
 	 * heavy speed-up.
 	 */
-	class BresenInterpolation {
+	class BresenInterpolation : public ISerializable {
 			DISABLE_COPY(BresenInterpolation)
 		private:
 			int32_t m_dx; //!< @brief Width of the line
@@ -58,6 +59,11 @@ namespace ppp {
 				for( m_err -= m_dy; m_err < 0; m_err += m_dx )
 					pos++;
 			}
+			inline void reset(int32_t dx, int32_t dy) {
+				m_dx = dx;
+				m_dy = dy;
+			}
+			virtual IArchive& serialize( class IArchive* archive );
 	};
 }
 

@@ -5,6 +5,8 @@ add_library(genmod STATIC
 	gensample.cpp
 	gencell.cpp
 	genchannel.cpp
-	genmodule.cpp)
+	genmodule.cpp
+	breseninter.cpp
+)
 
 # target_link_libraries(genmod binstream)
