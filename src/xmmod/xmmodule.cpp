@@ -73,7 +73,7 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 	m_amiga = ( hdr.flags & 1 ) == 0;
 	m_channels.clear();
 	for(int i=0; i<hdr.numChannels; i++)
-		m_channels.push_back( XmChannel::Ptr( new XmChannel(this) ) );
+		m_channels.push_back( XmChannel::Ptr( new XmChannel(this, getPlaybackFrq()) ) );
 	for( uint16_t i = 0; i < hdr.numPatterns; i++ ) {
 		XmPattern::Ptr pat( new XmPattern( hdr.numChannels ) );
 		if( !pat->load( file ) ) {
@@ -90,8 +90,7 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 		}
 		m_instruments.push_back( ins );
 	}
-	// TODO Remove this when player code exists!
-	return false;
+	return true;
 }
 
 uint16_t XmModule::getTickBufLen() const throw( PppException ) {
@@ -100,9 +99,30 @@ uint16_t XmModule::getTickBufLen() const throw( PppException ) {
 }
 
 void XmModule::getTick( AudioFrameBuffer& buffer ) throw( PppException ) {
-#warning Stub - implement me
 	if( !buffer )
 		buffer.reset( new AudioFrameBuffer::element_type );
+	MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( getTickBufLen(), {0, 0} ) );
+	XmPattern::Ptr currPat = m_patterns[0];
+	for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+		XmChannel::Ptr chan = m_channels[currTrack];
+		PPP_TEST( !chan );
+		XmCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
+		chan->update( cell );
+		chan->mixTick( mixerBuffer, getPlaybackInfo().globalVolume );
+	}
+	buffer->resize( mixerBuffer->size() );
+	MixerSample* mixerBufferPtr = &mixerBuffer->front().left;
+	BasicSample* bufPtr = &buffer->front().left;
+	for( std::size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
+		*( bufPtr++ ) = clipSample( *( mixerBufferPtr++ ) >> 2 );
+		*( bufPtr++ ) = clipSample( *( mixerBufferPtr++ ) >> 2 );
+	}
+	//adjustPosition( true, false );
+	nextTick();
+	if(getPlaybackInfo().tick == 0) {
+		setRow( (getPlaybackInfo().row+1) % 64 );
+	}
+	setPosition( getPosition() + mixerBuffer->size() );
 }
 
 void XmModule::getTickNoMixing( std::size_t& len ) throw( PppException ) {

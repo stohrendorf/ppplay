@@ -142,14 +142,14 @@ namespace ppp {
 			 * @pre @c bufSize>0
 			 * @note Time-critical
 			 */
-			virtual void mixTick( MixerFrameBuffer& mixBuffer, const uint8_t volume ) throw( PppException ) = 0;
+			virtual void mixTick( MixerFrameBuffer& mixBuffer, uint8_t volume ) throw( PppException ) = 0;
 			/**
 			 * @brief Simulates a tick without mixing
 			 * @param[in] bufSize Buffer size
 			 * @param[in] volume Volume
 			 * @see #mixTick
 			 */
-			virtual void simTick( const std::size_t bufSize, const uint8_t volume ) = 0;
+			virtual void simTick( std::size_t bufSize, uint8_t volume ) = 0;
 			/**
 			 * @brief Updates the status string returned by #getStatus()
 			 * @note Time-critical

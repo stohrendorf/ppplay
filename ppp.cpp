@@ -29,6 +29,7 @@
 
 #include "src/genmod/genmodule.h"
 #include "src/s3mmod/s3mmodule.h"
+#include "src/xmmod/xmmodule.h"
 
 #include "src/output/audiofifo.h"
 #include "src/output/sdlaudiooutput.h"
@@ -225,10 +226,12 @@ int main( int argc, char* argv[] ) {
 		try {
 			s3m.reset( new ppp::s3m::S3mModule( 44100, 2 ) );
 			if( !std::static_pointer_cast<ppp::s3m::S3mModule>( s3m )->load( modFileName ) ) {
-				s3m.reset();
-				LOG_ERROR( "Error on loading the mod..." );
-				SDL_Quit();
-				return EXIT_FAILURE;
+				s3m.reset( new ppp::xm::XmModule( 44100, 2 ) );
+				if( !std::static_pointer_cast<ppp::xm::XmModule>( s3m )->load( modFileName ) ) {
+					LOG_ERROR( "Error on loading the mod..." );
+					SDL_Quit();
+					return EXIT_FAILURE;
+				}
 			}
 		}
 		catch( PppException& e ) {
