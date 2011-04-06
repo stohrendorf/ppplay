@@ -819,7 +819,7 @@ void S3mChannel::mixTick( MixerFrameBuffer& mixBuffer, uint8_t volume ) throw( P
 		setActive( false );
 		return;
 	}
-	m_bresen.reset( mixBuffer->size(), FRQ_VALUE / getPlaybackFrq() * mixBuffer->size() / adjPer );
+	m_bresen.reset( getPlaybackFrq(), FRQ_VALUE / adjPer );
 	uint16_t currVol = clip( getVolume() + m_deltaVolume, 0, 0x40 ) * m_globalVol;
 	MixerSample* mixBufferPtr = &mixBuffer->front().left;
 	S3mSample::Ptr currSmp = currentSample();
