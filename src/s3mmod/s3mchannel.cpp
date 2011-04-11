@@ -185,15 +185,15 @@ namespace ppp {
 using namespace ppp;
 using namespace ppp::s3m;
 
-static uint16_t clipPeriod(bool amiga, uint16_t period) {
-	if(amiga)
-		return clip<uint16_t>(period, 0x15c, 0xd60);
+static uint16_t clipPeriod( bool amiga, uint16_t period ) {
+	if( amiga )
+		return clip<uint16_t>( period, 0x15c, 0xd60 );
 	else
-		return clip<uint16_t>(period, 0x40, 0x7fff);
+		return clip<uint16_t>( period, 0x40, 0x7fff );
 }
 
-static uint16_t clipPeriodMax(bool amiga, uint16_t period) {
-	if(amiga)
+static uint16_t clipPeriodMax( bool amiga, uint16_t period ) {
+	if( amiga )
 		return std::min<uint16_t>( period, 0xd60 );
 	else
 		return std::min<uint16_t>( period, 0x7fff );
@@ -207,7 +207,7 @@ void S3mChannel::setSampleIndex( int32_t idx ) {
 
 S3mChannel::S3mChannel( uint16_t frq, S3mModule* const module ) throw() : GenChannel( frq ),
 	m_note( ::s3mEmptyNote ),
-	m_lastFxByte(0),
+	m_lastFxByte( 0 ),
 	m_lastVibratoData( 0 ),
 	m_lastPortaSpeed( 0 ),
 	m_tremorVolume( 0 ),
@@ -219,7 +219,7 @@ S3mChannel::S3mChannel( uint16_t frq, S3mModule* const module ) throw() : GenCha
 	m_retrigCount( 0 ),
 	m_tremorCount( 0 ),
 	m_zeroVolCounter( 0 ),
-	m_module(module),
+	m_module( module ),
 	m_basePeriod( 0 ),
 	m_realPeriod( 0 ),
 	m_portaTargetPeriod( 0 ),
@@ -229,9 +229,8 @@ S3mChannel::S3mChannel( uint16_t frq, S3mModule* const module ) throw() : GenCha
 	m_tremorCounter( 0 ),
 	m_glissando( false ),
 	m_currentCell( new S3mCell() ),
-	m_bresen(1,1),
-	m_sampleIndex( 101 )
-{
+	m_bresen( 1, 1 ),
+	m_sampleIndex( 101 ) {
 }
 
 S3mChannel::~S3mChannel() throw() {
@@ -242,7 +241,7 @@ S3mSample::Ptr S3mChannel::currentSample() throw( PppException ) {
 		setActive( false );
 		return S3mSample::Ptr();
 	}
-	return m_module->sampleAt(m_sampleIndex);
+	return m_module->sampleAt( m_sampleIndex );
 }
 
 std::string S3mChannel::getNoteName() throw( PppException ) {
@@ -276,90 +275,131 @@ std::string S3mChannel::getFxName() const throw() {
 void S3mChannel::update( S3mCell::Ptr const cell, bool noRetrigger ) throw() {
 	if( isDisabled() )
 		return;
-	
+
 	recalcFrequency();
 	recalcVolume();
-	
-	if(m_module->tick() == 0) {
+
+	if( m_module->tick() == 0 ) {
 		if( !cell )
 			m_currentCell->reset();
 		else
 			*m_currentCell = *cell;
 
 		triggerNote();
-		if(m_currentCell->getEffect() != 0) {
+		if( m_currentCell->getEffect() != 0 ) {
 			m_zeroVolCounter = 3;
 		}
-		else if(m_module->hasZeroVolOpt()) {
-			if(m_currentVolume!=0 && m_currentCell->getVolume()!=0xff && m_currentCell->getInstr()!=0 && m_currentCell->getNote()!=0xff) {
+		else if( m_module->hasZeroVolOpt() ) {
+			if( m_currentVolume != 0 && m_currentCell->getVolume() != 0xff && m_currentCell->getInstr() != 0 && m_currentCell->getNote() != 0xff ) {
 				m_zeroVolCounter = 3;
 			}
 			else {
 				m_zeroVolCounter--;
-				if(m_zeroVolCounter == 0)
-					return setActive(false);
+				if( m_zeroVolCounter == 0 )
+					return setActive( false );
 			}
 		}
-		
-		if(m_currentCell->getEffectValue() != 0)
+
+		if( m_currentCell->getEffectValue() != 0 )
 			m_lastFxByte = m_currentCell->getEffectValue();
-		if(m_currentCell->getEffect()==0 || m_currentCell->getEffect()==s3mFxVolSlide) {
+		if( m_currentCell->getEffect() == 0 || m_currentCell->getEffect() == s3mFxVolSlide ) {
 			m_countdown = 0;
 		}
-		if((m_currentCell->getEffect()==s3mFxVolSlide || m_currentCell->getEffect()==0) && m_basePeriod!=m_realPeriod) {
+		if( ( m_currentCell->getEffect() == s3mFxVolSlide || m_currentCell->getEffect() == 0 ) && m_basePeriod != m_realPeriod ) {
 			m_realPeriod = m_basePeriod;
 			recalcFrequency();
 		}
-		if(m_currentCell->getEffect()!=s3mFxTremor) {
+		if( m_currentCell->getEffect() != s3mFxTremor ) {
 			m_tremorCount = 0;
 			m_tremorMute = 0;
 		}
-		
-		if(m_currentCell->getEffect()!=s3mFxVibrato
-			&& m_currentCell->getEffect()!=s3mFxFineVibrato
-			&& m_currentCell->getEffect()!=s3mFxVibVolSlide
-			&& m_currentCell->getEffect()!=s3mFxTremolo)
-		{
+
+		if( m_currentCell->getEffect() != s3mFxVibrato
+		        && m_currentCell->getEffect() != s3mFxFineVibrato
+		        && m_currentCell->getEffect() != s3mFxVibVolSlide
+		        && m_currentCell->getEffect() != s3mFxTremolo ) {
 			m_vibratoPhase |= 0x40;
 		}
-		switch(m_currentCell->getEffect()) {
-			case s3mFxSpeed: fxSpeed(m_currentCell->getEffectValue()); break;
-			case s3mFxJumpOrder: /*TODO*/ break;
-			case s3mFxBreakPat: /*TODO*/ break;
-			case s3mFxVolSlide: fxVolSlide(m_currentCell->getEffectValue()); break;
-			case s3mFxPitchDown: fxPitchSlideDown(m_currentCell->getEffectValue()); break;
-			case s3mFxPitchUp: fxPitchSlideUp(m_currentCell->getEffectValue()); break;
-			case s3mFxTremor: fxTremor(m_currentCell->getEffectValue()); break;
-			case s3mFxArpeggio: fxArpeggio(m_currentCell->getEffectValue()); break;
-			case s3mFxRetrig: fxRetrigger(m_currentCell->getEffectValue()); break;
-			case s3mFxSpecial: fxSpecial(m_currentCell->getEffectValue()); break;
+		switch( m_currentCell->getEffect() ) {
+			case s3mFxSpeed:
+				fxSpeed( m_currentCell->getEffectValue() );
+				break;
+			case s3mFxJumpOrder: /*TODO*/
+				break;
+			case s3mFxBreakPat: /*TODO*/
+				break;
+			case s3mFxVolSlide:
+				fxVolSlide( m_currentCell->getEffectValue() );
+				break;
+			case s3mFxPitchDown:
+				fxPitchSlideDown( m_currentCell->getEffectValue() );
+				break;
+			case s3mFxPitchUp:
+				fxPitchSlideUp( m_currentCell->getEffectValue() );
+				break;
+			case s3mFxTremor:
+				fxTremor( m_currentCell->getEffectValue() );
+				break;
+			case s3mFxArpeggio:
+				fxArpeggio( m_currentCell->getEffectValue() );
+				break;
+			case s3mFxRetrig:
+				fxRetrigger( m_currentCell->getEffectValue() );
+				break;
+			case s3mFxSpecial:
+				fxSpecial( m_currentCell->getEffectValue() );
+				break;
 		}
 	} // if(tick==0)
-	else if(m_currentCell->getEffect()!=0) { // if(tick!=0)
-		switch(m_currentCell->getEffect()) {
-			case s3mFxVolSlide: fxVolSlide(m_currentCell->getEffectValue()); break;
-			case s3mFxPitchDown: fxPitchSlideDown(m_currentCell->getEffectValue()); break;
-			case s3mFxPitchUp: fxPitchSlideUp(m_currentCell->getEffectValue()); break;
-			case s3mFxPorta: fxPorta(m_currentCell->getEffectValue(), false); break;
-			case s3mFxVibrato: fxVibrato(m_currentCell->getEffectValue(), false, false); break;
-			case s3mFxTremor: fxTremor(m_currentCell->getEffectValue()); break;
-			case s3mFxArpeggio: fxArpeggio(m_currentCell->getEffectValue()); break;
+	else if( m_currentCell->getEffect() != 0 ) { // if(tick!=0)
+		switch( m_currentCell->getEffect() ) {
+			case s3mFxVolSlide:
+				fxVolSlide( m_currentCell->getEffectValue() );
+				break;
+			case s3mFxPitchDown:
+				fxPitchSlideDown( m_currentCell->getEffectValue() );
+				break;
+			case s3mFxPitchUp:
+				fxPitchSlideUp( m_currentCell->getEffectValue() );
+				break;
+			case s3mFxPorta:
+				fxPorta( m_currentCell->getEffectValue(), false );
+				break;
+			case s3mFxVibrato:
+				fxVibrato( m_currentCell->getEffectValue(), false, false );
+				break;
+			case s3mFxTremor:
+				fxTremor( m_currentCell->getEffectValue() );
+				break;
+			case s3mFxArpeggio:
+				fxArpeggio( m_currentCell->getEffectValue() );
+				break;
 			case s3mFxVibVolSlide:
-				fxVolSlide(m_currentCell->getEffectValue());
-				fxVibrato(m_lastVibratoData, false, true);
+				fxVolSlide( m_currentCell->getEffectValue() );
+				fxVibrato( m_lastVibratoData, false, true );
 				break;
 			case s3mFxPortVolSlide:
-				fxVolSlide(m_currentCell->getEffectValue());
-				fxPorta(m_lastPortaSpeed, true);
+				fxVolSlide( m_currentCell->getEffectValue() );
+				fxPorta( m_lastPortaSpeed, true );
 				break;
-			case s3mFxRetrig: fxRetrigger(m_currentCell->getEffectValue()); break;
-			case s3mFxTremolo: fxTremolo(m_currentCell->getEffectValue()); break;
-			case s3mFxSpecial: fxSpecial(m_currentCell->getEffectValue()); break;
-			case s3mFxFineVibrato: fxVibrato(m_currentCell->getEffectValue(), true, false); break;
-			case s3mFxGlobalVol: fxGlobalVolume(m_currentCell->getEffectValue()); break;
+			case s3mFxRetrig:
+				fxRetrigger( m_currentCell->getEffectValue() );
+				break;
+			case s3mFxTremolo:
+				fxTremolo( m_currentCell->getEffectValue() );
+				break;
+			case s3mFxSpecial:
+				fxSpecial( m_currentCell->getEffectValue() );
+				break;
+			case s3mFxFineVibrato:
+				fxVibrato( m_currentCell->getEffectValue(), true, false );
+				break;
+			case s3mFxGlobalVol:
+				fxGlobalVolume( m_currentCell->getEffectValue() );
+				break;
 		}
 	}
-	
+
 	updateStatus();
 	if( m_module->tick() == 0 )
 		m_noteChanged = false;
@@ -376,7 +416,7 @@ void S3mChannel::update( S3mCell::Ptr const cell, bool noRetrigger ) throw() {
 			return;
 	}
 	if( m_currentCell->getEffect() == s3mEmptyCommand && m_currentCell->getEffectValue() != 0x00 )
-	m_noteChanged = ( m_currentCell->getNote() != s3mEmptyNote ) && ( m_currentCell->getNote() != s3mKeyOffNote ) && !noRetrigger;
+		m_noteChanged = ( m_currentCell->getNote() != s3mEmptyNote ) && ( m_currentCell->getNote() != s3mKeyOffNote ) && !noRetrigger;
 	if( m_module->tick() == smpDelay && !noRetrigger ) {
 		if( m_currentCell->getInstr() != s3mEmptyInstr ) {
 			setSampleIndex( m_currentCell->getInstr() - 1 );
@@ -793,226 +833,226 @@ IArchive& S3mChannel::serialize( IArchive* data ) {
 	return data->archive( m_currentCell.get() );
 }
 
-void S3mChannel::fxPitchSlideUp(uint8_t fxByte) {
-	if(m_basePeriod == 0)
+void S3mChannel::fxPitchSlideUp( uint8_t fxByte ) {
+	if( m_basePeriod == 0 )
 		return;
 	reuseIfZero( m_lastFxByte, fxByte );
-	if(m_module->tick() == 0) {
-		if(fxByte <= 0xe0)
+	if( m_module->tick() == 0 ) {
+		if( fxByte <= 0xe0 )
 			return;
-		if(fxByte <= 0xf0)
-			fxByte = lowNibble(fxByte);
+		if( fxByte <= 0xf0 )
+			fxByte = lowNibble( fxByte );
 		else
-			fxByte = lowNibble(fxByte)<<2;
+			fxByte = lowNibble( fxByte ) << 2;
 	}
 	else {
-		if(fxByte >= 0xe0)
+		if( fxByte >= 0xe0 )
 			return;
-		fxByte = lowNibble(fxByte)<<2;
+		fxByte = lowNibble( fxByte ) << 2;
 	}
-	m_basePeriod = m_realPeriod = std::max( 0, m_basePeriod-fxByte );
+	m_basePeriod = m_realPeriod = std::max( 0, m_basePeriod - fxByte );
 	recalcFrequency();
 }
 
-void S3mChannel::fxPitchSlideDown(uint8_t fxByte) {
-	if(m_basePeriod == 0)
+void S3mChannel::fxPitchSlideDown( uint8_t fxByte ) {
+	if( m_basePeriod == 0 )
 		return;
-	reuseIfZero(m_lastFxByte, fxByte);
-	if(m_module->tick() == 0) {
-		if(fxByte <= 0xe0)
+	reuseIfZero( m_lastFxByte, fxByte );
+	if( m_module->tick() == 0 ) {
+		if( fxByte <= 0xe0 )
 			return;
-		if(fxByte <= 0xf0)
-			fxByte = lowNibble(fxByte);
+		if( fxByte <= 0xf0 )
+			fxByte = lowNibble( fxByte );
 		else
-			fxByte = lowNibble(fxByte)<<2;
+			fxByte = lowNibble( fxByte ) << 2;
 	}
 	else {
-		if(fxByte >= 0xe0)
+		if( fxByte >= 0xe0 )
 			return;
-		fxByte = lowNibble(fxByte)<<2;
+		fxByte = lowNibble( fxByte ) << 2;
 	}
 	m_basePeriod = m_realPeriod = std::min( 0x7fff, m_basePeriod + fxByte );
 	recalcFrequency();
 }
 
-void S3mChannel::fxVolSlide(uint8_t fxByte) {
-	reuseIfZero(m_lastFxByte, fxByte);
-	if(lowNibble(fxByte) == 0x0f) {
-		if(highNibble(fxByte)==0)
-			m_currentVolume = std::max( 0, m_currentVolume-lowNibble(fxByte) );
-		else if(m_module->tick()!=0)
+void S3mChannel::fxVolSlide( uint8_t fxByte ) {
+	reuseIfZero( m_lastFxByte, fxByte );
+	if( lowNibble( fxByte ) == 0x0f ) {
+		if( highNibble( fxByte ) == 0 )
+			m_currentVolume = std::max( 0, m_currentVolume - lowNibble( fxByte ) );
+		else if( m_module->tick() != 0 )
 			return;
 		else
-			m_currentVolume = std::min( 63, m_currentVolume+highNibble(fxByte) );
+			m_currentVolume = std::min( 63, m_currentVolume + highNibble( fxByte ) );
 	}
-	else if(highNibble(fxByte) == 0x0f) {
-		if(lowNibble(fxByte) == 0)
-			m_currentVolume = std::min( 63, m_currentVolume+highNibble(fxByte) );
-		else if(m_module->tick()==0)
-			m_currentVolume = std::max( 0, m_currentVolume-lowNibble(fxByte) );
+	else if( highNibble( fxByte ) == 0x0f ) {
+		if( lowNibble( fxByte ) == 0 )
+			m_currentVolume = std::min( 63, m_currentVolume + highNibble( fxByte ) );
+		else if( m_module->tick() == 0 )
+			m_currentVolume = std::max( 0, m_currentVolume - lowNibble( fxByte ) );
 	}
-	else if(m_module->hasFastVolSlides() || m_module->tick()!=0) {
-		if(lowNibble(fxByte)==0)
-			m_currentVolume = std::min( 63, m_currentVolume+highNibble(fxByte) );
+	else if( m_module->hasFastVolSlides() || m_module->tick() != 0 ) {
+		if( lowNibble( fxByte ) == 0 )
+			m_currentVolume = std::min( 63, m_currentVolume + highNibble( fxByte ) );
 		else
-			m_currentVolume = std::max( 0, m_currentVolume-lowNibble(fxByte) );
+			m_currentVolume = std::max( 0, m_currentVolume - lowNibble( fxByte ) );
 	}
 	recalcVolume();
 }
 
 void S3mChannel::recalcFrequency() {
-	if(m_module->hasAmigaLimits())
-		m_basePeriod = clipPeriod(true, m_basePeriod);
+	if( m_module->hasAmigaLimits() )
+		m_basePeriod = clipPeriod( true, m_basePeriod );
 	uint16_t per = m_realPeriod;
-	if(m_module->hasAmigaLimits())
-		per = clipPeriodMax(true, m_realPeriod);
-	if(per == 0) {
+	if( m_module->hasAmigaLimits() )
+		per = clipPeriodMax( true, m_realPeriod );
+	if( per == 0 ) {
 		return;
 	}
-	m_realPeriod = clipPeriod(m_module->hasAmigaLimits(), per);
+	m_realPeriod = clipPeriod( m_module->hasAmigaLimits(), per );
 }
 
 void S3mChannel::recalcVolume() {
-	m_realVolume = (static_cast<int>(m_module->globalVolume())*m_currentVolume) >> 6;
+	m_realVolume = ( static_cast<int>( m_module->globalVolume() ) * m_currentVolume ) >> 6;
 }
 
-void S3mChannel::fxPorta(uint8_t fxByte, bool noReuse) {
-	if(m_module->tick()==0)
+void S3mChannel::fxPorta( uint8_t fxByte, bool noReuse ) {
+	if( m_module->tick() == 0 )
 		return;
-	if(m_basePeriod == 0) {
-		if(m_portaTargetPeriod == 0)
+	if( m_basePeriod == 0 ) {
+		if( m_portaTargetPeriod == 0 )
 			return;
 		m_realPeriod = m_basePeriod = m_portaTargetPeriod;
-		fxByte = m_portaTargetPeriod&0xff;
+		fxByte = m_portaTargetPeriod & 0xff;
 	}
-	if(!noReuse)
+	if( !noReuse )
 		reuseIfZero( m_lastPortaSpeed, fxByte );
 	//m_currentCell->setEffectValue(fxByte);
-	if(m_basePeriod == m_portaTargetPeriod)
+	if( m_basePeriod == m_portaTargetPeriod )
 		return;
-	if(m_basePeriod > m_portaTargetPeriod) {
-		LOG_DEBUG("base=%u > target=%u", m_basePeriod, m_portaTargetPeriod);
-		int tmp = m_basePeriod-(fxByte<<2);
-		if(tmp<m_portaTargetPeriod)
+	if( m_basePeriod > m_portaTargetPeriod ) {
+		LOG_DEBUG( "base=%u > target=%u", m_basePeriod, m_portaTargetPeriod );
+		int tmp = m_basePeriod - ( fxByte << 2 );
+		if( tmp < m_portaTargetPeriod )
 			tmp = m_portaTargetPeriod;
-		if(m_glissando)
-			tmp = glissando(tmp);
+		if( m_glissando )
+			tmp = glissando( tmp );
 		m_realPeriod = m_basePeriod = tmp;
 		recalcFrequency();
 	}
 	else {
-		LOG_DEBUG("base=%u < target=%u", m_basePeriod, m_portaTargetPeriod);
-		int tmp = m_basePeriod+(fxByte<<2);
-		if(tmp>m_portaTargetPeriod)
+		LOG_DEBUG( "base=%u < target=%u", m_basePeriod, m_portaTargetPeriod );
+		int tmp = m_basePeriod + ( fxByte << 2 );
+		if( tmp > m_portaTargetPeriod )
 			tmp = m_portaTargetPeriod;
-		if(m_glissando)
-			tmp = glissando(tmp);
+		if( m_glissando )
+			tmp = glissando( tmp );
 		m_realPeriod = m_basePeriod = tmp;
 		recalcFrequency();
 	}
 }
 
-void S3mChannel::fxVibrato(uint8_t fxByte, bool fine, bool noReuse) {
-	if(!noReuse)
+void S3mChannel::fxVibrato( uint8_t fxByte, bool fine, bool noReuse ) {
+	if( !noReuse )
 		reuseIfZero( m_lastVibratoData, fxByte );
-	if(m_basePeriod==0)
+	if( m_basePeriod == 0 )
 		return;
 	int val = 0;
-	switch(m_vibratoWaveform & 7) {
+	switch( m_vibratoWaveform & 7 ) {
 		case 0:
 		case 4:
-			if((m_vibratoPhase&0x40)!=0 && (m_vibratoWaveform&7)==0)
+			if( ( m_vibratoPhase & 0x40 ) != 0 && ( m_vibratoWaveform & 7 ) == 0 )
 				val = S3mWaveSine[0];
 			else
-				val = S3mWaveSine[m_vibratoPhase&0x3f];
+				val = S3mWaveSine[m_vibratoPhase & 0x3f];
 			break;
 		case 1:
 		case 5:
-			if((m_vibratoPhase&0x40)!=0 && (m_vibratoWaveform&7)==1)
+			if( ( m_vibratoPhase & 0x40 ) != 0 && ( m_vibratoWaveform & 7 ) == 1 )
 				val = S3mWaveRamp[0];
 			else
-				val = S3mWaveRamp[m_vibratoPhase&0x3f];
+				val = S3mWaveRamp[m_vibratoPhase & 0x3f];
 			break;
 		case 2:
 		case 6:
-			if((m_vibratoPhase&0x40)!=0 && (m_vibratoWaveform&7)==2)
+			if( ( m_vibratoPhase & 0x40 ) != 0 && ( m_vibratoWaveform & 7 ) == 2 )
 				val = S3mWaveSquare[0];
 			else
-				val = S3mWaveSquare[m_vibratoPhase&0x3f];
+				val = S3mWaveSquare[m_vibratoPhase & 0x3f];
 			break;
 		case 3:
 		case 7:
-			if((m_vibratoPhase&0x40)!=0 && (m_vibratoWaveform&7)==3)
+			if( ( m_vibratoPhase & 0x40 ) != 0 && ( m_vibratoWaveform & 7 ) == 3 )
 				val = S3mWaveSine[0];
 			else
-				val = S3mWaveSine[m_vibratoPhase&0x3f];
-			m_vibratoPhase = (m_vibratoPhase+(std::rand()&0x0f))&0x7f;
+				val = S3mWaveSine[m_vibratoPhase & 0x3f];
+			m_vibratoPhase = ( m_vibratoPhase + ( std::rand() & 0x0f ) ) & 0x7f;
 			break;
 	}
-	m_vibratoPhase = (m_vibratoPhase+highNibble(fxByte)) & 0x7f;
-	val = (val*lowNibble(fxByte))>>4;
-	if(m_module->st2Vibrato())
+	m_vibratoPhase = ( m_vibratoPhase + highNibble( fxByte ) ) & 0x7f;
+	val = ( val * lowNibble( fxByte ) ) >> 4;
+	if( m_module->st2Vibrato() )
 		val >>= 1;
-	if(fine)
+	if( fine )
 		val >>= 2;
-	m_realPeriod = m_basePeriod+val;
+	m_realPeriod = m_basePeriod + val;
 	recalcFrequency();
-	LOG_DEBUG("Vibrato: base=%u, real=%u", m_basePeriod, m_realPeriod);
+	LOG_DEBUG( "Vibrato: base=%u, real=%u", m_basePeriod, m_realPeriod );
 }
 
-void S3mChannel::fxNoteCut(uint8_t fxByte) {
-	fxByte = lowNibble(fxByte);
-	if(m_module->tick() == 0) {
+void S3mChannel::fxNoteCut( uint8_t fxByte ) {
+	fxByte = lowNibble( fxByte );
+	if( m_module->tick() == 0 ) {
 		m_countdown = fxByte;
 		return;
 	}
-	if(m_countdown==0)
+	if( m_countdown == 0 )
 		return;
 	m_countdown--;
-	if(m_countdown==0)
-		setActive(false);
+	if( m_countdown == 0 )
+		setActive( false );
 }
 
-void S3mChannel::fxNoteDelay(uint8_t fxByte) {
-	fxByte = lowNibble(fxByte);
-	if(m_module->tick() == 0) {
+void S3mChannel::fxNoteDelay( uint8_t fxByte ) {
+	fxByte = lowNibble( fxByte );
+	if( m_module->tick() == 0 ) {
 		m_countdown = fxByte;
 		return;
 	}
-	if(m_countdown==0)
+	if( m_countdown == 0 )
 		return;
 	m_countdown--;
-	if(m_countdown==0)
+	if( m_countdown == 0 )
 		triggerNote();
 }
 
-void S3mChannel::fxGlobalVolume(uint8_t fxByte) {
-	if(fxByte<=64)
-		m_module->setGlobalVolume(fxByte);
+void S3mChannel::fxGlobalVolume( uint8_t fxByte ) {
+	if( fxByte <= 64 )
+		m_module->setGlobalVolume( fxByte );
 }
 
-void S3mChannel::fxFineTune(uint8_t fxByte) {
-	fxByte = lowNibble(fxByte);
+void S3mChannel::fxFineTune( uint8_t fxByte ) {
+	fxByte = lowNibble( fxByte );
 	uint16_t ft = S3mFinetunes[fxByte];
 	// TODO apply finetune
 	m_basePeriod = m_realPeriod;
 	recalcFrequency();
 }
 
-void S3mChannel::fxSetVibWaveform(uint8_t fxByte) {
-	m_vibratoWaveform = lowNibble(fxByte);
+void S3mChannel::fxSetVibWaveform( uint8_t fxByte ) {
+	m_vibratoWaveform = lowNibble( fxByte );
 }
 
-void S3mChannel::fxRetrigger(uint8_t fxByte) {
-	reuseIfZero(m_lastFxByte, fxByte);
-	if(lowNibble(fxByte)==0 || lowNibble(fxByte)>m_countdown) {
+void S3mChannel::fxRetrigger( uint8_t fxByte ) {
+	reuseIfZero( m_lastFxByte, fxByte );
+	if( lowNibble( fxByte ) == 0 || lowNibble( fxByte ) > m_countdown ) {
 		m_countdown++;
 		return;
 	}
 	m_countdown = 0;
-	setPosition(0);
+	setPosition( 0 );
 	int nvol = m_currentVolume;
-	switch(highNibble(fxByte)) {
+	switch( highNibble( fxByte ) ) {
 		case 0x0:
 			break;
 		case 0x1:
@@ -1060,47 +1100,47 @@ void S3mChannel::fxRetrigger(uint8_t fxByte) {
 			nvol *= 2;
 			break;
 	}
-	m_currentVolume = clip<int>(nvol, 0, 63);
+	m_currentVolume = clip<int>( nvol, 0, 63 );
 	recalcVolume();
 }
 
-void S3mChannel::fxOffset(uint8_t fxByte) {
-	setPosition(fxByte<<8);
+void S3mChannel::fxOffset( uint8_t fxByte ) {
+	setPosition( fxByte << 8 );
 }
 
-void S3mChannel::fxTremor(uint8_t fxByte) {
-	reuseIfZero(m_lastFxByte, fxByte);
-	if(m_tremorCounter != 0) {
+void S3mChannel::fxTremor( uint8_t fxByte ) {
+	reuseIfZero( m_lastFxByte, fxByte );
+	if( m_tremorCounter != 0 ) {
 		m_tremorCounter--;
 		return;
 	}
-	if(m_tremorMute) {
+	if( m_tremorMute ) {
 		m_tremorMute = false;
 		m_currentVolume = 0;
 		recalcVolume();
-		m_tremorCounter = lowNibble(fxByte);
+		m_tremorCounter = lowNibble( fxByte );
 	}
 	else {
 		m_tremorMute = true;
 		m_currentVolume = m_baseVolume;
 		recalcVolume();
-		m_tremorCounter = highNibble(fxByte);
+		m_tremorCounter = highNibble( fxByte );
 	}
 }
 
-void S3mChannel::fxTempo(uint8_t fxByte) {
-	if(fxByte<=0x20)
+void S3mChannel::fxTempo( uint8_t fxByte ) {
+	if( fxByte <= 0x20 )
 		return;
-	m_module->setTempo(fxByte);
+	m_module->setTempo( fxByte );
 }
 
-void S3mChannel::fxSpeed(uint8_t fxByte) {
-	if(fxByte==0)
+void S3mChannel::fxSpeed( uint8_t fxByte ) {
+	if( fxByte == 0 )
 		return;
-	m_module->setSpeed(fxByte);
+	m_module->setSpeed( fxByte );
 }
 
-void S3mChannel::fxArpeggio(uint8_t fxByte) {
+void S3mChannel::fxArpeggio( uint8_t fxByte ) {
 	if( !currentSample() )
 		return;
 	reuseIfZero( m_lastFxByte, fxByte );
@@ -1118,49 +1158,49 @@ void S3mChannel::fxArpeggio(uint8_t fxByte) {
 	recalcFrequency();
 }
 
-void S3mChannel::fxSpecial(uint8_t fxByte) {
+void S3mChannel::fxSpecial( uint8_t fxByte ) {
 	// TODO
 }
 
-void S3mChannel::fxTremolo(uint8_t fxByte) {
+void S3mChannel::fxTremolo( uint8_t fxByte ) {
 	// TODO
 }
 
-uint16_t S3mChannel::glissando(uint16_t period) {
+uint16_t S3mChannel::glissando( uint16_t period ) {
 	uint8_t no = periodToNoteOffset( period, currentSample()->getBaseFrq() );
 	return st3PeriodEx( no % 12, no / 12, currentSample()->getBaseFrq() );
 }
 
 void S3mChannel::triggerNote() {
 	uint8_t instr = m_currentCell->getInstr();
-	if(instr>=101)
+	if( instr >= 101 )
 		instr = 0;
-	if(instr!=0) {
-		setSampleIndex(instr-1);
-		if(currentSample()) {
+	if( instr != 0 ) {
+		setSampleIndex( instr - 1 );
+		if( currentSample() ) {
 			m_currentVolume = currentSample()->getVolume();
 			recalcVolume();
 		}
 	}
-	if(m_currentCell->getNote()!=0xff) {
-		if(currentSample()) {
-			uint16_t p = st3Period(m_currentCell->getNote(), currentSample()->getBaseFrq());
-			if(m_currentCell->getEffect() != s3mFxPorta) {
+	if( m_currentCell->getNote() != 0xff ) {
+		if( currentSample() ) {
+			uint16_t p = st3Period( m_currentCell->getNote(), currentSample()->getBaseFrq() );
+			if( m_currentCell->getEffect() != s3mFxPorta ) {
 				m_realPeriod = m_basePeriod = m_portaTargetPeriod = p;
-				LOG_DEBUG("Set porta target = %u (base=%u, real=%u)", m_portaTargetPeriod, m_basePeriod, m_realPeriod);
 				recalcFrequency();
 			}
 			else {
 				/*m_basePeriod =*/ m_portaTargetPeriod = p;
-				LOG_DEBUG("PORTA (target=%u, base=%u, real=%u)", m_portaTargetPeriod, m_basePeriod, m_realPeriod);
+				LOG_DEBUG( "PORTA (target=%u, base=%u, real=%u)", m_portaTargetPeriod, m_basePeriod, m_realPeriod );
 			}
 		}
 	}
 	uint8_t vol = m_currentCell->getVolume();
-	if(vol!=0xff) {
-		if(vol>63)
+	if( vol != 0xff ) {
+		if( vol > 63 )
 			vol = 63;
 		m_currentVolume = m_baseVolume = vol;
 		recalcVolume();
 	}
 }
+
