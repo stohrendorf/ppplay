@@ -252,7 +252,9 @@ namespace ppp {
 			 */
 			virtual uint8_t channelCount() const = 0;
 			virtual std::size_t getAudioData( AudioFrameBuffer& buffer, std::size_t size );
-			virtual void setGlobalVolume( int16_t v ) { m_playbackInfo.globalVolume = v; }
+			virtual void setGlobalVolume( int16_t v ) {
+				m_playbackInfo.globalVolume = v;
+			}
 		protected:
 			/**
 			 * @brief Serialize this module to an archive
