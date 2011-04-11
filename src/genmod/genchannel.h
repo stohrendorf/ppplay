@@ -49,10 +49,7 @@ namespace ppp {
 		private:
 			bool m_active; //!< @brief @c true if channel is active
 			bool m_disabled; //!< @brief @c true if channel is disabled
-			Phaser m_vibrato; //!< @brief Vibrato effect helper
-			Phaser m_tremolo; //!< @brief Tremolo effect helper
 			uint8_t m_panning; //!< @brief Panning (0x00..0x80)
-			uint8_t m_volume; //!< @brief Volume (0x00..0x40)
 			int32_t m_position; //!< @brief Current sample position
 			std::string m_statusString; //!< @brief Status string
 			uint16_t m_playbackFrequency; //!< @brief Playback frequency, default is 44100 @see GenModule::GenModule
@@ -141,14 +138,14 @@ namespace ppp {
 			 * @pre @c bufSize>0
 			 * @note Time-critical
 			 */
-			virtual void mixTick( MixerFrameBuffer& mixBuffer, const uint8_t volume ) throw( PppException ) = 0;
+			virtual void mixTick( MixerFrameBuffer& mixBuffer ) throw( PppException ) = 0;
 			/**
 			 * @brief Simulates a tick without mixing
 			 * @param[in] bufSize Buffer size
 			 * @param[in] volume Volume
 			 * @see #mixTick
 			 */
-			virtual void simTick( const std::size_t bufSize, const uint8_t volume ) = 0;
+			virtual void simTick( const std::size_t bufSize ) = 0;
 			/**
 			 * @brief Updates the status string returned by #getStatus()
 			 * @note Time-critical
@@ -174,24 +171,6 @@ namespace ppp {
 		protected:
 			void setActive( bool a ) throw() {
 				m_active = a;
-			}
-			const Phaser& vibrato() const throw() {
-				return m_vibrato;
-			}
-			Phaser& vibrato() throw() {
-				return m_vibrato;
-			}
-			const Phaser& tremolo() const throw() {
-				return m_tremolo;
-			}
-			Phaser& tremolo() throw() {
-				return m_tremolo;
-			}
-			uint8_t getVolume() const throw() {
-				return m_volume;
-			}
-			void setVolume( uint8_t v ) throw() {
-				m_volume = v;
 			}
 			void setPosition( int32_t p ) throw() {
 				m_position = p;

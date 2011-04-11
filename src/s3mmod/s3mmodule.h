@@ -52,15 +52,15 @@ namespace ppp {
 				int16_t m_patLoopCount;  //!< @brief Loop counter for pattern loop, -1 if unused
 				int16_t m_patDelayCount; //!< @brief Delay counter for Pattern Delay, -1 if unused
 				bool m_customData;     //!< @brief @c true if module contains special custom data
-				bool m_amigaLimits;
-				bool m_fastVolSlides;
-				bool m_st2Vibrato;
-				bool m_zeroVolOpt;
 				S3mSample::Vector m_samples;
 				S3mPattern::Vector m_patterns;
 				std::array<S3mChannel::Ptr, 32> m_channels;
 				uint8_t m_usedChannels;
 				std::array<uint16_t, 256> m_orderPlaybackCounts;
+				bool m_amigaLimits;
+				bool m_fastVolSlides;
+				bool m_st2Vibrato;
+				bool m_zeroVolOpt;
 				S3mPattern::Ptr getPattern( size_t idx ) const {
 					if( idx >= m_patterns.size() ) return S3mPattern::Ptr();
 					return m_patterns[idx];
