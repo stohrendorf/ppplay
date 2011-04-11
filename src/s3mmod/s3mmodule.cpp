@@ -150,7 +150,9 @@ struct S3mModuleHeader {
 
 S3mModule::S3mModule( uint32_t frq, uint8_t maxRpt ) throw( PppException ) : GenModule( frq, maxRpt ),
 	m_breakRow( -1 ), m_breakOrder( -1 ), m_patLoopRow( -1 ), m_patLoopCount( -1 ), m_patDelayCount( -1 ),
-	m_customData( false ), m_samples(), m_patterns(), m_channels(), m_usedChannels( 0 ), m_orderPlaybackCounts() {
+	m_customData( false ), m_samples(), m_patterns(), m_channels(), m_usedChannels( 0 ), m_orderPlaybackCounts(),
+	m_amigaLimits(false), m_fastVolSlides(false), m_st2Vibrato(false), m_zeroVolOpt(false)
+{
 	try {
 		for( uint16_t i = 0; i < 256; i++ ) {
 			addOrder( GenOrder::Ptr( new GenOrder( s3mOrderEnd ) ) );
@@ -309,15 +311,6 @@ bool S3mModule::load( const std::string& fn ) throw( PppException ) {
 		for( int i = 0; i < 32; i++ ) {
 			S3mChannel* s3mChan = new S3mChannel( getPlaybackFrq(), this );
 			m_channels[i].reset( s3mChan );
-			s3mChan->setGlobalVolume( s3mHdr.globalVolume, true );
-			if( ( s3mHdr.flags & s3mFlagAmigaLimits ) != 0 )
-				s3mChan->enableAmigaLimits();
-			if( ( s3mHdr.flags & s3mFlag300Slides ) != 0 )
-				s3mChan->enable300VolSlides();
-			if( ( s3mHdr.flags & s3mFlag0volOpt ) != 0 )
-				s3mChan->enableZeroVol();
-			if( ( schismTest != 0 ) && ( s3mHdr.createdWith == 0x1320 ) )
-				s3mChan->maybeSchism();
 			if( ( s3mHdr.pannings[i] & 0x80 ) != 0 ) {
 				s3mChan->disable();
 				continue;
@@ -626,7 +619,7 @@ void S3mModule::getTick( AudioFrameBuffer& buf ) throw( PppException ) {
 			PPP_TEST( !chan );
 			S3mCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
 			chan->update( cell, m_patDelayCount != -1 );
-			chan->mixTick( mixerBuffer, getPlaybackInfo().globalVolume );
+			chan->mixTick( mixerBuffer );
 		}
 		buf->resize( mixerBuffer->size() );
 		MixerSample* mixerBufferPtr = &mixerBuffer->front().left;
@@ -663,7 +656,7 @@ void S3mModule::getTickNoMixing( std::size_t& bufLen ) throw( PppException ) {
 			PPP_TEST( !chan );
 			S3mCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
 			chan->update( cell, m_patDelayCount != -1 );
-			chan->simTick( bufLen, getPlaybackInfo().globalVolume );
+			chan->simTick( bufLen );
 		}
 		adjustPosition( true, true );
 		setPosition( getPosition() + bufLen );
@@ -787,7 +780,7 @@ IArchive& S3mModule::serialize( IArchive* data ) {
 void S3mModule::setGlobalVolume(int16_t v)
 {
 	GenModule::setGlobalVolume(v);
-	for(int i=0; i<m_channels.size(); i++)
+	for(std::size_t i=0; i<m_channels.size(); i++)
 		m_channels[i]->recalcVolume();
 }
 

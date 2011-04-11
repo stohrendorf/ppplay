@@ -27,8 +27,8 @@
 using namespace ppp;
 
 GenChannel::GenChannel( const uint16_t frq ) throw( PppException ) :
-	m_active( false ), m_disabled( true ), m_vibrato(), m_tremolo(), m_panning( 0x40 ),
-	m_volume( 0 ), m_position( 0 ),
+	m_active( false ), m_disabled( true ), m_panning( 0x40 ),
+	m_position( 0 ),
 	m_statusString(), m_playbackFrequency( frq ),
 	m_statusStringMutex() {
 }
@@ -37,8 +37,7 @@ GenChannel::~GenChannel() throw() {
 }
 
 IArchive& GenChannel::serialize( IArchive* data ) {
-	*data& m_active& m_disabled& m_volume& m_panning& m_position;
-	data->archive( &m_tremolo ).archive( &m_vibrato );
+	*data& m_active& m_disabled& m_panning& m_position;
 	return *data;
 }
 
