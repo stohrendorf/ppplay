@@ -100,6 +100,25 @@ namespace ppp {
 	void swapEndian( T* data ) {
 		swapEndian( reinterpret_cast<char*>( data ), sizeof( T ) );
 	}
+	
+	inline void reuseIfZero(uint8_t& oldFx, uint8_t& newFx) {
+		if( newFx == 0 )
+			newFx = oldFx;
+		else
+			oldFx = newFx;
+		newFx = oldFx;
+	}
+	inline void reuseNibblesIfZero(uint8_t& oldFx, uint8_t& newFx) {
+		if( newFx == 0 )
+			newFx = oldFx;
+		else if( highNibble( newFx ) == 0 )
+			oldFx = ( newFx & 0x0f ) | ( oldFx & 0xf0 );
+		else if( lowNibble( newFx ) == 0 )
+			oldFx = ( newFx & 0xf0 ) | ( oldFx & 0x0f );
+		else
+			oldFx = newFx;
+		newFx = oldFx;
+	}
 }
 
 #define DISABLE_COPY(classname) \

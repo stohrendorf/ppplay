@@ -35,6 +35,7 @@
 
 namespace ppp {
 	namespace s3m {
+		class S3mModule;
 		/**
 		 * @class S3mChannel
 		 * @ingroup S3mMod
@@ -48,7 +49,7 @@ namespace ppp {
 				typedef std::vector<Ptr> Vector;
 			private:
 				uint8_t m_note;          //!< @brief Currently playing note
-				uint8_t m_lastFx;        //!< @brief Last FX Value
+				uint8_t m_lastFxByte;        //!< @brief Last FX Value
 				uint8_t m_lastVibratoData; //!< @brief Last Vibrato FX
 				uint8_t m_lastPortaSpeed;
 				uint8_t m_tremorVolume;  //!< @brief Backup variable for Tremor FX
@@ -56,6 +57,10 @@ namespace ppp {
 				bool m_noteChanged;            //!< @brief @c true when a new note triggered in the current frame
 				int16_t m_deltaPeriod;              //!< @brief Vibrato delta period
 				int16_t m_deltaVolume;           //!< @brief Tremolo delta volume
+				uint8_t m_currentVolume;
+				uint8_t m_realVolume;
+				uint8_t m_baseVolume;
+				bool m_tremorMute;
 				uint8_t m_globalVol;     //!< @brief Global volume
 				uint8_t m_nextGlobalVol; //!< @brief Next Global volume to be applied with a new note
 				int8_t m_retrigCount;     //!< @brief Used for Retrigger Effect
@@ -64,8 +69,16 @@ namespace ppp {
 				bool m_amigaLimits;            //!< @brief Limit notes between C-2 and B-5
 				bool m_maybeSchism;            //!< @brief Schism Tracker compatibility (when 16 bit or stereo samples are found and the tracker ID is ScreamTracker 3.20)
 				int16_t m_zeroVolCounter;        //!< @brief Zero Volume Optimization counter, -1 if disabled
-				const S3mSample::Vector* const m_sampleList;
+				S3mModule* const m_module;
 				uint16_t m_basePeriod; //!< @brief The channel's period without the sample's c4speed applied
+				uint16_t m_realPeriod;
+				uint32_t m_frequency;
+				uint16_t m_portaTargetPeriod;
+				uint8_t m_vibratoPhase;
+				uint8_t m_vibratoWaveform;
+				uint8_t m_countdown;
+				uint8_t m_tremorCounter;
+				uint16_t m_c2speed;
 				uint16_t basePeriod();
 				void setBasePeriod( uint16_t per );
 				bool m_glissando;
@@ -128,27 +141,36 @@ namespace ppp {
 				 * @note Time-critical
 				 */
 				void pitchDown( int16_t delta ) throw();
-				/**
-				 * @brief Use the old Effect data if the new one is 0x00
-				 * @param[in,out] oldFx Old Effect Data
-				 * @param[in,out] newFx New Effect Data
-				 * @note Time-critical
-				 */
-				void useLastFxData( uint8_t& oldFx, uint8_t& newFx ) const throw();
-				/**
-				 * @brief Use the old Effect data nibble if one of the new Effect nibbles is 0
-				 * @param[in,out] oldFx Old Effect Data
-				 * @param[in,out] newFx New Effect Data
-				 * @note Time-critical
-				 */
-				void combineLastFxData( uint8_t& oldFx, uint8_t& newFx ) const throw();
 				int m_sampleIndex;
 				void setSampleIndex( int32_t idx );
+				
+				// new implementation
+				void fxPitchSlideUp(uint8_t fxByte);
+				void fxPitchSlideDown(uint8_t fxByte);
+				void fxVolSlide(uint8_t fxByte);
+				void fxPorta(uint8_t fxByte, bool noReuse);
+				void fxVibrato(uint8_t fxByte, bool fine, bool noReuse);
+				void fxNoteCut(uint8_t fxByte);
+				void fxNoteDelay(uint8_t fxByte);
+				void fxGlobalVolume(uint8_t fxByte);
+				void fxFineTune(uint8_t fxByte);
+				void fxSetVibWaveform(uint8_t fxByte);
+				void fxRetrigger(uint8_t fxByte);
+				void fxOffset(uint8_t fxByte);
+				void fxTremor(uint8_t fxByte);
+				void fxTempo(uint8_t fxByte);
+				void fxSpeed(uint8_t fxByte);
+				void fxArpeggio(uint8_t fxByte);
+				void fxSpecial(uint8_t fxByte);
+				void fxTremolo(uint8_t fxByte);
+				void triggerNote();
+				void recalcFrequency();
+				uint16_t glissando(uint16_t period);
 			public:
 				/**
 				 * @copydoc GenChannel::GenChannel
 				 */
-				S3mChannel( uint16_t frq, const S3mSample::Vector* const smp ) throw();
+				S3mChannel( uint16_t frq, S3mModule* const module ) throw();
 				virtual ~S3mChannel() throw();
 				virtual std::string getNoteName() throw( PppException );
 				virtual std::string getFxName() const throw();
@@ -161,9 +183,9 @@ namespace ppp {
 				 * @remarks A new value in the Instrument Column changes the instrument with the old playback position
 				 * @note Time-critical
 				 */
-				void update( S3mCell::Ptr const cell, uint8_t tick, bool noRetrigger = false ) throw();
+				void update( const S3mCell::Ptr cell, bool noRetrigger = false ) throw();
 				virtual void mixTick( MixerFrameBuffer& mixBuffer, uint8_t volume ) throw( PppException );
-				virtual void simTick( const std::size_t bufSize, uint8_t volume );
+				virtual void simTick( std::size_t bufSize, uint8_t volume );
 				virtual void updateStatus() throw();
 				virtual std::string getFxDesc() const throw( PppException );
 				/**
@@ -203,6 +225,7 @@ namespace ppp {
 				void setGlobalVolume( uint8_t gVol, bool applyNow = false ) throw();
 				virtual IArchive& serialize( IArchive* data );
 				virtual std::string getCellString();
+				void recalcVolume();
 		};
 	} // namespace s3m
 } // namespace ppp
