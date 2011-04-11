@@ -158,7 +158,7 @@ S3mModule::S3mModule( uint32_t frq, uint8_t maxRpt ) throw( PppException ) : Gen
 			m_samples.push_back( S3mSample::Ptr() );
 		}
 		for( uint8_t i = 0; i < m_channels.size(); i++ ) {
-			m_channels[i].reset( new S3mChannel( getPlaybackFrq(), &m_samples ) );
+			m_channels[i].reset( new S3mChannel( getPlaybackFrq(), this ) );
 		}
 		for( std::size_t i = 0; i < m_orderPlaybackCounts.size(); i++ )
 			m_orderPlaybackCounts[i] = 0;
@@ -201,12 +201,16 @@ bool S3mModule::load( const std::string& fn ) throw( PppException ) {
 		LOG_TEST_WARN( s3mHdr.type[0] != 0x1a );
 		if( s3mHdr.createdWith == 0x1300 )
 			s3mHdr.flags |= s3mFlag300Slides;
-		if( s3mHdr.flags & s3mFlagSt2Vibrato ) LOG_WARNING( "ST2 Vibrato (not supported)" );
+		m_st2Vibrato = (s3mHdr.flags & s3mFlagSt2Vibrato)!=0;
+		if( m_st2Vibrato ) LOG_WARNING( "ST2 Vibrato (not supported)" );
 		if( s3mHdr.flags & s3mFlagSt2Tempo ) LOG_MESSAGE( "ST2 Tempo (not supported)" );
-		if( s3mHdr.flags & s3mFlag300Slides ) LOG_MESSAGE( "ST v3.00 Volume Slides" );
-		if( s3mHdr.flags & s3mFlag0volOpt ) LOG_MESSAGE( "Zero-volume Optimization" );
+		m_fastVolSlides = (s3mHdr.flags & s3mFlag300Slides)!=0;
+		if( m_fastVolSlides ) LOG_MESSAGE( "ST v3.00 Volume Slides" );
+		m_zeroVolOpt = (s3mHdr.flags & s3mFlag0volOpt)!=0;
+		if( m_zeroVolOpt ) LOG_MESSAGE( "Zero-volume Optimization" );
 		if( s3mHdr.flags & s3mFlagAmigaSlides ) LOG_WARNING( "Amiga slides (not supported)" );
-		if( s3mHdr.flags & s3mFlagAmigaLimits ) LOG_MESSAGE( "Amiga limits" );
+		m_amigaLimits = (s3mHdr.flags & s3mFlagAmigaLimits)!=0;
+		if( m_amigaLimits ) LOG_MESSAGE( "Amiga limits" );
 		if( s3mHdr.flags & s3mFlagSpecial ) LOG_MESSAGE( "Special data present" );
 		if( s3mHdr.defaultPannings == 0xFC ) LOG_MESSAGE( "Default Pannings present" );
 		unsigned char schismTest = 0;
@@ -303,7 +307,7 @@ bool S3mModule::load( const std::string& fn ) throw( PppException ) {
 		// set pannings...
 		LOG_MESSAGE( "Preparing channels..." );
 		for( int i = 0; i < 32; i++ ) {
-			S3mChannel* s3mChan = new S3mChannel( getPlaybackFrq(), &m_samples );
+			S3mChannel* s3mChan = new S3mChannel( getPlaybackFrq(), this );
 			m_channels[i].reset( s3mChan );
 			s3mChan->setGlobalVolume( s3mHdr.globalVolume, true );
 			if( ( s3mHdr.flags & s3mFlagAmigaLimits ) != 0 )
@@ -621,7 +625,7 @@ void S3mModule::getTick( AudioFrameBuffer& buf ) throw( PppException ) {
 			S3mChannel::Ptr chan = m_channels[currTrack];
 			PPP_TEST( !chan );
 			S3mCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
-			chan->update( cell, getPlaybackInfo().tick, m_patDelayCount != -1 );
+			chan->update( cell, m_patDelayCount != -1 );
 			chan->mixTick( mixerBuffer, getPlaybackInfo().globalVolume );
 		}
 		buf->resize( mixerBuffer->size() );
@@ -658,7 +662,7 @@ void S3mModule::getTickNoMixing( std::size_t& bufLen ) throw( PppException ) {
 			S3mChannel::Ptr chan = m_channels[currTrack];
 			PPP_TEST( !chan );
 			S3mCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
-			chan->update( cell, getPlaybackInfo().tick, m_patDelayCount != -1 );
+			chan->update( cell, m_patDelayCount != -1 );
 			chan->simTick( bufLen, getPlaybackInfo().globalVolume );
 		}
 		adjustPosition( true, true );
@@ -780,5 +784,14 @@ IArchive& S3mModule::serialize( IArchive* data ) {
 	return *data;
 }
 
+void S3mModule::setGlobalVolume(int16_t v)
+{
+	GenModule::setGlobalVolume(v);
+	for(int i=0; i<m_channels.size(); i++)
+		m_channels[i]->recalcVolume();
+}
 
-
+uint16_t S3mModule::getTickBufLen() const throw( PppException ) {
+	PPP_TEST( getPlaybackInfo().tempo < 0x20 );
+	return getPlaybackFrq() * 5 / ( getPlaybackInfo().tempo << 1 );
+}

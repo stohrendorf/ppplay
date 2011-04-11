@@ -28,8 +28,6 @@ void MP3AudioOutput::encodeThread( MP3AudioOutput* src ) {
 			usleep( 1000 );
 		AudioFrameBuffer buffer;
 		if( src->source()->getAudioData( buffer, 1024 ) == 0 ) {
-			//! @bug This shows "terminate called without an active exception"
-			std::terminate();
 			return;
 		}
 		src->m_bufferMutex.lock();

@@ -103,7 +103,7 @@ bool S3mSample::load( BinStream& str, const std::size_t pos, bool imagoLoopEnd )
 		if( !imagoLoopEnd )
 			setLoopEnd( ( smpHdr.hiLoopEnd << 16 ) | smpHdr.loopEnd );
 		else
-			setLoopEnd( ( smpHdr.hiLoopEnd << 16 ) | smpHdr.loopEnd + 1 );
+			setLoopEnd( (( smpHdr.hiLoopEnd << 16 ) | smpHdr.loopEnd) + 1 );
 		//	aLoopEnd = (aLoopEnd>64000) ? 64000 : aLoopEnd;
 		setVolume( smpHdr.volume );
 		setBaseFrq( smpHdr.c2spd );

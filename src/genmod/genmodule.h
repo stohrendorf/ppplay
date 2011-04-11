@@ -252,6 +252,7 @@ namespace ppp {
 			 */
 			virtual uint8_t channelCount() const = 0;
 			virtual std::size_t getAudioData( AudioFrameBuffer& buffer, std::size_t size );
+			virtual void setGlobalVolume( int16_t v ) { m_playbackInfo.globalVolume = v; }
 		protected:
 			/**
 			 * @brief Serialize this module to an archive
@@ -315,14 +316,6 @@ namespace ppp {
 			uint16_t getMaxRepeat() const {
 				return m_maxRepeat;
 			}
-			void setSpeed( uint8_t s ) {
-				if( s == 0 ) return;
-				m_playbackInfo.speed = s;
-			}
-			void setTempo( uint8_t t ) {
-				if( t == 0 ) return;
-				m_playbackInfo.tempo = t;
-			}
 			void setOrder( int16_t o ) {
 				m_playbackInfo.order = o;
 			}
@@ -332,8 +325,14 @@ namespace ppp {
 			void nextTick() {
 				m_playbackInfo.tick = ( m_playbackInfo.tick + 1 ) % m_playbackInfo.speed;
 			}
-			void setGlobalVolume( int16_t v ) {
-				m_playbackInfo.globalVolume = v;
+		public:
+			void setTempo( uint8_t t ) {
+				if( t == 0 ) return;
+				m_playbackInfo.tempo = t;
+			}
+			void setSpeed( uint8_t s ) {
+				if( s == 0 ) return;
+				m_playbackInfo.speed = s;
 			}
 	};
 } // namespace ppp

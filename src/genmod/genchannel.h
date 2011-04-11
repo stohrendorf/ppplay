@@ -53,7 +53,6 @@ namespace ppp {
 			Phaser m_tremolo; //!< @brief Tremolo effect helper
 			uint8_t m_panning; //!< @brief Panning (0x00..0x80)
 			uint8_t m_volume; //!< @brief Volume (0x00..0x40)
-			uint8_t m_tick; //!< @brief Current tick
 			int32_t m_position; //!< @brief Current sample position
 			std::string m_statusString; //!< @brief Status string
 			uint16_t m_playbackFrequency; //!< @brief Playback frequency, default is 44100 @see GenModule::GenModule
@@ -173,12 +172,6 @@ namespace ppp {
 			 */
 			virtual std::string getCellString() = 0;
 		protected:
-			uint8_t getTick() const throw() {
-				return m_tick;
-			}
-			void setTick( uint8_t t ) throw() {
-				m_tick = t;
-			}
 			void setActive( bool a ) throw() {
 				m_active = a;
 			}
