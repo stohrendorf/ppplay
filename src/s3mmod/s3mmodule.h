@@ -57,6 +57,10 @@ namespace ppp {
 				std::array<S3mChannel::Ptr, 32> m_channels;
 				uint8_t m_usedChannels;
 				std::array<uint16_t, 256> m_orderPlaybackCounts;
+				bool m_amigaLimits;
+				bool m_fastVolSlides;
+				bool m_st2Vibrato;
+				bool m_zeroVolOpt;
 				S3mPattern::Ptr getPattern( size_t idx ) const {
 					if( idx >= m_patterns.size() ) return S3mPattern::Ptr();
 					return m_patterns[idx];
@@ -84,7 +88,7 @@ namespace ppp {
 				bool load( const std::string& fn ) throw( PppException );
 				bool existsSample( int16_t idx ) throw();
 				std::string getSampleName( int16_t idx ) throw();
-				virtual inline uint16_t getTickBufLen() const throw( PppException );
+				virtual uint16_t getTickBufLen() const throw( PppException );
 				virtual void getTick( AudioFrameBuffer& buf ) throw( PppException );
 				virtual void getTickNoMixing( std::size_t& bufLen ) throw( PppException );
 				virtual GenOrder::Ptr mapOrder( int16_t order ) throw();
@@ -94,12 +98,16 @@ namespace ppp {
 				virtual bool jumpNextOrder() throw();
 				virtual bool jumpPrevOrder() throw();
 				virtual std::string getChanCellString( int16_t idx ) throw();
+				uint8_t tick() const { return getPlaybackInfo().tick; }
+				bool hasAmigaLimits() const { return m_amigaLimits; }
+				bool hasFastVolSlides() const { return m_fastVolSlides; }
+				uint8_t globalVolume() const { return getPlaybackInfo().globalVolume; }
+				bool st2Vibrato() const { return m_st2Vibrato; }
+				std::size_t numSamples() const { return m_samples.size(); }
+				S3mSample::Ptr sampleAt(std::size_t idx) const { return m_samples.at(idx); }
+				virtual void setGlobalVolume(int16_t v);
+				bool hasZeroVolOpt() const { return m_zeroVolOpt; }
 		};
-
-		inline uint16_t S3mModule::getTickBufLen() const throw( PppException ) {
-			PPP_TEST( getPlaybackInfo().tempo < 0x20 );
-			return getPlaybackFrq() * 5 / ( getPlaybackInfo().tempo << 1 );
-		}
 	} // namespace s3m
 } // namespace ppp
 

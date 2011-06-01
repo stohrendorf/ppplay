@@ -37,21 +37,21 @@ GenSample::~GenSample() throw() {
 	delete[] m_dataL;
 }
 
-void GenSample::setDataL( const int16_t data[] ) throw() {
-	if( m_dataL )
+void GenSample::setDataL( const BasicSample data[] ) throw() {
+	if( m_dataL && isStereo() )
 		delete[] m_dataL;
-	m_dataL = new int16_t[m_length];
+	m_dataL = new BasicSample[m_length];
 	std::copy( data, data + m_length, m_dataL );
 }
 
-void GenSample::setDataR( const int16_t data[] ) throw() {
-	if( m_dataR )
+void GenSample::setDataR( const BasicSample data[] ) throw() {
+	if( m_dataR && isStereo() )
 		delete[] m_dataR;
-	m_dataR = new int16_t[m_length];
+	m_dataR = new BasicSample[m_length];
 	std::copy( data, data + m_length, m_dataR );
 }
 
-void GenSample::setDataMono( const int16_t data[] ) throw() {
+void GenSample::setDataMono( const BasicSample data[] ) throw() {
 	if( isStereo() )
 		delete[] m_dataR;
 	m_dataR = NULL;

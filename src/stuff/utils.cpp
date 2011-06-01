@@ -20,7 +20,7 @@
 #include <cstdarg>
 
 namespace ppp {
-	std::string stringf( const char* fmt, ... ) {
+	std::string stringf( const char fmt[], ... ) {
 		va_list args;
 		va_start( args, fmt );
 		char* tmp = new char[1024];
@@ -31,7 +31,7 @@ namespace ppp {
 		return res;
 	}
 
-	std::string stringncpy( const char src[], const std::size_t maxlen ) {
+	std::string stringncpy( const char src[], std::size_t maxlen ) {
 		std::string res;
 		for( std::size_t i = 0; i < maxlen; i++ ) {
 			if( src[i] == 0x00 )

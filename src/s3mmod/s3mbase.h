@@ -156,7 +156,7 @@ namespace ppp {
 			//! @note FX Data Share
 			//! @note If a value of 0 is given, it uses the value of the last porta FX
 			//! @note If one of the nibbles is 0x0f, this FX is ignored
-			s3mFxPortVolSlide = 12,
+			s3mFxPortaVolSlide = 12,
 			//! @brief (M) Set channel volume
 			//! @remarks Originally not supported
 			s3mFxChanVolume   = 13,
