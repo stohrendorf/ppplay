@@ -103,9 +103,9 @@ LogLevel getLogLevel();
 #define LOG_TEST_ERROR(condition) if(condition) LOG_ERROR("[LOG_TEST_ERROR] %s", #condition)
 
 #ifndef NDEBUG
-#	define LOG_DEBUG(fmt, ...) LOG(llDebug, fmt, __VA_ARGS__)
+#	define LOG_DEBUG(...) LOG(llDebug, __VA_ARGS__)
 #else
-#	define LOG_DEBUG(fmt, ...)
+#	define LOG_DEBUG(...)
 #endif
 
 /**
