@@ -78,7 +78,6 @@ namespace ppp {
 				 */
 				uint8_t getEffectValue() const throw();
 				virtual IArchive& serialize( IArchive* data );
-				void setEffectValue(uint8_t val) { m_effectValue=val; }
 		};
 
 		/**

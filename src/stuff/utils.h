@@ -61,7 +61,7 @@ namespace ppp {
 	 * @return Formatted string
 	 * @note Time-critical
 	 */
-	std::string stringf( const char* fmt, ... ) __attribute__( ( format( printf, 1, 2 ), nonnull( 1 ) ) );
+	std::string stringf( const char fmt[], ... ) __attribute__(( format( printf, 1, 2 ), nonnull( 1 ) ));
 
 	/**
 	 * @brief Helper function like strncpy, but returns a std::string
@@ -71,7 +71,7 @@ namespace ppp {
 	 * @return Copied string
 	 * @note Stops at the NUL character
 	 */
-	std::string stringncpy( const char src[], const std::size_t maxlen ) __attribute__( ( nonnull( 1 ) ) );
+	std::string stringncpy( const char src[], std::size_t maxlen ) __attribute__(( nonnull( 1 ) ));
 
 	/**
 	 * @brief Get low nibble of a byte
@@ -80,7 +80,7 @@ namespace ppp {
 	 * @return Low nibble of @a x
 	 * @note Time-critical
 	 */
-	inline uint8_t lowNibble( const uint8_t x ) throw() {
+	inline uint8_t lowNibble( uint8_t x ) throw() {
 		return x & 0x0f;
 	}
 
@@ -91,7 +91,7 @@ namespace ppp {
 	 * @return High nibble of @a x
 	 * @note Time-critical
 	 */
-	inline uint8_t highNibble( const uint8_t x ) throw() {
+	inline uint8_t highNibble( uint8_t x ) throw() {
 		return x >> 4;
 	}
 
@@ -107,6 +107,10 @@ namespace ppp {
 		else
 			oldFx = newFx;
 		newFx = oldFx;
+	}
+	inline void reuseIfZeroEx(uint8_t& oldFx, uint8_t newFx) {
+		if( newFx != 0 )
+			oldFx = newFx;
 	}
 	inline void reuseNibblesIfZero(uint8_t& oldFx, uint8_t& newFx) {
 		if( newFx == 0 )

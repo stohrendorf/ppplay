@@ -59,7 +59,6 @@ namespace ppp {
 				uint8_t m_baseVolume;
 				bool m_tremorMute;
 				int8_t m_retrigCount;     //!< @brief Used for Retrigger Effect
-				int8_t m_tremorCount;     //!< @brief Used for Tremor Effect
 				int16_t m_zeroVolCounter;        //!< @brief Zero Volume Optimization counter, -1 if disabled
 				S3mModule* const m_module;
 				uint16_t m_basePeriod; //!< @brief The channel's period without the sample's c4speed applied
@@ -67,20 +66,18 @@ namespace ppp {
 				uint16_t m_portaTargetPeriod;
 				uint8_t m_vibratoPhase;
 				uint8_t m_vibratoWaveform;
+				uint8_t m_tremoloPhase;
+				uint8_t m_tremoloWaveform;
 				uint8_t m_countdown;
 				uint8_t m_tremorCounter;
+				uint16_t m_c2spd;
 				bool m_glissando;
-				S3mCell::Ptr m_currentCell;
+				S3mCell m_currentCell;
 				BresenInterpolation m_bresen;
-				S3mSample::Ptr currentSample() throw( PppException );
-				/**
-				 * @brief Apply Special Effect
-				 * @param[in] fx Effect
-				 * @param[in] fxVal Effect data
-				 * @note Time-critical
-				 */
-				void doSpecialFx( uint8_t fx, uint8_t fxVal ) throw( PppException );
+				std::string m_currentFxStr;
 				int m_sampleIndex;
+
+				S3mSample::Ptr currentSample() throw( PppException );
 				void setSampleIndex( int32_t idx );
 				
 				// new implementation
@@ -94,6 +91,7 @@ namespace ppp {
 				void fxGlobalVolume(uint8_t fxByte);
 				void fxFineTune(uint8_t fxByte);
 				void fxSetVibWaveform(uint8_t fxByte);
+				void fxSetTremWaveform(uint8_t fxByte);
 				void fxRetrigger(uint8_t fxByte);
 				void fxOffset(uint8_t fxByte);
 				void fxTremor(uint8_t fxByte);
@@ -102,7 +100,9 @@ namespace ppp {
 				void fxArpeggio(uint8_t fxByte);
 				void fxSpecial(uint8_t fxByte);
 				void fxTremolo(uint8_t fxByte);
+
 				void triggerNote();
+				void playNote();
 				void recalcFrequency();
 				uint16_t glissando(uint16_t period);
 			public:
@@ -112,22 +112,22 @@ namespace ppp {
 				S3mChannel( uint16_t frq, S3mModule* const module ) throw();
 				virtual ~S3mChannel() throw();
 				virtual std::string getNoteName() throw( PppException );
-				virtual std::string getFxName() const throw();
 				/**
 				 * @brief Update the channel
 				 * @param[in] cell Pointer to a note cell
 				 * @param[in] tick Current tick
-				 * @param[in] noRetrigger Don't trigger new notes, only apply effects (i.e. for Pattern Delays)
+				 * @param[in] patDelay For pattern delays
 				 * @remarks A new value in the Instrument Column changes the instrument with the old playback position
 				 * @note Time-critical
 				 */
-				void update( const S3mCell::Ptr cell, bool noRetrigger = false ) throw();
+				void update( const S3mCell::Ptr cell, bool patDelay = false ) throw();
 				virtual void mixTick( MixerFrameBuffer& mixBuffer ) throw( PppException );
 				virtual void simTick( std::size_t bufSize );
 				virtual void updateStatus() throw();
-				virtual std::string getFxDesc() const throw( PppException );
 				virtual IArchive& serialize( IArchive* data );
 				virtual std::string getCellString();
+				virtual std::string getFxName() const throw( PppException );
+				virtual std::string getFxDesc() const throw( PppException );
 				void recalcVolume();
 		};
 	} // namespace s3m

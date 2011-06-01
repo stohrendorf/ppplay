@@ -146,6 +146,9 @@ namespace ppp {
 			LoopType getLoopType() const throw() {
 				return m_looptype;
 			}
+			void setBaseFrq( uint16_t f ) throw() {
+				m_baseFrq = f;
+			}
 		protected:
 			void setLoopType( LoopType l ) throw() {
 				m_looptype = l;
@@ -188,9 +191,6 @@ namespace ppp {
 			}
 			void setVolume( uint8_t v ) throw() {
 				m_volume = v;
-			}
-			void setBaseFrq( uint16_t f ) throw() {
-				m_baseFrq = f;
 			}
 	};
 
