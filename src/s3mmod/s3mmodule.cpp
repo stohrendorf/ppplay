@@ -410,7 +410,8 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 		if( !currPat )
 			return;
 		std::string data;
-		for( unsigned int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+// TODO uncomment on errors!
+/*		for( unsigned int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			S3mCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
 			if( !cell )
 				continue;
@@ -428,7 +429,7 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 				if( fxVal <= 0x40 )
 					setGlobalVolume( fxVal );
 			}
-		}
+		}*/
 		// check for pattern loops
 		int patLoopCounter = 0;
 		for( unsigned int currTrack = 0; currTrack < channelCount(); currTrack++ ) {

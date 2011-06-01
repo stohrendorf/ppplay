@@ -120,13 +120,13 @@ bool S3mSample::load( BinStream& str, const std::size_t pos, bool imagoLoopEnd )
 			return true;
 		}
 		if( loadStereo ) {
-			setDataL( new int16_t[getLength()] );
+			setDataL( new BasicSample[getLength()] );
 			std::fill_n( getNonConstDataL(), getLength(), 0 );
-			setDataR( new int16_t[getLength()] );
+			setDataR( new BasicSample[getLength()] );
 			std::fill_n( getNonConstDataR(), getLength(), 0 );
 		}
 		else {
-			setDataMono( new int16_t[getLength()] );
+			setDataMono( new BasicSample[getLength()] );
 			std::fill_n( getNonConstDataR(), getLength(), 0 );
 		}
 		if( smpHdr.flags & s3mFlagSmp16bit ) {
