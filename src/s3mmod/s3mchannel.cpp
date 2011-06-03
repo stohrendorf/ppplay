@@ -1083,10 +1083,6 @@ void S3mChannel::playNote()
         }
     }
 
-    if(m_currentCell.getEffect() == s3mFxOffset) {
-        fxOffset(m_currentCell.getEffectValue());
-    }
-
     if(m_currentCell.getNote() != 0xff) {
         if(m_currentCell.getNote() == 0xfe) {
             m_realPeriod = 0;
@@ -1101,7 +1097,12 @@ void S3mChannel::playNote()
                 m_realPeriod = m_basePeriod = m_portaTargetPeriod;
                 m_tremoloPhase = m_vibratoPhase = 0;
                 recalcFrequency();
-                setPosition(0);
+				if(m_currentCell.getEffect() == s3mFxOffset) {
+					fxOffset(m_currentCell.getEffectValue());
+				}
+				else {
+					setPosition(0);
+				}
                 m_note = m_currentCell.getNote();
                 m_noteChanged = true;
             }
