@@ -25,15 +25,11 @@ XmSample::XmSample() : m_finetune( 0 ), m_panning( 128 ), m_relativeNote( 0 ), m
 { }
 
 bool XmSample::load( BinStream& str, const std::size_t ) throw( PppException ) {
-	LOG_DEBUG( "Loading xm sample @ 0x%.8x", str.pos() );
-	int32_t sampleLength;
-	str.read( &sampleLength );
-	setLength( sampleLength );
+	int32_t dataSize;
+	str.read( &dataSize );
 	int32_t loopStart, loopLen;
 	str.read( &loopStart );
-	setLoopStart( loopStart );
 	str.read( &loopLen );
-	setLoopEnd( loopStart + loopLen );
 	uint8_t volume;
 	str.read( &volume );
 	setVolume( volume );
@@ -47,10 +43,22 @@ bool XmSample::load( BinStream& str, const std::size_t ) throw( PppException ) {
 			break;
 		case 1:
 			setLoopType( LoopType::Forward );
+			break;
 		case 2:
 			setLoopType( LoopType::Pingpong );
+			break;
 	}
-	m_16bit = type & 4;
+	m_16bit = (type & 0x10)!=0;
+	if(m_16bit) {
+		setLength( dataSize/2 );
+		setLoopStart( loopStart/2 );
+		setLoopEnd( (loopStart + loopLen)/2 );
+	}
+	else {
+		setLength( dataSize );
+		setLoopStart( loopStart );
+		setLoopEnd( loopStart + loopLen );
+	}
 	if( loopLen == 0 )
 		setLoopType( LoopType::None );
 	str.read( &m_panning );
@@ -58,17 +66,15 @@ bool XmSample::load( BinStream& str, const std::size_t ) throw( PppException ) {
 	str.seekrel( 1 );
 	{
 		char title[22];
-		LOG_DEBUG( "Sample title @ 0x%.8x", str.pos() );
 		str.read( title, 22 );
 		setTitle( stringncpy( title, 22 ) );
 	}
-	setDataMono( new int16_t[getLength()] );
+	setDataMono( new BasicSample[getLength()] );
 	std::fill_n( getNonConstDataMono(), getLength(), 0 );
 	return str.good();
 }
 
 bool XmSample::loadData( BinStream& str ) {
-	LOG_DEBUG( "Loading xm sample data @ 0x%.8x (%d samples)", str.pos(), getLength() );
 	if( getLength() == 0 )
 		return true;
 	if( m_16bit ) { // 16 bit

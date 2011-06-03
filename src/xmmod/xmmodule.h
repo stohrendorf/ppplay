@@ -33,6 +33,9 @@ namespace ppp {
 				XmPattern::Vector m_patterns;
 				XmInstrument::Vector m_instruments;
 				XmChannel::Vector m_channels;
+				std::array<uint16_t, 121*16> m_noteToPeriod;
+				std::array<uint8_t, 256> m_orders;
+				uint16_t m_length;
 			public:
 				typedef std::shared_ptr<XmModule> Ptr;
 				XmModule( const uint32_t frq = 44100, const uint8_t maxRpt = 2 ) throw( PppException );
@@ -49,6 +52,8 @@ namespace ppp {
 				virtual std::string getChanCellString( int16_t ) throw();
 				virtual uint8_t channelCount() const;
 				XmInstrument::Ptr getInstrument(int idx) const;
+				uint16_t noteToPeriod(uint16_t note) const;
+				uint32_t periodToFrequency(uint16_t period) const;
 		};
 	} // namespace xm
 } // namespace ppp

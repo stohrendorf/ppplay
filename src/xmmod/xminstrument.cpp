@@ -54,7 +54,6 @@ XmInstrument::XmInstrument() : m_samples(), m_map() {
 bool XmInstrument::load( BinStream& str ) {
 	std::size_t startPos = str.pos();
 	InstrumentHeader hdr;
-	LOG_DEBUG( "Loading Instrument header @ 0x%.8x", str.pos() );
 	str.read( reinterpret_cast<char*>( &hdr ), sizeof( hdr ) );
 	/*	if(hdr.type!=0) {
 			LOG_WARNING("Instrument header type error @ 0x%.8x", str.pos()-sizeof(hdr));
@@ -67,10 +66,8 @@ bool XmInstrument::load( BinStream& str ) {
 	PPP_TEST( hdr.numSamples > 255 );
 	m_samples.resize( hdr.numSamples );
 	InstrumentHeader2 hdr2;
-	LOG_DEBUG( "Loading Instrument header part 2 @ 0x%.8x", str.pos() );
 	str.read( reinterpret_cast<char*>( &hdr2 ), sizeof( hdr2 ) );
 	std::copy( hdr2.indices, hdr2.indices + 96, m_map );
-	LOG_DEBUG( "Loading %d samples", hdr.numSamples );
 	str.seek( startPos + hdr.size );
 	for( uint16_t i = 0; i < hdr.numSamples; i++ ) {
 		XmSample::Ptr smp( new XmSample() );
@@ -80,17 +77,23 @@ bool XmInstrument::load( BinStream& str ) {
 	for( uint16_t i = 0; i < hdr.numSamples; i++ ) {
 		m_samples[i]->loadData( str );
 	}
+	m_title = ppp::stringncpy( hdr.name, 22 );
 	return true;
 }
 
 uint8_t XmInstrument::mapNoteIndex( uint8_t note ) const {
 	if( note >= 96 )
 		return 0;
-	return m_map[note];
+	return m_map[note]&15;
 }
 
 XmSample::Ptr XmInstrument::mapNoteSample( uint8_t note ) const {
 	if( note >= 96 )
 		return XmSample::Ptr();
-	return m_samples[m_map[note]];
+	return m_samples[m_map[note]&15];
+}
+
+std::string XmInstrument::title() const
+{
+	return m_title;
 }
