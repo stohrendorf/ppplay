@@ -36,7 +36,7 @@ namespace ppp {
 				XmSample();
 				virtual bool load( BinStream& str, const std::size_t pos ) throw( PppException );
 				bool loadData( BinStream& str );
-				int8_t fineTune() const {
+				int8_t finetune() const {
 					return m_finetune;
 				}
 				uint8_t panning() const {

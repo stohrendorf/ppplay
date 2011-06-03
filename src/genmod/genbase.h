@@ -127,38 +127,6 @@ namespace ppp {
 			void setIndex( const uint8_t n ) throw();
 			virtual IArchive& serialize( IArchive* data );
 	};
-
-	/**
-	 * @brief Use the old Effect data if the new one is 0x00
-	 * @ingroup GenMod
-	 * @param[in,out] oldFx Old Effect Data
-	 * @param[in,out] newFx New Effect Data
-	 */
-	inline void combineIfZero( uint8_t& oldFx, uint8_t& newFx ) {
-		if( newFx == 0 )
-			newFx = oldFx;
-		else
-			oldFx = newFx;
-		newFx = oldFx;
-	}
-	
-	/**
-	 * @brief Use the old Effect data nibble if one of the new Effect nibbles is 0
-	 * @ingroup GenMod
-	 * @param[in,out] oldFx Old Effect Data
-	 * @param[in,out] newFx New Effect Data
-	 */
-	inline void combineNibblesIfZero( uint8_t& oldFx, uint8_t& newFx ) {
-		if( newFx == 0 )
-			newFx = oldFx;
-		else if( highNibble( newFx ) == 0 )
-			oldFx = ( newFx & 0x0f ) | ( oldFx & 0xf0 );
-		else if( lowNibble( newFx ) == 0 )
-			oldFx = ( newFx & 0xf0 ) | ( oldFx & 0x0f );
-		else
-			oldFx = newFx;
-		newFx = oldFx;
-	}
 } // namespace ppp
 
 #endif

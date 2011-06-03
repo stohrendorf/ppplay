@@ -124,13 +124,13 @@ bool XmPattern::load( BinStream& str ) throw( PppException ) {
 	uint8_t packType;
 	str.read( &packType );
 	if( packType != 0 ) {
-		LOG_WARNING( "Unsupported Pattern pack type: %d", packType );
+		LOG_WARNING( "Unsupported Pattern pack type: %u", packType );
 		return false;
 	}
 	uint16_t rows;
 	str.read( &rows );
 	if( rows < 1 || rows > 256 ) {
-		LOG_WARNING( "Number of rows out of range: %d", rows );
+		LOG_WARNING( "Number of rows out of range: %u", rows );
 		return false;
 	}
 	for( std::size_t chan = 0; chan < m_tracks.size(); chan++ ) {
