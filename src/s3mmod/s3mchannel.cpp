@@ -247,7 +247,8 @@ S3mChannel::S3mChannel(uint16_t frq, S3mModule *const module) throw() : GenChann
     m_currentCell(),
     m_bresen(1, 1),
     m_currentFxStr("      "),
-    m_sampleIndex(101)
+    m_sampleIndex(101),
+    m_panning(0x40)
 {
 }
 
@@ -393,7 +394,7 @@ void S3mChannel::update(S3mCell::Ptr const cell, bool patDelay) throw()
             // this is a non-standard effect, so we ignore the fx byte
             m_currentFxStr = "StPan\x1d";
             if((m_currentCell.getEffectValue() <= 0x80) || (m_currentCell.getEffectValue() == 0xa4))
-                setPanning(m_currentCell.getEffectValue());
+                m_panning = m_currentCell.getEffectValue();
             break;
         }
     } // endif(tick==0)
@@ -485,11 +486,11 @@ void S3mChannel::mixTick(MixerFrameBuffer &mixBuffer) throw(PppException)
     S3mSample::Ptr currSmp = currentSample();
     int32_t pos = getPosition();
     uint8_t volL = 0x40, volR = 0x40;
-    if(getPanning() > 0x40 && getPanning() != 0xa4)
-        volL = 0x80 - getPanning();
-    if(getPanning() < 0x40)
-        volR = getPanning();
-    else if(getPanning() == 0xa4)
+    if(m_panning > 0x40 && m_panning != 0xa4)
+        volL = 0x80 - m_panning;
+    if(m_panning < 0x40)
+        volR = m_panning;
+    else if(m_panning == 0xa4)
         volR = 0xa4;
     for(std::size_t i = 0; i < mixBuffer->size(); i++) {
         int16_t sampleVal = currSmp->getLeftSampleAt(pos);
@@ -562,16 +563,16 @@ void S3mChannel::updateStatus() throw()
     }
     if(isActive()) {
         std::string panStr;
-        if(getPanning() == 0xa4)
+        if(m_panning == 0xa4)
             panStr = "Srnd ";
-        else if(getPanning() == 0x00)
+        else if(m_panning == 0x00)
             panStr = "Left ";
-        else if(getPanning() == 0x40)
+        else if(m_panning == 0x40)
             panStr = "Centr";
-        else if(getPanning() == 0x80)
+        else if(m_panning == 0x80)
             panStr = "Right";
         else
-            panStr = stringf("%4d%%", (getPanning() - 0x40) * 100 / 0x40);
+            panStr = stringf("%4d%%", (m_panning - 0x40) * 100 / 0x40);
         std::string volStr = stringf("%3d%%", clip<int>(m_currentVolume , 0, 0x40) * 100 / 0x40);
         setStatusString(stringf("%.2d: %s%s %s %s P:%s V:%s %s",
                                 m_sampleIndex + 1,
@@ -1024,14 +1025,14 @@ void S3mChannel::fxSpecial(uint8_t fxByte)
         break;
     case s3mSFxSetPan:
         m_currentFxStr = "StPan\x1d";
-        setPanning(lowNibble(fxByte) * 0x80 / 0x0f);
+        m_panning = lowNibble(fxByte) * 0x80 / 0x0f;
         break;
     case s3mSFxStereoCtrl:
         m_currentFxStr = "SCtrl\x1d";
         if(lowNibble(fxByte) <= 7)
-            setPanning((lowNibble(fxByte) + 8) * 0x80 / 0x0f);
+            m_panning = (lowNibble(fxByte) + 8) * 0x80 / 0x0f;
         else
-            setPanning((lowNibble(fxByte) - 8) * 0x80 / 0x0f);
+            m_panning = (lowNibble(fxByte) - 8) * 0x80 / 0x0f;
         break;
     }
 }
@@ -1116,4 +1117,10 @@ void S3mChannel::playNote()
         recalcVolume();
         m_baseVolume = vol;
     }
+}
+
+void S3mChannel::setPanning(uint8_t pan)
+{
+	PPP_TEST(pan>0x40 && pan!=0xa4);
+	m_panning = pan;
 }

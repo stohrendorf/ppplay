@@ -49,7 +49,6 @@ namespace ppp {
 		private:
 			bool m_active; //!< @brief @c true if channel is active
 			bool m_disabled; //!< @brief @c true if channel is disabled
-			uint8_t m_panning; //!< @brief Panning (0x00..0x80)
 			int32_t m_position; //!< @brief Current sample position
 			std::string m_statusString; //!< @brief Status string
 			uint16_t m_playbackFrequency; //!< @brief Playback frequency, default is 44100 @see GenModule::GenModule
@@ -65,7 +64,7 @@ namespace ppp {
 			/**
 			 * @brief The destructor
 			 */
-			virtual ~GenChannel() throw();
+			virtual ~GenChannel();
 			/**
 			 * @brief Check if the channel is active
 			 * @return #aActive
@@ -120,16 +119,6 @@ namespace ppp {
 				m_disabled = false;
 			}
 			/**
-			 * @brief Sets the panning of this channel.
-			 * @param[in] pan Panning value
-			 * @note @c 0xa4 is surround sound
-			 * @pre @c (0x00\<=pan\<=0x80)||(pan==0xa4)
-			 */
-			virtual void setPanning( uint8_t pan ) throw( PppException ) {
-				PPP_TEST( ( pan > 0x80 ) && ( pan != 0xa4 ) );
-				m_panning = pan;
-			}
-			/**
 			 * @brief Mix the current channel into @a mixBuffer.
 			 * @param[in,out] mixBuffer Pointer to the mixer buffer
 			 * @param[in] bufSize Number of frames in the buffer
@@ -174,9 +163,6 @@ namespace ppp {
 			}
 			void setPosition( int32_t p ) throw() {
 				m_position = p;
-			}
-			uint8_t getPanning() const throw() {
-				return m_panning;
 			}
 			uint16_t getPlaybackFrq() const throw() {
 				return m_playbackFrequency;

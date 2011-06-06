@@ -52,7 +52,7 @@ namespace ppp {
 				virtual std::string getChanCellString( int16_t ) throw();
 				virtual uint8_t channelCount() const;
 				XmInstrument::Ptr getInstrument(int idx) const;
-				uint16_t noteToPeriod(uint16_t note) const;
+				uint16_t noteToPeriod(uint8_t note, int8_t finetune) const;
 				uint32_t periodToFrequency(uint16_t period) const;
 		};
 	} // namespace xm

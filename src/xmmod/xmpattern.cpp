@@ -21,7 +21,7 @@
 using namespace ppp;
 using namespace ppp::xm;
 
-XmCell::XmCell() throw() : GenCell(), m_note( 0 ), m_instr( 0 ), m_volume( 0 ), m_effect( 0 ), m_effectValue( 0 )
+XmCell::XmCell() throw() : GenCell(), m_note( 0 ), m_instr( 0 ), m_volume( 0 ), m_effect( 0xff ), m_effectValue( 0 )
 {}
 
 XmCell::~XmCell() throw()
@@ -52,7 +52,7 @@ void XmCell::reset() throw() {
 	m_note = 0;
 	m_instr = 0xff;
 	m_volume = 0;
-	m_effect = 0;
+	m_effect = 0xff;
 	m_effectValue = 0;
 }
 
@@ -134,7 +134,7 @@ bool XmPattern::load( BinStream& str ) throw( PppException ) {
 		return false;
 	}
 	for( std::size_t chan = 0; chan < m_tracks.size(); chan++ ) {
-		m_tracks[chan].resize( rows );
+		m_tracks[chan].resize( rows, XmCell::Ptr() );
 	}
 	uint16_t packedSize;
 	str.read( &packedSize );
@@ -144,10 +144,10 @@ bool XmPattern::load( BinStream& str ) throw( PppException ) {
 	}
 	for( uint16_t row = 0; row < rows; row++ ) {
 		for( std::size_t chan = 0; chan < m_tracks.size(); chan++ ) {
-			XmCell::Ptr cell( new XmCell() );
+			XmCell* cell = new XmCell();
 			if( !cell->load( str ) )
 				return false;
-			m_tracks[chan][row] = cell;
+			m_tracks[chan][row].reset(cell);
 		}
 	}
 	return !str.fail();
@@ -156,7 +156,8 @@ bool XmPattern::load( BinStream& str ) throw( PppException ) {
 XmCell::Ptr XmPattern::getCell( uint16_t trackIndex, uint16_t row ) throw() {
 	if( trackIndex >= numChannels() || row >= numRows() )
 		return XmCell::Ptr();
-	return m_tracks[trackIndex][row];
+	const XmCell::Vector& track = m_tracks.at(trackIndex);
+	return track.at(row);
 }
 
 std::size_t XmPattern::numRows() const {

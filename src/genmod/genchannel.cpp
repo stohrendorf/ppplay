@@ -27,17 +27,17 @@
 using namespace ppp;
 
 GenChannel::GenChannel( const uint16_t frq ) throw( PppException ) :
-	m_active( false ), m_disabled( true ), m_panning( 0x40 ),
+	m_active( false ), m_disabled( true ),
 	m_position( 0 ),
 	m_statusString(), m_playbackFrequency( frq ),
 	m_statusStringMutex() {
 }
 
-GenChannel::~GenChannel() throw() {
+GenChannel::~GenChannel() {
 }
 
 IArchive& GenChannel::serialize( IArchive* data ) {
-	*data& m_active& m_disabled& m_panning& m_position;
+	*data & m_active & m_disabled & m_position;
 	return *data;
 }
 

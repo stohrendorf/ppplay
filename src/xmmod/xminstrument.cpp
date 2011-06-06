@@ -78,6 +78,16 @@ bool XmInstrument::load( BinStream& str ) {
 		m_samples[i]->loadData( str );
 	}
 	m_title = ppp::stringncpy( hdr.name, 22 );
+	m_panEnvFlags = static_cast<EnvelopeFlags>(hdr2.panType);
+	for(uint8_t i=0; i<hdr2.numPanPoints; i++) {
+		EnvelopePoint p = { hdr2.panEnvelope[i].x, hdr2.panEnvelope[i].y };
+		m_panPoints.push_back(p);
+	}
+	m_volEnvFlags = static_cast<EnvelopeFlags>(hdr2.volType);
+	for(uint8_t i=0; i<hdr2.numVolPoints; i++) {
+		EnvelopePoint p = { hdr2.volEnvelope[i].x, hdr2.volEnvelope[i].y };
+		m_volPoints.push_back(p);
+	}
 	return true;
 }
 
@@ -90,10 +100,33 @@ uint8_t XmInstrument::mapNoteIndex( uint8_t note ) const {
 XmSample::Ptr XmInstrument::mapNoteSample( uint8_t note ) const {
 	if( note >= 96 )
 		return XmSample::Ptr();
-	return m_samples[m_map[note]&15];
+	uint8_t mapped = mapNoteIndex(note);
+	if(mapped >= m_samples.size())
+		return XmSample::Ptr();
+	return m_samples[mapped];
 }
 
 std::string XmInstrument::title() const
 {
 	return m_title;
+}
+
+XmInstrument::EnvelopeFlags XmInstrument::panEnvFlags() const
+{
+	return m_panEnvFlags;
+}
+
+XmInstrument::EnvelopePoint XmInstrument::panPoint(int idx) const
+{
+	return m_panPoints.at(idx);
+}
+
+XmInstrument::EnvelopeFlags XmInstrument::volEnvFlags() const
+{
+	return m_volEnvFlags;
+}
+
+XmInstrument::EnvelopePoint XmInstrument::volPoint(int idx) const
+{
+	return m_volPoints.at(idx);
 }

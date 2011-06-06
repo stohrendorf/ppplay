@@ -18,3 +18,11 @@
 * Exceptions, errors
   
   Too many exceptions are catched and thrown, many are errors recoverable, that means they're not putting the program into an unstable state.
+
+
+* XM
+
+  Envelopes
+  Vibrato
+  Key off handling
+  ...

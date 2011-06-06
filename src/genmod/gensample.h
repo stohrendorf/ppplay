@@ -61,7 +61,7 @@ namespace ppp {
 			 * @return Real position
 			 * @note Time-critical
 			 */
-			inline int32_t makeRealPos( int32_t& pos ) const throw();
+			inline int32_t makeRealPos( int32_t pos ) const throw();
 		public:
 			/**
 			 * @brief Position returned when end of sample reached
@@ -130,7 +130,7 @@ namespace ppp {
 			 * @brief Get the sample's name
 			 * @return Sample's name
 			 */
-			const std::string getTitle() const throw() {
+			std::string getTitle() const throw() {
 				return m_title;
 			}
 			/**
@@ -216,48 +216,31 @@ namespace ppp {
 		if( pos == EndOfSample )
 			return EndOfSample;
 		if( m_looptype != LoopType::None ) {
-			if( m_loopEnd <= m_loopStart )
-				return pos;
-			int32_t looplen = m_loopEnd - m_loopStart;
-			switch( m_looptype ) {
-				case LoopType::Forward:
-					while( pos >= m_loopEnd )
-						pos -= looplen;
-					break;
-				case LoopType::Pingpong:
-					while( pos >= m_loopEnd + looplen )
-						pos -= looplen << 1;
-					break;
-				default:
-					break;
+			if( m_loopEnd <= m_loopStart ) {
+				return pos=EndOfSample;
+			}
+			int32_t vLoopLen = m_loopEnd - m_loopStart;
+			int32_t vLoopEnd = m_loopEnd;
+			if(m_looptype == LoopType::Pingpong) {
+				vLoopLen *= 2;
+				vLoopEnd = m_loopStart + vLoopLen;
+			}
+			while(pos >= vLoopEnd) {
+				pos -= vLoopLen;
 			}
 		}
-		else if( pos >= m_length )
+		else if( pos >= m_length ) {
 			pos = EndOfSample;
+		}
 		return pos;
 	}
 
-	/**
-	 * @details
-	 * [0]....[aLoopStart]..[looplen]..[realPos]..[aLoopEnd]..[pos]..[looplen]..[virtual LoopEnd]
-	 * [pos] wraps over [aLoopEnd] and continues to [virtual LoopEnd], but practically
-	 * reverts to [aLoopStart], so with [virtual LoopEnd]=[aLoopEnd]+[looplen]:
-	 * @code
-	 * while([pos]>=[virtual LoopEnd]) {
-	 *   [pos] -= 2*[looplen]
-	 * }
-	 * @endcode
-	 * to get the "real" position:
-	 * @code
-	 * if([pos]<[aLoopEnd])
-	 *   [realPos] = [pos];
-	 * else
-	 *   [realPos] = 2*[aLoopEnd] - [pos];
-	 * @endcode
-	 */
-	inline int32_t GenSample::makeRealPos( int32_t& pos ) const throw() {
-		if( m_looptype == LoopType::Pingpong )
-			return pos = ( m_loopEnd << 1 ) - pos;
+	inline int32_t GenSample::makeRealPos( int32_t pos ) const throw() {
+		if( m_looptype == LoopType::Pingpong ) {
+			if(pos >= m_loopEnd) {
+				pos = 2*m_loopEnd - pos;
+			}
+		}
 		return pos;
 	}
 

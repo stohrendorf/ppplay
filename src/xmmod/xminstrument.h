@@ -25,10 +25,24 @@ namespace ppp {
 	namespace xm {
 		class XmInstrument {
 				DISABLE_COPY( XmInstrument )
+			public:
+				enum class EnvelopeFlags : uint8_t {
+					Enabled = 0x01,
+					Sustain = 0x02,
+					Loop = 0x04
+				};
 			private:
 				XmSample::Vector m_samples;
 				uint8_t m_map[96];
 				std::string m_title;
+				EnvelopeFlags m_panEnvFlags;
+				EnvelopeFlags m_volEnvFlags;
+				struct EnvelopePoint {
+					int16_t position;
+					int16_t value;
+				};
+				std::vector<EnvelopePoint> m_panPoints;
+				std::vector<EnvelopePoint> m_volPoints;
 			public:
 				typedef std::shared_ptr<XmInstrument> Ptr;
 				typedef std::vector<Ptr> Vector;
@@ -37,7 +51,14 @@ namespace ppp {
 				uint8_t mapNoteIndex( uint8_t note ) const;
 				XmSample::Ptr mapNoteSample( uint8_t note ) const;
 				std::string title() const;
+				EnvelopeFlags panEnvFlags() const;
+				EnvelopePoint panPoint(int idx) const;
+				EnvelopeFlags volEnvFlags() const;
+				EnvelopePoint volPoint(int idx) const;
 		};
+		inline bool operator&(const XmInstrument::EnvelopeFlags& a, const XmInstrument::EnvelopeFlags& b) {
+			return static_cast<uint8_t>(a) & static_cast<uint8_t>(b);
+		}
 	}
 }
 
