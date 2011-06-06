@@ -103,21 +103,23 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 	std::copy_n(hdr.orders, 256, m_orders.begin());
 	if(m_amiga) {
 		uint16_t* dest = m_noteToPeriod.begin();
+		uint8_t octShift = 0;
 		for(int octave=10; octave>0; octave--) {
-			int numFinetunes = 96;
-			if(octave!=1) {
-				numFinetunes *= 8;
-			}
-			uint8_t octShift = 10-octave;
 			uint16_t val = ~(0xffff << octShift);
-			for(int j=0; j<numFinetunes; j++) {
-				dest[0] = dest[1] = ((g_PeriodTable[j]<<6)+val)>>(octShift+1);
+			for(int j=0; j<96; j++) {
+				dest[0] = ((g_PeriodTable[j]<<6)+val)>>(octShift+1);
 				dest += 2;
 			}
+			octShift++;
 		}
-		LOG_TEST_WARN(dest >= m_noteToPeriod.end());
+		dest = m_noteToPeriod.begin();
+		for(std::size_t i=0; i<m_noteToPeriod.size()/2-1; i++) {
+			dest[1] = (dest[0]+dest[2])>>1;
+			dest += 2;
+		}
 	}
 	else {
+		LOG_MESSAGE("LINEAR FRQ");
 		uint16_t val = 10*12*16*4 + 16*4;
 		for(std::size_t i=0; i<m_noteToPeriod.size(); i++) {
 			m_noteToPeriod[i] = val;
@@ -209,14 +211,21 @@ uint8_t XmModule::channelCount() const {
 }
 
 XmInstrument::Ptr XmModule::getInstrument(int idx) const {
-	if(!inRange<int>(idx, 0, m_instruments.size()-1))
+// 	static XmInstrument::Ptr nullInstr(new XmInstrument);
+/*	if(idx == 0)
+		return nullInstr;*/
+	if(!inRange<int>(idx, 1, m_instruments.size()))
 		return XmInstrument::Ptr();
-	return m_instruments.at(idx);
+	return m_instruments.at(idx-1);
 }
 
-uint16_t XmModule::noteToPeriod(uint16_t note) const
+uint16_t XmModule::noteToPeriod(uint8_t note, int8_t finetune) const
 {
-	return m_noteToPeriod[note];
+	uint16_t tuned = (note<<4) + (finetune/8 + 16);
+	if(tuned>=1936) {
+		return 0;
+	}
+	return clip<int>(m_noteToPeriod[tuned], 1, 0x7cff);
 }
 
 static const std::array<uint32_t, 12*16*4> g_linearMult = {{
@@ -380,14 +389,12 @@ uint32_t XmModule::periodToFrequency(uint16_t period) const
 {
 	float pbFrq = getPlaybackFrq();
 	if(m_amiga) {
-		return (8363.0f*1712.0f*65536.0f/pbFrq) / period;
-// 		return 117288600/period;
+		return 8363.0f*1712.0f*65536.0f / (pbFrq*period);
 	}
 	else {
 		uint32_t tmp = 12*12*16*4 - period;
-		uint32_t mod = tmp % (12*16*4);
 		uint32_t div = 14 - tmp / (12*16*4);
-		uint64_t res = static_cast<uint64_t>(256.0f*65536.0f*8363.0f/pbFrq) * g_linearMult[mod];
+		uint64_t res = static_cast<uint64_t>(256.0f*65536.0f*8363.0f/pbFrq) * g_linearMult[ tmp % (12*16*4) ];
 		res <<= 8;
 		res >>= div;
 		return res>>32;

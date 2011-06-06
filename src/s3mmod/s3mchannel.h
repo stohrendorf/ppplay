@@ -76,6 +76,7 @@ namespace ppp {
 				BresenInterpolation m_bresen;
 				std::string m_currentFxStr;
 				int m_sampleIndex;
+				uint8_t m_panning;
 
 				S3mSample::Ptr currentSample() throw( PppException );
 				void setSampleIndex( int32_t idx );
@@ -129,6 +130,7 @@ namespace ppp {
 				virtual std::string getFxName() const throw( PppException );
 				virtual std::string getFxDesc() const throw( PppException );
 				void recalcVolume();
+				void setPanning(uint8_t pan);
 		};
 	} // namespace s3m
 } // namespace ppp

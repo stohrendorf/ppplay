@@ -19,6 +19,7 @@
 #ifndef XMCHANNEL_H
 #define XMCHANNEL_H
 
+#include "genmod/breseninter.h"
 #include "genmod/genchannel.h"
 #include "xmpattern.h"
 #include "xminstrument.h"
@@ -33,21 +34,48 @@ namespace ppp {
 			typedef std::shared_ptr<XmChannel> Ptr;
 			typedef std::vector<Ptr> Vector;
 		private:
+			enum class PortaDir {
+				Off,
+				Up,
+				Down
+			};
 			uint8_t m_baseVolume;
 			uint8_t m_currentVolume;
 			uint8_t m_panning;
 			uint16_t m_basePeriod;
 			uint16_t m_currentPeriod;
+			uint16_t m_portaPeriod;
 			int8_t m_finetune;
 			uint8_t m_lastVolSlideFx;
 			uint8_t m_lastPortaUpFx;
 			uint8_t m_lastPortaDownFx;
 			uint8_t m_lastPanSlideFx;
+			uint8_t m_lastOffsetFx;
 			uint8_t m_baseNote;
 			uint8_t m_realNote;
 			uint8_t m_instrumentIndex;
+			uint8_t m_volFadeoutVal;
+			uint16_t m_panEnvPos;
+			uint8_t m_panEnvIdx;
+			uint16_t m_volEnvPos;
+			uint8_t m_volEnvIdx;
+			uint8_t m_lastFinePortaUpFx;
+			uint8_t m_lastFinePortaDownFx;
+			uint8_t m_lastFineVolUpFx;
+			uint8_t m_lastFineVolDownFx;
+			uint8_t m_lastXFinePortaUp;
+			uint8_t m_lastXFinePortaDown;
+			uint8_t m_portaSpeed;
+			uint16_t m_portaTargetPeriod;
+			uint8_t m_vibratoSpeed;
+			PortaDir m_portaDir;
+			BresenInterpolation m_bres;
 			XmModule* m_module;
-			XmSample::Ptr currentSample() const;
+			XmSample::Ptr currentSample();
+			XmInstrument::Ptr currentInstrument();
+			XmCell m_currentCell;
+			XmSample::Ptr m_currentSample;
+			XmInstrument::Ptr m_currentInstrument;
 		public:
 			XmChannel(XmModule* module, int frq);
 			virtual std::string getNoteName() throw( PppException );
@@ -63,8 +91,29 @@ namespace ppp {
 			void fxPortaDown(uint8_t fxByte);
 			void fxVolSlide(uint8_t fxByte);
 			void fxPanSlide(uint8_t fxByte);
-			void triggerNote(uint8_t note);
+			void fxSetVolume(uint8_t fxByte);
+			void fxSetPan(uint8_t fxByte);
+			void fxSetTempoBpm(uint8_t fxByte);
+			void fxOffset(uint8_t fxByte);
+			void fxSetGlobalVolume(uint8_t fxByte);
+			void fxExtraFinePorta(uint8_t fxByte);
+			void fxExtended(uint8_t fxByte);
+			void fxPorta();
+			void vfxFineVolSlideDown(uint8_t fxByte);
+			void vfxFineVolSlideUp(uint8_t fxByte);
+			void vfxSetPan(uint8_t fxByte);
+			void vfxSlideDown(uint8_t fxByte);
+			void vfxSlideUp(uint8_t fxByte);
+			void vfxSetVibratoSpeed(uint8_t fxByte);
+			void vfxPanSlideLeft(uint8_t fxByte);
+			void vfxPanSlideRight(uint8_t fxByte);
+			void efxFinePortaUp(uint8_t fxByte);
+			void efxFinePortaDown(uint8_t fxByte);
+			void efxFineVolUp(uint8_t fxByte);
+			void efxFineVolDown(uint8_t fxByte);
+			void triggerNote();
 			void doKeyOff();
+			void applySampleDefaults();
 		};
 	}
 }
