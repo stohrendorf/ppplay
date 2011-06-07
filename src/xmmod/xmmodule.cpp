@@ -76,6 +76,7 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 			title.erase( title.length() - 1, 1 );
 		setTitle( title );
 	}
+	LOG_DEBUG("Restart pos = %u", hdr.restartPos);
 	setTrackerInfo( stringncpy( hdr.trackerName, 20 ) );
 	setTempo( hdr.defaultTempo & 0xff );
 	setSpeed( hdr.defaultSpeed & 0xff );
@@ -127,6 +128,7 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 		}
 	}
 	m_length = hdr.songLength;
+	setPatternIndex( m_orders[0] );
 	return true;
 }
 
@@ -389,12 +391,12 @@ uint32_t XmModule::periodToFrequency(uint16_t period) const
 {
 	float pbFrq = getPlaybackFrq();
 	if(m_amiga) {
-		return 8363.0f*1712.0f*65536.0f / (pbFrq*period);
+		return 8363.0f*1712.0f*65536.0f / pbFrq / period;
 	}
 	else {
 		uint32_t tmp = 12*12*16*4 - period;
 		uint32_t div = 14 - tmp / (12*16*4);
-		uint64_t res = static_cast<uint64_t>(256.0f*65536.0f*8363.0f/pbFrq) * g_linearMult[ tmp % (12*16*4) ];
+		uint64_t res = static_cast<uint64_t>(256.0f*65536.0f*8363.0f/pbFrq * g_linearMult[ tmp % (12*16*4) ]);
 		res <<= 8;
 		res >>= div;
 		return res>>32;

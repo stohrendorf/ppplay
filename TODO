@@ -26,3 +26,19 @@
   Vibrato
   Key off handling
   ...
+
+
+* General module interface
+
+  Add methods like "getNormalizedVolume" that return percentage values.
+  Add factory methods for automatically registering supported module types.
+  Move S3mModule/XmModule implementations into a private class -> pImpl.
+
+* Audio system
+  
+  Add a "RawVector" template class that copies data without respect for constructors or copy operators; should speed up audio output.
+  Add OGG support.
+
+* Graphics system
+  
+  Add more widgets/screens (file browser, song message, additional meta information...).

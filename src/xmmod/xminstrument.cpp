@@ -79,12 +79,12 @@ bool XmInstrument::load( BinStream& str ) {
 	}
 	m_title = ppp::stringncpy( hdr.name, 22 );
 	m_panEnvFlags = static_cast<EnvelopeFlags>(hdr2.panType);
-	for(uint8_t i=0; i<hdr2.numPanPoints; i++) {
+	for(uint8_t i=0; i<12; i++) {
 		EnvelopePoint p = { hdr2.panEnvelope[i].x, hdr2.panEnvelope[i].y };
 		m_panPoints.push_back(p);
 	}
 	m_volEnvFlags = static_cast<EnvelopeFlags>(hdr2.volType);
-	for(uint8_t i=0; i<hdr2.numVolPoints; i++) {
+	for(uint8_t i=0; i<12; i++) {
 		EnvelopePoint p = { hdr2.volEnvelope[i].x, hdr2.volEnvelope[i].y };
 		m_volPoints.push_back(p);
 	}
