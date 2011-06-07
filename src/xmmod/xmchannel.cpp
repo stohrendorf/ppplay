@@ -22,25 +22,11 @@
 
 #include <cmath>
 
-using namespace ppp;
-using namespace ppp::xm;
+namespace ppp { namespace xm {
 
-enum Effect {
-	FxArpeggio = 0,
-	FxPortaUp = 1,
-	FxPortaDown = 2,
-	FxPorta = 3,
-	FxVibrato = 4,
-	FxPortaVolSlide = 5,
-	FxVibratoVolSlide = 6,
-	FxTremolo = 7,
-	FxSetPanning = 8,
-	FxOffset = 9,
-	FxVolSlide = 0x0a,
-	FxPosJump = 0x0b,
-	FxSetVolume = 0x0c,
-	FxPatBreak = 0x0d,
-	FxExtended = 0x0e,
+static const uint8_t KeyOff = 97;
+
+enum {
 	EfxFinePortaUp = 1,
 	EfxFinePortaDown = 2,
 	EfxSetGlissCtrl = 3,
@@ -54,19 +40,17 @@ enum Effect {
 	EfxNoteCut = 0x0c,
 	EfxNoteDelay = 0x0d,
 	EfxPatDelay = 0x0e,
-	FxSetTempoBpm = 0x0f,
-	FxSetGlobalVol = 0x10,
-	FxGlobalVolSlide = 0x11,
-	FxSetEnvPos = 0x15,
-	FxPanSlide = 0x19,
-	FxRetrigger = 0x1b,
-	FxTremor = 0x1d,
-	FxExtraFinePorta = 0x21,
-	XfxUp = 1,
-	XfxDown = 2
-};
-enum Special {
-	KeyOff = 97
+	VfxNone = 0,
+	VfxVolSlideDown = 6,
+	VfxVolSlideUp = 7,
+	VfxFineVolSlideDown = 8,
+	VfxFineVolSlideUp = 9,
+	VfxSetVibSpeed = 0xa,
+	VfxVibrato = 0xb,
+	VfxSetPanning = 0xc,
+	VfxPanSlideLeft = 0xd,
+	VfxPanSlideRight = 0xe,
+	VfxPorta = 0xf
 };
 
 XmChannel::XmChannel(XmModule *module, int frq) : GenChannel(frq), m_module(module), m_finetune(0), m_panEnvIdx(0), m_volEnvIdx(0), m_bres(1,1)
@@ -160,18 +144,18 @@ void XmChannel::triggerNote()
 	if(!currentSample()) {
 		m_realNote = m_baseNote;
 		m_finetune = 0;
-		m_basePeriod = m_currentPeriod = m_portaPeriod = 0;
+		m_basePeriod = m_currentPeriod = 0;
 		setActive(false);
 	}
 	else {
-		int tmp = currentSample()->relativeNote() + m_baseNote;
+		int tmp = static_cast<int>(currentSample()->relativeNote()) + m_baseNote;
 		if(!inRange(tmp, 1, 119)) {
 			LOG_WARNING("OUT OF RANGE NOTE: rel=%d base=%d r=%d", currentSample()->relativeNote(), m_baseNote, tmp);
 			setActive(false);
 			return;
 		}
-		m_realNote = tmp;
-		if(m_currentCell.getEffect()==FxExtended && highNibble(m_currentCell.getEffectValue())==EfxSetFinetune) {
+		m_realNote = tmp-1;
+		if(m_currentCell.getEffect()==Effect::FxExtended && highNibble(m_currentCell.getEffectValue())==EfxSetFinetune) {
 			m_finetune = (lowNibble(m_currentCell.getEffectValue())<<4)-0x80;
 		}
 		else {
@@ -180,12 +164,12 @@ void XmChannel::triggerNote()
 		uint16_t newPer = m_module->noteToPeriod( m_realNote, m_finetune );
 		if(newPer != 0) {
 			m_basePeriod = newPer;
-			m_portaPeriod = m_currentPeriod = m_basePeriod;
+			m_currentPeriod = m_basePeriod;
 		}
-		if(m_currentCell.getEffect() == FxOffset) {
+		if(m_currentCell.getEffect() == Effect::FxOffset) {
 			fxOffset( m_currentCell.getEffectValue() );
 		}
-		else {
+		else if(!(m_currentCell.getEffect()==Effect::FxPorta || m_currentCell.getEffect()==Effect::FxPortaVolSlide || highNibble(m_currentCell.getVolume())==VfxPorta)) {
 			setPosition(0);
 		}
 		setActive(true);
@@ -194,10 +178,10 @@ void XmChannel::triggerNote()
 
 void XmChannel::doKeyOff()
 {
-	return setActive(false); // FIXME
-
 	m_volFadeoutVal = 0;
 	XmInstrument::Ptr instr = currentInstrument();
+	if(!instr)
+		return;
 	
 	if(!(instr->panEnvFlags() & XmInstrument::EnvelopeFlags::Enabled)) {
 		uint16_t pos = instr->panPoint( m_panEnvIdx ).position;
@@ -214,19 +198,19 @@ void XmChannel::doKeyOff()
 	else {
 		m_baseVolume = m_currentVolume = 0;
 	}
-//     setActive(false);
+	// FIXME
+    setActive(false);
 }
 
 void XmChannel::update(const XmCell::Ptr cell)
 {
 // 	m_currentCell = *cell;
     if(m_module->getPlaybackInfo().tick == 0) {
-		m_currentPeriod = m_basePeriod;
 		m_currentCell = *cell;
 		if(m_currentCell.getInstr() != 0 && m_currentCell.getInstr()<0x80) {
 			m_instrumentIndex = m_currentCell.getInstr();
 		}
-		if(m_currentCell.getEffect()==FxExtended) {
+		if(m_currentCell.getEffect()==Effect::FxExtended) {
 			if(highNibble(m_currentCell.getEffectValue())==EfxNoteDelay) {
 				if(lowNibble(m_currentCell.getEffectValue())!=0) {
 					return;
@@ -244,50 +228,26 @@ void XmChannel::update(const XmCell::Ptr cell)
 				}
 			}
 		}
-		if(highNibble(m_currentCell.getVolume()) == 0x0f) {
+		if(highNibble(m_currentCell.getVolume()) == VfxPorta) {
 			if(lowNibble(m_currentCell.getVolume()) != 0) {
 				m_portaSpeed = lowNibble(m_currentCell.getVolume())<<4;
 			}
-			if(m_currentCell.getNote()!=0 && m_currentCell.getNote()!=KeyOff) {
-				uint16_t newPer = m_module->noteToPeriod(m_currentCell.getNote(), m_finetune);
-				if(newPer != 0) {
-					m_portaTargetPeriod = newPer;
-					if(m_portaTargetPeriod == m_basePeriod) {
-						m_portaDir = PortaDir::Off;
-					}
-					else if(m_portaTargetPeriod < m_basePeriod) {
-						m_portaDir = PortaDir::Down;
-					}
-					else {
-						m_portaDir = PortaDir::Up;
-					}
-				}
+			calculatePortaTarget( m_currentCell.getNote() );
+		}
+		else if(m_currentCell.getEffect()==Effect::FxPorta) {
+			if(m_currentCell.getEffectValue()!=0) {
+				m_portaSpeed = m_currentCell.getEffectValue()<<2;
 			}
+			calculatePortaTarget( m_currentCell.getNote() );
 		}
-		else if(m_currentCell.getEffect()==FxPorta) {
-			m_portaSpeed = m_currentCell.getEffectValue()<<2;
-			if(m_currentCell.getNote()!=0 && m_currentCell.getNote()!=KeyOff) {
-				uint16_t newPer = m_module->noteToPeriod(m_currentCell.getNote(), m_finetune);
-				if(newPer != 0) {
-					m_portaTargetPeriod = newPer;
-					if(m_portaTargetPeriod == m_basePeriod) {
-						m_portaDir = PortaDir::Off;
-					}
-					else if(m_portaTargetPeriod < m_basePeriod) {
-						m_portaDir = PortaDir::Down;
-					}
-					else {
-						m_portaDir = PortaDir::Up;
-					}
-				}
+		else if(m_currentCell.getEffect()!=Effect::FxPortaVolSlide && m_currentCell.getNote() != 0) {
+			if(m_currentCell.getNote() == KeyOff) {
+				doKeyOff();
 			}
-		}
-		if(m_currentCell.getNote() == KeyOff) {
-			doKeyOff();
-		}
-		else if(m_currentCell.getNote() != 0) {
-			triggerNote();
-			applySampleDefaults();
+			else {
+				triggerNote();
+				applySampleDefaults();
+			}
 		}
 		switch(highNibble(m_currentCell.getVolume())) {
 			case 0x01:
@@ -298,75 +258,75 @@ void XmChannel::update(const XmCell::Ptr cell)
 				m_baseVolume = m_currentCell.getVolume()-0x10;
 				m_currentVolume = m_baseVolume;
 				break;
-			case 0x08:
+			case VfxFineVolSlideDown:
 				vfxFineVolSlideDown(m_currentCell.getVolume());
 				break;
-			case 0x09:
+			case VfxFineVolSlideUp:
 				vfxFineVolSlideUp(m_currentCell.getVolume());
 				break;
-			case 0x0a:
+			case VfxSetVibSpeed:
 				vfxSetVibratoSpeed(m_currentCell.getVolume());
 				break;
-			case 0x0c:
+			case VfxSetPanning:
 				vfxSetPan(m_currentCell.getVolume());
 		}
 		switch(m_currentCell.getEffect()) {
-			case FxSetPanning:
+			case Effect::FxSetPanning:
 				fxSetPan(m_currentCell.getEffectValue());
 				break;
-			case FxSetVolume:
+			case Effect::FxSetVolume:
 				fxSetVolume(m_currentCell.getEffectValue());
 				break;
-			case FxExtended:
+			case Effect::FxExtended:
 				fxExtended(m_currentCell.getEffectValue());
 				break;
-			case FxSetTempoBpm:
+			case Effect::FxSetTempoBpm:
 				fxSetTempoBpm( m_currentCell.getEffectValue() );
 				break;
-			case FxSetGlobalVol:
+			case Effect::FxSetGlobalVol:
 				fxSetGlobalVolume( m_currentCell.getEffectValue() );
 				break;
-			case FxExtraFinePorta:
-// 				fxExtraFinePorta(m_currentCell.getEffectValue());
+			case Effect::FxExtraFinePorta:
+				fxExtraFinePorta(m_currentCell.getEffectValue());
 				break;
 		}
 	}
 	else { // tick 1+
 		switch(highNibble(m_currentCell.getVolume())) {
-			case 0x06:
+			case VfxVolSlideDown:
 				vfxSlideDown(m_currentCell.getVolume());
 				break;
-			case 0x07:
+			case VfxVolSlideUp:
 				vfxSlideUp(m_currentCell.getVolume());
 				break;
-			case 0x0d:
+			case VfxPanSlideLeft:
 				vfxPanSlideLeft(m_currentCell.getVolume());
 				break;
-			case 0x0e:
+			case VfxPanSlideRight:
 				vfxPanSlideRight(m_currentCell.getVolume());
 				break;
-			case 0x0f:
-// 				fxPorta();
+			case VfxPorta:
+				fxPorta();
 				break;
 		}
 		switch(m_currentCell.getEffect()) {
-			case FxPortaUp:
+			case Effect::FxPortaUp:
 				fxPortaUp(m_currentCell.getEffectValue());
 				break;
-			case FxPortaDown:
+			case Effect::FxPortaDown:
 				fxPortaDown(m_currentCell.getEffectValue());
 				break;
-			case FxVolSlide:
+			case Effect::FxVolSlide:
 				fxVolSlide(m_currentCell.getEffectValue());
 				break;
-			case FxExtended:
+			case Effect::FxExtended:
 				fxExtended(m_currentCell.getEffectValue());
 				break;
-			case FxPorta:
-// 				fxPorta();
+			case Effect::FxPorta:
+				fxPorta();
 				break;
-			case FxPortaVolSlide:
-// 				fxPorta();
+			case Effect::FxPortaVolSlide:
+				fxPorta();
 				fxVolSlide(m_currentCell.getEffectValue());
 				break;
 		}
@@ -596,25 +556,37 @@ void XmChannel::vfxPanSlideRight(uint8_t fxByte)
 
 void XmChannel::fxPorta()
 {
-	if(m_portaDir == PortaDir::Off) {
-		return;
-	}
-	uint16_t tmp;
-	if(m_portaDir == PortaDir::Up) {
-		tmp = m_basePeriod+m_portaSpeed;
-		if(tmp>m_portaTargetPeriod) {
-			tmp = m_portaTargetPeriod;
-			m_portaDir = PortaDir::Up;
-		}
-	}
-	else if(m_portaDir == PortaDir::Down) {
+	int tmp = m_basePeriod;
+	if(m_portaTargetPeriod<m_basePeriod) {
 		tmp = m_basePeriod-m_portaSpeed;
 		if(tmp<m_portaTargetPeriod) {
 			tmp = m_portaTargetPeriod;
-			m_portaDir = PortaDir::Up;
 		}
 	}
-	m_basePeriod = tmp;
+	else if(m_portaTargetPeriod>m_basePeriod) {
+		tmp = m_basePeriod+m_portaSpeed;
+		if(tmp>m_portaTargetPeriod) {
+			tmp = m_portaTargetPeriod;
+		}
+	}
+	else {
+		return;
+	}
+	m_currentPeriod = m_basePeriod = tmp;
 	// TODO glissando
-	m_portaPeriod = m_currentPeriod = m_basePeriod;
 }
+
+void XmChannel::calculatePortaTarget(uint8_t targetNote)
+{
+	if(!currentSample())
+		return;
+	if(targetNote!=0 && targetNote!=KeyOff) {
+		uint16_t newPer = m_module->noteToPeriod(targetNote + currentSample()->relativeNote() - 1, currentSample()->finetune());
+		if(newPer != 0) {
+			m_portaTargetPeriod = newPer;
+		}
+	}
+}
+
+
+}}

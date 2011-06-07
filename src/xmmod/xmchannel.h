@@ -34,17 +34,11 @@ namespace ppp {
 			typedef std::shared_ptr<XmChannel> Ptr;
 			typedef std::vector<Ptr> Vector;
 		private:
-			enum class PortaDir {
-				Off,
-				Up,
-				Down
-			};
 			uint8_t m_baseVolume;
 			uint8_t m_currentVolume;
 			uint8_t m_panning;
 			uint16_t m_basePeriod;
 			uint16_t m_currentPeriod;
-			uint16_t m_portaPeriod;
 			int8_t m_finetune;
 			uint8_t m_lastVolSlideFx;
 			uint8_t m_lastPortaUpFx;
@@ -65,10 +59,9 @@ namespace ppp {
 			uint8_t m_lastFineVolDownFx;
 			uint8_t m_lastXFinePortaUp;
 			uint8_t m_lastXFinePortaDown;
-			uint8_t m_portaSpeed;
+			uint16_t m_portaSpeed;
 			uint16_t m_portaTargetPeriod;
 			uint8_t m_vibratoSpeed;
-			PortaDir m_portaDir;
 			BresenInterpolation m_bres;
 			XmModule* m_module;
 			XmSample::Ptr currentSample();
@@ -114,6 +107,7 @@ namespace ppp {
 			void triggerNote();
 			void doKeyOff();
 			void applySampleDefaults();
+			void calculatePortaTarget(uint8_t targetNote);
 		};
 	}
 }
