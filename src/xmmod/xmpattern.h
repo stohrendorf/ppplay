@@ -34,21 +34,21 @@ enum class Effect : uint8_t
     FxVibrato = 4,
     FxPortaVolSlide = 5,
     FxVibratoVolSlide = 6,
-    FxTremolo = 7,
+    FxTremolo = 7, //!< @todo Implement!
     FxSetPanning = 8,
     FxOffset = 9,
     FxVolSlide = 0x0a,
-    FxPosJump = 0x0b,
+    FxPosJump = 0x0b, //!< @todo Implement!
     FxSetVolume = 0x0c,
-    FxPatBreak = 0x0d,
+    FxPatBreak = 0x0d, //!< @todo Implement!
     FxExtended = 0x0e,
     FxSetTempoBpm = 0x0f,
     FxSetGlobalVol = 0x10,
     FxGlobalVolSlide = 0x11,
-    FxSetEnvPos = 0x15,
+    FxSetEnvPos = 0x15, //!< @todo Implement!
     FxPanSlide = 0x19,
-    FxRetrigger = 0x1b,
-    FxTremor = 0x1d,
+    FxRetrigger = 0x1b, //!< @todo Implement!
+    FxTremor = 0x1d, //!< @todo Implement!
     FxExtraFinePorta = 0x21,
     FxNone = 0xff
 };

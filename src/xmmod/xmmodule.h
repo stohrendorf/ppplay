@@ -54,6 +54,7 @@ namespace ppp {
 				XmInstrument::Ptr getInstrument(int idx) const;
 				uint16_t noteToPeriod(uint8_t note, int8_t finetune) const;
 				uint32_t periodToFrequency(uint16_t period) const;
+				uint16_t glissando(uint16_t period, int8_t finetune, uint8_t deltaNote = 0) const;
 		};
 	} // namespace xm
 } // namespace ppp

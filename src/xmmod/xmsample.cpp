@@ -34,6 +34,9 @@ bool XmSample::load( BinStream& str, const std::size_t ) throw( PppException ) {
 	str.read( &volume );
 	setVolume( volume );
 	str.read( &m_finetune );
+/*	if(m_finetune!=0) {
+		LOG_DEBUG("FTune:%d", m_finetune);
+	}*/
 	uint8_t type;
 	str.read( &type );
 	switch( type & 3 ) {
