@@ -32,14 +32,14 @@ enum {
 	EfxSetGlissCtrl = 3,
 	EfxSetVibratoCtrl = 4,
 	EfxSetFinetune = 5,
-	EfxPatLoop = 6,
-	EfxSetTremoloCtrl = 7,
-	EfxRetrigger = 9,
+	EfxPatLoop = 6, //!< @todo Implement!
+	EfxSetTremoloCtrl = 7, //!< @todo Implement!
+	EfxRetrigger = 9, //!< @todo Implement!
 	EfxFineVolSlideUp = 0x0a,
 	EfxFineVolSlideDown = 0x0b,
-	EfxNoteCut = 0x0c,
-	EfxNoteDelay = 0x0d,
-	EfxPatDelay = 0x0e,
+	EfxNoteCut = 0x0c, //!< @todo Implement!
+	EfxNoteDelay = 0x0d, //!< @todo Implement!
+	EfxPatDelay = 0x0e, //!< @todo Implement!
 	VfxNone = 0,
 	VfxVolSlideDown = 6,
 	VfxVolSlideUp = 7,
@@ -53,15 +53,15 @@ enum {
 	VfxPorta = 0xf
 };
 
-XmChannel::XmChannel(XmModule *module, int frq) : GenChannel(frq), m_module(module), m_finetune(0), m_panEnvIdx(0), m_volEnvIdx(0), m_bres(1,1)
+XmChannel::XmChannel(XmModule *module, int frq) : GenChannel(frq), m_module(module), m_finetune(0), m_panEnvIdx(0), m_volEnvIdx(0), m_bres(1,1), m_glissandoCtrl(false), m_vibratoCtrl(0), m_vibratoPhase(0)
 {
 }
 
 XmSample::Ptr XmChannel::currentSample()
 {
     XmInstrument::Ptr instr = currentInstrument();
-	if(instr) {
-		XmSample::Ptr smp = instr->mapNoteSample(m_baseNote);
+	if(instr && m_baseNote>0) {
+		XmSample::Ptr smp = instr->mapNoteSample(m_baseNote-1);
 		if(smp) {
 			m_currentSample = smp;
 		}
@@ -189,7 +189,7 @@ void XmChannel::doKeyOff()
 			m_panEnvPos = pos-1;
 		}
 	}
-	if(instr->panEnvFlags() & XmInstrument::EnvelopeFlags::Enabled) {
+	if(instr->volEnvFlags() & XmInstrument::EnvelopeFlags::Enabled) {
 		uint16_t pos = instr->volPoint( m_volEnvIdx ).position;
 		if(m_volEnvPos >= pos) {
 			m_volEnvPos = pos-1;
@@ -206,6 +206,13 @@ void XmChannel::update(const XmCell::Ptr cell)
 {
 // 	m_currentCell = *cell;
     if(m_module->getPlaybackInfo().tick == 0) {
+		if(m_vibratoCtrl&4 == 0 && cell->getNote()!=0 && cell->getNote()!=KeyOff) {
+			// reset vibrato phase on a new note, but only if there was no previous vibrato effect...
+			if(m_currentCell.getEffect()!=Effect::FxVibrato && m_currentCell.getEffect()!=Effect::FxVibratoVolSlide && highNibble(m_currentCell.getVolume())!=VfxVibrato) {
+				// no previous vibrato fx: yay!
+				m_vibratoPhase = 0;
+			}
+		}
 		m_currentCell = *cell;
 		if(m_currentCell.getInstr() != 0 && m_currentCell.getInstr()<0x80) {
 			m_instrumentIndex = m_currentCell.getInstr();
@@ -292,6 +299,14 @@ void XmChannel::update(const XmCell::Ptr cell)
 		}
 	}
 	else { // tick 1+
+		if(m_currentCell.getEffect()==Effect::FxExtended) {
+			if(highNibble(m_currentCell.getEffectValue())==EfxNoteDelay) {
+				if(lowNibble(m_currentCell.getEffectValue())==m_module->getPlaybackInfo().tick) {
+					triggerNote();
+					applySampleDefaults();
+				}
+			}
+		}
 		switch(highNibble(m_currentCell.getVolume())) {
 			case VfxVolSlideDown:
 				vfxSlideDown(m_currentCell.getVolume());
@@ -308,8 +323,14 @@ void XmChannel::update(const XmCell::Ptr cell)
 			case VfxPorta:
 				fxPorta();
 				break;
+			case VfxVibrato:
+				vfxVibrato(m_currentCell.getVolume());
+				break;
 		}
 		switch(m_currentCell.getEffect()) {
+			case Effect::FxArpeggio:
+				fxArpeggio(m_currentCell.getEffectValue());
+				break;
 			case Effect::FxPortaUp:
 				fxPortaUp(m_currentCell.getEffectValue());
 				break;
@@ -329,6 +350,32 @@ void XmChannel::update(const XmCell::Ptr cell)
 				fxPorta();
 				fxVolSlide(m_currentCell.getEffectValue());
 				break;
+			case Effect::FxVibrato:
+				fxVibrato(m_currentCell.getEffectValue());
+				break;
+			case Effect::FxVibratoVolSlide:
+				fxVibrato(m_currentCell.getEffectValue());
+				fxVolSlide(m_currentCell.getEffectValue());
+				break;
+			case Effect::FxGlobalVolSlide:
+				fxGlobalVolSlide(m_currentCell.getEffectValue());
+				break;
+		}
+	}
+	if(currentInstrument() && currentInstrument()->volEnvFlags()&XmInstrument::EnvelopeFlags::Enabled) {
+		m_volEnvPos++;
+		if(m_volEnvPos == currentInstrument()->volPoint(m_volEnvIdx).position) {
+			m_volEnvVal = (currentInstrument()->volPoint(m_volEnvIdx).value&0xff)<<8;
+			if(currentInstrument()->volEnvFlags()&XmInstrument::EnvelopeFlags::Loop && m_volEnvIdx==currentInstrument()->volLoopEnd()) {
+				if(currentInstrument()->volEnvFlags()&XmInstrument::EnvelopeFlags::Sustain && m_volEnvIdx==currentInstrument()->volSustainPoint()) {
+					if(m_volFadeoutVal != 0) {
+						m_volEnvIdx = currentInstrument()->volLoopStart();
+						m_volEnvPos = currentInstrument()->volPoint(m_volEnvIdx).position;
+						m_volEnvVal = (currentInstrument()->volPoint(m_volEnvIdx).value&0xff)<<8;
+						// TODO ...
+					}
+				}
+			}
 		}
 	}
  /*   if(!isActive())
@@ -523,6 +570,12 @@ void XmChannel::fxExtended(uint8_t fxByte)
 		case EfxFineVolSlideDown:
 			efxFineVolDown(fxByte);
 			break;
+		case EfxSetGlissCtrl:
+			m_glissandoCtrl = lowNibble(fxByte)!=0;
+			break;
+		case EfxSetVibratoCtrl:
+			m_vibratoCtrl = lowNibble(fxByte);
+			break;
 	}
 }
 
@@ -572,8 +625,13 @@ void XmChannel::fxPorta()
 	else {
 		return;
 	}
-	m_currentPeriod = m_basePeriod = tmp;
-	// TODO glissando
+	m_basePeriod = tmp;
+	if(!m_glissandoCtrl) {
+		m_currentPeriod = m_basePeriod;
+	}
+	else {
+		m_currentPeriod = m_module->glissando(m_basePeriod, m_finetune);
+	}
 }
 
 void XmChannel::calculatePortaTarget(uint8_t targetNote)
@@ -585,6 +643,91 @@ void XmChannel::calculatePortaTarget(uint8_t targetNote)
 		if(newPer != 0) {
 			m_portaTargetPeriod = newPer;
 		}
+	}
+}
+
+void XmChannel::fxArpeggio(uint8_t fxByte)
+{
+	if(fxByte == 0) {
+		return;
+	}
+	switch( m_module->getPlaybackInfo().tick % 3) {
+		case 0:
+			m_currentPeriod = m_basePeriod;
+			break;
+		case 1:
+			m_currentPeriod = m_module->glissando( m_basePeriod, m_finetune, highNibble(fxByte) );
+			break;
+		case 2:
+			m_currentPeriod = m_module->glissando( m_basePeriod, m_finetune, lowNibble(fxByte) );
+			break;
+	}
+}
+
+void XmChannel::fxVibrato(uint8_t fxByte)
+{
+	if(fxByte != 0) {
+		if(lowNibble(fxByte) != 0) {
+			m_vibratoDepth = lowNibble(fxByte);
+		}
+		if(highNibble(fxByte)>>2 != 0) {
+			m_vibratoSpeed = highNibble(fxByte)>>2;
+		}
+	}
+	doVibrato();
+}
+
+static const std::array<uint8_t, 32> g_VibTable = {{
+	0, 24, 49, 74, 97,120,141,161,180,197,212,224,235,
+	244,250,253,255,253,250,244,235,224,212,197,180,161,
+	141,120, 97, 74, 49, 24
+}};
+
+void XmChannel::doVibrato()
+{
+	uint8_t value = (m_vibratoPhase>>2) & 0x1f;
+	switch(m_vibratoCtrl&3) {
+		case 0:
+			value = g_VibTable[value];
+			break;
+		case 1:
+			value <<= 3;
+			if((m_vibratoPhase&0x80) == 0) {
+				value = ~value;
+			}
+			break;
+		case 2:
+			value = 0xff;
+	}
+	uint16_t delta = (value*m_vibratoDepth)>>5;
+	if(m_vibratoPhase&0x80) {
+		m_currentPeriod = m_basePeriod - delta;
+	}
+	else {
+		m_currentPeriod = m_basePeriod + delta;
+	}
+	m_vibratoPhase += m_vibratoSpeed;
+}
+
+void XmChannel::vfxVibrato(uint8_t fxByte)
+{
+	fxByte = lowNibble(fxByte);
+	if(fxByte != 0) {
+		m_vibratoDepth = fxByte;
+	}
+	doVibrato();
+}
+
+void XmChannel::fxGlobalVolSlide(uint8_t fxByte)
+{
+	reuseIfZero( m_lastGlobVolSlideFx, fxByte );
+	if(highNibble(fxByte)==0) {
+		fxByte = lowNibble(fxByte);
+		m_module->setGlobalVolume( std::max(0, m_module->getPlaybackInfo().globalVolume-fxByte ) );
+	}
+	else {
+		fxByte = highNibble(fxByte);
+		m_module->setGlobalVolume( std::min(0x40, m_module->getPlaybackInfo().globalVolume+fxByte ) );
 	}
 }
 

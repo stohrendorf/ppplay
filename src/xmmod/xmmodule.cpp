@@ -103,12 +103,16 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 	}
 	std::copy_n(hdr.orders, 256, m_orders.begin());
 	if(m_amiga) {
+		for(int i=0; i<m_noteToPeriod.size(); i++) {
+			m_noteToPeriod[i] = 0;
+		}
 		uint16_t* dest = m_noteToPeriod.begin();
 		uint8_t octShift = 0;
-		for(int octave=10; octave>0; octave--) {
+		for(int octave=10; octave>=0; octave--) {
 			uint16_t val = ~(0xffff << octShift);
-			for(int j=0; j<96; j++) {
-				dest[0] = ((g_PeriodTable[j]<<6)+val)>>(octShift+1);
+			int count = octave!=0 ? 96 : 8;
+			for(int j=0; j<count; j++) {
+				dest[0] = dest[1] = ((g_PeriodTable[j]<<6)+val)>>(octShift+1);
 				dest += 2;
 			}
 			octShift++;
@@ -118,13 +122,18 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 			dest[1] = (dest[0]+dest[2])>>1;
 			dest += 2;
 		}
+		for(int i=0; i<m_noteToPeriod.size(); i++) {
+			if(m_noteToPeriod[i] == 0) {
+				LOG_DEBUG("Uninitialized value: %d", i);
+			}
+		}
 	}
 	else {
-		LOG_MESSAGE("LINEAR FRQ");
-		uint16_t val = 10*12*16*4 + 16*4;
+		LOG_DEBUG("LINEAR FRQ");
+		uint16_t val = 10*12*16 + 16;
 		for(std::size_t i=0; i<m_noteToPeriod.size(); i++) {
-			m_noteToPeriod[i] = val;
-			val -= 4;
+			m_noteToPeriod[i] = val*4;
+			val--;
 		}
 	}
 	m_length = hdr.songLength;
@@ -224,7 +233,8 @@ XmInstrument::Ptr XmModule::getInstrument(int idx) const {
 uint16_t XmModule::noteToPeriod(uint8_t note, int8_t finetune) const
 {
 	uint16_t tuned = (note<<4) + (finetune/8 + 16);
-	if(tuned>=1936) {
+// 	if(tuned>=1936) {
+	if(tuned>=m_noteToPeriod.size()) {
 		return 0;
 	}
 	return clip<int>(m_noteToPeriod[tuned], 1, 0x7cff);
@@ -401,4 +411,27 @@ uint32_t XmModule::periodToFrequency(uint16_t period) const
 		res >>= div;
 		return res>>32;
 	}
+}
+
+uint16_t XmModule::glissando(uint16_t period, int8_t finetune, uint8_t deltaNote) const
+{
+	int8_t tuned = (finetune/8+16);
+	uint16_t ofsLo = 0;
+	uint16_t ofsHi = m_noteToPeriod.size();
+	for(int i=0; i<8; i++) {
+		uint16_t ofsMid = (ofsLo+ofsHi)>>1;
+		ofsMid &= 0xfff0;
+		ofsMid += tuned;
+		if(period >= m_noteToPeriod[ofsMid]) {
+			ofsHi = ofsMid - tuned;
+		}
+		else {
+			ofsLo = ofsMid + tuned;
+		}
+	}
+	uint16_t ofs = ofsLo + tuned + deltaNote;
+	if(ofs >= m_noteToPeriod.size()) {
+		ofs = m_noteToPeriod.size()-1;
+	}
+	return m_noteToPeriod[ofs];
 }

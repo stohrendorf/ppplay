@@ -43,18 +43,38 @@ namespace ppp {
 				};
 				std::vector<EnvelopePoint> m_panPoints;
 				std::vector<EnvelopePoint> m_volPoints;
+				uint8_t m_numVolPoints;
+				uint8_t m_volLoopStart;
+				uint8_t m_volLoopEnd;
+				uint8_t m_volSustainPoint;
 			public:
 				typedef std::shared_ptr<XmInstrument> Ptr;
 				typedef std::vector<Ptr> Vector;
 				XmInstrument();
 				bool load( BinStream& str );
+				/**
+				 * @brief Map a note index into its sample index
+				 * @param[in] note Note to map
+				 * @return Mapped sample index
+				 * @note @a note is zero-based!
+				 */
 				uint8_t mapNoteIndex( uint8_t note ) const;
+				/**
+				 * @brief Map a note index into its sample
+				 * @param[in] note Note to map
+				 * @return Mapped sample
+				 * @note @a note is zero-based!
+				 */
 				XmSample::Ptr mapNoteSample( uint8_t note ) const;
 				std::string title() const;
 				EnvelopeFlags panEnvFlags() const;
 				EnvelopePoint panPoint(int idx) const;
 				EnvelopeFlags volEnvFlags() const;
 				EnvelopePoint volPoint(int idx) const;
+				uint8_t numVolPoints() const { return m_numVolPoints; }
+				uint8_t volLoopStart() const { return m_volLoopStart; }
+				uint8_t volLoopEnd() const { return m_volLoopEnd; }
+				uint8_t volSustainPoint() const { return m_volSustainPoint; }
 		};
 		inline bool operator&(const XmInstrument::EnvelopeFlags& a, const XmInstrument::EnvelopeFlags& b) {
 			return static_cast<uint8_t>(a) & static_cast<uint8_t>(b);

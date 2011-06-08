@@ -84,6 +84,10 @@ bool XmInstrument::load( BinStream& str ) {
 		m_panPoints.push_back(p);
 	}
 	m_volEnvFlags = static_cast<EnvelopeFlags>(hdr2.volType);
+	m_numVolPoints = hdr2.numVolPoints;
+	m_volLoopStart = hdr2.volLoopStart;
+	m_volLoopEnd = hdr2.volLoopEnd;
+	m_volSustainPoint = hdr2.volSustainPoint;
 	for(uint8_t i=0; i<12; i++) {
 		EnvelopePoint p = { hdr2.volEnvelope[i].x, hdr2.volEnvelope[i].y };
 		m_volPoints.push_back(p);
