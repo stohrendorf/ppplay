@@ -53,7 +53,7 @@ static const std::array<const uint16_t, 12 * 8> g_PeriodTable = {{
     }
 };
 
-XmModule::XmModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) : GenModule( frq, maxRpt ), m_amiga( false ) {
+XmModule::XmModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) : GenModule( frq, maxRpt ), m_amiga( false ), m_patternBreak(-1) {
 }
 
 bool XmModule::load( const std::string& filename ) throw( PppException ) {
@@ -62,7 +62,7 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 	setFilename( filename );
 	file.read( reinterpret_cast<char*>( &hdr ), sizeof( hdr ) );
 	LOG_DEBUG( "Header end @ 0x%.8x", file.pos() );
-	if( !std::equal( hdr.id, hdr.id + 17, "Extended Module: " ) || hdr.endOfFile != 0x1a || hdr.numChannels > 32 ) {
+	if( !std::equal( hdr.id, hdr.id + 17, "Extended Module: " ) || hdr.endOfFile != 0x1a /*|| hdr.numChannels > 32*/ ) {
 		LOG_WARNING( "XM Header invalid" );
 		return false;
 	}
@@ -103,9 +103,6 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 	}
 	std::copy_n(hdr.orders, 256, m_orders.begin());
 	if(m_amiga) {
-		for(int i=0; i<m_noteToPeriod.size(); i++) {
-			m_noteToPeriod[i] = 0;
-		}
 		uint16_t* dest = m_noteToPeriod.begin();
 		uint8_t octShift = 0;
 		for(int octave=10; octave>=0; octave--) {
@@ -121,11 +118,6 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 		for(std::size_t i=0; i<m_noteToPeriod.size()/2-1; i++) {
 			dest[1] = (dest[0]+dest[2])>>1;
 			dest += 2;
-		}
-		for(int i=0; i<m_noteToPeriod.size(); i++) {
-			if(m_noteToPeriod[i] == 0) {
-				LOG_DEBUG("Uninitialized value: %d", i);
-			}
 		}
 	}
 	else {
@@ -168,14 +160,30 @@ void XmModule::getTick( AudioFrameBuffer& buffer ) throw( PppException ) {
 	//adjustPosition( true, false );
 	nextTick();
 	if(getPlaybackInfo().tick == 0) {
-		setRow( (getPlaybackInfo().row+1) % currPat->numRows() );
-		if(getPlaybackInfo().row == 0) {
+		if(m_patternBreak == -1) {
+			setRow( (getPlaybackInfo().row+1) % currPat->numRows() );
+			if(getPlaybackInfo().row == 0) {
+				setOrder( (getPlaybackInfo().order+1) );
+				if(getPlaybackInfo().order >= m_length) {
+					buffer->clear();
+					return;
+				}
+				setPatternIndex( m_orders[getPlaybackInfo().order] );
+			}
+		}
+		else {
 			setOrder( (getPlaybackInfo().order+1) );
 			if(getPlaybackInfo().order >= m_length) {
 				buffer->clear();
 				return;
 			}
 			setPatternIndex( m_orders[getPlaybackInfo().order] );
+			if(m_patternBreak >= currPat->numRows()) {
+				buffer->clear();
+				return;
+			}
+			setRow( m_patternBreak );
+			m_patternBreak = -1;
 		}
 	}
 	setPosition( getPosition() + mixerBuffer->size() );
@@ -222,9 +230,6 @@ uint8_t XmModule::channelCount() const {
 }
 
 XmInstrument::Ptr XmModule::getInstrument(int idx) const {
-// 	static XmInstrument::Ptr nullInstr(new XmInstrument);
-/*	if(idx == 0)
-		return nullInstr;*/
 	if(!inRange<int>(idx, 1, m_instruments.size()))
 		return XmInstrument::Ptr();
 	return m_instruments.at(idx-1);
@@ -434,4 +439,9 @@ uint16_t XmModule::glissando(uint16_t period, int8_t finetune, uint8_t deltaNote
 		ofs = m_noteToPeriod.size()-1;
 	}
 	return m_noteToPeriod[ofs];
+}
+
+void XmModule::doPatternBreak(int16_t next)
+{
+	m_patternBreak = next;
 }

@@ -34,7 +34,7 @@ enum class Effect : uint8_t
     FxVibrato = 4,
     FxPortaVolSlide = 5,
     FxVibratoVolSlide = 6,
-    FxTremolo = 7, //!< @todo Implement!
+    FxTremolo = 7,
     FxSetPanning = 8,
     FxOffset = 9,
     FxVolSlide = 0x0a,
@@ -45,10 +45,11 @@ enum class Effect : uint8_t
     FxSetTempoBpm = 0x0f,
     FxSetGlobalVol = 0x10,
     FxGlobalVolSlide = 0x11,
+	FxKeyOff = 0x14,
     FxSetEnvPos = 0x15, //!< @todo Implement!
     FxPanSlide = 0x19,
-    FxRetrigger = 0x1b, //!< @todo Implement!
-    FxTremor = 0x1d, //!< @todo Implement!
+    FxRetrigger = 0x1b,
+    FxTremor = 0x1d,
     FxExtraFinePorta = 0x21,
     FxNone = 0xff
 };

@@ -47,6 +47,7 @@ namespace ppp {
 				uint8_t m_volLoopStart;
 				uint8_t m_volLoopEnd;
 				uint8_t m_volSustainPoint;
+				uint16_t m_fadeout;
 			public:
 				typedef std::shared_ptr<XmInstrument> Ptr;
 				typedef std::vector<Ptr> Vector;
@@ -75,6 +76,7 @@ namespace ppp {
 				uint8_t volLoopStart() const { return m_volLoopStart; }
 				uint8_t volLoopEnd() const { return m_volLoopEnd; }
 				uint8_t volSustainPoint() const { return m_volSustainPoint; }
+				uint16_t fadeout() const { return m_fadeout; }
 		};
 		inline bool operator&(const XmInstrument::EnvelopeFlags& a, const XmInstrument::EnvelopeFlags& b) {
 			return static_cast<uint8_t>(a) & static_cast<uint8_t>(b);

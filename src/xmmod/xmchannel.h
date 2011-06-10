@@ -24,6 +24,11 @@
 #include "xmpattern.h"
 #include "xminstrument.h"
 
+/**
+ * @ingroup XmModule
+ * @{
+ */
+
 namespace ppp {
 	namespace xm {
 		class XmModule;
@@ -34,46 +39,134 @@ namespace ppp {
 			typedef std::shared_ptr<XmChannel> Ptr;
 			typedef std::vector<Ptr> Vector;
 		private:
+			/** @name Basic channel variables
+			 * @{
+			 */
+			//! @brief Base volume
 			uint8_t m_baseVolume;
+			//! @brief Current volume (for tremolo or such fx)
 			uint8_t m_currentVolume;
+			//! @brief Current panning (0x00..0x80)
 			uint8_t m_panning;
+			//! @brief Base period
 			uint16_t m_basePeriod;
+			//! @brief Current period (for vibrato or such fx)
 			uint16_t m_currentPeriod;
+			//! @brief Current finetune
 			int8_t m_finetune;
-			uint8_t m_lastVolSlideFx;
-			uint8_t m_lastPortaUpFx;
-			uint8_t m_lastPortaDownFx;
-			uint8_t m_lastPanSlideFx;
-			uint8_t m_lastOffsetFx;
-			uint8_t m_baseNote;
-			uint8_t m_realNote;
+			//! @brief Current instrument index
 			uint8_t m_instrumentIndex;
-			uint8_t m_volFadeoutVal;
-			uint16_t m_panEnvPos;
-			uint8_t m_panEnvIdx;
-			uint16_t m_volEnvPos;
-			uint8_t m_volEnvIdx;
-			uint16_t m_volEnvVal;
-			uint8_t m_lastFinePortaUpFx;
-			uint8_t m_lastFinePortaDownFx;
-			uint8_t m_lastFineVolUpFx;
-			uint8_t m_lastFineVolDownFx;
-			uint8_t m_lastXFinePortaUp;
-			uint8_t m_lastXFinePortaDown;
-			uint8_t m_lastGlobVolSlideFx;
-			uint16_t m_portaSpeed;
-			uint16_t m_portaTargetPeriod;
-			uint8_t m_vibratoSpeed;
-			uint8_t m_vibratoDepth;
-			uint8_t m_vibratoPhase;
-			uint8_t m_vibratoCtrl;
-			bool m_glissandoCtrl;
-			BresenInterpolation m_bres;
-			XmModule* m_module;
-			XmSample::Ptr currentSample();
-			XmInstrument::Ptr currentInstrument();
+			//! @brief Current base note
+			uint8_t m_baseNote;
+			//! @brief Current real note (including relative note)
+			uint8_t m_realNote;
+			//! @brief The current note cell
 			XmCell m_currentCell;
+			/** @} */
+			
+			/** @name Envelopes variables
+			 * @{
+			 */
+			//! @brief Current panning envelope point position
+			uint16_t m_panEnvPos;
+			//! @brief Current panning envelope point index
+			uint8_t m_panEnvIdx;
+			//! @brief Current volume envelope point position
+			uint16_t m_volEnvPos;
+			//! @brief Current volume envelope point index
+			uint8_t m_volEnvIdx;
+			//! @brief Current volume envelope point value
+			uint8_t m_volEnvVal;
+			int16_t m_volEnvRate;
+			uint16_t m_volScale;
+			uint8_t m_volScaleRate;
+			uint8_t m_realVolume;
+			bool m_keyOn;
+			/** @} */
+			
+			/** @name Effect backup variables
+			 * @{
+			 */
+			//! @brief Last volume slide effect value
+			uint8_t m_lastVolSlideFx;
+			//! @brief Last porta up effect value
+			uint8_t m_lastPortaUpFx;
+			//! @brief Last porta down effect value
+			uint8_t m_lastPortaDownFx;
+			//! @brief Last panning slide effect value
+			uint8_t m_lastPanSlideFx;
+			//! @brief Last offset effect value
+			uint8_t m_lastOffsetFx;
+			//! @brief Last fine porta up effect value
+			uint8_t m_lastFinePortaUpFx;
+			//! @brief Last fine porta down effect value
+			uint8_t m_lastFinePortaDownFx;
+			//! @brief Last fine volume slide up effect value
+			uint8_t m_lastFineVolUpFx;
+			//! @brief Last fine volume slide down effect value
+			uint8_t m_lastFineVolDownFx;
+			//! @brief Last extra fine porta up effect value
+			uint8_t m_lastXFinePortaUp;
+			//! @brief Last extra fine porta down effect value
+			uint8_t m_lastXFinePortaDown;
+			//! @brief Last global volume slide effect value
+			uint8_t m_lastGlobVolSlideFx;
+			//! @brief Last tremor effect value
+			uint8_t m_lastTremorFx;
+			/** @} */
+			
+			/** @name Effect state variables
+			 * @{
+			 */
+			//! @brief Current porta rate
+			uint16_t m_portaSpeed;
+			//! @brief Target period of porta effect
+			uint16_t m_portaTargetPeriod;
+			//! @brief Vibrato speed
+			uint8_t m_vibratoSpeed;
+			//! @brief Vibrato amplitude
+			uint8_t m_vibratoDepth;
+			//! @brief Vibrato phase
+			uint8_t m_vibratoPhase;
+			//! @brief Vibrato waveform and retrigger selector
+			uint8_t m_vibratoCtrl;
+			//! @brief @c true if Glissando is enabled
+			bool m_glissandoCtrl;
+			//! @brief Tremolo amplitude
+			uint8_t m_tremoloDepth;
+			//! @brief Tremolo speed
+			uint8_t m_tremoloSpeed;
+			//! @brief Tremolo phase
+			uint8_t m_tremoloPhase;
+			//! @brief Tremolo waveform selector
+			uint8_t m_tremoloCtrl;
+			//! @brief Countdown for the Tremor effect
+			uint8_t m_tremorCountdown;
+			//! @brief Counter for the Multi Retrigger Effect
+			uint8_t m_retriggerCounter;
+			//! @brief Retrigger delay in ticks
+			uint8_t m_retriggerLength;
+			//! @brief Volume change type for the Multi Retrigger Effect
+			uint8_t m_retriggerVolumeType;
+			/** @} */
+			
+			//! @brief Output rate controller
+			BresenInterpolation m_bres;
+			//! @brief Module this channel belongs to
+			XmModule* m_module;
+			/**
+			 * @brief Get the current sample
+			 * @return Pointer to the current sample or NULL
+			 */
+			XmSample::Ptr currentSample();
+			/**
+			 * @brief Get the current instrument
+			 * @return Pointer to the current instrument or NULL
+			 */
+			XmInstrument::Ptr currentInstrument();
+			//! @brief Cached sample pointer for currentSample()
 			XmSample::Ptr m_currentSample;
+			//! @brief Cached instrument pointer for currentInstrument()
 			XmInstrument::Ptr m_currentInstrument;
 		public:
 			XmChannel(XmModule* module, int frq);
@@ -86,6 +179,9 @@ namespace ppp {
 			virtual std::string getCellString();
 			void update( XmCell::Ptr const cell );
 		private:
+			/** @name Effect handlers
+			 * @{
+			 */
 			void fxPortaUp(uint8_t fxByte);
 			void fxPortaDown(uint8_t fxByte);
 			void fxVolSlide(uint8_t fxByte);
@@ -101,6 +197,14 @@ namespace ppp {
 			void fxArpeggio(uint8_t fxByte);
 			void fxVibrato(uint8_t fxByte);
 			void fxGlobalVolSlide(uint8_t fxByte);
+			void fxTremolo(uint8_t fxByte);
+			void fxTremor(uint8_t fxByte);
+			void fxRetrigger(uint8_t fxByte);
+			/** @} */
+			
+			/** @name Volume column effect handlers
+			 * @{
+			 */
 			void vfxFineVolSlideDown(uint8_t fxByte);
 			void vfxFineVolSlideUp(uint8_t fxByte);
 			void vfxSetPan(uint8_t fxByte);
@@ -110,17 +214,29 @@ namespace ppp {
 			void vfxPanSlideLeft(uint8_t fxByte);
 			void vfxPanSlideRight(uint8_t fxByte);
 			void vfxVibrato(uint8_t fxByte);
+			/** @} */
+			
+			/** @name Extended effect handlers
+			 * @{
+			 */
 			void efxFinePortaUp(uint8_t fxByte);
 			void efxFinePortaDown(uint8_t fxByte);
 			void efxFineVolUp(uint8_t fxByte);
 			void efxFineVolDown(uint8_t fxByte);
+			/** @} */
 			void triggerNote();
+			void retriggerNote();
 			void doKeyOff();
+			void doKeyOn();
 			void doVibrato();
 			void applySampleDefaults();
 			void calculatePortaTarget(uint8_t targetNote);
 		};
 	}
 }
+
+/**
+ * @}
+ */
 
 #endif
