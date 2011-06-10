@@ -88,6 +88,7 @@ bool XmInstrument::load( BinStream& str ) {
 	m_volLoopStart = hdr2.volLoopStart;
 	m_volLoopEnd = hdr2.volLoopEnd;
 	m_volSustainPoint = hdr2.volSustainPoint;
+	m_fadeout = hdr2.volFadeout;
 	for(uint8_t i=0; i<12; i++) {
 		EnvelopePoint p = { hdr2.volEnvelope[i].x, hdr2.volEnvelope[i].y };
 		m_volPoints.push_back(p);
@@ -97,7 +98,7 @@ bool XmInstrument::load( BinStream& str ) {
 
 uint8_t XmInstrument::mapNoteIndex( uint8_t note ) const {
 	if( note >= 96 )
-		return 0;
+		return 0xff;
 	return m_map[note]&15;
 }
 
