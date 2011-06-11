@@ -71,7 +71,7 @@ namespace ppp {
 				XmModule( const uint32_t frq = 44100, const uint8_t maxRpt = 2 ) throw( PppException );
 				virtual bool load( const std::string& filename ) throw( PppException );
 				virtual uint16_t getTickBufLen() const throw( PppException );
-				virtual void getTick( AudioFrameBuffer& buffer ) throw( PppException );
+				virtual void getTick( AudioFrameBuffer& buffer );
 				virtual void getTickNoMixing( std::size_t& ) throw( PppException );
 				virtual ppp::GenOrder::Ptr mapOrder( int16_t ) throw( PppException );
 				virtual std::string getChanStatus( int16_t ) throw();

@@ -4,4 +4,5 @@ add_library(xmmod STATIC
 	xminstrument.cpp
 	xmsample.cpp
 	xmchannel.cpp
+	xmenvelopeprocessor.cpp
 )

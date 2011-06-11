@@ -67,19 +67,9 @@ namespace ppp {
 			/** @name Envelopes variables
 			 * @{
 			 */
-			//! @brief Current panning envelope point position
-			uint16_t m_panEnvPos;
-			//! @brief Current panning envelope point index
-			uint8_t m_panEnvIdx;
-			//! @brief Current volume envelope point position
-			uint16_t m_volEnvPos;
-			//! @brief Current volume envelope point index
-			uint8_t m_volEnvIdx;
-			//! @brief Current volume envelope point value
-			uint8_t m_volEnvVal;
-			int16_t m_volEnvRate;
+			XmEnvelopeProcessor m_volumeEnvelope;
 			uint16_t m_volScale;
-			uint8_t m_volScaleRate;
+			uint16_t m_volScaleRate;
 			uint8_t m_realVolume;
 			bool m_keyOn;
 			/** @} */
