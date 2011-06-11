@@ -78,20 +78,20 @@ bool XmInstrument::load( BinStream& str ) {
 		m_samples[i]->loadData( str );
 	}
 	m_title = ppp::stringncpy( hdr.name, 22 );
-	m_panEnvFlags = static_cast<EnvelopeFlags>(hdr2.panType);
+	m_panEnvFlags = static_cast<XmEnvelopeProcessor::EnvelopeFlags>(hdr2.panType);
 	for(uint8_t i=0; i<12; i++) {
-		EnvelopePoint p = { hdr2.panEnvelope[i].x, hdr2.panEnvelope[i].y };
-		m_panPoints.push_back(p);
+		m_panPoints[i].position = hdr2.panEnvelope[i].x;
+		m_panPoints[i].value = hdr2.panEnvelope[i].y;
 	}
-	m_volEnvFlags = static_cast<EnvelopeFlags>(hdr2.volType);
+	m_volEnvFlags = static_cast<XmEnvelopeProcessor::EnvelopeFlags>(hdr2.volType);
 	m_numVolPoints = hdr2.numVolPoints;
 	m_volLoopStart = hdr2.volLoopStart;
 	m_volLoopEnd = hdr2.volLoopEnd;
 	m_volSustainPoint = hdr2.volSustainPoint;
 	m_fadeout = hdr2.volFadeout;
 	for(uint8_t i=0; i<12; i++) {
-		EnvelopePoint p = { hdr2.volEnvelope[i].x, hdr2.volEnvelope[i].y };
-		m_volPoints.push_back(p);
+		m_volPoints[i].position = hdr2.volEnvelope[i].x;
+		m_volPoints[i].value = hdr2.volEnvelope[i].y;
 	}
 	return true;
 }
@@ -116,22 +116,17 @@ std::string XmInstrument::title() const
 	return m_title;
 }
 
-XmInstrument::EnvelopeFlags XmInstrument::panEnvFlags() const
+XmEnvelopeProcessor::EnvelopeFlags XmInstrument::panEnvFlags() const
 {
 	return m_panEnvFlags;
 }
 
-XmInstrument::EnvelopePoint XmInstrument::panPoint(int idx) const
+XmEnvelopeProcessor::EnvelopePoint XmInstrument::panPoint(int idx) const
 {
 	return m_panPoints.at(idx);
 }
 
-XmInstrument::EnvelopeFlags XmInstrument::volEnvFlags() const
+XmEnvelopeProcessor XmInstrument::volumeProcessor() const
 {
-	return m_volEnvFlags;
-}
-
-XmInstrument::EnvelopePoint XmInstrument::volPoint(int idx) const
-{
-	return m_volPoints.at(idx);
+	return XmEnvelopeProcessor(m_volEnvFlags, m_volPoints, m_numVolPoints, m_volSustainPoint, m_volLoopStart, m_volLoopEnd);
 }

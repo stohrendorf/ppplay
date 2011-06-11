@@ -33,12 +33,12 @@ enum {
 	EfxSetVibratoCtrl = 4,
 	EfxSetFinetune = 5,
 	EfxPatLoop = 6, //!< @todo Implement!
-	EfxSetTremoloCtrl = 7, //!< @todo Implement!
-	EfxRetrigger = 9, //!< @todo Implement!
+	EfxSetTremoloCtrl = 7,
+	EfxRetrigger = 9,
 	EfxFineVolSlideUp = 0x0a,
 	EfxFineVolSlideDown = 0x0b,
-	EfxNoteCut = 0x0c, //!< @todo Implement!
-	EfxNoteDelay = 0x0d, //!< @todo Implement!
+	EfxNoteCut = 0x0c,
+	EfxNoteDelay = 0x0d,
 	EfxPatDelay = 0x0e, //!< @todo Implement!
 	VfxNone = 0,
 	VfxVolSlideDown = 6,
@@ -53,7 +53,7 @@ enum {
 	VfxPorta = 0xf
 };
 
-XmChannel::XmChannel(XmModule *module, int frq) : GenChannel(frq), m_module(module), m_finetune(0), m_panEnvIdx(0), m_volEnvIdx(0), m_bres(1,1), m_glissandoCtrl(false), m_vibratoCtrl(0), m_vibratoPhase(0)
+XmChannel::XmChannel(XmModule *module, int frq) : GenChannel(frq), m_module(module), m_finetune(0), m_bres(1,1), m_glissandoCtrl(false), m_vibratoCtrl(0), m_vibratoPhase(0)
 {
 }
 
@@ -183,7 +183,7 @@ void XmChannel::doKeyOff()
 	if(!instr)
 		return;
 	
-	if(!(instr->panEnvFlags() & XmInstrument::EnvelopeFlags::Enabled)) {
+/*	if(!(instr->panEnvFlags() & XmInstrument::EnvelopeFlags::Enabled)) {
 		uint16_t pos = instr->panPoint( m_panEnvIdx ).position;
 		if(m_panEnvPos >= pos) {
 			m_panEnvPos = pos-1;
@@ -197,7 +197,7 @@ void XmChannel::doKeyOff()
 	}
 	else {
 		m_baseVolume = m_currentVolume = 0;
-	}
+	}*/
 	// FIXME
 //     setActive(false);
 }
@@ -209,14 +209,11 @@ void XmChannel::doKeyOn()
 	}
 	m_tremoloPhase = m_retriggerCounter = m_tremorCountdown = 0;
 	m_keyOn = true;
-	if(currentInstrument()->volEnvFlags() & XmInstrument::EnvelopeFlags::Enabled) {
-		m_volEnvPos = 0xffff;
-		m_volEnvIdx = 0;
-	}
-	if(currentInstrument()->panEnvFlags() & XmInstrument::EnvelopeFlags::Enabled) {
+	m_volumeEnvelope = currentInstrument()->volumeProcessor();
+/*	if(currentInstrument()->panEnvFlags() & XmInstrument::EnvelopeFlags::Enabled) {
 		m_panEnvPos = 0xffff;
 		m_panEnvIdx = 0;
-	}
+	}*/
 	m_volScaleRate = currentInstrument()->fadeout();
 	m_volScale = 0x8000;
 	setActive(true);
@@ -406,7 +403,10 @@ void XmChannel::update(const XmCell::Ptr cell)
 			m_volScale = m_volScaleRate = 0;
 		}
 	}
-	if(currentInstrument() && currentInstrument()->volEnvFlags()&XmInstrument::EnvelopeFlags::Enabled) {
+	m_volumeEnvelope.increasePosition( m_keyOn );
+	m_realVolume = m_volumeEnvelope.realVolume(m_currentVolume, m_module->getPlaybackInfo().globalVolume, m_volScale);
+// 	m_realVolume = m_currentVolume;
+/*	if(currentInstrument() && currentInstrument()->volEnvFlags()&XmInstrument::EnvelopeFlags::Enabled) {
 		m_volEnvPos++;
 		if(m_volEnvPos == currentInstrument()->volPoint(m_volEnvIdx).position) {
 			// go to next envelope point
@@ -414,8 +414,8 @@ void XmChannel::update(const XmCell::Ptr cell)
 			if(currentInstrument()->volEnvFlags()&XmInstrument::EnvelopeFlags::Loop && m_volEnvIdx==currentInstrument()->volLoopEnd()) {
 				// volume envelope loop AND last loop point
 				if(
-					!(currentInstrument()->volEnvFlags()&XmInstrument::EnvelopeFlags::Sustain) ||
-					m_volEnvIdx!=currentInstrument()->volSustainPoint() ||
+					(!(currentInstrument()->volEnvFlags()&XmInstrument::EnvelopeFlags::Sustain) ||
+					m_volEnvIdx!=currentInstrument()->volSustainPoint()) &&
 					m_keyOn
 				) {
 					// not on the sustain point
@@ -424,7 +424,7 @@ void XmChannel::update(const XmCell::Ptr cell)
 					m_volEnvVal = (currentInstrument()->volPoint(m_volEnvIdx).value&0xff)<<8;
 				}
 			}
-			if(m_volEnvIdx < currentInstrument()->numVolPoints()) {
+			if(m_volEnvIdx < currentInstrument()->numVolPoints()-1) {
 				// valid volume envelope point
 				if(
 					!(currentInstrument()->volEnvFlags()&XmInstrument::EnvelopeFlags::Sustain) ||
@@ -447,6 +447,7 @@ void XmChannel::update(const XmCell::Ptr cell)
 			}
 			else {
 				m_volEnvRate = 0;
+				m_currentVolume = m_baseVolume = m_realVolume = 0;
 			}
 		}
 		m_volEnvVal += m_volEnvRate;
@@ -468,7 +469,7 @@ void XmChannel::update(const XmCell::Ptr cell)
 	}
 	else {
 		m_realVolume = (((m_volScale*m_currentVolume)>>4)*m_module->getPlaybackInfo().globalVolume)>>16;
-	}
+	}*/
  /*   if(!isActive())
         return;
  */   // m_basePeriod = (g_AmigaPeriodTab[(m_relativeNote % 12) * 8] << 4) >> (m_relativeNote / 12);
@@ -534,8 +535,8 @@ void XmChannel::updateStatus() throw(PppException)
 		setStatusString("");
 		return;
 	}
-	setStatusString( stringf("Note=%u(%u) vol=%.2u ins=%.2u vfx=%.2x fx=%.2x/%.2x frq=%u pos=%d",
-							 m_realNote, m_baseNote, m_realVolume, m_instrumentIndex, m_currentCell.getVolume(), m_currentCell.getEffect(), m_currentCell.getEffectValue(), m_module->periodToFrequency(m_currentPeriod), getPosition() ));
+	setStatusString( stringf("Note=%u(%u) vol=%.2u ins=%.2u vfx=%.2x fx=%.2x/%.2x [%s]",
+							 m_realNote, m_baseNote, m_realVolume, m_instrumentIndex, m_currentCell.getVolume(), m_currentCell.getEffect(), m_currentCell.getEffectValue(), m_volumeEnvelope.toString().c_str() ));
 }
 
 void XmChannel::fxSetVolume(uint8_t fxByte)

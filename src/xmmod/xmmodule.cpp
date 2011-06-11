@@ -138,7 +138,7 @@ uint16_t XmModule::getTickBufLen() const throw( PppException ) {
 	return getPlaybackFrq() * 5 / ( getPlaybackInfo().tempo << 1 );
 }
 
-void XmModule::getTick( AudioFrameBuffer& buffer ) throw( PppException ) {
+void XmModule::getTick( AudioFrameBuffer& buffer ) {
 	if( !buffer )
 		buffer.reset( new AudioFrameBuffer::element_type );
 	MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( getTickBufLen(), {0, 0} ) );

@@ -20,29 +20,20 @@
 #define XMINSTRUMENT_H
 
 #include "xmsample.h"
+#include "xmenvelopeprocessor.h"
 
 namespace ppp {
 	namespace xm {
 		class XmInstrument {
 				DISABLE_COPY( XmInstrument )
-			public:
-				enum class EnvelopeFlags : uint8_t {
-					Enabled = 0x01,
-					Sustain = 0x02,
-					Loop = 0x04
-				};
 			private:
 				XmSample::Vector m_samples;
 				uint8_t m_map[96];
 				std::string m_title;
-				EnvelopeFlags m_panEnvFlags;
-				EnvelopeFlags m_volEnvFlags;
-				struct EnvelopePoint {
-					int16_t position;
-					int16_t value;
-				};
-				std::vector<EnvelopePoint> m_panPoints;
-				std::vector<EnvelopePoint> m_volPoints;
+				XmEnvelopeProcessor::EnvelopeFlags m_panEnvFlags;
+				XmEnvelopeProcessor::EnvelopeFlags m_volEnvFlags;
+				std::array<XmEnvelopeProcessor::EnvelopePoint, 12> m_panPoints;
+				std::array<XmEnvelopeProcessor::EnvelopePoint, 12> m_volPoints;
 				uint8_t m_numVolPoints;
 				uint8_t m_volLoopStart;
 				uint8_t m_volLoopEnd;
@@ -68,19 +59,11 @@ namespace ppp {
 				 */
 				XmSample::Ptr mapNoteSample( uint8_t note ) const;
 				std::string title() const;
-				EnvelopeFlags panEnvFlags() const;
-				EnvelopePoint panPoint(int idx) const;
-				EnvelopeFlags volEnvFlags() const;
-				EnvelopePoint volPoint(int idx) const;
-				uint8_t numVolPoints() const { return m_numVolPoints; }
-				uint8_t volLoopStart() const { return m_volLoopStart; }
-				uint8_t volLoopEnd() const { return m_volLoopEnd; }
-				uint8_t volSustainPoint() const { return m_volSustainPoint; }
+				XmEnvelopeProcessor::EnvelopeFlags panEnvFlags() const;
+				XmEnvelopeProcessor::EnvelopePoint panPoint(int idx) const;
 				uint16_t fadeout() const { return m_fadeout; }
+				XmEnvelopeProcessor volumeProcessor() const;
 		};
-		inline bool operator&(const XmInstrument::EnvelopeFlags& a, const XmInstrument::EnvelopeFlags& b) {
-			return static_cast<uint8_t>(a) & static_cast<uint8_t>(b);
-		}
 	}
 }
 

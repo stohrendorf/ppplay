@@ -155,7 +155,7 @@ namespace ppp {
 			 * @param[out] buf Reference to the destination buffer
 			 * @note Time-critical
 			 */
-			virtual void getTick( AudioFrameBuffer& buf ) throw( PppException ) = 0;
+			virtual void getTick( AudioFrameBuffer& buf ) = 0;
 			/**
 			 * @brief Get a tick without mixing for length calculation
 			 * @param[out] bufLen Number of sample frames in the current tick
