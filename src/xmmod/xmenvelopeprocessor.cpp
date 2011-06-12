@@ -86,7 +86,7 @@ namespace ppp {
 				return 0;
 			}
 			if(!enabled()) {
-				return ( ((volume*scale)>>12) * globalVolume )>>8;
+				return ( ((volume*scale)>>12) * globalVolume )>>9;
 			}
 			else {
 				uint8_t tmp = m_currentValue>>8;
@@ -98,8 +98,15 @@ namespace ppp {
 					tmp = 0x40;
 					m_currentRate = 0;
 				}
-				return ( (((tmp*volume>>6)*scale)>>12)*globalVolume )>>8;
+				return ( (((tmp*volume>>6)*scale)>>12)*globalVolume )>>9;
 			}
+		}
+		uint8_t XmEnvelopeProcessor::realPanning(uint8_t panning) const
+		{
+			if(!enabled()) {
+				return panning;
+			}
+			return (panning + ((m_currentValue>>8)-0x20) * (0x80-std::abs(panning-0x80))) >> 5;
 		}
 		void XmEnvelopeProcessor::setPosition(uint8_t pos)
 		{
@@ -121,7 +128,7 @@ namespace ppp {
 				}
 				if(foundPoint==m_numPoints) {
 					m_currentRate = 0;
-					m_currentValue = m_points[i-1].value;
+					m_currentValue = m_points[foundPoint-1].value;
 				}
 				else if(m_points[foundPoint].position == pos) {
 					if(m_points[foundPoint+1].position < m_points[foundPoint].position) {

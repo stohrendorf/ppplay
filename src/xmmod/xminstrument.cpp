@@ -85,9 +85,13 @@ bool XmInstrument::load( BinStream& str ) {
 	}
 	m_volEnvFlags = static_cast<XmEnvelopeProcessor::EnvelopeFlags>(hdr2.volType);
 	m_numVolPoints = hdr2.numVolPoints;
+	m_numPanPoints = hdr2.numPanPoints;
 	m_volLoopStart = hdr2.volLoopStart;
+	m_panLoopStart = hdr2.panLoopStart;
 	m_volLoopEnd = hdr2.volLoopEnd;
+	m_panLoopEnd = hdr2.panLoopEnd;
 	m_volSustainPoint = hdr2.volSustainPoint;
+	m_panSustainPoint = hdr2.panSustainPoint;
 	m_fadeout = hdr2.volFadeout;
 	for(uint8_t i=0; i<12; i++) {
 		m_volPoints[i].position = hdr2.volEnvelope[i].x;
@@ -116,17 +120,12 @@ std::string XmInstrument::title() const
 	return m_title;
 }
 
-XmEnvelopeProcessor::EnvelopeFlags XmInstrument::panEnvFlags() const
-{
-	return m_panEnvFlags;
-}
-
-XmEnvelopeProcessor::EnvelopePoint XmInstrument::panPoint(int idx) const
-{
-	return m_panPoints.at(idx);
-}
-
 XmEnvelopeProcessor XmInstrument::volumeProcessor() const
 {
 	return XmEnvelopeProcessor(m_volEnvFlags, m_volPoints, m_numVolPoints, m_volSustainPoint, m_volLoopStart, m_volLoopEnd);
+}
+
+XmEnvelopeProcessor XmInstrument::panningProcessor() const
+{
+	return XmEnvelopeProcessor(m_panEnvFlags, m_panPoints, m_numPanPoints, m_panSustainPoint, m_panLoopStart, m_panLoopEnd);
 }

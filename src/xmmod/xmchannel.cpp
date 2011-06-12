@@ -148,7 +148,8 @@ void XmChannel::triggerNote()
 		setActive(false);
 	}
 	else {
-		int tmp = static_cast<int>(currentSample()->relativeNote()) + m_baseNote;
+		int tmp = currentSample()->relativeNote();
+		tmp += m_baseNote;
 		if(!inRange(tmp, 1, 119)) {
 			LOG_WARNING("OUT OF RANGE NOTE: rel=%d base=%d r=%d", currentSample()->relativeNote(), m_baseNote, tmp);
 			setActive(false);
@@ -196,6 +197,7 @@ void XmChannel::doKeyOn()
 	m_tremoloPhase = m_retriggerCounter = m_tremorCountdown = 0;
 	m_keyOn = true;
 	m_volumeEnvelope = currentInstrument()->volumeProcessor();
+	m_panningEnvelope = currentInstrument()->panningProcessor();
 	m_volScale = 0x8000;
 	m_volScaleRate = currentInstrument()->fadeout();
 	setActive(true);
@@ -323,6 +325,7 @@ void XmChannel::update(const XmCell::Ptr cell)
 				break;
 			case Effect::SetEnvPos:
 				m_volumeEnvelope.setPosition(m_currentCell.getEffectValue());
+				m_panningEnvelope.setPosition(m_currentCell.getEffectValue());
 				break;
 		}
 	}
@@ -428,12 +431,8 @@ void XmChannel::update(const XmCell::Ptr cell)
 	}
 	m_volumeEnvelope.increasePosition( m_keyOn );
 	m_realVolume = m_volumeEnvelope.realVolume(m_currentVolume, m_module->getPlaybackInfo().globalVolume, m_volScale);
- /*   if(!isActive())
-        return;
- */   // m_basePeriod = (g_AmigaPeriodTab[(m_relativeNote % 12) * 8] << 4) >> (m_relativeNote / 12);
-/*	m_basePeriod = m_module->noteToPeriod( (m_realNote<<4) + ((m_finetune>>3) + 16) );
-    m_basePeriod = clip<int>(m_basePeriod, 1, 0x7cff);
-	m_currentPeriod = m_basePeriod;*/
+	m_panningEnvelope.increasePosition( m_keyOn );
+	m_realPanning = m_panningEnvelope.realPanning(m_panning);
 	updateStatus();
 }
 
@@ -461,15 +460,23 @@ void XmChannel::mixTick(MixerFrameBuffer &mixBuffer) throw(PppException)
 {
     if(!isActive())
         return;
-    m_bres.reset(getPlaybackFrq(), m_module->periodToFrequency(m_currentPeriod));
+	m_bres.reset(getPlaybackFrq(), m_module->periodToFrequency(m_currentPeriod));
     //BresenInterpolation bres(getPlaybackFrq(), 8363 * 1712 *8 / m_currentPeriod);
     MixerSample *mixBufferPtr = &mixBuffer->front().left;
     XmSample::Ptr currSmp = currentSample();
     int32_t pos = getPosition();
+	uint8_t volLeft = 0x80;
+	if(m_realPanning>0x80) {
+		volLeft = 0xff-m_realPanning;
+	}
+	uint8_t volRight = 0x80;
+	if(m_realPanning<0x80) {
+		volRight = m_realPanning;
+	}
     for(std::size_t i = 0; i < mixBuffer->size(); i++) {
-        int16_t sampleVal = currSmp->getLeftSampleAt(pos);
+        int16_t sampleVal = currSmp->getLeftSampleAt(pos)*volLeft >> 7;
         *(mixBufferPtr++) += (sampleVal * m_realVolume) >> 6;
-        sampleVal = currSmp->getRightSampleAt(pos);
+        sampleVal = currSmp->getRightSampleAt(pos)*volRight >> 7;
         *(mixBufferPtr++) += (sampleVal * m_realVolume) >> 6;
         if(pos == GenSample::EndOfSample)
             break;
@@ -493,8 +500,8 @@ void XmChannel::updateStatus() throw(PppException)
 		setStatusString("");
 		return;
 	}
-	setStatusString( stringf("Note=%u(%u) vol=%.2u ins=%.2u vfx=%.2x fx=%.2x/%.2x [%s]",
-							 m_realNote, m_baseNote, m_realVolume, m_instrumentIndex, m_currentCell.getVolume(), m_currentCell.getEffect(), m_currentCell.getEffectValue(), m_volumeEnvelope.toString().c_str() ));
+	setStatusString( stringf("Note=%u(%u) vol=%.2u pan=%.2u ins=%.2u vfx=%.2x fx=%.2x/%.2x [%s]",
+							 m_realNote, m_baseNote, m_realVolume, m_realPanning, m_instrumentIndex, m_currentCell.getVolume(), m_currentCell.getEffect(), m_currentCell.getEffectValue(), m_panningEnvelope.toString().c_str() ));
 }
 
 void XmChannel::fxSetVolume(uint8_t fxByte)

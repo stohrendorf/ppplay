@@ -97,12 +97,7 @@ std::string GenModule::getTitle() const throw() {
 }
 
 std::string GenModule::getTrimTitle() const throw() {
-	std::string res = m_title;
-	std::size_t startpos = res.find_first_not_of( " \t" );
-	std::size_t endpos = res.find_last_not_of( " \t" );
-	if( ( std::string::npos == startpos ) || ( std::string::npos == endpos ) )
-		return std::string();
-	return res.substr( startpos, endpos - startpos + 1 );
+	return trimString(m_title);
 }
 
 uint32_t GenModule::timeElapsed() const throw( PppException ) {
