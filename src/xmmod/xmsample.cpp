@@ -21,10 +21,10 @@
 using namespace ppp;
 using namespace ppp::xm;
 
-XmSample::XmSample() : m_finetune( 0 ), m_panning( 128 ), m_relativeNote( 0 ), m_16bit( false )
+XmSample::XmSample() : m_finetune( 0 ), m_panning( 0x80 ), m_relativeNote( 0 ), m_16bit( false )
 { }
 
-bool XmSample::load( BinStream& str, const std::size_t ) throw( PppException ) {
+bool XmSample::load( BinStream& str, std::size_t ) throw( PppException ) {
 	int32_t dataSize;
 	str.read( &dataSize );
 	int32_t loopStart, loopLen;
@@ -34,9 +34,6 @@ bool XmSample::load( BinStream& str, const std::size_t ) throw( PppException ) {
 	str.read( &volume );
 	setVolume( volume );
 	str.read( &m_finetune );
-/*	if(m_finetune!=0) {
-		LOG_DEBUG("FTune:%d", m_finetune);
-	}*/
 	uint8_t type;
 	str.read( &type );
 	switch( type & 3 ) {

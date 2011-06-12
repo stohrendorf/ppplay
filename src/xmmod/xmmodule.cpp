@@ -61,7 +61,6 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 	FBinStream file( filename );
 	setFilename( filename );
 	file.read( reinterpret_cast<char*>( &hdr ), sizeof( hdr ) );
-	LOG_DEBUG( "Header end @ 0x%.8x", file.pos() );
 	if( !std::equal( hdr.id, hdr.id + 17, "Extended Module: " ) || hdr.endOfFile != 0x1a /*|| hdr.numChannels > 32*/ ) {
 		LOG_WARNING( "XM Header invalid" );
 		return false;
@@ -76,8 +75,16 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 			title.erase( title.length() - 1, 1 );
 		setTitle( title );
 	}
-	LOG_DEBUG("Restart pos = %u", hdr.restartPos);
-	setTrackerInfo( stringncpy( hdr.trackerName, 20 ) );
+// 	LOG_DEBUG("Restart pos = %u", hdr.restartPos);
+	{
+		std::string tmp = trimString(stringncpy( hdr.trackerName, 20 ));
+		if(tmp.length() > 0) {
+			setTrackerInfo( tmp );
+		}
+		else {
+			setTrackerInfo( "<unknown>" );
+		}
+	}
 	setTempo( hdr.defaultTempo & 0xff );
 	setSpeed( hdr.defaultSpeed & 0xff );
 	setGlobalVolume( 0x40 );
@@ -121,7 +128,6 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 		}
 	}
 	else {
-		LOG_DEBUG("LINEAR FRQ");
 		uint16_t val = 10*12*16 + 16;
 		for(std::size_t i=0; i<m_noteToPeriod.size(); i++) {
 			m_noteToPeriod[i] = val*4;
@@ -143,7 +149,7 @@ void XmModule::getTick( AudioFrameBuffer& buffer ) {
 		buffer.reset( new AudioFrameBuffer::element_type );
 	MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( getTickBufLen(), {0, 0} ) );
 	XmPattern::Ptr currPat = m_patterns[getPlaybackInfo().pattern];
-	for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+	for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 		XmChannel::Ptr chan = m_channels[currTrack];
 		PPP_TEST( !chan );
 		XmCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );

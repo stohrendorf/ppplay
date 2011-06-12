@@ -35,9 +35,13 @@ namespace ppp {
 				std::array<XmEnvelopeProcessor::EnvelopePoint, 12> m_panPoints;
 				std::array<XmEnvelopeProcessor::EnvelopePoint, 12> m_volPoints;
 				uint8_t m_numVolPoints;
+				uint8_t m_numPanPoints;
 				uint8_t m_volLoopStart;
+				uint8_t m_panLoopStart;
 				uint8_t m_volLoopEnd;
+				uint8_t m_panLoopEnd;
 				uint8_t m_volSustainPoint;
+				uint8_t m_panSustainPoint;
 				uint16_t m_fadeout;
 			public:
 				typedef std::shared_ptr<XmInstrument> Ptr;
@@ -59,10 +63,9 @@ namespace ppp {
 				 */
 				XmSample::Ptr mapNoteSample( uint8_t note ) const;
 				std::string title() const;
-				XmEnvelopeProcessor::EnvelopeFlags panEnvFlags() const;
-				XmEnvelopeProcessor::EnvelopePoint panPoint(int idx) const;
 				uint16_t fadeout() const { return m_fadeout; }
 				XmEnvelopeProcessor volumeProcessor() const;
+				XmEnvelopeProcessor panningProcessor() const;
 		};
 	}
 }

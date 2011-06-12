@@ -123,6 +123,8 @@ namespace ppp {
 			oldFx = newFx;
 		newFx = oldFx;
 	}
+	
+	std::string trimString(const std::string& str);
 }
 
 #define DISABLE_COPY(classname) \

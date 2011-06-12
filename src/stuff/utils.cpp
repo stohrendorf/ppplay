@@ -45,4 +45,14 @@ namespace ppp {
 		for( std::size_t i = 0; i < size / 2; i++ )
 			std::swap( data[i], data[size - i - 1] );
 	}
+	
+	std::string trimString(const std::string &str)
+	{
+		std::string res = str;
+		std::size_t startpos = res.find_first_not_of( " \t" );
+		std::size_t endpos = res.find_last_not_of( " \t" );
+		if( ( std::string::npos == startpos ) || ( std::string::npos == endpos ) )
+			return std::string();
+		return res.substr( startpos, endpos - startpos + 1 );
+	}
 }

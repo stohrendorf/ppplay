@@ -34,16 +34,19 @@ namespace ppp {
 				typedef std::shared_ptr<XmSample> Ptr;
 				typedef std::vector<Ptr> Vector;
 				XmSample();
-				virtual bool load( BinStream& str, const std::size_t pos ) throw( PppException );
+				virtual bool load( BinStream& str, std::size_t pos ) throw( PppException );
 				bool loadData( BinStream& str );
 				int8_t finetune() const {
 					return m_finetune;
 				}
-				int8_t panning() const {
-					return m_panning - 0x80;
+				uint8_t panning() const {
+					return m_panning;
 				}
 				int8_t relativeNote() const {
 					return m_relativeNote;
+				}
+				bool is16bit() const {
+					return m_16bit;
 				}
 		};
 	}

@@ -50,6 +50,8 @@ namespace ppp {
 			uint8_t m_realVolume;
 			//! @brief Current panning (0x00..0x80)
 			uint8_t m_panning;
+			//! @brief Real panning (including envelope)
+			uint8_t m_realPanning;
 			//! @brief Base period
 			uint16_t m_basePeriod;
 			//! @brief Current period (for vibrato or such fx)
@@ -71,6 +73,8 @@ namespace ppp {
 			 */
 			//! @brief Volume envelope processor
 			XmEnvelopeProcessor m_volumeEnvelope;
+			//! @brief Panning envelope processor
+			XmEnvelopeProcessor m_panningEnvelope;
 			//! @brief Current volume scale factor
 			uint16_t m_volScale;
 			//! @brief Current volume scale increase/decrease rate
