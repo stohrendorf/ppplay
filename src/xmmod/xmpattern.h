@@ -27,31 +27,31 @@ namespace xm
 {
 enum class Effect : uint8_t
 {
-    FxArpeggio = 0,
-    FxPortaUp = 1,
-    FxPortaDown = 2,
-    FxPorta = 3,
-    FxVibrato = 4,
-    FxPortaVolSlide = 5,
-    FxVibratoVolSlide = 6,
-    FxTremolo = 7,
-    FxSetPanning = 8,
-    FxOffset = 9,
-    FxVolSlide = 0x0a,
-    FxPosJump = 0x0b, //!< @todo Implement!
-    FxSetVolume = 0x0c,
-    FxPatBreak = 0x0d, //!< @todo Implement!
-    FxExtended = 0x0e,
-    FxSetTempoBpm = 0x0f,
-    FxSetGlobalVol = 0x10,
-    FxGlobalVolSlide = 0x11,
-	FxKeyOff = 0x14,
-    FxSetEnvPos = 0x15, //!< @todo Implement!
-    FxPanSlide = 0x19,
-    FxRetrigger = 0x1b,
-    FxTremor = 0x1d,
-    FxExtraFinePorta = 0x21,
-    FxNone = 0xff
+    Arpeggio = 0,
+    PortaUp = 1,
+    PortaDown = 2,
+    Porta = 3,
+    Vibrato = 4,
+    PortaVolSlide = 5,
+    VibratoVolSlide = 6,
+    Tremolo = 7,
+    SetPanning = 8,
+    Offset = 9,
+    VolSlide = 0x0a,
+    PosJump = 0x0b, //!< @todo Implement!
+    SetVolume = 0x0c,
+    PatBreak = 0x0d, //!< @todo Implement!
+    Extended = 0x0e,
+    SetTempoBpm = 0x0f,
+    SetGlobalVol = 0x10,
+    GlobalVolSlide = 0x11,
+	KeyOff = 0x14,
+    SetEnvPos = 0x15, //!< @todo Implement!
+    PanSlide = 0x19,
+    Retrigger = 0x1b,
+    Tremor = 0x1d,
+    ExtraFinePorta = 0x21,
+    None = 0xff
 };
 
 class XmCell : public GenCell

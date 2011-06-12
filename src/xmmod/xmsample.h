@@ -39,8 +39,8 @@ namespace ppp {
 				int8_t finetune() const {
 					return m_finetune;
 				}
-				uint8_t panning() const {
-					return m_panning;
+				int8_t panning() const {
+					return m_panning - 0x80;
 				}
 				int8_t relativeNote() const {
 					return m_relativeNote;

@@ -21,7 +21,7 @@
 using namespace ppp;
 using namespace ppp::xm;
 
-XmCell::XmCell() throw() : GenCell(), m_note(0), m_instr(0), m_volume(0), m_effect(Effect::FxNone), m_effectValue(0)
+XmCell::XmCell() throw() : GenCell(), m_note(0), m_instr(0), m_volume(0), m_effect(Effect::None), m_effectValue(0)
 {}
 
 XmCell::~XmCell() throw()
@@ -54,7 +54,7 @@ void XmCell::reset() throw()
     m_note = 0;
     m_instr = 0xff;
     m_volume = 0;
-    m_effect = Effect::FxNone;
+    m_effect = Effect::None;
     m_effectValue = 0;
 }
 

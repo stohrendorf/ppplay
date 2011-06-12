@@ -46,6 +46,8 @@ namespace ppp {
 			uint8_t m_baseVolume;
 			//! @brief Current volume (for tremolo or such fx)
 			uint8_t m_currentVolume;
+			//! @brief Real volume (including envelope)
+			uint8_t m_realVolume;
 			//! @brief Current panning (0x00..0x80)
 			uint8_t m_panning;
 			//! @brief Base period
@@ -67,10 +69,13 @@ namespace ppp {
 			/** @name Envelopes variables
 			 * @{
 			 */
+			//! @brief Volume envelope processor
 			XmEnvelopeProcessor m_volumeEnvelope;
+			//! @brief Current volume scale factor
 			uint16_t m_volScale;
+			//! @brief Current volume scale increase/decrease rate
 			uint16_t m_volScaleRate;
-			uint8_t m_realVolume;
+			//! @brief For sustain points
 			bool m_keyOn;
 			/** @} */
 			
