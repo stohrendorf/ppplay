@@ -59,7 +59,11 @@ namespace ppp {
 				//! @brief Song length
 				uint16_t m_length;
 				//! @brief Contains the row to break to, or @c -1 if no break is intended
-				int16_t m_patternBreak;
+				int16_t m_jumpRow;
+				int16_t m_jumpOrder;
+				bool m_isPatLoop;
+				bool m_doPatJump;
+				uint8_t m_restartPos;
 			public:
 				//! @brief Class pointer
 				typedef std::shared_ptr<XmModule> Ptr;
@@ -113,6 +117,8 @@ namespace ppp {
 				 * @param[in] next Row to break to
 				 */
 				void doPatternBreak(int16_t next);
+				void doJumpPos(int16_t next);
+				void doPatLoop(int16_t next);
 		};
 	} // namespace xm
 } // namespace ppp

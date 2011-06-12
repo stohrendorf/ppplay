@@ -207,7 +207,12 @@ void XmChannel::doKeyOn()
 void XmChannel::update(const XmCell::Ptr cell)
 {
     if(m_module->getPlaybackInfo().tick == 0) {
-		m_currentCell = *cell;
+		if(cell) {
+			m_currentCell = *cell;
+		}
+		else {
+			m_currentCell.reset();
+		}
 		
 		if((m_vibratoCtrl&4) == 0) {
 			// check for vib reset
@@ -403,7 +408,10 @@ void XmChannel::update(const XmCell::Ptr cell)
 				fxGlobalVolSlide(m_currentCell.getEffectValue());
 				break;
 			case Effect::PatBreak:
-				m_module->doPatternBreak( m_currentCell.getEffectValue() );
+				m_module->doPatternBreak( highNibble(m_currentCell.getEffectValue())*10 + lowNibble(m_currentCell.getEffectValue()) );
+				break;
+			case Effect::PosJump:
+				m_module->doJumpPos( m_currentCell.getEffectValue() );
 				break;
 			case Effect::Tremolo:
 				fxTremolo(m_currentCell.getEffectValue());
@@ -474,9 +482,9 @@ void XmChannel::mixTick(MixerFrameBuffer &mixBuffer) throw(PppException)
 		volRight = m_realPanning;
 	}
     for(std::size_t i = 0; i < mixBuffer->size(); i++) {
-        int16_t sampleVal = currSmp->getLeftSampleAt(pos)*volLeft >> 7;
+        int16_t sampleVal = (currSmp->getLeftSampleAt(pos)*volLeft) >> 7;
         *(mixBufferPtr++) += (sampleVal * m_realVolume) >> 6;
-        sampleVal = currSmp->getRightSampleAt(pos)*volRight >> 7;
+        sampleVal = (currSmp->getRightSampleAt(pos)*volRight) >> 7;
         *(mixBufferPtr++) += (sampleVal * m_realVolume) >> 6;
         if(pos == GenSample::EndOfSample)
             break;
@@ -660,6 +668,11 @@ void XmChannel::fxExtended(uint8_t fxByte)
 					triggerNote();
 					doKeyOn();
 				}
+			}
+			break;
+		case EfxPatLoop:
+			if(m_module->getPlaybackInfo().tick == 0) {
+				efxPatLoop(fxByte);
 			}
 			break;
 	}
@@ -955,6 +968,24 @@ void XmChannel::fxRetrigger(uint8_t fxByte)
 	}
 	if(m_currentCell.getNote() != 0) {
 		retriggerNote();
+	}
+}
+
+void XmChannel::efxPatLoop(uint8_t fxByte)
+{
+	fxByte = lowNibble(fxByte);
+	if(fxByte==0) {
+		m_patLoopRow = m_module->getPlaybackInfo().row;
+		return;
+	}
+	if(m_patLoopCounter == 0) {
+		m_patLoopCounter = fxByte;
+		m_module->doPatLoop( m_patLoopRow );
+	}
+	m_patLoopCounter--;
+	if(m_patLoopCounter != 0) {
+		m_patLoopCounter = fxByte;
+		m_module->doPatLoop( m_patLoopRow );
 	}
 }
 

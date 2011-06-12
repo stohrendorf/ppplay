@@ -101,12 +101,21 @@ namespace ppp {
 				return ( (((tmp*volume>>6)*scale)>>12)*globalVolume )>>9;
 			}
 		}
-		uint8_t XmEnvelopeProcessor::realPanning(uint8_t panning) const
+		uint8_t XmEnvelopeProcessor::realPanning(uint8_t panning)
 		{
 			if(!enabled()) {
 				return panning;
 			}
-			return (panning + ((m_currentValue>>8)-0x20) * (0x80-std::abs(panning-0x80))) >> 5;
+			uint8_t tmp = m_currentValue>>8;
+			if(tmp > 0xa0) {
+				tmp = 0;
+				m_currentRate = 0;
+			}
+			else if(tmp>0x40) {
+				tmp = 0x40;
+				m_currentRate = 0;
+			}
+			return clip<int>(panning + (((tmp-0x20) * (128-std::abs(panning-0x80))) >> 5), 0, 0xff);
 		}
 		void XmEnvelopeProcessor::setPosition(uint8_t pos)
 		{

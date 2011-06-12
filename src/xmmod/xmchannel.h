@@ -147,6 +147,8 @@ namespace ppp {
 			uint8_t m_retriggerLength;
 			//! @brief Volume change type for the Multi Retrigger Effect
 			uint8_t m_retriggerVolumeType;
+			uint8_t m_patLoopCounter;
+			uint8_t m_patLoopRow;
 			/** @} */
 			
 			//! @brief Output rate controller
@@ -222,7 +224,9 @@ namespace ppp {
 			void efxFinePortaDown(uint8_t fxByte);
 			void efxFineVolUp(uint8_t fxByte);
 			void efxFineVolDown(uint8_t fxByte);
+			void efxPatLoop(uint8_t fxByte);
 			/** @} */
+			
 			void triggerNote();
 			void retriggerNote();
 			void doKeyOff();

@@ -40,7 +40,7 @@ enum class Effect : uint8_t
     VolSlide = 0x0a,
     PosJump = 0x0b, //!< @todo Implement!
     SetVolume = 0x0c,
-    PatBreak = 0x0d, //!< @todo Implement!
+    PatBreak = 0x0d,
     Extended = 0x0e,
     SetTempoBpm = 0x0f,
     SetGlobalVol = 0x10,
