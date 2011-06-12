@@ -53,7 +53,9 @@ static const std::array<const uint16_t, 12 * 8> g_PeriodTable = {{
     }
 };
 
-XmModule::XmModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) : GenModule( frq, maxRpt ), m_amiga( false ), m_patternBreak(-1) {
+XmModule::XmModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) : GenModule( frq, maxRpt ), m_amiga( false ), m_jumpRow(-1), m_jumpOrder(-1),
+	m_isPatLoop(false), m_doPatJump(false)
+{
 }
 
 bool XmModule::load( const std::string& filename ) throw( PppException ) {
@@ -76,6 +78,7 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 		setTitle( title );
 	}
 // 	LOG_DEBUG("Restart pos = %u", hdr.restartPos);
+	m_restartPos = hdr.restartPos;
 	{
 		std::string tmp = trimString(stringncpy( hdr.trackerName, 20 ));
 		if(tmp.length() > 0) {
@@ -166,7 +169,27 @@ void XmModule::getTick( AudioFrameBuffer& buffer ) {
 	//adjustPosition( true, false );
 	nextTick();
 	if(getPlaybackInfo().tick == 0) {
-		if(m_patternBreak == -1) {
+		if(m_isPatLoop || m_doPatJump) {
+			if(m_isPatLoop) {
+				m_isPatLoop = false;
+				setRow( m_jumpRow );
+			}
+			if(m_doPatJump) {
+				setRow( m_jumpRow );
+				m_jumpRow = 0;
+				m_doPatJump = false;
+				if(m_jumpOrder+1 >= m_length) {
+					m_jumpOrder = m_restartPos;
+				}
+				setOrder( m_jumpOrder );
+				if(getPlaybackInfo().order >= m_length) {
+					buffer->clear();
+					return;
+				}
+				setPatternIndex( m_orders[getPlaybackInfo().order] );
+			}
+		}
+		else {
 			setRow( (getPlaybackInfo().row+1) % currPat->numRows() );
 			if(getPlaybackInfo().row == 0) {
 				setOrder( (getPlaybackInfo().order+1) );
@@ -175,6 +198,25 @@ void XmModule::getTick( AudioFrameBuffer& buffer ) {
 					return;
 				}
 				setPatternIndex( m_orders[getPlaybackInfo().order] );
+			}
+		}
+		m_jumpOrder = m_jumpRow = -1;
+		m_doPatJump = m_isPatLoop = false;
+/*		if(m_patternBreak == -1) {
+			if(m_patLoopRow == -1) {
+				setRow( (getPlaybackInfo().row+1) % currPat->numRows() );
+				if(getPlaybackInfo().row == 0) {
+					setOrder( (getPlaybackInfo().order+1) );
+					if(getPlaybackInfo().order >= m_length) {
+						buffer->clear();
+						return;
+					}
+					setPatternIndex( m_orders[getPlaybackInfo().order] );
+				}
+			}
+			else {
+				setRow( m_patLoopRow );
+				m_patLoopRow = -1;
 			}
 		}
 		else {
@@ -190,7 +232,7 @@ void XmModule::getTick( AudioFrameBuffer& buffer ) {
 			}
 			setRow( m_patternBreak );
 			m_patternBreak = -1;
-		}
+		}*/
 	}
 	setPosition( getPosition() + mixerBuffer->size() );
 }
@@ -449,5 +491,22 @@ uint16_t XmModule::glissando(uint16_t period, int8_t finetune, uint8_t deltaNote
 
 void XmModule::doPatternBreak(int16_t next)
 {
-	m_patternBreak = next;
+	if(next <= 0x3f) {
+		m_jumpRow = next;
+	}
+	else {
+		m_jumpRow = 0;
+	}
+	m_doPatJump = true;
+}
+
+void XmModule::doJumpPos(int16_t next)
+{
+	m_jumpOrder = next;
+}
+
+void XmModule::doPatLoop(int16_t next)
+{
+	m_jumpRow = next;
+	m_isPatLoop = true;
 }

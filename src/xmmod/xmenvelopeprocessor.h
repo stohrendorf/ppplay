@@ -57,7 +57,7 @@ namespace ppp {
 				void increasePosition(bool keyOn);
 				bool enabled() const;
 				uint8_t realVolume(uint8_t volume, uint8_t globalVolume, uint16_t scale);
-				uint8_t realPanning(uint8_t panning) const;
+				uint8_t realPanning(uint8_t panning);
 				void setPosition(uint8_t pos);
 				std::string toString() const;
 		};
