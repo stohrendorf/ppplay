@@ -49,12 +49,15 @@ namespace ppp {
 				uint8_t m_loopEnd;
 				int16_t m_currentRate;
 				uint16_t m_currentValue;
+				bool onSustain(uint8_t idx) const;
+				bool atLoopEnd(uint8_t idx) const;
 			public:
 				XmEnvelopeProcessor();
 				XmEnvelopeProcessor(EnvelopeFlags flags, const std::array<EnvelopePoint, 12>& points, uint8_t numPoints, uint8_t sustainPt, uint8_t loopStart, uint8_t loopEnd);
 				void increasePosition(bool keyOn);
 				bool enabled() const;
 				uint8_t realVolume(uint8_t volume, uint8_t globalVolume, uint16_t scale);
+				void setPosition(uint8_t pos);
 				std::string toString() const;
 		};
 

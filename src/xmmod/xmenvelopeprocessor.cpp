@@ -30,36 +30,43 @@ namespace ppp {
 			: m_flags(flags), m_points(points), m_numPoints(numPoints), m_position(0xffff), m_nextIndex(0), m_sustainPoint(sustainPt), m_loopStart(loopStart), m_loopEnd(loopEnd), m_currentRate(0), m_currentValue(0)
 		{
 		}
+		bool XmEnvelopeProcessor::onSustain(uint8_t idx) const
+		{
+			return m_flags&EnvelopeFlags::Sustain && idx==m_sustainPoint;
+		}
+		bool XmEnvelopeProcessor::atLoopEnd(uint8_t idx) const
+		{
+			return m_flags&EnvelopeFlags::Loop && idx==m_loopEnd;
+		}
+		bool XmEnvelopeProcessor::enabled() const
+		{
+			return m_flags & EnvelopeFlags::Enabled;
+		}
 		void XmEnvelopeProcessor::increasePosition(bool keyOn)
 		{
-			if(!enabled()) {
+			if(!enabled() || m_nextIndex>=m_numPoints) {
 				return;
 			}
+			if(keyOn && onSustain(m_nextIndex-1)) {
+				return;
+			}
+			
 			m_position++;
 			if(m_position == m_points[m_nextIndex].position) {
-				m_currentValue = m_points[m_nextIndex].value<<8;
-				uint8_t tmpNextIdx = m_nextIndex+1;
-				uint8_t oldIdx = m_nextIndex;
-				if((m_flags & EnvelopeFlags::Loop) && (oldIdx == m_loopEnd)) {
-					// we're at the loop end
-					if(!(m_flags & EnvelopeFlags::Sustain) || oldIdx!=m_sustainPoint || !keyOn) {
-						// no sustain -> loop!
-						tmpNextIdx = m_loopStart+1;
-						m_position = m_points[m_loopStart].position;
-						m_currentValue = m_points[m_loopStart].value<<8;
-					}
+				if(atLoopEnd(m_nextIndex)) {
+					m_position = m_points[m_loopStart].position;
+					m_currentValue = m_points[m_loopStart].value<<8;
+					m_nextIndex = m_loopStart;
 				}
-				if(tmpNextIdx < m_numPoints) {
-					if(!(m_flags & EnvelopeFlags::Sustain) || !keyOn || oldIdx!=m_sustainPoint) {
-						m_nextIndex = tmpNextIdx;
-						int dx = m_points[tmpNextIdx+1].position - m_points[tmpNextIdx].position;
-						if(dx>0) {
-							int16_t dy = (m_points[tmpNextIdx+1].value<<8) - (m_points[tmpNextIdx].value<<8);
-							m_currentRate = dy / dx;
-						}
-						else {
-							m_currentRate = 0;
-						}
+				else {
+					m_currentValue = m_points[m_nextIndex].value<<8;
+				}
+				m_nextIndex++;
+				if(m_nextIndex < m_numPoints) {
+					int16_t dx = m_points[m_nextIndex].position - m_points[m_nextIndex-1].position;
+					if(dx>0) {
+						int16_t dy = (m_points[m_nextIndex].value<<8) - (m_points[m_nextIndex-1].value<<8);
+						m_currentRate = dy / dx;
 					}
 					else {
 						m_currentRate = 0;
@@ -71,12 +78,7 @@ namespace ppp {
 			}
 			else {
 				m_currentValue = clip<int>(m_currentValue+m_currentRate, 0, 0xffff);
-// 				m_currentValue += m_currentRate;
 			}
-		}
-		bool XmEnvelopeProcessor::enabled() const
-		{
-			return m_flags & EnvelopeFlags::Enabled;
 		}
 		uint8_t XmEnvelopeProcessor::realVolume(uint8_t volume, uint8_t globalVolume, uint16_t scale)
 		{
@@ -99,13 +101,55 @@ namespace ppp {
 				return ( (((tmp*volume>>6)*scale)>>12)*globalVolume )>>8;
 			}
 		}
+		void XmEnvelopeProcessor::setPosition(uint8_t pos)
+		{
+			if(!enabled()) {
+				return;
+			}
+			m_position = pos-1;
+			if(m_numPoints <= 1) {
+				m_currentRate = 0;
+				m_currentValue = m_points[0].value;
+			}
+			else {
+				int foundPoint;
+				for(foundPoint=1; foundPoint<m_numPoints; foundPoint++) {
+					if(pos < m_points[foundPoint].position) {
+						foundPoint--;
+						break;
+					}
+				}
+				if(foundPoint==m_numPoints) {
+					m_currentRate = 0;
+					m_currentValue = m_points[i-1].value;
+				}
+				else if(m_points[foundPoint].position == pos) {
+					if(m_points[foundPoint+1].position < m_points[foundPoint].position) {
+						m_currentRate = 0;
+						m_currentValue = m_points[foundPoint-1].value;
+					}
+				}
+				else {
+					int16_t dx = m_points[foundPoint+1].position - m_points[foundPoint].position;
+					int16_t dy = m_points[foundPoint+1].value - m_points[foundPoint].value;
+					m_currentRate = (dy<<8) / dx;
+					m_currentValue = m_points[foundPoint].value;
+					m_currentValue += m_currentRate * (pos - m_points[foundPoint].position);
+					foundPoint++;
+				}
+				if(foundPoint >= m_numPoints) {
+					foundPoint = m_numPoints-1;
+				}
+				m_nextIndex = std::max(0, foundPoint);
+			}
+		}
 		std::string XmEnvelopeProcessor::toString() const
 		{
 			if(!enabled()) {
 				return "OFF";
 			}
 			else {
-				return stringf("val=%d rate=%d pos=%d", m_currentValue, m_currentRate, m_position);
+				return stringf("val=%d rate=%d pos=%d%s", m_currentValue, m_currentRate, m_position, onSustain(m_nextIndex-1) ? "(sust)" : "");
 			}
 		}
 	}
