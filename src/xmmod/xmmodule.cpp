@@ -288,7 +288,7 @@ XmInstrument::Ptr XmModule::getInstrument(int idx) const {
 
 uint16_t XmModule::noteToPeriod(uint8_t note, int8_t finetune) const
 {
-	int16_t tuned = (note<<4) + (finetune/8 + 16) - 96;
+	int16_t tuned = (note<<4) + (finetune/8 + 16) - 16*7;
 // 	if(tuned>=1936) {
 	if(tuned<0 || tuned>=m_noteToPeriod.size()) {
 		return 0;
