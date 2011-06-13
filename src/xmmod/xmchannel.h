@@ -56,6 +56,8 @@ namespace ppp {
 			uint16_t m_basePeriod;
 			//! @brief Current period (for vibrato or such fx)
 			uint16_t m_currentPeriod;
+			//! @brief Added to m_currentPeriod
+			int16_t m_autoVibDeltaPeriod;
 			//! @brief Current finetune
 			int8_t m_finetune;
 			//! @brief Current instrument index
@@ -149,6 +151,11 @@ namespace ppp {
 			uint8_t m_retriggerVolumeType;
 			uint8_t m_patLoopCounter;
 			uint8_t m_patLoopRow;
+			uint8_t m_autoVibType;
+			uint8_t m_autoVibSweep;
+			uint8_t m_autoVibSweepRate;
+			uint16_t m_autoVibDepth;
+			uint8_t m_autoVibPhase;
 			/** @} */
 			
 			//! @brief Output rate controller

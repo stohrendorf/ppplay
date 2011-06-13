@@ -32,7 +32,7 @@ namespace ppp {
 		}
 		bool XmEnvelopeProcessor::onSustain(uint8_t idx) const
 		{
-			return m_flags&EnvelopeFlags::Sustain && idx==m_sustainPoint;
+			return m_flags&EnvelopeFlags::Sustain && idx==m_sustainPoint && m_position==m_points[m_sustainPoint].position;
 		}
 		bool XmEnvelopeProcessor::atLoopEnd(uint8_t idx) const
 		{
@@ -106,16 +106,27 @@ namespace ppp {
 			if(!enabled()) {
 				return panning;
 			}
-			uint8_t tmp = m_currentValue>>8;
-			if(tmp > 0xa0) {
-				tmp = 0;
+			uint8_t curVal = m_currentValue>>8;
+			if(curVal > 0xa0) {
+				curVal = 0;
 				m_currentRate = 0;
 			}
-			else if(tmp>0x40) {
-				tmp = 0x40;
+			else if(curVal>0x40) {
+				curVal = 0x40;
 				m_currentRate = 0;
 			}
-			return clip<int>(panning + (((tmp-0x20) * (128-std::abs(panning-0x80))) >> 5), 0, 0xff);
+			uint16_t curPan;
+			if(panning > 0x80) {
+				curPan = panning-0x80;
+			}
+			else {
+				curPan = 0x80-panning;
+			}
+			curPan += 0x80;
+			curPan <<= 3;
+			curPan = (curPan*(curVal-0x20))>>8;
+			return panning + curPan; 
+// 			return clip<int>(panning + (((curVal-0x20) * (0x80-std::abs(panning-0x80))) >> 5), 0, 0xff);
 		}
 		void XmEnvelopeProcessor::setPosition(uint8_t pos)
 		{
@@ -162,10 +173,10 @@ namespace ppp {
 		std::string XmEnvelopeProcessor::toString() const
 		{
 			if(!enabled()) {
-				return "OFF";
+				return "Off";
 			}
 			else {
-				return stringf("val=%d rate=%d pos=%d%s", m_currentValue, m_currentRate, m_position, onSustain(m_nextIndex-1) ? "(sust)" : "");
+				return stringf("%.2x%s", m_currentValue>>8, onSustain(m_nextIndex-1) ? "(sust)" : "");
 			}
 		}
 	}

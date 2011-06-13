@@ -131,7 +131,7 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 		}
 	}
 	else {
-		uint16_t val = 10*12*16 + 16;
+		uint16_t val = 121*16;
 		for(std::size_t i=0; i<m_noteToPeriod.size(); i++) {
 			m_noteToPeriod[i] = val*4;
 			val--;
@@ -173,12 +173,15 @@ void XmModule::getTick( AudioFrameBuffer& buffer ) {
 			if(m_isPatLoop) {
 				m_isPatLoop = false;
 				setRow( m_jumpRow );
+				LOG_DEBUG("Pat loop -> %d", m_jumpRow);
 			}
 			if(m_doPatJump) {
+				LOG_DEBUG("Pat jump -> %d,%d", m_jumpOrder, m_jumpRow);
 				setRow( m_jumpRow );
 				m_jumpRow = 0;
 				m_doPatJump = false;
-				if(m_jumpOrder+1 >= m_length) {
+				m_jumpOrder++;
+				if(m_jumpOrder >= m_length) {
 					m_jumpOrder = m_restartPos;
 				}
 				setOrder( m_jumpOrder );
@@ -200,7 +203,7 @@ void XmModule::getTick( AudioFrameBuffer& buffer ) {
 				setPatternIndex( m_orders[getPlaybackInfo().order] );
 			}
 		}
-		m_jumpOrder = m_jumpRow = -1;
+		m_jumpOrder = m_jumpRow = 0;
 		m_doPatJump = m_isPatLoop = false;
 /*		if(m_patternBreak == -1) {
 			if(m_patLoopRow == -1) {
@@ -497,6 +500,7 @@ void XmModule::doPatternBreak(int16_t next)
 	else {
 		m_jumpRow = 0;
 	}
+	doJumpPos( getPlaybackInfo().order );
 	m_doPatJump = true;
 }
 
