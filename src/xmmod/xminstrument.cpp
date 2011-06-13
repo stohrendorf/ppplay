@@ -97,6 +97,10 @@ bool XmInstrument::load( BinStream& str ) {
 		m_volPoints[i].position = hdr2.volEnvelope[i].x;
 		m_volPoints[i].value = hdr2.volEnvelope[i].y;
 	}
+	m_vibDepth = hdr2.vibDepth;
+	m_vibRate = hdr2.vibRate;
+	m_vibSweep = hdr2.vibSweep;
+	m_vibType = hdr2.vibType;
 	return true;
 }
 

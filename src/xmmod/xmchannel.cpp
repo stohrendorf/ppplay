@@ -200,9 +200,47 @@ void XmChannel::doKeyOn()
 	m_panningEnvelope = currentInstrument()->panningProcessor();
 	m_volScale = 0x8000;
 	m_volScaleRate = currentInstrument()->fadeout();
+	if(currentInstrument()->vibDepth() == 0) {
+		return;
+	}
+	m_autoVibPhase = 0;
+	if(currentInstrument()->vibSweep()==0) {
+		m_autoVibDepth = currentInstrument()->vibDepth()<<8;
+		m_autoVibSweepRate = 0;
+	}
+	else {
+		m_autoVibDepth = 0;
+		m_autoVibSweepRate = m_autoVibDepth / currentInstrument()->vibSweep();
+	}
 	setActive(true);
 }
 
+static const std::array<int8_t, 256> g_AutoVibTable = {{
+	0, -2, -3, -5, -6, -8, -9, -11, -12, -14, -16,
+	-17, -19, -20, -22, -23, -24, -26, -27, -29, -30, -32,
+	-33, -34, -36, -37, -38, -39, -41, -42, -43, -44, -45,
+	-46, -47, -48, -49, -50, -51, -52, -53, -54, -55, -56,
+	-56, -57, -58, -59, -59, -60, -60, -61, -61, -62, -62,
+	-62, -63, -63, -63, -64, -64, -64, -64, -64, -64, -64,
+	-64, -64, -64, -64, -63, -63, -63, -62, -62, -62, -61,
+	-61, -60, -60, -59, -59, -58, -57, -56, -56, -55, -54,
+	-53, -52, -51, -50, -49, -48, -47, -46, -45, -44, -43,
+	-42, -41, -39, -38, -37, -36, -34, -33, -32, -30, -29,
+	-27, -26, -24, -23, -22, -20, -19, -17, -16, -14, -12,
+	-11, -9, -8, -6, -5, -3, -2, 0, 2, 3, 5,
+	6, 8, 9, 11, 12, 14, 16, 17, 19, 20, 22,
+	23, 24, 26, 27, 29, 30, 32, 33, 34, 36, 37,
+	38, 39, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+	50, 51, 52, 53, 54, 55, 56, 56, 57, 58, 59,
+	59, 60, 60, 61, 61, 62, 62, 62, 63, 63, 63,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	63, 63, 63, 62, 62, 62, 61, 61, 60, 60, 59,
+	59, 58, 57, 56, 56, 55, 54, 53, 52, 51, 50,
+	49, 48, 47, 46, 45, 44, 43, 42, 41, 39, 38,
+	37, 36, 34, 33, 32, 30, 29, 27, 26, 24, 23,
+	22, 20, 19, 17, 16, 14, 12, 11, 9, 8, 6,
+	5, 3, 2
+}};
 
 void XmChannel::update(const XmCell::Ptr cell)
 {
@@ -441,6 +479,54 @@ void XmChannel::update(const XmCell::Ptr cell)
 	m_realVolume = m_volumeEnvelope.realVolume(m_currentVolume, m_module->getPlaybackInfo().globalVolume, m_volScale);
 	m_panningEnvelope.increasePosition( m_keyOn );
 	m_realPanning = m_panningEnvelope.realPanning(m_panning);
+	
+	if(currentInstrument()) {
+		if(m_autoVibSweepRate != 0 && m_keyOn) {
+			uint16_t tmp = m_autoVibSweepRate+m_autoVibDepth;
+			if(tmp > currentInstrument()->vibDepth()) {
+				m_autoVibSweepRate = 0;
+				m_autoVibDeltaPeriod = 0;
+				tmp = currentInstrument()->vibDepth();
+			}
+			m_autoVibDepth = tmp;
+		}
+		m_autoVibPhase += currentInstrument()->vibRate();
+		int8_t value = 0;
+		switch(m_vibratoCtrl&3) {
+			case 0:
+				value = g_AutoVibTable[m_autoVibPhase];
+				break;
+			case 1:
+				if((m_autoVibPhase&0x80) == 0) {
+					value = -0x40;
+				}
+				else {
+					value = 0x40;
+				}
+				break;
+			case 2:
+				value = (m_autoVibPhase>>1) + 0x40;
+				value &= 0x7f;
+				value -= 0x40;
+				break;
+			case 3:
+				value = -(m_autoVibPhase>>1) + 0x40;
+				value &= 0x7f;
+				value -= 0x40;
+				break;
+		}
+		uint16_t newPeriod = (value*m_autoVibDepth >> 14) + m_currentPeriod;
+		if(newPeriod > 0x7cff) {
+			m_autoVibDeltaPeriod = 0;
+		}
+		else {
+			m_autoVibDeltaPeriod = value*m_autoVibDepth >> 14;
+		}
+	}
+	else {
+		m_autoVibDeltaPeriod = 0;
+	}
+
 	updateStatus();
 }
 
@@ -468,7 +554,7 @@ void XmChannel::mixTick(MixerFrameBuffer &mixBuffer) throw(PppException)
 {
     if(!isActive())
         return;
-	m_bres.reset(getPlaybackFrq(), m_module->periodToFrequency(m_currentPeriod));
+	m_bres.reset(getPlaybackFrq(), m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod));
     //BresenInterpolation bres(getPlaybackFrq(), 8363 * 1712 *8 / m_currentPeriod);
     MixerSample *mixBufferPtr = &mixBuffer->front().left;
     XmSample::Ptr currSmp = currentSample();
@@ -508,8 +594,8 @@ void XmChannel::updateStatus() throw(PppException)
 		setStatusString("");
 		return;
 	}
-	setStatusString( stringf("Note=%u(%u) vol=%.2u pan=%.2u ins=%.2u vfx=%.2x fx=%.2x/%.2x [%s]",
-							 m_realNote, m_baseNote, m_realVolume, m_realPanning, m_instrumentIndex, m_currentCell.getVolume(), m_currentCell.getEffect(), m_currentCell.getEffectValue(), m_panningEnvelope.toString().c_str() ));
+	setStatusString( stringf("vol=%.2u pan=%.2x vfx=%.2x fx=%.2x/%.2x [PE=%s] [VE=%s]",
+							 m_realVolume, m_realPanning, m_currentCell.getVolume(), m_currentCell.getEffect(), m_currentCell.getEffectValue(), m_panningEnvelope.toString().c_str(), m_volumeEnvelope.toString().c_str() ));
 }
 
 void XmChannel::fxSetVolume(uint8_t fxByte)

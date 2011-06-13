@@ -43,6 +43,10 @@ namespace ppp {
 				uint8_t m_volSustainPoint;
 				uint8_t m_panSustainPoint;
 				uint16_t m_fadeout;
+				uint8_t m_vibRate;
+				uint8_t m_vibDepth;
+				uint8_t m_vibSweep;
+				uint8_t m_vibType;
 			public:
 				typedef std::shared_ptr<XmInstrument> Ptr;
 				typedef std::vector<Ptr> Vector;
@@ -66,6 +70,10 @@ namespace ppp {
 				uint16_t fadeout() const { return m_fadeout; }
 				XmEnvelopeProcessor volumeProcessor() const;
 				XmEnvelopeProcessor panningProcessor() const;
+				uint8_t vibRate() const { return m_vibRate; }
+				uint8_t vibDepth() const { return m_vibDepth; }
+				uint8_t vibSweep() const { return m_vibSweep; }
+				uint8_t vibType() const { return m_vibType; }
 		};
 	}
 }
