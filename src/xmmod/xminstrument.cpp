@@ -47,7 +47,16 @@ struct InstrumentHeader2 {
 
 using namespace ppp::xm;
 
-XmInstrument::XmInstrument() : m_samples(), m_map() {
+XmInstrument::XmInstrument() :
+	m_samples(), m_map(), m_title(),
+	m_panEnvFlags(), m_volEnvFlags(),
+	m_panPoints(), m_volPoints(),
+	m_numVolPoints(0), m_numPanPoints(0),
+	m_volLoopStart(0), m_panLoopStart(0),
+	m_volLoopEnd(0), m_panLoopEnd(0),
+	m_volSustainPoint(0), m_panSustainPoint(0),
+	m_fadeout(0), m_vibRate(0), m_vibDepth(0), m_vibSweep(0), m_vibType(0)
+{
 	std::fill_n( m_map, 96, 0 );
 }
 

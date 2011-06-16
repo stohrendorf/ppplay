@@ -179,5 +179,22 @@ namespace ppp {
 				return stringf("%.2x%s", m_currentValue>>8, onSustain(m_nextIndex-1) ? "(sust)" : "");
 			}
 		}
+		IArchive& XmEnvelopeProcessor::serialize(IArchive* data)
+		{
+			*data & (*reinterpret_cast<uint8_t*>(&m_flags));
+			for(std::size_t i=0; i<m_points.size(); i++) {
+				*data & m_points[i].position & m_points[i].value;
+			}
+			*data
+			& m_numPoints
+			& m_position
+			& m_nextIndex
+			& m_sustainPoint
+			& m_loopStart
+			& m_loopEnd
+			& m_currentRate
+			& m_currentValue;
+			return *data;
+		}
 	}
 }

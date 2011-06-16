@@ -20,13 +20,15 @@
 #ifndef XMENVELOPEPROCESSOR_H
 #define XMENVELOPEPROCESSOR_H
 
+#include "stream/binstream.h"
+
 #include <array>
 #include <cstdint>
 #include <string>
 
 namespace ppp {
 	namespace xm {
-		class XmEnvelopeProcessor
+		class XmEnvelopeProcessor : public ISerializable
 		{
 			public:
 				enum class EnvelopeFlags : uint8_t {
@@ -60,6 +62,7 @@ namespace ppp {
 				uint8_t realPanning(uint8_t panning);
 				void setPosition(uint8_t pos);
 				std::string toString() const;
+				virtual IArchive& serialize(IArchive* data);
 		};
 
 		inline bool operator&(const XmEnvelopeProcessor::EnvelopeFlags& a, const XmEnvelopeProcessor::EnvelopeFlags& b) {
