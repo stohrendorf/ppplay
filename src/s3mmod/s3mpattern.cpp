@@ -25,8 +25,8 @@
 * @ingroup S3mMod
 */
 
-using namespace ppp;
-using namespace ppp::s3m;
+namespace ppp {
+namespace s3m {
 
 S3mCell::S3mCell() throw() : GenCell(), m_note( s3mEmptyNote ), m_instr( s3mEmptyInstr ), m_volume( s3mEmptyVolume ),
 	m_effect( s3mEmptyCommand ), m_effectValue( 0x00 ) {
@@ -200,4 +200,7 @@ bool S3mPattern::load( BinStream& str, std::size_t pos ) throw( PppException ) {
 	catch( ... ) {
 		PPP_THROW( "Unknown Exception" );
 	}
+}
+
+}
 }

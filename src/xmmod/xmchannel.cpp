@@ -53,7 +53,21 @@ enum {
 	VfxPorta = 0xf
 };
 
-XmChannel::XmChannel(XmModule *module, int frq) : GenChannel(frq), m_module(module), m_finetune(0), m_bres(1,1), m_glissandoCtrl(false), m_vibratoCtrl(0), m_vibratoPhase(0)
+XmChannel::XmChannel(XmModule *module, int frq) :
+	GenChannel(frq),
+	m_baseVolume(0), m_currentVolume(0), m_realVolume(0), m_panning(0x80),
+	m_realPanning(0x80), m_basePeriod(0), m_currentPeriod(0), m_autoVibDeltaPeriod(0),
+	m_finetune(0), m_instrumentIndex(0), m_baseNote(0), m_realNote(0), m_currentCell(),
+	m_volumeEnvelope(), m_panningEnvelope(), m_volScale(0), m_volScaleRate(0), m_keyOn(false),
+	m_lastVolSlideFx(0), m_lastPortaUpFx(0), m_lastPortaDownFx(0), m_lastPanSlideFx(0),
+	m_lastOffsetFx(0), m_lastFinePortaUpFx(0), m_lastFinePortaDownFx(0), m_lastFineVolUpFx(0),
+	m_lastFineVolDownFx(0), m_lastXFinePortaUp(0), m_lastXFinePortaDown(0), m_lastGlobVolSlideFx(0),
+	m_lastTremorFx(0), m_portaSpeed(0), m_portaTargetPeriod(0), m_vibratoSpeed(0), m_vibratoDepth(0),
+	m_vibratoPhase(0), m_vibratoCtrl(0), m_glissandoCtrl(0), m_tremoloDepth(0),
+	m_tremoloSpeed(0), m_tremoloPhase(0), m_tremoloCtrl(0), m_tremorCountdown(0),
+	m_retriggerCounter(0), m_retriggerLength(0), m_retriggerVolumeType(0), m_patLoopCounter(0),
+	m_patLoopRow(0), m_autoVibType(0), m_autoVibSweep(0), m_autoVibSweepRate(0),
+	m_autoVibDepth(0), m_autoVibPhase(0), m_bres(1,1), m_module(module), m_fxString()
 {
 }
 
@@ -61,22 +75,14 @@ XmSample::Ptr XmChannel::currentSample()
 {
     XmInstrument::Ptr instr = currentInstrument();
 	if(instr && m_baseNote>0) {
-		XmSample::Ptr smp = instr->mapNoteSample(m_baseNote-1);
-		if(smp) {
-			m_currentSample = smp;
-		}
+		return instr->mapNoteSample(m_baseNote-1);
 	}
-    return m_currentSample;
+    return XmSample::Ptr();
 }
 
 XmInstrument::Ptr XmChannel::currentInstrument()
 {
-	XmInstrument::Ptr instr = m_module->getInstrument(m_instrumentIndex);
-	if(instr!=m_currentInstrument) {
-		m_currentSample.reset();
-		m_currentInstrument = instr;
-	}
-	return m_currentInstrument;
+	return m_module->getInstrument(m_instrumentIndex);
 }
 
 
@@ -313,62 +319,124 @@ void XmChannel::update(const XmCell::Ptr cell)
 				break;
 			case VfxFineVolSlideDown:
 				vfxFineVolSlideDown(m_currentCell.getVolume());
+				m_fxString = "VSld \x19";
 				break;
 			case VfxFineVolSlideUp:
 				vfxFineVolSlideUp(m_currentCell.getVolume());
+				m_fxString = "VSld \x18";
 				break;
 			case VfxSetVibSpeed:
 				vfxSetVibratoSpeed(m_currentCell.getVolume());
+				m_fxString = "Vibr \xf7";
 				break;
 			case VfxSetPanning:
 				vfxSetPan(m_currentCell.getVolume());
+				m_fxString = "StPan\x1d";
+				break;
 		}
 		switch(m_currentCell.getEffect()) {
 			case Effect::None:
+				m_fxString = "      ";
 				break;
 			// To get rid of the "enumeration value XY not handled in switch" warnings...
 			case Effect::Arpeggio:
+				m_fxString = "Arp  \xf0";
+				break;
 			case Effect::PortaUp:
+				m_fxString = "Ptch\x1e\x1e";
+				break;
 			case Effect::PortaDown:
+				m_fxString = "Ptch\x1f\x1f";
+				break;
 			case Effect::Porta:
+				m_fxString = "Porta\x12";
+				break;
 			case Effect::Vibrato:
+				m_fxString = "Vibr \xf7";
+				break;
 			case Effect::PortaVolSlide:
+				m_fxString = "PrtVo\x12";
+				break;
 			case Effect::VibratoVolSlide:
+				m_fxString = "VibVo\xf7";
+				break;
 			case Effect::Tremolo:
+				m_fxString = "Tremo\xec";
+				break;
 			case Effect::VolSlide:
+				if(highNibble(m_currentCell.getEffectValue()) == 0)
+					m_fxString = "VSld \x1f";
+				else
+					m_fxString = "VSld \x1e";
+				break;
 			case Effect::GlobalVolSlide:
+				if(highNibble(m_currentCell.getEffectValue()) == 0)
+					m_fxString = "GVSld\x1f";
+				else
+					m_fxString = "GVSld\x1e";
+				break;
 			case Effect::KeyOff:
+				m_fxString = "KOff \xd4";
+				break;
 			case Effect::PanSlide:
+				if(highNibble(m_currentCell.getEffectValue()) == 0)
+					m_fxString = "GVSld\x1b";
+				else
+					m_fxString = "GVSld\x1a";
+				break;
 			case Effect::Tremor:
+				m_fxString = "Tremr\xec";
+				break;
+			case Effect::PosJump:
+				m_fxString = "JmOrd\x1a";
+				break;
+			case Effect::PatBreak:
 				// All the above effects are handled in tick 1+
+				m_fxString = "PBrk \xf6";
 				break;
 			case Effect::Offset:
 				// this effect is handled in triggerNote()
+				m_fxString = "Offs \xaa";
 				break;
 			case Effect::SetPanning:
 				fxSetPan(m_currentCell.getEffectValue());
+				m_fxString = "StPan\x1d";
 				break;
 			case Effect::SetVolume:
 				fxSetVolume(m_currentCell.getEffectValue());
+				m_fxString = "StVol=";
 				break;
 			case Effect::Extended:
 				fxExtended(m_currentCell.getEffectValue());
 				break;
 			case Effect::SetTempoBpm:
 				fxSetTempoBpm( m_currentCell.getEffectValue() );
+				m_fxString = "Tempo\x7f";
 				break;
 			case Effect::SetGlobalVol:
 				fxSetGlobalVolume( m_currentCell.getEffectValue() );
+				m_fxString = "GloVol";
 				break;
 			case Effect::ExtraFinePorta:
 				fxExtraFinePorta(m_currentCell.getEffectValue());
+				if( highNibble(m_currentCell.getEffectValue()) == 1 ) {
+					m_fxString = "Ptch \x18";
+				}
+				else if( highNibble(m_currentCell.getEffectValue()) == 2 ) {
+					m_fxString = "Ptch \x19";
+				}
+				else {
+					m_fxString = "      ";
+				}
 				break;
 			case Effect::Retrigger:
 				fxRetrigger(m_currentCell.getEffectValue());
+				m_fxString = "Retr \xec";
 				break;
 			case Effect::SetEnvPos:
 				m_volumeEnvelope.setPosition(m_currentCell.getEffectValue());
 				m_panningEnvelope.setPosition(m_currentCell.getEffectValue());
+				m_fxString = "EnvP \x1d";
 				break;
 		}
 	}
@@ -411,6 +479,7 @@ void XmChannel::update(const XmCell::Ptr cell)
 			case Effect::PanSlide:
 			case Effect::ExtraFinePorta:
 			case Effect::None:
+			case Effect::SetEnvPos:
 				// already handled
 				break;
 			case Effect::Arpeggio:
@@ -532,22 +601,33 @@ void XmChannel::update(const XmCell::Ptr cell)
 
 std::string XmChannel::getCellString()
 {
-    return std::string();
+    return m_currentCell.trackerString();
 }
 
 std::string XmChannel::getFxDesc() const throw(PppException)
 {
-    return std::string();
+    return m_fxString;
 }
 
 std::string XmChannel::getFxName() const throw(PppException)
 {
-    return std::string();
+	return m_currentCell.fxString();
 }
 
 std::string XmChannel::getNoteName() throw(PppException)
 {
-    return std::string();
+	if(m_baseNote == 0) {
+		return "...";
+	}
+	else if(m_baseNote == 97) {
+		return "===";
+	}
+	else if(m_baseNote<97) {
+		return stringf( "%s%d", NoteNames[m_baseNote%12], m_baseNote/12 );
+	}
+	else {
+		return "???";
+	}
 }
 
 void XmChannel::mixTick(MixerFrameBuffer &mixBuffer) throw(PppException)
@@ -555,7 +635,6 @@ void XmChannel::mixTick(MixerFrameBuffer &mixBuffer) throw(PppException)
     if(!isActive())
         return;
 	m_bres.reset(getPlaybackFrq(), m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod));
-    //BresenInterpolation bres(getPlaybackFrq(), 8363 * 1712 *8 / m_currentPeriod);
     MixerSample *mixBufferPtr = &mixBuffer->front().left;
     XmSample::Ptr currSmp = currentSample();
     int32_t pos = getPosition();
@@ -585,7 +664,24 @@ void XmChannel::mixTick(MixerFrameBuffer &mixBuffer) throw(PppException)
 
 void XmChannel::simTick(std::size_t bufSize)
 {
-
+    PPP_TEST(getPlaybackFrq() == 0);
+    PPP_TEST(bufSize == 0);
+    if(!isActive() || isDisabled())
+        return;
+	m_bres.reset(getPlaybackFrq(), m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod));
+    XmSample::Ptr currSmp = currentSample();
+	int32_t pos = getPosition();
+    for(std::size_t i = 0; i < bufSize; i++) {
+		currSmp->adjustPos(pos);
+        if(pos == GenSample::EndOfSample)
+            break;
+        m_bres.next(pos);
+    }
+    if(pos != GenSample::EndOfSample)
+        currentSample()->adjustPos(pos);
+    setPosition(pos);
+    if(pos == GenSample::EndOfSample)
+        setActive(false);
 }
 
 void XmChannel::updateStatus() throw(PppException)
@@ -594,8 +690,29 @@ void XmChannel::updateStatus() throw(PppException)
 		setStatusString("");
 		return;
 	}
-	setStatusString( stringf("vol=%.2u pan=%.2x vfx=%.2x fx=%.2x/%.2x [PE=%s] [VE=%s]",
-							 m_realVolume, m_realPanning, m_currentCell.getVolume(), m_currentCell.getEffect(), m_currentCell.getEffectValue(), m_panningEnvelope.toString().c_str(), m_volumeEnvelope.toString().c_str() ));
+	std::string panStr;
+	if(m_realPanning == 0x00)
+		panStr = "Left ";
+	else if(m_realPanning == 0x80)
+		panStr = "Centr";
+	else if(m_realPanning == 0xff)
+		panStr = "Right";
+	else
+		panStr = stringf("%4d%%", (m_realPanning - 0x80) * 100 / 0x80);
+	std::string volStr = stringf("%3d%%", clip<int>(m_realVolume , 0, 0x40) * 100 / 0x40);
+	setStatusString(stringf("%.2X: %s%s %s %s P:%s V:%s %s",
+							m_instrumentIndex + 1,
+							" ",
+							//(m_noteChanged ? "*" : " "),
+							getNoteName().c_str(),
+							getFxName().c_str(),
+							getFxDesc().c_str(),
+							panStr.c_str(),
+							volStr.c_str(),
+							currentInstrument() ? currentInstrument()->title().c_str() : ""
+							));
+/*	setStatusString( stringf("vol=%.2u pan=%.2x vfx=%.2x fx=%.2x/%.2x [PE=%s] [VE=%s]",
+							 m_realVolume, m_realPanning, m_currentCell.getVolume(), m_currentCell.getEffect(), m_currentCell.getEffectValue(), m_panningEnvelope.toString().c_str(), m_volumeEnvelope.toString().c_str() ));*/
 }
 
 void XmChannel::fxSetVolume(uint8_t fxByte)
@@ -711,29 +828,37 @@ void XmChannel::fxExtended(uint8_t fxByte)
 	switch(highNibble(fxByte)) {
 		case EfxFinePortaUp:
 			efxFinePortaUp(fxByte);
+			m_fxString = "Ptch \x18";
 			break;
 		case EfxFinePortaDown:
 			efxFinePortaDown(fxByte);
+			m_fxString = "Ptch \x19";
 			break;
 		case EfxFineVolSlideUp:
 			efxFineVolUp(fxByte);
+			m_fxString = "VSld \x18";
 			break;
 		case EfxFineVolSlideDown:
 			efxFineVolDown(fxByte);
+			m_fxString = "VSld \x19";
 			break;
 		case EfxSetGlissCtrl:
 			m_glissandoCtrl = lowNibble(fxByte)!=0;
+			m_fxString = "Gliss\xcd";
 			break;
 		case EfxSetVibratoCtrl:
 			m_vibratoCtrl = lowNibble(fxByte);
+			m_fxString = "VWave\x9f";
 			break;
 		case EfxSetTremoloCtrl:
 			m_tremoloCtrl = lowNibble(fxByte);
+			m_fxString = "TWave\x9f";
 			break;
 		case EfxNoteCut:
 			if(m_module->getPlaybackInfo().tick == lowNibble(fxByte)) {
 				m_baseVolume = m_currentVolume = 0;
 			}
+			m_fxString = "NCut \xd4";
 			break;
 		case EfxNoteDelay:
 			if(m_module->getPlaybackInfo().tick == lowNibble(fxByte)) {
@@ -747,6 +872,7 @@ void XmChannel::fxExtended(uint8_t fxByte)
 					vfxSetPan(fxByte);
 				}
 			}
+			m_fxString = "Delay\xc2";
 			break;
 		case EfxRetrigger:
 			if(lowNibble(fxByte) != 0) {
@@ -755,11 +881,13 @@ void XmChannel::fxExtended(uint8_t fxByte)
 					doKeyOn();
 				}
 			}
+			m_fxString = "Retr \xec";
 			break;
 		case EfxPatLoop:
 			if(m_module->getPlaybackInfo().tick == 0) {
 				efxPatLoop(fxByte);
 			}
+			m_fxString = "PLoop\xe8";
 			break;
 	}
 }
@@ -1073,6 +1201,68 @@ void XmChannel::efxPatLoop(uint8_t fxByte)
 		m_patLoopCounter = fxByte;
 		m_module->doPatLoop( m_patLoopRow );
 	}
+}
+
+IArchive& XmChannel::serialize(IArchive* data)
+{
+	GenChannel::serialize(data)
+	& m_baseVolume
+	& m_currentVolume
+	& m_realVolume
+	& m_panning
+	& m_realPanning
+	& m_basePeriod
+	& m_currentPeriod
+	& m_autoVibDeltaPeriod
+	& m_finetune
+	& m_instrumentIndex
+	& m_baseNote
+	& m_realNote;
+	(*data)
+	.archive( &m_currentCell )
+	.archive( &m_volumeEnvelope )
+	.archive( &m_panningEnvelope );
+	*data
+	& m_volScale
+	& m_volScaleRate
+	& m_keyOn
+	& m_lastVolSlideFx
+	& m_lastPortaUpFx
+	& m_lastPortaDownFx
+	& m_lastPanSlideFx
+	& m_lastOffsetFx
+	& m_lastFinePortaUpFx
+	& m_lastFinePortaDownFx
+	& m_lastFineVolUpFx
+	& m_lastFineVolDownFx
+	& m_lastXFinePortaUp
+	& m_lastXFinePortaDown
+	& m_lastGlobVolSlideFx
+	& m_lastTremorFx
+	& m_portaSpeed
+	& m_portaTargetPeriod
+	& m_vibratoSpeed
+	& m_vibratoDepth
+	& m_vibratoPhase
+	& m_vibratoCtrl
+	& m_glissandoCtrl
+	& m_tremoloDepth
+	& m_tremoloSpeed
+	& m_tremoloPhase
+	& m_tremoloCtrl
+	& m_tremorCountdown
+	& m_retriggerCounter
+	& m_retriggerLength
+	& m_retriggerVolumeType
+	& m_patLoopCounter
+	& m_patLoopRow
+	& m_autoVibType
+	& m_autoVibSweep
+	& m_autoVibSweepRate
+	& m_autoVibDepth
+	& m_autoVibPhase;
+	data->archive( &m_bres );
+	return *data;
 }
 
 }}

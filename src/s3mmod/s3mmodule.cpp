@@ -322,28 +322,28 @@ bool S3mModule::load( const std::string& fn ) throw( PppException ) {
 			if( s3mHdr.defaultPannings != 0xFC ) {  // no pannings
 				if( ( s3mHdr.masterVolume & 0x80 ) != 0 ) { // stereo
 					if( ( s3mHdr.pannings[i] & 0x08 ) != 0 ) // left channel
-						s3mChan->setPanning( 0x03 * 0x80 / 0x0f );
+						s3mChan->setPanning( 0x03 * 0x40 / 0x0f );
 					else // right channel
-						s3mChan->setPanning( 0x0c * 0x80 / 0x0f );
+						s3mChan->setPanning( 0x0c * 0x40 / 0x0f );
 				}
 				else { // mono
-					s3mChan->setPanning( 0x40 );
+					s3mChan->setPanning( 0x20 );
 				}
 			}
 			else { // panning settings are there...
 				if( ( defPans[i] & 0x20 ) == 0 ) { // use defaults
 					if( ( s3mHdr.masterVolume & 0x80 ) != 0 ) { // stereo
 						if( ( s3mHdr.pannings[i] & 0x08 ) != 0 ) // left channel
-							s3mChan->setPanning( 0x03 * 0x80 / 0x0f );
+							s3mChan->setPanning( 0x03 * 0x40 / 0x0f );
 						else // right channel
-							s3mChan->setPanning( 0x0c * 0x80 / 0x0f );
+							s3mChan->setPanning( 0x0c * 0x40 / 0x0f );
 					}
 					else { // mono
-						s3mChan->setPanning( 0x40 );
+						s3mChan->setPanning( 0x20 );
 					}
 				}
 				else { // use panning settings...
-					s3mChan->setPanning( ( defPans[i] & 0x0f ) * 0x80 / 0x0f );
+					s3mChan->setPanning( ( defPans[i] & 0x0f ) * 0x40 / 0x0f );
 				}
 			}
 		}

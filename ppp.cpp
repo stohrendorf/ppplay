@@ -59,11 +59,19 @@ static void updateDisplay( ppp::GenModule::Ptr& module ) {
 	std::size_t msecslen = module->getLength() / 441;
 	ppp::GenPlaybackInfo pbi = module->getPlaybackInfo();
 	ppg::Label* lb = uiMain->posLabel();
-	lb->setText( ppp::stringf( "%3d(%3d)/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Track %d/%d",
-	                           pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
-	                           msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
-	                           module->getCurrentTrack() + 1, module->getTrackCount()
-	                         ) );
+	if(module->isMultiTrack()) {
+		lb->setText( ppp::stringf( "%3d(%3d)/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Track %d/%d",
+								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
+								msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
+								module->getCurrentTrack() + 1, module->getTrackCount()
+								) );
+	}
+	else {
+		lb->setText( ppp::stringf( "%3d(%3d)/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d",
+								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
+								msecslen / 6000, msecslen / 100 % 60, msecslen % 100
+								) );
+	}
 	lb = uiMain->playbackInfo();
 	lb->setText( ppp::stringf( "Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", pbi.speed, pbi.tempo, pbi.globalVolume * 100 / 0x40 ) );
 	for( uint8_t i = 0; i < module->channelCount(); i++ ) {

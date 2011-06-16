@@ -71,6 +71,8 @@ public:
     virtual bool load(BinStream &str) throw(PppException);
     virtual void reset() throw();
     virtual std::string trackerString() const throw();
+	std::string noteString() const;
+	std::string fxString() const;
     uint8_t getNote() const throw();
     uint8_t getInstr() const throw();
     uint8_t getVolume() const throw();

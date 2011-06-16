@@ -134,7 +134,7 @@ namespace ppp {
 			 * @param[in] volume Volume
 			 * @see #mixTick
 			 */
-			virtual void simTick( const std::size_t bufSize ) = 0;
+			virtual void simTick( std::size_t bufSize ) = 0;
 			/**
 			 * @brief Updates the status string returned by #getStatus()
 			 * @note Time-critical

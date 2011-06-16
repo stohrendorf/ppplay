@@ -58,31 +58,78 @@ void XmCell::reset() throw()
     m_effectValue = 0;
 }
 
+std::string XmCell::fxString() const
+{
+	if(m_effect == Effect::None) {
+		return "...";
+	}
+	else if(static_cast<uint8_t>(m_effect)<=0x0f) {
+		return stringf( "%1X%.2X", static_cast<uint8_t>(m_effect), m_effectValue );
+	}
+	else if(static_cast<uint8_t>(m_effect)<=0x21) {
+		return stringf( "%c%.2X", static_cast<uint8_t>(m_effect)-0x10+'F', m_effectValue );
+	}
+	else {
+		return stringf( "?%.2X", m_effectValue );
+	}
+}
+
+std::string XmCell::noteString() const
+{
+	if(m_note == 0) {
+		return "...";
+	}
+	else if(m_note == 97) {
+		return "===";
+	}
+	else if(m_note<97) {
+		return stringf( "%s%d", NoteNames[m_note%12], m_note/12 );
+	}
+	else {
+		return "???";
+	}
+}
+
 std::string XmCell::trackerString() const throw()
 {
-    if(!isActive())
-        return "... .. .. ...";
-    std::string xmsg = "";
-    // TODO
-    /*	if( m_note == 0 )
-    		xmsg += "... ";
-    	else if( m_note == 97 )
-    		xmsg += "===";
-    	else
-    		xmsg += stringf( "%s%d ", NoteNames[m_note & 0x0f], m_note >> 4 );
-    	if( m_instr != 0 )
-    		xmsg += stringf( "%.2d ", m_instr );
-    	else
-    		xmsg += ".. ";
-    	if( m_volume != 0 )
-    		xmsg += stringf( "%.2x ", m_volume );
-    	else
-    		xmsg += ".. ";
-    	if( m_effect != 0 )
-    		xmsg += stringf( "%c%.2x", 'A' - 1 + m_effect, m_effectValue );
-    	else
-    		xmsg += "...";*/
-    return xmsg;
+/*    if(!isActive())
+        return "...       ...";*/
+    std::string xmsg = noteString();
+	if(m_instr == 0) {
+		xmsg += "    ";
+	}
+	else {
+		xmsg += stringf( " %2X ", m_instr);
+	}
+	/*
+	VfxVolSlideDown = 6,
+	VfxVolSlideUp = 7,
+	VfxFineVolSlideDown = 8,
+	VfxFineVolSlideUp = 9,
+	VfxSetVibSpeed = 0xa,
+	VfxVibrato = 0xb,
+	VfxSetPanning = 0xc,
+	VfxPanSlideLeft = 0xd,
+	VfxPanSlideRight = 0xe,
+	VfxPorta = 0xf
+	 */
+	static const char vfxChars[] = "-+DUSVPLRM";
+	switch(highNibble(m_volume)) {
+		case 0:
+			xmsg += "   ";
+			break;
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+			xmsg += stringf( "%2d ", m_volume-0x10 );
+			break;
+		default:
+			xmsg += stringf( "%c%X ", vfxChars[highNibble(m_volume)-6], lowNibble(m_volume) );
+			break;
+	}
+    return xmsg + fxString();
 }
 
 uint8_t XmCell::getNote() const throw()

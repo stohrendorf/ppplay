@@ -162,6 +162,7 @@ namespace ppp {
 			BresenInterpolation m_bres;
 			//! @brief Module this channel belongs to
 			XmModule* m_module;
+			std::string m_fxString;
 			/**
 			 * @brief Get the current sample
 			 * @return Pointer to the current sample or NULL
@@ -172,10 +173,6 @@ namespace ppp {
 			 * @return Pointer to the current instrument or NULL
 			 */
 			XmInstrument::Ptr currentInstrument();
-			//! @brief Cached sample pointer for currentSample()
-			XmSample::Ptr m_currentSample;
-			//! @brief Cached instrument pointer for currentInstrument()
-			XmInstrument::Ptr m_currentInstrument;
 		public:
 			XmChannel(XmModule* module, int frq);
 			virtual std::string getNoteName() throw( PppException );
@@ -186,6 +183,7 @@ namespace ppp {
 			virtual std::string getFxDesc() const throw( PppException );
 			virtual std::string getCellString();
 			void update( XmCell::Ptr const cell );
+			virtual IArchive& serialize(IArchive* data);
 		private:
 			/** @name Effect handlers
 			 * @{

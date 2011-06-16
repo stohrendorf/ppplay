@@ -28,6 +28,8 @@ void MP3AudioOutput::encodeThread( MP3AudioOutput* src ) {
 			usleep( 1000 );
 		AudioFrameBuffer buffer;
 		if( src->source()->getAudioData( buffer, 1024 ) == 0 ) {
+			src->setErrorCode( InputDry );
+			src->pause();
 			return;
 		}
 		src->m_bufferMutex.lock();

@@ -56,6 +56,7 @@ namespace ppp {
 				std::array<uint16_t, 121*16> m_noteToPeriod;
 				//! @brief Order list
 				std::array<uint8_t, 256> m_orders;
+				std::array<uint8_t, 256> m_orderPlaybackCount;
 				//! @brief Song length
 				uint16_t m_length;
 				//! @brief Contains the row to break to, or @c -1 if no break is intended
@@ -119,6 +120,7 @@ namespace ppp {
 				void doPatternBreak(int16_t next);
 				void doJumpPos(int16_t next);
 				void doPatLoop(int16_t next);
+				IArchive& serialize(IArchive* data);
 		};
 	} // namespace xm
 } // namespace ppp
