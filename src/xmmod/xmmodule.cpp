@@ -196,10 +196,10 @@ void XmModule::getTick( AudioFrameBuffer& buffer ) {
 			if(m_isPatLoop) {
 				m_isPatLoop = false;
 				setRow( m_jumpRow );
-				LOG_DEBUG("Pat loop -> %d", m_jumpRow);
+// 				LOG_DEBUG("Pat loop -> %d", m_jumpRow);
 			}
 			if(m_doPatJump) {
-				LOG_DEBUG("Pat jump -> %d,%d", m_jumpOrder, m_jumpRow);
+// 				LOG_DEBUG("Pat jump -> %d,%d", m_jumpOrder, m_jumpRow);
 				setRow( m_jumpRow );
 				m_jumpRow = 0;
 				m_doPatJump = false;
@@ -213,6 +213,7 @@ void XmModule::getTick( AudioFrameBuffer& buffer ) {
 					return;
 				}
 				setPatternIndex( m_orders[getPlaybackInfo().order] );
+				getMultiTrack( 0 ).nextState()->archive( this ).finishLoad();
 			}
 		}
 		else {
@@ -224,6 +225,7 @@ void XmModule::getTick( AudioFrameBuffer& buffer ) {
 					return;
 				}
 				setPatternIndex( m_orders[getPlaybackInfo().order] );
+				getMultiTrack( 0 ).nextState()->archive( this ).finishLoad();
 			}
 		}
 		m_jumpOrder = m_jumpRow = 0;
@@ -251,10 +253,10 @@ void XmModule::getTickNoMixing( std::size_t& bufferLength ) throw( PppException 
 				if(m_isPatLoop) {
 					m_isPatLoop = false;
 					setRow( m_jumpRow );
-					LOG_DEBUG("Pat loop -> %d", m_jumpRow);
+// 					LOG_DEBUG("Pat loop -> %d", m_jumpRow);
 				}
 				if(m_doPatJump) {
-					LOG_DEBUG("Pat jump -> %d,%d", m_jumpOrder, m_jumpRow);
+// 					LOG_DEBUG("Pat jump -> %d,%d", m_jumpOrder, m_jumpRow);
 					setRow( m_jumpRow );
 					m_jumpRow = 0;
 					m_doPatJump = false;
