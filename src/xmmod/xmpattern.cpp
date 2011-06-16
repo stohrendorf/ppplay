@@ -83,7 +83,7 @@ std::string XmCell::noteString() const
 		return "===";
 	}
 	else if(m_note<97) {
-		return stringf( "%s%d", NoteNames[m_note%12], m_note/12 );
+		return stringf( "%s%d", NoteNames[(m_note-1)%12], (m_note-1)/12 );
 	}
 	else {
 		return "???";

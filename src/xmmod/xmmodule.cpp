@@ -199,8 +199,9 @@ void XmModule::getTick( AudioFrameBuffer& buffer ) {
 // 				LOG_DEBUG("Pat loop -> %d", m_jumpRow);
 			}
 			if(m_doPatJump) {
+				jumpNextOrder();
 // 				LOG_DEBUG("Pat jump -> %d,%d", m_jumpOrder, m_jumpRow);
-				setRow( m_jumpRow );
+/*				setRow( m_jumpRow );
 				m_jumpRow = 0;
 				m_doPatJump = false;
 				m_jumpOrder++;
@@ -213,19 +214,22 @@ void XmModule::getTick( AudioFrameBuffer& buffer ) {
 					return;
 				}
 				setPatternIndex( m_orders[getPlaybackInfo().order] );
-				getMultiTrack( 0 ).nextState()->archive( this ).finishLoad();
+				getMultiTrack( 0 ).nextState()->archive( this ).finishLoad();*/
+				return;
 			}
 		}
 		else {
 			setRow( (getPlaybackInfo().row+1) % currPat->numRows() );
 			if(getPlaybackInfo().row == 0) {
-				setOrder( (getPlaybackInfo().order+1) );
+				jumpNextOrder();
+/*				setOrder( (getPlaybackInfo().order+1) );
 				if(getPlaybackInfo().order >= m_length) {
 					buffer->clear();
 					return;
 				}
 				setPatternIndex( m_orders[getPlaybackInfo().order] );
-				getMultiTrack( 0 ).nextState()->archive( this ).finishLoad();
+				getMultiTrack( 0 ).nextState()->archive( this ).finishLoad();*/
+				return;
 			}
 		}
 		m_jumpOrder = m_jumpRow = 0;
