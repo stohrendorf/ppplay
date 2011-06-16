@@ -308,6 +308,7 @@ void XmChannel::update(const XmCell::Ptr cell)
 				doKeyOn();
 			}
 		}
+		m_fxString = "      ";
 		switch(highNibble(m_currentCell.getVolume())) {
 			case 0x01:
 			case 0x02:
@@ -333,10 +334,27 @@ void XmChannel::update(const XmCell::Ptr cell)
 				vfxSetPan(m_currentCell.getVolume());
 				m_fxString = "StPan\x1d";
 				break;
+			case VfxVolSlideDown:
+				m_fxString = "VSld \x1f";
+				break;
+			case VfxVolSlideUp:
+				m_fxString = "VSld \x1e";
+				break;
+			case VfxPanSlideLeft:
+				m_fxString = "PSld \x1b";
+				break;
+			case VfxPanSlideRight:
+				m_fxString = "PSld \x1a";
+				break;
+			case VfxPorta:
+				m_fxString = "Porta\x12";
+				break;
+			case VfxVibrato:
+				m_fxString = "Vibr \xf7";
+				break;
 		}
 		switch(m_currentCell.getEffect()) {
 			case Effect::None:
-				m_fxString = "      ";
 				break;
 			// To get rid of the "enumeration value XY not handled in switch" warnings...
 			case Effect::Arpeggio:
@@ -380,9 +398,9 @@ void XmChannel::update(const XmCell::Ptr cell)
 				break;
 			case Effect::PanSlide:
 				if(highNibble(m_currentCell.getEffectValue()) == 0)
-					m_fxString = "GVSld\x1b";
+					m_fxString = "PSld \x1b";
 				else
-					m_fxString = "GVSld\x1a";
+					m_fxString = "PSld \x1a";
 				break;
 			case Effect::Tremor:
 				m_fxString = "Tremr\xec";
@@ -623,7 +641,7 @@ std::string XmChannel::getNoteName() throw(PppException)
 		return "===";
 	}
 	else if(m_baseNote<97) {
-		return stringf( "%s%d", NoteNames[m_baseNote%12], m_baseNote/12 );
+		return stringf( "%s%d", NoteNames[(m_baseNote-1)%12], (m_baseNote-1)/12 );
 	}
 	else {
 		return "???";
@@ -666,7 +684,7 @@ void XmChannel::simTick(std::size_t bufSize)
 {
     PPP_TEST(getPlaybackFrq() == 0);
     PPP_TEST(bufSize == 0);
-    if(!isActive() || isDisabled())
+    if(!isActive())
         return;
 	m_bres.reset(getPlaybackFrq(), m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod));
     XmSample::Ptr currSmp = currentSample();
