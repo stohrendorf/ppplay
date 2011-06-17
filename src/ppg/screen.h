@@ -67,17 +67,6 @@ namespace ppg {
 			virtual void drawChar( int x, int y, char c ) throw();
 			virtual void setFgColorAt( int x, int y, uint8_t c ) throw();
 			virtual void setBgColorAt( int x, int y, uint8_t c ) throw();
-			/**
-			 * @brief Clear the pixel overlay (make it fully transparent)
-			 */
-			void clearOverlay();
-			/**
-			 * @brief Draw a pixel on the overlay
-			 * @param[in] x X coordinate
-			 * @param[in] y Y coordinate
-			 * @param[in] color DOS Color of the pixel
-			 */
-			void drawPixel( int x, int y, uint8_t color );
 			virtual bool onMouseMove( int x, int y );
 	};
 } // namespace ppg

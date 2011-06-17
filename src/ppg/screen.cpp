@@ -33,21 +33,12 @@ namespace ppg {
 	static uint8_t* g_currentColorsF = NULL;
 	static uint8_t* g_colorsB = NULL;
 	static uint8_t* g_currentColorsB = NULL;
-	static uint8_t* g_pixelOverlay = NULL; //!< @brief Pixel overlay buffer
 	static SDL_Surface* g_screenSurface = NULL;
 
 	static inline void g_drawPixel( int x, int y, Uint32 color ) throw() {
 		if( ( x < 0 ) || ( y < 0 ) || ( y >= g_screenSurface->h ) || ( x >= g_screenSurface->w ) )
 			return;
 		reinterpret_cast<Uint32*>( g_screenSurface->pixels )[( ( y * g_screenSurface->pitch ) >> 2 ) + x] = color;
-	}
-
-	static inline void g_drawPixelRGB( int x, int y, Uint8 R, Uint8 G, Uint8 B ) throw( Exception ) {
-		g_drawPixel( x, y, SDL_MapRGB( g_screenSurface->format, R, G, B ) );
-	}
-
-	void Screen::clearOverlay() {
-		std::fill_n( g_pixelOverlay, g_screenSurface->w * g_screenSurface->h, 0xff );
 	}
 
 	Screen::Screen( int w, int h, const std::string& title ) throw( Exception ) : Widget( NULL ), m_cursorX( 0 ), m_cursorY( 0 ) {
@@ -80,8 +71,6 @@ namespace ppg {
 		}
 		setPosition( 0, 0 );
 		setSize( g_screenSurface->w / 8, g_screenSurface->h / 16 );
-		g_pixelOverlay = new uint8_t[g_screenSurface->w * g_screenSurface->h];
-		clearOverlay();
 		SDL_WM_SetCaption( title.c_str(), NULL );
 		g_dosColors[dcBlack]       = SDL_MapRGB( g_screenSurface->format, 0x00, 0x00, 0x00 ); // black
 		g_dosColors[dcBlue]        = SDL_MapRGB( g_screenSurface->format, 0x00, 0x00, 0xaa ); // blue
@@ -114,8 +103,6 @@ namespace ppg {
 	}
 
 	Screen::~Screen() throw() {
-		delete[] g_pixelOverlay;
-		g_pixelOverlay = NULL;
 		delete[] g_chars;
 		g_chars = NULL;
 		delete[] g_currentChars;
@@ -193,17 +180,6 @@ namespace ppg {
 			g_currentColorsF[ofs] = ( g_colorsF[ofs] & 7 ) ^ 7;
 			g_currentColorsB[ofs] = ( g_colorsB[ofs] & 7 ) ^ 7;
 		}
-		h = g_screenSurface->h;
-		w = g_screenSurface->w;
-		int pos = -1;
-		for( int y = 0; y < h; y++ ) {
-			for( int x = 0; x < w; x++ ) {
-				pos++;
-				if( g_pixelOverlay[pos] == 0xff )
-					continue;
-				g_drawPixel( x, y, g_dosColors[g_pixelOverlay[pos]] );
-			}
-		}
 		if( SDL_MUSTLOCK( g_screenSurface ) ) {
 			SDL_UnlockSurface( g_screenSurface );
 		}
@@ -229,12 +205,6 @@ namespace ppg {
 		if( !area().contains( x, y ) )
 			return;
 		g_colorsB[x + y * area().width()] = c;
-	}
-
-	void Screen::drawPixel( int x, int y, uint8_t color ) {
-		if( !area().contains( x / 8, y / 16 ) )
-			return;
-		g_pixelOverlay[x + y * g_screenSurface->w] = color;
 	}
 
 	bool Screen::onMouseMove( int x, int y ) {
