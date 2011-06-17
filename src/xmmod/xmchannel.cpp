@@ -719,7 +719,7 @@ void XmChannel::updateStatus() throw(PppException)
 		panStr = stringf("%4d%%", (m_realPanning - 0x80) * 100 / 0x80);
 	std::string volStr = stringf("%3d%%", clip<int>(m_realVolume , 0, 0x40) * 100 / 0x40);
 	setStatusString(stringf("%.2X: %s%s %s %s P:%s V:%s %s",
-							m_instrumentIndex + 1,
+							m_instrumentIndex,
 							" ",
 							//(m_noteChanged ? "*" : " "),
 							getNoteName().c_str(),
