@@ -57,10 +57,11 @@ IArchive* GenMultiTrack::prevState() {
 	return result;
 }
 
-GenModule::GenModule( uint32_t frq, uint8_t maxRpt ) throw( PppException ) :
+GenModule::GenModule( uint8_t maxRpt ) throw( PppException ) :
 	m_fileName(), m_title(), m_trackerInfo(), m_orders(), m_maxRepeat( maxRpt ),
-	m_playbackFrequency( clip<unsigned int>( frq, 11025, 44800 ) ), m_playedFrames( 0 ), m_tracks(),
-	m_currentTrack( 0 ), m_multiTrack( false ), m_playbackInfo() {
+	m_playedFrames( 0 ), m_tracks(),
+	m_currentTrack( 0 ), m_multiTrack( false ), m_playbackInfo()
+{
 	PPP_TEST( maxRpt == 0 );
 	m_playbackInfo.tick = m_playbackInfo.order = m_playbackInfo.pattern = 0;
 	m_playbackInfo.row = m_playbackInfo.speed = m_playbackInfo.tempo = 0;
@@ -82,7 +83,7 @@ IArchive& GenModule::serialize( IArchive* data ) {
 	return *data;
 }
 
-std::string GenModule::getFileName() throw( PppException ) {
+std::string GenModule::filename() throw( PppException ) {
 	try {
 		std::size_t lastPos = m_fileName.find_last_of( "/\\" );
 		if( lastPos != std::string::npos )
@@ -92,28 +93,28 @@ std::string GenModule::getFileName() throw( PppException ) {
 	PPP_CATCH_ALL();
 }
 
-std::string GenModule::getTitle() const throw() {
+std::string GenModule::title() const throw() {
 	return m_title;
 }
 
-std::string GenModule::getTrimTitle() const throw() {
+std::string GenModule::trimmedTitle() const throw() {
 	return trimString(m_title);
 }
 
 uint32_t GenModule::timeElapsed() const throw( PppException ) {
-	PPP_TEST( m_playbackFrequency == 0 );
-	return static_cast<uint32_t>( m_playedFrames / m_playbackFrequency );
+	PPP_TEST( frequency() == 0 );
+	return static_cast<uint32_t>( m_playedFrames / frequency() );
 }
 
-uint32_t GenModule::getLength() const throw() {
+uint32_t GenModule::length() const throw() {
 	return m_tracks[m_currentTrack].length;
 }
 
-std::string GenModule::getTrackerInfo() const throw() {
+std::string GenModule::trackerInfo() const throw() {
 	return m_trackerInfo;
 }
 
-GenPlaybackInfo GenModule::getPlaybackInfo() const throw() {
+GenPlaybackInfo GenModule::playbackInfo() const throw() {
 	return m_playbackInfo;
 }
 
@@ -134,7 +135,7 @@ void GenModule::removeEmptyTracks() {
 				nTr.push_back( *it );
 		}*/
 	m_tracks = nTr;
-	m_multiTrack = getTrackCount() > 1;
+	m_multiTrack = trackCount() > 1;
 }
 
 std::size_t GenModule::getAudioData( AudioFrameBuffer& buffer, std::size_t size ) {
@@ -142,10 +143,20 @@ std::size_t GenModule::getAudioData( AudioFrameBuffer& buffer, std::size_t size 
 		buffer.reset( new AudioFrameBuffer::element_type );
 	while( buffer->size() < size ) {
 		AudioFrameBuffer tmpBuf;
-		getTick( tmpBuf );
+		buildTick( tmpBuf );
 		if( !tmpBuf || tmpBuf->size() == 0 )
 			return 0;
 		buffer->insert( buffer->end(), tmpBuf->begin(), tmpBuf->end() );
 	}
 	return buffer->size();
+}
+
+IArchive::Vector GenMultiTrack::states() const
+{
+    return m_states;
+}
+
+std::size_t GenMultiTrack::stateIndex() const
+{
+    return m_stateIndex;
 }

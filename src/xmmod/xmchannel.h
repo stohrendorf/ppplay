@@ -174,14 +174,14 @@ namespace ppp {
 			 */
 			XmInstrument::Ptr currentInstrument();
 		public:
-			XmChannel(XmModule* module, int frq);
-			virtual std::string getNoteName() throw( PppException );
-			virtual std::string getFxName() const throw( PppException );
+			XmChannel(XmModule* module);
+			virtual std::string noteName() throw( PppException );
+			virtual std::string effectName() const throw( PppException );
 			virtual void mixTick( MixerFrameBuffer& mixBuffer ) throw( PppException );
 			virtual void simTick( std::size_t bufSize );
 			virtual void updateStatus() throw( PppException );
-			virtual std::string getFxDesc() const throw( PppException );
-			virtual std::string getCellString();
+			virtual std::string effectDescription() const throw( PppException );
+			virtual std::string cellString();
 			void update( XmCell::Ptr const cell );
 			virtual IArchive& serialize(IArchive* data);
 		private:

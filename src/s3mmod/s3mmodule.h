@@ -45,6 +45,7 @@ namespace ppp {
 				S3mModule() = delete;
 			public:
 				typedef std::shared_ptr<S3mModule> Ptr;
+				static GenModule::Ptr factory(const std::string& filename, uint32_t frequency, uint8_t maxRpt = 2);
 			private:
 				int16_t m_breakRow;      //!< @brief Row to break to, -1 if unused
 				int16_t m_breakOrder;    //!< @brief Order to break to, -1 if unused
@@ -82,31 +83,31 @@ namespace ppp {
 				/**
 				 * @copydoc GenModule::GenModule
 				 */
-				S3mModule( uint32_t frq = 44100, uint8_t maxRpt = 2 ) throw( PppException );
+				S3mModule( uint8_t maxRpt = 2 ) throw( PppException );
 				virtual ~S3mModule() throw();
 				virtual uint8_t channelCount() const;
 				bool load( const std::string& fn ) throw( PppException );
 				bool existsSample( int16_t idx ) throw();
-				std::string getSampleName( int16_t idx ) throw();
-				virtual uint16_t getTickBufLen() const throw( PppException );
-				virtual void getTick( AudioFrameBuffer& buf ) throw( PppException );
-				virtual void getTickNoMixing( std::size_t& bufLen ) throw( PppException );
+				virtual uint16_t tickBufferLength() const throw( PppException );
+				virtual void buildTick( AudioFrameBuffer& buf ) throw( PppException );
+				virtual void simulateTick( std::size_t& bufLen ) throw( PppException );
 				virtual GenOrder::Ptr mapOrder( int16_t order ) throw();
-				virtual std::string getChanStatus( int16_t idx ) throw();
+				virtual std::string channelStatus( int16_t idx ) throw();
 				virtual bool jumpNextTrack() throw( PppException );
 				virtual bool jumpPrevTrack() throw( PppException );
 				virtual bool jumpNextOrder() throw();
 				virtual bool jumpPrevOrder() throw();
-				virtual std::string getChanCellString( int16_t idx ) throw();
-				uint8_t tick() const { return getPlaybackInfo().tick; }
+				virtual std::string channelCellString( int16_t idx ) throw();
+				uint8_t tick() const { return playbackInfo().tick; }
 				bool hasAmigaLimits() const { return m_amigaLimits; }
 				bool hasFastVolSlides() const { return m_fastVolSlides; }
-				uint8_t globalVolume() const { return getPlaybackInfo().globalVolume; }
+				uint8_t globalVolume() const { return playbackInfo().globalVolume; }
 				bool st2Vibrato() const { return m_st2Vibrato; }
 				std::size_t numSamples() const { return m_samples.size(); }
 				S3mSample::Ptr sampleAt(std::size_t idx) const { return m_samples.at(idx); }
 				virtual void setGlobalVolume(int16_t v);
 				bool hasZeroVolOpt() const { return m_zeroVolOpt; }
+				virtual bool initialize(uint32_t frq);
 		};
 	} // namespace s3m
 } // namespace ppp

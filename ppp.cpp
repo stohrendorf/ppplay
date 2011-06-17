@@ -55,15 +55,15 @@ static void updateDisplay( ppp::GenModule::Ptr& module ) {
 		return;
 	dosScreen->clear( ' ', ppg::dcWhite, ppg::dcBlack );
 	uiMain->volBar()->shift( output->volumeLeft() >> 8, output->volumeRight() >> 8 );
-	std::size_t msecs = module->getPosition() / 441;
-	std::size_t msecslen = module->getLength() / 441;
-	ppp::GenPlaybackInfo pbi = module->getPlaybackInfo();
+	std::size_t msecs = module->position() / 441;
+	std::size_t msecslen = module->length() / 441;
+	ppp::GenPlaybackInfo pbi = module->playbackInfo();
 	ppg::Label* lb = uiMain->posLabel();
 	if(module->isMultiTrack()) {
 		lb->setText( ppp::stringf( "%3d(%3d)/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Track %d/%d",
 								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
 								msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
-								module->getCurrentTrack() + 1, module->getTrackCount()
+								module->currentTrackIndex() + 1, module->trackCount()
 								) );
 	}
 	else {
@@ -78,9 +78,9 @@ static void updateDisplay( ppp::GenModule::Ptr& module ) {
 		if( i >= 16 )
 			break;
 		lb = uiMain->chanInfo( i );
-		lb->setText( module->getChanStatus( i ) );
+		lb->setText( module->channelStatus( i ) );
 		lb = uiMain->chanCell( i );
-		lb->setText( module->getChanCellString( i ) );
+		lb->setText( module->channelCellString( i ) );
 	}
 }
 
@@ -230,12 +230,12 @@ int main( int argc, char* argv[] ) {
 		for( int i = 0; i < 16; i++ ) {
 		}
 		LOG_MESSAGE( "Loading the module." );
-		ppp::GenModule::Ptr s3m;
+		ppp::GenModule::Ptr module;
 		try {
-			s3m.reset( new ppp::s3m::S3mModule( 44100, 2 ) );
-			if( !std::static_pointer_cast<ppp::s3m::S3mModule>( s3m )->load( modFileName ) ) {
-				s3m.reset( new ppp::xm::XmModule( 44100, 2 ) );
-				if( !std::static_pointer_cast<ppp::xm::XmModule>( s3m )->load( modFileName ) ) {
+			module = ppp::s3m::S3mModule::factory( modFileName, 44100, 2 );
+			if( !module ) {
+				module = ppp::xm::XmModule::factory( modFileName, 44100, 2 );
+				if( !module ) {
 					LOG_ERROR( "Error on loading the mod..." );
 					SDL_Quit();
 					return EXIT_FAILURE;
@@ -252,24 +252,24 @@ int main( int argc, char* argv[] ) {
 		}
 		if( !noGUI ) {
 			l = uiMain->trackerInfo();
-			l->setText( ppp::stringf( "Tracker: %s - Channels: %d", s3m->getTrackerInfo().c_str(), s3m->channelCount() ) );
-			if( s3m->isMultiTrack() )
+			l->setText( ppp::stringf( "Tracker: %s - Channels: %d", module->trackerInfo().c_str(), module->channelCount() ) );
+			if( module->isMultiTrack() )
 				l->setText( l->text() + " - Multi-track" );
 			l = uiMain->modTitle();
-			if( s3m->getTrimTitle() != "" )
-				l->setText( std::string( " -=\xf0[ " ) + s3m->getFileName() + " : " + s3m->getTrimTitle() + " ]\xf0=- " );
+			if( module->trimmedTitle().length()>0 )
+				l->setText( std::string( " -=\xf0[ " ) + module->filename() + " : " + module->trimmedTitle() + " ]\xf0=- " );
 			else
-				l->setText( std::string( " -=\xf0[ " ) + s3m->getFileName() + " ]\xf0=- " );
+				l->setText( std::string( " -=\xf0[ " ) + module->filename() + " ]\xf0=- " );
 			dosScreen->show();
 		}
 		//LOG_MESSAGE_("Init Fifo");
 		//s3m->initFifo(ppp::FFT::fftSampleCount);
-		updateTimer = SDL_AddTimer( 1000 / 30, sdlTimerCallback, &s3m );
+		updateTimer = SDL_AddTimer( 1000 / 30, sdlTimerCallback, &module );
 #ifdef WITH_MP3LAME
 		if( !quickMp3 ) {
 #endif
 			LOG_MESSAGE( "Init Audio" );
-			output.reset( new SDLAudioOutput( s3m.get() ) );
+			output.reset( new SDLAudioOutput( module ) );
 			if( !output->init( 44100 ) ) {
 				LOG_ERROR( "Audio Init failed" );
 				return EXIT_FAILURE;
@@ -292,21 +292,21 @@ int main( int argc, char* argv[] ) {
 									output->play();
 								break;
 							case SDLK_END:
-								if( !s3m->jumpNextTrack() )
+								if( !module->jumpNextTrack() )
 									output.reset();
 								break;
 							case SDLK_HOME:
-								s3m->jumpPrevTrack();
+								module->jumpPrevTrack();
 								break;
 							case SDLK_PAGEDOWN:
-								if( !s3m->jumpNextOrder() ) {
+								if( !module->jumpNextOrder() ) {
 									// if jumpNextOrder fails, maybe jumpNextTrack works...
-									if( !s3m->jumpNextTrack() )
+									if( !module->jumpNextTrack() )
 										output.reset();
 								}
 								break;
 							case SDLK_PAGEUP:
-								s3m->jumpPrevOrder();
+								module->jumpPrevOrder();
 								break;
 							default:
 								break;
@@ -326,9 +326,9 @@ int main( int argc, char* argv[] ) {
 		}
 		else {   // if(mp3File.is_open()) { // quickMp3
 			LOG_MESSAGE( "QuickMP3 Output Mode" );
-			MP3AudioOutput* mp3out = new MP3AudioOutput( s3m.get(), modFileName + ".mp3" );
+			MP3AudioOutput* mp3out = new MP3AudioOutput( module, modFileName + ".mp3" );
 			output.reset( mp3out );
-			mp3out->setID3( s3m->getTrimTitle(), PACKAGE_STRING, s3m->getTrackerInfo() );
+			mp3out->setID3( module->trimmedTitle(), PACKAGE_STRING, module->trackerInfo() );
 			if( 0 == mp3out->init( 44100 ) ) {
 				if( mp3out->errorCode() == IAudioOutput::OutputUnavailable )
 					LOG_ERROR( "LAME unavailable: Maybe cannot create MP3 File" );

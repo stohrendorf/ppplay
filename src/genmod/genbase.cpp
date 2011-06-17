@@ -47,7 +47,7 @@ namespace ppp {
 	GenOrder::GenOrder( uint8_t idx ) throw() : m_index( idx )
 	{ }
 
-	uint8_t GenOrder::getIndex() const throw() {
+	uint8_t GenOrder::index() const throw() {
 		return m_index;
 	}
 

@@ -55,8 +55,8 @@ static const std::array<const uint16_t, 12 * 8> g_PeriodTable = {{
     }
 };
 
-XmModule::XmModule( const uint32_t frq, const uint8_t maxRpt ) throw( PppException ) :
-	GenModule( frq, maxRpt ),
+XmModule::XmModule( uint8_t maxRpt ) throw( PppException ) :
+	GenModule( maxRpt ),
 	m_amiga( false ), m_patterns(), m_instruments(), m_channels(),
 	m_noteToPeriod(), m_orders(), m_orderPlaybackCount(), m_length(), m_jumpRow(-1), m_jumpOrder(-1),
 	m_isPatLoop(false), m_doPatJump(false), m_restartPos(0)
@@ -85,7 +85,6 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 			title.erase( title.length() - 1, 1 );
 		setTitle( title );
 	}
-// 	LOG_DEBUG("Restart pos = %u", hdr.restartPos);
 	m_restartPos = hdr.restartPos;
 	{
 		std::string tmp = trimString(stringncpy( hdr.trackerName, 20 ));
@@ -102,7 +101,7 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 	m_amiga = ( hdr.flags & 1 ) == 0;
 	m_channels.clear();
 	for(int i=0; i<hdr.numChannels; i++)
-		m_channels.push_back( XmChannel::Ptr( new XmChannel(this, getPlaybackFrq()) ) );
+		m_channels.push_back( XmChannel::Ptr( new XmChannel(this) ) );
 	for( uint16_t i = 0; i < hdr.numPatterns; i++ ) {
 		XmPattern::Ptr pat( new XmPattern( hdr.numChannels ) );
 		if( !pat->load( file ) ) {
@@ -147,38 +146,25 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 	}
 	m_length = hdr.songLength;
 	setPatternIndex( m_orders[0] );
-	getMultiTrack( 0 ).newState()->archive( this ).finishSave();
-	getMultiTrack( 0 ).startOrder = getPlaybackInfo().order;
-	LOG_MESSAGE( "Calculating track length and preparing seek operations..." );
-	std::size_t currTickLen = 0;
-	getMultiTrack( 0 ).startOrder = getPlaybackInfo().order;
-	do {
-		getTickNoMixing( currTickLen );
-		getMultiTrack( 0 ).length += currTickLen;
-	}
-	while( currTickLen != 0 );
-	LOG_MESSAGE( "Preprocessed. Resetting module." );
-	if( getTrackCount() > 0 )
-		getMultiTrack( 0 ).nextState()->archive( this ).finishLoad();
-	LOG_MESSAGE( "Removing empty tracks" );
-	removeEmptyTracks();
+	multiTrackAt( 0 ).newState()->archive( this ).finishSave();
+	multiTrackAt( 0 ).startOrder = playbackInfo().order;
 	return true;
 }
 
-uint16_t XmModule::getTickBufLen() const throw( PppException ) {
-	PPP_TEST( getPlaybackInfo().tempo < 0x20 );
-	return getPlaybackFrq() * 5 / ( getPlaybackInfo().tempo << 1 );
+uint16_t XmModule::tickBufferLength() const throw( PppException ) {
+	PPP_TEST( playbackInfo().tempo < 0x20 );
+	return frequency() * 5 / ( playbackInfo().tempo << 1 );
 }
 
-void XmModule::getTick( AudioFrameBuffer& buffer ) {
+void XmModule::buildTick( AudioFrameBuffer& buffer ) {
 	if( !buffer )
 		buffer.reset( new AudioFrameBuffer::element_type );
-	MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( getTickBufLen(), {0, 0} ) );
-	XmPattern::Ptr currPat = m_patterns[getPlaybackInfo().pattern];
+	MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength(), {0, 0} ) );
+	XmPattern::Ptr currPat = m_patterns[playbackInfo().pattern];
 	for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 		XmChannel::Ptr chan = m_channels[currTrack];
 		PPP_TEST( !chan );
-		XmCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
+		XmCell::Ptr cell = currPat->cellAt( currTrack, playbackInfo().row );
 		chan->update( cell );
 		chan->mixTick( mixerBuffer );
 	}
@@ -189,70 +175,46 @@ void XmModule::getTick( AudioFrameBuffer& buffer ) {
 		*( bufPtr++ ) = clipSample( *( mixerBufferPtr++ ) >> 2 );
 		*( bufPtr++ ) = clipSample( *( mixerBufferPtr++ ) >> 2 );
 	}
-	//adjustPosition( true, false );
 	nextTick();
-	if(getPlaybackInfo().tick == 0) {
+	if(playbackInfo().tick == 0) {
 		if(m_isPatLoop || m_doPatJump) {
 			if(m_isPatLoop) {
 				m_isPatLoop = false;
 				setRow( m_jumpRow );
-// 				LOG_DEBUG("Pat loop -> %d", m_jumpRow);
 			}
 			if(m_doPatJump) {
 				jumpNextOrder();
-// 				LOG_DEBUG("Pat jump -> %d,%d", m_jumpOrder, m_jumpRow);
-/*				setRow( m_jumpRow );
-				m_jumpRow = 0;
-				m_doPatJump = false;
-				m_jumpOrder++;
-				if(m_jumpOrder >= m_length) {
-					m_jumpOrder = m_restartPos;
-				}
-				setOrder( m_jumpOrder );
-				if(getPlaybackInfo().order >= m_length) {
-					buffer->clear();
-					return;
-				}
-				setPatternIndex( m_orders[getPlaybackInfo().order] );
-				getMultiTrack( 0 ).nextState()->archive( this ).finishLoad();*/
 				return;
 			}
 		}
 		else {
-			setRow( (getPlaybackInfo().row+1) % currPat->numRows() );
-			if(getPlaybackInfo().row == 0) {
+			setRow( (playbackInfo().row+1) % currPat->numRows() );
+			if(playbackInfo().row == 0) {
 				jumpNextOrder();
-/*				setOrder( (getPlaybackInfo().order+1) );
-				if(getPlaybackInfo().order >= m_length) {
-					buffer->clear();
-					return;
-				}
-				setPatternIndex( m_orders[getPlaybackInfo().order] );
-				getMultiTrack( 0 ).nextState()->archive( this ).finishLoad();*/
 				return;
 			}
 		}
 		m_jumpOrder = m_jumpRow = 0;
 		m_doPatJump = m_isPatLoop = false;
 	}
-	setPosition( getPosition() + mixerBuffer->size() );
+	setPosition( position() + mixerBuffer->size() );
 }
 
-void XmModule::getTickNoMixing( std::size_t& bufferLength ) throw( PppException )
+void XmModule::simulateTick( std::size_t& bufferLength ) throw( PppException )
 {
 	try {
-		bufferLength = getTickBufLen();
-		XmPattern::Ptr currPat = m_patterns[getPlaybackInfo().pattern];
+		bufferLength = tickBufferLength();
+		XmPattern::Ptr currPat = m_patterns[playbackInfo().pattern];
 		PPP_TEST( !currPat );
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			XmChannel::Ptr chan = m_channels[currTrack];
 			PPP_TEST( !chan );
-			XmCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
+			XmCell::Ptr cell = currPat->cellAt( currTrack, playbackInfo().row );
 			chan->update( cell );
 			chan->simTick( bufferLength );
 		}
 		nextTick();
-		if(getPlaybackInfo().tick == 0) {
+		if(playbackInfo().tick == 0) {
 			if(m_isPatLoop || m_doPatJump) {
 				if(m_isPatLoop) {
 					m_isPatLoop = false;
@@ -268,50 +230,50 @@ void XmModule::getTickNoMixing( std::size_t& bufferLength ) throw( PppException 
 					if(m_jumpOrder >= m_length) {
 						m_jumpOrder = m_restartPos;
 					}
-					m_orderPlaybackCount[getPlaybackInfo().order]++;
+					m_orderPlaybackCount[playbackInfo().order]++;
 					setOrder( m_jumpOrder );
-					if(getPlaybackInfo().order >= m_length) {
+					if(playbackInfo().order >= m_length) {
 						bufferLength = 0;
 						return;
 					}
-					setPatternIndex( m_orders[getPlaybackInfo().order] );
-					getMultiTrack( 0 ).newState()->archive( this ).finishSave();
+					setPatternIndex( m_orders[playbackInfo().order] );
+					multiTrackAt( 0 ).newState()->archive( this ).finishSave();
 				}
 			}
 			else {
-				setRow( (getPlaybackInfo().row+1) % currPat->numRows() );
-				if(getPlaybackInfo().row == 0) {
-					m_orderPlaybackCount[getPlaybackInfo().order]++;
-					setOrder( (getPlaybackInfo().order+1) );
-					if(getPlaybackInfo().order >= m_length) {
+				setRow( (playbackInfo().row+1) % currPat->numRows() );
+				if(playbackInfo().row == 0) {
+					m_orderPlaybackCount[playbackInfo().order]++;
+					setOrder( (playbackInfo().order+1) );
+					if(playbackInfo().order >= m_length) {
 						bufferLength = 0;
 						return;
 					}
-					setPatternIndex( m_orders[getPlaybackInfo().order] );
-					getMultiTrack( 0 ).newState()->archive( this ).finishSave();
+					setPatternIndex( m_orders[playbackInfo().order] );
+					multiTrackAt( 0 ).newState()->archive( this ).finishSave();
 				}
 			}
 			m_jumpOrder = m_jumpRow = 0;
 			m_doPatJump = m_isPatLoop = false;
 		}
-		if( m_orderPlaybackCount[getPlaybackInfo().order] >= getMaxRepeat() ) {
+		if( m_orderPlaybackCount[playbackInfo().order] >= maxRepeat() ) {
 			bufferLength = 0;
 			return;
 		}
-		setPosition( getPosition() + bufferLength );
+		setPosition( position() + bufferLength );
 	}
 	PPP_CATCH_ALL();
 }
 
 GenOrder::Ptr XmModule::mapOrder( int16_t order ) throw( PppException ) {
 	static GenOrder::Ptr xxx( new GenOrder( 0xff ) );
-	if( !inRange<int16_t>( order, 0, getOrderCount() - 1 ) )
+	if( !inRange<int16_t>( order, 0, orderCount() - 1 ) )
 		return xxx;
-	return getOrder( order );
+	return orderAt( order );
 }
 
-std::string XmModule::getChanStatus( int16_t idx ) throw() {
-	return m_channels[idx]->getStatus();
+std::string XmModule::channelStatus( int16_t idx ) throw() {
+	return m_channels[idx]->statusString();
 }
 
 bool XmModule::jumpNextTrack() throw( PppException ) {
@@ -323,7 +285,7 @@ bool XmModule::jumpPrevTrack() throw( PppException ) {
 }
 
 bool XmModule::jumpNextOrder() throw() {
-	IArchive* next = getMultiTrack( 0 ).nextState();
+	IArchive* next = multiTrackAt( 0 ).nextState();
 	if( next == NULL )
 		return false;
 	next->archive( this ).finishLoad();
@@ -331,18 +293,18 @@ bool XmModule::jumpNextOrder() throw() {
 }
 
 bool XmModule::jumpPrevOrder() throw() {
-	IArchive* next = getMultiTrack( 0 ).prevState();
+	IArchive* next = multiTrackAt( 0 ).prevState();
 	if( next == NULL )
 		return false;
 	next->archive( this ).finishLoad();
 	return true;
 }
 
-std::string XmModule::getChanCellString( int16_t idx ) throw() {
+std::string XmModule::channelCellString( int16_t idx ) throw() {
 	XmChannel::Ptr x = m_channels[idx];
 	if( !x )
 		return "";
-	return x->getCellString();
+	return x->cellString();
 }
 
 uint8_t XmModule::channelCount() const {
@@ -523,7 +485,7 @@ static const std::array<uint32_t, 12*16*4> g_linearMult = {{
 
 uint32_t XmModule::periodToFrequency(uint16_t period) const
 {
-	float pbFrq = getPlaybackFrq();
+	float pbFrq = frequency();
 	static const float adjFac = pow(2, -7.0f/12);
 	if(m_amiga) {
 		return 8363.0f*1712.0f*65536.0f / pbFrq / period * adjFac;
@@ -569,7 +531,7 @@ void XmModule::doPatternBreak(int16_t next)
 	else {
 		m_jumpRow = 0;
 	}
-	doJumpPos( getPlaybackInfo().order );
+	doJumpPos( playbackInfo().order );
 	m_doPatJump = true;
 }
 
@@ -602,4 +564,41 @@ IArchive& XmModule::serialize(IArchive* data)
 	& m_doPatJump
 	& m_restartPos;
 	return *data;
+}
+
+bool XmModule::initialize(uint32_t frq)
+{
+	if(initialized()) {
+		return true;
+	}
+	IAudioSource::initialize(frq);
+	LOG_MESSAGE( "Calculating track length and preparing seek operations..." );
+	std::size_t currTickLen = 0;
+	multiTrackAt( 0 ).startOrder = playbackInfo().order;
+	do {
+		simulateTick( currTickLen );
+		multiTrackAt( 0 ).length += currTickLen;
+	}
+	while( currTickLen != 0 );
+	LOG_MESSAGE( "Preprocessed. Resetting module." );
+	if( trackCount() > 0 )
+		multiTrackAt( 0 ).nextState()->archive( this ).finishLoad();
+	LOG_MESSAGE( "Removing empty tracks" );
+	removeEmptyTracks();
+	return true;
+}
+
+GenModule::Ptr XmModule::factory(const std::string& filename, uint32_t frequency, uint8_t maxRpt)
+{
+	XmModule::Ptr result( new XmModule(maxRpt) );
+	if(!result) {
+		return GenModule::Ptr();
+	}
+	if(!result->load(filename)) {
+		return GenModule::Ptr();
+	}
+	if(!result->initialize(frequency)) {
+		return GenModule::Ptr();
+	}
+	return result;
 }

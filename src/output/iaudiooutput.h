@@ -57,7 +57,7 @@ class IAudioOutput {
 		 * @brief Constructor
 		 * @param[in] src Pointer to an audio data source
 		 */
-		explicit IAudioOutput( IAudioSource* src ) : m_source( src ), m_errorCode( NoError ) {}
+		explicit IAudioOutput( const IAudioSource::WeakPtr& src ) : m_source( src ), m_errorCode( NoError ) {}
 		//! @brief Destructor
 		virtual ~IAudioOutput();
 		/**
@@ -88,9 +88,7 @@ class IAudioOutput {
 		 * @brief Get the attached audio source
 		 * @return Pointer to the attached audio source
 		 */
-		IAudioSource* source() const {
-			return m_source;
-		}
+		IAudioSource::WeakPtr source() const ;
 		/**
 		 * @brief Get the left channel's volume
 		 * @return Left channel's volume
@@ -113,7 +111,7 @@ class IAudioOutput {
 		 */
 		void setErrorCode( ErrorCode ec );
 	private:
-		IAudioSource* m_source; //!< @brief The audio source
+		IAudioSource::WeakPtr m_source; //!< @brief The audio source
 		ErrorCode m_errorCode; //!< @brief Internal error code
 };
 

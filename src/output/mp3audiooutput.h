@@ -38,7 +38,7 @@ class MP3AudioOutput : public IAudioOutput {
 		static const std::size_t BufferSize = 4096;
 		static void encodeThread( MP3AudioOutput* src );
 	public:
-		explicit MP3AudioOutput( IAudioSource* src, const std::string& filename );
+		explicit MP3AudioOutput( const IAudioSource::WeakPtr& src, const std::string& filename );
 		virtual ~MP3AudioOutput();
 		virtual uint16_t volumeRight() const;
 		virtual uint16_t volumeLeft() const;

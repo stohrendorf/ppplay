@@ -148,7 +148,7 @@ struct S3mModuleHeader {
 };
 #pragma pack(pop)
 
-S3mModule::S3mModule( uint32_t frq, uint8_t maxRpt ) throw( PppException ) : GenModule( frq, maxRpt ),
+S3mModule::S3mModule( uint8_t maxRpt ) throw( PppException ) : GenModule( maxRpt ),
 	m_breakRow( -1 ), m_breakOrder( -1 ), m_patLoopRow( -1 ), m_patLoopCount( -1 ), m_patDelayCount( -1 ),
 	m_customData( false ), m_samples(), m_patterns(), m_channels(), m_usedChannels( 0 ), m_orderPlaybackCounts(),
 	m_amigaLimits(false), m_fastVolSlides(false), m_st2Vibrato(false), m_zeroVolOpt(false)
@@ -160,7 +160,7 @@ S3mModule::S3mModule( uint32_t frq, uint8_t maxRpt ) throw( PppException ) : Gen
 			m_samples.push_back( S3mSample::Ptr() );
 		}
 		for( uint8_t i = 0; i < m_channels.size(); i++ ) {
-			m_channels[i].reset( new S3mChannel( getPlaybackFrq(), this ) );
+			m_channels[i].reset( new S3mChannel( this ) );
 		}
 		for( std::size_t i = 0; i < m_orderPlaybackCounts.size(); i++ )
 			m_orderPlaybackCounts[i] = 0;
@@ -237,11 +237,11 @@ bool S3mModule::load( const std::string& fn ) throw( PppException ) {
 			default:
 				setTrackerInfo( stringf( "Unknown Tracker (%x) v", s3mHdr.createdWith >> 12 ) );
 		}
-		setTrackerInfo( getTrackerInfo() + stringf( "%x.%.2x", ( s3mHdr.createdWith >> 8 ) & 0x0f, s3mHdr.createdWith & 0xff ) );
+		setTrackerInfo( trackerInfo() + stringf( "%x.%.2x", ( s3mHdr.createdWith >> 8 ) & 0x0f, s3mHdr.createdWith & 0xff ) );
 		setTempo( s3mHdr.initialTempo );
 		//m_playbackInfo.speed = s3mHdr.initialSpeed;
 		setSpeed( s3mHdr.initialSpeed );
-		PPP_TEST( getPlaybackInfo().speed == 0 );
+		PPP_TEST( playbackInfo().speed == 0 );
 		setGlobalVolume( s3mHdr.globalVolume );
 		// parse flags
 		m_customData = ( s3mHdr.ffv & s3mFlagSpecial ) != 0;
@@ -252,7 +252,7 @@ bool S3mModule::load( const std::string& fn ) throw( PppException ) {
 				PPP_THROW( "Stream Error: Orders" );
 			unsigned char tmpOrd;
 			str.read( &tmpOrd );
-			getOrder( i )->setIndex( tmpOrd );
+			orderAt( i )->setIndex( tmpOrd );
 		}
 		unsigned char defPans[32];
 		if( s3mHdr.defaultPannings == 0xFC ) {
@@ -309,7 +309,7 @@ bool S3mModule::load( const std::string& fn ) throw( PppException ) {
 		// set pannings...
 		LOG_MESSAGE( "Preparing channels..." );
 		for( int i = 0; i < 32; i++ ) {
-			S3mChannel* s3mChan = new S3mChannel( getPlaybackFrq(), this );
+			S3mChannel* s3mChan = new S3mChannel( this );
 			m_channels[i].reset( s3mChan );
 			if( ( s3mHdr.pannings[i] & 0x80 ) != 0 ) {
 				s3mChan->disable();
@@ -348,54 +348,56 @@ bool S3mModule::load( const std::string& fn ) throw( PppException ) {
 			}
 		}
 		setTitle( stringncpy( s3mHdr.title, 28 ) );
-		getMultiTrack( getCurrentTrack() ).newState()->archive( this ).finishSave();
-		// calculate total length...
-		LOG_MESSAGE( "Calculating track lengths and preparing seek operations..." );
-		do {
-			LOG_MESSAGE( "Pre-processing Track %d", getCurrentTrack() );
-			std::size_t currTickLen = 0;
-			getMultiTrack( getCurrentTrack() ).startOrder = getPlaybackInfo().order;
-			do {
-				getTickNoMixing( currTickLen );
-				getMultiTrack( getCurrentTrack() ).length += currTickLen;
-			}
-			while( currTickLen != 0 );
-			LOG_MESSAGE( "Preprocessed." );
-			int nCount = 0;
-			for( int i = 0; i < getOrderCount(); i++ ) {
-				PPP_TEST( !getOrder( i ) );
-				if( ( getOrder( i )->getIndex() != s3mOrderEnd ) && ( getOrder( i )->getIndex() != s3mOrderSkip ) && ( m_orderPlaybackCounts[i] == 0 ) ) {
-					if( nCount == 0 )
-						setMultiTrack( true );
-					nCount++;
-				}
-			}
-			LOG_MESSAGE( "Trying to jump to the next track" );
-		}
-		while( jumpNextTrack() );
-		LOG_MESSAGE( "Lengths calculated, resetting module." );
-		if( getTrackCount() > 0 )
-			getMultiTrack( 0 ).nextState()->archive( this ).finishLoad();
-		LOG_MESSAGE( "Removing empty tracks" );
-		removeEmptyTracks();
-//		if (aMultiTrack)
-//			LOG_MESSAGE("Hmmm... This could be a multi-song module, there are never played orders");
 		return true;
 	}
 	PPP_CATCH_ALL();
 }
+
+bool S3mModule::initialize(uint32_t frq)
+{
+	if(initialized()) {
+		return true;
+	}
+	IAudioSource::initialize(frq);
+	multiTrackAt( currentTrackIndex() ).newState()->archive( this ).finishSave();
+	// calculate total length...
+	LOG_MESSAGE( "Calculating track lengths and preparing seek operations..." );
+	do {
+		LOG_MESSAGE( "Pre-processing Track %d", currentTrackIndex() );
+		std::size_t currTickLen = 0;
+		multiTrackAt( currentTrackIndex() ).startOrder = playbackInfo().order;
+		do {
+			simulateTick( currTickLen );
+			multiTrackAt( currentTrackIndex() ).length += currTickLen;
+		}
+		while( currTickLen != 0 );
+		LOG_MESSAGE( "Preprocessed." );
+		int nCount = 0;
+		for( int i = 0; i < orderCount(); i++ ) {
+			PPP_TEST( !orderAt( i ) );
+			if( ( orderAt( i )->index() != s3mOrderEnd ) && ( orderAt( i )->index() != s3mOrderSkip ) && ( m_orderPlaybackCounts[i] == 0 ) ) {
+				if( nCount == 0 )
+					setMultiTrack( true );
+				nCount++;
+			}
+		}
+		LOG_MESSAGE( "Trying to jump to the next track" );
+	}
+	while( jumpNextTrack() );
+	LOG_MESSAGE( "Lengths calculated, resetting module." );
+	if( trackCount() > 0 )
+		multiTrackAt( 0 ).nextState()->archive( this ).finishLoad();
+	LOG_MESSAGE( "Removing empty tracks" );
+	removeEmptyTracks();
+	return true;
+}
+
 
 bool S3mModule::existsSample( int16_t idx ) throw() {
 	idx--;
 	if( !inRange<int>( idx, 0, m_samples.size() - 1 ) )
 		return false;
 	return m_samples[idx].get() != NULL;
-}
-
-std::string S3mModule::getSampleName( int16_t idx ) throw() {
-	if( !existsSample( idx ) )
-		return std::string();
-	return m_samples[idx - 1]->getTitle();
 }
 
 uint8_t S3mModule::channelCount() const {
@@ -405,22 +407,22 @@ uint8_t S3mModule::channelCount() const {
 
 void S3mModule::checkGlobalFx() throw( PppException ) {
 	try {
-		setPatternIndex( mapOrder( getPlaybackInfo().order )->getIndex() );
-		S3mPattern::Ptr currPat = getPattern( getPlaybackInfo().pattern );
+		setPatternIndex( mapOrder( playbackInfo().order )->index() );
+		S3mPattern::Ptr currPat = getPattern( playbackInfo().pattern );
 		if( !currPat )
 			return;
 		std::string data;
 // TODO uncomment on errors!
 /*		for( unsigned int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			S3mCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
+			S3mCell::Ptr cell = currPat->cellAt( currTrack, getPlaybackInfo().row );
 			if( !cell )
 				continue;
 			if( !cell->isActive() )
 				continue;
-			if( cell->getEffect() == s3mEmptyCommand )
+			if( cell->effect() == s3mEmptyCommand )
 				continue;
-			unsigned char fx = cell->getEffect();
-			unsigned char fxVal = cell->getEffectValue();
+			unsigned char fx = cell->effect();
+			unsigned char fxVal = cell->effectValue();
 			if( ( fx == s3mFxSpeed ) && ( fxVal != 0 ) )
 				setSpeed( fxVal );
 			else if( ( fx == s3mFxTempo ) && ( fxVal > 0x20 ) )
@@ -433,16 +435,16 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 		// check for pattern loops
 		int patLoopCounter = 0;
 		for( unsigned int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			S3mCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
+			S3mCell::Ptr cell = currPat->cellAt( currTrack, playbackInfo().row );
 			if( !cell ) continue;
 			if( !cell->isActive() ) continue;
-			if( cell->getEffect() == s3mEmptyCommand ) continue;
-			unsigned char fx = cell->getEffect();
-			unsigned char fxVal = cell->getEffectValue();
+			if( cell->effect() == s3mEmptyCommand ) continue;
+			unsigned char fx = cell->effect();
+			unsigned char fxVal = cell->effectValue();
 			if( fx != s3mFxSpecial ) continue;
 			if( highNibble( fxVal ) != s3mSFxPatLoop ) continue;
 			if( lowNibble( fxVal ) == 0x00 ) {  // loop start
-				m_patLoopRow = getPlaybackInfo().row;
+				m_patLoopRow = playbackInfo().row;
 			}
 			else { // loop return
 				patLoopCounter++;
@@ -458,7 +460,7 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 					if( patLoopCounter == 1 ) {  // one loop, all ok
 						m_patLoopCount = -1;
 						m_breakRow = -1;
-						m_patLoopRow = getPlaybackInfo().row + 1;
+						m_patLoopRow = playbackInfo().row + 1;
 					}
 					else { // we got an "infinite" loop...
 						m_patLoopCount = 127;
@@ -471,12 +473,12 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 		// check for pattern delays
 		int patDelayCounter = 0;
 		for( unsigned int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			S3mCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
+			S3mCell::Ptr cell = currPat->cellAt( currTrack, playbackInfo().row );
 			if( !cell ) continue;
 			if( !cell->isActive() ) continue;
-			if( cell->getEffect() == s3mEmptyCommand ) continue;
-			unsigned char fx = cell->getEffect();
-			unsigned char fxVal = cell->getEffectValue();
+			if( cell->effect() == s3mEmptyCommand ) continue;
+			unsigned char fx = cell->effect();
+			unsigned char fxVal = cell->effectValue();
 			if( fx != s3mFxSpecial ) continue;
 			if( highNibble( fxVal ) != s3mSFxPatDelay ) continue;
 			if( lowNibble( fxVal ) == 0 ) continue;
@@ -491,18 +493,18 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 		// now check for breaking effects
 		for( unsigned int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			if( m_patLoopCount != -1 ) break;
-			S3mCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
+			S3mCell::Ptr cell = currPat->cellAt( currTrack, playbackInfo().row );
 			if( !cell ) continue;
 			if( !cell->isActive() ) continue;
-			if( cell->getEffect() == s3mEmptyCommand ) continue;
-			unsigned char fx = cell->getEffect();
-			unsigned char fxVal = cell->getEffectValue();
+			if( cell->effect() == s3mEmptyCommand ) continue;
+			unsigned char fx = cell->effect();
+			unsigned char fxVal = cell->effectValue();
 			if( fx == s3mFxJumpOrder ) {
 				m_breakOrder = fxVal;
 			}
 			else if( fx == s3mFxBreakPat ) {
 				m_breakRow = highNibble( fxVal ) * 10 + lowNibble( fxVal );
-				LOG_MESSAGE( "Row %d: Break pattern to row %d", getPlaybackInfo().row, m_breakRow );
+				LOG_MESSAGE( "Row %d: Break pattern to row %d", playbackInfo().row, m_breakRow );
 			}
 		}
 	}
@@ -513,7 +515,7 @@ void S3mModule::checkGlobalFx() throw( PppException ) {
 }
 
 bool S3mModule::adjustPosition( bool increaseTick, bool doStore ) throw( PppException ) {
-	PPP_TEST( getOrderCount() == 0 );
+	PPP_TEST( orderCount() == 0 );
 	bool orderChanged = false;
 	if( increaseTick ) {
 		nextTick();
@@ -521,11 +523,11 @@ bool S3mModule::adjustPosition( bool increaseTick, bool doStore ) throw( PppExce
 				PPP_TEST( getPlaybackInfo().speed == 0 );
 				m_playbackInfo.tick %= getPlaybackInfo().speed;*/
 	}
-	if( ( getPlaybackInfo().tick == 0 ) && increaseTick ) {
+	if( ( playbackInfo().tick == 0 ) && increaseTick ) {
 		m_patDelayCount = -1;
 		if( m_breakOrder != -1 ) {
-			m_orderPlaybackCounts[getPlaybackInfo().order]++;
-			if( m_breakOrder < getOrderCount() ) {
+			m_orderPlaybackCounts[playbackInfo().order]++;
+			if( m_breakOrder < orderCount() ) {
 				setOrder( m_breakOrder );
 				orderChanged = true;
 			}
@@ -537,8 +539,8 @@ bool S3mModule::adjustPosition( bool increaseTick, bool doStore ) throw( PppExce
 			}
 			if( m_breakOrder == -1 ) {
 				if( m_patLoopCount == -1 ) {
-					m_orderPlaybackCounts[getPlaybackInfo().order]++;
-					setOrder( getPlaybackInfo().order + 1 );
+					m_orderPlaybackCounts[playbackInfo().order]++;
+					setOrder( playbackInfo().order + 1 );
 					orderChanged = true;
 				}
 				//else {
@@ -547,42 +549,42 @@ bool S3mModule::adjustPosition( bool increaseTick, bool doStore ) throw( PppExce
 			}
 		}
 		if( ( m_breakRow == -1 ) && ( m_breakOrder == -1 ) && ( m_patDelayCount == -1 ) ) {
-			setRow( ( getPlaybackInfo().row + 1 ) & 0x3f );
-			if( getPlaybackInfo().row == 0 ) {
-				m_orderPlaybackCounts[getPlaybackInfo().order]++;
-				setOrder( getPlaybackInfo().order + 1 );
+			setRow( ( playbackInfo().row + 1 ) & 0x3f );
+			if( playbackInfo().row == 0 ) {
+				m_orderPlaybackCounts[playbackInfo().order]++;
+				setOrder( playbackInfo().order + 1 );
 				orderChanged = true;
 			}
 		}
 		m_breakRow = m_breakOrder = -1;
 	}
-	setPatternIndex( mapOrder( getPlaybackInfo().order )->getIndex() );
+	setPatternIndex( mapOrder( playbackInfo().order )->index() );
 	// skip "--" and "++" marks
-	while( getPlaybackInfo().pattern >= 254 ) {
-		if( getPlaybackInfo().pattern == s3mOrderEnd ) {
-			LOG_TEST_MESSAGE( getPlaybackInfo().pattern == s3mOrderEnd );
+	while( playbackInfo().pattern >= 254 ) {
+		if( playbackInfo().pattern == s3mOrderEnd ) {
+			LOG_TEST_MESSAGE( playbackInfo().pattern == s3mOrderEnd );
 			return false;
 		}
-		if( !mapOrder( getPlaybackInfo().order ) )
+		if( !mapOrder( playbackInfo().order ) )
 			return false;
-		m_orderPlaybackCounts[getPlaybackInfo().order]++;
-		setOrder( getPlaybackInfo().order + 1 );
+		m_orderPlaybackCounts[playbackInfo().order]++;
+		setOrder( playbackInfo().order + 1 );
 		orderChanged = true;
-		if( getPlaybackInfo().order >= getOrderCount() ) {
+		if( playbackInfo().order >= orderCount() ) {
 			LOG_MESSAGE( "Song end reached: End of orders" );
 			return false;
 		}
-		setPatternIndex( mapOrder( getPlaybackInfo().order )->getIndex() );
+		setPatternIndex( mapOrder( playbackInfo().order )->index() );
 	}
 	if( orderChanged ) {
 		m_patLoopRow = 0;
 		m_patLoopCount = -1;
 		try {
 			if( doStore )
-				getMultiTrack( getCurrentTrack() ).newState()->archive( this ).finishSave();
+				multiTrackAt( currentTrackIndex() ).newState()->archive( this ).finishSave();
 			else {
 				//PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
-				getMultiTrack( getCurrentTrack() ).nextState()->archive( this ).finishLoad();
+				multiTrackAt( currentTrackIndex() ).nextState()->archive( this ).finishLoad();
 			}
 		}
 		PPP_CATCH_ALL()
@@ -590,12 +592,12 @@ bool S3mModule::adjustPosition( bool increaseTick, bool doStore ) throw( PppExce
 	return true;
 }
 
-void S3mModule::getTick( AudioFrameBuffer& buf ) throw( PppException ) {
+void S3mModule::buildTick( AudioFrameBuffer& buf ) throw( PppException ) {
 	try {
 		//PPP_TEST(!buf);
 		if( !buf )
 			buf.reset( new AudioFrameBuffer::element_type );
-		if( getPlaybackInfo().tick == 0 )
+		if( playbackInfo().tick == 0 )
 			checkGlobalFx();
 		//buf->resize(getTickBufLen());
 		//buf->clear();
@@ -604,21 +606,21 @@ void S3mModule::getTick( AudioFrameBuffer& buf ) throw( PppException ) {
 			buf.reset();
 			return;
 		}
-		if( m_orderPlaybackCounts[getPlaybackInfo().order] >= getMaxRepeat() ) {
+		if( m_orderPlaybackCounts[playbackInfo().order] >= maxRepeat() ) {
 			LOG_MESSAGE( "Song end reached: Maximum repeat count reached" );
 			buf.reset();
 			return;
 		}
 		// update channels...
-		setPatternIndex( mapOrder( getPlaybackInfo().order )->getIndex() );
-		S3mPattern::Ptr currPat = getPattern( getPlaybackInfo().pattern );
+		setPatternIndex( mapOrder( playbackInfo().order )->index() );
+		S3mPattern::Ptr currPat = getPattern( playbackInfo().pattern );
 		if( !currPat )
 			return;
-		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( getTickBufLen(), {0, 0} ) );
+		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength(), {0, 0} ) );
 		for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			S3mChannel::Ptr chan = m_channels[currTrack];
 			PPP_TEST( !chan );
-			S3mCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
+			S3mCell::Ptr cell = currPat->cellAt( currTrack, playbackInfo().row );
 			chan->update( cell, m_patDelayCount != -1 );
 			chan->mixTick( mixerBuffer );
 		}
@@ -630,43 +632,43 @@ void S3mModule::getTick( AudioFrameBuffer& buf ) throw( PppException ) {
 			*( bufPtr++ ) = clipSample( *( mixerBufferPtr++ ) >> 2 );
 		}
 		adjustPosition( true, false );
-		setPosition( getPosition() + mixerBuffer->size() );
+		setPosition( position() + mixerBuffer->size() );
 	}
 	PPP_CATCH_ALL();
 // 	PPP_RETHROW()
 }
 
-void S3mModule::getTickNoMixing( std::size_t& bufLen ) throw( PppException ) {
+void S3mModule::simulateTick( std::size_t& bufLen ) throw( PppException ) {
 	try {
-		if( getPlaybackInfo().tick == 0 )
+		if( playbackInfo().tick == 0 )
 			checkGlobalFx();
 		bufLen = 0;
 		if( !adjustPosition( false, true ) )
 			return;
-		PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
-		if( m_orderPlaybackCounts[getPlaybackInfo().order] >= getMaxRepeat() )
+		PPP_TEST( !mapOrder( playbackInfo().order ) );
+		if( m_orderPlaybackCounts[playbackInfo().order] >= maxRepeat() )
 			return;
 		// update channels...
-		setPatternIndex( mapOrder( getPlaybackInfo().order )->getIndex() );
-		S3mPattern::Ptr currPat = getPattern( getPlaybackInfo().pattern );
+		setPatternIndex( mapOrder( playbackInfo().order )->index() );
+		S3mPattern::Ptr currPat = getPattern( playbackInfo().pattern );
 		if( !currPat )
 			return;
-		bufLen = getTickBufLen(); // in frames
+		bufLen = tickBufferLength(); // in frames
 		for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			S3mChannel::Ptr chan = m_channels[currTrack];
 			PPP_TEST( !chan );
-			S3mCell::Ptr cell = currPat->getCell( currTrack, getPlaybackInfo().row );
+			S3mCell::Ptr cell = currPat->cellAt( currTrack, playbackInfo().row );
 			chan->update( cell, m_patDelayCount != -1 );
 			chan->simTick( bufLen );
 		}
 		adjustPosition( true, true );
-		setPosition( getPosition() + bufLen );
+		setPosition( position() + bufLen );
 	}
 	PPP_CATCH_ALL();
 }
 
 bool S3mModule::jumpNextOrder() throw() {
-	IArchive* next = getMultiTrack( getCurrentTrack() ).nextState();
+	IArchive* next = multiTrackAt( currentTrackIndex() ).nextState();
 	if( next == NULL )
 		return false;
 	next->archive( this ).finishLoad();
@@ -674,7 +676,7 @@ bool S3mModule::jumpNextOrder() throw() {
 }
 
 bool S3mModule::jumpPrevOrder() throw() {
-	IArchive* next = getMultiTrack( getCurrentTrack() ).prevState();
+	IArchive* next = multiTrackAt( currentTrackIndex() ).prevState();
 	if( next == NULL )
 		return false;
 	next->archive( this ).finishLoad();
@@ -683,23 +685,23 @@ bool S3mModule::jumpPrevOrder() throw() {
 
 GenOrder::Ptr S3mModule::mapOrder( int16_t order ) throw() {
 	static GenOrder::Ptr xxx( new GenOrder( s3mOrderEnd ) );
-	if( !inRange<int16_t>( order, 0, getOrderCount() - 1 ) )
+	if( !inRange<int16_t>( order, 0, orderCount() - 1 ) )
 		return xxx;
-	return getOrder( order );
+	return orderAt( order );
 }
 
-std::string S3mModule::getChanStatus( int16_t idx ) throw() {
+std::string S3mModule::channelStatus( int16_t idx ) throw() {
 	S3mChannel::Ptr x = m_channels[idx];
 	if( !x )
 		return "";
-	return x->getStatus();
+	return x->statusString();
 }
 
-std::string S3mModule::getChanCellString( int16_t idx ) throw() {
+std::string S3mModule::channelCellString( int16_t idx ) throw() {
 	S3mChannel::Ptr x = m_channels[idx];
 	if( !x )
 		return "";
-	return x->getCellString();
+	return x->cellString();
 }
 
 bool S3mModule::jumpNextTrack() throw( PppException ) {
@@ -707,21 +709,21 @@ bool S3mModule::jumpNextTrack() throw( PppException ) {
 		LOG_MESSAGE( "This is not a multi-track" );
 		return false;
 	}
-	PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
-	m_orderPlaybackCounts[getPlaybackInfo().order]++;
-	setCurrentTrack( getCurrentTrack() + 1 );
-	if( getCurrentTrack() >= getTrackCount() ) {
+	PPP_TEST( !mapOrder( playbackInfo().order ) );
+	m_orderPlaybackCounts[playbackInfo().order]++;
+	setCurrentTrack( currentTrackIndex() + 1 );
+	if( currentTrackIndex() >= currentTrackIndex() ) {
 		GenMultiTrack nulltrack;
-		for( uint16_t i = 0; i < getOrderCount(); i++ ) {
-			PPP_TEST( !getOrder( i ) );
-			if( ( getOrder( i )->getIndex() != s3mOrderEnd ) && ( getOrder( i )->getIndex() != s3mOrderSkip ) && ( m_orderPlaybackCounts[i] == 0 ) ) {
+		for( uint16_t i = 0; i < orderCount(); i++ ) {
+			PPP_TEST( !orderAt( i ) );
+			if( ( orderAt( i )->index() != s3mOrderEnd ) && ( orderAt( i )->index() != s3mOrderSkip ) && ( m_orderPlaybackCounts[i] == 0 ) ) {
 				PPP_TEST( !mapOrder( i ) );
-				setPatternIndex( mapOrder( i )->getIndex() );
+				setPatternIndex( mapOrder( i )->index() );
 				setOrder( i );
 				nulltrack.startOrder = i;
 				addMultiTrack( nulltrack );
 				setPosition( 0 );
-				getMultiTrack( getCurrentTrack() ).newState()->archive( this ).finishSave();
+				multiTrackAt( currentTrackIndex() ).newState()->archive( this ).finishSave();
 				return true;
 			}
 		}
@@ -730,15 +732,15 @@ bool S3mModule::jumpNextTrack() throw( PppException ) {
 		return false;
 	}
 	else {
-		if( getMultiTrack( getCurrentTrack() ).startOrder == GenMultiTrack::stopHere ) {
+		if( multiTrackAt( currentTrackIndex() ).startOrder == GenMultiTrack::stopHere ) {
 			LOG_MESSAGE( "No more tracks" );
 			return false;
 		}
-		setOrder( getMultiTrack( getCurrentTrack() ).startOrder );
-		PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
-		setPatternIndex( mapOrder( getPlaybackInfo().order )->getIndex() );
+		setOrder( multiTrackAt( currentTrackIndex() ).startOrder );
+		PPP_TEST( !mapOrder( playbackInfo().order ) );
+		setPatternIndex( mapOrder( playbackInfo().order )->index() );
 		setPosition( 0 );
-		getMultiTrack( getCurrentTrack() ).nextState()->archive( this ).finishLoad();
+		multiTrackAt( currentTrackIndex() ).nextState()->archive( this ).finishLoad();
 		//restoreState( getPlaybackInfo().order, 0 );
 		return true;
 	}
@@ -751,16 +753,16 @@ bool S3mModule::jumpPrevTrack() throw( PppException ) {
 		LOG_MESSAGE( "This is not a multi-track" );
 		return false;
 	}
-	if( getCurrentTrack() == 0 ) {
+	if( currentTrackIndex() == 0 ) {
 		LOG_MESSAGE( "Already on first track" );
 		return false;
 	}
-	setCurrentTrack( getCurrentTrack() - 1 );
-	setOrder( getMultiTrack( getCurrentTrack() ).startOrder );
-	PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
-	setPatternIndex( mapOrder( getPlaybackInfo().order )->getIndex() );
+	setCurrentTrack( currentTrackIndex() - 1 );
+	setOrder( multiTrackAt( currentTrackIndex() ).startOrder );
+	PPP_TEST( !mapOrder( playbackInfo().order ) );
+	setPatternIndex( mapOrder( playbackInfo().order )->index() );
 	setPosition( 0 );
-	getMultiTrack( getCurrentTrack() ).nextState()->archive( this ).finishLoad();
+	multiTrackAt( currentTrackIndex() ).nextState()->archive( this ).finishLoad();
 	//restoreState( getPlaybackInfo().order, 0 );
 	return true;
 }
@@ -785,7 +787,19 @@ void S3mModule::setGlobalVolume(int16_t v)
 		m_channels[i]->recalcVolume();
 }
 
-uint16_t S3mModule::getTickBufLen() const throw( PppException ) {
-	PPP_TEST( getPlaybackInfo().tempo < 0x20 );
-	return getPlaybackFrq() * 5 / ( getPlaybackInfo().tempo << 1 );
+uint16_t S3mModule::tickBufferLength() const throw( PppException ) {
+	PPP_TEST( playbackInfo().tempo < 0x20 );
+	return frequency() * 5 / ( playbackInfo().tempo << 1 );
+}
+
+GenModule::Ptr S3mModule::factory(const std::string& filename, uint32_t frequency, uint8_t maxRpt)
+{
+	S3mModule::Ptr result(new S3mModule(maxRpt));
+	if(!result->load(filename)) {
+		return GenModule::Ptr();
+	}
+	if(!result->initialize(frequency)) {
+		return GenModule::Ptr();
+	}
+	return result;
 }

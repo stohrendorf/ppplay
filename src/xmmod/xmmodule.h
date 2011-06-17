@@ -66,25 +66,25 @@ namespace ppp {
 				bool m_doPatJump;
 				uint8_t m_restartPos;
 			public:
+				static GenModule::Ptr factory(const std::string& filename, uint32_t frequency, uint8_t maxRpt);
 				//! @brief Class pointer
 				typedef std::shared_ptr<XmModule> Ptr;
 				/**
 				 * @brief Constructor
-				 * @param[in] frq Playback frequency
 				 * @param[in] maxRpt maximum repeat count per order
 				 */
-				XmModule( const uint32_t frq = 44100, const uint8_t maxRpt = 2 ) throw( PppException );
+				XmModule( uint8_t maxRpt ) throw( PppException );
 				virtual bool load( const std::string& filename ) throw( PppException );
-				virtual uint16_t getTickBufLen() const throw( PppException );
-				virtual void getTick( AudioFrameBuffer& buffer );
-				virtual void getTickNoMixing( std::size_t& ) throw( PppException );
+				virtual uint16_t tickBufferLength() const throw( PppException );
+				virtual void buildTick( AudioFrameBuffer& buffer );
+				virtual void simulateTick( std::size_t& ) throw( PppException );
 				virtual ppp::GenOrder::Ptr mapOrder( int16_t ) throw( PppException );
-				virtual std::string getChanStatus( int16_t ) throw();
+				virtual std::string channelStatus( int16_t ) throw();
 				virtual bool jumpNextTrack() throw( PppException );
 				virtual bool jumpPrevTrack() throw( PppException );
 				virtual bool jumpNextOrder() throw();
 				virtual bool jumpPrevOrder() throw();
-				virtual std::string getChanCellString( int16_t ) throw();
+				virtual std::string channelCellString( int16_t ) throw();
 				virtual uint8_t channelCount() const;
 				/**
 				 * @brief Get an instrument
@@ -121,6 +121,7 @@ namespace ppp {
 				void doJumpPos(int16_t next);
 				void doPatLoop(int16_t next);
 				IArchive& serialize(IArchive* data);
+				virtual bool initialize(uint32_t frq);
 		};
 	} // namespace xm
 } // namespace ppp

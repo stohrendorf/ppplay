@@ -42,7 +42,7 @@ void SDLAudioOutput::sdlAudioCallback( void* userdata, Uint8* stream, int len_by
 	}
 }
 
-SDLAudioOutput::SDLAudioOutput( IAudioSource* src ) : IAudioOutput( src ), m_fifo( 2048 ) {
+SDLAudioOutput::SDLAudioOutput( const IAudioSource::WeakPtr& src ) : IAudioOutput( src ), m_fifo( 2048 ) {
 }
 
 SDLAudioOutput::~SDLAudioOutput() {
@@ -85,7 +85,7 @@ int SDLAudioOutput::init( int desiredFrq ) {
 bool SDLAudioOutput::fillFifo() {
 	while( m_fifo.needsData() ) {
 		AudioFrameBuffer buf;
-		if( 0 == source()->getAudioData( buf, m_fifo.minFrameCount() - m_fifo.queuedLength() ) )
+		if( 0 == source().lock()->getAudioData( buf, m_fifo.minFrameCount() - m_fifo.queuedLength() ) )
 			return false;
 		m_fifo.push( buf );
 	}

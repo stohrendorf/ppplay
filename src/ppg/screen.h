@@ -65,8 +65,8 @@ namespace ppg {
 			 */
 			void clear( uint8_t c, uint8_t foreground, uint8_t background ) throw();
 			virtual void drawChar( int x, int y, char c ) throw();
-			virtual void drawFgColor( int x, int y, uint8_t c ) throw();
-			virtual void drawBgColor( int x, int y, uint8_t c ) throw();
+			virtual void setFgColorAt( int x, int y, uint8_t c ) throw();
+			virtual void setBgColorAt( int x, int y, uint8_t c ) throw();
 			/**
 			 * @brief Clear the pixel overlay (make it fully transparent)
 			 */

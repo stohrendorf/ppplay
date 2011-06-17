@@ -26,11 +26,12 @@
 
 using namespace ppp;
 
-GenChannel::GenChannel( const uint16_t frq ) throw( PppException ) :
+GenChannel::GenChannel() throw( PppException ) :
 	m_active( false ), m_disabled( true ),
 	m_position( 0 ),
-	m_statusString(), m_playbackFrequency( frq ),
-	m_statusStringMutex() {
+	m_statusString(),
+	m_statusStringMutex()
+{
 }
 
 GenChannel::~GenChannel() {
@@ -41,7 +42,7 @@ IArchive& GenChannel::serialize( IArchive* data ) {
 	return *data;
 }
 
-std::string GenChannel::getStatus() throw() {
+std::string GenChannel::statusString() throw() {
 	std::lock_guard<std::mutex> lock( m_statusStringMutex );
 	return m_statusString;
 }
@@ -51,3 +52,37 @@ void GenChannel::setStatusString( const std::string& s ) {
 	m_statusString = s;
 }
 
+void GenChannel::setActive(bool a) throw()
+{
+    m_active = a;
+}
+
+void GenChannel::setPosition(int32_t p) throw()
+{
+    m_position = p;
+}
+
+void GenChannel::enable() throw()
+{
+    m_disabled = false;
+}
+
+void GenChannel::disable() throw()
+{
+    m_disabled = true;
+}
+
+int32_t GenChannel::position() const throw()
+{
+    return m_position;
+}
+
+bool GenChannel::isDisabled() const throw()
+{
+    return m_disabled;
+}
+
+bool GenChannel::isActive() const throw()
+{
+    return m_active;
+}

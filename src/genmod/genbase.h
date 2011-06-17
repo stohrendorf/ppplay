@@ -119,7 +119,7 @@ namespace ppp {
 			 * @brief Return the pattern index associated with this order
 			 * @return GenOrder::m_index
 			 */
-			uint8_t getIndex() const throw();
+			uint8_t index() const throw();
 			/**
 			 * @brief Set the pattern index
 			 * @param[in] n New index

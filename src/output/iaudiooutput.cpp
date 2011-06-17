@@ -28,3 +28,8 @@ IAudioOutput::ErrorCode IAudioOutput::errorCode() const {
 void IAudioOutput::setErrorCode( IAudioOutput::ErrorCode ec ) {
 	m_errorCode = ec;
 }
+
+IAudioSource::WeakPtr IAudioOutput::source() const
+{
+    return m_source;
+}

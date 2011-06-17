@@ -159,3 +159,44 @@ std::size_t ppp::AudioFifo::copy( AudioFrameBuffer& data, std::size_t size ) {
 	//LOG_DEBUG(" -- copied %zd frames", copied);
 	return copied;
 }
+
+std::size_t AudioFifo::queuedLength() const throw()
+{
+	return m_queuedFrames;
+}
+
+bool AudioFifo::empty() const throw()
+{
+	return m_queuedFrames == 0;
+}
+
+uint16_t AudioFifo::volumeRight() const throw()
+{
+	return m_volumeRight;
+}
+
+uint16_t AudioFifo::volumeLeft() const throw()
+{
+	return m_volumeLeft;
+}
+
+void AudioFifo::setMinFrameCount(std::size_t len) throw()
+{
+	m_minFrameCount = len;
+}
+
+bool AudioFifo::needsData() const throw()
+{
+	return m_queuedFrames < m_minFrameCount;
+}
+
+size_t AudioFifo::queuedChunkCount() const throw()
+{
+	return m_queue.size();
+}
+
+size_t AudioFifo::minFrameCount() const throw()
+{
+	return m_minFrameCount;
+}
+

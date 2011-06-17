@@ -110,9 +110,9 @@ namespace ppp {
 				/**
 				 * @copydoc GenChannel::GenChannel
 				 */
-				S3mChannel( uint16_t frq, S3mModule* const module ) throw();
+				S3mChannel( ppp::s3m::S3mModule *const module ) throw();
 				virtual ~S3mChannel() throw();
-				virtual std::string getNoteName() throw( PppException );
+				virtual std::string noteName() throw( PppException );
 				/**
 				 * @brief Update the channel
 				 * @param[in] cell Pointer to a note cell
@@ -126,9 +126,9 @@ namespace ppp {
 				virtual void simTick( std::size_t bufSize );
 				virtual void updateStatus() throw();
 				virtual IArchive& serialize( IArchive* data );
-				virtual std::string getCellString();
-				virtual std::string getFxName() const throw( PppException );
-				virtual std::string getFxDesc() const throw( PppException );
+				virtual std::string cellString();
+				virtual std::string effectName() const throw( PppException );
+				virtual std::string effectDescription() const throw( PppException );
 				void recalcVolume();
 				void setPanning(uint8_t pan);
 		};

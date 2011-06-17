@@ -68,7 +68,7 @@ class BinStream {
 		 * @param[in] count Count of data elements (NOT the byte size)
 		 * @return Reference to *this for pipelining
 		 */
-		template<typename TR> BinStream& read( TR* data, std::size_t count = 1 ) __attribute__( ( nonnull( 1 ) ) );
+		template<typename TR> BinStream& read( TR* data, std::size_t count = 1 ) __attribute__(( nonnull( 1 ) ));
 		/**
 		 * @brief Write data to the stream
 		 * @tparam TW Data type
@@ -76,65 +76,46 @@ class BinStream {
 		 * @param[in] count Count of data elements (NOT the byte size)
 		 * @return Reference to *this for pipelining
 		 */
-		template<typename TW> BinStream& write( const TW* data, std::size_t count = 1 ) __attribute__( ( nonnull( 1 ) ) );
+		template<typename TW> BinStream& write( const TW* data, std::size_t count = 1 ) __attribute__(( nonnull( 1 ) ));
 		/**
 		 * @brief Get the failbit of the IO Stream
 		 * @return @c true on error
 		 */
-		bool fail() const {
-			return m_stream->fail();
-		}
+		bool fail() const;
 		/**
 		 * @brief Get the goodbit of the IO Stream
 		 * @return @c false on error
 		 */
-		bool good() const {
-			return m_stream->good();
-		}
+		bool good() const;
 		/**
 		 * @brief Clear the failbits of the IO Stream
 		 */
-		void clear() {
-			m_stream->clear();
-		}
+		void clear();
 		/**
 		 * @brief Seek to a stream position
 		 * @param[in] pos Position to seek to
 		 */
-		void seek( uint32_t pos ) {
-			m_stream->seekg( pos );
-			m_stream->seekp( pos );
-		}
+		void seek( uint32_t pos );
 		/**
 		 * @brief Seek to a relative stream position
 		 * @param[in] delta Relative seek position
 		 */
-		void seekrel( int32_t delta ) {
-			uint32_t p = pos();
-			m_stream->seekg( p + delta );
-			m_stream->seekp( p + delta );
-		}
+		void seekrel( int32_t delta );
 		/**
 		 * @brief Get the stream position
 		 * @return The IO Stream position
 		 */
-		uint32_t pos() const {
-			return m_stream->tellg();
-		}
+		uint32_t pos() const;
 		/**
 		 * @brief Const access to the internal stream
 		 * @return BinStream::m_stream
 		 */
-		const SpIoStream& stream() const {
-			return m_stream;
-		}
+		const SpIoStream& stream() const;
 		/**
 		 * @brief Access to the internal stream
 		 * @return BinStream::m_stream
 		 */
-		SpIoStream& stream() {
-			return m_stream;
-		}
+		SpIoStream& stream();
 };
 
 // NOTE Templates are (due to explicit instantiation) outsourced ;-)

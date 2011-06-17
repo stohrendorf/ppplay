@@ -272,14 +272,14 @@ namespace ppg {
 			 * @param[in] y Top position
 			 * @param[in] c Dos Color Value
 			 */
-			virtual void drawFgColor( int x, int y, uint8_t c ) throw();
+			virtual void setFgColorAt( int x, int y, uint8_t c ) throw();
 			/**
 			 * @brief Sets the background color relative to the widget's position
 			 * @param[in] x Left position
 			 * @param[in] y Top position
 			 * @param[in] c Dos Color Value
 			 */
-			virtual void drawBgColor( int x, int y, uint8_t c ) throw();
+			virtual void setBgColorAt( int x, int y, uint8_t c ) throw();
 			/**
 			 * @brief Sets the widget's left position
 			 * @param[in] x Left position

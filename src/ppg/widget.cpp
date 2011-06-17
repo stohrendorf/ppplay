@@ -223,22 +223,22 @@ namespace ppg {
 		m_parent->drawChar( x, y, c );
 	}
 
-	void Widget::drawFgColor( int x, int y, uint8_t c ) throw() {
+	void Widget::setFgColorAt( int x, int y, uint8_t c ) throw() {
 		if( !m_parent )
 			return;
 		mapToParent( &x, &y );
 		if( !m_area.contains( x, y ) )
 			return;
-		m_parent->drawFgColor( x, y, c );
+		m_parent->setFgColorAt( x, y, c );
 	}
 
-	void Widget::drawBgColor( int x, int y, uint8_t c ) throw() {
+	void Widget::setBgColorAt( int x, int y, uint8_t c ) throw() {
 		if( !m_parent )
 			return;
 		mapToParent( &x, &y );
 		if( !m_area.contains( x, y ) )
 			return;
-		m_parent->drawBgColor( x, y, c );
+		m_parent->setBgColorAt( x, y, c );
 	}
 
 	void Widget::mapToParent( int* x, int* y ) const {
