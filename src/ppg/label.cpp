@@ -102,7 +102,7 @@ namespace ppg {
 				break;
 			drawChar( localX, 0, m_text[textPos] );
 			if( m_fgColors[textPos] != ESC_NOCHANGE )
-				setFgColorRange( localX, 0, m_fgColors[textPos] );
+				setFgColorAt( localX, 0, m_fgColors[textPos] );
 			if( m_bgColors[textPos] != ESC_NOCHANGE )
 				setBgColorAt( localX, 0, m_bgColors[textPos] );
 		}
