@@ -69,5 +69,49 @@ IArchive::~IArchive()
 
 MemArchive::MemArchive() : IArchive( BinStream::Ptr( new SBinStream() ) )
 { }
+
 MemArchive::~MemArchive()
 { }
+
+bool BinStream::fail() const
+{
+    return m_stream->fail();
+}
+
+bool BinStream::good() const
+{
+    return m_stream->good();
+}
+
+void BinStream::clear()
+{
+    m_stream->clear();
+}
+
+void BinStream::seek(uint32_t pos)
+{
+    m_stream->seekg(pos);
+    m_stream->seekp(pos);
+}
+
+void BinStream::seekrel(int32_t delta)
+{
+    uint32_t p = pos();
+    m_stream->seekg(p + delta);
+    m_stream->seekp(p + delta);
+}
+
+uint32_t BinStream::pos() const
+{
+    return m_stream->tellg();
+}
+
+const BinStream::SpIoStream &BinStream::stream() const
+{
+    return m_stream;
+}
+
+BinStream::SpIoStream &BinStream::stream()
+{
+    return m_stream;
+}

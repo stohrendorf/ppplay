@@ -132,27 +132,27 @@ std::string XmCell::trackerString() const throw()
     return xmsg + fxString();
 }
 
-uint8_t XmCell::getNote() const throw()
+uint8_t XmCell::note() const throw()
 {
     return m_note;
 }
 
-uint8_t XmCell::getInstr() const throw()
+uint8_t XmCell::instrument() const throw()
 {
     return m_instr;
 }
 
-uint8_t XmCell::getVolume() const throw()
+uint8_t XmCell::volume() const throw()
 {
     return m_volume;
 }
 
-Effect XmCell::getEffect() const throw()
+Effect XmCell::effect() const throw()
 {
     return m_effect;
 }
 
-uint8_t XmCell::getEffectValue() const throw()
+uint8_t XmCell::effectValue() const throw()
 {
     return m_effectValue;
 }
@@ -213,7 +213,7 @@ bool XmPattern::load(BinStream &str) throw(PppException)
     return !str.fail();
 }
 
-XmCell::Ptr XmPattern::getCell(uint16_t trackIndex, uint16_t row) throw()
+XmCell::Ptr XmPattern::cellAt(uint16_t trackIndex, uint16_t row) throw()
 {
     if(trackIndex >= numChannels() || row >= numRows())
         return XmCell::Ptr();

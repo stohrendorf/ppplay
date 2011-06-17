@@ -64,9 +64,7 @@ namespace ppp {
 			 */
 			virtual std::string trackerString() const throw() = 0;
 			virtual IArchive& serialize( IArchive* data );
-			void setActive( bool a ) throw() {
-				m_active = a;
-			}
+			void setActive( bool a ) throw();
 	};
 
 } // namespace ppp

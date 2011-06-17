@@ -33,7 +33,7 @@ class SDLAudioOutput : public IAudioOutput {
 		SDLAudioOutput() = delete;
 	public:
 		//! @copydoc IAudioOutput::IAudioOutput(IAudioSource*)
-		explicit SDLAudioOutput( IAudioSource* src );
+		explicit SDLAudioOutput( const IAudioSource::WeakPtr& src );
 		virtual ~SDLAudioOutput();
 		virtual int init( int desiredFrq );
 		virtual bool playing();

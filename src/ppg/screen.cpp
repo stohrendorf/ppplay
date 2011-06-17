@@ -219,13 +219,13 @@ namespace ppg {
 		g_chars[x + y * area().width()] = c;
 	}
 
-	void Screen::drawFgColor( int x, int y, uint8_t c ) throw() {
+	void Screen::setFgColorAt( int x, int y, uint8_t c ) throw() {
 		if( !area().contains( x, y ) )
 			return;
 		g_colorsF[x + y * area().width()] = c;
 	}
 
-	void Screen::drawBgColor( int x, int y, uint8_t c ) throw() {
+	void Screen::setBgColorAt( int x, int y, uint8_t c ) throw() {
 		if( !area().contains( x, y ) )
 			return;
 		g_colorsB[x + y * area().width()] = c;

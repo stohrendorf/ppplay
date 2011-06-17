@@ -75,7 +75,7 @@ S3mSample::~S3mSample() throw() {
 
 bool S3mSample::load( BinStream& str, const std::size_t pos, bool imagoLoopEnd ) throw( PppException ) {
 	try {
-		PPP_TEST( getDataL() != NULL || getDataR() != NULL );
+		PPP_TEST( dataLeft() != NULL || dataRight() != NULL );
 		str.seek( pos );
 		S3mSampleHeader smpHdr;
 		str.read( reinterpret_cast<char*>( &smpHdr ), sizeof( smpHdr ) );
@@ -106,35 +106,35 @@ bool S3mSample::load( BinStream& str, const std::size_t pos, bool imagoLoopEnd )
 			setLoopEnd( (( smpHdr.hiLoopEnd << 16 ) | smpHdr.loopEnd) + 1 );
 		//	aLoopEnd = (aLoopEnd>64000) ? 64000 : aLoopEnd;
 		setVolume( smpHdr.volume );
-		setBaseFrq( smpHdr.c2spd );
+		setFrequency( smpHdr.c2spd );
 		bool loadStereo = ( smpHdr.flags & s3mFlagSmpStereo ) != 0;
 		setLoopType( ( smpHdr.flags & s3mFlagSmpLooped ) == 0 ? GenSample::LoopType::None : GenSample::LoopType::Forward );
 		setTitle( stringncpy( smpHdr.sampleName, 28 ) );
 		setFilename( stringncpy( smpHdr.filename, 12 ) );
 		// ok, header loaded, now load the sample data
 		str.seek( ( ( smpHdr.memSeg[0] << 16 ) | ( smpHdr.memSeg[2] << 8 ) | smpHdr.memSeg[1] ) * 16 );
-		PPP_TEST( getLength() == 0 );
+		PPP_TEST( length() == 0 );
 		if( str.fail() ) {
-			setBaseFrq( 0 );
+			setFrequency( 0 );
 			LOG_WARNING( "Seek failed or length is zero, assuming empty." );
 			return true;
 		}
 		if( loadStereo ) {
-			setDataL( new BasicSample[getLength()] );
-			std::fill_n( getNonConstDataL(), getLength(), 0 );
-			setDataR( new BasicSample[getLength()] );
-			std::fill_n( getNonConstDataR(), getLength(), 0 );
+			setDataLeft( new BasicSample[length()] );
+			std::fill_n( nonConstDataL(), length(), 0 );
+			setDataRight( new BasicSample[length()] );
+			std::fill_n( nonConstDataR(), length(), 0 );
 		}
 		else {
-			setDataMono( new BasicSample[getLength()] );
-			std::fill_n( getNonConstDataR(), getLength(), 0 );
+			setDataMono( new BasicSample[length()] );
+			std::fill_n( nonConstDataR(), length(), 0 );
 		}
 		if( smpHdr.flags & s3mFlagSmp16bit ) {
 			LOG_MESSAGE( "Loading 16-bit sample" );
 			m_highQuality = true;
 			uint16_t smp16;
-			BasicSample* smpPtr = getNonConstDataL();
-			for( uint32_t i = 0; i < getLength(); i++ ) {
+			BasicSample* smpPtr = nonConstDataL();
+			for( uint32_t i = 0; i < length(); i++ ) {
 				str.read( &smp16 );
 				if( str.fail() ) {
 					LOG_WARNING( "EOF reached before Sample Data read completely, assuming zeroes." );
@@ -144,8 +144,8 @@ bool S3mSample::load( BinStream& str, const std::size_t pos, bool imagoLoopEnd )
 			}
 			if( loadStereo ) {
 				LOG_MESSAGE( "Loading Stereo..." );
-				smpPtr = getNonConstDataR();
-				for( uint32_t i = 0; i < getLength(); i++ ) {
+				smpPtr = nonConstDataR();
+				for( uint32_t i = 0; i < length(); i++ ) {
 					str.read( &smp16 );
 					if( str.fail() ) {
 						LOG_WARNING( "EOF reached before Sample Data read completely, assuming zeroes." );
@@ -158,8 +158,8 @@ bool S3mSample::load( BinStream& str, const std::size_t pos, bool imagoLoopEnd )
 		else { // convert 8-bit samples to 16-bit ones
 			LOG_MESSAGE( "Loading 8-bit sample" );
 			uint8_t smp8;
-			BasicSample* smpPtr = getNonConstDataL();
-			for( uint32_t i = 0; i < getLength(); i++ ) {
+			BasicSample* smpPtr = nonConstDataL();
+			for( uint32_t i = 0; i < length(); i++ ) {
 				str.read( &smp8 );
 				if( str.fail() ) {
 					LOG_WARNING( "EOF reached before Sample Data read completely, assuming zeroes." );
@@ -169,8 +169,8 @@ bool S3mSample::load( BinStream& str, const std::size_t pos, bool imagoLoopEnd )
 			}
 			if( loadStereo ) {
 				LOG_MESSAGE( "Loading Stereo..." );
-				smpPtr = getNonConstDataR();
-				for( uint32_t i = 0; i < getLength(); i++ ) {
+				smpPtr = nonConstDataR();
+				for( uint32_t i = 0; i < length(); i++ ) {
 					str.read( &smp8 );
 					if( str.fail() ) {
 						LOG_WARNING( "EOF reached before Sample Data read completely, assuming zeroes." );

@@ -62,7 +62,7 @@ namespace ppg {
 		return m_text.length();
 	}
 
-	void Label::setFgColor( std::size_t pos, uint8_t color, std::size_t len ) throw() {
+	void Label::setFgColorRange( std::size_t pos, uint8_t color, std::size_t len ) throw() {
 		if( pos >= m_bgColors.size() )
 			return;
 		if( ( len == 0 ) || ( len + pos > m_bgColors.size() ) )
@@ -70,7 +70,7 @@ namespace ppg {
 		std::fill_n( &m_fgColors[pos], len, color );
 	}
 
-	void Label::setBgColor( std::size_t pos, uint8_t color, std::size_t len ) throw() {
+	void Label::setBgColorRange( std::size_t pos, uint8_t color, std::size_t len ) throw() {
 		if( pos >= m_bgColors.size() )
 			return;
 		if( ( len == 0 ) || ( len + pos > m_bgColors.size() ) )
@@ -102,9 +102,9 @@ namespace ppg {
 				break;
 			drawChar( localX, 0, m_text[textPos] );
 			if( m_fgColors[textPos] != ESC_NOCHANGE )
-				drawFgColor( localX, 0, m_fgColors[textPos] );
+				setFgColorRange( localX, 0, m_fgColors[textPos] );
 			if( m_bgColors[textPos] != ESC_NOCHANGE )
-				drawBgColor( localX, 0, m_bgColors[textPos] );
+				setBgColorAt( localX, 0, m_bgColors[textPos] );
 		}
 	}
 	

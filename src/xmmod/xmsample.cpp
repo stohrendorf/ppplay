@@ -24,7 +24,7 @@ using namespace ppp::xm;
 XmSample::XmSample() : m_finetune( 0 ), m_panning( 0x80 ), m_relativeNote( 0 ), m_16bit( false )
 { }
 
-bool XmSample::load( BinStream& str, std::size_t ) throw( PppException ) {
+bool XmSample::load( BinStream& str ) throw( PppException ) {
 	int32_t dataSize;
 	str.read( &dataSize );
 	int32_t loopStart, loopLen;
@@ -69,18 +69,18 @@ bool XmSample::load( BinStream& str, std::size_t ) throw( PppException ) {
 		str.read( title, 22 );
 		setTitle( stringncpy( title, 22 ) );
 	}
-	setDataMono( new BasicSample[getLength()] );
-	std::fill_n( getNonConstDataMono(), getLength(), 0 );
+	setDataMono( new BasicSample[length()] );
+	std::fill_n( nonConstDataMono(), length(), 0 );
 	return str.good();
 }
 
 bool XmSample::loadData( BinStream& str ) {
-	if( getLength() == 0 )
+	if( length() == 0 )
 		return true;
 	if( m_16bit ) { // 16 bit
 		int16_t smp16 = 0;
-		BasicSample* smpPtr = getNonConstDataMono();
-		for( std::size_t i = 0; i < getLength(); i++ ) {
+		BasicSample* smpPtr = nonConstDataMono();
+		for( std::size_t i = 0; i < length(); i++ ) {
 			int16_t delta;
 			str.read( &delta );
 			smp16 += delta;
@@ -89,8 +89,8 @@ bool XmSample::loadData( BinStream& str ) {
 	}
 	else { // 8 bit
 		int8_t smp8 = 0;
-		BasicSample* smpPtr = getNonConstDataMono();
-		for( std::size_t i = 0; i < getLength(); i++ ) {
+		BasicSample* smpPtr = nonConstDataMono();
+		for( std::size_t i = 0; i < length(); i++ ) {
 			int8_t delta;
 			str.read( &delta );
 			smp8 += delta;
@@ -99,3 +99,21 @@ bool XmSample::loadData( BinStream& str ) {
 	}
 	return str.good();
 }
+
+uint8_t XmSample::panning() const {
+	return m_panning;
+}
+
+bool XmSample::is16bit() const {
+	return m_16bit;
+}
+
+int8_t XmSample::relativeNote() const {
+	return m_relativeNote;
+}
+
+int8_t XmSample::finetune() const {
+	return m_finetune;
+}
+
+

@@ -49,7 +49,7 @@ namespace ppp {
 			int32_t m_loopStart; //!< @brief Loop start sample
 			int32_t m_loopEnd; //!< @brief Loop end sample (points to 1 frame @e after the loop end)
 			uint8_t m_volume; //!< @brief Volume of the sample
-			uint16_t m_baseFrq; //!< @brief Base frequency of the sample
+			uint16_t m_frequency; //!< @brief Base frequency of the sample
 			BasicSample* m_dataL; //!< @brief Left sample data
 			BasicSample* m_dataR; //!< @brief Right sample data
 			std::string m_filename; //!< @brief Sample filename
@@ -79,15 +79,13 @@ namespace ppp {
 			 * @brief Check if sample is stereo
 			 * @return @c true if sample is stereo
 			 */
-			bool isStereo() const throw() {
-				return m_dataL != m_dataR;
-			}
+			bool isStereo() const throw();
 			/**
 			 * @brief Get a mono sample
 			 * @param[in,out] pos Position of the requested sample. Returns Left sample by default
 			 * @return Sample value, 0 if invalid value for @a pos
 			 */
-			inline BasicSample getSampleAt( int32_t& pos ) const throw();
+			inline BasicSample sampleAt( int32_t& pos ) const throw();
 			/**
 			 * @brief Get a left channel sample
 			 * @param[in,out] pos Position of the requested sample
@@ -96,7 +94,7 @@ namespace ppp {
 			 * @note Time-critical
 			 * @pre @c (0x00\<=panPos\<=0x80)||(panPos==0xa4)
 			 */
-			inline BasicSample getLeftSampleAt( int32_t& pos ) const throw();
+			inline BasicSample leftSampleAt( int32_t& pos ) const throw();
 			/**
 			 * @brief Get a right channel sample
 			 * @param[in,out] pos Position of the requested sample
@@ -105,114 +103,74 @@ namespace ppp {
 			 * @note Time-critical
 			 * @pre @c (0x00\<=panPos\<=0x80)||(panPos==0xa4)
 			 */
-			inline BasicSample getRightSampleAt( int32_t& pos ) const throw();
+			inline BasicSample rightSampleAt( int32_t& pos ) const throw();
 			/**
 			 * @brief Get the sample's Base Frequency
 			 * @return Base frequency
 			 */
-			uint16_t getBaseFrq() const throw() {
-				return m_baseFrq;
-			}
+			uint16_t frequency() const throw() ;
 			/**
 			 * @brief Get the sample's default volume
 			 * @return Default volume
 			 */
-			uint8_t getVolume() const throw() {
-				return m_volume;
-			}
+			uint8_t volume() const throw() ;
 			/**
 			 * @brief Adjust the playback position so it doesn't fall out of the sample data. Returns #endOfSample if it does
 			 * @param[in,out] pos Reference to a variable that should be adjusted
 			 * @note Time-critical
 			 */
-			inline int32_t adjustPos( int32_t& pos ) const throw();
+			inline int32_t adjustPosition( int32_t& pos ) const throw();
 			/**
 			 * @brief Get the sample's name
 			 * @return Sample's name
 			 */
-			std::string getTitle() const throw() {
-				return m_title;
-			}
+			std::string title() const throw() ;
 			/**
 			 * @brief Is the sample looped?
 			 * @return @c true if the sample is looped
 			 */
-			bool isLooped() const throw() {
-				return m_looptype != LoopType::None;
-			}
-			std::size_t getLength() const throw() {
-				return m_length;
-			}
-			LoopType getLoopType() const throw() {
-				return m_looptype;
-			}
-			void setBaseFrq( uint16_t f ) throw() {
-				m_baseFrq = f;
-			}
+			bool isLooped() const throw() ;
+			std::size_t length() const throw() ;
+			LoopType loopType() const throw() ;
 		protected:
-			void setLoopType( LoopType l ) throw() {
-				m_looptype = l;
-			}
-			const BasicSample* getDataL() const throw() {
-				return m_dataL;
-			}
-			const BasicSample* getDataMono() const throw() {
-				return m_dataL;
-			}
-			const BasicSample* getDataR() const throw() {
-				return m_dataR;
-			}
-			BasicSample* getNonConstDataL() const throw() {
-				return m_dataL;
-			}
-			BasicSample* getNonConstDataMono() const throw() {
-				return m_dataL;
-			}
-			BasicSample* getNonConstDataR() const throw() {
-				return m_dataR;
-			}
-			void setDataL( const BasicSample b[] ) throw();
-			void setDataR( const BasicSample b[] ) throw();
+			void setFrequency( uint16_t f ) throw() ;
+			void setLoopType( LoopType l ) throw() ;
+			const BasicSample* dataLeft() const throw() ;
+			const BasicSample* dataMono() const throw() ;
+			const BasicSample* dataRight() const throw() ;
+			BasicSample* nonConstDataL() const throw() ;
+			BasicSample* nonConstDataMono() const throw() ;
+			BasicSample* nonConstDataR() const throw() ;
+			void setDataLeft( const BasicSample b[] ) throw();
+			void setDataRight( const BasicSample b[] ) throw();
 			void setDataMono( const BasicSample b[] ) throw();
-			void setTitle( const std::string& t ) throw() {
-				m_title = t;
-			}
-			void setFilename( const std::string& f ) throw() {
-				m_filename = f;
-			}
-			void setLength( std::size_t l ) throw() {
-				m_length = l;
-			}
-			void setLoopStart( std::size_t s ) throw() {
-				m_loopStart = s;
-			}
-			void setLoopEnd( std::size_t e ) throw() {
-				m_loopEnd = e;
-			}
-			void setVolume( uint8_t v ) throw() {
-				m_volume = v;
-			}
+			void setTitle( const std::string& t ) throw() ;
+			void setFilename( const std::string& f ) throw() ;
+			void setLength( std::size_t l ) throw() ;
+			void setLoopStart( std::size_t s ) throw() ;
+			void setLoopEnd( std::size_t e ) throw() ;
+			void setVolume( uint8_t v ) throw() ;
 	};
 
-	inline BasicSample GenSample::getSampleAt( int32_t& pos ) const throw() {
-		adjustPos( pos );
+	inline BasicSample GenSample::sampleAt( int32_t& pos ) const throw() {
+		adjustPosition( pos );
 		if( ( pos == EndOfSample ) || ( !m_dataL ) )
 			return 0;
 		return m_dataL[makeRealPos( pos )];
 	}
 
-	inline BasicSample GenSample::getLeftSampleAt( int32_t& pos ) const throw() {
-		return getSampleAt( pos );
+	inline BasicSample GenSample::leftSampleAt( int32_t& pos ) const throw() {
+		return sampleAt( pos );
 	}
 
-	inline BasicSample GenSample::getRightSampleAt( int32_t& pos ) const throw() {
-		adjustPos( pos );
+	inline BasicSample GenSample::rightSampleAt( int32_t& pos ) const throw() {
+		adjustPosition( pos );
 		if( ( pos == EndOfSample ) || ( !m_dataR ) )
 			return 0;
 		return m_dataR[makeRealPos( pos )];
 	}
 
-	inline int32_t GenSample::adjustPos( int32_t& pos ) const throw() {
+	inline int32_t GenSample::adjustPosition( int32_t& pos ) const throw() {
 		if( pos == EndOfSample )
 			return EndOfSample;
 		if( m_looptype != LoopType::None ) {

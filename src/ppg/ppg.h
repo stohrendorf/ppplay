@@ -93,12 +93,12 @@ namespace ppg {
 			 * @brief Get the left value
 			 * @return The left value
 			 */
-			int getValLeft() const throw();
+			int valueLeft() const throw();
 			/**
 			 * @brief Get the right value
 			 * @return The right value
 			 */
-			int getValRight() const throw();
+			int valueRight() const throw();
 	};
 
 } // namespace ppg

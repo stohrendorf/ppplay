@@ -46,26 +46,26 @@ namespace ppg {
 		for( int i = 0; i < width; i++ ) {
 			switch( i * 4 / width ) {
 				case 3:
-					setFgColor( mpoint + i + 1, dcLightRed );
-					setFgColor( mpoint - i - 1, dcLightRed );
+					setFgColorRange( mpoint + i + 1, dcLightRed );
+					setFgColorRange( mpoint - i - 1, dcLightRed );
 					break;
 				case 2:
-					setFgColor( mpoint + i + 1, dcYellow );
-					setFgColor( mpoint - i - 1, dcYellow );
+					setFgColorRange( mpoint + i + 1, dcYellow );
+					setFgColorRange( mpoint - i - 1, dcYellow );
 					break;
 				case 1:
-					setFgColor( mpoint + i + 1, dcGreen );
-					setFgColor( mpoint - i - 1, dcGreen );
+					setFgColorRange( mpoint + i + 1, dcGreen );
+					setFgColorRange( mpoint - i - 1, dcGreen );
 					break;
 				case 0:
-					setFgColor( mpoint + i + 1, dcLightBlue );
-					setFgColor( mpoint - i - 1, dcLightBlue );
+					setFgColorRange( mpoint + i + 1, dcLightBlue );
+					setFgColorRange( mpoint - i - 1, dcLightBlue );
 					break;
 			}
 		}
-		setFgColor( 0, dcGreen );
-		setFgColor( mpoint, dcGreen );
-		setFgColor( length() - 1, dcGreen );
+		setFgColorRange( 0, dcGreen );
+		setFgColorRange( mpoint, dcGreen );
+		setFgColorRange( length() - 1, dcGreen );
 	}
 
 	StereoPeakBar::~StereoPeakBar() throw() {
@@ -79,9 +79,9 @@ namespace ppg {
 		m_interArrR.push_back( rval );
 		if( !m_showPeak )
 			return;
-		if( getValLeft() > m_peakPosL ) {
+		if( valueLeft() > m_peakPosL ) {
 			m_peakFalloffSpeedL = 0;
-			m_peakPosL = getValLeft();
+			m_peakPosL = valueLeft();
 		}
 		else {
 			m_peakFalloffSpeedL++;
@@ -89,9 +89,9 @@ namespace ppg {
 			if( m_peakPosL == 0 )
 				m_peakFalloffSpeedL = 0;
 		}
-		if( getValRight() > m_peakPosR ) {
+		if( valueRight() > m_peakPosR ) {
 			m_peakFalloffSpeedR = 0;
-			m_peakPosR = getValRight();
+			m_peakPosR = valueRight();
 		}
 		else {
 			m_peakFalloffSpeedR++;
@@ -99,8 +99,8 @@ namespace ppg {
 			if( m_peakPosR == 0 )
 				m_peakFalloffSpeedR = 0;
 		}
-		int valL = getValLeft();
-		int valR = getValRight();
+		int valL = valueLeft();
+		int valR = valueRight();
 		int mpoint = length() / 2;
 		for( int i = 0; i < m_barLength; i++ ) {
 			if( valL > i * m_max / m_barLength )
@@ -122,7 +122,7 @@ namespace ppg {
 		shift( static_cast<int>( lval * m_max ), static_cast<int>( rval * m_max ) );
 	}
 
-	int StereoPeakBar::getValLeft() const throw() {
+	int StereoPeakBar::valueLeft() const throw() {
 		int res = 0;
 		int div = 0;
 		int i = 0;
@@ -138,7 +138,7 @@ namespace ppg {
 		return res / div;
 	}
 
-	int StereoPeakBar::getValRight() const throw() {
+	int StereoPeakBar::valueRight() const throw() {
 		int res = 0;
 		int div = 0;
 		int i = 0;

@@ -44,3 +44,8 @@ IArchive& GenCell::serialize( IArchive* data ) {
 	*data& m_active;
 	return *data;
 }
+
+void GenCell::setActive(bool a) throw()
+{
+    m_active = a;
+}

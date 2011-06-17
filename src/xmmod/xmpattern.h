@@ -68,16 +68,16 @@ private:
 public:
     XmCell() throw();
     virtual ~XmCell() throw();
-    virtual bool load(BinStream &str) throw(PppException);
+    bool load(BinStream &str) throw(PppException);
     virtual void reset() throw();
     virtual std::string trackerString() const throw();
 	std::string noteString() const;
 	std::string fxString() const;
-    uint8_t getNote() const throw();
-    uint8_t getInstr() const throw();
-    uint8_t getVolume() const throw();
-    Effect getEffect() const throw();
-    uint8_t getEffectValue() const throw();
+    uint8_t note() const throw();
+    uint8_t instrument() const throw();
+    uint8_t volume() const throw();
+    Effect effect() const throw();
+    uint8_t effectValue() const throw();
 };
 
 class XmPattern
@@ -94,7 +94,7 @@ public:
     XmPattern(int16_t chans) throw(PppException);
     ~XmPattern() throw();
     bool load(BinStream &str) throw(PppException);
-    XmCell::Ptr getCell(uint16_t trackIndex, uint16_t row) throw();
+    XmCell::Ptr cellAt(uint16_t trackIndex, uint16_t row) throw();
     std::size_t numRows() const;
     std::size_t numChannels() const;
 };

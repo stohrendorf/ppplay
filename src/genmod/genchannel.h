@@ -22,7 +22,6 @@
 #include <cstdint>
 #include "gensample.h"
 #include "gencell.h"
-#include "phaser/phaser.h"
 #include "stuff/utils.h"
 #include <mutex>
 
@@ -42,7 +41,6 @@ namespace ppp {
 	 */
 	class GenChannel : public ISerializable {
 			DISABLE_COPY( GenChannel )
-			GenChannel() = delete;
 		public:
 			typedef std::shared_ptr<GenChannel> Ptr; //!< @brief Class pointer
 			typedef std::vector<Ptr> Vector;
@@ -51,7 +49,6 @@ namespace ppp {
 			bool m_disabled; //!< @brief @c true if channel is disabled
 			int32_t m_position; //!< @brief Current sample position
 			std::string m_statusString; //!< @brief Status string
-			uint16_t m_playbackFrequency; //!< @brief Playback frequency, default is 44100 @see GenModule::GenModule
 			std::mutex m_statusStringMutex;
 		public:
 			/**
@@ -60,7 +57,7 @@ namespace ppp {
 			 * @pre @c smp!=NULL
 			 * @see GenModule::GenModule()
 			 */
-			GenChannel( const uint16_t frq ) throw( PppException );
+			GenChannel() throw( PppException );
 			/**
 			 * @brief The destructor
 			 */
@@ -70,17 +67,13 @@ namespace ppp {
 			 * @return #aActive
 			 * @note Time-critical
 			 */
-			bool isActive() const throw() {
-				return m_active;
-			}
+			bool isActive() const throw();
 			/**
 			 * @brief Check if the channel is disabled
 			 * @return #aDisabled
 			 * @note Time-critical
 			 */
-			bool isDisabled() const throw() {
-				return m_disabled;
-			}
+			bool isDisabled() const throw();
 			/**
 			 * @brief Get the name of the note
 			 * @return String containing note and octave (i.e. "C-3")
@@ -88,7 +81,7 @@ namespace ppp {
 			 * @see ppp::NoteNames[]
 			 * @note Time-critical
 			 */
-			virtual std::string getNoteName() throw( PppException ) = 0;
+			virtual std::string noteName() throw( PppException ) = 0;
 			/**
 			 * @brief Get the effect string as shown in the tracker's FX column
 			 * @return Effect string
@@ -97,27 +90,21 @@ namespace ppp {
 			 * disabled or inactive
 			 * @see #getFxDesc()
 			*/
-			virtual std::string getFxName() const throw( PppException ) = 0;
+			virtual std::string effectName() const throw( PppException ) = 0;
 			/**
 			 * @brief Get the playback position
 			 * @return Playback position in the channel's sample
 			 * @note Time-critical
 			 */
-			int32_t getPosition() const throw() {
-				return m_position;
-			}
+			int32_t position() const throw();
 			/**
 			 * @brief Disables this channel.
 			 */
-			void disable() throw() {
-				m_disabled = true;
-			}
+			void disable() throw();
 			/**
 			 * @brief Enables this channel.
 			 */
-			void enable() throw() {
-				m_disabled = false;
-			}
+			void enable() throw();
 			/**
 			 * @brief Mix the current channel into @a mixBuffer.
 			 * @param[in,out] mixBuffer Pointer to the mixer buffer
@@ -144,29 +131,22 @@ namespace ppp {
 			 * @brief Returns the status string
 			 * @return #aStatusString
 			 */
-			std::string getStatus() throw();
+			std::string statusString() throw();
 			/**
 			 * @brief Get a short description of the current effect
-			 * @return The current effect in the format @c xxxxxS, where @c x is a short description and @c S is a symbol
+			 * @return The current effect in the format @c xxxx[xS]S, where @c x is a short description and @c S is a symbol
 			 * @see #getFxName()
 			 */
-			virtual std::string getFxDesc() const throw( PppException ) = 0;
+			virtual std::string effectDescription() const throw( PppException ) = 0;
 			virtual IArchive& serialize( IArchive* data );
 			/**
 			 * @brief Get a string representation of the current cell as displayed in the tracker
 			 * @return String representation of the current cell like in the tracker
 			 */
-			virtual std::string getCellString() = 0;
+			virtual std::string cellString() = 0;
 		protected:
-			void setActive( bool a ) throw() {
-				m_active = a;
-			}
-			void setPosition( int32_t p ) throw() {
-				m_position = p;
-			}
-			uint16_t getPlaybackFrq() const throw() {
-				return m_playbackFrequency;
-			}
+			void setActive( bool a ) throw() ;
+			void setPosition( int32_t p ) throw() ;
 			void setStatusString( const std::string& s );
 	};
 

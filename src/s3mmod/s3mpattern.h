@@ -56,27 +56,27 @@ namespace ppp {
 				 * @brief Get the cell's note
 				 * @return #aNote
 				 */
-				uint8_t getNote() const throw();
+				uint8_t note() const throw();
 				/**
 				 * @brief Get the cell's instrument
 				 * @return #aInstr
 				 */
-				uint8_t getInstr() const throw();
+				uint8_t instrument() const throw();
 				/**
 				 * @brief Get the cell's volume
 				 * @return #aVolume
 				 */
-				uint8_t getVolume() const throw();
+				uint8_t volume() const throw();
 				/**
 				 * @brief Get the cell's effect
 				 * @return #aEffect
 				 */
-				uint8_t getEffect() const throw();
+				uint8_t effect() const throw();
 				/**
 				 * @brief Get the cell's effect value
 				 * @return #aEffectValue
 				 */
-				uint8_t getEffectValue() const throw();
+				uint8_t effectValue() const throw();
 				virtual IArchive& serialize( IArchive* data );
 		};
 
@@ -96,7 +96,7 @@ namespace ppp {
 				S3mPattern() throw( PppException );
 				~S3mPattern() throw();
 				bool load( BinStream& str, std::size_t pos ) throw( PppException );
-				S3mCell::Ptr getCell( uint16_t trackIndex, int16_t row ) throw();
+				S3mCell::Ptr cellAt( uint16_t trackIndex, int16_t row ) throw();
 		};
 	} // namespace s3m
 } // namespace ppp

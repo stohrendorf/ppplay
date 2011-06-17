@@ -81,12 +81,8 @@ namespace ppp {
 			}
 			static const uint16_t stopHere = ~0; //!< @brief Const to define unused track
 			IArchive* newState();
-			IArchive::Vector states() const {
-				return m_states;
-			}
-			std::size_t stateIndex() const {
-				return m_stateIndex;
-			}
+			IArchive::Vector states() const;
+			std::size_t stateIndex() const;
 			IArchive* nextState();
 			IArchive* prevState();
 	};
@@ -104,13 +100,13 @@ namespace ppp {
 			GenModule() = delete;
 		public:
 			typedef std::shared_ptr<GenModule> Ptr; //!< @brief Class pointer
+			typedef std::weak_ptr<GenModule> WeakPtr; //!< @brief Weak class pointer
 		private:
 			std::string m_fileName; //!< @brief Filename of the loaded module, empty if none loaded
 			std::string m_title; //!< @brief Title of the module
 			std::string m_trackerInfo; //!< @brief Tracker information (Name and Version)
 			GenOrder::Vector m_orders; //!< @brief Order list @note @b Not @b initialized @b here!
 			uint16_t m_maxRepeat; //!< @brief Maximum module loops if module patterns are played multiple times
-			uint16_t m_playbackFrequency; //!< @brief Playback frequency
 			std::size_t m_playedFrames; //!< @brief Played Sample frames
 			std::vector<GenMultiTrack> m_tracks; //!< @brief Per-track infos
 			uint16_t m_currentTrack; //!< @brief The current track index
@@ -124,7 +120,7 @@ namespace ppp {
 			 * @pre @c maxRpt>0
 			 * @see GenChannel::GenChannel
 			 */
-			GenModule( uint32_t frq = 44100, uint8_t maxRpt = 1 ) throw( PppException );
+			GenModule( uint8_t maxRpt ) throw( PppException );
 			/**
 			 * @brief The destructor
 			 */
@@ -134,33 +130,33 @@ namespace ppp {
 			 * @return Filename, or empty if no module loaded
 			 * @todo Implement OS-independent filename splitting
 			 */
-			std::string getFileName() throw( PppException );
+			std::string filename() throw( PppException );
 			/**
 			 * @brief Returns the title
 			 * @return The title of the module
 			 */
-			std::string getTitle() const throw();
+			std::string title() const throw();
 			/**
 			 * @brief Returns the title without left and right spaces
 			 * @return The trimmed title of the module
 			 */
-			std::string getTrimTitle() const throw();
+			std::string trimmedTitle() const throw();
 			/**
 			 * @brief Get the frame count of a tick
 			 * @return Sample frames per tick
 			 */
-			virtual uint16_t getTickBufLen() const throw( PppException ) = 0;
+			virtual uint16_t tickBufferLength() const throw( PppException ) = 0;
 			/**
 			 * @brief Get a tick
 			 * @param[out] buf Reference to the destination buffer
 			 * @note Time-critical
 			 */
-			virtual void getTick( AudioFrameBuffer& buf ) = 0;
+			virtual void buildTick( AudioFrameBuffer& buf ) = 0;
 			/**
 			 * @brief Get a tick without mixing for length calculation
 			 * @param[out] bufLen Number of sample frames in the current tick
 			 */
-			virtual void getTickNoMixing( std::size_t& bufLen ) throw( PppException ) = 0;
+			virtual void simulateTick( std::size_t& bufLen ) throw( PppException ) = 0;
 			/**
 			 * @brief Map an order number to a pattern
 			 * @param[in] order The order to map
@@ -171,7 +167,7 @@ namespace ppp {
 			 * @brief Returns the channel status string for a channel
 			 * @param[in] idx Requested channel
 			 */
-			virtual std::string getChanStatus( int16_t idx ) throw() = 0;
+			virtual std::string channelStatus( int16_t idx ) throw() = 0;
 			/**
 			 * @brief Get playback time in seconds
 			 * @return Playback time in seconds
@@ -182,17 +178,17 @@ namespace ppp {
 			 * @return The current track's length
 			 * @see timeElapsed()
 			 */
-			uint32_t getLength() const throw();
+			uint32_t length() const throw();
 			/**
 			 * @brief Get information about the tracker
 			 * @return Tracker type and version, i.e. "ScreamTracker v3.20"
 			 */
-			std::string getTrackerInfo() const throw();
+			std::string trackerInfo() const throw();
 			/**
 			 * @brief Get playback information
 			 * @return m_playbackInfo
 			 */
-			GenPlaybackInfo getPlaybackInfo() const throw();
+			GenPlaybackInfo playbackInfo() const throw();
 			/**
 			 * @brief Returns @c true if this module contains additional tracks
 			 * @return m_multiTrack
@@ -222,21 +218,21 @@ namespace ppp {
 			 * @brief Get the current playback position in sample frames
 			 * @return m_playedFrames
 			 */
-			std::size_t getPosition() const throw() {
+			std::size_t position() const throw() {
 				return m_playedFrames;
 			}
 			/**
 			 * @brief Get the number of tracks in this module
 			 * @return Number of tracks
 			 */
-			uint16_t getTrackCount() const throw() {
+			uint16_t trackCount() const throw() {
 				return m_tracks.size();
 			}
 			/**
 			 * @brief Get the currently playing track index
 			 * @return m_currentTrack
 			 */
-			uint16_t getCurrentTrack() const throw() {
+			uint16_t currentTrackIndex() const throw() {
 				return m_currentTrack;
 			}
 			/**
@@ -245,7 +241,7 @@ namespace ppp {
 			 * @return String representation of the channel's cell
 			 * @see GenChannel::getCellString
 			 */
-			virtual std::string getChanCellString( int16_t idx ) throw() = 0;
+			virtual std::string channelCellString( int16_t idx ) throw() = 0;
 			/**
 			 * @brief Get the number of actually used channels
 			 * @return Number of actually used channels
@@ -267,19 +263,13 @@ namespace ppp {
 			 * @brief Removes empty tracks from the track list and resets the orders' repeat count
 			 */
 			void removeEmptyTracks();
-			void setPlaybackFrq( uint16_t f ) throw() {
-				m_playbackFrequency = f;
-			}
-			uint16_t getPlaybackFrq() const throw() {
-				return m_playbackFrequency;
-			}
 			void setPosition( std::size_t p ) throw() {
 				m_playedFrames = p;
 			}
 			void addOrder( const GenOrder::Ptr& o ) {
 				m_orders.push_back( o );
 			}
-			std::string getFilename() const {
+			std::string filename() const {
 				return m_fileName;
 			}
 			void setFilename( const std::string& f ) {
@@ -288,16 +278,16 @@ namespace ppp {
 			void setTrackerInfo( const std::string& t ) {
 				m_trackerInfo = t;
 			}
-			GenOrder::Ptr getOrder( size_t idx ) const {
+			GenOrder::Ptr orderAt( size_t idx ) const {
 				return m_orders[idx];
 			}
-			int16_t getPatternIndex() const {
+			int16_t patternIndex() const {
 				return m_playbackInfo.pattern;
 			}
 			void setPatternIndex( int16_t i ) {
 				m_playbackInfo.pattern = i;
 			}
-			int getOrderCount() const {
+			int orderCount() const {
 				return m_orders.size();
 			}
 			void setCurrentTrack( uint16_t t ) {
@@ -309,13 +299,13 @@ namespace ppp {
 			void setMultiTrack( bool m ) {
 				m_multiTrack = m;
 			}
-			GenMultiTrack& getMultiTrack( size_t idx ) {
+			GenMultiTrack& multiTrackAt( size_t idx ) {
 				return m_tracks[idx];
 			}
 			void addMultiTrack( const GenMultiTrack& t ) {
 				m_tracks.push_back( t );
 			}
-			uint16_t getMaxRepeat() const {
+			uint16_t maxRepeat() const {
 				return m_maxRepeat;
 			}
 			void setOrder( int16_t o ) {

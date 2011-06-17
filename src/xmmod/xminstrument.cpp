@@ -80,7 +80,7 @@ bool XmInstrument::load( BinStream& str ) {
 	str.seek( startPos + hdr.size );
 	for( uint16_t i = 0; i < hdr.numSamples; i++ ) {
 		XmSample::Ptr smp( new XmSample() );
-		smp->load( str, 0 );
+		smp->load( str );
 		m_samples[i] = smp;
 	}
 	for( uint16_t i = 0; i < hdr.numSamples; i++ ) {

@@ -35,30 +35,16 @@ class UIMain : public ppg::Widget {
 		std::array<ppg::Label*, 16> m_chanCells;
 		ppg::Label* m_trackerInfo;
 		ppg::Label* m_modTitle;
-		virtual void drawThis() throw( ppg::Exception ) {}
+		virtual void drawThis() throw( ppg::Exception );
 	public:
 		UIMain( ppg::Widget* parent );
-		ppg::Label* posLabel() {
-			return m_position;
-		}
-		ppg::Label* playbackInfo() {
-			return m_playbackInfo;
-		}
-		ppg::StereoPeakBar* volBar() {
-			return m_volBar;
-		}
-		ppg::Label* chanInfo( std::size_t idx ) {
-			return m_chanInfos[idx];
-		}
-		ppg::Label* chanCell( std::size_t idx ) {
-			return m_chanCells[idx];
-		}
-		ppg::Label* trackerInfo() {
-			return m_trackerInfo;
-		}
-		ppg::Label* modTitle() {
-			return m_modTitle;
-		}
+		ppg::Label* posLabel();
+		ppg::Label* playbackInfo();
+		ppg::StereoPeakBar* volBar();
+		ppg::Label* chanInfo( std::size_t idx );
+		ppg::Label* chanCell( std::size_t idx );
+		ppg::Label* trackerInfo();
+		ppg::Label* modTitle();
 };
 
 #endif // UI_MAIN_H

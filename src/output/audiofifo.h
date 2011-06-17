@@ -79,30 +79,22 @@ namespace ppp {
 			 * @brief Get the number of buffered frames
 			 * @return Number of buffered frames
 			 */
-			std::size_t queuedLength() const throw() {
-				return m_queuedFrames;
-			}
+			std::size_t queuedLength() const throw();
 			/**
 			 * @brief Get the minimum number of frames that should be queued
 			 * @return m_minFrameCount
 			 */
-			std::size_t minFrameCount() const throw() {
-				return m_minFrameCount;
-			}
+			std::size_t minFrameCount() const throw();
 			/**
 			 * @brief Get the number of queued chunks
 			 * @return Number of queued chunks
 			 */
-			std::size_t queuedChunkCount() const throw() {
-				return m_queue.size();
-			}
+			std::size_t queuedChunkCount() const throw();
 			/**
 			 * @brief Returns @c true if this buffer needs more data
 			 * @return @c true if this buffer needs more data
 			 */
-			bool needsData() const throw() {
-				return m_queuedFrames < m_minFrameCount;
-			}
+			bool needsData() const throw();
 			/**
 			 * @brief Push data into the buffer
 			 * @param[in] data Source of the data
@@ -143,26 +135,18 @@ namespace ppp {
 			 * @brief Set the FIFO buffer length
 			 * @param[in] len The requested buffer length
 			 */
-			void setMinFrameCount( std::size_t len ) {
-				m_minFrameCount = len;
-			}
+			void setMinFrameCount( std::size_t len ) throw();
 			/**
 			 * @brief Get the left volume
 			 * @return The left channel's volume
 			 */
-			uint16_t volumeLeft() const {
-				return m_volumeLeft;
-			}
+			uint16_t volumeLeft() const throw();
 			/**
 			 * @brief Get the right volume
 			 * @return The right channel's volume
 			 */
-			uint16_t volumeRight() const {
-				return m_volumeRight;
-			}
-			bool empty() const {
-				return m_queuedFrames == 0;
-			}
+			uint16_t volumeRight() const throw();
+			bool empty() const throw();
 	};
 }
 

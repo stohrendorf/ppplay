@@ -87,14 +87,14 @@ namespace ppg {
 			 * @param[in] color New foreground color
 			 * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
 			 */
-			virtual void setFgColor( std::size_t pos, uint8_t color = ESC_NOCHANGE, std::size_t len = 1 ) throw();
+			virtual void setFgColorRange( std::size_t pos, uint8_t color = ESC_NOCHANGE, std::size_t len = 1 ) throw();
 			/**
 			 * @brief Set's the background color of @a len chars from position @a pos to @a color
 			 * @param[in] pos Starting position
 			 * @param[in] color New background color
 			 * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
 			 */
-			virtual void setBgColor( std::size_t pos, uint8_t color = ESC_NOCHANGE, std::size_t len = 1 ) throw();
+			virtual void setBgColorRange( std::size_t pos, uint8_t color = ESC_NOCHANGE, std::size_t len = 1 ) throw();
 			virtual int setHeight( int h ) throw( Exception );
 			virtual int setWidth( int w ) throw( Exception );
 	};

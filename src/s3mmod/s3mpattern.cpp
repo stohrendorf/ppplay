@@ -109,23 +109,23 @@ std::string S3mCell::trackerString() const throw() {
 	return xmsg;
 }
 
-uint8_t S3mCell::getNote() const throw() {
+uint8_t S3mCell::note() const throw() {
 	return m_note;
 }
 
-uint8_t S3mCell::getInstr() const throw() {
+uint8_t S3mCell::instrument() const throw() {
 	return m_instr;
 }
 
-uint8_t S3mCell::getVolume() const throw() {
+uint8_t S3mCell::volume() const throw() {
 	return m_volume;
 }
 
-uint8_t S3mCell::getEffect() const throw() {
+uint8_t S3mCell::effect() const throw() {
 	return m_effect;
 }
 
-uint8_t S3mCell::getEffectValue() const throw() {
+uint8_t S3mCell::effectValue() const throw() {
 	return m_effectValue;
 }
 
@@ -161,7 +161,7 @@ S3mCell::Ptr S3mPattern::createCell( uint16_t trackIndex, int16_t row ) throw( P
 	return cell;
 }
 
-S3mCell::Ptr S3mPattern::getCell( uint16_t trackIndex, int16_t row ) throw() {
+S3mCell::Ptr S3mPattern::cellAt( uint16_t trackIndex, int16_t row ) throw() {
 	if( row < 0 )
 		return S3mCell::Ptr();
 	if( trackIndex >= m_tracks.size() )

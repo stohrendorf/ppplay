@@ -35,7 +35,24 @@
  */
 
 class IAudioSource {
+	private:
+		//! @brief @c true when this source was successfully inited
+		bool m_initialized;
+		//! @brief Frequency of this source
+		uint32_t m_frequency;
+	protected:
+		/**
+		 * @brief Sets m_initialized to @c false and m_frequency to @c 0
+		 * @return @c false
+		 */
+		bool fail();
 	public:
+		typedef std::shared_ptr<IAudioSource> Ptr;
+		typedef std::weak_ptr<IAudioSource> WeakPtr;
+		//! @brief Constructor
+		IAudioSource();
+		//! @brief Destructor
+		virtual ~IAudioSource();
 		/**
 		 * @brief Get audio data from the source
 		 * @param[out] buffer The buffer containing the retrieved data
@@ -44,8 +61,23 @@ class IAudioSource {
 		 * @note If this function returns 0, the audio output device should stop playback
 		 */
 		virtual std::size_t getAudioData( AudioFrameBuffer& buffer, std::size_t requestedFrames ) = 0;
-		//! @brief Destructor
-		virtual ~IAudioSource();
+		/**
+		 * @brief Initialized the source with given frequency
+		 * @param[in] frequency Requested frequency
+		 * @return @c true on success
+		 * @note This method has a default implementation that returns @c true. Make sure to call it in derived classes to set m_frequency.
+		 */
+		virtual bool initialize(uint32_t frequency) = 0;
+		/**
+		 * @brief Check if this source was successfully initialized
+		 * @return m_initialized
+		 */
+		bool initialized() const;
+		/**
+		 * @brief Get this source's frequency
+		 * @return m_frequency
+		 */
+		uint32_t frequency() const;
 };
 
 #endif // IAUDIOSOURCE_H
