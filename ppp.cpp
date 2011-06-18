@@ -43,7 +43,7 @@ static const std::size_t SAMPLECOUNT = BUFFERSIZE / sizeof( BasicSample );
 static const std::size_t FRAMECOUNT = BUFFERSIZE / sizeof( BasicSampleFrame );
 
 static std::shared_ptr<ppg::Screen> dosScreen;
-static UIMain* uiMain = NULL;
+static std::shared_ptr<UIMain> uiMain;
 
 static IAudioOutput::Ptr output;
 static SDL_TimerID updateTimer = NULL;
@@ -225,7 +225,7 @@ int main( int argc, char* argv[] ) {
 		ppg::Label* l;
 		if( !noGUI ) {
 			dosScreen.reset( new ppg::Screen( 80, 25, PACKAGE_STRING ) );
-			uiMain = new UIMain( dosScreen.get() );
+			uiMain.reset( new UIMain( dosScreen.get() ) );
 		}
 		for( int i = 0; i < 16; i++ ) {
 		}

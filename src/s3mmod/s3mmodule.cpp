@@ -397,7 +397,7 @@ bool S3mModule::existsSample( int16_t idx ) throw() {
 	idx--;
 	if( !inRange<int>( idx, 0, m_samples.size() - 1 ) )
 		return false;
-	return m_samples[idx].get() != NULL;
+	return m_samples[idx].use_count()>0;
 }
 
 uint8_t S3mModule::channelCount() const {
@@ -668,16 +668,16 @@ void S3mModule::simulateTick( std::size_t& bufLen ) throw( PppException ) {
 }
 
 bool S3mModule::jumpNextOrder() throw() {
-	IArchive* next = multiTrackAt( currentTrackIndex() ).nextState();
-	if( next == NULL )
+	IArchive::Ptr next = multiTrackAt( currentTrackIndex() ).nextState();
+	if( !next )
 		return false;
 	next->archive( this ).finishLoad();
 	return true;
 }
 
 bool S3mModule::jumpPrevOrder() throw() {
-	IArchive* next = multiTrackAt( currentTrackIndex() ).prevState();
-	if( next == NULL )
+	IArchive::Ptr next = multiTrackAt( currentTrackIndex() ).prevState();
+	if( !next )
 		return false;
 	next->archive( this ).finishLoad();
 	return true;

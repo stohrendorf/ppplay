@@ -285,16 +285,16 @@ bool XmModule::jumpPrevTrack() throw( PppException ) {
 }
 
 bool XmModule::jumpNextOrder() throw() {
-	IArchive* next = multiTrackAt( 0 ).nextState();
-	if( next == NULL )
+	IArchive::Ptr next = multiTrackAt( 0 ).nextState();
+	if( !next )
 		return false;
 	next->archive( this ).finishLoad();
 	return true;
 }
 
 bool XmModule::jumpPrevOrder() throw() {
-	IArchive* next = multiTrackAt( 0 ).prevState();
-	if( next == NULL )
+	IArchive::Ptr next = multiTrackAt( 0 ).prevState();
+	if( !next )
 		return false;
 	next->archive( this ).finishLoad();
 	return true;
