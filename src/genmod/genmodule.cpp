@@ -28,32 +28,32 @@
 
 using namespace ppp;
 
-IArchive* GenMultiTrack::newState() {
+IArchive::Ptr GenMultiTrack::newState() {
 	IArchive::Ptr p( new MemArchive() );
 	LOG_MESSAGE( "Creating new state %u", m_states.size() );
 	m_states.push_back( p );
-	return p.get();
+	return p;
 }
 
-IArchive* GenMultiTrack::nextState() {
-	if( m_stateIndex >= m_states.size() ) {
-		LOG_ERROR( "%d >= %d", m_stateIndex, m_states.size() );
-		return NULL;
+IArchive::Ptr GenMultiTrack::nextState() {
+	if( m_stateIndex >= m_states.size()-1 ) {
+		LOG_ERROR( "%d >= %d - 1", m_stateIndex, m_states.size() );
+		return IArchive::Ptr();
 	}
 	m_stateIndex++;
 	LOG_MESSAGE( "Loading state %u", m_stateIndex );
-	IArchive* result = m_states[m_stateIndex].get();
+	IArchive::Ptr result = m_states[m_stateIndex];
 	return result;
 }
 
-IArchive* GenMultiTrack::prevState() {
+IArchive::Ptr GenMultiTrack::prevState() {
 	if( m_stateIndex <= 1 ) {
 		LOG_ERROR( "m_stateIndex <= 1" );
-		return NULL;
+		return IArchive::Ptr();
 	}
 	m_stateIndex--;
 	LOG_MESSAGE( "Loading state %u", m_stateIndex );
-	IArchive* result = m_states[m_stateIndex].get();
+	IArchive::Ptr result = m_states[m_stateIndex];
 	return result;
 }
 

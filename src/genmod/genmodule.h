@@ -80,11 +80,11 @@ namespace ppp {
 				m_states.resize( 1 );
 			}
 			static const uint16_t stopHere = ~0; //!< @brief Const to define unused track
-			IArchive* newState();
+			IArchive::Ptr newState();
 			IArchive::Vector states() const;
 			std::size_t stateIndex() const;
-			IArchive* nextState();
-			IArchive* prevState();
+			IArchive::Ptr nextState();
+			IArchive::Ptr prevState();
 	};
 
 	/**
@@ -100,7 +100,7 @@ namespace ppp {
 			GenModule() = delete;
 		public:
 			typedef std::shared_ptr<GenModule> Ptr; //!< @brief Class pointer
-			typedef std::weak_ptr<GenModule> WeakPtr; //!< @brief Weak class pointer
+			// typedef std::weak_ptr<GenModule> WeakPtr; //!< @brief Weak class pointer
 		private:
 			std::string m_fileName; //!< @brief Filename of the loaded module, empty if none loaded
 			std::string m_title; //!< @brief Title of the module
