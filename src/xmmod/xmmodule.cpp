@@ -183,14 +183,18 @@ void XmModule::buildTick( AudioFrameBuffer& buffer ) {
 				setRow( m_jumpRow );
 			}
 			if(m_doPatJump) {
-				jumpNextOrder();
+				if(!jumpNextOrder()) {
+					buffer.reset();
+				}
 				return;
 			}
 		}
 		else {
 			setRow( (playbackInfo().row+1) % currPat->numRows() );
 			if(playbackInfo().row == 0) {
-				jumpNextOrder();
+				if(!jumpNextOrder()) {
+					buffer.reset();
+				}
 				return;
 			}
 		}
