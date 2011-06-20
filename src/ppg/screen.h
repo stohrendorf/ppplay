@@ -63,10 +63,10 @@ namespace ppg {
 			 * @param[in] foreground Foreground color
 			 * @param[in] background Background color
 			 */
-			void clear( uint8_t c, uint8_t foreground, uint8_t background ) throw();
+			void clear( uint8_t c, Color foreground, Color background ) throw();
 			virtual void drawChar( int x, int y, char c ) throw();
-			virtual void setFgColorAt( int x, int y, uint8_t c ) throw();
-			virtual void setBgColorAt( int x, int y, uint8_t c ) throw();
+			virtual void setFgColorAt( int x, int y, Color c ) throw();
+			virtual void setBgColorAt( int x, int y, Color c ) throw();
 			virtual bool onMouseMove( int x, int y );
 	};
 } // namespace ppg

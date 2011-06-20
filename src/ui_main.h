@@ -20,6 +20,8 @@
 #define UI_MAIN_H
 
 #include "ppg/ppg.h"
+#include "ppg/label.h"
+#include "ppg/stereopeakbar.h"
 
 #include <array>
 

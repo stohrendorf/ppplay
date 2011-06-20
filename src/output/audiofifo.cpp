@@ -23,7 +23,7 @@
 namespace ppp {
 
 void AudioFifo::calcVolume(uint16_t& leftVol, uint16_t& rightVol) {
-	PPP_TEST(m_queuedFrames == 0);
+	PPP_ASSERT(m_queuedFrames != 0);
 	//MutexLocker mutexLock(m_queueMutex);
 	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
 	leftVol = rightVol = 0;

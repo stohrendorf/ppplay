@@ -239,7 +239,7 @@ bool S3mModule::load(const std::string& fn) {
 		setTempo(s3mHdr.initialTempo);
 		//m_playbackInfo.speed = s3mHdr.initialSpeed;
 		setSpeed(s3mHdr.initialSpeed);
-		PPP_TEST(playbackInfo().speed == 0);
+		PPP_ASSERT(playbackInfo().speed != 0);
 		setGlobalVolume(s3mHdr.globalVolume);
 		// parse flags
 		m_customData = (s3mHdr.ffv & s3mFlagSpecial) != 0;
@@ -371,7 +371,7 @@ bool S3mModule::initialize(uint32_t frq) {
 		LOG_MESSAGE("Preprocessed.");
 		int nCount = 0;
 		for(int i = 0; i < orderCount(); i++) {
-			PPP_TEST(!orderAt(i));
+			PPP_ASSERT( orderAt(i).use_count()>0 );
 			if((orderAt(i)->index() != s3mOrderEnd) && (orderAt(i)->index() != s3mOrderSkip) && (m_orderPlaybackCounts[i] == 0)) {
 				if(nCount == 0)
 					setMultiTrack(true);
@@ -382,8 +382,10 @@ bool S3mModule::initialize(uint32_t frq) {
 	}
 	while(jumpNextTrack());
 	LOG_MESSAGE("Lengths calculated, resetting module.");
-	if(trackCount() > 0)
+	if(trackCount() > 0) {
+		IAudioSource::LockGuard guard(this);
 		multiTrackAt(0).nextState()->archive(this).finishLoad();
+	}
 	LOG_MESSAGE("Removing empty tracks");
 	removeEmptyTracks();
 	return true;
@@ -509,7 +511,7 @@ void S3mModule::checkGlobalFx() {
 }
 
 bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
-	PPP_TEST(orderCount() == 0);
+	PPP_ASSERT(orderCount() != 0);
 	bool orderChanged = false;
 	if(increaseTick) {
 		nextTick();
@@ -571,10 +573,11 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 		m_patLoopRow = 0;
 		m_patLoopCount = -1;
 		try {
-			if(doStore)
+			if(doStore) {
 				multiTrackAt(currentTrackIndex()).newState()->archive(this).finishSave();
+			}
 			else {
-				//PPP_TEST( !mapOrder( getPlaybackInfo().order ) );
+				IAudioSource::LockGuard guard(this);
 				multiTrackAt(currentTrackIndex()).nextState()->archive(this).finishLoad();
 			}
 		}
@@ -610,7 +613,7 @@ void S3mModule::buildTick(AudioFrameBuffer& buf) {
 		MixerFrameBuffer mixerBuffer(new MixerFrameBuffer::element_type(tickBufferLength(), {0, 0}));
 		for(unsigned short currTrack = 0; currTrack < channelCount(); currTrack++) {
 			S3mChannel::Ptr chan = m_channels[currTrack];
-			PPP_TEST(!chan);
+			PPP_ASSERT(chan.use_count()>0);
 			S3mCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 			chan->update(cell, m_patDelayCount != -1);
 			chan->mixTick(mixerBuffer);
@@ -636,7 +639,7 @@ void S3mModule::simulateTick(std::size_t& bufLen) {
 		bufLen = 0;
 		if(!adjustPosition(false, true))
 			return;
-		PPP_TEST(!mapOrder(playbackInfo().order));
+		PPP_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
 		if(m_orderPlaybackCounts[playbackInfo().order] >= maxRepeat())
 			return;
 		// update channels...
@@ -647,7 +650,7 @@ void S3mModule::simulateTick(std::size_t& bufLen) {
 		bufLen = tickBufferLength(); // in frames
 		for(unsigned short currTrack = 0; currTrack < channelCount(); currTrack++) {
 			S3mChannel::Ptr chan = m_channels[currTrack];
-			PPP_TEST(!chan);
+			PPP_ASSERT(chan.use_count()>0);
 			S3mCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 			chan->update(cell, m_patDelayCount != -1);
 			chan->simTick(bufLen);
@@ -660,24 +663,29 @@ void S3mModule::simulateTick(std::size_t& bufLen) {
 
 bool S3mModule::jumpNextOrder() {
 	IArchive::Ptr next = multiTrackAt(currentTrackIndex()).nextState();
-	if(!next)
+	if(!next) {
 		return false;
+	}
+	IAudioSource::LockGuard guard(this);
 	next->archive(this).finishLoad();
 	return true;
 }
 
 bool S3mModule::jumpPrevOrder() {
 	IArchive::Ptr next = multiTrackAt(currentTrackIndex()).prevState();
-	if(!next)
+	if(!next) {
 		return false;
+	}
+	IAudioSource::LockGuard guard(this);
 	next->archive(this).finishLoad();
 	return true;
 }
 
 GenOrder::Ptr S3mModule::mapOrder(int16_t order) {
 	static GenOrder::Ptr xxx(new GenOrder(s3mOrderEnd));
-	if(!inRange<int16_t>(order, 0, orderCount() - 1))
+	if(!inRange<int16_t>(order, 0, orderCount() - 1)) {
 		return xxx;
+	}
 	return orderAt(order);
 }
 
@@ -700,20 +708,21 @@ bool S3mModule::jumpNextTrack() {
 		LOG_MESSAGE("This is not a multi-track");
 		return false;
 	}
-	PPP_TEST(!mapOrder(playbackInfo().order));
+	PPP_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
 	m_orderPlaybackCounts[playbackInfo().order]++;
 	setCurrentTrack(currentTrackIndex() + 1);
 	if(currentTrackIndex() >= currentTrackIndex()) {
 		GenMultiTrack nulltrack;
 		for(uint16_t i = 0; i < orderCount(); i++) {
-			PPP_TEST(!orderAt(i));
+			PPP_ASSERT(orderAt(i).use_count()>0);
 			if((orderAt(i)->index() != s3mOrderEnd) && (orderAt(i)->index() != s3mOrderSkip) && (m_orderPlaybackCounts[i] == 0)) {
-				PPP_TEST(!mapOrder(i));
+				PPP_ASSERT(mapOrder(i).use_count()>0);
 				setPatternIndex(mapOrder(i)->index());
 				setOrder(i);
 				nulltrack.startOrder = i;
 				addMultiTrack(nulltrack);
 				setPosition(0);
+				IAudioSource::LockGuard guard(this);
 				multiTrackAt(currentTrackIndex()).newState()->archive(this).finishSave();
 				return true;
 			}
@@ -728,11 +737,11 @@ bool S3mModule::jumpNextTrack() {
 			return false;
 		}
 		setOrder(multiTrackAt(currentTrackIndex()).startOrder);
-		PPP_TEST(!mapOrder(playbackInfo().order));
+		PPP_ASSERT(mapOrder(playbackInfo().order).use_count()>0);
 		setPatternIndex(mapOrder(playbackInfo().order)->index());
 		setPosition(0);
+		IAudioSource::LockGuard guard(this);
 		multiTrackAt(currentTrackIndex()).nextState()->archive(this).finishLoad();
-		//restoreState( getPlaybackInfo().order, 0 );
 		return true;
 	}
 	LOG_ERROR("This should definitively NOT have happened...");
@@ -750,11 +759,11 @@ bool S3mModule::jumpPrevTrack() {
 	}
 	setCurrentTrack(currentTrackIndex() - 1);
 	setOrder(multiTrackAt(currentTrackIndex()).startOrder);
-	PPP_TEST(!mapOrder(playbackInfo().order));
+	PPP_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
 	setPatternIndex(mapOrder(playbackInfo().order)->index());
 	setPosition(0);
+	IAudioSource::LockGuard guard(this);
 	multiTrackAt(currentTrackIndex()).nextState()->archive(this).finishLoad();
-	//restoreState( getPlaybackInfo().order, 0 );
 	return true;
 }
 
@@ -778,7 +787,7 @@ void S3mModule::setGlobalVolume(int16_t v) {
 }
 
 uint16_t S3mModule::tickBufferLength() const {
-	PPP_TEST(playbackInfo().tempo < 0x20);
+	PPP_ASSERT(playbackInfo().tempo >= 0x20);
 	return frequency() * 5 / (playbackInfo().tempo << 1);
 }
 

@@ -61,7 +61,7 @@ GenModule::GenModule(uint8_t maxRpt) :
 	m_fileName(), m_title(), m_trackerInfo(), m_orders(), m_maxRepeat(maxRpt),
 	m_playedFrames(0), m_tracks(),
 	m_currentTrack(0), m_multiTrack(false), m_playbackInfo() {
-	PPP_TEST(maxRpt == 0);
+	PPP_ASSERT(maxRpt != 0);
 	m_playbackInfo.tick = m_playbackInfo.order = m_playbackInfo.pattern = 0;
 	m_playbackInfo.row = m_playbackInfo.speed = m_playbackInfo.tempo = 0;
 	m_playbackInfo.globalVolume = 0x40;
@@ -74,11 +74,6 @@ GenModule::~GenModule() {
 
 IArchive& GenModule::serialize(IArchive* data) {
 	data->array(reinterpret_cast<char*>(&m_playbackInfo), sizeof(m_playbackInfo)) & m_playedFrames& m_currentTrack;
-	/*	for ( uint_fast16_t i = 0; i < m_orders.size(); i++ ) {
-			if ( !m_orders[i] )
-				continue;
-			data->archive(m_orders[i].get());
-		}*/
 	return *data;
 }
 
@@ -101,7 +96,7 @@ std::string GenModule::trimmedTitle() const {
 }
 
 uint32_t GenModule::timeElapsed() const {
-	PPP_TEST(frequency() == 0);
+	PPP_ASSERT(frequency() != 0);
 	return static_cast<uint32_t>(m_playedFrames / frequency());
 }
 
@@ -138,8 +133,10 @@ void GenModule::removeEmptyTracks() {
 }
 
 std::size_t GenModule::getAudioData(AudioFrameBuffer& buffer, std::size_t size) {
-	if(!buffer)
+	IAudioSource::LockGuard guard(this);
+	if(!buffer) {
 		buffer.reset(new AudioFrameBuffer::element_type);
+	}
 	while(buffer->size() < size) {
 		AudioFrameBuffer tmpBuf;
 		buildTick(tmpBuf);

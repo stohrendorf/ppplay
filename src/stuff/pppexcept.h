@@ -102,7 +102,7 @@ class PppException : public std::exception {
  * @details
  * Throws a ::PppException if @a condition is true, containing the condition in the message
  */
-#define PPP_TEST(condition) if(condition) throw PppException("[PPP_TEST] " #condition,__LINE__,__PRETTY_FUNCTION__);
+#define PPP_ASSERT(condition) if(!(condition)) throw PppException("Assertion failed: " #condition,__LINE__,__PRETTY_FUNCTION__);
 
 /**
  * @brief Catch and re-throw a PppException

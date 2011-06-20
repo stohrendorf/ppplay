@@ -53,7 +53,7 @@ static bool noGUI = false;
 static void updateDisplay( ppp::GenModule::Ptr& module ) {
 	if( !module || !output || noGUI )
 		return;
-	dosScreen->clear( ' ', ppg::dcWhite, ppg::dcBlack );
+	dosScreen->clear( ' ', ppg::Color::White, ppg::Color::Black );
 	uiMain->volBar()->shift( output->volumeLeft() >> 8, output->volumeRight() >> 8 );
 	std::size_t msecs = module->position() / 441;
 	std::size_t msecslen = module->length() / 441;
@@ -225,9 +225,8 @@ int main( int argc, char* argv[] ) {
 		ppg::Label* l;
 		if( !noGUI ) {
 			dosScreen.reset( new ppg::Screen( 80, 25, PACKAGE_STRING ) );
+			dosScreen->setAutoDelete(false);
 			uiMain.reset( new UIMain( dosScreen.get() ) );
-		}
-		for( int i = 0; i < 16; i++ ) {
 		}
 		LOG_MESSAGE( "Loading the module." );
 		ppp::GenModule::Ptr module;

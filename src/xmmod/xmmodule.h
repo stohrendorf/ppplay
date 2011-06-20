@@ -66,6 +66,7 @@ class XmModule : public GenModule {
 		bool m_isPatLoop;
 		bool m_doPatJump;
 		uint8_t m_restartPos;
+		bool adjustPosition(bool doStore);
 	public:
 		static GenModule::Ptr factory(const std::string& filename, uint32_t frequency, uint8_t maxRpt);
 		//! @brief Class pointer

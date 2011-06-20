@@ -75,7 +75,7 @@ S3mSample::~S3mSample() {
 
 bool S3mSample::load(BinStream& str, const std::size_t pos, bool imagoLoopEnd) {
 	try {
-		PPP_TEST(dataLeft() != NULL || dataRight() != NULL);
+		PPP_ASSERT(dataLeft() == NULL && dataRight() == NULL);
 		str.seek(pos);
 		S3mSampleHeader smpHdr;
 		str.read(reinterpret_cast<char*>(&smpHdr), sizeof(smpHdr));
@@ -113,7 +113,7 @@ bool S3mSample::load(BinStream& str, const std::size_t pos, bool imagoLoopEnd) {
 		setFilename(stringncpy(smpHdr.filename, 12));
 		// ok, header loaded, now load the sample data
 		str.seek(((smpHdr.memSeg[0] << 16) | (smpHdr.memSeg[2] << 8) | smpHdr.memSeg[1]) * 16);
-		PPP_TEST(length() == 0);
+		PPP_ASSERT(length() != 0);
 		if(str.fail()) {
 			setFrequency(0);
 			LOG_WARNING("Seek failed or length is zero, assuming empty.");

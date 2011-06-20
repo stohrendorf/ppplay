@@ -22,6 +22,8 @@
 #include "stuff/utils.h"
 #include "audiotypes.h"
 
+#include <mutex>
+
 /**
  * @file
  * @ingroup Output
@@ -40,6 +42,8 @@ class IAudioSource {
 		bool m_initialized;
 		//! @brief Frequency of this source
 		uint32_t m_frequency;
+		//! @brief Mutex for locking the source
+		std::mutex m_lockMutex;
 	protected:
 		/**
 		 * @brief Sets m_initialized to @c false and m_frequency to @c 0
@@ -47,6 +51,13 @@ class IAudioSource {
 		 */
 		bool fail();
 	public:
+		class LockGuard {
+			DISABLE_COPY(LockGuard)
+		private:
+			std::lock_guard<std::mutex> m_guard;
+		public:
+			LockGuard(IAudioSource* src) : m_guard(src->m_lockMutex) { }
+		};
 		typedef std::shared_ptr<IAudioSource> Ptr;
 		typedef std::weak_ptr<IAudioSource> WeakPtr;
 		//! @brief Constructor
@@ -78,6 +89,10 @@ class IAudioSource {
 		 * @return m_frequency
 		 */
 		uint32_t frequency() const;
+		void waitLock();
+		bool tryLock();
+		void unlock();
+		bool isLocked();
 };
 
 #endif // IAUDIOSOURCE_H
