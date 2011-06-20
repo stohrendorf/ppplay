@@ -24,28 +24,10 @@
 * @brief General Pattern and Track definitions
 */
 
-using namespace ppp;
+namespace ppp {
 
-GenCell::GenCell() throw() : m_active( false ) {
-}
+GenCell::GenCell() = default;
 
-GenCell::~GenCell() {
-}
+GenCell::~GenCell() = default;
 
-void GenCell::reset() throw() {
-	m_active = false;
-}
-
-bool GenCell::isActive() const throw() {
-	return m_active;
-}
-
-IArchive& GenCell::serialize( IArchive* data ) {
-	*data& m_active;
-	return *data;
-}
-
-void GenCell::setActive(bool a) throw()
-{
-    m_active = a;
 }

@@ -24,144 +24,125 @@
 * @brief General Sample definitions
 */
 
-using namespace ppp;
+namespace ppp {
 
-GenSample::GenSample() throw() :
-	m_length( 0 ), m_loopStart( 0 ), m_loopEnd( 0 ), m_volume( 0 ),
-	m_frequency( 0 ), m_dataL( NULL ), m_dataR( NULL ), m_filename( ), m_title( ), m_looptype( LoopType::None ) {
+GenSample::GenSample() :
+	m_length(0), m_loopStart(0), m_loopEnd(0), m_volume(0),
+	m_frequency(0), m_dataL(NULL), m_dataR(NULL), m_filename(), m_title(), m_looptype(LoopType::None) {
 }
 
-GenSample::~GenSample() throw() {
-	if( isStereo() )
+GenSample::~GenSample() {
+	if(isStereo())
 		delete[] m_dataR;
 	delete[] m_dataL;
 }
 
-void GenSample::setDataLeft( const BasicSample data[] ) throw() {
-	if( m_dataL && isStereo() )
+void GenSample::setDataLeft(const BasicSample data[]) {
+	if(m_dataL && isStereo())
 		delete[] m_dataL;
 	m_dataL = new BasicSample[m_length];
-	std::copy( data, data + m_length, m_dataL );
+	std::copy(data, data + m_length, m_dataL);
 }
 
-void GenSample::setDataRight( const BasicSample data[] ) throw() {
-	if( m_dataR && isStereo() )
+void GenSample::setDataRight(const BasicSample data[]) {
+	if(m_dataR && isStereo())
 		delete[] m_dataR;
 	m_dataR = new BasicSample[m_length];
-	std::copy( data, data + m_length, m_dataR );
+	std::copy(data, data + m_length, m_dataR);
 }
 
-void GenSample::setDataMono( const BasicSample data[] ) throw() {
-	if( isStereo() )
+void GenSample::setDataMono(const BasicSample data[]) {
+	if(isStereo())
 		delete[] m_dataR;
 	m_dataR = NULL;
 	delete[] m_dataL;
 	m_dataL = NULL;
-	setDataLeft( data );
+	setDataLeft(data);
 	m_dataR = m_dataL;
 }
 
-bool GenSample::isStereo() const throw()
-{
-    return m_dataL != m_dataR;
+bool GenSample::isStereo() const {
+	return m_dataL != m_dataR;
 }
 
-uint16_t GenSample::frequency() const throw()
-{
-    return m_frequency;
+uint16_t GenSample::frequency() const {
+	return m_frequency;
 }
 
-uint8_t GenSample::volume() const throw()
-{
-    return m_volume;
+uint8_t GenSample::volume() const {
+	return m_volume;
 }
 
-std::string GenSample::title() const throw()
-{
-    return m_title;
+std::string GenSample::title() const {
+	return m_title;
 }
 
-bool GenSample::isLooped() const throw()
-{
-    return m_looptype != LoopType::None;
+bool GenSample::isLooped() const {
+	return m_looptype != LoopType::None;
 }
 
-std::size_t GenSample::length() const throw()
-{
-    return m_length;
+std::size_t GenSample::length() const {
+	return m_length;
 }
 
-GenSample::LoopType GenSample::loopType() const throw()
-{
-    return m_looptype;
+GenSample::LoopType GenSample::loopType() const {
+	return m_looptype;
 }
 
-void GenSample::setFrequency(uint16_t f) throw()
-{
-    m_frequency = f;
+void GenSample::setFrequency(uint16_t f) {
+	m_frequency = f;
 }
 
-void GenSample::setLoopType(GenSample::LoopType l) throw()
-{
-    m_looptype = l;
+void GenSample::setLoopType(GenSample::LoopType l) {
+	m_looptype = l;
 }
 
-const BasicSample *GenSample::dataLeft() const throw()
-{
-    return m_dataL;
+const BasicSample* GenSample::dataLeft() const {
+	return m_dataL;
 }
 
-const BasicSample *GenSample::dataMono() const throw()
-{
-    return m_dataL;
+const BasicSample* GenSample::dataMono() const {
+	return m_dataL;
 }
 
-const BasicSample *GenSample::dataRight() const throw()
-{
-    return m_dataR;
+const BasicSample* GenSample::dataRight() const {
+	return m_dataR;
 }
 
-BasicSample *GenSample::nonConstDataL() const throw()
-{
-    return m_dataL;
+BasicSample* GenSample::nonConstDataL() const {
+	return m_dataL;
 }
 
-BasicSample *GenSample::nonConstDataMono() const throw()
-{
-    return m_dataL;
+BasicSample* GenSample::nonConstDataMono() const {
+	return m_dataL;
 }
 
-BasicSample *GenSample::nonConstDataR() const throw()
-{
-    return m_dataR;
+BasicSample* GenSample::nonConstDataR() const {
+	return m_dataR;
 }
 
-void GenSample::setTitle(const std::string &t) throw()
-{
-    m_title = t;
+void GenSample::setTitle(const std::string& t) {
+	m_title = t;
 }
 
-void GenSample::setFilename(const std::string &f) throw()
-{
-    m_filename = f;
+void GenSample::setFilename(const std::string& f) {
+	m_filename = f;
 }
 
-void GenSample::setLength(std::size_t l) throw()
-{
-    m_length = l;
+void GenSample::setLength(std::size_t l) {
+	m_length = l;
 }
 
-void GenSample::setLoopStart(std::size_t s) throw()
-{
-    m_loopStart = s;
+void GenSample::setLoopStart(std::size_t s) {
+	m_loopStart = s;
 }
 
-void GenSample::setLoopEnd(std::size_t e) throw()
-{
-    m_loopEnd = e;
+void GenSample::setLoopEnd(std::size_t e) {
+	m_loopEnd = e;
 }
 
-void GenSample::setVolume(uint8_t v) throw()
-{
-    m_volume = v;
+void GenSample::setVolume(uint8_t v) {
+	m_volume = v;
+}
+
 }

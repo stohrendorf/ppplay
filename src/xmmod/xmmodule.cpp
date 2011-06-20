@@ -17,7 +17,7 @@
 */
 
 #include "xmmodule.h"
-#include "stream/binstream.h"
+#include "stream/fbinstream.h"
 #include "logger/logger.h"
 
 #include <cmath>
@@ -55,7 +55,7 @@ static const std::array<const uint16_t, 12 * 8> g_PeriodTable = {{
     }
 };
 
-XmModule::XmModule( uint8_t maxRpt ) throw( PppException ) :
+XmModule::XmModule( uint8_t maxRpt ):
 	GenModule( maxRpt ),
 	m_amiga( false ), m_patterns(), m_instruments(), m_channels(),
 	m_noteToPeriod(), m_orders(), m_orderPlaybackCount(), m_length(), m_jumpRow(-1), m_jumpOrder(-1),
@@ -66,7 +66,7 @@ XmModule::XmModule( uint8_t maxRpt ) throw( PppException ) :
 	}
 }
 
-bool XmModule::load( const std::string& filename ) throw( PppException ) {
+bool XmModule::load( const std::string& filename ){
 	XmHeader hdr;
 	FBinStream file( filename );
 	setFilename( filename );
@@ -151,7 +151,7 @@ bool XmModule::load( const std::string& filename ) throw( PppException ) {
 	return true;
 }
 
-uint16_t XmModule::tickBufferLength() const throw( PppException ) {
+uint16_t XmModule::tickBufferLength() const{
 	PPP_TEST( playbackInfo().tempo < 0x20 );
 	return frequency() * 5 / ( playbackInfo().tempo << 1 );
 }
@@ -204,7 +204,7 @@ void XmModule::buildTick( AudioFrameBuffer& buffer ) {
 	setPosition( position() + mixerBuffer->size() );
 }
 
-void XmModule::simulateTick( std::size_t& bufferLength ) throw( PppException )
+void XmModule::simulateTick( std::size_t& bufferLength )
 {
 	try {
 		bufferLength = tickBufferLength();
@@ -269,26 +269,26 @@ void XmModule::simulateTick( std::size_t& bufferLength ) throw( PppException )
 	PPP_CATCH_ALL();
 }
 
-GenOrder::Ptr XmModule::mapOrder( int16_t order ) throw( PppException ) {
+GenOrder::Ptr XmModule::mapOrder( int16_t order ){
 	static GenOrder::Ptr xxx( new GenOrder( 0xff ) );
 	if( !inRange<int16_t>( order, 0, orderCount() - 1 ) )
 		return xxx;
 	return orderAt( order );
 }
 
-std::string XmModule::channelStatus( int16_t idx ) throw() {
+std::string XmModule::channelStatus( int16_t idx ){
 	return m_channels[idx]->statusString();
 }
 
-bool XmModule::jumpNextTrack() throw( PppException ) {
+bool XmModule::jumpNextTrack(){
 	return false;
 }
 
-bool XmModule::jumpPrevTrack() throw( PppException ) {
+bool XmModule::jumpPrevTrack(){
 	return false;
 }
 
-bool XmModule::jumpNextOrder() throw() {
+bool XmModule::jumpNextOrder(){
 	IArchive::Ptr next = multiTrackAt( 0 ).nextState();
 	if( !next )
 		return false;
@@ -296,7 +296,7 @@ bool XmModule::jumpNextOrder() throw() {
 	return true;
 }
 
-bool XmModule::jumpPrevOrder() throw() {
+bool XmModule::jumpPrevOrder(){
 	IArchive::Ptr next = multiTrackAt( 0 ).prevState();
 	if( !next )
 		return false;
@@ -304,7 +304,7 @@ bool XmModule::jumpPrevOrder() throw() {
 	return true;
 }
 
-std::string XmModule::channelCellString( int16_t idx ) throw() {
+std::string XmModule::channelCellString( int16_t idx ){
 	XmChannel::Ptr x = m_channels[idx];
 	if( !x )
 		return "";

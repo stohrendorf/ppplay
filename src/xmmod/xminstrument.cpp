@@ -142,3 +142,22 @@ XmEnvelopeProcessor XmInstrument::panningProcessor() const
 {
 	return XmEnvelopeProcessor(m_panEnvFlags, m_panPoints, m_numPanPoints, m_panSustainPoint, m_panLoopStart, m_panLoopEnd);
 }
+namespace ppp {
+namespace xm {
+uint16_t XmInstrument::fadeout() const {
+	return m_fadeout;
+}}
+uint8_t XmInstrument::vibType() const {
+	return m_vibType;
+}
+uint8_t XmInstrument::vibSweep() const {
+	return m_vibSweep;
+}
+uint8_t XmInstrument::vibDepth() const {
+	return m_vibDepth;
+}
+uint8_t XmInstrument::vibRate() const {
+	return m_vibRate;
+}
+}
+

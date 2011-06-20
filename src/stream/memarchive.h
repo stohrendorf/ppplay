@@ -16,13 +16,24 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "breseninter.h"
-#include "stream/iarchive.h"
+#ifndef MEMARCHIVE_H
+#define MEMARCHIVE_H
 
-namespace ppp {
+#include "iarchive.h"
 
-IArchive& BresenInterpolation::serialize( class IArchive* archive ) {
-	return *archive & m_dx & m_dy & m_err;
-}
+/**
+ * @class MemArchive
+ * @ingroup Common
+ * @brief Specialization of IArchive for memory storage
+ */
+class MemArchive : public IArchive {
+		DISABLE_COPY(MemArchive)
+	public:
+		/**
+		 * @brief Constructs this archive using a SBinStream
+		 */
+		MemArchive();
+		virtual ~MemArchive();
+};
 
-}
+#endif

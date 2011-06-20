@@ -4,4 +4,6 @@ add_library(ppg STATIC
 	ppgexcept.cpp
 	label.cpp
 	screen.cpp
+	rect.cpp
+	point.cpp
 )

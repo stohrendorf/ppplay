@@ -16,13 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "breseninter.h"
-#include "stream/iarchive.h"
+#include "memarchive.h"
+#include "sbinstream.h"
 
-namespace ppp {
+MemArchive::MemArchive() : IArchive(BinStream::Ptr(new SBinStream()))
+{ }
 
-IArchive& BresenInterpolation::serialize( class IArchive* archive ) {
-	return *archive & m_dx & m_dy & m_err;
-}
-
-}
+MemArchive::~MemArchive() = default;

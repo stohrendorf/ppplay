@@ -20,14 +20,14 @@
 #include "s3msample.h"
 #include <algorithm>
 
-using namespace ppp;
-using namespace ppp::s3m;
-
 /**
 * @file
 * @brief S3M Sample class
 * @ingroup S3mMod
 */
+
+namespace ppp {
+namespace s3m {
 
 /**
 * @brief Flags for s3mSampleHeader::flags
@@ -67,120 +67,127 @@ struct S3mSampleHeader {
 };
 #pragma pack(pop)
 
-S3mSample::S3mSample() throw() : GenSample(), m_highQuality( false ) {
+S3mSample::S3mSample() : GenSample(), m_highQuality(false) {
 }
 
-S3mSample::~S3mSample() throw() {
+S3mSample::~S3mSample() {
 }
 
-bool S3mSample::load( BinStream& str, const std::size_t pos, bool imagoLoopEnd ) throw( PppException ) {
+bool S3mSample::load(BinStream& str, const std::size_t pos, bool imagoLoopEnd) {
 	try {
-		PPP_TEST( dataLeft() != NULL || dataRight() != NULL );
-		str.seek( pos );
+		PPP_TEST(dataLeft() != NULL || dataRight() != NULL);
+		str.seek(pos);
 		S3mSampleHeader smpHdr;
-		str.read( reinterpret_cast<char*>( &smpHdr ), sizeof( smpHdr ) );
+		str.read(reinterpret_cast<char*>(&smpHdr), sizeof(smpHdr));
 // 		str.read((char*)&smpHdr, sizeof(s3mSampleHeader));
-		if( ( smpHdr.length == 0 ) || ( ( smpHdr.memSeg[0] == 0 ) && ( smpHdr.memSeg[1] == 0 ) && ( smpHdr.memSeg[2] == 0 ) ) )
+		if((smpHdr.length == 0) || ((smpHdr.memSeg[0] == 0) && (smpHdr.memSeg[1] == 0) && (smpHdr.memSeg[2] == 0)))
 			return true;
 		//if (memcmp(smpHdr.ID, "SCRS", 4)) {
-		if( !std::equal( smpHdr.ID, smpHdr.ID + 4, "SCRS" ) ) {
-			LOG_WARNING( "Sample ID not 'SCRS', assuming empty." );
+		if(!std::equal(smpHdr.ID, smpHdr.ID + 4, "SCRS")) {
+			LOG_WARNING("Sample ID not 'SCRS', assuming empty.");
 			return true;
 		}
-		if( smpHdr.pack != 0 ) {
-			LOG_ERROR( "Packed sample, not supported." );
+		if(smpHdr.pack != 0) {
+			LOG_ERROR("Packed sample, not supported.");
 			return false;
 		}
-		if( smpHdr.type != 1 ) {
-			LOG_WARNING( "Sample Type not 0x01 (is 0x%.2x), assuming empty.", smpHdr.type );
+		if(smpHdr.type != 1) {
+			LOG_WARNING("Sample Type not 0x01 (is 0x%.2x), assuming empty.", smpHdr.type);
 			return true;
 		}
 		/// @warning This could be a much too high value...
-		setLength( ( smpHdr.hiLength << 16 ) | smpHdr.length );
+		setLength((smpHdr.hiLength << 16) | smpHdr.length);
 		//	aLength = (aLength>64000) ? 64000 : aLength;
-		setLoopStart( ( smpHdr.hiLoopStart << 16 ) | smpHdr.loopStart );
+		setLoopStart((smpHdr.hiLoopStart << 16) | smpHdr.loopStart);
 		//	aLoopStart = (aLoopStart>64000) ? 64000 : aLoopStart;
-		if( !imagoLoopEnd )
-			setLoopEnd( ( smpHdr.hiLoopEnd << 16 ) | smpHdr.loopEnd );
+		if(!imagoLoopEnd)
+			setLoopEnd((smpHdr.hiLoopEnd << 16) | smpHdr.loopEnd);
 		else
-			setLoopEnd( (( smpHdr.hiLoopEnd << 16 ) | smpHdr.loopEnd) + 1 );
+			setLoopEnd(((smpHdr.hiLoopEnd << 16) | smpHdr.loopEnd) + 1);
 		//	aLoopEnd = (aLoopEnd>64000) ? 64000 : aLoopEnd;
-		setVolume( smpHdr.volume );
-		setFrequency( smpHdr.c2spd );
-		bool loadStereo = ( smpHdr.flags & s3mFlagSmpStereo ) != 0;
-		setLoopType( ( smpHdr.flags & s3mFlagSmpLooped ) == 0 ? GenSample::LoopType::None : GenSample::LoopType::Forward );
-		setTitle( stringncpy( smpHdr.sampleName, 28 ) );
-		setFilename( stringncpy( smpHdr.filename, 12 ) );
+		setVolume(smpHdr.volume);
+		setFrequency(smpHdr.c2spd);
+		bool loadStereo = (smpHdr.flags & s3mFlagSmpStereo) != 0;
+		setLoopType((smpHdr.flags & s3mFlagSmpLooped) == 0 ? GenSample::LoopType::None : GenSample::LoopType::Forward);
+		setTitle(stringncpy(smpHdr.sampleName, 28));
+		setFilename(stringncpy(smpHdr.filename, 12));
 		// ok, header loaded, now load the sample data
-		str.seek( ( ( smpHdr.memSeg[0] << 16 ) | ( smpHdr.memSeg[2] << 8 ) | smpHdr.memSeg[1] ) * 16 );
-		PPP_TEST( length() == 0 );
-		if( str.fail() ) {
-			setFrequency( 0 );
-			LOG_WARNING( "Seek failed or length is zero, assuming empty." );
+		str.seek(((smpHdr.memSeg[0] << 16) | (smpHdr.memSeg[2] << 8) | smpHdr.memSeg[1]) * 16);
+		PPP_TEST(length() == 0);
+		if(str.fail()) {
+			setFrequency(0);
+			LOG_WARNING("Seek failed or length is zero, assuming empty.");
 			return true;
 		}
-		if( loadStereo ) {
-			setDataLeft( new BasicSample[length()] );
-			std::fill_n( nonConstDataL(), length(), 0 );
-			setDataRight( new BasicSample[length()] );
-			std::fill_n( nonConstDataR(), length(), 0 );
+		if(loadStereo) {
+			setDataLeft(new BasicSample[length()]);
+			std::fill_n(nonConstDataL(), length(), 0);
+			setDataRight(new BasicSample[length()]);
+			std::fill_n(nonConstDataR(), length(), 0);
 		}
 		else {
-			setDataMono( new BasicSample[length()] );
-			std::fill_n( nonConstDataR(), length(), 0 );
+			setDataMono(new BasicSample[length()]);
+			std::fill_n(nonConstDataR(), length(), 0);
 		}
-		if( smpHdr.flags & s3mFlagSmp16bit ) {
-			LOG_MESSAGE( "Loading 16-bit sample" );
+		if(smpHdr.flags & s3mFlagSmp16bit) {
+			LOG_MESSAGE("Loading 16-bit sample");
 			m_highQuality = true;
 			uint16_t smp16;
 			BasicSample* smpPtr = nonConstDataL();
-			for( uint32_t i = 0; i < length(); i++ ) {
-				str.read( &smp16 );
-				if( str.fail() ) {
-					LOG_WARNING( "EOF reached before Sample Data read completely, assuming zeroes." );
+			for(uint32_t i = 0; i < length(); i++) {
+				str.read(&smp16);
+				if(str.fail()) {
+					LOG_WARNING("EOF reached before Sample Data read completely, assuming zeroes.");
 					return true;
 				}
-				*( smpPtr++ ) = clip( smp16 - 32768, -32767, 32767 ); // negating -32768 fails otherwise in surround mode
+				*(smpPtr++) = clip(smp16 - 32768, -32767, 32767);     // negating -32768 fails otherwise in surround mode
 			}
-			if( loadStereo ) {
-				LOG_MESSAGE( "Loading Stereo..." );
+			if(loadStereo) {
+				LOG_MESSAGE("Loading Stereo...");
 				smpPtr = nonConstDataR();
-				for( uint32_t i = 0; i < length(); i++ ) {
-					str.read( &smp16 );
-					if( str.fail() ) {
-						LOG_WARNING( "EOF reached before Sample Data read completely, assuming zeroes." );
+				for(uint32_t i = 0; i < length(); i++) {
+					str.read(&smp16);
+					if(str.fail()) {
+						LOG_WARNING("EOF reached before Sample Data read completely, assuming zeroes.");
 						return true;
 					}
-					*( smpPtr++ ) = clip( smp16 - 32768, -32767, 32767 ); // negating -32768 fails otherwise in surround mode
+					*(smpPtr++) = clip(smp16 - 32768, -32767, 32767);     // negating -32768 fails otherwise in surround mode
 				}
 			}
 		}
 		else { // convert 8-bit samples to 16-bit ones
-			LOG_MESSAGE( "Loading 8-bit sample" );
+			LOG_MESSAGE("Loading 8-bit sample");
 			uint8_t smp8;
 			BasicSample* smpPtr = nonConstDataL();
-			for( uint32_t i = 0; i < length(); i++ ) {
-				str.read( &smp8 );
-				if( str.fail() ) {
-					LOG_WARNING( "EOF reached before Sample Data read completely, assuming zeroes." );
+			for(uint32_t i = 0; i < length(); i++) {
+				str.read(&smp8);
+				if(str.fail()) {
+					LOG_WARNING("EOF reached before Sample Data read completely, assuming zeroes.");
 					return true;
 				}
-				*( smpPtr++ ) = clip( ( smp8 - 128 ) << 8, -32767, 32767 ); // negating -32768 fails otherwise in surround mode
+				*(smpPtr++) = clip((smp8 - 128) << 8, -32767, 32767);       // negating -32768 fails otherwise in surround mode
 			}
-			if( loadStereo ) {
-				LOG_MESSAGE( "Loading Stereo..." );
+			if(loadStereo) {
+				LOG_MESSAGE("Loading Stereo...");
 				smpPtr = nonConstDataR();
-				for( uint32_t i = 0; i < length(); i++ ) {
-					str.read( &smp8 );
-					if( str.fail() ) {
-						LOG_WARNING( "EOF reached before Sample Data read completely, assuming zeroes." );
+				for(uint32_t i = 0; i < length(); i++) {
+					str.read(&smp8);
+					if(str.fail()) {
+						LOG_WARNING("EOF reached before Sample Data read completely, assuming zeroes.");
 						return true;
 					}
-					*( smpPtr++ ) = clip( ( smp8 - 128 ) << 8, -32767, 32767 ); // negating -32768 fails otherwise in surround mode
+					*(smpPtr++) = clip((smp8 - 128) << 8, -32767, 32767);       // negating -32768 fails otherwise in surround mode
 				}
 			}
 		}
 		return true;
 	}
 	PPP_CATCH_ALL();
+}
+
+bool S3mSample::isHighQuality() const {
+	return m_highQuality;
+}
+
+}
 }

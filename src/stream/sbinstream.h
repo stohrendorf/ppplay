@@ -16,13 +16,21 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "breseninter.h"
-#include "stream/iarchive.h"
+#ifndef SBINSTREAM_H
+#define SBINSTREAM_H
 
-namespace ppp {
+#include "binstream.h"
 
-IArchive& BresenInterpolation::serialize( class IArchive* archive ) {
-	return *archive & m_dx & m_dy & m_err;
-}
+/**
+ * @class SBinStream
+ * @ingroup Common
+ * @brief Class derived from BinStream for a std::stringstream
+ */
+class SBinStream : public BinStream {
+		DISABLE_COPY( SBinStream )
+	public:
+		explicit SBinStream();
+		virtual ~SBinStream();
+};
 
-}
+#endif

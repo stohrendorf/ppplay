@@ -39,28 +39,28 @@ namespace ppg {
 			std::string m_text; //!< @brief The text in this label
 			std::vector<uint8_t> m_fgColors; //!< @brief Text chars' foreground colors
 			std::vector<uint8_t> m_bgColors; //!< @brief Text chars' background colors
-			virtual void drawThis() throw( Exception );
+			virtual void drawThis();
 		public:
-			/**
-			 * @brief Label alignment enumeration class
-			 */
-			enum class Alignment {
-			    alLeft, alCenter, alRight
-			};
-			Alignment alignment; //!< @brief Label's alignment
 			/**
 			 * @brief Constructor
 			 * @param[in] parent Parent widget
 			 * @param[in] text Initial text
 			 */
 			Label( Widget* parent, const std::string& text = std::string() );
+			/**
+			 * @brief Label alignment enumeration class
+			 */
+			enum class Alignment {
+			    Left, Center, Right
+			};
+			Alignment alignment; //!< @brief Label's alignment
 			//! @copydoc ppg::Widget::~Widget
-			virtual ~Label() throw();
+			virtual ~Label();
 			/**
 			 * @brief Get the label's text length
 			 * @return Text length
 			 */
-			std::size_t length() const throw();
+			std::size_t length() const;
 			/**
 			 * @brief Sets the label's text
 			 * @param[in] txt Text to assign to this label
@@ -87,16 +87,16 @@ namespace ppg {
 			 * @param[in] color New foreground color
 			 * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
 			 */
-			virtual void setFgColorRange( std::size_t pos, uint8_t color = ESC_NOCHANGE, std::size_t len = 1 ) throw();
+			virtual void setFgColorRange( std::size_t pos, uint8_t color = ESC_NOCHANGE, std::size_t len = 1 );
 			/**
 			 * @brief Set's the background color of @a len chars from position @a pos to @a color
 			 * @param[in] pos Starting position
 			 * @param[in] color New background color
 			 * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
 			 */
-			virtual void setBgColorRange( std::size_t pos, uint8_t color = ESC_NOCHANGE, std::size_t len = 1 ) throw();
-			virtual int setHeight( int h ) throw( Exception );
-			virtual int setWidth( int w ) throw( Exception );
+			virtual void setBgColorRange( std::size_t pos, uint8_t color = ESC_NOCHANGE, std::size_t len = 1 );
+			virtual int setHeight( int h );
+			virtual int setWidth( int w );
 	};
 
 } // namespace ppg

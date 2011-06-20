@@ -16,13 +16,34 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "breseninter.h"
-#include "stream/iarchive.h"
+#include "iarchive.h"
+#include "iserializable.h"
 
-namespace ppp {
+IArchive::IArchive(const BinStream::Ptr& stream) : m_loading(false), m_stream(stream)
+{ }
 
-IArchive& BresenInterpolation::serialize( class IArchive* archive ) {
-	return *archive & m_dx & m_dy & m_err;
+IArchive::~IArchive() = default;
+
+bool IArchive::isLoading() const {
+	return m_loading;
 }
 
+bool IArchive::isSaving() const {
+	return !m_loading;
+}
+
+IArchive& IArchive::archive(ISerializable* data) {
+	PPP_TEST(data == NULL);
+	return data->serialize(this);
+}
+
+void IArchive::finishSave() {
+	PPP_TEST(m_loading);
+	m_stream->seek(0);
+	m_loading = true;
+}
+
+void IArchive::finishLoad() {
+	PPP_TEST(!m_loading);
+	m_stream->seek(0);
 }

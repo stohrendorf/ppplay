@@ -20,39 +20,38 @@
 #include <cstdarg>
 
 namespace ppp {
-	std::string stringf( const char fmt[], ... ) {
-		va_list args;
-		va_start( args, fmt );
-		char* tmp = new char[1024];
-		vsnprintf( tmp, 1024, fmt, args );
-		va_end( args );
-		std::string res( tmp );
-		delete[] tmp;
-		return res;
-	}
+std::string stringf(const char fmt[], ...) {
+	va_list args;
+	va_start(args, fmt);
+	char* tmp = new char[1024];
+	vsnprintf(tmp, 1024, fmt, args);
+	va_end(args);
+	std::string res(tmp);
+	delete[] tmp;
+	return res;
+}
 
-	std::string stringncpy( const char src[], std::size_t maxlen ) {
-		std::string res;
-		for( std::size_t i = 0; i < maxlen; i++ ) {
-			if( src[i] == 0x00 )
-				break;
-			res += src[i];
-		}
-		return res;
+std::string stringncpy(const char src[], std::size_t maxlen) {
+	std::string res;
+	for(std::size_t i = 0; i < maxlen; i++) {
+		if(src[i] == 0x00)
+			break;
+		res += src[i];
 	}
+	return res;
+}
 
-	void swapEndian( char* data, std::size_t size ) {
-		for( std::size_t i = 0; i < size / 2; i++ )
-			std::swap( data[i], data[size - i - 1] );
-	}
-	
-	std::string trimString(const std::string &str)
-	{
-		std::string res = str;
-		std::size_t startpos = res.find_first_not_of( " \t" );
-		std::size_t endpos = res.find_last_not_of( " \t" );
-		if( ( std::string::npos == startpos ) || ( std::string::npos == endpos ) )
-			return std::string();
-		return res.substr( startpos, endpos - startpos + 1 );
-	}
+void swapEndian(char* data, std::size_t size) {
+	for(std::size_t i = 0; i < size / 2; i++)
+		std::swap(data[i], data[size - i - 1]);
+}
+
+std::string trimString(const std::string& str) {
+	std::string res = str;
+	std::size_t startpos = res.find_first_not_of(" \t");
+	std::size_t endpos = res.find_last_not_of(" \t");
+	if((std::string::npos == startpos) || (std::string::npos == endpos))
+		return std::string();
+	return res.substr(startpos, endpos - startpos + 1);
+}
 }

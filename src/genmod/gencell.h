@@ -29,43 +29,33 @@
 
 namespace ppp {
 
-	/**
-	 * @class GenCell
-	 * @ingroup GenMod
-	 * @brief A single note cell
-	 */
-	class GenCell : public ISerializable {
-		public:
-			typedef std::shared_ptr<GenCell> Ptr; //!< @brief Class pointer
-			typedef std::vector<Ptr> Vector;
-		private:
-			bool m_active; //!< @brief Is this cell used/relevant?
-		public:
-			/**
-			 * @brief Constructor, sets m_active to @c false
-			 */
-			GenCell() throw();
-			/**
-			 * @brief Destructor, does nothing
-			 */
-			virtual ~GenCell();
-			/**
-			 * @brief Reset the cell so that it is practically "unused"
-			 */
-			virtual void reset() throw();
-			/**
-			 * @brief Is this cell active/used?
-			 * @return m_active
-			 */
-			bool isActive() const throw();
-			/**
-			 * @brief Get the tracker-like string representation of this cell
-			 * @return Tracker-like string
-			 */
-			virtual std::string trackerString() const throw() = 0;
-			virtual IArchive& serialize( IArchive* data );
-			void setActive( bool a ) throw();
-	};
+/**
+ * @class GenCell
+ * @ingroup GenMod
+ * @brief A single note cell
+ */
+class GenCell : public ISerializable {
+	public:
+		typedef std::shared_ptr<GenCell> Ptr; //!< @brief Class pointer
+		typedef std::vector<Ptr> Vector;
+		/**
+		 * @brief Constructor, sets m_active to @c false
+		 */
+		GenCell();
+		/**
+		 * @brief Destructor, does nothing
+		 */
+		virtual ~GenCell();
+		/**
+		 * @brief Reset the cell so that it is practically "unused"
+		 */
+		virtual void reset() = 0;
+		/**
+		 * @brief Get the tracker-like string representation of this cell
+		 * @return Tracker-like string
+		 */
+		virtual std::string trackerString() const = 0;
+};
 
 } // namespace ppp
 

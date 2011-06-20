@@ -18,18 +18,16 @@
 
 #include "iaudiooutput.h"
 
-IAudioOutput::~IAudioOutput() {
-}
+IAudioOutput::~IAudioOutput() = default;
 
 IAudioOutput::ErrorCode IAudioOutput::errorCode() const {
 	return m_errorCode;
 }
 
-void IAudioOutput::setErrorCode( IAudioOutput::ErrorCode ec ) {
+void IAudioOutput::setErrorCode(IAudioOutput::ErrorCode ec) {
 	m_errorCode = ec;
 }
 
-IAudioSource::WeakPtr IAudioOutput::source() const
-{
-    return m_source;
+IAudioSource::WeakPtr IAudioOutput::source() const {
+	return m_source;
 }

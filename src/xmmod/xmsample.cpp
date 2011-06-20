@@ -24,7 +24,7 @@ using namespace ppp::xm;
 XmSample::XmSample() : m_finetune( 0 ), m_panning( 0x80 ), m_relativeNote( 0 ), m_16bit( false )
 { }
 
-bool XmSample::load( BinStream& str ) throw( PppException ) {
+bool XmSample::load( BinStream& str ) {
 	int32_t dataSize;
 	str.read( &dataSize );
 	int32_t loopStart, loopLen;
