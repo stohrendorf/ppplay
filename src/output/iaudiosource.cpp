@@ -17,8 +17,9 @@
 */
 
 #include "iaudiosource.h"
+#include "stuff/pppexcept.h"
 
-IAudioSource::IAudioSource() : m_initialized(false), m_frequency(0) {
+IAudioSource::IAudioSource() : m_initialized(false), m_frequency(0), m_lockMutex() {
 }
 
 IAudioSource::~IAudioSource() = default;
@@ -41,4 +42,26 @@ bool IAudioSource::initialize(uint32_t frequency) {
 
 uint32_t IAudioSource::frequency() const {
 	return m_frequency;
+}
+
+bool IAudioSource::tryLock() {
+	return m_lockMutex.try_lock();
+}
+
+void IAudioSource::waitLock() {
+	m_lockMutex.lock();
+}
+
+void IAudioSource::unlock() {
+	m_lockMutex.unlock();
+}
+
+bool IAudioSource::isLocked() {
+	bool tmp = tryLock();
+	if(tmp) {
+		// we changed the state to "locked", so unlock it again
+		unlock();
+	}
+	// the mutex is locked when a lock attempt fails
+	return !tmp;
 }

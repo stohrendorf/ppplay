@@ -27,14 +27,26 @@ Widget::Widget(Widget* parent) :
 	m_visible(false),
 	m_parent(parent),
 	m_area(0, 0, 0, 0),
-	m_children()
+	m_children(),
+	m_autodelete(true)
 {
 	if(parent) {
 		parent->m_children.push_back(this);
 	}
 }
 
-Widget::~Widget() = default;
+Widget::~Widget() {
+	List backup = m_children;
+	for(auto it = backup.begin(); it != backup.end(); it++) {
+		Widget* tmp = *it;
+		if(tmp->m_autodelete) {
+			delete tmp;
+		}
+	}
+	if(m_parent) {
+		m_parent->m_children.remove(this);
+	}
+}
 
 int Widget::setLeft(int x, bool absolute) {
 	if(absolute) {
@@ -91,7 +103,7 @@ void Widget::draw() {
 	if(!isVisible())
 		return;
 	// draw from bottom to top so that top elements are drawn over bottom ones
-	for(Widget::List::reverse_iterator revIt = m_children.rbegin(); revIt != m_children.rend(); revIt++) {
+	for(auto revIt = m_children.rbegin(); revIt != m_children.rend(); revIt++) {
 		Widget* w = *revIt;
 		if(!w || !w->isVisible()) {
 			continue;
@@ -131,7 +143,7 @@ void Widget::drawChar(int x, int y, char c) {
 	m_parent->drawChar(x, y, c);
 }
 
-void Widget::setFgColorAt(int x, int y, uint8_t c) {
+void Widget::setFgColorAt(int x, int y, Color c) {
 	if(!m_parent) {
 		return;
 	}
@@ -142,7 +154,7 @@ void Widget::setFgColorAt(int x, int y, uint8_t c) {
 	m_parent->setFgColorAt(x, y, c);
 }
 
-void Widget::setBgColorAt(int x, int y, uint8_t c) {
+void Widget::setBgColorAt(int x, int y, Color c) {
 	if(!m_parent) {
 		return;
 	}
@@ -203,7 +215,7 @@ void Widget::toTop(Widget* vp) {
 }
 
 bool Widget::onMouseMove(int x, int y) {
-	for(Widget::List::iterator it = m_children.begin(); it != m_children.end(); it++) {
+	for(auto it = m_children.begin(); it != m_children.end(); it++) {
 		Widget* current = *it;
 		if(!current)
 			continue;
@@ -214,5 +226,9 @@ bool Widget::onMouseMove(int x, int y) {
 	return false;
 }
 
+void Widget::setAutoDelete(bool value)
+{
+	m_autodelete = value;
+}
 
 } // namespace ppg

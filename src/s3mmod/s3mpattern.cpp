@@ -43,8 +43,8 @@ S3mPattern::~S3mPattern() {
 }
 
 S3mCell::Ptr S3mPattern::createCell(uint16_t trackIndex, int16_t row) {
-	PPP_TEST((row < 0) || (row > 63));
-	PPP_TEST(trackIndex >= m_tracks.size());
+	PPP_ASSERT((row >= 0) && (row <= 63));
+	PPP_ASSERT(trackIndex < m_tracks.size());
 	S3mCell::Vector* track = &m_tracks[trackIndex];
 	S3mCell::Ptr& cell = track->at(row);
 	if(cell)

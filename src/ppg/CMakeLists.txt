@@ -6,4 +6,5 @@ add_library(ppg STATIC
 	screen.cpp
 	rect.cpp
 	point.cpp
+	stereopeakbar.cpp
 )

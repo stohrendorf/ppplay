@@ -79,11 +79,13 @@ class IArchive {
 		 * @note Operation depends on m_loading
 		 */
 		template<class T> IArchive& array(T* data, std::size_t count) {
-			PPP_TEST(data == NULL);
-			if(m_loading)
+			PPP_ASSERT(data != NULL);
+			if(m_loading) {
 				m_stream->read(data, count);
-			else
+			}
+			else {
 				m_stream->write(data, count);
+			}
 			return *this;
 		}
 		/**

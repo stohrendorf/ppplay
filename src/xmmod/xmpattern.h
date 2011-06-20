@@ -40,6 +40,7 @@ class XmPattern {
 		XmCell::Ptr cellAt(uint16_t trackIndex, uint16_t row);
 		std::size_t numRows() const;
 		std::size_t numChannels() const;
+		static XmPattern::Ptr createDefaultPattern(int16_t chans);
 };
 
 } // namespace xm

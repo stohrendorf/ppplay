@@ -23,12 +23,13 @@ using namespace ppp::xm;
 
 XmCell::Ptr XmPattern::createCell(uint16_t trackIndex, uint16_t row)
 {
-    PPP_TEST(row >= numRows());
-    PPP_TEST(trackIndex >= numChannels());
+    PPP_ASSERT(row < numRows());
+    PPP_ASSERT(trackIndex < numChannels());
     XmCell::Vector *track = &m_tracks[trackIndex];
     XmCell::Ptr &cell = track->at(row);
-    if(cell)
+    if(cell) {
         return cell;
+	}
     cell.reset(new XmCell());
     return cell;
 }
@@ -77,8 +78,9 @@ bool XmPattern::load(BinStream &str)
 
 XmCell::Ptr XmPattern::cellAt(uint16_t trackIndex, uint16_t row)
 {
-    if(trackIndex >= numChannels() || row >= numRows())
+    if(trackIndex >= numChannels() || row >= numRows()) {
         return XmCell::Ptr();
+	}
     const XmCell::Vector &track = m_tracks.at(trackIndex);
     return track.at(row);
 }
@@ -93,4 +95,15 @@ std::size_t XmPattern::numRows() const
 std::size_t XmPattern::numChannels() const
 {
     return m_tracks.size();
+}
+
+XmPattern::Ptr XmPattern::createDefaultPattern(int16_t chans)
+{
+	XmPattern::Ptr result(new XmPattern(chans));
+	for(int i=0; i<chans; i++) {
+		for(int r=0; r<64; r++) {
+			result->m_tracks[i].push_back( XmCell::Ptr(new XmCell()) );
+		}
+	}
+	return result;
 }

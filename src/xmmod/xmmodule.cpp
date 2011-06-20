@@ -110,6 +110,9 @@ bool XmModule::load( const std::string& filename ){
 		}
 		m_patterns.push_back( pat );
 	}
+	while( m_patterns.size()<256 ) {
+		m_patterns.push_back( XmPattern::createDefaultPattern(hdr.numChannels) );
+	}
 	for( uint16_t i = 0; i < hdr.numInstruments; i++ ) {
 		XmInstrument::Ptr ins( new XmInstrument() );
 		if( !ins->load( file ) ) {
@@ -152,18 +155,19 @@ bool XmModule::load( const std::string& filename ){
 }
 
 uint16_t XmModule::tickBufferLength() const{
-	PPP_TEST( playbackInfo().tempo < 0x20 );
+	PPP_ASSERT( playbackInfo().tempo >= 0x20 );
 	return frequency() * 5 / ( playbackInfo().tempo << 1 );
 }
 
 void XmModule::buildTick( AudioFrameBuffer& buffer ) {
-	if( !buffer )
+	if( !buffer ) {
 		buffer.reset( new AudioFrameBuffer::element_type );
+	}
 	MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength(), {0, 0} ) );
 	XmPattern::Ptr currPat = m_patterns[playbackInfo().pattern];
 	for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 		XmChannel::Ptr chan = m_channels[currTrack];
-		PPP_TEST( !chan );
+		PPP_ASSERT( chan.use_count()>0 );
 		XmCell::Ptr cell = currPat->cellAt( currTrack, playbackInfo().row );
 		chan->update( cell );
 		chan->mixTick( mixerBuffer );
@@ -176,30 +180,9 @@ void XmModule::buildTick( AudioFrameBuffer& buffer ) {
 		*( bufPtr++ ) = clipSample( *( mixerBufferPtr++ ) >> 2 );
 	}
 	nextTick();
-	if(playbackInfo().tick == 0) {
-		if(m_isPatLoop || m_doPatJump) {
-			if(m_isPatLoop) {
-				m_isPatLoop = false;
-				setRow( m_jumpRow );
-			}
-			if(m_doPatJump) {
-				if(!jumpNextOrder()) {
-					buffer.reset();
-				}
-				return;
-			}
-		}
-		else {
-			setRow( (playbackInfo().row+1) % currPat->numRows() );
-			if(playbackInfo().row == 0) {
-				if(!jumpNextOrder()) {
-					buffer.reset();
-				}
-				return;
-			}
-		}
-		m_jumpOrder = m_jumpRow = 0;
-		m_doPatJump = m_isPatLoop = false;
+	if(!adjustPosition(false)) {
+		buffer.reset();
+		return;
 	}
 	setPosition( position() + mixerBuffer->size() );
 }
@@ -209,67 +192,82 @@ void XmModule::simulateTick( std::size_t& bufferLength )
 	try {
 		bufferLength = tickBufferLength();
 		XmPattern::Ptr currPat = m_patterns[playbackInfo().pattern];
-		PPP_TEST( !currPat );
+		PPP_ASSERT( currPat.use_count()>0 );
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			XmChannel::Ptr chan = m_channels[currTrack];
-			PPP_TEST( !chan );
+			PPP_ASSERT( chan.use_count()>0 );
 			XmCell::Ptr cell = currPat->cellAt( currTrack, playbackInfo().row );
 			chan->update( cell );
 			chan->simTick( bufferLength );
 		}
 		nextTick();
-		if(playbackInfo().tick == 0) {
-			if(m_isPatLoop || m_doPatJump) {
-				if(m_isPatLoop) {
-					m_isPatLoop = false;
-					setRow( m_jumpRow );
-// 					LOG_DEBUG("Pat loop -> %d", m_jumpRow);
-				}
-				if(m_doPatJump) {
-// 					LOG_DEBUG("Pat jump -> %d,%d", m_jumpOrder, m_jumpRow);
-					setRow( m_jumpRow );
-					m_jumpRow = 0;
-					m_doPatJump = false;
-					m_jumpOrder++;
-					if(m_jumpOrder >= m_length) {
-						m_jumpOrder = m_restartPos;
-					}
-					m_orderPlaybackCount[playbackInfo().order]++;
-					setOrder( m_jumpOrder );
-					if(playbackInfo().order >= m_length) {
-						bufferLength = 0;
-						return;
-					}
-					setPatternIndex( m_orders[playbackInfo().order] );
-					multiTrackAt( 0 ).newState()->archive( this ).finishSave();
-				}
-			}
-			else {
-				setRow( (playbackInfo().row+1) % currPat->numRows() );
-				if(playbackInfo().row == 0) {
-					m_orderPlaybackCount[playbackInfo().order]++;
-					setOrder( (playbackInfo().order+1) );
-					if(playbackInfo().order >= m_length) {
-						bufferLength = 0;
-						return;
-					}
-					setPatternIndex( m_orders[playbackInfo().order] );
-					multiTrackAt( 0 ).newState()->archive( this ).finishSave();
-				}
-			}
-			m_jumpOrder = m_jumpRow = 0;
-			m_doPatJump = m_isPatLoop = false;
-		}
-		if( m_orderPlaybackCount[playbackInfo().order] >= maxRepeat() ) {
+		if(!adjustPosition(true)) {
 			bufferLength = 0;
-			return;
 		}
 		setPosition( position() + bufferLength );
 	}
 	PPP_CATCH_ALL();
 }
 
-GenOrder::Ptr XmModule::mapOrder( int16_t order ){
+bool XmModule::adjustPosition(bool doStore)
+{
+	bool orderChanged = false;
+	if(playbackInfo().tick == 0) {
+		if(m_isPatLoop || m_doPatJump) {
+			if(m_isPatLoop) {
+				m_isPatLoop = false;
+				setRow( m_jumpRow );
+			}
+			if(m_doPatJump) {
+				setRow( m_jumpRow );
+				m_jumpRow = 0;
+				m_doPatJump = false;
+				m_jumpOrder++;
+				if(m_jumpOrder >= m_length) {
+					m_jumpOrder = m_restartPos;
+				}
+				m_orderPlaybackCount[playbackInfo().order]++;
+				setOrder( m_jumpOrder );
+				orderChanged = true;
+			}
+		}
+		else {
+			XmPattern::Ptr currPat = m_patterns[playbackInfo().pattern];
+			setRow( (playbackInfo().row+1) % currPat->numRows() );
+			if(playbackInfo().row == 0) {
+				m_orderPlaybackCount[playbackInfo().order]++;
+				setOrder( (playbackInfo().order+1) );
+				orderChanged = true;
+			}
+		}
+		m_jumpOrder = m_jumpRow = 0;
+		m_doPatJump = m_isPatLoop = false;
+	}
+	if(orderChanged) {
+		if(playbackInfo().order < m_length) {
+			setPatternIndex( m_orders[playbackInfo().order] );
+			if(doStore) {
+				multiTrackAt( 0 ).newState()->archive( this ).finishSave();
+			}
+			else {
+				bool wasLocked = tryLock();
+				multiTrackAt( 0 ).nextState()->archive( this ).finishLoad();
+				if(wasLocked) {
+					unlock();
+				}
+			}
+		}
+		else {
+			return false;
+		}
+	}
+	if( m_orderPlaybackCount[playbackInfo().order] >= maxRepeat() ) {
+		return false;
+	}
+	return true;
+}
+
+GenOrder::Ptr XmModule::mapOrder( int16_t order ) {
 	static GenOrder::Ptr xxx( new GenOrder( 0xff ) );
 	if( !inRange<int16_t>( order, 0, orderCount() - 1 ) )
 		return xxx;
@@ -290,16 +288,20 @@ bool XmModule::jumpPrevTrack(){
 
 bool XmModule::jumpNextOrder(){
 	IArchive::Ptr next = multiTrackAt( 0 ).nextState();
-	if( !next )
+	if( !next ) {
 		return false;
+	}
+	IAudioSource::LockGuard guard(this);
 	next->archive( this ).finishLoad();
 	return true;
 }
 
 bool XmModule::jumpPrevOrder(){
 	IArchive::Ptr next = multiTrackAt( 0 ).prevState();
-	if( !next )
+	if( !next ) {
 		return false;
+	}
+	IAudioSource::LockGuard guard(this);
 	next->archive( this ).finishLoad();
 	return true;
 }
@@ -585,10 +587,12 @@ bool XmModule::initialize(uint32_t frq)
 	}
 	while( currTickLen != 0 );
 	LOG_MESSAGE( "Preprocessed. Resetting module." );
-	if( trackCount() > 0 )
+	if( trackCount() > 0 ) {
+		IAudioSource::LockGuard guard(this);
 		multiTrackAt( 0 ).nextState()->archive( this ).finishLoad();
-	LOG_MESSAGE( "Removing empty tracks" );
-	removeEmptyTracks();
+	}
+/*	LOG_MESSAGE( "Removing empty tracks" );
+	removeEmptyTracks();*/
 	return true;
 }
 

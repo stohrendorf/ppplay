@@ -40,8 +40,8 @@ Label::~Label() = default;
 
 void Label::sizeColorsToMax() {
 	int w = area().width();
-	m_fgColors.resize(std::max<std::size_t>(m_text.length(), w), ESC_NOCHANGE);
-	m_bgColors.resize(std::max<std::size_t>(m_text.length(), w), ESC_NOCHANGE);
+	m_fgColors.resize(std::max<std::size_t>(m_text.length(), w), Color::None);
+	m_bgColors.resize(std::max<std::size_t>(m_text.length(), w), Color::None);
 }
 
 void Label::setText(const std::string& txt) {
@@ -63,7 +63,7 @@ std::size_t Label::length() const {
 	return m_text.length();
 }
 
-void Label::setFgColorRange(std::size_t pos, uint8_t color, std::size_t len) {
+void Label::setFgColorRange(std::size_t pos, Color color, std::size_t len) {
 	if(pos >= m_bgColors.size())
 		return;
 	if((len == 0) || (len + pos > m_bgColors.size()))
@@ -71,7 +71,7 @@ void Label::setFgColorRange(std::size_t pos, uint8_t color, std::size_t len) {
 	std::fill_n(&m_fgColors[pos], len, color);
 }
 
-void Label::setBgColorRange(std::size_t pos, uint8_t color, std::size_t len) {
+void Label::setBgColorRange(std::size_t pos, Color color, std::size_t len) {
 	if(pos >= m_bgColors.size())
 		return;
 	if((len == 0) || (len + pos > m_bgColors.size()))
@@ -102,9 +102,9 @@ void Label::drawThis() {
 		if(textPos >= length())
 			break;
 		drawChar(localX, 0, m_text[textPos]);
-		if(m_fgColors[textPos] != ESC_NOCHANGE)
+		if(m_fgColors[textPos] != Color::None)
 			setFgColorAt(localX, 0, m_fgColors[textPos]);
-		if(m_bgColors[textPos] != ESC_NOCHANGE)
+		if(m_bgColors[textPos] != Color::None)
 			setBgColorAt(localX, 0, m_bgColors[textPos]);
 	}
 }

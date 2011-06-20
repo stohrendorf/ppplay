@@ -26,6 +26,7 @@
 
 #include <list>
 #include <memory>
+#include "ppg.h"
 
 namespace ppg {
 
@@ -50,6 +51,7 @@ class Widget {
 		Widget* m_parent; //!< @brief Pointer to the parent widget, or @c NULL if it's the top widget
 		Rect m_area; //!< @brief Area of this widget within the parent's space
 		List m_children; //!< @brief Children within this widget
+		bool m_autodelete; //!< @brief If @c true, the parent widget should delete this when destroyed. Default is @c true
 		virtual void drawThis() = 0; //!< @brief Internal drawing method, called by PppWidet::draw() @see draw()
 	public:
 		/**
@@ -58,10 +60,6 @@ class Widget {
 		 * @param[in] thisPtr Shared pointer to @c this
 		 */
 		explicit Widget(Widget* parent);
-		/**
-		 * @brief Value that marks a non-changing color
-		 */
-		static const int ESC_NOCHANGE = 0xff;
 		/**
 		 * @brief Destructor. Deletes all children.
 		 */
@@ -96,14 +94,14 @@ class Widget {
 		 * @param[in] y Top position
 		 * @param[in] c Dos Color Value
 		 */
-		virtual void setFgColorAt(int x, int y, uint8_t c);
+		virtual void setFgColorAt(int x, int y, Color c);
 		/**
 		 * @brief Sets the background color relative to the widget's position
 		 * @param[in] x Left position
 		 * @param[in] y Top position
 		 * @param[in] c Dos Color Value
 		 */
-		virtual void setBgColorAt(int x, int y, uint8_t c);
+		virtual void setBgColorAt(int x, int y, Color c);
 		/**
 		 * @brief Sets the widget's left position
 		 * @param[in] x Left position
@@ -204,6 +202,11 @@ class Widget {
 		 * The default implementation calls the children's event handlers
 		 */
 		virtual bool onMouseMove(int x, int y);
+		/**
+		 * @brief Sets the value of m_autoDelete
+		 * @param[in] value The new value
+		 */
+		void setAutoDelete(bool value);
 };
 
 } // namespace ppg
