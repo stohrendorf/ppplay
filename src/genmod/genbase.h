@@ -19,21 +19,17 @@
 #ifndef GENBASE_H
 #define GENBASE_H
 
+#include "stuff/utils.h"
+#include "stuff/pppexcept.h"
+#include "logger/logger.h"
+#include "stream/iserializable.h"
+#include "output/audiofifo.h"
+
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <cstdint>
 #include <array>
-
-#include "stuff/utils.h"
-#include "stuff/pppexcept.h"
-#include "logger/logger.h"
-#include "stream/binstream.h"
-#include "output/audiofifo.h"
-
-/**
- * @example ppp.cpp
- */
 
 /**
  * @mainpage Hi folks!
@@ -61,7 +57,9 @@
  * @brief This module contains abstract base classes for the PeePeePlayer Module Interface
  * @details
  * If you want to create your own Module Class, be sure to use these classes to create it.
- *
+ */
+
+/**
  * @defgroup Common Common definitions
  * @brief This module contains common things for all things
  */
@@ -80,53 +78,55 @@
  * @brief This namespace is just for grouping things together
  */
 namespace ppp {
-	/**
-	 * @brief General note names
-	 * @ingroup Common
-	 */
-	extern const std::array<const char[3], 12> NoteNames;
 
-	/**
-	 * @brief Clip/convert a signed sample to a signed 16-bit PCM value
-	 * @ingroup GenMod
-	 * @param[in] smp Sample to be clipped
-	 * @return Clipped 16-bit sample
-	 * @note Time-critical
-	 */
-	inline int16_t clipSample( int32_t smp ) throw() {
-		return clip( smp, -32768, 32767 );
-	}
+/**
+ * @brief General note names
+ * @ingroup Common
+ */
+extern const std::array<const char[3], 12> NoteNames;
 
-	/**
-	 * @brief An order list item
-	 * @ingroup GenMod
-	 */
-	class GenOrder : public ISerializable {
-			DISABLE_COPY( GenOrder )
-			GenOrder() = delete;
-		public:
-			typedef std::shared_ptr<GenOrder> Ptr; //!< @brief Class pointer
-			typedef std::vector<Ptr> Vector;
-		private:
-			uint8_t m_index; //!< @brief Pattern index of this order
-		public:
-			/**
-			 * @brief Constructor
-			 * @param[in] idx Order index
-			 */
-			GenOrder( uint8_t idx ) throw();
-			/**
-			 * @brief Return the pattern index associated with this order
-			 * @return GenOrder::m_index
-			 */
-			uint8_t index() const throw();
-			/**
-			 * @brief Set the pattern index
-			 * @param[in] n New index
-			 */
-			void setIndex( const uint8_t n ) throw();
-			virtual IArchive& serialize( IArchive* data );
-	};
+/**
+ * @brief Clip/convert a signed sample to a signed 16-bit PCM value
+ * @ingroup GenMod
+ * @param[in] smp Sample to be clipped
+ * @return Clipped 16-bit sample
+ * @note Time-critical
+ */
+inline int16_t clipSample(int32_t smp) throw() {
+	return clip(smp, -32768, 32767);
+}
+
+/**
+ * @brief An order list item
+ * @ingroup GenMod
+ */
+class GenOrder : public ISerializable {
+		DISABLE_COPY(GenOrder)
+		GenOrder() = delete;
+	public:
+		typedef std::shared_ptr<GenOrder> Ptr; //!< @brief Class pointer
+		typedef std::vector<Ptr> Vector;
+	private:
+		uint8_t m_index; //!< @brief Pattern index of this order
+	public:
+		/**
+		 * @brief Constructor
+		 * @param[in] idx Order index
+		 */
+		GenOrder(uint8_t idx);
+		/**
+		 * @brief Return the pattern index associated with this order
+		 * @return GenOrder::m_index
+		 */
+		uint8_t index() const;
+		/**
+		 * @brief Set the pattern index
+		 * @param[in] n New index
+		 */
+		void setIndex(const uint8_t n);
+		virtual IArchive& serialize(IArchive* data);
+};
+
 } // namespace ppp
 
 #endif

@@ -37,7 +37,7 @@ class UIMain : public ppg::Widget {
 		ppg::Label* m_modTitle;
 		virtual void drawThis() throw( ppg::Exception );
 	public:
-		UIMain( ppg::Widget* parent );
+		UIMain( Widget* parent );
 		ppg::Label* posLabel();
 		ppg::Label* playbackInfo();
 		ppg::StereoPeakBar* volBar();

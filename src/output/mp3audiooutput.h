@@ -25,7 +25,7 @@
 #include <fstream>
 
 class MP3AudioOutput : public IAudioOutput {
-		DISABLE_COPY( MP3AudioOutput )
+		DISABLE_COPY(MP3AudioOutput)
 		MP3AudioOutput() = delete;
 	private:
 		struct lame_global_struct* m_lameGlobalFlags;
@@ -36,9 +36,9 @@ class MP3AudioOutput : public IAudioOutput {
 		std::mutex m_bufferMutex;
 		bool m_paused;
 		static const std::size_t BufferSize = 4096;
-		static void encodeThread( MP3AudioOutput* src );
+		static void encodeThread(MP3AudioOutput* src);
 	public:
-		explicit MP3AudioOutput( const IAudioSource::WeakPtr& src, const std::string& filename );
+		explicit MP3AudioOutput(const IAudioSource::WeakPtr& src, const std::string& filename);
 		virtual ~MP3AudioOutput();
 		virtual uint16_t volumeRight() const;
 		virtual uint16_t volumeLeft() const;
@@ -46,8 +46,8 @@ class MP3AudioOutput : public IAudioOutput {
 		virtual void play();
 		virtual bool paused();
 		virtual bool playing();
-		virtual int init( int desiredFrq );
-		void setID3( const std::string& title, const std::string& album, const std::string& artist );
+		virtual int init(int desiredFrq);
+		void setID3(const std::string& title, const std::string& album, const std::string& artist);
 };
 
 #endif // MP3AUDIOOUTPUT_H

@@ -18,34 +18,27 @@
 
 #include "iaudiosource.h"
 
-IAudioSource::IAudioSource() : m_initialized(false), m_frequency(0)
-{
+IAudioSource::IAudioSource() : m_initialized(false), m_frequency(0) {
 }
 
-IAudioSource::~IAudioSource()
-{
-}
+IAudioSource::~IAudioSource() = default;
 
-bool IAudioSource::initialized() const
-{
+bool IAudioSource::initialized() const {
 	return m_initialized;
 }
 
-bool IAudioSource::fail()
-{
+bool IAudioSource::fail() {
 	m_initialized = false;
 	m_frequency = 0;
 	return false;
 }
 
-bool IAudioSource::initialize(uint32_t frequency)
-{
+bool IAudioSource::initialize(uint32_t frequency) {
 	m_frequency = frequency;
 	m_initialized = true;
 	return true;
 }
 
-uint32_t IAudioSource::frequency() const
-{
+uint32_t IAudioSource::frequency() const {
 	return m_frequency;
 }

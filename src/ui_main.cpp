@@ -18,7 +18,17 @@
 
 #include "ui_main.h"
 
-UIMain::UIMain( ppg::Widget* parent ): Widget( parent ), m_position( NULL ), m_screenSep1( NULL ), m_screenSep2( NULL ), m_playbackInfo( NULL ), m_volBar( NULL ), m_chanInfos(), m_chanCells(), m_trackerInfo( NULL ), m_modTitle( NULL ) {
+UIMain::UIMain( Widget* parent ): Widget( parent ),
+	m_position(NULL),
+	m_screenSep1(NULL),
+	m_screenSep2(NULL),
+	m_playbackInfo(NULL),
+	m_volBar(NULL),
+	m_chanInfos(),
+	m_chanCells(),
+	m_trackerInfo(NULL),
+	m_modTitle(NULL)
+{
 	setSize( parent->area().size() );
 	setPosition( 0, 0 );
 	show();
@@ -39,7 +49,7 @@ UIMain::UIMain( ppg::Widget* parent ): Widget( parent ), m_position( NULL ), m_s
 	m_playbackInfo = new ppg::Label( this );
 	m_playbackInfo->setWidth( area().width() - 4 );
 	m_playbackInfo->setPosition( 2, 2 );
-	m_playbackInfo->alignment = ppg::Label::Alignment::alRight;
+	m_playbackInfo->alignment = ppg::Label::Alignment::Right;
 	m_playbackInfo->setFgColorRange( 0, ppg::dcBrightWhite, 0 );
 	m_playbackInfo->show();
 	m_volBar = new ppg::StereoPeakBar( this, 16, 256, 1, true );
@@ -61,20 +71,20 @@ UIMain::UIMain( ppg::Widget* parent ): Widget( parent ), m_position( NULL ), m_s
 		m_chanCells[i] = new ppg::Label( this );
 		m_chanCells[i]->setWidth( area().width() - 4 );
 		m_chanCells[i]->setPosition( 2, 5 + i );
-		m_chanCells[i]->alignment = ppg::Label::Alignment::alRight;
+		m_chanCells[i]->alignment = ppg::Label::Alignment::Right;
 		m_chanCells[i]->setFgColorRange( 0, ppg::dcWhite, 0 );
 		m_chanCells[i]->show();
 	}
 	m_trackerInfo = new ppg::Label( this );
 	m_trackerInfo->setPosition( 2, area().height() - 2 );
 	m_trackerInfo->setWidth( area().width() - 4 );
-	m_trackerInfo->alignment = ppg::Label::Alignment::alCenter;
+	m_trackerInfo->alignment = ppg::Label::Alignment::Center;
 	m_trackerInfo->setFgColorRange( 0, ppg::dcAqua, 0 );
 	m_trackerInfo->show();
 	m_modTitle = new ppg::Label( this );
 	m_modTitle->setWidth( area().width() - 4 );
 	m_modTitle->setPosition( 2, 0 );
-	m_modTitle->alignment = ppg::Label::Alignment::alCenter;
+	m_modTitle->alignment = ppg::Label::Alignment::Center;
 	m_modTitle->setFgColorRange( 0, ppg::dcBrightWhite, 0 );
 	m_modTitle->show();
 }

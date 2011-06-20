@@ -16,13 +16,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "breseninter.h"
-#include "stream/iarchive.h"
+#include "sbinstream.h"
 
-namespace ppp {
-
-IArchive& BresenInterpolation::serialize( class IArchive* archive ) {
-	return *archive & m_dx & m_dy & m_err;
+SBinStream::SBinStream() : BinStream(BinStream::SpIoStream(new std::stringstream(std::ios::in | std::ios::out | std::ios::binary))) {
 }
 
-}
+SBinStream::~SBinStream() = default;

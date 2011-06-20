@@ -20,6 +20,7 @@
 #define IAUDIOOUTPUT_H
 
 #include "iaudiosource.h"
+
 #include <memory>
 
 /**
@@ -39,7 +40,7 @@
  * @brief Abstract base class for sound output
  */
 class IAudioOutput {
-		DISABLE_COPY( IAudioOutput )
+		DISABLE_COPY(IAudioOutput)
 		IAudioOutput() = delete;
 	public:
 		//! @brief Audio output device error codes
@@ -57,7 +58,7 @@ class IAudioOutput {
 		 * @brief Constructor
 		 * @param[in] src Pointer to an audio data source
 		 */
-		explicit IAudioOutput( const IAudioSource::WeakPtr& src ) : m_source( src ), m_errorCode( NoError ) {}
+		explicit IAudioOutput(const IAudioSource::WeakPtr& src) : m_source(src), m_errorCode(NoError) {}
 		//! @brief Destructor
 		virtual ~IAudioOutput();
 		/**
@@ -65,7 +66,7 @@ class IAudioOutput {
 		 * @param[in] desiredFrq Desired output frequency
 		 * @return Either the real output frequency, or 0 if the call failed
 		 */
-		virtual int init( int desiredFrq ) = 0;
+		virtual int init(int desiredFrq) = 0;
 		/**
 		 * @brief Check if the output is in playing state
 		 * @return @c true if the output is in playing state
@@ -109,7 +110,7 @@ class IAudioOutput {
 		 * @brief Set the internal error code
 		 * @param[in] ec New error code
 		 */
-		void setErrorCode( ErrorCode ec );
+		void setErrorCode(ErrorCode ec);
 	private:
 		IAudioSource::WeakPtr m_source; //!< @brief The audio source
 		ErrorCode m_errorCode; //!< @brief Internal error code

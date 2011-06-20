@@ -17,6 +17,7 @@
 */
 
 #include "genchannel.h"
+#include "stream/iarchive.h"
 
 /**
 * @file
@@ -24,65 +25,59 @@
 * @brief General channel definitions
 */
 
-using namespace ppp;
+namespace ppp {
 
-GenChannel::GenChannel() throw( PppException ) :
-	m_active( false ), m_disabled( true ),
-	m_position( 0 ),
+GenChannel::GenChannel() :
+	m_active(false), m_disabled(true),
+	m_position(0),
 	m_statusString(),
-	m_statusStringMutex()
-{
+	m_statusStringMutex() {
 }
 
 GenChannel::~GenChannel() {
 }
 
-IArchive& GenChannel::serialize( IArchive* data ) {
-	*data & m_active & m_disabled & m_position;
+IArchive& GenChannel::serialize(IArchive* data) {
+	*data& m_active& m_disabled& m_position;
 	return *data;
 }
 
-std::string GenChannel::statusString() throw() {
-	std::lock_guard<std::mutex> lock( m_statusStringMutex );
+std::string GenChannel::statusString() {
+	std::lock_guard<std::mutex> lock(m_statusStringMutex);
 	return m_statusString;
 }
 
-void GenChannel::setStatusString( const std::string& s ) {
-	std::lock_guard<std::mutex> lock( m_statusStringMutex );
+void GenChannel::setStatusString(const std::string& s) {
+	std::lock_guard<std::mutex> lock(m_statusStringMutex);
 	m_statusString = s;
 }
 
-void GenChannel::setActive(bool a) throw()
-{
-    m_active = a;
+void GenChannel::setActive(bool a) {
+	m_active = a;
 }
 
-void GenChannel::setPosition(int32_t p) throw()
-{
-    m_position = p;
+void GenChannel::setPosition(int32_t p) {
+	m_position = p;
 }
 
-void GenChannel::enable() throw()
-{
-    m_disabled = false;
+void GenChannel::enable() {
+	m_disabled = false;
 }
 
-void GenChannel::disable() throw()
-{
-    m_disabled = true;
+void GenChannel::disable() {
+	m_disabled = true;
 }
 
-int32_t GenChannel::position() const throw()
-{
-    return m_position;
+int32_t GenChannel::position() const {
+	return m_position;
 }
 
-bool GenChannel::isDisabled() const throw()
-{
-    return m_disabled;
+bool GenChannel::isDisabled() const {
+	return m_disabled;
 }
 
-bool GenChannel::isActive() const throw()
-{
-    return m_active;
+bool GenChannel::isActive() const {
+	return m_active;
+}
+
 }

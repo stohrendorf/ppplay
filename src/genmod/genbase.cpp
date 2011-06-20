@@ -17,6 +17,7 @@
 */
 
 #include "genbase.h"
+#include "stream/iarchive.h"
 
 /**
 * @file
@@ -25,37 +26,28 @@
 */
 
 namespace ppp {
-	const std::array<const char[3], 12> NoteNames = {
-		{
-			"C-", "C#", "D-", "D#",
-			"E-", "F-", "F#", "G-",
-			"G#", "A-", "A#", "B-"
-		}
-	};
 
-// 	const std::array<const int16_t, 64> ProtrackerLookup = {{
-// 		      0,  24,  49,  74,  97, 120, 141, 161,
-// 		    180, 197, 212, 224, 235, 244, 250, 253,
-// 		    255, 253, 250, 244, 235, 224, 212, 197,
-// 		    180, 161, 141, 120,  97,  74,  49,  24,
-// 		   -  0, -24,- 49,- 74,- 97,-120,-141,-161,
-// 		   -180,-197,-212,-224,-235,-244,-250,-253,
-// 		   -255,-253,-250,-244,-235,-224,-212,-197,
-// 		   -180,-161,-141,-120,- 97,- 74,- 49,- 24
-// 	}};
-
-	GenOrder::GenOrder( uint8_t idx ) throw() : m_index( idx )
-	{ }
-
-	uint8_t GenOrder::index() const throw() {
-		return m_index;
+const std::array<const char[3], 12> NoteNames = {
+	{
+		"C-", "C#", "D-", "D#",
+		"E-", "F-", "F#", "G-",
+		"G#", "A-", "A#", "B-"
 	}
+};
 
-	void GenOrder::setIndex( const uint8_t n ) throw() {
-		m_index = n;
-	}
+GenOrder::GenOrder(uint8_t idx) : m_index(idx)
+{ }
 
-	IArchive& GenOrder::serialize( IArchive* data ) {
-		return *data & m_index;
-	}
+uint8_t GenOrder::index() const {
+	return m_index;
+}
+
+void GenOrder::setIndex(const uint8_t n) {
+	m_index = n;
+}
+
+IArchive& GenOrder::serialize(IArchive* data) {
+	return *data & m_index;
+}
+
 }

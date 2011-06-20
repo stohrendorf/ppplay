@@ -20,6 +20,7 @@
 #define S3MSAMPLE_H
 
 #include "genmod/gensample.h"
+#include "stream/binstream.h"
 
 /**
 * @file
@@ -28,28 +29,26 @@
 */
 
 namespace ppp {
-	namespace s3m {
+namespace s3m {
 
-		/**
-		* @class S3mSample
-		* @ingroup S3mMod
-		* @brief Sample class for S3M Samples
-		*/
-		class S3mSample : public GenSample {
-			public:
-				typedef std::shared_ptr<S3mSample> Ptr;
-				typedef std::vector<Ptr> Vector;
-			private:
-				bool m_highQuality;
-			public:
-				S3mSample() throw();
-				virtual ~S3mSample() throw();
-				bool load( BinStream& str, std::size_t pos, bool imagoLoopEnd ) throw( PppException );
-				bool isHighQuality() const {
-					return m_highQuality;
-				}
-		};
-	} // namespace ppp
+/**
+* @class S3mSample
+* @ingroup S3mMod
+* @brief Sample class for S3M Samples
+*/
+class S3mSample : public GenSample {
+	public:
+		typedef std::shared_ptr<S3mSample> Ptr;
+		typedef std::vector<Ptr> Vector;
+	private:
+		bool m_highQuality;
+	public:
+		S3mSample();
+		virtual ~S3mSample();
+		bool load(BinStream& str, std::size_t pos, bool imagoLoopEnd);
+		bool isHighQuality() const;
+};
+} // namespace ppp
 } // namespace s3m
 
 #endif

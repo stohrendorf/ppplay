@@ -18,27 +18,18 @@
 
 #include "binstream.h"
 
-FBinStream::FBinStream( const std::string& filename ) :
-	BinStream( SpIoStream( new std::fstream( filename.c_str(), std::ios::in | std::ios::binary ) ) ),
-	m_filename( filename ) {
-}
-
-FBinStream::~FBinStream() {
-	std::static_pointer_cast<std::fstream>( stream() )->close();
-}
-
-bool FBinStream::isOpen() const {
-	return std::static_pointer_cast<std::fstream>( stream() )->is_open();
+BinStream::BinStream(BinStream::SpIoStream stream) : m_stream(stream)
+{
 }
 
 template<typename TR>
-BinStream& BinStream::read( TR* data, const std::size_t count ) {
-	m_stream->read( reinterpret_cast<char*>( data ), sizeof( TR )*count );
+BinStream& BinStream::read(TR* data, const std::size_t count) {
+	m_stream->read(reinterpret_cast<char*>(data), sizeof(TR)*count);
 	return *this;
 }
 template<typename TW>
-BinStream& BinStream::write( const TW* data, const std::size_t count ) {
-	m_stream->write( reinterpret_cast<const char*>( data ), sizeof( TW )*count );
+BinStream& BinStream::write(const TW* data, const std::size_t count) {
+	m_stream->write(reinterpret_cast<const char*>(data), sizeof(TW)*count);
 	return *this;
 }
 
@@ -46,72 +37,50 @@ BinStream& BinStream::write( const TW* data, const std::size_t count ) {
 	template BinStream &BinStream::read<tn>(tn *, std::size_t); \
 	template BinStream &BinStream::write<tn>(const tn*, std::size_t);
 
-BINSTREAM_RW_IMPL( int8_t )
-BINSTREAM_RW_IMPL( uint8_t )
-BINSTREAM_RW_IMPL( int16_t )
-BINSTREAM_RW_IMPL( uint16_t )
-BINSTREAM_RW_IMPL( int32_t )
-BINSTREAM_RW_IMPL( uint32_t )
-BINSTREAM_RW_IMPL( int64_t )
-BINSTREAM_RW_IMPL( uint64_t )
-BINSTREAM_RW_IMPL( char )
-BINSTREAM_RW_IMPL( bool )
-BINSTREAM_RW_IMPL( float )
+BINSTREAM_RW_IMPL(int8_t)
+BINSTREAM_RW_IMPL(uint8_t)
+BINSTREAM_RW_IMPL(int16_t)
+BINSTREAM_RW_IMPL(uint16_t)
+BINSTREAM_RW_IMPL(int32_t)
+BINSTREAM_RW_IMPL(uint32_t)
+BINSTREAM_RW_IMPL(int64_t)
+BINSTREAM_RW_IMPL(uint64_t)
+BINSTREAM_RW_IMPL(char)
+BINSTREAM_RW_IMPL(bool)
+BINSTREAM_RW_IMPL(float)
 
-ISerializable::~ISerializable()
-{ }
-
-IArchive::IArchive( const BinStream::Ptr& stream ) : m_loading( false ), m_stream( stream )
-{ }
-
-IArchive::~IArchive()
-{ }
-
-MemArchive::MemArchive() : IArchive( BinStream::Ptr( new SBinStream() ) )
-{ }
-
-MemArchive::~MemArchive()
-{ }
-
-bool BinStream::fail() const
-{
-    return m_stream->fail();
+bool BinStream::fail() const {
+	return m_stream->fail();
 }
 
-bool BinStream::good() const
-{
-    return m_stream->good();
+bool BinStream::good() const {
+	return m_stream->good();
 }
 
-void BinStream::clear()
-{
-    m_stream->clear();
+void BinStream::clear() {
+	m_stream->clear();
 }
 
-void BinStream::seek(uint32_t pos)
-{
-    m_stream->seekg(pos);
-    m_stream->seekp(pos);
+void BinStream::seek(uint32_t pos) {
+	m_stream->seekg(pos);
+	m_stream->seekp(pos);
 }
 
-void BinStream::seekrel(int32_t delta)
-{
-    uint32_t p = pos();
-    m_stream->seekg(p + delta);
-    m_stream->seekp(p + delta);
+void BinStream::seekrel(int32_t delta) {
+	uint32_t p = pos();
+	m_stream->seekg(p + delta);
+	m_stream->seekp(p + delta);
 }
 
-uint32_t BinStream::pos() const
-{
-    return m_stream->tellg();
+uint32_t BinStream::pos() const {
+	return m_stream->tellg();
 }
 
-const BinStream::SpIoStream &BinStream::stream() const
-{
-    return m_stream;
+const BinStream::SpIoStream& BinStream::stream() const {
+	return m_stream;
 }
 
-BinStream::SpIoStream &BinStream::stream()
-{
-    return m_stream;
+BinStream::SpIoStream& BinStream::stream() {
+	return m_stream;
 }
+

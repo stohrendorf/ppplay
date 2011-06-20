@@ -20,28 +20,31 @@
 #define XMSAMPLE_H
 
 #include "genmod/gensample.h"
+#include "stream/binstream.h"
 
 namespace ppp {
-	namespace xm {
-		class XmSample : public GenSample {
-				DISABLE_COPY( XmSample )
-			private:
-				int8_t m_finetune;
-				uint8_t m_panning;
-				int8_t m_relativeNote;
-				bool m_16bit;
-			public:
-				typedef std::shared_ptr<XmSample> Ptr;
-				typedef std::vector<Ptr> Vector;
-				XmSample();
-				bool load( BinStream& str ) throw( PppException );
-				bool loadData( BinStream& str );
-				int8_t finetune() const;
-				uint8_t panning() const;
-				int8_t relativeNote() const;
-				bool is16bit() const;
-		};
-	}
+namespace xm {
+
+class XmSample : public GenSample {
+		DISABLE_COPY(XmSample)
+	private:
+		int8_t m_finetune;
+		uint8_t m_panning;
+		int8_t m_relativeNote;
+		bool m_16bit;
+	public:
+		typedef std::shared_ptr<XmSample> Ptr;
+		typedef std::vector<Ptr> Vector;
+		XmSample();
+		bool load(BinStream& str);
+		bool loadData(BinStream& str);
+		int8_t finetune() const;
+		uint8_t panning() const;
+		int8_t relativeNote() const;
+		bool is16bit() const;
+};
+
+}
 }
 
 #endif // XMSAMPLE_H

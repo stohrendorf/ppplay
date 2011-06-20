@@ -16,13 +16,17 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "breseninter.h"
-#include "stream/iarchive.h"
+#include "fbinstream.h"
 
-namespace ppp {
-
-IArchive& BresenInterpolation::serialize( class IArchive* archive ) {
-	return *archive & m_dx & m_dy & m_err;
+FBinStream::FBinStream( const std::string& filename ) :
+	BinStream( SpIoStream( new std::fstream( filename.c_str(), std::ios::in | std::ios::binary ) ) ),
+	m_filename( filename ) {
 }
 
+FBinStream::~FBinStream() {
+	std::static_pointer_cast<std::fstream>( stream() )->close();
+}
+
+bool FBinStream::isOpen() const {
+	return std::static_pointer_cast<std::fstream>( stream() )->is_open();
 }

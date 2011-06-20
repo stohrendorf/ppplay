@@ -16,13 +16,28 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "breseninter.h"
-#include "stream/iarchive.h"
+#ifndef ISERIALIZABLE_H
+#define ISERIALIZABLE_H
 
-namespace ppp {
+class IArchive;
 
-IArchive& BresenInterpolation::serialize( class IArchive* archive ) {
-	return *archive & m_dx & m_dy & m_err;
-}
+/**
+ * @interface ISerializable
+ * @ingroup Common
+ * @brief Interface for serialisable classes
+ */
+class ISerializable {
+	public:
+		/**
+		 * @brief Serialise this object
+		 * @param[in,out] archive IArchive to serialize this object to
+		 * @return Reference to @a archive for pipelining
+		 */
+		virtual IArchive& serialize( IArchive* archive ) = 0;
+		/**
+		 * @brief Destructor
+		 */
+		virtual ~ISerializable() = 0;
+};
 
-}
+#endif

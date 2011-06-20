@@ -16,13 +16,50 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "breseninter.h"
-#include "stream/iarchive.h"
+#include "point.h"
 
-namespace ppp {
+namespace ppg {
 
-IArchive& BresenInterpolation::serialize( class IArchive* archive ) {
-	return *archive & m_dx & m_dy & m_err;
+Point::Point() : m_x(0), m_y(0) {
+}
+
+Point::Point(int x, int y) : m_x(x), m_y(y) {
+}
+
+const Point& Point::operator+=(const Point& rhs) {
+	m_x += rhs.m_x;
+	m_y += rhs.m_y;
+	return *this;
+}
+
+const Point Point::operator+(const Point& rhs) const {
+	return Point(m_x + rhs.m_x, m_y + rhs.m_y);
+}
+
+const Point& Point::operator-=(const Point& rhs) {
+	m_x -= rhs.m_x;
+	m_y -= rhs.m_y;
+	return *this;
+}
+
+const Point Point::operator-(const Point& rhs) const {
+	return Point(m_x - rhs.m_x, m_y - rhs.m_y);
+}
+
+int Point::x() const {
+	return m_x;
+}
+
+int Point::y() const {
+	return m_y;
+}
+
+void Point::setX(int x) {
+	m_x = x;
+}
+
+void Point::setY(int y) {
+	m_y = y;
 }
 
 }
