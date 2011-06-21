@@ -1151,7 +1151,7 @@ void XmChannel::efxPatLoop(uint8_t fxByte) {
 	}
 	m_patLoopCounter--;
 	if(m_patLoopCounter != 0) {
-		m_patLoopCounter = fxByte;
+// 		m_patLoopCounter = fxByte;
 		m_module->doPatLoop(m_patLoopRow);
 	}
 }
