@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2011  Syron <mr.syron@googlemail.com>
+    Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -61,7 +61,6 @@ class XmEnvelopeProcessor : public ISerializable {
 		uint8_t realVolume(uint8_t volume, uint8_t globalVolume, uint16_t scale);
 		uint8_t realPanning(uint8_t panning);
 		void setPosition(uint8_t pos);
-		std::string toString() const;
 		virtual IArchive& serialize(IArchive* data);
 };
 

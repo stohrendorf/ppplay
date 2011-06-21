@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2010  Syron <mr.syron@googlemail.com>
+    Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@
 #ifndef FFT_H
 #define FFT_H
 
+#include "output/audiofifo.h"
+
 #include <cstdint>
 #include <memory>
 #include <vector>
-
-#include "output/audiofifo.h"
 
 namespace ppp {
 	namespace FFT {

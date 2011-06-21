@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2011  Syron <mr.syron@googlemail.com>
+    Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -56,6 +56,10 @@ class IArchive {
 		 * @see isLoading()
 		 */
 		bool isSaving() const ;
+// the pragma is used to get rid of the annoying
+// warning: ‘IArchive& IArchive::operator%(T&)’ should return by value [-Weffc++]
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
 		/**
 		 * @brief Serialization operator
 		 * @tparam T Data type
@@ -63,7 +67,7 @@ class IArchive {
 		 * @return Reference to *this
 		 * @note Operation depends on m_loading
 		 */
-		template<class T> IArchive& operator&(T& data) {
+		template<class T> IArchive& operator%(T& data) {
 			if(m_loading) {
 				m_stream->read(&data, 1);
 			}
@@ -72,6 +76,7 @@ class IArchive {
 			}
 			return *this;
 		}
+#pragma GCC diagnostic pop
 		/**
 		 * @brief Serialization operator for arrays
 		 * @tparam T Data type

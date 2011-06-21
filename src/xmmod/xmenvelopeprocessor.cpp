@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2011  Syron <mr.syron@googlemail.com>
+    Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -170,30 +170,21 @@ namespace ppp {
 				m_nextIndex = std::max(0, foundPoint);
 			}
 		}
-		std::string XmEnvelopeProcessor::toString() const
-		{
-			if(!enabled()) {
-				return "Off";
-			}
-			else {
-				return stringf("%.2x%s", m_currentValue>>8, onSustain(m_nextIndex-1) ? "(sust)" : "");
-			}
-		}
 		IArchive& XmEnvelopeProcessor::serialize(IArchive* data)
 		{
-			*data & (*reinterpret_cast<uint8_t*>(&m_flags));
+			*data % (*reinterpret_cast<uint8_t*>(&m_flags));
 			for(std::size_t i=0; i<m_points.size(); i++) {
-				*data & m_points[i].position & m_points[i].value;
+				*data % m_points[i].position % m_points[i].value;
 			}
 			*data
-			& m_numPoints
-			& m_position
-			& m_nextIndex
-			& m_sustainPoint
-			& m_loopStart
-			& m_loopEnd
-			& m_currentRate
-			& m_currentValue;
+			% m_numPoints
+			% m_position
+			% m_nextIndex
+			% m_sustainPoint
+			% m_loopStart
+			% m_loopEnd
+			% m_currentRate
+			% m_currentValue;
 			return *data;
 		}
 	}

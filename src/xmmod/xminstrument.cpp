@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2010  Syron <mr.syron@googlemail.com>
+    Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -30,8 +30,12 @@ struct InstrumentHeader {
 struct InstrumentHeader2 {
 	uint32_t size;
 	uint8_t indices[96]; //!< @brief Maps note indices to their samples
-	struct { int16_t x,y; } volEnvelope[12];
-	struct { int16_t x,y; } panEnvelope[12];
+	struct {
+		int16_t x, y;
+	} volEnvelope[12];
+	struct {
+		int16_t x, y;
+	} panEnvelope[12];
 	uint8_t numVolPoints;
 	uint8_t numPanPoints;
 	uint8_t volSustainPoint;
@@ -45,7 +49,8 @@ struct InstrumentHeader2 {
 };
 #pragma pack(pop)
 
-using namespace ppp::xm;
+namespace ppp {
+namespace xm {
 
 XmInstrument::XmInstrument() :
 	m_samples(), m_map(), m_title(),
@@ -55,40 +60,39 @@ XmInstrument::XmInstrument() :
 	m_volLoopStart(0), m_panLoopStart(0),
 	m_volLoopEnd(0), m_panLoopEnd(0),
 	m_volSustainPoint(0), m_panSustainPoint(0),
-	m_fadeout(0), m_vibRate(0), m_vibDepth(0), m_vibSweep(0), m_vibType(0)
-{
-	std::fill_n( m_map, 96, 0 );
+	m_fadeout(0), m_vibRate(0), m_vibDepth(0), m_vibSweep(0), m_vibType(0) {
+	std::fill_n(m_map, 96, 0);
 }
 
-bool XmInstrument::load( BinStream& str ) {
+bool XmInstrument::load(BinStream& str) {
 	std::size_t startPos = str.pos();
 	InstrumentHeader hdr;
-	str.read( reinterpret_cast<char*>( &hdr ), sizeof( hdr ) );
+	str.read(reinterpret_cast<char*>(&hdr), sizeof(hdr));
 	/*	if(hdr.type!=0) {
 			LOG_WARNING("Instrument header type error @ 0x%.8x", str.pos()-sizeof(hdr));
 			return false;
 		}*/
-	if( hdr.numSamples == 0 ) {
-		str.seek( startPos + hdr.size );
+	if(hdr.numSamples == 0) {
+		str.seek(startPos + hdr.size);
 		return true;
 	}
-	PPP_ASSERT( hdr.numSamples <= 255 );
-	m_samples.resize( hdr.numSamples );
+	PPP_ASSERT(hdr.numSamples <= 255);
+	m_samples.resize(hdr.numSamples);
 	InstrumentHeader2 hdr2;
-	str.read( reinterpret_cast<char*>( &hdr2 ), sizeof( hdr2 ) );
-	std::copy( hdr2.indices, hdr2.indices + 96, m_map );
-	str.seek( startPos + hdr.size );
-	for( uint16_t i = 0; i < hdr.numSamples; i++ ) {
-		XmSample::Ptr smp( new XmSample() );
-		smp->load( str );
+	str.read(reinterpret_cast<char*>(&hdr2), sizeof(hdr2));
+	std::copy(hdr2.indices, hdr2.indices + 96, m_map);
+	str.seek(startPos + hdr.size);
+	for(uint16_t i = 0; i < hdr.numSamples; i++) {
+		XmSample::Ptr smp(new XmSample());
+		smp->load(str);
 		m_samples[i] = smp;
 	}
-	for( uint16_t i = 0; i < hdr.numSamples; i++ ) {
-		m_samples[i]->loadData( str );
+	for(uint16_t i = 0; i < hdr.numSamples; i++) {
+		m_samples[i]->loadData(str);
 	}
-	m_title = ppp::stringncpy( hdr.name, 22 );
+	m_title = ppp::stringncpy(hdr.name, 22);
 	m_panEnvFlags = static_cast<XmEnvelopeProcessor::EnvelopeFlags>(hdr2.panType);
-	for(uint8_t i=0; i<12; i++) {
+	for(uint8_t i = 0; i < 12; i++) {
 		m_panPoints[i].position = hdr2.panEnvelope[i].x;
 		m_panPoints[i].value = hdr2.panEnvelope[i].y;
 	}
@@ -102,7 +106,7 @@ bool XmInstrument::load( BinStream& str ) {
 	m_volSustainPoint = hdr2.volSustainPoint;
 	m_panSustainPoint = hdr2.panSustainPoint;
 	m_fadeout = hdr2.volFadeout;
-	for(uint8_t i=0; i<12; i++) {
+	for(uint8_t i = 0; i < 12; i++) {
 		m_volPoints[i].position = hdr2.volEnvelope[i].x;
 		m_volPoints[i].value = hdr2.volEnvelope[i].y;
 	}
@@ -113,14 +117,14 @@ bool XmInstrument::load( BinStream& str ) {
 	return true;
 }
 
-uint8_t XmInstrument::mapNoteIndex( uint8_t note ) const {
-	if( note >= 96 )
+uint8_t XmInstrument::mapNoteIndex(uint8_t note) const {
+	if(note >= 96)
 		return 0xff;
-	return m_map[note]&15;
+	return m_map[note] & 15;
 }
 
-XmSample::Ptr XmInstrument::mapNoteSample( uint8_t note ) const {
-	if( note >= 96 )
+XmSample::Ptr XmInstrument::mapNoteSample(uint8_t note) const {
+	if(note >= 96)
 		return XmSample::Ptr();
 	uint8_t mapped = mapNoteIndex(note);
 	if(mapped >= m_samples.size())
@@ -128,36 +132,37 @@ XmSample::Ptr XmInstrument::mapNoteSample( uint8_t note ) const {
 	return m_samples[mapped];
 }
 
-std::string XmInstrument::title() const
-{
+std::string XmInstrument::title() const {
 	return m_title;
 }
 
-XmEnvelopeProcessor XmInstrument::volumeProcessor() const
-{
+XmEnvelopeProcessor XmInstrument::volumeProcessor() const {
 	return XmEnvelopeProcessor(m_volEnvFlags, m_volPoints, m_numVolPoints, m_volSustainPoint, m_volLoopStart, m_volLoopEnd);
 }
 
-XmEnvelopeProcessor XmInstrument::panningProcessor() const
-{
+XmEnvelopeProcessor XmInstrument::panningProcessor() const {
 	return XmEnvelopeProcessor(m_panEnvFlags, m_panPoints, m_numPanPoints, m_panSustainPoint, m_panLoopStart, m_panLoopEnd);
 }
-namespace ppp {
-namespace xm {
+
 uint16_t XmInstrument::fadeout() const {
 	return m_fadeout;
-}}
+}
+
 uint8_t XmInstrument::vibType() const {
 	return m_vibType;
 }
+
 uint8_t XmInstrument::vibSweep() const {
 	return m_vibSweep;
 }
+
 uint8_t XmInstrument::vibDepth() const {
 	return m_vibDepth;
 }
+
 uint8_t XmInstrument::vibRate() const {
 	return m_vibRate;
 }
-}
 
+}
+}

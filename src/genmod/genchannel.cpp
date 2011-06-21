@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2010  Syron <mr.syron@googlemail.com>
+    Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ GenChannel::~GenChannel() {
 }
 
 IArchive& GenChannel::serialize(IArchive* data) {
-	*data& m_active& m_disabled& m_position;
+	*data % m_active % m_disabled % m_position;
 	return *data;
 }
 
