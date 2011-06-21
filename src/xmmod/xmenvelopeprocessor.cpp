@@ -116,7 +116,7 @@ namespace ppp {
 				curVal = 0x40;
 				m_currentRate = 0;
 			}
-			uint16_t curPan;
+			int16_t curPan;
 			if(panning > 0x80) {
 				curPan = panning-0x80;
 			}
@@ -126,8 +126,7 @@ namespace ppp {
 			curPan += 0x80;
 			curPan <<= 3;
 			curPan = (curPan*(curVal-0x20))>>8;
-			return panning + curPan; 
-// 			return clip<int>(panning + (((curVal-0x20) * (0x80-std::abs(panning-0x80))) >> 5), 0, 0xff);
+			return clip<int>(panning + curPan, 0, 0xff); 
 		}
 		void XmEnvelopeProcessor::setPosition(uint8_t pos)
 		{
