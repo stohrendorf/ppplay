@@ -19,12 +19,21 @@
 #ifndef XMINSTRUMENT_H
 #define XMINSTRUMENT_H
 
+/**
+ * @ingroup XmModule
+ * @{
+ */
+
 #include "xmsample.h"
 #include "xmenvelopeprocessor.h"
 
 namespace ppp {
 namespace xm {
 
+/**
+ * @class XmInstrument
+ * @brief XM Instrument class
+ */
 class XmInstrument {
 		DISABLE_COPY(XmInstrument)
 	private:
@@ -79,5 +88,9 @@ class XmInstrument {
 
 }
 }
+
+/**
+ * @}
+ */
 
 #endif // XMINSTRUMENT_H

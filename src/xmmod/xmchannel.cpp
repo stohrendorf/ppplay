@@ -216,7 +216,7 @@ static const std::array<int8_t, 256> g_AutoVibTable = {{
 	}
 };
 
-void XmChannel::update(const XmCell::Ptr cell) {
+void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 	if(m_module->playbackInfo().tick == 0) {
 		if(cell) {
 			m_currentCell = *cell;

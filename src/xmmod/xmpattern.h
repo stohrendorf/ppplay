@@ -19,6 +19,11 @@
 #ifndef XMPATTERN_H
 #define XMPATTERN_H
 
+/**
+ * @ingroup XmModule
+ * @{
+ */
+
 #include "xmcell.h"
 
 namespace ppp {
@@ -45,5 +50,9 @@ class XmPattern {
 
 } // namespace xm
 } // namespace ppp
+
+/**
+ * @}
+ */
 
 #endif // XMPATTERN_H

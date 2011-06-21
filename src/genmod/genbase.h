@@ -34,8 +34,8 @@
 /**
  * @mainpage Hi folks!
  * @author Syron
- * @version 0.1.1
- * @date 2009
+ * @version 0.1.2-beta2
+ * @date 2011
  * @section prereqs_sec Prerequisites
  * OK, you have found the docs... Well done, less work for me *g* @n
  * To be able to compile PeePeePlayer, make sure you have the SDL sources installed...
