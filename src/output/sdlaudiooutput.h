@@ -19,21 +19,25 @@
 #ifndef SDLAUDIOOUTPUT_H
 #define SDLAUDIOOUTPUT_H
 
+/**
+ * @ingroup Output
+ * @{
+ */
+
 #include "iaudiooutput.h"
 #include "audiofifo.h"
 
 #include <SDL.h>
 
 /**
- * @class OutputSDL
- * @ingroup Output
+ * @class SDLAudioOutput
  * @brief Output class for SDL
  */
 class SDLAudioOutput : public IAudioOutput {
 		DISABLE_COPY(SDLAudioOutput)
 		SDLAudioOutput() = delete;
 	public:
-		//! @copydoc IAudioOutput::IAudioOutput(IAudioSource*)
+		//! @copydoc IAudioOutput::IAudioOutput(const IAudioSource::WeakPtr&)
 		explicit SDLAudioOutput(const IAudioSource::WeakPtr& src);
 		virtual ~SDLAudioOutput();
 		virtual int init(int desiredFrq);
@@ -49,6 +53,7 @@ class SDLAudioOutput : public IAudioOutput {
 		 * @param[in] userdata Pointer to SDLAudioOutput
 		 * @param[out] stream Audio buffer pointer
 		 * @param[in] len_bytes Byte length of @a stream
+		 * @note Declared here to get access to m_fifo
 		 */
 		static void sdlAudioCallback(void* userdata, Uint8* stream, int len_bytes);
 		ppp::AudioFifo m_fifo; //!< @brief FIFO buffer
@@ -58,5 +63,9 @@ class SDLAudioOutput : public IAudioOutput {
 		 */
 		bool fillFifo();
 };
+
+/**
+ * @}
+ */
 
 #endif

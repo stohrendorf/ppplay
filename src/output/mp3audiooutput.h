@@ -19,25 +19,52 @@
 #ifndef MP3AUDIOOUTPUT_H
 #define MP3AUDIOOUTPUT_H
 
+/**
+ * @ingroup Output
+ * @{
+ */
+
 #include "iaudiooutput.h"
 
 #include <thread>
 #include <fstream>
 
+/**
+ * @class MP3AudioOutput
+ * @brief MP3 writing IAudioOutput
+ */
 class MP3AudioOutput : public IAudioOutput {
 		DISABLE_COPY(MP3AudioOutput)
 		MP3AudioOutput() = delete;
 	private:
+		//! @brief Internal lame flags struct
 		struct lame_global_struct* m_lameGlobalFlags;
+		//! @brief Output file stream for the MP3 data
 		std::ofstream m_file;
+		//! @brief MP3 filename
 		std::string m_filename;
+		//! @brief Internally used buffer for encoding
 		uint8_t* m_buffer;
+		//! @brief Encoder thread holder
 		std::thread m_encoderThread;
+		//! @brief Mutex that locks m_buffer
 		std::mutex m_bufferMutex;
+		//! @brief Whether the output is paused
 		bool m_paused;
+		//! @brief Default size of m_buffer
 		static const std::size_t BufferSize = 4096;
+		/**
+		 * @brief Encoder thread handler
+		 * @param[in] src Audio output source
+		 * @note Declared here to get access to private data members without need to declare it as a @c friend
+		 */
 		static void encodeThread(MP3AudioOutput* src);
 	public:
+		/**
+		 * @brief Constructor
+		 * @param[in] src Source of audio data
+		 * @param[in] filename Output filename of the MP3 data
+		 */
 		explicit MP3AudioOutput(const IAudioSource::WeakPtr& src, const std::string& filename);
 		virtual ~MP3AudioOutput();
 		virtual uint16_t volumeRight() const;
@@ -47,7 +74,18 @@ class MP3AudioOutput : public IAudioOutput {
 		virtual bool paused();
 		virtual bool playing();
 		virtual int init(int desiredFrq);
+		/**
+		 * @brief Set the ID3 tags of the output file
+		 * @param[in] title Title tag
+		 * @param[in] album Album tag
+		 * @param[in] artist Artist tag
+		 * @pre Should be called before init(int).
+		 */
 		void setID3(const std::string& title, const std::string& album, const std::string& artist);
 };
+
+/**
+ * @}
+ */
 
 #endif // MP3AUDIOOUTPUT_H

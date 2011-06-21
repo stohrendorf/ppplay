@@ -20,6 +20,11 @@
 #ifndef XMENVELOPEPROCESSOR_H
 #define XMENVELOPEPROCESSOR_H
 
+/**
+ * @ingroup XmModule
+ * @{
+ */
+
 #include "stream/iserializable.h"
 
 #include <array>
@@ -29,6 +34,10 @@
 namespace ppp {
 namespace xm {
 
+/**
+ * @class XmEnvelopeProcessor
+ * @brief XM Envelope helper class
+ */
 class XmEnvelopeProcessor : public ISerializable {
 	public:
 	enum class EnvelopeFlags : uint8_t {
@@ -70,5 +79,9 @@ inline bool operator&(const XmEnvelopeProcessor::EnvelopeFlags& a, const XmEnvel
 
 }
 }
+
+/**
+ * @}
+ */
 
 #endif // XMENVELOPEPROCESSOR_H

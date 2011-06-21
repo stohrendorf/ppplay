@@ -19,6 +19,11 @@
 #ifndef IAUDIOSOURCE_H
 #define IAUDIOSOURCE_H
 
+/**
+ * @ingroup Output
+ * @{
+ */
+
 #include "stuff/utils.h"
 #include "audiotypes.h"
 
@@ -26,7 +31,6 @@
 
 /**
  * @file
- * @ingroup Output
  * @brief Audio source interface definition
  */
 
@@ -51,14 +55,28 @@ class IAudioSource {
 		 */
 		bool fail();
 	public:
+		/**
+		 * @class LockGuard
+		 * @brief Lock guard helper
+		 * @details
+		 * Locks an IAudioSource on construction and automatically
+		 * unlocks it on destruction
+		 */
 		class LockGuard {
 			DISABLE_COPY(LockGuard)
 		private:
+			//! @brief STL mutex lock guard
 			std::lock_guard<std::mutex> m_guard;
 		public:
+			/**
+			 * @brief Constructor
+			 * @param[in] src IAudioSource to lock
+			 */
 			LockGuard(IAudioSource* src) : m_guard(src->m_lockMutex) { }
 		};
+		//! @brief Class pointer
 		typedef std::shared_ptr<IAudioSource> Ptr;
+		//! @brief Weak class pointer
 		typedef std::weak_ptr<IAudioSource> WeakPtr;
 		//! @brief Constructor
 		IAudioSource();
@@ -89,10 +107,31 @@ class IAudioSource {
 		 * @return m_frequency
 		 */
 		uint32_t frequency() const;
+		/**
+		 * @brief Waits until this IAudioSource is unlocked and then locks it
+		 */
 		void waitLock();
+		/**
+		 * @brief Tries to lock this IAudioSource
+		 * @return @c true if a lock could be acquired
+		 */
 		bool tryLock();
+		/**
+		 * @brief Unlocks this IAudioSource
+		 */
 		void unlock();
+		/**
+		 * @brief Check if this IAudioSource is locked
+		 * @return @c true if it is locked
+		 * @details
+		 * Internally calls tryLock(). If a lock could be acquired, it unlocks again
+		 * and returns @c false, else it returns @c true.
+		 */
 		bool isLocked();
 };
+
+/**
+ * @}
+ */
 
 #endif // IAUDIOSOURCE_H

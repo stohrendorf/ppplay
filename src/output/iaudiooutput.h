@@ -19,24 +19,23 @@
 #ifndef IAUDIOOUTPUT_H
 #define IAUDIOOUTPUT_H
 
+/**
+ * @defgroup Output Output routines
+ * @brief Output routines
+ * @{
+ */
+
 #include "iaudiosource.h"
 
 #include <memory>
 
 /**
- * @defgroup Output Output routines
- * @brief Output routines
- */
-
-/**
  * @file
- * @ingroup Output
  * @brief Audio output interface definition
  */
 
 /**
  * @interface IAudioOutput
- * @ingroup Output
  * @brief Abstract base class for sound output
  */
 class IAudioOutput {
@@ -89,7 +88,7 @@ class IAudioOutput {
 		 * @brief Get the attached audio source
 		 * @return Pointer to the attached audio source
 		 */
-		IAudioSource::WeakPtr source() const ;
+		IAudioSource::WeakPtr source() const;
 		/**
 		 * @brief Get the left channel's volume
 		 * @return Left channel's volume
@@ -115,5 +114,9 @@ class IAudioOutput {
 		IAudioSource::WeakPtr m_source; //!< @brief The audio source
 		ErrorCode m_errorCode; //!< @brief Internal error code
 };
+
+/**
+ * @}
+ */
 
 #endif

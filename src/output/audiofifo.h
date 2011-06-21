@@ -20,8 +20,12 @@
 #define AUDIOFIFO_H
 
 /**
- * @file
  * @ingroup Output
+ * @{
+ */
+
+/**
+ * @file
  * @brief Audio FIFO buffer class (declaration)
  */
 
@@ -36,7 +40,6 @@
 namespace ppp {
 /**
  * @class AudioFifo
- * @ingroup Output
  * @brief Audio FIFO buffer
  */
 class AudioFifo {
@@ -147,5 +150,9 @@ class AudioFifo {
 		bool isEmpty() const;
 };
 }
+
+/**
+ * @}
+ */
 
 #endif //audiofifoH
