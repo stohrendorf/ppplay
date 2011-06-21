@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2010  Syron <mr.syron@googlemail.com>
+    Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,18 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <SDL.h>
-
 #include "config.h"
 
-#include <iostream>
-#include <algorithm>
-#include <boost/program_options.hpp>
-#include "src/ppg/ppg.h"
 #include "src/ppg/screen.h"
 #include "src/ui_main.h"
 
-#include "src/genmod/genmodule.h"
 #include "src/s3mmod/s3mmodule.h"
 #include "src/xmmod/xmmodule.h"
 
@@ -37,6 +30,11 @@
 #ifdef WITH_MP3LAME
 #include "src/output/mp3audiooutput.h"
 #endif
+
+#include <iostream>
+#include <algorithm>
+#include <boost/program_options.hpp>
+#include <SDL.h>
 
 static const std::size_t BUFFERSIZE = 4096;
 static const std::size_t SAMPLECOUNT = BUFFERSIZE / sizeof( BasicSample );

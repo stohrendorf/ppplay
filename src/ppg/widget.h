@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2010  Syron <mr.syron@googlemail.com>
+    Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -23,10 +23,10 @@
 #include "stuff/utils.h"
 #include "point.h"
 #include "rect.h"
+#include "ppg.h"
 
 #include <list>
 #include <memory>
-#include "ppg.h"
 
 namespace ppg {
 

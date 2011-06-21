@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2010  Syron <mr.syron@googlemail.com>
+    Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -567,30 +567,30 @@ void S3mChannel::updateStatus() {
 
 IArchive& S3mChannel::serialize(IArchive* data) {
 	GenChannel::serialize(data)
-	& m_note
-	& m_lastFxByte
-	& m_lastVibratoData
-	& m_lastPortaSpeed
-	& m_tremorVolume
-	& m_noteChanged
-	& m_currentVolume
-	& m_realVolume
-	& m_baseVolume
-	& m_tremorMute
-	& m_retrigCount
-	& m_zeroVolCounter
-	& m_basePeriod
-	& m_realPeriod
-	& m_portaTargetPeriod
-	& m_vibratoPhase
-	& m_vibratoWaveform
-	& m_tremoloPhase
-	& m_tremoloWaveform
-	& m_countdown
-	& m_tremorCounter
-	& m_c2spd
-	& m_glissando
-	& m_sampleIndex;
+	% m_note
+	% m_lastFxByte
+	% m_lastVibratoData
+	% m_lastPortaSpeed
+	% m_tremorVolume
+	% m_noteChanged
+	% m_currentVolume
+	% m_realVolume
+	% m_baseVolume
+	% m_tremorMute
+	% m_retrigCount
+	% m_zeroVolCounter
+	% m_basePeriod
+	% m_realPeriod
+	% m_portaTargetPeriod
+	% m_vibratoPhase
+	% m_vibratoWaveform
+	% m_tremoloPhase
+	% m_tremoloWaveform
+	% m_countdown
+	% m_tremorCounter
+	% m_c2spd
+	% m_glissando
+	% m_sampleIndex;
 
 	data->archive(&m_bresen);
 	return data->archive(&m_currentCell);

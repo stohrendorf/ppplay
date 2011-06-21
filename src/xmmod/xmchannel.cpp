@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2011  Syron <mr.syron@googlemail.com>
+    Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -1158,61 +1158,61 @@ void XmChannel::efxPatLoop(uint8_t fxByte) {
 
 IArchive& XmChannel::serialize(IArchive* data) {
 	GenChannel::serialize(data)
-	& m_baseVolume
-	& m_currentVolume
-	& m_realVolume
-	& m_panning
-	& m_realPanning
-	& m_basePeriod
-	& m_currentPeriod
-	& m_autoVibDeltaPeriod
-	& m_finetune
-	& m_instrumentIndex
-	& m_baseNote
-	& m_realNote;
+	% m_baseVolume
+	% m_currentVolume
+	% m_realVolume
+	% m_panning
+	% m_realPanning
+	% m_basePeriod
+	% m_currentPeriod
+	% m_autoVibDeltaPeriod
+	% m_finetune
+	% m_instrumentIndex
+	% m_baseNote
+	% m_realNote;
 	(*data)
 	.archive(&m_currentCell)
 	.archive(&m_volumeEnvelope)
 	.archive(&m_panningEnvelope);
 	*data
-	& m_volScale
-	& m_volScaleRate
-	& m_keyOn
-	& m_lastVolSlideFx
-	& m_lastPortaUpFx
-	& m_lastPortaDownFx
-	& m_lastPanSlideFx
-	& m_lastOffsetFx
-	& m_lastFinePortaUpFx
-	& m_lastFinePortaDownFx
-	& m_lastFineVolUpFx
-	& m_lastFineVolDownFx
-	& m_lastXFinePortaUp
-	& m_lastXFinePortaDown
-	& m_lastGlobVolSlideFx
-	& m_lastTremorFx
-	& m_portaSpeed
-	& m_portaTargetPeriod
-	& m_vibratoSpeed
-	& m_vibratoDepth
-	& m_vibratoPhase
-	& m_vibratoCtrl
-	& m_glissandoCtrl
-	& m_tremoloDepth
-	& m_tremoloSpeed
-	& m_tremoloPhase
-	& m_tremoloCtrl
-	& m_tremorCountdown
-	& m_retriggerCounter
-	& m_retriggerLength
-	& m_retriggerVolumeType
-	& m_patLoopCounter
-	& m_patLoopRow
-	& m_autoVibType
-	& m_autoVibSweep
-	& m_autoVibSweepRate
-	& m_autoVibDepth
-	& m_autoVibPhase;
+	% m_volScale
+	% m_volScaleRate
+	% m_keyOn
+	% m_lastVolSlideFx
+	% m_lastPortaUpFx
+	% m_lastPortaDownFx
+	% m_lastPanSlideFx
+	% m_lastOffsetFx
+	% m_lastFinePortaUpFx
+	% m_lastFinePortaDownFx
+	% m_lastFineVolUpFx
+	% m_lastFineVolDownFx
+	% m_lastXFinePortaUp
+	% m_lastXFinePortaDown
+	% m_lastGlobVolSlideFx
+	% m_lastTremorFx
+	% m_portaSpeed
+	% m_portaTargetPeriod
+	% m_vibratoSpeed
+	% m_vibratoDepth
+	% m_vibratoPhase
+	% m_vibratoCtrl
+	% m_glissandoCtrl
+	% m_tremoloDepth
+	% m_tremoloSpeed
+	% m_tremoloPhase
+	% m_tremoloCtrl
+	% m_tremorCountdown
+	% m_retriggerCounter
+	% m_retriggerLength
+	% m_retriggerVolumeType
+	% m_patLoopCounter
+	% m_patLoopRow
+	% m_autoVibType
+	% m_autoVibSweep
+	% m_autoVibSweepRate
+	% m_autoVibDepth
+	% m_autoVibPhase;
 	data->archive(&m_bres);
 	return *data;
 }

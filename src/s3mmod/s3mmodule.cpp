@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2010  Syron <mr.syron@googlemail.com>
+    Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -769,8 +769,12 @@ bool S3mModule::jumpPrevTrack() {
 
 IArchive& S3mModule::serialize(IArchive* data) {
 	GenModule::serialize(data)
-	& m_breakRow& m_breakOrder& m_patLoopRow& m_patLoopCount
-	& m_patDelayCount& m_customData;
+	% m_breakRow
+	% m_breakOrder
+	% m_patLoopRow
+	% m_patLoopCount
+	% m_patDelayCount
+	% m_customData;
 	for(std::size_t i = 0; i < m_channels.size(); i++) {
 		if(!m_channels[i])
 			continue;

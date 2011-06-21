@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2010  Syron <mr.syron@googlemail.com>
+    Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ void GenOrder::setIndex(const uint8_t n) {
 }
 
 IArchive& GenOrder::serialize(IArchive* data) {
-	return *data & m_index;
+	return *data % m_index;
 }
 
 }
