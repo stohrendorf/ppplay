@@ -64,10 +64,12 @@ class IArchive {
 		 * @note Operation depends on m_loading
 		 */
 		template<class T> IArchive& operator&(T& data) {
-			if(m_loading)
+			if(m_loading) {
 				m_stream->read(&data, 1);
-			else
+			}
+			else {
 				m_stream->write(&data, 1);
+			}
 			return *this;
 		}
 		/**
