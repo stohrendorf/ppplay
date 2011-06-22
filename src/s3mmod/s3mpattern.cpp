@@ -17,7 +17,8 @@
 */
 
 #include "s3mpattern.h"
-#include "genmod/gencell.h"
+
+#include "logger/logger.h"
 
 /**
 * @file
@@ -45,7 +46,7 @@ S3mPattern::~S3mPattern() {
 S3mCell::Ptr S3mPattern::createCell(uint16_t trackIndex, int16_t row) {
 	PPP_ASSERT((row >= 0) && (row <= 63));
 	PPP_ASSERT(trackIndex < m_tracks.size());
-	S3mCell::Vector* track = &m_tracks[trackIndex];
+	S3mCell::Vector* track = &m_tracks.at(trackIndex);
 	S3mCell::Ptr& cell = track->at(row);
 	if(cell)
 		return cell;
@@ -58,7 +59,7 @@ S3mCell::Ptr S3mPattern::cellAt(uint16_t trackIndex, int16_t row) {
 		return S3mCell::Ptr();
 	if(trackIndex >= m_tracks.size())
 		return S3mCell::Ptr();
-	return m_tracks[trackIndex][row];
+	return m_tracks.at(trackIndex).at(row);
 }
 
 bool S3mPattern::load(BinStream& str, std::size_t pos) {

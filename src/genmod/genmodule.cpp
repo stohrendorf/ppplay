@@ -16,73 +16,42 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @ingroup GenMod
+ * @{
+ */
+
 #include "genbase.h"
 #include "genmodule.h"
 #include "stream/memarchive.h"
-
-/**
-* @file
-* @ingroup GenMod
-* @brief General/common module definitions
-*/
+#include "logger/logger.h"
 
 namespace ppp {
 
-IArchive::Ptr GenMultiTrack::newState() {
-	IArchive::Ptr p(new MemArchive());
-	LOG_MESSAGE("Creating new state %u", m_states.size());
-	m_states.push_back(p);
-	return p;
-}
-
-IArchive::Ptr GenMultiTrack::nextState() {
-	if(m_stateIndex >= m_states.size() - 1) {
-		LOG_ERROR("%d >= %d - 1", m_stateIndex, m_states.size());
-		return IArchive::Ptr();
-	}
-	m_stateIndex++;
-	LOG_MESSAGE("Loading state %u", m_stateIndex);
-	IArchive::Ptr result = m_states[m_stateIndex];
-	return result;
-}
-
-IArchive::Ptr GenMultiTrack::prevState() {
-	if(m_stateIndex <= 1) {
-		LOG_ERROR("m_stateIndex <= 1");
-		return IArchive::Ptr();
-	}
-	m_stateIndex--;
-	LOG_MESSAGE("Loading state %u", m_stateIndex);
-	IArchive::Ptr result = m_states[m_stateIndex];
-	return result;
-}
-
 GenModule::GenModule(uint8_t maxRpt) :
-	m_fileName(), m_title(), m_trackerInfo(), m_orders(), m_maxRepeat(maxRpt),
-	m_playedFrames(0), m_tracks(),
-	m_currentTrack(0), m_multiTrack(false), m_playbackInfo() {
+	m_filename(), m_title(), m_trackerInfo(), m_orders(), m_maxRepeat(maxRpt),
+	m_playedFrames(0), m_songs(), m_songLengths(),
+	m_currentSongIndex(0), m_playbackInfo() {
 	PPP_ASSERT(maxRpt != 0);
 	m_playbackInfo.tick = m_playbackInfo.order = m_playbackInfo.pattern = 0;
 	m_playbackInfo.row = m_playbackInfo.speed = m_playbackInfo.tempo = 0;
 	m_playbackInfo.globalVolume = 0x40;
-	GenMultiTrack nulltrack;
-	m_tracks.push_back(nulltrack);
 }
 
-GenModule::~GenModule() {
-}
+GenModule::~GenModule() = default;
 
 IArchive& GenModule::serialize(IArchive* data) {
-	data->array(reinterpret_cast<char*>(&m_playbackInfo), sizeof(m_playbackInfo)) % m_playedFrames % m_currentTrack;
+	data->array(reinterpret_cast<char*>(&m_playbackInfo), sizeof(m_playbackInfo)) % m_playedFrames % m_currentSongIndex;
 	return *data;
 }
 
 std::string GenModule::filename() {
 	try {
-		std::size_t lastPos = m_fileName.find_last_of("/\\");
-		if(lastPos != std::string::npos)
-			return m_fileName.substr(lastPos + 1);
-		return m_fileName;
+		std::size_t lastPos = m_filename.find_last_of("/\\");
+		if(lastPos != std::string::npos) {
+			return m_filename.substr(lastPos + 1);
+		}
+		return m_filename;
 	}
 	PPP_CATCH_ALL();
 }
@@ -100,8 +69,8 @@ uint32_t GenModule::timeElapsed() const {
 	return static_cast<uint32_t>(m_playedFrames / frequency());
 }
 
-uint32_t GenModule::length() const {
-	return m_tracks[m_currentTrack].length;
+std::size_t GenModule::length() const {
+	return m_songLengths.at(m_currentSongIndex);
 }
 
 std::string GenModule::trackerInfo() const {
@@ -112,24 +81,22 @@ GenPlaybackInfo GenModule::playbackInfo() const {
 	return m_playbackInfo;
 }
 
-bool GenModule::isMultiTrack() const {
-	return m_multiTrack;
+bool GenModule::isMultiSong() const {
+	return m_songs.size()>1;
 }
 
-void GenModule::removeEmptyTracks() {
-	std::vector<GenMultiTrack> nTr;
-	std::for_each(
-	    m_tracks.begin(), m_tracks.end(),
-	[&nTr](const GenMultiTrack & mt) {
-		if(mt.length != 0 && mt.startOrder != GenMultiTrack::stopHere) nTr.push_back(mt);
+void GenModule::removeEmptySongs() {
+	LOG_MESSAGE("Removing empty songs");
+	std::vector<StateIterator> nTr;
+	std::vector<std::size_t> nTrLen;
+	for(std::size_t i = 0; i < m_songs.size(); i++) {
+		if(m_songLengths.at(i) != 0) {
+			nTr.push_back(m_songs.at(i));
+			nTrLen.push_back(m_songLengths.at(i));
+		}
 	}
-	);
-	/*	for(std::vector<GenMultiTrack>::iterator it = m_tracks.begin(); it!=m_tracks.end(); it++) {
-			if (( it->length != 0 ) && ( it->startOrder != GenMultiTrack::stopHere ) )
-				nTr.push_back( *it );
-		}*/
-	m_tracks = nTr;
-	m_multiTrack = trackCount() > 1;
+	m_songs = nTr;
+	m_songLengths = nTrLen;
 }
 
 std::size_t GenModule::getAudioData(AudioFrameBuffer& buffer, std::size_t size) {
@@ -147,14 +114,6 @@ std::size_t GenModule::getAudioData(AudioFrameBuffer& buffer, std::size_t size) 
 	return buffer->size();
 }
 
-IArchive::Vector GenMultiTrack::states() const {
-	return m_states;
-}
-
-std::size_t GenMultiTrack::stateIndex() const {
-	return m_stateIndex;
-}
-
 void GenModule::setGlobalVolume(int16_t v) {
 	m_playbackInfo.globalVolume = v;
 }
@@ -168,11 +127,11 @@ void GenModule::addOrder(const GenOrder::Ptr& o) {
 }
 
 std::string GenModule::filename() const {
-	return m_fileName;
+	return m_filename;
 }
 
 void GenModule::setFilename(const std::string& f) {
-	m_fileName = f;
+	m_filename = f;
 }
 
 void GenModule::setTrackerInfo(const std::string& t) {
@@ -180,7 +139,7 @@ void GenModule::setTrackerInfo(const std::string& t) {
 }
 
 GenOrder::Ptr GenModule::orderAt(size_t idx) const {
-	return m_orders[idx];
+	return m_orders.at(idx);
 }
 
 int16_t GenModule::patternIndex() const {
@@ -191,28 +150,29 @@ void GenModule::setPatternIndex(int16_t i) {
 	m_playbackInfo.pattern = i;
 }
 
-int GenModule::orderCount() const {
+std::size_t GenModule::orderCount() const {
 	return m_orders.size();
 }
 
-void GenModule::setCurrentTrack(uint16_t t) {
-	m_currentTrack = t;
+void GenModule::setCurrentSongIndex(uint16_t t) {
+	m_currentSongIndex = t;
 }
 
 void GenModule::setTitle(const std::string& t) {
 	m_title = t;
 }
 
-void GenModule::setMultiTrack(bool m) {
-	m_multiTrack = m;
+StateIterator& GenModule::multiSongAt(std::size_t idx) {
+	return m_songs.at(idx);
 }
 
-GenMultiTrack& GenModule::multiTrackAt(size_t idx) {
-	return m_tracks[idx];
+std::size_t& GenModule::multiSongLengthAt(std::size_t idx) {
+	return m_songLengths.at(idx);
 }
 
-void GenModule::addMultiTrack(const GenMultiTrack& t) {
-	m_tracks.push_back(t);
+void GenModule::addMultiSong(const StateIterator& t) {
+	m_songs.push_back(t);
+	m_songLengths.push_back(0);
 }
 
 uint16_t GenModule::maxRepeat() const {
@@ -245,12 +205,16 @@ size_t GenModule::position() const {
 	return m_playedFrames;
 }
 
-uint16_t GenModule::trackCount() const {
-	return m_tracks.size();
+uint16_t GenModule::songCount() const {
+	return m_songs.size();
 }
 
-uint16_t GenModule::currentTrackIndex() const {
-	return m_currentTrack;
+uint16_t GenModule::currentSongIndex() const {
+	return m_currentSongIndex;
 }
 
 }
+
+/**
+ * @}
+ */

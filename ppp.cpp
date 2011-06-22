@@ -27,6 +27,8 @@
 #include "src/output/audiofifo.h"
 #include "src/output/sdlaudiooutput.h"
 
+#include "src/logger/logger.h"
+
 #ifdef WITH_MP3LAME
 #include "src/output/mp3audiooutput.h"
 #endif
@@ -57,11 +59,11 @@ static void updateDisplay( ppp::GenModule::Ptr& module ) {
 	std::size_t msecslen = module->length() / 441;
 	ppp::GenPlaybackInfo pbi = module->playbackInfo();
 	ppg::Label* lb = uiMain->posLabel();
-	if(module->isMultiTrack()) {
-		lb->setText( ppp::stringf( "%3d(%3d)/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Track %d/%d",
+	if(module->isMultiSong()) {
+		lb->setText( ppp::stringf( "%3d(%3d)/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Song %d/%d",
 								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
 								msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
-								module->currentTrackIndex() + 1, module->trackCount()
+								module->currentSongIndex() + 1, module->songCount()
 								) );
 	}
 	else {
@@ -250,8 +252,8 @@ int main( int argc, char* argv[] ) {
 		if( !noGUI ) {
 			l = uiMain->trackerInfo();
 			l->setText( ppp::stringf( "Tracker: %s - Channels: %d", module->trackerInfo().c_str(), module->channelCount() ) );
-			if( module->isMultiTrack() )
-				l->setText( l->text() + " - Multi-track" );
+			if( module->isMultiSong() )
+				l->setText( l->text() + " - Multi-song" );
 			l = uiMain->modTitle();
 			if( module->trimmedTitle().length()>0 )
 				l->setText( std::string( " -=\xf0[ " ) + module->filename() + " : " + module->trimmedTitle() + " ]\xf0=- " );
@@ -289,16 +291,16 @@ int main( int argc, char* argv[] ) {
 									output->play();
 								break;
 							case SDLK_END:
-								if( !module->jumpNextTrack() )
+								if( !module->jumpNextSong() )
 									output.reset();
 								break;
 							case SDLK_HOME:
-								module->jumpPrevTrack();
+								module->jumpPrevSong();
 								break;
 							case SDLK_PAGEDOWN:
 								if( !module->jumpNextOrder() ) {
 									// if jumpNextOrder fails, maybe jumpNextTrack works...
-									if( !module->jumpNextTrack() )
+									if( !module->jumpNextSong() )
 										output.reset();
 								}
 								break;

@@ -16,14 +16,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @ingroup GenMod
+ * @{
+ */
+
 #include "genchannel.h"
 #include "stream/iarchive.h"
-
-/**
-* @file
-* @ingroup GenMod
-* @brief General channel definitions
-*/
 
 namespace ppp {
 
@@ -34,8 +33,7 @@ GenChannel::GenChannel() :
 	m_statusStringMutex() {
 }
 
-GenChannel::~GenChannel() {
-}
+GenChannel::~GenChannel() = default;
 
 IArchive& GenChannel::serialize(IArchive* data) {
 	*data % m_active % m_disabled % m_position;

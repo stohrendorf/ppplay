@@ -56,24 +56,24 @@ UIMain::UIMain( Widget* parent ): Widget( parent ),
 	m_volBar->setPosition( ( area().width() - m_volBar->length() ) / 2, 4 );
 	m_volBar->show();
 	for( size_t i = 0; i < m_chanInfos.size(); i++ ) {
-		m_chanInfos[i] = new ppg::Label( this );
-		m_chanInfos[i]->setWidth( area().width() - 4 );
-		m_chanInfos[i]->setPosition( 2, 5 + i );
-		m_chanInfos[i]->setFgColorRange( 4, ppg::Color::LightRed );
-		m_chanInfos[i]->setFgColorRange( 5, ppg::Color::BrightWhite, 3 );
-		m_chanInfos[i]->setFgColorRange( 9, ppg::Color::LightBlue );
-		m_chanInfos[i]->setFgColorRange( 10, ppg::Color::Aqua, 2 );
-		m_chanInfos[i]->setFgColorRange( 13, ppg::Color::LightGreen, 6 );
-		m_chanInfos[i]->setFgColorRange( 35, ppg::Color::BrightWhite, 0 );
-		m_chanInfos[i]->show();
+		m_chanInfos.at(i) = new ppg::Label( this );
+		m_chanInfos.at(i)->setWidth( area().width() - 4 );
+		m_chanInfos.at(i)->setPosition( 2, 5 + i );
+		m_chanInfos.at(i)->setFgColorRange( 4, ppg::Color::LightRed );
+		m_chanInfos.at(i)->setFgColorRange( 5, ppg::Color::BrightWhite, 3 );
+		m_chanInfos.at(i)->setFgColorRange( 9, ppg::Color::LightBlue );
+		m_chanInfos.at(i)->setFgColorRange( 10, ppg::Color::Aqua, 2 );
+		m_chanInfos.at(i)->setFgColorRange( 13, ppg::Color::LightGreen, 6 );
+		m_chanInfos.at(i)->setFgColorRange( 35, ppg::Color::BrightWhite, 0 );
+		m_chanInfos.at(i)->show();
 	}
 	for( size_t i = 0; i < m_chanCells.size(); i++ ) {
-		m_chanCells[i] = new ppg::Label( this );
-		m_chanCells[i]->setWidth( area().width() - 4 );
-		m_chanCells[i]->setPosition( 2, 5 + i );
-		m_chanCells[i]->alignment = ppg::Label::Alignment::Right;
-		m_chanCells[i]->setFgColorRange( 0, ppg::Color::White, 0 );
-		m_chanCells[i]->show();
+		m_chanCells.at(i) = new ppg::Label( this );
+		m_chanCells.at(i)->setWidth( area().width() - 4 );
+		m_chanCells.at(i)->setPosition( 2, 5 + i );
+		m_chanCells.at(i)->alignment = ppg::Label::Alignment::Right;
+		m_chanCells.at(i)->setFgColorRange( 0, ppg::Color::White, 0 );
+		m_chanCells.at(i)->show();
 	}
 	m_trackerInfo = new ppg::Label( this );
 	m_trackerInfo->setPosition( 2, area().height() - 2 );
@@ -110,12 +110,12 @@ ppg::StereoPeakBar *UIMain::volBar()
 
 ppg::Label *UIMain::chanInfo(size_t idx)
 {
-    return m_chanInfos[idx];
+    return m_chanInfos.at(idx);
 }
 
 ppg::Label *UIMain::chanCell(size_t idx)
 {
-    return m_chanCells[idx];
+    return m_chanCells.at(idx);
 }
 
 ppg::Label *UIMain::trackerInfo()

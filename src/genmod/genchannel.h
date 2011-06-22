@@ -19,22 +19,17 @@
 #ifndef GENCHANNEL_H
 #define GENCHANNEL_H
 
+/**
+ * @ingroup GenMod
+ * @{
+ */
+
 #include "gensample.h"
 #include "gencell.h"
 #include "stuff/utils.h"
 
 #include <mutex>
 #include <cstdint>
-
-/**
- * @ingroup GenMod
- * @{
- */
-
-/**
- * @file
- * @brief General channel definitions
- */
 
 namespace ppp {
 /**
@@ -57,9 +52,6 @@ class GenChannel : public ISerializable {
 	public:
 		/**
 		 * @brief The constructor
-		 * @param[in] frq Playback frequency
-		 * @pre @c smp!=NULL
-		 * @see GenModule::GenModule()
 		 */
 		GenChannel();
 		/**
@@ -69,27 +61,23 @@ class GenChannel : public ISerializable {
 		/**
 		 * @brief Check if the channel is active
 		 * @return m_active
-		 * @note Time-critical
 		 */
 		bool isActive() const;
 		/**
 		 * @brief Check if the channel is disabled
 		 * @return m_disabled
-		 * @note Time-critical
 		 */
 		bool isDisabled() const;
 		/**
 		 * @brief Get the name of the note
 		 * @return String containing note and octave (i.e. "C-3")
 		 * @note Return value is empty if channel is disabled or inactive
-		 * @see ppp::NoteNames[]
-		 * @note Time-critical
+		 * @see ppp::NoteNames
 		 */
 		virtual std::string noteName() = 0;
 		/**
 		 * @brief Get the effect string as shown in the tracker's FX column
 		 * @return Effect string
-		 * @note Time-critical
 		 * @note Return value is empty if no effect is playing, or if the channel is
 		 * disabled or inactive
 		 * @see effectDescription()
@@ -98,7 +86,6 @@ class GenChannel : public ISerializable {
 		/**
 		 * @brief Get the playback position
 		 * @return Playback position in the channel's sample
-		 * @note Time-critical
 		 */
 		int32_t position() const;
 		/**
@@ -111,24 +98,18 @@ class GenChannel : public ISerializable {
 		void enable();
 		/**
 		 * @brief Mix the current channel into @a mixBuffer.
-		 * @param[in,out] mixBuffer Pointer to the mixer buffer
-		 * @param[in] bufSize Number of frames in the buffer
-		 * @param[in] volume Global volume
-		 * @pre @c mixBuffer!=NULL
-		 * @pre @c bufSize>0
+		 * @param[in,out] mixBuffer Reference to the mixer buffer
 		 * @note Time-critical
 		 */
 		virtual void mixTick(MixerFrameBuffer& mixBuffer) = 0;
 		/**
 		 * @brief Simulates a tick without mixing
 		 * @param[in] bufSize Buffer size
-		 * @param[in] volume Volume
 		 * @see mixTick(MixerFrameBuffer&)
 		 */
 		virtual void simTick(std::size_t bufSize) = 0;
 		/**
-		 * @brief Updates the status string returned by #getStatus()
-		 * @note Time-critical
+		 * @brief Updates the status string returned by statusString()
 		 */
 		virtual void updateStatus() = 0;
 		/**
@@ -142,15 +123,27 @@ class GenChannel : public ISerializable {
 		 * @see effectName()
 		 */
 		virtual std::string effectDescription() const = 0;
-		virtual IArchive& serialize(IArchive* data);
 		/**
 		 * @brief Get a string representation of the current cell as displayed in the tracker
 		 * @return String representation of the current cell like in the tracker
 		 */
 		virtual std::string cellString() = 0;
+		virtual IArchive& serialize(IArchive* data);
 	protected:
+		/**
+		 * @brief Set the m_active value
+		 * @param[in] a The new value
+		 */
 		void setActive(bool a);
+		/**
+		 * @brief Set the m_position value
+		 * @param[in] p The new value
+		 */
 		void setPosition(int32_t p);
+		/**
+		 * @brief Sets m_statusString
+		 * @param[in] s The new string
+		 */
 		void setStatusString(const std::string& s);
 };
 

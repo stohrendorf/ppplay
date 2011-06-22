@@ -81,7 +81,7 @@ class S3mModule : public GenModule {
 		 * @copydoc GenModule::GenModule
 		 */
 		S3mModule(uint8_t maxRpt = 2);
-		virtual ~S3mModule() throw();
+		virtual ~S3mModule();
 		virtual uint8_t channelCount() const;
 		bool load(const std::string& fn);
 		bool existsSample(int16_t idx);
@@ -90,8 +90,8 @@ class S3mModule : public GenModule {
 		virtual void simulateTick(std::size_t& bufLen);
 		virtual GenOrder::Ptr mapOrder(int16_t order);
 		virtual std::string channelStatus(int16_t idx);
-		virtual bool jumpNextTrack();
-		virtual bool jumpPrevTrack();
+		virtual bool jumpNextSong();
+		virtual bool jumpPrevSong();
 		virtual bool jumpNextOrder();
 		virtual bool jumpPrevOrder();
 		virtual std::string channelCellString(int16_t idx);

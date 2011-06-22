@@ -19,6 +19,11 @@
 #include "breseninter.h"
 #include "stream/iarchive.h"
 
+/**
+ * @ingroup GenMod
+ * @{
+ */
+
 namespace ppp {
 
 IArchive& BresenInterpolation::serialize( IArchive* archive ) {
@@ -26,3 +31,7 @@ IArchive& BresenInterpolation::serialize( IArchive* archive ) {
 }
 
 }
+
+/**
+ * @}
+ */

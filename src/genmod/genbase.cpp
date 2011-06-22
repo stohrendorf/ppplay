@@ -16,14 +16,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @ingroup GenMod
+ * @{
+ */
+
 #include "genbase.h"
 #include "stream/iarchive.h"
-
-/**
-* @file
-* @brief Module base declarations (Implementation)
-* @ingroup GenMod
-*/
 
 namespace ppp {
 
@@ -42,7 +41,7 @@ uint8_t GenOrder::index() const {
 	return m_index;
 }
 
-void GenOrder::setIndex(const uint8_t n) {
+void GenOrder::setIndex(uint8_t n) {
 	m_index = n;
 }
 
@@ -51,3 +50,7 @@ IArchive& GenOrder::serialize(IArchive* data) {
 }
 
 }
+
+/**
+ * @}
+ */

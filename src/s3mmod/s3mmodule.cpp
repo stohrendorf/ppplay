@@ -17,7 +17,9 @@
 */
 
 #include "s3mmodule.h"
+
 #include "stream/fbinstream.h"
+#include "logger/logger.h"
 
 namespace ppp {
 namespace s3m {
@@ -56,61 +58,6 @@ typedef uint16_t ParaPointer;
 * @param[in] sample The sample to be postprocessed
 * @return The postprocessed sample
 * @ingroup S3mMod
-* @details
-* The Future Crew states the following about Post processing:
-@verbatim
-How ST3 mixes:
-	1) volumetable is created in the following way:
-		> volumetable[volume][sampledata]=volume*(sampledata-128)/64;
-		NOTE: sampledata in memory is unsigned in ST3, so the -128 in the
-			formula converts it so that the volumetable output is signed.
-
-	2) postprocessing table is created with this pseudocode:
-
-		> z=mastervol&127;
-		> if(z<0x10) z=0x10;
-		> c=2048*16/z;
-		> a=(2048-c)/2;
-		> b=a+c;
-		>                     { 0                , if x < a
-		> posttable[x+1024] = { (x-a)*256/(b-a)  , if a <= x < b
-		>                     { 255              , if x > b
-
-	3) mixing the samples
-
-		output=1024
-		for i=0 to number of channels
-			output+=volumetable[volume*globalvolume/64][sampledata];
-		next
-		realoutput=posttable[output]
-
-	This is how the mixing is done in theory. In practice it's a bit
-	different for speed reasons, but the result is the same.
-@endverbatim
-* OK, the last sentence is interesting... My first implementation used only a slightly modified
-* version of that algorithm for signed samples. Very, very slow. So I took a closer look at this
-* algorithm. Let's write it down to mathematical equations:
-\f{eqnarray*}
-	c & = & \frac{2^{11}\cdot2^{4}}{z}=2^{15}z^{-1} \\
-	a & = & 2^{-1}\left(2^{11}-c\right)=2^{10}-2^{14}z^{-1} \\
-	b & = & a+c=2^{10}-2^{14}z^{-1}+2^{15}z^{-1} \\
-	& = & 2^{10}+2^{14}z^{-1} \\
-	s_{o} & = & \begin{cases}
-		0 & \text{if $s_{i} < a$} \\
-		2^{8} \frac{s_{i}-a}{b-a} & \text{if $a \leq s_{i} < b$} \\
-		255 & \text{if $b \leq s_{i}$}
-	\end{cases} \\
-	b-a & = & 2^{10}+2^{14}z^{-1} - 2^{10}+2^{14}z^{-1} \\
-		& = & 2^{15}z^{-1} \\
-		& = & c
-\f}
-Let's look at the second case:
-\f{eqnarray*}
-	2^{8} \frac{s_{i}-a}{c} & = & 2^{8} 2^{-15} z \left( s_{i} - \left(2^{10}-2^{14}z^{-1}\right) \right) \\
-		& = & 2^{-7} z \left( s_{i} - 2^{10} + 2^{14}z^{-1} \right) \\
-		& = & \frac{\left(s_{i}-2^{10}\right)z}{2^{7}} + 2^{7}
-\f}
-Hell, yes... You see? Keeping in mind that @f$ s_{i} @f$ is @f$ 2^{10} @f$-based and @f$ s_{o} @f$ is @f$ 2^{7} @f$-based, that's @b @e really simple
 */
 inline int16_t s3mPostProcess(int32_t sample) throw() {
 	return clip(sample >> 2, -32768, 32767);
@@ -158,16 +105,15 @@ S3mModule::S3mModule(uint8_t maxRpt) : GenModule(maxRpt),
 			m_samples.push_back(S3mSample::Ptr());
 		}
 		for(uint8_t i = 0; i < m_channels.size(); i++) {
-			m_channels[i].reset(new S3mChannel(this));
+			m_channels.at(i).reset(new S3mChannel(this));
 		}
 		for(std::size_t i = 0; i < m_orderPlaybackCounts.size(); i++)
-			m_orderPlaybackCounts[i] = 0;
+			m_orderPlaybackCounts.at(i) = 0;
 	}
 	PPP_CATCH_ALL();
 }
 
-S3mModule::~S3mModule() throw() {
-}
+S3mModule::~S3mModule() = default;
 
 bool S3mModule::load(const std::string& fn) {
 	try {
@@ -278,12 +224,12 @@ bool S3mModule::load(const std::string& fn) {
 			str.read(&pp);
 			if(pp == 0)
 				continue;
-			m_samples[i].reset(new S3mSample());
-			if(!(m_samples[i]->load(str, pp * 16, ((s3mHdr.createdWith >> 12) & 0x0f) == s3mTIdImagoOrpheus)))
+			m_samples.at(i).reset(new S3mSample());
+			if(!(m_samples.at(i)->load(str, pp * 16, ((s3mHdr.createdWith >> 12) & 0x0f) == s3mTIdImagoOrpheus)))
 				PPP_THROW("Sample Error");
 			if(!str.good())
 				PPP_THROW("Stream Error: Samples / Load");
-			schismTest |= (m_samples[i]->isHighQuality() || m_samples[i]->isStereo());
+			schismTest |= (m_samples.at(i)->isHighQuality() || m_samples.at(i)->isStereo());
 		}
 		if(schismTest != 0) {
 			LOG_MESSAGE("Enabling Schism Tracker compatibility mode");
@@ -297,7 +243,7 @@ bool S3mModule::load(const std::string& fn) {
 			if(pp == 0)
 				continue;
 			S3mPattern* pat = new S3mPattern();
-			m_patterns[i].reset(pat);
+			m_patterns.at(i).reset(pat);
 			if(!(pat->load(str, pp * 16)))
 				PPP_THROW("Pattern Error");
 			if(!str.good())
@@ -308,7 +254,7 @@ bool S3mModule::load(const std::string& fn) {
 		LOG_MESSAGE("Preparing channels...");
 		for(int i = 0; i < 32; i++) {
 			S3mChannel* s3mChan = new S3mChannel(this);
-			m_channels[i].reset(s3mChan);
+			m_channels.at(i).reset(s3mChan);
 			if((s3mHdr.pannings[i] & 0x80) != 0) {
 				s3mChan->disable();
 				continue;
@@ -356,38 +302,36 @@ bool S3mModule::initialize(uint32_t frq) {
 		return true;
 	}
 	IAudioSource::initialize(frq);
-	multiTrackAt(currentTrackIndex()).newState()->archive(this).finishSave();
+	addMultiSong( StateIterator() );
+	multiSongAt(currentSongIndex()).newState()->archive(this).finishSave();
 	// calculate total length...
 	LOG_MESSAGE("Calculating track lengths and preparing seek operations...");
 	do {
-		LOG_MESSAGE("Pre-processing Track %d", currentTrackIndex());
+		LOG_MESSAGE("Pre-processing Track %d", currentSongIndex());
 		std::size_t currTickLen = 0;
-		multiTrackAt(currentTrackIndex()).startOrder = playbackInfo().order;
 		do {
 			simulateTick(currTickLen);
-			multiTrackAt(currentTrackIndex()).length += currTickLen;
+			multiSongLengthAt(currentSongIndex()) += currTickLen;
 		}
 		while(currTickLen != 0);
 		LOG_MESSAGE("Preprocessed.");
-		int nCount = 0;
-		for(int i = 0; i < orderCount(); i++) {
+		for(std::size_t i = 0; i < orderCount(); i++) {
 			PPP_ASSERT( orderAt(i).use_count()>0 );
-			if((orderAt(i)->index() != s3mOrderEnd) && (orderAt(i)->index() != s3mOrderSkip) && (m_orderPlaybackCounts[i] == 0)) {
-				if(nCount == 0)
-					setMultiTrack(true);
-				nCount++;
+			if((orderAt(i)->index() != s3mOrderEnd) && (orderAt(i)->index() != s3mOrderSkip) && (m_orderPlaybackCounts.at(i) == 0)) {
+				addMultiSong( StateIterator() );
+				setCurrentSongIndex( currentSongIndex()+1 );
+				break;
 			}
 		}
 		LOG_MESSAGE("Trying to jump to the next track");
 	}
-	while(jumpNextTrack());
+	while(jumpNextSong());
 	LOG_MESSAGE("Lengths calculated, resetting module.");
-	if(trackCount() > 0) {
+	if(songCount() > 0) {
 		IAudioSource::LockGuard guard(this);
-		multiTrackAt(0).nextState()->archive(this).finishLoad();
+		multiSongAt(0).currentState()->archive(this).finishLoad();
 	}
-	LOG_MESSAGE("Removing empty tracks");
-	removeEmptyTracks();
+	removeEmptySongs();
 	return true;
 }
 
@@ -396,13 +340,12 @@ bool S3mModule::existsSample(int16_t idx) {
 	idx--;
 	if(!inRange<int>(idx, 0, m_samples.size() - 1))
 		return false;
-	return m_samples[idx].use_count() > 0;
+	return m_samples.at(idx).use_count() > 0;
 }
 
 uint8_t S3mModule::channelCount() const {
 	return m_usedChannels;
 }
-
 
 void S3mModule::checkGlobalFx() {
 	try {
@@ -519,7 +462,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 	if((playbackInfo().tick == 0) && increaseTick) {
 		m_patDelayCount = -1;
 		if(m_breakOrder != -1) {
-			m_orderPlaybackCounts[playbackInfo().order]++;
+			m_orderPlaybackCounts.at(playbackInfo().order)++;
 			if(m_breakOrder < orderCount()) {
 				setOrder(m_breakOrder);
 				orderChanged = true;
@@ -532,7 +475,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 			}
 			if(m_breakOrder == -1) {
 				if(m_patLoopCount == -1) {
-					m_orderPlaybackCounts[playbackInfo().order]++;
+					m_orderPlaybackCounts.at(playbackInfo().order)++;
 					setOrder(playbackInfo().order + 1);
 					orderChanged = true;
 				}
@@ -544,7 +487,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 		if((m_breakRow == -1) && (m_breakOrder == -1) && (m_patDelayCount == -1)) {
 			setRow((playbackInfo().row + 1) & 0x3f);
 			if(playbackInfo().row == 0) {
-				m_orderPlaybackCounts[playbackInfo().order]++;
+				m_orderPlaybackCounts.at(playbackInfo().order)++;
 				setOrder(playbackInfo().order + 1);
 				orderChanged = true;
 			}
@@ -560,7 +503,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 		}
 		if(!mapOrder(playbackInfo().order))
 			return false;
-		m_orderPlaybackCounts[playbackInfo().order]++;
+		m_orderPlaybackCounts.at(playbackInfo().order)++;
 		setOrder(playbackInfo().order + 1);
 		orderChanged = true;
 		if(playbackInfo().order >= orderCount()) {
@@ -574,11 +517,14 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 		m_patLoopCount = -1;
 		try {
 			if(doStore) {
-				multiTrackAt(currentTrackIndex()).newState()->archive(this).finishSave();
+				multiSongAt(currentSongIndex()).newState()->archive(this).finishSave();
 			}
 			else {
-				IAudioSource::LockGuard guard(this);
-				multiTrackAt(currentTrackIndex()).nextState()->archive(this).finishLoad();
+				bool wasLocked = tryLock();
+				multiSongAt(currentSongIndex()).nextState()->archive(this).finishLoad();
+				if(wasLocked) {
+					unlock();
+				}
 			}
 		}
 		PPP_CATCH_ALL()
@@ -600,7 +546,7 @@ void S3mModule::buildTick(AudioFrameBuffer& buf) {
 			buf.reset();
 			return;
 		}
-		if(m_orderPlaybackCounts[playbackInfo().order] >= maxRepeat()) {
+		if(m_orderPlaybackCounts.at(playbackInfo().order) >= maxRepeat()) {
 			LOG_MESSAGE("Song end reached: Maximum repeat count reached");
 			buf.reset();
 			return;
@@ -612,7 +558,7 @@ void S3mModule::buildTick(AudioFrameBuffer& buf) {
 			return;
 		MixerFrameBuffer mixerBuffer(new MixerFrameBuffer::element_type(tickBufferLength(), {0, 0}));
 		for(unsigned short currTrack = 0; currTrack < channelCount(); currTrack++) {
-			S3mChannel::Ptr chan = m_channels[currTrack];
+			S3mChannel::Ptr chan = m_channels.at(currTrack);
 			PPP_ASSERT(chan.use_count()>0);
 			S3mCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 			chan->update(cell, m_patDelayCount != -1);
@@ -640,7 +586,7 @@ void S3mModule::simulateTick(std::size_t& bufLen) {
 		if(!adjustPosition(false, true))
 			return;
 		PPP_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
-		if(m_orderPlaybackCounts[playbackInfo().order] >= maxRepeat())
+		if(m_orderPlaybackCounts.at(playbackInfo().order) >= maxRepeat())
 			return;
 		// update channels...
 		setPatternIndex(mapOrder(playbackInfo().order)->index());
@@ -649,7 +595,7 @@ void S3mModule::simulateTick(std::size_t& bufLen) {
 			return;
 		bufLen = tickBufferLength(); // in frames
 		for(unsigned short currTrack = 0; currTrack < channelCount(); currTrack++) {
-			S3mChannel::Ptr chan = m_channels[currTrack];
+			S3mChannel::Ptr chan = m_channels.at(currTrack);
 			PPP_ASSERT(chan.use_count()>0);
 			S3mCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 			chan->update(cell, m_patDelayCount != -1);
@@ -662,7 +608,7 @@ void S3mModule::simulateTick(std::size_t& bufLen) {
 }
 
 bool S3mModule::jumpNextOrder() {
-	IArchive::Ptr next = multiTrackAt(currentTrackIndex()).nextState();
+	IArchive::Ptr next = multiSongAt(currentSongIndex()).nextState();
 	if(!next) {
 		return false;
 	}
@@ -672,7 +618,7 @@ bool S3mModule::jumpNextOrder() {
 }
 
 bool S3mModule::jumpPrevOrder() {
-	IArchive::Ptr next = multiTrackAt(currentTrackIndex()).prevState();
+	IArchive::Ptr next = multiSongAt(currentSongIndex()).prevState();
 	if(!next) {
 		return false;
 	}
@@ -690,80 +636,75 @@ GenOrder::Ptr S3mModule::mapOrder(int16_t order) {
 }
 
 std::string S3mModule::channelStatus(int16_t idx) {
-	S3mChannel::Ptr x = m_channels[idx];
+	S3mChannel::Ptr x = m_channels.at(idx);
 	if(!x)
-		return "";
+		return std::string();
 	return x->statusString();
 }
 
 std::string S3mModule::channelCellString(int16_t idx) {
-	S3mChannel::Ptr x = m_channels[idx];
+	S3mChannel::Ptr x = m_channels.at(idx);
 	if(!x)
-		return "";
+		return std::string();
 	return x->cellString();
 }
 
-bool S3mModule::jumpNextTrack() {
-	if(!isMultiTrack()) {
-		LOG_MESSAGE("This is not a multi-track");
+bool S3mModule::jumpNextSong() {
+	if(!isMultiSong()) {
+		LOG_MESSAGE("This is not a multi-song");
 		return false;
 	}
 	PPP_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
-	m_orderPlaybackCounts[playbackInfo().order]++;
-	setCurrentTrack(currentTrackIndex() + 1);
-	if(currentTrackIndex() >= currentTrackIndex()) {
-		GenMultiTrack nulltrack;
+	m_orderPlaybackCounts.at(playbackInfo().order)++;
+	setCurrentSongIndex(currentSongIndex() + 1);
+	if(currentSongIndex() >= songCount()) {
 		for(uint16_t i = 0; i < orderCount(); i++) {
 			PPP_ASSERT(orderAt(i).use_count()>0);
-			if((orderAt(i)->index() != s3mOrderEnd) && (orderAt(i)->index() != s3mOrderSkip) && (m_orderPlaybackCounts[i] == 0)) {
+			if((orderAt(i)->index() != s3mOrderEnd) && (orderAt(i)->index() != s3mOrderSkip) && (m_orderPlaybackCounts.at(i) == 0)) {
 				PPP_ASSERT(mapOrder(i).use_count()>0);
 				setPatternIndex(mapOrder(i)->index());
 				setOrder(i);
-				nulltrack.startOrder = i;
-				addMultiTrack(nulltrack);
+				addMultiSong(StateIterator());
 				setPosition(0);
 				IAudioSource::LockGuard guard(this);
-				multiTrackAt(currentTrackIndex()).newState()->archive(this).finishSave();
+				multiSongAt(currentSongIndex()).newState()->archive(this).finishSave();
 				return true;
 			}
 		}
-		nulltrack.startOrder = GenMultiTrack::stopHere;
-		addMultiTrack(nulltrack);
+		addMultiSong(StateIterator());
 		return false;
 	}
 	else {
-		if(multiTrackAt(currentTrackIndex()).startOrder == GenMultiTrack::stopHere) {
-			LOG_MESSAGE("No more tracks");
-			return false;
-		}
-		setOrder(multiTrackAt(currentTrackIndex()).startOrder);
+// 		setOrder(multiTrackAt(currentTrackIndex()).startOrder); FIXME
+		setOrder( 0 );
 		PPP_ASSERT(mapOrder(playbackInfo().order).use_count()>0);
 		setPatternIndex(mapOrder(playbackInfo().order)->index());
 		setPosition(0);
 		IAudioSource::LockGuard guard(this);
-		multiTrackAt(currentTrackIndex()).nextState()->archive(this).finishLoad();
+		multiSongAt(currentSongIndex()).nextState()->archive(this).finishLoad();
 		return true;
 	}
 	LOG_ERROR("This should definitively NOT have happened...");
 	return false;
 }
 
-bool S3mModule::jumpPrevTrack() {
-	if(!isMultiTrack()) {
-		LOG_MESSAGE("This is not a multi-track");
+bool S3mModule::jumpPrevSong() {
+	if(!isMultiSong()) {
+		LOG_MESSAGE("This is not a multi-song");
 		return false;
 	}
-	if(currentTrackIndex() == 0) {
-		LOG_MESSAGE("Already on first track");
+	if(currentSongIndex() == 0) {
+		LOG_MESSAGE("Already on first song");
 		return false;
 	}
-	setCurrentTrack(currentTrackIndex() - 1);
-	setOrder(multiTrackAt(currentTrackIndex()).startOrder);
+	setCurrentSongIndex(currentSongIndex() - 1);
+// 	setOrder(multiTrackAt(currentTrackIndex()).startOrder); FIXME
+	setOrder(0);
 	PPP_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
 	setPatternIndex(mapOrder(playbackInfo().order)->index());
 	setPosition(0);
 	IAudioSource::LockGuard guard(this);
-	multiTrackAt(currentTrackIndex()).nextState()->archive(this).finishLoad();
+	multiSongAt(currentSongIndex()).nextState()->archive(this).finishLoad();
 	return true;
 }
 
@@ -776,9 +717,10 @@ IArchive& S3mModule::serialize(IArchive* data) {
 	% m_patDelayCount
 	% m_customData;
 	for(std::size_t i = 0; i < m_channels.size(); i++) {
-		if(!m_channels[i])
+		if(!m_channels.at(i)) {
 			continue;
-		data->archive(m_channels[i].get());
+		}
+		data->archive(m_channels.at(i).get());
 	}
 	data->array(&m_orderPlaybackCounts.front(), m_orderPlaybackCounts.size());
 	return *data;
@@ -787,7 +729,7 @@ IArchive& S3mModule::serialize(IArchive* data) {
 void S3mModule::setGlobalVolume(int16_t v) {
 	GenModule::setGlobalVolume(v);
 	for(std::size_t i = 0; i < m_channels.size(); i++)
-		m_channels[i]->recalcVolume();
+		m_channels.at(i)->recalcVolume();
 }
 
 uint16_t S3mModule::tickBufferLength() const {
@@ -839,7 +781,7 @@ bool S3mModule::hasAmigaLimits() const {
 
 S3mPattern::Ptr S3mModule::getPattern(size_t idx) const {
 	if(idx >= m_patterns.size()) return S3mPattern::Ptr();
-	return m_patterns[idx];
+	return m_patterns.at(idx);
 }
 
 }

@@ -16,9 +16,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @ingroup S3mMod
+ * @{
+ */
+
 #include "s3mcell.h"
+
 #include "s3mbase.h"
 #include "stream/iarchive.h"
+#include "logger/logger.h"
 
 namespace ppp {
 namespace s3m {
@@ -32,7 +39,7 @@ S3mCell::~S3mCell() {
 
 bool S3mCell::load(BinStream& str) {
 	try {
-		reset();
+		clear();
 		uint8_t master = 0;
 		uint8_t buf;
 		str.read(&master);
@@ -68,7 +75,7 @@ bool S3mCell::load(BinStream& str) {
 	return true;
 }
 
-void S3mCell::reset() {
+void S3mCell::clear() {
 	m_note = s3mEmptyNote;
 	m_instr = s3mEmptyInstr;
 	m_volume = s3mEmptyVolume;
@@ -83,7 +90,7 @@ std::string S3mCell::trackerString() const {
 	else if(m_note == s3mKeyOffNote)
 		xmsg += "^^  ";
 	else
-		xmsg += stringf("%s%d ", NoteNames[m_note & 0x0f], m_note >> 4);
+		xmsg += stringf("%s%d ", NoteNames.at(m_note & 0x0f), m_note >> 4);
 	if(m_instr != s3mEmptyInstr)
 		xmsg += stringf("%.2d ", m_instr);
 	else
@@ -131,3 +138,7 @@ IArchive& S3mCell::serialize(IArchive* data) {
 
 }
 }
+
+/**
+ * @}
+ */

@@ -33,7 +33,7 @@ namespace ppp {
 		}
 		bool XmEnvelopeProcessor::onSustain(uint8_t idx) const
 		{
-			return m_flags&EnvelopeFlags::Sustain && idx==m_sustainPoint && m_position==m_points[m_sustainPoint].position;
+			return m_flags&EnvelopeFlags::Sustain && idx==m_sustainPoint && m_position==m_points.at(m_sustainPoint).position;
 		}
 		bool XmEnvelopeProcessor::atLoopEnd(uint8_t idx) const
 		{
@@ -53,20 +53,20 @@ namespace ppp {
 			}
 			
 			m_position++;
-			if(m_position == m_points[m_nextIndex].position) {
+			if(m_position == m_points.at(m_nextIndex).position) {
 				if(atLoopEnd(m_nextIndex)) {
-					m_position = m_points[m_loopStart].position;
-					m_currentValue = m_points[m_loopStart].value<<8;
+					m_position = m_points.at(m_loopStart).position;
+					m_currentValue = m_points.at(m_loopStart).value<<8;
 					m_nextIndex = m_loopStart;
 				}
 				else {
-					m_currentValue = m_points[m_nextIndex].value<<8;
+					m_currentValue = m_points.at(m_nextIndex).value<<8;
 				}
 				m_nextIndex++;
 				if(m_nextIndex < m_numPoints) {
-					int16_t dx = m_points[m_nextIndex].position - m_points[m_nextIndex-1].position;
+					int16_t dx = m_points.at(m_nextIndex).position - m_points.at(m_nextIndex-1).position;
 					if(dx>0) {
-						int16_t dy = (m_points[m_nextIndex].value<<8) - (m_points[m_nextIndex-1].value<<8);
+						int16_t dy = (m_points.at(m_nextIndex).value<<8) - (m_points.at(m_nextIndex-1).value<<8);
 						m_currentRate = dy / dx;
 					}
 					else {
@@ -136,32 +136,32 @@ namespace ppp {
 			m_position = pos-1;
 			if(m_numPoints <= 1) {
 				m_currentRate = 0;
-				m_currentValue = m_points[0].value;
+				m_currentValue = m_points.at(0).value;
 			}
 			else {
 				int foundPoint;
 				for(foundPoint=1; foundPoint<m_numPoints; foundPoint++) {
-					if(pos < m_points[foundPoint].position) {
+					if(pos < m_points.at(foundPoint).position) {
 						foundPoint--;
 						break;
 					}
 				}
 				if(foundPoint==m_numPoints) {
 					m_currentRate = 0;
-					m_currentValue = m_points[foundPoint-1].value;
+					m_currentValue = m_points.at(foundPoint-1).value;
 				}
-				else if(m_points[foundPoint].position == pos) {
-					if(m_points[foundPoint+1].position < m_points[foundPoint].position) {
+				else if(m_points.at(foundPoint).position == pos) {
+					if(m_points.at(foundPoint+1).position < m_points.at(foundPoint).position) {
 						m_currentRate = 0;
-						m_currentValue = m_points[foundPoint-1].value;
+						m_currentValue = m_points.at(foundPoint-1).value;
 					}
 				}
 				else {
-					int16_t dx = m_points[foundPoint+1].position - m_points[foundPoint].position;
-					int16_t dy = m_points[foundPoint+1].value - m_points[foundPoint].value;
+					int16_t dx = m_points.at(foundPoint+1).position - m_points.at(foundPoint).position;
+					int16_t dy = m_points.at(foundPoint+1).value - m_points.at(foundPoint).value;
 					m_currentRate = (dy<<8) / dx;
-					m_currentValue = m_points[foundPoint].value;
-					m_currentValue += m_currentRate * (pos - m_points[foundPoint].position);
+					m_currentValue = m_points.at(foundPoint).value;
+					m_currentValue += m_currentRate * (pos - m_points.at(foundPoint).position);
 					foundPoint++;
 				}
 				if(foundPoint >= m_numPoints) {
@@ -174,7 +174,7 @@ namespace ppp {
 		{
 			*data % (*reinterpret_cast<uint8_t*>(&m_flags));
 			for(std::size_t i=0; i<m_points.size(); i++) {
-				*data % m_points[i].position % m_points[i].value;
+				*data % m_points.at(i).position % m_points.at(i).value;
 			}
 			*data
 			% m_numPoints

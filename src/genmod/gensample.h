@@ -20,9 +20,8 @@
 #define GENSAMPLE_H
 
 /**
- * @file
  * @ingroup GenMod
- * @brief General Sample definitions
+ * @{
  */
 
 #include "genbase.h"
@@ -31,24 +30,24 @@
 namespace ppp {
 /**
  * @class GenSample
- * @ingroup GenMod
  * @brief An abstract sample class
  */
 class GenSample {
 		DISABLE_COPY(GenSample)
 	public:
 		typedef std::shared_ptr<GenSample> Ptr; //!< @brief Class pointer
-		typedef std::vector<Ptr> Vector;
+		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
+		//! @brief Loop type definitions
 		enum class LoopType {
 		    None, //!< @brief not looped
 		    Forward, //!< @brief Forward looped
 		    Pingpong //!< @brief Ping pong looped
-		}; //!< @brief Loop type definitions
+		};
 	private:
 		int32_t m_length; //!< @brief Length of the sample in frames
 		int32_t m_loopStart; //!< @brief Loop start sample
 		int32_t m_loopEnd; //!< @brief Loop end sample (points to 1 frame @e after the loop end)
-		uint8_t m_volume; //!< @brief Volume of the sample
+		uint8_t m_volume; //!< @brief Default volume of the sample
 		uint16_t m_frequency; //!< @brief Base frequency of the sample
 		BasicSample* m_dataL; //!< @brief Left sample data
 		BasicSample* m_dataR; //!< @brief Right sample data
@@ -89,19 +88,15 @@ class GenSample {
 		/**
 		 * @brief Get a left channel sample
 		 * @param[in,out] pos Position of the requested sample
-		 * @param[in] panPos Lowers sample value if \>0x40
 		 * @return Sample value, 0 if invalid value for @a pos
 		 * @note Time-critical
-		 * @pre @c (0x00\<=panPos\<=0x80)||(panPos==0xa4)
 		 */
 		inline BasicSample leftSampleAt(int32_t& pos) const;
 		/**
 		 * @brief Get a right channel sample
 		 * @param[in,out] pos Position of the requested sample
-		 * @param[in] panPos Lowers sample value if \<0x40
 		 * @return Sample value, 0 if invalid value for @a pos
 		 * @note Time-critical
-		 * @pre @c (0x00\<=panPos\<=0x80)||(panPos==0xa4)
 		 */
 		inline BasicSample rightSampleAt(int32_t& pos) const;
 		/**
@@ -115,8 +110,8 @@ class GenSample {
 		 */
 		uint8_t volume() const;
 		/**
-		 * @brief Adjust the playback position so it doesn't fall out of the sample data. Returns #endOfSample if it does
-		 * @param[in,out] pos Reference to a variable that should be adjusted
+		 * @brief Adjust the playback position so it doesn't fall out of the sample data. Returns EndOfSample if it does
+		 * @param[in,out] pos Reference to the variable that should be adjusted
 		 * @note Time-critical
 		 */
 		inline int32_t adjustPosition(int32_t& pos) const;
@@ -130,25 +125,107 @@ class GenSample {
 		 * @return @c true if the sample is looped
 		 */
 		bool isLooped() const;
+		/**
+		 * @brief Get the sample's length
+		 * @return The sample's length
+		 */
 		std::size_t length() const;
+		/**
+		 * @brief Get the loop type
+		 * @return The loop type
+		 */
 		LoopType loopType() const;
 	protected:
+		/**
+		 * @brief Set m_frequency
+		 * @param[in] f The new frequency value
+		 */
 		void setFrequency(uint16_t f);
+		/**
+		 * @brief Set m_looptype
+		 * @param[in] l The new loop type value
+		 */
 		void setLoopType(LoopType l);
+		/**
+		 * @brief Get the left sample data
+		 * @return Left sample data
+		 */
 		const BasicSample* dataLeft() const;
+		/**
+		 * @brief Get the mono sample data
+		 * @return Mono sample data
+		 */
 		const BasicSample* dataMono() const;
+		/**
+		 * @brief Get the right sample data
+		 * @return Right sample data
+		 */
 		const BasicSample* dataRight() const;
+		/**
+		 * @brief Get the left sample data
+		 * @return Left sample data
+		 * @note Use this for initialization
+		 */
 		BasicSample* nonConstDataL() const;
+		/**
+		 * @brief Get the mono sample data
+		 * @return Mono sample data
+		 * @note Use this for initialization
+		 */
 		BasicSample* nonConstDataMono() const;
+		/**
+		 * @brief Get the right sample data
+		 * @return Right sample data
+		 * @note Use this for initialization
+		 */
 		BasicSample* nonConstDataR() const;
+		/**
+		 * @brief Set the left sample data
+		 * @param[in] b New sample data
+		 * @note Creates a copy of @a b, so you may safely delete @a b after calling this
+		 */
 		void setDataLeft(const BasicSample b[]);
+		/**
+		 * @brief Set the right sample data
+		 * @param[in] b New sample data
+		 * @note Creates a copy of @a b, so you may safely delete @a b after calling this
+		 */
 		void setDataRight(const BasicSample b[]);
+		/**
+		 * @brief Set the mono sample data
+		 * @param[in] b New sample data
+		 * @note Creates a copy of @a b, so you may safely delete @a b after calling this
+		 */
 		void setDataMono(const BasicSample b[]);
+		/**
+		 * @brief Set the sample's name
+		 * @param[in] t The new name
+		 */
 		void setTitle(const std::string& t);
+		/**
+		 * @brief Set the sample's filename
+		 * @param[in] f The new filename
+		 */
 		void setFilename(const std::string& f);
+		/**
+		 * @brief Set the sample's length
+		 * @param[in] l The new length
+		 */
 		void setLength(std::size_t l);
+		/**
+		 * @brief Set the sample's loop start
+		 * @param[in] s The new loop start
+		 */
 		void setLoopStart(std::size_t s);
+		/**
+		 * @brief Set the sample's loop end
+		 * @param[in] e The new loop end
+		 */
 		void setLoopEnd(std::size_t e);
+		/**
+		 * @brief Set the sample's default volume
+		 * @param[in] v The new volume
+		 */
 		void setVolume(uint8_t v);
 };
 
@@ -203,5 +280,9 @@ inline int32_t GenSample::makeRealPos(int32_t pos) const {
 }
 
 } // namespace ppp
+
+/**
+ * @}
+ */
 
 #endif

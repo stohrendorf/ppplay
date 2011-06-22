@@ -61,7 +61,7 @@ XmModule::XmModule(uint8_t maxRpt):
 	m_noteToPeriod(), m_orders(), m_orderPlaybackCount(), m_length(), m_jumpRow(-1), m_jumpOrder(-1),
 	m_isPatLoop(false), m_doPatJump(false), m_restartPos(0) {
 	for(std::size_t i = 0; i < m_orderPlaybackCount.size(); i++) {
-		m_orderPlaybackCount[i] = 0;
+		m_orderPlaybackCount.at(i) = 0;
 	}
 }
 
@@ -80,7 +80,7 @@ bool XmModule::load(const std::string& filename) {
 	}
 	{
 		std::string title = stringncpy(hdr.title, 20);
-		while(title.length() > 0 && title[title.length() - 1] == ' ')
+		while(title.length() > 0 && title.at(title.length() - 1) == ' ')
 			title.erase(title.length() - 1, 1);
 		setTitle(title);
 	}
@@ -128,7 +128,7 @@ bool XmModule::load(const std::string& filename) {
 			uint16_t val = ~(0xffff << octShift);
 			int count = octave != 0 ? 96 : 8;
 			for(int j = 0; j < count; j++) {
-				dest[0] = dest[1] = ((g_PeriodTable[j] << 6) + val) >> (octShift + 1);
+				dest[0] = dest[1] = ((g_PeriodTable.at(j) << 6) + val) >> (octShift + 1);
 				dest += 2;
 			}
 			octShift++;
@@ -142,14 +142,15 @@ bool XmModule::load(const std::string& filename) {
 	else {
 		uint16_t val = 121 * 16;
 		for(std::size_t i = 0; i < m_noteToPeriod.size(); i++) {
-			m_noteToPeriod[i] = val * 4;
+			m_noteToPeriod.at(i) = val * 4;
 			val--;
 		}
 	}
 	m_length = hdr.songLength;
-	setPatternIndex(m_orders[0]);
-	multiTrackAt(0).newState()->archive(this).finishSave();
-	multiTrackAt(0).startOrder = playbackInfo().order;
+	setPatternIndex(m_orders.at(0));
+	addMultiSong( StateIterator() );
+	multiSongAt(0).newState()->archive(this).finishSave();
+// 	multiTrackAt(0).startOrder = playbackInfo().order;
 	return true;
 }
 
@@ -163,9 +164,9 @@ void XmModule::buildTick(AudioFrameBuffer& buffer) {
 		buffer.reset(new AudioFrameBuffer::element_type);
 	}
 	MixerFrameBuffer mixerBuffer(new MixerFrameBuffer::element_type(tickBufferLength(), {0, 0}));
-	XmPattern::Ptr currPat = m_patterns[playbackInfo().pattern];
+	XmPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
 	for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
-		XmChannel::Ptr chan = m_channels[currTrack];
+		XmChannel::Ptr chan = m_channels.at(currTrack);
 		PPP_ASSERT(chan.use_count() > 0);
 		XmCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 		chan->update(cell);
@@ -189,10 +190,10 @@ void XmModule::buildTick(AudioFrameBuffer& buffer) {
 void XmModule::simulateTick(std::size_t& bufferLength) {
 	try {
 		bufferLength = tickBufferLength();
-		XmPattern::Ptr currPat = m_patterns[playbackInfo().pattern];
+		XmPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
 		PPP_ASSERT(currPat.use_count() > 0);
 		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
-			XmChannel::Ptr chan = m_channels[currTrack];
+			XmChannel::Ptr chan = m_channels.at(currTrack);
 			PPP_ASSERT(chan.use_count() > 0);
 			XmCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 			chan->update(cell);
@@ -223,16 +224,16 @@ bool XmModule::adjustPosition(bool doStore) {
 				if(m_jumpOrder >= m_length) {
 					m_jumpOrder = m_restartPos;
 				}
-				m_orderPlaybackCount[playbackInfo().order]++;
+				m_orderPlaybackCount.at(playbackInfo().order)++;
 				setOrder(m_jumpOrder);
 				orderChanged = true;
 			}
 		}
 		else {
-			XmPattern::Ptr currPat = m_patterns[playbackInfo().pattern];
+			XmPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
 			setRow((playbackInfo().row + 1) % currPat->numRows());
 			if(playbackInfo().row == 0) {
-				m_orderPlaybackCount[playbackInfo().order]++;
+				m_orderPlaybackCount.at(playbackInfo().order)++;
 				setOrder((playbackInfo().order + 1));
 				orderChanged = true;
 			}
@@ -242,13 +243,13 @@ bool XmModule::adjustPosition(bool doStore) {
 	}
 	if(orderChanged) {
 		if(playbackInfo().order < m_length) {
-			setPatternIndex(m_orders[playbackInfo().order]);
+			setPatternIndex(m_orders.at(playbackInfo().order));
 			if(doStore) {
-				multiTrackAt(0).newState()->archive(this).finishSave();
+				multiSongAt(0).newState()->archive(this).finishSave();
 			}
 			else {
 				bool wasLocked = tryLock();
-				multiTrackAt(0).nextState()->archive(this).finishLoad();
+				multiSongAt(0).nextState()->archive(this).finishLoad();
 				if(wasLocked) {
 					unlock();
 				}
@@ -258,7 +259,7 @@ bool XmModule::adjustPosition(bool doStore) {
 			return false;
 		}
 	}
-	if(m_orderPlaybackCount[playbackInfo().order] >= maxRepeat()) {
+	if(m_orderPlaybackCount.at(playbackInfo().order) >= maxRepeat()) {
 		return false;
 	}
 	return true;
@@ -272,19 +273,19 @@ GenOrder::Ptr XmModule::mapOrder(int16_t order) {
 }
 
 std::string XmModule::channelStatus(int16_t idx) {
-	return m_channels[idx]->statusString();
+	return m_channels.at(idx)->statusString();
 }
 
-bool XmModule::jumpNextTrack() {
+bool XmModule::jumpNextSong() {
 	return false;
 }
 
-bool XmModule::jumpPrevTrack() {
+bool XmModule::jumpPrevSong() {
 	return false;
 }
 
 bool XmModule::jumpNextOrder() {
-	IArchive::Ptr next = multiTrackAt(0).nextState();
+	IArchive::Ptr next = multiSongAt(0).nextState();
 	if(!next) {
 		return false;
 	}
@@ -294,7 +295,7 @@ bool XmModule::jumpNextOrder() {
 }
 
 bool XmModule::jumpPrevOrder() {
-	IArchive::Ptr next = multiTrackAt(0).prevState();
+	IArchive::Ptr next = multiSongAt(0).prevState();
 	if(!next) {
 		return false;
 	}
@@ -304,7 +305,7 @@ bool XmModule::jumpPrevOrder() {
 }
 
 std::string XmModule::channelCellString(int16_t idx) {
-	XmChannel::Ptr x = m_channels[idx];
+	XmChannel::Ptr x = m_channels.at(idx);
 	if(!x)
 		return "";
 	return x->cellString();
@@ -325,7 +326,7 @@ uint16_t XmModule::noteToPeriod(uint8_t note, int8_t finetune) const {
 	if(tuned >= m_noteToPeriod.size()) {
 		return 0;
 	}
-	return clip<int>(m_noteToPeriod[tuned], 1, 0x7cff);
+	return clip<int>(m_noteToPeriod.at(tuned), 1, 0x7cff);
 }
 
 static const std::array<uint32_t, 12 * 16 * 4> g_linearMult = {{
@@ -495,7 +496,7 @@ uint32_t XmModule::periodToFrequency(uint16_t period) const {
 	else {
 		uint32_t tmp = 12 * 12 * 16 * 4 - period;
 		uint32_t div = 14 - tmp / (12 * 16 * 4);
-		uint64_t res = static_cast<uint64_t>(256.0f * 65536.0f * 8363.0f / pbFrq * g_linearMult[ tmp % (12 * 16 * 4) ] * adjFac);
+		uint64_t res = static_cast<uint64_t>(256.0f * 65536.0f * 8363.0f / pbFrq * g_linearMult.at( tmp % (12 * 16 * 4) ) * adjFac);
 		res <<= 8;
 		res >>= div;
 		return res >> 32;
@@ -510,7 +511,7 @@ uint16_t XmModule::glissando(uint16_t period, int8_t finetune, uint8_t deltaNote
 		uint16_t ofsMid = (ofsLo + ofsHi) >> 1;
 		ofsMid &= 0xfff0;
 		ofsMid += tuned;
-		if(period >= m_noteToPeriod[ofsMid]) {
+		if(period >= m_noteToPeriod.at(ofsMid)) {
 			ofsHi = ofsMid - tuned;
 		}
 		else {
@@ -521,7 +522,7 @@ uint16_t XmModule::glissando(uint16_t period, int8_t finetune, uint8_t deltaNote
 	if(ofs >= m_noteToPeriod.size()) {
 		ofs = m_noteToPeriod.size() - 1;
 	}
-	return m_noteToPeriod[ofs];
+	return m_noteToPeriod.at(ofs);
 }
 
 void XmModule::doPatternBreak(int16_t next) {
@@ -548,9 +549,10 @@ IArchive& XmModule::serialize(IArchive* data) {
 	GenModule::serialize(data)
 	% m_amiga;
 	for(std::size_t i = 0; i < m_channels.size(); i++) {
-		if(!m_channels[i])
+		if(!m_channels.at(i)) {
 			continue;
-		data->archive(m_channels[i].get());
+		}
+		data->archive(m_channels.at(i).get());
 	}
 	data->array(&m_orderPlaybackCount.front(), m_orderPlaybackCount.size());
 	*data
@@ -570,19 +572,17 @@ bool XmModule::initialize(uint32_t frq) {
 	IAudioSource::initialize(frq);
 	LOG_MESSAGE("Calculating track length and preparing seek operations...");
 	std::size_t currTickLen = 0;
-	multiTrackAt(0).startOrder = playbackInfo().order;
+// 	multiTrackAt(0).startOrder = playbackInfo().order;
 	do {
 		simulateTick(currTickLen);
-		multiTrackAt(0).length += currTickLen;
+		multiSongLengthAt(0) += currTickLen;
 	}
 	while(currTickLen != 0);
 	LOG_MESSAGE("Preprocessed. Resetting module.");
-	if(trackCount() > 0) {
+	if(songCount() > 0) {
 		IAudioSource::LockGuard guard(this);
-		multiTrackAt(0).nextState()->archive(this).finishLoad();
+		multiSongAt(0).currentState()->archive(this).finishLoad();
 	}
-	/*	LOG_MESSAGE( "Removing empty tracks" );
-		removeEmptyTracks();*/
 	return true;
 }
 

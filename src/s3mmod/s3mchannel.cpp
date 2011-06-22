@@ -23,9 +23,8 @@
 #include "logger/logger.h"
 
 /**
- * @file
  * @ingroup S3mMod
- * @brief S3M Channel Definitions, implementation
+ * @{
  */
 
 namespace ppp {
@@ -116,8 +115,9 @@ static const uint32_t FRQ_VALUE = 14317056;
  */
 static inline uint16_t st3PeriodEx(uint8_t note, uint8_t oct, uint16_t c4spd, uint16_t finetune = 8363) throw(PppException) {
 	//PPP_TEST( c4spd == 0 );
-	if(c4spd == 0)
+	if(c4spd == 0) {
 		c4spd = 8636;
+	}
 	return (Periods[note] >> oct) * finetune / c4spd;
 }
 /**
@@ -183,10 +183,12 @@ static inline uint8_t deltaNote(uint8_t note, int8_t delta) throw() {
 }
 
 static uint16_t clipPeriod(bool amiga, uint16_t period) {
-	if(amiga)
+	if(amiga) {
 		return clip<uint16_t>(period, 0x15c, 0xd60);
-	else
+	}
+	else {
 		return clip<uint16_t>(period, 0x40, 0x7fff);
+	}
 }
 
 void S3mChannel::setSampleIndex(int32_t idx) {
@@ -227,8 +229,7 @@ S3mChannel::S3mChannel(S3mModule* const module) : GenChannel(),
 	m_panning(0x20) {
 }
 
-S3mChannel::~S3mChannel() {
-}
+S3mChannel::~S3mChannel() = default;
 
 S3mSample::Ptr S3mChannel::currentSample() {
 	if(!inRange<int>(m_sampleIndex, 0, m_module->numSamples() - 1)) {
@@ -270,12 +271,12 @@ void S3mChannel::update(S3mCell::Ptr const cell, bool patDelay) {
 	if(m_module->tick() == 0) {
 		m_noteChanged = false;
 		m_currentFxStr = "      ";
-		m_currentCell.reset();
+		m_currentCell.clear();
 		if(cell && !patDelay) {
 			m_currentCell = *cell;
 		}
 
-		if(m_currentCell.note() != 0xff || m_currentCell.instrument() != 0 || m_currentCell.volume() != 0xff || m_currentCell.effect() != 0) {
+		if(m_currentCell.note() != s3mEmptyNote || m_currentCell.instrument() != s3mEmptyInstr || m_currentCell.volume() != s3mEmptyVolume || m_currentCell.effect() != s3mEmptyCommand) {
 			triggerNote();
 		}
 
@@ -283,7 +284,7 @@ void S3mChannel::update(S3mCell::Ptr const cell, bool patDelay) {
 			m_zeroVolCounter = 3;
 		}
 		else if(m_module->hasZeroVolOpt()) {
-			if(m_currentVolume == 0 && m_currentCell.volume() == 0 && m_currentCell.instrument() == 0 && m_currentCell.note() == 0xff) {
+			if(m_currentVolume == 0 && m_currentCell.volume() == 0 && m_currentCell.instrument() == s3mEmptyInstr && m_currentCell.note() == s3mEmptyNote) {
 				m_zeroVolCounter--;
 				if(m_zeroVolCounter == 0) {
 					setActive(false);
@@ -296,7 +297,7 @@ void S3mChannel::update(S3mCell::Ptr const cell, bool patDelay) {
 		}
 
 		reuseIfZeroEx(m_lastFxByte, m_currentCell.effectValue());   // TODO check if right here...
-		if(m_currentCell.effect() == 0) {
+		if(m_currentCell.effect() == s3mEmptyCommand) {
 			if(m_module->hasAmigaLimits()) {
 				m_countdown = 0;
 			}
@@ -1022,8 +1023,9 @@ uint16_t S3mChannel::glissando(uint16_t period) {
 }
 
 void S3mChannel::triggerNote() {
-	if(m_currentCell.effect() == s3mFxSpecial && highNibble(m_currentCell.effectValue()) == s3mSFxNoteDelay)
+	if(m_currentCell.effect() == s3mFxSpecial && highNibble(m_currentCell.effectValue()) == s3mSFxNoteDelay) {
 		return;
+	}
 	playNote();
 }
 
@@ -1031,11 +1033,11 @@ void S3mChannel::playNote() {
 	if(m_currentCell.instrument() >= 101) {
 		setSampleIndex(-1);
 	}
-	else if(m_currentCell.instrument() != 0) {
+	else if(m_currentCell.instrument() != s3mEmptyInstr) {
 		setSampleIndex(m_currentCell.instrument() - 1);
 		if(currentSample()) {
 			m_baseVolume = m_currentVolume = std::min<uint8_t>(currentSample()->volume(), 63);
-			m_c2spd = currentSample()->volume();
+			m_c2spd = currentSample()->frequency();
 			recalcVolume();
 		}
 		else {
@@ -1044,8 +1046,8 @@ void S3mChannel::playNote() {
 		}
 	}
 
-	if(m_currentCell.note() != 0xff) {
-		if(m_currentCell.note() == 0xfe) {
+	if(m_currentCell.note() != s3mEmptyNote) {
+		if(m_currentCell.note() == s3mKeyOffNote) {
 			m_realPeriod = 0;
 			recalcFrequency();
 			m_currentVolume = 0;
@@ -1071,9 +1073,10 @@ void S3mChannel::playNote() {
 		}
 	}
 	uint8_t vol = m_currentCell.volume();
-	if(vol != 0xff)
+	if(vol != s3mEmptyVolume) {
 		vol = std::min<uint8_t>(vol, 63);
-	if(vol != 0xff) {
+	}
+	if(vol != s3mEmptyVolume) {
 		m_currentVolume = vol;
 		recalcVolume();
 		m_baseVolume = vol;
@@ -1087,3 +1090,7 @@ void S3mChannel::setPanning(uint8_t pan) {
 
 } // namespace s3m
 } // namespace ppp
+
+/**
+ * @}
+ */

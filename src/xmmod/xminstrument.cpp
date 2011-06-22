@@ -85,16 +85,16 @@ bool XmInstrument::load(BinStream& str) {
 	for(uint16_t i = 0; i < hdr.numSamples; i++) {
 		XmSample::Ptr smp(new XmSample());
 		smp->load(str);
-		m_samples[i] = smp;
+		m_samples.at(i) = smp;
 	}
 	for(uint16_t i = 0; i < hdr.numSamples; i++) {
-		m_samples[i]->loadData(str);
+		m_samples.at(i)->loadData(str);
 	}
 	m_title = ppp::stringncpy(hdr.name, 22);
 	m_panEnvFlags = static_cast<XmEnvelopeProcessor::EnvelopeFlags>(hdr2.panType);
 	for(uint8_t i = 0; i < 12; i++) {
-		m_panPoints[i].position = hdr2.panEnvelope[i].x;
-		m_panPoints[i].value = hdr2.panEnvelope[i].y;
+		m_panPoints.at(i).position = hdr2.panEnvelope[i].x;
+		m_panPoints.at(i).value = hdr2.panEnvelope[i].y;
 	}
 	m_volEnvFlags = static_cast<XmEnvelopeProcessor::EnvelopeFlags>(hdr2.volType);
 	m_numVolPoints = hdr2.numVolPoints;
@@ -107,8 +107,8 @@ bool XmInstrument::load(BinStream& str) {
 	m_panSustainPoint = hdr2.panSustainPoint;
 	m_fadeout = hdr2.volFadeout;
 	for(uint8_t i = 0; i < 12; i++) {
-		m_volPoints[i].position = hdr2.volEnvelope[i].x;
-		m_volPoints[i].value = hdr2.volEnvelope[i].y;
+		m_volPoints.at(i).position = hdr2.volEnvelope[i].x;
+		m_volPoints.at(i).value = hdr2.volEnvelope[i].y;
 	}
 	m_vibDepth = hdr2.vibDepth;
 	m_vibRate = hdr2.vibRate;
@@ -129,7 +129,7 @@ XmSample::Ptr XmInstrument::mapNoteSample(uint8_t note) const {
 	uint8_t mapped = mapNoteIndex(note);
 	if(mapped >= m_samples.size())
 		return XmSample::Ptr();
-	return m_samples[mapped];
+	return m_samples.at(mapped);
 }
 
 std::string XmInstrument::title() const {

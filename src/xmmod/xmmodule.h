@@ -82,8 +82,8 @@ class XmModule : public GenModule {
 		virtual void simulateTick(std::size_t&);
 		virtual ppp::GenOrder::Ptr mapOrder(int16_t);
 		virtual std::string channelStatus(int16_t);
-		virtual bool jumpNextTrack();
-		virtual bool jumpPrevTrack();
+		virtual bool jumpNextSong();
+		virtual bool jumpPrevSong();
 		virtual bool jumpNextOrder();
 		virtual bool jumpPrevOrder();
 		virtual std::string channelCellString(int16_t);

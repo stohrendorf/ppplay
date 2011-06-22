@@ -24,29 +24,15 @@
 #include <cstdint>
 
 /**
- * @defgroup S3mMod ScreamTracker 3 module definitions
- * @brief This module contains the ScreamTracker 3 Module Classes
- * @remarks I am very proud that this should be the @b most @b compatible playing
- * routine ever.
- */
-
-/**
- * @file
  * @ingroup S3mMod
- * @brief This file contains the base definitions for S3M Modules
+ * @{
  */
 
 namespace ppp {
-/**
- * @namespace ppp::s3m
- * @ingroup S3mMod
- * @brief This namespace contains some consts that do not need to be public
- */
 namespace s3m {
 
 /**
  * @brief Some default values...
- * @ingroup S3mMod
  */
 enum : uint8_t {
 	s3mEmptyNote    = 0xff, //!< @brief Empty note
@@ -60,7 +46,6 @@ enum : uint8_t {
 
 /**
  * @brief Tracker IDs
- * @ingroup S3mMod
  */
 enum : uint8_t {
 	s3mTIdScreamTracker = 0x01, //!< @brief Scream Tracker 3
@@ -72,7 +57,6 @@ enum : uint8_t {
 
 /**
  * @brief Commands/effects
- * @ingroup S3mMod
  * @remarks @e FX @e Data @e Share means that if the value is 0x00, the last non-zero value is used. A special case is
  * ::s3mFxVibrato (and others), where each nibble is treated separately. If there is @e own @e field mentioned, that
  * means that this effect has its own backup variable for saving the last used effect value. See ::s3mFxVibVolSlide for
@@ -214,7 +198,6 @@ enum : uint8_t {
 
 /**
  * @brief Special Commands/effects
- * @ingroup S3mMod
  * @see s3mFxSpecial
  */
 enum : uint8_t {
@@ -222,23 +205,16 @@ enum : uint8_t {
 	//! @remarks Not supported
 	s3mSFxSetFilter    = 0x00,
 	//! @brief Special FX: Set Glissando control
-	//! @remarks Not supported
 	s3mSFxSetGlissando = 0x01,
 	//! @brief Special FX: Set Finetune
-	//! @todo Implementation needed
-	//! @note Is this a per-channel or a per-sample effect?
-	//! @see S3mChannel::doSpecialFx
 	s3mSFxSetFinetune  = 0x02,
 	//! @brief Special FX: Set Vibrato Waveform
-	//! @note Only the low 2 bits are interesting, retriggering is @e never done
 	s3mSFxSetVibWave   = 0x03,
 	//! @brief Special FX: Set Tremolo Waveform
-	//! @see ::s3mSFxSetVibWave
 	s3mSFxSetTremWave  = 0x04,
 	//! @brief Special FX: Set Panning position
 	s3mSFxSetPan       = 0x08,
 	//! @brief Special FX: Stereo control
-	//! @remarks Originally not supported
 	s3mSFxStereoCtrl   = 0x0a,
 	//! @brief Special FX: Pattern loop
 	//! @remarks Sets loop point after loop end point when finished
@@ -265,6 +241,10 @@ enum : uint8_t {
 };
 } // namespace s3m
 } // namespace ppp
+
+/**
+ * @}
+ */
 
 #endif
 

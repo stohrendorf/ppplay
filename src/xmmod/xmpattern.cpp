@@ -17,6 +17,7 @@
 */
 
 #include "xmpattern.h"
+#include "logger/logger.h"
 
 namespace ppp {
 namespace xm {
@@ -24,7 +25,7 @@ namespace xm {
 XmCell::Ptr XmPattern::createCell(uint16_t trackIndex, uint16_t row) {
 	PPP_ASSERT(row < numRows());
 	PPP_ASSERT(trackIndex < numChannels());
-	XmCell::Vector* track = &m_tracks[trackIndex];
+	XmCell::Vector* track = &m_tracks.at(trackIndex);
 	XmCell::Ptr& cell = track->at(row);
 	if(cell) {
 		return cell;
@@ -54,7 +55,7 @@ bool XmPattern::load(BinStream& str) {
 		return false;
 	}
 	for(std::size_t chan = 0; chan < m_tracks.size(); chan++) {
-		m_tracks[chan].resize(rows, XmCell::Ptr());
+		m_tracks.at(chan).resize(rows, XmCell::Ptr());
 	}
 	uint16_t packedSize;
 	str.read(&packedSize);
@@ -67,7 +68,7 @@ bool XmPattern::load(BinStream& str) {
 			XmCell* cell = new XmCell();
 			if(!cell->load(str))
 				return false;
-			m_tracks[chan][row].reset(cell);
+			m_tracks.at(chan).at(row).reset(cell);
 		}
 	}
 	return !str.fail();
@@ -84,7 +85,7 @@ XmCell::Ptr XmPattern::cellAt(uint16_t trackIndex, uint16_t row) {
 std::size_t XmPattern::numRows() const {
 	if(numChannels() == 0)
 		return 0;
-	return m_tracks[0].size();
+	return m_tracks.at(0).size();
 }
 
 std::size_t XmPattern::numChannels() const {
@@ -95,7 +96,7 @@ XmPattern::Ptr XmPattern::createDefaultPattern(int16_t chans) {
 	XmPattern::Ptr result(new XmPattern(chans));
 	for(int i = 0; i < chans; i++) {
 		for(int r = 0; r < 64; r++) {
-			result->m_tracks[i].push_back(XmCell::Ptr(new XmCell()));
+			result->m_tracks.at(i).push_back(XmCell::Ptr(new XmCell()));
 		}
 	}
 	return result;

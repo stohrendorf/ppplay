@@ -16,8 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "s3mbase.h"
 #include "s3msample.h"
+
+#include "s3mbase.h"
+#include "logger/logger.h"
+
 #include <algorithm>
 
 /**
