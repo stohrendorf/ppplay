@@ -47,7 +47,9 @@ typedef int16_t BasicSample;
  */
 #pragma pack(push, 1)
 struct BasicSampleFrame {
+	//! @brief Left sample value
 	BasicSample left;
+	//! @brief Right sample value
 	BasicSample right;
 };
 #pragma pack(pop)
@@ -67,7 +69,9 @@ typedef int32_t MixerSample;
  */
 #pragma pack(push,1)
 struct MixerSampleFrame {
+	//! @brief Left sample value
 	MixerSample left;
+	//! @brief Right sample value
 	MixerSample right;
 };
 #pragma pack(pop)

@@ -19,6 +19,11 @@
 #ifndef breseninterH
 #define breseninterH
 
+/**
+ * @ingroup GenMod
+ * @{
+ */
+
 #include "stuff/utils.h"
 #include "stream/iserializable.h"
 
@@ -28,7 +33,6 @@ namespace ppp {
 
 /**
  * @class BresenInterpolation
- * @ingroup Common
  * @brief Discrete linear interpolation
  * @note Time-critical
  * @note Please note that all methods are inline.
@@ -40,6 +44,7 @@ namespace ppp {
  */
 class BresenInterpolation : public ISerializable {
 		DISABLE_COPY(BresenInterpolation)
+		BresenInterpolation() = delete;
 	private:
 		int32_t m_dx; //!< @brief Width of the line
 		int32_t m_dy; //!< @brief Height of the line
@@ -51,7 +56,6 @@ class BresenInterpolation : public ISerializable {
 		 * @param[in] dy Height of the interpolation line
 		 */
 		BresenInterpolation(int32_t dx, int32_t dy) : m_dx(dx), m_dy(dy), m_err(m_dx / 2) { }
-		BresenInterpolation() = delete; //!< @brief No default constructor
 		/**
 		 * @brief Calculates the next interpolation step
 		 * @param[in,out] pos Interpolation Y point to adjust
@@ -60,6 +64,11 @@ class BresenInterpolation : public ISerializable {
 			for(m_err -= m_dy; m_err < 0; m_err += m_dx)
 				pos++;
 		}
+		/**
+		 * @brief Sets width and height of the interpolation line
+		 * @param[in] dx New value for m_dx
+		 * @param[in] dy New value for m_dy
+		 */
 		inline void reset(int32_t dx, int32_t dy) {
 			m_dx = dx;
 			m_dy = dy;
@@ -68,5 +77,9 @@ class BresenInterpolation : public ISerializable {
 };
 
 }
+
+/**
+ * @}
+ */
 
 #endif // breseninterH

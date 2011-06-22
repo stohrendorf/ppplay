@@ -20,12 +20,15 @@
 #define GENCELL_H
 
 /**
- * @file
  * @ingroup GenMod
- * @brief General Pattern and Track definitions
+ * @{
  */
 
-#include "genbase.h"
+#include "stream/iserializable.h"
+
+#include <vector>
+#include <string>
+#include <memory>
 
 namespace ppp {
 
@@ -37,19 +40,15 @@ namespace ppp {
 class GenCell : public ISerializable {
 	public:
 		typedef std::shared_ptr<GenCell> Ptr; //!< @brief Class pointer
-		typedef std::vector<Ptr> Vector;
-		/**
-		 * @brief Constructor, sets m_active to @c false
-		 */
-		GenCell();
+		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 		/**
 		 * @brief Destructor, does nothing
 		 */
 		virtual ~GenCell();
 		/**
-		 * @brief Reset the cell so that it is practically "unused"
+		 * @brief Clears the cell's data
 		 */
-		virtual void reset() = 0;
+		virtual void clear() = 0;
 		/**
 		 * @brief Get the tracker-like string representation of this cell
 		 * @return Tracker-like string
@@ -58,5 +57,9 @@ class GenCell : public ISerializable {
 };
 
 } // namespace ppp
+
+/**
+ * @}
+ */
 
 #endif

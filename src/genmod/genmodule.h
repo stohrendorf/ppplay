@@ -19,34 +19,20 @@
 #ifndef GENMODULE_H
 #define GENMODULE_H
 
+/**
+ * @ingroup GenMod
+ * @{
+ */
+
 #include "genbase.h"
 #include "genchannel.h"
 #include "output/iaudiosource.h"
-#include "stream/iarchive.h"
-
-/**
- * @file
- * @ingroup GenMod
- * @brief General/common module definitions
- * @note Volumes are from 0x00 to 0x40
- * @note Panning values are from 0x00 to 0x80, where 0x40
- * is the center
- * @note A panning value of 0xa4 indicates surround sound
- *
- * @details
- * Structure is as follows: ::GenPattern contains ::GenTrack's contains
- * ::GenCell's. @n
- * A Track is a column within a Pattern, whereas a Cell is a Row
- * within a Track. @n
- * This structure is caused by the simple fact that a row is accessed
- * through the tracks, and a track is accessed through the patterns.
- */
+#include "stream/stateiterator.h"
 
 namespace ppp {
 
 /**
  * @struct GenPlaybackInfo
- * @ingroup GenMod
  * @brief Playback info
  */
 struct GenPlaybackInfo {
@@ -60,65 +46,32 @@ struct GenPlaybackInfo {
 };
 
 /**
- * @class GenMultiTrack
- * @ingroup GenMod
- * @brief Storage class for multitracks
- */
-class GenMultiTrack {
-	public:
-		typedef std::shared_ptr<GenMultiTrack> Ptr; //!< @brief Class pointer
-	private:
-		IArchive::Vector m_states;
-		std::size_t m_stateIndex;
-	public:
-		std::size_t length; //!< @brief Track length in sample frames
-		uint16_t startOrder; //!< @brief Start order of this track
-		/**
-		 * @brief Constructor
-		 */
-		GenMultiTrack() : m_states(), m_stateIndex(0), length(0), startOrder(0) {
-			m_states.resize(1);
-		}
-		static const uint16_t stopHere = ~0; //!< @brief Const to define unused track
-		IArchive::Ptr newState();
-		IArchive::Vector states() const;
-		std::size_t stateIndex() const;
-		IArchive::Ptr nextState();
-		IArchive::Ptr prevState();
-};
-
-/**
  * @class GenModule
- * @ingroup GenMod
  * @brief An abstract class for all module classes
  * @todo Create a function to retrieve only the module's title without loading the whole module
- * @todo Multi-track: Reset module/channels on each new track?
- * @todo Multi-track: Get length of each track, not only the first one
+ * @todo Multi-song: Reset module/channels on each new song?
  */
 class GenModule : public ISerializable, public IAudioSource {
 		DISABLE_COPY(GenModule)
 		GenModule() = delete;
 	public:
 		typedef std::shared_ptr<GenModule> Ptr; //!< @brief Class pointer
-		// typedef std::weak_ptr<GenModule> WeakPtr; //!< @brief Weak class pointer
 	private:
-		std::string m_fileName; //!< @brief Filename of the loaded module, empty if none loaded
+		std::string m_filename; //!< @brief Filename of the loaded module, empty if none loaded
 		std::string m_title; //!< @brief Title of the module
 		std::string m_trackerInfo; //!< @brief Tracker information (Name and Version)
 		GenOrder::Vector m_orders; //!< @brief Order list @note @b Not @b initialized @b here!
 		uint16_t m_maxRepeat; //!< @brief Maximum module loops if module patterns are played multiple times
 		std::size_t m_playedFrames; //!< @brief Played Sample frames
-		std::vector<GenMultiTrack> m_tracks; //!< @brief Per-track infos
-		uint16_t m_currentTrack; //!< @brief The current track index
-		bool m_multiTrack; //!< @brief @c true if module could be a multi-track one
+		std::vector<StateIterator> m_songs; //!< @brief Per-song infos
+		std::vector<std::size_t> m_songLengths; //!< @brief Per-song lengths in sample frames
+		uint16_t m_currentSongIndex; //!< @brief The current song index
 		GenPlaybackInfo m_playbackInfo; //!< @brief General playback info
 	public:
 		/**
 		 * @brief The constructor
-		 * @param[in] frq Playback frequency, clipped to a value between 11025 and 44800
 		 * @param[in] maxRpt Maximum repeat count for repeating modules
 		 * @pre @c maxRpt>0
-		 * @see GenChannel::GenChannel
 		 */
 		GenModule(uint8_t maxRpt);
 		/**
@@ -128,7 +81,6 @@ class GenModule : public ISerializable, public IAudioSource {
 		/**
 		 * @brief Returns the filename without the path
 		 * @return Filename, or empty if no module loaded
-		 * @todo Implement OS-independent filename splitting
 		 */
 		std::string filename();
 		/**
@@ -137,7 +89,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		 */
 		std::string title() const;
 		/**
-		 * @brief Returns the title without left and right spaces
+		 * @brief Returns the title without left and right whitespaces
 		 * @return The trimmed title of the module
 		 */
 		std::string trimmedTitle() const;
@@ -154,7 +106,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		virtual void buildTick(AudioFrameBuffer& buf) = 0;
 		/**
 		 * @brief Get a tick without mixing for length calculation
-		 * @param[out] bufLen Number of sample frames in the current tick
+		 * @param[out] bufLen Number of sample frames in the current tick. If 0 after the call, the end was reached.
 		 */
 		virtual void simulateTick(std::size_t& bufLen) = 0;
 		/**
@@ -174,11 +126,11 @@ class GenModule : public ISerializable, public IAudioSource {
 		 */
 		uint32_t timeElapsed() const;
 		/**
-		 * @brief Returns the current track's length
-		 * @return The current track's length
+		 * @brief Returns the current song's length
+		 * @return The current song's length
 		 * @see timeElapsed()
 		 */
-		uint32_t length() const;
+		size_t length() const;
 		/**
 		 * @brief Get information about the tracker
 		 * @return Tracker type and version, i.e. "ScreamTracker v3.20"
@@ -190,23 +142,23 @@ class GenModule : public ISerializable, public IAudioSource {
 		 */
 		GenPlaybackInfo playbackInfo() const;
 		/**
-		 * @brief Returns @c true if this module contains additional tracks
-		 * @return m_multiTrack
+		 * @brief Returns @c true if this module contains multiple songs
+		 * @return @c true if this is a multi-song
 		 */
-		bool isMultiTrack() const;
+		bool isMultiSong() const;
 		/**
-		 * @brief Jump to the next track if possible
-		 * @return @c false if there are no tracks left
+		 * @brief Jump to the next song if possible
+		 * @return @c false if there are no songs left
 		 */
-		virtual bool jumpNextTrack() = 0;
+		virtual bool jumpNextSong() = 0;
 		/**
-		 * @brief Jump to the previous track if possible
+		 * @brief Jump to the previous song if possible
 		 * @return @c false if this operation fails
 		 */
-		virtual bool jumpPrevTrack() = 0;
+		virtual bool jumpPrevSong() = 0;
 		/**
 		 * @brief Jump to the next order if possible
-		 * @return @c false if the end of the current track is reached
+		 * @return @c false if the end of the current song is reached
 		 */
 		virtual bool jumpNextOrder() = 0;
 		/**
@@ -220,15 +172,15 @@ class GenModule : public ISerializable, public IAudioSource {
 		 */
 		std::size_t position() const;
 		/**
-		 * @brief Get the number of tracks in this module
-		 * @return Number of tracks
+		 * @brief Get the number of songs in this module
+		 * @return Number of songs
 		 */
-		uint16_t trackCount() const;
+		uint16_t songCount() const;
 		/**
-		 * @brief Get the currently playing track index
-		 * @return m_currentTrack
+		 * @brief Get the currently playing song index
+		 * @return m_currentSongIndex
 		 */
-		uint16_t currentTrackIndex() const;
+		uint16_t currentSongIndex() const;
 		/**
 		 * @brief Get the channel cell string
 		 * @param[in] idx Channel index
@@ -242,43 +194,127 @@ class GenModule : public ISerializable, public IAudioSource {
 		 */
 		virtual uint8_t channelCount() const = 0;
 		virtual std::size_t getAudioData(AudioFrameBuffer& buffer, std::size_t size);
+		/**
+		 * @brief Set the global volume
+		 * @param[in] v The new global volume
+		 */
 		virtual void setGlobalVolume(int16_t v);
 	protected:
-		/**
-		 * @brief Serialize this module to an archive
-		 * @param[in,out] data The archive to serialize to
-		 * @return Reference to @c *data
-		 * @pre @c data!=NULL
-		 */
 		virtual IArchive& serialize(IArchive* data);
 		/**
-		 * @brief Removes empty tracks from the track list and resets the orders' repeat count
+		 * @brief Removes empty songs from the song list
 		 */
-		void removeEmptyTracks();
+		void removeEmptySongs();
+		/**
+		 * @brief Set the song's position in sample frames
+		 * @param[in] p The new position
+		 */
 		void setPosition(std::size_t p);
+		/**
+		 * @brief Adds an order to m_orders
+		 * @param[in] o The new order
+		 */
 		void addOrder(const GenOrder::Ptr& o);
+		/**
+		 * @brief Get the filename
+		 * @return m_filename
+		 */
 		std::string filename() const;
+		/**
+		 * @brief Set the filename
+		 * @param[in] f The new filename
+		 */
 		void setFilename(const std::string& f);
+		/**
+		 * @brief Set the tracker info
+		 * @param[in] t The new tracker info
+		 */
 		void setTrackerInfo(const std::string& t);
+		/**
+		 * @brief Get an order pointer
+		 * @param[in] idx Index of requested order
+		 * @return Order pointer
+		 */
 		GenOrder::Ptr orderAt(size_t idx) const;
+		/**
+		 * @brief Get the current pattern index
+		 * @return Current pattern index
+		 */
 		int16_t patternIndex() const;
+		/**
+		 * @brief Set the current pattern index
+		 * @param[in] i The new pattern index
+		 */
 		void setPatternIndex(int16_t i);
-		int orderCount() const;
-		void setCurrentTrack(uint16_t t);
+		/**
+		 * @brief Get the number of orders
+		 * @return Number of orders
+		 */
+		std::size_t orderCount() const;
+		/**
+		 * @brief Set the current song index
+		 * @param[in] t The new song index
+		 */
+		void setCurrentSongIndex(uint16_t t);
+		/**
+		 * @brief Set the module's title
+		 * @param[in] t The new title
+		 */
 		void setTitle(const std::string& t);
-		void setMultiTrack(bool m);
-		GenMultiTrack& multiTrackAt(size_t idx);
-		void addMultiTrack(const GenMultiTrack& t);
+		/**
+		 * @brief Get the state iterator for a song
+		 * @param[in] idx Song index
+		 * @return Reference to the state iterator
+		 */
+		StateIterator& multiSongAt(size_t idx);
+		/**
+		 * @brief Get the length of a song
+		 * @param[in] idx Song index
+		 * @return Reference to the length in sample frames
+		 */
+		std::size_t& multiSongLengthAt(std::size_t idx);
+		/**
+		 * @brief Add a multi-song state iterator
+		 * @param[in] t The new state iterator
+		 */
+		void addMultiSong(const StateIterator& t);
+		/**
+		 * @brief Get the maximum repeat count
+		 * @return The maximum repeat count
+		 */
 		uint16_t maxRepeat() const;
+		/**
+		 * @brief Set the order index
+		 * @param[in] o The new order index
+		 */
 		void setOrder(int16_t o);
+		/**
+		 * @brief Set the current row index
+		 * @param[in] r The new row index
+		 */
 		void setRow(int16_t r);
+		/**
+		 * @brief Increase the current tick index
+		 */
 		void nextTick();
 	public:
+		/**
+		 * @brief Sets the current tempo
+		 * @param[in] t The new tempo
+		 */
 		void setTempo(uint8_t t);
+		/**
+		 * @brief Sets the current speed
+		 * @param[in] s The new speed
+		 */
 		void setSpeed(uint8_t s);
 };
 
 } // namespace ppp
+
+/**
+ * @}
+ */
 
 #endif
 

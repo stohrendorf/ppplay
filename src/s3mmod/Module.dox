@@ -1,0 +1,68 @@
+/**
+ * @defgroup S3mMod ScreamTracker 3 module definitions
+ * @brief This module contains the ScreamTracker 3 Module Classes
+ * @remarks I am very proud that this should be the @b most @b compatible playing
+ * routine ever.
+ */
+
+/**
+ * @namespace ppp::s3m
+ * @brief Namespace for S3M related things
+ */
+
+/** @section s3mPostProc S3M Post processing
+ * The Future Crew states the following about Post processing:
+@verbatim
+How ST3 mixes:
+	1) volumetable is created in the following way:
+		> volumetable[volume][sampledata]=volume*(sampledata-128)/64;
+		NOTE: sampledata in memory is unsigned in ST3, so the -128 in the
+			formula converts it so that the volumetable output is signed.
+
+	2) postprocessing table is created with this pseudocode:
+
+		> z=mastervol&127;
+		> if(z<0x10) z=0x10;
+		> c=2048*16/z;
+		> a=(2048-c)/2;
+		> b=a+c;
+		>                     { 0                , if x < a
+		> posttable[x+1024] = { (x-a)*256/(b-a)  , if a <= x < b
+		>                     { 255              , if x > b
+
+	3) mixing the samples
+
+		output=1024
+		for i=0 to number of channels
+			output+=volumetable[volume*globalvolume/64][sampledata];
+		next
+		realoutput=posttable[output]
+
+	This is how the mixing is done in theory. In practice it's a bit
+	different for speed reasons, but the result is the same.
+@endverbatim
+* OK, the last sentence is interesting... My first implementation used only a slightly modified
+* version of that algorithm for signed samples. Very, very slow. So I took a closer look at this
+* algorithm. Let's write it down to mathematical equations:
+\f{eqnarray*}
+	c & = & \frac{2^{11}\cdot2^{4}}{z}=2^{15}z^{-1} \\
+	a & = & 2^{-1}\left(2^{11}-c\right)=2^{10}-2^{14}z^{-1} \\
+	b & = & a+c=2^{10}-2^{14}z^{-1}+2^{15}z^{-1} \\
+	& = & 2^{10}+2^{14}z^{-1} \\
+	s_{o} & = & \begin{cases}
+		0 & \text{if $s_{i} < a$} \\
+		2^{8} \frac{s_{i}-a}{b-a} & \text{if $a \leq s_{i} < b$} \\
+		255 & \text{if $b \leq s_{i}$}
+	\end{cases} \\
+	b-a & = & 2^{10}+2^{14}z^{-1} - 2^{10}+2^{14}z^{-1} \\
+		& = & 2^{15}z^{-1} \\
+		& = & c
+\f}
+Let's look at the second case:
+\f{eqnarray*}
+	2^{8} \frac{s_{i}-a}{c} & = & 2^{8} 2^{-15} z \left( s_{i} - \left(2^{10}-2^{14}z^{-1}\right) \right) \\
+		& = & 2^{-7} z \left( s_{i} - 2^{10} + 2^{14}z^{-1} \right) \\
+		& = & \frac{\left(s_{i}-2^{10}\right)z}{2^{7}} + 2^{7}
+\f}
+Hell, yes... You see? Keeping in mind that @f$ s_{i} @f$ is @f$ 2^{10} @f$-based and @f$ s_{o} @f$ is @f$ 2^{7} @f$-based, that's @b @e really simple
+*/

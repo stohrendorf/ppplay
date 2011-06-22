@@ -16,9 +16,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "genmod/breseninter.h"
 #include "xmchannel.h"
 #include "xmmodule.h"
+#include "logger/logger.h"
 
 #include <cmath>
 
@@ -222,7 +222,7 @@ void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 			m_currentCell = *cell;
 		}
 		else {
-			m_currentCell.reset();
+			m_currentCell.clear();
 		}
 
 		if((m_vibratoCtrl & 4) == 0) {
@@ -548,7 +548,7 @@ void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 		int8_t value = 0;
 		switch(m_vibratoCtrl & 3) {
 			case 0:
-				value = g_AutoVibTable[m_autoVibPhase];
+				value = g_AutoVibTable.at(m_autoVibPhase);
 				break;
 			case 1:
 				if((m_autoVibPhase & 0x80) == 0) {
@@ -608,7 +608,7 @@ std::string XmChannel::noteName() {
 		return "===";
 	}
 	else if(m_baseNote < KeyOffNote) {
-		return stringf("%s%d", NoteNames[(m_baseNote - 1) % 12], (m_baseNote - 1) / 12);
+		return stringf("%s%d", NoteNames.at((m_baseNote - 1) % 12), (m_baseNote - 1) / 12);
 	}
 	else {
 		return "???";
@@ -961,7 +961,7 @@ void XmChannel::doVibrato() {
 	uint8_t value = (m_vibratoPhase >> 2) & 0x1f;
 	switch(m_vibratoCtrl & 3) {
 		case 0:
-			value = g_VibTable[value];
+			value = g_VibTable.at(value);
 			break;
 		case 1:
 			value <<= 3;
@@ -1012,7 +1012,7 @@ void XmChannel::fxTremolo(uint8_t fxByte) {
 	uint8_t value = (m_tremoloPhase >> 2) & 0x1f;
 	switch(m_tremoloCtrl & 3) {
 		case 0:
-			value = g_VibTable[value];
+			value = g_VibTable.at(value);
 			break;
 		case 1:
 			value <<= 3;

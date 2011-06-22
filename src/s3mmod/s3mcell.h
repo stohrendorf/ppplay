@@ -19,6 +19,11 @@
 #ifndef S3MCELL_H
 #define S3MCELL_H
 
+/**
+ * @ingroup S3mMod
+ * @{
+ */
+
 #include "stream/binstream.h"
 #include "genmod/gencell.h"
 
@@ -27,13 +32,12 @@ namespace s3m {
 
 /**
  * @class S3mCell
- * @ingroup S3mMod
  * @brief A ScreamTracker cell
  */
 class S3mCell : public GenCell {
 	public:
-		typedef std::shared_ptr<S3mCell> Ptr;
-		typedef std::vector<Ptr> Vector;
+		typedef std::shared_ptr<S3mCell> Ptr; //!< @brief Class pointer
+		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 	private:
 		uint8_t m_note; //!< @brief Note value
 		uint8_t m_instr; //!< @brief Instrument value
@@ -43,8 +47,12 @@ class S3mCell : public GenCell {
 	public:
 		S3mCell();
 		virtual ~S3mCell();
+		/**
+		 * @brief Load this cell from a stream
+		 * @param[in,out] str Reference to the stream to load from
+		 */
 		bool load(BinStream& str);
-		virtual void reset();
+		virtual void clear();
 		virtual std::string trackerString() const;
 		/**
 		 * @brief Get the cell's note
@@ -76,5 +84,9 @@ class S3mCell : public GenCell {
 
 }
 }
+
+/**
+ * @}
+ */
 
 #endif

@@ -19,10 +19,9 @@
 #include "gensample.h"
 
 /**
-* @file
-* @ingroup GenMod
-* @brief General Sample definitions
-*/
+ * @ingroup GenMod
+ * @{
+ */
 
 namespace ppp {
 
@@ -146,3 +145,7 @@ void GenSample::setVolume(uint8_t v) {
 }
 
 }
+
+/**
+ * @}
+ */

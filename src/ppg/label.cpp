@@ -68,7 +68,7 @@ void Label::setFgColorRange(std::size_t pos, Color color, std::size_t len) {
 		return;
 	if((len == 0) || (len + pos > m_bgColors.size()))
 		len = m_bgColors.size() - pos;
-	std::fill_n(&m_fgColors[pos], len, color);
+	std::fill_n(&m_fgColors.at(pos), len, color);
 }
 
 void Label::setBgColorRange(std::size_t pos, Color color, std::size_t len) {
@@ -76,7 +76,7 @@ void Label::setBgColorRange(std::size_t pos, Color color, std::size_t len) {
 		return;
 	if((len == 0) || (len + pos > m_bgColors.size()))
 		len = m_bgColors.size() - pos;
-	std::fill_n(&m_bgColors[pos], len, color);
+	std::fill_n(&m_bgColors.at(pos), len, color);
 }
 
 void Label::drawThis() {
@@ -101,19 +101,19 @@ void Label::drawThis() {
 		std::size_t textPos = localX - offset;
 		if(textPos >= length())
 			break;
-		drawChar(localX, 0, m_text[textPos]);
-		if(m_fgColors[textPos] != Color::None)
-			setFgColorAt(localX, 0, m_fgColors[textPos]);
-		if(m_bgColors[textPos] != Color::None)
-			setBgColorAt(localX, 0, m_bgColors[textPos]);
+		drawChar(localX, 0, m_text.at(textPos));
+		if(m_fgColors.at(textPos) != Color::None)
+			setFgColorAt(localX, 0, m_fgColors.at(textPos));
+		if(m_bgColors.at(textPos) != Color::None)
+			setBgColorAt(localX, 0, m_bgColors.at(textPos));
 	}
 }
 
 char& Label::charAt(std::size_t pos) {
-	return m_text[pos];
+	return m_text.at(pos);
 }
 char Label::charAt(std::size_t pos) const {
-	return m_text[pos];
+	return m_text.at(pos);
 }
 
 std::string Label::text() const {

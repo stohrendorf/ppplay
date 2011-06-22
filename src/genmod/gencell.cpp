@@ -19,15 +19,16 @@
 #include "gencell.h"
 
 /**
-* @file
-* @ingroup GenMod
-* @brief General Pattern and Track definitions
-*/
+ * @ingroup GenMod
+ * @{
+ */
 
 namespace ppp {
-
-GenCell::GenCell() = default;
 
 GenCell::~GenCell() = default;
 
 }
+
+/**
+ * @}
+ */
