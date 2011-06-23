@@ -29,11 +29,6 @@
 #include <memory>
 
 /**
- * @file
- * @brief Basic types for the audio system
- */
-
-/**
  * @brief Basic sample
  * @details
  * Used for both internal sample storage and for output devices.

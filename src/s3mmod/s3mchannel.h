@@ -114,9 +114,10 @@ class S3mChannel : public GenChannel {
 		uint16_t glissando(uint16_t period);
 	public:
 		/**
-		 * @copydoc GenChannel::GenChannel
+		 * @brief Constructor
+		 * @param[in] module Owning module
 		 */
-		S3mChannel(ppp::s3m::S3mModule* const module);
+		S3mChannel(S3mModule* module);
 		virtual ~S3mChannel();
 		virtual std::string noteName();
 		/**

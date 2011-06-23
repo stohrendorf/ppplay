@@ -17,10 +17,9 @@
 */
 
 /**
-* @file
-* @ingroup Logger
-* @brief Logger definitions (implementation)
-*/
+ * @ingroup Logger
+ * @{
+ */
 
 #include "logger.h"
 
@@ -29,7 +28,6 @@
 #include <stack>
 
 /**
- * @ingroup Logger
  * @brief The current log level
  */
 static LogLevel currentLogLevel = llError;
@@ -66,3 +64,7 @@ void setLogLevel( LogLevel ll ) {
 LogLevel getLogLevel() {
 	return currentLogLevel;
 }
+
+/**
+ * @}
+ */

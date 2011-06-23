@@ -16,6 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @ingroup Output
+ * @{
+ */
+
 #include "iaudiooutput.h"
 
 IAudioOutput::~IAudioOutput() = default;
@@ -31,3 +36,7 @@ void IAudioOutput::setErrorCode(IAudioOutput::ErrorCode ec) {
 IAudioSource::WeakPtr IAudioOutput::source() const {
 	return m_source;
 }
+
+/**
+ * @}
+ */

@@ -16,10 +16,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @ingroup XmModule
+ * @{
+ */
+
 #include "xminstrument.h"
 
 #include <cstdint>
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma pack(push,1)
 struct InstrumentHeader {
 	uint32_t size;
@@ -48,6 +54,7 @@ struct InstrumentHeader2 {
 	uint16_t reserved[11];
 };
 #pragma pack(pop)
+#endif
 
 namespace ppp {
 namespace xm {
@@ -166,3 +173,7 @@ uint8_t XmInstrument::vibRate() const {
 
 }
 }
+
+/**
+ * @}
+ */

@@ -16,6 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @ingroup Output
+ * @{
+ */
+
 #include "audiofifo.h"
 
 #include <algorithm>
@@ -64,9 +69,6 @@ void AudioFifo::logify(uint16_t& leftVol, uint16_t& rightVol) {
 }
 
 AudioFifo::AudioFifo(std::size_t frameCount) : m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_volumeLeft(0), m_volumeRight(0), m_queueMutex() {
-}
-
-AudioFifo::~AudioFifo() {
 }
 
 
@@ -193,3 +195,7 @@ size_t AudioFifo::minFrameCount() const {
 }
 
 }
+
+/**
+ * @}
+ */

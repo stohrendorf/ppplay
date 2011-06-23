@@ -18,13 +18,7 @@
 
 /**
  * @defgroup Logger Logging facility
- * @brief This module contains the logger definitions
- */
-
-/**
- * @file
- * @ingroup Logger
- * @brief Logger definitions (header)
+ * @{
  */
 
 #ifndef LOGGER_H
@@ -36,7 +30,6 @@
 
 /**
  * @enum LogLevel
- * @ingroup Logger
  * @brief Log level
  */
 enum LogLevel {
@@ -44,62 +37,77 @@ enum LogLevel {
 	llWarning, //!< @brief Log only warnings and errors
 	llError, //!< @brief Log only errors
 	llNone, //!< @brief Don't log anything
-	llDebug = 0xff
+	llDebug = 0xff //!< @brief Debug message (ignore log level)
 };
 
 /**
- * @ingroup Logger
  * @brief Log a message
+ * @param[in] where Where the message occured
  * @param[in] msg Message to logger
  * @param[in] ll Log level of the message
  */
 void logger( const std::string& where, const std::string& msg, LogLevel ll = llMessage );
 
 /**
- * @ingroup Logger
  * @brief Set the log level
  * @param[in] ll Log level
  */
 void setLogLevel( LogLevel ll );
 
 /**
- * @ingroup Logger
  * @brief Get the current log level
  * @return The current log level
  */
 LogLevel getLogLevel();
 
 /**
- * @def LOG(msg,ll)
- * @ingroup Logger
+ * @def LOG(msg, ...)
  * @brief Log a message
  * @param[in] ll Message's log level
- * @param[in] fmt Message
+ * @param[in] ... Format string and arguments
  */
 #define LOG(ll, ...) logger(__PRETTY_FUNCTION__, ppp::stringf(__VA_ARGS__), ll)
 
 /**
- * @ingroup Logger
- * @brief Log a message with log level ::llMessage
- * @param[in] fmt Message
+ * @def LOG_MESSAGE(...)
+ * @brief Log a message with level LogLevel::llMessage
+ * @param[in] ... Format string and arguments
  */
 #define LOG_MESSAGE(...) LOG(llMessage, __VA_ARGS__)
+
+/**
+ * @def LOG_TEST_MESSAGE(condition)
+ * @brief Log a message with level LogLevel::llMessage if @a condition is true
+ * @param[in] condition Condition to test
+ */
 #define LOG_TEST_MESSAGE(condition) if(condition) LOG_MESSAGE("[LOG_TEST_MESSAGE] %s", #condition)
 
 /**
- * @ingroup Logger
- * @brief Log a message with log level ::llWarning
- * @param[in] fmt Message
+ * @def LOG_WARNING(...)
+ * @brief Log a message with level LogLevel::llWarning
+ * @param[in] ... Format string and arguments
  */
 #define LOG_WARNING(...) LOG(llWarning, __VA_ARGS__)
+
+/**
+ * @def LOG_TEST_WARN(condition)
+ * @brief Log a message with level LogLevel::llWarning if @a condition is true
+ * @param[in] condition Condition to test
+ */
 #define LOG_TEST_WARN(condition) if(condition) LOG_WARNING("[LOG_TEST_WARN] %s", #condition)
 
 /**
- * @ingroup Logger
- * @brief Log a message with log level ::llError
- * @param[in] fmt Message
+ * @def LOG_ERROR(...)
+ * @brief Log a message with level LogLevel::llError
+ * @param[in] ... Format string and arguments
  */
 #define LOG_ERROR(...) LOG(llError, __VA_ARGS__)
+
+/**
+ * @def LOG_TEST_ERROR(condition)
+ * @brief Log a message with level LogLevel::llError if @a condition is true
+ * @param[in] condition Condition to test
+ */
 #define LOG_TEST_ERROR(condition) if(condition) LOG_ERROR("[LOG_TEST_ERROR] %s", #condition)
 
 #ifndef NDEBUG
@@ -109,10 +117,14 @@ LogLevel getLogLevel();
 #endif
 
 /**
- * @def LOG_DEBUG(msg)
- * @ingroup Logger
- * @brief Prints @a msg to stdout if @c NDEBUG is not defined, independent of the log level
- * @param[in] msg The message to print
+ * @def LOG_DEBUG(...)
+ * @brief Log a debug message
+ * @param[in] ... Format string and arguments
+ * @note This resolves to a no-op when @c NDEBUG is defined
+ */
+
+/**
+ * @}
  */
 
 #endif // loggerH

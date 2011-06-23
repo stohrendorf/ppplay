@@ -76,11 +76,14 @@ class Label : public Widget {
 		/**
 		 * @brief Get the character at position @a pos
 		 * @param[in] pos Position of the requested character
-		 * @return The character at position @a pos
+		 * @return Reference to the character at position @a pos
 		 */
 		char& charAt(std::size_t pos);
 		/**
 		 * @overload
+		 * @brief Get the character at position @a pos
+		 * @param[in] pos Position of the requested character
+		 * @return The character at position @a pos
 		 */
 		char charAt(std::size_t pos) const;
 		/**

@@ -19,6 +19,11 @@
 #ifndef WIDGET_H
 #define WIDGET_H
 
+/**
+ * @ingroup Ppg
+ * @{
+ */
+
 #include "ppgexcept.h"
 #include "stuff/utils.h"
 #include "point.h"
@@ -31,16 +36,16 @@
 namespace ppg {
 
 /**
- * @defgroup Ppg The PeePeeGUI Definitions
- * @brief This module contains definitions for the PeePeeGUI User Interface
- */
-
-/**
  * @class Widget
- * @ingroup Ppg
  * @brief The abstract base class for all PeePeeGUI classes
  * @details
  * Every PeePeeGUI class is derived from this class.
+ * 
+ * If you create widgets on the stack (so to speak @e not by using @c operator @c new), make
+ * sure to call @code Widget::setAutoDelete(false); @endcode
+ * 
+ * Every widget "owns" its children, so that it @c deletes them when it gets destructed. You may prevent
+ * auto-deletion by the procedure described above.
  */
 class Widget {
 		DISABLE_COPY(Widget)
@@ -57,7 +62,6 @@ class Widget {
 		/**
 		 * @brief Constructor
 		 * @param[in] parent Parent widget
-		 * @param[in] thisPtr Shared pointer to @c this
 		 */
 		explicit Widget(Widget* parent);
 		/**
@@ -65,7 +69,7 @@ class Widget {
 		 */
 		virtual ~Widget();
 		/**
-		 * @brief Calls ppg::Widget::drawThis(), but only when ppg::Widget::m_visible is @c true
+		 * @brief Calls drawThis(), but only when m_visible is @c true
 		 */
 		void draw();
 		/**
@@ -85,7 +89,7 @@ class Widget {
 		virtual void drawChar(int x, int y, char c);
 		/**
 		 * @brief Is this widget visible?
-		 * @return ppg::Widget::m_visible
+		 * @return m_visible
 		 */
 		bool isVisible() const;
 		/**
@@ -126,20 +130,23 @@ class Widget {
 		virtual bool setPosition(int x, int y, bool absolute = false);
 		/**
 		 * @overload
+		 * @param[in] pos Position
+		 * @param[in] absolute Set to @c true to calculate the position relative to the top parent widget
+		 * @return @c false if the position did not change
 		 */
 		virtual bool setPosition(const Point& pos, bool absolute = false);
 		/**
 		 * @brief Sets the widget's width
 		 * @param[in] w Wanted width
 		 * @return New width
-		 * @exception PpgException is thrown if @c w\<=0
+		 * @pre @c w>0
 		 */
 		virtual int setWidth(int w);
 		/**
 		 * @brief Sets the widget's height
 		 * @param[in] h Wanted height
 		 * @return New height
-		 * @exception PpgException is thrown if @c h\<=0
+		 * @pre @c h>0
 		 */
 		virtual int setHeight(int h);
 		/**
@@ -147,10 +154,14 @@ class Widget {
 		 * @param[in] w Width
 		 * @param[in] h Height
 		 * @return @c false if nothing changed
+		 * @pre @c w>0
+		 * @pre @c h>0
 		 */
 		virtual bool setSize(int w, int h);
 		/**
 		 * @overload
+		 * @param[in] pt New size
+		 * @return @c false if nothing changed
 		 */
 		virtual bool setSize(const Point& pt);
 		/**
@@ -160,6 +171,7 @@ class Widget {
 		Rect area() const;
 		/**
 		 * @overload
+		 * @return The widget's area
 		 */
 		Rect& area();
 		/**
@@ -175,6 +187,7 @@ class Widget {
 		virtual void mapToParent(int* x, int* y) const;
 		/**
 		 * @overload
+		 * @param[in] pt Coordinate
 		 */
 		virtual void mapToParent(Point* pt) const;
 		/**
@@ -185,6 +198,7 @@ class Widget {
 		virtual void mapToAbsolute(int* x, int* y) const;
 		/**
 		 * @overload
+		 * @param[in] pt Coordinate
 		 */
 		virtual void mapToAbsolute(Point* pt) const;
 		/**
@@ -210,5 +224,9 @@ class Widget {
 };
 
 } // namespace ppg
+
+/**
+ * @}
+ */
 
 #endif // ppgwidgetH

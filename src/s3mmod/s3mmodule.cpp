@@ -16,6 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @ingroup S3mMod
+ * @{
+ */
+
 #include "s3mmodule.h"
 
 #include "stream/fbinstream.h"
@@ -24,16 +29,7 @@
 namespace ppp {
 namespace s3m {
 
-/**
-* @file
-* @ingroup S3mMod
-* @brief Module definitions for ScreamTracker 3 Modules
-*/
-
-/**
-* @brief Flags for s3mModuleHeader::flags
-* @ingroup S3mMod
-*/
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 enum : uint8_t {
 	s3mFlagSt2Vibrato   = 0x01, //!< @brief Use st2 Vibrato, not supported
 	s3mFlagSt2Tempo     = 0x02, //!< @brief Use st2 Tempo, not supported
@@ -47,28 +43,13 @@ enum : uint8_t {
 	s3mFlagChanDisabled = 0x80  //!< @brief Channel is disabled
 };
 
-/**
-* @brief Parapointer, 16-byte aligned
-* @ingroup S3mMod
-*/
 typedef uint16_t ParaPointer;
 
-/**
-* @brief Postprocess a sample value
-* @param[in] sample The sample to be postprocessed
-* @return The postprocessed sample
-* @ingroup S3mMod
-*/
 inline int16_t s3mPostProcess(int32_t sample) throw() {
 	return clip(sample >> 2, -32768, 32767);
 }
 
 #pragma pack(push,1)
-/**
- * @typedef S3mModuleHeader
- * @ingroup S3mMod
- * @brief S3M Module Header
- */
 struct S3mModuleHeader {
 	char title[28]; //!< @brief Title of the module, Zero-terminated
 	uint8_t type[2]; //!< @brief Module type (@c 0x161a for s3m)
@@ -93,6 +74,7 @@ struct S3mModuleHeader {
 	uint8_t pannings[32];//!< @brief Channel pannings
 };
 #pragma pack(pop)
+#endif
 
 S3mModule::S3mModule(uint8_t maxRpt) : GenModule(maxRpt),
 	m_breakRow(-1), m_breakOrder(-1), m_patLoopRow(-1), m_patLoopCount(-1), m_patDelayCount(-1),
@@ -786,3 +768,7 @@ S3mPattern::Ptr S3mModule::getPattern(size_t idx) const {
 
 }
 }
+
+/**
+ * @}
+ */

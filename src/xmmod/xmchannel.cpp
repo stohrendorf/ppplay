@@ -16,6 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @ingroup XmModule
+ * @{
+ */
+
 #include "xmchannel.h"
 #include "xmmodule.h"
 #include "logger/logger.h"
@@ -1219,3 +1224,7 @@ IArchive& XmChannel::serialize(IArchive* data) {
 
 }
 }
+
+/**
+ * @}
+ */

@@ -20,8 +20,7 @@
 #define IAUDIOOUTPUT_H
 
 /**
- * @defgroup Output Output routines
- * @brief Output routines
+ * @ingroup Output
  * @{
  */
 
@@ -63,7 +62,8 @@ class IAudioOutput {
 		/**
 		 * @brief Initialize output device
 		 * @param[in] desiredFrq Desired output frequency
-		 * @return Either the real output frequency, or 0 if the call failed
+		 * @retval 0 Initialization failed
+		 * @retval other Real output frequency
 		 */
 		virtual int init(int desiredFrq) = 0;
 		/**
