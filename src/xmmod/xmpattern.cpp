@@ -16,6 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @ingroup XmModule
+ * @{
+ */
+
 #include "xmpattern.h"
 #include "logger/logger.h"
 
@@ -36,8 +41,6 @@ XmCell::Ptr XmPattern::createCell(uint16_t trackIndex, uint16_t row) {
 
 XmPattern::XmPattern(int16_t chans) : m_tracks(chans) {
 }
-
-XmPattern::~XmPattern() = default;
 
 bool XmPattern::load(BinStream& str) {
 	uint32_t hdrLen;
@@ -74,7 +77,7 @@ bool XmPattern::load(BinStream& str) {
 	return !str.fail();
 }
 
-XmCell::Ptr XmPattern::cellAt(uint16_t trackIndex, uint16_t row) {
+XmCell::Ptr XmPattern::cellAt(uint16_t column, uint16_t row) {
 	if(trackIndex >= numChannels() || row >= numRows()) {
 		return XmCell::Ptr();
 	}
@@ -104,3 +107,7 @@ XmPattern::Ptr XmPattern::createDefaultPattern(int16_t chans) {
 
 }
 }
+
+/**
+ * @}
+ */

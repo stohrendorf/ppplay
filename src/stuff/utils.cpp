@@ -16,10 +16,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @ingroup Common
+ * @{
+ */
+
 #include "utils.h"
 #include <cstdarg>
 
 namespace ppp {
+
 std::string stringf(const char fmt[], ...) {
 	va_list args;
 	va_start(args, fmt);
@@ -42,7 +48,7 @@ std::string stringncpy(const char src[], std::size_t maxlen) {
 	return res;
 }
 
-void swapEndian(char* data, std::size_t size) {
+void swapEndian(char data[], std::size_t size) {
 	for(std::size_t i = 0; i < size / 2; i++) {
 		std::swap(data[i], data[size - i - 1]);
 	}
@@ -57,4 +63,9 @@ std::string trimString(const std::string& str) {
 	}
 	return res.substr(startpos, endpos - startpos + 1);
 }
+
 }
+
+/**
+ * @}
+ */

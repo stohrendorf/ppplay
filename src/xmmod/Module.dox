@@ -1,0 +1,9 @@
+/**
+ * @defgroup XmModule XM module classes and definitions
+ * @since 0.1.2-beta
+ */
+
+/**
+ * @namespace ppp::xm
+ * @brief Namespace for XM code
+ */

@@ -42,7 +42,7 @@ class GenChannel : public ISerializable {
 		DISABLE_COPY(GenChannel)
 	public:
 		typedef std::shared_ptr<GenChannel> Ptr; //!< @brief Class pointer
-		typedef std::vector<Ptr> Vector;
+		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 	private:
 		bool m_active; //!< @brief @c true if channel is active
 		bool m_disabled; //!< @brief @c true if channel is disabled

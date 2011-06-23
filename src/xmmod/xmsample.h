@@ -27,11 +27,6 @@
  * @{
  */
 
-/**
- * @file
- * @brief XM Sample Class declaration
- */
-
 namespace ppp {
 namespace xm {
 

@@ -37,30 +37,56 @@ namespace xm {
 class XmInstrument {
 		DISABLE_COPY(XmInstrument)
 	private:
+		//! @brief Samples this instrument contains
 		XmSample::Vector m_samples;
+		//! @brief Note map that maps notes to the samples
 		uint8_t m_map[96];
+		//! @brief This instrument's title
 		std::string m_title;
+		//! @brief Panning envelope flags
 		XmEnvelopeProcessor::EnvelopeFlags m_panEnvFlags;
+		//! @brief Volume envelope flags
 		XmEnvelopeProcessor::EnvelopeFlags m_volEnvFlags;
+		//! @brief Panning envelope points
 		std::array<XmEnvelopeProcessor::EnvelopePoint, 12> m_panPoints;
+		//! @brief Volume envelope points
 		std::array<XmEnvelopeProcessor::EnvelopePoint, 12> m_volPoints;
+		//! @brief Number of volume envelope points
 		uint8_t m_numVolPoints;
+		//! @brief Number of panning envelope points
 		uint8_t m_numPanPoints;
+		//! @brief Volume envelope loop start
 		uint8_t m_volLoopStart;
+		//! @brief Panning envelope loop start
 		uint8_t m_panLoopStart;
+		//! @brief Volume envelope loop end
 		uint8_t m_volLoopEnd;
+		//! @brief Panning envelope loop end
 		uint8_t m_panLoopEnd;
+		//! @brief Volume envelope sustain point index
 		uint8_t m_volSustainPoint;
+		//! @brief Panning envelope sustain point index
 		uint8_t m_panSustainPoint;
+		//! @brief Volume fadeout value
 		uint16_t m_fadeout;
+		//! @brief Auto vibrato rate
 		uint8_t m_vibRate;
+		//! @brief Auto vibrato depth
 		uint8_t m_vibDepth;
+		//! @brief Auto vibrato sweep
 		uint8_t m_vibSweep;
+		//! @brief Auto vibrato type
 		uint8_t m_vibType;
 	public:
-		typedef std::shared_ptr<XmInstrument> Ptr;
-		typedef std::vector<Ptr> Vector;
+		typedef std::shared_ptr<XmInstrument> Ptr; //!< @brief Class pointer
+		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
+		//! @brief Constructor
 		XmInstrument();
+		/**
+		 * @brief Load this instrument from a stream
+		 * @param[in] str The stream to load from
+		 * @return @c true on success
+		 */
 		bool load(BinStream& str);
 		/**
 		 * @brief Map a note index into its sample index
@@ -76,13 +102,45 @@ class XmInstrument {
 		 * @note @a note is zero-based!
 		 */
 		XmSample::Ptr mapNoteSample(uint8_t note) const;
+		/**
+		 * @brief Get the instrument's title
+		 * @return m_title
+		 */
 		std::string title() const;
+		/**
+		 * @brief Get the volume fadeout value
+		 * @return m_fadeout
+		 */
 		uint16_t fadeout() const ;
+		/**
+		 * @brief Create the volume envelope processor
+		 * @return Volume envelope processor
+		 */
 		XmEnvelopeProcessor volumeProcessor() const;
+		/**
+		 * @brief Create the panning envelope processor
+		 * @return Volume envelope processor
+		 */
 		XmEnvelopeProcessor panningProcessor() const;
+		/**
+		 * @brief Get the auto vibrato rate
+		 * @return m_vibRate
+		 */
 		uint8_t vibRate() const;
+		/**
+		 * @brief Get the auto vibrato depth
+		 * @return m_vibDepth
+		 */
 		uint8_t vibDepth() const;
+		/**
+		 * @brief Get the auto vibrato sweep value
+		 * @return m_vibSweep
+		 */
 		uint8_t vibSweep() const;
+		/**
+		 * @brief Get the auto vibrato type
+		 * @return m_vibType
+		 */
 		uint8_t vibType() const;
 };
 

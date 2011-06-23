@@ -16,6 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @ingroup XmModule
+ * @{
+ */
+
 #include "xmmodule.h"
 #include "stream/fbinstream.h"
 #include "logger/logger.h"
@@ -25,6 +30,7 @@
 namespace ppp {
 namespace xm {
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma pack(push,1)
 struct XmHeader {
 	char id[17]; // "Extended Module: "
@@ -54,6 +60,7 @@ static const std::array<const uint16_t, 12 * 8> g_PeriodTable = {{
 		508, 505, 502, 498, 494, 491, 487, 484, 480, 477, 474, 470, 467, 463, 460, 457
 	}
 };
+#endif
 
 XmModule::XmModule(uint8_t maxRpt):
 	GenModule(maxRpt),
@@ -329,6 +336,7 @@ uint16_t XmModule::noteToPeriod(uint8_t note, int8_t finetune) const {
 	return clip<int>(m_noteToPeriod.at(tuned), 1, 0x7cff);
 }
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 static const std::array<uint32_t, 12 * 16 * 4> g_linearMult = {{
 		0x1000000, 0x1003B2D, 0x1007667, 0x100B1B0, 0x100ED06,
 		0x1012869, 0x10163DB, 0x1019F5A, 0x101DAE7, 0x1021681,
@@ -486,6 +494,7 @@ static const std::array<uint32_t, 12 * 16 * 4> g_linearMult = {{
 		0x1FE9D97, 0x1FF139F, 0x1FF89C2
 	}
 };
+#endif
 
 uint32_t XmModule::periodToFrequency(uint16_t period) const {
 	float pbFrq = frequency();
@@ -602,3 +611,7 @@ GenModule::Ptr XmModule::factory(const std::string& filename, uint32_t frequency
 
 }
 }
+
+/**
+ * @}
+ */

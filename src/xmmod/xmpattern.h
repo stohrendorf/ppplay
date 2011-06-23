@@ -29,22 +29,60 @@
 namespace ppp {
 namespace xm {
 
+/**
+ * @class XmPattern
+ * @brief XM pattern storage class
+ */
 class XmPattern {
 		DISABLE_COPY(XmPattern)
-	public:
-		typedef std::shared_ptr<XmPattern> Ptr;
-		typedef std::vector<Ptr> Vector;
-	private:
-		std::vector<XmCell::Vector> m_tracks;
-		XmCell::Ptr createCell(uint16_t trackIndex, uint16_t row);
-	public:
 		XmPattern() = delete;
+	public:
+		typedef std::shared_ptr<XmPattern> Ptr; //!< @brief Class pointer
+		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
+	private:
+		//! @brief Columns in the pattern
+		std::vector<XmCell::Vector> m_columns;
+		/**
+		 * @brief Create a cell if necessary
+		 * @param[in] column Column index
+		 * @param[in] row Row index
+		 * @return Pointer to the cell
+		 */
+		XmCell::Ptr createCell(uint16_t column, uint16_t row);
+	public:
+		/**
+		 * @brief Constructor
+		 * @param[in] chans Number of channels/columns needed
+		 */
 		XmPattern(int16_t chans);
-		~XmPattern();
+		/**
+		 * @brief Load the pattern from a stream
+		 * @param[in] str Stream to load from
+		 * @return @c true on success
+		 */
 		bool load(BinStream& str);
-		XmCell::Ptr cellAt(uint16_t trackIndex, uint16_t row);
+		/**
+		 * @brief Get a cell
+		 * @param[in] column Column of the cell
+		 * @param[in] row Row of the cell
+		 * @return Pointer to the cell or NULL
+		 */
+		XmCell::Ptr cellAt(uint16_t column, uint16_t row);
+		/**
+		 * @brief Number of rows in this pattern
+		 * @return Number of rows
+		 */
 		std::size_t numRows() const;
+		/**
+		 * @brief Number of channels/columns in this pattern
+		 * @return Number of channels
+		 */
 		std::size_t numChannels() const;
+		/**
+		 * @brief Create an empty default pattern with 64 rows
+		 * @param[in] chans Number of channels for the new pattern
+		 * @return Pointer to the new pattern
+		 */
 		static XmPattern::Ptr createDefaultPattern(int16_t chans);
 };
 

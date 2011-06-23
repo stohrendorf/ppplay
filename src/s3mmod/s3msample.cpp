@@ -16,6 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @ingroup S3mMod
+ * @{
+ */
+
 #include "s3msample.h"
 
 #include "s3mbase.h"
@@ -23,19 +28,10 @@
 
 #include <algorithm>
 
-/**
-* @file
-* @brief S3M Sample class
-* @ingroup S3mMod
-*/
-
 namespace ppp {
 namespace s3m {
 
-/**
-* @brief Flags for s3mSampleHeader::flags
-* @ingroup S3mMod
-*/
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 enum : uint8_t {
 	s3mFlagSmpLooped    = 0x01, //!< @brief Sample is looped
 	s3mFlagSmpStereo    = 0x02, //!< @brief Sample is stereo
@@ -43,11 +39,6 @@ enum : uint8_t {
 };
 
 #pragma pack(push,1)
-/**
- * @typedef S3mSampleHeader
- * @ingroup S3mMod
- * @brief S3M Sample Header
- */
 struct S3mSampleHeader {
 	uint8_t type;         //!< @brief Sample type, only type 1 supported
 	char filename[12];    //!< @brief DOS filename, no ending @c NUL character
@@ -69,12 +60,12 @@ struct S3mSampleHeader {
 	char ID[4];           //!< @brief @c 'SCRS'
 };
 #pragma pack(pop)
+#endif
 
 S3mSample::S3mSample() : GenSample(), m_highQuality(false) {
 }
 
-S3mSample::~S3mSample() {
-}
+S3mSample::~S3mSample() = default;
 
 bool S3mSample::load(BinStream& str, const std::size_t pos, bool imagoLoopEnd) {
 	try {
@@ -194,3 +185,7 @@ bool S3mSample::isHighQuality() const {
 
 }
 }
+
+/**
+ * @}
+ */

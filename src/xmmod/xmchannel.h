@@ -190,6 +190,10 @@ class XmChannel : public GenChannel {
 		 */
 		XmInstrument::Ptr currentInstrument();
 	public:
+		/**
+		 * @brief Constructor
+		 * @param[in] module Pointer to the owning module
+		 */
 		XmChannel(XmModule* module);
 		virtual std::string noteName();
 		virtual std::string effectName() const;

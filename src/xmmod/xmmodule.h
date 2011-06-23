@@ -19,29 +19,23 @@
 #ifndef XMMODULE_H
 #define XMMODULE_H
 
+/**
+ * @ingroup XmModule
+ * @{
+ */
+
 #include "genmod/genmodule.h"
 #include "xmpattern.h"
 #include "xminstrument.h"
 #include "xmchannel.h"
 
-/**
- * @defgroup XmModule XM Module definitions
- * @{
- */
-
-/**
- * @file
- * @brief XM Module class declaration
- */
-
-/**
- * @namespace ppp::xm
- * @brief Namespace for XM code
- */
-
 namespace ppp {
 namespace xm {
 
+/**
+ * @class XmModule
+ * @brief XM module class
+ */
 class XmModule : public GenModule {
 		DISABLE_COPY(XmModule)
 	private:
@@ -57,17 +51,36 @@ class XmModule : public GenModule {
 		std::array<uint16_t, 121 * 16> m_noteToPeriod;
 		//! @brief Order list
 		std::array<uint8_t, 256> m_orders;
+		//! @brief Playback count of the orders
 		std::array<uint8_t, 256> m_orderPlaybackCount;
 		//! @brief Song length
 		uint16_t m_length;
 		//! @brief Contains the row to break to, or @c -1 if no break is intended
 		int16_t m_jumpRow;
+		//! @brief Contains the order to jump to, or @c -1 if no jump is intended
 		int16_t m_jumpOrder;
+		//! @brief Is @c true if a pattern loop is running
 		bool m_isPatLoop;
+		//! @brief Is @c true if a pattern jump is intended
 		bool m_doPatJump;
+		//! @brief Song restart position
 		uint8_t m_restartPos;
+		/**
+		 * @brief Increases tick values and processes jumps
+		 * @param[in] doStore Set to @c true to store the state on order change
+		 * @return @c false when end of song is reached
+		 */
 		bool adjustPosition(bool doStore);
 	public:
+		/**
+		 * @brief Factory method
+		 * @param[in] filename Filename of the module
+		 * @param[in] frequency Rendering frequency
+		 * @param[in] maxRpt Maximum repeat count
+		 * @return Pointer to the loaded module or NULL on error
+		 * @details
+		 * Loads and initializes the module if possible
+		 */
 		static GenModule::Ptr factory(const std::string& filename, uint32_t frequency, uint8_t maxRpt);
 		//! @brief Class pointer
 		typedef std::shared_ptr<XmModule> Ptr;
@@ -120,7 +133,15 @@ class XmModule : public GenModule {
 		 * @param[in] next Row to break to
 		 */
 		void doPatternBreak(int16_t next);
+		/**
+		 * @brief Request order jump
+		 * @param[in] next Order to jump to
+		 */
 		void doJumpPos(int16_t next);
+		/**
+		 * @brief Request pattern loop
+		 * @param[in] next Row to jump to
+		 */
 		void doPatLoop(int16_t next);
 		IArchive& serialize(IArchive* data);
 		virtual bool initialize(uint32_t frq);

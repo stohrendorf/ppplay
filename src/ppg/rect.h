@@ -107,6 +107,7 @@ class Rect {
 		Point topLeft() const;
 		/**
 		 * @overload
+		 * @return The top left point
 		 */
 		Point& topLeft();
 		/**
@@ -116,6 +117,7 @@ class Rect {
 		Point bottomRight() const;
 		/**
 		 * @overload
+		 * @return The bottom right point
 		 */
 		Point& bottomRight();
 		/**
@@ -125,6 +127,7 @@ class Rect {
 		Point size() const;
 		/**
 		 * @brief Check if this rect contains a point
+		 * @param[in] pt Point to check
 		 * @return @c true if the area contains the point
 		 */
 		bool contains(const Point& pt) const {
@@ -132,6 +135,9 @@ class Rect {
 		}
 		/**
 		 * @overload
+		 * @param[in] x X coordinate of the point
+		 * @param[in] y Y coordinate of the point
+		 * @return @c true if the area contains the point
 		 */
 		bool contains(int x, int y) const {
 			return x >= m_topLeft.x() && x <= m_bottomRight.x() && y >= m_topLeft.y() && y <= m_bottomRight.y();

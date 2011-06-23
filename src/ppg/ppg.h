@@ -17,9 +17,8 @@
 */
 
 /**
- * @file
  * @ingroup Ppg
- * @brief PeePeeGUI Classes
+ * @{
  */
 
 #ifndef PPG_H
@@ -28,9 +27,7 @@
 namespace ppg {
 
 	/**
-	 * @ingroup Ppg
 	 * @brief Enumeration values for Dos Color Mappings
-	 * @see dosColors
 	 */
 	enum class Color {
 		Black, Blue, Green, Aqua, Red, Purple, Brown, White,
@@ -41,3 +38,7 @@ namespace ppg {
 } // namespace ppg
 
 #endif // ppgH
+
+/**
+ * @}
+ */

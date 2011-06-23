@@ -16,6 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/**
+ * @ingroup XmModule
+ * @{
+ */
+
 #include "xmsample.h"
 
 namespace ppp {
@@ -118,3 +123,7 @@ int8_t XmSample::finetune() const {
 
 }
 }
+
+/**
+ * @}
+ */

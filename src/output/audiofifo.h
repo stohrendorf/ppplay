@@ -24,11 +24,6 @@
  * @{
  */
 
-/**
- * @file
- * @brief Audio FIFO buffer class (declaration)
- */
-
 #include "stuff/pppexcept.h"
 #include "stuff/utils.h"
 #include "audiotypes.h"
@@ -75,7 +70,6 @@ class AudioFifo {
 		 * @param[in] minFrameCount Initial value for m_minFrameCount
 		 */
 		AudioFifo(std::size_t minFrameCount);
-		~AudioFifo();
 		/**
 		 * @brief Get the number of buffered frames
 		 * @return Number of buffered frames
@@ -93,7 +87,8 @@ class AudioFifo {
 		std::size_t queuedChunkCount() const;
 		/**
 		 * @brief Returns @c true if this buffer needs more data
-		 * @return @c true if this buffer needs more data
+		 * @retval true if this buffer needs more data
+		 * @retval false if this buffer is filled
 		 */
 		bool needsData() const;
 		/**
@@ -147,6 +142,11 @@ class AudioFifo {
 		 * @return The right channel's volume
 		 */
 		uint16_t volumeRight() const;
+		/**
+		 * @brief Check if the FIFO is empty
+		 * @retval true FIFO is empty
+		 * @retval false FIFO is not empty
+		 */
 		bool isEmpty() const;
 };
 }

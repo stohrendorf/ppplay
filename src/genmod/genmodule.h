@@ -118,6 +118,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		/**
 		 * @brief Returns the channel status string for a channel
 		 * @param[in] idx Requested channel
+		 * @return Status string
 		 */
 		virtual std::string channelStatus(int16_t idx) = 0;
 		/**

@@ -53,7 +53,7 @@ class GenSample {
 		BasicSample* m_dataR; //!< @brief Right sample data
 		std::string m_filename; //!< @brief Sample filename
 		std::string m_title; //!< @brief Sample title
-		LoopType m_looptype;
+		LoopType m_looptype; //!< @brief Loop type
 		/**
 		 * @brief Wraps a virtual position of ping-pong looped samples to the real position
 		 * @param[in] pos Virtual position
@@ -112,6 +112,7 @@ class GenSample {
 		/**
 		 * @brief Adjust the playback position so it doesn't fall out of the sample data. Returns EndOfSample if it does
 		 * @param[in,out] pos Reference to the variable that should be adjusted
+		 * @return Adjusted position
 		 * @note Time-critical
 		 */
 		inline int32_t adjustPosition(int32_t& pos) const;

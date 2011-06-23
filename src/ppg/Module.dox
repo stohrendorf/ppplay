@@ -1,0 +1,9 @@
+/**
+ * @defgroup Ppg The PeePeeGUI Definitions
+ * @brief This module contains definitions for the PeePeeGUI User Interface
+ */
+
+/**
+ * @namespace ppg
+ * @brief PeePeeGUI namespace
+ */

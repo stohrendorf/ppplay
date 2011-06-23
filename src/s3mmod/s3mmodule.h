@@ -19,6 +19,11 @@
 #ifndef S3MMODULE_H
 #define S3MMODULE_H
 
+/**
+ * @ingroup S3mMod
+ * @{
+ */
+
 #include "genmod/genmodule.h"
 #include "s3mchannel.h"
 #include "s3mpattern.h"
@@ -26,25 +31,25 @@
 
 #include <array>
 
-/**
- * @file
- * @ingroup S3mMod
- * @brief Module definitions for ScreamTracker 3 Modules
- */
-
 namespace ppp {
 namespace s3m {
 
 /**
  * @class S3mModule
- * @ingroup S3mMod
  * @brief Module class for S3M Modules
  */
 class S3mModule : public GenModule {
 		DISABLE_COPY(S3mModule)
 		S3mModule() = delete;
 	public:
-		typedef std::shared_ptr<S3mModule> Ptr;
+		typedef std::shared_ptr<S3mModule> Ptr; //! @brief Class pointer
+		/**
+		 * @brief Factory method
+		 * @param[in] filename Module filename
+		 * @param[in] frequency Rendering frequency
+		 * @param[in] maxRpt Maximum repeat count
+		 * @return Module pointer or NULL
+		 */
 		static GenModule::Ptr factory(const std::string& filename, uint32_t frequency, uint8_t maxRpt = 2);
 	private:
 		int16_t m_breakRow;      //!< @brief Row to break to, -1 if unused
@@ -53,25 +58,29 @@ class S3mModule : public GenModule {
 		int16_t m_patLoopCount;  //!< @brief Loop counter for pattern loop, -1 if unused
 		int16_t m_patDelayCount; //!< @brief Delay counter for Pattern Delay, -1 if unused
 		bool m_customData;     //!< @brief @c true if module contains special custom data
-		S3mSample::Vector m_samples;
-		S3mPattern::Vector m_patterns;
-		std::array<S3mChannel::Ptr, 32> m_channels;
-		uint8_t m_usedChannels;
-		std::array<uint16_t, 256> m_orderPlaybackCounts;
-		bool m_amigaLimits;
-		bool m_fastVolSlides;
-		bool m_st2Vibrato;
-		bool m_zeroVolOpt;
+		S3mSample::Vector m_samples; //!< @brief Samples
+		S3mPattern::Vector m_patterns; //!< @brief Patterns
+		std::array<S3mChannel::Ptr, 32> m_channels; //!< @brief Channels
+		uint8_t m_usedChannels; //!< @brief Number of used channels
+		std::array<uint16_t, 256> m_orderPlaybackCounts; //!< @brief Order playback counts
+		bool m_amigaLimits; //!< @brief @c true if amiga limits are present
+		bool m_fastVolSlides; //!< @brief @c true if fast volume slides are present
+		bool m_st2Vibrato; //!< @brief @c true if ScreamTracker v2 vibrato is present
+		bool m_zeroVolOpt; //!< @brief @c true if zero volume optimization is present
+		/**
+		 * @brief Get a pattern
+		 * @param[in] idx Pattern index of the requested pattern
+		 * @return Pattern pointer or NULL
+		 */
 		S3mPattern::Ptr getPattern(size_t idx) const;
 		/**
 		 * @brief Apply global effects
-		 * @note Time-critical
 		 */
 		void checkGlobalFx();
 		/**
 		 * @brief Adjust the playback position
 		 * @param[in] increaseTick Whether to increase the tick value
-		 * @param[in] doStore Set this to @c true to store the current state, and to @c false to restore it
+		 * @param[in] doStore Set this to @c true to store the current state, and to @c false to restore it on order change
 		 */
 		bool adjustPosition(bool increaseTick, bool doStore);
 	protected:
@@ -83,7 +92,17 @@ class S3mModule : public GenModule {
 		S3mModule(uint8_t maxRpt = 2);
 		virtual ~S3mModule();
 		virtual uint8_t channelCount() const;
+		/**
+		 * @brief Load the module
+		 * @param[in] fn Filename of the module to load
+		 * @return @c true on success
+		 */
 		bool load(const std::string& fn);
+		/**
+		 * @brief Check if a sample exists
+		 * @param[in] idx Sample index to check
+		 * @return @c true if the sample exists
+		 */
 		bool existsSample(int16_t idx);
 		virtual uint16_t tickBufferLength() const;
 		virtual void buildTick(AudioFrameBuffer& buf);
@@ -95,18 +114,55 @@ class S3mModule : public GenModule {
 		virtual bool jumpNextOrder();
 		virtual bool jumpPrevOrder();
 		virtual std::string channelCellString(int16_t idx);
+		/**
+		 * @brief Get the current tick index
+		 * @return The current tick index
+		 */
 		uint8_t tick() const;
+		/**
+		 * @brief Check if amiga limits are present
+		 * @return m_amigaLimits
+		 */
 		bool hasAmigaLimits() const;
+		/**
+		 * @brief Check if fast volume slides are present
+		 * @return m_fastVolSlides
+		 */
 		bool hasFastVolSlides() const;
+		/**
+		 * @brief Get the current global volume
+		 * @return The global volume
+		 */
 		uint8_t globalVolume() const;
+		/**
+		 * @brief Check if ScreamTracker v2 Vibrato is present
+		 * @return m_st2Vibrato
+		 */
 		bool st2Vibrato() const;
+		/**
+		 * @brief Get the maximum sample number
+		 * @return Maximum sample number
+		 */
 		std::size_t numSamples() const;
+		/**
+		 * @brief Get a sample
+		 * @param[in] idx Sample index
+		 * @return Sample pointer or NULL
+		 */
 		S3mSample::Ptr sampleAt(std::size_t idx) const;
 		virtual void setGlobalVolume(int16_t v);
+		/**
+		 * @brief Check if zero volume optimizations are present
+		 * @return m_zeroVolOpt
+		 */
 		bool hasZeroVolOpt() const;
 		virtual bool initialize(uint32_t frq);
 };
 } // namespace s3m
 } // namespace ppp
+
+/**
+ * @}
+ */
 
 #endif

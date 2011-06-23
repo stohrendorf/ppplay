@@ -36,6 +36,9 @@ class Point {
 		Point();
 		/**
 		 * @overload
+		 * @brief Initializing constructor
+		 * @param[in] x Value for m_x
+		 * @param[in] y Value for m_y
 		 */
 		Point(int x, int y);
 		/**
