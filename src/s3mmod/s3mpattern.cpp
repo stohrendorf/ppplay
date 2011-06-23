@@ -36,7 +36,7 @@ S3mPattern::S3mPattern() : m_channels() {
 
 S3mCell::Ptr S3mPattern::createCell(uint16_t trackIndex, int16_t row) {
 	PPP_ASSERT((row >= 0) && (row <= 63));
-	PPP_ASSERT(trackIndex < m_tracks.size());
+	PPP_ASSERT(trackIndex < m_channels.size());
 	S3mCell::Vector& track = m_channels.at(trackIndex);
 	S3mCell::Ptr& cell = track.at(row);
 	if(cell) {

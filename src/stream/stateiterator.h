@@ -74,6 +74,10 @@ class StateIterator {
 		 * @return @c true if m_stateIndex is at the front
 		 */
 		bool atFront() const;
+		/**
+		 * @brief Sets m_stateIndex to 0
+		 */
+		void gotoFront();
 };
 
 /**
