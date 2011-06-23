@@ -65,6 +65,10 @@ bool StateIterator::atFront() const {
 	return m_stateIndex == 0;
 }
 
+void StateIterator::gotoFront() {
+	m_stateIndex = 0;
+}
+
 /**
  * @}
  */

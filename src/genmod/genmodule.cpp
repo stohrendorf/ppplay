@@ -41,7 +41,7 @@ GenModule::GenModule(uint8_t maxRpt) :
 GenModule::~GenModule() = default;
 
 IArchive& GenModule::serialize(IArchive* data) {
-	data->array(reinterpret_cast<char*>(&m_playbackInfo), sizeof(m_playbackInfo)) % m_playedFrames % m_currentSongIndex;
+	data->array(reinterpret_cast<char*>(&m_playbackInfo), sizeof(m_playbackInfo)) % m_playedFrames; // % m_currentSongIndex;
 	return *data;
 }
 
@@ -97,6 +97,7 @@ void GenModule::removeEmptySongs() {
 	}
 	m_songs = nTr;
 	m_songLengths = nTrLen;
+	m_currentSongIndex = 0;
 }
 
 std::size_t GenModule::getAudioData(AudioFrameBuffer& buffer, std::size_t size) {

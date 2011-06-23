@@ -657,13 +657,12 @@ bool S3mModule::jumpNextSong() {
 		return false;
 	}
 	else {
-// 		setOrder(multiTrackAt(currentTrackIndex()).startOrder); FIXME
-		setOrder( 0 );
+// 		setOrder(multiTrackAt(currentTrackIndex()).startOrder); FIXME?
+		IAudioSource::LockGuard guard(this);
+		multiSongAt(currentSongIndex()).gotoFront();
+		multiSongAt(currentSongIndex()).currentState()->archive(this).finishLoad();
 		PPP_ASSERT(mapOrder(playbackInfo().order).use_count()>0);
 		setPatternIndex(mapOrder(playbackInfo().order)->index());
-		setPosition(0);
-		IAudioSource::LockGuard guard(this);
-		multiSongAt(currentSongIndex()).nextState()->archive(this).finishLoad();
 		return true;
 	}
 	LOG_ERROR("This should definitively NOT have happened...");
@@ -680,13 +679,14 @@ bool S3mModule::jumpPrevSong() {
 		return false;
 	}
 	setCurrentSongIndex(currentSongIndex() - 1);
+	IAudioSource::LockGuard guard(this);
+	multiSongAt(currentSongIndex()).gotoFront();
+	multiSongAt(currentSongIndex()).currentState()->archive(this).finishLoad();
 // 	setOrder(multiTrackAt(currentTrackIndex()).startOrder); FIXME
-	setOrder(0);
+// 	setOrder(0);
 	PPP_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
 	setPatternIndex(mapOrder(playbackInfo().order)->index());
-	setPosition(0);
-	IAudioSource::LockGuard guard(this);
-	multiSongAt(currentSongIndex()).nextState()->archive(this).finishLoad();
+// 	setPosition(0);
 	return true;
 }
 

@@ -30,7 +30,7 @@ namespace xm {
 XmCell::Ptr XmPattern::createCell(uint16_t trackIndex, uint16_t row) {
 	PPP_ASSERT(row < numRows());
 	PPP_ASSERT(trackIndex < numChannels());
-	XmCell::Vector* track = &m_tracks.at(trackIndex);
+	XmCell::Vector* track = &m_columns.at(trackIndex);
 	XmCell::Ptr& cell = track->at(row);
 	if(cell) {
 		return cell;
@@ -39,7 +39,7 @@ XmCell::Ptr XmPattern::createCell(uint16_t trackIndex, uint16_t row) {
 	return cell;
 }
 
-XmPattern::XmPattern(int16_t chans) : m_tracks(chans) {
+XmPattern::XmPattern(int16_t chans) : m_columns(chans) {
 }
 
 bool XmPattern::load(BinStream& str) {
@@ -57,8 +57,8 @@ bool XmPattern::load(BinStream& str) {
 		LOG_WARNING("Number of rows out of range: %u", rows);
 		return false;
 	}
-	for(std::size_t chan = 0; chan < m_tracks.size(); chan++) {
-		m_tracks.at(chan).resize(rows, XmCell::Ptr());
+	for(std::size_t chan = 0; chan < m_columns.size(); chan++) {
+		m_columns.at(chan).resize(rows, XmCell::Ptr());
 	}
 	uint16_t packedSize;
 	str.read(&packedSize);
@@ -67,39 +67,41 @@ bool XmPattern::load(BinStream& str) {
 		return true;
 	}
 	for(uint16_t row = 0; row < rows; row++) {
-		for(std::size_t chan = 0; chan < m_tracks.size(); chan++) {
+		for(std::size_t chan = 0; chan < m_columns.size(); chan++) {
 			XmCell* cell = new XmCell();
-			if(!cell->load(str))
+			if(!cell->load(str)) {
 				return false;
-			m_tracks.at(chan).at(row).reset(cell);
+			}
+			m_columns.at(chan).at(row).reset(cell);
 		}
 	}
 	return !str.fail();
 }
 
 XmCell::Ptr XmPattern::cellAt(uint16_t column, uint16_t row) {
-	if(trackIndex >= numChannels() || row >= numRows()) {
+	if(column >= numChannels() || row >= numRows()) {
 		return XmCell::Ptr();
 	}
-	const XmCell::Vector& track = m_tracks.at(trackIndex);
+	const XmCell::Vector& track = m_columns.at(column);
 	return track.at(row);
 }
 
 std::size_t XmPattern::numRows() const {
-	if(numChannels() == 0)
+	if(numChannels() == 0) {
 		return 0;
-	return m_tracks.at(0).size();
+	}
+	return m_columns.at(0).size();
 }
 
 std::size_t XmPattern::numChannels() const {
-	return m_tracks.size();
+	return m_columns.size();
 }
 
 XmPattern::Ptr XmPattern::createDefaultPattern(int16_t chans) {
 	XmPattern::Ptr result(new XmPattern(chans));
 	for(int i = 0; i < chans; i++) {
 		for(int r = 0; r < 64; r++) {
-			result->m_tracks.at(i).push_back(XmCell::Ptr(new XmCell()));
+			result->m_columns.at(i).push_back(XmCell::Ptr(new XmCell()));
 		}
 	}
 	return result;
