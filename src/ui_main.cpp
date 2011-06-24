@@ -89,7 +89,7 @@ UIMain::UIMain( Widget* parent ): Widget( parent ),
 	m_modTitle->show();
 }
 
-void UIMain::drawThis() throw(ppg::Exception)
+void UIMain::drawThis()
 {
 }
 

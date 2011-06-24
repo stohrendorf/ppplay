@@ -123,10 +123,7 @@ class S3mChannel : public GenChannel {
 		/**
 		 * @brief Update the channel
 		 * @param[in] cell Pointer to a note cell
-		 * @param[in] tick Current tick
 		 * @param[in] patDelay For pattern delays
-		 * @remarks A new value in the Instrument Column changes the instrument with the old playback position
-		 * @note Time-critical
 		 */
 		void update(const S3mCell::Ptr cell, bool patDelay = false);
 		virtual void mixTick(MixerFrameBuffer& mixBuffer);
@@ -136,7 +133,15 @@ class S3mChannel : public GenChannel {
 		virtual std::string cellString();
 		virtual std::string effectName() const;
 		virtual std::string effectDescription() const;
+		/**
+		 * @brief Recalculates the real output volume
+		 */
 		void recalcVolume();
+		/**
+		 * @brief Set the panning with range check
+		 * @param[in] pan Panning value
+		 * @pre @a pan must be within 0..64 or equal to 0xa4
+		 */
 		void setPanning(uint8_t pan);
 };
 } // namespace s3m

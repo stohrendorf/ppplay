@@ -89,7 +89,13 @@ class XmModule : public GenModule {
 		 * @param[in] maxRpt maximum repeat count per order
 		 */
 		XmModule(uint8_t maxRpt);
-		virtual bool load(const std::string& filename);
+		/**
+		 * @brief Try to load a XM module
+		 * @param[in] filename Filename of the module to load
+		 * @retval true on success
+		 * @retval false on error
+		 */
+		bool load(const std::string& filename);
 		virtual uint16_t tickBufferLength() const;
 		virtual void buildTick(AudioFrameBuffer& buffer);
 		virtual void simulateTick(std::size_t&);

@@ -37,7 +37,7 @@ class UIMain : public ppg::Widget {
 		std::array<ppg::Label*, 16> m_chanCells;
 		ppg::Label* m_trackerInfo;
 		ppg::Label* m_modTitle;
-		virtual void drawThis() throw( ppg::Exception );
+		virtual void drawThis();
 	public:
 		UIMain( Widget* parent );
 		ppg::Label* posLabel();

@@ -24,24 +24,74 @@
 #include <SDL.h>
 #include <SDL_endian.h>
 
+/**
+ * @ingroup Ppg
+ * @{
+ */
+
 namespace ppg {
 
+	/**
+	 * @name Internal data and functions
+	 * @{
+	 * @details
+	 * The g_ABC and g_currentABC arrays are compared everytime the screen needs to be redrawn.@n
+	 * If at least one of the foreground colors, background colors or characters differ, it is redrawn,
+	 * otherwise it is skipped. See ppg::Screen::drawThis().@n
+	 * This reduces the graphical overhead significantly.
+	 */
+	/**
+	 * @brief Maps DOS color values to their on-screen representation
+	 * @see ppg::Color
+	 */
 	static Uint32 g_dosColors[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	/**
+	 * @brief Contains the chars to be displayed
+	 * @see g_currentChars
+	 */
 	static char* g_chars = NULL;
+	/**
+	 * @brief Contains the chars currently visible to determine what needs to be drawn
+	 * @see g_chars
+	 */
 	static char* g_currentChars = NULL;
+	/**
+	 * @brief Contains the foreground colors to be displayed
+	 */
 	static Color* g_colorsF = NULL;
+	/**
+	 * @brief Contains the foreground colors currently visible to determine what needs to be drawn
+	 */
 	static Color* g_currentColorsF = NULL;
+	/**
+	 * @brief Contains the background colors to be displayed
+	 */
 	static Color* g_colorsB = NULL;
+	/**
+	 * @brief Contains the background colors currently visible to determine what needs to be drawn
+	 */
 	static Color* g_currentColorsB = NULL;
+	/**
+	 * @brief The current SDL screen surface instance
+	 */
 	static SDL_Surface* g_screenSurface = NULL;
 
-	static inline void g_drawPixel( int x, int y, Uint32 color ) throw() {
+	/**
+	 * @brief Draw a pixel
+	 * @param[in] x X position
+	 * @param[in] y Y position
+	 * @param[in] color %Screen color value
+	 */
+	static inline void g_drawPixel( int x, int y, Uint32 color ) {
 		if( ( x < 0 ) || ( y < 0 ) || ( y >= g_screenSurface->h ) || ( x >= g_screenSurface->w ) )
 			return;
 		reinterpret_cast<Uint32*>( g_screenSurface->pixels )[( ( y * g_screenSurface->pitch ) >> 2 ) + x] = color;
 	}
+	/**
+	 * @}
+	 */
 
-	Screen::Screen( int w, int h, const std::string& title ) throw( Exception ) : Widget( NULL ), m_cursorX( 0 ), m_cursorY( 0 ) {
+	Screen::Screen( int w, int h, const std::string& title ) : Widget( NULL ), m_cursorX( 0 ), m_cursorY( 0 ) {
 		PPG_TEST( g_screenSurface != NULL );
 		if( !SDL_WasInit( SDL_INIT_VIDEO ) ) {
 			if( SDL_Init( SDL_INIT_VIDEO ) == -1 ) {
@@ -102,7 +152,7 @@ namespace ppg {
 		SDL_ShowCursor( 0 );
 	}
 
-	Screen::~Screen() throw() {
+	Screen::~Screen() {
 		delete[] g_chars;
 		g_chars = NULL;
 		delete[] g_currentChars;
@@ -119,7 +169,7 @@ namespace ppg {
 
 #include "pfonts.inc"
 
-	void Screen::drawChar8( int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque ) throw() {
+	void Screen::drawChar8( int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque ) {
 		x <<= 3;
 		y <<= 3;
 		for( unsigned char py = 0; py < 8; py++ ) {
@@ -132,7 +182,7 @@ namespace ppg {
 		}
 	}
 
-	void Screen::drawChar16( int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque ) throw() {
+	void Screen::drawChar16( int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque ) {
 		x <<= 3;
 		y <<= 4;
 		for( unsigned char py = 0; py < 16; py++ ) {
@@ -145,14 +195,14 @@ namespace ppg {
 		}
 	}
 
-	void Screen::clear( uint8_t c, Color foreground, Color background ) throw() {
+	void Screen::clear( uint8_t c, Color foreground, Color background ) {
 		std::size_t size = area().width() * area().height();
 		std::fill_n( g_chars, size, c );
 		std::fill_n( g_colorsF, size, foreground );
 		std::fill_n( g_colorsB, size, background );
 	}
 
-	void Screen::drawThis() throw( Exception ) {
+	void Screen::drawThis() {
 		if( SDL_MUSTLOCK( g_screenSurface ) ) {
 			if( SDL_LockSurface( g_screenSurface ) < 0 )
 				return;
@@ -187,7 +237,7 @@ namespace ppg {
 			PPG_THROW( "Flip failed" );
 	}
 
-	void Screen::drawChar( int x, int y, char c ) throw() {
+	void Screen::drawChar( int x, int y, char c ) {
 		if( !area().contains( x, y ) ) {
 			LOG_ERROR( "Out of range: %d,%d", x, y );
 			return;
@@ -195,13 +245,13 @@ namespace ppg {
 		g_chars[x + y * area().width()] = c;
 	}
 
-	void Screen::setFgColorAt( int x, int y, Color c ) throw() {
+	void Screen::setFgColorAt( int x, int y, Color c ) {
 		if( !area().contains( x, y ) )
 			return;
 		g_colorsF[x + y * area().width()] = c;
 	}
 
-	void Screen::setBgColorAt( int x, int y, Color c ) throw() {
+	void Screen::setBgColorAt( int x, int y, Color c ) {
 		if( !area().contains( x, y ) )
 			return;
 		g_colorsB[x + y * area().width()] = c;
@@ -215,3 +265,7 @@ namespace ppg {
 	}
 
 } // namespace ppg
+
+/**
+ * @}
+ */
