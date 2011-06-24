@@ -50,6 +50,8 @@ class S3mCell : public GenCell {
 		/**
 		 * @brief Load this cell from a stream
 		 * @param[in,out] str Reference to the stream to load from
+		 * @retval true on success
+		 * @retval false if an error occured
 		 */
 		bool load(BinStream& str);
 		virtual void clear();

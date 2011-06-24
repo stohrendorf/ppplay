@@ -81,13 +81,15 @@ class S3mModule : public GenModule {
 		 * @brief Adjust the playback position
 		 * @param[in] increaseTick Whether to increase the tick value
 		 * @param[in] doStore Set this to @c true to store the current state, and to @c false to restore it on order change
+		 * @retval false if the end of the current song is reached
+		 * @retval true otherwise
 		 */
 		bool adjustPosition(bool increaseTick, bool doStore);
 	protected:
 		virtual IArchive& serialize(IArchive* data);
 	public:
 		/**
-		 * @copydoc GenModule::GenModule
+		 * @copydoc ppp::GenModule::GenModule(uint8_t)
 		 */
 		S3mModule(uint8_t maxRpt = 2);
 		virtual ~S3mModule();
@@ -101,7 +103,8 @@ class S3mModule : public GenModule {
 		/**
 		 * @brief Check if a sample exists
 		 * @param[in] idx Sample index to check
-		 * @return @c true if the sample exists
+		 * @retval true if the sample exists
+		 * @retval false otherwise
 		 */
 		bool existsSample(int16_t idx);
 		virtual uint16_t tickBufferLength() const;

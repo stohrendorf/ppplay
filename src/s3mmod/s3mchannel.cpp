@@ -30,6 +30,9 @@
 namespace ppp {
 namespace s3m {
 
+/**
+ * @brief S3M sine wave lookup
+ */
 static const std::array<const int16_t, 64> S3mWaveSine = {
 	{
 		0, 24, 49, 74, 97, 120, 141, 161,
@@ -42,6 +45,10 @@ static const std::array<const int16_t, 64> S3mWaveSine = {
 		-180, -161, -141, -120, -97, -74, -49, -24
 	}
 };
+
+/**
+ * @brief S3M ramp wave lookup
+ */
 static const std::array<const int16_t, 64> S3mWaveRamp = {
 	{
 		0, -0xF8, -0xF0, -0xE8, -0xE0, -0xD8, -0xD0, -0xC8,
@@ -53,6 +60,10 @@ static const std::array<const int16_t, 64> S3mWaveRamp = {
 		0xC8, 0xD0, 0xD8, 0xE0, 0xE8, 0xF0, 0xF8
 	}
 };
+
+/**
+ * @brief S3M square wave lookup
+ */
 static const std::array<const int16_t, 64> S3mWaveSquare = {
 	{
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -63,6 +74,10 @@ static const std::array<const int16_t, 64> S3mWaveSquare = {
 		0, 0, 0, 0, 0, 0
 	}
 };
+
+/**
+ * @brief S3M finetunes lookup
+ */
 static const std::array<const uint16_t, 16> S3mFinetunes = {
 	{
 		8363, 8413, 8463, 8529, 8581, 8651, 8723, 8757,
@@ -71,17 +86,14 @@ static const std::array<const uint16_t, 16> S3mFinetunes = {
 };
 
 /**
- * @ingroup S3mMod
  * @brief Note periodic table for frequency calculations
  */
 static const std::array<const uint16_t, 12> Periods = {{1712 << 4, 1616 << 4, 1524 << 4, 1440 << 4, 1356 << 4, 1280 << 4, 1208 << 4, 1140 << 4, 1076 << 4, 1016 << 4,  960 << 4,  907 << 4}};
 
 /**
  * @brief Get the octave out of a note
- * @ingroup S3mMod
  * @param[in] x Note value
  * @return Octave of @a x
- * @note Time-critical
  */
 static inline uint8_t S3M_OCTAVE(uint8_t x) {
 	return highNibble(x);
@@ -89,10 +101,8 @@ static inline uint8_t S3M_OCTAVE(uint8_t x) {
 
 /**
  * @brief Get the note out of a note
- * @ingroup S3mMod
  * @param[in] x Note value
  * @return Note of @a x
- * @note Time-critical
  */
 static inline uint8_t S3M_NOTE(uint8_t x) {
 	return lowNibble(x);
@@ -100,21 +110,18 @@ static inline uint8_t S3M_NOTE(uint8_t x) {
 
 /**
  * @brief A value for frequency calculation
- * @ingroup S3mMod
  */
 static const uint32_t FRQ_VALUE = 14317056;
 
 /**
  * @brief Calculate the period for a given note, octave and base frequency
- * @ingroup S3mMod
- * @param[in] note Note value
+ * @param[in] note Note value (without octave)
  * @param[in] oct Note octave
  * @param[in] c4spd Base frequency of the sample
- * @return S3M Period for note @a note and base frequency @a c4spd
- * @see S3mSample st3Period
+ * @param[in] finetune Optional finetune
+ * @return S3M Period for note @a note, base frequency @a c4spd and finetune @a finetune
  */
-static inline uint16_t st3PeriodEx(uint8_t note, uint8_t oct, uint16_t c4spd, uint16_t finetune = 8363) throw(PppException) {
-	//PPP_TEST( c4spd == 0 );
+static inline uint16_t st3PeriodEx(uint8_t note, uint8_t oct, uint16_t c4spd, uint16_t finetune = 8363) {
 	if(c4spd == 0) {
 		c4spd = 8636;
 	}
@@ -122,21 +129,20 @@ static inline uint16_t st3PeriodEx(uint8_t note, uint8_t oct, uint16_t c4spd, ui
 }
 /**
  * @brief Calculate the period for a given note and base frequency
- * @ingroup S3mMod
- * @param[in] note Note value
+ * @param[in] note Note value (including octave)
  * @param[in] c4spd Base frequency of the sample
- * @return S3M Period for note @a note and base frequency @a c4spd
- * @see S3mSample st3PeriodEx
+ * @param[in] finetune Optional finetune
+ * @return S3M Period for note @a note, base frequency @a c4spd and finetune @a finetune
  */
-static inline uint16_t st3Period(uint8_t note, uint16_t c4spd, uint16_t finetune = 8363) throw(PppException) {
+static inline uint16_t st3Period(uint8_t note, uint16_t c4spd, uint16_t finetune = 8363) {
 	return st3PeriodEx(S3M_NOTE(note), S3M_OCTAVE(note), c4spd, finetune);
 }
 
 /**
  * @brief Reverse calculate a note from a given period and C4 frequency
- * @ingroup S3mMod
  * @param[in] per Note period
  * @param[in] c4spd Base frequency of the sample
+ * @param[in] finetune Optional finetune
  * @return Note offset (12*octave+note)
  */
 static inline uint8_t periodToNoteOffset(uint16_t per, uint16_t c4spd, uint16_t finetune = 8363) {
@@ -145,14 +151,13 @@ static inline uint8_t periodToNoteOffset(uint16_t per, uint16_t c4spd, uint16_t 
 
 /**
  * @brief Reverse-calculate the Note from the given period
- * @ingroup S3mMod
  * @param[in] per Period
  * @param[in] c2spd Base frequency of the sample
+ * @param[in] finetune Optional finetune
  * @return Note string
  * @note Time-critical
- * @todo OPTIMIZE!!!
  */
-static inline std::string periodToNote(uint16_t per, uint16_t c2spd, uint16_t finetune = 8363) throw() {
+static inline std::string periodToNote(uint16_t per, uint16_t c2spd, uint16_t finetune = 8363) {
 	if(per == 0)
 		return "p??";
 	if(c2spd == 0)
@@ -172,16 +177,21 @@ static inline std::string periodToNote(uint16_t per, uint16_t c2spd, uint16_t fi
 
 /**
  * @brief Add/subtract semitones to/from a note
- * @ingroup S3mMod
  * @param[in] note Base note
  * @param[in] delta Delta value
  * @return New note
  */
-static inline uint8_t deltaNote(uint8_t note, int8_t delta) throw() {
+static inline uint8_t deltaNote(uint8_t note, int8_t delta) {
 	uint16_t x = S3M_OCTAVE(note) * 12 + S3M_NOTE(note) + delta;
 	return ((x / 12) << 4) | (x % 12);
 }
 
+/**
+ * @brief Clip a period if necessary
+ * @param[in] amiga Set to @c true to use amiga limits
+ * @param[in] period The period to clip
+ * @return Clipped period
+ */
 static uint16_t clipPeriod(bool amiga, uint16_t period) {
 	if(amiga) {
 		return clip<uint16_t>(period, 0x15c, 0xd60);
@@ -738,6 +748,12 @@ void S3mChannel::fxPorta(uint8_t fxByte, bool noReuse) {
 	}
 }
 
+/**
+ * @brief Look up a wave value
+ * @param[in] waveform Waveform selector
+ * @param[in] phase Wave phase
+ * @return Lookup value
+ */
 static int16_t waveValue(uint8_t waveform, uint8_t phase) {
 	switch(waveform & 7) {
 		case 1:

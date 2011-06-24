@@ -193,6 +193,7 @@ void XmChannel::doKeyOn() {
 	setActive(true);
 }
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 static const std::array<int8_t, 256> g_AutoVibTable = {{
 		0, -2, -3, -5, -6, -8, -9, -11, -12, -14, -16,
 		-17, -19, -20, -22, -23, -24, -26, -27, -29, -30, -32,
@@ -220,6 +221,7 @@ static const std::array<int8_t, 256> g_AutoVibTable = {{
 		5, 3, 2
 	}
 };
+#endif
 
 void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 	if(m_module->playbackInfo().tick == 0) {
@@ -955,12 +957,14 @@ void XmChannel::fxVibrato(uint8_t fxByte) {
 	doVibrato();
 }
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 static const std::array<uint8_t, 32> g_VibTable = {{
 		0, 24, 49, 74, 97, 120, 141, 161, 180, 197, 212, 224, 235,
 		244, 250, 253, 255, 253, 250, 244, 235, 224, 212, 197, 180, 161,
 		141, 120, 97, 74, 49, 24
 	}
 };
+#endif
 
 void XmChannel::doVibrato() {
 	uint8_t value = (m_vibratoPhase >> 2) & 0x1f;

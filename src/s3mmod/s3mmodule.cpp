@@ -45,7 +45,7 @@ enum : uint8_t {
 
 typedef uint16_t ParaPointer;
 
-inline int16_t s3mPostProcess(int32_t sample) throw() {
+inline int16_t s3mPostProcess(int32_t sample) {
 	return clip(sample >> 2, -32768, 32767);
 }
 

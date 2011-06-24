@@ -20,8 +20,19 @@
 #include <iostream>
 #include <sstream>
 
+/**
+ * @ingroup Ppg
+ * @{
+ */
+
 namespace ppg {
 
+	/**
+	 * @brief Build a string representing a source file position
+	 * @param[in] lineno Line number
+	 * @param[in] function Function name
+	 * @return String in the form of "{lineno}:{function}"
+	 */
 	static std::string makePos( int lineno, const char function[] ) {
 		std::ostringstream out;
 		out << std::dec << lineno << ":" << function;
@@ -51,3 +62,7 @@ namespace ppg {
 	}
 
 } // namespace ppg
+
+/**
+ * @}
+ */

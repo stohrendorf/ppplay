@@ -39,13 +39,13 @@ namespace ppg {
 			 * @param[in] background Background color
 			 * @param[in] opaque Set to @c false to draw a transparent char
 			 */
-			void drawChar8( int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque = true ) throw();
+			void drawChar8( int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque = true );
 			/**
 			 * @copydoc ppg::Screen::drawChar8
 			 * @brief Draw an 8x16 char
 			 */
-			void drawChar16( int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque = true ) throw();
-			virtual void drawThis() throw( Exception );
+			void drawChar16( int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque = true );
+			virtual void drawThis();
 			int m_cursorX; //!< @brief Cursor X position
 			int m_cursorY; //!< @brief Cursor Y position
 		public:
@@ -55,18 +55,18 @@ namespace ppg {
 			 * @param[in] h Height in characters
 			 * @param[in] title Title of the screen
 			 */
-			Screen( int w, int h, const std::string& title ) throw( Exception );
-			virtual ~Screen() throw();
+			Screen( int w, int h, const std::string& title );
+			virtual ~Screen();
 			/**
 			 * @brief Clear the screen
 			 * @param[in] c Character to overwrite the screen with
 			 * @param[in] foreground Foreground color
 			 * @param[in] background Background color
 			 */
-			void clear( uint8_t c, Color foreground, Color background ) throw();
-			virtual void drawChar( int x, int y, char c ) throw();
-			virtual void setFgColorAt( int x, int y, Color c ) throw();
-			virtual void setBgColorAt( int x, int y, Color c ) throw();
+			void clear( uint8_t c, Color foreground, Color background );
+			virtual void drawChar( int x, int y, char c );
+			virtual void setFgColorAt( int x, int y, Color c );
+			virtual void setBgColorAt( int x, int y, Color c );
 			virtual bool onMouseMove( int x, int y );
 	};
 } // namespace ppg

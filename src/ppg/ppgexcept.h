@@ -24,10 +24,14 @@
 #include <exception>
 #include <stdexcept>
 
+/**
+ * @ingroup Ppg
+ * @{
+ */
+
 namespace ppg {
 	/**
 	 * @class Exception
-	 * @ingroup Ppg
 	 * @brief A simple tracing exception for PeePeeGUI
 	 */
 	class Exception : public std::exception {
@@ -42,7 +46,6 @@ namespace ppg {
 			/**
 			 * @brief Constructor with additional information
 			 * @param[in] msg Initial Message
-			 * @param[in] file File name (use @c __BASE_FILE__ or @c __FILE__ here)
 			 * @param[in] lineno Line number (use @c __LINE__ here)
 			 * @param[in] function Function (use @c __PRETTY_FUNCTION__ or @c __FUNCTION__ here)
 			 */
@@ -50,7 +53,6 @@ namespace ppg {
 			/**
 			 * @brief Constructor with additional information for Re-Throws
 			 * @param[in] previous Previous PppException
-			 * @param[in] file File name (use @c __BASE_FILE__ or @c __FILE__ here)
 			 * @param[in] lineno Line number (use @c __LINE__ here)
 			 * @param[in] function Function (use @c __PRETTY_FUNCTION__ or @c __FUNCTION__ here)
 			 * @see PPG_RETHROW
@@ -65,7 +67,7 @@ namespace ppg {
 			virtual ~Exception() throw();
 			/**
 			 * @brief Get the exception message
-			 * @return Message
+			 * @return m_msg
 			 */
 			virtual const char* what() const throw();
 	};
@@ -74,7 +76,6 @@ namespace ppg {
 
 	/**
 	 * @brief Catch PeePeeGUI exceptions
-	 * @ingroup Ppg
 	 * @details
 	 * Catches general exceptions and throws a ppg::Exception for tracing the exception
 	 */
@@ -106,5 +107,10 @@ namespace ppg {
 #define PPG_THROW(msg) throw ppg::Exception(msg,__LINE__,__PRETTY_FUNCTION__);
 
 } // namespace ppg
+
+/**
+ * @}
+ */
+
 
 #endif
