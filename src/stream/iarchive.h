@@ -58,8 +58,9 @@ class IArchive {
 		bool isSaving() const ;
 // the pragma is used to get rid of the annoying
 // warning: ‘IArchive& IArchive::operator%(T&)’ should return by value [-Weffc++]
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Weffc++"
+//! @bug "#pragma #pragma GCC diagnostic [push|pop]" is only available in GCC 4.6+
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Weffc++"
 		/**
 		 * @brief Serialization operator
 		 * @tparam T Data type
@@ -76,7 +77,7 @@ class IArchive {
 			}
 			return *this;
 		}
-#pragma GCC diagnostic pop
+// #pragma GCC diagnostic pop
 		/**
 		 * @brief Serialization operator for arrays
 		 * @tparam T Data type
