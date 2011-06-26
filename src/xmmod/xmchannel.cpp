@@ -243,10 +243,8 @@ void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 			m_instrumentIndex = m_currentCell.instrument();
 		}
 		if(m_currentCell.effect() == Effect::Extended) {
-			if(highNibble(m_currentCell.effectValue()) == EfxNoteDelay) {
-				if(lowNibble(m_currentCell.effectValue()) != 0) {
-					return;
-				}
+			if(highNibble(m_currentCell.effectValue()) == EfxNoteDelay && lowNibble(m_currentCell.effectValue()) != 0) {
+				return;
 			}
 			else if(highNibble(m_currentCell.effectValue()) == EfxRetrigger && lowNibble(m_currentCell.effectValue()) == 0) {
 				if(m_currentCell.note() != KeyOffNote) {
@@ -264,13 +262,11 @@ void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 			if(lowNibble(m_currentCell.volume()) != 0) {
 				m_portaSpeed = lowNibble(m_currentCell.volume()) << 4;
 			}
-			calculatePortaTarget(m_currentCell.note());
 		}
 		else if(m_currentCell.effect() == Effect::Porta) {
 			if(m_currentCell.effectValue() != 0) {
 				m_portaSpeed = m_currentCell.effectValue() << 2;
 			}
-			calculatePortaTarget(m_currentCell.note());
 		}
 		else if(m_currentCell.effect() != Effect::PortaVolSlide && m_currentCell.note() != 0) {
 			if(m_currentCell.note() == KeyOffNote) {
@@ -282,6 +278,11 @@ void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 				doKeyOn();
 			}
 		}
+		
+		if(m_currentCell.note()!=0 && m_currentCell.note()!=KeyOffNote) {
+			calculatePortaTarget(m_currentCell.note());
+		}
+		
 		m_fxString = "      ";
 		switch(highNibble(m_currentCell.volume())) {
 			case 0x01:

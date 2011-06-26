@@ -139,7 +139,7 @@ class XmEnvelopeProcessor : public ISerializable {
  * @return @c true if @c a&b is not 0
  */
 inline bool operator&(const XmEnvelopeProcessor::EnvelopeFlags& a, const XmEnvelopeProcessor::EnvelopeFlags& b) {
-	return static_cast<uint8_t>(a) & static_cast<uint8_t>(b);
+	return (static_cast<uint8_t>(a) & static_cast<uint8_t>(b)) != 0;
 }
 
 }
