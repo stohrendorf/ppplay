@@ -262,11 +262,13 @@ void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 			if(lowNibble(m_currentCell.volume()) != 0) {
 				m_portaSpeed = lowNibble(m_currentCell.volume()) << 4;
 			}
+			applySampleDefaults();
 		}
 		else if(m_currentCell.effect() == Effect::Porta) {
 			if(m_currentCell.effectValue() != 0) {
 				m_portaSpeed = m_currentCell.effectValue() << 2;
 			}
+			applySampleDefaults();
 		}
 		else if(m_currentCell.effect() != Effect::PortaVolSlide && m_currentCell.note() != 0) {
 			if(m_currentCell.note() == KeyOffNote) {
