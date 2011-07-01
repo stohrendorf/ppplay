@@ -60,20 +60,20 @@ static void updateDisplay( ppp::GenModule::Ptr& module ) {
 	ppp::GenPlaybackInfo pbi = module->playbackInfo();
 	ppg::Label* lb = uiMain->posLabel();
 	if(module->isMultiSong()) {
-		lb->setText( ppp::stringf( "%3d(%3d)/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Song %d/%d",
+		lb->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Song %d/%d",
 								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
 								msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
 								module->currentSongIndex() + 1, module->songCount()
 								) );
 	}
 	else {
-		lb->setText( ppp::stringf( "%3d(%3d)/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d",
+		lb->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d",
 								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
 								msecslen / 6000, msecslen / 100 % 60, msecslen % 100
 								) );
 	}
 	lb = uiMain->playbackInfo();
-	lb->setText( ppp::stringf( "Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", pbi.speed, pbi.tempo, pbi.globalVolume * 100 / 0x40 ) );
+	lb->setEscapedText( ppp::stringf( "{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", pbi.speed, pbi.tempo, pbi.globalVolume * 100 / 0x40 ) );
 	for( uint8_t i = 0; i < module->channelCount(); i++ ) {
 		if( i >= 16 )
 			break;

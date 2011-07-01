@@ -35,8 +35,8 @@ UIMain::UIMain( Widget* parent ): Widget( parent ),
 	m_position = new ppg::Label( this );
 	m_position->setWidth( parent->area().width() - 4 );
 	m_position->setPosition( 2, 2 );
-	m_position->setFgColorRange( 0, ppg::Color::BrightWhite, 0 );
-	m_position->setFgColorRange( 3, ppg::Color::White, 5 );
+/*	m_position->setFgColorRange( 0, ppg::Color::BrightWhite, 0 );
+	m_position->setFgColorRange( 3, ppg::Color::White, 5 );*/
 	m_position->show();
 	m_screenSep1 = new ppg::Label( this, " \xc4 \xc4\xc4  \xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4  \xc4\xc4 \xc4 " );
 	m_screenSep1->setPosition( 0, 1 );
@@ -50,7 +50,7 @@ UIMain::UIMain( Widget* parent ): Widget( parent ),
 	m_playbackInfo->setWidth( area().width() - 4 );
 	m_playbackInfo->setPosition( 2, 2 );
 	m_playbackInfo->alignment = ppg::Label::Alignment::Right;
-	m_playbackInfo->setFgColorRange( 0, ppg::Color::BrightWhite, 0 );
+// 	m_playbackInfo->setFgColorRange( 0, ppg::Color::BrightWhite, 0 );
 	m_playbackInfo->show();
 	m_volBar = new ppg::StereoPeakBar( this, 16, 256, 1, true );
 	m_volBar->setPosition( ( area().width() - m_volBar->length() ) / 2, 4 );

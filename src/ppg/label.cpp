@@ -49,6 +49,68 @@ void Label::setText(const std::string& txt) {
 	sizeColorsToMax();
 }
 
+static std::string getColorString(const std::string& str, std::size_t start) {
+	PPG_TEST(start>=str.length() || str.at(start)!='{');
+	size_t end = str.find('}', start);
+	if(end == std::string::npos) {
+		// treat as normal text
+		return std::string();
+	}
+	return str.substr(start, end-start+1);
+}
+
+#define COLRET(colname) \
+	if(str == #colname) return Color::colname;
+static Color stringToColor(const std::string& str) {
+	if(str.empty()) {
+		return Color::None;
+	}
+	COLRET(Black) COLRET(Blue) COLRET(Green) COLRET(Aqua) COLRET(Red)
+	COLRET(Purple) COLRET(Brown) COLRET(White) COLRET(Gray)
+	COLRET(LightBlue) COLRET(LightGreen) COLRET(LightAqua) COLRET(LightRed)
+	COLRET(LightPurple) COLRET(Yellow) COLRET(BrightWhite) COLRET(None)
+	PPG_THROW( ppp::stringf("Invalid color string: %s", str.c_str()) );
+}
+#undef COLRET
+
+static Color extractFgColor(const std::string& str) {
+	PPG_TEST(str.size()<3 || str.at(0)!='{' || str.at(str.length()-1)!='}');
+	size_t pos = str.find(';');
+	PPG_TEST(pos == std::string::npos);
+	return stringToColor(str.substr( 1, pos-1 ));
+}
+
+static Color extractBgColor(const std::string& str) {
+	PPG_TEST(str.size()<3 || str.at(0)!='{' || str.at(str.length()-1)!='}');
+	size_t pos = str.find(';');
+	PPG_TEST(pos == std::string::npos);
+	return stringToColor(str.substr( pos+1, str.length()-pos-2 ));
+}
+
+void Label::setEscapedText(const std::string& txt) {
+	Color currentFg = Color::None;
+	Color currentBg = Color::None;
+	std::string stripped;
+	std::vector<Color> fgc, bgc;
+	for(std::size_t i=0; i<txt.length(); i++) {
+		if(txt.at(i) == '{') {
+			std::string colStr = getColorString(txt,i);
+			if(!colStr.empty()) {
+				currentFg = extractFgColor(colStr);
+				currentBg = extractBgColor(colStr);
+				i += colStr.length()-1;
+				continue;
+			}
+		}
+		stripped.push_back(txt.at(i));
+		fgc.push_back(currentFg);
+		bgc.push_back(currentBg);
+	}
+	m_text = stripped;
+	m_fgColors = fgc;
+	m_bgColors = bgc;
+}
+
 int Label::setHeight(int /*h*/) {
 	return 1;
 }

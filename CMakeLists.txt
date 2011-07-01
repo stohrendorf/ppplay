@@ -34,7 +34,7 @@ INCLUDE(InstallRequiredSystemLibraries)
 #########
 SET(CPACK_PACKAGE_NAME "PeePeePlayer")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Retro-style module player")
-SET(CPACK_PACKAGE_VENDOR "Syron <mr.syron@googlemail.com>")
+SET(CPACK_PACKAGE_VENDOR "Steffen Ohrendorf <steffen.ohrendorf@gmx.de>")
 # SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ReadMe.txt")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
 SET(CPACK_PACKAGE_VERSION_MAJOR "0")
@@ -61,7 +61,7 @@ if(LINUX OR UNIX)
 
 Authors:
 --------
-    Syron <mr.syron@googlemail.com>"
+    Steffen Ohrendorf <steffen.ohrendorf@gmx.de>"
 )
 endif()
 
@@ -196,3 +196,5 @@ configure_file(
 set_source_files_properties(Doxyfile config.h PROPERTIES GENERATED TRUE)
 
 add_dependencies(ppp config.h)
+add_dependencies(docs Doxyfile)
+

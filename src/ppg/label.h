@@ -69,6 +69,20 @@ class Label : public Widget {
 		 */
 		void setText(const std::string& txt);
 		/**
+		 * @brief Sets the label's text from an escaped string
+		 * @param[in] txt Text to assign to this label
+		 * @details
+		 * Sets this label's string and colors from the escaped
+		 * string @a txt. Colors may be inserted by using the pattern
+		 * @code "{[foreground];[background]}" @endcode
+		 * Examples:
+		 * @li "{None;Blue}" which is equivalent to "{;Blue}"
+		 * @li "{White;}" which is equivalent to "{White;None}"
+		 * 
+		 * For valid names, see ppg::Color
+		 */
+		void setEscapedText(const std::string& txt);
+		/**
 		 * @brief Get the label's text
 		 * @return The label's text
 		 */
