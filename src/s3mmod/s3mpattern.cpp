@@ -21,6 +21,8 @@
  * @{
  */
 
+#include <boost/exception/all.hpp>
+
 #include "s3mpattern.h"
 
 #include "logger/logger.h"
@@ -35,8 +37,8 @@ S3mPattern::S3mPattern() : m_channels() {
 }
 
 S3mCell::Ptr S3mPattern::createCell(uint16_t trackIndex, int16_t row) {
-	PPP_ASSERT((row >= 0) && (row <= 63));
-	PPP_ASSERT(trackIndex < m_channels.size());
+	BOOST_ASSERT((row >= 0) && (row <= 63));
+	BOOST_ASSERT(trackIndex < m_channels.size());
 	S3mCell::Vector& track = m_channels.at(trackIndex);
 	S3mCell::Ptr& cell = track.at(row);
 	if(cell) {
@@ -83,9 +85,11 @@ bool S3mPattern::load(BinStream& str, std::size_t pos) {
 		}
 		return true;
 	}
-	PPP_RETHROW()
+	catch( boost::exception& e) {
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+	}
 	catch(...) {
-		PPP_THROW("Unknown Exception");
+		BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
 	}
 }
 

@@ -21,6 +21,8 @@
 
 #include "binstream.h"
 
+#include <boost/assert.hpp>
+
 class ISerializable;
 
 /**
@@ -90,7 +92,7 @@ class IArchive {
 		 * @note Operation depends on m_loading
 		 */
 		template<class T> IArchive& array(T* data, std::size_t count) {
-			PPP_ASSERT(data != NULL);
+			BOOST_ASSERT(data != NULL);
 			if(m_loading) {
 				m_stream->read(data, count);
 			}

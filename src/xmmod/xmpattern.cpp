@@ -24,12 +24,14 @@
 #include "xmpattern.h"
 #include "logger/logger.h"
 
+#include <boost/assert.hpp>
+
 namespace ppp {
 namespace xm {
 
 XmCell::Ptr XmPattern::createCell(uint16_t trackIndex, uint16_t row) {
-	PPP_ASSERT(row < numRows());
-	PPP_ASSERT(trackIndex < numChannels());
+	BOOST_ASSERT(row < numRows());
+	BOOST_ASSERT(trackIndex < numChannels());
 	XmCell::Vector* track = &m_columns.at(trackIndex);
 	XmCell::Ptr& cell = track->at(row);
 	if(cell) {

@@ -21,6 +21,8 @@
  * @{
  */
 
+#include <boost/exception/all.hpp>
+
 #include "s3mmodule.h"
 
 #include "stream/fbinstream.h"
@@ -92,7 +94,12 @@ S3mModule::S3mModule(uint8_t maxRpt) : GenModule(maxRpt),
 		for(std::size_t i = 0; i < m_orderPlaybackCounts.size(); i++)
 			m_orderPlaybackCounts.at(i) = 0;
 	}
-	PPP_CATCH_ALL();
+	catch( boost::exception& e) {
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+	}
+	catch(...) {
+		BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
+	}
 }
 
 S3mModule::~S3mModule() = default;
@@ -112,7 +119,7 @@ bool S3mModule::load(const std::string& fn) {
 			str.read(reinterpret_cast<char*>(&s3mHdr), sizeof(s3mHdr));
 		}
 		catch(...) {
-			PPP_THROW("Header could not be read");
+			return false;
 		}
 		if(str.fail()) {    // header read completely?
 			LOG_WARNING("Header Error");
@@ -167,15 +174,16 @@ bool S3mModule::load(const std::string& fn) {
 		setTempo(s3mHdr.initialTempo);
 		//m_playbackInfo.speed = s3mHdr.initialSpeed;
 		setSpeed(s3mHdr.initialSpeed);
-		PPP_ASSERT(playbackInfo().speed != 0);
+		BOOST_ASSERT(playbackInfo().speed != 0);
 		setGlobalVolume(s3mHdr.globalVolume);
 		// parse flags
 		m_customData = (s3mHdr.ffv & s3mFlagSpecial) != 0;
 		// now read the orders...
 		str.seek(0x60);
 		for(int i = 0; i < s3mHdr.ordNum; i++) {
-			if(!str.good())
-				PPP_THROW("Stream Error: Orders");
+			if(!str.good()) {
+				return false;
+			}
 			unsigned char tmpOrd;
 			str.read(&tmpOrd);
 			orderAt(i)->setIndex(tmpOrd);
@@ -187,7 +195,7 @@ bool S3mModule::load(const std::string& fn) {
 				str.read(defPans, 32);
 			}
 			catch(...) {
-				PPP_THROW("Stream Error: Default Pannings");
+				return false;
 			}
 			for(int i = 0; i < 32; i++) {
 				schismTest |= (defPans[i] & 0x10) != 0;
@@ -196,21 +204,24 @@ bool S3mModule::load(const std::string& fn) {
 		// load the samples
 		LOG_MESSAGE("Loading samples...");
 		for(int i = 0; i < s3mHdr.smpNum; i++) {
-			if(!str.good())
-				PPP_THROW("Stream Error: Samples");
+			if(!str.good()) {
+				return false;
+			}
 			str.seek(s3mHdr.ordNum + 0x60 + 2 * i);
 			if(!str.good()) {
-				PPP_THROW("Stream Operation: Fail");
+				return false;
 			}
 			ParaPointer pp;
 			str.read(&pp);
 			if(pp == 0)
 				continue;
 			m_samples.at(i).reset(new S3mSample());
-			if(!(m_samples.at(i)->load(str, pp * 16, ((s3mHdr.createdWith >> 12) & 0x0f) == s3mTIdImagoOrpheus)))
-				PPP_THROW("Sample Error");
-			if(!str.good())
-				PPP_THROW("Stream Error: Samples / Load");
+			if(!(m_samples.at(i)->load(str, pp * 16, ((s3mHdr.createdWith >> 12) & 0x0f) == s3mTIdImagoOrpheus))) {
+				return false;
+			}
+			if(!str.good()) {
+				return false;
+			}
 			schismTest |= (m_samples.at(i)->isHighQuality() || m_samples.at(i)->isStereo());
 		}
 		if(schismTest != 0) {
@@ -226,10 +237,12 @@ bool S3mModule::load(const std::string& fn) {
 				continue;
 			S3mPattern* pat = new S3mPattern();
 			m_patterns.at(i).reset(pat);
-			if(!(pat->load(str, pp * 16)))
-				PPP_THROW("Pattern Error");
-			if(!str.good())
-				PPP_THROW("Stream Error: Patterns");
+			if(!pat->load(str, pp * 16)) {
+				return false;
+			}
+			if(!str.good()) {
+				return false;
+			}
 		}
 		//str.close();
 		// set pannings...
@@ -276,7 +289,12 @@ bool S3mModule::load(const std::string& fn) {
 		setTitle(stringncpy(s3mHdr.title, 28));
 		return true;
 	}
-	PPP_CATCH_ALL();
+	catch( boost::exception& e) {
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+	}
+	catch(...) {
+		BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
+	}
 }
 
 bool S3mModule::initialize(uint32_t frq) {
@@ -298,7 +316,7 @@ bool S3mModule::initialize(uint32_t frq) {
 		while(currTickLen != 0);
 		LOG_MESSAGE("Preprocessed.");
 		for(std::size_t i = 0; i < orderCount(); i++) {
-			PPP_ASSERT( orderAt(i).use_count()>0 );
+			BOOST_ASSERT( orderAt(i).use_count()>0 );
 			if((orderAt(i)->index() != s3mOrderEnd) && (orderAt(i)->index() != s3mOrderSkip) && (m_orderPlaybackCounts.at(i) == 0)) {
 				addMultiSong( StateIterator() );
 				setCurrentSongIndex( currentSongIndex()+1 );
@@ -429,14 +447,16 @@ void S3mModule::checkGlobalFx() {
 			}
 		}
 	}
-	PPP_RETHROW()
+	catch( boost::exception& e) {
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+	}
 	catch(...) {
-		PPP_THROW("Unknown Exception");
+		BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
 	}
 }
 
 bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
-	PPP_ASSERT(orderCount() != 0);
+	BOOST_ASSERT(orderCount() != 0);
 	bool orderChanged = false;
 	if(increaseTick) {
 		nextTick();
@@ -509,7 +529,12 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 				}
 			}
 		}
-		PPP_CATCH_ALL()
+		catch( boost::exception& e) {
+			BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+		}
+		catch(...) {
+			BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
+		}
 	}
 	return true;
 }
@@ -541,7 +566,7 @@ void S3mModule::buildTick(AudioFrameBuffer& buf) {
 		MixerFrameBuffer mixerBuffer(new MixerFrameBuffer::element_type(tickBufferLength(), {0, 0}));
 		for(unsigned short currTrack = 0; currTrack < channelCount(); currTrack++) {
 			S3mChannel::Ptr chan = m_channels.at(currTrack);
-			PPP_ASSERT(chan.use_count()>0);
+			BOOST_ASSERT(chan.use_count()>0);
 			S3mCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 			chan->update(cell, m_patDelayCount != -1);
 			chan->mixTick(mixerBuffer);
@@ -556,8 +581,12 @@ void S3mModule::buildTick(AudioFrameBuffer& buf) {
 		adjustPosition(true, false);
 		setPosition(position() + mixerBuffer->size());
 	}
-	PPP_CATCH_ALL();
-// 	PPP_RETHROW()
+	catch( boost::exception& e) {
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+	}
+	catch(...) {
+		BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
+	}
 }
 
 void S3mModule::simulateTick(std::size_t& bufLen) {
@@ -567,7 +596,7 @@ void S3mModule::simulateTick(std::size_t& bufLen) {
 		bufLen = 0;
 		if(!adjustPosition(false, true))
 			return;
-		PPP_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
+		BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
 		if(m_orderPlaybackCounts.at(playbackInfo().order) >= maxRepeat())
 			return;
 		// update channels...
@@ -578,7 +607,7 @@ void S3mModule::simulateTick(std::size_t& bufLen) {
 		bufLen = tickBufferLength(); // in frames
 		for(unsigned short currTrack = 0; currTrack < channelCount(); currTrack++) {
 			S3mChannel::Ptr chan = m_channels.at(currTrack);
-			PPP_ASSERT(chan.use_count()>0);
+			BOOST_ASSERT(chan.use_count()>0);
 			S3mCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 			chan->update(cell, m_patDelayCount != -1);
 			chan->simTick(bufLen);
@@ -586,7 +615,12 @@ void S3mModule::simulateTick(std::size_t& bufLen) {
 		adjustPosition(true, true);
 		setPosition(position() + bufLen);
 	}
-	PPP_CATCH_ALL();
+	catch( boost::exception& e) {
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+	}
+	catch(...) {
+		BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
+	}
 }
 
 bool S3mModule::jumpNextOrder() {
@@ -636,14 +670,14 @@ bool S3mModule::jumpNextSong() {
 		LOG_MESSAGE("This is not a multi-song");
 		return false;
 	}
-	PPP_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
+	BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
 	m_orderPlaybackCounts.at(playbackInfo().order)++;
 	setCurrentSongIndex(currentSongIndex() + 1);
 	if(currentSongIndex() >= songCount()) {
 		for(uint16_t i = 0; i < orderCount(); i++) {
-			PPP_ASSERT(orderAt(i).use_count()>0);
+			BOOST_ASSERT(orderAt(i).use_count()>0);
 			if((orderAt(i)->index() != s3mOrderEnd) && (orderAt(i)->index() != s3mOrderSkip) && (m_orderPlaybackCounts.at(i) == 0)) {
-				PPP_ASSERT(mapOrder(i).use_count()>0);
+				BOOST_ASSERT(mapOrder(i).use_count()>0);
 				setPatternIndex(mapOrder(i)->index());
 				setOrder(i);
 				addMultiSong(StateIterator());
@@ -661,7 +695,7 @@ bool S3mModule::jumpNextSong() {
 		IAudioSource::LockGuard guard(this);
 		multiSongAt(currentSongIndex()).gotoFront();
 		multiSongAt(currentSongIndex()).currentState()->archive(this).finishLoad();
-		PPP_ASSERT(mapOrder(playbackInfo().order).use_count()>0);
+		BOOST_ASSERT(mapOrder(playbackInfo().order).use_count()>0);
 		setPatternIndex(mapOrder(playbackInfo().order)->index());
 		return true;
 	}
@@ -684,7 +718,7 @@ bool S3mModule::jumpPrevSong() {
 	multiSongAt(currentSongIndex()).currentState()->archive(this).finishLoad();
 // 	setOrder(multiTrackAt(currentTrackIndex()).startOrder); FIXME
 // 	setOrder(0);
-	PPP_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
+	BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
 	setPatternIndex(mapOrder(playbackInfo().order)->index());
 // 	setPosition(0);
 	return true;
@@ -715,7 +749,7 @@ void S3mModule::setGlobalVolume(int16_t v) {
 }
 
 uint16_t S3mModule::tickBufferLength() const {
-	PPP_ASSERT(playbackInfo().tempo >= 0x20);
+	BOOST_ASSERT(playbackInfo().tempo >= 0x20);
 	return frequency() * 5 / (playbackInfo().tempo << 1);
 }
 

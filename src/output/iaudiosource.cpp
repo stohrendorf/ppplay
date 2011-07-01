@@ -17,7 +17,6 @@
 */
 
 #include "iaudiosource.h"
-#include "stuff/pppexcept.h"
 
 IAudioSource::IAudioSource() : m_initialized(false), m_frequency(0), m_lockMutex() {
 }

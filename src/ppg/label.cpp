@@ -16,8 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <boost/exception/all.hpp>
+
 #include "label.h"
+
 #include <algorithm>
+#include <stdexcept>
 
 namespace ppg {
 
@@ -50,7 +54,7 @@ void Label::setText(const std::string& txt) {
 }
 
 static std::string getColorString(const std::string& str, std::size_t start) {
-	PPG_TEST(start>=str.length() || str.at(start)!='{');
+	BOOST_ASSERT(start<str.length() && str.at(start)=='{');
 	size_t end = str.find('}', start);
 	if(end == std::string::npos) {
 		// treat as normal text
@@ -69,21 +73,21 @@ static Color stringToColor(const std::string& str) {
 	COLRET(Purple) COLRET(Brown) COLRET(White) COLRET(Gray)
 	COLRET(LightBlue) COLRET(LightGreen) COLRET(LightAqua) COLRET(LightRed)
 	COLRET(LightPurple) COLRET(Yellow) COLRET(BrightWhite) COLRET(None)
-	PPG_THROW( ppp::stringf("Invalid color string: %s", str.c_str()) );
+	BOOST_THROW_EXCEPTION( std::invalid_argument( ppp::stringf("Invalid color string: %s", str.c_str()) ) );
 }
 #undef COLRET
 
 static Color extractFgColor(const std::string& str) {
-	PPG_TEST(str.size()<3 || str.at(0)!='{' || str.at(str.length()-1)!='}');
+	BOOST_ASSERT(str.size()>=3 && str.at(0)=='{' && str.at(str.length()-1)=='}');
 	size_t pos = str.find(';');
-	PPG_TEST(pos == std::string::npos);
+	BOOST_ASSERT(pos != std::string::npos);
 	return stringToColor(str.substr( 1, pos-1 ));
 }
 
 static Color extractBgColor(const std::string& str) {
-	PPG_TEST(str.size()<3 || str.at(0)!='{' || str.at(str.length()-1)!='}');
+	BOOST_ASSERT(str.size()>=3 && str.at(0)=='{' && str.at(str.length()-1)=='}');
 	size_t pos = str.find(';');
-	PPG_TEST(pos == std::string::npos);
+	BOOST_ASSERT(pos != std::string::npos);
 	return stringToColor(str.substr( pos+1, str.length()-pos-2 ));
 }
 
@@ -157,7 +161,7 @@ void Label::drawThis() {
 			offset = (area().width() - length()) / 2;
 			break;
 		default:
-			PPG_THROW("Invalid alignment");
+			BOOST_THROW_EXCEPTION( std::invalid_argument( "Invalid alignment" ) );
 	}
 	int w = area().width();
 	for(int localX = offset; localX < w; localX++) {

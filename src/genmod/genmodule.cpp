@@ -34,7 +34,7 @@ GenModule::GenModule(uint8_t maxRpt) :
 	m_filename(), m_title(), m_trackerInfo(), m_orders(), m_maxRepeat(maxRpt),
 	m_playedFrames(0), m_songs(), m_songLengths(),
 	m_currentSongIndex(0), m_playbackInfo() {
-	PPP_ASSERT(maxRpt != 0);
+	BOOST_ASSERT(maxRpt != 0);
 	m_playbackInfo.tick = m_playbackInfo.order = m_playbackInfo.pattern = 0;
 	m_playbackInfo.row = m_playbackInfo.speed = m_playbackInfo.tempo = 0;
 	m_playbackInfo.globalVolume = 0x40;
@@ -49,7 +49,7 @@ IArchive& GenModule::serialize(IArchive* data) {
 
 std::string GenModule::filename() {
 	boost::filesystem::path path(m_filename);
-	PPP_ASSERT( path.has_filename() );
+	BOOST_ASSERT( path.has_filename() );
 	return path.filename();
 }
 
@@ -62,7 +62,7 @@ std::string GenModule::trimmedTitle() const {
 }
 
 uint32_t GenModule::timeElapsed() const {
-	PPP_ASSERT(frequency() != 0);
+	BOOST_ASSERT(frequency() != 0);
 	return static_cast<uint32_t>(m_playedFrames / frequency());
 }
 

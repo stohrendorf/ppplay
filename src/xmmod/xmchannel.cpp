@@ -655,8 +655,8 @@ void XmChannel::mixTick(MixerFrameBuffer& mixBuffer) {
 }
 
 void XmChannel::simTick(std::size_t bufSize) {
-	PPP_ASSERT(m_module && m_module->initialized() && m_module->frequency() != 0);
-	PPP_ASSERT(bufSize != 0);
+	BOOST_ASSERT(m_module && m_module->initialized() && m_module->frequency() != 0);
+	BOOST_ASSERT(bufSize != 0);
 	if(!isActive())
 		return;
 	m_bres.reset(m_module->frequency(), m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod));

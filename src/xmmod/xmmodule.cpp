@@ -21,6 +21,8 @@
  * @{
  */
 
+#include <boost/exception/all.hpp>
+
 #include "xmmodule.h"
 #include "stream/fbinstream.h"
 #include "logger/logger.h"
@@ -162,7 +164,7 @@ bool XmModule::load(const std::string& filename) {
 }
 
 uint16_t XmModule::tickBufferLength() const {
-	PPP_ASSERT(playbackInfo().tempo >= 0x20);
+	BOOST_ASSERT(playbackInfo().tempo >= 0x20);
 	return frequency() * 5 / (playbackInfo().tempo << 1);
 }
 
@@ -174,7 +176,7 @@ void XmModule::buildTick(AudioFrameBuffer& buffer) {
 	XmPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
 	for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
 		XmChannel::Ptr chan = m_channels.at(currTrack);
-		PPP_ASSERT(chan.use_count() > 0);
+		BOOST_ASSERT(chan.use_count() > 0);
 		XmCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 		chan->update(cell);
 		chan->mixTick(mixerBuffer);
@@ -198,10 +200,10 @@ void XmModule::simulateTick(std::size_t& bufferLength) {
 	try {
 		bufferLength = tickBufferLength();
 		XmPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
-		PPP_ASSERT(currPat.use_count() > 0);
+		BOOST_ASSERT(currPat.use_count() > 0);
 		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
 			XmChannel::Ptr chan = m_channels.at(currTrack);
-			PPP_ASSERT(chan.use_count() > 0);
+			BOOST_ASSERT(chan.use_count() > 0);
 			XmCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 			chan->update(cell);
 			chan->simTick(bufferLength);
@@ -212,7 +214,9 @@ void XmModule::simulateTick(std::size_t& bufferLength) {
 		}
 		setPosition(position() + bufferLength);
 	}
-	PPP_CATCH_ALL();
+	catch(const std::exception& e) {
+		BOOST_THROW_EXCEPTION( e );
+	}
 }
 
 bool XmModule::adjustPosition(bool doStore) {

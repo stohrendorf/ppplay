@@ -21,6 +21,8 @@
  * @{
  */
 
+#include <boost/exception/all.hpp>
+
 #include "s3msample.h"
 
 #include "s3mbase.h"
@@ -69,7 +71,7 @@ S3mSample::~S3mSample() = default;
 
 bool S3mSample::load(BinStream& str, const std::size_t pos, bool imagoLoopEnd) {
 	try {
-		PPP_ASSERT(dataLeft() == NULL && dataRight() == NULL);
+		BOOST_ASSERT(dataLeft() == NULL && dataRight() == NULL);
 		str.seek(pos);
 		S3mSampleHeader smpHdr;
 		str.read(reinterpret_cast<char*>(&smpHdr), sizeof(smpHdr));
@@ -107,7 +109,7 @@ bool S3mSample::load(BinStream& str, const std::size_t pos, bool imagoLoopEnd) {
 		setFilename(stringncpy(smpHdr.filename, 12));
 		// ok, header loaded, now load the sample data
 		str.seek(((smpHdr.memSeg[0] << 16) | (smpHdr.memSeg[2] << 8) | smpHdr.memSeg[1]) * 16);
-		PPP_ASSERT(length() != 0);
+		BOOST_ASSERT(length() != 0);
 		if(str.fail()) {
 			setFrequency(0);
 			LOG_WARNING("Seek failed or length is zero, assuming empty.");
@@ -176,7 +178,12 @@ bool S3mSample::load(BinStream& str, const std::size_t pos, bool imagoLoopEnd) {
 		}
 		return true;
 	}
-	PPP_CATCH_ALL();
+	catch( boost::exception& e) {
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+	}
+	catch(...) {
+		BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
+	}
 }
 
 bool S3mSample::isHighQuality() const {

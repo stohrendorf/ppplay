@@ -33,17 +33,17 @@ bool IArchive::isSaving() const {
 }
 
 IArchive& IArchive::archive(ISerializable* data) {
-	PPP_ASSERT(data != NULL);
+	BOOST_ASSERT(data != NULL);
 	return data->serialize(this);
 }
 
 void IArchive::finishSave() {
-	PPP_ASSERT(!m_loading);
+	BOOST_ASSERT(!m_loading);
 	m_stream->seek(0);
 	m_loading = true;
 }
 
 void IArchive::finishLoad() {
-	PPP_ASSERT(m_loading);
+	BOOST_ASSERT(m_loading);
 	m_stream->seek(0);
 }

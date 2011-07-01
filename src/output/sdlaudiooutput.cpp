@@ -50,8 +50,10 @@ SDLAudioOutput::~SDLAudioOutput() {
 
 int SDLAudioOutput::init(int desiredFrq) {
 	if(!SDL_WasInit(SDL_INIT_AUDIO)) {
-		if(-1 == SDL_Init(SDL_INIT_AUDIO))
+		if(-1 == SDL_Init(SDL_INIT_AUDIO)) {
+			setErrorCode( OutputError );
 			return 0;
+		}
 	}
 	else {
 		// in case audio was already inited, shut down the callbacks
@@ -67,6 +69,7 @@ int SDLAudioOutput::init(int desiredFrq) {
 	desired->userdata = this;
 	if(SDL_OpenAudio(desired.get(), obtained.get()) < 0) {
 		LOG_ERROR("Couldn't open audio. SDL reports '%s'", SDL_GetError());
+		setErrorCode( OutputError );
 		return 0;
 	}
 	LOG_TEST_ERROR(desired->freq != obtained->freq);
@@ -74,9 +77,11 @@ int SDLAudioOutput::init(int desiredFrq) {
 	LOG_TEST_ERROR(desired->format != obtained->format);
 	LOG_TEST_WARN(desired->samples != obtained->samples);
 	desiredFrq = desired->freq;
-	char driverName[1024];
-	if(SDL_AudioDriverName(driverName, 1023))
+	char driverName[256];
+	if(SDL_AudioDriverName(driverName, 255)) {
 		LOG_MESSAGE("Using audio driver '%s'", driverName);
+	}
+	setErrorCode( NoError );
 	return desiredFrq;
 }
 

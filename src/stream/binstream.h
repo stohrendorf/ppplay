@@ -20,7 +20,6 @@
 #define BINSTREAM_H
 
 #include "stuff/utils.h"
-#include "stuff/pppexcept.h"
 
 #include <iostream>
 #include <fstream>

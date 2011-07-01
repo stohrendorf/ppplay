@@ -516,8 +516,8 @@ void S3mChannel::simTick(std::size_t bufSize) {
 			return;
 		}
 	}
-	PPP_ASSERT(m_module && m_module->frequency() != 0);
-	PPP_ASSERT(bufSize != 0);
+	BOOST_ASSERT(m_module && m_module->frequency() != 0);
+	BOOST_ASSERT(bufSize != 0);
 	if(m_basePeriod == 0) {
 		setActive(false);
 		setPosition(0);
@@ -1100,7 +1100,7 @@ void S3mChannel::playNote() {
 }
 
 void S3mChannel::setPanning(uint8_t pan) {
-	PPP_ASSERT(pan <= 0x40 || pan == 0xa4);
+	BOOST_ASSERT(pan <= 0x40 || pan == 0xa4);
 	m_panning = pan;
 }
 

@@ -24,7 +24,6 @@
  * @{
  */
 
-#include "ppgexcept.h"
 #include "stuff/utils.h"
 #include "point.h"
 #include "rect.h"

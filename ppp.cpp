@@ -16,6 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <boost/exception/all.hpp>
+
 #include "config.h"
 
 #include "src/ppg/screen.h"
@@ -60,7 +62,7 @@ static void updateDisplay( ppp::GenModule::Ptr& module ) {
 	ppp::GenPlaybackInfo pbi = module->playbackInfo();
 	ppg::Label* lb = uiMain->posLabel();
 	if(module->isMultiSong()) {
-		lb->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Song %d/%d",
+		lb->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Song %d/%d",
 								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
 								msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
 								module->currentSongIndex() + 1, module->songCount()
@@ -241,12 +243,8 @@ int main( int argc, char* argv[] ) {
 				}
 			}
 		}
-		catch( PppException& e ) {
-			LOG_ERROR( "Main: %s", e.what() );
-			return EXIT_FAILURE;
-		}
-		catch( ppg::Exception& e ) {
-			LOG_ERROR( "Main: %s", e.what() );
+		catch( ... ) {
+			LOG_ERROR( "Main: %s", boost::current_exception_diagnostic_information().c_str() );
 			return EXIT_FAILURE;
 		}
 		if( !noGUI ) {
@@ -276,47 +274,59 @@ int main( int argc, char* argv[] ) {
 			LOG_MESSAGE( "Default Output Mode" );
 			output->play();
 			SDL_Event event;
-			while( output && output->errorCode() == IAudioOutput::NoError ) {
-				usleep( 1000 );
-				if( SDL_PollEvent( &event ) ) {
-					if( event.type == SDL_KEYDOWN ) {
-						switch( event.key.keysym.sym ) {
-							case SDLK_ESCAPE:
+			while(output) {
+				if( output && output->errorCode() == IAudioOutput::InputDry ) {
+					if( !module->jumpNextSong() ) {
+						output.reset();
+						break;
+					}
+					output->init( module->frequency() );
+					output->play();
+				}
+				else if(output && output->errorCode() != IAudioOutput::NoError) {
+					output.reset();
+					break;
+				}
+				if( !SDL_PollEvent( &event ) ) {
+					usleep( 10000 );
+					continue;
+				}
+				if( event.type == SDL_KEYDOWN ) {
+					switch( event.key.keysym.sym ) {
+						case SDLK_ESCAPE:
+							output.reset();
+							break;
+						case SDLK_SPACE:
+							if( output->playing() )
+								output->pause();
+							else if( output->paused() )
+								output->play();
+							break;
+						case SDLK_END:
+							if( !module->jumpNextSong() )
 								output.reset();
-								break;
-							case SDLK_SPACE:
-								if( output->playing() )
-									output->pause();
-								else if( output->paused() )
-									output->play();
-								break;
-							case SDLK_END:
+							break;
+						case SDLK_HOME:
+							module->jumpPrevSong();
+							break;
+						case SDLK_PAGEDOWN:
+							if( !module->jumpNextOrder() ) {
 								if( !module->jumpNextSong() )
 									output.reset();
-								break;
-							case SDLK_HOME:
-								module->jumpPrevSong();
-								break;
-							case SDLK_PAGEDOWN:
-								if( !module->jumpNextOrder() ) {
-									// if jumpNextOrder fails, maybe jumpNextTrack works...
-									if( !module->jumpNextSong() )
-										output.reset();
-								}
-								break;
-							case SDLK_PAGEUP:
-								module->jumpPrevOrder();
-								break;
-							default:
-								break;
-						}
+							}
+							break;
+						case SDLK_PAGEUP:
+							module->jumpPrevOrder();
+							break;
+						default:
+							break;
 					}
-					else if( !noGUI && event.type == SDL_MOUSEMOTION ) {
-						dosScreen->onMouseMove( event.motion.x / 8, event.motion.y / 16 );
-					}
-					else if( event.type == SDL_QUIT ) {
-						output.reset();
-					}
+				}
+				else if( !noGUI && event.type == SDL_MOUSEMOTION ) {
+					dosScreen->onMouseMove( event.motion.x / 8, event.motion.y / 16 );
+				}
+				else if( event.type == SDL_QUIT ) {
+					output.reset();
 				}
 			}
 			if( output )
@@ -346,12 +356,8 @@ int main( int argc, char* argv[] ) {
 		updateTimer = NULL;
 		SDL_Quit();
 	}
-	catch( PppException& e ) {
-		LOG_ERROR( "Main (end): %s", e.what() );
-		return EXIT_FAILURE;
-	}
-	catch( ppg::Exception& e ) {
-		LOG_ERROR( "Main (end): %s", e.what() );
+	catch( ... ) {
+		LOG_ERROR( "Main (end): %s", boost::current_exception_diagnostic_information().c_str() );
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;

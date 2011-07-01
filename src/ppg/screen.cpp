@@ -16,6 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <boost/exception/all.hpp>
+
 #include "screen.h"
 #include "ppg.h"
 
@@ -92,10 +94,10 @@ namespace ppg {
 	 */
 
 	Screen::Screen( int w, int h, const std::string& title ) : Widget( NULL ), m_cursorX( 0 ), m_cursorY( 0 ) {
-		PPG_TEST( g_screenSurface != NULL );
+		BOOST_ASSERT( g_screenSurface == NULL );
 		if( !SDL_WasInit( SDL_INIT_VIDEO ) ) {
 			if( SDL_Init( SDL_INIT_VIDEO ) == -1 ) {
-				PPG_THROW( "Initialization of SDL Video surface failed" );
+				BOOST_THROW_EXCEPTION( std::runtime_error( "Initialization of SDL Video surface failed" ) );
 			}
 		}
 		Uint8 bestBpp = 32;
@@ -111,7 +113,7 @@ namespace ppg {
 		}
 		g_screenSurface = SDL_SetVideoMode( w * 8, h * 16, bestBpp, bestFlags );
 		if( !g_screenSurface ) {
-			PPG_THROW( "Screen Initialization failed" );
+			BOOST_THROW_EXCEPTION( std::runtime_error("Screen Initialization failed") );
 		}
 		{
 			char videoDrv[256];
@@ -234,7 +236,7 @@ namespace ppg {
 			SDL_UnlockSurface( g_screenSurface );
 		}
 		if( SDL_Flip( g_screenSurface ) == -1 )
-			PPG_THROW( "Flip failed" );
+			BOOST_THROW_EXCEPTION( std::runtime_error("Flip failed") );
 	}
 
 	void Screen::drawChar( int x, int y, char c ) {

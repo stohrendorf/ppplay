@@ -24,6 +24,7 @@
 #include "xminstrument.h"
 
 #include <cstdint>
+#include <boost/assert.hpp>
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #pragma pack(push,1)
@@ -83,7 +84,7 @@ bool XmInstrument::load(BinStream& str) {
 		str.seek(startPos + hdr.size);
 		return true;
 	}
-	PPP_ASSERT(hdr.numSamples <= 255);
+	BOOST_ASSERT(hdr.numSamples <= 255);
 	m_samples.resize(hdr.numSamples);
 	InstrumentHeader2 hdr2;
 	str.read(reinterpret_cast<char*>(&hdr2), sizeof(hdr2));

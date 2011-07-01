@@ -18,11 +18,13 @@
 
 #include "stereopeakbar.h"
 
+#include <boost/assert.hpp>
+
 namespace ppg {
 StereoPeakBar::StereoPeakBar(Widget* parent, int width, int max, int interLen, bool showPeak) : Label(parent, " "),
 	m_interArrL(), m_interArrR(), m_max(0), m_barLength(0), m_showPeak(false),
 	m_peakPosL(0), m_peakPosR(0), m_peakFalloffSpeedL(0), m_peakFalloffSpeedR(0) {
-	PPG_TEST(width < 8 || interLen < 1);
+	BOOST_ASSERT(width >= 8 && interLen > 0);
 	m_interArrL = std::vector<int>(interLen, 0);
 	m_interArrR = std::vector<int>(interLen, 0);
 	m_showPeak = showPeak;
@@ -68,7 +70,7 @@ StereoPeakBar::StereoPeakBar(Widget* parent, int width, int max, int interLen, b
 StereoPeakBar::~StereoPeakBar() = default;
 
 void StereoPeakBar::shift(int lval, int rval) {
-	PPG_TEST(m_interArrL.size() == 0 || m_interArrR.size() != m_interArrL.size());
+	BOOST_ASSERT(m_interArrL.size() > 0 && m_interArrR.size() == m_interArrL.size());
 	m_interArrL.erase(m_interArrL.begin());
 	m_interArrR.erase(m_interArrR.begin());
 	m_interArrL.push_back(lval);

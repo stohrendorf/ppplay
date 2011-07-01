@@ -24,11 +24,12 @@
 #include "audiofifo.h"
 
 #include <algorithm>
+#include <boost/assert.hpp>
 
 namespace ppp {
 
 void AudioFifo::calcVolume(uint16_t& leftVol, uint16_t& rightVol) {
-	PPP_ASSERT(m_queuedFrames != 0);
+	BOOST_ASSERT(m_queuedFrames != 0);
 	//MutexLocker mutexLock(m_queueMutex);
 	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
 	leftVol = rightVol = 0;

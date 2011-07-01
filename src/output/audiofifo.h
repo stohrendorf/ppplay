@@ -24,7 +24,6 @@
  * @{
  */
 
-#include "stuff/pppexcept.h"
 #include "stuff/utils.h"
 #include "audiotypes.h"
 

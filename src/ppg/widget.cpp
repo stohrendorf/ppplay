@@ -20,6 +20,7 @@
 #include "logger/logger.h"
 
 #include <algorithm>
+#include <boost/assert.hpp>
 
 namespace ppg {
 
@@ -79,13 +80,13 @@ bool Widget::setPosition(const Point& pos, bool absolute) {
 }
 
 int Widget::setWidth(int w) {
-	PPG_TEST(w <= 0);
+	BOOST_ASSERT(w > 0);
 	m_area.setWidth(w);
 	return m_area.width();
 }
 
 int Widget::setHeight(int h) {
-	PPG_TEST(h <= 0);
+	BOOST_ASSERT(h > 0);
 	m_area.setHeight(h);
 	return m_area.height();
 }
