@@ -26,6 +26,8 @@
 #include "stream/memarchive.h"
 #include "logger/logger.h"
 
+#include <boost/filesystem.hpp>
+
 namespace ppp {
 
 GenModule::GenModule(uint8_t maxRpt) :
@@ -46,14 +48,9 @@ IArchive& GenModule::serialize(IArchive* data) {
 }
 
 std::string GenModule::filename() {
-	try {
-		std::size_t lastPos = m_filename.find_last_of("/\\");
-		if(lastPos != std::string::npos) {
-			return m_filename.substr(lastPos + 1);
-		}
-		return m_filename;
-	}
-	PPP_CATCH_ALL();
+	boost::filesystem::path path(m_filename);
+	PPP_ASSERT( path.has_filename() );
+	return path.filename();
 }
 
 std::string GenModule::title() const {

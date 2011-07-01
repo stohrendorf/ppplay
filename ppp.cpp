@@ -67,7 +67,7 @@ static void updateDisplay( ppp::GenModule::Ptr& module ) {
 								) );
 	}
 	else {
-		lb->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d",
+		lb->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d",
 								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
 								msecslen / 6000, msecslen / 100 % 60, msecslen % 100
 								) );

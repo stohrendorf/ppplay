@@ -109,6 +109,7 @@ void Label::setEscapedText(const std::string& txt) {
 	m_text = stripped;
 	m_fgColors = fgc;
 	m_bgColors = bgc;
+	sizeColorsToMax();
 }
 
 int Label::setHeight(int /*h*/) {
