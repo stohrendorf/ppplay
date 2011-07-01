@@ -48,20 +48,20 @@ class PppException : public std::exception {
 		 * @brief Constructor with additional information
 		 * @param[in] msg Initial Message
 		 * @param[in] lineno Line number (use @c __LINE__ here)
-		 * @param[in] function Function (use @c __PRETTY_FUNCTION__ or @c __FUNCTION__ here)
+		 * @param[in] function Function (use @c __FILE__ or @c __FUNCTION__ here)
 		 */
-		PppException(const std::string& msg, unsigned int lineno, const char function[]) throw();
+		PppException(const std::string& msg, unsigned int lineno, const char filename[]) throw();
 		/**
 		 * @brief Constructor with additional information for Re-Throws
 		 * @param[in] previous Previous PppException
 		 * @param[in] lineno Line number (use @c __LINE__ here)
-		 * @param[in] function Function (use @c __PRETTY_FUNCTION__ or @c __FUNCTION__ here)
+		 * @param[in] function Function (use @c __FILE__ or @c __FUNCTION__ here)
 		 * @see PPP_RETHROW
 		 * @details
 		 * Appends the parameters from this contructor to @a previous, giving the possibility
 		 * to trace the exception
 		 */
-		PppException(const PppException& previous, unsigned int lineno, const char function[]) throw();
+		PppException(const PppException& previous, unsigned int lineno, const char filename[]) throw();
 		/**
 		 * @brief Destructor, no operation
 		 */
@@ -80,7 +80,7 @@ class PppException : public std::exception {
  * @param[in] postcmd Optional commands to execute before throwing the PppException
  * @see PPP_CATCH_ALL
  */
-#define PPP_CATCH_STD(extype, postcmd) catch(std::extype &e) { postcmd; throw PppException(std::string(#extype "[")+e.what()+"]",__LINE__,__PRETTY_FUNCTION__); }
+#define PPP_CATCH_STD(extype, postcmd) catch(std::extype &e) { postcmd; throw PppException(std::string(#extype "[")+e.what()+"]",__LINE__,__FILE__); }
 
 /**
  * @brief Catch PeePeePlayer exceptions
@@ -90,11 +90,11 @@ class PppException : public std::exception {
  * Catches general exceptions and throws a ::PppException for tracing the exception
  */
 #define PPP_CATCH_ALL(postcmd) \
-	catch(PppException &e) { postcmd; throw PppException(e,__LINE__,__PRETTY_FUNCTION__); } \
+	catch(PppException &e) { postcmd; throw PppException(e,__LINE__,__FILE__); } \
 	PPP_CATCH_STD(bad_alloc, postcmd) PPP_CATCH_STD(bad_cast, postcmd) PPP_CATCH_STD(bad_exception, postcmd) PPP_CATCH_STD(bad_typeid, postcmd) \
 	PPP_CATCH_STD(ios_base::failure, postcmd) PPP_CATCH_STD(domain_error, postcmd) PPP_CATCH_STD(invalid_argument, postcmd) \
 	PPP_CATCH_STD(length_error, postcmd) PPP_CATCH_STD(out_of_range, postcmd) PPP_CATCH_STD(exception, postcmd) \
-	catch(...) { postcmd; throw PppException("Unknown Exception",__LINE__,__PRETTY_FUNCTION__); }
+	catch(...) { postcmd; throw PppException("Unknown Exception",__LINE__,__FILE__); }
 
 /**
  * @brief Test & throw
@@ -102,17 +102,17 @@ class PppException : public std::exception {
  * @details
  * Throws a ::PppException if @a condition is true, containing the condition in the message
  */
-#define PPP_ASSERT(condition) if(!(condition)) throw PppException("Assertion failed: " #condition,__LINE__,__PRETTY_FUNCTION__);
+#define PPP_ASSERT(condition) if(!(condition)) throw PppException("Assertion failed: " #condition,__LINE__,__FILE__);
 
 /**
  * @brief Catch and re-throw a PppException
  */
-#define PPP_RETHROW() catch(PppException &e) { throw PppException(e,__LINE__,__PRETTY_FUNCTION__); }
+#define PPP_RETHROW() catch(PppException &e) { throw PppException(e,__LINE__,__FILE__); }
 
 /**
  * @brief Throw a PppException with position information
  * @param[in] msg Message passed to the constructor of ::PppException
  */
-#define PPP_THROW(msg) throw PppException(msg,__LINE__,__PRETTY_FUNCTION__);
+#define PPP_THROW(msg) throw PppException(msg,__LINE__,__FILE__);
 
 #endif
