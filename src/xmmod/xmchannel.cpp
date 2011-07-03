@@ -263,14 +263,26 @@ void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 				m_portaSpeed = lowNibble(m_currentCell.volume()) << 4;
 			}
 			applySampleDefaults();
+			if(m_currentCell.note()!=0 && m_currentCell.note()!=KeyOffNote) {
+				doKeyOn();
+			}
 		}
 		else if(m_currentCell.effect() == Effect::Porta) {
 			if(m_currentCell.effectValue() != 0) {
 				m_portaSpeed = m_currentCell.effectValue() << 2;
 			}
 			applySampleDefaults();
+			if(m_currentCell.note()!=0 && m_currentCell.note()!=KeyOffNote) {
+				doKeyOn();
+			}
 		}
-		else if(m_currentCell.effect() != Effect::PortaVolSlide && m_currentCell.note() != 0) {
+		else if(m_currentCell.effect() == Effect::PortaVolSlide) {
+			applySampleDefaults();
+			if(m_currentCell.note()!=0 && m_currentCell.note()!=KeyOffNote) {
+				doKeyOn();
+			}
+		}
+		else if(m_currentCell.note() != 0) {
 			if(m_currentCell.note() == KeyOffNote) {
 				doKeyOff();
 			}
@@ -593,7 +605,7 @@ void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 
 	updateStatus();
 
-	if(m_currentVolume == 0 && m_realVolume == 0) {
+	if(m_currentVolume == 0 && m_realVolume == 0 && m_volScale == 0) {
 		setActive(false);
 	}
 }
