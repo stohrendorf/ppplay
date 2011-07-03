@@ -691,7 +691,6 @@ bool S3mModule::jumpNextSong() {
 		return false;
 	}
 	else {
-// 		setOrder(multiTrackAt(currentTrackIndex()).startOrder); FIXME?
 		IAudioSource::LockGuard guard(this);
 		multiSongAt(currentSongIndex()).gotoFront();
 		multiSongAt(currentSongIndex()).currentState()->archive(this).finishLoad();
@@ -716,11 +715,8 @@ bool S3mModule::jumpPrevSong() {
 	IAudioSource::LockGuard guard(this);
 	multiSongAt(currentSongIndex()).gotoFront();
 	multiSongAt(currentSongIndex()).currentState()->archive(this).finishLoad();
-// 	setOrder(multiTrackAt(currentTrackIndex()).startOrder); FIXME
-// 	setOrder(0);
 	BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
 	setPatternIndex(mapOrder(playbackInfo().order)->index());
-// 	setPosition(0);
 	return true;
 }
 

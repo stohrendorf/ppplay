@@ -20,14 +20,6 @@
   Too many exceptions are catched and thrown, many are errors recoverable, that means they're not putting the program into an unstable state.
 
 
-* XM
-
-  Envelopes
-  Vibrato
-  Key off handling
-  ...
-
-
 * General module interface
 
   Add methods like "getNormalizedVolume" that return percentage values.
@@ -36,7 +28,6 @@
 
 * Audio system
   
-  Add a "RawVector" template class that copies data without respect for constructors or copy operators; should speed up audio output.
   Add OGG support.
 
 * Graphics system
