@@ -71,6 +71,8 @@ INCLUDE(CPack)
 # setting compiler flags
 #########
 set(CMAKE_CXX_FLAGS "-Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtual -pedantic -std=c++0x")
+add_definitions(-DBOOST_FILESYSTEM_VERSION=3)
+
 if(MINGW)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
 endif()

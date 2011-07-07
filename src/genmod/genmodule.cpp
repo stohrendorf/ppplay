@@ -50,7 +50,7 @@ IArchive& GenModule::serialize(IArchive* data) {
 std::string GenModule::filename() {
 	boost::filesystem::path path(m_filename);
 	BOOST_ASSERT( path.has_filename() );
-	return path.filename();
+	return path.filename().native();
 }
 
 std::string GenModule::title() const {
