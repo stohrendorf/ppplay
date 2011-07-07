@@ -218,7 +218,7 @@ int main( int argc, char* argv[] ) {
 		if( modFileName.empty() )
 			return EXIT_SUCCESS;
 		LOG_MESSAGE( "Initializing SDL" );
-		if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER ) < 0 ) {
+		if( SDL_Init( /* SDL_INIT_VIDEO | SDL_INIT_AUDIO | */ SDL_INIT_TIMER ) < 0 ) {
 			LOG_ERROR( "Could not initialize SDL: %s", SDL_GetError() );
 			SDL_Quit();
 			return EXIT_FAILURE;
