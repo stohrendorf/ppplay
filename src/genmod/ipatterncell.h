@@ -16,19 +16,52 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "gencell.h"
+#ifndef IPATTERNCELL_H
+#define IPATTERNCELL_H
 
 /**
  * @ingroup GenMod
  * @{
  */
 
+#include "stream/iserializable.h"
+
+#include <vector>
+#include <string>
+#include <memory>
+
 namespace ppp {
 
-GenCell::~GenCell() = default;
+/**
+ * @interface IPatternCell
+ * @ingroup GenMod
+ * @brief General interface for pattern note cells
+ */
+class IPatternCell : public ISerializable {
+	public:
+		typedef std::shared_ptr<IPatternCell> Ptr; //!< @brief Class pointer
+		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
+		/**
+		 * @brief Destructor
+		 */
+		virtual ~IPatternCell();
+		/**
+		 * @brief Clears the cell's data
+		 */
+		virtual void clear() = 0;
+		/**
+		 * @brief Get the tracker-like string representation of this cell
+		 * @return Tracker-like string
+		 */
+		virtual std::string trackerString() const = 0;
+};
 
-}
+IPatternCell::~IPatternCell() = default;
+
+} // namespace ppp
 
 /**
  * @}
  */
+
+#endif

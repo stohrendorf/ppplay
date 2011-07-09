@@ -24,7 +24,7 @@
  * @{
  */
 
-#include "genmod/gencell.h"
+#include "genmod/ipatterncell.h"
 #include "xmbase.h"
 #include "stream/binstream.h"
 
@@ -35,7 +35,7 @@ namespace xm {
  * @class XmCell
  * @brief Cell of a pattern
  */
-class XmCell : public GenCell {
+class XmCell : public IPatternCell {
 	public:
 		typedef std::shared_ptr<XmCell> Ptr; //!< @brief Class pointer
 		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers

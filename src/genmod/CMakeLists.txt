@@ -1,7 +1,6 @@
 add_library(genmod STATIC
 	genbase.cpp
 	gensample.cpp
-	gencell.cpp
 	genchannel.cpp
 	genmodule.cpp
 	breseninter.cpp

@@ -25,7 +25,6 @@
  */
 
 #include "gensample.h"
-#include "gencell.h"
 #include "stuff/utils.h"
 
 #include <mutex>

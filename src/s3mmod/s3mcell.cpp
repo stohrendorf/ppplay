@@ -30,7 +30,7 @@
 namespace ppp {
 namespace s3m {
 
-S3mCell::S3mCell() : GenCell(), m_note(s3mEmptyNote), m_instr(s3mEmptyInstr), m_volume(s3mEmptyVolume),
+S3mCell::S3mCell() : IPatternCell(), m_note(s3mEmptyNote), m_instr(s3mEmptyInstr), m_volume(s3mEmptyVolume),
 	m_effect(s3mEmptyCommand), m_effectValue(0x00) {
 }
 

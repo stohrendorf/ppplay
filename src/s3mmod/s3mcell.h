@@ -25,7 +25,7 @@
  */
 
 #include "stream/binstream.h"
-#include "genmod/gencell.h"
+#include "genmod/ipatterncell.h"
 
 namespace ppp {
 namespace s3m {
@@ -34,7 +34,7 @@ namespace s3m {
  * @class S3mCell
  * @brief A ScreamTracker cell
  */
-class S3mCell : public GenCell {
+class S3mCell : public IPatternCell {
 	public:
 		typedef std::shared_ptr<S3mCell> Ptr; //!< @brief Class pointer
 		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers

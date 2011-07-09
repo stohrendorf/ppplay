@@ -30,7 +30,7 @@
 namespace ppp {
 namespace xm {
 
-XmCell::XmCell() : GenCell(), m_note(0), m_instr(0), m_volume(0), m_effect(Effect::None), m_effectValue(0) {
+XmCell::XmCell() : IPatternCell(), m_note(0), m_instr(0), m_volume(0), m_effect(Effect::None), m_effectValue(0) {
 }
 
 XmCell::~XmCell() = default;
