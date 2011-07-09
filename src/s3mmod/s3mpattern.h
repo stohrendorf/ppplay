@@ -61,7 +61,7 @@ class S3mPattern {
 		 * @brief Get a cell from the pattern
 		 * @param[in] chanIdx Channel index
 		 * @param[in] row Row index
-		 * @return Pointer to the cell or NULL
+		 * @return Pointer to the cell or nullptr
 		 */
 		S3mCell::Ptr cellAt(uint16_t chanIdx, int16_t row);
 };

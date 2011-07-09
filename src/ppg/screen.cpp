@@ -51,32 +51,32 @@ namespace ppg {
 	 * @brief Contains the chars to be displayed
 	 * @see g_currentChars
 	 */
-	static char* g_chars = NULL;
+	static char* g_chars = nullptr;
 	/**
 	 * @brief Contains the chars currently visible to determine what needs to be drawn
 	 * @see g_chars
 	 */
-	static char* g_currentChars = NULL;
+	static char* g_currentChars = nullptr;
 	/**
 	 * @brief Contains the foreground colors to be displayed
 	 */
-	static Color* g_colorsF = NULL;
+	static Color* g_colorsF = nullptr;
 	/**
 	 * @brief Contains the foreground colors currently visible to determine what needs to be drawn
 	 */
-	static Color* g_currentColorsF = NULL;
+	static Color* g_currentColorsF = nullptr;
 	/**
 	 * @brief Contains the background colors to be displayed
 	 */
-	static Color* g_colorsB = NULL;
+	static Color* g_colorsB = nullptr;
 	/**
 	 * @brief Contains the background colors currently visible to determine what needs to be drawn
 	 */
-	static Color* g_currentColorsB = NULL;
+	static Color* g_currentColorsB = nullptr;
 	/**
 	 * @brief The current SDL screen surface instance
 	 */
-	static SDL_Surface* g_screenSurface = NULL;
+	static SDL_Surface* g_screenSurface = nullptr;
 
 	/**
 	 * @brief Draw a pixel
@@ -93,8 +93,8 @@ namespace ppg {
 	 * @}
 	 */
 
-	Screen::Screen( int w, int h, const std::string& title ) : Widget( NULL ), m_cursorX( 0 ), m_cursorY( 0 ) {
-		BOOST_ASSERT( g_screenSurface == NULL );
+	Screen::Screen( int w, int h, const std::string& title ) : Widget( nullptr ), m_cursorX( 0 ), m_cursorY( 0 ) {
+		BOOST_ASSERT( g_screenSurface == nullptr );
 		if( !SDL_WasInit( SDL_INIT_VIDEO ) ) {
 			if( SDL_Init( SDL_INIT_VIDEO ) == -1 ) {
 				BOOST_THROW_EXCEPTION( std::runtime_error( "Initialization of SDL Video surface failed" ) );
@@ -123,7 +123,7 @@ namespace ppg {
 		}
 		setPosition( 0, 0 );
 		setSize( g_screenSurface->w / 8, g_screenSurface->h / 16 );
-		SDL_WM_SetCaption( title.c_str(), NULL );
+		SDL_WM_SetCaption( title.c_str(), nullptr );
 		g_dosColors[static_cast<int>(Color::Black)]       = SDL_MapRGB( g_screenSurface->format, 0x00, 0x00, 0x00 ); // black
 		g_dosColors[static_cast<int>(Color::Blue)]        = SDL_MapRGB( g_screenSurface->format, 0x00, 0x00, 0xaa ); // blue
 		g_dosColors[static_cast<int>(Color::Green)]       = SDL_MapRGB( g_screenSurface->format, 0x00, 0xaa, 0x00 ); // green
@@ -156,17 +156,17 @@ namespace ppg {
 
 	Screen::~Screen() {
 		delete[] g_chars;
-		g_chars = NULL;
+		g_chars = nullptr;
 		delete[] g_currentChars;
-		g_currentChars = NULL;
+		g_currentChars = nullptr;
 		delete[] g_colorsF;
-		g_colorsF = NULL;
+		g_colorsF = nullptr;
 		delete[] g_currentColorsF;
-		g_currentColorsF = NULL;
+		g_currentColorsF = nullptr;
 		delete[] g_colorsB;
-		g_colorsB = NULL;
+		g_colorsB = nullptr;
 		delete[] g_currentColorsB;
-		g_currentColorsB = NULL;
+		g_currentColorsB = nullptr;
 	}
 
 #include "pfonts.inc"

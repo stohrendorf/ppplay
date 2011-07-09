@@ -65,7 +65,7 @@ class XmPattern {
 		 * @brief Get a cell
 		 * @param[in] column Column of the cell
 		 * @param[in] row Row of the cell
-		 * @return Pointer to the cell or NULL
+		 * @return Pointer to the cell or nullptr
 		 */
 		XmCell::Ptr cellAt(uint16_t column, uint16_t row);
 		/**

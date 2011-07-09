@@ -49,7 +49,7 @@ void MP3AudioOutput::encodeThread(MP3AudioOutput* src) {
 
 
 MP3AudioOutput::MP3AudioOutput(const IAudioSource::WeakPtr& src, const std::string& filename): IAudioOutput(src),
-	m_lameGlobalFlags(NULL), m_file(), m_filename(filename), m_buffer(NULL), m_encoderThread(), m_bufferMutex(), m_paused(true) {
+	m_lameGlobalFlags(nullptr), m_file(), m_filename(filename), m_buffer(nullptr), m_encoderThread(), m_bufferMutex(), m_paused(true) {
 	m_buffer = new uint8_t[BufferSize];
 	m_lameGlobalFlags = lame_init();
 }

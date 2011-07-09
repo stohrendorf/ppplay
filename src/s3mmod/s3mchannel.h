@@ -78,7 +78,7 @@ class S3mChannel : public GenChannel {
 
 		/**
 		 * @brief Get the current sample
-		 * @return Pointer to current sample or NULL
+		 * @return Pointer to current sample or nullptr
 		 */
 		S3mSample::Ptr currentSample();
 		/**

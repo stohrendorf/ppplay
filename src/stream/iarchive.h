@@ -58,12 +58,10 @@ class IArchive {
 		 * @see isLoading()
 		 */
 		bool isSaving() const ;
-// the pragma is used to get rid of the annoying
+// the pragma is used to get rid of the following annoying GCC message:
 // warning: ‘IArchive& IArchive::operator%(T&)’ should return by value [-Weffc++]
-#if (__GNUC__>4) || (__GNUC__==4 && __GNUC_MINOR__>=6)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
-#endif
 		/**
 		 * @brief Serialization operator
 		 * @tparam T Data type
@@ -80,9 +78,7 @@ class IArchive {
 			}
 			return *this;
 		}
-#if (__GNUC__>4) || (__GNUC__==3 && __GNUC_MINOR__>=6)
 #pragma GCC diagnostic pop
-#endif
 		/**
 		 * @brief Serialization operator for arrays
 		 * @tparam T Data type
@@ -92,7 +88,7 @@ class IArchive {
 		 * @note Operation depends on m_loading
 		 */
 		template<class T> IArchive& array(T* data, std::size_t count) {
-			BOOST_ASSERT(data != NULL);
+			BOOST_ASSERT(data != nullptr);
 			if(m_loading) {
 				m_stream->read(data, count);
 			}

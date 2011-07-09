@@ -33,7 +33,7 @@ bool IArchive::isSaving() const {
 }
 
 IArchive& IArchive::archive(ISerializable* data) {
-	BOOST_ASSERT(data != NULL);
+	BOOST_ASSERT(data != nullptr);
 	return data->serialize(this);
 }
 

@@ -48,7 +48,7 @@ static std::shared_ptr<ppg::Screen> dosScreen;
 static std::shared_ptr<UIMain> uiMain;
 
 static IAudioOutput::Ptr output;
-static SDL_TimerID updateTimer = NULL;
+static SDL_TimerID updateTimer = nullptr;
 
 static bool noGUI = false;
 
@@ -353,7 +353,7 @@ int main( int argc, char* argv[] ) {
 		}
 #endif
 		SDL_RemoveTimer( updateTimer );
-		updateTimer = NULL;
+		updateTimer = nullptr;
 		SDL_Quit();
 	}
 	catch( ... ) {

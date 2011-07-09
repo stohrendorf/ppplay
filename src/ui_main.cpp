@@ -19,15 +19,15 @@
 #include "ui_main.h"
 
 UIMain::UIMain( Widget* parent ): Widget( parent ),
-	m_position(NULL),
-	m_screenSep1(NULL),
-	m_screenSep2(NULL),
-	m_playbackInfo(NULL),
-	m_volBar(NULL),
+	m_position(nullptr),
+	m_screenSep1(nullptr),
+	m_screenSep2(nullptr),
+	m_playbackInfo(nullptr),
+	m_volBar(nullptr),
 	m_chanInfos(),
 	m_chanCells(),
-	m_trackerInfo(NULL),
-	m_modTitle(NULL)
+	m_trackerInfo(nullptr),
+	m_modTitle(nullptr)
 {
 	setSize( parent->area().size() );
 	setPosition( 0, 0 );

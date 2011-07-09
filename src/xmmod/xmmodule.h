@@ -77,7 +77,7 @@ class XmModule : public GenModule {
 		 * @param[in] filename Filename of the module
 		 * @param[in] frequency Rendering frequency
 		 * @param[in] maxRpt Maximum repeat count
-		 * @return Pointer to the loaded module or NULL on error
+		 * @return Pointer to the loaded module or nullptr on error
 		 * @details
 		 * Loads and initializes the module if possible
 		 */
@@ -110,7 +110,7 @@ class XmModule : public GenModule {
 		/**
 		 * @brief Get an instrument
 		 * @param[in] idx 1-based instrument index
-		 * @return Instrument pointer or NULL
+		 * @return Instrument pointer or nullptr
 		 */
 		XmInstrument::Ptr getInstrument(int idx) const;
 		/**

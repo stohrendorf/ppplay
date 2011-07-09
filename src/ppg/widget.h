@@ -52,7 +52,7 @@ class Widget {
 		typedef std::list<Widget*> List; //!< @brief List of widgets
 	private:
 		bool m_visible; //!< @brief @c false if this widget and it's children should not be drawn
-		Widget* m_parent; //!< @brief Pointer to the parent widget, or @c NULL if it's the top widget
+		Widget* m_parent; //!< @brief Pointer to the parent widget, or @c nullptr if it's the top widget
 		Rect m_area; //!< @brief Area of this widget within the parent's space
 		List m_children; //!< @brief Children within this widget
 		bool m_autodelete; //!< @brief If @c true, the parent widget should delete this when destroyed. Default is @c true

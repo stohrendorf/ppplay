@@ -27,7 +27,7 @@ namespace ppp {
 
 GenSample::GenSample() :
 	m_length(0), m_loopStart(0), m_loopEnd(0), m_volume(0),
-	m_frequency(0), m_dataL(NULL), m_dataR(NULL), m_filename(), m_title(), m_looptype(LoopType::None) {
+	m_frequency(0), m_dataL(nullptr), m_dataR(nullptr), m_filename(), m_title(), m_looptype(LoopType::None) {
 }
 
 GenSample::~GenSample() {
@@ -53,9 +53,9 @@ void GenSample::setDataRight(const BasicSample data[]) {
 void GenSample::setDataMono(const BasicSample data[]) {
 	if(isStereo())
 		delete[] m_dataR;
-	m_dataR = NULL;
+	m_dataR = nullptr;
 	delete[] m_dataL;
-	m_dataL = NULL;
+	m_dataL = nullptr;
 	setDataLeft(data);
 	m_dataR = m_dataL;
 }

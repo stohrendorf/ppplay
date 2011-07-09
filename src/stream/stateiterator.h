@@ -51,17 +51,17 @@ class StateIterator {
 		IArchive::Ptr newState();
 		/**
 		 * @brief Increases m_stateIndex and returns the state pointer
-		 * @return The state pointer or @c NULL if atEnd() returns @c true
+		 * @return The state pointer or @c nullptr if atEnd() returns @c true
 		 */
 		IArchive::Ptr nextState();
 		/**
 		 * @brief Decreases m_stateIndex and returns the state pointer
-		 * @return The state pointer or @c NULL if atFront() returns @c true
+		 * @return The state pointer or @c nullptr if atFront() returns @c true
 		 */
 		IArchive::Ptr prevState();
 		/**
 		 * @brief Returns the current state pointer
-		 * @return The current state pointer or NULL
+		 * @return The current state pointer or nullptr
 		 */
 		IArchive::Ptr currentState() const;
 		/**

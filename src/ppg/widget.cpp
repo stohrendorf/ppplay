@@ -40,6 +40,7 @@ Widget::~Widget() {
 	List backup = m_children;
 	for(auto it = backup.begin(); it != backup.end(); it++) {
 		Widget* tmp = *it;
+		tmp->m_parent = nullptr;
 		if(tmp->m_autodelete) {
 			delete tmp;
 		}
@@ -51,7 +52,7 @@ Widget::~Widget() {
 
 int Widget::setLeft(int x, bool absolute) {
 	if(absolute) {
-		mapToAbsolute(&x, NULL);
+		mapToAbsolute(&x, nullptr);
 	}
 	int w = m_area.width();
 	m_area.setLeft(x);
@@ -61,7 +62,7 @@ int Widget::setLeft(int x, bool absolute) {
 
 int Widget::setTop(int y, bool absolute) {
 	if(absolute) {
-		mapToAbsolute(NULL, &y);
+		mapToAbsolute(nullptr, &y);
 	}
 	int h = m_area.height();
 	m_area.setTop(y);
@@ -170,10 +171,10 @@ void Widget::mapToParent(int* x, int* y) const {
 	if(!m_parent) {
 		return;
 	}
-	if(x != NULL) {
+	if(x != nullptr) {
 		*x += m_area.left();
 	}
-	if(y != NULL) {
+	if(y != nullptr) {
 		*y += m_area.top();
 	}
 }
@@ -203,7 +204,7 @@ void Widget::mapToAbsolute(ppg::Point* pt) const {
 
 Widget* Widget::getTopParent() const {
 	if(!m_parent) {
-		return NULL;
+		return nullptr;
 	}
 	return m_parent->getTopParent();
 }

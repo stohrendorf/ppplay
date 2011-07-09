@@ -48,7 +48,7 @@ class S3mModule : public GenModule {
 		 * @param[in] filename Module filename
 		 * @param[in] frequency Rendering frequency
 		 * @param[in] maxRpt Maximum repeat count
-		 * @return Module pointer or NULL
+		 * @return Module pointer or nullptr
 		 */
 		static GenModule::Ptr factory(const std::string& filename, uint32_t frequency, uint8_t maxRpt = 2);
 	private:
@@ -70,7 +70,7 @@ class S3mModule : public GenModule {
 		/**
 		 * @brief Get a pattern
 		 * @param[in] idx Pattern index of the requested pattern
-		 * @return Pattern pointer or NULL
+		 * @return Pattern pointer or nullptr
 		 */
 		S3mPattern::Ptr getPattern(size_t idx) const;
 		/**
@@ -150,7 +150,7 @@ class S3mModule : public GenModule {
 		/**
 		 * @brief Get a sample
 		 * @param[in] idx Sample index
-		 * @return Sample pointer or NULL
+		 * @return Sample pointer or nullptr
 		 */
 		S3mSample::Ptr sampleAt(std::size_t idx) const;
 		virtual void setGlobalVolume(int16_t v);

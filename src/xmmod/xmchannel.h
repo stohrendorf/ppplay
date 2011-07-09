@@ -181,12 +181,12 @@ class XmChannel : public GenChannel {
 		std::string m_fxString;
 		/**
 		 * @brief Get the current sample
-		 * @return Pointer to the current sample or NULL
+		 * @return Pointer to the current sample or nullptr
 		 */
 		XmSample::Ptr currentSample();
 		/**
 		 * @brief Get the current instrument
-		 * @return Pointer to the current instrument or NULL
+		 * @return Pointer to the current instrument or nullptr
 		 */
 		XmInstrument::Ptr currentInstrument();
 	public:
