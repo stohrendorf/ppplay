@@ -19,13 +19,15 @@
 #ifndef UI_MAIN_H
 #define UI_MAIN_H
 
-#include "ppg/ppg.h"
 #include "ppg/label.h"
 #include "ppg/stereopeakbar.h"
+#include "stuff/sdltimer.h"
+#include "genmod/genmodule.h"
+#include "output/iaudiooutput.h"
 
 #include <array>
 
-class UIMain : public ppg::Widget {
+class UIMain : public ppg::Widget, public SDLTimer {
 		DISABLE_COPY( UIMain )
 	private:
 		ppg::Label* m_position;
@@ -37,9 +39,11 @@ class UIMain : public ppg::Widget {
 		std::array<ppg::Label*, 16> m_chanCells;
 		ppg::Label* m_trackerInfo;
 		ppg::Label* m_modTitle;
+		ppp::GenModule::WeakPtr m_module;
+		IAudioOutput::WeakPtr m_output;
 		virtual void drawThis();
 	public:
-		UIMain( Widget* parent );
+		UIMain( Widget* parent, const ppp::GenModule::Ptr& module, const IAudioOutput::Ptr& output );
 		ppg::Label* posLabel();
 		ppg::Label* playbackInfo();
 		ppg::StereoPeakBar* volBar();
@@ -47,6 +51,7 @@ class UIMain : public ppg::Widget {
 		ppg::Label* chanCell( std::size_t idx );
 		ppg::Label* trackerInfo();
 		ppg::Label* modTitle();
+		virtual void onTimer();
 };
 
 #endif // UI_MAIN_H

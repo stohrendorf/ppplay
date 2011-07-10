@@ -27,11 +27,8 @@
 #include "stuff/utils.h"
 #include "audiotypes.h"
 
-#include <algorithm>
-#include <memory>
 #include <mutex>
 
-namespace ppp {
 /**
  * @class AudioFifo
  * @brief Audio FIFO buffer
@@ -148,7 +145,6 @@ class AudioFifo {
 		 */
 		bool isEmpty() const;
 };
-}
 
 /**
  * @}

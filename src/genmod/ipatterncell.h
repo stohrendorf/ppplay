@@ -56,8 +56,6 @@ class IPatternCell : public ISerializable {
 		virtual std::string trackerString() const = 0;
 };
 
-IPatternCell::~IPatternCell() = default;
-
 } // namespace ppp
 
 /**

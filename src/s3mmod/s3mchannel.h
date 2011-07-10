@@ -25,10 +25,10 @@
  */
 
 #include "genmod/genchannel.h"
-#include "genmod/breseninter.h"
-#include "s3mbase.h"
+#include "s3mcell.h"
 #include "s3msample.h"
-#include "s3mpattern.h"
+#include "s3mbase.h"
+#include "genmod/breseninter.h"
 
 #include <array>
 

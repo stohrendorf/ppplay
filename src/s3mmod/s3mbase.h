@@ -19,8 +19,6 @@
 #ifndef S3MBASE_H
 #define S3MBASE_H
 
-#include "genmod/genbase.h"
-
 #include <cstdint>
 
 /**

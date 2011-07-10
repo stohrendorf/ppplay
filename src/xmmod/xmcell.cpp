@@ -23,7 +23,6 @@
 
 #include "xmcell.h"
 
-#include "xmbase.h"
 #include "genmod/genbase.h"
 #include "stream/iarchive.h"
 

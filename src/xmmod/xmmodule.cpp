@@ -27,8 +27,6 @@
 #include "stream/fbinstream.h"
 #include "logger/logger.h"
 
-#include <cmath>
-
 namespace ppp {
 namespace xm {
 
@@ -67,11 +65,9 @@ static const std::array<const uint16_t, 12 * 8> g_PeriodTable = {{
 XmModule::XmModule(uint8_t maxRpt):
 	GenModule(maxRpt),
 	m_amiga(false), m_patterns(), m_instruments(), m_channels(),
-	m_noteToPeriod(), m_orders(), m_orderPlaybackCount(), m_length(), m_jumpRow(-1), m_jumpOrder(-1),
-	m_isPatLoop(false), m_doPatJump(false), m_restartPos(0) {
-	for(std::size_t i = 0; i < m_orderPlaybackCount.size(); i++) {
-		m_orderPlaybackCount.at(i) = 0;
-	}
+	m_noteToPeriod(), m_jumpRow(-1), m_jumpOrder(-1),
+	m_isPatLoop(false), m_doPatJump(false), m_restartPos(0)
+{
 }
 
 bool XmModule::load(const std::string& filename) {
@@ -129,7 +125,9 @@ bool XmModule::load(const std::string& filename) {
 		}
 		m_instruments.push_back(ins);
 	}
-	std::copy_n(hdr.orders, 256, m_orders.begin());
+	for(int i=0; i<(hdr.songLength&0xff); i++) {
+		addOrder( GenOrder::Ptr( new GenOrder(hdr.orders[i]) ) );
+	}
 	if(m_amiga) {
 		uint16_t* dest = m_noteToPeriod.begin();
 		uint8_t octShift = 0;
@@ -155,8 +153,7 @@ bool XmModule::load(const std::string& filename) {
 			val--;
 		}
 	}
-	m_length = hdr.songLength;
-	setPatternIndex(m_orders.at(0));
+	setPatternIndex( orderAt(0)->index() );
 	addMultiSong( StateIterator() );
 	multiSongAt(0).newState()->archive(this).finishSave();
 // 	multiTrackAt(0).startOrder = playbackInfo().order;
@@ -199,8 +196,9 @@ void XmModule::buildTick(AudioFrameBuffer& buffer) {
 void XmModule::simulateTick(std::size_t& bufferLength) {
 	try {
 		bufferLength = tickBufferLength();
+		BOOST_ASSERT( playbackInfo().pattern < m_patterns.size() );
 		XmPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
-		BOOST_ASSERT(currPat.use_count() > 0);
+		BOOST_ASSERT( currPat.use_count() > 0 );
 		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
 			XmChannel::Ptr chan = m_channels.at(currTrack);
 			BOOST_ASSERT(chan.use_count() > 0);
@@ -214,8 +212,8 @@ void XmModule::simulateTick(std::size_t& bufferLength) {
 		}
 		setPosition(position() + bufferLength);
 	}
-	catch(const std::exception& e) {
-		BOOST_THROW_EXCEPTION( e );
+	catch(...) {
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information().c_str() ) );
 	}
 }
 
@@ -232,10 +230,10 @@ bool XmModule::adjustPosition(bool doStore) {
 				m_jumpRow = 0;
 				m_doPatJump = false;
 				m_jumpOrder++;
-				if(m_jumpOrder >= m_length) {
+				if(m_jumpOrder >= orderCount()) {
 					m_jumpOrder = m_restartPos;
 				}
-				m_orderPlaybackCount.at(playbackInfo().order)++;
+				orderAt(playbackInfo().order)->increasePlaybackCount();
 				setOrder(m_jumpOrder);
 				orderChanged = true;
 			}
@@ -244,7 +242,7 @@ bool XmModule::adjustPosition(bool doStore) {
 			XmPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
 			setRow((playbackInfo().row + 1) % currPat->numRows());
 			if(playbackInfo().row == 0) {
-				m_orderPlaybackCount.at(playbackInfo().order)++;
+				orderAt(playbackInfo().order)->increasePlaybackCount();
 				setOrder((playbackInfo().order + 1));
 				orderChanged = true;
 			}
@@ -253,8 +251,8 @@ bool XmModule::adjustPosition(bool doStore) {
 		m_doPatJump = m_isPatLoop = false;
 	}
 	if(orderChanged) {
-		if(playbackInfo().order < m_length) {
-			setPatternIndex(m_orders.at(playbackInfo().order));
+		if(playbackInfo().order < orderCount()) {
+			setPatternIndex(orderAt(playbackInfo().order)->index());
 			if(doStore) {
 				multiSongAt(0).newState()->archive(this).finishSave();
 			}
@@ -270,7 +268,7 @@ bool XmModule::adjustPosition(bool doStore) {
 			return false;
 		}
 	}
-	if(m_orderPlaybackCount.at(playbackInfo().order) >= maxRepeat()) {
+	if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat()) {
 		return false;
 	}
 	return true;
@@ -567,9 +565,7 @@ IArchive& XmModule::serialize(IArchive* data) {
 		}
 		data->archive(m_channels.at(i).get());
 	}
-	data->array(&m_orderPlaybackCount.front(), m_orderPlaybackCount.size());
 	*data
-	% m_length
 	% m_jumpRow
 	% m_jumpOrder
 	% m_isPatLoop
@@ -595,6 +591,9 @@ bool XmModule::initialize(uint32_t frq) {
 	if(songCount() > 0) {
 		IAudioSource::LockGuard guard(this);
 		multiSongAt(0).currentState()->archive(this).finishLoad();
+	}
+	else {
+		return false;
 	}
 	return true;
 }

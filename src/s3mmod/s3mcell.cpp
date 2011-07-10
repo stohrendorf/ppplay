@@ -23,7 +23,9 @@
 
 #include "s3mcell.h"
 
+#include "genmod/genbase.h"
 #include "s3mbase.h"
+
 #include "stream/iarchive.h"
 #include "logger/logger.h"
 

@@ -93,7 +93,7 @@ message(STATUS "CXX Flags (Additional)  : ${CMAKE_CXX_FLAGS}")
 #########
 # init main application target settings
 #########
-set(ppp_SRCS ppp.cpp src/ui_main.cpp)
+set(ppp_SRCS ppp.cpp src/ui_main.cpp src/sdlloader.cpp)
 if(WIN32 OR MINGW)
 	set(ppp_SRCS ${ppp_SRCS} ppp.rc)
 endif()
@@ -105,7 +105,7 @@ endif()
 
 target_link_libraries(ppp xmmod s3mmod genmod audioout)
 target_link_libraries(ppp logger utils binstream)
-target_link_libraries(ppp ppg)
+target_link_libraries(ppp ppg timer)
 
 #########
 # link libraries

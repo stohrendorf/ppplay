@@ -49,12 +49,6 @@ class XmModule : public GenModule {
 		XmChannel::Vector m_channels;
 		//! @brief Maps notes including finetune to their periods
 		std::array<uint16_t, 121 * 16> m_noteToPeriod;
-		//! @brief Order list
-		std::array<uint8_t, 256> m_orders;
-		//! @brief Playback count of the orders
-		std::array<uint8_t, 256> m_orderPlaybackCount;
-		//! @brief Song length
-		uint16_t m_length;
 		//! @brief Contains the row to break to, or @c -1 if no break is intended
 		int16_t m_jumpRow;
 		//! @brief Contains the order to jump to, or @c -1 if no jump is intended

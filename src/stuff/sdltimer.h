@@ -16,26 +16,23 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "fbinstream.h"
 
-#include <fstream>
+#ifndef SDLTIMER_H
+#define SDLTIMER_H
 
-FBinStream::FBinStream( const std::string& filename ) :
-	BinStream( SpIoStream( new std::fstream( filename.c_str(), std::ios::in | std::ios::binary ) ) ),
-	m_filename( filename )
+#include "itimer.h"
+
+class SDLTimer : public ITimer
 {
-}
+	DISABLE_COPY(SDLTimer)
+private:
+	uint32_t m_interval;
+	struct _SDL_TimerID* m_id;
+	static uint32_t callback(uint32_t interval, void* userdata);
+public:
+	SDLTimer(uint32_t interval);
+    virtual ~SDLTimer();
+    virtual uint32_t interval() const;
+};
 
-FBinStream::~FBinStream() {
-	if(stream().unique()) {
-		std::static_pointer_cast<std::fstream>( stream() )->close();
-	}
-}
-
-bool FBinStream::isOpen() const {
-	return std::static_pointer_cast<std::fstream>( stream() )->is_open();
-}
-
-std::string FBinStream::filename() const {
-	return m_filename;
-}
+#endif // SDLTIMER_H

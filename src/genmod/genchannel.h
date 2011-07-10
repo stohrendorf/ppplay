@@ -24,11 +24,11 @@
  * @{
  */
 
-#include "gensample.h"
+#include "stream/iserializable.h"
+#include "output/audiotypes.h"
 #include "stuff/utils.h"
 
 #include <mutex>
-#include <cstdint>
 
 namespace ppp {
 /**

@@ -16,26 +16,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "fbinstream.h"
 
-#include <fstream>
+#include "itimer.h"
 
-FBinStream::FBinStream( const std::string& filename ) :
-	BinStream( SpIoStream( new std::fstream( filename.c_str(), std::ios::in | std::ios::binary ) ) ),
-	m_filename( filename )
-{
-}
+/**
+ * @ingroup Common
+ * @{
+ */
 
-FBinStream::~FBinStream() {
-	if(stream().unique()) {
-		std::static_pointer_cast<std::fstream>( stream() )->close();
-	}
-}
+ITimer::~ITimer() = default;
 
-bool FBinStream::isOpen() const {
-	return std::static_pointer_cast<std::fstream>( stream() )->is_open();
-}
-
-std::string FBinStream::filename() const {
-	return m_filename;
-}
+/**
+ * @}
+ */

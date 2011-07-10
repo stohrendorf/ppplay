@@ -24,10 +24,9 @@
  * @{
  */
 
-#include "genbase.h"
-#include "genchannel.h"
-#include "output/iaudiosource.h"
+#include "genorder.h"
 #include "stream/stateiterator.h"
+#include "output/iaudiosource.h"
 
 namespace ppp {
 

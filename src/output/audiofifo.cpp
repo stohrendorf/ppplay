@@ -26,8 +26,6 @@
 #include <algorithm>
 #include <boost/assert.hpp>
 
-namespace ppp {
-
 void AudioFifo::calcVolume(uint16_t& leftVol, uint16_t& rightVol) {
 	BOOST_ASSERT(m_queuedFrames != 0);
 	//MutexLocker mutexLock(m_queueMutex);
@@ -134,7 +132,7 @@ std::size_t AudioFifo::pull(AudioFrameBuffer& data, std::size_t size) {
 	return copied;
 }
 
-std::size_t ppp::AudioFifo::copy(AudioFrameBuffer& data, std::size_t size) {
+std::size_t AudioFifo::copy(AudioFrameBuffer& data, std::size_t size) {
 	//LOG_DEBUG("Requested %zd frames", size);
 	if(needsData())
 		return 0;
@@ -193,8 +191,6 @@ size_t AudioFifo::queuedChunkCount() const {
 
 size_t AudioFifo::minFrameCount() const {
 	return m_minFrameCount;
-}
-
 }
 
 /**

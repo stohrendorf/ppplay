@@ -18,6 +18,8 @@
 
 #include "sbinstream.h"
 
+#include <sstream>
+
 SBinStream::SBinStream() : BinStream(BinStream::SpIoStream(new std::stringstream(std::ios::in | std::ios::out | std::ios::binary))) {
 }
 

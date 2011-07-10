@@ -27,8 +27,6 @@
 #include "iaudiooutput.h"
 #include "audiofifo.h"
 
-#include <SDL.h>
-
 /**
  * @class SDLAudioOutput
  * @brief Output class for SDL
@@ -55,8 +53,8 @@ class SDLAudioOutput : public IAudioOutput {
 		 * @param[in] len_bytes Byte length of @a stream
 		 * @note Declared here to get access to m_fifo
 		 */
-		static void sdlAudioCallback(void* userdata, Uint8* stream, int len_bytes);
-		ppp::AudioFifo m_fifo; //!< @brief FIFO buffer
+		static void sdlAudioCallback(void* userdata, uint8_t* stream, int len_bytes);
+		AudioFifo m_fifo; //!< @brief FIFO buffer
 		/**
 		 * @brief Fills m_fifo
 		 * @return @c false if the FIFO could not be filled

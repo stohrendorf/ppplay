@@ -24,9 +24,10 @@
  * @{
  */
 
-#include <vector>
 #include <deque>
+#include <cstdint>
 #include <memory>
+#include <vector>
 
 /**
  * @brief Basic sample

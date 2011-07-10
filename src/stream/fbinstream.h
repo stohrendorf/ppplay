@@ -47,6 +47,11 @@ class FBinStream : public BinStream {
 		 * @return @c true if the file is opened
 		 */
 		bool isOpen() const;
+		/**
+		 * @brief Get the filename
+		 * @return m_filename
+		 */
+		std::string filename() const;
 };
 
 #endif

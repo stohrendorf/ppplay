@@ -25,9 +25,8 @@
  */
 
 #include "stuff/utils.h"
-#include "point.h"
 #include "rect.h"
-#include "ppg.h"
+#include "color.h"
 
 #include <list>
 #include <memory>

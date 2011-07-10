@@ -19,8 +19,8 @@
 #ifndef XMCHANNEL_H
 #define XMCHANNEL_H
 
-#include "genmod/breseninter.h"
 #include "genmod/genchannel.h"
+#include "genmod/breseninter.h"
 #include "xmpattern.h"
 #include "xminstrument.h"
 

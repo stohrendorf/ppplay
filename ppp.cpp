@@ -20,7 +20,7 @@
 
 #include "config.h"
 
-#include "src/ppg/screen.h"
+#include "src/ppg/sdlscreen.h"
 #include "src/ui_main.h"
 
 #include "src/s3mmod/s3mmodule.h"
@@ -29,70 +29,27 @@
 #include "src/output/audiofifo.h"
 #include "src/output/sdlaudiooutput.h"
 
-#include "src/logger/logger.h"
-
 #ifdef WITH_MP3LAME
 #include "src/output/mp3audiooutput.h"
 #endif
 
-#include <iostream>
-#include <algorithm>
+#include "logger/logger.h"
+
 #include <boost/program_options.hpp>
+
 #include <SDL.h>
 
-static const std::size_t BUFFERSIZE = 4096;
-static const std::size_t SAMPLECOUNT = BUFFERSIZE / sizeof( BasicSample );
-static const std::size_t FRAMECOUNT = BUFFERSIZE / sizeof( BasicSampleFrame );
+// static const std::size_t BUFFERSIZE = 4096;
+// static const std::size_t SAMPLECOUNT = BUFFERSIZE / sizeof( BasicSample );
+// static const std::size_t FRAMECOUNT = BUFFERSIZE / sizeof( BasicSampleFrame );
 
-static std::shared_ptr<ppg::Screen> dosScreen;
+static std::shared_ptr<ppg::SDLScreen> dosScreen;
 static std::shared_ptr<UIMain> uiMain;
 
 static IAudioOutput::Ptr output;
-static SDL_TimerID updateTimer = nullptr;
+// static SDL_TimerID updateTimer = nullptr;
 
 static bool noGUI = false;
-
-static void updateDisplay( ppp::GenModule::Ptr& module ) {
-	if( !module || !output || noGUI )
-		return;
-	dosScreen->clear( ' ', ppg::Color::White, ppg::Color::Black );
-	uiMain->volBar()->shift( output->volumeLeft() >> 8, output->volumeRight() >> 8 );
-	std::size_t msecs = module->position() / 441;
-	std::size_t msecslen = module->length() / 441;
-	ppp::GenPlaybackInfo pbi = module->playbackInfo();
-	ppg::Label* lb = uiMain->posLabel();
-	if(module->isMultiSong()) {
-		lb->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Song %d/%d",
-								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
-								msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
-								module->currentSongIndex() + 1, module->songCount()
-								) );
-	}
-	else {
-		lb->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d",
-								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
-								msecslen / 6000, msecslen / 100 % 60, msecslen % 100
-								) );
-	}
-	lb = uiMain->playbackInfo();
-	lb->setEscapedText( ppp::stringf( "{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", pbi.speed, pbi.tempo, pbi.globalVolume * 100 / 0x40 ) );
-	for( uint8_t i = 0; i < module->channelCount(); i++ ) {
-		if( i >= 16 )
-			break;
-		lb = uiMain->chanInfo( i );
-		lb->setText( module->channelStatus( i ) );
-		lb = uiMain->chanCell( i );
-		lb->setText( module->channelCellString( i ) );
-	}
-}
-
-static Uint32 sdlTimerCallback( Uint32 interval, void* param ) {
-	if( !noGUI ) {
-		updateDisplay( *static_cast<ppp::GenModule::Ptr*>( param ) );
-		dosScreen->draw();
-	}
-	return interval;
-}
 
 #ifdef WITH_MP3LAME
 static bool quickMp3 = false;
@@ -217,19 +174,6 @@ int main( int argc, char* argv[] ) {
 		std::string modFileName = parseCmdLine( argc, argv );
 		if( modFileName.empty() )
 			return EXIT_SUCCESS;
-		LOG_MESSAGE( "Initializing SDL" );
-		if( SDL_Init( /* SDL_INIT_VIDEO | SDL_INIT_AUDIO | */ SDL_INIT_TIMER ) < 0 ) {
-			LOG_ERROR( "Could not initialize SDL: %s", SDL_GetError() );
-			SDL_Quit();
-			return EXIT_FAILURE;
-		}
-		LOG_MESSAGE( "Initializing PeePeeGUI Elements." );
-		ppg::Label* l;
-		if( !noGUI ) {
-			dosScreen.reset( new ppg::Screen( 80, 25, PACKAGE_STRING ) );
-			dosScreen->setAutoDelete(false);
-			uiMain.reset( new UIMain( dosScreen.get() ) );
-		}
 		LOG_MESSAGE( "Loading the module." );
 		ppp::GenModule::Ptr module;
 		try {
@@ -238,7 +182,6 @@ int main( int argc, char* argv[] ) {
 				module = ppp::xm::XmModule::factory( modFileName, 44100, 2 );
 				if( !module ) {
 					LOG_ERROR( "Error on loading the mod..." );
-					SDL_Quit();
 					return EXIT_FAILURE;
 				}
 			}
@@ -248,20 +191,10 @@ int main( int argc, char* argv[] ) {
 			return EXIT_FAILURE;
 		}
 		if( !noGUI ) {
-			l = uiMain->trackerInfo();
-			l->setText( ppp::stringf( "Tracker: %s - Channels: %d", module->trackerInfo().c_str(), module->channelCount() ) );
-			if( module->isMultiSong() )
-				l->setText( l->text() + " - Multi-song" );
-			l = uiMain->modTitle();
-			if( module->trimmedTitle().length()>0 )
-				l->setText( std::string( " -=\xf0[ " ) + module->filename() + " : " + module->trimmedTitle() + " ]\xf0=- " );
-			else
-				l->setText( std::string( " -=\xf0[ " ) + module->filename() + " ]\xf0=- " );
+			dosScreen.reset( new ppg::SDLScreen( 80, 25, PACKAGE_STRING ) );
+			dosScreen->setAutoDelete(false);
 			dosScreen->show();
 		}
-		//LOG_MESSAGE_("Init Fifo");
-		//s3m->initFifo(ppp::FFT::fftSampleCount);
-		updateTimer = SDL_AddTimer( 1000 / 30, sdlTimerCallback, &module );
 #ifdef WITH_MP3LAME
 		if( !quickMp3 ) {
 #endif
@@ -271,8 +204,10 @@ int main( int argc, char* argv[] ) {
 				LOG_ERROR( "Audio Init failed" );
 				return EXIT_FAILURE;
 			}
-			LOG_MESSAGE( "Default Output Mode" );
 			output->play();
+			if(dosScreen) {
+				uiMain.reset( new UIMain( dosScreen.get(), module, output ) );
+			}
 			SDL_Event event;
 			while(output) {
 				if( output && output->errorCode() == IAudioOutput::InputDry ) {
@@ -343,8 +278,10 @@ int main( int argc, char* argv[] ) {
 					LOG_ERROR( "LAME unavailable: Maybe cannot create MP3 File" );
 				else
 					LOG_ERROR( "LAME initialization error: %d", mp3out->errorCode() );
-				SDL_Quit();
 				return EXIT_FAILURE;
+			}
+			if(dosScreen) {
+				uiMain.reset( new UIMain( dosScreen.get(), module, output ) );
 			}
 			output->play();
 			while( output->playing() ) {
@@ -352,9 +289,6 @@ int main( int argc, char* argv[] ) {
 			}
 		}
 #endif
-		SDL_RemoveTimer( updateTimer );
-		updateTimer = nullptr;
-		SDL_Quit();
 	}
 	catch( ... ) {
 		LOG_ERROR( "Main (end): %s", boost::current_exception_diagnostic_information().c_str() );

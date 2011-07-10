@@ -44,6 +44,9 @@ GenModule::~GenModule() = default;
 
 IArchive& GenModule::serialize(IArchive* data) {
 	data->array(reinterpret_cast<char*>(&m_playbackInfo), sizeof(m_playbackInfo)) % m_playedFrames; // % m_currentSongIndex;
+	for(size_t i=0; i<m_orders.size(); i++) {
+		data->archive( m_orders.at(i).get() );
+	}
 	return *data;
 }
 
@@ -137,6 +140,7 @@ void GenModule::setTrackerInfo(const std::string& t) {
 }
 
 GenOrder::Ptr GenModule::orderAt(size_t idx) const {
+	BOOST_ASSERT( idx<m_orders.size() );
 	return m_orders.at(idx);
 }
 

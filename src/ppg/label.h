@@ -19,7 +19,6 @@
 #ifndef LABEL_H
 #define LABEL_H
 
-#include "ppg.h"
 #include "widget.h"
 
 #include <vector>

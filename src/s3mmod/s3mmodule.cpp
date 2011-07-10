@@ -80,7 +80,7 @@ struct S3mModuleHeader {
 
 S3mModule::S3mModule(uint8_t maxRpt) : GenModule(maxRpt),
 	m_breakRow(-1), m_breakOrder(-1), m_patLoopRow(-1), m_patLoopCount(-1), m_patDelayCount(-1),
-	m_customData(false), m_samples(), m_patterns(), m_channels(), m_usedChannels(0), m_orderPlaybackCounts(),
+	m_customData(false), m_samples(), m_patterns(), m_channels(), m_usedChannels(0),
 	m_amigaLimits(false), m_fastVolSlides(false), m_st2Vibrato(false), m_zeroVolOpt(false) {
 	try {
 		for(uint16_t i = 0; i < 256; i++) {
@@ -91,8 +91,6 @@ S3mModule::S3mModule(uint8_t maxRpt) : GenModule(maxRpt),
 		for(uint8_t i = 0; i < m_channels.size(); i++) {
 			m_channels.at(i).reset(new S3mChannel(this));
 		}
-		for(std::size_t i = 0; i < m_orderPlaybackCounts.size(); i++)
-			m_orderPlaybackCounts.at(i) = 0;
 	}
 	catch( boost::exception& e) {
 		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
@@ -317,7 +315,7 @@ bool S3mModule::initialize(uint32_t frq) {
 		LOG_MESSAGE("Preprocessed.");
 		for(std::size_t i = 0; i < orderCount(); i++) {
 			BOOST_ASSERT( orderAt(i).use_count()>0 );
-			if((orderAt(i)->index() != s3mOrderEnd) && (orderAt(i)->index() != s3mOrderSkip) && (m_orderPlaybackCounts.at(i) == 0)) {
+			if((orderAt(i)->index() != s3mOrderEnd) && (orderAt(i)->index() != s3mOrderSkip) && (orderAt(i)->playbackCount() == 0)) {
 				addMultiSong( StateIterator() );
 				setCurrentSongIndex( currentSongIndex()+1 );
 				break;
@@ -464,7 +462,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 	if((playbackInfo().tick == 0) && increaseTick) {
 		m_patDelayCount = -1;
 		if(m_breakOrder != -1) {
-			m_orderPlaybackCounts.at(playbackInfo().order)++;
+			orderAt(playbackInfo().order)->increasePlaybackCount();
 			if(m_breakOrder < orderCount()) {
 				setOrder(m_breakOrder);
 				orderChanged = true;
@@ -477,7 +475,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 			}
 			if(m_breakOrder == -1) {
 				if(m_patLoopCount == -1) {
-					m_orderPlaybackCounts.at(playbackInfo().order)++;
+					orderAt(playbackInfo().order)->increasePlaybackCount();
 					setOrder(playbackInfo().order + 1);
 					orderChanged = true;
 				}
@@ -489,7 +487,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 		if((m_breakRow == -1) && (m_breakOrder == -1) && (m_patDelayCount == -1)) {
 			setRow((playbackInfo().row + 1) & 0x3f);
 			if(playbackInfo().row == 0) {
-				m_orderPlaybackCounts.at(playbackInfo().order)++;
+				orderAt(playbackInfo().order)->increasePlaybackCount();
 				setOrder(playbackInfo().order + 1);
 				orderChanged = true;
 			}
@@ -505,7 +503,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 		}
 		if(!mapOrder(playbackInfo().order))
 			return false;
-		m_orderPlaybackCounts.at(playbackInfo().order)++;
+		orderAt(playbackInfo().order)->increasePlaybackCount();
 		setOrder(playbackInfo().order + 1);
 		orderChanged = true;
 		if(playbackInfo().order >= orderCount()) {
@@ -553,7 +551,7 @@ void S3mModule::buildTick(AudioFrameBuffer& buf) {
 			buf.reset();
 			return;
 		}
-		if(m_orderPlaybackCounts.at(playbackInfo().order) >= maxRepeat()) {
+		if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat()) {
 			LOG_MESSAGE("Song end reached: Maximum repeat count reached");
 			buf.reset();
 			return;
@@ -597,7 +595,7 @@ void S3mModule::simulateTick(std::size_t& bufLen) {
 		if(!adjustPosition(false, true))
 			return;
 		BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
-		if(m_orderPlaybackCounts.at(playbackInfo().order) >= maxRepeat())
+		if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat())
 			return;
 		// update channels...
 		setPatternIndex(mapOrder(playbackInfo().order)->index());
@@ -671,12 +669,12 @@ bool S3mModule::jumpNextSong() {
 		return false;
 	}
 	BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
-	m_orderPlaybackCounts.at(playbackInfo().order)++;
+	orderAt(playbackInfo().order)->increasePlaybackCount();
 	setCurrentSongIndex(currentSongIndex() + 1);
 	if(currentSongIndex() >= songCount()) {
 		for(uint16_t i = 0; i < orderCount(); i++) {
 			BOOST_ASSERT(orderAt(i).use_count()>0);
-			if((orderAt(i)->index() != s3mOrderEnd) && (orderAt(i)->index() != s3mOrderSkip) && (m_orderPlaybackCounts.at(i) == 0)) {
+			if((orderAt(i)->index() != s3mOrderEnd) && (orderAt(i)->index() != s3mOrderSkip) && (orderAt(i)->playbackCount() == 0)) {
 				BOOST_ASSERT(mapOrder(i).use_count()>0);
 				setPatternIndex(mapOrder(i)->index());
 				setOrder(i);
@@ -734,7 +732,6 @@ IArchive& S3mModule::serialize(IArchive* data) {
 		}
 		data->archive(m_channels.at(i).get());
 	}
-	data->array(&m_orderPlaybackCounts.front(), m_orderPlaybackCounts.size());
 	return *data;
 }
 

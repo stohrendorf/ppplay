@@ -21,7 +21,6 @@
 #include "label.h"
 
 #include <algorithm>
-#include <stdexcept>
 
 namespace ppg {
 

@@ -26,13 +26,6 @@
 
 #include "iaudiosource.h"
 
-#include <memory>
-
-/**
- * @file
- * @brief Audio output interface definition
- */
-
 /**
  * @interface IAudioOutput
  * @brief Abstract base class for sound output
@@ -52,6 +45,7 @@ class IAudioOutput {
 		};
 		//! @brief Class pointer
 		typedef std::shared_ptr<IAudioOutput> Ptr;
+		typedef std::weak_ptr<IAudioOutput> WeakPtr;
 		/**
 		 * @brief Constructor
 		 * @param[in] src Pointer to an audio data source

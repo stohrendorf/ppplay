@@ -25,11 +25,8 @@
  */
 
 #include "stuff/utils.h"
-#include "stream/iserializable.h"
 
-#include <cstdint>
 #include <array>
-#include <memory>
 
 namespace ppp {
 
@@ -47,37 +44,6 @@ extern const std::array<const char[3], 12> NoteNames;
 inline int16_t clipSample(int32_t smp) {
 	return clip(smp, -32768, 32767);
 }
-
-/**
- * @class GenOrder
- * @brief An order list item
- */
-class GenOrder : public ISerializable {
-		DISABLE_COPY(GenOrder)
-		GenOrder() = delete;
-	public:
-		typedef std::shared_ptr<GenOrder> Ptr; //!< @brief Class pointer
-		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
-	private:
-		uint8_t m_index; //!< @brief Pattern index of this order
-	public:
-		/**
-		 * @brief Constructor
-		 * @param[in] idx Order index
-		 */
-		GenOrder(uint8_t idx);
-		/**
-		 * @brief Return the pattern index associated with this order
-		 * @return m_index
-		 */
-		uint8_t index() const;
-		/**
-		 * @brief Set the pattern index
-		 * @param[in] n New index
-		 */
-		void setIndex(uint8_t n);
-		virtual IArchive& serialize(IArchive* data);
-};
 
 } // namespace ppp
 

@@ -16,26 +16,46 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "fbinstream.h"
+#include "genorder.h"
 
-#include <fstream>
+#include "stream/iarchive.h"
 
-FBinStream::FBinStream( const std::string& filename ) :
-	BinStream( SpIoStream( new std::fstream( filename.c_str(), std::ios::in | std::ios::binary ) ) ),
-	m_filename( filename )
+/**
+ * @ingroup GenMod
+ * @{
+ */
+
+namespace ppp {
+
+GenOrder::GenOrder(uint8_t idx) : m_index(idx), m_playbackCount(0)
+{ }
+
+uint8_t GenOrder::index() const {
+	return m_index;
+}
+
+void GenOrder::setIndex(uint8_t n) {
+	m_index = n;
+}
+
+IArchive& GenOrder::serialize(IArchive* data) {
+	return *data % m_index % m_playbackCount;
+}
+
+uint8_t GenOrder::playbackCount() const
 {
+	return m_playbackCount;
 }
 
-FBinStream::~FBinStream() {
-	if(stream().unique()) {
-		std::static_pointer_cast<std::fstream>( stream() )->close();
-	}
+uint8_t GenOrder::increasePlaybackCount()
+{
+	// prevent overflow
+	BOOST_ASSERT( m_playbackCount<0xff );
+	return ++m_playbackCount;
 }
 
-bool FBinStream::isOpen() const {
-	return std::static_pointer_cast<std::fstream>( stream() )->is_open();
 }
 
-std::string FBinStream::filename() const {
-	return m_filename;
-}
+/**
+ * @}
+ */

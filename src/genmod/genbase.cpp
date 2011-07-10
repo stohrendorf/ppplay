@@ -22,7 +22,6 @@
  */
 
 #include "genbase.h"
-#include "stream/iarchive.h"
 
 namespace ppp {
 
@@ -33,21 +32,6 @@ const std::array<const char[3], 12> NoteNames = {
 		"G#", "A-", "A#", "B-"
 	}
 };
-
-GenOrder::GenOrder(uint8_t idx) : m_index(idx)
-{ }
-
-uint8_t GenOrder::index() const {
-	return m_index;
-}
-
-void GenOrder::setIndex(uint8_t n) {
-	m_index = n;
-}
-
-IArchive& GenOrder::serialize(IArchive* data) {
-	return *data % m_index;
-}
 
 }
 

@@ -62,7 +62,6 @@ class S3mModule : public GenModule {
 		S3mPattern::Vector m_patterns; //!< @brief Patterns
 		std::array<S3mChannel::Ptr, 32> m_channels; //!< @brief Channels
 		uint8_t m_usedChannels; //!< @brief Number of used channels
-		std::array<uint16_t, 256> m_orderPlaybackCounts; //!< @brief Order playback counts
 		bool m_amigaLimits; //!< @brief @c true if amiga limits are present
 		bool m_fastVolSlides; //!< @brief @c true if fast volume slides are present
 		bool m_st2Vibrato; //!< @brief @c true if ScreamTracker v2 vibrato is present

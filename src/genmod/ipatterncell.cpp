@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
+    Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,26 +16,19 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "fbinstream.h"
+#include "ipatterncell.h"
 
-#include <fstream>
+/**
+ * @ingroup GenMod
+ * @{
+ */
 
-FBinStream::FBinStream( const std::string& filename ) :
-	BinStream( SpIoStream( new std::fstream( filename.c_str(), std::ios::in | std::ios::binary ) ) ),
-	m_filename( filename )
-{
+namespace ppp {
+
+IPatternCell::~IPatternCell() = default;
+
 }
 
-FBinStream::~FBinStream() {
-	if(stream().unique()) {
-		std::static_pointer_cast<std::fstream>( stream() )->close();
-	}
-}
-
-bool FBinStream::isOpen() const {
-	return std::static_pointer_cast<std::fstream>( stream() )->is_open();
-}
-
-std::string FBinStream::filename() const {
-	return m_filename;
-}
+/**
+ * @}
+ */

@@ -1,8 +1,6 @@
 add_library(ppg STATIC
-	ppg.cpp
 	widget.cpp
-	label.cpp
-	screen.cpp
+	label.cpp sdlscreen.cpp
 	rect.cpp
 	point.cpp
 	stereopeakbar.cpp

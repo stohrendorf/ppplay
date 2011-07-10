@@ -22,7 +22,7 @@
  */
 
 #include "xmenvelopeprocessor.h"
-#include "stuff/utils.h"
+
 #include "stream/iarchive.h"
 
 namespace ppp {

@@ -25,7 +25,6 @@
 
 #include "s3msample.h"
 
-#include "s3mbase.h"
 #include "logger/logger.h"
 
 #include <algorithm>
@@ -78,7 +77,6 @@ bool S3mSample::load(BinStream& str, const std::size_t pos, bool imagoLoopEnd) {
 // 		str.read((char*)&smpHdr, sizeof(s3mSampleHeader));
 		if((smpHdr.length == 0) || ((smpHdr.memSeg[0] == 0) && (smpHdr.memSeg[1] == 0) && (smpHdr.memSeg[2] == 0)))
 			return true;
-		//if (memcmp(smpHdr.ID, "SCRS", 4)) {
 		if(!std::equal(smpHdr.ID, smpHdr.ID + 4, "SCRS")) {
 			LOG_WARNING("Sample ID not 'SCRS', assuming empty.");
 			return true;

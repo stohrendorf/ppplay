@@ -16,26 +16,34 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "fbinstream.h"
 
-#include <fstream>
+#include "sdltimer.h"
 
-FBinStream::FBinStream( const std::string& filename ) :
-	BinStream( SpIoStream( new std::fstream( filename.c_str(), std::ios::in | std::ios::binary ) ) ),
-	m_filename( filename )
+#include <SDL.h>
+#include <boost/assert.hpp>
+
+uint32_t SDLTimer::callback(uint32_t interval, void* userdata)
 {
+	SDLTimer* timer = static_cast<SDLTimer*>(userdata);
+	timer->onTimer();
+	return interval;
 }
 
-FBinStream::~FBinStream() {
-	if(stream().unique()) {
-		std::static_pointer_cast<std::fstream>( stream() )->close();
+SDLTimer::SDLTimer(uint32_t interval) : ITimer(), m_interval(interval), m_id(nullptr)
+{
+	if(!SDL_WasInit(SDL_INIT_TIMER)) {
+		BOOST_ASSERT( SDL_InitSubSystem(SDL_INIT_TIMER)==0 );
 	}
+	m_id = SDL_AddTimer(m_interval, callback, this );
 }
 
-bool FBinStream::isOpen() const {
-	return std::static_pointer_cast<std::fstream>( stream() )->is_open();
+SDLTimer::~SDLTimer()
+{
+	SDL_RemoveTimer(m_id);
 }
 
-std::string FBinStream::filename() const {
-	return m_filename;
+uint32_t SDLTimer::interval() const
+{
+	return m_interval;
 }
+

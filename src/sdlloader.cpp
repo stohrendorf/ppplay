@@ -16,26 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "fbinstream.h"
+#include <SDL.h>
+#include <boost/assert.hpp>
 
-#include <fstream>
-
-FBinStream::FBinStream( const std::string& filename ) :
-	BinStream( SpIoStream( new std::fstream( filename.c_str(), std::ios::in | std::ios::binary ) ) ),
-	m_filename( filename )
-{
-}
-
-FBinStream::~FBinStream() {
-	if(stream().unique()) {
-		std::static_pointer_cast<std::fstream>( stream() )->close();
-	}
-}
-
-bool FBinStream::isOpen() const {
-	return std::static_pointer_cast<std::fstream>( stream() )->is_open();
-}
-
-std::string FBinStream::filename() const {
-	return m_filename;
+static void __attribute__((constructor)) sdlInit() {
+	BOOST_ASSERT( SDL_Init(0)==0 );
+	BOOST_ASSERT( atexit(SDL_Quit)==0 );
 }

@@ -19,7 +19,9 @@
 #include "sdlaudiooutput.h"
 #include "logger/logger.h"
 
-void SDLAudioOutput::sdlAudioCallback(void* userdata, Uint8* stream, int len_bytes) {
+#include <SDL.h>
+
+void SDLAudioOutput::sdlAudioCallback(void* userdata, uint8_t* stream, int len_bytes) {
 	std::fill_n(stream, len_bytes, 0);
 	SDLAudioOutput* outpSdl = static_cast<SDLAudioOutput*>(userdata);
 	while(len_bytes > 0) {

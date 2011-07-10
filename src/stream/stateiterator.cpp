@@ -54,6 +54,7 @@ IArchive::Ptr StateIterator::prevState() {
 }
 
 IArchive::Ptr StateIterator::currentState() const {
+	BOOST_ASSERT(m_stateIndex<m_states.size());
 	return m_states.at(m_stateIndex);
 }
 

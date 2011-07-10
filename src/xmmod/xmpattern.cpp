@@ -66,6 +66,12 @@ bool XmPattern::load(BinStream& str) {
 	str.read(&packedSize);
 	str.seekrel(hdrLen - 9);   // copied from schismtracker
 	if(packedSize == 0) {
+/*		for(size_t i = 0; i < m_columns.size(); i++) {
+			m_columns.at(i).clear();
+			for(int r = 0; r < 64; r++) {
+				m_columns.at(i).push_back(XmCell::Ptr(new XmCell()));
+			}
+		}*/
 		return true;
 	}
 	for(uint16_t row = 0; row < rows; row++) {
