@@ -184,23 +184,26 @@ endif()
 #########
 # add docs target & configuration
 #########
-add_custom_target(docs
-	COMMAND doxygen "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile"
-	WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-	COMMENT "Building the Doxygen docs..."
-	SOURCES Doxyfile
-)
-configure_file(
-	"${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in"
-	"${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile"
-	ESCAPE_QUOTES
-)
+include(FindDoxygen)
+if(DOXYGEN_FOUND AND DOXYGEN_DOT_FOUND)
+	add_custom_target(docs
+		COMMAND doxygen "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile"
+		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+		COMMENT "Building the Doxygen docs..."
+		SOURCES Doxyfile
+	)
+	configure_file(
+		"${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in"
+		"${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile"
+		ESCAPE_QUOTES
+	)
+endif()
 configure_file(
 	"${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
 	"${CMAKE_CURRENT_SOURCE_DIR}/config.h"
 	ESCAPE_QUOTES
 )
-set_source_files_properties(Doxyfile config.h PROPERTIES GENERATED TRUE)
+# set_source_files_properties(Doxyfile config.h PROPERTIES GENERATED TRUE)
 
 add_dependencies(ppp config.h)
 add_dependencies(docs Doxyfile)
