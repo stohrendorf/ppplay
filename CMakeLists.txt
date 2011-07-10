@@ -28,6 +28,11 @@ else()
 	message(FATAL_ERROR "Sorry, you need at least GCC 4.6.0")
 endif()
 
+if(NOT __COMPILER_GNU)
+	include(Compiler/GNU)
+	__compiler_gnu(CXX)
+endif()
+
 INCLUDE(InstallRequiredSystemLibraries)
 #########
 # configure CPACK
