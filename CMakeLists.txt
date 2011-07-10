@@ -95,6 +95,7 @@ message(STATUS "CXX Flags (Min. Size)   : ${CMAKE_CXX_FLAGS_MINSIZEREL}")
 message(STATUS "CXX Flags (Rel. w. Dbg.): ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 message(STATUS "CXX Flags (Additional)  : ${CMAKE_CXX_FLAGS}")
 
+include(FeatureSummary)
 #########
 # init main application target settings
 #########
@@ -128,21 +129,23 @@ function(trylinklib LIBNAME ATTRIBS)
 		/opt
 	)
 	if(NOT "${LIBNAME}_LIB")
-		message(STATUS "${LIBNAME} Library not found")
+		# message(STATUS "${LIBNAME} Library not found")
 	else(NOT "${LIBNAME}_LIB")
-		message(STATUS "${LIBNAME} Library found: ${${LIBNAME}_LIB}")
+		# message(STATUS "${LIBNAME} Library found: ${${LIBNAME}_LIB}")
 		add_library("${LIBNAME}" ${ATTRIBS} IMPORTED)
 		target_link_libraries(ppp ${${LIBNAME}_LIB})
 	endif(NOT "${LIBNAME}_LIB")
 endfunction(trylinklib)
 trylinklib("mp3lame" SHARED)
 if(NOT mp3lame_LIB)
-	set(WITH_MP3LAME FALSE)
-	message(STATUS "MP3Lame _not_ found, Quick-MP3 will not be available")
+	option(WITH_MP3LAME "Whether to include MP3Lame support." OFF)
+	# message(STATUS "MP3Lame _not_ found, Quick-MP3 will not be available")
 else()
-	set(WITH_MP3LAME TRUE)
-	message(STATUS "MP3Lame found, Quick-MP3 will be available")
+	option(WITH_MP3LAME "Whether to include MP3Lame support." ON)
+	# message(STATUS "MP3Lame found, Quick-MP3 will be available")
 endif()
+
+add_feature_info(MP3Lame WITH_MP3LAME "The MP3Lame library enabled MP3 generation.")
 
 #########
 # add SDL
@@ -151,12 +154,12 @@ find_package(SDL REQUIRED)
 if(NOT SDL_FOUND)
 	message(FATAL_ERROR "SDL not found")
 endif()
+set_package_info(SDL "Simple DirectMedia Layer" "http://www.libsdl.org" "The SDL library is used for audio and video output.")
 include_directories(${SDL_INCLUDE_DIR})
 target_link_libraries(ppp ${SDL_LIBRARY})
 
 set(Boost_USE_STATIC_LIBS FALSE)
 set(Boost_USE_MULTITHREADED TRUE)
-# set(Boost_ADDITIONAL_VERSIONS "1.44")
 include(FindBoost)
 find_package(Boost COMPONENTS program_options filesystem system)
 if(Boost_FOUND)
@@ -167,6 +170,10 @@ if(Boost_FOUND)
 else()
 	message(FATAL_ERROR "Boost Libraries not found!")
 endif()
+set_package_info(Boost "Boost libraries" "http://www.boost.org")
+set_package_info(program_options "Boost program_options library" "http://www.boost.org" "The Boost program_options library is used to parse command line arguments.")
+set_package_info(filesystem "Boost filesystem library" "http://www.boost.org" "The Boost filesystem library is used to handle file paths and information.")
+set_package_info(system "Boost system library" "http://www.boost.org" "The Boost system library handles system dependent things.")
 
 include_directories(src)
 add_subdirectory(src)
@@ -198,6 +205,7 @@ if(DOXYGEN_FOUND AND DOXYGEN_DOT_FOUND)
 		ESCAPE_QUOTES
 	)
 endif()
+add_feature_info(Doxygen DOXYGEN_FOUND "Doxygen is used to generate the API documentation.")
 configure_file(
 	"${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
 	"${CMAKE_CURRENT_SOURCE_DIR}/config.h"
@@ -207,4 +215,10 @@ configure_file(
 
 add_dependencies(ppp config.h)
 add_dependencies(docs Doxyfile)
+
+set_package_info(Threads "Threads library")
+
+feature_summary(WHAT ENABLED_FEATURES DESCRIPTION "Enabled features:")
+feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "Disabled features:")
+feature_summary(WHAT PACKAGES_FOUND DESCRIPTION "Found packages:")
 
