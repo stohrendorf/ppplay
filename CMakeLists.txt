@@ -29,6 +29,7 @@ else()
 endif()
 
 if(NOT __COMPILER_GNU)
+	message(WARNING "Manually including GCC configuration")
 	include(Compiler/GNU)
 	__compiler_gnu(CXX)
 endif()
