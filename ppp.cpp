@@ -86,32 +86,36 @@ static std::string parseCmdLine( int argc, char* argv[] ) {
 	using std::cout;
 	using std::endl;
 	if( vm.count( "warranty" ) ) {
-		cout << "**** The following is part of the GNU General Public License version 2 ****" << endl;
-		cout << "  11. BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY" << endl;
-		cout << "FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  EXCEPT WHEN" << endl;
-		cout << "OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES" << endl;
-		cout << "PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED" << endl;
-		cout << "OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF" << endl;
-		cout << "MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS" << endl;
-		cout << "TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE" << endl;
-		cout << "PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING," << endl;
-		cout << "REPAIR OR CORRECTION." << endl;
+		cout << "**** The following is part of the GNU General Public License version 3 ****" << endl;
+		cout << "	  15. Disclaimer of Warranty." << endl;
 		cout << endl;
-		cout << "  12. IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING" << endl;
-		cout << "WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR" << endl;
-		cout << "REDISTRIBUTE THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES," << endl;
-		cout << "INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING" << endl;
-		cout << "OUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED" << endl;
-		cout << "TO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY" << endl;
-		cout << "YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER" << endl;
-		cout << "PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE" << endl;
-		cout << "POSSIBILITY OF SUCH DAMAGES." << endl;
+		cout << "  THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY" << endl;
+		cout << "APPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT" << endl;
+		cout << "HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM \"AS IS\" WITHOUT WARRANTY" << endl;
+		cout << "OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO," << endl;
+		cout << "THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR" << endl;
+		cout << "PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM" << endl;
+		cout << "IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF" << endl;
+		cout << "ALL NECESSARY SERVICING, REPAIR OR CORRECTION." << endl;
+		cout << endl;
+		cout << "  16. Limitation of Liability." << endl;
+		cout << endl;
+		cout << "  IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING" << endl;
+		cout << "WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS" << endl;
+		cout << "THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY" << endl;
+		cout << "GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE" << endl;
+		cout << "USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF" << endl;
+		cout << "DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD" << endl;
+		cout << "PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS)," << endl;
+		cout << "EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF" << endl;
+		cout << "SUCH DAMAGES." << endl;
+
 		return std::string();
 	}
 	if( vm.count( "copyright" ) ) {
 		cout << "*   This program is free software; you can redistribute it and/or modify  *" << endl;
 		cout << "*   it under the terms of the GNU General Public License as published by  *" << endl;
-		cout << "*   the Free Software Foundation; either version 2 of the License, or     *" << endl;
+		cout << "*   the Free Software Foundation; either version 3 of the License, or     *" << endl;
 		cout << "*   (at your option) any later version.                                   *" << endl;
 		cout << "*                                                                         *" << endl;
 		cout << "*   This program is distributed in the hope that it will be useful,       *" << endl;
@@ -120,9 +124,7 @@ static std::string parseCmdLine( int argc, char* argv[] ) {
 		cout << "*   GNU General Public License for more details.                          *" << endl;
 		cout << "*                                                                         *" << endl;
 		cout << "*   You should have received a copy of the GNU General Public License     *" << endl;
-		cout << "*   along with this program; if not, write to the                         *" << endl;
-		cout << "*   Free Software Foundation, Inc.,                                       *" << endl;
-		cout << "*   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *" << endl;
+		cout << "*   along with this program; if not, see <http://www.gnu.org/licenses/>.  *" << endl;
 		return std::string();
 	}
 	if( vm.count( "version" ) ) {
