@@ -1,0 +1,194 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename ppp.info
+@settitle PeePeePlayer manual 0.1.2
+@c %**end of header
+
+@copying
+This manual is for PeePeePlayer, version 0.1.2.
+
+Copyright @copyright{} 2011 Steffen Ohrendorf.
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3
+or any later version published by the Free Software Foundation;
+with no Invariant Sections, no Front-Cover Texts, and no Back-Cover
+Texts. A copy of the license is included in the section entitled ``GNU
+Free Documentation License''.
+@end quotation
+@end copying
+
+@titlepage
+@title PeePeePlayer manual
+@subtitle for version 0.1.2
+@author Steffen Ohrendorf
+
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+
+Published by Steffen Ohrendorf.
+@end titlepage
+
+@contents
+
+@ifnottex
+@dircategory Multimedia
+@direntry
+* PeePeePlayer (ppp).       The PeePeePlayer manual
+@end direntry
+
+@node Top
+@top PeePeePlayer manual
+
+This manual is for PeePeePlayer, version 0.1.2.
+@end ifnottex
+
+@ifset man
+@c man begin SYNOPSIS
+ppp [@b{options}] @file{modfile}
+@c man end
+@end ifset
+
+@c man begin DESCRIPTION
+@command{ppp} plays ScreamTracker 3 and FastTracker 2 modules
+and is able to convert them to @acronym{MP3, @acronym{MPEG, Motion Picture Experts Group} Layer 3} files.
+@c man end
+
+@menu
+* Invoking:: Invoking PeePeePlayer
+* Usage:: Using the @abbr{GUI}
+* GNU Free Documentation License:: Your rights and permissions
+* Index:: The complete index
+@end menu
+
+@node Invoking
+@chapter Invoking
+@pindex ppp
+@cindex Invoking @command{ppp}
+
+@c man begin DESCRIPTION
+The @command{ppp} program can be invoked in the following ways.
+@c man end
+
+@cindex command line
+@cindex options
+@c man begin OPTIONS
+The PeePeePlayer supports several options for configuring
+its behaviour.
+
+The simpliest way of invoking it is
+@smallexample
+ppp @file{modulefile}
+@end smallexample
+
+This tells @command{ppp} to try to load the file @file{modulefile},
+to preprocess it, then to initialize its audio and video subsystems
+and finally start playing it.
+
+Another small example which instructs PeePeePlayer to convert a
+module file to an @acronym{MP3} file without showing up a window:
+@smallexample
+ppp -nq @file{modulefile}
+@end smallexample
+
+Here's the table of the available command line options:
+@table @option
+@kindex -v
+@kindex --verbose
+@item -v
+@itemx --verbose
+This option increases the message level so that, additionally
+to errors, also warnings will be printed.
+
+@kindex -V
+@kindex --very-verbose
+@item -V
+@itemx --very-verbose
+This option increases the message level so that, additionally
+to errors and warnings, also status and debug messages will
+be printed.
+
+@kindex -n
+@kindex --no-gui
+@item -n
+@itemx --no-gui
+This option disables the @abbr{GUI} window of @command{ppp}.
+
+When using this option, you may also want to use @option{--very-verbose}.
+
+@kindex -q
+@kindex --quick-mp3
+@item -q
+@itemx --quick-mp3
+This option enables the @acronym{MP3} conversion. This will produce
+a @acronym{MP3} file which's name is derived from the input file
+by appending @file{.mp3} to the input filename.
+
+The command line
+@smallexample
+ppp -q ~/Music/module.s3m
+@end smallexample
+would produce a file @file{~/Music/module.s3m.mp3}.
+
+Please note that an existing @acronym{MP3} file will @emph{not} be
+overwritten.
+
+@end table
+
+On Linux, you may convert a folder of @abbr{S3M} files with the
+following command line:
+@smallexample
+for FN in *.s3m; do ppp -Vnq $FN; done
+@end smallexample
+The option @option{-V} is used here because the option
+@option{-n} disables the @abbr{GUI}, so you can see
+if PeePeePlayer may have encountered a bug that causes
+it to hang.
+@c man end
+
+@node Usage
+@chapter Usage
+@cindex Usage
+The following table lists the available keyboard commands
+for the @abbr{GUI}.
+
+@table @kbd
+@item Page up
+@kindex Page up
+@kindex PgUp
+Jump to the previous order.
+
+@item Page down
+@kindex Page down
+@kindex PgDn
+Jump to the next order.
+
+@item Home
+@kindex Home
+Jump to the previous song in a multi-song module.
+
+@item End
+@kindex End
+Jump to the next song in a multi-song module
+
+@item Space
+@kindex Space
+Pauses or resumes playback.
+
+@item Esc
+@kindex Esc
+Exit PeePeePlayer.
+
+@end table
+
+@node GNU Free Documentation License
+@appendix GNU Free Documentation License
+@include fdl.texi
+
+@node Index
+@unnumbered Index
+@printindex cp
+@bye
+
