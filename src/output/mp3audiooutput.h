@@ -26,7 +26,11 @@
 
 #include "iaudiooutput.h"
 
+#define _GLIBCXX_USE_NANOSLEEP
+#warning "Defining _GLIBCXX_USE_NANOSLEEP for enabling usage of std::sleep_for"
 #include <thread>
+#undef _GLIBCXX_USE_NANOSLEEP
+
 #include <fstream>
 
 /**

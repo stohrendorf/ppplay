@@ -39,6 +39,11 @@
 
 #include <SDL.h>
 
+#define _GLIBCXX_USE_NANOSLEEP
+#warning "Defining _GLIBCXX_USE_NANOSLEEP for enabling usage of std::sleep_for"
+#include <thread>
+#undef _GLIBCXX_USE_NANOSLEEP
+
 // static const std::size_t BUFFERSIZE = 4096;
 // static const std::size_t SAMPLECOUNT = BUFFERSIZE / sizeof( BasicSample );
 // static const std::size_t FRAMECOUNT = BUFFERSIZE / sizeof( BasicSampleFrame );
@@ -225,7 +230,8 @@ int main( int argc, char* argv[] ) {
 					break;
 				}
 				if( !SDL_PollEvent( &event ) ) {
-					usleep( 10000 );
+					// usleep( 10000 );
+					std::this_thread::sleep_for(std::chrono::milliseconds(10));
 					continue;
 				}
 				if( event.type == SDL_KEYDOWN ) {

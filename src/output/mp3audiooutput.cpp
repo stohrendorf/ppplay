@@ -20,12 +20,12 @@
 #include "logger/logger.h"
 
 #include <lame/lame.h>
-#include <ctime>
 
 void MP3AudioOutput::encodeThread(MP3AudioOutput* src) {
 	while(true) {
-		while(src->m_paused)
-			usleep(1000);
+		while(src->m_paused) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
 		AudioFrameBuffer buffer;
 		if(src->source().lock()->getAudioData(buffer, 1024) == 0) {
 			src->setErrorCode(InputDry);
