@@ -70,11 +70,7 @@ and is able to convert them to @acronym{MP3, @acronym{MPEG, Motion Picture Exper
 
 @c man begin DESCRIPTION
 The @command{ppp} program can be invoked in the following ways.
-@c man end
 
-@cindex command line
-@cindex options
-@c man begin OPTIONS
 The PeePeePlayer supports several options for configuring
 its behaviour.
 
@@ -92,7 +88,12 @@ module file to an @acronym{MP3} file without showing up a window:
 @smallexample
 ppp -nq @file{modulefile}
 @end smallexample
+@c man end
 
+@section Command line options
+@cindex command line
+@cindex options
+@c man begin OPTIONS
 Here's the table of the available command line options:
 @table @option
 @kindex -v
@@ -137,16 +138,20 @@ overwritten.
 
 @end table
 
+@section Examples
 On Linux, you may convert a folder of @abbr{S3M} files with the
 following command line:
+
 @smallexample
 for FN in *.s3m; do ppp -Vnq $FN; done
 @end smallexample
+
 The option @option{-V} is used here because the option
 @option{-n} disables the @abbr{GUI}, so you can see
 if PeePeePlayer may have encountered a bug that causes
 it to hang.
 @c man end
+
 
 @node Usage
 @chapter Usage
@@ -155,23 +160,14 @@ The following table lists the available keyboard commands
 for the @abbr{GUI}.
 
 @table @kbd
-@item Page up
-@kindex Page up
-@kindex PgUp
-Jump to the previous order.
+@item Page up/down
+@kindex Page up/down
+@kindex PgUp/PgDn
+Jump to the previous/next order.
 
-@item Page down
-@kindex Page down
-@kindex PgDn
-Jump to the next order.
-
-@item Home
-@kindex Home
-Jump to the previous song in a multi-song module.
-
-@item End
-@kindex End
-Jump to the next song in a multi-song module
+@item Home/End
+@kindex Home/End
+Jump to the previous/next song in a multi-song module.
 
 @item Space
 @kindex Space
@@ -182,6 +178,7 @@ Pauses or resumes playback.
 Exit PeePeePlayer.
 
 @end table
+
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License
