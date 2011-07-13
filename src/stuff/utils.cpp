@@ -22,6 +22,8 @@
  */
 
 #include "utils.h"
+
+#include <boost/assert.hpp>
 #include <cstdarg>
 
 namespace ppp {
@@ -29,11 +31,12 @@ namespace ppp {
 std::string stringf(const char fmt[], ...) {
 	va_list args;
 	va_start(args, fmt);
-	char* tmp = new char[1024];
-	vsnprintf(tmp, 1024, fmt, args);
+	char* tmp = nullptr;
+	vasprintf(&tmp, fmt, args);
+	BOOST_ASSERT( tmp != nullptr );
 	va_end(args);
 	std::string res(tmp);
-	delete[] tmp;
+	free(tmp);
 	return res;
 }
 
