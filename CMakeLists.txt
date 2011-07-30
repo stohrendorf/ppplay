@@ -110,7 +110,7 @@ if(MINGW)
 	target_link_libraries(ppp stdc++ mingw32)
 endif()
 
-target_link_libraries(ppp xmmod s3mmod genmod audioout)
+target_link_libraries(ppp modmod xmmod s3mmod genmod audioout)
 target_link_libraries(ppp logger utils binstream)
 target_link_libraries(ppp ppg timer)
 
