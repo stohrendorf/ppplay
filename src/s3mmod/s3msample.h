@@ -45,8 +45,6 @@ class S3mSample : public GenSample {
 	public:
 		//! @brief Constructor
 		S3mSample();
-		//! @brief Destructor
-		virtual ~S3mSample();
 		/**
 		 * @brief Load from a stream
 		 * @param[in] str The stream to load this sample from

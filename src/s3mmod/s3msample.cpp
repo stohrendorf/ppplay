@@ -66,8 +66,6 @@ struct S3mSampleHeader {
 S3mSample::S3mSample() : GenSample(), m_highQuality(false) {
 }
 
-S3mSample::~S3mSample() = default;
-
 bool S3mSample::load(BinStream& str, const std::size_t pos, bool imagoLoopEnd) {
 	try {
 		BOOST_ASSERT(dataLeft() == nullptr && dataRight() == nullptr);
