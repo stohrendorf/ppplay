@@ -44,8 +44,8 @@ GenModule::~GenModule() = default;
 
 IArchive& GenModule::serialize(IArchive* data) {
 	data->array(reinterpret_cast<char*>(&m_playbackInfo), sizeof(m_playbackInfo)) % m_playedFrames; // % m_currentSongIndex;
-	for(size_t i=0; i<m_orders.size(); i++) {
-		data->archive( m_orders.at(i).get() );
+	for(const GenOrder::Ptr& order : m_orders) {
+		data->archive( order.get() );
 	}
 	return *data;
 }

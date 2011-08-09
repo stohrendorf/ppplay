@@ -571,11 +571,11 @@ void XmModule::doPatLoop(int16_t next) {
 IArchive& XmModule::serialize(IArchive* data) {
 	GenModule::serialize(data)
 	% m_amiga;
-	for(size_t i = 0; i < m_channels.size(); i++) {
-		if(!m_channels.at(i)) {
+	for(const XmChannel::Ptr& chan : m_channels) {
+		if(!chan) {
 			continue;
 		}
-		data->archive(m_channels.at(i).get());
+		data->archive( chan.get() );
 	}
 	*data
 	% m_jumpRow

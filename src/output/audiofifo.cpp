@@ -33,15 +33,12 @@ void AudioFifo::calcVolume(uint16_t& leftVol, uint16_t& rightVol) {
 	leftVol = rightVol = 0;
 	uint64_t leftSum = 0, rightSum = 0;
 	size_t totalProcessed = 0;
-	for(AudioFrameBufferQueue::iterator it = m_queue.begin(); it != m_queue.end(); it++) {
-		const AudioFrameBuffer& buf = *it;
-		const BasicSample* bPtr = &buf->front().left;
-		size_t bLen = buf->size();
-		for(size_t i = 0; i < bLen; i++) {
-			leftSum  += abs(*(bPtr++));
-			rightSum += abs(*(bPtr++));
-		}
-		totalProcessed += bLen;
+	for(const AudioFrameBuffer& buf : m_queue) {
+		for(const BasicSampleFrame& frame : *buf) {
+			leftSum  += abs(frame.left);
+			rightSum += abs(frame.right);
+ 		}
+		totalProcessed += buf->size();
 	}
 	leftVol = (leftSum << 2) / totalProcessed;
 	rightVol = (rightSum << 2) / totalProcessed;

@@ -38,8 +38,7 @@ Widget::Widget(Widget* parent) :
 
 Widget::~Widget() {
 	List backup = m_children;
-	for(auto it = backup.begin(); it != backup.end(); it++) {
-		Widget* tmp = *it;
+	for(Widget* tmp : backup) {
 		tmp->m_parent = nullptr;
 		if(tmp->m_autodelete) {
 			delete tmp;
@@ -217,13 +216,14 @@ void Widget::toTop(Widget* vp) {
 }
 
 bool Widget::onMouseMove(int x, int y) {
-	for(auto it = m_children.begin(); it != m_children.end(); it++) {
-		Widget* current = *it;
-		if(!current)
+	for(Widget* current : m_children) {
+		if(!current) {
 			continue;
+		}
 		Rect currentArea = current->area();
-		if(current->onMouseMove(x - currentArea.left(), y - currentArea.top()))
+		if(current->onMouseMove(x - currentArea.left(), y - currentArea.top())) {
 			return true;
+		}
 	}
 	return false;
 }

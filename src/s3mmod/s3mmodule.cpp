@@ -88,8 +88,8 @@ S3mModule::S3mModule(uint8_t maxRpt) : GenModule(maxRpt),
 			m_patterns.push_back(S3mPattern::Ptr());
 			m_samples.push_back(S3mSample::Ptr());
 		}
-		for(uint8_t i = 0; i < m_channels.size(); i++) {
-			m_channels.at(i).reset(new S3mChannel(this));
+		for(S3mChannel::Ptr& chan : m_channels) {
+			chan.reset(new S3mChannel(this));
 		}
 	}
 	catch( boost::exception& e) {
@@ -352,34 +352,14 @@ void S3mModule::checkGlobalFx() {
 		if(!currPat)
 			return;
 		std::string data;
-// TODO uncomment on errors!
-		/*		for( unsigned int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-					S3mCell::Ptr cell = currPat->cellAt( currTrack, getPlaybackInfo().row );
-					if( !cell )
-						continue;
-					if( !cell->isActive() )
-						continue;
-					if( cell->effect() == s3mEmptyCommand )
-						continue;
-					unsigned char fx = cell->effect();
-					unsigned char fxVal = cell->effectValue();
-					if( ( fx == s3mFxSpeed ) && ( fxVal != 0 ) )
-						setSpeed( fxVal );
-					else if( ( fx == s3mFxTempo ) && ( fxVal > 0x20 ) )
-						setTempo( fxVal );
-					else if( fx == s3mFxGlobalVol ) {
-						if( fxVal <= 0x40 )
-							setGlobalVolume( fxVal );
-					}
-				}*/
 		// check for pattern loops
 		int patLoopCounter = 0;
-		for(unsigned int currTrack = 0; currTrack < channelCount(); currTrack++) {
+		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
 			S3mCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 			if(!cell) continue;
 			if(cell->effect() == s3mEmptyCommand) continue;
-			unsigned char fx = cell->effect();
-			unsigned char fxVal = cell->effectValue();
+			uint8_t fx = cell->effect();
+			uint8_t fxVal = cell->effectValue();
 			if(fx != s3mFxSpecial) continue;
 			if(highNibble(fxVal) != s3mSFxPatLoop) continue;
 			if(lowNibble(fxVal) == 0x00) {      // loop start
@@ -410,13 +390,13 @@ void S3mModule::checkGlobalFx() {
 			}
 		}
 		// check for pattern delays
-		int patDelayCounter = 0;
-		for(unsigned int currTrack = 0; currTrack < channelCount(); currTrack++) {
+		uint8_t patDelayCounter = 0;
+		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
 			S3mCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 			if(!cell) continue;
 			if(cell->effect() == s3mEmptyCommand) continue;
-			unsigned char fx = cell->effect();
-			unsigned char fxVal = cell->effectValue();
+			uint8_t fx = cell->effect();
+			uint8_t fxVal = cell->effectValue();
 			if(fx != s3mFxSpecial) continue;
 			if(highNibble(fxVal) != s3mSFxPatDelay) continue;
 			if(lowNibble(fxVal) == 0) continue;
@@ -429,13 +409,13 @@ void S3mModule::checkGlobalFx() {
 		else
 			m_patDelayCount = -1;
 		// now check for breaking effects
-		for(unsigned int currTrack = 0; currTrack < channelCount(); currTrack++) {
+		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
 			if(m_patLoopCount != -1) break;
 			S3mCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 			if(!cell) continue;
 			if(cell->effect() == s3mEmptyCommand) continue;
-			unsigned char fx = cell->effect();
-			unsigned char fxVal = cell->effectValue();
+			uint8_t fx = cell->effect();
+			uint8_t fxVal = cell->effectValue();
 			if(fx == s3mFxJumpOrder) {
 				m_breakOrder = fxVal;
 			}
@@ -726,19 +706,20 @@ IArchive& S3mModule::serialize(IArchive* data) {
 	% m_patLoopCount
 	% m_patDelayCount
 	% m_customData;
-	for(size_t i = 0; i < m_channels.size(); i++) {
-		if(!m_channels.at(i)) {
+	for(S3mChannel::Ptr& chan : m_channels) {
+		if(!chan) {
 			continue;
 		}
-		data->archive(m_channels.at(i).get());
+		data->archive(chan.get());
 	}
 	return *data;
 }
 
 void S3mModule::setGlobalVolume(int16_t v) {
 	GenModule::setGlobalVolume(v);
-	for(size_t i = 0; i < m_channels.size(); i++)
-		m_channels.at(i)->recalcVolume();
+	for(S3mChannel::Ptr& chan : m_channels) {
+		chan->recalcVolume();
+	}
 }
 
 uint16_t S3mModule::tickBufferLength() const {

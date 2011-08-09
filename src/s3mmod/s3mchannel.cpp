@@ -467,7 +467,6 @@ void S3mChannel::mixTick(MixerFrameBuffer& mixBuffer) {
 	m_bresen.reset(m_module->frequency(), FRQ_VALUE / m_realPeriod);
 	recalcVolume();
 	uint16_t currVol = m_realVolume; //clip( volume() + m_deltaVolume, 0, 0x40 ) * m_globalVol;
-	MixerSample* mixBufferPtr = &mixBuffer->front().left;
 	S3mSample::Ptr currSmp = currentSample();
 	int32_t pos = position();
 	uint8_t volL = 0x20, volR = 0x20;
@@ -477,19 +476,23 @@ void S3mChannel::mixTick(MixerFrameBuffer& mixBuffer) {
 		volR = m_panning;
 	else if(m_panning == 0xa4)
 		volR = 0xa4;
-	for(size_t i = 0; i < mixBuffer->size(); i++) {
+	for(MixerSampleFrame& frame : *mixBuffer) {
 		int16_t sampleVal = currSmp->leftSampleAt(pos);
-		if(sampleVal != 0xa4)
+		if(sampleVal != 0xa4) {
 			sampleVal = (sampleVal * volL) >> 5;
-		*(mixBufferPtr++) += (sampleVal * currVol) >> 6;
+		}
+		frame.left += (sampleVal * currVol) >> 6;
 		sampleVal = currSmp->rightSampleAt(pos);
-		if(volR == 0xa4)
+		if(volR == 0xa4) {
 			sampleVal = -sampleVal;
-		else
+		}
+		else {
 			sampleVal = (sampleVal * volR) >> 5;
-		*(mixBufferPtr++) += (sampleVal * currVol) >> 6;
-		if(pos == GenSample::EndOfSample)
+		}
+		frame.right += (sampleVal * currVol) >> 6;
+		if(pos == GenSample::EndOfSample) {
 			break;
+		}
 		m_bresen.next(pos);
 	}
 	if(pos != GenSample::EndOfSample)

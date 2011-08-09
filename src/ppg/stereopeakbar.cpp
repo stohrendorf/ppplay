@@ -124,15 +124,10 @@ int StereoPeakBar::valueLeft() const {
 	int res = 0;
 	int div = 0;
 	int i = 0;
-	std::for_each(
-	    m_interArrL.begin(),
-	    m_interArrL.end(),
-	[&res, &div, &i](int v) {
-		i++;
-		res += v * i;
+	for(int v : m_interArrL) {
+		res += i*v;
 		div += i;
 	}
-	);
 	return res / div;
 }
 
@@ -140,15 +135,10 @@ int StereoPeakBar::valueRight() const {
 	int res = 0;
 	int div = 0;
 	int i = 0;
-	std::for_each(
-	    m_interArrR.begin(),
-	    m_interArrR.end(),
-	[&res, &div, &i](int v) {
-		i++;
-		res += v * i;
+	for(int v : m_interArrR) {
+		res += i*v;
 		div += i;
 	}
-	);
 	return res / div;
 }
 

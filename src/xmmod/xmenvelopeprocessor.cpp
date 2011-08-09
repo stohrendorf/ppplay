@@ -177,8 +177,8 @@ void XmEnvelopeProcessor::setPosition(uint8_t pos) {
 
 IArchive& XmEnvelopeProcessor::serialize(IArchive* data) {
 	*data % (*reinterpret_cast<uint8_t*>(&m_flags));
-	for(size_t i = 0; i < m_points.size(); i++) {
-		*data % m_points.at(i).position % m_points.at(i).value;
+	for(EnvelopePoint& pt : m_points) {
+		*data % pt.position % pt.value;
 	}
 	*data
 	% m_numPoints

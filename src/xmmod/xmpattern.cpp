@@ -59,8 +59,8 @@ bool XmPattern::load(BinStream& str) {
 		LOG_WARNING("Number of rows out of range: %u", rows);
 		return false;
 	}
-	for(size_t chan = 0; chan < m_columns.size(); chan++) {
-		m_columns.at(chan).resize(rows, XmCell::Ptr());
+	for(XmCell::Vector& chan : m_columns) {
+		chan.resize(rows, XmCell::Ptr());
 	}
 	uint16_t packedSize;
 	str.read(&packedSize);
@@ -75,12 +75,12 @@ bool XmPattern::load(BinStream& str) {
 		return true;
 	}
 	for(uint16_t row = 0; row < rows; row++) {
-		for(size_t chan = 0; chan < m_columns.size(); chan++) {
+		for(XmCell::Vector& chan : m_columns) {
 			XmCell* cell = new XmCell();
 			if(!cell->load(str)) {
 				return false;
 			}
-			m_columns.at(chan).at(row).reset(cell);
+			chan.at(row).reset(cell);
 		}
 	}
 	return !str.fail();
