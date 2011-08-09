@@ -77,6 +77,10 @@ INCLUDE(CPack)
 # setting compiler flags
 #########
 set(CMAKE_CXX_FLAGS "-Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtual -pedantic -std=c++0x")
+option(WITH_PROFILING "Whether to enable profiling (-pg)" OFF)
+if(WITH_PROFILING)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+endif()
 add_definitions(-DBOOST_FILESYSTEM_VERSION=3)
 
 if(MINGW)
