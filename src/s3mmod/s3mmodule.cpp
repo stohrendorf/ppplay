@@ -722,11 +722,6 @@ void S3mModule::setGlobalVolume(int16_t v) {
 	}
 }
 
-uint16_t S3mModule::tickBufferLength() const {
-	BOOST_ASSERT(playbackInfo().tempo >= 0x20);
-	return frequency() * 5 / (playbackInfo().tempo << 1);
-}
-
 GenModule::Ptr S3mModule::factory(const std::string& filename, uint32_t frequency, uint8_t maxRpt) {
 	S3mModule::Ptr result(new S3mModule(maxRpt));
 	if(!result->load(filename)) {

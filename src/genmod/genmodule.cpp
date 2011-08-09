@@ -215,6 +215,12 @@ uint16_t GenModule::currentSongIndex() const {
 	return m_currentSongIndex;
 }
 
+uint16_t GenModule::tickBufferLength() const
+{
+	BOOST_ASSERT(m_playbackInfo.tempo != 0);
+	return frequency() * 5 / (m_playbackInfo.tempo << 1);
+}
+
 }
 
 /**

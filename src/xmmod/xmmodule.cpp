@@ -161,11 +161,6 @@ bool XmModule::load(const std::string& filename) {
 	return true;
 }
 
-uint16_t XmModule::tickBufferLength() const {
-	BOOST_ASSERT(playbackInfo().tempo >= 0x20);
-	return frequency() * 5 / (playbackInfo().tempo << 1);
-}
-
 void XmModule::buildTick(AudioFrameBuffer& buffer) {
 	if(!buffer) {
 		buffer.reset(new AudioFrameBuffer::element_type);

@@ -651,7 +651,7 @@ void XmChannel::mixTick(MixerFrameBuffer& mixBuffer) {
 	if(m_realPanning < 0x80) {
 		volRight = m_realPanning;
 	}
-	for(MixerFrameBuffer& frame : *mixBuffer) {
+	for(MixerSampleFrame& frame : *mixBuffer) {
 		int16_t sampleVal = (currSmp->leftSampleAt(pos) * volLeft) >> 7;
 		frame.left += (sampleVal * m_realVolume) >> 6;
 		sampleVal = (currSmp->rightSampleAt(pos) * volRight) >> 7;

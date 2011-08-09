@@ -96,7 +96,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @brief Get the frame count of a tick
 		 * @return Sample frames per tick
 		 */
-		virtual uint16_t tickBufferLength() const = 0;
+		uint16_t tickBufferLength() const;
 		/**
 		 * @brief Get a tick
 		 * @param[out] buf Reference to the destination buffer

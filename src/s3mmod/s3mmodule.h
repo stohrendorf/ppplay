@@ -106,7 +106,6 @@ class S3mModule : public GenModule {
 		 * @retval false otherwise
 		 */
 		bool existsSample(int16_t idx);
-		virtual uint16_t tickBufferLength() const;
 		virtual void buildTick(AudioFrameBuffer& buf);
 		virtual void simulateTick(size_t& bufLen);
 		virtual GenOrder::Ptr mapOrder(int16_t order);

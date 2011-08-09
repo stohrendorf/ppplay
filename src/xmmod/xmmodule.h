@@ -94,7 +94,6 @@ class XmModule : public GenModule {
 		 * @retval false on error
 		 */
 		bool load(const std::string& filename);
-		virtual uint16_t tickBufferLength() const;
 		virtual void buildTick(AudioFrameBuffer& buffer);
 		virtual void simulateTick(size_t&);
 		virtual ppp::GenOrder::Ptr mapOrder(int16_t);
