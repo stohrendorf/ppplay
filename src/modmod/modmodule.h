@@ -66,6 +66,7 @@ public:
 	virtual bool jumpPrevOrder();
 	virtual std::string channelCellString(int16_t idx);
 	virtual bool initialize(uint32_t frq);
+	ModSample::Ptr sampleAt(size_t idx) const;
 };
 
 }

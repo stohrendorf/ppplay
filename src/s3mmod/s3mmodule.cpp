@@ -732,9 +732,6 @@ GenModule::Ptr S3mModule::factory(const std::string& filename, uint32_t frequenc
 	}
 	return result;
 }
-uint8_t S3mModule::tick() const {
-	return playbackInfo().tick;
-}
 
 bool S3mModule::hasZeroVolOpt() const {
 	return m_zeroVolOpt;

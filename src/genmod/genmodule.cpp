@@ -221,6 +221,11 @@ uint16_t GenModule::tickBufferLength() const
 	return frequency() * 5 / (m_playbackInfo.tempo << 1);
 }
 
+uint8_t GenModule::tick() const
+{
+	return m_playbackInfo.tick;
+}
+
 }
 
 /**

@@ -14,6 +14,14 @@ ModModule::ModModule(uint8_t maxRpt): GenModule(maxRpt),
 
 ModModule::~ModModule() = default;
 
+ModSample::Ptr ModModule::sampleAt(size_t idx) const
+{
+	if(idx>=m_samples.size()) {
+		return ModSample::Ptr();
+	}
+	return m_samples.at(idx);
+}
+
 /**
  * @brief Maps module IDs to their respective channel counts
  */

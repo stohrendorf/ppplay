@@ -20,17 +20,32 @@
 
 #include "modmodule.h"
 
+#include "logger/logger.h"
+
 #include <boost/assert.hpp>
 
 namespace ppp {
 namespace mod {
 
-ModChannel::ModChannel(ModModule* parent) : m_parent(parent), m_currentCell()
+#ifdef MOD_USE_NTSC_FREQUENCY
+static const uint32_t FrequencyBase = 7159090.5/2;
+#else
+static const uint32_t FrequencyBase = 7093789.2/2;
+#endif
+
+ModChannel::ModChannel(ModModule* parent) : m_module(parent), m_currentCell(), m_volume(0),
+	m_finetune(0), m_tremoloWaveform(0), m_vibratoWaveform(0), m_glissando(false),
+	m_period(0), m_lastVibratoFx(0), m_lastPortaFx(0), m_sampleIndex(0), m_bresen(1,1)
 {
 	BOOST_ASSERT(parent!=nullptr);
 }
 
 ModChannel::~ModChannel() = default;
+
+ModSample::Ptr ModChannel::currentSample() const
+{
+	return m_module->sampleAt(m_sampleIndex);
+}
 
 std::string ModChannel::cellString()
 {
@@ -40,16 +55,13 @@ std::string ModChannel::cellString()
 std::string ModChannel::effectDescription() const
 {
 	// TODO
+	return "      ";
 }
 
 std::string ModChannel::effectName() const
 {
 	// TODO
-}
-
-void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
-{
-	// TODO
+	return "   ";
 }
 
 std::string ModChannel::noteName()
@@ -64,7 +76,65 @@ IArchive& ModChannel::serialize(IArchive* data)
 
 void ModChannel::simTick(size_t bufsize)
 {
-	// TODO
+	if(!isActive() || !currentSample() || m_period == 0) {
+		return setActive(false);
+	}
+	BOOST_ASSERT(m_module && m_module->frequency() != 0);
+	BOOST_ASSERT(bufsize != 0);
+	if(m_period == 0) {
+		setActive(false);
+		setPosition(0);
+		return;
+	}
+	// TODO glissando
+	int32_t pos = position() + (FrequencyBase / m_module->frequency() * bufsize / m_period);
+	currentSample()->adjustPosition(pos);
+	if(pos == GenSample::EndOfSample) {
+		setActive(false);
+	}
+	setPosition(pos);
+}
+
+void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
+{
+	if(!isActive() || !currentSample() || m_period == 0) {
+		return setActive(false);
+	}
+	BOOST_ASSERT(m_module && m_module->frequency() != 0);
+	LOG_TEST_ERROR(mixBuffer->size() == 0);
+	if(m_module->frequency() * mixBuffer->size() == 0) {
+		setActive(false);
+		return;
+	}
+	if(m_period == 0) {
+		setActive(false);
+		setPosition(0);
+		return;
+	}
+	m_bresen.reset(m_module->frequency(), FrequencyBase / m_period);
+	// TODO glissando
+	ModSample::Ptr currSmp = currentSample();
+	int32_t pos = position();
+	if(pos == GenSample::EndOfSample) {
+		setActive(false);
+		return;
+	}
+	for(MixerSampleFrame& frame : *mixBuffer) {
+		// TODO panning
+		frame.left += (currSmp->leftSampleAt(pos)*m_volume)>>6;
+		frame.right += (currSmp->rightSampleAt(pos)*m_volume)>>6;
+		if(pos == GenSample::EndOfSample) {
+			break;
+		}
+		m_bresen.next(pos);
+	}
+	if(pos != GenSample::EndOfSample) {
+		currentSample()->adjustPosition(pos);
+	}
+	setPosition(pos);
+	if(pos == GenSample::EndOfSample) {
+		setActive(false);
+	}
 }
 
 void ModChannel::fxSetSpeed(uint8_t fxByte)
@@ -73,24 +143,24 @@ void ModChannel::fxSetSpeed(uint8_t fxByte)
 		return;
 	}
 	else if(fxByte<=0x1f) {
-		m_parent->setSpeed(fxByte);
+		m_module->setSpeed(fxByte);
 	}
 	else {
-		m_parent->setTempo(fxByte);
+		m_module->setTempo(fxByte);
 	}
 }
 
 void ModChannel::efxNoteCut(uint8_t fxByte)
 {
 	fxByte = lowNibble(fxByte);
-	if(fxByte == m_parent->playbackInfo().tick) {
+	if(fxByte == m_module->playbackInfo().tick) {
 		setActive(false);
 	}
 }
 
 void ModChannel::efxFineVolSlideDown(uint8_t fxByte)
 {
-	if(m_parent->playbackInfo().tick != 0) {
+	if(m_module->playbackInfo().tick != 0) {
 		return;
 	}
 	fxByte = lowNibble(fxByte);
@@ -99,7 +169,7 @@ void ModChannel::efxFineVolSlideDown(uint8_t fxByte)
 
 void ModChannel::efxFineVolSlideUp(uint8_t fxByte)
 {
-	if(m_parent->playbackInfo().tick != 0) {
+	if(m_module->playbackInfo().tick != 0) {
 		return;
 	}
 	fxByte = lowNibble(fxByte);
@@ -128,7 +198,7 @@ void ModChannel::efxGlissando(uint8_t fxByte)
 
 void ModChannel::efxFineSlideDown(uint8_t fxByte)
 {
-	if(m_parent->playbackInfo().tick != 0) {
+	if(m_module->playbackInfo().tick != 0) {
 		return;
 	}
 	// TODO clip period
@@ -137,7 +207,7 @@ void ModChannel::efxFineSlideDown(uint8_t fxByte)
 
 void ModChannel::efxFineSlideUp(uint8_t fxByte)
 {
-	if(m_parent->playbackInfo().tick != 0) {
+	if(m_module->playbackInfo().tick != 0) {
 		return;
 	}
 	// TODO clip period
@@ -157,7 +227,7 @@ void ModChannel::fxSetVolume(uint8_t fxByte)
 void ModChannel::fxVolSlide(uint8_t fxByte)
 {
 	// I assume that there is no slide on tick 0
-	if(m_parent->playbackInfo().tick == 0) {
+	if(m_module->playbackInfo().tick == 0) {
 		return;
 	}
 	if(highNibble(fxByte)!=0 && lowNibble(fxByte)==0) {

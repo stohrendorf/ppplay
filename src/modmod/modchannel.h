@@ -24,8 +24,10 @@
  * @{
  */
 #include "genmod/genchannel.h"
+#include "genmod/breseninter.h"
 
 #include "modcell.h"
+#include "modsample.h"
 
 namespace ppp {
 namespace mod {
@@ -36,7 +38,7 @@ class ModChannel : public GenChannel
 {
 	DISABLE_COPY(ModChannel)
 private:
-	ModModule* m_parent;
+	ModModule* m_module;
 	ModCell m_currentCell;
 	uint8_t m_volume;
 	uint8_t m_finetune;
@@ -46,6 +48,8 @@ private:
 	uint16_t m_period;
 	uint8_t m_lastVibratoFx;
 	uint8_t m_lastPortaFx;
+	uint8_t m_sampleIndex;
+	BresenInterpolation m_bresen;
 public:
 	typedef std::shared_ptr<ModChannel> Ptr; //!< @brief Class pointer
 	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
@@ -89,6 +93,7 @@ private:
 	void efxNoteDelay(uint8_t fxByte);
 	void efxPatDelay(uint8_t fxByte);
 	void fxSetSpeed(uint8_t fxByte);
+	ModSample::Ptr currentSample() const;
 };
 
 }

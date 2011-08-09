@@ -6,3 +6,8 @@ add_library(modmod STATIC
 	modchannel.cpp
 	modbase.cpp
 )
+
+option(MOD_USE_NTSC_FREQUENCY "Use NTSC frequency base instead of PAL for .mod playback" OFF)
+if(MOD_USE_NTSC_FREQUENCY)
+	add_definitions(-DMOD_USE_NTSC_FREQUENCY)
+endif()

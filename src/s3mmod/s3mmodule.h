@@ -116,11 +116,6 @@ class S3mModule : public GenModule {
 		virtual bool jumpPrevOrder();
 		virtual std::string channelCellString(int16_t idx);
 		/**
-		 * @brief Get the current tick index
-		 * @return The current tick index
-		 */
-		uint8_t tick() const;
-		/**
 		 * @brief Check if amiga limits are present
 		 * @return m_amigaLimits
 		 */

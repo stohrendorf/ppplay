@@ -308,6 +308,11 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @param[in] s The new speed
 		 */
 		void setSpeed(uint8_t s);
+		/**
+		 * @brief Get the current tick index
+		 * @return The current tick index
+		 */
+		uint8_t tick() const;
 };
 
 } // namespace ppp
