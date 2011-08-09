@@ -40,9 +40,9 @@ public:
 	ModSample();
 	bool loadHeader(BinStream& stream);
 	bool loadData(BinStream& stream);
-	int8_t finetune() const;
+	uint8_t finetune() const;
 private:
-	int8_t m_finetune;
+	uint8_t m_finetune;
 };
 
 }

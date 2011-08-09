@@ -67,9 +67,6 @@ bool ModSample::loadHeader(BinStream& stream)
 	setTitle( stringncpy(hdr.name, 22) );
 	setVolume( std::min<uint8_t>( hdr.volume, 0x40 ) );
 	m_finetune = hdr.finetune&0x0f;
-	if(m_finetune>=8) {
-		m_finetune -= 16;
-	}
 	return stream.good();
 }
 
@@ -85,7 +82,7 @@ bool ModSample::loadData(BinStream& stream)
 	return stream.good();
 }
 
-int8_t ModSample::finetune() const
+uint8_t ModSample::finetune() const
 {
 	return m_finetune;
 }
