@@ -66,7 +66,8 @@ XmModule::XmModule(uint8_t maxRpt):
 	GenModule(maxRpt),
 	m_amiga(false), m_patterns(), m_instruments(), m_channels(),
 	m_noteToPeriod(), m_jumpRow(-1), m_jumpOrder(-1),
-	m_isPatLoop(false), m_doPatJump(false), m_restartPos(0)
+	m_isPatLoop(false), m_doPatJump(false), m_restartPos(0),
+	m_currentPatternDelay(0), m_requestedPatternDelay(0)
 {
 }
 
@@ -220,6 +221,15 @@ void XmModule::simulateTick(std::size_t& bufferLength) {
 bool XmModule::adjustPosition(bool doStore) {
 	bool orderChanged = false;
 	if(playbackInfo().tick == 0) {
+		if(m_requestedPatternDelay!=0 || m_currentPatternDelay!=0) {
+			if(m_requestedPatternDelay != 0) {
+				m_currentPatternDelay = m_requestedPatternDelay;
+				m_requestedPatternDelay = 0;
+			}
+			if(m_currentPatternDelay!=0) {
+				m_currentPatternDelay--;
+			}
+		}
 		if(m_isPatLoop || m_doPatJump) {
 			if(m_isPatLoop) {
 				m_isPatLoop = false;
@@ -243,8 +253,10 @@ bool XmModule::adjustPosition(bool doStore) {
 			setRow((playbackInfo().row + 1) % currPat->numRows());
 			if(playbackInfo().row == 0) {
 				orderAt(playbackInfo().order)->increasePlaybackCount();
-				setOrder((playbackInfo().order + 1));
-				orderChanged = true;
+				if(m_currentPatternDelay == 0) {
+					setOrder((playbackInfo().order + 1));
+					orderChanged = true;
+				}
 			}
 		}
 		m_jumpOrder = m_jumpRow = 0;
@@ -570,7 +582,9 @@ IArchive& XmModule::serialize(IArchive* data) {
 	% m_jumpOrder
 	% m_isPatLoop
 	% m_doPatJump
-	% m_restartPos;
+	% m_restartPos
+	% m_requestedPatternDelay
+	% m_currentPatternDelay;
 	return *data;
 }
 
@@ -610,6 +624,19 @@ GenModule::Ptr XmModule::factory(const std::string& filename, uint32_t frequency
 		return GenModule::Ptr();
 	}
 	return result;
+}
+
+bool XmModule::isRunningPatDelay() const
+{
+	return m_currentPatternDelay!=0;
+}
+
+void XmModule::doPatDelay(uint8_t counter)
+{
+	if(isRunningPatDelay()) {
+		return;
+	}
+	m_requestedPatternDelay = counter+1;
 }
 
 }

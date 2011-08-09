@@ -59,6 +59,10 @@ class XmModule : public GenModule {
 		bool m_doPatJump;
 		//! @brief Song restart position
 		uint8_t m_restartPos;
+		//! @brief The current pattern delay countdown, 0 if unused
+		uint8_t m_currentPatternDelay;
+		//! @brief The requested pattern delay countdown, 0 if unused
+		uint8_t m_requestedPatternDelay;
 		/**
 		 * @brief Increases tick values and processes jumps
 		 * @param[in] doStore Set to @c true to store the state on order change
@@ -145,6 +149,8 @@ class XmModule : public GenModule {
 		void doPatLoop(int16_t next);
 		IArchive& serialize(IArchive* data);
 		virtual bool initialize(uint32_t frq);
+		bool isRunningPatDelay() const;
+		void doPatDelay(uint8_t counter);
 };
 
 } // namespace xm

@@ -224,7 +224,7 @@ static const std::array<int8_t, 256> g_AutoVibTable = {{
 #endif
 
 void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
-	if(m_module->playbackInfo().tick == 0) {
+	if(m_module->playbackInfo().tick == 0 && !m_module->isRunningPatDelay()) {
 		if(cell) {
 			m_currentCell = *cell;
 		}
@@ -878,6 +878,11 @@ void XmChannel::fxExtended(uint8_t fxByte) {
 				efxPatLoop(fxByte);
 			}
 			m_fxString = "PLoop\xe8";
+			break;
+		case EfxPatDelay:
+			if(m_module->playbackInfo().tick == 0) {
+				m_module->doPatDelay( lowNibble(fxByte) );
+			}
 			break;
 	}
 }
