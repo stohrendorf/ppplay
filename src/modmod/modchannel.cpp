@@ -16,45 +16,52 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MODCHANNEL_H
-#define MODCHANNEL_H
-
-/**
- * @ingroup ModMod
- * @{
- */
-#include "genmod/genchannel.h"
-
-#include "modcell.h"
+#include "modchannel.h"
 
 namespace ppp {
 namespace mod {
 
-class ModChannel : public GenChannel
+ModChannel::ModChannel()
 {
-	DISABLE_COPY(ModChannel)
-private:
-	ModCell m_currentCell;
-public:
-	typedef std::shared_ptr<ModChannel> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
-	ModChannel();
-	virtual ~ModChannel();
-	virtual std::string noteName();
-	virtual std::string effectName() const;
-	virtual void mixTick(MixerFrameBuffer& mixBuffer);
-	virtual void simTick(size_t bufsize);
-	virtual void updateStatus();
-	virtual std::string effectDescription() const;
-	virtual std::string cellString() const;
-	virtual IArchive& serialize(IArchive* data);
-};
+
+}
+
+ModChannel::~ModChannel() = default;
+
+std::string ModChannel::cellString() const
+{
+	// TODO
+}
+
+std::string ModChannel::effectDescription() const
+{
+	// TODO
+}
+
+std::string ModChannel::effectName() const
+{
+	// TODO
+}
+
+void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
+{
+	// TODO
+}
+
+std::string ModChannel::noteName()
+{
+	return "???"; // TODO
+}
+
+IArchive& ModChannel::serialize(IArchive* data)
+{
+    // TODO return ppp::GenChannel::serialize(data);
+}
+
+void ModChannel::simTick(size_t bufsize)
+{
+	// TODO
+}
 
 }
 }
-
-/**
- * @}
- */
-
-#endif
