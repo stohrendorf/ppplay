@@ -153,14 +153,14 @@ void ModChannel::fxSetSpeed(uint8_t fxByte)
 void ModChannel::efxNoteCut(uint8_t fxByte)
 {
 	fxByte = lowNibble(fxByte);
-	if(fxByte == m_module->playbackInfo().tick) {
+	if(fxByte == m_module->tick()) {
 		setActive(false);
 	}
 }
 
 void ModChannel::efxFineVolSlideDown(uint8_t fxByte)
 {
-	if(m_module->playbackInfo().tick != 0) {
+	if(m_module->tick() != 0) {
 		return;
 	}
 	fxByte = lowNibble(fxByte);
@@ -169,7 +169,7 @@ void ModChannel::efxFineVolSlideDown(uint8_t fxByte)
 
 void ModChannel::efxFineVolSlideUp(uint8_t fxByte)
 {
-	if(m_module->playbackInfo().tick != 0) {
+	if(m_module->tick() != 0) {
 		return;
 	}
 	fxByte = lowNibble(fxByte);
@@ -198,7 +198,7 @@ void ModChannel::efxGlissando(uint8_t fxByte)
 
 void ModChannel::efxFineSlideDown(uint8_t fxByte)
 {
-	if(m_module->playbackInfo().tick != 0) {
+	if(m_module->tick() != 0) {
 		return;
 	}
 	// TODO clip period
@@ -207,7 +207,7 @@ void ModChannel::efxFineSlideDown(uint8_t fxByte)
 
 void ModChannel::efxFineSlideUp(uint8_t fxByte)
 {
-	if(m_module->playbackInfo().tick != 0) {
+	if(m_module->tick() != 0) {
 		return;
 	}
 	// TODO clip period
@@ -227,7 +227,7 @@ void ModChannel::fxSetVolume(uint8_t fxByte)
 void ModChannel::fxVolSlide(uint8_t fxByte)
 {
 	// I assume that there is no slide on tick 0
-	if(m_module->playbackInfo().tick == 0) {
+	if(m_module->tick() == 0) {
 		return;
 	}
 	if(highNibble(fxByte)!=0 && lowNibble(fxByte)==0) {

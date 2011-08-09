@@ -215,7 +215,7 @@ void XmModule::simulateTick(size_t& bufferLength) {
 
 bool XmModule::adjustPosition(bool doStore) {
 	bool orderChanged = false;
-	if(playbackInfo().tick == 0) {
+	if(tick() == 0) {
 		if(m_requestedPatternDelay!=0 || m_currentPatternDelay!=0) {
 			if(m_requestedPatternDelay != 0) {
 				m_currentPatternDelay = m_requestedPatternDelay;

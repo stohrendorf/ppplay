@@ -439,7 +439,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 	if(increaseTick) {
 		nextTick();
 	}
-	if((playbackInfo().tick == 0) && increaseTick) {
+	if((tick() == 0) && increaseTick) {
 		m_patDelayCount = -1;
 		if(m_breakOrder != -1) {
 			orderAt(playbackInfo().order)->increasePlaybackCount();
@@ -522,7 +522,7 @@ void S3mModule::buildTick(AudioFrameBuffer& buf) {
 		//PPP_TEST(!buf);
 		if(!buf)
 			buf.reset(new AudioFrameBuffer::element_type);
-		if(playbackInfo().tick == 0)
+		if(tick() == 0)
 			checkGlobalFx();
 		//buf->resize(getTickBufLen());
 		//buf->clear();
@@ -569,7 +569,7 @@ void S3mModule::buildTick(AudioFrameBuffer& buf) {
 
 void S3mModule::simulateTick(size_t& bufLen) {
 	try {
-		if(playbackInfo().tick == 0)
+		if(tick() == 0)
 			checkGlobalFx();
 		bufLen = 0;
 		if(!adjustPosition(false, true))

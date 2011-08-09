@@ -224,7 +224,7 @@ static const std::array<int8_t, 256> g_AutoVibTable = {{
 #endif
 
 void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
-	if(m_module->playbackInfo().tick == 0 && !m_module->isRunningPatDelay()) {
+	if(m_module->tick() == 0 && !m_module->isRunningPatDelay()) {
 		if(cell) {
 			m_currentCell = *cell;
 		}
@@ -450,7 +450,7 @@ void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 	else { // tick 1+
 		if(m_currentCell.effect() == Effect::Extended) {
 			if(highNibble(m_currentCell.effectValue()) == EfxNoteDelay) {
-				if(lowNibble(m_currentCell.effectValue()) == m_module->playbackInfo().tick) {
+				if(lowNibble(m_currentCell.effectValue()) == m_module->tick()) {
 					triggerNote();
 					applySampleDefaults();
 					doKeyOn();
@@ -531,7 +531,7 @@ void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 				fxTremolo(m_currentCell.effectValue());
 				break;
 			case Effect::KeyOff:
-				if(m_module->playbackInfo().tick == m_currentCell.effectValue()) {
+				if(m_module->tick() == m_currentCell.effectValue()) {
 					doKeyOff();
 				}
 				break;
@@ -839,13 +839,13 @@ void XmChannel::fxExtended(uint8_t fxByte) {
 			m_fxString = "TWave\x9f";
 			break;
 		case EfxNoteCut:
-			if(m_module->playbackInfo().tick == lowNibble(fxByte)) {
+			if(m_module->tick() == lowNibble(fxByte)) {
 				m_baseVolume = m_currentVolume = 0;
 			}
 			m_fxString = "NCut \xd4";
 			break;
 		case EfxNoteDelay:
-			if(m_module->playbackInfo().tick == lowNibble(fxByte)) {
+			if(m_module->tick() == lowNibble(fxByte)) {
 				triggerNote();
 				applySampleDefaults();
 				doKeyOn();
@@ -860,7 +860,7 @@ void XmChannel::fxExtended(uint8_t fxByte) {
 			break;
 		case EfxRetrigger:
 			if(lowNibble(fxByte) != 0) {
-				if(m_module->playbackInfo().tick % lowNibble(fxByte) == 0) {
+				if(m_module->tick() % lowNibble(fxByte) == 0) {
 					triggerNote();
 					doKeyOn();
 				}
@@ -868,13 +868,13 @@ void XmChannel::fxExtended(uint8_t fxByte) {
 			m_fxString = "Retr \xec";
 			break;
 		case EfxPatLoop:
-			if(m_module->playbackInfo().tick == 0) {
+			if(m_module->tick() == 0) {
 				efxPatLoop(fxByte);
 			}
 			m_fxString = "PLoop\xe8";
 			break;
 		case EfxPatDelay:
-			if(m_module->playbackInfo().tick == 0) {
+			if(m_module->tick() == 0) {
 				m_module->doPatDelay( lowNibble(fxByte) );
 			}
 			break;
@@ -946,7 +946,7 @@ void XmChannel::fxArpeggio(uint8_t fxByte) {
 	if(fxByte == 0) {
 		return;
 	}
-	switch(m_module->playbackInfo().tick % 3) {
+	switch(m_module->tick() % 3) {
 		case 0:
 			m_currentPeriod = m_basePeriod;
 			break;

@@ -33,6 +33,7 @@ namespace ppp {
 /**
  * @struct GenPlaybackInfo
  * @brief Playback info
+ * @todo Get rid of this!
  */
 struct GenPlaybackInfo {
 	int16_t tick; //!< @brief Current tick
