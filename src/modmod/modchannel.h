@@ -30,15 +30,26 @@
 namespace ppp {
 namespace mod {
 
+class ModModule;
+
 class ModChannel : public GenChannel
 {
 	DISABLE_COPY(ModChannel)
 private:
+	ModModule* m_parent;
 	ModCell m_currentCell;
+	uint8_t m_volume;
+	uint8_t m_finetune;
+	uint8_t m_tremoloWaveform;
+	uint8_t m_vibratoWaveform;
+	bool m_glissando;
+	uint16_t m_period;
+	uint8_t m_lastVibratoFx;
+	uint8_t m_lastPortaFx;
 public:
 	typedef std::shared_ptr<ModChannel> Ptr; //!< @brief Class pointer
 	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
-	ModChannel();
+	explicit ModChannel(ModModule* parent);
 	virtual ~ModChannel();
 	virtual std::string noteName();
 	virtual std::string effectName() const;
@@ -48,6 +59,36 @@ public:
 	virtual std::string effectDescription() const;
 	virtual std::string cellString();
 	virtual IArchive& serialize(IArchive* data);
+private:
+	void fxArpeggio(uint8_t fxByte);
+	void fxPortaUp(uint8_t fxByte);
+	void fxPortaDown(uint8_t fxByte);
+	void fxPorta(uint8_t fxByte);
+	void fxVibrato(uint8_t fxByte);
+	void fxPortaVolSlide(uint8_t fxByte);
+	void fxVibVolSlide(uint8_t fxByte);
+	void fxTremolo(uint8_t fxByte);
+	void fxSetFinePan(uint8_t fxByte);
+	void fxOffset(uint8_t fxByte);
+	void fxVolSlide(uint8_t fxByte);
+	void fxPosJmp(uint8_t fxByte);
+	void fxSetVolume(uint8_t fxByte);
+	void fxPatBreak(uint8_t fxByte);
+	void efxFineSlideUp(uint8_t fxByte);
+	void efxFineSlideDown(uint8_t fxByte);
+	void efxGlissando(uint8_t fxByte);
+	void efxSetVibWaveform(uint8_t fxByte);
+	void efxSetFinetune(uint8_t fxByte);
+	void efxPatLoop(uint8_t fxByte);
+	void efxSetTremoloWaveform(uint8_t fxByte);
+	void efxSetPanning(uint8_t fxByte);
+	void efxRetrigger(uint8_t fxByte);
+	void efxFineVolSlideUp(uint8_t fxByte);
+	void efxFineVolSlideDown(uint8_t fxByte);
+	void efxNoteCut(uint8_t fxByte);
+	void efxNoteDelay(uint8_t fxByte);
+	void efxPatDelay(uint8_t fxByte);
+	void fxSetSpeed(uint8_t fxByte);
 };
 
 }
