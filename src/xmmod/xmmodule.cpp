@@ -216,14 +216,13 @@ void XmModule::simulateTick(size_t& bufferLength) {
 bool XmModule::adjustPosition(bool doStore) {
 	bool orderChanged = false;
 	if(tick() == 0) {
-		if(m_requestedPatternDelay!=0 || m_currentPatternDelay!=0) {
-			if(m_requestedPatternDelay != 0) {
-				m_currentPatternDelay = m_requestedPatternDelay;
-				m_requestedPatternDelay = 0;
-			}
-			if(m_currentPatternDelay!=0) {
-				m_currentPatternDelay--;
-			}
+		if(m_requestedPatternDelay != 0) {
+			m_currentPatternDelay = m_requestedPatternDelay;
+			m_requestedPatternDelay = 0;
+		}
+		if(m_currentPatternDelay!=0) {
+			m_currentPatternDelay--;
+			LOG_DEBUG("Pattern delay, %d rows left...", m_currentPatternDelay);
 		}
 		if(m_isPatLoop || m_doPatJump) {
 			if(m_isPatLoop) {
@@ -244,11 +243,11 @@ bool XmModule::adjustPosition(bool doStore) {
 			}
 		}
 		else {
-			XmPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
-			setRow((playbackInfo().row + 1) % currPat->numRows());
-			if(playbackInfo().row == 0) {
-				orderAt(playbackInfo().order)->increasePlaybackCount();
-				if(m_currentPatternDelay == 0) {
+			if(!isRunningPatDelay()) {
+				XmPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
+				setRow((playbackInfo().row + 1) % currPat->numRows());
+				if(playbackInfo().row == 0) {
+					orderAt(playbackInfo().order)->increasePlaybackCount();
 					setOrder((playbackInfo().order + 1));
 					orderChanged = true;
 				}
