@@ -58,6 +58,7 @@ private:
 	uint16_t m_period;
 	uint8_t m_effect;
 	uint8_t m_effectValue;
+	uint8_t m_noteIndex;
 	std::string m_note;
 };
 

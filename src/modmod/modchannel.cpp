@@ -21,16 +21,16 @@
 namespace ppp {
 namespace mod {
 
-ModChannel::ModChannel()
+ModChannel::ModChannel() : m_currentCell()
 {
 
 }
 
 ModChannel::~ModChannel() = default;
 
-std::string ModChannel::cellString() const
+std::string ModChannel::cellString()
 {
-	// TODO
+	return m_currentCell.trackerString();
 }
 
 std::string ModChannel::effectDescription() const

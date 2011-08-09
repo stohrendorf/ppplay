@@ -16,40 +16,33 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MODCHANNEL_H
-#define MODCHANNEL_H
+#ifndef MODBASE_H
+#define MODBASE_H
+
+#include <array>
+#include <cstdint>
 
 /**
- * @ingroup ModMod
+ * @ingroup modmod
  * @{
  */
-#include "genmod/genchannel.h"
-
-#include "modcell.h"
 
 namespace ppp {
 namespace mod {
-
-class ModChannel : public GenChannel
-{
-	DISABLE_COPY(ModChannel)
-private:
-	ModCell m_currentCell;
-public:
-	typedef std::shared_ptr<ModChannel> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
-	ModChannel();
-	virtual ~ModChannel();
-	virtual std::string noteName();
-	virtual std::string effectName() const;
-	virtual void mixTick(MixerFrameBuffer& mixBuffer);
-	virtual void simTick(size_t bufsize);
-	virtual void updateStatus();
-	virtual std::string effectDescription() const;
-	virtual std::string cellString();
-	virtual IArchive& serialize(IArchive* data);
-};
-
+	/**
+	 * @brief Contains all periods of the notes
+	 * @details
+	 * The first index is the finetune value. It is unsigned, as seen in
+	 * the raw module data.@n
+	 * The second index is the note index.
+	 * 
+	 * Example:
+	 * @code
+	 * uint16_t period = fullPeriods[m_finetune][m_noteIndex];
+	 * @endcode
+	 * @note Though non-standard, also octaves 0 and 4 are included
+	 */
+	extern std::array<std::array<uint16_t, 12*5>, 16> fullPeriods;
 }
 }
 

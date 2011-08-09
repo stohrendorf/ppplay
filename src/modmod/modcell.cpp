@@ -18,22 +18,16 @@
 
 #include "modcell.h"
 
+#include "modbase.h"
+
 #include "genmod/genbase.h"
 #include "logger/logger.h"
 #include "stream/iarchive.h"
 
-#include <array>
-
-static std::array<uint16_t, 3*12> g_periods = {{
-	856,808,762,720,678,640,604,570,538,508,480,453,
-	428,404,381,360,339,320,302,285,269,254,240,226,
-	214,202,190,180,170,160,151,143,135,127,120,113
-}};
-
 namespace ppp {
 namespace mod {
 
-ModCell::ModCell() : m_sampleNumber(0), m_period(0), m_effect(0), m_effectValue(0), m_note("...")
+ModCell::ModCell() : m_sampleNumber(0), m_period(0), m_effect(0), m_effectValue(0), m_noteIndex(255), m_note("...")
 {
 }
 
@@ -56,13 +50,15 @@ bool ModCell::load(BinStream& str)
 	str.read(&tmp);
 	m_effectValue = tmp;
 	if(m_period!=0) {
-		uint16_t* p = std::find( g_periods.begin(), g_periods.end(), m_period );
-		if(p!=g_periods.end()) {
-			uint8_t o = (p-g_periods.begin());
-			m_note = ppp::stringf("%s%u", NoteNames[o%12], o/12);
+		uint16_t* p = std::find( fullPeriods.at(0).begin(), fullPeriods.at(0).end(), m_period );
+		if(p!=fullPeriods.at(0).end()) {
+			m_noteIndex = (p-fullPeriods.at(0).begin());
+			m_note = ppp::stringf("%s%u", NoteNames[m_noteIndex%12], m_noteIndex/12);
 		}
 		else {
 			m_note = "???";
+			m_period = 0;
+			m_noteIndex = 255;
 		}
 	}
 	return str.good();
@@ -120,13 +116,15 @@ IArchive& ModCell::serialize(IArchive* data)
 	*data % m_sampleNumber % m_period % m_effect % m_effectValue;
 	if(data->isLoading()) {
 		if(m_period!=0) {
-			uint16_t* p = std::find( g_periods.begin(), g_periods.end(), m_period );
-			if(p!=g_periods.end()) {
-				uint8_t o = (p-g_periods.begin());
-				m_note = ppp::stringf("%s%u", NoteNames[o%12], o/12);
+			uint16_t* p = std::find( fullPeriods.at(0).begin(), fullPeriods.at(0).end(), m_period );
+			if(p!=fullPeriods.at(0).end()) {
+				m_noteIndex = (p-fullPeriods.at(0).begin());
+				m_note = ppp::stringf("%s%u", NoteNames[m_noteIndex%12], m_noteIndex/12);
 			}
 			else {
 				m_note = "???";
+				m_period = 0;
+				m_noteIndex = 255;
 			}
 		}
 		else {

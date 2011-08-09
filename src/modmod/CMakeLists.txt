@@ -3,4 +3,6 @@ add_library(modmod STATIC
 	modcell.cpp
 	modmodule.cpp
 	modpattern.cpp
+	modchannel.cpp
+	modbase.cpp
 )
