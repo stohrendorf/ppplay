@@ -306,14 +306,14 @@ bool S3mModule::initialize(uint32_t frq) {
 	LOG_MESSAGE("Calculating track lengths and preparing seek operations...");
 	do {
 		LOG_MESSAGE("Pre-processing Track %d", currentSongIndex());
-		std::size_t currTickLen = 0;
+		size_t currTickLen = 0;
 		do {
 			simulateTick(currTickLen);
 			multiSongLengthAt(currentSongIndex()) += currTickLen;
 		}
 		while(currTickLen != 0);
 		LOG_MESSAGE("Preprocessed.");
-		for(std::size_t i = 0; i < orderCount(); i++) {
+		for(size_t i = 0; i < orderCount(); i++) {
 			BOOST_ASSERT( orderAt(i).use_count()>0 );
 			if((orderAt(i)->index() != s3mOrderEnd) && (orderAt(i)->index() != s3mOrderSkip) && (orderAt(i)->playbackCount() == 0)) {
 				addMultiSong( StateIterator() );
@@ -572,7 +572,7 @@ void S3mModule::buildTick(AudioFrameBuffer& buf) {
 		buf->resize(mixerBuffer->size());
 		MixerSample* mixerBufferPtr = &mixerBuffer->front().left;
 		BasicSample* bufPtr = &buf->front().left;
-		for(std::size_t i = 0; i < mixerBuffer->size(); i++) {    // postprocess...
+		for(size_t i = 0; i < mixerBuffer->size(); i++) {    // postprocess...
 			*(bufPtr++) = clipSample(*(mixerBufferPtr++) >> 2);
 			*(bufPtr++) = clipSample(*(mixerBufferPtr++) >> 2);
 		}
@@ -587,7 +587,7 @@ void S3mModule::buildTick(AudioFrameBuffer& buf) {
 	}
 }
 
-void S3mModule::simulateTick(std::size_t& bufLen) {
+void S3mModule::simulateTick(size_t& bufLen) {
 	try {
 		if(playbackInfo().tick == 0)
 			checkGlobalFx();
@@ -726,7 +726,7 @@ IArchive& S3mModule::serialize(IArchive* data) {
 	% m_patLoopCount
 	% m_patDelayCount
 	% m_customData;
-	for(std::size_t i = 0; i < m_channels.size(); i++) {
+	for(size_t i = 0; i < m_channels.size(); i++) {
 		if(!m_channels.at(i)) {
 			continue;
 		}
@@ -737,7 +737,7 @@ IArchive& S3mModule::serialize(IArchive* data) {
 
 void S3mModule::setGlobalVolume(int16_t v) {
 	GenModule::setGlobalVolume(v);
-	for(std::size_t i = 0; i < m_channels.size(); i++)
+	for(size_t i = 0; i < m_channels.size(); i++)
 		m_channels.at(i)->recalcVolume();
 }
 

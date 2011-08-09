@@ -58,7 +58,7 @@ S3mCell::Ptr S3mPattern::cellAt(uint16_t chanIdx, int16_t row) {
 	return m_channels.at(chanIdx).at(row);
 }
 
-bool S3mPattern::load(BinStream& str, std::size_t pos) {
+bool S3mPattern::load(BinStream& str, size_t pos) {
 	try {
 		uint16_t patSize;
 		str.seek(pos);

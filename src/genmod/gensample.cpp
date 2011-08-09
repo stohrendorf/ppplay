@@ -80,7 +80,7 @@ bool GenSample::isLooped() const {
 	return m_looptype != LoopType::None;
 }
 
-std::size_t GenSample::length() const {
+size_t GenSample::length() const {
 	return m_length;
 }
 
@@ -128,15 +128,15 @@ void GenSample::setFilename(const std::string& f) {
 	m_filename = f;
 }
 
-void GenSample::setLength(std::size_t l) {
+void GenSample::setLength(size_t l) {
 	m_length = l;
 }
 
-void GenSample::setLoopStart(std::size_t s) {
+void GenSample::setLoopStart(size_t s) {
 	m_loopStart = s;
 }
 
-void GenSample::setLoopEnd(std::size_t e) {
+void GenSample::setLoopEnd(size_t e) {
 	m_loopEnd = e;
 }
 

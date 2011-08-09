@@ -72,12 +72,12 @@ class XmPattern {
 		 * @brief Number of rows in this pattern
 		 * @return Number of rows
 		 */
-		std::size_t numRows() const;
+		size_t numRows() const;
 		/**
 		 * @brief Number of channels/columns in this pattern
 		 * @return Number of channels
 		 */
-		std::size_t numChannels() const;
+		size_t numChannels() const;
 		/**
 		 * @brief Create an empty default pattern with 64 rows
 		 * @param[in] chans Number of channels for the new pattern

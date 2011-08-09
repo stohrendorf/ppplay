@@ -108,7 +108,7 @@ class S3mModule : public GenModule {
 		bool existsSample(int16_t idx);
 		virtual uint16_t tickBufferLength() const;
 		virtual void buildTick(AudioFrameBuffer& buf);
-		virtual void simulateTick(std::size_t& bufLen);
+		virtual void simulateTick(size_t& bufLen);
 		virtual GenOrder::Ptr mapOrder(int16_t order);
 		virtual std::string channelStatus(int16_t idx);
 		virtual bool jumpNextSong();
@@ -145,13 +145,13 @@ class S3mModule : public GenModule {
 		 * @brief Get the maximum sample number
 		 * @return Maximum sample number
 		 */
-		std::size_t numSamples() const;
+		size_t numSamples() const;
 		/**
 		 * @brief Get a sample
 		 * @param[in] idx Sample index
 		 * @return Sample pointer or nullptr
 		 */
-		S3mSample::Ptr sampleAt(std::size_t idx) const;
+		S3mSample::Ptr sampleAt(size_t idx) const;
 		virtual void setGlobalVolume(int16_t v);
 		/**
 		 * @brief Check if zero volume optimizations are present

@@ -61,9 +61,9 @@ class GenModule : public ISerializable, public IAudioSource {
 		std::string m_trackerInfo; //!< @brief Tracker information (Name and Version)
 		GenOrder::Vector m_orders; //!< @brief Order list @note @b Not @b initialized @b here!
 		uint16_t m_maxRepeat; //!< @brief Maximum module loops if module patterns are played multiple times
-		std::size_t m_playedFrames; //!< @brief Played Sample frames
+		size_t m_playedFrames; //!< @brief Played Sample frames
 		std::vector<StateIterator> m_songs; //!< @brief Per-song infos
-		std::vector<std::size_t> m_songLengths; //!< @brief Per-song lengths in sample frames
+		std::vector<size_t> m_songLengths; //!< @brief Per-song lengths in sample frames
 		uint16_t m_currentSongIndex; //!< @brief The current song index
 		GenPlaybackInfo m_playbackInfo; //!< @brief General playback info
 	public:
@@ -107,7 +107,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @brief Get a tick without mixing for length calculation
 		 * @param[out] bufLen Number of sample frames in the current tick. If 0 after the call, the end was reached.
 		 */
-		virtual void simulateTick(std::size_t& bufLen) = 0;
+		virtual void simulateTick(size_t& bufLen) = 0;
 		/**
 		 * @brief Map an order number to a pattern
 		 * @param[in] order The order to map
@@ -170,7 +170,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @brief Get the current playback position in sample frames
 		 * @return m_playedFrames
 		 */
-		std::size_t position() const;
+		size_t position() const;
 		/**
 		 * @brief Get the number of songs in this module
 		 * @return Number of songs
@@ -193,7 +193,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @return Number of actually used channels
 		 */
 		virtual uint8_t channelCount() const = 0;
-		virtual std::size_t getAudioData(AudioFrameBuffer& buffer, std::size_t size);
+		virtual size_t getAudioData(AudioFrameBuffer& buffer, size_t size);
 		/**
 		 * @brief Set the global volume
 		 * @param[in] v The new global volume
@@ -209,7 +209,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @brief Set the song's position in sample frames
 		 * @param[in] p The new position
 		 */
-		void setPosition(std::size_t p);
+		void setPosition(size_t p);
 		/**
 		 * @brief Adds an order to m_orders
 		 * @param[in] o The new order
@@ -250,7 +250,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @brief Get the number of orders
 		 * @return Number of orders
 		 */
-		std::size_t orderCount() const;
+		size_t orderCount() const;
 		/**
 		 * @brief Set the current song index
 		 * @param[in] t The new song index
@@ -272,7 +272,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @param[in] idx Song index
 		 * @return Reference to the length in sample frames
 		 */
-		std::size_t& multiSongLengthAt(std::size_t idx);
+		size_t& multiSongLengthAt(size_t idx);
 		/**
 		 * @brief Add a multi-song state iterator
 		 * @param[in] t The new state iterator

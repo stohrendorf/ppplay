@@ -150,8 +150,8 @@ void UIMain::onTimer()
 	IAudioOutput::Ptr outLock(m_output.lock());
 	ppg::SDLScreen::instance()->clear( ' ', ppg::Color::White, ppg::Color::Black );
 	m_volBar->shift( outLock->volumeLeft() >> 8, outLock->volumeRight() >> 8 );
-	std::size_t msecs = modLock->position() / 441;
-	std::size_t msecslen = modLock->length() / 441;
+	size_t msecs = modLock->position() / 441;
+	size_t msecslen = modLock->length() / 441;
 	ppp::GenPlaybackInfo pbi = modLock->playbackInfo();
 	if(modLock->isMultiSong()) {
 		m_position->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Song %d/%d",

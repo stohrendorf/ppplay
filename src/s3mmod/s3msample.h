@@ -52,7 +52,7 @@ class S3mSample : public GenSample {
 		 * @param[in] imagoLoopEnd If @c true, the loop end is decreased by 1
 		 * @return @c true on success
 		 */
-		bool load(BinStream& str, std::size_t pos, bool imagoLoopEnd);
+		bool load(BinStream& str, size_t pos, bool imagoLoopEnd);
 		/**
 		 * @brief Whether this is a 16-bit sample
 		 * @return m_highQuality

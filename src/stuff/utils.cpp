@@ -40,9 +40,9 @@ std::string stringf(const char fmt[], ...) {
 	return res;
 }
 
-std::string stringncpy(const char src[], std::size_t maxlen) {
+std::string stringncpy(const char src[], size_t maxlen) {
 	std::string res;
-	for(std::size_t i = 0; i < maxlen; i++) {
+	for(size_t i = 0; i < maxlen; i++) {
 		if(src[i] == 0x00) {
 			break;
 		}
@@ -51,16 +51,16 @@ std::string stringncpy(const char src[], std::size_t maxlen) {
 	return res;
 }
 
-void swapEndian(char data[], std::size_t size) {
-	for(std::size_t i = 0; i < size / 2; i++) {
+void swapEndian(char data[], size_t size) {
+	for(size_t i = 0; i < size / 2; i++) {
 		std::swap(data[i], data[size - i - 1]);
 	}
 }
 
 std::string trimString(const std::string& str) {
 	std::string res = str;
-	std::size_t startpos = res.find_first_not_of(" \t");
-	std::size_t endpos = res.find_last_not_of(" \t");
+	size_t startpos = res.find_first_not_of(" \t");
+	size_t endpos = res.find_last_not_of(" \t");
 	if((std::string::npos == startpos) || (std::string::npos == endpos)) {
 		return std::string();
 	}

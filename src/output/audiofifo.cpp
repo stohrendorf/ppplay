@@ -32,12 +32,12 @@ void AudioFifo::calcVolume(uint16_t& leftVol, uint16_t& rightVol) {
 	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
 	leftVol = rightVol = 0;
 	uint64_t leftSum = 0, rightSum = 0;
-	std::size_t totalProcessed = 0;
+	size_t totalProcessed = 0;
 	for(AudioFrameBufferQueue::iterator it = m_queue.begin(); it != m_queue.end(); it++) {
 		const AudioFrameBuffer& buf = *it;
 		const BasicSample* bPtr = &buf->front().left;
-		std::size_t bLen = buf->size();
-		for(std::size_t i = 0; i < bLen; i++) {
+		size_t bLen = buf->size();
+		for(size_t i = 0; i < bLen; i++) {
 			leftSum  += abs(*(bPtr++));
 			rightSum += abs(*(bPtr++));
 		}
@@ -67,7 +67,7 @@ void AudioFifo::logify(uint16_t& leftVol, uint16_t& rightVol) {
 	rightVol = tmp > 0xffff ? 0xffff : tmp;
 }
 
-AudioFifo::AudioFifo(std::size_t frameCount) : m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_volumeLeft(0), m_volumeRight(0), m_queueMutex() {
+AudioFifo::AudioFifo(size_t frameCount) : m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_volumeLeft(0), m_volumeRight(0), m_queueMutex() {
 }
 
 
@@ -81,11 +81,11 @@ void AudioFifo::push(const AudioFrameBuffer& data) {
 	//LOG_DEBUG("Added %zd frames to the queue, now queued %zd frames", cp->size(), m_queuedFrames);
 }
 
-std::size_t AudioFifo::pullAll(AudioFrameBuffer& data) {
+size_t AudioFifo::pullAll(AudioFrameBuffer& data) {
 	return pull(data, nsize);
 }
 
-std::size_t AudioFifo::pull(BasicSampleFrame* data, std::size_t size) {
+size_t AudioFifo::pull(BasicSampleFrame* data, size_t size) {
 	AudioFrameBuffer buffer;
 	if(0 == pull(buffer, size))
 		return 0;
@@ -95,7 +95,7 @@ std::size_t AudioFifo::pull(BasicSampleFrame* data, std::size_t size) {
 	return buffer->size();
 }
 
-std::size_t AudioFifo::pull(AudioFrameBuffer& data, std::size_t size) {
+size_t AudioFifo::pull(AudioFrameBuffer& data, size_t size) {
 	//LOG_DEBUG("Requested %zd frames", size);
 	if(needsData())
 		return 0;
@@ -107,8 +107,8 @@ std::size_t AudioFifo::pull(AudioFrameBuffer& data, std::size_t size) {
 		data.reset(new AudioFrameBuffer::element_type(size, {0, 0}));
 	if(data->size() < size)
 		data->resize(size, {0, 0});
-	std::size_t copied = 0;
-	std::size_t toCopy = m_queue.front()->size();
+	size_t copied = 0;
+	size_t toCopy = m_queue.front()->size();
 	while(!m_queue.empty() && size != 0) {
 		AudioFrameBuffer& current = m_queue.front();
 		toCopy = std::min(current->size(), size);
@@ -132,7 +132,7 @@ std::size_t AudioFifo::pull(AudioFrameBuffer& data, std::size_t size) {
 	return copied;
 }
 
-std::size_t AudioFifo::copy(AudioFrameBuffer& data, std::size_t size) {
+size_t AudioFifo::copy(AudioFrameBuffer& data, size_t size) {
 	//LOG_DEBUG("Requested %zd frames", size);
 	if(needsData())
 		return 0;
@@ -143,9 +143,9 @@ std::size_t AudioFifo::copy(AudioFrameBuffer& data, std::size_t size) {
 		data.reset(new AudioFrameBuffer::element_type(size, {0, 0}));
 	if(data->size() < size)
 		data->resize(size, {0, 0});
-	std::size_t copied = 0;
+	size_t copied = 0;
 	AudioFrameBufferQueue::iterator queueIt = m_queue.begin();
-	std::size_t toCopy = (*queueIt)->size();
+	size_t toCopy = (*queueIt)->size();
 	while(queueIt != m_queue.end() && size != 0) {
 		AudioFrameBuffer& current = *queueIt;
 		toCopy = std::min(current->size(), size);
@@ -161,7 +161,7 @@ std::size_t AudioFifo::copy(AudioFrameBuffer& data, std::size_t size) {
 	return copied;
 }
 
-std::size_t AudioFifo::queuedLength() const {
+size_t AudioFifo::queuedLength() const {
 	return m_queuedFrames;
 }
 
@@ -177,7 +177,7 @@ uint16_t AudioFifo::volumeLeft() const {
 	return m_volumeLeft;
 }
 
-void AudioFifo::setMinFrameCount(std::size_t len) {
+void AudioFifo::setMinFrameCount(size_t len) {
 	m_minFrameCount = len;
 }
 

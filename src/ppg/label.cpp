@@ -43,8 +43,8 @@ Label::~Label() = default;
 
 void Label::sizeColorsToMax() {
 	int w = area().width();
-	m_fgColors.resize(std::max<std::size_t>(m_text.length(), w), Color::None);
-	m_bgColors.resize(std::max<std::size_t>(m_text.length(), w), Color::None);
+	m_fgColors.resize(std::max<size_t>(m_text.length(), w), Color::None);
+	m_bgColors.resize(std::max<size_t>(m_text.length(), w), Color::None);
 }
 
 void Label::setText(const std::string& txt) {
@@ -52,7 +52,7 @@ void Label::setText(const std::string& txt) {
 	sizeColorsToMax();
 }
 
-static std::string getColorString(const std::string& str, std::size_t start) {
+static std::string getColorString(const std::string& str, size_t start) {
 	BOOST_ASSERT(start<str.length() && str.at(start)=='{');
 	size_t end = str.find('}', start);
 	if(end == std::string::npos) {
@@ -95,7 +95,7 @@ void Label::setEscapedText(const std::string& txt) {
 	Color currentBg = Color::None;
 	std::string stripped;
 	std::vector<Color> fgc, bgc;
-	for(std::size_t i=0; i<txt.length(); i++) {
+	for(size_t i=0; i<txt.length(); i++) {
 		if(txt.at(i) == '{') {
 			std::string colStr = getColorString(txt,i);
 			if(!colStr.empty()) {
@@ -125,11 +125,11 @@ int Label::setWidth(int w) {
 	return area().width();
 }
 
-std::size_t Label::length() const {
+size_t Label::length() const {
 	return m_text.length();
 }
 
-void Label::setFgColorRange(std::size_t pos, Color color, std::size_t len) {
+void Label::setFgColorRange(size_t pos, Color color, size_t len) {
 	if(pos >= m_bgColors.size())
 		return;
 	if((len == 0) || (len + pos > m_bgColors.size()))
@@ -137,7 +137,7 @@ void Label::setFgColorRange(std::size_t pos, Color color, std::size_t len) {
 	std::fill_n(&m_fgColors.at(pos), len, color);
 }
 
-void Label::setBgColorRange(std::size_t pos, Color color, std::size_t len) {
+void Label::setBgColorRange(size_t pos, Color color, size_t len) {
 	if(pos >= m_bgColors.size())
 		return;
 	if((len == 0) || (len + pos > m_bgColors.size()))
@@ -164,7 +164,7 @@ void Label::drawThis() {
 	}
 	int w = area().width();
 	for(int localX = offset; localX < w; localX++) {
-		std::size_t textPos = localX - offset;
+		size_t textPos = localX - offset;
 		if(textPos >= length())
 			break;
 		drawChar(localX, 0, m_text.at(textPos));
@@ -175,10 +175,10 @@ void Label::drawThis() {
 	}
 }
 
-char& Label::charAt(std::size_t pos) {
+char& Label::charAt(size_t pos) {
 	return m_text.at(pos);
 }
-char Label::charAt(std::size_t pos) const {
+char Label::charAt(size_t pos) const {
 	return m_text.at(pos);
 }
 

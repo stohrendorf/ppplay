@@ -127,7 +127,7 @@ class S3mChannel : public GenChannel {
 		 */
 		void update(const S3mCell::Ptr cell, bool patDelay = false);
 		virtual void mixTick(MixerFrameBuffer& mixBuffer);
-		virtual void simTick(std::size_t bufSize);
+		virtual void simTick(size_t bufSize);
 		virtual void updateStatus();
 		virtual IArchive& serialize(IArchive* data);
 		virtual std::string cellString();

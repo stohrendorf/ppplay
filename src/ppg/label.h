@@ -61,7 +61,7 @@ class Label : public Widget {
 		 * @brief Get the label's text length
 		 * @return Text length
 		 */
-		std::size_t length() const;
+		size_t length() const;
 		/**
 		 * @brief Sets the label's text
 		 * @param[in] txt Text to assign to this label
@@ -91,28 +91,28 @@ class Label : public Widget {
 		 * @param[in] pos Position of the requested character
 		 * @return Reference to the character at position @a pos
 		 */
-		char& charAt(std::size_t pos);
+		char& charAt(size_t pos);
 		/**
 		 * @overload
 		 * @brief Get the character at position @a pos
 		 * @param[in] pos Position of the requested character
 		 * @return The character at position @a pos
 		 */
-		char charAt(std::size_t pos) const;
+		char charAt(size_t pos) const;
 		/**
 		 * @brief Set's the foreground color of @a len chars from position @a pos to @a color
 		 * @param[in] pos Starting position
 		 * @param[in] color New foreground color
 		 * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
 		 */
-		virtual void setFgColorRange(std::size_t pos, Color color = Color::None, std::size_t len = 1);
+		virtual void setFgColorRange(size_t pos, Color color = Color::None, size_t len = 1);
 		/**
 		 * @brief Set's the background color of @a len chars from position @a pos to @a color
 		 * @param[in] pos Starting position
 		 * @param[in] color New background color
 		 * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
 		 */
-		virtual void setBgColorRange(std::size_t pos, Color color = Color::None, std::size_t len = 1);
+		virtual void setBgColorRange(size_t pos, Color color = Color::None, size_t len = 1);
 		virtual int setHeight(int h);
 		virtual int setWidth(int w);
 };

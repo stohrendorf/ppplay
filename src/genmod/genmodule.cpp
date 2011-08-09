@@ -69,7 +69,7 @@ uint32_t GenModule::timeElapsed() const {
 	return static_cast<uint32_t>(m_playedFrames / frequency());
 }
 
-std::size_t GenModule::length() const {
+size_t GenModule::length() const {
 	return m_songLengths.at(m_currentSongIndex);
 }
 
@@ -88,8 +88,8 @@ bool GenModule::isMultiSong() const {
 void GenModule::removeEmptySongs() {
 	LOG_MESSAGE("Removing empty songs");
 	std::vector<StateIterator> nTr;
-	std::vector<std::size_t> nTrLen;
-	for(std::size_t i = 0; i < m_songs.size(); i++) {
+	std::vector<size_t> nTrLen;
+	for(size_t i = 0; i < m_songs.size(); i++) {
 		if(m_songLengths.at(i) != 0) {
 			nTr.push_back(m_songs.at(i));
 			nTrLen.push_back(m_songLengths.at(i));
@@ -100,7 +100,7 @@ void GenModule::removeEmptySongs() {
 	m_currentSongIndex = 0;
 }
 
-std::size_t GenModule::getAudioData(AudioFrameBuffer& buffer, std::size_t size) {
+size_t GenModule::getAudioData(AudioFrameBuffer& buffer, size_t size) {
 	IAudioSource::LockGuard guard(this);
 	if(!buffer) {
 		buffer.reset(new AudioFrameBuffer::element_type);
@@ -152,7 +152,7 @@ void GenModule::setPatternIndex(int16_t i) {
 	m_playbackInfo.pattern = i;
 }
 
-std::size_t GenModule::orderCount() const {
+size_t GenModule::orderCount() const {
 	return m_orders.size();
 }
 
@@ -164,11 +164,11 @@ void GenModule::setTitle(const std::string& t) {
 	m_title = t;
 }
 
-StateIterator& GenModule::multiSongAt(std::size_t idx) {
+StateIterator& GenModule::multiSongAt(size_t idx) {
 	return m_songs.at(idx);
 }
 
-std::size_t& GenModule::multiSongLengthAt(std::size_t idx) {
+size_t& GenModule::multiSongLengthAt(size_t idx) {
 	return m_songLengths.at(idx);
 }
 

@@ -44,9 +44,9 @@
 #include <thread>
 #undef _GLIBCXX_USE_NANOSLEEP
 
-// static const std::size_t BUFFERSIZE = 4096;
-// static const std::size_t SAMPLECOUNT = BUFFERSIZE / sizeof( BasicSample );
-// static const std::size_t FRAMECOUNT = BUFFERSIZE / sizeof( BasicSampleFrame );
+// static const size_t BUFFERSIZE = 4096;
+// static const size_t SAMPLECOUNT = BUFFERSIZE / sizeof( BasicSample );
+// static const size_t FRAMECOUNT = BUFFERSIZE / sizeof( BasicSampleFrame );
 
 static std::shared_ptr<ppg::SDLScreen> dosScreen;
 static std::shared_ptr<UIMain> uiMain;

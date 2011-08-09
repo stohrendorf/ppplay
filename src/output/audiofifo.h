@@ -51,8 +51,8 @@ class AudioFifo {
 		 */
 		void calcVolume(uint16_t& leftVol, uint16_t& rightVol);
 		AudioFrameBufferQueue m_queue; //!< @brief Queued audio chunks
-		std::size_t m_queuedFrames; //!< @brief Number of frames in the queue
-		std::size_t m_minFrameCount; //!< @brief Minimum number of frames the queue should contain
+		size_t m_queuedFrames; //!< @brief Number of frames in the queue
+		size_t m_minFrameCount; //!< @brief Minimum number of frames the queue should contain
 		uint16_t m_volumeLeft; //!< @brief Left volume
 		uint16_t m_volumeRight; //!< @brief Right volume
 		std::mutex m_queueMutex; //!< @brief Mutex to lock queue access
@@ -60,27 +60,27 @@ class AudioFifo {
 		/**
 		 * @brief Alias for "No size specified" for where a size parameter is needed
 		 */
-		static const std::size_t nsize = ~0;
+		static const size_t nsize = ~0;
 		/**
 		 * @brief Initialize the buffer
 		 * @param[in] minFrameCount Initial value for m_minFrameCount
 		 */
-		AudioFifo(std::size_t minFrameCount);
+		AudioFifo(size_t minFrameCount);
 		/**
 		 * @brief Get the number of buffered frames
 		 * @return Number of buffered frames
 		 */
-		std::size_t queuedLength() const;
+		size_t queuedLength() const;
 		/**
 		 * @brief Get the minimum number of frames that should be queued
 		 * @return m_minFrameCount
 		 */
-		std::size_t minFrameCount() const;
+		size_t minFrameCount() const;
 		/**
 		 * @brief Get the number of queued chunks
 		 * @return Number of queued chunks
 		 */
-		std::size_t queuedChunkCount() const;
+		size_t queuedChunkCount() const;
 		/**
 		 * @brief Returns @c true if this buffer needs more data
 		 * @retval true if this buffer needs more data
@@ -98,7 +98,7 @@ class AudioFifo {
 		 * @return Copied frames
 		 * @details This also updates the volumes
 		 */
-		std::size_t pullAll(AudioFrameBuffer& data);
+		size_t pullAll(AudioFrameBuffer& data);
 		/**
 		 * @brief Copy part of the internal FIFO buffer to @a data
 		 * @param[out] data Destination buffer
@@ -106,7 +106,7 @@ class AudioFifo {
 		 * @return Copied frames
 		 * @details This also updates the volumes
 		 */
-		std::size_t pull(AudioFrameBuffer& data, std::size_t size);
+		size_t pull(AudioFrameBuffer& data, size_t size);
 		/**
 		 * @brief Copy part of the internal FIFO buffer to @a data
 		 * @param[out] data Destination buffer
@@ -114,7 +114,7 @@ class AudioFifo {
 		 * @return Copied frames
 		 * @details This also updates the volumes
 		 */
-		std::size_t pull(BasicSampleFrame* data, std::size_t size);
+		size_t pull(BasicSampleFrame* data, size_t size);
 		/**
 		 * @brief Copy part of the internal FIFO buffer to @a data without removing them from the queue
 		 * @param[out] data Destination buffer
@@ -122,12 +122,12 @@ class AudioFifo {
 		 * @return Copied frames
 		 * @details This also updates the volumes
 		 */
-		std::size_t copy(AudioFrameBuffer& data, std::size_t size);
+		size_t copy(AudioFrameBuffer& data, size_t size);
 		/**
 		 * @brief Set the FIFO buffer length
 		 * @param[in] len The requested buffer length
 		 */
-		void setMinFrameCount(std::size_t len);
+		void setMinFrameCount(size_t len);
 		/**
 		 * @brief Get the left volume
 		 * @return The left channel's volume

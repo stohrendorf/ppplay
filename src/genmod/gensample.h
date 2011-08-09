@@ -130,7 +130,7 @@ class GenSample {
 		 * @brief Get the sample's length
 		 * @return The sample's length
 		 */
-		std::size_t length() const;
+		size_t length() const;
 		/**
 		 * @brief Get the loop type
 		 * @return The loop type
@@ -212,17 +212,17 @@ class GenSample {
 		 * @brief Set the sample's length
 		 * @param[in] l The new length
 		 */
-		void setLength(std::size_t l);
+		void setLength(size_t l);
 		/**
 		 * @brief Set the sample's loop start
 		 * @param[in] s The new loop start
 		 */
-		void setLoopStart(std::size_t s);
+		void setLoopStart(size_t s);
 		/**
 		 * @brief Set the sample's loop end
 		 * @param[in] e The new loop end
 		 */
-		void setLoopEnd(std::size_t e);
+		void setLoopEnd(size_t e);
 		/**
 		 * @brief Set the sample's default volume
 		 * @param[in] v The new volume

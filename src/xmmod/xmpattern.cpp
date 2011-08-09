@@ -59,7 +59,7 @@ bool XmPattern::load(BinStream& str) {
 		LOG_WARNING("Number of rows out of range: %u", rows);
 		return false;
 	}
-	for(std::size_t chan = 0; chan < m_columns.size(); chan++) {
+	for(size_t chan = 0; chan < m_columns.size(); chan++) {
 		m_columns.at(chan).resize(rows, XmCell::Ptr());
 	}
 	uint16_t packedSize;
@@ -75,7 +75,7 @@ bool XmPattern::load(BinStream& str) {
 		return true;
 	}
 	for(uint16_t row = 0; row < rows; row++) {
-		for(std::size_t chan = 0; chan < m_columns.size(); chan++) {
+		for(size_t chan = 0; chan < m_columns.size(); chan++) {
 			XmCell* cell = new XmCell();
 			if(!cell->load(str)) {
 				return false;
@@ -94,14 +94,14 @@ XmCell::Ptr XmPattern::cellAt(uint16_t column, uint16_t row) {
 	return track.at(row);
 }
 
-std::size_t XmPattern::numRows() const {
+size_t XmPattern::numRows() const {
 	if(numChannels() == 0) {
 		return 0;
 	}
 	return m_columns.at(0).size();
 }
 
-std::size_t XmPattern::numChannels() const {
+size_t XmPattern::numChannels() const {
 	return m_columns.size();
 }
 

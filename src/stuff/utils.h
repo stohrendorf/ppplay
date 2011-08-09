@@ -73,7 +73,7 @@ std::string stringf(const char fmt[], ...) __attribute__((format(printf, 1, 2)))
  * @return Copied string
  * @note Stops at the NUL character
  */
-std::string stringncpy(const char src[], std::size_t maxlen);
+std::string stringncpy(const char src[], size_t maxlen);
 
 /**
  * @brief Get low nibble of a byte
@@ -102,7 +102,7 @@ inline uint8_t highNibble(uint8_t x) {
  * @details
  * Reverts the bytes in @a data
  */
-void swapEndian(char data[], std::size_t size);
+void swapEndian(char data[], size_t size);
 
 /**
  * @overload

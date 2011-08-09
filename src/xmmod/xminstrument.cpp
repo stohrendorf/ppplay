@@ -73,7 +73,7 @@ XmInstrument::XmInstrument() :
 }
 
 bool XmInstrument::load(BinStream& str) {
-	std::size_t startPos = str.pos();
+	size_t startPos = str.pos();
 	InstrumentHeader hdr;
 	str.read(reinterpret_cast<char*>(&hdr), sizeof(hdr));
 	/*	if(hdr.type!=0) {

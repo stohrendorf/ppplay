@@ -106,7 +106,7 @@ class GenChannel : public ISerializable {
 		 * @param[in] bufSize Buffer size
 		 * @see mixTick(MixerFrameBuffer&)
 		 */
-		virtual void simTick(std::size_t bufSize) = 0;
+		virtual void simTick(size_t bufSize) = 0;
 		/**
 		 * @brief Updates the status string returned by statusString()
 		 */

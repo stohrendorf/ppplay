@@ -207,7 +207,7 @@ SDLScreen* SDLScreen::instance()
 	}
 
 	void SDLScreen::clear( uint8_t c, Color foreground, Color background ) {
-		std::size_t size = area().width() * area().height();
+		size_t size = area().width() * area().height();
 		std::fill_n( g_chars, size, c );
 		std::fill_n( g_colorsF, size, foreground );
 		std::fill_n( g_colorsB, size, background );
@@ -228,13 +228,13 @@ SDLScreen* SDLScreen::instance()
 			}
 		}
 		{
-			std::size_t size = w * h;
+			size_t size = w * h;
 			std::copy(g_chars, g_chars+size, g_currentChars);
 			std::copy(g_colorsF, g_colorsF+size, g_currentColorsF);
 			std::copy(g_colorsB, g_colorsB+size, g_currentColorsB);
 		}
 		if( area().contains( m_cursorX, m_cursorY ) ) {
-			std::size_t ofs = m_cursorX + m_cursorY * w;
+			size_t ofs = m_cursorX + m_cursorY * w;
 			Uint32 c1 = g_dosColors[static_cast<int>(~g_colorsF[ofs])];
 			Uint32 c2 = g_dosColors[static_cast<int>(~g_colorsB[ofs])];
 			drawChar16( m_cursorX, m_cursorY, g_chars[ofs], c1, c2, true );

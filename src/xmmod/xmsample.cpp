@@ -85,7 +85,7 @@ bool XmSample::loadData(BinStream& str) {
 	if(m_16bit) {   // 16 bit
 		int16_t smp16 = 0;
 		BasicSample* smpPtr = nonConstDataMono();
-		for(std::size_t i = 0; i < length(); i++) {
+		for(size_t i = 0; i < length(); i++) {
 			int16_t delta;
 			str.read(&delta);
 			smp16 += delta;
@@ -95,7 +95,7 @@ bool XmSample::loadData(BinStream& str) {
 	else { // 8 bit
 		int8_t smp8 = 0;
 		BasicSample* smpPtr = nonConstDataMono();
-		for(std::size_t i = 0; i < length(); i++) {
+		for(size_t i = 0; i < length(); i++) {
 			int8_t delta;
 			str.read(&delta);
 			smp8 += delta;

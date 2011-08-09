@@ -142,14 +142,14 @@ bool XmModule::load(const std::string& filename) {
 			octShift++;
 		}
 		dest = m_noteToPeriod.begin();
-		for(std::size_t i = 0; i < m_noteToPeriod.size() / 2 - 1; i++) {
+		for(size_t i = 0; i < m_noteToPeriod.size() / 2 - 1; i++) {
 			dest[1] = (dest[0] + dest[2]) >> 1;
 			dest += 2;
 		}
 	}
 	else {
 		uint16_t val = 121 * 16;
-		for(std::size_t i = 0; i < m_noteToPeriod.size(); i++) {
+		for(size_t i = 0; i < m_noteToPeriod.size(); i++) {
 			m_noteToPeriod.at(i) = val * 4;
 			val--;
 		}
@@ -182,7 +182,7 @@ void XmModule::buildTick(AudioFrameBuffer& buffer) {
 	buffer->resize(mixerBuffer->size());
 	MixerSample* mixerBufferPtr = &mixerBuffer->front().left;
 	BasicSample* bufPtr = &buffer->front().left;
-	for(std::size_t i = 0; i < mixerBuffer->size(); i++) {    // postprocess...
+	for(size_t i = 0; i < mixerBuffer->size(); i++) {    // postprocess...
 		*(bufPtr++) = clipSample(*(mixerBufferPtr++) >> 2);
 		*(bufPtr++) = clipSample(*(mixerBufferPtr++) >> 2);
 	}
@@ -194,7 +194,7 @@ void XmModule::buildTick(AudioFrameBuffer& buffer) {
 	setPosition(position() + mixerBuffer->size());
 }
 
-void XmModule::simulateTick(std::size_t& bufferLength) {
+void XmModule::simulateTick(size_t& bufferLength) {
 	try {
 		bufferLength = tickBufferLength();
 		BOOST_ASSERT( playbackInfo().pattern < m_patterns.size() );
@@ -571,7 +571,7 @@ void XmModule::doPatLoop(int16_t next) {
 IArchive& XmModule::serialize(IArchive* data) {
 	GenModule::serialize(data)
 	% m_amiga;
-	for(std::size_t i = 0; i < m_channels.size(); i++) {
+	for(size_t i = 0; i < m_channels.size(); i++) {
 		if(!m_channels.at(i)) {
 			continue;
 		}
@@ -594,7 +594,7 @@ bool XmModule::initialize(uint32_t frq) {
 	}
 	IAudioSource::initialize(frq);
 	LOG_MESSAGE("Calculating track length and preparing seek operations...");
-	std::size_t currTickLen = 0;
+	size_t currTickLen = 0;
 // 	multiTrackAt(0).startOrder = playbackInfo().order;
 	do {
 		simulateTick(currTickLen);

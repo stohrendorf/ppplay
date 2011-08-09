@@ -477,7 +477,7 @@ void S3mChannel::mixTick(MixerFrameBuffer& mixBuffer) {
 		volR = m_panning;
 	else if(m_panning == 0xa4)
 		volR = 0xa4;
-	for(std::size_t i = 0; i < mixBuffer->size(); i++) {
+	for(size_t i = 0; i < mixBuffer->size(); i++) {
 		int16_t sampleVal = currSmp->leftSampleAt(pos);
 		if(sampleVal != 0xa4)
 			sampleVal = (sampleVal * volL) >> 5;
@@ -499,7 +499,7 @@ void S3mChannel::mixTick(MixerFrameBuffer& mixBuffer) {
 		setActive(false);
 }
 
-void S3mChannel::simTick(std::size_t bufSize) {
+void S3mChannel::simTick(size_t bufSize) {
 	if(isDisabled())
 		return;
 	if(!isActive() || !currentSample() || m_basePeriod == 0)

@@ -87,7 +87,7 @@ class IArchive {
 		 * @return Reference to *this
 		 * @note Operation depends on m_loading
 		 */
-		template<class T> IArchive& array(T* data, std::size_t count) {
+		template<class T> IArchive& array(T* data, size_t count) {
 			BOOST_ASSERT(data != nullptr);
 			if(m_loading) {
 				m_stream->read(data, count);

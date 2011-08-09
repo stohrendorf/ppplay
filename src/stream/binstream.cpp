@@ -23,19 +23,19 @@ BinStream::BinStream(BinStream::SpIoStream stream) : m_stream(stream)
 }
 
 template<typename TR>
-BinStream& BinStream::read(TR* data, const std::size_t count) {
+BinStream& BinStream::read(TR* data, const size_t count) {
 	m_stream->read(reinterpret_cast<char*>(data), sizeof(TR)*count);
 	return *this;
 }
 template<typename TW>
-BinStream& BinStream::write(const TW* data, const std::size_t count) {
+BinStream& BinStream::write(const TW* data, const size_t count) {
 	m_stream->write(reinterpret_cast<const char*>(data), sizeof(TW)*count);
 	return *this;
 }
 
 #define BINSTREAM_RW_IMPL(tn)\
-	template BinStream &BinStream::read<tn>(tn *, std::size_t); \
-	template BinStream &BinStream::write<tn>(const tn*, std::size_t);
+	template BinStream &BinStream::read<tn>(tn *, size_t); \
+	template BinStream &BinStream::write<tn>(const tn*, size_t);
 
 BINSTREAM_RW_IMPL(int8_t)
 BINSTREAM_RW_IMPL(uint8_t)

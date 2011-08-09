@@ -37,7 +37,7 @@ class StateIterator {
 		typedef std::shared_ptr<StateIterator> Ptr; //!< @brief Class pointer
 	private:
 		IArchive::Vector m_states; //!< @brief The states
-		std::size_t m_stateIndex; //!< @brief Current index of the iterator
+		size_t m_stateIndex; //!< @brief Current index of the iterator
 	public:
 		static const uint16_t stopHere = ~0; //!< @brief Const to define unused track
 		/**

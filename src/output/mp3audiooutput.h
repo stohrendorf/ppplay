@@ -56,7 +56,7 @@ class MP3AudioOutput : public IAudioOutput {
 		//! @brief Whether the output is paused
 		bool m_paused;
 		//! @brief Default size of m_buffer
-		static const std::size_t BufferSize = 4096;
+		static const size_t BufferSize = 4096;
 		/**
 		 * @brief Encoder thread handler
 		 * @param[in] src Audio output source

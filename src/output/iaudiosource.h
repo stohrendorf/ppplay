@@ -83,7 +83,7 @@ class IAudioSource {
 		 * @returns The number of frames actually returned - should be equal to @c buffer->size()
 		 * @note If this function returns 0, the audio output device should stop playback
 		 */
-		virtual std::size_t getAudioData(AudioFrameBuffer& buffer, std::size_t requestedFrames) = 0;
+		virtual size_t getAudioData(AudioFrameBuffer& buffer, size_t requestedFrames) = 0;
 		/**
 		 * @brief Initialized the source with given frequency
 		 * @param[in] frequency Requested frequency

@@ -30,7 +30,7 @@ void SDLAudioOutput::sdlAudioCallback(void* userdata, uint8_t* stream, int len_b
 			outpSdl->pause();
 			break;
 		}
-		std::size_t copied = outpSdl->m_fifo.pull(reinterpret_cast<BasicSampleFrame*>(stream), len_bytes / sizeof(BasicSampleFrame));
+		size_t copied = outpSdl->m_fifo.pull(reinterpret_cast<BasicSampleFrame*>(stream), len_bytes / sizeof(BasicSampleFrame));
 		if(copied == 0) {
 			outpSdl->setErrorCode(InputDry);
 			outpSdl->pause();

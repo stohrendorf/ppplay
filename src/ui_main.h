@@ -47,8 +47,8 @@ class UIMain : public ppg::Widget, public SDLTimer {
 		ppg::Label* posLabel();
 		ppg::Label* playbackInfo();
 		ppg::StereoPeakBar* volBar();
-		ppg::Label* chanInfo( std::size_t idx );
-		ppg::Label* chanCell( std::size_t idx );
+		ppg::Label* chanInfo( size_t idx );
+		ppg::Label* chanCell( size_t idx );
 		ppg::Label* trackerInfo();
 		ppg::Label* modTitle();
 		virtual void onTimer();
