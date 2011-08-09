@@ -17,23 +17,59 @@ ModModule::~ModModule() = default;
 /**
  * @brief Maps module IDs to their respective channel counts
  */
-typedef std::pair<std::string, uint8_t> IdChanPair;
+struct IdMetaInfo {
+	const std::string id;
+	const uint8_t channels;
+	const std::string tracker;
+};
  
-static const std::array<IdChanPair, 1> idChanMap = {{
-	{"M.K.", 4}
+static const std::array<IdMetaInfo, 31> idMetaData  = {{
+	{"M.K.", 4, "ProTracker"},
+	{"M!K!", 4, "ProTracker"},
+	{"FLT4", 4, "Startrekker"},
+	{"FLT8", 8, "Startrekker"},
+	{"CD81", 8, "Falcon"}, //< @todo Check tracker name
+	{"TDZ1", 1, "TakeTracker"},
+	{"TDZ2", 2, "TakeTracker"},
+	{"TDZ3", 3, "TakeTracker"},
+	{"5CHN", 1, "TakeTracker"},
+	{"7CHN", 1, "TakeTracker"},
+	{"9CHN", 1, "TakeTracker"},
+	{"11CH", 11, "TakeTracker"},
+	{"13CH", 13, "TakeTracker"},
+	{"15CH", 15, "TakeTracker"},
+	{"2CHN", 2, "FastTracker"},
+	{"4CHN", 4, "FastTracker"},
+	{"6CHN", 6, "FastTracker"},
+	{"8CHN", 8, "FastTracker"},
+	{"10CH", 10, "FastTracker"},
+	{"12CH", 12, "FastTracker"},
+	{"14CH", 14, "FastTracker"},
+	{"16CH", 16, "FastTracker"},
+	{"18CH", 18, "FastTracker"},
+	{"20CH", 20, "FastTracker"},
+	{"22CH", 22, "FastTracker"},
+	{"24CH", 24, "FastTracker"},
+	{"26CH", 26, "FastTracker"},
+	{"28CH", 28, "FastTracker"},
+	{"30CH", 30, "FastTracker"},
+	{"32CH", 32, "FastTracker"},
+	{"OCTA", 8, "Octalyzer"}, //< @todo Check tracker name
 }};
 
-uint8_t findChanId(BinStream* stream) {
-	char id[4];
+IdMetaInfo findMeta(BinStream* stream) {
+	static const IdMetaInfo none = {"", 0, ""};
+	char id[5];
 	stream->read(id, 4);
-	for(const IdChanPair& p : idChanMap) {
-		if(id == p.first) {
-			return p.second;
+	id[4] = '\0';
+	for(const IdMetaInfo& mi : idMetaData) {
+		if(id == mi.id) {
+			return mi;
 		}
 	}
 	// revert...
 	stream->seekrel(-4);
-	return 0;
+	return none;
 }
 
 bool ModModule::load(const std::string& filename)
@@ -51,16 +87,17 @@ bool ModModule::load(const std::string& filename)
 	char modName[22];
 	stream.read(modName, 22);
 	setTitle( stringncpy(modName, 22) );
-	setTrackerInfo( "ProTracker" );
 	// check 31-sample mod
+	LOG_MESSAGE("Probing meta-info for 31-sample mod...");
 	stream.seek(1080);
-	uint8_t numChannels = findChanId(&stream);
-	if(numChannels == 0) {
+	IdMetaInfo meta = findMeta(&stream);
+	if(meta.channels == 0) {
 		LOG_WARNING("Could not find a valid module ID");
 		return false;
 	}
-	m_channels.resize(numChannels);
-	stream.seek(20);
+	setTrackerInfo(meta.tracker);
+	m_channels.resize(meta.channels);
+	stream.seek(22);
 	for(uint8_t i=0; i<31; i++) {
 		ModSample::Ptr smp(new ModSample());
 		if(!smp->loadHeader(stream)) {
@@ -96,7 +133,7 @@ bool ModModule::load(const std::string& filename)
 	}
 	for(uint8_t i=0; i<maxPatNum; i++) {
 		ModPattern::Ptr pat(new ModPattern());
-		if(!pat->load(stream, numChannels)) {
+		if(!pat->load(stream, meta.channels)) {
 			LOG_WARNING("Could not load pattern");
 			return false;
 		}
