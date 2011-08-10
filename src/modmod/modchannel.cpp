@@ -33,6 +33,11 @@ static const uint32_t FrequencyBase = 7159090.5/2;
 static const uint32_t FrequencyBase = 7093789.2/2;
 #endif
 
+/**
+ * @todo According to some Amiga assembler sources, periods
+ * are clipped to a range of 0x71..0x358 (113..856 decimal respectively).
+ */
+
 ModChannel::ModChannel(ModModule* parent) : m_module(parent), m_currentCell(), m_volume(0),
 	m_finetune(0), m_tremoloWaveform(0), m_vibratoWaveform(0), m_glissando(false),
 	m_period(0), m_lastVibratoFx(0), m_lastPortaFx(0), m_sampleIndex(0), m_bresen(1,1)
