@@ -50,6 +50,7 @@ private:
 	ModSample::Vector m_samples; //!< @brief Samples
 	ModPattern::Vector m_patterns; //!< @brief Patterns
 	std::vector<ModChannel::Ptr> m_channels; //!< @brief Channels
+	bool adjustPosition(bool doStore);
 protected:
 	virtual IArchive& serialize(IArchive* data);
 public:
@@ -66,6 +67,7 @@ public:
 	virtual bool jumpPrevOrder();
 	virtual std::string channelCellString(int16_t idx);
 	virtual bool initialize(uint32_t frq);
+	virtual uint8_t channelCount() const;
 	ModSample::Ptr sampleAt(size_t idx) const;
 };
 

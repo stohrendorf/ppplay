@@ -63,6 +63,7 @@ public:
 	virtual std::string effectDescription() const;
 	virtual std::string cellString();
 	virtual IArchive& serialize(IArchive* data);
+	void update(const ModCell::Ptr& cell);
 private:
 	void fxArpeggio(uint8_t fxByte);
 	void fxPortaUp(uint8_t fxByte);

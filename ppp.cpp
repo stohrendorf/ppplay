@@ -25,6 +25,7 @@
 
 #include "src/s3mmod/s3mmodule.h"
 #include "src/xmmod/xmmodule.h"
+#include "src/modmod/modmodule.h"
 
 #include "src/output/audiofifo.h"
 #include "src/output/sdlaudiooutput.h"
@@ -188,8 +189,11 @@ int main( int argc, char* argv[] ) {
 			if( !module ) {
 				module = ppp::xm::XmModule::factory( modFileName, 44100, 2 );
 				if( !module ) {
-					LOG_ERROR( "Error on loading the mod..." );
-					return EXIT_FAILURE;
+					module = ppp::mod::ModModule::factory( modFileName, 44100, 2 );
+					if(!module) {
+						LOG_ERROR( "Error on loading the mod..." );
+						return EXIT_FAILURE;
+					}
 				}
 			}
 		}

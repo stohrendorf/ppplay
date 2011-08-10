@@ -42,6 +42,42 @@ ModChannel::ModChannel(ModModule* parent) : m_module(parent), m_currentCell(), m
 
 ModChannel::~ModChannel() = default;
 
+void ModChannel::update(const ModCell::Ptr& cell)
+{
+	if(m_module->tick() == 0) {
+		if(cell) {
+			m_currentCell = *cell;
+		}
+		else {
+			m_currentCell.reset();
+		}
+		if(m_currentCell.period() != 0) {
+			m_period = 0;
+			// TODO porta, offset
+			setPosition(0);
+			if(currentSample()) {
+				setActive(true);
+			}
+		}
+		if(m_currentCell.sampleNumber() != 0) {
+			m_sampleIndex = m_currentCell.sampleNumber()-1;
+			if(currentSample()) {
+				m_finetune = currentSample()->finetune();
+			}
+			else {
+				setActive(false);
+				return;
+			}
+		}
+		if(m_currentCell.effect() == 0x0c) {
+			fxSetVolume(m_currentCell.effectValue());
+		}
+		else if(m_currentCell.effect() == 0x0f) {
+			fxSetSpeed(m_currentCell.effectValue());
+		}
+	}
+}
+
 ModSample::Ptr ModChannel::currentSample() const
 {
 	return m_module->sampleAt(m_sampleIndex);
@@ -71,7 +107,7 @@ std::string ModChannel::noteName()
 
 IArchive& ModChannel::serialize(IArchive* data)
 {
-    // TODO return ppp::GenChannel::serialize(data);
+    return GenChannel::serialize(data);
 }
 
 void ModChannel::simTick(size_t bufsize)
@@ -268,6 +304,21 @@ void ModChannel::fxPortaUp(uint8_t fxByte)
 	reuseIfZero(m_lastPortaFx, fxByte);
 	// TODO clip
 	m_period -= fxByte;
+}
+
+void ModChannel::fxVibrato(uint8_t fxByte)
+{
+	// TODO
+}
+
+void ModChannel::fxPorta(uint8_t fxByte)
+{
+	// TODO
+}
+
+void ModChannel::updateStatus()
+{
+	// TODO
 }
 
 }

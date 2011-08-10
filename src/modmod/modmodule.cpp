@@ -4,8 +4,22 @@
 #include "stream/fbinstream.h"
 #include "logger/logger.h"
 
+#include <boost/exception/all.hpp>
+
 namespace ppp {
 namespace mod {
+
+GenModule::Ptr ModModule::factory(const std::string& filename, uint32_t frequency, uint8_t maxRpt)
+{
+	ModModule::Ptr result(new ModModule(maxRpt));
+	if(!result->load(filename)) {
+		return GenModule::Ptr();
+	}
+	if(!result->initialize(frequency)) {
+		return GenModule::Ptr();
+	}
+	return result;
+}
 
 ModModule::ModModule(uint8_t maxRpt): GenModule(maxRpt),
 	m_samples(), m_patterns(), m_channels()
@@ -104,7 +118,9 @@ bool ModModule::load(const std::string& filename)
 		return false;
 	}
 	setTrackerInfo(meta.tracker);
-	m_channels.resize(meta.channels);
+	for(int i=0; i<meta.channels; i++) {
+		m_channels.push_back( ModChannel::Ptr(new ModChannel(this)) );
+	}
 	stream.seek(22);
 	for(uint8_t i=0; i<31; i++) {
 		ModSample::Ptr smp(new ModSample());
@@ -127,7 +143,7 @@ bool ModModule::load(const std::string& filename)
 		for(uint8_t i=0; i<128; i++) {
 			stream.read(&tmp);
 			if(i>=songLen) {
-				tmp = 0xff;
+				continue;
 			}
 			else if(tmp>maxPatNum) {
 				maxPatNum = tmp;
@@ -136,7 +152,7 @@ bool ModModule::load(const std::string& filename)
 				LOG_WARNING("Pattern number out of range: %u", maxPatNum);
 				return false;
 			}
-			orderAt(i)->setIndex(tmp);
+			addOrder( GenOrder::Ptr(new GenOrder(tmp)) );
 		}
 	}
 	for(uint8_t i=0; i<maxPatNum; i++) {
@@ -157,7 +173,131 @@ bool ModModule::load(const std::string& filename)
 
 void ModModule::buildTick(AudioFrameBuffer& buf)
 {
-// TODO
+	try {
+		if(!buf) {
+			buf.reset(new AudioFrameBuffer::element_type);
+		}
+/*		if(!adjustPosition(false, true))
+			return;*/
+		BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
+		if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat()) {
+			buf.reset();
+			return;
+		}
+		// update channels...
+		setPatternIndex(mapOrder(playbackInfo().order)->index());
+		ModPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
+		if(!currPat) {
+			return;
+		}
+		MixerFrameBuffer mixerBuffer(new MixerFrameBuffer::element_type(tickBufferLength(), {0, 0}));
+		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
+			ModChannel::Ptr chan = m_channels.at(currTrack);
+			BOOST_ASSERT(chan.use_count()>0);
+			ModCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			chan->update(cell);
+			chan->mixTick(mixerBuffer);
+		}
+		buf->resize(mixerBuffer->size());
+		MixerSample* mixerBufferPtr = &mixerBuffer->front().left;
+		BasicSample* bufPtr = &buf->front().left;
+		for(size_t i = 0; i < mixerBuffer->size(); i++) {    // postprocess...
+			*(bufPtr++) = clipSample(*(mixerBufferPtr++) >> 2);
+			*(bufPtr++) = clipSample(*(mixerBufferPtr++) >> 2);
+		}
+// 		adjustPosition(true, true);
+		if(!adjustPosition(false)) {
+			buf->clear();
+			return;
+		}
+		setPosition(position() + buf->size());
+	}
+	catch( boost::exception& e) {
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+	}
+	catch(...) {
+		BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
+	}
+}
+
+bool ModModule::adjustPosition(bool doStore)
+{
+	BOOST_ASSERT(orderCount() != 0);
+	bool orderChanged = false;
+	nextTick();
+	if(tick() == 0) {
+		setRow((playbackInfo().row + 1) & 0x3f);
+		if(playbackInfo().row == 0) {
+			orderAt(playbackInfo().order)->increasePlaybackCount();
+			setOrder(playbackInfo().order + 1);
+			orderChanged = true;
+		}
+	}
+	GenOrder::Ptr ord = mapOrder(playbackInfo().order);
+	if(!ord || ord->index()==255) {
+		return false;
+	}
+	setPatternIndex(ord->index());
+	if(orderChanged) {
+		try {
+			if(doStore) {
+				multiSongAt(currentSongIndex()).newState()->archive(this).finishSave();
+			}
+			else {
+				bool wasLocked = tryLock();
+				multiSongAt(currentSongIndex()).nextState()->archive(this).finishLoad();
+				if(wasLocked) {
+					unlock();
+				}
+			}
+		}
+		catch( boost::exception& e) {
+			BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+		}
+		catch(...) {
+			BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
+		}
+	}
+	return true;
+}
+
+void ModModule::simulateTick(size_t& bufLen)
+{
+	try {
+		bufLen = 0;
+/*		if(!adjustPosition(false, true))
+			return;*/
+		BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
+		if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat()) {
+			return;
+		}
+		// update channels...
+		setPatternIndex(mapOrder(playbackInfo().order)->index());
+		ModPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
+		if(!currPat) {
+			return;
+		}
+		bufLen = tickBufferLength(); // in frames
+		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
+			ModChannel::Ptr chan = m_channels.at(currTrack);
+			BOOST_ASSERT(chan.use_count()>0);
+			ModCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			chan->update(cell);
+			chan->simTick(bufLen);
+		}
+// 		adjustPosition(true, true);
+		if(!adjustPosition(true)) {
+			bufLen = 0;
+			return;
+		}
+		setPosition(position() + bufLen);
+	}
+	catch( boost::exception& e) {
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+	}
+	catch(...) {
+		BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
+	}
 }
 
 std::string ModModule::channelCellString(int16_t idx)
@@ -232,6 +372,11 @@ IArchive& ModModule::serialize(IArchive* data)
 		data->archive(chan.get());
 	}
 	return *data;
+}
+
+uint8_t ModModule::channelCount() const
+{
+	return m_channels.size();
 }
 
 }

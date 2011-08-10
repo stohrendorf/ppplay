@@ -31,6 +31,16 @@ ModCell::ModCell() : m_sampleNumber(0), m_period(0), m_effect(0), m_effectValue(
 {
 }
 
+void ModCell::reset()
+{
+	m_sampleNumber = 0;
+	m_period = 0;
+	m_effect = 0;
+	m_effectValue = 0;
+	m_noteIndex = 255;
+	m_note = "   ";
+}
+
 ModCell::~ModCell() = default;
 
 bool ModCell::load(BinStream& str)

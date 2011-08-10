@@ -32,7 +32,6 @@ namespace mod {
 
 class ModCell : public IPatternCell
 {
-	DISABLE_COPY(ModCell)
 public:
 	typedef std::shared_ptr<ModCell> Ptr; //!< @brief Class pointer
 	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
@@ -52,6 +51,7 @@ public:
 	uint16_t period() const;
 	uint8_t effect() const;
 	uint8_t effectValue() const;
+	void reset();
 	virtual IArchive& serialize(IArchive* data);
 private:
 	uint8_t m_sampleNumber;

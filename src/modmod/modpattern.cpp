@@ -5,7 +5,9 @@
 namespace ppp {
 namespace mod {
 
-ModPattern::ModPattern() = default;
+ModPattern::ModPattern() : m_channels()
+{
+}
 
 ModCell::Ptr ModPattern::createCell(uint16_t trackIndex, int16_t row) {
 	BOOST_ASSERT((row >= 0) && (row <= 63));
