@@ -1,0 +1,7 @@
+build/
+.kdev4/
+/config.h
+/Doxyfile
+
+*~
+
