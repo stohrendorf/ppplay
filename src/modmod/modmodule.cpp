@@ -22,7 +22,8 @@ GenModule::Ptr ModModule::factory(const std::string& filename, uint32_t frequenc
 }
 
 ModModule::ModModule(uint8_t maxRpt): GenModule(maxRpt),
-	m_samples(), m_patterns(), m_channels()
+	m_samples(), m_patterns(), m_channels(), m_patLoopRow(-1),
+	m_patLoopCount(-1), m_breakRow(-1), m_patDelayCount(-1), m_breakOrder(-1)
 {
 }
 
@@ -30,6 +31,10 @@ ModModule::~ModModule() = default;
 
 ModSample::Ptr ModModule::sampleAt(size_t idx) const
 {
+	if(idx == 0) {
+		return ModSample::Ptr();
+	}
+	idx--;
 	if(idx>=m_samples.size()) {
 		return ModSample::Ptr();
 	}
@@ -106,9 +111,9 @@ bool ModModule::load(const std::string& filename)
 	setTempo(125);
 	setSpeed(6);
 	setGlobalVolume(0x40);
-	char modName[22];
-	stream.read(modName, 22);
-	setTitle( stringncpy(modName, 22) );
+	char modName[20];
+	stream.read(modName, 20);
+	setTitle( stringncpy(modName, 20) );
 	// check 31-sample mod
 	LOG_MESSAGE("Probing meta-info for 31-sample mod...");
 	stream.seek(1080);
@@ -121,7 +126,7 @@ bool ModModule::load(const std::string& filename)
 	for(int i=0; i<meta.channels; i++) {
 		m_channels.push_back( ModChannel::Ptr(new ModChannel(this)) );
 	}
-	stream.seek(22);
+	stream.seek(20);
 	for(uint8_t i=0; i<31; i++) {
 		ModSample::Ptr smp(new ModSample());
 		if(!smp->loadHeader(stream)) {
@@ -134,10 +139,12 @@ bool ModModule::load(const std::string& filename)
 	{
 		// load orders
 		uint8_t songLen;
+		LOG_DEBUG("Song len @ 0x%x", stream.pos());
 		stream.read(&songLen);
 		if(songLen>128) {
 			songLen = 128;
 		}
+		LOG_DEBUG("Song length: %u", songLen);
 		uint8_t tmp;
 		stream.read(&tmp);
 		for(uint8_t i=0; i<128; i++) {
@@ -152,6 +159,7 @@ bool ModModule::load(const std::string& filename)
 				LOG_WARNING("Pattern number out of range: %u", maxPatNum);
 				return false;
 			}
+			LOG_DEBUG("Order: %u", tmp);
 			addOrder( GenOrder::Ptr(new GenOrder(tmp)) );
 		}
 	}
@@ -174,28 +182,34 @@ bool ModModule::load(const std::string& filename)
 void ModModule::buildTick(AudioFrameBuffer& buf)
 {
 	try {
-		if(!buf) {
+		//PPP_TEST(!buf);
+		if(!buf)
 			buf.reset(new AudioFrameBuffer::element_type);
+		if(tick() == 0)
+			checkGlobalFx();
+		//buf->resize(getTickBufLen());
+		//buf->clear();
+		if(!adjustPosition(false, false)) {
+			LOG_MESSAGE("Song end reached: adjustPosition() failed");
+			buf.reset();
+			return;
 		}
-/*		if(!adjustPosition(false, true))
-			return;*/
-		BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
 		if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat()) {
+			LOG_MESSAGE("Song end reached: Maximum repeat count reached");
 			buf.reset();
 			return;
 		}
 		// update channels...
 		setPatternIndex(mapOrder(playbackInfo().order)->index());
-		ModPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
-		if(!currPat) {
+		ModPattern::Ptr currPat = getPattern(playbackInfo().pattern);
+		if(!currPat)
 			return;
-		}
 		MixerFrameBuffer mixerBuffer(new MixerFrameBuffer::element_type(tickBufferLength(), {0, 0}));
-		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
+		for(unsigned short currTrack = 0; currTrack < channelCount(); currTrack++) {
 			ModChannel::Ptr chan = m_channels.at(currTrack);
 			BOOST_ASSERT(chan.use_count()>0);
 			ModCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
-			chan->update(cell);
+			chan->update(cell, false);// m_patDelayCount != -1);
 			chan->mixTick(mixerBuffer);
 		}
 		buf->resize(mixerBuffer->size());
@@ -205,12 +219,8 @@ void ModModule::buildTick(AudioFrameBuffer& buf)
 			*(bufPtr++) = clipSample(*(mixerBufferPtr++) >> 2);
 			*(bufPtr++) = clipSample(*(mixerBufferPtr++) >> 2);
 		}
-// 		adjustPosition(true, true);
-		if(!adjustPosition(false)) {
-			buf->clear();
-			return;
-		}
-		setPosition(position() + buf->size());
+		adjustPosition(true, false);
+		setPosition(position() + mixerBuffer->size());
 	}
 	catch( boost::exception& e) {
 		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
@@ -220,25 +230,52 @@ void ModModule::buildTick(AudioFrameBuffer& buf)
 	}
 }
 
-bool ModModule::adjustPosition(bool doStore)
+bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 {
 	BOOST_ASSERT(orderCount() != 0);
 	bool orderChanged = false;
-	nextTick();
-	if(tick() == 0) {
-		setRow((playbackInfo().row + 1) & 0x3f);
-		if(playbackInfo().row == 0) {
+	if(increaseTick) {
+		nextTick();
+	}
+	if((tick() == 0) && increaseTick) {
+		m_patDelayCount = -1;
+		if(m_breakOrder != -1) {
 			orderAt(playbackInfo().order)->increasePlaybackCount();
-			setOrder(playbackInfo().order + 1);
-			orderChanged = true;
+			if(m_breakOrder < orderCount()) {
+				setOrder(m_breakOrder);
+				orderChanged = true;
+			}
+			setRow(0);
 		}
+		if(m_breakRow != -1) {
+			if(m_breakRow <= 63) {
+				setRow(m_breakRow);
+			}
+			if(m_breakOrder == -1) {
+				if(m_patLoopCount == -1) {
+					orderAt(playbackInfo().order)->increasePlaybackCount();
+					setOrder(playbackInfo().order + 1);
+					orderChanged = true;
+				}
+				//else {
+				//	LOG_MESSAGE(stringf("oO... aPatLoopCount=%d",aPatLoopCount));
+				//}
+			}
+		}
+		if((m_breakRow == -1) && (m_breakOrder == -1) && (m_patDelayCount == -1)) {
+			setRow((playbackInfo().row + 1) & 0x3f);
+			if(playbackInfo().row == 0) {
+				orderAt(playbackInfo().order)->increasePlaybackCount();
+				setOrder(playbackInfo().order + 1);
+				orderChanged = true;
+			}
+		}
+		m_breakRow = m_breakOrder = -1;
 	}
-	GenOrder::Ptr ord = mapOrder(playbackInfo().order);
-	if(!ord || ord->index()==255) {
-		return false;
-	}
-	setPatternIndex(ord->index());
+	setPatternIndex(mapOrder(playbackInfo().order)->index());
 	if(orderChanged) {
+		m_patLoopRow = 0;
+		m_patLoopCount = -1;
 		try {
 			if(doStore) {
 				multiSongAt(currentSongIndex()).newState()->archive(this).finishSave();
@@ -264,32 +301,28 @@ bool ModModule::adjustPosition(bool doStore)
 void ModModule::simulateTick(size_t& bufLen)
 {
 	try {
+		if(tick() == 0)
+			checkGlobalFx();
 		bufLen = 0;
-/*		if(!adjustPosition(false, true))
-			return;*/
-		BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
-		if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat()) {
+		if(!adjustPosition(false, true))
 			return;
-		}
+		BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
+		if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat())
+			return;
 		// update channels...
 		setPatternIndex(mapOrder(playbackInfo().order)->index());
-		ModPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
-		if(!currPat) {
+		ModPattern::Ptr currPat = getPattern(playbackInfo().pattern);
+		if(!currPat)
 			return;
-		}
 		bufLen = tickBufferLength(); // in frames
-		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
+		for(unsigned short currTrack = 0; currTrack < channelCount(); currTrack++) {
 			ModChannel::Ptr chan = m_channels.at(currTrack);
 			BOOST_ASSERT(chan.use_count()>0);
 			ModCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
-			chan->update(cell);
+			chan->update(cell, false);// m_patDelayCount != -1);
 			chan->simTick(bufLen);
 		}
-// 		adjustPosition(true, true);
-		if(!adjustPosition(true)) {
-			bufLen = 0;
-			return;
-		}
+		adjustPosition(true, true);
 		setPosition(position() + bufLen);
 	}
 	catch( boost::exception& e) {
@@ -328,7 +361,7 @@ bool ModModule::initialize(uint32_t frq)
 		multiSongLengthAt(0) += currTickLen;
 	}
 	while(currTickLen != 0);
-	LOG_MESSAGE("Preprocessed.");
+	LOG_MESSAGE("Preprocessed. %u", multiSongLengthAt(0));
 	{
 		IAudioSource::LockGuard guard(this);
 		multiSongAt(0).currentState()->archive(this).finishLoad();
@@ -378,6 +411,110 @@ uint8_t ModModule::channelCount() const
 {
 	return m_channels.size();
 }
+
+bool ModModule::existsSample(size_t idx) const
+{
+	if(idx==0 || idx>30) {
+		return false;
+	}
+	return m_samples.at(idx-1)->length()>0;
+}
+
+void ModModule::checkGlobalFx()
+{
+	try {
+		setPatternIndex(mapOrder(playbackInfo().order)->index());
+		ModPattern::Ptr currPat = getPattern(playbackInfo().pattern);
+		if(!currPat)
+			return;
+		std::string data;
+		// check for pattern loops
+		int patLoopCounter = 0;
+		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
+			ModCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			if(!cell) continue;
+			if(cell->effect() == 0x0f) continue;
+			uint8_t fx = cell->effect();
+			uint8_t fxVal = cell->effectValue();
+			if(fx != 0x0e) continue;
+			if(highNibble(fxVal) != 0x06) continue;
+			if(lowNibble(fxVal) == 0x00) {      // loop start
+				m_patLoopRow = playbackInfo().row;
+			}
+			else { // loop return
+				patLoopCounter++;
+				if(m_patLoopCount == -1) {    // first loop return -> set loop count
+					m_patLoopCount = lowNibble(fxVal);
+					m_breakRow = m_patLoopRow;
+				}
+				else if(m_patLoopCount > 1) {    // non-initial return -> decrease loop counter
+					m_patLoopCount--;
+					m_breakRow = m_patLoopRow;
+				}
+				else { // loops done...
+					if(patLoopCounter == 1) {    // one loop, all ok
+						m_patLoopCount = -1;
+						m_breakRow = -1;
+						m_patLoopRow = playbackInfo().row + 1;
+					}
+					else { // we got an "infinite" loop...
+						m_patLoopCount = 127;
+						m_breakRow = m_patLoopRow;
+						LOG_WARNING("Infinite pattern loop detected");
+					}
+				}
+			}
+		}
+		// check for pattern delays
+		uint8_t patDelayCounter = 0;
+		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
+			ModCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			if(!cell) continue;
+			if(cell->effect() == 0x0f) continue;
+			uint8_t fx = cell->effect();
+			uint8_t fxVal = cell->effectValue();
+			if(fx != 0x0e) continue;
+			if(highNibble(fxVal) != 0x0e) continue;
+			if(lowNibble(fxVal) == 0) continue;
+			if(++patDelayCounter != 1) continue;
+			if(m_patDelayCount != -1) continue;
+			m_patDelayCount = lowNibble(fxVal);
+		}
+		if(m_patDelayCount > 1)
+			m_patDelayCount--;
+		else
+			m_patDelayCount = -1;
+		// now check for breaking effects
+		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
+			if(m_patLoopCount != -1) break;
+			ModCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			if(!cell) continue;
+			if(cell->effect() == 0x0f) continue;
+			uint8_t fx = cell->effect();
+			uint8_t fxVal = cell->effectValue();
+			if(fx == 0x0b) {
+				m_breakOrder = fxVal;
+			}
+			else if(fx == 0x0d) {
+				m_breakRow = highNibble(fxVal) * 10 + lowNibble(fxVal);
+				LOG_MESSAGE("Row %d: Break pattern to row %d", playbackInfo().row, m_breakRow);
+			}
+		}
+	}
+	catch( boost::exception& e) {
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+	}
+	catch(...) {
+		BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
+	}
+}
+
+ModPattern::Ptr ModModule::getPattern(size_t idx) const
+{
+	if(idx >= m_patterns.size()) return ModPattern::Ptr();
+	return m_patterns.at(idx);
+}
+
 
 }
 }

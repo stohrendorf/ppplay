@@ -47,40 +47,79 @@ ModChannel::ModChannel(ModModule* parent) : m_module(parent), m_currentCell(), m
 
 ModChannel::~ModChannel() = default;
 
-void ModChannel::update(const ModCell::Ptr& cell)
+void ModChannel::update(const ppp::mod::ModCell::Ptr& cell, bool patDelay)
 {
+// 	if(isDisabled())
+// 		return;
 	if(m_module->tick() == 0) {
-		if(cell) {
+// 		m_noteChanged = false;
+// 		m_currentFxStr = "      ";
+		m_currentCell.clear();
+		if(cell && !patDelay) {
 			m_currentCell = *cell;
 		}
-		else {
-			m_currentCell.reset();
+
+		if(m_currentCell.period() != 0 || m_currentCell.sampleNumber() != 0 || m_currentCell.effect() != 0xff) {
+// 			triggerNote();
+			m_period = m_currentCell.period();
+			m_sampleIndex = m_currentCell.sampleNumber();
+			setActive(true);
 		}
-		if(m_currentCell.period() != 0) {
-			m_period = 0;
-			// TODO porta, offset
-			setPosition(0);
-			if(currentSample()) {
-				setActive(true);
-			}
-		}
-		if(m_currentCell.sampleNumber() != 0) {
-			m_sampleIndex = m_currentCell.sampleNumber()-1;
-			if(currentSample()) {
-				m_finetune = currentSample()->finetune();
-			}
-			else {
-				setActive(false);
-				return;
-			}
-		}
-		if(m_currentCell.effect() == 0x0c) {
+	} // endif(tick==0)
+	switch(m_currentCell.effect()) {
+		case 0x00:
+			fxArpeggio(m_currentCell.effectValue());
+			break;
+		case 0x01:
+			fxPortaUp(m_currentCell.effectValue());
+			break;
+		case 0x02:
+			fxPortaDown(m_currentCell.effectValue());
+			break;
+		case 0x03:
+			fxPorta(m_currentCell.effectValue());
+			break;
+		case 0x04:
+			fxVibrato(m_currentCell.effectValue());
+			break;
+		case 0x05:
+			fxPortaVolSlide(m_currentCell.effectValue());
+			break;
+		case 0x06:
+			fxVibVolSlide(m_currentCell.effectValue());
+			break;
+		case 0x07:
+			fxTremolo(m_currentCell.effectValue());
+			break;
+		case 0x08:
+			fxSetFinePan(m_currentCell.effectValue());
+			break;
+		case 0x09:
+			fxOffset(m_currentCell.effectValue());
+			break;
+		case 0x0a:
+			fxVolSlide(m_currentCell.effectValue());
+			break;
+		case 0x0b:
+			fxPosJmp(m_currentCell.effectValue());
+			break;
+		case 0x0c:
 			fxSetVolume(m_currentCell.effectValue());
-		}
-		else if(m_currentCell.effect() == 0x0f) {
+			break;
+		case 0x0d:
+			fxPatBreak(m_currentCell.effectValue());
+			break;
+		case 0x0e:
+			switch(highNibble(m_currentCell.effectValue())) {
+				case 0x00:
+					break;
+			}
+			break;
+		case 0x0f:
 			fxSetSpeed(m_currentCell.effectValue());
-		}
+			break;
 	}
+	updateStatus();
 }
 
 ModSample::Ptr ModChannel::currentSample() const
@@ -325,6 +364,32 @@ void ModChannel::updateStatus()
 {
 	// TODO
 }
+
+void ModChannel::fxArpeggio(uint8_t fxByte)
+{
+	// TODO
+}
+
+void ModChannel::fxPatBreak(uint8_t fxByte)
+{
+	// TODO
+}
+
+void ModChannel::fxPosJmp(uint8_t fxByte)
+{
+	// TODO
+}
+
+void ModChannel::fxSetFinePan(uint8_t fxByte)
+{
+	// TODO
+}
+
+void ModChannel::fxTremolo(uint8_t fxByte)
+{
+	// TODO
+}
+
 
 }
 }

@@ -49,7 +49,9 @@ bool ModCell::load(BinStream& str)
 	uint8_t tmp;
 	str.read(&tmp);
 	m_sampleNumber = tmp&0xf0;
-	LOG_TEST_WARN(m_sampleNumber>31);
+	if(m_sampleNumber>32) {
+		LOG_WARNING("Sample out of range: %u", m_sampleNumber);
+	}
 	m_sampleNumber &= 0x1f;
 	m_period = (tmp&0x0f)<<8;
 	str.read(&tmp);
@@ -57,6 +59,7 @@ bool ModCell::load(BinStream& str)
 	str.read(&tmp);
 	m_sampleNumber |= tmp>>4;
 	m_effect = tmp&0x0f;
+	LOG_DEBUG("FX: %.1X", m_effect);
 	str.read(&tmp);
 	m_effectValue = tmp;
 	if(m_period!=0) {
@@ -78,7 +81,7 @@ void ModCell::clear()
 {
 	m_sampleNumber = 0;
 	m_period = 0;
-	m_effect = 0;
+	m_effect = 0xff;
 	m_effectValue = 0;
 	m_note.assign("...");
 }
@@ -116,7 +119,7 @@ std::string ModCell::trackerString() const
 		res.append(" ...");
 	}
 	else {
-		res.append(" %.1X%.2X", m_effect, m_effectValue);
+		res.append( stringf(" %.1X%.2X", m_effect, m_effectValue) );
 	}
 	return res;
 }

@@ -50,7 +50,14 @@ private:
 	ModSample::Vector m_samples; //!< @brief Samples
 	ModPattern::Vector m_patterns; //!< @brief Patterns
 	std::vector<ModChannel::Ptr> m_channels; //!< @brief Channels
-	bool adjustPosition(bool doStore);
+	int8_t m_patLoopRow;
+	int m_patLoopCount;
+	int8_t m_breakRow;
+	int m_patDelayCount;
+	int m_breakOrder;
+	bool adjustPosition(bool increaseTick, bool doStore);
+	void checkGlobalFx();
+	ModPattern::Ptr getPattern(size_t idx) const;
 protected:
 	virtual IArchive& serialize(IArchive* data);
 public:
@@ -69,6 +76,7 @@ public:
 	virtual bool initialize(uint32_t frq);
 	virtual uint8_t channelCount() const;
 	ModSample::Ptr sampleAt(size_t idx) const;
+	bool existsSample(size_t idx) const;
 };
 
 }
