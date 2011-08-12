@@ -38,6 +38,9 @@ class S3mModule;
 /**
  * @class S3mChannel
  * @brief The S3M Channel
+ *
+ * @note Please note that even the S3M tech spec allows the cell volume to be
+ * 64, it effectively is clipped to a value between 0 and <b>64</b>.
  */
 class S3mChannel : public GenChannel {
 		S3mChannel() = delete; //!< @brief No default constructor
@@ -52,9 +55,9 @@ class S3mChannel : public GenChannel {
 		uint8_t m_lastPortaSpeed; //!< @brief Last porta speed
 		uint8_t m_tremorVolume;  //!< @brief Backup variable for Tremor FX
 		bool m_noteChanged;            //!< @brief @c true when a new note triggered in the current frame
-		uint8_t m_currentVolume; //!< @brief Current volume
-		uint8_t m_realVolume; //!< @brief Real volume used when mixing
-		uint8_t m_baseVolume; //!< @brief Base volume
+		uint8_t m_currentVolume; //!< @brief Current volume, range: 0..63
+		uint8_t m_realVolume; //!< @brief Real volume used when mixing, range 0..63
+		uint8_t m_baseVolume; //!< @brief Base volume, range 0..63
 		bool m_tremorMute; //!< @brief @c true if tremor is muted
 		int8_t m_retrigCount;     //!< @brief Used for Retrigger Effect
 		int16_t m_zeroVolCounter;        //!< @brief Zero Volume Optimization counter, -1 if disabled

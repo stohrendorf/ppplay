@@ -558,7 +558,7 @@ void S3mChannel::updateStatus() {
 			panStr = "Right";
 		else
 			panStr = stringf("%4d%%", (m_panning - 0x20) * 100 / 0x40);
-		std::string volStr = stringf("%3d%%", clip<int>(m_currentVolume , 0, 0x40) * 100 / 0x40);
+		std::string volStr = stringf("%3d%%", clip<int>(m_currentVolume , 0, 0x3f) * 100 / 0x3f);
 		setStatusString(stringf("%.2d: %s%s %s %s P:%s V:%s %s",
 		                        m_sampleIndex + 1,
 		                        (m_noteChanged ? "*" : " "),
@@ -1094,8 +1094,6 @@ void S3mChannel::playNote() {
 	uint8_t vol = m_currentCell.volume();
 	if(vol != s3mEmptyVolume) {
 		vol = std::min<uint8_t>(vol, 63);
-	}
-	if(vol != s3mEmptyVolume) {
 		m_currentVolume = vol;
 		recalcVolume();
 		m_baseVolume = vol;
