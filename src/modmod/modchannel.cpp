@@ -22,6 +22,7 @@
 
 #include "logger/logger.h"
 
+#include <cmath>
 #include <boost/assert.hpp>
 
 namespace ppp {
@@ -33,9 +34,16 @@ static const uint32_t FrequencyBase = 7159090.5/2;
 static const uint32_t FrequencyBase = 7093789.2/2;
 #endif
 
+static inline double finetuneMultiplicator(uint8_t finetune)
+{
+	return pow(2.0, -(finetune>7?finetune-16:finetune)/(12*8));
+}
+
 /**
  * @todo According to some Amiga assembler sources, periods
  * are clipped to a range of 0x71..0x358 (113..856 decimal respectively).
+ *
+ * @todo Finetune calculation: realPeriod = basePeriod*(2^(-finetune/8/12))
  */
 
 ModChannel::ModChannel(ModModule* parent) : m_module(parent), m_currentCell(), m_volume(0),
@@ -66,15 +74,15 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 				m_finetune = currentSample()->finetune();
 			}
 		}
-		if(m_currentCell.period(m_finetune) != 0) {
+		if(m_currentCell.period() != 0) {
 			if(m_currentCell.effect()!=3 && m_currentCell.effect()!=5) {
 				// 			triggerNote();
-				m_period = m_currentCell.period(m_finetune);
+				m_period = m_currentCell.period();
 				setPosition(0);
 				setActive(true);
 			}
 			else {
-				m_portaTarget = m_currentCell.period(m_finetune);
+				m_portaTarget = m_currentCell.period();
 				if(m_period==0) {
 					setPosition(0);
 					m_period = m_portaTarget;
@@ -195,7 +203,7 @@ void ModChannel::simTick(size_t bufsize)
 		return;
 	}
 	// TODO glissando
-	int32_t pos = position() + (FrequencyBase / m_module->frequency() * bufsize / m_period);
+	int32_t pos = position() + (FrequencyBase / m_module->frequency() * bufsize / (m_period*finetuneMultiplicator(m_finetune)));
 	currentSample()->adjustPosition(pos);
 	if(pos == GenSample::EndOfSample) {
 		setActive(false);
@@ -214,8 +222,8 @@ void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
 		setActive(false);
 		return;
 	}
-	m_bresen.reset(m_module->frequency(), FrequencyBase / m_period);
-	setStatusString( statusString() + stringf(" %d",FrequencyBase/m_period) );
+	m_bresen.reset(m_module->frequency(), FrequencyBase / (m_period*finetuneMultiplicator(m_finetune)));
+	setStatusString( statusString() + stringf(" %d +- %u",FrequencyBase/m_period, m_finetune) );
 	// TODO glissando
 	ModSample::Ptr currSmp = currentSample();
 	int32_t pos = position();

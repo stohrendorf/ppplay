@@ -48,7 +48,7 @@ public:
 	virtual void clear();
 	virtual std::string trackerString() const;
 	uint8_t sampleNumber() const;
-	uint16_t period(uint8_t finetune) const;
+	uint16_t period() const;
 	uint8_t effect() const;
 	uint8_t effectValue() const;
 	void reset();

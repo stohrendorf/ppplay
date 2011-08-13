@@ -66,7 +66,7 @@ bool ModSample::loadHeader(BinStream& stream)
 		setLoopType(LoopType::Forward);
 	}
 	setTitle( stringncpy(hdr.name, 22) );
-	LOG_DEBUG("Loading sample (length=%u, loop=%u+%u=%u, name='%s', vol=%u)", length(), hdr.loopStart, hdr.loopLength, hdr.loopStart+hdr.loopLength, title().c_str(), hdr.volume);
+// 	LOG_DEBUG("Loading sample (length=%u, loop=%u+%u=%u, name='%s', vol=%u)", length(), hdr.loopStart, hdr.loopLength, hdr.loopStart+hdr.loopLength, title().c_str(), hdr.volume);
 	setVolume( std::min<uint8_t>( hdr.volume, 0x40 ) );
 	m_finetune = hdr.finetune&0x0f;
 	return stream.good();

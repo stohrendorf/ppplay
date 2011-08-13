@@ -140,12 +140,12 @@ bool ModModule::load(const std::string& filename)
 	{
 		// load orders
 		uint8_t songLen;
-		LOG_DEBUG("Song len @ 0x%x", stream.pos());
+// 		LOG_DEBUG("Song len @ 0x%x", stream.pos());
 		stream.read(&songLen);
 		if(songLen>128) {
 			songLen = 128;
 		}
-		LOG_DEBUG("Song length: %u", songLen);
+// 		LOG_DEBUG("Song length: %u", songLen);
 		uint8_t tmp;
 		stream.read(&tmp); // skip the restart pos
 		for(uint8_t i=0; i<128; i++) {
@@ -160,7 +160,7 @@ bool ModModule::load(const std::string& filename)
 				LOG_WARNING("Pattern number out of range: %u", maxPatNum);
 				return false;
 			}
-			LOG_DEBUG("Order: %u", tmp);
+// 			LOG_DEBUG("Order: %u", tmp);
 			addOrder( GenOrder::Ptr(new GenOrder(tmp)) );
 		}
 	}
