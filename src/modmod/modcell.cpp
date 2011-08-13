@@ -92,9 +92,12 @@ uint8_t ModCell::sampleNumber() const
 	return m_sampleNumber;
 }
 
-uint16_t ModCell::period() const
+uint16_t ModCell::period(uint8_t finetune) const
 {
-	return m_period;
+	if(m_period == 0) {
+		return 0;
+	}
+	return fullPeriods.at(finetune).at(m_noteIndex);
 }
 
 uint8_t ModCell::effect() const

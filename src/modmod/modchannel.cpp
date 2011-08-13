@@ -40,7 +40,7 @@ static const uint32_t FrequencyBase = 7093789.2/2;
 
 ModChannel::ModChannel(ModModule* parent) : m_module(parent), m_currentCell(), m_volume(0),
 	m_finetune(0), m_tremoloWaveform(0), m_vibratoWaveform(0), m_glissando(false),
-	m_period(0), m_lastVibratoFx(0), m_lastPortaFx(0), m_sampleIndex(0), m_bresen(1,1)
+	m_period(0), m_portaTarget(0), m_lastVibratoFx(0), m_lastPortaFx(0), m_sampleIndex(0), m_bresen(1,1)
 {
 	BOOST_ASSERT(parent!=nullptr);
 }
@@ -59,16 +59,27 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 			m_currentCell = *cell;
 		}
 
-		if(m_currentCell.period() != 0 && m_currentCell.effect()!=3 && m_currentCell.effect()!=5) {
-// 			triggerNote();
-			m_period = m_currentCell.period();
-			setPosition(0);
-			setActive(true);
-		}
 		if(m_currentCell.sampleNumber()!=0) {
 			m_sampleIndex = m_currentCell.sampleNumber();
 			if(currentSample()) {
 				m_volume = currentSample()->volume();
+				m_finetune = currentSample()->finetune();
+			}
+		}
+		if(m_currentCell.period(m_finetune) != 0) {
+			if(m_currentCell.effect()!=3 && m_currentCell.effect()!=5) {
+				// 			triggerNote();
+				m_period = m_currentCell.period(m_finetune);
+				setPosition(0);
+				setActive(true);
+			}
+			else {
+				m_portaTarget = m_currentCell.period(m_finetune);
+				if(m_period==0) {
+					setPosition(0);
+					m_period = m_portaTarget;
+				}
+				setActive(true);
 			}
 		}
 		setActive(m_period!=0 && currentSample());
@@ -121,7 +132,14 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 			break;
 		case 0x0e:
 			switch(highNibble(m_currentCell.effectValue())) {
-				case 0x00:
+				case 0x05:
+					efxSetFinetune(m_currentCell.effectValue());
+					break;
+				case 0x0a:
+					efxFineVolSlideUp(m_currentCell.effectValue());
+					break;
+				case 0x0b:
+					efxFineVolSlideDown(m_currentCell.effectValue());
 					break;
 			}
 			break;
@@ -302,7 +320,7 @@ void ModChannel::efxFineSlideUp(uint8_t fxByte)
 
 void ModChannel::fxOffset(uint8_t fxByte)
 {
-	if(m_module->tick() == 0) {
+	if(m_module->tick() != 0) {
 		return;
 	}
 	setPosition(fxByte<<8);
@@ -319,7 +337,7 @@ void ModChannel::fxVolSlide(uint8_t fxByte)
 	if(m_module->tick() == 0) {
 		return;
 	}
-	if(highNibble(fxByte)!=0 && lowNibble(fxByte)==0) {
+	if(highNibble(fxByte)!=0 && lowNibble(fxByte)!=0) {
 		// not valid
 		return;
 	}
@@ -353,20 +371,35 @@ void ModChannel::fxPortaDown(uint8_t fxByte)
 
 void ModChannel::fxPortaUp(uint8_t fxByte)
 {
-	// TODO maybe unconditionally assign?
-	reuseIfZero(m_lastPortaFx, fxByte);
 	// TODO clip
 	m_period -= fxByte;
 }
 
 void ModChannel::fxVibrato(uint8_t fxByte)
 {
+	reuseIfZero(m_lastVibratoFx, fxByte);
 	// TODO
 }
 
 void ModChannel::fxPorta(uint8_t fxByte)
 {
-	// TODO
+	if(m_module->tick() == 0) {
+		return;
+	}
+	reuseIfZero(m_lastPortaFx, fxByte);
+	if(m_portaTarget == 0) {
+		m_portaTarget = m_period;
+		return;
+	}
+	if(m_portaTarget == m_period) {
+		return;
+	}
+	else if(m_portaTarget < m_period) {
+		m_period = std::max<int>(m_portaTarget, m_period-fxByte);
+	}
+	else if(m_portaTarget > m_period) {
+		m_period = std::min<int>(m_portaTarget, m_period+fxByte);
+	}
 }
 
 void ModChannel::updateStatus()

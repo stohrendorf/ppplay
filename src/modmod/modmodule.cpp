@@ -223,7 +223,10 @@ void ModModule::buildTick(AudioFrameBuffer& buf)
 			*(bufPtr++) = clipSample(*(mixerBufferPtr++) >> 2);
 			*(bufPtr++) = clipSample(*(mixerBufferPtr++) >> 2);
 		}
-		adjustPosition(true, false);
+		if(!adjustPosition(true, false)) {
+			buf.reset();
+			return;
+		}
 		setPosition(position() + mixerBuffer->size());
 	}
 	catch( boost::exception& e) {
@@ -247,6 +250,9 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 			orderAt(playbackInfo().order)->increasePlaybackCount();
 			if(m_breakOrder < orderCount()) {
 				setOrder(m_breakOrder);
+				if(playbackInfo().order >= orderCount()) {
+					return false;
+				}
 				orderChanged = true;
 			}
 			setRow(0);
@@ -259,6 +265,9 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 				if(m_patLoopCount == -1) {
 					orderAt(playbackInfo().order)->increasePlaybackCount();
 					setOrder(playbackInfo().order + 1);
+					if(playbackInfo().order >= orderCount()) {
+						return false;
+					}
 					orderChanged = true;
 				}
 				//else {
@@ -271,6 +280,9 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 			if(playbackInfo().row == 0) {
 				orderAt(playbackInfo().order)->increasePlaybackCount();
 				setOrder(playbackInfo().order + 1);
+				if(playbackInfo().order >= orderCount()) {
+					return false;
+				}
 				orderChanged = true;
 			}
 		}
@@ -326,7 +338,10 @@ void ModModule::simulateTick(size_t& bufLen)
 			chan->update(cell, false);// m_patDelayCount != -1);
 			chan->simTick(bufLen);
 		}
-		adjustPosition(true, true);
+		if(!adjustPosition(true, true)) {
+			bufLen = 0;
+			return;
+		}
 		setPosition(position() + bufLen);
 	}
 	catch( boost::exception& e) {

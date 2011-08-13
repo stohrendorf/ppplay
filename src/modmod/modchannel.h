@@ -46,6 +46,7 @@ private:
 	uint8_t m_vibratoWaveform;
 	bool m_glissando;
 	uint16_t m_period;
+	uint16_t m_portaTarget;
 	uint8_t m_lastVibratoFx;
 	uint8_t m_lastPortaFx;
 	uint8_t m_sampleIndex;

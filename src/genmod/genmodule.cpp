@@ -140,6 +140,9 @@ void GenModule::setTrackerInfo(const std::string& t) {
 }
 
 GenOrder::Ptr GenModule::orderAt(size_t idx) const {
+	if( idx>=m_orders.size() ) {
+		LOG_ERROR("%u >= %u", idx, m_orders.size());
+	}
 	BOOST_ASSERT( idx<m_orders.size() );
 	return m_orders.at(idx);
 }
