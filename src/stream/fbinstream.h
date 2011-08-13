@@ -32,6 +32,7 @@ class FBinStream : public BinStream {
 		FBinStream() = delete;
 	private:
 		std::string m_filename; //!< @brief Filename of the file
+		size_t m_size;
 	public:
 		/**
 		 * @brief Default contructor
@@ -52,6 +53,7 @@ class FBinStream : public BinStream {
 		 * @return m_filename
 		 */
 		std::string filename() const;
+		size_t size() const;
 };
 
 #endif

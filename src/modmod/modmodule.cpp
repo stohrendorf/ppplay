@@ -166,8 +166,7 @@ bool ModModule::load(const std::string& filename)
 	}
 	stream.seekrel(4); // skip the ID
 	LOG_DEBUG("Patterns @ %u", stream.pos());
-// 	maxPatNum++;
-	for(uint8_t i=0; i<maxPatNum; i++) {
+	for(uint8_t i=0; i<=maxPatNum; i++) {
 		ModPattern::Ptr pat(new ModPattern());
 		if(!pat->load(stream, meta.channels)) {
 			LOG_WARNING("Could not load pattern");
@@ -215,6 +214,7 @@ void ModModule::buildTick(AudioFrameBuffer& buf)
 			ModCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 			chan->update(cell, false);// m_patDelayCount != -1);
 			chan->mixTick(mixerBuffer);
+// 			break;
 		}
 		buf->resize(mixerBuffer->size());
 		MixerSample* mixerBufferPtr = &mixerBuffer->front().left;

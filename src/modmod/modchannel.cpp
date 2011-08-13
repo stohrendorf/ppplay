@@ -59,20 +59,23 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 			m_currentCell = *cell;
 		}
 
-		if(m_currentCell.period() != 0) {
+		if(m_currentCell.period() != 0 && m_currentCell.effect()!=3 && m_currentCell.effect()!=5) {
 // 			triggerNote();
-			setPosition(0);
 			m_period = m_currentCell.period();
-			if(m_currentCell.sampleNumber()!=0) {
-				m_sampleIndex = m_currentCell.sampleNumber();
-				if(currentSample()) {
-					m_volume = currentSample()->volume();
-				}
-			}
-			setActive(!!currentSample());
+			setPosition(0);
+			setActive(true);
 		}
+		if(m_currentCell.sampleNumber()!=0) {
+			m_sampleIndex = m_currentCell.sampleNumber();
+			if(currentSample()) {
+				m_volume = currentSample()->volume();
+			}
+		}
+		setActive(m_period!=0 && currentSample());
 	} // endif(tick==0)
-#if 0
+	if(!isActive()) {
+		return;
+	}
 	switch(m_currentCell.effect()) {
 		case 0x00:
 			fxArpeggio(m_currentCell.effectValue());
@@ -126,7 +129,6 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 			fxSetSpeed(m_currentCell.effectValue());
 			break;
 	}
-#endif
 	updateStatus();
 }
 
@@ -194,12 +196,8 @@ void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
 		setActive(false);
 		return;
 	}
-	if(m_period == 0) {
-		setActive(false);
-		setPosition(0);
-		return;
-	}
 	m_bresen.reset(m_module->frequency(), FrequencyBase / m_period);
+	setStatusString( statusString() + stringf(" %d",FrequencyBase/m_period) );
 	// TODO glissando
 	ModSample::Ptr currSmp = currentSample();
 	int32_t pos = position();
@@ -304,6 +302,9 @@ void ModChannel::efxFineSlideUp(uint8_t fxByte)
 
 void ModChannel::fxOffset(uint8_t fxByte)
 {
+	if(m_module->tick() == 0) {
+		return;
+	}
 	setPosition(fxByte<<8);
 }
 
@@ -370,6 +371,8 @@ void ModChannel::fxPorta(uint8_t fxByte)
 
 void ModChannel::updateStatus()
 {
+	if(currentSample())
+	setStatusString( stringf("%05d / %05d (%d)", position(), currentSample()->length(), m_sampleIndex) );
 	// TODO
 }
 

@@ -22,8 +22,11 @@
 
 FBinStream::FBinStream( const std::string& filename ) :
 	BinStream( SpIoStream( new std::fstream( filename.c_str(), std::ios::in | std::ios::binary ) ) ),
-	m_filename( filename )
+	m_filename(filename), m_size(0)
 {
+	stream()->seekg(0, std::ios::end);
+	m_size = stream()->tellg();
+	stream()->seekg(0);
 }
 
 FBinStream::~FBinStream() {
@@ -38,4 +41,8 @@ bool FBinStream::isOpen() const {
 
 std::string FBinStream::filename() const {
 	return m_filename;
+}
+
+size_t FBinStream::size() const {
+	return m_size;
 }

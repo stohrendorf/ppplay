@@ -81,9 +81,10 @@ void ModCell::clear()
 {
 	m_sampleNumber = 0;
 	m_period = 0;
-	m_effect = 0xff;
+	m_effect = 0;
 	m_effectValue = 0;
 	m_note.assign("...");
+	m_noteIndex = 255;
 }
 
 uint8_t ModCell::sampleNumber() const
@@ -115,7 +116,7 @@ std::string ModCell::trackerString() const
 	else {
 		res.append("   ");
 	}
-	if(m_effect == 0x0f) {
+	if(m_effect == 0 && m_effectValue == 0) {
 		res.append(" ...");
 	}
 	else {
