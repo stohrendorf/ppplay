@@ -47,7 +47,7 @@ ModChannel::ModChannel(ModModule* parent) : m_module(parent), m_currentCell(), m
 
 ModChannel::~ModChannel() = default;
 
-void ModChannel::update(const ppp::mod::ModCell::Ptr& cell, bool patDelay)
+void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 {
 // 	if(isDisabled())
 // 		return;
@@ -59,13 +59,20 @@ void ModChannel::update(const ppp::mod::ModCell::Ptr& cell, bool patDelay)
 			m_currentCell = *cell;
 		}
 
-		if(m_currentCell.period() != 0 || m_currentCell.sampleNumber() != 0 || m_currentCell.effect() != 0xff) {
+		if(m_currentCell.period() != 0) {
 // 			triggerNote();
+			setPosition(0);
 			m_period = m_currentCell.period();
-			m_sampleIndex = m_currentCell.sampleNumber();
-			setActive(true);
+			if(m_currentCell.sampleNumber()!=0) {
+				m_sampleIndex = m_currentCell.sampleNumber();
+				if(currentSample()) {
+					m_volume = currentSample()->volume();
+				}
+			}
+			setActive(!!currentSample());
 		}
 	} // endif(tick==0)
+#if 0
 	switch(m_currentCell.effect()) {
 		case 0x00:
 			fxArpeggio(m_currentCell.effectValue());
@@ -119,6 +126,7 @@ void ModChannel::update(const ppp::mod::ModCell::Ptr& cell, bool patDelay)
 			fxSetSpeed(m_currentCell.effectValue());
 			break;
 	}
+#endif
 	updateStatus();
 }
 

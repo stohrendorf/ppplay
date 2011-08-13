@@ -31,7 +31,7 @@ ModModule::~ModModule() = default;
 
 ModSample::Ptr ModModule::sampleAt(size_t idx) const
 {
-	if(idx == 0) {
+	if(idx==0) {
 		return ModSample::Ptr();
 	}
 	idx--;
@@ -84,7 +84,7 @@ static const std::array<IdMetaInfo, 31> idMetaData  = {{
 	{"OCTA", 8, "Octalyzer"}, //< @todo Check tracker name
 }};
 
-IdMetaInfo findMeta(BinStream* stream) {
+static IdMetaInfo findMeta(BinStream* stream) {
 	static const IdMetaInfo none = {"", 0, ""};
 	char id[5];
 	stream->read(id, 4);
@@ -122,6 +122,7 @@ bool ModModule::load(const std::string& filename)
 		LOG_WARNING("Could not find a valid module ID");
 		return false;
 	}
+	LOG_MESSAGE("%d-channel, ID '%s', Tracker '%s'", meta.channels, meta.id.c_str(), meta.tracker.c_str());
 	setTrackerInfo(meta.tracker);
 	for(int i=0; i<meta.channels; i++) {
 		m_channels.push_back( ModChannel::Ptr(new ModChannel(this)) );
@@ -146,7 +147,7 @@ bool ModModule::load(const std::string& filename)
 		}
 		LOG_DEBUG("Song length: %u", songLen);
 		uint8_t tmp;
-		stream.read(&tmp);
+		stream.read(&tmp); // skip the restart pos
 		for(uint8_t i=0; i<128; i++) {
 			stream.read(&tmp);
 			if(i>=songLen) {
@@ -163,6 +164,9 @@ bool ModModule::load(const std::string& filename)
 			addOrder( GenOrder::Ptr(new GenOrder(tmp)) );
 		}
 	}
+	stream.seekrel(4); // skip the ID
+	LOG_DEBUG("Patterns @ %u", stream.pos());
+// 	maxPatNum++;
 	for(uint8_t i=0; i<maxPatNum; i++) {
 		ModPattern::Ptr pat(new ModPattern());
 		if(!pat->load(stream, meta.channels)) {
@@ -176,7 +180,7 @@ bool ModModule::load(const std::string& filename)
 			LOG_WARNING("Could not load sample data");
 		}
 	}
-	return true;
+	return stream.good();
 }
 
 void ModModule::buildTick(AudioFrameBuffer& buf)

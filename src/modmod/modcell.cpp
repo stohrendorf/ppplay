@@ -59,7 +59,6 @@ bool ModCell::load(BinStream& str)
 	str.read(&tmp);
 	m_sampleNumber |= tmp>>4;
 	m_effect = tmp&0x0f;
-	LOG_DEBUG("FX: %.1X", m_effect);
 	str.read(&tmp);
 	m_effectValue = tmp;
 	if(m_period!=0) {
@@ -69,6 +68,7 @@ bool ModCell::load(BinStream& str)
 			m_note = ppp::stringf("%s%u", NoteNames[m_noteIndex%12], m_noteIndex/12);
 		}
 		else {
+			LOG_WARNING("Cannot find a note for period %u", m_period);
 			m_note = "???";
 			m_period = 0;
 			m_noteIndex = 255;

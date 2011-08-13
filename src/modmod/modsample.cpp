@@ -19,6 +19,7 @@
 #include "modsample.h"
 
 #include "stream/binstream.h"
+#include "logger/logger.h"
 
 /**
  * @ingroup ModMod
@@ -59,12 +60,13 @@ bool ModSample::loadHeader(BinStream& stream)
 	swapEndian(&hdr.loopStart);
 	swapEndian(&hdr.loopLength);
 	setLength(hdr.length<<1);
-	if(hdr.loopLength!=0) {
+	if(hdr.loopLength>1) {
 		setLoopStart(hdr.loopStart<<1);
 		setLoopEnd((hdr.loopStart+hdr.loopLength)<<1);
 		setLoopType(LoopType::Forward);
 	}
 	setTitle( stringncpy(hdr.name, 22) );
+	LOG_DEBUG("Loading sample (length=%u, loop=%u, name=%s)", length(), hdr.loopLength, title().c_str());
 	setVolume( std::min<uint8_t>( hdr.volume, 0x40 ) );
 	m_finetune = hdr.finetune&0x0f;
 	return stream.good();
@@ -75,9 +77,9 @@ bool ModSample::loadData(BinStream& stream)
 	setDataMono( new BasicSample[length()] );
 	BasicSample* s = nonConstDataMono();
 	for(size_t i=0; i<length(); i++) {
-		uint8_t tmp;
+		int8_t tmp;
 		stream.read(&tmp);
-		*(s++) = (tmp-0x80)<<8;
+		*(s++) = tmp<<8;
 	}
 	return stream.good();
 }
