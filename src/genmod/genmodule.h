@@ -36,7 +36,6 @@ namespace ppp {
  * @todo Get rid of this!
  */
 struct GenPlaybackInfo {
-	int16_t tick; //!< @brief Current tick
 	int16_t order; //!< @brief Current Order
 	int16_t pattern; //!< @brief Current pattern
 	int16_t row; //!< @brief Current row
@@ -67,6 +66,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		std::vector<size_t> m_songLengths; //!< @brief Per-song lengths in sample frames
 		uint16_t m_currentSongIndex; //!< @brief The current song index
 		GenPlaybackInfo m_playbackInfo; //!< @brief General playback info
+		int16_t m_tick; //!< @brief Current tick index
 	public:
 		/**
 		 * @brief The constructor
@@ -96,6 +96,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		/**
 		 * @brief Get the frame count of a tick
 		 * @return Sample frames per tick
+		 * @pre m_playbackInfo.tempo != 0
 		 */
 		uint16_t tickBufferLength() const;
 		/**
@@ -296,6 +297,8 @@ class GenModule : public ISerializable, public IAudioSource {
 		void setRow(int16_t r);
 		/**
 		 * @brief Increase the current tick index
+		 * @pre m_playbackInfo.speed > 0
+		 * @post m_tick < m_playbackInfo.speed
 		 */
 		void nextTick();
 	public:

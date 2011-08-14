@@ -33,9 +33,10 @@ namespace ppp {
 GenModule::GenModule(uint8_t maxRpt) :
 	m_filename(), m_title(), m_trackerInfo(), m_orders(), m_maxRepeat(maxRpt),
 	m_playedFrames(0), m_songs(), m_songLengths(),
-	m_currentSongIndex(0), m_playbackInfo() {
+	m_currentSongIndex(0), m_playbackInfo(), m_tick(0)
+{
 	BOOST_ASSERT(maxRpt != 0);
-	m_playbackInfo.tick = m_playbackInfo.order = m_playbackInfo.pattern = 0;
+	m_playbackInfo.order = m_playbackInfo.pattern = 0;
 	m_playbackInfo.row = m_playbackInfo.speed = m_playbackInfo.tempo = 0;
 	m_playbackInfo.globalVolume = 0x40;
 }
@@ -43,7 +44,11 @@ GenModule::GenModule(uint8_t maxRpt) :
 GenModule::~GenModule() = default;
 
 IArchive& GenModule::serialize(IArchive* data) {
-	data->array(reinterpret_cast<char*>(&m_playbackInfo), sizeof(m_playbackInfo)) % m_playedFrames; // % m_currentSongIndex;
+	data->array(reinterpret_cast<char*>(&m_playbackInfo), sizeof(m_playbackInfo));
+	*data
+	% m_playedFrames
+	% m_tick
+	;
 	for(const GenOrder::Ptr& order : m_orders) {
 		data->archive( order.get() );
 	}
@@ -193,7 +198,8 @@ void GenModule::setRow(int16_t r) {
 }
 
 void GenModule::nextTick() {
-	m_playbackInfo.tick = (m_playbackInfo.tick + 1) % m_playbackInfo.speed;
+	BOOST_ASSERT( m_playbackInfo.speed != 0 );
+	m_tick = (m_tick + 1) % m_playbackInfo.speed;
 }
 
 void GenModule::setTempo(uint8_t t) {
@@ -226,7 +232,7 @@ uint16_t GenModule::tickBufferLength() const
 
 uint8_t GenModule::tick() const
 {
-	return m_playbackInfo.tick;
+	return m_tick;
 }
 
 }

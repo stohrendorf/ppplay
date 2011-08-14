@@ -87,7 +87,7 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 				}
 				setActive(true);
 			}
-			if(m_vibratoWaveform&4 == 0) {
+			if((m_vibratoWaveform&4) == 0) {
 				// reset phase to 0 on a new note
 				m_vibratoPhase = 0;
 			}
@@ -467,7 +467,7 @@ int16_t ModChannel::vibDelta()
 			res = WaveSine.at( m_vibratoPhase&0x1f );
 			break;
 		case 1:
-			res = 256-(m_vibratoPhase&0x1f)<<3;
+			res = 256-((m_vibratoPhase&0x1f)<<3);
 			break;
 		case 2:
 			res = 256;
