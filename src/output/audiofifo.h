@@ -38,13 +38,6 @@ class AudioFifo {
 		AudioFifo() = delete;
 	private:
 		/**
-		 * @brief Makes volume values logarithmic
-		 * @param[in,out] leftVol Left channel volume
-		 * @param[in,out] rightVol Right channel volume
-		 * @see calcVolume
-		 */
-		void logify(uint16_t& leftVol, uint16_t& rightVol);
-		/**
 		 * @brief Calculate the volume of the audio buffer
 		 * @param[out] leftVol Left volume
 		 * @param[out] rightVol Right volume

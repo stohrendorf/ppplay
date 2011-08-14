@@ -26,6 +26,31 @@
 #include <algorithm>
 #include <boost/assert.hpp>
 
+/**
+ * @brief Makes volume values logarithmic
+ * @param[in,out] leftVol Left channel volume
+ * @param[in,out] rightVol Right channel volume
+ * @see calcVolume
+ */
+static void logify(uint16_t& leftVol, uint16_t& rightVol) {
+	uint32_t tmp = leftVol << 1;
+	if(tmp > 0x8000)
+		tmp = (0x8000 + tmp) >> 1;
+	if(tmp > 0xb000)
+		tmp = (0xb000 + tmp) >> 1;
+	if(tmp > 0xe000)
+		tmp = (0xe000 + tmp) >> 1;
+	leftVol = tmp > 0xffff ? 0xffff : tmp;
+	tmp = rightVol << 1;
+	if(tmp > 0x8000)
+		tmp = (0x8000 + tmp) >> 1;
+	if(tmp > 0xb000)
+		tmp = (0xb000 + tmp) >> 1;
+	if(tmp > 0xe000)
+		tmp = (0xe000 + tmp) >> 1;
+	rightVol = tmp > 0xffff ? 0xffff : tmp;
+}
+
 void AudioFifo::calcVolume(uint16_t& leftVol, uint16_t& rightVol) {
 	BOOST_ASSERT(m_queuedFrames != 0);
 	//MutexLocker mutexLock(m_queueMutex);
@@ -43,25 +68,6 @@ void AudioFifo::calcVolume(uint16_t& leftVol, uint16_t& rightVol) {
 	leftVol = (leftSum << 2) / totalProcessed;
 	rightVol = (rightSum << 2) / totalProcessed;
 	logify(leftVol, rightVol);
-}
-
-void AudioFifo::logify(uint16_t& leftVol, uint16_t& rightVol) {
-	uint32_t tmp = leftVol << 1;
-	if(tmp > 0x8000)
-		tmp = (0x8000 + tmp) >> 1;
-	if(tmp > 0xb000)
-		tmp = (0xb000 + tmp) >> 1;
-	if(tmp > 0xe000)
-		tmp = (0xe000 + tmp) >> 1;
-	leftVol = tmp > 0xffff ? 0xffff : tmp;
-	tmp = rightVol << 1;
-	if(tmp > 0x8000)
-		tmp = (0x8000 + tmp) >> 1;
-	if(tmp > 0xb000)
-		tmp = (0xb000 + tmp) >> 1;
-	if(tmp > 0xe000)
-		tmp = (0xe000 + tmp) >> 1;
-	rightVol = tmp > 0xffff ? 0xffff : tmp;
 }
 
 AudioFifo::AudioFifo(size_t frameCount) : m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_volumeLeft(0), m_volumeRight(0), m_queueMutex() {

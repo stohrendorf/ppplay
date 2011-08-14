@@ -288,6 +288,9 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 		}
 		m_breakRow = m_breakOrder = -1;
 	}
+	if(playbackInfo().order >= orderCount()) {
+		return false;
+	}
 	setPatternIndex(mapOrder(playbackInfo().order)->index());
 	if(orderChanged) {
 		m_patLoopRow = 0;
@@ -411,7 +414,7 @@ bool ModModule::jumpPrevSong()
 
 GenOrder::Ptr ModModule::mapOrder(int16_t order)
 {
-	if(order<0 || order>63) {
+	if(order<0 || order>127) {
 		return GenOrder::Ptr();
 	}
 	return orderAt(order);

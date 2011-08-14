@@ -44,6 +44,7 @@ private:
 	uint8_t m_finetune;
 	uint8_t m_tremoloWaveform;
 	uint8_t m_vibratoWaveform;
+	uint8_t m_vibratoPhase;
 	bool m_glissando;
 	uint16_t m_period;
 	uint16_t m_portaTarget;
@@ -96,6 +97,7 @@ private:
 	void efxPatDelay(uint8_t fxByte);
 	void fxSetSpeed(uint8_t fxByte);
 	ModSample::Ptr currentSample() const;
+	int16_t vibDelta();
 };
 
 }

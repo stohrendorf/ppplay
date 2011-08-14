@@ -42,12 +42,10 @@ static inline double finetuneMultiplicator(uint8_t finetune)
 /**
  * @todo According to some Amiga assembler sources, periods
  * are clipped to a range of 0x71..0x358 (113..856 decimal respectively).
- *
- * @todo Finetune calculation: realPeriod = basePeriod*(2^(-finetune/8/12))
  */
 
 ModChannel::ModChannel(ModModule* parent) : m_module(parent), m_currentCell(), m_volume(0),
-	m_finetune(0), m_tremoloWaveform(0), m_vibratoWaveform(0), m_glissando(false),
+	m_finetune(0), m_tremoloWaveform(0), m_vibratoWaveform(0), m_vibratoPhase(0), m_glissando(false),
 	m_period(0), m_portaTarget(0), m_lastVibratoFx(0), m_lastPortaFx(0), m_sampleIndex(0), m_bresen(1,1)
 {
 	BOOST_ASSERT(parent!=nullptr);
@@ -88,6 +86,10 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 					m_period = m_portaTarget;
 				}
 				setActive(true);
+			}
+			if(m_vibratoWaveform&4 == 0) {
+				// reset phase to 0 on a new note
+				m_vibratoPhase = 0;
 			}
 		}
 		setActive(m_period!=0 && currentSample());
@@ -155,6 +157,7 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 			fxSetSpeed(m_currentCell.effectValue());
 			break;
 	}
+	m_period = clip<uint16_t>(m_period, 0x71, 0x358);
 	updateStatus();
 }
 
@@ -203,7 +206,7 @@ void ModChannel::simTick(size_t bufsize)
 		return;
 	}
 	// TODO glissando
-	int32_t pos = position() + (FrequencyBase / m_module->frequency() * bufsize / (m_period*finetuneMultiplicator(m_finetune)));
+	int32_t pos = position() + (FrequencyBase / m_module->frequency() * bufsize / (m_period*finetuneMultiplicator(m_finetune)+vibDelta()));
 	currentSample()->adjustPosition(pos);
 	if(pos == GenSample::EndOfSample) {
 		setActive(false);
@@ -222,7 +225,7 @@ void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
 		setActive(false);
 		return;
 	}
-	m_bresen.reset(m_module->frequency(), FrequencyBase / (m_period*finetuneMultiplicator(m_finetune)));
+	m_bresen.reset(m_module->frequency(), FrequencyBase / (m_period*finetuneMultiplicator(m_finetune)+vibDelta()));
 	setStatusString( statusString() + stringf(" %d +- %u",FrequencyBase/m_period, m_finetune) );
 	// TODO glissando
 	ModSample::Ptr currSmp = currentSample();
@@ -385,8 +388,11 @@ void ModChannel::fxPortaUp(uint8_t fxByte)
 
 void ModChannel::fxVibrato(uint8_t fxByte)
 {
-	reuseIfZero(m_lastVibratoFx, fxByte);
-	// TODO
+	if(m_module->tick() == 0) {
+		return;
+	}
+	reuseNibblesIfZero(m_lastVibratoFx, fxByte);
+	m_vibratoPhase += highNibble(fxByte);
 }
 
 void ModChannel::fxPorta(uint8_t fxByte)
@@ -442,6 +448,39 @@ void ModChannel::fxTremolo(uint8_t fxByte)
 	// TODO
 }
 
+static const std::array<const int16_t, 32> WaveSine = {{
+		0, 24, 49, 74, 97, 120, 141, 161,
+		180, 197, 212, 224, 235, 244, 250, 253,
+		255, 253, 250, 244, 235, 224, 212, 197,
+		180, 161, 141, 120, 97, 74, 49, 24
+}};
+
+int16_t ModChannel::vibDelta()
+{
+	if(m_currentCell.effect() != 4 && m_currentCell.effect() != 6) {
+		return 0;
+	}
+	m_vibratoPhase &= 0x3f;
+	int16_t res = 0;
+	switch(m_vibratoWaveform&3) {
+		case 0:
+			res = WaveSine.at( m_vibratoPhase&0x1f );
+			break;
+		case 1:
+			res = 256-(m_vibratoPhase&0x1f)<<3;
+			break;
+		case 2:
+			res = 256;
+			break;
+		case 3:
+			res = rand()&0xff;
+			break;
+	}
+	if(m_vibratoPhase>=0x20) {
+		res = -res;
+	}
+	return (res*lowNibble(m_lastVibratoFx))>>7;
+}
 
 }
 }
