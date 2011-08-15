@@ -17,7 +17,6 @@
 */
 
 #include "widget.h"
-#include "logger/logger.h"
 
 #include <algorithm>
 #include <boost/assert.hpp>

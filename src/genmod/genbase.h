@@ -26,6 +26,8 @@
 
 #include "stuff/utils.h"
 
+#include <log4cxx/logger.h>
+
 #include <array>
 
 namespace ppp {

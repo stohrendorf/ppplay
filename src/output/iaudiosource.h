@@ -27,6 +27,8 @@
 #include "stuff/utils.h"
 #include "audiotypes.h"
 
+#include <log4cxx/logger.h>
+
 #include <mutex>
 
 /**
@@ -122,6 +124,8 @@ class IAudioSource {
 		 * and returns @c false, else it returns @c true.
 		 */
 		bool isLocked();
+	protected:
+		static log4cxx::LoggerPtr logger();
 };
 
 /**

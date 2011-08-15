@@ -17,7 +17,6 @@
 */
 
 #include "sdlaudiooutput.h"
-#include "logger/logger.h"
 
 #include <SDL.h>
 
@@ -70,18 +69,18 @@ int SDLAudioOutput::init(int desiredFrq) {
 	desired->callback = sdlAudioCallback;
 	desired->userdata = this;
 	if(SDL_OpenAudio(desired.get(), obtained.get()) < 0) {
-		LOG_ERROR("Couldn't open audio. SDL reports '%s'", SDL_GetError());
+		LOG4CXX_FATAL(logger(), "Couldn't open audio. SDL reports '" << SDL_GetError() << "'");
 		setErrorCode( OutputError );
 		return 0;
 	}
-	LOG_TEST_ERROR(desired->freq != obtained->freq);
+/*	LOG_TEST_ERROR(desired->freq != obtained->freq);
 	LOG_TEST_ERROR(desired->channels != obtained->channels);
 	LOG_TEST_ERROR(desired->format != obtained->format);
-	LOG_TEST_WARN(desired->samples != obtained->samples);
+	LOG_TEST_WARN(desired->samples != obtained->samples);*/
 	desiredFrq = desired->freq;
 	char driverName[256];
 	if(SDL_AudioDriverName(driverName, 255)) {
-		LOG_MESSAGE("Using audio driver '%s'", driverName);
+		LOG4CXX_INFO(logger(), "Using audio driver '" << driverName << "'");
 	}
 	setErrorCode( NoError );
 	return desiredFrq;
@@ -117,4 +116,9 @@ uint16_t SDLAudioOutput::volumeLeft() const {
 
 uint16_t SDLAudioOutput::volumeRight() const {
 	return m_fifo.volumeRight();
+}
+
+log4cxx::LoggerPtr SDLAudioOutput::logger()
+{
+	return log4cxx::Logger::getLogger( IAudioOutput::logger()->getName() + ".sdl" );
 }

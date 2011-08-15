@@ -25,8 +25,6 @@
 
 #include "s3msample.h"
 
-#include "logger/logger.h"
-
 #include <algorithm>
 
 namespace ppp {

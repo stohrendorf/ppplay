@@ -317,6 +317,8 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @return The current tick index
 		 */
 		uint8_t tick() const;
+	protected:
+		static log4cxx::LoggerPtr logger();
 };
 
 } // namespace ppp

@@ -27,6 +27,8 @@
 #include "stuff/utils.h"
 #include "audiotypes.h"
 
+#include <log4cxx/logger.h>
+
 #include <mutex>
 
 /**
@@ -137,6 +139,8 @@ class AudioFifo {
 		 * @retval false FIFO is not empty
 		 */
 		bool isEmpty() const;
+	protected:
+		static log4cxx::LoggerPtr logger();
 };
 
 /**

@@ -19,7 +19,6 @@
 #include "modsample.h"
 
 #include "stream/binstream.h"
-#include "logger/logger.h"
 
 /**
  * @ingroup ModMod
@@ -88,6 +87,12 @@ uint8_t ModSample::finetune() const
 {
 	return m_finetune;
 }
+
+log4cxx::LoggerPtr ModSample::logger()
+{
+	return log4cxx::Logger::getLogger( GenSample::logger()->getName() + ".mod" );
+}
+
 
 }
 }

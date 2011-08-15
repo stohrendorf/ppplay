@@ -64,3 +64,8 @@ bool IAudioSource::isLocked() {
 	// the mutex is locked when a lock attempt fails
 	return !tmp;
 }
+
+log4cxx::LoggerPtr IAudioSource::logger()
+{
+	return log4cxx::Logger::getLogger("iaudiosource");
+}

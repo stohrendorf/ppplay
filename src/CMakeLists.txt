@@ -2,7 +2,6 @@ include_directories(.)
 
 add_subdirectory(stuff)
 add_subdirectory(output)
-add_subdirectory(logger)
 
 add_subdirectory(stream)
 

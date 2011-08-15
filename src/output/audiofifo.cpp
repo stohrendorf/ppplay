@@ -196,6 +196,11 @@ size_t AudioFifo::minFrameCount() const {
 	return m_minFrameCount;
 }
 
+log4cxx::LoggerPtr AudioFifo::logger()
+{
+	return log4cxx::Logger::getLogger("audiofifo");
+}
+
 /**
  * @}
  */

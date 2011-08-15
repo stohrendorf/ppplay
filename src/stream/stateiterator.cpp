@@ -22,15 +22,18 @@
  */
 
 #include "stateiterator.h"
-#include "logger/logger.h"
 #include "memarchive.h"
+
+#include <log4cxx/logger.h>
+
+static log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("stateiterator");
 
 StateIterator::StateIterator() : m_states(), m_stateIndex(0) {
 }
 
 IArchive::Ptr StateIterator::newState() {
 	IArchive::Ptr p(new MemArchive());
-	LOG_MESSAGE("Creating new state %u", m_states.size());
+	LOG4CXX_INFO(logger, "Creating new state " << m_states.size());
 	m_states.push_back(p);
 	return p;
 }
@@ -40,7 +43,7 @@ IArchive::Ptr StateIterator::nextState() {
 		return IArchive::Ptr();
 	}
 	m_stateIndex++;
-	LOG_MESSAGE("Loading state %u", m_stateIndex);
+	LOG4CXX_INFO(logger, "Loading state " << m_stateIndex);
 	return m_states.at(m_stateIndex);
 }
 
@@ -49,7 +52,7 @@ IArchive::Ptr StateIterator::prevState() {
 		return IArchive::Ptr();
 	}
 	m_stateIndex--;
-	LOG_MESSAGE("Loading state %u", m_stateIndex);
+	LOG4CXX_INFO(logger, "Loading state " << m_stateIndex);
 	return m_states.at(m_stateIndex);
 }
 

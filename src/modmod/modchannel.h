@@ -99,6 +99,8 @@ private:
 	void fxSetSpeed(uint8_t fxByte);
 	ModSample::Ptr currentSample() const;
 	int16_t vibDelta();
+protected:
+	static log4cxx::LoggerPtr logger();
 };
 
 }

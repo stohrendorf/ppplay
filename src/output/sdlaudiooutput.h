@@ -60,6 +60,8 @@ class SDLAudioOutput : public IAudioOutput {
 		 * @return @c false if the FIFO could not be filled
 		 */
 		bool fillFifo();
+	protected:
+		static log4cxx::LoggerPtr logger();
 };
 
 /**

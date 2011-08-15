@@ -150,7 +150,15 @@ else()
 	# message(STATUS "MP3Lame found, Quick-MP3 will be available")
 endif()
 
-add_feature_info(MP3Lame WITH_MP3LAME "The MP3Lame library enabled MP3 generation.")
+add_feature_info(MP3Lame WITH_MP3LAME "The MP3Lame library enables MP3 export.")
+
+include(cmake/FindLog4Cxx.cmake)
+if(NOT LOG4CXX_FOUND)
+	message(FATAL_ERROR "Required Log4Cxx was not found")
+endif()
+set_package_info(LOG4CXX "Log4Cxx" "http://logging.apache.org/log4cxx" "The Log4Cxx library is used for advanced logging")
+include_directories(${LOG4CXX_INCLUDE_DIR})
+target_link_libraries(ppp ${LOG4CXX_LIBRARIES})
 
 #########
 # add SDL

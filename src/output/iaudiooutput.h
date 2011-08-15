@@ -104,6 +104,7 @@ class IAudioOutput {
 		 * @param[in] ec New error code
 		 */
 		void setErrorCode(ErrorCode ec);
+		static log4cxx::LoggerPtr logger();
 	private:
 		IAudioSource::WeakPtr m_source; //!< @brief The audio source
 		ErrorCode m_errorCode; //!< @brief Internal error code

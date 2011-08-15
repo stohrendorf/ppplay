@@ -77,6 +77,8 @@ public:
 	virtual uint8_t channelCount() const;
 	ModSample::Ptr sampleAt(size_t idx) const;
 	bool existsSample(size_t idx) const;
+protected:
+	static log4cxx::LoggerPtr logger();
 };
 
 }

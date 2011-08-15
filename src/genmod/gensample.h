@@ -228,6 +228,8 @@ class GenSample {
 		 * @param[in] v The new volume
 		 */
 		void setVolume(uint8_t v);
+	protected:
+		static log4cxx::LoggerPtr logger();
 };
 
 inline BasicSample GenSample::sampleAt(int32_t& pos) const {

@@ -17,7 +17,6 @@
 */
 
 #include "mp3audiooutput.h"
-#include "logger/logger.h"
 
 #include <lame/lame.h>
 
@@ -35,10 +34,12 @@ void MP3AudioOutput::encodeThread(MP3AudioOutput* src) {
 		src->m_bufferMutex.lock();
 		int res = lame_encode_buffer_interleaved(src->m_lameGlobalFlags, &buffer->front().left, buffer->size(), src->m_buffer, BufferSize);
 		if(res < 0) {
-			if(res == -1)
-				LOG_ERROR("Lame Encoding Buffer too small!");
-			else
-				LOG_ERROR("Unknown Lame Error.");
+			if(res == -1) {
+				LOG4CXX_ERROR( logger(), "Lame Encoding Buffer too small!" );
+			}
+			else {
+				LOG4CXX_ERROR( logger(), "Unknown error: " << res);
+			}
 		}
 		else {
 			src->m_file.write(reinterpret_cast<char*>(src->m_buffer), res);
@@ -87,13 +88,13 @@ int MP3AudioOutput::init(int desiredFrq) {
 	m_file.open(m_filename, std::ios::in);
 	if(m_file.is_open()) {
 		m_file.close();
-		LOG_ERROR("Output file already exists");
+		LOG4CXX_ERROR(logger(), "Output file already exists: " << m_filename);
 		setErrorCode(OutputUnavailable);
 		return 0;
 	}
 	m_file.open(m_filename, std::ios::out | std::ios::binary);
 	if(!m_file.is_open()) {
-		LOG_ERROR("Cannot open output file for writing");
+		LOG4CXX_ERROR(logger(), "Cannot open output file for writing: " << m_filename);
 		setErrorCode(OutputUnavailable);
 		return 0;
 	}
@@ -102,8 +103,9 @@ int MP3AudioOutput::init(int desiredFrq) {
 	lame_set_quality(m_lameGlobalFlags, 5);
 	lame_set_mode(m_lameGlobalFlags, STEREO);
 	lame_set_VBR(m_lameGlobalFlags, vbr_off);
-	if(lame_init_params(m_lameGlobalFlags) < 0)
+	if(lame_init_params(m_lameGlobalFlags) < 0) {
 		return 0;
+	}
 	m_encoderThread = std::thread(encodeThread, this);
 	m_encoderThread.detach();
 	return desiredFrq;
@@ -115,4 +117,9 @@ void MP3AudioOutput::setID3(const std::string& title, const std::string& album, 
 	id3tag_set_title(m_lameGlobalFlags, title.c_str());
 	id3tag_set_artist(m_lameGlobalFlags, artist.c_str());
 	id3tag_set_album(m_lameGlobalFlags, album.c_str());
+}
+
+log4cxx::LoggerPtr MP3AudioOutput::logger()
+{
+	return log4cxx::Logger::getLogger( IAudioOutput::logger()->getName()+".mp3" );
 }

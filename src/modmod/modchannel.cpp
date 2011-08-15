@@ -20,8 +20,6 @@
 
 #include "modmodule.h"
 
-#include "logger/logger.h"
-
 #include <cmath>
 #include <boost/assert.hpp>
 
@@ -265,7 +263,7 @@ void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
 		return setActive(false);
 	}
 	BOOST_ASSERT(m_module && m_module->frequency() != 0);
-	LOG_TEST_ERROR(mixBuffer->size() == 0);
+	LOG4CXX_ASSERT(logger(), mixBuffer->size() != 0, "mixBuffer is empty");
 	if(m_module->frequency() * mixBuffer->size() == 0) {
 		setActive(false);
 		return;
@@ -590,6 +588,11 @@ int16_t ModChannel::vibDelta()
 		res = -res;
 	}
 	return (res*lowNibble(m_lastVibratoFx))>>7;
+}
+
+log4cxx::LoggerPtr ModChannel::logger()
+{
+	return log4cxx::Logger::getLogger( GenChannel::logger()->getName() + ".mod" );
 }
 
 }

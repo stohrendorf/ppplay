@@ -27,6 +27,8 @@
 #include "stream/iserializable.h"
 #include "stuff/utils.h"
 
+#include <log4cxx/logger.h>
+
 #include <memory>
 
 namespace ppp {
@@ -71,6 +73,8 @@ class GenOrder : public ISerializable {
 		 * @return The new value of m_playbackCount
 		 */
 		uint8_t increasePlaybackCount();
+	protected:
+		static log4cxx::LoggerPtr logger();
 };
 
 }

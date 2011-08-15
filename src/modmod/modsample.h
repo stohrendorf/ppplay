@@ -43,6 +43,8 @@ public:
 	uint8_t finetune() const;
 private:
 	uint8_t m_finetune;
+protected:
+	static log4cxx::LoggerPtr logger();
 };
 
 }

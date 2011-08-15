@@ -20,10 +20,12 @@
 
 #include "sdlscreen.h"
 
-#include "logger/logger.h"
+#include <log4cxx/logger.h>
 
 #include <SDL.h>
 #include <SDL_endian.h>
+
+static log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("ppg.sdl");
 
 /**
  * @ingroup Ppg
@@ -125,7 +127,7 @@ SDLScreen* SDLScreen::instance()
 		{
 			char videoDrv[256];
 			if( SDL_VideoDriverName( videoDrv, 255 ) ) {
-				LOG_MESSAGE( "Using video driver '%s'", videoDrv );
+				LOG4CXX_INFO( logger, "Using video driver '"<<videoDrv<<"'" );
 			}
 		}
 		setPosition( 0, 0 );
@@ -250,7 +252,7 @@ SDLScreen* SDLScreen::instance()
 
 	void SDLScreen::drawChar( int x, int y, char c ) {
 		if( !area().contains( x, y ) ) {
-			LOG_ERROR( "Out of range: %d,%d", x, y );
+			LOG4CXX_ERROR( logger,  "Out of range: " << x << "," << y );
 			return;
 		}
 		g_chars[x + y * area().width()] = c;
