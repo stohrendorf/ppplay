@@ -19,7 +19,28 @@
  * So, I decided to start my own, platform-independent player.
  *
  * @section thanks Thanks fly out to...
- * The creators of DosBox! Without DosBox I wouldn't have found that many bugs and quirks.
+ * <ul>
+ * <li>The creators of DosBox! Without DosBox I wouldn't have found that many bugs and quirks.</li>
+ * <li>Vim (http://www.vim.org) with the must-have scripts:
+ *   <ul>
+ *   <li>NERDTree</li>
+ *   <li>NERDCommenter</li>
+ *   <li>A (the thing that switches between headers and sources)</li>
+ *   <li>minibufexpl</li>
+ *   <li>supertab</li>
+ *   </ul>
+ * </li>
+ * <li>KDevelop (http://www.kdevelop.org)</li>
+ * <li>Awesome (http://awesome.naquadah.org) - though I don't like Lua, this window manager is ... awesome!</li>
+ * <li>GCC - You're great, guys!</li>
+ * <li>SDL (http://www.libsdl.org) - The Simple Direct Media Layer, used for audio and video</li>
+ * <li>Boost (http://www.boost.org) - for great frameworks, especially Filesystem, Smart Pointer and Exception.</li>
+ * <li>CMake (http://www.cmake.org) for a great build system</li>
+ * <li>Doxygen (http://www.doxygen.org) - the best source code documentation tool I know of.</li>
+ * <li>LaTeX - OK, not directly related, but thanks guys!</li>
+ * <li>modland.com and modarchive.org for a great source of modules!</li>
+ * <li>berlios.de for hosting my project.</li>
+ * </ul>
  */
 
 /**

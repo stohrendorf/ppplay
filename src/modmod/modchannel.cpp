@@ -210,7 +210,7 @@ std::string ModChannel::effectDescription() const
 std::string ModChannel::effectName() const
 {
 	if(m_currentCell.effect()==0 && m_currentCell.effectValue()==0) {
-		return "   ";
+		return "---";
 	}
 	return stringf("%X%.2X",m_currentCell.effect(),m_currentCell.effectValue());
 }

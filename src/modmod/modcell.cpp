@@ -27,7 +27,7 @@
 namespace ppp {
 namespace mod {
 
-ModCell::ModCell() : m_sampleNumber(0), m_period(0), m_effect(0), m_effectValue(0), m_note("...")
+ModCell::ModCell() : m_sampleNumber(0), m_period(0), m_effect(0), m_effectValue(0), m_note("---")
 {
 }
 
@@ -37,7 +37,7 @@ void ModCell::reset()
 	m_period = 0;
 	m_effect = 0;
 	m_effectValue = 0;
-	m_note = "   ";
+	m_note = "---";
 }
 
 ModCell::~ModCell() = default;
@@ -67,6 +67,7 @@ bool ModCell::load(BinStream& str)
 			m_note = ppp::stringf("%s%u", NoteNames[idx%12], idx/12);
 		}
 		else {
+			// TODO find best-matching note
 			LOG_WARNING("Cannot find a note for period %u", m_period);
 			m_note = "???";
 		}
@@ -80,7 +81,7 @@ void ModCell::clear()
 	m_period = 0;
 	m_effect = 0;
 	m_effectValue = 0;
-	m_note.assign("...");
+	m_note.assign("---");
 }
 
 uint8_t ModCell::sampleNumber() const
@@ -110,10 +111,10 @@ std::string ModCell::trackerString() const
 		res.append(ppp::stringf(" %.2u", m_sampleNumber));
 	}
 	else {
-		res.append("   ");
+		res.append(" --");
 	}
 	if(m_effect == 0 && m_effectValue == 0) {
-		res.append(" ...");
+		res.append(" ---");
 	}
 	else {
 		res.append( stringf(" %.1X%.2X", m_effect, m_effectValue) );
@@ -136,7 +137,7 @@ IArchive& ModCell::serialize(IArchive* data)
 			}
 		}
 		else {
-			m_note = "...";
+			m_note = "---";
 		}
 	}
 	return *data;

@@ -74,7 +74,7 @@ enum {
 	EfxFineVolSlideDown = 0x0b,
 	EfxNoteCut = 0x0c,
 	EfxNoteDelay = 0x0d,
-	EfxPatDelay = 0x0e, //!< @todo Implement!
+	EfxPatDelay = 0x0e,
 	VfxNone = 0,
 	VfxVolSlideDown = 6,
 	VfxVolSlideUp = 7,

@@ -47,7 +47,6 @@ class ModPattern
 	public:
 		/**
 		 * @brief Constructor
-		 * @todo Number of channels
 		 */
 		ModPattern();
 		/**
