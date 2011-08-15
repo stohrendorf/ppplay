@@ -150,6 +150,8 @@ class XmModule : public GenModule {
 		virtual bool initialize(uint32_t frq);
 		bool isRunningPatDelay() const;
 		void doPatDelay(uint8_t counter);
+	protected:
+		static log4cxx::LoggerPtr logger();
 };
 
 } // namespace xm

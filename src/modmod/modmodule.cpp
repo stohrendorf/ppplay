@@ -600,7 +600,7 @@ void ModModule::checkGlobalFx()
 			}
 			else if(fx == 0x0d) {
 				m_breakRow = highNibble(fxVal) * 10 + lowNibble(fxVal);
-				LOG4CXX_INFO(logger(), "Row "<<playbackInfo().row<<": Break pattern to row "<<m_breakRow);
+				LOG4CXX_INFO(logger(), "Row "<<playbackInfo().row<<": Break pattern to row "<<std::dec<<(int)m_breakRow);
 			}
 		}
 	}

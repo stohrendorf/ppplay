@@ -34,9 +34,13 @@
 #include "src/output/mp3audiooutput.h"
 #endif
 
-#include "logger/logger.h"
-
 #include <boost/program_options.hpp>
+
+#include <log4cxx/logger.h>
+#include <log4cxx/defaultconfigurator.h>
+#include <log4cxx/logmanager.h>
+#include <log4cxx/consoleappender.h>
+#include <log4cxx/patternlayout.h>
 
 #include <SDL.h>
 
@@ -62,6 +66,7 @@ static bool quickMp3 = false;
 #endif
 
 static std::string parseCmdLine( int argc, char* argv[] ) {
+	int loglevel = 0;
 	namespace bpo = boost::program_options;
 	bpo::options_description genOpts( "General Options" );
 	genOpts.add_options()
@@ -69,8 +74,9 @@ static std::string parseCmdLine( int argc, char* argv[] ) {
 	( "version", "Shows version information and exits" )
 	( "warranty", "Shows warranty information and exits" )
 	( "copyright", "Shows copyright information and exits" )
-	( "verbose,v", "Be verbose (includes warnings)" )
-	( "very-verbose,V", "FOR DEBUG PURPOSES ONLY! (implies -v, includes all messages)" )
+	( "log-level,l", bpo::value<int>(&loglevel)->default_value(0), "Sets the log level. Possible values:\n - 0 No logging\n - 1 Errors\n - 2 Warnings\n - 3 Informational\n - 4 Debug" )
+	//( "verbose,v", "Be verbose (includes warnings)" )
+	//( "very-verbose,V", "FOR DEBUG PURPOSES ONLY! (implies -v, includes all messages)" )
 	( "no-gui,n", "No GUI" )
 	;
 	bpo::options_description ioOpts( "Input/Output Options" );
@@ -89,6 +95,26 @@ static std::string parseCmdLine( int argc, char* argv[] ) {
 	bpo::variables_map vm;
 	bpo::store( bpo::command_line_parser( argc, argv ).options( allOpts ).positional( p ).run(), vm );
 	bpo::notify( vm );
+	switch(loglevel) {
+		case 0:
+			log4cxx::Logger::getRootLogger()->setLevel( log4cxx::Level::getOff() );
+			break;
+		case 1:
+			log4cxx::Logger::getRootLogger()->setLevel( log4cxx::Level::getError() );
+			break;
+		case 2:
+			log4cxx::Logger::getRootLogger()->setLevel( log4cxx::Level::getWarn() );
+			break;
+		case 3:
+			log4cxx::Logger::getRootLogger()->setLevel( log4cxx::Level::getInfo() );
+			break;
+		case 4:
+			log4cxx::Logger::getRootLogger()->setLevel( log4cxx::Level::getDebug() );
+			break;
+		default:
+			log4cxx::Logger::getRootLogger()->setLevel( log4cxx::Level::getAll() );
+	}
+
 	using std::cout;
 	using std::endl;
 	if( vm.count( "warranty" ) ) {
@@ -149,40 +175,44 @@ static std::string parseCmdLine( int argc, char* argv[] ) {
 	if( vm.count( "no-gui" ) ) {
 		noGUI = true;
 	}
-	if( vm.count( "verbose" ) ) {
-		setLogLevel( llWarning );
-	}
-	if( vm.count( "very-verbose" ) ) {
-		setLogLevel( llMessage );
-	}
+	//if( vm.count( "verbose" ) ) {
+		//setLogLevel( llWarning );
+	//}
+	//if( vm.count( "very-verbose" ) ) {
+		//setLogLevel( llMessage );
+	//}
 	//setLogLevel(llMessage);
 #ifdef WITH_MP3LAME
 	quickMp3 = vm.count( "quick-mp3" );
 #endif
-	switch( getLogLevel() ) {
-		case llMessage:
-			cout << "Log level is: VERY Verbose" << endl;
-			break;
-		case llWarning:
-			cout << "Log level is: Verbose" << endl;
-			break;
-		case llError:
-			cout << "Log level is: Normal" << endl;
-			break;
-		case llNone: /* logging disabled... */
-			break;
-		default:
-			break;
-	}
+	//switch( getLogLevel() ) {
+		//case llMessage:
+			//cout << "Log level is: VERY Verbose" << endl;
+			//break;
+		//case llWarning:
+			//cout << "Log level is: Verbose" << endl;
+			//break;
+		//case llError:
+			//cout << "Log level is: Normal" << endl;
+			//break;
+		//case llNone: [> logging disabled... <]
+			//break;
+		//default:
+			//break;
+	//}
 	return vm["file"].as<std::string>();
 }
 
 int main( int argc, char* argv[] ) {
+	//log4cxx::AppenderPtr appender(new log4cxx::ConsoleAppender(new log4cxx::SimpleLayout));
+	//log4cxx::Logger::getRootLogger()->addAppender( appender );
+	log4cxx::DefaultConfigurator::configure( log4cxx::LogManager::getLoggerRepository() );
+	log4cxx::LogManager::getRootLogger()->addAppender( new log4cxx::ConsoleAppender(new log4cxx::PatternLayout("[%-5p %rms %c] %m%n")) );
 	try {
 		std::string modFileName = parseCmdLine( argc, argv );
 		if( modFileName.empty() )
 			return EXIT_SUCCESS;
-		LOG_MESSAGE( "Loading the module." );
+		LOG4CXX_INFO(log4cxx::Logger::getRootLogger(), "Loading the module." );
 		ppp::GenModule::Ptr module;
 		try {
 			module = ppp::s3m::S3mModule::factory( modFileName, 44100, 2 );
@@ -191,14 +221,14 @@ int main( int argc, char* argv[] ) {
 				if( !module ) {
 					module = ppp::mod::ModModule::factory( modFileName, 44100, 2 );
 					if(!module) {
-						LOG_ERROR( "Error on loading the mod..." );
+						LOG4CXX_ERROR(log4cxx::Logger::getRootLogger(), "Error on loading the mod..." );
 						return EXIT_FAILURE;
 					}
 				}
 			}
 		}
 		catch( ... ) {
-			LOG_ERROR( "Main: %s", boost::current_exception_diagnostic_information().c_str() );
+			LOG4CXX_FATAL(log4cxx::Logger::getRootLogger(), "Main: " << boost::current_exception_diagnostic_information() );
 			return EXIT_FAILURE;
 		}
 		if( !noGUI ) {
@@ -209,10 +239,10 @@ int main( int argc, char* argv[] ) {
 #ifdef WITH_MP3LAME
 		if( !quickMp3 ) {
 #endif
-			LOG_MESSAGE( "Init Audio" );
+			LOG4CXX_INFO(log4cxx::Logger::getRootLogger(), "Init Audio" );
 			output.reset( new SDLAudioOutput( module ) );
 			if( !output->init( 44100 ) ) {
-				LOG_ERROR( "Audio Init failed" );
+				LOG4CXX_FATAL(log4cxx::Logger::getRootLogger(), "Audio Init failed" );
 				return EXIT_FAILURE;
 			}
 			output->play();
@@ -281,15 +311,17 @@ int main( int argc, char* argv[] ) {
 #ifdef WITH_MP3LAME
 		}
 		else {   // if(mp3File.is_open()) { // quickMp3
-			LOG_MESSAGE( "QuickMP3 Output Mode" );
+			LOG4CXX_INFO(log4cxx::Logger::getRootLogger(), "QuickMP3 Output Mode" );
 			MP3AudioOutput* mp3out = new MP3AudioOutput( module, modFileName + ".mp3" );
 			output.reset( mp3out );
 			mp3out->setID3( module->trimmedTitle(), PACKAGE_STRING, module->trackerInfo() );
 			if( 0 == mp3out->init( 44100 ) ) {
-				if( mp3out->errorCode() == IAudioOutput::OutputUnavailable )
-					LOG_ERROR( "LAME unavailable: Maybe cannot create MP3 File" );
-				else
-					LOG_ERROR( "LAME initialization error: %d", mp3out->errorCode() );
+				if( mp3out->errorCode() == IAudioOutput::OutputUnavailable ) {
+					LOG4CXX_ERROR(log4cxx::Logger::getRootLogger(), "LAME unavailable: Maybe cannot create MP3 File" );
+				}
+				else {
+					LOG4CXX_ERROR(log4cxx::Logger::getRootLogger(), "LAME initialization error: " << mp3out->errorCode() );
+				}
 				return EXIT_FAILURE;
 			}
 			if(dosScreen) {
@@ -303,9 +335,12 @@ int main( int argc, char* argv[] ) {
 #endif
 	}
 	catch( ... ) {
-		LOG_ERROR( "Main (end): %s", boost::current_exception_diagnostic_information().c_str() );
+		LOG4CXX_FATAL(log4cxx::Logger::getRootLogger(), "Main (end): " << boost::current_exception_diagnostic_information() );
 		return EXIT_FAILURE;
 	}
+	//for(const log4cxx::LoggerPtr& l : log4cxx::LogManager::getCurrentLoggers()) {
+		//std::cout << l->getName() << std::endl;
+	//}
 	return EXIT_SUCCESS;
 }
 

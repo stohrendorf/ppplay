@@ -23,7 +23,6 @@
 
 #include "xmchannel.h"
 #include "xmmodule.h"
-#include "logger/logger.h"
 
 #include <cmath>
 
@@ -126,7 +125,7 @@ void XmChannel::triggerNote() {
 		int tmp = currentSample()->relativeNote();
 		tmp += m_baseNote;
 		if(!inRange(tmp, 1, 119)) {
-			LOG_WARNING("OUT OF RANGE NOTE: rel=%d base=%d r=%d", currentSample()->relativeNote(), m_baseNote, tmp);
+			//LOG_WARNING("OUT OF RANGE NOTE: rel=%d base=%d r=%d", currentSample()->relativeNote(), m_baseNote, tmp);
 			setActive(false);
 			return;
 		}

@@ -24,7 +24,6 @@
 #include "genbase.h"
 #include "genmodule.h"
 #include "stream/memarchive.h"
-#include "logger/logger.h"
 
 #include <boost/filesystem.hpp>
 
@@ -91,7 +90,7 @@ bool GenModule::isMultiSong() const {
 }
 
 void GenModule::removeEmptySongs() {
-	LOG_MESSAGE("Removing empty songs");
+	LOG4CXX_INFO(logger(), "Removing empty songs");
 	std::vector<StateIterator> nTr;
 	std::vector<size_t> nTrLen;
 	for(size_t i = 0; i < m_songs.size(); i++) {
@@ -145,9 +144,9 @@ void GenModule::setTrackerInfo(const std::string& t) {
 }
 
 GenOrder::Ptr GenModule::orderAt(size_t idx) const {
-	if( idx>=m_orders.size() ) {
-		LOG_ERROR("%u >= %u", idx, m_orders.size());
-	}
+	//if( idx>=m_orders.size() ) {
+		//LOG_ERROR("%u >= %u", idx, m_orders.size());
+	//}
 	BOOST_ASSERT( idx<m_orders.size() );
 	return m_orders.at(idx);
 }

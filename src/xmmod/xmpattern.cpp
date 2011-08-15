@@ -22,7 +22,6 @@
  */
 
 #include "xmpattern.h"
-#include "logger/logger.h"
 
 #include <boost/assert.hpp>
 
@@ -50,13 +49,13 @@ bool XmPattern::load(BinStream& str) {
 	uint8_t packType;
 	str.read(&packType);
 	if(packType != 0) {
-		LOG_WARNING("Unsupported Pattern pack type: %u", packType);
+		LOG4CXX_ERROR(logger(), "Unsupported Pattern pack type: " << packType);
 		return false;
 	}
 	uint16_t rows;
 	str.read(&rows);
 	if(rows < 1 || rows > 256) {
-		LOG_WARNING("Number of rows out of range: %u", rows);
+		LOG4CXX_WARN(logger(), "Number of rows out of range: " << rows);
 		return false;
 	}
 	for(XmCell::Vector& chan : m_columns) {
@@ -113,6 +112,11 @@ XmPattern::Ptr XmPattern::createDefaultPattern(int16_t chans) {
 		}
 	}
 	return result;
+}
+
+log4cxx::LoggerPtr XmPattern::logger()
+{
+	return log4cxx::Logger::getLogger( "pattern.xm" );
 }
 
 }

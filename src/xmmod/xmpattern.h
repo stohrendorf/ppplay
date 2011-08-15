@@ -84,6 +84,8 @@ class XmPattern {
 		 * @return Pointer to the new pattern
 		 */
 		static XmPattern::Ptr createDefaultPattern(int16_t chans);
+	protected:
+		static log4cxx::LoggerPtr logger();
 };
 
 } // namespace xm

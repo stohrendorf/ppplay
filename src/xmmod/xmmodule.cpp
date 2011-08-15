@@ -25,7 +25,6 @@
 
 #include "xmmodule.h"
 #include "stream/fbinstream.h"
-#include "logger/logger.h"
 
 namespace ppp {
 namespace xm {
@@ -77,11 +76,11 @@ bool XmModule::load(const std::string& filename) {
 	setFilename(filename);
 	file.read(reinterpret_cast<char*>(&hdr), sizeof(hdr));
 	if(!std::equal(hdr.id, hdr.id + 17, "Extended Module: ") || hdr.endOfFile != 0x1a /*|| hdr.numChannels > 32*/) {
-		LOG_WARNING("XM Header invalid");
+		LOG4CXX_WARN(logger(), "XM Header invalid");
 		return false;
 	}
 	if(hdr.version != 0x0104) {
-		LOG_WARNING("Unsupported XM Version 0x%.4x", hdr.version);
+		LOG4CXX_WARN(logger(), "Unsupported XM Version 0x" << std::hex << hdr.version);
 		return false;
 	}
 	{
@@ -110,7 +109,7 @@ bool XmModule::load(const std::string& filename) {
 	for(uint16_t i = 0; i < hdr.numPatterns; i++) {
 		XmPattern::Ptr pat(new XmPattern(hdr.numChannels));
 		if(!pat->load(file)) {
-			LOG_ERROR("Pattern loading error");
+			LOG4CXX_ERROR(logger(), "Pattern loading error");
 			return false;
 		}
 		m_patterns.push_back(pat);
@@ -121,7 +120,7 @@ bool XmModule::load(const std::string& filename) {
 	for(uint16_t i = 0; i < hdr.numInstruments; i++) {
 		XmInstrument::Ptr ins(new XmInstrument());
 		if(!ins->load(file)) {
-			LOG_ERROR("Instrument loading error");
+			LOG4CXX_ERROR(logger(), "Instrument loading error");
 			return false;
 		}
 		m_instruments.push_back(ins);
@@ -222,7 +221,7 @@ bool XmModule::adjustPosition(bool doStore) {
 		}
 		if(m_currentPatternDelay!=0) {
 			m_currentPatternDelay--;
-			LOG_DEBUG("Pattern delay, %d rows left...", m_currentPatternDelay);
+			LOG4CXX_DEBUG(logger(), "Pattern delay, " << m_currentPatternDelay << " rows left...");
 		}
 		if(m_isPatLoop || m_doPatJump) {
 			if(m_isPatLoop) {
@@ -587,7 +586,7 @@ bool XmModule::initialize(uint32_t frq) {
 		return true;
 	}
 	IAudioSource::initialize(frq);
-	LOG_MESSAGE("Calculating track length and preparing seek operations...");
+	LOG4CXX_INFO(logger(), "Calculating track length and preparing seek operations...");
 	size_t currTickLen = 0;
 // 	multiTrackAt(0).startOrder = playbackInfo().order;
 	do {
@@ -595,7 +594,7 @@ bool XmModule::initialize(uint32_t frq) {
 		multiSongLengthAt(0) += currTickLen;
 	}
 	while(currTickLen != 0);
-	LOG_MESSAGE("Preprocessed. Resetting module.");
+	LOG4CXX_INFO(logger(), "Preprocessed. Resetting module.");
 	if(songCount() > 0) {
 		IAudioSource::LockGuard guard(this);
 		multiSongAt(0).currentState()->archive(this).finishLoad();
@@ -631,6 +630,11 @@ void XmModule::doPatDelay(uint8_t counter)
 		return;
 	}
 	m_requestedPatternDelay = counter+1;
+}
+
+log4cxx::LoggerPtr XmModule::logger()
+{
+	return log4cxx::Logger::getLogger( GenModule::logger()->getName() + ".xm" );
 }
 
 }
