@@ -11,7 +11,7 @@ add_subdirectory(ppg)
 add_subdirectory(genmod)
 add_subdirectory(s3mmod)
 add_subdirectory(xmmod)
-add_subdirectory(modmod
+add_subdirectory(modmod)
 
 configure_file(
 	"${CMAKE_CURRENT_SOURCE_DIR}/Mainpage.dox.in"
@@ -20,3 +20,4 @@ configure_file(
 )
 
 set_source_files_properties(Mainpage.dox PROPERTIES GENERATED TRUE)
+
