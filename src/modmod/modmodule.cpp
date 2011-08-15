@@ -145,27 +145,29 @@ bool ModModule::load(const std::string& filename)
 		if(songLen>128) {
 			songLen = 128;
 		}
-// 		LOG_DEBUG("Song length: %u", songLen);
+		LOG_DEBUG("Song length: %u", songLen);
 		uint8_t tmp;
 		stream.read(&tmp); // skip the restart pos
 		for(uint8_t i=0; i<128; i++) {
 			stream.read(&tmp);
-			if(i>=songLen) {
+			if(tmp>=64) {
 				continue;
 			}
 			else if(tmp>maxPatNum) {
 				maxPatNum = tmp;
 			}
-			if(maxPatNum > 63) {
-				LOG_WARNING("Pattern number out of range: %u", maxPatNum);
-				return false;
+			//if(maxPatNum > 63) {
+				//LOG_WARNING("Pattern number out of range: %u", maxPatNum);
+				//return false;
+			//}
+			//LOG_DEBUG("Order: %u", tmp);
+			if(i<songLen) {
+				addOrder( GenOrder::Ptr(new GenOrder(tmp)) );
 			}
-// 			LOG_DEBUG("Order: %u", tmp);
-			addOrder( GenOrder::Ptr(new GenOrder(tmp)) );
 		}
 	}
 	stream.seekrel(4); // skip the ID
-	LOG_DEBUG("Patterns @ %u", stream.pos());
+	LOG_DEBUG("%u Patterns @ %u", maxPatNum, stream.pos());
 	for(uint8_t i=0; i<=maxPatNum; i++) {
 		ModPattern::Ptr pat(new ModPattern());
 		if(!pat->load(stream, meta.channels)) {
@@ -174,11 +176,13 @@ bool ModModule::load(const std::string& filename)
 		}
 		m_patterns.push_back(pat);
 	}
+	LOG_DEBUG("Sample start @ 0x%x", stream.pos());
 	for(const ModSample::Ptr& smp : m_samples) {
 		if(!smp->loadData(stream)) {
 			LOG_WARNING("Could not load sample data");
 		}
 	}
+	LOG_DEBUG("pos=%u size=%u delta=%u", stream.pos(), stream.size(), stream.size()-stream.pos());
 	return stream.good();
 }
 
@@ -214,7 +218,6 @@ void ModModule::buildTick(AudioFrameBuffer& buf)
 			ModCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
 			chan->update(cell, false);// m_patDelayCount != -1);
 			chan->mixTick(mixerBuffer);
-// 			break;
 		}
 		buf->resize(mixerBuffer->size());
 		MixerSample* mixerBufferPtr = &mixerBuffer->front().left;
@@ -374,17 +377,29 @@ bool ModModule::initialize(uint32_t frq)
 	}
 	IAudioSource::initialize(frq);
 	addMultiSong( StateIterator() );
-	multiSongAt(0).newState()->archive(this).finishSave();
+	multiSongAt(currentSongIndex()).newState()->archive(this).finishSave();
 	// calculate total length...
 	LOG_MESSAGE("Calculating track lengths and preparing seek operations...");
-	size_t currTickLen = 0;
 	do {
-		simulateTick(currTickLen);
-		multiSongLengthAt(0) += currTickLen;
-	}
-	while(currTickLen != 0);
-	LOG_MESSAGE("Preprocessed. %u", multiSongLengthAt(0));
-	{
+		LOG_MESSAGE("Pre-processing Track %d", currentSongIndex());
+		size_t currTickLen = 0;
+		do {
+			simulateTick(currTickLen);
+			multiSongLengthAt(currentSongIndex()) += currTickLen;
+		} while(currTickLen != 0);
+		LOG_MESSAGE("Preprocessed.");
+		for(size_t i=0; i<orderCount(); i++) {
+			BOOST_ASSERT(orderAt(i).use_count()>0);
+			if(orderAt(i)->playbackCount()==0) {
+				addMultiSong( StateIterator() );
+				setCurrentSongIndex( currentSongIndex()+1 );
+				break;
+			}
+		}
+		LOG_MESSAGE("Trying to jump to the next song");
+	} while(jumpNextSong());
+	if(songCount() > 0) {
+		LOG_MESSAGE("Preprocessed. %u", multiSongLengthAt(0));
 		IAudioSource::LockGuard guard(this);
 		multiSongAt(0).currentState()->archive(this).finishLoad();
 	}
@@ -394,22 +409,81 @@ bool ModModule::initialize(uint32_t frq)
 
 bool ModModule::jumpNextOrder()
 {
-	return false; // TODO
+	IArchive::Ptr next = multiSongAt(currentSongIndex()).nextState();
+	if(!next) {
+		return false;
+	}
+	IAudioSource::LockGuard guard(this);
+	next->archive(this).finishLoad();
+	return true;
 }
 
 bool ModModule::jumpNextSong()
 {
+	if(!isMultiSong()) {
+		LOG_MESSAGE("This is not a multi-song");
+		return false;
+	}
+	BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
+	orderAt(playbackInfo().order)->increasePlaybackCount();
+	setCurrentSongIndex(currentSongIndex() + 1);
+	if(currentSongIndex() >= songCount()) {
+		for(uint16_t i = 0; i < orderCount(); i++) {
+			BOOST_ASSERT(orderAt(i).use_count()>0);
+			if(orderAt(i)->playbackCount() == 0) {
+				BOOST_ASSERT(mapOrder(i).use_count()>0);
+				setPatternIndex(mapOrder(i)->index());
+				setOrder(i);
+				addMultiSong(StateIterator());
+				setPosition(0);
+				IAudioSource::LockGuard guard(this);
+				multiSongAt(currentSongIndex()).newState()->archive(this).finishSave();
+				return true;
+			}
+		}
+		addMultiSong(StateIterator());
+		return false;
+	}
+	else {
+		IAudioSource::LockGuard guard(this);
+		multiSongAt(currentSongIndex()).gotoFront();
+		multiSongAt(currentSongIndex()).currentState()->archive(this).finishLoad();
+		BOOST_ASSERT(mapOrder(playbackInfo().order).use_count()>0);
+		setPatternIndex(mapOrder(playbackInfo().order)->index());
+		return true;
+	}
+	LOG_ERROR("This should definitively NOT have happened...");
 	return false;
 }
 
 bool ModModule::jumpPrevOrder()
 {
-	return false; // TODO
+	IArchive::Ptr next = multiSongAt(currentSongIndex()).prevState();
+	if(!next) {
+		return false;
+	}
+	IAudioSource::LockGuard guard(this);
+	next->archive(this).finishLoad();
+	return true;
 }
 
 bool ModModule::jumpPrevSong()
 {
-	return false;
+	if(!isMultiSong()) {
+		LOG_MESSAGE("This is not a multi-song");
+		return false;
+	}
+	if(currentSongIndex() == 0) {
+		LOG_MESSAGE("Already on first song");
+		return false;
+	}
+	setCurrentSongIndex(currentSongIndex() - 1);
+	IAudioSource::LockGuard guard(this);
+	multiSongAt(currentSongIndex()).gotoFront();
+	multiSongAt(currentSongIndex()).currentState()->archive(this).finishLoad();
+	BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
+	setPatternIndex(mapOrder(playbackInfo().order)->index());
+	return true;
 }
 
 GenOrder::Ptr ModModule::mapOrder(int16_t order)
@@ -422,8 +496,16 @@ GenOrder::Ptr ModModule::mapOrder(int16_t order)
 
 IArchive& ModModule::serialize(IArchive* data)
 {
-    GenModule::serialize(data);
-	for(const ModChannel::Ptr& chan : m_channels) {
+	GenModule::serialize(data)
+	% m_breakRow
+	% m_breakOrder
+	% m_patLoopRow
+	% m_patLoopCount
+	% m_patDelayCount;
+	for(ModChannel::Ptr& chan : m_channels) {
+		if(!chan) {
+			continue;
+		}
 		data->archive(chan.get());
 	}
 	return *data;

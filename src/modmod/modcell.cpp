@@ -27,7 +27,7 @@
 namespace ppp {
 namespace mod {
 
-ModCell::ModCell() : m_sampleNumber(0), m_period(0), m_effect(0), m_effectValue(0), m_noteIndex(255), m_note("...")
+ModCell::ModCell() : m_sampleNumber(0), m_period(0), m_effect(0), m_effectValue(0), m_note("...")
 {
 }
 
@@ -37,7 +37,6 @@ void ModCell::reset()
 	m_period = 0;
 	m_effect = 0;
 	m_effectValue = 0;
-	m_noteIndex = 255;
 	m_note = "   ";
 }
 
@@ -64,14 +63,12 @@ bool ModCell::load(BinStream& str)
 	if(m_period!=0) {
 		uint16_t* p = std::find( fullPeriods.at(0).begin(), fullPeriods.at(0).end(), m_period );
 		if(p!=fullPeriods.at(0).end()) {
-			m_noteIndex = (p-fullPeriods.at(0).begin());
-			m_note = ppp::stringf("%s%u", NoteNames[m_noteIndex%12], m_noteIndex/12);
+			uint8_t idx = (p-fullPeriods.at(0).begin());
+			m_note = ppp::stringf("%s%u", NoteNames[idx%12], idx/12);
 		}
 		else {
 			LOG_WARNING("Cannot find a note for period %u", m_period);
 			m_note = "???";
-			m_period = 0;
-			m_noteIndex = 255;
 		}
 	}
 	return str.good();
@@ -84,7 +81,6 @@ void ModCell::clear()
 	m_effect = 0;
 	m_effectValue = 0;
 	m_note.assign("...");
-	m_noteIndex = 255;
 }
 
 uint8_t ModCell::sampleNumber() const
@@ -94,10 +90,7 @@ uint8_t ModCell::sampleNumber() const
 
 uint16_t ModCell::period() const
 {
-	if(m_period == 0) {
-		return 0;
-	}
-	return fullPeriods.at(0).at(m_noteIndex);
+	return m_period;
 }
 
 uint8_t ModCell::effect() const
@@ -135,13 +128,11 @@ IArchive& ModCell::serialize(IArchive* data)
 		if(m_period!=0) {
 			uint16_t* p = std::find( fullPeriods.at(0).begin(), fullPeriods.at(0).end(), m_period );
 			if(p!=fullPeriods.at(0).end()) {
-				m_noteIndex = (p-fullPeriods.at(0).begin());
-				m_note = ppp::stringf("%s%u", NoteNames[m_noteIndex%12], m_noteIndex/12);
+				uint8_t idx = (p-fullPeriods.at(0).begin());
+				m_note = ppp::stringf("%s%u", NoteNames[idx%12], idx/12);
 			}
 			else {
 				m_note = "???";
-				m_period = 0;
-				m_noteIndex = 255;
 			}
 		}
 		else {

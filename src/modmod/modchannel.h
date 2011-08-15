@@ -52,6 +52,7 @@ private:
 	uint8_t m_lastPortaFx;
 	uint8_t m_sampleIndex;
 	BresenInterpolation m_bresen;
+	std::string m_effectDescription;
 public:
 	typedef std::shared_ptr<ModChannel> Ptr; //!< @brief Class pointer
 	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers

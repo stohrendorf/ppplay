@@ -46,7 +46,8 @@ static inline double finetuneMultiplicator(uint8_t finetune)
 
 ModChannel::ModChannel(ModModule* parent) : m_module(parent), m_currentCell(), m_volume(0),
 	m_finetune(0), m_tremoloWaveform(0), m_vibratoWaveform(0), m_vibratoPhase(0), m_glissando(false),
-	m_period(0), m_portaTarget(0), m_lastVibratoFx(0), m_lastPortaFx(0), m_sampleIndex(0), m_bresen(1,1)
+	m_period(0), m_portaTarget(0), m_lastVibratoFx(0), m_lastPortaFx(0), m_sampleIndex(0), m_bresen(1,1),
+	m_effectDescription("      ")
 {
 	BOOST_ASSERT(parent!=nullptr);
 }
@@ -94,9 +95,9 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 		}
 		setActive(m_period!=0 && currentSample());
 	} // endif(tick==0)
-	if(!isActive()) {
-		return;
-	}
+	//if(!isActive()) {
+		//return;
+	//}
 	switch(m_currentCell.effect()) {
 		case 0x00:
 			fxArpeggio(m_currentCell.effectValue());
@@ -142,14 +143,44 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 			break;
 		case 0x0e:
 			switch(highNibble(m_currentCell.effectValue())) {
+				case 0x01:
+					efxFineSlideUp(m_currentCell.effectValue());
+					break;
+				case 0x02:
+					efxFineSlideDown(m_currentCell.effectValue());
+					break;
+				case 0x03:
+					efxGlissando(m_currentCell.effectValue());
+					break;
+				case 0x04:
+					efxSetVibWaveform(m_currentCell.effectValue());
+					break;
 				case 0x05:
 					efxSetFinetune(m_currentCell.effectValue());
+					break;
+				case 0x06:
+					efxPatLoop(m_currentCell.effectValue());
+					break;
+				case 0x07:
+					efxSetTremoloWaveform(m_currentCell.effectValue());
+					break;
+				case 0x08:
+					efxSetPanning(m_currentCell.effectValue());
 					break;
 				case 0x0a:
 					efxFineVolSlideUp(m_currentCell.effectValue());
 					break;
 				case 0x0b:
 					efxFineVolSlideDown(m_currentCell.effectValue());
+					break;
+				case 0x0c:
+					efxNoteCut(m_currentCell.effectValue());
+					break;
+				case 0x0d:
+					efxNoteDelay(m_currentCell.effectValue());
+					break;
+				case 0x0e:
+					efxPatDelay(m_currentCell.effectValue());
 					break;
 			}
 			break;
@@ -173,24 +204,38 @@ std::string ModChannel::cellString()
 
 std::string ModChannel::effectDescription() const
 {
-	// TODO
-	return "      ";
+	return m_effectDescription;
 }
 
 std::string ModChannel::effectName() const
 {
-	// TODO
-	return "   ";
+	if(m_currentCell.effect()==0 && m_currentCell.effectValue()==0) {
+		return "   ";
+	}
+	return stringf("%X%.2X",m_currentCell.effect(),m_currentCell.effectValue());
 }
 
 std::string ModChannel::noteName()
 {
-	return "???"; // TODO
+	return "???"; // TODO noteName() -> reverse calc
 }
 
 IArchive& ModChannel::serialize(IArchive* data)
 {
-    return GenChannel::serialize(data);
+	GenChannel::serialize(data)
+	.archive(&m_currentCell)
+	% m_volume
+	% m_finetune
+	% m_tremoloWaveform
+	% m_vibratoWaveform
+	% m_vibratoPhase
+	% m_glissando
+	% m_period
+	% m_portaTarget
+	% m_lastVibratoFx
+	% m_lastPortaFx
+	% m_sampleIndex;
+	return data->archive(&m_bresen);
 }
 
 void ModChannel::simTick(size_t bufsize)
@@ -226,7 +271,7 @@ void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
 		return;
 	}
 	m_bresen.reset(m_module->frequency(), FrequencyBase / (m_period*finetuneMultiplicator(m_finetune)+vibDelta()));
-	setStatusString( statusString() + stringf(" %d +- %u",FrequencyBase/m_period, m_finetune) );
+// 	setStatusString( statusString() + stringf(" %d +- %u",FrequencyBase/m_period, m_finetune) );
 	// TODO glissando
 	ModSample::Ptr currSmp = currentSample();
 	int32_t pos = position();
@@ -254,6 +299,7 @@ void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
 
 void ModChannel::fxSetSpeed(uint8_t fxByte)
 {
+	m_effectDescription = "Tempo\x7f";
 	if(fxByte==0) {
 		return;
 	}
@@ -267,6 +313,7 @@ void ModChannel::fxSetSpeed(uint8_t fxByte)
 
 void ModChannel::efxNoteCut(uint8_t fxByte)
 {
+	m_effectDescription = "NCut \xd4";
 	fxByte = lowNibble(fxByte);
 	if(fxByte == m_module->tick()) {
 		setActive(false);
@@ -275,6 +322,7 @@ void ModChannel::efxNoteCut(uint8_t fxByte)
 
 void ModChannel::efxFineVolSlideDown(uint8_t fxByte)
 {
+	m_effectDescription = "VSld \x19";
 	if(m_module->tick() != 0) {
 		return;
 	}
@@ -284,6 +332,7 @@ void ModChannel::efxFineVolSlideDown(uint8_t fxByte)
 
 void ModChannel::efxFineVolSlideUp(uint8_t fxByte)
 {
+	m_effectDescription = "VSld \x18";
 	if(m_module->tick() != 0) {
 		return;
 	}
@@ -293,26 +342,31 @@ void ModChannel::efxFineVolSlideUp(uint8_t fxByte)
 
 void ModChannel::efxSetFinetune(uint8_t fxByte)
 {
+	m_effectDescription = "FTune\xe6";
 	m_finetune = lowNibble(fxByte);
 }
 
 void ModChannel::efxSetTremoloWaveform(uint8_t fxByte)
 {
+	m_effectDescription = "TWave\x9f";
 	m_tremoloWaveform = fxByte&0x7;
 }
 
 void ModChannel::efxSetVibWaveform(uint8_t fxByte)
 {
+	m_effectDescription = "VWave\x9f";
 	m_vibratoWaveform = fxByte&0x7;
 }
 
 void ModChannel::efxGlissando(uint8_t fxByte)
 {
+	m_effectDescription = "Gliss\xcd";
 	m_glissando = lowNibble(fxByte)!=0;
 }
 
 void ModChannel::efxFineSlideDown(uint8_t fxByte)
 {
+	m_effectDescription = "Ptch \x1f";
 	if(m_module->tick() != 0) {
 		return;
 	}
@@ -322,6 +376,7 @@ void ModChannel::efxFineSlideDown(uint8_t fxByte)
 
 void ModChannel::efxFineSlideUp(uint8_t fxByte)
 {
+	m_effectDescription = "Ptch \x1e";
 	if(m_module->tick() != 0) {
 		return;
 	}
@@ -331,6 +386,7 @@ void ModChannel::efxFineSlideUp(uint8_t fxByte)
 
 void ModChannel::fxOffset(uint8_t fxByte)
 {
+	m_effectDescription = "Offs \xaa";
 	if(m_module->tick() != 0) {
 		return;
 	}
@@ -339,6 +395,7 @@ void ModChannel::fxOffset(uint8_t fxByte)
 
 void ModChannel::fxSetVolume(uint8_t fxByte)
 {
+	m_effectDescription = "StVol=";
 	m_volume = std::min<uint8_t>(0x40, fxByte);
 }
 
@@ -353,9 +410,11 @@ void ModChannel::fxVolSlide(uint8_t fxByte)
 		return;
 	}
 	if(highNibble(fxByte)!=0) {
+		m_effectDescription = "VSld \x1e";
 		m_volume = std::min(0x40, m_volume+highNibble(fxByte));
 	}
 	else if(lowNibble(fxByte)!=0) {
+		m_effectDescription = "VSld \x1f";
 		m_volume = std::max<int>(0x0, m_volume-lowNibble(fxByte));
 	}
 }
@@ -364,30 +423,33 @@ void ModChannel::fxVibVolSlide(uint8_t fxByte)
 {
 	fxVolSlide(fxByte);
 	fxVibrato(m_lastVibratoFx);
+	m_effectDescription = "VibVo\xf7";
 }
 
 void ModChannel::fxPortaVolSlide(uint8_t fxByte)
 {
 	fxVolSlide(fxByte);
 	fxPorta(m_lastPortaFx);
+	m_effectDescription = "PrtVo\x12";
 }
 
 void ModChannel::fxPortaDown(uint8_t fxByte)
 {
-	// TODO maybe unconditionally assign?
-	reuseIfZero(m_lastPortaFx, fxByte);
 	// TODO clip
+	m_effectDescription = "Ptch \x1f";
 	m_period += fxByte;
 }
 
 void ModChannel::fxPortaUp(uint8_t fxByte)
 {
+	m_effectDescription = "Ptch \x1e";
 	// TODO clip
 	m_period -= fxByte;
 }
 
 void ModChannel::fxVibrato(uint8_t fxByte)
 {
+	m_effectDescription = "Vibr \xf7";
 	if(m_module->tick() == 0) {
 		return;
 	}
@@ -397,6 +459,7 @@ void ModChannel::fxVibrato(uint8_t fxByte)
 
 void ModChannel::fxPorta(uint8_t fxByte)
 {
+	m_effectDescription = "Porta\x12";
 	if(m_module->tick() == 0) {
 		return;
 	}
@@ -418,32 +481,79 @@ void ModChannel::fxPorta(uint8_t fxByte)
 
 void ModChannel::updateStatus()
 {
-	if(currentSample())
-	setStatusString( stringf("%05d / %05d (%d)", position(), currentSample()->length(), m_sampleIndex) );
-	// TODO
+	if(!isActive()) {
+		setStatusString("");
+		return;
+	}
+	std::string volStr = stringf("%3d%%", clip<int>(m_volume, 0, 0x40) * 100 / 0x40);
+	setStatusString(stringf("%.2X: %s%s %s %s P:%s V:%s %s",
+	                        m_sampleIndex,
+	                        " ",
+	                        //(m_noteChanged ? "*" : " "),
+	                        noteName().c_str(),
+	                        effectName().c_str(),
+	                        m_effectDescription.c_str(),
+	                        "-----",
+	                        volStr.c_str(),
+	                        currentSample() ? currentSample()->title().c_str() : ""
+	                       ));
 }
 
 void ModChannel::fxArpeggio(uint8_t fxByte)
 {
+	if(fxByte == 0) {
+		m_effectDescription = "      ";
+		return;
+	}
+	else {
+		m_effectDescription = "Arp  \xf0";
+	}
 	// TODO
 }
 
 void ModChannel::fxPatBreak(uint8_t fxByte)
 {
+	m_effectDescription = "PBrk \xf6";
 	// TODO
 }
 
 void ModChannel::fxPosJmp(uint8_t fxByte)
 {
+	m_effectDescription = "JmOrd\x1a";
 	// TODO
 }
 
 void ModChannel::fxSetFinePan(uint8_t fxByte)
 {
+	m_effectDescription = "StPan\x1d";
 	// TODO
 }
 
 void ModChannel::fxTremolo(uint8_t fxByte)
+{
+	m_effectDescription = "Tremo\xec";
+	// TODO
+}
+
+void ModChannel::efxPatLoop(uint8_t fxByte)
+{
+	m_effectDescription = "PLoop\xe8";
+	// TODO
+}
+
+void ModChannel::efxNoteDelay(uint8_t fxByte)
+{
+	m_effectDescription = "Delay\xc2";
+	// TODO should be handled in update()
+}
+
+void ModChannel::efxSetPanning(uint8_t fxByte)
+{
+	m_effectDescription = "StPan\x1d";
+	// TODO
+}
+
+void ModChannel::efxPatDelay(uint8_t fxByte)
 {
 	// TODO
 }
