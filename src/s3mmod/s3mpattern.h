@@ -26,6 +26,8 @@
 
 #include "s3mcell.h"
 
+#include <log4cxx/logger.h>
+
 namespace ppp {
 namespace s3m {
 
@@ -64,6 +66,8 @@ class S3mPattern {
 		 * @return Pointer to the cell or nullptr
 		 */
 		S3mCell::Ptr cellAt(uint16_t chanIdx, int16_t row);
+	protected:
+		static log4cxx::LoggerPtr logger();
 };
 
 } // namespace s3m

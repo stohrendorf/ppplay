@@ -27,7 +27,8 @@
 #include "s3mbase.h"
 
 #include "stream/iarchive.h"
-#include "logger/logger.h"
+
+#include <boost/exception/all.hpp>
 
 namespace ppp {
 namespace s3m {
@@ -49,7 +50,7 @@ bool S3mCell::load(BinStream& str) {
 			str.read(&buf);
 			m_note = buf;
 			if((m_note >= 0x9b) && (m_note != s3mEmptyNote) && (m_note != s3mKeyOffNote)) {
-				LOG_WARNING("File Position %.8x: Note out of range: %.2x", str.pos(), m_note);
+				LOG4CXX_WARN(logger(), "File Position 0x" << std::hex << str.pos() << ": Note out of range: " << m_note);
 				m_note = s3mEmptyNote;
 			}
 			str.read(&buf);
@@ -59,7 +60,7 @@ bool S3mCell::load(BinStream& str) {
 			str.read(&buf);
 			m_volume = buf;
 			if(buf > 0x40) {
-				LOG_WARNING("File Position %.8x: Volume out of range: %d", str.pos(), m_volume);
+				LOG4CXX_WARN(logger(), "File Position 0x" << std::hex << str.pos() << ": Volume out of range: " << m_volume);
 				m_volume = s3mEmptyVolume;
 			}
 		}
@@ -71,7 +72,7 @@ bool S3mCell::load(BinStream& str) {
 		}
 	}
 	catch(...) {
-		LOG_ERROR("EXCEPTION");
+		BOOST_THROW_EXCEPTION( std::runtime_error("Exception") );
 		return false;
 	}
 	return true;
@@ -136,6 +137,11 @@ IArchive& S3mCell::serialize(IArchive* data) {
 	% m_effect
 	% m_effectValue;
 	return *data;
+}
+
+log4cxx::LoggerPtr S3mCell::logger()
+{
+	return log4cxx::Logger::getLogger( IPatternCell::logger()->getName() + ".s3m" );
 }
 
 }

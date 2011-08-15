@@ -20,7 +20,6 @@
 #include "s3mchannel.h"
 #include "s3mpattern.h"
 #include "s3mmodule.h"
-#include "logger/logger.h"
 
 /**
  * @ingroup S3mMod
@@ -266,7 +265,7 @@ std::string S3mChannel::effectName() const {
 	if(fxRangeOk)
 		return stringf("%c%.2X", fx + 'A' - 1, m_currentCell.effectValue());
 	else {
-		LOG_ERROR("Effect out of range: 0x%.2X", fx);
+		LOG4CXX_WARN(logger(), "Effect out of range: 0x" << std::hex << fx);
 		return stringf("?%.2X", m_currentCell.effectValue());
 	}
 }
@@ -458,8 +457,8 @@ void S3mChannel::mixTick(MixerFrameBuffer& mixBuffer) {
 	}
 	if(!isActive())
 		return;
-	LOG_TEST_ERROR(!m_module || m_module->frequency() == 0);
-	LOG_TEST_ERROR(mixBuffer->size() == 0);
+	//LOG_TEST_ERROR(!m_module || m_module->frequency() == 0);
+	//LOG_TEST_ERROR(mixBuffer->size() == 0);
 	if(m_module->frequency() * mixBuffer->size() == 0) {
 		setActive(false);
 		return;
@@ -1103,6 +1102,11 @@ void S3mChannel::playNote() {
 void S3mChannel::setPanning(uint8_t pan) {
 	BOOST_ASSERT(pan <= 0x40 || pan == 0xa4);
 	m_panning = pan;
+}
+
+log4cxx::LoggerPtr S3mChannel::logger()
+{
+	return log4cxx::Logger::getLogger( GenChannel::logger()->getName() + ".s3m" );
 }
 
 } // namespace s3m

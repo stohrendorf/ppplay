@@ -25,8 +25,6 @@
 
 #include "s3mpattern.h"
 
-#include "logger/logger.h"
-
 namespace ppp {
 namespace s3m {
 
@@ -74,12 +72,12 @@ bool S3mPattern::load(BinStream& str, size_t pos) {
 			currTrack = master & 31;
 			str.seekrel(-1);
 			if(str.fail()) {
-				LOG_ERROR("str.fail()...");
+				LOG4CXX_ERROR(logger(), "str.fail()...");
 				return false;
 			}
 			S3mCell::Ptr cell = createCell(currTrack, currRow);
 			if(!cell->load(str)) {
-				LOG_ERROR("Cell loading: ERROR");
+				LOG4CXX_ERROR(logger(), "Cell loading: ERROR");
 				return false;
 			}
 		}
@@ -91,6 +89,11 @@ bool S3mPattern::load(BinStream& str, size_t pos) {
 	catch(...) {
 		BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
 	}
+}
+
+log4cxx::LoggerPtr S3mPattern::logger()
+{
+	return log4cxx::Logger::getLogger( "pattern.s3m" );
 }
 
 }

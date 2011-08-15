@@ -146,6 +146,8 @@ class S3mChannel : public GenChannel {
 		 * @pre @a pan must be within 0..64 or equal to 0xa4
 		 */
 		void setPanning(uint8_t pan);
+	protected:
+		static log4cxx::LoggerPtr logger();
 };
 } // namespace s3m
 } // namespace ppp

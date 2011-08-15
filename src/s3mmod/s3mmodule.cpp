@@ -26,7 +26,6 @@
 #include "s3mmodule.h"
 
 #include "stream/fbinstream.h"
-#include "logger/logger.h"
 
 namespace ppp {
 namespace s3m {
@@ -104,10 +103,10 @@ S3mModule::~S3mModule() = default;
 
 bool S3mModule::load(const std::string& fn) {
 	try {
-		LOG_MESSAGE("Opening '%s'", fn.c_str());
+		//LOG_MESSAGE("Opening '%s'", fn.c_str());
 		FBinStream str(fn);
 		if(!str.isOpen()) {
-			LOG_WARNING("%s could not be opened", fn.c_str());
+			//LOG_WARNING("%s could not be opened", fn.c_str());
 			return false;
 		}
 		setFilename(fn);
@@ -120,32 +119,32 @@ bool S3mModule::load(const std::string& fn) {
 			return false;
 		}
 		if(str.fail()) {    // header read completely?
-			LOG_WARNING("Header Error");
+			LOG4CXX_WARN(logger(), "Header Error");
 			return false;
 		}
 		if(!std::equal(s3mHdr.id, s3mHdr.id + 4, "SCRM")) {
-			LOG_WARNING("Header ID Error");
+			LOG4CXX_WARN(logger(), "Header ID Error");
 			return false;
 		}
 		s3mHdr.ordNum &= 0xff;
 		s3mHdr.patNum &= 0xff;
 		s3mHdr.smpNum &= 0xff;
 		// many modules have 0x00 here, but they_re still correct
-		LOG_TEST_WARN(s3mHdr.type[0] != 0x1a);
+		//LOG_TEST_WARN(s3mHdr.type[0] != 0x1a);
 		if(s3mHdr.createdWith == 0x1300)
 			s3mHdr.flags |= s3mFlag300Slides;
 		m_st2Vibrato = (s3mHdr.flags & s3mFlagSt2Vibrato) != 0;
-		if(m_st2Vibrato) LOG_WARNING("ST2 Vibrato (not supported)");
-		if(s3mHdr.flags & s3mFlagSt2Tempo) LOG_MESSAGE("ST2 Tempo (not supported)");
+		if(m_st2Vibrato) LOG4CXX_DEBUG(logger(), "ST2 Vibrato (not supported)");
+		if(s3mHdr.flags & s3mFlagSt2Tempo) LOG4CXX_DEBUG(logger(), "ST2 Tempo (not supported)");
 		m_fastVolSlides = (s3mHdr.flags & s3mFlag300Slides) != 0;
-		if(m_fastVolSlides) LOG_MESSAGE("ST v3.00 Volume Slides");
+		if(m_fastVolSlides) LOG4CXX_DEBUG(logger(), "ST v3.00 Volume Slides");
 		m_zeroVolOpt = (s3mHdr.flags & s3mFlag0volOpt) != 0;
-		if(m_zeroVolOpt) LOG_MESSAGE("Zero-volume Optimization");
-		if(s3mHdr.flags & s3mFlagAmigaSlides) LOG_WARNING("Amiga slides (not supported)");
+		if(m_zeroVolOpt) LOG4CXX_DEBUG(logger(), "Zero-volume Optimization");
+		if(s3mHdr.flags & s3mFlagAmigaSlides) LOG4CXX_DEBUG(logger(), "Amiga slides (not supported)");
 		m_amigaLimits = (s3mHdr.flags & s3mFlagAmigaLimits) != 0;
-		if(m_amigaLimits) LOG_MESSAGE("Amiga limits");
-		if(s3mHdr.flags & s3mFlagSpecial) LOG_MESSAGE("Special data present");
-		if(s3mHdr.defaultPannings == 0xFC) LOG_MESSAGE("Default Pannings present");
+		if(m_amigaLimits) LOG4CXX_DEBUG(logger(), "Amiga limits");
+		if(s3mHdr.flags & s3mFlagSpecial) LOG4CXX_DEBUG(logger(), "Special data present");
+		if(s3mHdr.defaultPannings == 0xFC) LOG4CXX_DEBUG(logger(), "Default Pannings present");
 		unsigned char schismTest = 0;
 		switch((s3mHdr.createdWith >> 12) & 0x0f) {
 			case s3mTIdScreamTracker:
@@ -200,7 +199,7 @@ bool S3mModule::load(const std::string& fn) {
 			}
 		}
 		// load the samples
-		LOG_MESSAGE("Loading samples...");
+		LOG4CXX_INFO(logger(), "Loading samples...");
 		for(int i = 0; i < s3mHdr.smpNum; i++) {
 			if(!str.good()) {
 				return false;
@@ -223,10 +222,10 @@ bool S3mModule::load(const std::string& fn) {
 			schismTest |= (m_samples.at(i)->isHighQuality() || m_samples.at(i)->isStereo());
 		}
 		if(schismTest != 0) {
-			LOG_MESSAGE("Enabling Schism Tracker compatibility mode");
+			LOG4CXX_INFO(logger(), "Enabling Schism Tracker compatibility mode");
 		}
 		// ok, samples loaded, now load the patterns...
-		LOG_MESSAGE("Loading patterns...");
+		LOG4CXX_INFO(logger(), "Loading patterns...");
 		for(int i = 0; i < s3mHdr.patNum; i++) {
 			str.seek(s3mHdr.ordNum + 2 * s3mHdr.smpNum + 0x60 + 2 * i);
 			ParaPointer pp;
@@ -244,7 +243,7 @@ bool S3mModule::load(const std::string& fn) {
 		}
 		//str.close();
 		// set pannings...
-		LOG_MESSAGE("Preparing channels...");
+		LOG4CXX_INFO(logger(), "Preparing channels...");
 		for(int i = 0; i < 32; i++) {
 			S3mChannel* s3mChan = new S3mChannel(this);
 			m_channels.at(i).reset(s3mChan);
@@ -303,16 +302,16 @@ bool S3mModule::initialize(uint32_t frq) {
 	addMultiSong( StateIterator() );
 	multiSongAt(currentSongIndex()).newState()->archive(this).finishSave();
 	// calculate total length...
-	LOG_MESSAGE("Calculating track lengths and preparing seek operations...");
+	LOG4CXX_INFO(logger(), "Calculating track lengths and preparing seek operations...");
 	do {
-		LOG_MESSAGE("Pre-processing Track %d", currentSongIndex());
+		LOG4CXX_INFO(logger(), "Pre-processing Track " << currentSongIndex());
 		size_t currTickLen = 0;
 		do {
 			simulateTick(currTickLen);
 			multiSongLengthAt(currentSongIndex()) += currTickLen;
 		}
 		while(currTickLen != 0);
-		LOG_MESSAGE("Preprocessed.");
+		LOG4CXX_INFO(logger(), "Preprocessed.");
 		for(size_t i = 0; i < orderCount(); i++) {
 			BOOST_ASSERT( orderAt(i).use_count()>0 );
 			if((orderAt(i)->index() != s3mOrderEnd) && (orderAt(i)->index() != s3mOrderSkip) && (orderAt(i)->playbackCount() == 0)) {
@@ -321,10 +320,10 @@ bool S3mModule::initialize(uint32_t frq) {
 				break;
 			}
 		}
-		LOG_MESSAGE("Trying to jump to the next track");
+		LOG4CXX_INFO(logger(), "Trying to jump to the next track");
 	}
 	while(jumpNextSong());
-	LOG_MESSAGE("Lengths calculated, resetting module.");
+	LOG4CXX_INFO(logger(), "Lengths calculated, resetting module.");
 	if(songCount() > 0) {
 		IAudioSource::LockGuard guard(this);
 		multiSongAt(0).currentState()->archive(this).finishLoad();
@@ -384,7 +383,7 @@ void S3mModule::checkGlobalFx() {
 					else { // we got an "infinite" loop...
 						m_patLoopCount = 127;
 						m_breakRow = m_patLoopRow;
-						LOG_WARNING("Infinite pattern loop detected");
+						LOG4CXX_INFO(logger(), "Infinite pattern loop detected");
 					}
 				}
 			}
@@ -421,7 +420,7 @@ void S3mModule::checkGlobalFx() {
 			}
 			else if(fx == s3mFxBreakPat) {
 				m_breakRow = highNibble(fxVal) * 10 + lowNibble(fxVal);
-				LOG_MESSAGE("Row %d: Break pattern to row %d", playbackInfo().row, m_breakRow);
+				LOG4CXX_DEBUG(logger(), "Row " << playbackInfo().row << ": Break pattern to row " << m_breakRow);
 			}
 		}
 	}
@@ -478,7 +477,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 	// skip "--" and "++" marks
 	while(playbackInfo().pattern >= 254) {
 		if(playbackInfo().pattern == s3mOrderEnd) {
-			LOG_TEST_MESSAGE(playbackInfo().pattern == s3mOrderEnd);
+			//LOG_TEST_MESSAGE(playbackInfo().pattern == s3mOrderEnd);
 			return false;
 		}
 		if(!mapOrder(playbackInfo().order))
@@ -487,7 +486,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 		setOrder(playbackInfo().order + 1);
 		orderChanged = true;
 		if(playbackInfo().order >= orderCount()) {
-			LOG_MESSAGE("Song end reached: End of orders");
+			LOG4CXX_INFO(logger(), "Song end reached: End of orders");
 			return false;
 		}
 		setPatternIndex(mapOrder(playbackInfo().order)->index());
@@ -527,12 +526,12 @@ void S3mModule::buildTick(AudioFrameBuffer& buf) {
 		//buf->resize(getTickBufLen());
 		//buf->clear();
 		if(!adjustPosition(false, false)) {
-			LOG_MESSAGE("Song end reached: adjustPosition() failed");
+			LOG4CXX_INFO(logger(), "Song end reached: adjustPosition() failed");
 			buf.reset();
 			return;
 		}
 		if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat()) {
-			LOG_MESSAGE("Song end reached: Maximum repeat count reached");
+			LOG4CXX_INFO(logger(), "Song end reached: Maximum repeat count reached");
 			buf.reset();
 			return;
 		}
@@ -645,7 +644,7 @@ std::string S3mModule::channelCellString(int16_t idx) {
 
 bool S3mModule::jumpNextSong() {
 	if(!isMultiSong()) {
-		LOG_MESSAGE("This is not a multi-song");
+		LOG4CXX_INFO(logger(), "This is not a multi-song");
 		return false;
 	}
 	BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
@@ -676,17 +675,17 @@ bool S3mModule::jumpNextSong() {
 		setPatternIndex(mapOrder(playbackInfo().order)->index());
 		return true;
 	}
-	LOG_ERROR("This should definitively NOT have happened...");
+	LOG4CXX_FATAL(logger(), "This should definitively NOT have happened...");
 	return false;
 }
 
 bool S3mModule::jumpPrevSong() {
 	if(!isMultiSong()) {
-		LOG_MESSAGE("This is not a multi-song");
+		LOG4CXX_INFO(logger(), "This is not a multi-song");
 		return false;
 	}
 	if(currentSongIndex() == 0) {
-		LOG_MESSAGE("Already on first song");
+		LOG4CXX_INFO(logger(), "Already on first song");
 		return false;
 	}
 	setCurrentSongIndex(currentSongIndex() - 1);
@@ -764,6 +763,11 @@ bool S3mModule::hasAmigaLimits() const {
 S3mPattern::Ptr S3mModule::getPattern(size_t idx) const {
 	if(idx >= m_patterns.size()) return S3mPattern::Ptr();
 	return m_patterns.at(idx);
+}
+
+log4cxx::LoggerPtr S3mModule::logger()
+{
+	return log4cxx::Logger::getLogger( GenModule::logger()->getName() + ".s3m" );
 }
 
 }
