@@ -56,7 +56,11 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 {
 // 	if(isDisabled())
 // 		return;
-	if(m_module->tick() == 0) {
+	uint8_t delayTick = 0;
+	if(cell && cell->effect()==0x0e && highNibble(cell->effectValue())==0x0d) {
+		delayTick = lowNibble(cell->effectValue());
+	}
+	if(m_module->tick() == delayTick) {
 // 		m_noteChanged = false;
 // 		m_currentFxStr = "      ";
 		m_currentCell.clear();
@@ -91,7 +95,7 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 				m_vibratoPhase = 0;
 			}
 		}
-		setActive(m_period!=0 && currentSample());
+		setActive(isActive() && m_period!=0 && currentSample());
 	} // endif(tick==0)
 	//if(!isActive()) {
 		//return;
@@ -542,7 +546,6 @@ void ModChannel::efxPatLoop(uint8_t fxByte)
 void ModChannel::efxNoteDelay(uint8_t fxByte)
 {
 	m_effectDescription = "Delay\xc2";
-	// TODO should be handled in update()
 }
 
 void ModChannel::efxSetPanning(uint8_t fxByte)
