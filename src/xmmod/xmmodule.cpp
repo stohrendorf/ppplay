@@ -26,6 +26,8 @@
 #include "xmmodule.h"
 #include "stream/fbinstream.h"
 
+#include <boost/format.hpp>
+
 namespace ppp {
 namespace xm {
 
@@ -221,7 +223,7 @@ bool XmModule::adjustPosition(bool doStore) {
 		}
 		if(m_currentPatternDelay!=0) {
 			m_currentPatternDelay--;
-			LOG4CXX_DEBUG(logger(), "Pattern delay, " << m_currentPatternDelay << " rows left...");
+			LOG4CXX_DEBUG(logger(), boost::format("Pattern delay, %d rows left...")%m_currentPatternDelay);
 		}
 		if(m_isPatLoop || m_doPatJump) {
 			if(m_isPatLoop) {

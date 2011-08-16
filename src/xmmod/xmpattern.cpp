@@ -24,6 +24,7 @@
 #include "xmpattern.h"
 
 #include <boost/assert.hpp>
+#include <boost/format.hpp>
 
 namespace ppp {
 namespace xm {
@@ -49,13 +50,13 @@ bool XmPattern::load(BinStream& str) {
 	uint8_t packType;
 	str.read(&packType);
 	if(packType != 0) {
-		LOG4CXX_ERROR(logger(), "Unsupported Pattern pack type: " << packType);
+		LOG4CXX_ERROR(logger(), boost::format("Unsupported Pattern pack type: %d")%packType);
 		return false;
 	}
 	uint16_t rows;
 	str.read(&rows);
 	if(rows < 1 || rows > 256) {
-		LOG4CXX_WARN(logger(), "Number of rows out of range: " << rows);
+		LOG4CXX_WARN(logger(), boost::format("Number of rows out of range: %d")%rows);
 		return false;
 	}
 	for(XmCell::Vector& chan : m_columns) {

@@ -29,6 +29,7 @@
 #include "stream/iarchive.h"
 
 #include <boost/exception/all.hpp>
+#include <boost/format.hpp>
 
 namespace ppp {
 namespace s3m {
@@ -50,7 +51,7 @@ bool S3mCell::load(BinStream& str) {
 			str.read(&buf);
 			m_note = buf;
 			if((m_note >= 0x9b) && (m_note != s3mEmptyNote) && (m_note != s3mKeyOffNote)) {
-				LOG4CXX_WARN(logger(), "File Position 0x" << std::hex << str.pos() << ": Note out of range: " << m_note);
+				LOG4CXX_WARN(logger(), boost::format("File Position %#x: Note out of range: %d")%str.pos()%m_note);
 				m_note = s3mEmptyNote;
 			}
 			str.read(&buf);
@@ -60,7 +61,7 @@ bool S3mCell::load(BinStream& str) {
 			str.read(&buf);
 			m_volume = buf;
 			if(buf > 0x40) {
-				LOG4CXX_WARN(logger(), "File Position 0x" << std::hex << str.pos() << ": Volume out of range: " << m_volume);
+				LOG4CXX_WARN(logger(), boost::format("File Position %#x: Volume out of range: %d")%str.pos()%m_volume);
 				m_volume = s3mEmptyVolume;
 			}
 		}

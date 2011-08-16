@@ -35,6 +35,7 @@
 #endif
 
 #include <boost/program_options.hpp>
+#include <boost/format.hpp>
 
 #include <log4cxx/logger.h>
 #include <log4cxx/defaultconfigurator.h>
@@ -74,7 +75,7 @@ static std::string parseCmdLine( int argc, char* argv[] ) {
 	( "version", "Shows version information and exits" )
 	( "warranty", "Shows warranty information and exits" )
 	( "copyright", "Shows copyright information and exits" )
-	( "log-level,l", bpo::value<int>(&loglevel)->default_value(0), "Sets the log level. Possible values:\n - 0 No logging\n - 1 Errors\n - 2 Warnings\n - 3 Informational\n - 4 Debug" )
+	( "log-level,l", bpo::value<int>(&loglevel)->default_value(1), "Sets the log level. Possible values:\n - 0 No logging\n - 1 Errors\n - 2 Warnings\n - 3 Informational\n - 4 Debug" )
 	//( "verbose,v", "Be verbose (includes warnings)" )
 	//( "very-verbose,V", "FOR DEBUG PURPOSES ONLY! (implies -v, includes all messages)" )
 	( "no-gui,n", "No GUI" )
@@ -228,7 +229,7 @@ int main( int argc, char* argv[] ) {
 			}
 		}
 		catch( ... ) {
-			LOG4CXX_FATAL(log4cxx::Logger::getRootLogger(), "Main: " << boost::current_exception_diagnostic_information() );
+			LOG4CXX_FATAL(log4cxx::Logger::getRootLogger(), boost::format("Main: %s") % boost::current_exception_diagnostic_information() );
 			return EXIT_FAILURE;
 		}
 		if( !noGUI ) {
@@ -320,7 +321,7 @@ int main( int argc, char* argv[] ) {
 					LOG4CXX_ERROR(log4cxx::Logger::getRootLogger(), "LAME unavailable: Maybe cannot create MP3 File" );
 				}
 				else {
-					LOG4CXX_ERROR(log4cxx::Logger::getRootLogger(), "LAME initialization error: " << mp3out->errorCode() );
+					LOG4CXX_ERROR(log4cxx::Logger::getRootLogger(), boost::format("LAME initialization error: '%s'") % mp3out->errorCode() );
 				}
 				return EXIT_FAILURE;
 			}
@@ -335,7 +336,7 @@ int main( int argc, char* argv[] ) {
 #endif
 	}
 	catch( ... ) {
-		LOG4CXX_FATAL(log4cxx::Logger::getRootLogger(), "Main (end): " << boost::current_exception_diagnostic_information() );
+		LOG4CXX_FATAL(log4cxx::Logger::getRootLogger(), boost::format("Main (end): %s") % boost::current_exception_diagnostic_information() );
 		return EXIT_FAILURE;
 	}
 	//for(const log4cxx::LoggerPtr& l : log4cxx::LogManager::getCurrentLoggers()) {

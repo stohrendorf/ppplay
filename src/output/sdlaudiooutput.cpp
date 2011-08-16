@@ -19,6 +19,7 @@
 #include "sdlaudiooutput.h"
 
 #include <SDL.h>
+#include <boost/format.hpp>
 
 void SDLAudioOutput::sdlAudioCallback(void* userdata, uint8_t* stream, int len_bytes) {
 	std::fill_n(stream, len_bytes, 0);
@@ -69,7 +70,7 @@ int SDLAudioOutput::init(int desiredFrq) {
 	desired->callback = sdlAudioCallback;
 	desired->userdata = this;
 	if(SDL_OpenAudio(desired.get(), obtained.get()) < 0) {
-		LOG4CXX_FATAL(logger(), "Couldn't open audio. SDL reports '" << SDL_GetError() << "'");
+		LOG4CXX_FATAL(logger(), boost::format("Couldn't open audio. SDL reports '%s'")%SDL_GetError());
 		setErrorCode( OutputError );
 		return 0;
 	}
@@ -80,7 +81,7 @@ int SDLAudioOutput::init(int desiredFrq) {
 	desiredFrq = desired->freq;
 	char driverName[256];
 	if(SDL_AudioDriverName(driverName, 255)) {
-		LOG4CXX_INFO(logger(), "Using audio driver '" << driverName << "'");
+		LOG4CXX_INFO(logger(), boost::format("Using audio driver '%s'")%driverName);
 	}
 	setErrorCode( NoError );
 	return desiredFrq;

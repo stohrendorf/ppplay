@@ -27,6 +27,8 @@
 
 #include "stream/fbinstream.h"
 
+#include <boost/format.hpp>
+
 namespace ppp {
 namespace s3m {
 
@@ -420,7 +422,7 @@ void S3mModule::checkGlobalFx() {
 			}
 			else if(fx == s3mFxBreakPat) {
 				m_breakRow = highNibble(fxVal) * 10 + lowNibble(fxVal);
-				LOG4CXX_DEBUG(logger(), "Row " << playbackInfo().row << ": Break pattern to row " << m_breakRow);
+				LOG4CXX_DEBUG(logger(), boost::format("Row %d: Break pattern to row %d")%playbackInfo().row%m_breakRow);
 			}
 		}
 	}

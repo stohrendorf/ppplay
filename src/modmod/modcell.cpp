@@ -23,6 +23,8 @@
 #include "genmod/genbase.h"
 #include "stream/iarchive.h"
 
+#include <boost/format.hpp>
+
 namespace ppp {
 namespace mod {
 
@@ -48,7 +50,7 @@ bool ModCell::load(BinStream& str)
 	str.read(&tmp);
 	m_sampleNumber = tmp&0xf0;
 	if(m_sampleNumber>32) {
-		LOG4CXX_WARN(logger(), "Sample out of range: " << m_sampleNumber);
+		LOG4CXX_WARN(logger(), boost::format("Sample out of range: %d") % m_sampleNumber);
 	}
 	m_sampleNumber &= 0x1f;
 	m_period = (tmp&0x0f)<<8;
@@ -67,7 +69,7 @@ bool ModCell::load(BinStream& str)
 		}
 		else {
 			// TODO find best-matching note
-			LOG4CXX_WARN(logger(), "Cannot find a note for period " << m_period);
+			LOG4CXX_WARN(logger(), boost::format("Cannot find a note for period %d") % m_period);
 			m_note = "???";
 		}
 	}

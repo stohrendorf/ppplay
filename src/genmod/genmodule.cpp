@@ -26,6 +26,7 @@
 #include "stream/memarchive.h"
 
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 
 namespace ppp {
 

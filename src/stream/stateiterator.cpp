@@ -25,6 +25,7 @@
 #include "memarchive.h"
 
 #include <log4cxx/logger.h>
+#include <boost/format.hpp>
 
 static log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("stateiterator");
 
@@ -33,7 +34,7 @@ StateIterator::StateIterator() : m_states(), m_stateIndex(0) {
 
 IArchive::Ptr StateIterator::newState() {
 	IArchive::Ptr p(new MemArchive());
-	LOG4CXX_INFO(logger, "Creating new state " << m_states.size());
+	LOG4CXX_INFO(logger, boost::format("Creating new state %d")%m_states.size());
 	m_states.push_back(p);
 	return p;
 }
@@ -43,7 +44,7 @@ IArchive::Ptr StateIterator::nextState() {
 		return IArchive::Ptr();
 	}
 	m_stateIndex++;
-	LOG4CXX_INFO(logger, "Loading state " << m_stateIndex);
+	LOG4CXX_INFO(logger, boost::format("Loading state %d")%m_stateIndex);
 	return m_states.at(m_stateIndex);
 }
 
@@ -52,7 +53,7 @@ IArchive::Ptr StateIterator::prevState() {
 		return IArchive::Ptr();
 	}
 	m_stateIndex--;
-	LOG4CXX_INFO(logger, "Loading state " << m_stateIndex);
+	LOG4CXX_INFO(logger, boost::format("Loading state %d")%m_stateIndex);
 	return m_states.at(m_stateIndex);
 }
 

@@ -21,6 +21,8 @@
 #include "s3mpattern.h"
 #include "s3mmodule.h"
 
+#include <boost/format.hpp>
+
 /**
  * @ingroup S3mMod
  * @{
@@ -265,7 +267,7 @@ std::string S3mChannel::effectName() const {
 	if(fxRangeOk)
 		return stringf("%c%.2X", fx + 'A' - 1, m_currentCell.effectValue());
 	else {
-		LOG4CXX_WARN(logger(), "Effect out of range: 0x" << std::hex << fx);
+		LOG4CXX_WARN(logger(), boost::format("Effect out of range: %#x")%fx);
 		return stringf("?%.2X", m_currentCell.effectValue());
 	}
 }

@@ -19,6 +19,7 @@
 #include "mp3audiooutput.h"
 
 #include <lame/lame.h>
+#include <boost/format.hpp>
 
 void MP3AudioOutput::encodeThread(MP3AudioOutput* src) {
 	while(true) {
@@ -38,7 +39,7 @@ void MP3AudioOutput::encodeThread(MP3AudioOutput* src) {
 				LOG4CXX_ERROR( logger(), "Lame Encoding Buffer too small!" );
 			}
 			else {
-				LOG4CXX_ERROR( logger(), "Unknown error: " << res);
+				LOG4CXX_ERROR( logger(), boost::format("Unknown error: %d") % res);
 			}
 		}
 		else {
@@ -88,13 +89,13 @@ int MP3AudioOutput::init(int desiredFrq) {
 	m_file.open(m_filename, std::ios::in);
 	if(m_file.is_open()) {
 		m_file.close();
-		LOG4CXX_ERROR(logger(), "Output file already exists: " << m_filename);
+		LOG4CXX_ERROR(logger(), boost::format("Output file already exists: '%s'") % m_filename);
 		setErrorCode(OutputUnavailable);
 		return 0;
 	}
 	m_file.open(m_filename, std::ios::out | std::ios::binary);
 	if(!m_file.is_open()) {
-		LOG4CXX_ERROR(logger(), "Cannot open output file for writing: " << m_filename);
+		LOG4CXX_ERROR(logger(), boost::format("Cannot open output file for writing: '%s'") % m_filename);
 		setErrorCode(OutputUnavailable);
 		return 0;
 	}

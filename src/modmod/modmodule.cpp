@@ -4,6 +4,7 @@
 #include "stream/fbinstream.h"
 
 #include <boost/exception/all.hpp>
+#include <boost/format.hpp>
 
 namespace ppp {
 namespace mod {
@@ -100,7 +101,7 @@ static IdMetaInfo findMeta(BinStream* stream) {
 
 bool ModModule::load(const std::string& filename)
 {
-	LOG4CXX_INFO(logger(), "Opening '" << filename << "'");
+	LOG4CXX_INFO(logger(), boost::format("Opening '%s'")%filename);
 	FBinStream stream(filename);
 	if(!stream.isOpen()) {
 		LOG4CXX_WARN(logger(), "Could not open file");
@@ -121,7 +122,7 @@ bool ModModule::load(const std::string& filename)
 		LOG4CXX_WARN(logger(), "Could not find a valid module ID");
 		return false;
 	}
-	LOG4CXX_DEBUG(logger(), meta.channels << "-channel, ID '" << meta.id << "', Tracker '" << meta.tracker <<"'");
+	LOG4CXX_DEBUG(logger(), boost::format("%d-channel, ID '%s', Tracker '%s'")%meta.channels%meta.id%meta.tracker);
 	setTrackerInfo(meta.tracker);
 	for(int i=0; i<meta.channels; i++) {
 		m_channels.push_back( ModChannel::Ptr(new ModChannel(this)) );
@@ -144,7 +145,7 @@ bool ModModule::load(const std::string& filename)
 		if(songLen>128) {
 			songLen = 128;
 		}
-		LOG4CXX_DEBUG(logger(), "Song length: " << songLen);
+		LOG4CXX_DEBUG(logger(), boost::format("Song length: %d")%songLen);
 		uint8_t tmp;
 		stream.read(&tmp); // skip the restart pos
 		for(uint8_t i=0; i<128; i++) {
@@ -166,7 +167,7 @@ bool ModModule::load(const std::string& filename)
 		}
 	}
 	stream.seekrel(4); // skip the ID
-	LOG4CXX_DEBUG(logger(), maxPatNum << " Patterns @ 0x" << std::hex << stream.pos());
+	LOG4CXX_DEBUG(logger(), boost::format("%d patterns @ %#x")%maxPatNum%stream.pos());
 	for(uint8_t i=0; i<=maxPatNum; i++) {
 		ModPattern::Ptr pat(new ModPattern());
 		if(!pat->load(stream, meta.channels)) {
@@ -175,13 +176,13 @@ bool ModModule::load(const std::string& filename)
 		}
 		m_patterns.push_back(pat);
 	}
-	LOG4CXX_DEBUG(logger(), "Sample start @ 0x" << std::hex << stream.pos());
+	LOG4CXX_DEBUG(logger(), boost::format("Sample start @ %#x")%stream.pos());
 	for(const ModSample::Ptr& smp : m_samples) {
 		if(!smp->loadData(stream)) {
 			LOG4CXX_WARN(logger(), "Could not load sample data");
 		}
 	}
-	LOG4CXX_DEBUG(logger(), "pos=0x"<<std::hex<<stream.pos()<<" size=0x"<<std::hex<<stream.size()<<" delta=0x"<<std::hex<<stream.size()-stream.pos());
+	LOG4CXX_DEBUG(logger(), boost::format("pos=%#x size=%#x delta=%#x")%stream.pos()%stream.size()%(stream.size()-stream.pos()));
 	return stream.good();
 }
 
@@ -380,7 +381,7 @@ bool ModModule::initialize(uint32_t frq)
 	// calculate total length...
 	LOG4CXX_INFO(logger(), "Calculating track lengths and preparing seek operations...");
 	do {
-		LOG4CXX_INFO(logger(), "Pre-processing Track " << currentSongIndex());
+		LOG4CXX_INFO(logger(), boost::format("Pre-processing Track %d") % currentSongIndex());
 		size_t currTickLen = 0;
 		do {
 			simulateTick(currTickLen);
@@ -600,7 +601,7 @@ void ModModule::checkGlobalFx()
 			}
 			else if(fx == 0x0d) {
 				m_breakRow = highNibble(fxVal) * 10 + lowNibble(fxVal);
-				LOG4CXX_INFO(logger(), "Row "<<playbackInfo().row<<": Break pattern to row "<<std::dec<<(int)m_breakRow);
+				LOG4CXX_INFO(logger(), boost::format("Row %1%: Break pattern to row %2%")%playbackInfo().row%(int)m_breakRow);
 			}
 		}
 	}

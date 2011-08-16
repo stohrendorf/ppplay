@@ -26,6 +26,7 @@
 #include "s3msample.h"
 
 #include <algorithm>
+#include <boost/format.hpp>
 
 namespace ppp {
 namespace s3m {
@@ -82,7 +83,7 @@ bool S3mSample::load(BinStream& str, const size_t pos, bool imagoLoopEnd) {
 			return false;
 		}
 		if(smpHdr.type != 1) {
-			LOG4CXX_WARN(logger(), "Sample Type not 0x01 (is 0x" << std::hex << smpHdr.type << "), assuming empty.");
+			LOG4CXX_WARN(logger(), boost::format("Sample Type not 0x01 (is %#.2x), assuming empty.")%smpHdr.type);
 			return true;
 		}
 		/// @warning This could be a much too high value...
