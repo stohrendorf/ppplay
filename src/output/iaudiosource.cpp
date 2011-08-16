@@ -67,5 +67,5 @@ bool IAudioSource::isLocked() {
 
 log4cxx::LoggerPtr IAudioSource::logger()
 {
-	return log4cxx::Logger::getLogger("iaudiosource");
+	return log4cxx::Logger::getLogger("audio.source");
 }

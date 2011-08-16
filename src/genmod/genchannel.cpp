@@ -80,7 +80,7 @@ bool GenChannel::isActive() const {
 
 log4cxx::LoggerPtr GenChannel::logger()
 {
-	return log4cxx::Logger::getLogger("genchannel");
+	return log4cxx::Logger::getLogger("channel");
 }
 
 }

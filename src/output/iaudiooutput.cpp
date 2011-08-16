@@ -39,7 +39,7 @@ IAudioSource::WeakPtr IAudioOutput::source() const {
 
 log4cxx::LoggerPtr IAudioOutput::logger()
 {
-	return log4cxx::Logger::getLogger("iaudiosource");
+	return log4cxx::Logger::getLogger("audio.output");
 }
 
 /**

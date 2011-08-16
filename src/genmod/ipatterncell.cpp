@@ -29,7 +29,7 @@ IPatternCell::~IPatternCell() = default;
 
 log4cxx::LoggerPtr IPatternCell::logger()
 {
-	return log4cxx::Logger::getLogger("ipatterncell");
+	return log4cxx::Logger::getLogger("cell");
 }
 
 }

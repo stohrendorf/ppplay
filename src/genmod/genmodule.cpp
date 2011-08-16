@@ -237,7 +237,7 @@ uint8_t GenModule::tick() const
 
 log4cxx::LoggerPtr GenModule::logger()
 {
-	return log4cxx::Logger::getLogger("GenModule");
+	return log4cxx::Logger::getLogger("module");
 }
 
 }
