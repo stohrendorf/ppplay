@@ -20,6 +20,8 @@
 
 #include "stream/binstream.h"
 
+#include <boost/format.hpp>
+
 /**
  * @ingroup ModMod
  * @{
@@ -65,6 +67,7 @@ bool ModSample::loadHeader(BinStream& stream)
 		setLoopType(LoopType::Forward);
 	}
 	setTitle( stringncpy(hdr.name, 22) );
+	LOG4CXX_DEBUG(logger(), boost::format("Length=%u, loop=%u+%u=%u, name='%s'")%length()%hdr.loopStart%hdr.loopLength%(hdr.loopStart+hdr.loopLength)%title());
 // 	LOG_DEBUG("Loading sample (length=%u, loop=%u+%u=%u, name='%s', vol=%u)", length(), hdr.loopStart, hdr.loopLength, hdr.loopStart+hdr.loopLength, title().c_str(), hdr.volume);
 	setVolume( std::min<uint8_t>( hdr.volume, 0x40 ) );
 	m_finetune = hdr.finetune&0x0f;
@@ -73,6 +76,10 @@ bool ModSample::loadHeader(BinStream& stream)
 
 bool ModSample::loadData(BinStream& stream)
 {
+	if(stream.pos()+length()>=stream.size()) {
+		LOG4CXX_ERROR(logger(), boost::format("File seems truncated: %u bytes requested while only %u bytes left")%length()%(stream.size()-stream.pos()));
+		return false;
+	}
 	setDataMono( new BasicSample[length()] );
 	BasicSample* s = nonConstDataMono();
 	for(size_t i=0; i<length(); i++) {

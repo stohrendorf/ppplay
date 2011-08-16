@@ -122,7 +122,7 @@ bool ModModule::load(const std::string& filename)
 		LOG4CXX_WARN(logger(), "Could not find a valid module ID");
 		return false;
 	}
-	LOG4CXX_DEBUG(logger(), boost::format("%d-channel, ID '%s', Tracker '%s'")%meta.channels%meta.id%meta.tracker);
+	LOG4CXX_DEBUG(logger(), boost::format("%d-channel, ID '%s', Tracker '%s'")%(int)meta.channels%meta.id%meta.tracker);
 	setTrackerInfo(meta.tracker);
 	for(int i=0; i<meta.channels; i++) {
 		m_channels.push_back( ModChannel::Ptr(new ModChannel(this)) );
@@ -145,7 +145,7 @@ bool ModModule::load(const std::string& filename)
 		if(songLen>128) {
 			songLen = 128;
 		}
-		LOG4CXX_DEBUG(logger(), boost::format("Song length: %d")%songLen);
+		LOG4CXX_DEBUG(logger(), boost::format("Song length: %d")%(int)songLen);
 		uint8_t tmp;
 		stream.read(&tmp); // skip the restart pos
 		for(uint8_t i=0; i<128; i++) {
@@ -167,7 +167,7 @@ bool ModModule::load(const std::string& filename)
 		}
 	}
 	stream.seekrel(4); // skip the ID
-	LOG4CXX_DEBUG(logger(), boost::format("%d patterns @ %#x")%maxPatNum%stream.pos());
+	LOG4CXX_DEBUG(logger(), boost::format("%d patterns @ %#x")%(int)maxPatNum%stream.pos());
 	for(uint8_t i=0; i<=maxPatNum; i++) {
 		ModPattern::Ptr pat(new ModPattern());
 		if(!pat->load(stream, meta.channels)) {

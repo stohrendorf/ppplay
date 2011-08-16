@@ -24,3 +24,9 @@ SBinStream::SBinStream() : BinStream(BinStream::SpIoStream(new std::stringstream
 }
 
 SBinStream::~SBinStream() = default;
+
+size_t SBinStream::size() const
+{
+	std::shared_ptr<std::stringstream> p = std::static_pointer_cast<std::stringstream>(stream());
+	return p->str().size();
+}

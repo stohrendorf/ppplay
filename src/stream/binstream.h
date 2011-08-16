@@ -110,6 +110,7 @@ class BinStream {
 		 * @return BinStream::m_stream
 		 */
 		SpIoStream& stream();
+		virtual size_t size() const = 0;
 };
 
 // NOTE Templates are (due to explicit instantiation) outsourced ;-)

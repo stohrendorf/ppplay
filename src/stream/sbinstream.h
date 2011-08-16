@@ -31,6 +31,7 @@ class SBinStream : public BinStream {
 	public:
 		explicit SBinStream();
 		virtual ~SBinStream();
+		virtual size_t size() const;
 };
 
 #endif
