@@ -240,6 +240,7 @@ void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 
 		if(m_currentCell.instrument() != 0 && m_currentCell.instrument() < 0x80) {
 			m_instrumentIndex = m_currentCell.instrument();
+			applySampleDefaults(); // TODO check if it's right here
 		}
 		if(m_currentCell.effect() == Effect::Extended) {
 			if(highNibble(m_currentCell.effectValue()) == EfxNoteDelay && lowNibble(m_currentCell.effectValue()) != 0) {
