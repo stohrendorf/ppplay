@@ -60,13 +60,16 @@ static std::shared_ptr<UIMain> uiMain;
 static IAudioOutput::Ptr output;
 // static SDL_TimerID updateTimer = nullptr;
 
-static bool noGUI = false;
-
+namespace config {
+	static bool noGUI = false;
+	static uint16_t maxRepeat = 2;
+	static std::string filename;
 #ifdef WITH_MP3LAME
-static bool quickMp3 = false;
+	static bool quickMp3 = false;
 #endif
+}
 
-static std::string parseCmdLine( int argc, char* argv[] ) {
+static bool parseCmdLine( int argc, char* argv[] ) {
 	int loglevel = 0;
 	namespace bpo = boost::program_options;
 	bpo::options_description genOpts( "General Options" );
@@ -82,7 +85,8 @@ static std::string parseCmdLine( int argc, char* argv[] ) {
 	;
 	bpo::options_description ioOpts( "Input/Output Options" );
 	ioOpts.add_options()
-	( "file,f", bpo::value<std::string>(), "Module file to play" )
+	( "max-repeat,m", bpo::value<uint16_t>(&config::maxRepeat)->default_value(2), "Maximum repeat count (the number of times an order can be played). Specify a number between 1 and 10,000." )
+	( "file,f", bpo::value<std::string>(&config::filename), "Module file to play" )
 #ifdef WITH_MP3LAME
 	( "quick-mp3,q", "Produces only an mp3 without sound output" )
 #endif
@@ -96,6 +100,12 @@ static std::string parseCmdLine( int argc, char* argv[] ) {
 	bpo::variables_map vm;
 	bpo::store( bpo::command_line_parser( argc, argv ).options( allOpts ).positional( p ).run(), vm );
 	bpo::notify( vm );
+
+	if(config::maxRepeat<1 || config::maxRepeat>10000) {
+		std::cout << "Error: Maximum repeat count not within 1 to 10,000" << std::endl;
+		return false;
+	}
+
 	switch(loglevel) {
 		case 0:
 			log4cxx::Logger::getRootLogger()->setLevel( log4cxx::Level::getOff() );
@@ -143,7 +153,7 @@ static std::string parseCmdLine( int argc, char* argv[] ) {
 		cout << "EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF" << endl;
 		cout << "SUCH DAMAGES." << endl;
 
-		return std::string();
+		return false;
 	}
 	if( vm.count( "copyright" ) ) {
 		cout << "*   This program is free software; you can redistribute it and/or modify  *" << endl;
@@ -158,11 +168,11 @@ static std::string parseCmdLine( int argc, char* argv[] ) {
 		cout << "*                                                                         *" << endl;
 		cout << "*   You should have received a copy of the GNU General Public License     *" << endl;
 		cout << "*   along with this program; if not, see <http://www.gnu.org/licenses/>.  *" << endl;
-		return std::string();
+		return false;
 	}
 	if( vm.count( "version" ) ) {
 		cout << PACKAGE_STRING << " - (C) 2010 " << PACKAGE_VENDOR << endl;
-		return std::string();
+		return false;
 	}
 	if( vm.count( "help" ) || !vm.count( "file" ) ) {
 		cout << "Usage: ppp [options] <file>" << endl;
@@ -171,56 +181,31 @@ static std::string parseCmdLine( int argc, char* argv[] ) {
 		cout << "This is free software, and you are welcome to redistribute it" << endl;
 		cout << "under certain conditions; type `ppp --copyright' for details." << endl;
 		cout << genOpts << ioOpts;
-		return std::string();
+		return false;
 	}
-	if( vm.count( "no-gui" ) ) {
-		noGUI = true;
+	if( vm.count( "no-gui" )!=0 ) {
+		config::noGUI = true;
 	}
-	//if( vm.count( "verbose" ) ) {
-		//setLogLevel( llWarning );
-	//}
-	//if( vm.count( "very-verbose" ) ) {
-		//setLogLevel( llMessage );
-	//}
-	//setLogLevel(llMessage);
 #ifdef WITH_MP3LAME
-	quickMp3 = vm.count( "quick-mp3" );
+	config::quickMp3 = vm.count( "quick-mp3" );
 #endif
-	//switch( getLogLevel() ) {
-		//case llMessage:
-			//cout << "Log level is: VERY Verbose" << endl;
-			//break;
-		//case llWarning:
-			//cout << "Log level is: Verbose" << endl;
-			//break;
-		//case llError:
-			//cout << "Log level is: Normal" << endl;
-			//break;
-		//case llNone: [> logging disabled... <]
-			//break;
-		//default:
-			//break;
-	//}
-	return vm["file"].as<std::string>();
+	return vm.count("file")!=0;
 }
 
 int main( int argc, char* argv[] ) {
-	//log4cxx::AppenderPtr appender(new log4cxx::ConsoleAppender(new log4cxx::SimpleLayout));
-	//log4cxx::Logger::getRootLogger()->addAppender( appender );
 	log4cxx::DefaultConfigurator::configure( log4cxx::LogManager::getLoggerRepository() );
 	log4cxx::LogManager::getRootLogger()->addAppender( new log4cxx::ConsoleAppender(new log4cxx::PatternLayout("[%-5p %rms %c] %m%n")) );
 	try {
-		std::string modFileName = parseCmdLine( argc, argv );
-		if( modFileName.empty() )
+		if( !parseCmdLine(argc,argv) )
 			return EXIT_SUCCESS;
-		LOG4CXX_INFO(log4cxx::Logger::getRootLogger(), "Loading the module." );
+		LOG4CXX_INFO(log4cxx::Logger::getRootLogger(), boost::format("Trying to load '%s'")%config::filename );
 		ppp::GenModule::Ptr module;
 		try {
-			module = ppp::s3m::S3mModule::factory( modFileName, 44100, 2 );
+			module = ppp::s3m::S3mModule::factory( config::filename, 44100, config::maxRepeat );
 			if( !module ) {
-				module = ppp::xm::XmModule::factory( modFileName, 44100, 2 );
+				module = ppp::xm::XmModule::factory( config::filename, 44100, config::maxRepeat );
 				if( !module ) {
-					module = ppp::mod::ModModule::factory( modFileName, 44100, 2 );
+					module = ppp::mod::ModModule::factory( config::filename, 44100, config::maxRepeat );
 					if(!module) {
 						LOG4CXX_ERROR(log4cxx::Logger::getRootLogger(), "Error on loading the mod..." );
 						return EXIT_FAILURE;
@@ -232,13 +217,13 @@ int main( int argc, char* argv[] ) {
 			LOG4CXX_FATAL(log4cxx::Logger::getRootLogger(), boost::format("Main: %s") % boost::current_exception_diagnostic_information() );
 			return EXIT_FAILURE;
 		}
-		if( !noGUI ) {
+		if( !config::noGUI ) {
 			dosScreen.reset( new ppg::SDLScreen( 80, 25, PACKAGE_STRING ) );
 			dosScreen->setAutoDelete(false);
 			dosScreen->show();
 		}
 #ifdef WITH_MP3LAME
-		if( !quickMp3 ) {
+		if( !config::quickMp3 ) {
 #endif
 			LOG4CXX_INFO(log4cxx::Logger::getRootLogger(), "Init Audio" );
 			output.reset( new SDLAudioOutput( module ) );
@@ -300,7 +285,7 @@ int main( int argc, char* argv[] ) {
 							break;
 					}
 				}
-				else if( !noGUI && event.type == SDL_MOUSEMOTION ) {
+				else if( !config::noGUI && event.type == SDL_MOUSEMOTION ) {
 					dosScreen->onMouseMove( event.motion.x / 8, event.motion.y / 16 );
 				}
 				else if( event.type == SDL_QUIT ) {
@@ -313,7 +298,7 @@ int main( int argc, char* argv[] ) {
 		}
 		else {   // if(mp3File.is_open()) { // quickMp3
 			LOG4CXX_INFO(log4cxx::Logger::getRootLogger(), "QuickMP3 Output Mode" );
-			MP3AudioOutput* mp3out = new MP3AudioOutput( module, modFileName + ".mp3" );
+			MP3AudioOutput* mp3out = new MP3AudioOutput( module, config::filename + ".mp3" );
 			output.reset( mp3out );
 			mp3out->setID3( module->trimmedTitle(), PACKAGE_STRING, module->trackerInfo() );
 			if( 0 == mp3out->init( 44100 ) ) {
