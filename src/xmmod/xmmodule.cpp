@@ -39,6 +39,7 @@ struct XmHeader {
 	uint8_t endOfFile; // 0x1a
 	char trackerName[20];
 	uint16_t version;
+	// offsetof(headerSize) == 60
 	uint32_t headerSize;
 	uint16_t songLength;
 	uint16_t restartPos;
@@ -90,6 +91,7 @@ bool XmModule::load(const std::string& filename) {
 		file.read(&tmp);
 		addOrder( GenOrder::Ptr( new GenOrder(tmp) ) );
 	}
+	file.seek( hdr.headerSize + offsetof(XmHeader, headerSize) );
 	{
 		std::string title = stringncpy(hdr.title, 20);
 		while(title.length() > 0 && title.at(title.length() - 1) == ' ')

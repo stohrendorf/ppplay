@@ -57,7 +57,17 @@ bool XmPattern::load(BinStream& str) {
 	}
 	uint16_t rows;
 	str.read(&rows);
-	if(rows < 1 || rows > 256) {
+	if(rows==0) {
+		// create a 64-row default pattern
+		LOG4CXX_DEBUG(logger(), "Number of rows = 0, creating 64-rows default pattern.");
+		for(XmCell::Vector& chan : m_columns) {
+			for(int r = 0; r < 64; r++) {
+				chan.push_back(XmCell::Ptr(new XmCell()));
+			}
+		}
+		return true;
+	}
+	else if(rows < 1 || rows > 256) {
 		LOG4CXX_WARN(logger(), boost::format("Number of rows out of range: %d")%rows);
 		return false;
 	}
