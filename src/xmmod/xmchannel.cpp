@@ -43,7 +43,8 @@ XmChannel::XmChannel(ppp::xm::XmModule* module) :
 	m_tremoloSpeed(0), m_tremoloPhase(0), m_tremoloCtrl(0), m_tremorCountdown(0),
 	m_retriggerCounter(0), m_retriggerLength(0), m_retriggerVolumeType(0), m_patLoopCounter(0),
 	m_patLoopRow(0), m_autoVibType(0), m_autoVibSweep(0), m_autoVibSweepRate(0),
-	m_autoVibDepth(0), m_autoVibPhase(0), m_bres(1, 1), m_module(module), m_fxString() {
+	m_autoVibDepth(0), m_autoVibPhase(0), m_bres(1, 1), m_module(module), m_fxString(), m_noteChanged(false)
+{
 }
 
 XmSample::Ptr XmChannel::currentSample() {
@@ -168,6 +169,7 @@ void XmChannel::doKeyOn() {
 		setActive(false);
 		return;
 	}
+	m_noteChanged = true;
 	if((m_vibratoCtrl & 4) == 0) {
 		m_vibratoPhase = 0;
 	}
@@ -224,6 +226,7 @@ static const std::array<int8_t, 256> g_AutoVibTable = {{
 
 void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 	if(m_module->tick() == 0 && !m_module->isRunningPatDelay()) {
+		m_noteChanged = false;
 		if(cell) {
 			m_currentCell = *cell;
 		}
@@ -629,12 +632,22 @@ std::string XmChannel::noteName() {
 	else if(m_baseNote == KeyOffNote) {
 		return "===";
 	}
-	else if(m_baseNote < KeyOffNote) {
-		return stringf("%s%d", NoteNames.at((m_baseNote - 1) % 12), (m_baseNote - 1) / 12);
+	//else if(m_baseNote < KeyOffNote) {
+		//return stringf("%s%d", NoteNames.at((m_baseNote - 1) % 12), (m_baseNote - 1) / 12);
+	//}
+	//else {
+		//return "???";
+	//}
+	int ofs = m_module->periodToFineNoteIndex( m_currentPeriod+m_autoVibDeltaPeriod, m_finetune );
+	ofs -= m_finetune>>3;
+	ofs >>= 4;
+	ofs -= currentSample()->relativeNote()+1;
+	ofs--;
+	if(ofs<0) {
+		return "___";
 	}
-	else {
-		return "???";
-	}
+	//ofs = (ofs>>4)-1-currentSample()->relativeNote();
+	return stringf("%s%d", NoteNames.at(ofs%12), ofs/12 );
 }
 
 void XmChannel::mixTick(MixerFrameBuffer& mixBuffer) {
@@ -702,8 +715,7 @@ void XmChannel::updateStatus() {
 	std::string volStr = stringf("%3d%%", clip<int>(m_realVolume , 0, 0x40) * 100 / 0x40);
 	setStatusString(stringf("%.2X: %s%s %s %s P:%s V:%s %s",
 	                        m_instrumentIndex,
-	                        " ",
-	                        //(m_noteChanged ? "*" : " "),
+	                        (m_noteChanged ? "*" : " "),
 	                        noteName().c_str(),
 	                        effectName().c_str(),
 	                        effectDescription().c_str(),
@@ -1241,7 +1253,8 @@ IArchive& XmChannel::serialize(IArchive* data) {
 	% m_autoVibSweep
 	% m_autoVibSweepRate
 	% m_autoVibDepth
-	% m_autoVibPhase;
+	% m_autoVibPhase
+	% m_noteChanged;
 	data->archive(&m_bres);
 	return *data;
 }

@@ -179,6 +179,7 @@ class XmChannel : public GenChannel {
 		XmModule* m_module;
 		//! @brief Current effect string
 		std::string m_fxString;
+		bool m_noteChanged;
 		/**
 		 * @brief Get the current sample
 		 * @return Pointer to the current sample or nullptr

@@ -131,6 +131,7 @@ class XmModule : public GenModule {
 		 * @return Quantisized period
 		 */
 		uint16_t glissando(uint16_t period, int8_t finetune, uint8_t deltaNote = 0) const;
+		uint16_t periodToFineNoteIndex(uint16_t period, int8_t finetune, uint8_t deltaNote = 0) const;
 		/**
 		 * @brief Request pattern break
 		 * @param[in] next Row to break to

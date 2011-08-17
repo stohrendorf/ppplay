@@ -525,7 +525,7 @@ uint32_t XmModule::periodToFrequency(uint16_t period) const {
 	}
 }
 
-uint16_t XmModule::glissando(uint16_t period, int8_t finetune, uint8_t deltaNote) const {
+uint16_t XmModule::periodToFineNoteIndex(uint16_t period, int8_t finetune, uint8_t deltaNote) const {
 	int8_t tuned = (finetune / 8 + 16);
 	uint16_t ofsLo = 0;
 	uint16_t ofsHi = m_noteToPeriod.size();
@@ -533,7 +533,11 @@ uint16_t XmModule::glissando(uint16_t period, int8_t finetune, uint8_t deltaNote
 		uint16_t ofsMid = (ofsLo + ofsHi) >> 1;
 		ofsMid &= 0xfff0;
 		ofsMid += tuned;
-		if(period >= m_noteToPeriod.at(ofsMid)) {
+		if(period == m_noteToPeriod.at(ofsMid)) {
+			ofsLo = ofsMid;
+			break;
+		}
+		else if(period > m_noteToPeriod.at(ofsMid)) {
 			ofsHi = ofsMid - tuned;
 		}
 		else {
@@ -544,7 +548,11 @@ uint16_t XmModule::glissando(uint16_t period, int8_t finetune, uint8_t deltaNote
 	if(ofs >= m_noteToPeriod.size()) {
 		ofs = m_noteToPeriod.size() - 1;
 	}
-	return m_noteToPeriod.at(ofs);
+	return ofs;
+}
+
+uint16_t XmModule::glissando(uint16_t period, int8_t finetune, uint8_t deltaNote) const {
+	return m_noteToPeriod.at( periodToFineNoteIndex(period,finetune,deltaNote) );
 }
 
 void XmModule::doPatternBreak(int16_t next) {
