@@ -48,7 +48,7 @@ struct XmHeader {
 	uint16_t flags;
 	uint16_t defaultSpeed;
 	uint16_t defaultTempo;
-	uint8_t orders[256];
+	//uint8_t orders[256];
 };
 #pragma pack(pop)
 
@@ -84,6 +84,11 @@ bool XmModule::load(const std::string& filename) {
 	if(hdr.version != 0x0104) {
 		LOG4CXX_WARN(logger(), "Unsupported XM Version 0x" << std::hex << hdr.version);
 		return false;
+	}
+	for(int i=0; i<(hdr.songLength&0xff); i++) {
+		uint8_t tmp;
+		file.read(&tmp);
+		addOrder( GenOrder::Ptr( new GenOrder(tmp) ) );
 	}
 	{
 		std::string title = stringncpy(hdr.title, 20);
@@ -126,9 +131,6 @@ bool XmModule::load(const std::string& filename) {
 			return false;
 		}
 		m_instruments.push_back(ins);
-	}
-	for(int i=0; i<(hdr.songLength&0xff); i++) {
-		addOrder( GenOrder::Ptr( new GenOrder(hdr.orders[i]) ) );
 	}
 	if(m_amiga) {
 		uint16_t* dest = m_noteToPeriod.begin();
