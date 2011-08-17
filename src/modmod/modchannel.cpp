@@ -19,6 +19,7 @@
 #include "modchannel.h"
 
 #include "modmodule.h"
+#include "modbase.h"
 
 #include <cmath>
 #include <boost/assert.hpp>
@@ -219,7 +220,13 @@ std::string ModChannel::effectName() const
 
 std::string ModChannel::noteName()
 {
-	return "???"; // TODO noteName() -> reverse calc
+	uint8_t idx = periodToNoteIndex(m_period);
+	if(idx==255) {
+		return "^^^";
+	}
+	else {
+		return ppp::stringf("%s%u", NoteNames[idx%12], idx/12);
+	}
 }
 
 IArchive& ModChannel::serialize(IArchive* data)

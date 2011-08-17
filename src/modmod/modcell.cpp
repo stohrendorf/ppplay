@@ -62,15 +62,13 @@ bool ModCell::load(BinStream& str)
 	str.read(&tmp);
 	m_effectValue = tmp;
 	if(m_period!=0) {
-		uint16_t* p = std::find( fullPeriods.at(0).begin(), fullPeriods.at(0).end(), m_period );
-		if(p!=fullPeriods.at(0).end()) {
-			uint8_t idx = (p-fullPeriods.at(0).begin());
+		uint8_t idx = periodToNoteIndex(m_period);
+		if(idx!=255) {
 			m_note = ppp::stringf("%s%u", NoteNames[idx%12], idx/12);
 		}
 		else {
-			// TODO find best-matching note
-			LOG4CXX_WARN(logger(), boost::format("Cannot find a note for period %d") % m_period);
-			m_note = "???";
+			LOG4CXX_WARN(logger(), boost::format("Period %d too low: Cannot find matching note name.") % m_period);
+			m_note = "^^^";
 		}
 	}
 	return str.good();
@@ -128,13 +126,12 @@ IArchive& ModCell::serialize(IArchive* data)
 	*data % m_sampleNumber % m_period % m_effect % m_effectValue;
 	if(data->isLoading()) {
 		if(m_period!=0) {
-			uint16_t* p = std::find( fullPeriods.at(0).begin(), fullPeriods.at(0).end(), m_period );
-			if(p!=fullPeriods.at(0).end()) {
-				uint8_t idx = (p-fullPeriods.at(0).begin());
+			uint8_t idx = periodToNoteIndex(m_period);
+			if(idx!=255) {
 				m_note = ppp::stringf("%s%u", NoteNames[idx%12], idx/12);
 			}
 			else {
-				m_note = "???";
+				m_note = "^^^";
 			}
 		}
 		else {

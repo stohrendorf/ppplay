@@ -21,6 +21,26 @@
 namespace ppp {
 namespace mod {
 
+static const std::array<uint16_t,12> periods = {{
+	1712, 1616, 1524, 1440, 1356, 1280, 1208, 1140, 1076, 1016, 960, 906
+}};
+
+uint16_t noteIndexToPeriod(uint8_t index)
+{
+	return periods.at(index%12)>>(index/12);
+}
+
+uint8_t periodToNoteIndex(uint16_t period)
+{
+	for(uint8_t i=0; i<12*5; i++) {
+		if(noteIndexToPeriod(i)<=period) {
+			return i;
+		}
+	}
+	return 255;
+}
+
+/*
 std::array<std::array<uint16_t, 5*12>, 16> fullPeriods = {{
 	{{
 		1712, 1616, 1524, 1440, 1356, 1280, 1208, 1140, 1076, 1016, 960 , 906,
@@ -135,6 +155,7 @@ std::array<std::array<uint16_t, 5*12>, 16> fullPeriods = {{
 		108 , 101 , 96  , 90  , 85  , 80  , 76  , 72  , 68  , 64  , 60  , 57
 	}}
 }};
+*/
 
 }
 }
