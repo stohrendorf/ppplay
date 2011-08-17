@@ -27,6 +27,8 @@
 #include "xmsample.h"
 #include "xmenvelopeprocessor.h"
 
+#include <log4cxx/logger.h>
+
 namespace ppp {
 namespace xm {
 
@@ -142,6 +144,8 @@ class XmInstrument {
 		 * @return m_vibType
 		 */
 		uint8_t vibType() const;
+	protected:
+		static log4cxx::LoggerPtr logger();
 };
 
 }
