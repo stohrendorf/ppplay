@@ -69,6 +69,7 @@ enum {
 	EfxSetFinetune = 5,
 	EfxPatLoop = 6,
 	EfxSetTremoloCtrl = 7,
+	EfxSetPan = 8,
 	EfxRetrigger = 9,
 	EfxFineVolSlideUp = 0x0a,
 	EfxFineVolSlideDown = 0x0b,

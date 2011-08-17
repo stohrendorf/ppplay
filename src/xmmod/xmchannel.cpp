@@ -878,6 +878,12 @@ void XmChannel::fxExtended(uint8_t fxByte) {
 				m_module->doPatDelay( lowNibble(fxByte) );
 			}
 			break;
+		case EfxSetPan:
+			if(m_module->tick() == 0) {
+				m_panning = 0xff*lowNibble(fxByte)/0x0f;
+			}
+			m_fxString = "StPan\x1d";
+			break;
 	}
 }
 
