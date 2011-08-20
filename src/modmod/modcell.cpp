@@ -56,6 +56,7 @@ bool ModCell::load(BinStream& str)
 	m_period = (tmp&0x0f)<<8;
 	str.read(&tmp);
 	m_period |= tmp;
+	m_period &= 0xfff;
 	str.read(&tmp);
 	m_sampleNumber |= tmp>>4;
 	m_effect = tmp&0x0f;

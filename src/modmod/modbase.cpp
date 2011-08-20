@@ -40,7 +40,6 @@ uint8_t periodToNoteIndex(uint16_t period)
 	return 255;
 }
 
-/*
 std::array<std::array<uint16_t, 5*12>, 16> fullPeriods = {{
 	{{
 		1712, 1616, 1524, 1440, 1356, 1280, 1208, 1140, 1076, 1016, 960 , 906,
@@ -155,7 +154,16 @@ std::array<std::array<uint16_t, 5*12>, 16> fullPeriods = {{
 		108 , 101 , 96  , 90  , 85  , 80  , 76  , 72  , 68  , 64  , 60  , 57
 	}}
 }};
-*/
+
+uint16_t findPeriod(uint16_t period, uint8_t finetune)
+{
+	for(uint8_t idx=0; idx<fullPeriods[0].size(); idx++) {
+		if(period >= fullPeriods.at(0).at(idx)) {
+			return fullPeriods.at(finetune).at(idx);
+		}
+	}
+	return 0;
+}
 
 }
 }

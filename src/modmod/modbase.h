@@ -45,6 +45,7 @@ namespace mod {
 	//extern std::array<std::array<uint16_t, 12*5>, 16> fullPeriods;
 	extern uint16_t noteIndexToPeriod(uint8_t index);
 	extern uint8_t periodToNoteIndex(uint16_t period);
+	extern uint16_t findPeriod(uint16_t period, uint8_t finetune);
 }
 }
 

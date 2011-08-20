@@ -43,13 +43,15 @@ private:
 	uint8_t m_volume;
 	uint8_t m_finetune;
 	uint8_t m_tremoloWaveform;
+	uint8_t m_tremoloPhase;
 	uint8_t m_vibratoWaveform;
 	uint8_t m_vibratoPhase;
 	bool m_glissando;
 	uint16_t m_period;
 	uint16_t m_portaTarget;
 	uint8_t m_lastVibratoFx;
-	uint8_t m_lastPortaFx;
+	uint8_t m_portaSpeed;
+	uint8_t m_lastOffsetFx;
 	uint8_t m_sampleIndex;
 	BresenInterpolation m_bresen;
 	std::string m_effectDescription;
