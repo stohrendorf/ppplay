@@ -41,6 +41,7 @@ private:
 	ModModule* m_module;
 	ModCell m_currentCell;
 	uint8_t m_volume;
+	uint8_t m_physVolume;
 	uint8_t m_finetune;
 	uint8_t m_tremoloWaveform;
 	uint8_t m_tremoloPhase;
@@ -48,13 +49,17 @@ private:
 	uint8_t m_vibratoPhase;
 	bool m_glissando;
 	uint16_t m_period;
+	uint16_t m_physPeriod;
 	uint16_t m_portaTarget;
 	uint8_t m_lastVibratoFx;
+	uint8_t m_lastTremoloFx;
 	uint8_t m_portaSpeed;
 	uint8_t m_lastOffsetFx;
 	uint8_t m_sampleIndex;
 	BresenInterpolation m_bresen;
 	std::string m_effectDescription;
+	void setCellPeriod();
+	void setTonePortaTarget();
 public:
 	typedef std::shared_ptr<ModChannel> Ptr; //!< @brief Class pointer
 	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
@@ -100,7 +105,7 @@ private:
 	void efxPatDelay(uint8_t fxByte);
 	void fxSetSpeed(uint8_t fxByte);
 	ModSample::Ptr currentSample() const;
-	int16_t vibDelta();
+	void applyGlissando();
 protected:
 	static log4cxx::LoggerPtr logger();
 };

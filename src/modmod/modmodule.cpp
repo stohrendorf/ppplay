@@ -322,7 +322,7 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 
 void ModModule::simulateTick(size_t& bufLen)
 {
-	try {
+	//try {
 		if(tick() == 0)
 			checkGlobalFx();
 		bufLen = 0;
@@ -349,13 +349,13 @@ void ModModule::simulateTick(size_t& bufLen)
 			return;
 		}
 		setPosition(position() + bufLen);
-	}
-	catch( boost::exception& e) {
-		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
-	}
-	catch(...) {
-		BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
-	}
+	//}
+	//catch( boost::exception& e) {
+		//BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+	//}
+	//catch(...) {
+		//BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
+	//}
 }
 
 std::string ModModule::channelCellString(int16_t idx)

@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <boost/assert.hpp>
+#include <boost/format.hpp>
 
 /**
  * @brief Makes volume values logarithmic
@@ -71,6 +72,7 @@ void AudioFifo::calcVolume(uint16_t& leftVol, uint16_t& rightVol) {
 }
 
 AudioFifo::AudioFifo(size_t frameCount) : m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_volumeLeft(0), m_volumeRight(0), m_queueMutex() {
+	LOG4CXX_DEBUG(logger(), boost::format("Initialized FIFO with %d frames minimum")%frameCount);
 }
 
 
@@ -104,8 +106,12 @@ size_t AudioFifo::pull(AudioFrameBuffer& data, size_t size) {
 		return 0;
 	calcVolume(m_volumeLeft, m_volumeRight);
 	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
-	if(size == nsize || size > m_queuedFrames)
+	if(size == nsize || size > m_queuedFrames) {
+		if(size != nsize) {
+			LOG4CXX_WARN(logger(), boost::format("Requested %d frames while only %d frames in queue")%size%m_queuedFrames);
+		}
 		size = m_queuedFrames;
+	}
 	if(!data)
 		data.reset(new AudioFrameBuffer::element_type(size, {0, 0}));
 	if(data->size() < size)
@@ -140,8 +146,12 @@ size_t AudioFifo::copy(AudioFrameBuffer& data, size_t size) {
 	if(needsData())
 		return 0;
 	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
-	if(size == nsize || size > m_queuedFrames)
+	if(size == nsize || size > m_queuedFrames) {
+		if(size != nsize) {
+			LOG4CXX_WARN(logger(), boost::format("Requested %d frames while only %d frames in queue")%size%m_queuedFrames);
+		}
 		size = m_queuedFrames;
+	}
 	if(!data)
 		data.reset(new AudioFrameBuffer::element_type(size, {0, 0}));
 	if(data->size() < size)

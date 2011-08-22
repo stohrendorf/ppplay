@@ -23,6 +23,7 @@
 
 #include <cmath>
 #include <boost/assert.hpp>
+#include <boost/format.hpp>
 
 namespace ppp {
 namespace mod {
@@ -32,6 +33,13 @@ static const uint32_t FrequencyBase = 7159090.5/2;
 #else
 static const uint32_t FrequencyBase = 7093789.2/2;
 #endif
+
+static const std::array<const int16_t, 32> WaveSine = {{
+		0, 24, 49, 74, 97, 120, 141, 161,
+		180, 197, 212, 224, 235, 244, 250, 253,
+		255, 253, 250, 244, 235, 224, 212, 197,
+		180, 161, 141, 120, 97, 74, 49, 24
+}};
 
 static inline double finetuneMultiplicator(uint8_t finetune)
 {
@@ -43,9 +51,9 @@ static inline double finetuneMultiplicator(uint8_t finetune)
  * are clipped to a range of 0x71..0x358 (113..856 decimal respectively).
  */
 
-ModChannel::ModChannel(ModModule* parent) : m_module(parent), m_currentCell(), m_volume(0),
-	m_finetune(0), m_tremoloWaveform(0), m_vibratoWaveform(0), m_vibratoPhase(0), m_glissando(false),
-	m_period(0), m_portaTarget(0), m_lastVibratoFx(0), m_portaSpeed(0), m_sampleIndex(0), m_bresen(1,1),
+ModChannel::ModChannel(ModModule* parent) : m_module(parent), m_currentCell(), m_volume(0), m_physVolume(0),
+	m_finetune(0), m_tremoloWaveform(0), m_tremoloPhase(0), m_vibratoWaveform(0), m_vibratoPhase(0), m_glissando(false),
+	m_period(0), m_physPeriod(0), m_portaTarget(0), m_lastVibratoFx(0), m_lastTremoloFx(0), m_portaSpeed(0), m_lastOffsetFx(0), m_sampleIndex(0), m_bresen(1,1),
 	m_effectDescription("      ")
 {
 	BOOST_ASSERT(parent!=nullptr);
@@ -53,6 +61,7 @@ ModChannel::ModChannel(ModModule* parent) : m_module(parent), m_currentCell(), m
 
 ModChannel::~ModChannel() = default;
 
+// TODO mt_setfinetune
 void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 {
 // 	if(isDisabled())
@@ -72,25 +81,20 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 		if(m_currentCell.sampleNumber()!=0) {
 			m_sampleIndex = m_currentCell.sampleNumber();
 			if(currentSample()) {
-				m_volume = currentSample()->volume();
+				m_physVolume = m_volume = currentSample()->volume();
 				m_finetune = currentSample()->finetune();
 			}
 		}
 		if(m_currentCell.period() != 0) {
 			if(m_currentCell.effect()!=3 && m_currentCell.effect()!=5) {
-				// 			triggerNote();
-				m_period = m_currentCell.period();
+				setCellPeriod();
 				setPosition(0);
 				setActive(true);
 			}
 			else {
-				m_portaTarget = m_currentCell.period();
-				if(m_period==0) {
-					setPosition(0);
-					m_period = m_portaTarget;
-				}
-				setActive(true);
+				setTonePortaTarget();
 			}
+			setActive(m_period != 0);
 			if((m_vibratoWaveform&4) == 0) {
 				// reset phase to 0 on a new note
 				m_vibratoPhase = 0;
@@ -173,6 +177,9 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 				case 0x08:
 					efxSetPanning(m_currentCell.effectValue());
 					break;
+				case 0x09:
+					efxRetrigger(m_currentCell.effectValue());
+					break;
 				case 0x0a:
 					efxFineVolSlideUp(m_currentCell.effectValue());
 					break;
@@ -237,33 +244,38 @@ IArchive& ModChannel::serialize(IArchive* data)
 	GenChannel::serialize(data)
 	.archive(&m_currentCell)
 	% m_volume
+	% m_physVolume
 	% m_finetune
 	% m_tremoloWaveform
+	% m_tremoloPhase
 	% m_vibratoWaveform
 	% m_vibratoPhase
 	% m_glissando
 	% m_period
+	% m_physPeriod
 	% m_portaTarget
 	% m_lastVibratoFx
+	% m_lastTremoloFx
 	% m_portaSpeed
+	% m_lastOffsetFx
 	% m_sampleIndex;
 	return data->archive(&m_bresen);
 }
 
 void ModChannel::simTick(size_t bufsize)
 {
-	if(!isActive() || !currentSample() || m_period == 0) {
+	if(!isActive() || !currentSample() || m_physPeriod == 0) {
 		return setActive(false);
 	}
 	BOOST_ASSERT(m_module && m_module->frequency() != 0);
 	BOOST_ASSERT(bufsize != 0);
-	if(m_period == 0) {
+	if(m_physPeriod == 0) {
 		setActive(false);
 		setPosition(0);
 		return;
 	}
 	// TODO glissando
-	int32_t pos = position() + (FrequencyBase / m_module->frequency() * bufsize / (m_period*finetuneMultiplicator(m_finetune)+vibDelta()));
+	int32_t pos = position() + (FrequencyBase / m_module->frequency() * bufsize / (m_physPeriod));
 	currentSample()->adjustPosition(pos);
 	if(pos == GenSample::EndOfSample) {
 		setActive(false);
@@ -273,7 +285,7 @@ void ModChannel::simTick(size_t bufsize)
 
 void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
 {
-	if(!isActive() || !currentSample() || m_period == 0) {
+	if(!isActive() || !currentSample() || m_physPeriod == 0) {
 		return setActive(false);
 	}
 	BOOST_ASSERT(m_module && m_module->frequency() != 0);
@@ -282,7 +294,7 @@ void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
 		setActive(false);
 		return;
 	}
-	m_bresen.reset(m_module->frequency(), FrequencyBase / (m_period*finetuneMultiplicator(m_finetune)+vibDelta()));
+	m_bresen.reset(m_module->frequency(), FrequencyBase / m_physPeriod);
 // 	setStatusString( statusString() + stringf(" %d +- %u",FrequencyBase/m_period, m_finetune) );
 	// TODO glissando
 	ModSample::Ptr currSmp = currentSample();
@@ -293,8 +305,8 @@ void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
 	}
 	for(MixerSampleFrame& frame : *mixBuffer) {
 		// TODO panning
-		frame.left += (currSmp->leftSampleAt(pos)*m_volume)>>6;
-		frame.right += (currSmp->rightSampleAt(pos)*m_volume)>>6;
+		frame.left += (currSmp->leftSampleAt(pos)*m_physVolume)>>6;
+		frame.right += (currSmp->rightSampleAt(pos)*m_physVolume)>>6;
 		if(pos == GenSample::EndOfSample) {
 			break;
 		}
@@ -306,6 +318,59 @@ void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
 	setPosition(pos);
 	if(pos == GenSample::EndOfSample) {
 		setActive(false);
+	}
+}
+
+void ModChannel::setCellPeriod()
+{
+	if(m_currentCell.period() == 0) {
+		return;
+	}
+	uint8_t perIdx = 0;
+	for(perIdx = 0; perIdx<fullPeriods.at(0).size(); perIdx++) {
+		if(m_currentCell.period() >= fullPeriods.at(0).at(perIdx)) {
+			break;
+		}
+	}
+	if(perIdx == fullPeriods.at(0).size()) {
+		m_period = fullPeriods.at(m_finetune).at(perIdx-1);
+	}
+	else {
+		m_period = fullPeriods.at(m_finetune).at(perIdx);
+	}
+	if(m_currentCell.effect()==0x0e && m_currentCell.effectValue()==0x0d) {
+		// note delay
+		return;
+	}
+	m_physPeriod = m_period;
+	if((m_vibratoWaveform&4)==0) {
+		m_vibratoPhase = 0;
+	}
+	if((m_tremoloWaveform&4)==0) {
+		m_vibratoPhase = 0;
+	}
+}
+
+void ModChannel::setTonePortaTarget()
+{
+
+	if(m_currentCell.period() == 0) {
+		return;
+	}
+	uint8_t perIdx = 0;
+	for(perIdx = 0; perIdx<fullPeriods.at(m_finetune).size(); perIdx++) {
+		if(m_currentCell.period() >= fullPeriods.at(m_finetune).at(perIdx)) {
+			break;
+		}
+	}
+	if(perIdx == fullPeriods.at(m_finetune).size()) {
+		m_portaTarget = fullPeriods.at(m_finetune).at(perIdx-1);
+	}
+	else {
+		m_portaTarget = fullPeriods.at(m_finetune).at(perIdx);
+	}
+	if(m_portaTarget == m_period) {
+		m_portaTarget = 0;
 	}
 }
 
@@ -340,7 +405,7 @@ void ModChannel::efxFineVolSlideDown(uint8_t fxByte)
 		return;
 	}
 	fxByte = lowNibble(fxByte);
-	m_volume = std::max<int>(0, m_volume-fxByte);
+	m_physVolume = m_volume = std::max<int>(0, m_volume-fxByte);
 }
 
 void ModChannel::efxFineVolSlideUp(uint8_t fxByte)
@@ -350,13 +415,14 @@ void ModChannel::efxFineVolSlideUp(uint8_t fxByte)
 		return;
 	}
 	fxByte = lowNibble(fxByte);
-	m_volume = std::min<int>(0x40, m_volume+fxByte);
+	m_physVolume = m_volume = std::min<int>(0x40, m_volume+fxByte);
 }
 
 void ModChannel::efxSetFinetune(uint8_t fxByte)
 {
 	m_effectDescription = "FTune\xe6";
 	m_finetune = lowNibble(fxByte);
+	setCellPeriod();
 }
 
 void ModChannel::efxSetTremoloWaveform(uint8_t fxByte)
@@ -368,7 +434,7 @@ void ModChannel::efxSetTremoloWaveform(uint8_t fxByte)
 void ModChannel::efxSetVibWaveform(uint8_t fxByte)
 {
 	m_effectDescription = "VWave\x9f";
-	m_vibratoWaveform = fxByte&0x7;
+	m_vibratoWaveform = lowNibble(fxByte);
 }
 
 void ModChannel::efxGlissando(uint8_t fxByte)
@@ -383,13 +449,11 @@ void ModChannel::efxFineSlideDown(uint8_t fxByte)
 	if(m_module->tick() != 0) {
 		return;
 	}
-	// TODO clip period
 	m_period += lowNibble(fxByte);
-	m_period &= 0xfff;
 	if(m_period > 856) {
 		m_period = 856;
 	}
-	m_portaTarget = m_period;
+	m_physPeriod = m_period;
 }
 
 void ModChannel::efxFineSlideUp(uint8_t fxByte)
@@ -398,13 +462,11 @@ void ModChannel::efxFineSlideUp(uint8_t fxByte)
 	if(m_module->tick() != 0) {
 		return;
 	}
-	// TODO clip period
 	m_period -= lowNibble(fxByte);
-	m_period &= 0xfff;
 	if(m_period < 113) {
 		m_period = 113;
 	}
-	m_portaTarget = m_period;
+	m_physPeriod = m_period;
 }
 
 void ModChannel::fxOffset(uint8_t fxByte)
@@ -414,83 +476,119 @@ void ModChannel::fxOffset(uint8_t fxByte)
 	if(m_module->tick() != 0 || m_currentCell.period()==0) {
 		return;
 	}
-	setPosition(fxByte<<8);
+	if(currentSample() && currentSample()->length()>(fxByte<<8)) {
+		setPosition(fxByte<<8);
+	}
+	else {
+		if(currentSample()) {
+			LOG4CXX_DEBUG(logger(), boost::format("Offset effect: length()=%d, request=%d")%currentSample()->length()%(fxByte<<8));
+		}
+		//setActive(false);
+	}
 }
 
 void ModChannel::fxSetVolume(uint8_t fxByte)
 {
 	m_effectDescription = "StVol=";
-	m_volume = std::min<uint8_t>(0x40, fxByte);
+	m_physVolume = m_volume = std::min<uint8_t>(0x40, fxByte);
 }
 
 void ModChannel::fxVolSlide(uint8_t fxByte)
 {
 	if(highNibble(fxByte)!=0) {
 		m_effectDescription = "VSld \x1e";
-		m_volume = std::min(0x40, m_volume+highNibble(fxByte));
+		m_physVolume = m_volume = std::min(0x40, m_volume+highNibble(fxByte));
 	}
 	else {
 		m_effectDescription = "VSld \x1f";
-		m_volume = std::max<int>(0x0, m_volume-lowNibble(fxByte));
+		m_physVolume = m_volume = std::max<int>(0x0, m_volume-lowNibble(fxByte));
 	}
 }
 
 void ModChannel::fxVibVolSlide(uint8_t fxByte)
 {
 	fxVolSlide(fxByte);
-	fxVibrato(m_lastVibratoFx);
+	fxVibrato(0);
 	m_effectDescription = "VibVo\xf7";
 }
 
 void ModChannel::fxPortaVolSlide(uint8_t fxByte)
 {
 	fxVolSlide(fxByte);
-	fxPorta(m_portaSpeed);
+	fxPorta(0);
 	m_effectDescription = "PrtVo\x12";
 }
 
 void ModChannel::fxPortaDown(uint8_t fxByte)
 {
-	// TODO clip
 	m_effectDescription = "Ptch \x1f";
 	m_period += fxByte;
-	m_portaTarget = m_period;
+	if(m_period > 856) {
+		m_period = 856;
+	}
+	m_physPeriod = m_portaTarget = m_period;
+	applyGlissando();
 }
 
 void ModChannel::fxPortaUp(uint8_t fxByte)
 {
 	m_effectDescription = "Ptch \x1e";
-	// TODO clip
 	m_period -= fxByte;
-	m_portaTarget = m_period;
+	if(m_period < 113) {
+		m_period = 113;
+	}
+	m_physPeriod = m_portaTarget = m_period;
+	applyGlissando();
 }
 
 void ModChannel::fxVibrato(uint8_t fxByte)
 {
 	m_effectDescription = "Vibr \xf7";
 	reuseNibblesIfZero(m_lastVibratoFx, fxByte);
+	int16_t vibVal = 0;
+	switch(m_vibratoWaveform & 3) {
+		case 0: // sine
+			vibVal = WaveSine.at(m_vibratoPhase&0x1f);
+			break;
+		case 1: // ramp
+			if((m_vibratoPhase & 0x20)!=0) {
+				vibVal = 255 - (m_vibratoPhase<<3);
+			}
+			else {
+				vibVal = (m_vibratoPhase<<3);
+			}
+			break;
+		default: // square
+			vibVal = 255;
+			break;
+	}
+	vibVal = (lowNibble(fxByte)*vibVal) >> 7;
+	if((m_vibratoPhase&0x20) != 0) {
+		vibVal = -vibVal;
+	}
+	m_physPeriod = m_period + vibVal;
 	m_vibratoPhase += highNibble(fxByte);
+	m_vibratoPhase &= 0x3f;
 }
 
 void ModChannel::fxPorta(uint8_t fxByte)
 {
 	m_effectDescription = "Porta\x12";
-	if(m_module->tick() == 0) {
-		return;
-	}
 	reuseIfZero(m_portaSpeed, fxByte);
 	if(m_portaTarget == 0) {
 		return;
 	}
-	if(m_portaTarget == m_period) {
-		return;
-	}
-	else if(m_portaTarget < m_period) {
+	if(m_portaTarget < m_period) {
 		m_period = std::max<int>(m_portaTarget, m_period-fxByte);
 	}
 	else if(m_portaTarget > m_period) {
 		m_period = std::min<int>(m_portaTarget, m_period+fxByte);
 	}
+	if(m_period == m_portaTarget) {
+		m_portaTarget = 0;
+	}
+	m_period = clip<uint16_t>(113,856,m_period);
+	applyGlissando();
 }
 
 void ModChannel::updateStatus()
@@ -519,43 +617,87 @@ void ModChannel::fxArpeggio(uint8_t fxByte)
 		m_effectDescription = "      ";
 		return;
 	}
-	else {
-		m_effectDescription = "Arp  \xf0";
+	m_effectDescription = "Arp  \xf0";
+	if((m_module->tick()%3) == 0) {
+		m_physPeriod = m_period;
+		return;
 	}
-	// TODO
+	uint8_t delta = 0;
+	if((m_module->tick()%3) == 1) {
+		delta = highNibble(fxByte);
+	}
+	else {
+		delta = lowNibble(fxByte);
+	}
+	for(uint8_t i=0; i<fullPeriods.at(m_finetune).size()-delta; i++) {
+		if(fullPeriods.at(m_finetune).at(i) <= m_period) {
+			m_physPeriod = fullPeriods.at(m_finetune).at(i+delta);
+			LOG4CXX_DEBUG(logger(), boost::format("Arpeggio: period=%d, physPeriod=%d, delta=%d, finetune=%d")%m_period%m_physPeriod%(delta+0)%(m_finetune+0));
+			return;
+		}
+	}
+	m_physPeriod = fullPeriods.at(m_finetune).at( fullPeriods.at(m_finetune).size()-1 );
 }
 
 void ModChannel::fxPatBreak(uint8_t fxByte)
 {
 	m_effectDescription = "PBrk \xf6";
+	LOG4CXX_WARN(logger(), "Not implemented: Effect Pattern Break");
 	// TODO
 }
 
 void ModChannel::fxPosJmp(uint8_t fxByte)
 {
 	m_effectDescription = "JmOrd\x1a";
+	LOG4CXX_WARN(logger(), "Not implemented: Effect Position Jump");
 	// TODO
 }
 
 void ModChannel::fxSetFinePan(uint8_t fxByte)
 {
 	m_effectDescription = "StPan\x1d";
+	LOG4CXX_WARN(logger(), "Not implemented: Effect Fine Panning");
 	// TODO
 }
 
 void ModChannel::fxTremolo(uint8_t fxByte)
 {
 	m_effectDescription = "Tremo\xec";
-	// TODO
+	reuseNibblesIfZero(m_lastTremoloFx, fxByte);
+	int16_t vibVal = 0;
+	switch(m_tremoloWaveform & 3) {
+		case 0: // sine
+			vibVal = WaveSine.at(m_tremoloPhase&0x1f);
+			break;
+		case 1: // ramp
+			if((m_vibratoPhase & 0x20)!=0) {
+				vibVal = 255 - (m_tremoloPhase<<3);
+			}
+			else {
+				vibVal = (m_tremoloPhase<<3);
+			}
+			break;
+		default: // square
+			vibVal = 255;
+			break;
+	}
+	vibVal = (lowNibble(fxByte)*vibVal) >> 6;
+	if((m_tremoloPhase&0x20) != 0) {
+		vibVal = -vibVal;
+	}
+	m_physVolume = clip<int>(0, 0x40, m_volume+vibVal);
+	m_tremoloPhase += highNibble(fxByte);
+	m_tremoloPhase &= 0x3f;
 }
 
 void ModChannel::efxPatLoop(uint8_t fxByte)
 {
 	m_effectDescription = "PLoop\xe8";
+	LOG4CXX_WARN(logger(), "Not implemented: Effect Pattern Loop");
 	// TODO
 }
 
-void ModChannel::efxNoteDelay(uint8_t fxByte)
+void ModChannel::efxNoteDelay(uint8_t /*fxByte*/)
 {
 	m_effectDescription = "Delay\xc2";
 }
@@ -563,46 +705,40 @@ void ModChannel::efxNoteDelay(uint8_t fxByte)
 void ModChannel::efxSetPanning(uint8_t fxByte)
 {
 	m_effectDescription = "StPan\x1d";
+	LOG4CXX_WARN(logger(), "Not implemented: Effect Set Panning");
 	// TODO
 }
 
 void ModChannel::efxPatDelay(uint8_t fxByte)
 {
 	// TODO
+	LOG4CXX_WARN(logger(), "Not implemented: Effect Pattern Delay");
 }
 
-static const std::array<const int16_t, 32> WaveSine = {{
-		0, 24, 49, 74, 97, 120, 141, 161,
-		180, 197, 212, 224, 235, 244, 250, 253,
-		255, 253, 250, 244, 235, 224, 212, 197,
-		180, 161, 141, 120, 97, 74, 49, 24
-}};
-
-int16_t ModChannel::vibDelta()
+void ModChannel::efxRetrigger(uint8_t fxByte)
 {
-	if(m_currentCell.effect() != 4 && m_currentCell.effect() != 6) {
-		return 0;
+	if(lowNibble(fxByte) == 0 || m_currentCell.period()==0) {
+		return;
 	}
-	m_vibratoPhase &= 0x3f;
-	int16_t res = 0;
-	switch(m_vibratoWaveform&3) {
-		case 0:
-			res = WaveSine.at( m_vibratoPhase&0x1f );
-			break;
-		case 1:
-			res = 256-((m_vibratoPhase&0x1f)<<3);
-			break;
-		case 2:
-			res = 256;
-			break;
-		case 3:
-			res = rand()&0xff;
-			break;
+	if(m_module->tick()%lowNibble(fxByte) != 0) {
+		return;
 	}
-	if(m_vibratoPhase>=0x20) {
-		res = -res;
+	setPosition(0);
+}
+
+void ModChannel::applyGlissando()
+{
+	if(!m_glissando) {
+		m_physPeriod = m_period;
+		return;
 	}
-	return (res*lowNibble(m_lastVibratoFx))>>7;
+	for(uint8_t i=0; i<fullPeriods.at(m_finetune).size(); i++) {
+		if(m_period >= fullPeriods.at(m_finetune).at(i)) {
+			m_physPeriod = fullPeriods.at(m_finetune).at(i);
+			return;
+		}
+	}
+	m_physPeriod = fullPeriods.at(m_finetune).at( fullPeriods.at(m_finetune).size()-1 );
 }
 
 log4cxx::LoggerPtr ModChannel::logger()
