@@ -8,6 +8,6 @@ NoDisplay=true
 GenericName=Tracker Module Player
 Comment=Plays old Music Tracker Modules
 Terminal=false
-MimeType=audio/x-s3m;audio/x-xm;
+MimeType=audio/x-s3m;audio/x-xm;audio/x-mod;
 StartupNotify=true
 Categories=AudioVideo;Audio;Player;
