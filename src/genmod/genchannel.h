@@ -28,7 +28,7 @@
 #include "output/audiotypes.h"
 #include "stuff/utils.h"
 
-#include <log4cxx/logger.h>
+#include "light4cxx/logger.h"
 
 #include <mutex>
 
@@ -146,7 +146,7 @@ class GenChannel : public ISerializable {
 		 * @param[in] s The new string
 		 */
 		void setStatusString(const std::string& s);
-		static log4cxx::LoggerPtr logger();
+		static light4cxx::Logger::Ptr logger();
 };
 
 } // namespace ppp

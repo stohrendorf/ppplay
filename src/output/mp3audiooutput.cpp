@@ -36,10 +36,10 @@ void MP3AudioOutput::encodeThread(MP3AudioOutput* src) {
 		int res = lame_encode_buffer_interleaved(src->m_lameGlobalFlags, &buffer->front().left, buffer->size(), src->m_buffer, BufferSize);
 		if(res < 0) {
 			if(res == -1) {
-				LOG4CXX_ERROR( logger(), "Lame Encoding Buffer too small!" );
+				logger()->error(L4CXX_LOCATION, "Lame Encoding Buffer too small!" );
 			}
 			else {
-				LOG4CXX_ERROR( logger(), boost::format("Unknown error: %d") % res);
+				logger()->error(L4CXX_LOCATION, boost::format("Unknown error: %d") % res);
 			}
 		}
 		else {
@@ -89,13 +89,13 @@ int MP3AudioOutput::init(int desiredFrq) {
 	m_file.open(m_filename, std::ios::in);
 	if(m_file.is_open()) {
 		m_file.close();
-		LOG4CXX_ERROR(logger(), boost::format("Output file already exists: '%s'") % m_filename);
+		logger()->error(L4CXX_LOCATION, boost::format("Output file already exists: '%s'") % m_filename);
 		setErrorCode(OutputUnavailable);
 		return 0;
 	}
 	m_file.open(m_filename, std::ios::out | std::ios::binary);
 	if(!m_file.is_open()) {
-		LOG4CXX_ERROR(logger(), boost::format("Cannot open output file for writing: '%s'") % m_filename);
+		logger()->error(L4CXX_LOCATION, boost::format("Cannot open output file for writing: '%s'") % m_filename);
 		setErrorCode(OutputUnavailable);
 		return 0;
 	}
@@ -120,7 +120,7 @@ void MP3AudioOutput::setID3(const std::string& title, const std::string& album, 
 	id3tag_set_album(m_lameGlobalFlags, album.c_str());
 }
 
-log4cxx::LoggerPtr MP3AudioOutput::logger()
+light4cxx::Logger::Ptr MP3AudioOutput::logger()
 {
-	return log4cxx::Logger::getLogger( IAudioOutput::logger()->getName()+".mp3" );
+	return light4cxx::Logger::get( IAudioOutput::logger()->name()+".mp3" );
 }

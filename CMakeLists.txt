@@ -115,7 +115,7 @@ if(MINGW)
 endif()
 
 target_link_libraries(ppp modmod xmmod s3mmod genmod audioout)
-target_link_libraries(ppp utils binstream)
+target_link_libraries(ppp utils binstream light4cxx)
 target_link_libraries(ppp ppg timer)
 
 #########
@@ -151,14 +151,6 @@ else()
 endif()
 
 add_feature_info(MP3Lame WITH_MP3LAME "The MP3Lame library enables MP3 export.")
-
-include(cmake/FindLog4Cxx.cmake)
-if(NOT LOG4CXX_FOUND)
-	message(FATAL_ERROR "Required Log4Cxx was not found")
-endif()
-set_package_info(LOG4CXX "Log4Cxx" "http://logging.apache.org/log4cxx" "The Log4Cxx library is used for advanced logging")
-include_directories(${LOG4CXX_INCLUDE_DIR})
-target_link_libraries(ppp ${LOG4CXX_LIBRARIES})
 
 #########
 # add SDL

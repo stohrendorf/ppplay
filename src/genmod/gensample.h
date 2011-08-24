@@ -229,7 +229,7 @@ class GenSample {
 		 */
 		void setVolume(uint8_t v);
 	protected:
-		static log4cxx::LoggerPtr logger();
+		static light4cxx::Logger::Ptr logger();
 };
 
 inline BasicSample GenSample::sampleAt(int32_t& pos) const {

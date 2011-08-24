@@ -72,12 +72,12 @@ bool S3mPattern::load(BinStream& str, size_t pos) {
 			currTrack = master & 31;
 			str.seekrel(-1);
 			if(str.fail()) {
-				LOG4CXX_ERROR(logger(), "str.fail()...");
+				logger()->error(L4CXX_LOCATION, "str.fail()...");
 				return false;
 			}
 			S3mCell::Ptr cell = createCell(currTrack, currRow);
 			if(!cell->load(str)) {
-				LOG4CXX_ERROR(logger(), "Cell loading: ERROR");
+				logger()->error(L4CXX_LOCATION, "Cell loading: ERROR");
 				return false;
 			}
 		}
@@ -91,9 +91,9 @@ bool S3mPattern::load(BinStream& str, size_t pos) {
 	}
 }
 
-log4cxx::LoggerPtr S3mPattern::logger()
+light4cxx::Logger::Ptr S3mPattern::logger()
 {
-	return log4cxx::Logger::getLogger( "pattern.s3m" );
+	return light4cxx::Logger::get( "pattern.s3m" );
 }
 
 }

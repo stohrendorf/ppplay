@@ -27,7 +27,7 @@
 #include "stuff/utils.h"
 #include "audiotypes.h"
 
-#include <log4cxx/logger.h>
+#include "light4cxx/logger.h"
 
 #include <mutex>
 
@@ -125,7 +125,7 @@ class IAudioSource {
 		 */
 		bool isLocked();
 	protected:
-		static log4cxx::LoggerPtr logger();
+		static light4cxx::Logger::Ptr logger();
 };
 
 /**

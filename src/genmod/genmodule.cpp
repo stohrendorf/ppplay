@@ -91,7 +91,7 @@ bool GenModule::isMultiSong() const {
 }
 
 void GenModule::removeEmptySongs() {
-	LOG4CXX_INFO(logger(), "Removing empty songs");
+	logger()->info(L4CXX_LOCATION, "Removing empty songs");
 	std::vector<StateIterator> nTr;
 	std::vector<size_t> nTrLen;
 	for(size_t i = 0; i < m_songs.size(); i++) {
@@ -235,9 +235,9 @@ uint8_t GenModule::tick() const
 	return m_tick;
 }
 
-log4cxx::LoggerPtr GenModule::logger()
+light4cxx::Logger::Ptr GenModule::logger()
 {
-	return log4cxx::Logger::getLogger("module");
+	return light4cxx::Logger::get("module");
 }
 
 }

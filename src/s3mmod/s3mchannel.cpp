@@ -267,7 +267,7 @@ std::string S3mChannel::effectName() const {
 	if(fxRangeOk)
 		return stringf("%c%.2X", fx + 'A' - 1, m_currentCell.effectValue());
 	else {
-		LOG4CXX_WARN(logger(), boost::format("Effect out of range: %#x")%fx);
+		logger()->warn(L4CXX_LOCATION, boost::format("Effect out of range: %#x")%fx);
 		return stringf("?%.2X", m_currentCell.effectValue());
 	}
 }
@@ -1106,9 +1106,9 @@ void S3mChannel::setPanning(uint8_t pan) {
 	m_panning = pan;
 }
 
-log4cxx::LoggerPtr S3mChannel::logger()
+light4cxx::Logger::Ptr S3mChannel::logger()
 {
-	return log4cxx::Logger::getLogger( GenChannel::logger()->getName() + ".s3m" );
+	return light4cxx::Logger::get( GenChannel::logger()->name() + ".s3m" );
 }
 
 } // namespace s3m

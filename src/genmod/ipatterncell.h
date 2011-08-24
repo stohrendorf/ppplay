@@ -26,7 +26,7 @@
 
 #include "stream/iserializable.h"
 
-#include <log4cxx/logger.h>
+#include "light4cxx/logger.h"
 
 #include <vector>
 #include <string>
@@ -57,7 +57,7 @@ class IPatternCell : public ISerializable {
 		 */
 		virtual std::string trackerString() const = 0;
 	protected:
-		static log4cxx::LoggerPtr logger();
+		static light4cxx::Logger::Ptr logger();
 };
 
 } // namespace ppp

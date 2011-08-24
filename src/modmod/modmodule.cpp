@@ -101,10 +101,10 @@ static IdMetaInfo findMeta(BinStream* stream) {
 
 bool ModModule::load(const std::string& filename)
 {
-	LOG4CXX_INFO(logger(), boost::format("Opening '%s'")%filename);
+	logger()->info(L4CXX_LOCATION, boost::format("Opening '%s'")%filename);
 	FBinStream stream(filename);
 	if(!stream.isOpen()) {
-		LOG4CXX_WARN(logger(), "Could not open file");
+		logger()->warn(L4CXX_LOCATION, "Could not open file");
 		return false;
 	}
 	setFilename(filename);
@@ -115,14 +115,14 @@ bool ModModule::load(const std::string& filename)
 	stream.read(modName, 20);
 	setTitle( stringncpy(modName, 20) );
 	// check 31-sample mod
-	LOG4CXX_INFO(logger(), "Probing meta-info for 31-sample mod...");
+	logger()->info(L4CXX_LOCATION, "Probing meta-info for 31-sample mod...");
 	stream.seek(1080);
 	IdMetaInfo meta = findMeta(&stream);
 	if(meta.channels == 0) {
-		LOG4CXX_WARN(logger(), "Could not find a valid module ID");
+		logger()->warn(L4CXX_LOCATION, "Could not find a valid module ID");
 		return false;
 	}
-	LOG4CXX_DEBUG(logger(), boost::format("%d-channel, ID '%s', Tracker '%s'")%(int)meta.channels%meta.id%meta.tracker);
+	logger()->debug(L4CXX_LOCATION, boost::format("%d-channel, ID '%s', Tracker '%s'")%(meta.channels+0)%meta.id%meta.tracker);
 	setTrackerInfo(meta.tracker);
 	for(int i=0; i<meta.channels; i++) {
 		m_channels.push_back( ModChannel::Ptr(new ModChannel(this)) );
@@ -131,7 +131,7 @@ bool ModModule::load(const std::string& filename)
 	for(uint8_t i=0; i<31; i++) {
 		ModSample::Ptr smp(new ModSample());
 		if(!smp->loadHeader(stream)) {
-			LOG4CXX_WARN(logger(), "Sample header could not be loaded");
+			logger()->warn(L4CXX_LOCATION, "Sample header could not be loaded");
 			return false;
 		}
 		m_samples.push_back(smp);
@@ -145,7 +145,7 @@ bool ModModule::load(const std::string& filename)
 		if(songLen>128) {
 			songLen = 128;
 		}
-		LOG4CXX_DEBUG(logger(), boost::format("Song length: %d")%(int)songLen);
+		logger()->debug(L4CXX_LOCATION, boost::format("Song length: %d")%(songLen+0));
 		uint8_t tmp;
 		stream.read(&tmp); // skip the restart pos
 		for(uint8_t i=0; i<128; i++) {
@@ -167,22 +167,22 @@ bool ModModule::load(const std::string& filename)
 		}
 	}
 	stream.seekrel(4); // skip the ID
-	LOG4CXX_DEBUG(logger(), boost::format("%d patterns @ %#x")%(int)maxPatNum%stream.pos());
+	logger()->debug(L4CXX_LOCATION, boost::format("%d patterns @ %#x")%(maxPatNum+0)%stream.pos());
 	for(uint8_t i=0; i<=maxPatNum; i++) {
 		ModPattern::Ptr pat(new ModPattern());
 		if(!pat->load(stream, meta.channels)) {
-			LOG4CXX_WARN(logger(), "Could not load pattern");
+			logger()->warn(L4CXX_LOCATION, "Could not load pattern");
 			return false;
 		}
 		m_patterns.push_back(pat);
 	}
-	LOG4CXX_DEBUG(logger(), boost::format("Sample start @ %#x")%stream.pos());
+	logger()->debug(L4CXX_LOCATION, boost::format("Sample start @ %#x")%stream.pos());
 	for(const ModSample::Ptr& smp : m_samples) {
 		if(!smp->loadData(stream)) {
-			LOG4CXX_WARN(logger(), "Could not load sample data");
+			logger()->warn(L4CXX_LOCATION, "Could not load sample data");
 		}
 	}
-	LOG4CXX_DEBUG(logger(), boost::format("pos=%#x size=%#x delta=%#x")%stream.pos()%stream.size()%(stream.size()-stream.pos()));
+	logger()->debug(L4CXX_LOCATION, boost::format("pos=%#x size=%#x delta=%#x")%stream.pos()%stream.size()%(stream.size()-stream.pos()));
 	return stream.good();
 }
 
@@ -197,12 +197,12 @@ void ModModule::buildTick(AudioFrameBuffer& buf)
 		//buf->resize(getTickBufLen());
 		//buf->clear();
 		if(!adjustPosition(false, false)) {
-			LOG4CXX_INFO(logger(), "Song end reached: adjustPosition() failed");
+			logger()->info(L4CXX_LOCATION, "Song end reached: adjustPosition() failed");
 			buf.reset();
 			return;
 		}
 		if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat()) {
-			LOG4CXX_INFO(logger(), "Song end reached: Maximum repeat count reached");
+			logger()->info(L4CXX_LOCATION, "Song end reached: Maximum repeat count reached");
 			buf.reset();
 			return;
 		}
@@ -379,15 +379,15 @@ bool ModModule::initialize(uint32_t frq)
 	addMultiSong( StateIterator() );
 	multiSongAt(currentSongIndex()).newState()->archive(this).finishSave();
 	// calculate total length...
-	LOG4CXX_INFO(logger(), "Calculating track lengths and preparing seek operations...");
+	logger()->info(L4CXX_LOCATION, "Calculating track lengths and preparing seek operations...");
 	do {
-		LOG4CXX_INFO(logger(), boost::format("Pre-processing Track %d") % currentSongIndex());
+		logger()->info(L4CXX_LOCATION, boost::format("Pre-processing Track %d") % currentSongIndex());
 		size_t currTickLen = 0;
 		do {
 			simulateTick(currTickLen);
 			multiSongLengthAt(currentSongIndex()) += currTickLen;
 		} while(currTickLen != 0);
-		LOG4CXX_INFO(logger(), "Preprocessed.");
+		logger()->info(L4CXX_LOCATION, "Preprocessed.");
 		for(size_t i=0; i<orderCount(); i++) {
 			BOOST_ASSERT(orderAt(i).use_count()>0);
 			if(orderAt(i)->playbackCount()==0) {
@@ -396,10 +396,10 @@ bool ModModule::initialize(uint32_t frq)
 				break;
 			}
 		}
-		LOG4CXX_INFO(logger(), "Trying to jump to the next song");
+		logger()->info(L4CXX_LOCATION, "Trying to jump to the next song");
 	} while(jumpNextSong());
 	if(songCount() > 0) {
-		LOG4CXX_INFO(logger(), "Preprocessed.");
+		logger()->info(L4CXX_LOCATION, "Preprocessed.");
 		IAudioSource::LockGuard guard(this);
 		multiSongAt(0).currentState()->archive(this).finishLoad();
 	}
@@ -421,7 +421,7 @@ bool ModModule::jumpNextOrder()
 bool ModModule::jumpNextSong()
 {
 	if(!isMultiSong()) {
-		LOG4CXX_INFO(logger(), "This is not a multi-song");
+		logger()->info(L4CXX_LOCATION, "This is not a multi-song");
 		return false;
 	}
 	BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
@@ -452,7 +452,7 @@ bool ModModule::jumpNextSong()
 		setPatternIndex(mapOrder(playbackInfo().order)->index());
 		return true;
 	}
-	LOG4CXX_FATAL(logger(), "This should definitively NOT have happened...");
+	logger()->fatal(L4CXX_LOCATION, "This should definitively NOT have happened...");
 	return false;
 }
 
@@ -470,11 +470,11 @@ bool ModModule::jumpPrevOrder()
 bool ModModule::jumpPrevSong()
 {
 	if(!isMultiSong()) {
-		LOG4CXX_INFO(logger(), "This is not a multi-song");
+		logger()->info(L4CXX_LOCATION, "This is not a multi-song");
 		return false;
 	}
 	if(currentSongIndex() == 0) {
-		LOG4CXX_INFO(logger(), "Already on first song");
+		logger()->info(L4CXX_LOCATION, "Already on first song");
 		return false;
 	}
 	setCurrentSongIndex(currentSongIndex() - 1);
@@ -564,7 +564,7 @@ void ModModule::checkGlobalFx()
 					else { // we got an "infinite" loop...
 						m_patLoopCount = 127;
 						m_breakRow = m_patLoopRow;
-						LOG4CXX_WARN(logger(), "Infinite pattern loop detected");
+						logger()->warn(L4CXX_LOCATION, "Infinite pattern loop detected");
 					}
 				}
 			}
@@ -601,7 +601,7 @@ void ModModule::checkGlobalFx()
 			}
 			else if(fx == 0x0d) {
 				m_breakRow = highNibble(fxVal) * 10 + lowNibble(fxVal);
-				LOG4CXX_INFO(logger(), boost::format("Row %1%: Break pattern to row %2%")%playbackInfo().row%(int)m_breakRow);
+				logger()->info(L4CXX_LOCATION, boost::format("Row %1%: Break pattern to row %2%")%playbackInfo().row%(m_breakRow+0));
 			}
 		}
 	}
@@ -619,9 +619,9 @@ ModPattern::Ptr ModModule::getPattern(size_t idx) const
 	return m_patterns.at(idx);
 }
 
-log4cxx::LoggerPtr ModModule::logger()
+light4cxx::Logger::Ptr ModModule::logger()
 {
-	return log4cxx::Logger::getLogger( GenModule::logger()->getName() + ".mod" );
+	return light4cxx::Logger::get( GenModule::logger()->name() + ".mod" );
 }
 
 

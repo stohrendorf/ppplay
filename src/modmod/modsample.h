@@ -44,7 +44,7 @@ public:
 private:
 	uint8_t m_finetune;
 protected:
-	static log4cxx::LoggerPtr logger();
+	static light4cxx::Logger::Ptr logger();
 };
 
 }

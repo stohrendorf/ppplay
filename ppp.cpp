@@ -37,11 +37,7 @@
 #include <boost/program_options.hpp>
 #include <boost/format.hpp>
 
-#include <log4cxx/logger.h>
-#include <log4cxx/defaultconfigurator.h>
-#include <log4cxx/logmanager.h>
-#include <log4cxx/consoleappender.h>
-#include <log4cxx/patternlayout.h>
+#include "light4cxx/logger.h"
 
 #include <SDL.h>
 
@@ -108,22 +104,25 @@ static bool parseCmdLine( int argc, char* argv[] ) {
 
 	switch(loglevel) {
 		case 0:
-			log4cxx::Logger::getRootLogger()->setLevel( log4cxx::Level::getOff() );
+			light4cxx::Logger::setLevel( light4cxx::Level::Off );
 			break;
 		case 1:
-			log4cxx::Logger::getRootLogger()->setLevel( log4cxx::Level::getError() );
+			light4cxx::Logger::setLevel( light4cxx::Level::Error );
 			break;
 		case 2:
-			log4cxx::Logger::getRootLogger()->setLevel( log4cxx::Level::getWarn() );
+			light4cxx::Logger::setLevel( light4cxx::Level::Warn );
 			break;
 		case 3:
-			log4cxx::Logger::getRootLogger()->setLevel( log4cxx::Level::getInfo() );
+			light4cxx::Logger::setLevel( light4cxx::Level::Info );
 			break;
 		case 4:
-			log4cxx::Logger::getRootLogger()->setLevel( log4cxx::Level::getDebug() );
+			light4cxx::Logger::setLevel( light4cxx::Level::Debug );
+			break;
+		case 5:
+			light4cxx::Logger::setLevel( light4cxx::Level::Trace );
 			break;
 		default:
-			log4cxx::Logger::getRootLogger()->setLevel( log4cxx::Level::getAll() );
+			light4cxx::Logger::setLevel( light4cxx::Level::All );
 	}
 
 	using std::cout;
@@ -193,12 +192,12 @@ static bool parseCmdLine( int argc, char* argv[] ) {
 }
 
 int main( int argc, char* argv[] ) {
-	log4cxx::DefaultConfigurator::configure( log4cxx::LogManager::getLoggerRepository() );
-	log4cxx::LogManager::getRootLogger()->addAppender( new log4cxx::ConsoleAppender(new log4cxx::PatternLayout("[%-5p %rms %c] %m%n")) );
+/*	log4cxx::DefaultConfigurator::configure( log4cxx::LogManager::getLoggerRepository() );
+	log4cxx::LogManager::getRootLogger()->addAppender( new log4cxx::ConsoleAppender(new log4cxx::PatternLayout("[%-5p %rms %c] %m%n")) );*/
 	try {
 		if( !parseCmdLine(argc,argv) )
 			return EXIT_SUCCESS;
-		LOG4CXX_INFO(log4cxx::Logger::getRootLogger(), boost::format("Trying to load '%s'")%config::filename );
+		light4cxx::Logger::root()->info(L4CXX_LOCATION, boost::format("Trying to load '%s'")%config::filename );
 		ppp::GenModule::Ptr module;
 		try {
 			module = ppp::s3m::S3mModule::factory( config::filename, 44100, config::maxRepeat );
@@ -207,14 +206,14 @@ int main( int argc, char* argv[] ) {
 				if( !module ) {
 					module = ppp::mod::ModModule::factory( config::filename, 44100, config::maxRepeat );
 					if(!module) {
-						LOG4CXX_ERROR(log4cxx::Logger::getRootLogger(), "Error on loading the mod..." );
+						light4cxx::Logger::root()->error(L4CXX_LOCATION, "Error on loading the mod..." );
 						return EXIT_FAILURE;
 					}
 				}
 			}
 		}
 		catch( ... ) {
-			LOG4CXX_FATAL(log4cxx::Logger::getRootLogger(), boost::format("Main: %s") % boost::current_exception_diagnostic_information() );
+			light4cxx::Logger::root()->fatal(L4CXX_LOCATION, boost::format("Main: %s") % boost::current_exception_diagnostic_information() );
 			return EXIT_FAILURE;
 		}
 		if( !config::noGUI ) {
@@ -225,10 +224,10 @@ int main( int argc, char* argv[] ) {
 #ifdef WITH_MP3LAME
 		if( !config::quickMp3 ) {
 #endif
-			LOG4CXX_INFO(log4cxx::Logger::getRootLogger(), "Init Audio" );
+			light4cxx::Logger::root()->info(L4CXX_LOCATION, "Init Audio" );
 			output.reset( new SDLAudioOutput( module ) );
 			if( !output->init( 44100 ) ) {
-				LOG4CXX_FATAL(log4cxx::Logger::getRootLogger(), "Audio Init failed" );
+				light4cxx::Logger::root()->fatal(L4CXX_LOCATION, "Audio Init failed" );
 				return EXIT_FAILURE;
 			}
 			output->play();
@@ -297,16 +296,16 @@ int main( int argc, char* argv[] ) {
 #ifdef WITH_MP3LAME
 		}
 		else {   // if(mp3File.is_open()) { // quickMp3
-			LOG4CXX_INFO(log4cxx::Logger::getRootLogger(), "QuickMP3 Output Mode" );
+			light4cxx::Logger::root()->info(L4CXX_LOCATION, "QuickMP3 Output Mode" );
 			MP3AudioOutput* mp3out = new MP3AudioOutput( module, config::filename + ".mp3" );
 			output.reset( mp3out );
 			mp3out->setID3( module->trimmedTitle(), PACKAGE_STRING, module->trackerInfo() );
 			if( 0 == mp3out->init( 44100 ) ) {
 				if( mp3out->errorCode() == IAudioOutput::OutputUnavailable ) {
-					LOG4CXX_ERROR(log4cxx::Logger::getRootLogger(), "LAME unavailable: Maybe cannot create MP3 File" );
+					light4cxx::Logger::root()->error(L4CXX_LOCATION, "LAME unavailable: Maybe cannot create MP3 File" );
 				}
 				else {
-					LOG4CXX_ERROR(log4cxx::Logger::getRootLogger(), boost::format("LAME initialization error: '%s'") % mp3out->errorCode() );
+					light4cxx::Logger::root()->error(L4CXX_LOCATION, boost::format("LAME initialization error: '%s'") % mp3out->errorCode() );
 				}
 				return EXIT_FAILURE;
 			}
@@ -321,7 +320,7 @@ int main( int argc, char* argv[] ) {
 #endif
 	}
 	catch( ... ) {
-		LOG4CXX_FATAL(log4cxx::Logger::getRootLogger(), boost::format("Main (end): %s") % boost::current_exception_diagnostic_information() );
+		light4cxx::Logger::root()->fatal(L4CXX_LOCATION, boost::format("Main (end): %s") % boost::current_exception_diagnostic_information() );
 		return EXIT_FAILURE;
 	}
 	//for(const log4cxx::LoggerPtr& l : log4cxx::LogManager::getCurrentLoggers()) {

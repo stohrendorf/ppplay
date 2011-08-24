@@ -60,7 +60,7 @@ private:
 	uint8_t m_effectValue;
 	std::string m_note;
 protected:
-	static log4cxx::LoggerPtr logger();
+	static light4cxx::Logger::Ptr logger();
 };
 
 }

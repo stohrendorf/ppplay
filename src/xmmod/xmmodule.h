@@ -152,7 +152,7 @@ class XmModule : public GenModule {
 		bool isRunningPatDelay() const;
 		void doPatDelay(uint8_t counter);
 	protected:
-		static log4cxx::LoggerPtr logger();
+		static light4cxx::Logger::Ptr logger();
 };
 
 } // namespace xm

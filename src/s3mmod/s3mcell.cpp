@@ -51,7 +51,7 @@ bool S3mCell::load(BinStream& str) {
 			str.read(&buf);
 			m_note = buf;
 			if((m_note >= 0x9b) && (m_note != s3mEmptyNote) && (m_note != s3mKeyOffNote)) {
-				LOG4CXX_WARN(logger(), boost::format("File Position %#x: Note out of range: %d")%str.pos()%m_note);
+				logger()->warn(L4CXX_LOCATION, boost::format("File Position %#x: Note out of range: %d")%str.pos()%(m_note+0));
 				m_note = s3mEmptyNote;
 			}
 			str.read(&buf);
@@ -61,7 +61,7 @@ bool S3mCell::load(BinStream& str) {
 			str.read(&buf);
 			m_volume = buf;
 			if(buf > 0x40) {
-				LOG4CXX_WARN(logger(), boost::format("File Position %#x: Volume out of range: %d")%str.pos()%m_volume);
+				logger()->warn(L4CXX_LOCATION, boost::format("File Position %#x: Volume out of range: %d")%str.pos()%(m_volume+0));
 				m_volume = s3mEmptyVolume;
 			}
 		}
@@ -140,9 +140,9 @@ IArchive& S3mCell::serialize(IArchive* data) {
 	return *data;
 }
 
-log4cxx::LoggerPtr S3mCell::logger()
+light4cxx::Logger::Ptr S3mCell::logger()
 {
-	return log4cxx::Logger::getLogger( IPatternCell::logger()->getName() + ".s3m" );
+	return light4cxx::Logger::get( IPatternCell::logger()->name() + ".s3m" );
 }
 
 }

@@ -27,7 +27,7 @@
 #include "genmod/gensample.h"
 #include "stream/binstream.h"
 
-#include <log4cxx/logger.h>
+#include "light4cxx/logger.h"
 
 namespace ppp {
 namespace s3m {
@@ -61,7 +61,7 @@ class S3mSample : public GenSample {
 		 */
 		bool isHighQuality() const;
 	protected:
-		static log4cxx::LoggerPtr logger();
+		static light4cxx::Logger::Ptr logger();
 };
 
 } // namespace ppp

@@ -75,15 +75,15 @@ bool S3mSample::load(BinStream& str, const size_t pos, bool imagoLoopEnd) {
 		if((smpHdr.length == 0) || ((smpHdr.memSeg[0] == 0) && (smpHdr.memSeg[1] == 0) && (smpHdr.memSeg[2] == 0)))
 			return true;
 		if(!std::equal(smpHdr.ID, smpHdr.ID + 4, "SCRS")) {
-			LOG4CXX_WARN(logger(), "Sample ID not 'SCRS', assuming empty.");
+			logger()->warn(L4CXX_LOCATION, "Sample ID not 'SCRS', assuming empty.");
 			return true;
 		}
 		if(smpHdr.pack != 0) {
-			LOG4CXX_ERROR(logger(), "Packed sample, not supported.");
+			logger()->error(L4CXX_LOCATION, "Packed sample, not supported.");
 			return false;
 		}
 		if(smpHdr.type != 1) {
-			LOG4CXX_WARN(logger(), boost::format("Sample Type not 0x01 (is %#.2x), assuming empty.")%smpHdr.type);
+			logger()->warn(L4CXX_LOCATION, boost::format("Sample Type not 0x01 (is %#.2x), assuming empty.")%smpHdr.type);
 			return true;
 		}
 		/// @warning This could be a much too high value...
@@ -107,7 +107,7 @@ bool S3mSample::load(BinStream& str, const size_t pos, bool imagoLoopEnd) {
 		BOOST_ASSERT(length() != 0);
 		if(str.fail()) {
 			setFrequency(0);
-			LOG4CXX_WARN(logger(), "Seek failed or length is zero, assuming empty.");
+			logger()->warn(L4CXX_LOCATION, "Seek failed or length is zero, assuming empty.");
 			return true;
 		}
 		if(loadStereo) {
@@ -121,25 +121,25 @@ bool S3mSample::load(BinStream& str, const size_t pos, bool imagoLoopEnd) {
 			std::fill_n(nonConstDataR(), length(), 0);
 		}
 		if(smpHdr.flags & s3mFlagSmp16bit) {
-			LOG4CXX_INFO(logger(), "Loading 16-bit sample");
+			logger()->info(L4CXX_LOCATION, "Loading 16-bit sample");
 			m_highQuality = true;
 			uint16_t smp16;
 			BasicSample* smpPtr = nonConstDataL();
 			for(uint32_t i = 0; i < length(); i++) {
 				str.read(&smp16);
 				if(str.fail()) {
-					LOG4CXX_WARN(logger(), "EOF reached before Sample Data read completely, assuming zeroes.");
+					logger()->warn(L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes.");
 					return true;
 				}
 				*(smpPtr++) = clip(smp16 - 32768, -32767, 32767);     // negating -32768 fails otherwise in surround mode
 			}
 			if(loadStereo) {
-				LOG4CXX_INFO(logger(), "Loading Stereo...");
+				logger()->info(L4CXX_LOCATION, "Loading Stereo...");
 				smpPtr = nonConstDataR();
 				for(uint32_t i = 0; i < length(); i++) {
 					str.read(&smp16);
 					if(str.fail()) {
-						LOG4CXX_WARN(logger(), "EOF reached before Sample Data read completely, assuming zeroes.");
+						logger()->warn(L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes.");
 						return true;
 					}
 					*(smpPtr++) = clip(smp16 - 32768, -32767, 32767);     // negating -32768 fails otherwise in surround mode
@@ -147,24 +147,24 @@ bool S3mSample::load(BinStream& str, const size_t pos, bool imagoLoopEnd) {
 			}
 		}
 		else { // convert 8-bit samples to 16-bit ones
-			LOG4CXX_INFO(logger(), "Loading 8-bit sample");
+			logger()->info(L4CXX_LOCATION, "Loading 8-bit sample");
 			uint8_t smp8;
 			BasicSample* smpPtr = nonConstDataL();
 			for(uint32_t i = 0; i < length(); i++) {
 				str.read(&smp8);
 				if(str.fail()) {
-					LOG4CXX_WARN(logger(), "EOF reached before Sample Data read completely, assuming zeroes.");
+					logger()->warn(L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes.");
 					return true;
 				}
 				*(smpPtr++) = clip((smp8 - 128) << 8, -32767, 32767);       // negating -32768 fails otherwise in surround mode
 			}
 			if(loadStereo) {
-				LOG4CXX_INFO(logger(), "Loading Stereo...");
+				logger()->info(L4CXX_LOCATION, "Loading Stereo...");
 				smpPtr = nonConstDataR();
 				for(uint32_t i = 0; i < length(); i++) {
 					str.read(&smp8);
 					if(str.fail()) {
-						LOG4CXX_WARN(logger(), "EOF reached before Sample Data read completely, assuming zeroes.");
+						logger()->warn(L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes.");
 						return true;
 					}
 					*(smpPtr++) = clip((smp8 - 128) << 8, -32767, 32767);       // negating -32768 fails otherwise in surround mode
@@ -185,9 +185,9 @@ bool S3mSample::isHighQuality() const {
 	return m_highQuality;
 }
 
-log4cxx::LoggerPtr S3mSample::logger()
+light4cxx::Logger::Ptr S3mSample::logger()
 {
-	return log4cxx::Logger::getLogger( GenSample::logger()->getName() + ".s3m" );
+	return light4cxx::Logger::get( GenSample::logger()->name() + ".s3m" );
 }
 
 }

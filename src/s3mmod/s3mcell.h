@@ -83,7 +83,7 @@ class S3mCell : public IPatternCell {
 		uint8_t effectValue() const;
 		virtual IArchive& serialize(IArchive* data);
 	protected:
-		static log4cxx::LoggerPtr logger();
+		static light4cxx::Logger::Ptr logger();
 };
 
 }

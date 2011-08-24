@@ -54,9 +54,9 @@ uint8_t GenOrder::increasePlaybackCount()
 	return ++m_playbackCount;
 }
 
-log4cxx::LoggerPtr GenOrder::logger()
+light4cxx::Logger::Ptr GenOrder::logger()
 {
-	return log4cxx::Logger::getLogger("order");
+	return light4cxx::Logger::get("order");
 }
 
 }

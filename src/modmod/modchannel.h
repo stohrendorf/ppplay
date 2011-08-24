@@ -107,7 +107,7 @@ private:
 	ModSample::Ptr currentSample() const;
 	void applyGlissando();
 protected:
-	static log4cxx::LoggerPtr logger();
+	static light4cxx::Logger::Ptr logger();
 };
 
 }

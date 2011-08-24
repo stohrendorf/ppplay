@@ -85,7 +85,7 @@ class XmPattern {
 		 */
 		static XmPattern::Ptr createDefaultPattern(int16_t chans);
 	protected:
-		static log4cxx::LoggerPtr logger();
+		static light4cxx::Logger::Ptr logger();
 };
 
 } // namespace xm

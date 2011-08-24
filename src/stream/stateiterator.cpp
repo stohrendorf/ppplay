@@ -24,17 +24,17 @@
 #include "stateiterator.h"
 #include "memarchive.h"
 
-#include <log4cxx/logger.h>
+#include "light4cxx/logger.h"
 #include <boost/format.hpp>
 
-static log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("stateiterator");
+static light4cxx::Logger::Ptr logger = light4cxx::Logger::get("stateiterator");
 
 StateIterator::StateIterator() : m_states(), m_stateIndex(0) {
 }
 
 IArchive::Ptr StateIterator::newState() {
 	IArchive::Ptr p(new MemArchive());
-	LOG4CXX_INFO(logger, boost::format("Creating new state %d")%m_states.size());
+	logger->info(L4CXX_LOCATION, boost::format("Creating new state %d")%m_states.size());
 	m_states.push_back(p);
 	return p;
 }
@@ -44,7 +44,7 @@ IArchive::Ptr StateIterator::nextState() {
 		return IArchive::Ptr();
 	}
 	m_stateIndex++;
-	LOG4CXX_INFO(logger, boost::format("Loading state %d")%m_stateIndex);
+	logger->info(L4CXX_LOCATION, boost::format("Loading state %d of %d")%m_stateIndex%m_states.size());
 	return m_states.at(m_stateIndex);
 }
 
@@ -53,7 +53,7 @@ IArchive::Ptr StateIterator::prevState() {
 		return IArchive::Ptr();
 	}
 	m_stateIndex--;
-	LOG4CXX_INFO(logger, boost::format("Loading state %d")%m_stateIndex);
+	logger->info(L4CXX_LOCATION, boost::format("Loading state %d of %d")%m_stateIndex%m_states.size());
 	return m_states.at(m_stateIndex);
 }
 

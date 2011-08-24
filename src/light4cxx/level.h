@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
+    Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,41 +16,22 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef GENBASE_H
-#define GENBASE_H
+#ifndef LEVEL_H
+#define LEVEL_H
 
-/**
- * @ingroup GenMod
- * @{
- */
+namespace light4cxx {
 
-#include "stuff/utils.h"
+enum class Level {
+	All,
+	Trace,
+	Debug,
+	Info,
+	Warn,
+	Error,
+	Fatal,
+	Off
+};
 
-#include "light4cxx/logger.h"
-
-#include <array>
-
-namespace ppp {
-
-/**
- * @brief General note names
- */
-extern const std::array<const char[3], 12> NoteNames;
-
-/**
- * @brief Clip/convert a signed sample to a signed 16-bit PCM value
- * @param[in] smp Sample to be clipped
- * @return Clipped 16-bit sample
- * @note Time-critical
- */
-inline int16_t clipSample(int32_t smp) {
-	return clip(smp, -32768, 32767);
 }
-
-} // namespace ppp
-
-/**
- * @}
- */
 
 #endif

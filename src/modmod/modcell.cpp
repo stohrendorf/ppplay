@@ -50,7 +50,7 @@ bool ModCell::load(BinStream& str)
 	str.read(&tmp);
 	m_sampleNumber = tmp&0xf0;
 	if(m_sampleNumber>32) {
-		LOG4CXX_WARN(logger(), boost::format("Sample out of range: %d") % m_sampleNumber);
+		logger()->warn(L4CXX_LOCATION, boost::format("Sample out of range: %d") % (m_sampleNumber+0));
 	}
 	m_sampleNumber &= 0x1f;
 	m_period = (tmp&0x0f)<<8;
@@ -68,7 +68,7 @@ bool ModCell::load(BinStream& str)
 			m_note = ppp::stringf("%s%u", NoteNames[idx%12], idx/12);
 		}
 		else {
-			LOG4CXX_WARN(logger(), boost::format("Period %d too low: Cannot find matching note name.") % m_period);
+			logger()->warn(L4CXX_LOCATION, boost::format("Period %d too low: Cannot find matching note name.") % m_period);
 			m_note = "^^^";
 		}
 	}
@@ -142,9 +142,9 @@ IArchive& ModCell::serialize(IArchive* data)
 	return *data;
 }
 
-log4cxx::LoggerPtr ModCell::logger()
+light4cxx::Logger::Ptr ModCell::logger()
 {
-	return log4cxx::Logger::getLogger( IPatternCell::logger()->getName() + ".mod" );
+	return light4cxx::Logger::get( IPatternCell::logger()->name() + ".mod" );
 }
 
 

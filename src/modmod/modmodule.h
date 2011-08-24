@@ -78,7 +78,7 @@ public:
 	ModSample::Ptr sampleAt(size_t idx) const;
 	bool existsSample(size_t idx) const;
 protected:
-	static log4cxx::LoggerPtr logger();
+	static light4cxx::Logger::Ptr logger();
 };
 
 }

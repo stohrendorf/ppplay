@@ -70,7 +70,7 @@ int SDLAudioOutput::init(int desiredFrq) {
 	desired->callback = sdlAudioCallback;
 	desired->userdata = this;
 	if(SDL_OpenAudio(desired.get(), obtained.get()) < 0) {
-		LOG4CXX_FATAL(logger(), boost::format("Couldn't open audio. SDL reports '%s'")%SDL_GetError());
+		logger()->fatal(L4CXX_LOCATION, boost::format("Couldn't open audio. SDL reports '%s'")%SDL_GetError());
 		setErrorCode( OutputError );
 		return 0;
 	}
@@ -81,7 +81,7 @@ int SDLAudioOutput::init(int desiredFrq) {
 	desiredFrq = desired->freq;
 	char driverName[256];
 	if(SDL_AudioDriverName(driverName, 255)) {
-		LOG4CXX_INFO(logger(), boost::format("Using audio driver '%s'")%driverName);
+		logger()->info(L4CXX_LOCATION, boost::format("Using audio driver '%s'")%driverName);
 	}
 	setErrorCode( NoError );
 	return desiredFrq;
@@ -119,7 +119,7 @@ uint16_t SDLAudioOutput::volumeRight() const {
 	return m_fifo.volumeRight();
 }
 
-log4cxx::LoggerPtr SDLAudioOutput::logger()
+light4cxx::Logger::Ptr SDLAudioOutput::logger()
 {
-	return log4cxx::Logger::getLogger( IAudioOutput::logger()->getName() + ".sdl" );
+	return light4cxx::Logger::get( IAudioOutput::logger()->name() + ".sdl" );
 }

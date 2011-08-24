@@ -87,7 +87,7 @@ class MP3AudioOutput : public IAudioOutput {
 		 */
 		void setID3(const std::string& title, const std::string& album, const std::string& artist);
 	protected:
-		static log4cxx::LoggerPtr logger();
+		static light4cxx::Logger::Ptr logger();
 };
 
 /**

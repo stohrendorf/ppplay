@@ -69,7 +69,7 @@ bool ModSample::loadHeader(BinStream& stream)
 		setLoopType(LoopType::Forward);
 	}
 	setTitle( stringncpy(hdr.name, 22) );
-	LOG4CXX_DEBUG(logger(), boost::format("Length=%u, loop=%u+%u=%u, name='%s'")%length()%hdr.loopStart%hdr.loopLength%(hdr.loopStart+hdr.loopLength)%title());
+	logger()->debug(L4CXX_LOCATION, boost::format("Length=%u, loop=%u+%u=%u, name='%s'")%length()%hdr.loopStart%hdr.loopLength%(hdr.loopStart+hdr.loopLength)%title());
 // 	LOG_DEBUG("Loading sample (length=%u, loop=%u+%u=%u, name='%s', vol=%u)", length(), hdr.loopStart, hdr.loopLength, hdr.loopStart+hdr.loopLength, title().c_str(), hdr.volume);
 	setVolume( std::min<uint8_t>( hdr.volume, 0x40 ) );
 	m_finetune = hdr.finetune&0x0f;
@@ -82,7 +82,7 @@ bool ModSample::loadData(BinStream& stream)
 		return true;
 	}
 	if(stream.pos()+length()>stream.size()) {
-		LOG4CXX_WARN(logger(), boost::format("File truncated: %u bytes requested while only %u bytes left. Truncating sample.")%length()%(stream.size()-stream.pos()));
+		logger()->warn(L4CXX_LOCATION, boost::format("File truncated: %u bytes requested while only %u bytes left. Truncating sample.")%length()%(stream.size()-stream.pos()));
 		setLength( stream.size()-stream.pos() );
 	}
 	setDataMono( new BasicSample[length()] );
@@ -100,9 +100,9 @@ uint8_t ModSample::finetune() const
 	return m_finetune;
 }
 
-log4cxx::LoggerPtr ModSample::logger()
+light4cxx::Logger::Ptr ModSample::logger()
 {
-	return log4cxx::Logger::getLogger( GenSample::logger()->getName() + ".mod" );
+	return light4cxx::Logger::get( GenSample::logger()->name() + ".mod" );
 }
 
 

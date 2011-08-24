@@ -79,11 +79,11 @@ bool XmModule::load(const std::string& filename) {
 	setFilename(filename);
 	file.read(reinterpret_cast<char*>(&hdr), sizeof(hdr));
 	if(!std::equal(hdr.id, hdr.id + 17, "Extended Module: ") || hdr.endOfFile != 0x1a /*|| hdr.numChannels > 32*/) {
-		LOG4CXX_WARN(logger(), "XM Header invalid");
+		logger()->warn(L4CXX_LOCATION, "XM Header invalid");
 		return false;
 	}
 	if(hdr.version != 0x0104) {
-		LOG4CXX_WARN(logger(), "Unsupported XM Version 0x" << std::hex << hdr.version);
+		logger()->warn(L4CXX_LOCATION, boost::format("Unsupported XM Version %#x")%hdr.version);
 		return false;
 	}
 	for(int i=0; i<(hdr.songLength&0xff); i++) {
@@ -118,7 +118,7 @@ bool XmModule::load(const std::string& filename) {
 	for(uint16_t i = 0; i < hdr.numPatterns; i++) {
 		XmPattern::Ptr pat(new XmPattern(hdr.numChannels));
 		if(!pat->load(file)) {
-			LOG4CXX_ERROR(logger(), "Pattern loading error");
+			logger()->error(L4CXX_LOCATION, "Pattern loading error");
 			return false;
 		}
 		m_patterns.push_back(pat);
@@ -129,7 +129,7 @@ bool XmModule::load(const std::string& filename) {
 	for(uint16_t i = 0; i < hdr.numInstruments; i++) {
 		XmInstrument::Ptr ins(new XmInstrument());
 		if(!ins->load(file)) {
-			LOG4CXX_ERROR(logger(), "Instrument loading error");
+			logger()->error(L4CXX_LOCATION, "Instrument loading error");
 			return false;
 		}
 		m_instruments.push_back(ins);
@@ -227,7 +227,7 @@ bool XmModule::adjustPosition(bool doStore) {
 		}
 		if(m_currentPatternDelay!=0) {
 			m_currentPatternDelay--;
-			LOG4CXX_DEBUG(logger(), boost::format("Pattern delay, %d rows left...")%m_currentPatternDelay);
+			logger()->debug(L4CXX_LOCATION, boost::format("Pattern delay, %d rows left...")%(m_currentPatternDelay+0));
 		}
 		if(m_isPatLoop || m_doPatJump) {
 			if(m_isPatLoop) {
@@ -600,7 +600,7 @@ bool XmModule::initialize(uint32_t frq) {
 		return true;
 	}
 	IAudioSource::initialize(frq);
-	LOG4CXX_INFO(logger(), "Calculating track length and preparing seek operations...");
+	logger()->info(L4CXX_LOCATION, "Calculating track length and preparing seek operations...");
 	size_t currTickLen = 0;
 // 	multiTrackAt(0).startOrder = playbackInfo().order;
 	do {
@@ -608,7 +608,7 @@ bool XmModule::initialize(uint32_t frq) {
 		multiSongLengthAt(0) += currTickLen;
 	}
 	while(currTickLen != 0);
-	LOG4CXX_INFO(logger(), "Preprocessed. Resetting module.");
+	logger()->info(L4CXX_LOCATION, "Preprocessed. Resetting module.");
 	if(songCount() > 0) {
 		IAudioSource::LockGuard guard(this);
 		multiSongAt(0).currentState()->archive(this).finishLoad();
@@ -646,9 +646,9 @@ void XmModule::doPatDelay(uint8_t counter)
 	m_requestedPatternDelay = counter+1;
 }
 
-log4cxx::LoggerPtr XmModule::logger()
+light4cxx::Logger::Ptr XmModule::logger()
 {
-	return log4cxx::Logger::getLogger( GenModule::logger()->getName() + ".xm" );
+	return light4cxx::Logger::get( GenModule::logger()->name() + ".xm" );
 }
 
 }

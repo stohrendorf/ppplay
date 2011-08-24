@@ -144,9 +144,9 @@ void GenSample::setVolume(uint8_t v) {
 	m_volume = v;
 }
 
-log4cxx::LoggerPtr GenSample::logger()
+light4cxx::Logger::Ptr GenSample::logger()
 {
-	return log4cxx::Logger::getLogger("sample");
+	return light4cxx::Logger::get("sample");
 }
 
 }

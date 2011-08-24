@@ -26,7 +26,7 @@
 
 #include "s3mcell.h"
 
-#include <log4cxx/logger.h>
+#include "light4cxx/logger.h"
 
 namespace ppp {
 namespace s3m {
@@ -67,7 +67,7 @@ class S3mPattern {
 		 */
 		S3mCell::Ptr cellAt(uint16_t chanIdx, int16_t row);
 	protected:
-		static log4cxx::LoggerPtr logger();
+		static light4cxx::Logger::Ptr logger();
 };
 
 } // namespace s3m

@@ -154,7 +154,7 @@ class S3mModule : public GenModule {
 		bool hasZeroVolOpt() const;
 		virtual bool initialize(uint32_t frq);
 	protected:
-		static log4cxx::LoggerPtr logger();
+		static light4cxx::Logger::Ptr logger();
 };
 } // namespace s3m
 } // namespace ppp

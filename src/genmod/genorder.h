@@ -27,7 +27,7 @@
 #include "stream/iserializable.h"
 #include "stuff/utils.h"
 
-#include <log4cxx/logger.h>
+#include "light4cxx/logger.h"
 
 #include <memory>
 
@@ -74,7 +74,7 @@ class GenOrder : public ISerializable {
 		 */
 		uint8_t increasePlaybackCount();
 	protected:
-		static log4cxx::LoggerPtr logger();
+		static light4cxx::Logger::Ptr logger();
 };
 
 }

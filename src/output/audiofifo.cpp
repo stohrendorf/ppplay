@@ -72,7 +72,7 @@ void AudioFifo::calcVolume(uint16_t& leftVol, uint16_t& rightVol) {
 }
 
 AudioFifo::AudioFifo(size_t frameCount) : m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_volumeLeft(0), m_volumeRight(0), m_queueMutex() {
-	LOG4CXX_DEBUG(logger(), boost::format("Initialized FIFO with %d frames minimum")%frameCount);
+	logger()->debug(L4CXX_LOCATION, boost::format("Initialized FIFO with %d frames minimum")%frameCount);
 }
 
 
@@ -108,7 +108,7 @@ size_t AudioFifo::pull(AudioFrameBuffer& data, size_t size) {
 	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
 	if(size == nsize || size > m_queuedFrames) {
 		if(size != nsize) {
-			LOG4CXX_WARN(logger(), boost::format("Requested %d frames while only %d frames in queue")%size%m_queuedFrames);
+			logger()->warn(L4CXX_LOCATION, boost::format("Requested %d frames while only %d frames in queue")%size%m_queuedFrames);
 		}
 		size = m_queuedFrames;
 	}
@@ -148,7 +148,7 @@ size_t AudioFifo::copy(AudioFrameBuffer& data, size_t size) {
 	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
 	if(size == nsize || size > m_queuedFrames) {
 		if(size != nsize) {
-			LOG4CXX_WARN(logger(), boost::format("Requested %d frames while only %d frames in queue")%size%m_queuedFrames);
+			logger()->warn(L4CXX_LOCATION, boost::format("Requested %d frames while only %d frames in queue")%size%m_queuedFrames);
 		}
 		size = m_queuedFrames;
 	}
@@ -206,9 +206,9 @@ size_t AudioFifo::minFrameCount() const {
 	return m_minFrameCount;
 }
 
-log4cxx::LoggerPtr AudioFifo::logger()
+light4cxx::Logger::Ptr AudioFifo::logger()
 {
-	return log4cxx::Logger::getLogger("audio.fifo");
+	return light4cxx::Logger::get("audio.fifo");
 }
 
 /**

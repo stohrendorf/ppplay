@@ -289,7 +289,9 @@ void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
 		return setActive(false);
 	}
 	BOOST_ASSERT(m_module && m_module->frequency() != 0);
-	LOG4CXX_ASSERT(logger(), mixBuffer->size() != 0, "mixBuffer is empty");
+	if(mixBuffer->empty()) {
+		logger()->error(L4CXX_LOCATION, "mixBuffer is empty");
+	}
 	if(m_module->frequency() * mixBuffer->size() == 0) {
 		setActive(false);
 		return;
@@ -481,7 +483,7 @@ void ModChannel::fxOffset(uint8_t fxByte)
 	}
 	else {
 		if(currentSample()) {
-			LOG4CXX_DEBUG(logger(), boost::format("Offset effect: length()=%d, request=%d")%currentSample()->length()%(fxByte<<8));
+			logger()->debug(L4CXX_LOCATION, boost::format("Offset effect: length()=%d, request=%d")%currentSample()->length()%(fxByte<<8));
 		}
 		//setActive(false);
 	}
@@ -632,7 +634,7 @@ void ModChannel::fxArpeggio(uint8_t fxByte)
 	for(uint8_t i=0; i<fullPeriods.at(m_finetune).size()-delta; i++) {
 		if(fullPeriods.at(m_finetune).at(i) <= m_period) {
 			m_physPeriod = fullPeriods.at(m_finetune).at(i+delta);
-			LOG4CXX_DEBUG(logger(), boost::format("Arpeggio: period=%d, physPeriod=%d, delta=%d, finetune=%d")%m_period%m_physPeriod%(delta+0)%(m_finetune+0));
+			logger()->debug(L4CXX_LOCATION, boost::format("Arpeggio: period=%d, physPeriod=%d, delta=%d, finetune=%d")%m_period%m_physPeriod%(delta+0)%(m_finetune+0));
 			return;
 		}
 	}
@@ -642,21 +644,21 @@ void ModChannel::fxArpeggio(uint8_t fxByte)
 void ModChannel::fxPatBreak(uint8_t fxByte)
 {
 	m_effectDescription = "PBrk \xf6";
-	LOG4CXX_WARN(logger(), "Not implemented: Effect Pattern Break");
+	logger()->warn(L4CXX_LOCATION, "Not implemented: Effect Pattern Break");
 	// TODO
 }
 
 void ModChannel::fxPosJmp(uint8_t fxByte)
 {
 	m_effectDescription = "JmOrd\x1a";
-	LOG4CXX_WARN(logger(), "Not implemented: Effect Position Jump");
+	logger()->warn(L4CXX_LOCATION, "Not implemented: Effect Position Jump");
 	// TODO
 }
 
 void ModChannel::fxSetFinePan(uint8_t fxByte)
 {
 	m_effectDescription = "StPan\x1d";
-	LOG4CXX_WARN(logger(), "Not implemented: Effect Fine Panning");
+	logger()->warn(L4CXX_LOCATION, "Not implemented: Effect Fine Panning");
 	// TODO
 }
 
@@ -693,7 +695,7 @@ void ModChannel::fxTremolo(uint8_t fxByte)
 void ModChannel::efxPatLoop(uint8_t fxByte)
 {
 	m_effectDescription = "PLoop\xe8";
-	LOG4CXX_WARN(logger(), "Not implemented: Effect Pattern Loop");
+	logger()->warn(L4CXX_LOCATION, "Not implemented: Effect Pattern Loop");
 	// TODO
 }
 
@@ -705,14 +707,14 @@ void ModChannel::efxNoteDelay(uint8_t /*fxByte*/)
 void ModChannel::efxSetPanning(uint8_t fxByte)
 {
 	m_effectDescription = "StPan\x1d";
-	LOG4CXX_WARN(logger(), "Not implemented: Effect Set Panning");
+	logger()->warn(L4CXX_LOCATION, "Not implemented: Effect Set Panning");
 	// TODO
 }
 
 void ModChannel::efxPatDelay(uint8_t fxByte)
 {
 	// TODO
-	LOG4CXX_WARN(logger(), "Not implemented: Effect Pattern Delay");
+	logger()->warn(L4CXX_LOCATION, "Not implemented: Effect Pattern Delay");
 }
 
 void ModChannel::efxRetrigger(uint8_t fxByte)
@@ -741,9 +743,9 @@ void ModChannel::applyGlissando()
 	m_physPeriod = fullPeriods.at(m_finetune).at( fullPeriods.at(m_finetune).size()-1 );
 }
 
-log4cxx::LoggerPtr ModChannel::logger()
+light4cxx::Logger::Ptr ModChannel::logger()
 {
-	return log4cxx::Logger::getLogger( GenChannel::logger()->getName() + ".mod" );
+	return light4cxx::Logger::get( GenChannel::logger()->name() + ".mod" );
 }
 
 }

@@ -78,9 +78,9 @@ bool GenChannel::isActive() const {
 	return m_active;
 }
 
-log4cxx::LoggerPtr GenChannel::logger()
+light4cxx::Logger::Ptr GenChannel::logger()
 {
-	return log4cxx::Logger::getLogger("channel");
+	return light4cxx::Logger::get("channel");
 }
 
 }

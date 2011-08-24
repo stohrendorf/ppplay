@@ -20,14 +20,14 @@
 
 #include "sdlscreen.h"
 
-#include <log4cxx/logger.h>
+#include "light4cxx/logger.h"
 
 #include <SDL.h>
 #include <SDL_endian.h>
 
 #include <boost/format.hpp>
 
-static log4cxx::LoggerPtr logger = log4cxx::Logger::getLogger("ppg.sdl");
+static light4cxx::Logger::Ptr logger = light4cxx::Logger::get("ppg.sdl");
 
 /**
  * @ingroup Ppg
@@ -129,7 +129,7 @@ SDLScreen* SDLScreen::instance()
 		{
 			char videoDrv[256];
 			if( SDL_VideoDriverName( videoDrv, 255 ) ) {
-				LOG4CXX_INFO( logger, boost::format("Using video driver '%s'")%videoDrv );
+				logger->info( L4CXX_LOCATION, boost::format("Using video driver '%s'")%videoDrv );
 			}
 		}
 		setPosition( 0, 0 );
@@ -254,7 +254,7 @@ SDLScreen* SDLScreen::instance()
 
 	void SDLScreen::drawChar( int x, int y, char c ) {
 		if( !area().contains( x, y ) ) {
-			LOG4CXX_ERROR( logger,  boost::format("Out of range: %d, %d")%x%y );
+			logger->error( L4CXX_LOCATION, boost::format("Out of range: %d, %d")%x%y );
 			return;
 		}
 		g_chars[x + y * area().width()] = c;

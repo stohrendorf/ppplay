@@ -27,9 +27,9 @@ namespace ppp {
 
 IPatternCell::~IPatternCell() = default;
 
-log4cxx::LoggerPtr IPatternCell::logger()
+light4cxx::Logger::Ptr IPatternCell::logger()
 {
-	return log4cxx::Logger::getLogger("cell");
+	return light4cxx::Logger::get("cell");
 }
 
 }

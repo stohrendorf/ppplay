@@ -45,21 +45,21 @@ XmPattern::XmPattern(int16_t chans) : m_columns(chans) {
 }
 
 bool XmPattern::load(BinStream& str) {
-	LOG4CXX_DEBUG(logger(), boost::format("Start: %#x")%str.pos());
+	logger()->debug(L4CXX_LOCATION, boost::format("Start: %#x")%str.pos());
 	uint32_t hdrLen;
 	str.read(&hdrLen);
-	LOG4CXX_DEBUG(logger(), boost::format("hdrLen=%d")%hdrLen);
+	logger()->debug(L4CXX_LOCATION, boost::format("hdrLen=%d")%hdrLen);
 	uint8_t packType;
 	str.read(&packType);
 	if(packType != 0) {
-		LOG4CXX_ERROR(logger(), boost::format("Unsupported Pattern pack type: %d")%packType);
+		logger()->error(L4CXX_LOCATION, boost::format("Unsupported Pattern pack type: %d")%(packType+0));
 		return false;
 	}
 	uint16_t rows;
 	str.read(&rows);
 	if(rows==0) {
 		// create a 64-row default pattern
-		LOG4CXX_DEBUG(logger(), "Number of rows = 0, creating 64-rows default pattern.");
+		logger()->debug(L4CXX_LOCATION, "Number of rows = 0, creating 64-rows default pattern.");
 		for(XmCell::Vector& chan : m_columns) {
 			for(int r = 0; r < 64; r++) {
 				chan.push_back(XmCell::Ptr(new XmCell()));
@@ -68,7 +68,7 @@ bool XmPattern::load(BinStream& str) {
 		return true;
 	}
 	else if(rows < 1 || rows > 256) {
-		LOG4CXX_WARN(logger(), boost::format("Number of rows out of range: %d")%rows);
+		logger()->warn(L4CXX_LOCATION, boost::format("Number of rows out of range: %d")%rows);
 		return false;
 	}
 	for(XmCell::Vector& chan : m_columns) {
@@ -76,7 +76,7 @@ bool XmPattern::load(BinStream& str) {
 	}
 	uint16_t packedSize;
 	str.read(&packedSize);
-	LOG4CXX_DEBUG(logger(), boost::format("Header end: %#x")%str.pos());
+	logger()->debug(L4CXX_LOCATION, boost::format("Header end: %#x")%str.pos());
 	str.seekrel(hdrLen - 9);   // copied from schismtracker
 	if(packedSize == 0) {
 /*		for(size_t i = 0; i < m_columns.size(); i++) {
@@ -128,9 +128,9 @@ XmPattern::Ptr XmPattern::createDefaultPattern(int16_t chans) {
 	return result;
 }
 
-log4cxx::LoggerPtr XmPattern::logger()
+light4cxx::Logger::Ptr XmPattern::logger()
 {
-	return log4cxx::Logger::getLogger( "pattern.xm" );
+	return light4cxx::Logger::get( "pattern.xm" );
 }
 
 }
