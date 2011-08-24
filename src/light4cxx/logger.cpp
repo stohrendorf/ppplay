@@ -67,7 +67,7 @@ static std::mutex outMutex;
 
 void Logger::log(light4cxx::Level l, const light4cxx::Location& loc, const std::string& str) const
 {
-	if(l < s_level || l==Level::Off) {
+	if(l < s_level || s_level==Level::Off) {
 		return;
 	}
 	std::lock_guard<std::mutex> outLock(outMutex);

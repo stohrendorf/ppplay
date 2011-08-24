@@ -1,3 +1,21 @@
+/*
+    PeePeePlayer - an old-fashioned module player
+    Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "location.h"
 
 #include "level.h"
@@ -5,10 +23,35 @@
 
 #include <stdexcept>
 #include <sstream>
+#include <time.h>
 
 namespace light4cxx {
 
-static std::string s_format = "[%T %-5t] %L: %m%n";
+static timespec s_processTime;
+static timespec s_realTime;
+
+void __attribute__((constructor)) initializer()
+{
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &s_processTime);
+	clock_gettime(CLOCK_REALTIME, &s_realTime);
+}
+
+static inline double processTime() {
+	timespec tmp;
+	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tmp);
+	double res = (tmp.tv_sec-s_processTime.tv_sec)*1000.0f;
+	res += (tmp.tv_nsec-s_processTime.tv_nsec)/1000000.0f;
+	return res;
+}
+static inline double realTime() {
+	timespec tmp;
+	clock_gettime(CLOCK_REALTIME, &tmp);
+	double res = (tmp.tv_sec-s_realTime.tv_sec)*1000.0f;
+	res += (tmp.tv_nsec-s_realTime.tv_nsec)/1000000.0f;
+	return res;
+}
+
+static std::string s_format = "[%T %-5t %p] %L (in %f:%l): %m%n";
 
 static std::string levelString(Level l)
 {
@@ -40,7 +83,7 @@ void Location::setFormat(const std::string& fmt)
 std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logger, const std::string& msg) const
 {
 	std::ostringstream oss;
-	const std::ios_base::fmtflags clearFlags = oss.flags();
+// 	const std::ios_base::fmtflags clearFlags = oss.flags();
 	int state = 0;
 	for(int i=0; i<s_format.length(); i++) {
 		char c = s_format.at(i);
@@ -59,14 +102,32 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
 					case '#':
 						oss << std::showbase;
 						break;
+					case '+':
+						oss << std::showpos;
+						break;
+					case ',':
+						oss << std::showpoint;
+						break;
 					case '0':
 						oss.fill('0');
 						break;
-					case '-':
+					case ' ':
+						oss.fill(' ');
+						break;
+					case '<':
 						oss << std::left;
 						break;
-					case '+':
-						oss << std::showpos;
+					case '|':
+						oss << std::internal;
+						break;
+					case '>':
+						oss << std::right;
+						break;
+					case '=':
+						oss << std::fixed;
+						break;
+					case '~':
+						oss << std::scientific;
 						break;
 					default:
 						state = 2;
@@ -130,6 +191,18 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
 					case 'n':
 						oss << std::endl;
 						break;
+					case 'p':
+						oss << processTime()/1000.0f;
+						break;
+					case 'P':
+						oss << static_cast<uint64_t>(processTime()/1000.0f);
+						break;
+					case 'r':
+						oss << realTime()/1000.0f;
+						break;
+					case 'R':
+						oss << static_cast<uint64_t>(realTime()/1000.0f);
+						break;
 					case 't':
 						oss << levelString(l);
 						break;
@@ -137,10 +210,13 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
 						oss << std::hex << m_threadId;
 						break;
 					default:
-						throw std::runtime_error( std::string("Unknown format specifier: ") + s_format.substr(i) );
+						throw std::runtime_error( std::string("Unknown format specifier at: ") + s_format.substr(i) );
 				}
 				state = 0;
-				oss.flags( clearFlags );
+				oss.copyfmt( std::ostringstream() );
+/*				oss.flags( clearFlags );
+				oss.fill(' ');
+				oss.width(0);*/
 				break;
 			default:
 				throw std::runtime_error("Invalid format parsing state");

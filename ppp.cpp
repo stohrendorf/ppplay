@@ -74,9 +74,7 @@ static bool parseCmdLine( int argc, char* argv[] ) {
 	( "version", "Shows version information and exits" )
 	( "warranty", "Shows warranty information and exits" )
 	( "copyright", "Shows copyright information and exits" )
-	( "log-level,l", bpo::value<int>(&loglevel)->default_value(1), "Sets the log level. Possible values:\n - 0 No logging\n - 1 Errors\n - 2 Warnings\n - 3 Informational\n - 4 Debug" )
-	//( "verbose,v", "Be verbose (includes warnings)" )
-	//( "very-verbose,V", "FOR DEBUG PURPOSES ONLY! (implies -v, includes all messages)" )
+	( "log-level,l", bpo::value<int>(&loglevel)->default_value(1), "Sets the log level. Possible values:\n - 0 No logging\n - 1 Errors\n - 2 Warnings\n - 3 Informational\n - 4 Debug\n - 5 Trace\nWhen an invalid level is passed, it will automatically set to 'Trace'. Levels 4 and 5 will also produce a more verbose output." )
 	( "no-gui,n", "No GUI" )
 	;
 	bpo::options_description ioOpts( "Input/Output Options" );
@@ -102,6 +100,7 @@ static bool parseCmdLine( int argc, char* argv[] ) {
 		return false;
 	}
 
+	light4cxx::Location::setFormat("[%T %<5t %>=7.3r] %L: %m%n");
 	switch(loglevel) {
 		case 0:
 			light4cxx::Logger::setLevel( light4cxx::Level::Off );
@@ -117,12 +116,15 @@ static bool parseCmdLine( int argc, char* argv[] ) {
 			break;
 		case 4:
 			light4cxx::Logger::setLevel( light4cxx::Level::Debug );
+// 			light4cxx::Location::setFormat("[%T %-5t %9p] %L (in %f:%l): %m%n");
 			break;
 		case 5:
 			light4cxx::Logger::setLevel( light4cxx::Level::Trace );
+// 			light4cxx::Location::setFormat("[%T %-5t %9p] %L (in %f:%l): %m%n");
 			break;
 		default:
 			light4cxx::Logger::setLevel( light4cxx::Level::All );
+// 			light4cxx::Location::setFormat("[%T %-5t %9p] %L (in %f:%l): %m%n");
 	}
 
 	using std::cout;
@@ -192,8 +194,6 @@ static bool parseCmdLine( int argc, char* argv[] ) {
 }
 
 int main( int argc, char* argv[] ) {
-/*	log4cxx::DefaultConfigurator::configure( log4cxx::LogManager::getLoggerRepository() );
-	log4cxx::LogManager::getRootLogger()->addAppender( new log4cxx::ConsoleAppender(new log4cxx::PatternLayout("[%-5p %rms %c] %m%n")) );*/
 	try {
 		if( !parseCmdLine(argc,argv) )
 			return EXIT_SUCCESS;
@@ -323,9 +323,6 @@ int main( int argc, char* argv[] ) {
 		light4cxx::Logger::root()->fatal(L4CXX_LOCATION, boost::format("Main (end): %s") % boost::current_exception_diagnostic_information() );
 		return EXIT_FAILURE;
 	}
-	//for(const log4cxx::LoggerPtr& l : log4cxx::LogManager::getCurrentLoggers()) {
-		//std::cout << l->getName() << std::endl;
-	//}
 	return EXIT_SUCCESS;
 }
 
