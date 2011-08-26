@@ -2,7 +2,7 @@
 Version=1.0
 Name=PeePeePlayer
 Type=Application
-TryExec=ppp
+TryExec=ppplay
 Exec=ppp %f
 NoDisplay=true
 GenericName=Tracker Module Player
