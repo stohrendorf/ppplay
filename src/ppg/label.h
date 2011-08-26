@@ -32,6 +32,7 @@ namespace ppg {
  */
 class Label : public Widget {
 		DISABLE_COPY(Label)
+		Label() = delete;
 	private:
 		/**
 		 * @brief Resizes m_fgColors and m_bgColors if the new text length or the widget's width are greater than the arrays' sizes
@@ -105,14 +106,14 @@ class Label : public Widget {
 		 * @param[in] color New foreground color
 		 * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
 		 */
-		virtual void setFgColorRange(size_t pos, Color color = Color::None, size_t len = 1);
+		void setFgColorRange(size_t pos, Color color = Color::None, size_t len = 1);
 		/**
 		 * @brief Set's the background color of @a len chars from position @a pos to @a color
 		 * @param[in] pos Starting position
 		 * @param[in] color New background color
 		 * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
 		 */
-		virtual void setBgColorRange(size_t pos, Color color = Color::None, size_t len = 1);
+		void setBgColorRange(size_t pos, Color color = Color::None, size_t len = 1);
 		virtual int setHeight(int h);
 		virtual int setWidth(int w);
 };

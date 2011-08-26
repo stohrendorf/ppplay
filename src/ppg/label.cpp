@@ -29,7 +29,8 @@ Label::Label(Widget* parent, const std::string& text) :
 	m_text(text),
 	m_fgColors(),
 	m_bgColors(),
-	alignment(Alignment::Left) {
+	alignment(Alignment::Left)
+{
 	if(length() != 0) {
 		setWidth(length());
 	}

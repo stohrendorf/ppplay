@@ -31,6 +31,7 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IA
 	m_chanCells(),
 	m_trackerInfo(nullptr),
 	m_modTitle(nullptr),
+	m_posBar(nullptr),
 	m_module(module),
 	m_output(output)
 {
@@ -93,12 +94,20 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IA
 	m_modTitle->setFgColorRange( 0, ppg::Color::BrightWhite, 0 );
 	m_modTitle->show();
 	m_trackerInfo->setText( ppp::stringf( "Tracker: %s - Channels: %d", module->trackerInfo().c_str(), module->channelCount() ) );
-	if( module->isMultiSong() )
+	if( module->isMultiSong() ) {
 		m_trackerInfo->setText( m_trackerInfo->text() + " - Multi-song" );
-	if( module->trimmedTitle().length()>0 )
+	}
+	if( module->trimmedTitle().length()>0 ) {
 		m_modTitle->setText( std::string( " -=\xf0[ " ) + module->filename() + " : " + module->trimmedTitle() + " ]\xf0=- " );
-	else
+	}
+	else {
 		m_modTitle->setText( std::string( " -=\xf0[ " ) + module->filename() + " ]\xf0=- " );
+	}
+	m_posBar = new ppg::PositionBar( this, 0, 40 );
+	m_posBar->setPosition( (area().width()-40)/2, 3 );
+	m_posBar->setFgColor(ppg::Color::BrightWhite);
+	m_posBar->show();
+	toTop(m_posBar);
 }
 
 void UIMain::drawThis()
@@ -172,5 +181,7 @@ void UIMain::onTimer()
 		m_chanInfos.at(i)->setText( modLock->channelStatus( i ) );
 		m_chanCells.at(i)->setText( modLock->channelCellString( i ) );
 	}
+	m_posBar->setMax( modLock->length() );
+	m_posBar->setValue( modLock->position() );
 	ppg::SDLScreen::instance()->draw();
 }
