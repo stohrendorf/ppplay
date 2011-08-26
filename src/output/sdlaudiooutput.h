@@ -61,6 +61,10 @@ class SDLAudioOutput : public IAudioOutput {
 		 */
 		bool fillFifo();
 	protected:
+		/**
+		 * @brief Get the logger instance for SDLAudioOutput
+		 * @return The logger instance with name "audio.output.sdl"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 

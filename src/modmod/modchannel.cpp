@@ -641,18 +641,18 @@ void ModChannel::fxArpeggio(uint8_t fxByte)
 	m_physPeriod = fullPeriods.at(m_finetune).at( fullPeriods.at(m_finetune).size()-1 );
 }
 
-void ModChannel::fxPatBreak(uint8_t fxByte)
+void ModChannel::fxPatBreak(uint8_t)
 {
 	m_effectDescription = "PBrk \xf6";
-	logger()->warn(L4CXX_LOCATION, "Not implemented: Effect Pattern Break");
-	// TODO
+	// implemented in ModModule
+	// logger()->warn(L4CXX_LOCATION, "Not implemented: Effect Pattern Break");
 }
 
-void ModChannel::fxPosJmp(uint8_t fxByte)
+void ModChannel::fxPosJmp(uint8_t)
 {
 	m_effectDescription = "JmOrd\x1a";
-	logger()->warn(L4CXX_LOCATION, "Not implemented: Effect Position Jump");
-	// TODO
+	// implemented in ModModule
+	// logger()->warn(L4CXX_LOCATION, "Not implemented: Effect Position Jump");
 }
 
 void ModChannel::fxSetFinePan(uint8_t fxByte)

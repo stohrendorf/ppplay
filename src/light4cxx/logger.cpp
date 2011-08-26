@@ -24,8 +24,16 @@
 
 #include <mutex>
 
+/**
+ * @ingroup light4cxx
+ * @{
+ */
+
 namespace light4cxx {
 
+/**
+ * @brief The current logging level filter
+ */
 static Level s_level = Level::Debug;
 
 Level Logger::level()
@@ -45,9 +53,9 @@ Logger::Ptr Logger::root()
 
 Logger::Ptr Logger::get(const std::string& name)
 {
-	typedef std::unordered_map<std::string, Logger::Ptr> RepoMap;
-	static RepoMap s_repository;
-	static std::mutex lockMutex;
+	typedef std::unordered_map<std::string, Logger::Ptr> RepoMap; //!< @brief Maps logger names to their instances
+	static RepoMap s_repository; //!< @brief The logger repository
+	static std::mutex lockMutex; //!< @brief Mutex for locking the repository
 	std::lock_guard<std::mutex> lockGuard(lockMutex);
 	
 	RepoMap::const_iterator elem = s_repository.find(name);
@@ -63,6 +71,9 @@ Logger::Logger(const std::string& name) : m_name(name)
 {
 }
 
+/**
+ * @brief The mutex that blocks parallel calls to std::cout
+ */
 static std::mutex outMutex;
 
 void Logger::log(light4cxx::Level l, const light4cxx::Location& loc, const std::string& str) const
@@ -80,3 +91,7 @@ void Logger::log(Level l, const Location& loc, const boost::format& fmt) const
 }
 
 }
+
+/**
+ * @}
+ */

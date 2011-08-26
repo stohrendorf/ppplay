@@ -125,6 +125,10 @@ class IAudioSource {
 		 */
 		bool isLocked();
 	protected:
+		/**
+		 * @brief Get the logger instance for IAudioSource
+		 * @return The logger instance with name "audio.source"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 

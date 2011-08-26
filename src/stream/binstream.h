@@ -110,6 +110,10 @@ class BinStream {
 		 * @return BinStream::m_stream
 		 */
 		SpIoStream& stream();
+		/**
+		 * @brief Returns the size of the underlying stream
+		 * @return The stream size
+		 */
 		virtual size_t size() const = 0;
 };
 

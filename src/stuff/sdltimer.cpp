@@ -22,6 +22,11 @@
 #include <SDL.h>
 #include <boost/assert.hpp>
 
+/**
+ * @ingroup common
+ * @{
+ */
+
 uint32_t SDLTimer::callback(uint32_t interval, void* userdata)
 {
 	SDLTimer* timer = static_cast<SDLTimer*>(userdata);
@@ -47,3 +52,6 @@ uint32_t SDLTimer::interval() const
 	return m_interval;
 }
 
+/**
+ * @}
+ */

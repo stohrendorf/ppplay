@@ -45,6 +45,7 @@ class IAudioOutput {
 		};
 		//! @brief Class pointer
 		typedef std::shared_ptr<IAudioOutput> Ptr;
+		//! @brief Weak class pointer
 		typedef std::weak_ptr<IAudioOutput> WeakPtr;
 		/**
 		 * @brief Constructor
@@ -104,6 +105,10 @@ class IAudioOutput {
 		 * @param[in] ec New error code
 		 */
 		void setErrorCode(ErrorCode ec);
+		/**
+		 * @brief Get the logger instance for IAudioOutput
+		 * @return The logger instance with name "audio.output"
+		 */
 		static light4cxx::Logger::Ptr logger();
 	private:
 		IAudioSource::WeakPtr m_source; //!< @brief The audio source

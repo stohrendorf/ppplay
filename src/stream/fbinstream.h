@@ -32,7 +32,7 @@ class FBinStream : public BinStream {
 		FBinStream() = delete;
 	private:
 		std::string m_filename; //!< @brief Filename of the file
-		size_t m_size;
+		size_t m_size; //!< @brief Cached size of the file
 	public:
 		/**
 		 * @brief Default contructor

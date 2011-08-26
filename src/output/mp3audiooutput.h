@@ -87,6 +87,10 @@ class MP3AudioOutput : public IAudioOutput {
 		 */
 		void setID3(const std::string& title, const std::string& album, const std::string& artist);
 	protected:
+		/**
+		 * @brief Get the logger instance for MP3AudioOutput
+		 * @return The logger instance with name "audio.output.mp3"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 

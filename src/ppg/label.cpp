@@ -52,6 +52,12 @@ void Label::setText(const std::string& txt) {
 	sizeColorsToMax();
 }
 
+/**
+ * @brief Extract a color string
+ * @param[in] str The string to extract the color string from
+ * @param[in] start The start within @a str to search for the color string
+ * @return The "{embraced}" string or an empty string if nothing found
+ */
 static std::string getColorString(const std::string& str, size_t start) {
 	BOOST_ASSERT(start<str.length() && str.at(start)=='{');
 	size_t end = str.find('}', start);
@@ -62,8 +68,17 @@ static std::string getColorString(const std::string& str, size_t start) {
 	return str.substr(start, end-start+1);
 }
 
+/**
+ * @brief Helper macro to return color on string equality
+ * @param[in] colname The color name
+ */
 #define COLRET(colname) \
 	if(str == #colname) return Color::colname;
+/**
+ * @brief Converts a color name to its value
+ * @param[in] str The color name (like "Aqua", "Black", etc.)
+ * @return The color value
+ */
 static Color stringToColor(const std::string& str) {
 	if(str.empty()) {
 		return Color::None;
@@ -76,6 +91,11 @@ static Color stringToColor(const std::string& str) {
 }
 #undef COLRET
 
+/**
+ * @brief Extracts the foreground color value from a color string
+ * @param[in] str The string to convert
+ * @return E.g.: Color::Black if str=="{Black;Blue}"
+ */
 static Color extractFgColor(const std::string& str) {
 	BOOST_ASSERT(str.size()>=3 && str.at(0)=='{' && str.at(str.length()-1)=='}');
 	size_t pos = str.find(';');
@@ -83,6 +103,11 @@ static Color extractFgColor(const std::string& str) {
 	return stringToColor(str.substr( 1, pos-1 ));
 }
 
+/**
+ * @brief Extracts the background color value from a color string
+ * @param[in] str The string to convert
+ * @return E.g.: Color::Blue if str=="{Black;Blue}"
+ */
 static Color extractBgColor(const std::string& str) {
 	BOOST_ASSERT(str.size()>=3 && str.at(0)=='{' && str.at(str.length()-1)=='}');
 	size_t pos = str.find(';');
