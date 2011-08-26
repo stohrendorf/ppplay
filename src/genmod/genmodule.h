@@ -31,20 +31,6 @@
 namespace ppp {
 
 /**
- * @struct GenPlaybackInfo
- * @brief Playback info
- * @todo Get rid of this!
- */
-struct GenPlaybackInfo {
-	int16_t order; //!< @brief Current Order
-	int16_t pattern; //!< @brief Current pattern
-	int16_t row; //!< @brief Current row
-	int16_t speed; //!< @brief Current speed
-	int16_t tempo; //!< @brief Current tempo
-	int16_t globalVolume; //!< @brief Current global volume
-};
-
-/**
  * @class GenModule
  * @brief An abstract class for all module classes
  * @todo Create a function to retrieve only the module's title without loading the whole module
@@ -65,8 +51,13 @@ class GenModule : public ISerializable, public IAudioSource {
 		std::vector<StateIterator> m_songs; //!< @brief Per-song infos
 		std::vector<size_t> m_songLengths; //!< @brief Per-song lengths in sample frames
 		uint16_t m_currentSongIndex; //!< @brief The current song index
-		GenPlaybackInfo m_playbackInfo; //!< @brief General playback info
 		int16_t m_tick; //!< @brief Current tick index
+		int16_t m_globalVolume; //!< @brief Current global volume
+		int16_t m_speed; //!< @brief Current speed
+		int16_t m_tempo; //!< @brief Current tempo
+		int16_t m_order; //!< @brief Current Order
+		int16_t m_pattern; //!< @brief Current pattern
+		int16_t m_row; //!< @brief Current row
 	public:
 		/**
 		 * @brief The constructor
@@ -139,11 +130,6 @@ class GenModule : public ISerializable, public IAudioSource {
 		 */
 		std::string trackerInfo() const;
 		/**
-		 * @brief Get playback information
-		 * @return m_playbackInfo
-		 */
-		GenPlaybackInfo playbackInfo() const;
-		/**
 		 * @brief Returns @c true if this module contains multiple songs
 		 * @return @c true if this is a multi-song
 		 */
@@ -201,6 +187,11 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @param[in] v The new global volume
 		 */
 		virtual void setGlobalVolume(int16_t v);
+		/**
+		 * @brief Get the current global volume
+		 * @return The global volume
+		 */
+		int16_t globalVolume() const;
 	protected:
 		virtual IArchive& serialize(IArchive* data);
 		/**
@@ -238,11 +229,6 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @return Order pointer
 		 */
 		GenOrder::Ptr orderAt(size_t idx) const;
-		/**
-		 * @brief Get the current pattern index
-		 * @return Current pattern index
-		 */
-		int16_t patternIndex() const;
 		/**
 		 * @brief Set the current pattern index
 		 * @param[in] i The new pattern index
@@ -307,16 +293,25 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @param[in] t The new tempo
 		 */
 		void setTempo(uint8_t t);
+		int16_t tempo() const;
 		/**
 		 * @brief Sets the current speed
 		 * @param[in] s The new speed
 		 */
 		void setSpeed(uint8_t s);
+		int16_t speed() const;
 		/**
 		 * @brief Get the current tick index
 		 * @return The current tick index
 		 */
 		uint8_t tick() const;
+		int16_t row() const;
+		int16_t order() const;
+		/**
+		 * @brief Get the current pattern index
+		 * @return Current pattern index
+		 */
+		int16_t patternIndex() const;
 	protected:
 		static light4cxx::Logger::Ptr logger();
 };

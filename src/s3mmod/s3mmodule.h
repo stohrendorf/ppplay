@@ -126,11 +126,6 @@ class S3mModule : public GenModule {
 		 */
 		bool hasFastVolSlides() const;
 		/**
-		 * @brief Get the current global volume
-		 * @return The global volume
-		 */
-		uint8_t globalVolume() const;
-		/**
 		 * @brief Check if ScreamTracker v2 Vibrato is present
 		 * @return m_st2Vibrato
 		 */

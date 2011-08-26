@@ -201,21 +201,21 @@ void ModModule::buildTick(AudioFrameBuffer& buf)
 			buf.reset();
 			return;
 		}
-		if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat()) {
+		if(orderAt(order())->playbackCount() >= maxRepeat()) {
 			logger()->info(L4CXX_LOCATION, "Song end reached: Maximum repeat count reached");
 			buf.reset();
 			return;
 		}
 		// update channels...
-		setPatternIndex(mapOrder(playbackInfo().order)->index());
-		ModPattern::Ptr currPat = getPattern(playbackInfo().pattern);
+		setPatternIndex(mapOrder(order())->index());
+		ModPattern::Ptr currPat = getPattern(patternIndex());
 		if(!currPat)
 			return;
 		MixerFrameBuffer mixerBuffer(new MixerFrameBuffer::element_type(tickBufferLength(), {0, 0}));
 		for(unsigned short currTrack = 0; currTrack < channelCount(); currTrack++) {
 			ModChannel::Ptr chan = m_channels.at(currTrack);
 			BOOST_ASSERT(chan.use_count()>0);
-			ModCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			ModCell::Ptr cell = currPat->cellAt(currTrack, row());
 			chan->update(cell, false);// m_patDelayCount != -1);
 			chan->mixTick(mixerBuffer);
 		}
@@ -250,10 +250,10 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 	if((tick() == 0) && increaseTick) {
 		m_patDelayCount = -1;
 		if(m_breakOrder != -1) {
-			orderAt(playbackInfo().order)->increasePlaybackCount();
+			orderAt(order())->increasePlaybackCount();
 			if(m_breakOrder < orderCount()) {
 				setOrder(m_breakOrder);
-				if(playbackInfo().order >= orderCount()) {
+				if(order() >= orderCount()) {
 					return false;
 				}
 				orderChanged = true;
@@ -266,9 +266,9 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 			}
 			if(m_breakOrder == -1) {
 				if(m_patLoopCount == -1) {
-					orderAt(playbackInfo().order)->increasePlaybackCount();
-					setOrder(playbackInfo().order + 1);
-					if(playbackInfo().order >= orderCount()) {
+					orderAt(order())->increasePlaybackCount();
+					setOrder(order() + 1);
+					if(order() >= orderCount()) {
 						return false;
 					}
 					orderChanged = true;
@@ -279,11 +279,11 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 			}
 		}
 		if((m_breakRow == -1) && (m_breakOrder == -1) && (m_patDelayCount == -1)) {
-			setRow((playbackInfo().row + 1) & 0x3f);
-			if(playbackInfo().row == 0) {
-				orderAt(playbackInfo().order)->increasePlaybackCount();
-				setOrder(playbackInfo().order + 1);
-				if(playbackInfo().order >= orderCount()) {
+			setRow((row() + 1) & 0x3f);
+			if(row() == 0) {
+				orderAt(order())->increasePlaybackCount();
+				setOrder(order() + 1);
+				if(order() >= orderCount()) {
 					return false;
 				}
 				orderChanged = true;
@@ -291,10 +291,10 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 		}
 		m_breakRow = m_breakOrder = -1;
 	}
-	if(playbackInfo().order >= orderCount()) {
+	if(order() >= orderCount()) {
 		return false;
 	}
-	setPatternIndex(mapOrder(playbackInfo().order)->index());
+	setPatternIndex(mapOrder(order())->index());
 	if(orderChanged) {
 		m_patLoopRow = 0;
 		m_patLoopCount = -1;
@@ -328,19 +328,19 @@ void ModModule::simulateTick(size_t& bufLen)
 		bufLen = 0;
 		if(!adjustPosition(false, true))
 			return;
-		BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
-		if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat())
+		BOOST_ASSERT( mapOrder(order()).use_count()>0 );
+		if(orderAt(order())->playbackCount() >= maxRepeat())
 			return;
 		// update channels...
-		setPatternIndex(mapOrder(playbackInfo().order)->index());
-		ModPattern::Ptr currPat = getPattern(playbackInfo().pattern);
+		setPatternIndex(mapOrder(order())->index());
+		ModPattern::Ptr currPat = getPattern(patternIndex());
 		if(!currPat)
 			return;
 		bufLen = tickBufferLength(); // in frames
 		for(unsigned short currTrack = 0; currTrack < channelCount(); currTrack++) {
 			ModChannel::Ptr chan = m_channels.at(currTrack);
 			BOOST_ASSERT(chan.use_count()>0);
-			ModCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			ModCell::Ptr cell = currPat->cellAt(currTrack, row());
 			chan->update(cell, false);// m_patDelayCount != -1);
 			chan->simTick(bufLen);
 		}
@@ -424,8 +424,8 @@ bool ModModule::jumpNextSong()
 		logger()->info(L4CXX_LOCATION, "This is not a multi-song");
 		return false;
 	}
-	BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
-	orderAt(playbackInfo().order)->increasePlaybackCount();
+	BOOST_ASSERT( mapOrder(order()).use_count()>0 );
+	orderAt(order())->increasePlaybackCount();
 	setCurrentSongIndex(currentSongIndex() + 1);
 	if(currentSongIndex() >= songCount()) {
 		for(uint16_t i = 0; i < orderCount(); i++) {
@@ -448,8 +448,8 @@ bool ModModule::jumpNextSong()
 		IAudioSource::LockGuard guard(this);
 		multiSongAt(currentSongIndex()).gotoFront();
 		multiSongAt(currentSongIndex()).currentState()->archive(this).finishLoad();
-		BOOST_ASSERT(mapOrder(playbackInfo().order).use_count()>0);
-		setPatternIndex(mapOrder(playbackInfo().order)->index());
+		BOOST_ASSERT(mapOrder(order()).use_count()>0);
+		setPatternIndex(mapOrder(order())->index());
 		return true;
 	}
 	logger()->fatal(L4CXX_LOCATION, "This should definitively NOT have happened...");
@@ -481,8 +481,8 @@ bool ModModule::jumpPrevSong()
 	IAudioSource::LockGuard guard(this);
 	multiSongAt(currentSongIndex()).gotoFront();
 	multiSongAt(currentSongIndex()).currentState()->archive(this).finishLoad();
-	BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
-	setPatternIndex(mapOrder(playbackInfo().order)->index());
+	BOOST_ASSERT( mapOrder(order()).use_count()>0 );
+	setPatternIndex(mapOrder(order())->index());
 	return true;
 }
 
@@ -527,15 +527,15 @@ bool ModModule::existsSample(size_t idx) const
 void ModModule::checkGlobalFx()
 {
 	try {
-		setPatternIndex(mapOrder(playbackInfo().order)->index());
-		ModPattern::Ptr currPat = getPattern(playbackInfo().pattern);
+		setPatternIndex(mapOrder(order())->index());
+		ModPattern::Ptr currPat = getPattern(patternIndex());
 		if(!currPat)
 			return;
 		std::string data;
 		// check for pattern loops
 		int patLoopCounter = 0;
 		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
-			ModCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			ModCell::Ptr cell = currPat->cellAt(currTrack, row());
 			if(!cell) continue;
 			if(cell->effect() == 0x0f) continue;
 			uint8_t fx = cell->effect();
@@ -543,7 +543,7 @@ void ModModule::checkGlobalFx()
 			if(fx != 0x0e) continue;
 			if(highNibble(fxVal) != 0x06) continue;
 			if(lowNibble(fxVal) == 0x00) {      // loop start
-				m_patLoopRow = playbackInfo().row;
+				m_patLoopRow = row();
 			}
 			else { // loop return
 				patLoopCounter++;
@@ -559,7 +559,7 @@ void ModModule::checkGlobalFx()
 					if(patLoopCounter == 1) {    // one loop, all ok
 						m_patLoopCount = -1;
 						m_breakRow = -1;
-						m_patLoopRow = playbackInfo().row + 1;
+						m_patLoopRow = row() + 1;
 					}
 					else { // we got an "infinite" loop...
 						m_patLoopCount = 127;
@@ -572,7 +572,7 @@ void ModModule::checkGlobalFx()
 		// check for pattern delays
 		uint8_t patDelayCounter = 0;
 		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
-			ModCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			ModCell::Ptr cell = currPat->cellAt(currTrack, row());
 			if(!cell) continue;
 			if(cell->effect() == 0x0f) continue;
 			uint8_t fx = cell->effect();
@@ -591,7 +591,7 @@ void ModModule::checkGlobalFx()
 		// now check for breaking effects
 		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
 			if(m_patLoopCount != -1) break;
-			ModCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			ModCell::Ptr cell = currPat->cellAt(currTrack, row());
 			if(!cell) continue;
 			if(cell->effect() == 0x0f) continue;
 			uint8_t fx = cell->effect();
@@ -601,7 +601,7 @@ void ModModule::checkGlobalFx()
 			}
 			else if(fx == 0x0d) {
 				m_breakRow = highNibble(fxVal) * 10 + lowNibble(fxVal);
-				logger()->info(L4CXX_LOCATION, boost::format("Row %1%: Break pattern to row %2%")%playbackInfo().row%(m_breakRow+0));
+				logger()->info(L4CXX_LOCATION, boost::format("Row %1%: Break pattern to row %2%")%row()%(m_breakRow+0));
 			}
 		}
 	}

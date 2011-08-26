@@ -173,7 +173,7 @@ bool S3mModule::load(const std::string& fn) {
 		setTempo(s3mHdr.initialTempo);
 		//m_playbackInfo.speed = s3mHdr.initialSpeed;
 		setSpeed(s3mHdr.initialSpeed);
-		BOOST_ASSERT(playbackInfo().speed != 0);
+		BOOST_ASSERT(speed() != 0);
 		setGlobalVolume(s3mHdr.globalVolume);
 		// parse flags
 		m_customData = (s3mHdr.ffv & s3mFlagSpecial) != 0;
@@ -348,15 +348,15 @@ uint8_t S3mModule::channelCount() const {
 
 void S3mModule::checkGlobalFx() {
 	try {
-		setPatternIndex(mapOrder(playbackInfo().order)->index());
-		S3mPattern::Ptr currPat = getPattern(playbackInfo().pattern);
+		setPatternIndex(mapOrder(order())->index());
+		S3mPattern::Ptr currPat = getPattern(patternIndex());
 		if(!currPat)
 			return;
 		std::string data;
 		// check for pattern loops
 		int patLoopCounter = 0;
 		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
-			S3mCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			S3mCell::Ptr cell = currPat->cellAt(currTrack, row());
 			if(!cell) continue;
 			if(cell->effect() == s3mEmptyCommand) continue;
 			uint8_t fx = cell->effect();
@@ -364,7 +364,7 @@ void S3mModule::checkGlobalFx() {
 			if(fx != s3mFxSpecial) continue;
 			if(highNibble(fxVal) != s3mSFxPatLoop) continue;
 			if(lowNibble(fxVal) == 0x00) {      // loop start
-				m_patLoopRow = playbackInfo().row;
+				m_patLoopRow = row();
 			}
 			else { // loop return
 				patLoopCounter++;
@@ -380,7 +380,7 @@ void S3mModule::checkGlobalFx() {
 					if(patLoopCounter == 1) {    // one loop, all ok
 						m_patLoopCount = -1;
 						m_breakRow = -1;
-						m_patLoopRow = playbackInfo().row + 1;
+						m_patLoopRow = row() + 1;
 					}
 					else { // we got an "infinite" loop...
 						m_patLoopCount = 127;
@@ -393,7 +393,7 @@ void S3mModule::checkGlobalFx() {
 		// check for pattern delays
 		uint8_t patDelayCounter = 0;
 		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
-			S3mCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			S3mCell::Ptr cell = currPat->cellAt(currTrack, row());
 			if(!cell) continue;
 			if(cell->effect() == s3mEmptyCommand) continue;
 			uint8_t fx = cell->effect();
@@ -412,7 +412,7 @@ void S3mModule::checkGlobalFx() {
 		// now check for breaking effects
 		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
 			if(m_patLoopCount != -1) break;
-			S3mCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			S3mCell::Ptr cell = currPat->cellAt(currTrack, row());
 			if(!cell) continue;
 			if(cell->effect() == s3mEmptyCommand) continue;
 			uint8_t fx = cell->effect();
@@ -422,7 +422,7 @@ void S3mModule::checkGlobalFx() {
 			}
 			else if(fx == s3mFxBreakPat) {
 				m_breakRow = highNibble(fxVal) * 10 + lowNibble(fxVal);
-				logger()->debug(L4CXX_LOCATION, boost::format("Row %d: Break pattern to row %d")%playbackInfo().row%m_breakRow);
+				logger()->debug(L4CXX_LOCATION, boost::format("Row %d: Break pattern to row %d")%row()%m_breakRow);
 			}
 		}
 	}
@@ -443,7 +443,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 	if((tick() == 0) && increaseTick) {
 		m_patDelayCount = -1;
 		if(m_breakOrder != -1) {
-			orderAt(playbackInfo().order)->increasePlaybackCount();
+			orderAt(order())->increasePlaybackCount();
 			if(m_breakOrder < orderCount()) {
 				setOrder(m_breakOrder);
 				orderChanged = true;
@@ -456,8 +456,8 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 			}
 			if(m_breakOrder == -1) {
 				if(m_patLoopCount == -1) {
-					orderAt(playbackInfo().order)->increasePlaybackCount();
-					setOrder(playbackInfo().order + 1);
+					orderAt(order())->increasePlaybackCount();
+					setOrder(order() + 1);
 					orderChanged = true;
 				}
 				//else {
@@ -466,32 +466,32 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 			}
 		}
 		if((m_breakRow == -1) && (m_breakOrder == -1) && (m_patDelayCount == -1)) {
-			setRow((playbackInfo().row + 1) & 0x3f);
-			if(playbackInfo().row == 0) {
-				orderAt(playbackInfo().order)->increasePlaybackCount();
-				setOrder(playbackInfo().order + 1);
+			setRow((row() + 1) & 0x3f);
+			if(row() == 0) {
+				orderAt(order())->increasePlaybackCount();
+				setOrder(order() + 1);
 				orderChanged = true;
 			}
 		}
 		m_breakRow = m_breakOrder = -1;
 	}
-	setPatternIndex(mapOrder(playbackInfo().order)->index());
+	setPatternIndex(mapOrder(order())->index());
 	// skip "--" and "++" marks
-	while(playbackInfo().pattern >= 254) {
-		if(playbackInfo().pattern == s3mOrderEnd) {
-			//LOG_TEST_MESSAGE(playbackInfo().pattern == s3mOrderEnd);
+	while(patternIndex() >= 254) {
+		if(patternIndex() == s3mOrderEnd) {
+			//LOG_TEST_MESSAGE(patternIndex() == s3mOrderEnd);
 			return false;
 		}
-		if(!mapOrder(playbackInfo().order))
+		if(!mapOrder(order()))
 			return false;
-		orderAt(playbackInfo().order)->increasePlaybackCount();
-		setOrder(playbackInfo().order + 1);
+		orderAt(order())->increasePlaybackCount();
+		setOrder(order() + 1);
 		orderChanged = true;
-		if(playbackInfo().order >= orderCount()) {
+		if(order() >= orderCount()) {
 			logger()->info(L4CXX_LOCATION, "Song end reached: End of orders");
 			return false;
 		}
-		setPatternIndex(mapOrder(playbackInfo().order)->index());
+		setPatternIndex(mapOrder(order())->index());
 	}
 	if(orderChanged) {
 		m_patLoopRow = 0;
@@ -532,21 +532,21 @@ void S3mModule::buildTick(AudioFrameBuffer& buf) {
 			buf.reset();
 			return;
 		}
-		if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat()) {
+		if(orderAt(order())->playbackCount() >= maxRepeat()) {
 			logger()->info(L4CXX_LOCATION, "Song end reached: Maximum repeat count reached");
 			buf.reset();
 			return;
 		}
 		// update channels...
-		setPatternIndex(mapOrder(playbackInfo().order)->index());
-		S3mPattern::Ptr currPat = getPattern(playbackInfo().pattern);
+		setPatternIndex(mapOrder(order())->index());
+		S3mPattern::Ptr currPat = getPattern(patternIndex());
 		if(!currPat)
 			return;
 		MixerFrameBuffer mixerBuffer(new MixerFrameBuffer::element_type(tickBufferLength(), {0, 0}));
 		for(unsigned short currTrack = 0; currTrack < channelCount(); currTrack++) {
 			S3mChannel::Ptr chan = m_channels.at(currTrack);
 			BOOST_ASSERT(chan.use_count()>0);
-			S3mCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			S3mCell::Ptr cell = currPat->cellAt(currTrack, row());
 			chan->update(cell, m_patDelayCount != -1);
 			chan->mixTick(mixerBuffer);
 		}
@@ -575,19 +575,19 @@ void S3mModule::simulateTick(size_t& bufLen) {
 		bufLen = 0;
 		if(!adjustPosition(false, true))
 			return;
-		BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
-		if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat())
+		BOOST_ASSERT( mapOrder(order()).use_count()>0 );
+		if(orderAt(order())->playbackCount() >= maxRepeat())
 			return;
 		// update channels...
-		setPatternIndex(mapOrder(playbackInfo().order)->index());
-		S3mPattern::Ptr currPat = getPattern(playbackInfo().pattern);
+		setPatternIndex(mapOrder(order())->index());
+		S3mPattern::Ptr currPat = getPattern(patternIndex());
 		if(!currPat)
 			return;
 		bufLen = tickBufferLength(); // in frames
 		for(unsigned short currTrack = 0; currTrack < channelCount(); currTrack++) {
 			S3mChannel::Ptr chan = m_channels.at(currTrack);
 			BOOST_ASSERT(chan.use_count()>0);
-			S3mCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			S3mCell::Ptr cell = currPat->cellAt(currTrack, row());
 			chan->update(cell, m_patDelayCount != -1);
 			chan->simTick(bufLen);
 		}
@@ -649,8 +649,8 @@ bool S3mModule::jumpNextSong() {
 		logger()->info(L4CXX_LOCATION, "This is not a multi-song");
 		return false;
 	}
-	BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
-	orderAt(playbackInfo().order)->increasePlaybackCount();
+	BOOST_ASSERT( mapOrder(order()).use_count()>0 );
+	orderAt(order())->increasePlaybackCount();
 	setCurrentSongIndex(currentSongIndex() + 1);
 	if(currentSongIndex() >= songCount()) {
 		for(uint16_t i = 0; i < orderCount(); i++) {
@@ -673,8 +673,8 @@ bool S3mModule::jumpNextSong() {
 		IAudioSource::LockGuard guard(this);
 		multiSongAt(currentSongIndex()).gotoFront();
 		multiSongAt(currentSongIndex()).currentState()->archive(this).finishLoad();
-		BOOST_ASSERT(mapOrder(playbackInfo().order).use_count()>0);
-		setPatternIndex(mapOrder(playbackInfo().order)->index());
+		BOOST_ASSERT(mapOrder(order()).use_count()>0);
+		setPatternIndex(mapOrder(order())->index());
 		return true;
 	}
 	logger()->fatal(L4CXX_LOCATION, "This should definitively NOT have happened...");
@@ -694,8 +694,8 @@ bool S3mModule::jumpPrevSong() {
 	IAudioSource::LockGuard guard(this);
 	multiSongAt(currentSongIndex()).gotoFront();
 	multiSongAt(currentSongIndex()).currentState()->archive(this).finishLoad();
-	BOOST_ASSERT( mapOrder(playbackInfo().order).use_count()>0 );
-	setPatternIndex(mapOrder(playbackInfo().order)->index());
+	BOOST_ASSERT( mapOrder(order()).use_count()>0 );
+	setPatternIndex(mapOrder(order())->index());
 	return true;
 }
 
@@ -748,10 +748,6 @@ size_t S3mModule::numSamples() const {
 
 bool S3mModule::st2Vibrato() const {
 	return m_st2Vibrato;
-}
-
-uint8_t S3mModule::globalVolume() const {
-	return playbackInfo().globalVolume;
 }
 
 bool S3mModule::hasFastVolSlides() const {

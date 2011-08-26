@@ -33,21 +33,24 @@ namespace ppp {
 GenModule::GenModule(uint8_t maxRpt) :
 	m_filename(), m_title(), m_trackerInfo(), m_orders(), m_maxRepeat(maxRpt),
 	m_playedFrames(0), m_songs(), m_songLengths(),
-	m_currentSongIndex(0), m_playbackInfo(), m_tick(0)
+	m_currentSongIndex(0), m_tick(0), m_globalVolume(0x40),
+	m_speed(0), m_tempo(0), m_order(0), m_pattern(0), m_row(0)
 {
 	BOOST_ASSERT(maxRpt != 0);
-	m_playbackInfo.order = m_playbackInfo.pattern = 0;
-	m_playbackInfo.row = m_playbackInfo.speed = m_playbackInfo.tempo = 0;
-	m_playbackInfo.globalVolume = 0x40;
 }
 
 GenModule::~GenModule() = default;
 
 IArchive& GenModule::serialize(IArchive* data) {
-	data->array(reinterpret_cast<char*>(&m_playbackInfo), sizeof(m_playbackInfo));
 	*data
 	% m_playedFrames
 	% m_tick
+	% m_globalVolume
+	% m_speed
+	% m_tempo
+	% m_order
+	% m_pattern
+	% m_row
 	;
 	for(const GenOrder::Ptr& order : m_orders) {
 		data->archive( order.get() );
@@ -80,10 +83,6 @@ size_t GenModule::length() const {
 
 std::string GenModule::trackerInfo() const {
 	return m_trackerInfo;
-}
-
-GenPlaybackInfo GenModule::playbackInfo() const {
-	return m_playbackInfo;
 }
 
 bool GenModule::isMultiSong() const {
@@ -121,7 +120,7 @@ size_t GenModule::getAudioData(AudioFrameBuffer& buffer, size_t size) {
 }
 
 void GenModule::setGlobalVolume(int16_t v) {
-	m_playbackInfo.globalVolume = v;
+	m_globalVolume = v;
 }
 
 void GenModule::setPosition(size_t p) {
@@ -153,11 +152,11 @@ GenOrder::Ptr GenModule::orderAt(size_t idx) const {
 }
 
 int16_t GenModule::patternIndex() const {
-	return m_playbackInfo.pattern;
+	return m_pattern;
 }
 
 void GenModule::setPatternIndex(int16_t i) {
-	m_playbackInfo.pattern = i;
+	m_pattern = i;
 }
 
 size_t GenModule::orderCount() const {
@@ -190,26 +189,26 @@ uint16_t GenModule::maxRepeat() const {
 }
 
 void GenModule::setOrder(int16_t o) {
-	m_playbackInfo.order = o;
+	m_order = o;
 }
 
 void GenModule::setRow(int16_t r) {
-	m_playbackInfo.row = r;
+	m_row = r;
 }
 
 void GenModule::nextTick() {
-	BOOST_ASSERT( m_playbackInfo.speed != 0 );
-	m_tick = (m_tick + 1) % m_playbackInfo.speed;
+	BOOST_ASSERT( m_speed != 0 );
+	m_tick = (m_tick + 1) % m_speed;
 }
 
 void GenModule::setTempo(uint8_t t) {
 	if(t == 0) return;
-	m_playbackInfo.tempo = t;
+	m_tempo = t;
 }
 
 void GenModule::setSpeed(uint8_t s) {
 	if(s == 0) return;
-	m_playbackInfo.speed = s;
+	m_speed = s;
 }
 
 size_t GenModule::position() const {
@@ -226,8 +225,8 @@ uint16_t GenModule::currentSongIndex() const {
 
 uint16_t GenModule::tickBufferLength() const
 {
-	BOOST_ASSERT(m_playbackInfo.tempo != 0);
-	return frequency() * 5 / (m_playbackInfo.tempo << 1);
+	BOOST_ASSERT(m_tempo != 0);
+	return frequency() * 5 / (m_tempo << 1);
 }
 
 uint8_t GenModule::tick() const
@@ -238,6 +237,31 @@ uint8_t GenModule::tick() const
 light4cxx::Logger::Ptr GenModule::logger()
 {
 	return light4cxx::Logger::get("module");
+}
+
+int16_t GenModule::speed() const
+{
+	return m_speed;
+}
+
+int16_t GenModule::tempo() const
+{
+	return m_tempo;
+}
+
+int16_t GenModule::globalVolume() const
+{
+	return m_globalVolume;
+}
+
+int16_t GenModule::order() const
+{
+	return m_order;
+}
+
+int16_t GenModule::row() const
+{
+	return m_row;
 }
 
 }

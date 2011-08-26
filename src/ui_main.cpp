@@ -152,21 +152,20 @@ void UIMain::onTimer()
 	m_volBar->shift( outLock->volumeLeft() >> 8, outLock->volumeRight() >> 8 );
 	size_t msecs = modLock->position() / 441;
 	size_t msecslen = modLock->length() / 441;
-	ppp::GenPlaybackInfo pbi = modLock->playbackInfo();
 	if(modLock->isMultiSong()) {
 		m_position->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Song %d/%d",
-								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
+								modLock->order(), modLock->patternIndex(), modLock->row(), msecs / 6000, msecs / 100 % 60, msecs % 100,
 								msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
 								modLock->currentSongIndex() + 1, modLock->songCount()
 								) );
 	}
 	else {
 		m_position->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d",
-								pbi.order, pbi.pattern, pbi.row, msecs / 6000, msecs / 100 % 60, msecs % 100,
+								modLock->order(), modLock->patternIndex(), modLock->row(), msecs / 6000, msecs / 100 % 60, msecs % 100,
 								msecslen / 6000, msecslen / 100 % 60, msecslen % 100
 								) );
 	}
-	m_playbackInfo->setEscapedText( ppp::stringf( "{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", pbi.speed, pbi.tempo, pbi.globalVolume * 100 / 0x40 ) );
+	m_playbackInfo->setEscapedText( ppp::stringf( "{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", modLock->speed(), modLock->tempo(), modLock->globalVolume() * 100 / 0x40 ) );
 	for( uint8_t i = 0; i < modLock->channelCount(); i++ ) {
 		if( i >= 16 )
 			break;

@@ -555,7 +555,7 @@ void XmChannel::update(const ppp::xm::XmCell::Ptr& cell) {
 		}
 	}
 	m_volumeEnvelope.increasePosition(m_keyOn);
-	m_realVolume = m_volumeEnvelope.realVolume(m_currentVolume, m_module->playbackInfo().globalVolume, m_volScale);
+	m_realVolume = m_volumeEnvelope.realVolume(m_currentVolume, m_module->globalVolume(), m_volScale);
 	m_panningEnvelope.increasePosition(m_keyOn);
 	m_realPanning = m_panningEnvelope.realPanning(m_panning);
 
@@ -1035,11 +1035,11 @@ void XmChannel::fxGlobalVolSlide(uint8_t fxByte) {
 	reuseIfZero(m_lastGlobVolSlideFx, fxByte);
 	if(highNibble(fxByte) == 0) {
 		fxByte = lowNibble(fxByte);
-		m_module->setGlobalVolume(std::max(0, m_module->playbackInfo().globalVolume - fxByte));
+		m_module->setGlobalVolume(std::max(0, m_module->globalVolume() - fxByte));
 	}
 	else {
 		fxByte = highNibble(fxByte);
-		m_module->setGlobalVolume(std::min(0x40, m_module->playbackInfo().globalVolume + fxByte));
+		m_module->setGlobalVolume(std::min(0x40, m_module->globalVolume() + fxByte));
 	}
 }
 
@@ -1183,7 +1183,7 @@ void XmChannel::fxRetrigger(uint8_t fxByte) {
 void XmChannel::efxPatLoop(uint8_t fxByte) {
 	fxByte = lowNibble(fxByte);
 	if(fxByte == 0) {
-		m_patLoopRow = m_module->playbackInfo().row;
+		m_patLoopRow = m_module->row();
 		return;
 	}
 	if(m_patLoopCounter == 0) {

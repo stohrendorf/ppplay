@@ -171,11 +171,11 @@ void XmModule::buildTick(AudioFrameBuffer& buffer) {
 		buffer.reset(new AudioFrameBuffer::element_type);
 	}
 	MixerFrameBuffer mixerBuffer(new MixerFrameBuffer::element_type(tickBufferLength(), {0, 0}));
-	XmPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
+	XmPattern::Ptr currPat = m_patterns.at(patternIndex());
 	for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
 		XmChannel::Ptr chan = m_channels.at(currTrack);
 		BOOST_ASSERT(chan.use_count() > 0);
-		XmCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+		XmCell::Ptr cell = currPat->cellAt(currTrack, row());
 		chan->update(cell);
 		chan->mixTick(mixerBuffer);
 	}
@@ -197,13 +197,13 @@ void XmModule::buildTick(AudioFrameBuffer& buffer) {
 void XmModule::simulateTick(size_t& bufferLength) {
 	try {
 		bufferLength = tickBufferLength();
-		BOOST_ASSERT( playbackInfo().pattern < m_patterns.size() );
-		XmPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
+		BOOST_ASSERT( patternIndex() < m_patterns.size() );
+		XmPattern::Ptr currPat = m_patterns.at(patternIndex());
 		BOOST_ASSERT( currPat.use_count() > 0 );
 		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
 			XmChannel::Ptr chan = m_channels.at(currTrack);
 			BOOST_ASSERT(chan.use_count() > 0);
-			XmCell::Ptr cell = currPat->cellAt(currTrack, playbackInfo().row);
+			XmCell::Ptr cell = currPat->cellAt(currTrack, row());
 			chan->update(cell);
 			chan->simTick(bufferLength);
 		}
@@ -242,18 +242,18 @@ bool XmModule::adjustPosition(bool doStore) {
 				if(m_jumpOrder >= orderCount()) {
 					m_jumpOrder = m_restartPos;
 				}
-				orderAt(playbackInfo().order)->increasePlaybackCount();
+				orderAt(order())->increasePlaybackCount();
 				setOrder(m_jumpOrder);
 				orderChanged = true;
 			}
 		}
 		else {
 			if(!isRunningPatDelay()) {
-				XmPattern::Ptr currPat = m_patterns.at(playbackInfo().pattern);
-				setRow((playbackInfo().row + 1) % currPat->numRows());
-				if(playbackInfo().row == 0) {
-					orderAt(playbackInfo().order)->increasePlaybackCount();
-					setOrder((playbackInfo().order + 1));
+				XmPattern::Ptr currPat = m_patterns.at(patternIndex());
+				setRow((row() + 1) % currPat->numRows());
+				if(row() == 0) {
+					orderAt(order())->increasePlaybackCount();
+					setOrder(order() + 1);
 					orderChanged = true;
 				}
 			}
@@ -262,8 +262,8 @@ bool XmModule::adjustPosition(bool doStore) {
 		m_doPatJump = m_isPatLoop = false;
 	}
 	if(orderChanged) {
-		if(playbackInfo().order < orderCount()) {
-			setPatternIndex(orderAt(playbackInfo().order)->index());
+		if(order() < orderCount()) {
+			setPatternIndex(orderAt(order())->index());
 			if(doStore) {
 				multiSongAt(0).newState()->archive(this).finishSave();
 			}
@@ -279,7 +279,7 @@ bool XmModule::adjustPosition(bool doStore) {
 			return false;
 		}
 	}
-	if(orderAt(playbackInfo().order)->playbackCount() >= maxRepeat()) {
+	if(orderAt(order())->playbackCount() >= maxRepeat()) {
 		return false;
 	}
 	return true;
@@ -562,7 +562,7 @@ void XmModule::doPatternBreak(int16_t next) {
 	else {
 		m_jumpRow = 0;
 	}
-	doJumpPos(playbackInfo().order);
+	doJumpPos(order());
 	m_doPatJump = true;
 }
 
