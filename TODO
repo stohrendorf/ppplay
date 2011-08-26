@@ -27,7 +27,3 @@
 * Graphics system
   
   Add more widgets/screens (file browser, song message, additional meta information...).
-
-* Logging
-
-  Add boost::format

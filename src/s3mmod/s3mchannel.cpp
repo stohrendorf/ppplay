@@ -267,7 +267,7 @@ std::string S3mChannel::effectName() const {
 	if(fxRangeOk)
 		return stringf("%c%.2X", fx + 'A' - 1, m_currentCell.effectValue());
 	else {
-		logger()->warn(L4CXX_LOCATION, boost::format("Effect out of range: %#x")%fx);
+		logger()->warn(L4CXX_LOCATION, boost::format("Effect out of range: %#x")%(fx+0));
 		return stringf("?%.2X", m_currentCell.effectValue());
 	}
 }

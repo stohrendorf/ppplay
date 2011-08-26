@@ -101,7 +101,7 @@ bool XmModule::load(const std::string& filename) {
 	m_restartPos = hdr.restartPos;
 	{
 		std::string tmp = trimString(stringncpy(hdr.trackerName, 20));
-		if(tmp.length() > 0) {
+		if(!tmp.empty()) {
 			setTrackerInfo(tmp);
 		}
 		else {
