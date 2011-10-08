@@ -45,10 +45,10 @@ XmPattern::XmPattern(int16_t chans) : m_columns(chans) {
 }
 
 bool XmPattern::load(BinStream& str) {
-	logger()->debug(L4CXX_LOCATION, boost::format("Start: %#x")%str.pos());
+	logger()->trace(L4CXX_LOCATION, boost::format("Start: %#x")%str.pos());
 	uint32_t hdrLen;
 	str.read(&hdrLen);
-	logger()->debug(L4CXX_LOCATION, boost::format("hdrLen=%d")%hdrLen);
+	logger()->trace(L4CXX_LOCATION, boost::format("hdrLen=%d")%hdrLen);
 	uint8_t packType;
 	str.read(&packType);
 	if(packType != 0) {
@@ -76,7 +76,7 @@ bool XmPattern::load(BinStream& str) {
 	}
 	uint16_t packedSize;
 	str.read(&packedSize);
-	logger()->debug(L4CXX_LOCATION, boost::format("Header end: %#x")%str.pos());
+	logger()->trace(L4CXX_LOCATION, boost::format("Header end: %#x")%str.pos());
 	str.seekrel(hdrLen - 9);   // copied from schismtracker
 	if(packedSize == 0) {
 /*		for(size_t i = 0; i < m_columns.size(); i++) {

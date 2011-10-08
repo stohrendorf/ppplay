@@ -54,11 +54,13 @@ MP3AudioOutput::MP3AudioOutput(const IAudioSource::WeakPtr& src, const std::stri
 	m_lameGlobalFlags(nullptr), m_file(), m_filename(filename), m_buffer(nullptr), m_encoderThread(), m_bufferMutex(), m_paused(true) {
 	m_buffer = new uint8_t[BufferSize];
 	m_lameGlobalFlags = lame_init();
+	logger()->info(L4CXX_LOCATION, boost::format("Created output: Filename '%s'")%filename);
 }
 
 MP3AudioOutput::~MP3AudioOutput() {
 	delete[] m_buffer;
 	lame_close(m_lameGlobalFlags);
+	logger()->trace(L4CXX_LOCATION, "Destroyed");
 }
 
 uint16_t MP3AudioOutput::volumeRight() const {
@@ -86,6 +88,7 @@ bool MP3AudioOutput::playing() {
 }
 
 int MP3AudioOutput::init(int desiredFrq) {
+	logger()->trace(L4CXX_LOCATION, "Initializing LAME");
 	m_file.open(m_filename, std::ios::in);
 	if(m_file.is_open()) {
 		m_file.close();
@@ -105,10 +108,12 @@ int MP3AudioOutput::init(int desiredFrq) {
 	lame_set_mode(m_lameGlobalFlags, STEREO);
 	lame_set_VBR(m_lameGlobalFlags, vbr_off);
 	if(lame_init_params(m_lameGlobalFlags) < 0) {
+		logger()->error(L4CXX_LOCATION, "LAME parameter initialization failed");
 		return 0;
 	}
 	m_encoderThread = std::thread(encodeThread, this);
 	m_encoderThread.detach();
+	logger()->trace(L4CXX_LOCATION, "LAME initialized");
 	return desiredFrq;
 }
 

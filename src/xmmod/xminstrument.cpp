@@ -85,12 +85,10 @@ bool XmInstrument::load(BinStream& str) {
 		str.seek(startPos + hdr.size);
 		return true;
 	}
-	logger()->debug(L4CXX_LOCATION, boost::format("Header.size=%d, sizeof(Header)=%d")%hdr.size%sizeof(hdr));
 	BOOST_ASSERT(hdr.numSamples <= 255);
 	m_samples.resize(hdr.numSamples);
 	InstrumentHeader2 hdr2;
 	str.read(reinterpret_cast<char*>(&hdr2), sizeof(hdr2));
-	logger()->debug(L4CXX_LOCATION, boost::format("Header2.size=%d, sizeof(Header2)=%d")%hdr2.size%sizeof(hdr2));
 	std::copy(hdr2.indices, hdr2.indices + 96, m_map);
 	str.seek(startPos + hdr.size);
 	for(uint16_t i = 0; i < hdr.numSamples; i++) {

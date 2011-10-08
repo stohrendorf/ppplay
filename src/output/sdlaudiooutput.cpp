@@ -51,8 +51,11 @@ SDLAudioOutput::~SDLAudioOutput() {
 }
 
 int SDLAudioOutput::init(int desiredFrq) {
+	logger()->trace(L4CXX_LOCATION, "Initializing");
 	if(!SDL_WasInit(SDL_INIT_AUDIO)) {
+		logger()->trace(L4CXX_LOCATION, "Initializing SDL Audio component");
 		if(-1 == SDL_Init(SDL_INIT_AUDIO)) {
+			logger()->fatal(L4CXX_LOCATION, boost::format("SDL Audio component initialization failed. SDL Error: '%s'")%SDL_GetError());
 			setErrorCode( OutputError );
 			return 0;
 		}
@@ -70,7 +73,7 @@ int SDLAudioOutput::init(int desiredFrq) {
 	desired->callback = sdlAudioCallback;
 	desired->userdata = this;
 	if(SDL_OpenAudio(desired.get(), obtained.get()) < 0) {
-		logger()->fatal(L4CXX_LOCATION, boost::format("Couldn't open audio. SDL reports '%s'")%SDL_GetError());
+		logger()->fatal(L4CXX_LOCATION, boost::format("Couldn't open audio. SDL Error: '%s'")%SDL_GetError());
 		setErrorCode( OutputError );
 		return 0;
 	}
@@ -84,6 +87,7 @@ int SDLAudioOutput::init(int desiredFrq) {
 		logger()->info(L4CXX_LOCATION, boost::format("Using audio driver '%s'")%driverName);
 	}
 	setErrorCode( NoError );
+	logger()->trace(L4CXX_LOCATION, "Initialized");
 	return desiredFrq;
 }
 
