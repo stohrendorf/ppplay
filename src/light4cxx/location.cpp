@@ -42,10 +42,10 @@ void __attribute__((constructor)) initializer()
  * @brief Get the current process CPU time in seconds
  * @return Current process CPU time in seconds
  */
-static inline double processTime() {
+static inline float_t processTime() {
 	timespec tmp;
 	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tmp);
-	double res = (tmp.tv_sec-s_processTime.tv_sec)*1000.0f;
+	float_t res = (tmp.tv_sec-s_processTime.tv_sec)*1000.0f;
 	res += (tmp.tv_nsec-s_processTime.tv_nsec)/1000000.0f;
 	return res;
 }
@@ -53,10 +53,10 @@ static inline double processTime() {
  * @brief Get the current run-time in seconds
  * @return Current run-time in seconds
  */
-static inline double realTime() {
+static inline float_t realTime() {
 	timespec tmp;
 	clock_gettime(CLOCK_REALTIME, &tmp);
-	double res = (tmp.tv_sec-s_realTime.tv_sec)*1000.0f;
+	float_t res = (tmp.tv_sec-s_realTime.tv_sec)*1000.0f;
 	res += (tmp.tv_nsec-s_realTime.tv_nsec)/1000000.0f;
 	return res;
 }
@@ -86,6 +86,8 @@ static std::string levelString(Level l)
 			return "WARN";
 		case Level::Error:
 			return "ERROR";
+		case Level::Fatal:
+			return "FATAL";
 		case Level::All:
 			throw std::runtime_error("Logging level invalid: Level::All should not be passed to levelString()");
 		default:
