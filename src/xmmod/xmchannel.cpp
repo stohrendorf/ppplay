@@ -689,7 +689,8 @@ void XmChannel::simTick(size_t bufSize) {
 	m_bres.reset(m_module->frequency(), m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod));
 	XmSample::Ptr currSmp = currentSample();
 	int32_t pos = position();
-	pos += m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod) * bufSize / m_module->frequency();
+	m_bres.fastNext(bufSize, pos);
+// 	pos += m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod) * bufSize / m_module->frequency();
 	currSmp->adjustPosition(pos);
 	if(pos != GenSample::EndOfSample)
 		currentSample()->adjustPosition(pos);

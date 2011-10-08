@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef breseninterH
-#define breseninterH
+#ifndef BRESENINTER_H
+#define BRESENINTER_H
 
 /**
  * @ingroup GenMod
@@ -46,8 +46,8 @@ class BresenInterpolation : public ISerializable {
 		DISABLE_COPY(BresenInterpolation)
 		BresenInterpolation() = delete;
 	private:
-		int32_t m_dx; //!< @brief Width of the line
-		int32_t m_dy; //!< @brief Height of the line
+		uint32_t m_dx; //!< @brief Width of the line
+		uint32_t m_dy; //!< @brief Height of the line
 		int32_t m_err; //!< @brief Error variable
 	public:
 		/**
@@ -55,21 +55,39 @@ class BresenInterpolation : public ISerializable {
 		 * @param[in] dx Width of the interpolation line
 		 * @param[in] dy Height of the interpolation line
 		 */
-		BresenInterpolation(int32_t dx, int32_t dy) : m_dx(dx), m_dy(dy), m_err(m_dx / 2) { }
+		BresenInterpolation(uint32_t dx, uint32_t dy) : m_dx(dx), m_dy(dy), m_err(m_dx / 2) { }
 		/**
 		 * @brief Calculates the next interpolation step
 		 * @param[in,out] pos Interpolation Y point to adjust
 		 */
 		inline void next(int32_t& pos) {
-			for(m_err -= m_dy; m_err < 0; m_err += m_dx)
+			for(m_err -= m_dy; m_err < 0; m_err += m_dx) {
 				pos++;
+			}
+		}
+		/**
+		 * @brief Calculates the next interpolation steps
+		 * @param[in] dx The number of steps to calculate
+		 * @param[in,out] pos Interpolation Y point to adjust
+		 * @note Use this for tick simulation purposes
+		 * @see next()
+		 */
+		inline void fastNext(uint32_t bigDx, int32_t& pos) {
+			uint32_t bigDy = m_dy*bigDx/m_dx;
+			pos += bigDy;
+			m_err -= m_dy*bigDx;
+			int fac = -m_err/m_dx;
+			m_err += fac*m_dx;
+			while(m_err<0) {
+				m_err += m_dx;
+			}
 		}
 		/**
 		 * @brief Sets width and height of the interpolation line
 		 * @param[in] dx New value for m_dx
 		 * @param[in] dy New value for m_dy
 		 */
-		inline void reset(int32_t dx, int32_t dy) {
+		inline void reset(uint32_t dx, uint32_t dy) {
 			m_dx = dx;
 			m_dy = dy;
 		}

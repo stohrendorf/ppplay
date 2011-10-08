@@ -529,7 +529,9 @@ void S3mChannel::simTick(size_t bufSize) {
 	}
 	if(!isActive())
 		return;
-	int32_t pos = position() + (FRQ_VALUE / m_module->frequency() * bufSize / m_realPeriod);
+	m_bresen.reset(m_module->frequency(), FRQ_VALUE / m_realPeriod);
+	int32_t pos = position(); // + (FRQ_VALUE / m_module->frequency() * bufSize / m_realPeriod);
+	m_bresen.fastNext(bufSize, pos);
 	currentSample()->adjustPosition(pos);
 	if(pos == GenSample::EndOfSample)
 		setActive(false);
