@@ -52,7 +52,7 @@ class MP3AudioOutput : public IAudioOutput {
 		//! @brief Encoder thread holder
 		std::thread m_encoderThread;
 		//! @brief Mutex that locks m_buffer
-		std::mutex m_bufferMutex;
+		std::recursive_mutex m_bufferMutex;
 		//! @brief Whether the output is paused
 		bool m_paused;
 		//! @brief Default size of m_buffer

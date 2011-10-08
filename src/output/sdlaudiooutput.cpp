@@ -25,12 +25,9 @@ void SDLAudioOutput::sdlAudioCallback(void* userdata, uint8_t* stream, int len_b
 	std::fill_n(stream, len_bytes, 0);
 	SDLAudioOutput* outpSdl = static_cast<SDLAudioOutput*>(userdata);
 	while(len_bytes > 0) {
-		if(!outpSdl->fillFifo()) {
-			outpSdl->setErrorCode(InputDry);
-			outpSdl->pause();
-			break;
-		}
-		size_t copied = outpSdl->m_fifo.pull(reinterpret_cast<BasicSampleFrame*>(stream), len_bytes / sizeof(BasicSampleFrame));
+		AudioFrameBuffer buffer;
+		IAudioSource::Ptr src(outpSdl->source().lock());
+		size_t copied = src->getAudioData(buffer, len_bytes / sizeof(BasicSampleFrame));
 		if(copied == 0) {
 			outpSdl->setErrorCode(InputDry);
 			outpSdl->pause();
@@ -38,16 +35,19 @@ void SDLAudioOutput::sdlAudioCallback(void* userdata, uint8_t* stream, int len_b
 		}
 		copied *= sizeof(BasicSampleFrame);
 		len_bytes -= copied;
+		std::copy(buffer->begin(), buffer->end(), reinterpret_cast<BasicSampleFrame*>(stream));
 		stream += copied;
 	}
 }
 
-SDLAudioOutput::SDLAudioOutput(const IAudioSource::WeakPtr& src) : IAudioOutput(src), m_fifo(2048) {
+SDLAudioOutput::SDLAudioOutput(const IAudioSource::WeakPtr& src) : IAudioOutput(src) {
+	logger()->trace(L4CXX_LOCATION, "Created");
 }
 
 SDLAudioOutput::~SDLAudioOutput() {
 	SDL_CloseAudio();
 	SDL_QuitSubSystem(SDL_INIT_AUDIO);
+	logger()->trace(L4CXX_LOCATION, "Destroyed");
 }
 
 int SDLAudioOutput::init(int desiredFrq) {
@@ -87,16 +87,6 @@ int SDLAudioOutput::init(int desiredFrq) {
 	return desiredFrq;
 }
 
-bool SDLAudioOutput::fillFifo() {
-	while(m_fifo.needsData()) {
-		AudioFrameBuffer buf;
-		if(0 == source().lock()->getAudioData(buf, m_fifo.minFrameCount() - m_fifo.queuedLength()))
-			return false;
-		m_fifo.push(buf);
-	}
-	return true;
-}
-
 bool SDLAudioOutput::playing() {
 	return SDL_GetAudioStatus() == SDL_AUDIO_PLAYING;
 }
@@ -112,11 +102,11 @@ void SDLAudioOutput::pause() {
 }
 
 uint16_t SDLAudioOutput::volumeLeft() const {
-	return m_fifo.volumeLeft();
+	return 0; // TODO
 }
 
 uint16_t SDLAudioOutput::volumeRight() const {
-	return m_fifo.volumeRight();
+	return 0; // TODO
 }
 
 light4cxx::Logger::Ptr SDLAudioOutput::logger()

@@ -55,8 +55,8 @@ Logger::Ptr Logger::get(const std::string& name)
 {
 	typedef std::unordered_map<std::string, Logger::Ptr> RepoMap; //!< @brief Maps logger names to their instances
 	static RepoMap s_repository; //!< @brief The logger repository
-	static std::mutex lockMutex; //!< @brief Mutex for locking the repository
-	std::lock_guard<std::mutex> lockGuard(lockMutex);
+	static std::recursive_mutex lockMutex; //!< @brief Mutex for locking the repository
+	std::lock_guard<std::recursive_mutex> lockGuard(lockMutex);
 	
 	RepoMap::const_iterator elem = s_repository.find(name);
 	if(elem != s_repository.end()) {

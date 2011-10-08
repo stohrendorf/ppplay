@@ -26,16 +26,22 @@
 
 #include "stuff/utils.h"
 #include "audiotypes.h"
+#include "iaudiosource.h"
 
 #include "light4cxx/logger.h"
 
-#include <mutex>
+#include <thread>
+#include <atomic>
 
 /**
  * @class AudioFifo
  * @brief Audio FIFO buffer
+ * 
+ * @details
+ * A simple thread is created that continuously requests data from the connected
+ * IAudioSource.
  */
-class AudioFifo {
+class AudioFifo : public IAudioSource {
 		DISABLE_COPY(AudioFifo)
 		AudioFifo() = delete;
 	private:
@@ -46,21 +52,21 @@ class AudioFifo {
 		 */
 		void calcVolume(uint16_t& leftVol, uint16_t& rightVol);
 		AudioFrameBufferQueue m_queue; //!< @brief Queued audio chunks
-		size_t m_queuedFrames; //!< @brief Number of frames in the queue
-		size_t m_minFrameCount; //!< @brief Minimum number of frames the queue should contain
+		std::atomic_size_t m_queuedFrames; //!< @brief Number of frames in the queue
+		std::atomic_size_t m_minFrameCount; //!< @brief Minimum number of frames the queue should contain
 		uint16_t m_volumeLeft; //!< @brief Left volume
 		uint16_t m_volumeRight; //!< @brief Right volume
-		std::mutex m_queueMutex; //!< @brief Mutex to lock queue access
+		std::recursive_mutex m_queueMutex; //!< @brief Mutex to lock queue access
+		std::thread m_requestThread;
+		IAudioSource::WeakPtr m_source;
+		static void requestThread(AudioFifo* fifo);
 	public:
-		/**
-		 * @brief Alias for "No size specified" for where a size parameter is needed
-		 */
-		static const size_t nsize = ~0;
 		/**
 		 * @brief Initialize the buffer
 		 * @param[in] minFrameCount Initial value for m_minFrameCount
 		 */
-		AudioFifo(size_t minFrameCount);
+		AudioFifo(const IAudioSource::WeakPtr& source, size_t minFrameCount);
+		virtual ~AudioFifo();
 		/**
 		 * @brief Get the number of buffered frames
 		 * @return Number of buffered frames
@@ -76,48 +82,6 @@ class AudioFifo {
 		 * @return Number of queued chunks
 		 */
 		size_t queuedChunkCount() const;
-		/**
-		 * @brief Returns @c true if this buffer needs more data
-		 * @retval true if this buffer needs more data
-		 * @retval false if this buffer is filled
-		 */
-		bool needsData() const;
-		/**
-		 * @brief Push data into the buffer
-		 * @param[in] data Source of the data
-		 */
-		void push(const AudioFrameBuffer& data);
-		/**
-		 * @brief Copy the internal FIFO buffer to @a data
-		 * @param[out] data Destination buffer
-		 * @return Copied frames
-		 * @details This also updates the volumes
-		 */
-		size_t pullAll(AudioFrameBuffer& data);
-		/**
-		 * @brief Copy part of the internal FIFO buffer to @a data
-		 * @param[out] data Destination buffer
-		 * @param[in] size Number of frames to copy
-		 * @return Copied frames
-		 * @details This also updates the volumes
-		 */
-		size_t pull(AudioFrameBuffer& data, size_t size);
-		/**
-		 * @brief Copy part of the internal FIFO buffer to @a data
-		 * @param[out] data Destination buffer
-		 * @param[in] size Number of frames to copy
-		 * @return Copied frames
-		 * @details This also updates the volumes
-		 */
-		size_t pull(BasicSampleFrame* data, size_t size);
-		/**
-		 * @brief Copy part of the internal FIFO buffer to @a data without removing them from the queue
-		 * @param[out] data Destination buffer
-		 * @param[in] size Number of frames to copy
-		 * @return Copied frames
-		 * @details This also updates the volumes
-		 */
-		size_t copy(AudioFrameBuffer& data, size_t size);
 		/**
 		 * @brief Set the FIFO buffer length
 		 * @param[in] len The requested buffer length
@@ -139,6 +103,9 @@ class AudioFifo {
 		 * @retval false FIFO is not empty
 		 */
 		bool isEmpty() const;
+		// ------------------
+		virtual size_t getAudioData(AudioFrameBuffer& buffer, size_t requestedFrames);
+		virtual bool initialize(uint32_t frequency);
 	protected:
 		static light4cxx::Logger::Ptr logger();
 };

@@ -154,34 +154,38 @@ void UIMain::onTimer()
 	if( m_module.expired() || m_output.expired() ) {
 		return;
 	}
-	ppp::GenModule::Ptr modLock( std::static_pointer_cast<ppp::GenModule>( m_module.lock() ) );
-	IAudioSource::LockGuard guard(modLock.get());
-	IAudioOutput::Ptr outLock(m_output.lock());
-	ppg::SDLScreen::instance()->clear( ' ', ppg::Color::White, ppg::Color::Black );
-	m_volBar->shift( outLock->volumeLeft() >> 8, outLock->volumeRight() >> 8 );
-	size_t msecs = modLock->position() / 441;
-	size_t msecslen = modLock->length() / 441;
-	if(modLock->isMultiSong()) {
-		m_position->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Song %d/%d",
-								modLock->order(), modLock->patternIndex(), modLock->row(), msecs / 6000, msecs / 100 % 60, msecs % 100,
-								msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
-								modLock->currentSongIndex() + 1, modLock->songCount()
-								) );
+	{
+		// this MUST be in its own scope so that the lock gets released
+		// before drawing. drawing may block.
+		ppp::GenModule::Ptr modLock( std::static_pointer_cast<ppp::GenModule>( m_module.lock() ) );
+		IAudioSource::LockGuard guard(modLock.get());
+		IAudioOutput::Ptr outLock(m_output.lock());
+		ppg::SDLScreen::instance()->clear( ' ', ppg::Color::White, ppg::Color::Black );
+		m_volBar->shift( outLock->volumeLeft() >> 8, outLock->volumeRight() >> 8 );
+		size_t msecs = modLock->position() / 441;
+		size_t msecslen = modLock->length() / 441;
+		if(modLock->isMultiSong()) {
+			m_position->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Song %d/%d",
+									modLock->order(), modLock->patternIndex(), modLock->row(), msecs / 6000, msecs / 100 % 60, msecs % 100,
+									msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
+									modLock->currentSongIndex() + 1, modLock->songCount()
+									) );
+		}
+		else {
+			m_position->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d",
+									modLock->order(), modLock->patternIndex(), modLock->row(), msecs / 6000, msecs / 100 % 60, msecs % 100,
+									msecslen / 6000, msecslen / 100 % 60, msecslen % 100
+									) );
+		}
+		m_playbackInfo->setEscapedText( ppp::stringf( "{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", modLock->speed(), modLock->tempo(), modLock->globalVolume() * 100 / 0x40 ) );
+		for( uint8_t i = 0; i < modLock->channelCount(); i++ ) {
+			if( i >= 16 )
+				break;
+			m_chanInfos.at(i)->setText( modLock->channelStatus( i ) );
+			m_chanCells.at(i)->setText( modLock->channelCellString( i ) );
+		}
+		m_posBar->setMax( modLock->length() );
+		m_posBar->setValue( modLock->position() );
 	}
-	else {
-		m_position->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d",
-								modLock->order(), modLock->patternIndex(), modLock->row(), msecs / 6000, msecs / 100 % 60, msecs % 100,
-								msecslen / 6000, msecslen / 100 % 60, msecslen % 100
-								) );
-	}
-	m_playbackInfo->setEscapedText( ppp::stringf( "{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", modLock->speed(), modLock->tempo(), modLock->globalVolume() * 100 / 0x40 ) );
-	for( uint8_t i = 0; i < modLock->channelCount(); i++ ) {
-		if( i >= 16 )
-			break;
-		m_chanInfos.at(i)->setText( modLock->channelStatus( i ) );
-		m_chanCells.at(i)->setText( modLock->channelCellString( i ) );
-	}
-	m_posBar->setMax( modLock->length() );
-	m_posBar->setValue( modLock->position() );
 	ppg::SDLScreen::instance()->draw();
 }

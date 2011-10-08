@@ -29,7 +29,10 @@
 
 #include "light4cxx/logger.h"
 
-#include <mutex>
+#define _GLIBCXX_USE_NANOSLEEP
+#warning "Defining _GLIBCXX_USE_NANOSLEEP for enabling usage of std::sleep_for"
+#include <thread>
+#undef _GLIBCXX_USE_NANOSLEEP
 
 /**
  * @interface IAudioSource
@@ -43,7 +46,7 @@ class IAudioSource {
 		//! @brief Frequency of this source
 		uint32_t m_frequency;
 		//! @brief Mutex for locking the source
-		std::mutex m_lockMutex;
+		std::recursive_mutex m_lockMutex;
 	protected:
 		/**
 		 * @brief Sets m_initialized to @c false and m_frequency to @c 0
@@ -62,7 +65,7 @@ class IAudioSource {
 			DISABLE_COPY(LockGuard)
 		private:
 			//! @brief STL mutex lock guard
-			std::lock_guard<std::mutex> m_guard;
+			std::lock_guard<std::recursive_mutex> m_guard;
 		public:
 			/**
 			 * @brief Constructor

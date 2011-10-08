@@ -41,11 +41,6 @@
 
 #include <SDL.h>
 
-#define _GLIBCXX_USE_NANOSLEEP
-#warning "Defining _GLIBCXX_USE_NANOSLEEP for enabling usage of std::sleep_for"
-#include <thread>
-#undef _GLIBCXX_USE_NANOSLEEP
-
 // static const size_t BUFFERSIZE = 4096;
 // static const size_t SAMPLECOUNT = BUFFERSIZE / sizeof( BasicSample );
 // static const size_t FRAMECOUNT = BUFFERSIZE / sizeof( BasicSampleFrame );
@@ -54,6 +49,7 @@ static std::shared_ptr<ppg::SDLScreen> dosScreen;
 static std::shared_ptr<UIMain> uiMain;
 
 static IAudioOutput::Ptr output;
+static AudioFifo::Ptr fifo;
 // static SDL_TimerID updateTimer = nullptr;
 
 namespace config {
@@ -225,7 +221,8 @@ int main( int argc, char* argv[] ) {
 		if( !config::quickMp3 ) {
 #endif
 			light4cxx::Logger::root()->info(L4CXX_LOCATION, "Init Audio" );
-			output.reset( new SDLAudioOutput( module ) );
+			fifo.reset( new AudioFifo( module, 4096 ) );
+			output.reset( new SDLAudioOutput( fifo ) );
 			if( !output->init( 44100 ) ) {
 				light4cxx::Logger::root()->fatal(L4CXX_LOCATION, "Audio Init failed" );
 				return EXIT_FAILURE;

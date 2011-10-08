@@ -24,6 +24,8 @@
 #include "audiofifo.h"
 
 #include <algorithm>
+#include <thread>
+
 #include <boost/assert.hpp>
 #include <boost/format.hpp>
 
@@ -31,7 +33,7 @@
  * @brief Makes volume values logarithmic
  * @param[in,out] leftVol Left channel volume
  * @param[in,out] rightVol Right channel volume
- * @see calcVolume
+ * @see AudioFifo::calcVolume()
  */
 static void logify(uint16_t& leftVol, uint16_t& rightVol) {
 	uint32_t tmp = leftVol << 1;
@@ -52,10 +54,60 @@ static void logify(uint16_t& leftVol, uint16_t& rightVol) {
 	rightVol = tmp > 0xffff ? 0xffff : tmp;
 }
 
+void AudioFifo::requestThread(AudioFifo* fifo)
+{
+	BOOST_ASSERT(fifo != nullptr);
+	while(!fifo->m_source.expired()) {
+		// continue if no data is available
+		if(fifo->m_queuedFrames >= fifo->m_minFrameCount) {
+			continue;
+		}
+		AudioFrameBuffer buffer;
+		// keep it low to avoid blockings
+		int size = std::max<int>(256, fifo->m_minFrameCount - fifo->m_queuedFrames);
+		if(size<=0) {
+			continue;
+		}
+		{
+			// request the data
+			IAudioSource::Ptr src = fifo->m_source.lock();
+			IAudioSource::LockGuard guard(src.get());
+			if(0==src->getAudioData(buffer, size)) {
+				logger()->trace(L4CXX_LOCATION, "Audio source dry");
+				break;
+			}
+		}
+		// add the data to the queue...
+		logger()->trace(L4CXX_LOCATION, boost::format("Adding %d frames to a %d-frame queue, minimum is %d frames")%buffer->size()%fifo->m_queuedFrames%fifo->m_minFrameCount);
+		// copy, because AudioFrameBuffer is a shared_ptr that may be modified
+		AudioFrameBuffer cp(new AudioFrameBuffer::element_type);
+		*cp = *buffer;
+		fifo->waitLock();
+		fifo->m_queuedFrames += cp->size();
+		fifo->m_queue.push_back(cp);
+		fifo->unlock();
+	}
+}
+
+AudioFifo::AudioFifo(const IAudioSource::WeakPtr& source, size_t frameCount) :
+	m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_volumeLeft(0),
+	m_volumeRight(0), m_queueMutex(), m_requestThread(), m_source(source)
+{
+	BOOST_ASSERT(!source.expired());
+	logger()->debug(L4CXX_LOCATION, boost::format("Created with %d frames minimum")%frameCount);
+	m_requestThread = std::thread(requestThread, this);
+	m_requestThread.detach();
+}
+
+AudioFifo::~AudioFifo() {
+	logger()->trace(L4CXX_LOCATION, "Destroyed");
+}
+
 void AudioFifo::calcVolume(uint16_t& leftVol, uint16_t& rightVol) {
-	BOOST_ASSERT(m_queuedFrames != 0);
-	//MutexLocker mutexLock(m_queueMutex);
-	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
+	if(m_queuedFrames == 0) {
+		return;
+	}
+	std::lock_guard<std::recursive_mutex> mutexLock(m_queueMutex);
 	leftVol = rightVol = 0;
 	uint64_t leftSum = 0, rightSum = 0;
 	size_t totalProcessed = 0;
@@ -71,53 +123,21 @@ void AudioFifo::calcVolume(uint16_t& leftVol, uint16_t& rightVol) {
 	logify(leftVol, rightVol);
 }
 
-AudioFifo::AudioFifo(size_t frameCount) : m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_volumeLeft(0), m_volumeRight(0), m_queueMutex() {
-	logger()->debug(L4CXX_LOCATION, boost::format("Initialized FIFO with %d frames minimum")%frameCount);
-}
-
-
-void AudioFifo::push(const AudioFrameBuffer& data) {
-	// copy, because AudioFrameBuffer is a shared_ptr that may be modified
-	AudioFrameBuffer cp(new AudioFrameBuffer::element_type);
-	*cp = *data;
-	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
-	m_queuedFrames += cp->size();
-	m_queue.push_back(cp);
-	//LOG_DEBUG("Added %zd frames to the queue, now queued %zd frames", cp->size(), m_queuedFrames);
-}
-
-size_t AudioFifo::pullAll(AudioFrameBuffer& data) {
-	return pull(data, nsize);
-}
-
-size_t AudioFifo::pull(BasicSampleFrame* data, size_t size) {
-	AudioFrameBuffer buffer;
-	if(0 == pull(buffer, size))
-		return 0;
-	if(!buffer || buffer->size() == 0)
-		return 0;
-	std::copy(buffer->begin(), buffer->end(), data);
-	return buffer->size();
-}
-
-size_t AudioFifo::pull(AudioFrameBuffer& data, size_t size) {
-	//LOG_DEBUG("Requested %zd frames", size);
-	if(needsData())
-		return 0;
+size_t AudioFifo::getAudioData(AudioFrameBuffer& data, size_t size) {
 	calcVolume(m_volumeLeft, m_volumeRight);
-	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
-	if(size == nsize || size > m_queuedFrames) {
-		if(size != nsize) {
-			logger()->warn(L4CXX_LOCATION, boost::format("Requested %d frames while only %d frames in queue")%size%m_queuedFrames);
-		}
+	std::lock_guard<std::recursive_mutex> mutexLock(m_queueMutex);
+	if(size > m_queuedFrames) {
+		logger()->warn(L4CXX_LOCATION, boost::format("Buffer underrun: Requested %d frames while only %d frames in queue")%size%m_queuedFrames);
 		size = m_queuedFrames;
 	}
-	if(!data)
+	if(!data) {
 		data.reset(new AudioFrameBuffer::element_type(size, {0, 0}));
-	if(data->size() < size)
+	}
+	if(data->size() < size) {
 		data->resize(size, {0, 0});
+	}
 	size_t copied = 0;
-	size_t toCopy = m_queue.front()->size();
+	size_t toCopy = size;
 	while(!m_queue.empty() && size != 0) {
 		AudioFrameBuffer& current = m_queue.front();
 		toCopy = std::min(current->size(), size);
@@ -129,48 +149,18 @@ size_t AudioFifo::pull(AudioFrameBuffer& data, size_t size) {
 			m_queue.pop_front();
 			toCopy = 0;
 		}
-		else
+		else {
 			break;
+		}
 	}
 	if(toCopy != 0 && !m_queue.empty()) {
 		m_queuedFrames -= toCopy;
 		AudioFrameBuffer& current = m_queue.front();
 		current->erase(current->begin(), current->begin() + toCopy);
 	}
-	//LOG_DEBUG(" -- copied %zd frames", copied);
-	return copied;
-}
-
-size_t AudioFifo::copy(AudioFrameBuffer& data, size_t size) {
-	//LOG_DEBUG("Requested %zd frames", size);
-	if(needsData())
-		return 0;
-	std::lock_guard<std::mutex> mutexLock(m_queueMutex);
-	if(size == nsize || size > m_queuedFrames) {
-		if(size != nsize) {
-			logger()->warn(L4CXX_LOCATION, boost::format("Requested %d frames while only %d frames in queue")%size%m_queuedFrames);
-		}
-		size = m_queuedFrames;
+	if(data->size() != copied) {
+		logger()->error(L4CXX_LOCATION, boost::format("Copied %d frames into a buffer with %d frames")%copied%data->size());
 	}
-	if(!data)
-		data.reset(new AudioFrameBuffer::element_type(size, {0, 0}));
-	if(data->size() < size)
-		data->resize(size, {0, 0});
-	size_t copied = 0;
-	AudioFrameBufferQueue::iterator queueIt = m_queue.begin();
-	size_t toCopy = (*queueIt)->size();
-	while(queueIt != m_queue.end() && size != 0) {
-		AudioFrameBuffer& current = *queueIt;
-		toCopy = std::min(current->size(), size);
-		std::copy(current->begin(), current->begin() + toCopy, data->begin() + copied);
-		copied += toCopy;
-		size -= toCopy;
-		if(toCopy == current->size())
-			queueIt++;
-		else
-			break;
-	}
-	//LOG_DEBUG(" -- copied %zd frames", copied);
 	return copied;
 }
 
@@ -194,16 +184,20 @@ void AudioFifo::setMinFrameCount(size_t len) {
 	m_minFrameCount = len;
 }
 
-bool AudioFifo::needsData() const {
-	return m_queuedFrames < m_minFrameCount;
-}
-
 size_t AudioFifo::queuedChunkCount() const {
 	return m_queue.size();
 }
 
 size_t AudioFifo::minFrameCount() const {
 	return m_minFrameCount;
+}
+
+bool AudioFifo::initialize(uint32_t frequency)
+{
+	logger()->trace(L4CXX_LOCATION, "Initializing");
+	BOOST_ASSERT(!m_source.expired());
+	IAudioSource::Ptr lock(m_source.lock());
+	return lock->initialize(frequency);
 }
 
 light4cxx::Logger::Ptr AudioFifo::logger()

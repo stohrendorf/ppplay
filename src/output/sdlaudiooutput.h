@@ -54,12 +54,6 @@ class SDLAudioOutput : public IAudioOutput {
 		 * @note Declared here to get access to m_fifo
 		 */
 		static void sdlAudioCallback(void* userdata, uint8_t* stream, int len_bytes);
-		AudioFifo m_fifo; //!< @brief FIFO buffer
-		/**
-		 * @brief Fills m_fifo
-		 * @return @c false if the FIFO could not be filled
-		 */
-		bool fillFifo();
 	protected:
 		/**
 		 * @brief Get the logger instance for SDLAudioOutput
