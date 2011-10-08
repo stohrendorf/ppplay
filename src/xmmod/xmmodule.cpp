@@ -526,13 +526,16 @@ uint32_t XmModule::periodToFrequency(uint16_t period) const {
 }
 
 uint16_t XmModule::periodToFineNoteIndex(uint16_t period, int8_t finetune, uint8_t deltaNote) const {
-	int8_t tuned = (finetune / 8 + 16);
+	return 0;
+#warning WE GOT A PROBLEM!
+	int8_t tuned = (finetune / 8 + 15);
 	uint16_t ofsLo = 0;
 	uint16_t ofsHi = m_noteToPeriod.size();
 	for(int i = 0; i < 8; i++) {
 		uint16_t ofsMid = (ofsLo + ofsHi) >> 1;
 		ofsMid &= 0xfff0;
 		ofsMid += tuned;
+		//! @bug out_of_range sometimes
 		if(period == m_noteToPeriod.at(ofsMid)) {
 			ofsLo = ofsMid;
 			break;
