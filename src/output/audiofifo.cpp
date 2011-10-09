@@ -60,12 +60,14 @@ void AudioFifo::requestThread(AudioFifo* fifo)
 	while(!fifo->m_source.expired()) {
 		// continue if no data is available
 		if(fifo->m_queuedFrames >= fifo->m_minFrameCount) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			continue;
 		}
 		AudioFrameBuffer buffer;
 		// keep it low to avoid blockings
 		int size = std::max<int>(256, fifo->m_minFrameCount - fifo->m_queuedFrames);
 		if(size<=0) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			continue;
 		}
 		{
