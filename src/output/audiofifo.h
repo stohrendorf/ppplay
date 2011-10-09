@@ -30,7 +30,6 @@
 
 #include "light4cxx/logger.h"
 
-#include <thread>
 #include <atomic>
 
 /**

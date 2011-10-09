@@ -610,8 +610,7 @@ bool XmModule::initialize(uint32_t frq) {
 	do {
 		simulateTick(currTickLen);
 		multiSongLengthAt(0) += currTickLen;
-	}
-	while(currTickLen != 0);
+	} while(currTickLen != 0);
 	logger()->info(L4CXX_LOCATION, "Preprocessed. Resetting module.");
 	if(songCount() > 0) {
 		IAudioSource::LockGuard guard(this);
