@@ -147,7 +147,7 @@ static inline uint16_t st3Period(uint8_t note, uint16_t c4spd, uint16_t finetune
  * @return Note offset (12*octave+note)
  */
 static inline uint8_t periodToNoteOffset(uint16_t per, uint16_t c4spd, uint16_t finetune = 8363) {
-	return -12 * std::log2(static_cast<float>(per) * c4spd / (finetune * Periods[0]));
+	return std::round(-12 * std::log2(static_cast<float>(per) * c4spd / (finetune * Periods[0])));
 }
 
 /**
@@ -159,10 +159,12 @@ static inline uint8_t periodToNoteOffset(uint16_t per, uint16_t c4spd, uint16_t 
  * @note Time-critical
  */
 static inline std::string periodToNote(uint16_t per, uint16_t c2spd, uint16_t finetune = 8363) {
-	if(per == 0)
+	if(per == 0) {
 		return "p??";
-	if(c2spd == 0)
+	}
+	if(c2spd == 0) {
 		return "c??";
+	}
 	// per = (8363<<4)*( Periods[S3M_NOTE( note )] >> S3M_OCTAVE( note ) ) / c4spd;
 	// per*c4spd/(8363<<4) == Periods[note] * (2^-octave)
 	//                     ~= Periods[0] * (2^-(octave+note/12))
@@ -251,10 +253,12 @@ S3mSample::Ptr S3mChannel::currentSample() {
 }
 
 std::string S3mChannel::noteName() {
-	if(m_note == s3mEmptyNote)
+	if(m_note == s3mEmptyNote) {
 		return "   ";
-	if(!isActive() || isDisabled())
+	}
+	if(!isActive() || isDisabled()) {
 		return "   ";
+	}
 	return periodToNote(m_realPeriod, currentSample()->frequency());
 }
 

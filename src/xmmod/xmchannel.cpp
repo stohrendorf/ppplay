@@ -632,21 +632,15 @@ std::string XmChannel::noteName() {
 	else if(m_baseNote == KeyOffNote) {
 		return "===";
 	}
-	//else if(m_baseNote < KeyOffNote) {
-		//return stringf("%s%d", NoteNames.at((m_baseNote - 1) % 12), (m_baseNote - 1) / 12);
-	//}
-	//else {
-		//return "???";
-	//}
-	int ofs = m_module->periodToFineNoteIndex( m_currentPeriod+m_autoVibDeltaPeriod, m_finetune );
-	ofs -= m_finetune>>3;
-	ofs >>= 4;
-	ofs -= currentSample()->relativeNote()+1;
-	ofs--;
-	if(ofs<0) {
+	float fofs = m_module->periodToFineNoteIndex( m_currentPeriod+m_autoVibDeltaPeriod, m_finetune );
+	fofs -= m_finetune/8.0+15;
+	fofs /= 16;
+	fofs -= currentSample()->relativeNote()+1;
+	fofs -= 1;
+	if(fofs<0) {
 		return "___";
 	}
-	//ofs = (ofs>>4)-1-currentSample()->relativeNote();
+	int ofs = std::round(fofs);
 	return stringf("%s%d", NoteNames.at(ofs%12), ofs/12 );
 }
 

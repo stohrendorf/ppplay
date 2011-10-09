@@ -526,16 +526,17 @@ uint32_t XmModule::periodToFrequency(uint16_t period) const {
 }
 
 uint16_t XmModule::periodToFineNoteIndex(uint16_t period, int8_t finetune, uint8_t deltaNote) const {
-	return 0;
-#warning WE GOT A PROBLEM!
 	int8_t tuned = (finetune / 8 + 15);
-	uint16_t ofsLo = 0;
-	uint16_t ofsHi = m_noteToPeriod.size();
+	int16_t ofsLo = 0;
+	int16_t ofsHi = m_noteToPeriod.size();
 	for(int i = 0; i < 8; i++) {
-		uint16_t ofsMid = (ofsLo + ofsHi) >> 1;
+		int16_t ofsMid = (ofsLo + ofsHi) >> 1;
 		ofsMid &= 0xfff0;
 		ofsMid += tuned;
-		//! @bug out_of_range sometimes
+		if( !inRange<size_t>(ofsMid, 0, m_noteToPeriod.size()-1) ) {
+			ofsLo = clip<size_t>(ofsMid, 0, m_noteToPeriod.size()-1);
+			break;
+		}
 		if(period == m_noteToPeriod.at(ofsMid)) {
 			ofsLo = ofsMid;
 			break;
@@ -547,7 +548,7 @@ uint16_t XmModule::periodToFineNoteIndex(uint16_t period, int8_t finetune, uint8
 			ofsLo = ofsMid + tuned;
 		}
 	}
-	uint16_t ofs = ofsLo + tuned + deltaNote;
+	int16_t ofs = ofsLo + tuned + deltaNote;
 	if(ofs >= m_noteToPeriod.size()) {
 		ofs = m_noteToPeriod.size() - 1;
 	}
