@@ -60,6 +60,10 @@ private:
 	uint8_t m_effectValue;
 	std::string m_note;
 protected:
+	/**
+	 * @brief Get the logger
+	 * @return Child logger with attached ".mod"
+	 */
 	static light4cxx::Logger::Ptr logger();
 };
 

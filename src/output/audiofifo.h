@@ -57,12 +57,19 @@ class AudioFifo : public IAudioSource {
 		uint16_t m_volumeLeft; //!< @brief Left volume
 		uint16_t m_volumeRight; //!< @brief Right volume
 		std::recursive_mutex m_queueMutex; //!< @brief Mutex to lock queue access
-		std::thread m_requestThread;
-		IAudioSource::WeakPtr m_source;
+		std::thread m_requestThread; //!< @brief The requester thread that pulls the audio data from the source
+		IAudioSource::WeakPtr m_source; //!< @brief The audio source to pull the data from
+		/**
+		 * @brief Audio data pulling thread function
+		 * @param[in] fifo The FIFO that owns the thread
+		 * @note Declared here to get access to private members of the AudioFifo
+		 * @see m_requestThread
+		 */
 		static void requestThread(AudioFifo* fifo);
 	public:
 		/**
 		 * @brief Initialize the buffer
+		 * @param[in] source The audio source that should be buffered
 		 * @param[in] minFrameCount Initial value for m_minFrameCount
 		 */
 		AudioFifo(const IAudioSource::WeakPtr& source, size_t minFrameCount);
@@ -107,6 +114,10 @@ class AudioFifo : public IAudioSource {
 		virtual size_t getAudioData(AudioFrameBuffer& buffer, size_t requestedFrames);
 		virtual bool initialize(uint32_t frequency);
 	protected:
+		/**
+		 * @brief Get the logger
+		 * @return Logger with name "audio.fifo"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 

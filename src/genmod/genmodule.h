@@ -293,19 +293,35 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @param[in] t The new tempo
 		 */
 		void setTempo(uint8_t t);
+		/**
+		 * @brief Get the current tempo
+		 * @return The current tempo
+		 */
 		int16_t tempo() const;
 		/**
 		 * @brief Sets the current speed
 		 * @param[in] s The new speed
 		 */
 		void setSpeed(uint8_t s);
+		/**
+		 * @brief Get the current speed
+		 * @return The current speed
+		 */
 		int16_t speed() const;
 		/**
 		 * @brief Get the current tick index
 		 * @return The current tick index
 		 */
 		uint8_t tick() const;
+		/**
+		 * @brief Get the current row index
+		 * @return The current row index
+		 */
 		int16_t row() const;
+		/**
+		 * @brief Get the current order index
+		 * @return The current order index
+		 */
 		int16_t order() const;
 		/**
 		 * @brief Get the current pattern index
@@ -313,6 +329,10 @@ class GenModule : public ISerializable, public IAudioSource {
 		 */
 		int16_t patternIndex() const;
 	protected:
+		/**
+		 * @brief Get the logger
+		 * @return Logger with name "module"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 

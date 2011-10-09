@@ -229,6 +229,10 @@ class GenSample {
 		 */
 		void setVolume(uint8_t v);
 	protected:
+		/**
+		 * @brief Get the logger
+		 * @return Logger with name "sample"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 

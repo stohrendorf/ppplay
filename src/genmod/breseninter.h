@@ -67,7 +67,7 @@ class BresenInterpolation : public ISerializable {
 		}
 		/**
 		 * @brief Calculates the next interpolation steps
-		 * @param[in] dx The number of steps to calculate
+		 * @param[in] bigDx The number of steps to calculate
 		 * @param[in,out] pos Interpolation Y point to adjust
 		 * @note Use this for tick simulation purposes
 		 * @see next()

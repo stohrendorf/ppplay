@@ -57,6 +57,10 @@ class IPatternCell : public ISerializable {
 		 */
 		virtual std::string trackerString() const = 0;
 	protected:
+		/**
+		 * @brief Get the logger
+		 * @return Logger with name "cell"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 

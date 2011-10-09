@@ -143,7 +143,7 @@ public:
 	 *       <li>@b P - Current process runtime in seconds (integer precision).</li>
 	 *       <li>@b r - Current processor time in seconds (double precision).</li>
 	 *       <li>@b R - Current processor time in seconds (integer precision).</li>
-	 *       <li>@b t - The log level string (one of TRACE, DEBUG, INFO, WARN, ERROR).</li>
+	 *       <li>@b t - The log level string (one of TRACE, DEBUG, INFO, WARN, ERROR, FATAL).</li>
 	 *       <li>@b T - The thread ID in hexadecimal, but without the "0x" prefix. Depending on the architecture, it may be either 8 or 16 chars wide.</li>
 	 *     </ul>
 	 *   </li>
@@ -158,7 +158,7 @@ public:
 	 * @endcode
 	 * 
 	 * @note The format string is pretty strict, so make sure to check it twice,
-	 * otherwise you will encounter a std::runtime_error telling you that setFormat()
+	 * otherwise you will encounter a std::runtime_error telling you that toString()
 	 * cannot parse the string.
 	 */
 	static void setFormat(const std::string& fmt);

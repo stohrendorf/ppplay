@@ -179,6 +179,7 @@ class XmChannel : public GenChannel {
 		XmModule* m_module;
 		//! @brief Current effect string
 		std::string m_fxString;
+		//! @brief Whether a note was triggered in the current row
 		bool m_noteChanged;
 		/**
 		 * @brief Get the current sample

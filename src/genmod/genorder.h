@@ -74,6 +74,10 @@ class GenOrder : public ISerializable {
 		 */
 		uint8_t increasePlaybackCount();
 	protected:
+		/**
+		 * @brief Get the logger
+		 * @return Logger with name "order"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 

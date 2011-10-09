@@ -106,8 +106,8 @@ class IAudioOutput {
 		 */
 		void setErrorCode(ErrorCode ec);
 		/**
-		 * @brief Get the logger instance for IAudioOutput
-		 * @return The logger instance with name "audio.output"
+		 * @brief Get the logger
+		 * @return Logger with name "audio.output"
 		 */
 		static light4cxx::Logger::Ptr logger();
 	private:

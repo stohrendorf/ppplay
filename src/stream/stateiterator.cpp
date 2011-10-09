@@ -27,6 +27,9 @@
 #include "light4cxx/logger.h"
 #include <boost/format.hpp>
 
+/**
+ * @brief Logger with name "stateiterator"
+ */
 static light4cxx::Logger::Ptr logger = light4cxx::Logger::get("stateiterator");
 
 StateIterator::StateIterator() : m_states(), m_stateIndex(0) {

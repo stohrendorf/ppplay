@@ -131,6 +131,13 @@ class XmModule : public GenModule {
 		 * @return Quantisized period
 		 */
 		uint16_t glissando(uint16_t period, int8_t finetune, uint8_t deltaNote = 0) const;
+		/**
+		 * @brief Reverse calculates a period to its fine note index
+		 * @param[in] period The period to reverse calculate
+		 * @param[in] finetune The finetune of the @a period
+		 * @param[in] deltaNote The optional relative note
+		 * @return The fine note index. It is 16 times finer than the real note index.
+		 */
 		uint16_t periodToFineNoteIndex(uint16_t period, int8_t finetune, uint8_t deltaNote = 0) const;
 		/**
 		 * @brief Request pattern break
@@ -149,9 +156,22 @@ class XmModule : public GenModule {
 		void doPatLoop(int16_t next);
 		IArchive& serialize(IArchive* data);
 		virtual bool initialize(uint32_t frq);
+		/**
+		 * @brief Check if there is a running pattern delay
+		 * @retval true if there is a running pattern delay
+		 */
 		bool isRunningPatDelay() const;
+		/**
+		 * @brief Request a pattern delay
+		 * @param[in] counter The number of rows the pattern should be delayed
+		 * @note Ignored if there is already a running pattern delay
+		 */
 		void doPatDelay(uint8_t counter);
 	protected:
+		/**
+		 * @brief Get the logger
+		 * @return Child logger with attached ".xm"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 

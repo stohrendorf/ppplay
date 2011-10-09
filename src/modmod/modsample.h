@@ -44,6 +44,10 @@ public:
 private:
 	uint8_t m_finetune;
 protected:
+	/**
+	 * @brief Get the logger
+	 * @return Child logger with attached ".mod"
+	 */
 	static light4cxx::Logger::Ptr logger();
 };
 

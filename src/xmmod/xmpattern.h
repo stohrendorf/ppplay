@@ -85,6 +85,10 @@ class XmPattern {
 		 */
 		static XmPattern::Ptr createDefaultPattern(int16_t chans);
 	protected:
+		/**
+		 * @brief Get the logger
+		 * @return Child logger with attached ".xm"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 

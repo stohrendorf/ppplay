@@ -146,6 +146,10 @@ class GenChannel : public ISerializable {
 		 * @param[in] s The new string
 		 */
 		void setStatusString(const std::string& s);
+		/**
+		 * @brief Get the logger
+		 * @return Logger with name "channel"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 

@@ -61,6 +61,10 @@ class S3mSample : public GenSample {
 		 */
 		bool isHighQuality() const;
 	protected:
+		/**
+		 * @brief Get the logger
+		 * @return Child logger with attached ".s3m"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 

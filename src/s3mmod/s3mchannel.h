@@ -147,6 +147,10 @@ class S3mChannel : public GenChannel {
 		 */
 		void setPanning(uint8_t pan);
 	protected:
+		/**
+		 * @brief Get the logger
+		 * @return Child logger with attached ".s3m"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 } // namespace s3m

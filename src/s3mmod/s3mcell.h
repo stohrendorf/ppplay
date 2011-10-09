@@ -83,6 +83,10 @@ class S3mCell : public IPatternCell {
 		uint8_t effectValue() const;
 		virtual IArchive& serialize(IArchive* data);
 	protected:
+		/**
+		 * @brief Get the logger
+		 * @return Child logger with attached ".s3m"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 

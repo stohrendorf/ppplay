@@ -149,6 +149,10 @@ class S3mModule : public GenModule {
 		bool hasZeroVolOpt() const;
 		virtual bool initialize(uint32_t frq);
 	protected:
+		/**
+		 * @brief Get the logger
+		 * @return Child logger with attached ".s3m"
+		 */
 		static light4cxx::Logger::Ptr logger();
 };
 } // namespace s3m

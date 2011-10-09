@@ -107,6 +107,10 @@ private:
 	ModSample::Ptr currentSample() const;
 	void applyGlissando();
 protected:
+	/**
+	 * @brief Get the logger
+	 * @return Child logger with attached ".mod"
+	 */
 	static light4cxx::Logger::Ptr logger();
 };
 

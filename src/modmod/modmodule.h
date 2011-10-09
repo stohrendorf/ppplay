@@ -78,6 +78,10 @@ public:
 	ModSample::Ptr sampleAt(size_t idx) const;
 	bool existsSample(size_t idx) const;
 protected:
+	/**
+	 * @brief Get the logger
+	 * @return Child logger with attached ".mod"
+	 */
 	static light4cxx::Logger::Ptr logger();
 };
 

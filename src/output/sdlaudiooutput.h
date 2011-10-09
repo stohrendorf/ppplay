@@ -56,8 +56,8 @@ class SDLAudioOutput : public IAudioOutput {
 		static void sdlAudioCallback(void* userdata, uint8_t* stream, int len_bytes);
 	protected:
 		/**
-		 * @brief Get the logger instance for SDLAudioOutput
-		 * @return The logger instance with name "audio.output.sdl"
+		 * @brief Get the logger
+		 * @return Child logger with attached ".sdl"
 		 */
 		static light4cxx::Logger::Ptr logger();
 };
