@@ -127,7 +127,7 @@ int StereoPeakBar::valueLeft() const {
 	int i = 0;
 	for(int v : m_interArrL) {
 		res += i*v;
-		div += i;
+		div += ++i;
 	}
 	return res / div;
 }
@@ -138,7 +138,7 @@ int StereoPeakBar::valueRight() const {
 	int i = 0;
 	for(int v : m_interArrR) {
 		res += i*v;
-		div += i;
+		div += ++i;
 	}
 	return res / div;
 }
