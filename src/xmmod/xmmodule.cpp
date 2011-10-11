@@ -528,24 +528,25 @@ uint32_t XmModule::periodToFrequency(uint16_t period) const {
 uint16_t XmModule::periodToFineNoteIndex(uint16_t period, int8_t finetune, uint8_t deltaNote) const {
 	int8_t tuned = (finetune / 8 + 15);
 	int16_t ofsLo = 0;
-	int16_t ofsHi = m_noteToPeriod.size();
+	int16_t ofsHi = m_noteToPeriod.size()-1;
+	// min(tuned)=13, max(tuned)=16
+	// log2(m_noteToPeriod.size()/16) ~= 7.0
+	// log2(m_noteToPeriod.size()/13) ~= 7.2
+	// so this binary search is a "little" faster by iterating only 8 times than
+	// iterating over the whole 1936 values. by the way, this _is_ the originally
+	// used algorithm.
 	for(int i = 0; i < 8; i++) {
 		int16_t ofsMid = (ofsLo + ofsHi) >> 1;
 		ofsMid &= 0xfff0;
 		ofsMid += tuned;
-		if( !inRange<size_t>(ofsMid, 0, m_noteToPeriod.size()-1) ) {
-			ofsLo = clip<size_t>(ofsMid, 0, m_noteToPeriod.size()-1);
+		if(ofsMid>=m_noteToPeriod.size()) {
 			break;
 		}
-		if(period == m_noteToPeriod.at(ofsMid)) {
-			ofsLo = ofsMid;
-			break;
-		}
-		else if(period > m_noteToPeriod.at(ofsMid)) {
-			ofsHi = ofsMid - tuned;
+		else if(ofsMid<0 || period <= m_noteToPeriod.at(ofsMid)) {
+			ofsLo = ofsMid + tuned;
 		}
 		else {
-			ofsLo = ofsMid + tuned;
+			ofsHi = ofsMid - tuned;
 		}
 	}
 	int16_t ofs = ofsLo + tuned + deltaNote;
