@@ -27,3 +27,7 @@
 * Graphics system
   
   Add more widgets/screens (file browser, song message, additional meta information...).
+
+* S3M
+
+  Fixme: Not every FX is displayed on every tick, e.g. vibrato or volume slides.
