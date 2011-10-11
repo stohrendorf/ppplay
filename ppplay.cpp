@@ -70,7 +70,7 @@ static bool parseCmdLine( int argc, char* argv[] ) {
 	( "version", "Shows version information and exits" )
 	( "warranty", "Shows warranty information and exits" )
 	( "copyright", "Shows copyright information and exits" )
-	( "log-level,l", bpo::value<int>(&loglevel)->default_value(1), "Sets the log level. Possible values:\n - 0 No logging\n - 1 Errors\n - 2 Warnings\n - 3 Informational\n - 4 Debug\n - 5 Trace\nWhen an invalid level is passed, it will automatically set to 'Trace'. Levels 4 and 5 will also produce a more verbose output." )
+	( "log-level,l", bpo::value<int>(&loglevel)->default_value(1), "Sets the log level. Possible values:\n - 0 No logging\n - 1 Errors\n - 2 Warnings\n - 3 Informational\n - 4 Debug\n - 5 Trace\nWhen an invalid level is passed, it will automatically be set to 'Trace'. Levels 4 and 5 will also produce a more verbose output." )
 	( "no-gui,n", "No GUI" )
 	;
 	bpo::options_description ioOpts( "Input/Output Options" );
@@ -322,4 +322,5 @@ int main( int argc, char* argv[] ) {
 	}
 	return EXIT_SUCCESS;
 }
+
 
