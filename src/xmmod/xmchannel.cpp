@@ -695,7 +695,10 @@ void XmChannel::simTick(size_t bufSize) {
 
 void XmChannel::updateStatus() {
 	if(!isActive()) {
-		setStatusString("");
+		setStatusString(stringf("         %s %s",
+		                        effectName().c_str(),
+		                        effectDescription().c_str()
+		                       ));
 		return;
 	}
 	std::string panStr;
