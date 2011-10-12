@@ -633,10 +633,9 @@ std::string XmChannel::noteName() {
 		return "===";
 	}
 	float fofs = m_module->periodToFineNoteIndex( m_currentPeriod+m_autoVibDeltaPeriod, m_finetune );
-	fofs -= m_finetune/8.0+15;
+	fofs -= m_finetune/8.0+16;
 	fofs /= 16;
-	fofs -= currentSample()->relativeNote()+1;
-	fofs -= 1;
+	fofs -= currentSample()->relativeNote();
 	if(fofs<0) {
 		return "___";
 	}

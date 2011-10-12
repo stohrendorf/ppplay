@@ -20,6 +20,10 @@
 
 #include "ppg/sdlscreen.h"
 
+static light4cxx::Logger::Ptr logger() {
+	return light4cxx::Logger::get("ui.main");
+}
+
 UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IAudioOutput::Ptr& output ):
 	Widget( parent ), SDLTimer(1000/30),
 	m_position(nullptr),
@@ -35,6 +39,7 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IA
 	m_module(module),
 	m_output(output)
 {
+	logger()->trace(L4CXX_LOCATION, "Initializing");
 	setSize( parent->area().size() );
 	setPosition( 0, 0 );
 	show();
@@ -108,6 +113,7 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IA
 	m_posBar->setFgColor(ppg::Color::BrightWhite);
 	m_posBar->show();
 	toTop(m_posBar);
+	logger()->trace(L4CXX_LOCATION, "Initialized");
 }
 
 void UIMain::drawThis()
@@ -152,14 +158,18 @@ ppg::Label *UIMain::modTitle()
 void UIMain::onTimer()
 {
 	if( m_module.expired() || m_output.expired() ) {
+		logger()->debug(L4CXX_LOCATION, "Module expired");
 		return;
 	}
 	{
+		logger()->trace(L4CXX_LOCATION, "Updating");
 		// this MUST be in its own scope so that the lock gets released
 		// before drawing. drawing may block.
 		ppp::GenModule::Ptr modLock( std::static_pointer_cast<ppp::GenModule>( m_module.lock() ) );
 		IAudioSource::LockGuard guard(modLock.get());
+		logger()->trace(L4CXX_LOCATION, "Module locked");
 		IAudioOutput::Ptr outLock(m_output.lock());
+		logger()->trace(L4CXX_LOCATION, "Output device locked");
 		ppg::SDLScreen::instance()->clear( ' ', ppg::Color::White, ppg::Color::Black );
 		m_volBar->shift( outLock->volumeLeft() >> 8, outLock->volumeRight() >> 8 );
 		size_t msecs = modLock->position() / 441;
@@ -187,5 +197,6 @@ void UIMain::onTimer()
 		m_posBar->setMax( modLock->length() );
 		m_posBar->setValue( modLock->position() );
 	}
+	logger()->trace(L4CXX_LOCATION, "Drawing");
 	ppg::SDLScreen::instance()->draw();
 }

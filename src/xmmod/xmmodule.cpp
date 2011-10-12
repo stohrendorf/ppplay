@@ -135,24 +135,26 @@ bool XmModule::load(const std::string& filename) {
 		m_instruments.push_back(ins);
 	}
 	if(m_amiga) {
-		uint16_t* dest = m_noteToPeriod.begin();
-		uint8_t octShift = 0;
-		for(int octave = 10; octave >= 0; octave--) {
-			uint16_t val = ~(0xffff << octShift);
-			int count = octave != 0 ? 96 : 8;
-			for(int j = 0; j < count; j++) {
-				dest[0] = dest[1] = ((g_PeriodTable.at(j) << 6) + val) >> (octShift + 1);
-				dest += 2;
+		logger()->debug(L4CXX_LOCATION, "Initializing Amiga period table");
+		uint16_t destOfs = 0;
+		for(int16_t octave = 10; octave>0; octave--) {
+			uint16_t octaveMask = ~(0xffff<<(10-octave));
+			int16_t perCount = 96;
+// 			if(octave==1) {
+// 				perCount += 8;
+// 			}
+			for(int i=0; i<perCount; i++) {
+				uint16_t amigaVal = g_PeriodTable.at(i);
+				amigaVal = ((amigaVal<<6)+octaveMask) >> (11-octave);
+				m_noteToPeriod.at(destOfs++) = m_noteToPeriod.at(destOfs++) = amigaVal;
 			}
-			octShift++;
 		}
-		dest = m_noteToPeriod.begin();
-		for(size_t i = 0; i < m_noteToPeriod.size() / 2 - 1; i++) {
-			dest[1] = (dest[0] + dest[2]) >> 1;
-			dest += 2;
+		for(size_t i = 0; i < 967; i++) {
+			m_noteToPeriod.at(i*2+1) = (m_noteToPeriod.at(i*2+0) + m_noteToPeriod.at(i*2+2)) >> 1;
 		}
 	}
 	else {
+		logger()->debug(L4CXX_LOCATION, "Initializing linear frequency table");
 		uint16_t val = 121 * 16;
 		for(size_t i = 0; i < m_noteToPeriod.size(); i++) {
 			m_noteToPeriod.at(i) = val * 4;
@@ -526,32 +528,23 @@ uint32_t XmModule::periodToFrequency(uint16_t period) const {
 }
 
 uint16_t XmModule::periodToFineNoteIndex(uint16_t period, int8_t finetune, uint8_t deltaNote) const {
-	int8_t tuned = (finetune / 8 + 15);
+	int8_t tuned = (finetune / 8 + 16);
 	int16_t ofsLo = 0;
-	int16_t ofsHi = m_noteToPeriod.size()-1;
-	// min(tuned)=13, max(tuned)=16
-	// log2(m_noteToPeriod.size()/16) ~= 7.0
-	// log2(m_noteToPeriod.size()/13) ~= 7.2
-	// so this binary search is a "little" faster by iterating only 8 times than
-	// iterating over the whole 1936 values. by the way, this _is_ the originally
-	// used algorithm.
+	int16_t ofsHi = 1536;
 	for(int i = 0; i < 8; i++) {
 		int16_t ofsMid = (ofsLo + ofsHi) >> 1;
 		ofsMid &= 0xfff0;
 		ofsMid += tuned;
-		if(ofsMid>=m_noteToPeriod.size()) {
-			break;
-		}
-		else if(ofsMid<0 || period <= m_noteToPeriod.at(ofsMid)) {
-			ofsLo = ofsMid + tuned;
+		if(period <= m_noteToPeriod.at(ofsMid-8)) {
+			ofsLo = ofsMid - tuned;
 		}
 		else {
 			ofsHi = ofsMid - tuned;
 		}
 	}
 	int16_t ofs = ofsLo + tuned + deltaNote;
-	if(ofs >= m_noteToPeriod.size()) {
-		ofs = m_noteToPeriod.size() - 1;
+	if(ofs > 1550) {
+		ofs = 1551;
 	}
 	return ofs;
 }

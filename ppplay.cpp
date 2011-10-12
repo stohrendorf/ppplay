@@ -213,6 +213,7 @@ int main( int argc, char* argv[] ) {
 			return EXIT_FAILURE;
 		}
 		if( !config::noGUI ) {
+			light4cxx::Logger::root()->trace(L4CXX_LOCATION, "Initializing SDL Screen");
 			dosScreen.reset( new ppg::SDLScreen( 80, 25, PACKAGE_STRING ) );
 			dosScreen->setAutoDelete(false);
 			dosScreen->show();

@@ -80,7 +80,7 @@ void AudioFifo::requestThread(AudioFifo* fifo)
 			}
 		}
 		// add the data to the queue...
-		logger()->trace(L4CXX_LOCATION, boost::format("Adding %d frames to a %d-frame queue, minimum is %d frames")%buffer->size()%fifo->m_queuedFrames%fifo->m_minFrameCount);
+		logger()->trace(L4CXX_LOCATION, boost::format("Adding %4d frames to a %4d-frame queue, minimum is %4d frames")%buffer->size()%fifo->m_queuedFrames%fifo->m_minFrameCount);
 		// copy, because AudioFrameBuffer is a shared_ptr that may be modified
 		AudioFrameBuffer cp(new AudioFrameBuffer::element_type);
 		*cp = *buffer;
