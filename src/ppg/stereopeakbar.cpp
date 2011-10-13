@@ -124,10 +124,10 @@ void StereoPeakBar::shiftFrac(float lval, float rval) {
 int StereoPeakBar::valueLeft() const {
 	int res = 0;
 	int div = 0;
-	int i = 0;
+	int i = 1;
 	for(int v : m_interArrL) {
 		res += i*v;
-		div += ++i;
+		div += i++;
 	}
 	return res / div;
 }
@@ -135,10 +135,10 @@ int StereoPeakBar::valueLeft() const {
 int StereoPeakBar::valueRight() const {
 	int res = 0;
 	int div = 0;
-	int i = 0;
+	int i = 1;
 	for(int v : m_interArrR) {
 		res += i*v;
-		div += ++i;
+		div += i++;
 	}
 	return res / div;
 }
