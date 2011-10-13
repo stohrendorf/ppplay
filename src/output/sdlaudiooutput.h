@@ -43,8 +43,6 @@ class SDLAudioOutput : public IAudioOutput {
 		virtual bool paused();
 		virtual void play();
 		virtual void pause();
-		virtual uint16_t volumeLeft() const;
-		virtual uint16_t volumeRight() const;
 	private:
 		/**
 		 * @brief SDL Audio callback handler

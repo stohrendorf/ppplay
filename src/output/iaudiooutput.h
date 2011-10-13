@@ -86,14 +86,14 @@ class IAudioOutput {
 		IAudioSource::WeakPtr source() const;
 		/**
 		 * @brief Get the left channel's volume
-		 * @return Left channel's volume
+		 * @return Left channel's volume, defaults to the source's volume
 		 */
-		virtual uint16_t volumeLeft() const = 0;
+		virtual uint16_t volumeLeft() const;
 		/**
 		 * @brief Get the right channel's volume
-		 * @return Right channel's volume
+		 * @return Right channel's volume, defaults to the source's volume
 		 */
-		virtual uint16_t volumeRight() const = 0;
+		virtual uint16_t volumeRight() const;
 		/**
 		 * @brief Get the internal error code
 		 * @return Internal error code

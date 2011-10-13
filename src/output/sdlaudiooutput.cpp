@@ -105,14 +105,6 @@ void SDLAudioOutput::pause() {
 	SDL_PauseAudio(1);
 }
 
-uint16_t SDLAudioOutput::volumeLeft() const {
-	return 0; // TODO
-}
-
-uint16_t SDLAudioOutput::volumeRight() const {
-	return 0; // TODO
-}
-
 light4cxx::Logger::Ptr SDLAudioOutput::logger()
 {
 	return light4cxx::Logger::get( IAudioOutput::logger()->name() + ".sdl" );

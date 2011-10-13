@@ -93,16 +93,8 @@ class AudioFifo : public IAudioSource {
 		 * @param[in] len The requested buffer length
 		 */
 		void setMinFrameCount(size_t len);
-		/**
-		 * @brief Get the left volume
-		 * @return The left channel's volume
-		 */
-		uint16_t volumeLeft() const;
-		/**
-		 * @brief Get the right volume
-		 * @return The right channel's volume
-		 */
-		uint16_t volumeRight() const;
+		virtual uint16_t volumeLeft() const;
+		virtual uint16_t volumeRight() const;
 		/**
 		 * @brief Check if the FIFO is empty
 		 * @retval true FIFO is empty

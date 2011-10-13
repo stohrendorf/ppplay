@@ -127,6 +127,16 @@ class IAudioSource {
 		 * and returns @c false, else it returns @c true.
 		 */
 		bool isLocked();
+		/**
+		 * @brief Get the left channel's volume
+		 * @return Left channel's volume, default is 0
+		 */
+		virtual uint16_t volumeLeft() const ;
+		/**
+		 * @brief Get the right channel's volume
+		 * @return Right channel's volume, default is 0
+		 */
+		virtual uint16_t volumeRight() const;
 	protected:
 		/**
 		 * @brief Get the logger
