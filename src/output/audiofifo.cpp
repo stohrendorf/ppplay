@@ -31,27 +31,34 @@
 
 /**
  * @brief Makes volume values logarithmic
- * @param[in,out] leftVol Left channel volume
- * @param[in,out] rightVol Right channel volume
+ * @param[in] value Volume to make logarithmic
+ * @return A more "natural" feeling value
  * @see AudioFifo::calcVolume()
  */
-static void logify(uint16_t& leftVol, uint16_t& rightVol) {
-	uint32_t tmp = leftVol << 1;
+static uint16_t logify(uint16_t value) {
+	uint32_t tmp = value << 1;
 	if(tmp > 0x8000)
 		tmp = (0x8000 + tmp) >> 1;
 	if(tmp > 0xb000)
 		tmp = (0xb000 + tmp) >> 1;
 	if(tmp > 0xe000)
 		tmp = (0xe000 + tmp) >> 1;
-	leftVol = tmp > 0xffff ? 0xffff : tmp;
-	tmp = rightVol << 1;
-	if(tmp > 0x8000)
-		tmp = (0x8000 + tmp) >> 1;
-	if(tmp > 0xb000)
-		tmp = (0xb000 + tmp) >> 1;
-	if(tmp > 0xe000)
-		tmp = (0xe000 + tmp) >> 1;
-	rightVol = tmp > 0xffff ? 0xffff : tmp;
+	return tmp > 0xffff ? 0xffff : tmp;
+}
+
+/**
+ * @brief Sums up the absolute sample values of an AudioFrameBuffer
+ * @param[in] buf The buffer with the values to sum up
+ * @param[out] left Sum of absolute left sample values
+ * @param[out] right Sum of absolute right sample values
+ */
+static void sumAbsValues(const AudioFrameBuffer& buf, uint64_t& left, uint64_t& right)
+{
+	left = right = 0;
+	for(const BasicSampleFrame& frame : *buf) {
+		left += std::abs(frame.left);
+		right += std::abs(frame.right);
+	}
 }
 
 void AudioFifo::requestThread(AudioFifo* fifo)
@@ -84,21 +91,16 @@ void AudioFifo::requestThread(AudioFifo* fifo)
 		}
 		// add the data to the queue...
 		logger()->trace(L4CXX_LOCATION, boost::format("Adding %4d frames to a %4d-frame queue, minimum is %4d frames")%buffer->size()%fifo->m_queuedFrames%fifo->m_minFrameCount);
-		// copy, because AudioFrameBuffer is a shared_ptr that may be modified
-		AudioFrameBuffer cp(new AudioFrameBuffer::element_type);
-		*cp = *buffer;
-		fifo->waitLock();
-		fifo->m_queuedFrames += cp->size();
-		fifo->m_queue.push_back(cp);
-		fifo->unlock();
+		fifo->pushBuffer(buffer);
 	}
 }
 
 AudioFifo::AudioFifo(const IAudioSource::WeakPtr& source, size_t frameCount) :
-	m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_volumeLeft(0),
-	m_volumeRight(0), m_queueMutex(), m_requestThread(), m_source(source)
+	m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_queueMutex(),
+	m_requestThread(), m_source(source), m_volLeftSum(0), m_volRightSum(0)
 {
 	BOOST_ASSERT(!source.expired());
+	BOOST_ASSERT(m_minFrameCount >= 256);
 	logger()->debug(L4CXX_LOCATION, boost::format("Created with %d frames minimum")%frameCount);
 	m_requestThread = std::thread(requestThread, this);
 	m_requestThread.detach();
@@ -108,29 +110,23 @@ AudioFifo::~AudioFifo() {
 	logger()->trace(L4CXX_LOCATION, "Destroyed");
 }
 
-void AudioFifo::calcVolume(uint16_t& leftVol, uint16_t& rightVol) {
-	if(m_queuedFrames == 0) {
-		return;
-	}
-	std::lock_guard<std::recursive_mutex> mutexLock(m_queueMutex);
-	leftVol = rightVol = 0;
-	uint64_t leftSum = 0, rightSum = 0;
-	size_t totalProcessed = 0;
-	for(const AudioFrameBuffer& buf : m_queue) {
-		for(const BasicSampleFrame& frame : *buf) {
-			leftSum  += abs(frame.left);
-			rightSum += abs(frame.right);
- 		}
-		totalProcessed += buf->size();
-	}
-	leftVol = (leftSum << 2) / totalProcessed;
-	rightVol = (rightSum << 2) / totalProcessed;
-	logify(leftVol, rightVol);
+void AudioFifo::pushBuffer(const AudioFrameBuffer& buf)
+{
+	// copy, because AudioFrameBuffer is a shared_ptr that may be modified
+	AudioFrameBuffer cp(new AudioFrameBuffer::element_type);
+	*cp = *buf;
+	uint64_t left, right;
+	sumAbsValues(cp, left, right);
+	std::lock_guard<std::mutex> guard(m_queueMutex);
+	m_volLeftSum += left;
+	m_volRightSum += right;
+	m_queuedFrames += cp->size();
+	m_queue.push_back(cp);
 }
 
 size_t AudioFifo::getAudioData(AudioFrameBuffer& data, size_t size) {
-	calcVolume(m_volumeLeft, m_volumeRight);
-	std::lock_guard<std::recursive_mutex> mutexLock(m_queueMutex);
+	// a modifying function, so we need a unique lock again
+	std::lock_guard<std::mutex> guard(m_queueMutex);
 	if(size > m_queuedFrames) {
 		logger()->warn(L4CXX_LOCATION, boost::format("Buffer underrun: Requested %d frames while only %d frames in queue")%size%m_queuedFrames);
 		size = m_queuedFrames;
@@ -166,6 +162,12 @@ size_t AudioFifo::getAudioData(AudioFrameBuffer& data, size_t size) {
 	if(data->size() != copied) {
 		logger()->error(L4CXX_LOCATION, boost::format("Copied %d frames into a buffer with %d frames")%copied%data->size());
 	}
+	{
+		uint64_t left, right;
+		sumAbsValues(data, left, right);
+		m_volLeftSum -= left;
+		m_volRightSum -= right;
+	}
 	return copied;
 }
 
@@ -178,14 +180,21 @@ bool AudioFifo::isEmpty() const {
 }
 
 uint16_t AudioFifo::volumeRight() const {
-	return m_volumeRight;
+	if(m_queuedFrames == 0) {
+		return 0;
+	}
+	return logify(m_volRightSum/(m_queuedFrames>>2));
 }
 
 uint16_t AudioFifo::volumeLeft() const {
-	return m_volumeLeft;
+	if(m_queuedFrames == 0) {
+		return 0;
+	}
+	return logify(m_volLeftSum/(m_queuedFrames>>2));
 }
 
 void AudioFifo::setMinFrameCount(size_t len) {
+	BOOST_ASSERT(len >= 256);
 	m_minFrameCount = len;
 }
 

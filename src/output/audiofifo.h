@@ -44,20 +44,14 @@ class AudioFifo : public IAudioSource {
 		DISABLE_COPY(AudioFifo)
 		AudioFifo() = delete;
 	private:
-		/**
-		 * @brief Calculate the volume of the audio buffer
-		 * @param[out] leftVol Left volume
-		 * @param[out] rightVol Right volume
-		 */
-		void calcVolume(uint16_t& leftVol, uint16_t& rightVol);
 		AudioFrameBufferQueue m_queue; //!< @brief Queued audio chunks
 		std::atomic_size_t m_queuedFrames; //!< @brief Number of frames in the queue
 		std::atomic_size_t m_minFrameCount; //!< @brief Minimum number of frames the queue should contain
-		uint16_t m_volumeLeft; //!< @brief Left volume
-		uint16_t m_volumeRight; //!< @brief Right volume
-		std::recursive_mutex m_queueMutex; //!< @brief Mutex to lock queue access
+		std::mutex m_queueMutex; //!< @brief Mutex to lock queue access
 		std::thread m_requestThread; //!< @brief The requester thread that pulls the audio data from the source
 		IAudioSource::WeakPtr m_source; //!< @brief The audio source to pull the data from
+		uint64_t m_volLeftSum; //!< @brief Sum of all left absolute sample values
+		uint64_t m_volRightSum; //!< @brief Sum of all right absolute sample values
 		/**
 		 * @brief Audio data pulling thread function
 		 * @param[in] fifo The FIFO that owns the thread
@@ -65,11 +59,16 @@ class AudioFifo : public IAudioSource {
 		 * @see m_requestThread
 		 */
 		static void requestThread(AudioFifo* fifo);
+		/**
+		 * @brief Adds a buffer to the internal queue by copying its contents
+		 * @param[in] buf The buffer to add
+		 */
+		void pushBuffer(const AudioFrameBuffer& buf);
 	public:
 		/**
 		 * @brief Initialize the buffer
 		 * @param[in] source The audio source that should be buffered
-		 * @param[in] minFrameCount Initial value for m_minFrameCount
+		 * @param[in] minFrameCount Initial value for m_minFrameCount (minimum 256)
 		 */
 		AudioFifo(const IAudioSource::WeakPtr& source, size_t minFrameCount);
 		virtual ~AudioFifo();
@@ -90,7 +89,7 @@ class AudioFifo : public IAudioSource {
 		size_t queuedChunkCount() const;
 		/**
 		 * @brief Set the FIFO buffer length
-		 * @param[in] len The requested buffer length
+		 * @param[in] len The requested buffer length (minimum 256)
 		 */
 		void setMinFrameCount(size_t len);
 		virtual uint16_t volumeLeft() const;
