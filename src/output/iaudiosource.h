@@ -87,8 +87,14 @@ class IAudioSource {
 		 * @param[in] requestedFrames Number of requested frames
 		 * @returns The number of frames actually returned - should be equal to @c buffer->size()
 		 * @note If this function returns 0, the audio output device should stop playback
+		 * @see preferredBufferSize()
 		 */
 		virtual size_t getAudioData(AudioFrameBuffer& buffer, size_t requestedFrames) = 0;
+		/**
+		 * @brief Get the preferred buffer size to prevent unnecessary calls to getAudioData()
+		 * @retval 0 if no size is specified
+		 */
+		virtual size_t preferredBufferSize() const;
 		/**
 		 * @brief Initialized the source with given frequency
 		 * @param[in] frequency Requested frequency

@@ -181,7 +181,17 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @return Number of actually used channels
 		 */
 		virtual uint8_t channelCount() const = 0;
-		virtual size_t getAudioData(AudioFrameBuffer& buffer, size_t size);
+		/**
+		 * @copydoc IAudioSource::getAudioData()
+		 * @note The buffer will contain full ticks, so the buffer will generally
+		 * have a different size as requested with @a requestedFrames.
+		 */
+		virtual size_t getAudioData(AudioFrameBuffer& buffer, size_t requestedFrames);
+		/**
+		 * @copydoc IAudioSource::preferredBufferSize()
+		 * @note This should generally return tickBufferLength()
+		 */
+		virtual size_t preferredBufferSize() const;
 		/**
 		 * @brief Set the global volume
 		 * @param[in] v The new global volume

@@ -119,6 +119,11 @@ size_t GenModule::getAudioData(AudioFrameBuffer& buffer, size_t size) {
 	return buffer->size();
 }
 
+size_t GenModule::preferredBufferSize() const
+{
+	return tickBufferLength();
+}
+
 void GenModule::setGlobalVolume(int16_t v) {
 	m_globalVolume = v;
 }

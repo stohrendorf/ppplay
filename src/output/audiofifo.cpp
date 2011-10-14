@@ -64,15 +64,18 @@ void AudioFifo::requestThread(AudioFifo* fifo)
 			continue;
 		}
 		AudioFrameBuffer buffer;
+		IAudioSource::Ptr src = fifo->m_source.lock();
 		// keep it low to avoid blockings
-		int size = std::max<int>(256, fifo->m_minFrameCount - fifo->m_queuedFrames);
+		int size = src->preferredBufferSize();
+		if(size == 0) {
+			size = std::max<int>(fifo->m_minFrameCount/2, fifo->m_minFrameCount - fifo->m_queuedFrames);
+		}
 		if(size<=0) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			continue;
 		}
 		{
 			// request the data
-			IAudioSource::Ptr src = fifo->m_source.lock();
 			IAudioSource::LockGuard guard(src.get());
 			if(0==src->getAudioData(buffer, size)) {
 				logger()->trace(L4CXX_LOCATION, "Audio source dry");

@@ -75,6 +75,11 @@ uint16_t IAudioSource::volumeRight() const
 	return 0;
 }
 
+size_t IAudioSource::preferredBufferSize() const
+{
+	return 0;
+}
+
 light4cxx::Logger::Ptr IAudioSource::logger()
 {
 	return light4cxx::Logger::get("audio.source");
