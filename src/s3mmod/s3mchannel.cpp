@@ -280,7 +280,7 @@ std::string S3mChannel::effectDescription() const {
 	return m_currentFxStr;
 }
 
-void S3mChannel::update(S3mCell::Ptr const cell, bool patDelay) {
+void S3mChannel::update(const S3mCell::Ptr& cell, bool patDelay) {
 	if(isDisabled())
 		return;
 	if(m_module->tick() == 0) {

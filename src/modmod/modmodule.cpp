@@ -531,7 +531,6 @@ void ModModule::checkGlobalFx()
 		ModPattern::Ptr currPat = getPattern(patternIndex());
 		if(!currPat)
 			return;
-		std::string data;
 		// check for pattern loops
 		int patLoopCounter = 0;
 		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {

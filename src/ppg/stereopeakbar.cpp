@@ -71,7 +71,7 @@ StereoPeakBar::StereoPeakBar(Widget* parent, int width, int max, int interLen, b
 StereoPeakBar::~StereoPeakBar() = default;
 
 void StereoPeakBar::shift(int lval, int rval) {
-	BOOST_ASSERT(m_interArrL.size() > 0 && m_interArrR.size() == m_interArrL.size());
+	BOOST_ASSERT(!m_interArrL.empty() && m_interArrR.size() == m_interArrL.size());
 	m_interArrL.erase(m_interArrL.begin());
 	m_interArrR.erase(m_interArrR.begin());
 	m_interArrL.push_back(lval);

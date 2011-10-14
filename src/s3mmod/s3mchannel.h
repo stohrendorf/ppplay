@@ -128,7 +128,7 @@ class S3mChannel : public GenChannel {
 		 * @param[in] cell Pointer to a note cell
 		 * @param[in] patDelay For pattern delays
 		 */
-		void update(const S3mCell::Ptr cell, bool patDelay = false);
+		void update(const S3mCell::Ptr& cell, bool patDelay = false);
 		virtual void mixTick(MixerFrameBuffer& mixBuffer);
 		virtual void simTick(size_t bufSize);
 		virtual void updateStatus();
