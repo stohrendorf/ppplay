@@ -121,7 +121,7 @@ void AudioFifo::pushBuffer(const AudioFrameBuffer& buf)
 	m_volLeftSum += left;
 	m_volRightSum += right;
 	m_queuedFrames += cp->size();
-	m_queue.push_back(cp);
+	m_queue.push(cp);
 }
 
 size_t AudioFifo::getAudioData(AudioFrameBuffer& data, size_t size) {
@@ -147,7 +147,7 @@ size_t AudioFifo::getAudioData(AudioFrameBuffer& data, size_t size) {
 		size -= toCopy;
 		if(toCopy == current->size()) {
 			m_queuedFrames -= toCopy;
-			m_queue.pop_front();
+			m_queue.pop();
 			toCopy = 0;
 		}
 		else {

@@ -24,7 +24,7 @@
  * @{
  */
 
-#include <deque>
+#include <queue>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -95,7 +95,7 @@ typedef std::shared_ptr< std::vector<MixerSampleFrame> > MixerFrameBuffer;
  * @details
  * Used to create FIFO buffers.
  */
-typedef std::deque< AudioFrameBuffer > AudioFrameBufferQueue;
+typedef std::queue< AudioFrameBuffer > AudioFrameBufferQueue;
 
 /**
  * @}
