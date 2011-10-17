@@ -21,7 +21,7 @@
 
 #include "ppg/label.h"
 #include "ppg/stereopeakbar.h"
-#include "ppg/positionbar.h"
+#include "ppg/progressbar.h"
 #include "stuff/sdltimer.h"
 #include "genmod/genmodule.h"
 #include "output/iaudiooutput.h"
@@ -40,7 +40,7 @@ class UIMain : public ppg::Widget, public SDLTimer {
 		std::array<ppg::Label*, 16> m_chanCells;
 		ppg::Label* m_trackerInfo;
 		ppg::Label* m_modTitle;
-		ppg::PositionBar* m_posBar;
+		ppg::ProgressBar* m_progress;
 		ppp::GenModule::WeakPtr m_module;
 		IAudioOutput::WeakPtr m_output;
 		virtual void drawThis();
@@ -53,7 +53,7 @@ class UIMain : public ppg::Widget, public SDLTimer {
 		ppg::Label* chanCell( size_t idx );
 		ppg::Label* trackerInfo();
 		ppg::Label* modTitle();
-		ppg::PositionBar* posBar();
+		ppg::ProgressBar* progressBar();
 		virtual void onTimer();
 };
 

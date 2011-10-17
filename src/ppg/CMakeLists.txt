@@ -4,5 +4,5 @@ add_library(ppg STATIC
 	rect.cpp
 	point.cpp
 	stereopeakbar.cpp
-	positionbar.cpp
+	progressbar.cpp
 )

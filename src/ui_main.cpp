@@ -35,7 +35,7 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IA
 	m_chanCells(),
 	m_trackerInfo(nullptr),
 	m_modTitle(nullptr),
-	m_posBar(nullptr),
+	m_progress(nullptr),
 	m_module(module),
 	m_output(output)
 {
@@ -108,11 +108,11 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IA
 	else {
 		m_modTitle->setText( std::string( " -=\xf0[ " ) + module->filename() + " ]\xf0=- " );
 	}
-	m_posBar = new ppg::PositionBar( this, 0, 40 );
-	m_posBar->setPosition( (area().width()-40)/2, 3 );
-	m_posBar->setFgColor(ppg::Color::BrightWhite);
-	m_posBar->show();
-	toTop(m_posBar);
+	m_progress = new ppg::ProgressBar( this, 0, 40 );
+	m_progress->setPosition( (area().width()-40)/2, 3 );
+	m_progress->setFgColor(ppg::Color::BrightWhite);
+	m_progress->show();
+	toTop(m_progress);
 	logger()->trace(L4CXX_LOCATION, "Initialized");
 }
 
@@ -194,8 +194,8 @@ void UIMain::onTimer()
 			m_chanInfos.at(i)->setText( modLock->channelStatus( i ) );
 			m_chanCells.at(i)->setText( modLock->channelCellString( i ) );
 		}
-		m_posBar->setMax( modLock->length() );
-		m_posBar->setValue( modLock->position() );
+		m_progress->setMax( modLock->length() );
+		m_progress->setValue( modLock->position() );
 	}
 	logger()->trace(L4CXX_LOCATION, "Drawing");
 	ppg::SDLScreen::instance()->draw();
