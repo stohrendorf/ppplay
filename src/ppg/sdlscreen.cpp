@@ -19,6 +19,7 @@
 #include <boost/exception/all.hpp>
 
 #include "sdlscreen.h"
+#include "fonts.h"
 
 #include "light4cxx/logger.h"
 

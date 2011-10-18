@@ -5,4 +5,5 @@ add_library(ppg STATIC
 	point.cpp
 	stereopeakbar.cpp
 	progressbar.cpp
+	fonts.cpp
 )

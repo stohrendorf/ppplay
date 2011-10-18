@@ -1,3 +1,21 @@
+/*
+    PeePeePlayer - an old-fashioned module player
+    Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 // OpenCP Module Player
 // copyright (c) '94-'98 Niklas Beisert <nbeisert@physik.tu-muenchen.de>
 //
@@ -7,7 +25,11 @@
 //  -nb980510   Niklas Beisert <nbeisert@physik.tu-muenchen.de>
 //    -first release
 
-static const unsigned char plFont88[256][8] = {
+#include "fonts.h"
+
+namespace ppg {
+
+const unsigned char plFont88[256][8] = {
 	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 	{0x7E, 0x81, 0xA5, 0x81, 0xBD, 0x99, 0x81, 0x7E},
 	{0x7E, 0xFF, 0xDB, 0xFF, 0xC3, 0xE7, 0xFF, 0x7E},
@@ -266,7 +288,7 @@ static const unsigned char plFont88[256][8] = {
 	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 };
 
-static const unsigned char plFont816[256][16] = {
+const unsigned char plFont816[256][16] = {
 	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 	{0x00, 0x00, 0x7E, 0x81, 0xA5, 0x81, 0x81, 0xBD, 0x99, 0x81, 0x81, 0x7E, 0x00, 0x00, 0x00, 0x00},
 	{0x00, 0x00, 0x7E, 0xFF, 0xDB, 0xFF, 0xFF, 0xC3, 0xE7, 0xFF, 0xFF, 0x7E, 0x00, 0x00, 0x00, 0x00},
@@ -525,3 +547,4 @@ static const unsigned char plFont816[256][16] = {
 	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 };
 
+}
