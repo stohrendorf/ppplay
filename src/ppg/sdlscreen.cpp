@@ -97,8 +97,9 @@ namespace ppg {
 	 * @param[in] color %Screen color value
 	 */
 	static inline void g_drawPixel( int x, int y, Uint32 color ) {
-		if( ( x < 0 ) || ( y < 0 ) || ( y >= g_screenSurface->h ) || ( x >= g_screenSurface->w ) )
+		if( ( x < 0 ) || ( y < 0 ) || ( y >= g_screenSurface->h ) || ( x >= g_screenSurface->w ) ) {
 			return;
+		}
 		reinterpret_cast<Uint32*>( g_screenSurface->pixels )[( ( y * g_screenSurface->pitch ) >> 2 ) + x] = color;
 	}
 	/**
@@ -116,12 +117,15 @@ namespace ppg {
 		Uint32 bestFlags = SDL_DOUBLEBUF;
 		{
 			const SDL_VideoInfo* info = SDL_GetVideoInfo();
-			if( info->vfmt )
+			if( info->vfmt ) {
 				bestBpp = info->vfmt->BitsPerPixel;
-			if( info->hw_available )
-				bestFlags |= SDL_HWSURFACE;
-			else
-				bestFlags |= SDL_SWSURFACE;
+			}
+// 			if( info->hw_available ) {
+// 				bestFlags |= SDL_HWSURFACE;
+// 			}
+// 			else {
+// 				bestFlags |= SDL_SWSURFACE;
+// 			}
 		}
 		g_screenSurface = SDL_SetVideoMode( w * 8, h * 16, bestBpp, bestFlags );
 		if( !g_screenSurface ) {
@@ -183,17 +187,17 @@ namespace ppg {
 		g_currentColorsB = nullptr;
 	}
 
-#include "pfonts.inc"
-
 	void SDLScreen::drawChar8( int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque ) {
 		x <<= 3;
 		y <<= 3;
 		for( unsigned char py = 0; py < 8; py++ ) {
 			for( unsigned char px = 0; px < 8; px++ ) {
-				if( plFont88[c][py] & ( 0x80 >> px ) )
+				if( plFont88[c][py] & ( 0x80 >> px ) ) {
 					g_drawPixel( x + px, y + py, foreground );
-				else if( opaque )
+				}
+				else if( opaque ) {
 					g_drawPixel( x + px, y + py, background );
+				}
 			}
 		}
 	}
@@ -203,10 +207,12 @@ namespace ppg {
 		y <<= 4;
 		for( unsigned char py = 0; py < 16; py++ ) {
 			for( unsigned char px = 0; px < 8; px++ ) {
-				if( plFont816[c][py] & ( 0x80 >> px ) )
+				if( plFont816[c][py] & ( 0x80 >> px ) ) {
 					g_drawPixel( x + px, y + py, foreground );
-				else if( opaque )
+				}
+				else if( opaque ) {
 					g_drawPixel( x + px, y + py, background );
+				}
 			}
 		}
 	}
@@ -220,16 +226,18 @@ namespace ppg {
 
 	void SDLScreen::drawThis() {
 		if( SDL_MUSTLOCK( g_screenSurface ) ) {
-			if( SDL_LockSurface( g_screenSurface ) < 0 )
+			if( SDL_LockSurface( g_screenSurface ) < 0 ) {
 				return;
+			}
 		}
 		int w = area().width();
 		int h = area().height();
 		for( int y = 0; y < h; y++ ) {
 			for( int x = 0; x < w; x++ ) {
 				int o = x + y * w;
-				if(g_chars[o]!=g_currentChars[o] || g_colorsF[o]!=g_currentColorsF[o] || g_colorsB[o]!=g_currentColorsB[o])
+				if(g_chars[o]!=g_currentChars[o] || g_colorsF[o]!=g_currentColorsF[o] || g_colorsB[o]!=g_currentColorsB[o]) {
 					drawChar16( x, y, g_chars[o], g_dosColors[static_cast<int>(g_colorsF[o])], g_dosColors[static_cast<int>(g_colorsB[o])], true );
+				}
 			}
 		}
 		{
@@ -249,8 +257,9 @@ namespace ppg {
 		if( SDL_MUSTLOCK( g_screenSurface ) ) {
 			SDL_UnlockSurface( g_screenSurface );
 		}
-		if( SDL_Flip( g_screenSurface ) == -1 )
+		if( SDL_Flip( g_screenSurface ) == -1 ) {
 			BOOST_THROW_EXCEPTION( std::runtime_error("Flip failed") );
+		}
 	}
 
 	void SDLScreen::drawChar( int x, int y, char c ) {
