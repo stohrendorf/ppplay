@@ -84,10 +84,10 @@ namespace ppg {
 	
 	static SDLScreen* g_instance = nullptr;
 	
-SDLScreen* SDLScreen::instance()
-{
-	return g_instance;
-}
+	SDLScreen* SDLScreen::instance()
+	{
+		return g_instance;
+	}
 
 
 	/**
