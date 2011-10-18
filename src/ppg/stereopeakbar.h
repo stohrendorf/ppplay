@@ -21,10 +21,14 @@
 
 #include "label.h"
 
+/**
+ * @ingroup Ppg
+ * @{
+ */
+
 namespace ppg {
 /**
  * @class StereoPeakBar
- * @ingroup Ppg
  * @brief A stereo bar with peaks
  */
 class StereoPeakBar : public Label {
@@ -80,5 +84,9 @@ class StereoPeakBar : public Label {
 };
 
 }
+
+/**
+ * @}
+ */
 
 #endif

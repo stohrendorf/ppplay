@@ -23,11 +23,15 @@
 
 #include <vector>
 
+/**
+ * @ingroup Ppg
+ * @{
+ */
+
 namespace ppg {
 
 /**
  * @class Label
- * @ingroup Ppg
  * @brief A colored text label
  */
 class Label : public Widget {
@@ -119,5 +123,9 @@ class Label : public Widget {
 };
 
 } // namespace ppg
+
+/**
+ * @}
+ */
 
 #endif

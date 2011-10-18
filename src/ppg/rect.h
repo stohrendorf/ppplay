@@ -21,10 +21,14 @@
 
 #include "point.h"
 
+/**
+ * @ingroup Ppg
+ * @{
+ */
+
 namespace ppg {
 /**
  * @class Rect
- * @ingroup Ppg
  * @brief Represents an area on screen or in a widget
  */
 class Rect {
@@ -145,5 +149,9 @@ class Rect {
 };
 
 }
+
+/**
+ * @}
+ */
 
 #endif

@@ -21,10 +21,14 @@
 
 #include "widget.h"
 
+/**
+ * @ingroup Ppg
+ * @{
+ */
+
 namespace ppg {
 	/**
 	 * @class SDLScreen
-	 * @ingroup Ppg
 	 * @brief The virtual DOS screen (SDL implementation)
 	 */
 	class SDLScreen : public Widget {
@@ -71,5 +75,9 @@ namespace ppg {
 			virtual bool onMouseMove( int x, int y );
 	};
 } // namespace ppg
+
+/**
+ * @}
+ */
 
 #endif

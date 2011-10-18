@@ -19,10 +19,14 @@
 #ifndef POINT_H
 #define POINT_H
 
+/**
+ * @ingroup Ppg
+ * @{
+ */
+
 namespace ppg {
 /**
  * @class Point
- * @ingroup Ppg
  * @brief Represents a point on screen or in a widget
  */
 class Point {
@@ -88,5 +92,9 @@ class Point {
 };
 
 }
+
+/**
+ * @}
+ */
 
 #endif

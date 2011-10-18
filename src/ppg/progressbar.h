@@ -22,12 +22,16 @@
 #include "widget.h"
 
 /**
- * @ingroup ppg
+ * @ingroup Ppg
  * @{
  */
 
 namespace ppg {
 
+/**
+ * @class ProgressBar
+ * @brief A one-line widget showing a progress
+ */
 class ProgressBar : public Widget {
 	DISABLE_COPY(ProgressBar)
 private:
