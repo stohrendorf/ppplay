@@ -246,7 +246,7 @@ namespace ppg {
 			std::copy(g_colorsF, g_colorsF+size, g_currentColorsF);
 			std::copy(g_colorsB, g_colorsB+size, g_currentColorsB);
 		}
-		if( area().contains( m_cursorX, m_cursorY ) ) {
+		if( hasMouseFocus() && area().contains( m_cursorX, m_cursorY ) ) {
 			size_t ofs = m_cursorX + m_cursorY * w;
 			Uint32 c1 = g_dosColors[static_cast<int>(~g_colorsF[ofs])];
 			Uint32 c2 = g_dosColors[static_cast<int>(~g_colorsB[ofs])];
@@ -287,6 +287,11 @@ namespace ppg {
 		m_cursorY = y;
 		Widget::onMouseMove( x, y );
 		return true;
+	}
+	
+	bool SDLScreen::hasMouseFocus() const
+	{
+		return (SDL_GetAppState()&SDL_APPMOUSEFOCUS)!=0;
 	}
 
 } // namespace ppg

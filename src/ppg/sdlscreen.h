@@ -73,6 +73,11 @@ namespace ppg {
 			virtual void setFgColorAt( int x, int y, Color c );
 			virtual void setBgColorAt( int x, int y, Color c );
 			virtual bool onMouseMove( int x, int y );
+			/**
+			 * @brief Whether the screen has the mouse focus
+			 * @retval true if the screen has the mouse focus
+			 */
+			bool hasMouseFocus() const;
 	};
 } // namespace ppg
 
