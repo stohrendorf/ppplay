@@ -142,7 +142,8 @@ bool XmModule::load(const std::string& filename) {
 			uint16_t octaveMask = ~(0xffff<<(10-octave));
 			for(uint16_t amigaVal : g_PeriodTable) {
 				amigaVal = ((amigaVal<<6)+octaveMask) >> (11-octave);
-				m_noteToPeriod.at(destOfs++) = m_noteToPeriod.at(destOfs++) = amigaVal;
+				m_noteToPeriod.at(destOfs) = m_noteToPeriod.at(destOfs+1) = amigaVal;
+				destOfs += 2;
 			}
 		}
 		for(size_t i = 0; i < 967; i++) {
