@@ -54,7 +54,7 @@ private:
 	int m_patLoopCount;
 	int8_t m_breakRow;
 	int m_patDelayCount;
-	int m_breakOrder;
+	size_t m_breakOrder;
 	bool adjustPosition(bool increaseTick, bool doStore);
 	void checkGlobalFx();
 	ModPattern::Ptr getPattern(size_t idx) const;
@@ -67,12 +67,12 @@ public:
 	virtual void buildTick(AudioFrameBuffer& buf);
 	virtual void simulateTick(size_t& bufLen);
 	virtual GenOrder::Ptr mapOrder(int16_t order);
-	virtual std::string channelStatus(int16_t idx);
+	virtual std::string channelStatus(size_t idx);
 	virtual bool jumpNextSong();
 	virtual bool jumpPrevSong();
 	virtual bool jumpNextOrder();
 	virtual bool jumpPrevOrder();
-	virtual std::string channelCellString(int16_t idx);
+	virtual std::string channelCellString(size_t idx);
 	virtual bool initialize(uint32_t frq);
 	virtual uint8_t channelCount() const;
 	ModSample::Ptr sampleAt(size_t idx) const;

@@ -68,7 +68,7 @@ static const std::array<const uint16_t, 12 * 8> g_PeriodTable = {{
 XmModule::XmModule(uint8_t maxRpt):
 	GenModule(maxRpt),
 	m_amiga(false), m_patterns(), m_instruments(), m_channels(),
-	m_noteToPeriod(), m_jumpRow(-1), m_jumpOrder(-1),
+	m_noteToPeriod(), m_jumpRow(~0), m_jumpOrder(~0),
 	m_isPatLoop(false), m_doPatJump(false), m_restartPos(0),
 	m_currentPatternDelay(0), m_requestedPatternDelay(0)
 {
@@ -290,7 +290,7 @@ GenOrder::Ptr XmModule::mapOrder(int16_t order) {
 	return orderAt(order);
 }
 
-std::string XmModule::channelStatus(int16_t idx) {
+std::string XmModule::channelStatus(size_t idx) {
 	return m_channels.at(idx)->statusString();
 }
 
@@ -322,7 +322,7 @@ bool XmModule::jumpPrevOrder() {
 	return true;
 }
 
-std::string XmModule::channelCellString(int16_t idx) {
+std::string XmModule::channelCellString(size_t idx) {
 	XmChannel::Ptr x = m_channels.at(idx);
 	if(!x)
 		return "";

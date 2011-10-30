@@ -23,7 +23,7 @@ GenModule::Ptr ModModule::factory(const std::string& filename, uint32_t frequenc
 
 ModModule::ModModule(uint8_t maxRpt): GenModule(maxRpt),
 	m_samples(), m_patterns(), m_channels(), m_patLoopRow(-1),
-	m_patLoopCount(-1), m_breakRow(-1), m_patDelayCount(-1), m_breakOrder(-1)
+	m_patLoopCount(-1), m_breakRow(-1), m_patDelayCount(-1), m_breakOrder(~0)
 {
 }
 
@@ -249,7 +249,7 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 	}
 	if((tick() == 0) && increaseTick) {
 		m_patDelayCount = -1;
-		if(m_breakOrder != -1) {
+		if(m_breakOrder != 0xffff) {
 			orderAt(order())->increasePlaybackCount();
 			if(m_breakOrder < orderCount()) {
 				setOrder(m_breakOrder);
@@ -264,7 +264,7 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 			if(m_breakRow <= 63) {
 				setRow(m_breakRow);
 			}
-			if(m_breakOrder == -1) {
+			if(m_breakOrder == 0xffff) {
 				if(m_patLoopCount == -1) {
 					orderAt(order())->increasePlaybackCount();
 					setOrder(order() + 1);
@@ -278,7 +278,7 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 				//}
 			}
 		}
-		if((m_breakRow == -1) && (m_breakOrder == -1) && (m_patDelayCount == -1)) {
+		if((m_breakRow == -1) && (m_breakOrder == 0xffff) && (m_patDelayCount == -1)) {
 			setRow((row() + 1) & 0x3f);
 			if(row() == 0) {
 				orderAt(order())->increasePlaybackCount();
@@ -289,7 +289,8 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 				orderChanged = true;
 			}
 		}
-		m_breakRow = m_breakOrder = -1;
+		m_breakRow = -1;
+		m_breakOrder = ~0;
 	}
 	if(order() >= orderCount()) {
 		return false;
@@ -358,15 +359,15 @@ void ModModule::simulateTick(size_t& bufLen)
 	//}
 }
 
-std::string ModModule::channelCellString(int16_t idx)
+std::string ModModule::channelCellString(size_t idx)
 {
-	BOOST_ASSERT( idx>=0 && idx<m_channels.size() );
+	BOOST_ASSERT( idx<m_channels.size() );
 	return m_channels.at(idx)->cellString();
 }
 
-std::string ModModule::channelStatus(int16_t idx)
+std::string ModModule::channelStatus(size_t idx)
 {
-	BOOST_ASSERT( idx>=0 && idx<m_channels.size() );
+	BOOST_ASSERT( idx<m_channels.size() );
 	return m_channels.at(idx)->statusString();
 }
 

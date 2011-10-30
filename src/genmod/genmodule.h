@@ -55,8 +55,8 @@ class GenModule : public ISerializable, public IAudioSource {
 		int16_t m_globalVolume; //!< @brief Current global volume
 		int16_t m_speed; //!< @brief Current speed
 		int16_t m_tempo; //!< @brief Current tempo
-		int16_t m_order; //!< @brief Current Order
-		int16_t m_pattern; //!< @brief Current pattern
+		size_t m_order; //!< @brief Current Order
+		size_t m_pattern; //!< @brief Current pattern
 		int16_t m_row; //!< @brief Current row
 	public:
 		/**
@@ -112,7 +112,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @param[in] idx Requested channel
 		 * @return Status string
 		 */
-		virtual std::string channelStatus(int16_t idx) = 0;
+		virtual std::string channelStatus(size_t idx) = 0;
 		/**
 		 * @brief Get playback time in seconds
 		 * @return Playback time in seconds
@@ -175,7 +175,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @return String representation of the channel's cell
 		 * @see GenChannel::getCellString
 		 */
-		virtual std::string channelCellString(int16_t idx) = 0;
+		virtual std::string channelCellString(size_t idx) = 0;
 		/**
 		 * @brief Get the number of actually used channels
 		 * @return Number of actually used channels
@@ -246,7 +246,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @brief Set the current pattern index
 		 * @param[in] i The new pattern index
 		 */
-		void setPatternIndex(int16_t i);
+		void setPatternIndex(size_t i);
 		/**
 		 * @brief Get the number of orders
 		 * @return Number of orders
@@ -288,7 +288,7 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @brief Set the order index
 		 * @param[in] o The new order index
 		 */
-		void setOrder(int16_t o);
+		void setOrder(size_t o);
 		/**
 		 * @brief Set the current row index
 		 * @param[in] r The new row index
@@ -335,12 +335,12 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @brief Get the current order index
 		 * @return The current order index
 		 */
-		int16_t order() const;
+		size_t order() const;
 		/**
 		 * @brief Get the current pattern index
 		 * @return Current pattern index
 		 */
-		int16_t patternIndex() const;
+		size_t patternIndex() const;
 	protected:
 		/**
 		 * @brief Get the logger

@@ -80,7 +80,7 @@ struct S3mModuleHeader {
 #endif
 
 S3mModule::S3mModule(uint8_t maxRpt) : GenModule(maxRpt),
-	m_breakRow(-1), m_breakOrder(-1), m_patLoopRow(-1), m_patLoopCount(-1), m_patDelayCount(-1),
+	m_breakRow(~0), m_breakOrder(~0), m_patLoopRow(-1), m_patLoopCount(-1), m_patDelayCount(-1),
 	m_customData(false), m_samples(), m_patterns(), m_channels(), m_usedChannels(0),
 	m_amigaLimits(false), m_fastVolSlides(false), m_st2Vibrato(false), m_zeroVolOpt(false) {
 	try {
@@ -378,7 +378,7 @@ void S3mModule::checkGlobalFx() {
 				else { // loops done...
 					if(patLoopCounter == 1) {    // one loop, all ok
 						m_patLoopCount = -1;
-						m_breakRow = -1;
+						m_breakRow = ~0;
 						m_patLoopRow = row() + 1;
 					}
 					else { // we got an "infinite" loop...
@@ -441,7 +441,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 	}
 	if((tick() == 0) && increaseTick) {
 		m_patDelayCount = -1;
-		if(m_breakOrder != -1) {
+		if(m_breakOrder != 0xffff) {
 			orderAt(order())->increasePlaybackCount();
 			if(m_breakOrder < orderCount()) {
 				setOrder(m_breakOrder);
@@ -449,11 +449,11 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 			}
 			setRow(0);
 		}
-		if(m_breakRow != -1) {
+		if(m_breakRow != 0xffff) {
 			if(m_breakRow <= 63) {
 				setRow(m_breakRow);
 			}
-			if(m_breakOrder == -1) {
+			if(m_breakOrder == 0xffff) {
 				if(m_patLoopCount == -1) {
 					orderAt(order())->increasePlaybackCount();
 					setOrder(order() + 1);
@@ -464,7 +464,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 				//}
 			}
 		}
-		if((m_breakRow == -1) && (m_breakOrder == -1) && (m_patDelayCount == -1)) {
+		if((m_breakRow == 0xffff) && (m_breakOrder == 0xffff) && (m_patDelayCount == -1)) {
 			setRow((row() + 1) & 0x3f);
 			if(row() == 0) {
 				orderAt(order())->increasePlaybackCount();
@@ -472,7 +472,7 @@ bool S3mModule::adjustPosition(bool increaseTick, bool doStore) {
 				orderChanged = true;
 			}
 		}
-		m_breakRow = m_breakOrder = -1;
+		m_breakRow = m_breakOrder = ~0;
 	}
 	setPatternIndex(mapOrder(order())->index());
 	// skip "--" and "++" marks
@@ -629,14 +629,14 @@ GenOrder::Ptr S3mModule::mapOrder(int16_t order) {
 	return orderAt(order);
 }
 
-std::string S3mModule::channelStatus(int16_t idx) {
+std::string S3mModule::channelStatus(size_t idx) {
 	S3mChannel::Ptr x = m_channels.at(idx);
 	if(!x)
 		return std::string();
 	return x->statusString();
 }
 
-std::string S3mModule::channelCellString(int16_t idx) {
+std::string S3mModule::channelCellString(size_t idx) {
 	S3mChannel::Ptr x = m_channels.at(idx);
 	if(!x)
 		return std::string();

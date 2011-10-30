@@ -157,11 +157,11 @@ GenOrder::Ptr GenModule::orderAt(size_t idx) const {
 	return m_orders.at(idx);
 }
 
-int16_t GenModule::patternIndex() const {
+size_t GenModule::patternIndex() const {
 	return m_pattern;
 }
 
-void GenModule::setPatternIndex(int16_t i) {
+void GenModule::setPatternIndex(size_t i) {
 	m_pattern = i;
 }
 
@@ -194,7 +194,7 @@ uint16_t GenModule::maxRepeat() const {
 	return m_maxRepeat;
 }
 
-void GenModule::setOrder(int16_t o) {
+void GenModule::setOrder(size_t o) {
 	m_order = o;
 }
 
@@ -260,7 +260,7 @@ int16_t GenModule::globalVolume() const
 	return m_globalVolume;
 }
 
-int16_t GenModule::order() const
+size_t GenModule::order() const
 {
 	return m_order;
 }

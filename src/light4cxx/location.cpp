@@ -105,7 +105,7 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
 	std::ostringstream oss;
 // 	const std::ios_base::fmtflags clearFlags = oss.flags();
 	int state = 0;
-	for(int i=0; i<s_format.length(); i++) {
+	for(size_t i=0; i<s_format.length(); i++) {
 		char c = s_format.at(i);
 		switch(state) {
 			case 0:

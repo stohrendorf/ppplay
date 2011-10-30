@@ -49,10 +49,10 @@ class XmModule : public GenModule {
 		XmChannel::Vector m_channels;
 		//! @brief Maps notes including finetune to their periods
 		std::array<uint16_t, 121 * 16> m_noteToPeriod;
-		//! @brief Contains the row to break to, or @c -1 if no break is intended
-		int16_t m_jumpRow;
-		//! @brief Contains the order to jump to, or @c -1 if no jump is intended
-		int16_t m_jumpOrder;
+		//! @brief Contains the row to break to
+		size_t m_jumpRow;
+		//! @brief Contains the order to jump to
+		size_t m_jumpOrder;
 		//! @brief Is @c true if a pattern loop is running
 		bool m_isPatLoop;
 		//! @brief Is @c true if a pattern jump is intended
@@ -97,12 +97,12 @@ class XmModule : public GenModule {
 		virtual void buildTick(AudioFrameBuffer& buffer);
 		virtual void simulateTick(size_t&);
 		virtual ppp::GenOrder::Ptr mapOrder(int16_t);
-		virtual std::string channelStatus(int16_t);
+		virtual std::string channelStatus(size_t);
 		virtual bool jumpNextSong();
 		virtual bool jumpPrevSong();
 		virtual bool jumpNextOrder();
 		virtual bool jumpPrevOrder();
-		virtual std::string channelCellString(int16_t);
+		virtual std::string channelCellString(size_t);
 		virtual uint8_t channelCount() const;
 		/**
 		 * @brief Get an instrument
