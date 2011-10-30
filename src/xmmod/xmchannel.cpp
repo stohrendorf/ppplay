@@ -886,6 +886,7 @@ void XmChannel::fxExtended(uint8_t fxByte) {
 			if(m_module->tick() == 0) {
 				m_module->doPatDelay( lowNibble(fxByte) );
 			}
+			m_fxString = "PDlay\xc2";
 			break;
 		case EfxSetPan:
 			if(m_module->tick() == 0) {

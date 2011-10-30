@@ -60,7 +60,7 @@ enum : uint8_t {
  * means that this effect has its own backup variable for saving the last used effect value. See ::s3mFxVibVolSlide for
  * example.
  */
-enum : uint8_t {
+enum S3mEffects : uint8_t {
 	/**
 	 * @brief (A) Set speed
 	 * @note Global
@@ -140,22 +140,11 @@ enum : uint8_t {
 	//! @note If a value of 0 is given, it uses the value of the last porta FX
 	//! @note If one of the nibbles is 0x0f, this FX is ignored
 	s3mFxPortaVolSlide = 12,
-	//! @brief (M) Set channel volume
-	//! @remarks Originally not supported
-	s3mFxChanVolume   = 13,
-	//! @brief (N) Channel volume slide
-	//! @note FX Data Share
-	//! @remarks Originally not supported, and it won't be...
-	s3mFxChanVolSlide = 14,
 	//! @brief (O) Set sample offset
 	//! @note FX Data Share
 	//! @remarks Does not play if value out of range
 	//! @remarks Ignored if not combined with a note
 	s3mFxOffset       = 15,
-	//! @brief (P) Panning slide
-	//! @note FX Data Share
-	//! @remarks Originally not supported
-	s3mFxPanSlide     = 16,
 	//! @brief (Q) Retrigger
 	//! @note FX Data Share
 	//! @remarks Accepts Values greater than Speed
@@ -177,31 +166,17 @@ enum : uint8_t {
 	//! @note Global
 	//! @remarks Does not affect already playing notes, and is applied @e after tick 0
 	s3mFxGlobalVol    = 22,
-	//! @brief (W) Global volume slide
-	//! @note Global
-	//! @note FX Data Share
-	//! @remarks Originally not supported, and it won't be...
-	s3mFxGlobVolSlide = 23,
 	//! @brief (X) Set panning (0x00..0x80)
 	//! @remarks Originally not supported
 	//! @note @c 0xa4 = Surround sound (that is practically Center Panning with negated Right sample values)
-	s3mFxSetPanning   = 24,
-	//! @brief (Y) Panbrello
-	//! @remarks Even not originally supported, I've found an S3M with it (probably a converted IT), but it won't be implemented...
-	s3mFxPanbrello    = 25,
-	//! @brief (Z) Resonance filter
-	//! @remarks Not supported
-	s3mFxResonance    = 26
+	s3mFxSetPanning   = 24
 };
 
 /**
  * @brief Special Commands/effects
  * @see s3mFxSpecial
  */
-enum : uint8_t {
-	//! @brief Special FX: Set filter
-	//! @remarks Not supported
-	s3mSFxSetFilter    = 0x00,
+enum S3mSpecialEffects : uint8_t {
 	//! @brief Special FX: Set Glissando control
 	s3mSFxSetGlissando = 0x01,
 	//! @brief Special FX: Set Finetune
@@ -232,10 +207,7 @@ enum : uint8_t {
 	//! @note Global
 	//! @remarks If multiple pattern delays on one row are specified, only the first one is used
 	//! @remarks A value of 0 is ignored
-	s3mSFxPatDelay     = 0x0e,
-	//! @brief Special FX: Funk repeat
-	//! @remarks Not supported
-	s3mSFxFunkRpt      = 0x0f
+	s3mSFxPatDelay     = 0x0e
 };
 } // namespace s3m
 } // namespace ppp

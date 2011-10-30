@@ -346,7 +346,7 @@ void S3mChannel::update(const S3mCell::Ptr& cell, bool patDelay) {
 			}
 		}
 
-		switch(m_currentCell.effect()) {
+		switch(static_cast<S3mEffects>(m_currentCell.effect())) {
 			case s3mFxSpeed:
 				fxSpeed(m_currentCell.effectValue());
 				break;
@@ -390,10 +390,34 @@ void S3mChannel::update(const S3mCell::Ptr& cell, bool patDelay) {
 					m_panning = m_currentCell.effectValue();
 				}
 				break;
+			case s3mFxVibVolSlide:
+				m_currentFxStr = "VibVo\xf7";
+				break;
+			case s3mFxPortaVolSlide:
+				m_currentFxStr = "PrtVo\x12";
+				break;
+			case s3mFxPorta:
+				m_currentFxStr = "Porta\x12";
+				break;
+			case s3mFxVibrato:
+				m_currentFxStr = "Vibr \xf7";
+				break;
+			case s3mFxFineVibrato:
+				m_currentFxStr = "FnVib\xf7";
+				break;
+			case s3mFxTremolo:
+				m_currentFxStr = "Tremo\xec";
+				break;
+			case s3mFxGlobalVol:
+				m_currentFxStr = "GloVol";
+				break;
+			case s3mFxOffset:
+				// handled...
+				break;
 		}
 	} // endif(tick==0)
 	else if(m_currentCell.effect() != 0) {   // if(tick!=0)
-		switch(m_currentCell.effect()) {
+		switch(static_cast<S3mEffects>(m_currentCell.effect())) {
 			case s3mFxVolSlide:
 				fxVolSlide(m_currentCell.effectValue());
 				break;
@@ -439,6 +463,14 @@ void S3mChannel::update(const S3mCell::Ptr& cell, bool patDelay) {
 				break;
 			case s3mFxGlobalVol:
 				fxGlobalVolume(m_currentCell.effectValue());
+				break;
+			case s3mFxOffset:
+			case s3mFxJumpOrder:
+			case s3mFxBreakPat:
+			case s3mFxTempo:
+			case s3mFxSetPanning:
+			case s3mFxSpeed:
+				// already handled...
 				break;
 		}
 	}
@@ -688,9 +720,11 @@ void S3mChannel::fxVolSlide(uint8_t fxByte) {
 			m_currentFxStr = "VSld \x1f";
 			m_currentVolume = std::max(0, m_currentVolume - lowNibble(fxByte));
 		}
-		else if(m_module->tick() == 0) {
+		else {
 			m_currentFxStr = "VSld \x18";
-			m_currentVolume = std::min(63, m_currentVolume + highNibble(fxByte));
+			if(m_module->tick() == 0) {
+				m_currentVolume = std::min(63, m_currentVolume + highNibble(fxByte));
+			}
 		}
 	}
 	else if(highNibble(fxByte) == 0x0f) {
@@ -698,9 +732,11 @@ void S3mChannel::fxVolSlide(uint8_t fxByte) {
 			m_currentFxStr = "VSld \x1e";
 			m_currentVolume = std::min(63, m_currentVolume + highNibble(fxByte));
 		}
-		else if(m_module->tick() == 0) {
+		else {
 			m_currentFxStr = "VSld \x19";
-			m_currentVolume = std::max(0, m_currentVolume - lowNibble(fxByte));
+			if(m_module->tick() == 0) {
+				m_currentVolume = std::max(0, m_currentVolume - lowNibble(fxByte));
+			}
 		}
 	}
 	else if(m_module->hasFastVolSlides() || m_module->tick() != 0) {
@@ -1000,7 +1036,7 @@ void S3mChannel::fxArpeggio(uint8_t fxByte) {
 
 void S3mChannel::fxSpecial(uint8_t fxByte) {
 	reuseIfZero(m_lastFxByte, fxByte);
-	switch(highNibble(fxByte)) {
+	switch(static_cast<S3mSpecialEffects>(highNibble(fxByte))) {
 		case s3mSFxNoteDelay:
 			fxNoteDelay(fxByte);
 			break;
@@ -1030,6 +1066,10 @@ void S3mChannel::fxSpecial(uint8_t fxByte) {
 				m_panning = (lowNibble(fxByte) + 8) * 0x40 / 0x0f;
 			else
 				m_panning = (lowNibble(fxByte) - 8) * 0x40 / 0x0f;
+			break;
+		case s3mSFxPatLoop:
+		case s3mSFxPatDelay:
+			// handled...
 			break;
 	}
 }
