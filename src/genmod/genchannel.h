@@ -146,6 +146,9 @@ class GenChannel : public ISerializable {
 		 * @param[in] s The new string
 		 */
 		void setStatusString(const std::string& s);
+		inline void setStatusString(const boost::format& fmt) {
+			setStatusString(fmt.str());
+		}
 		/**
 		 * @brief Get the logger
 		 * @return Logger with name "channel"

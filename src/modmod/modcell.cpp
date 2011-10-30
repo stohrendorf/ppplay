@@ -65,7 +65,7 @@ bool ModCell::load(BinStream& str)
 	if(m_period!=0) {
 		uint8_t idx = periodToNoteIndex(m_period);
 		if(idx!=255) {
-			m_note = ppp::stringf("%s%u", NoteNames[idx%12], idx/12);
+			m_note = (boost::format("%s%u") % NoteNames[idx%12] % (idx/12)).str();
 		}
 		else {
 			logger()->warn(L4CXX_LOCATION, boost::format("Period %d too low: Cannot find matching note name.") % m_period);
@@ -108,7 +108,7 @@ std::string ModCell::trackerString() const
 {
 	std::string res(m_note);
 	if(m_sampleNumber!=0) {
-		res.append(ppp::stringf(" %.2u", m_sampleNumber));
+		res.append((boost::format(" %02u") % (m_sampleNumber+0)).str());
 	}
 	else {
 		res.append(" --");
@@ -117,7 +117,7 @@ std::string ModCell::trackerString() const
 		res.append(" ---");
 	}
 	else {
-		res.append( stringf(" %.1X%.2X", m_effect, m_effectValue) );
+		res.append( (boost::format(" %01X%02X") % (m_effect+0) % (m_effectValue+0)).str() );
 	}
 	return res;
 }
@@ -129,7 +129,7 @@ IArchive& ModCell::serialize(IArchive* data)
 		if(m_period!=0) {
 			uint8_t idx = periodToNoteIndex(m_period);
 			if(idx!=255) {
-				m_note = ppp::stringf("%s%u", NoteNames[idx%12], idx/12);
+				m_note = (boost::format("%s%u") % NoteNames[idx%12] % (idx/12)).str();
 			}
 			else {
 				m_note = "^^^";

@@ -88,7 +88,7 @@ static Color stringToColor(const std::string& str) {
 	COLRET(Purple) COLRET(Brown) COLRET(White) COLRET(Gray)
 	COLRET(LightBlue) COLRET(LightGreen) COLRET(LightAqua) COLRET(LightRed)
 	COLRET(LightPurple) COLRET(Yellow) COLRET(BrightWhite) COLRET(None)
-	BOOST_THROW_EXCEPTION( std::invalid_argument( ppp::stringf("Invalid color string: %s", str.c_str()) ) );
+	BOOST_THROW_EXCEPTION( std::invalid_argument( "Invalid color string: " + str ) );
 }
 #undef COLRET
 

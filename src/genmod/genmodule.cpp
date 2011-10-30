@@ -27,6 +27,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace ppp {
 
@@ -69,7 +70,7 @@ std::string GenModule::title() const {
 }
 
 std::string GenModule::trimmedTitle() const {
-	return trimString(m_title);
+	return boost::algorithm::trim_copy(m_title);
 }
 
 uint32_t GenModule::timeElapsed() const {

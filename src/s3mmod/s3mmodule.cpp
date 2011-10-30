@@ -167,9 +167,9 @@ bool S3mModule::load(const std::string& fn) {
 				setTrackerInfo("OpenMPT v");
 				break;
 			default:
-				setTrackerInfo(stringf("Unknown Tracker (%x) v", s3mHdr.createdWith >> 12));
+				setTrackerInfo(boost::format("Unknown Tracker (%x) v") % (s3mHdr.createdWith >> 12));
 		}
-		setTrackerInfo(trackerInfo() + stringf("%x.%.2x", (s3mHdr.createdWith >> 8) & 0x0f, s3mHdr.createdWith & 0xff));
+		setTrackerInfo(boost::format("%s%x.%02x") % trackerInfo() % ((s3mHdr.createdWith >> 8) & 0x0f) % (s3mHdr.createdWith & 0xff));
 		setTempo(s3mHdr.initialTempo);
 		//m_playbackInfo.speed = s3mHdr.initialSpeed;
 		setSpeed(s3mHdr.initialSpeed);

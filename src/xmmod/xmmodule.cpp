@@ -27,6 +27,7 @@
 #include "stream/fbinstream.h"
 
 #include <boost/format.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace ppp {
 namespace xm {
@@ -100,7 +101,7 @@ bool XmModule::load(const std::string& filename) {
 	}
 	m_restartPos = hdr.restartPos;
 	{
-		std::string tmp = trimString(stringncpy(hdr.trackerName, 20));
+		std::string tmp = boost::algorithm::trim_copy(stringncpy(hdr.trackerName, 20));
 		if(!tmp.empty()) {
 			setTrackerInfo(tmp);
 		}

@@ -94,17 +94,17 @@ std::string S3mCell::trackerString() const {
 	else if(m_note == s3mKeyOffNote)
 		xmsg += "^^  ";
 	else
-		xmsg += stringf("%s%d ", NoteNames.at(m_note & 0x0f), m_note >> 4);
+		xmsg += (boost::format("%s%d ")%NoteNames.at(m_note & 0x0f)%((m_note >> 4)+0)).str();
 	if(m_instr != s3mEmptyInstr)
-		xmsg += stringf("%.2d ", m_instr);
+		xmsg += (boost::format("%02d ")%(m_instr+0)).str();
 	else
 		xmsg += ".. ";
 	if(m_volume != s3mEmptyVolume)
-		xmsg += stringf("%.2d ", m_volume);
+		xmsg += (boost::format("%02d ")%(m_volume+0)).str();
 	else
 		xmsg += ".. ";
 	if(m_effect != s3mEmptyCommand)
-		xmsg += stringf("%c%.2x", 'A' - 1 + m_effect, m_effectValue);
+		xmsg += (boost::format("%c%02x")%('A' - 1 + m_effect)%(m_effectValue+0)).str();
 	else
 		xmsg += "...";
 	return xmsg;

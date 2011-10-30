@@ -175,7 +175,7 @@ static inline std::string periodToNote(uint16_t per, uint16_t c2spd, uint16_t fi
 	if((minoct > 9) || (minnote > 11)) {
 		return "???";
 	}
-	return stringf("%s%d", NoteNames[minnote], minoct);
+	return (boost::format("%s%d")%NoteNames[minnote]%(minoct+0)).str();
 }
 
 /**
@@ -268,11 +268,14 @@ std::string S3mChannel::effectName() const {
 	}
 	uint8_t fx = m_currentCell.effect();
 	bool fxRangeOk = inRange<int>(fx, 1, 27);
-	if(fxRangeOk)
-		return stringf("%c%.2X", fx + 'A' - 1, m_currentCell.effectValue());
+	if(fxRangeOk) {
+		return (boost::format("%c%02X") % static_cast<char>(fx-1+'A') % (m_currentCell.effectValue()+0)).str();
+// 		return stringf("%c%.2X", fx + 'A' - 1, m_currentCell.effectValue());
+	}
 	else {
 		logger()->warn(L4CXX_LOCATION, boost::format("Effect out of range: %#x")%(fx+0));
-		return stringf("?%.2X", m_currentCell.effectValue());
+		return (boost::format("?%02X") % (m_currentCell.effectValue()+0)).str();
+// 		return stringf("?%.2X", m_currentCell.effectValue());
 	}
 }
 
@@ -555,34 +558,39 @@ void S3mChannel::updateStatus() {
 	}
 	if(isActive()) {
 		std::string panStr;
-		if(m_panning == 0xa4)
+		if(m_panning == 0xa4) {
 			panStr = "Srnd ";
-		else if(m_panning == 0x00)
+		}
+		else if(m_panning == 0x00) {
 			panStr = "Left ";
-		else if(m_panning == 0x20)
+		}
+		else if(m_panning == 0x20) {
 			panStr = "Centr";
-		else if(m_panning == 0x40)
+		}
+		else if(m_panning == 0x40) {
 			panStr = "Right";
-		else
-			panStr = stringf("%4d%%", (m_panning - 0x20) * 100 / 0x40);
-		std::string volStr = stringf("%3d%%", clip<int>(m_currentVolume , 0, 0x3f) * 100 / 0x3f);
-		setStatusString(stringf("%.2d: %s%s %s %s P:%s V:%s %s",
-		                        m_sampleIndex + 1,
-		                        (m_noteChanged ? "*" : " "),
-		                        noteName().c_str(),
-		                        effectName().c_str(),
-		                        effectDescription().c_str(),
-		                        panStr.c_str(),
-		                        volStr.c_str(),
-		                        smp->title().c_str()
-		                       ));
+		}
+		else {
+			panStr = (boost::format("%4d%%") % ((m_panning - 0x20) * 100 / 0x40)).str();
+		}
+		std::string volStr = (boost::format("%3d%%") % (clip<int>(m_currentVolume , 0, 0x3f) * 100 / 0x3f)).str();
+		setStatusString(boost::format("%02d: %s%s %s %s P:%s V:%s %s")
+		                        % (m_sampleIndex + 1)
+		                        % (m_noteChanged ? "*" : " ")
+		                        % noteName()
+		                        % effectName()
+		                        % effectDescription()
+		                        % panStr
+		                        % volStr
+		                        % smp->title()
+		                       );
 	}
 	else {
-		setStatusString(stringf("     %s %s %s",
-		                        (m_currentCell.note() == s3mKeyOffNote ? "^^ " : "   "),
-		                        effectName().c_str(),
-		                        effectDescription().c_str()
-		                       ));
+		setStatusString(boost::format("     %s %s %s")
+		                        % (m_currentCell.note() == s3mKeyOffNote ? "^^ " : "   ")
+		                        % effectName()
+		                        % effectDescription()
+		                       );
 	}
 }
 

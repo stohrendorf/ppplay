@@ -58,15 +58,6 @@ inline bool inRange(const T v, const T a, const T b) {
 }
 
 /**
- * @brief Helper function like printf, but returns a std::string
- * @param[in] fmt Format string
- * @param[in] ... Arguments
- * @return Formatted string
- * @note Time-critical
- */
-std::string stringf(const char fmt[], ...) __attribute__((format(printf, 1, 2)));
-
-/**
  * @brief Helper function like strncpy, but returns a std::string
  * @param[in] src Source string
  * @param[in] maxlen Maximum length of the string to copy
@@ -160,13 +151,6 @@ inline void reuseNibblesIfZero(uint8_t& oldFx, uint8_t& newFx) {
 	}
 	newFx = oldFx;
 }
-
-/**
- * @brief Removes whitespaces from front and end of a string
- * @param[in] str String to trim
- * @return Trimmed string
- */
-std::string trimString(const std::string& str);
 
 }
 

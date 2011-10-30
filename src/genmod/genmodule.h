@@ -233,6 +233,9 @@ class GenModule : public ISerializable, public IAudioSource {
 		 * @param[in] t The new tracker info
 		 */
 		void setTrackerInfo(const std::string& t);
+		inline void setTrackerInfo(const boost::format& fmt) {
+			setTrackerInfo(fmt.str());
+		}
 		/**
 		 * @brief Get an order pointer
 		 * @param[in] idx Index of requested order

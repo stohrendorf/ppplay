@@ -640,7 +640,7 @@ std::string XmChannel::noteName() {
 		return "___";
 	}
 	int ofs = std::round(fofs);
-	return stringf("%s%d", NoteNames.at(ofs%12), ofs/12 );
+	return (boost::format("%s%d")%NoteNames.at(ofs%12)%(ofs/12)).str();
 }
 
 void XmChannel::mixTick(MixerFrameBuffer& mixBuffer) {
@@ -694,10 +694,10 @@ void XmChannel::simTick(size_t bufSize) {
 
 void XmChannel::updateStatus() {
 	if(!isActive()) {
-		setStatusString(stringf("         %s %s",
-		                        effectName().c_str(),
-		                        effectDescription().c_str()
-		                       ));
+		setStatusString(boost::format("         %s %s")
+		                        %effectName()
+		                        %effectDescription()
+		                       );
 		return;
 	}
 	std::string panStr;
@@ -708,18 +708,18 @@ void XmChannel::updateStatus() {
 	else if(m_realPanning == 0xff)
 		panStr = "Right";
 	else
-		panStr = stringf("%4d%%", (m_realPanning - 0x80) * 100 / 0x80);
-	std::string volStr = stringf("%3d%%", clip<int>(m_realVolume , 0, 0x40) * 100 / 0x40);
-	setStatusString(stringf("%.2X: %s%s %s %s P:%s V:%s %s",
-	                        m_instrumentIndex,
-	                        (m_noteChanged ? "*" : " "),
-	                        noteName().c_str(),
-	                        effectName().c_str(),
-	                        effectDescription().c_str(),
-	                        panStr.c_str(),
-	                        volStr.c_str(),
-	                        currentInstrument() ? currentInstrument()->title().c_str() : ""
-	                       ));
+		panStr = (boost::format("%4d%%") % ((m_realPanning - 0x80) * 100 / 0x80)).str();
+	std::string volStr = (boost::format("%3d%%") % (clip<int>(m_realVolume , 0, 0x40) * 100 / 0x40)).str();
+	setStatusString(boost::format("%02X: %s%s %s %s P:%s V:%s %s")
+	                        %(m_instrumentIndex+0)
+	                        %(m_noteChanged ? "*" : " ")
+	                        %noteName()
+	                        %effectName()
+	                        %effectDescription()
+	                        %panStr
+	                        %volStr
+	                        %(currentInstrument() ? currentInstrument()->title().c_str() : "")
+	                       );
 	/*	setStatusString( stringf("vol=%.2u pan=%.2x vfx=%.2x fx=%.2x/%.2x [PE=%s] [VE=%s]",
 								 m_realVolume, m_realPanning, m_currentCell.volume(), m_currentCell.effect(), m_currentCell.effectValue(), m_panningEnvelope.toString().c_str(), m_volumeEnvelope.toString().c_str() ));*/
 }

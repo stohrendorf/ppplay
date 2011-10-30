@@ -225,7 +225,7 @@ std::string ModChannel::effectName() const
 	if(m_currentCell.effect()==0 && m_currentCell.effectValue()==0) {
 		return "---";
 	}
-	return stringf("%X%.2X",m_currentCell.effect(),m_currentCell.effectValue());
+	return (boost::format("%X%02X") % (m_currentCell.effect()+0) % (m_currentCell.effectValue()+0)).str();
 }
 
 std::string ModChannel::noteName()
@@ -235,7 +235,7 @@ std::string ModChannel::noteName()
 		return "^^^";
 	}
 	else {
-		return ppp::stringf("%s%u", NoteNames[idx%12], idx/12);
+		return (boost::format("%s%u") % NoteNames[idx%12] % (idx/12)).str();
 	}
 }
 
@@ -599,18 +599,18 @@ void ModChannel::updateStatus()
 		setStatusString("");
 		return;
 	}
-	std::string volStr = stringf("%3d%%", clip<int>(m_volume, 0, 0x40) * 100 / 0x40);
-	setStatusString(stringf("%.2X: %s%s %s %s P:%s V:%s %s",
-	                        m_sampleIndex,
-	                        " ",
+	std::string volStr = (boost::format("%3d%%") % (clip<int>(m_volume, 0, 0x40) * 100 / 0x40)).str();
+	setStatusString(boost::format("%02X: %s%s %s %s P:%s V:%s %s")
+	                        %(m_sampleIndex+0)
+	                        %" "
 	                        //(m_noteChanged ? "*" : " "),
-	                        noteName().c_str(),
-	                        effectName().c_str(),
-	                        m_effectDescription.c_str(),
-	                        "-----",
-	                        volStr.c_str(),
-	                        currentSample() ? currentSample()->title().c_str() : ""
-	                       ));
+	                        %noteName()
+	                        %effectName()
+	                        %m_effectDescription
+	                        %"-----"
+	                        %volStr.c_str()
+	                        %(currentSample() ? currentSample()->title() : "")
+	                       );
 }
 
 void ModChannel::fxArpeggio(uint8_t fxByte)

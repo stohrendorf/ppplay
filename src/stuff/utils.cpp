@@ -28,18 +28,6 @@
 
 namespace ppp {
 
-std::string stringf(const char fmt[], ...) {
-	va_list args;
-	va_start(args, fmt);
-	char* tmp = nullptr;
-	vasprintf(&tmp, fmt, args);
-	BOOST_ASSERT( tmp != nullptr );
-	va_end(args);
-	std::string res(tmp);
-	free(tmp);
-	return res;
-}
-
 std::string stringncpy(const char src[], size_t maxlen) {
 	std::string res;
 	for(size_t i = 0; i < maxlen; i++) {
@@ -55,16 +43,6 @@ void swapEndian(char data[], size_t size) {
 	for(size_t i = 0; i < size / 2; i++) {
 		std::swap(data[i], data[size - i - 1]);
 	}
-}
-
-std::string trimString(const std::string& str) {
-	std::string res = str;
-	size_t startpos = res.find_first_not_of(" \t");
-	size_t endpos = res.find_last_not_of(" \t");
-	if((std::string::npos == startpos) || (std::string::npos == endpos)) {
-		return std::string();
-	}
-	return res.substr(startpos, endpos - startpos + 1);
 }
 
 }
