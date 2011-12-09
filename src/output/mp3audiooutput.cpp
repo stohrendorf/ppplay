@@ -27,7 +27,7 @@ void MP3AudioOutput::encodeThread(MP3AudioOutput* src) {
 			boost::this_thread::sleep(boost::posix_time::millisec(10));
 		}
 		AudioFrameBuffer buffer;
-		if(src->source().lock()->getAudioData(buffer, 1024) == 0) {
+		if(src->source().lock()->getAudioData(buffer, src->source().lock()->preferredBufferSize()) == 0) {
 			src->setErrorCode(InputDry);
 			src->pause();
 			return;
