@@ -80,7 +80,21 @@ set(CMAKE_CXX_FLAGS "-Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtua
 option(WITH_PROFILING "Whether to enable profiling (-pg)" OFF)
 if(WITH_PROFILING)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+	message(WARNING "You have enabled profiling. This will decrease performance and should be disabled when building for distribution.")
 endif()
+
+option(WITH_NATIVE_MARCH "Sets -march=native (WARNING: Do not use when distributing binaries!)" OFF)
+if(WITH_NATIVE_MARCH)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+	message(WARNING "You have enabled a Native Build (-march=native). This will most likely ONLY work on YOUR machine!")
+endif()
+
+option(WITH_LTO "Enables link-time optimization" OFF)
+if(WITH_LTO)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+	message(STATUS "Link-time optimization (-flto) enabled")
+endif()
+
 add_definitions(-DBOOST_FILESYSTEM_VERSION=3)
 
 if(MINGW)
