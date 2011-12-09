@@ -21,6 +21,7 @@
 
 #include "level.h"
 
+#include <boost/thread.hpp>
 #include <string>
 
 /**
@@ -41,7 +42,7 @@ private:
 	const int m_line; //!< @brief The line withing m_file
 	const std::string m_file; //!< @brief The file
 	const std::string m_function; //!< @brief The function within m_file
-	const __gthread_t m_threadId; //!< @brief The thread ID
+	const boost::thread::id m_threadId; //!< @brief The thread ID
 	Location() = delete;
 public:
 	/**
@@ -51,7 +52,7 @@ public:
 	 * @param[in] function Function name of the location
 	 * @param[in] id Thread ID of the location
 	 */
-	inline Location(int line, const std::string& file, const std::string& function, const __gthread_t& id)
+	inline Location(int line, const std::string& file, const std::string& function, const boost::thread::id& id)
 		: m_line(line), m_file(file), m_function(function), m_threadId(id)
 	{
 	}
@@ -80,7 +81,7 @@ public:
 	 * @brief Get m_threadId
 	 * @return m_threadId
 	 */
-	inline __gthread_t threadId() const {
+	inline boost::thread::id threadId() const {
 		return m_threadId;
 	}
 	/**
@@ -168,7 +169,7 @@ public:
  * @brief Creates a Location instance with the location set to the current
  * file, line, function and thread.
  */
-#define L4CXX_LOCATION ::light4cxx::Location(__LINE__, __FILE__, __PRETTY_FUNCTION__, __gthread_self())
+#define L4CXX_LOCATION ::light4cxx::Location(__LINE__, __FILE__, __PRETTY_FUNCTION__, ::boost::this_thread::get_id())
 
 }
 

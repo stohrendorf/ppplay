@@ -24,10 +24,9 @@
 #include "audiofifo.h"
 
 #include <algorithm>
-#include <thread>
-
 #include <boost/assert.hpp>
 #include <boost/format.hpp>
+#include <boost/thread.hpp>
 
 /**
  * @brief Makes volume values logarithmic
@@ -67,7 +66,7 @@ void AudioFifo::requestThread(AudioFifo* fifo)
 	while(!fifo->m_source.expired()) {
 		// continue if no data is available
 		if(fifo->m_queuedFrames >= fifo->m_minFrameCount) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			boost::this_thread::sleep(boost::posix_time::millisec(1));
 			continue;
 		}
 		AudioFrameBuffer buffer;
@@ -78,7 +77,7 @@ void AudioFifo::requestThread(AudioFifo* fifo)
 			size = std::max<int>(fifo->m_minFrameCount/2, fifo->m_minFrameCount - fifo->m_queuedFrames);
 		}
 		if(size<=0) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			boost::this_thread::sleep(boost::posix_time::millisec(1));
 			continue;
 		}
 		{
@@ -102,7 +101,7 @@ AudioFifo::AudioFifo(const IAudioSource::WeakPtr& source, size_t frameCount) :
 	BOOST_ASSERT(!source.expired());
 	BOOST_ASSERT(m_minFrameCount >= 256);
 	logger()->debug(L4CXX_LOCATION, boost::format("Created with %d frames minimum")%frameCount);
-	m_requestThread = std::thread(requestThread, this);
+	m_requestThread = boost::thread(requestThread, this);
 	m_requestThread.detach();
 }
 
@@ -117,7 +116,7 @@ void AudioFifo::pushBuffer(const AudioFrameBuffer& buf)
 	*cp = *buf;
 	uint64_t left, right;
 	sumAbsValues(cp, left, right);
-	std::lock_guard<std::mutex> guard(m_queueMutex);
+	boost::lock_guard<boost::mutex> guard(m_queueMutex);
 	m_volLeftSum += left;
 	m_volRightSum += right;
 	m_queuedFrames += cp->size();
@@ -126,7 +125,7 @@ void AudioFifo::pushBuffer(const AudioFrameBuffer& buf)
 
 size_t AudioFifo::getAudioData(AudioFrameBuffer& data, size_t size) {
 	// a modifying function, so we need a unique lock again
-	std::lock_guard<std::mutex> guard(m_queueMutex);
+	boost::lock_guard<boost::mutex> guard(m_queueMutex);
 	if(size > m_queuedFrames) {
 		logger()->warn(L4CXX_LOCATION, boost::format("Buffer underrun: Requested %d frames while only %d frames in queue")%size%m_queuedFrames);
 		size = m_queuedFrames;

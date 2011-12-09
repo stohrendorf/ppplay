@@ -26,11 +26,7 @@
 
 #include "iaudiooutput.h"
 
-#define _GLIBCXX_USE_NANOSLEEP
-#warning "Defining _GLIBCXX_USE_NANOSLEEP for enabling usage of std::sleep_for"
-#include <thread>
-#undef _GLIBCXX_USE_NANOSLEEP
-
+#include <boost/thread.hpp>
 #include <fstream>
 
 /**
@@ -50,9 +46,9 @@ class MP3AudioOutput : public IAudioOutput {
 		//! @brief Internally used buffer for encoding
 		uint8_t* m_buffer;
 		//! @brief Encoder thread holder
-		std::thread m_encoderThread;
+		boost::thread m_encoderThread;
 		//! @brief Mutex that locks m_buffer
-		std::recursive_mutex m_bufferMutex;
+		boost::recursive_mutex m_bufferMutex;
 		//! @brief Whether the output is paused
 		bool m_paused;
 		//! @brief Default size of m_buffer

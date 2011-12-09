@@ -24,7 +24,7 @@
 void MP3AudioOutput::encodeThread(MP3AudioOutput* src) {
 	while(true) {
 		while(src->m_paused) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			boost::this_thread::sleep(boost::posix_time::millisec(10));
 		}
 		AudioFrameBuffer buffer;
 		if(src->source().lock()->getAudioData(buffer, 1024) == 0) {
@@ -111,7 +111,7 @@ int MP3AudioOutput::init(int desiredFrq) {
 		logger()->error(L4CXX_LOCATION, "LAME parameter initialization failed");
 		return 0;
 	}
-	m_encoderThread = std::thread(encodeThread, this);
+	m_encoderThread = boost::thread(encodeThread, this);
 	m_encoderThread.detach();
 	logger()->trace(L4CXX_LOCATION, "LAME initialized");
 	return desiredFrq;

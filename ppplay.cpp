@@ -248,7 +248,7 @@ int main( int argc, char* argv[] ) {
 				}
 				if( !SDL_PollEvent( &event ) ) {
 					// usleep( 10000 );
-					std::this_thread::sleep_for(std::chrono::milliseconds(10));
+					boost::this_thread::sleep(boost::posix_time::millisec(10));
 					continue;
 				}
 				if( event.type == SDL_KEYDOWN ) {

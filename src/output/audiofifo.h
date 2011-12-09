@@ -47,8 +47,8 @@ class AudioFifo : public IAudioSource {
 		AudioFrameBufferQueue m_queue; //!< @brief Queued audio chunks
 		std::atomic_size_t m_queuedFrames; //!< @brief Number of frames in the queue
 		std::atomic_size_t m_minFrameCount; //!< @brief Minimum number of frames the queue should contain
-		std::mutex m_queueMutex; //!< @brief Mutex to lock queue access
-		std::thread m_requestThread; //!< @brief The requester thread that pulls the audio data from the source
+		boost::mutex m_queueMutex; //!< @brief Mutex to lock queue access
+		boost::thread m_requestThread; //!< @brief The requester thread that pulls the audio data from the source
 		IAudioSource::WeakPtr m_source; //!< @brief The audio source to pull the data from
 		uint64_t m_volLeftSum; //!< @brief Sum of all left absolute sample values
 		uint64_t m_volRightSum; //!< @brief Sum of all right absolute sample values
