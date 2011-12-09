@@ -103,7 +103,7 @@ endif()
 
 if(NOT CMAKE_BUILD_TYPE)
 	message(STATUS "Build type is undefined, assuming 'RelWithDebInfo'")
-	set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+	set(CMAKE_BUILD_TYPE "RelWithDebInfo" FORCE)
 else()
 	message(STATUS "Build type is '${CMAKE_BUILD_TYPE}'")
 endif()
@@ -122,7 +122,7 @@ set(ppp_SRCS ppplay.cpp src/ui_main.cpp src/sdlloader.cpp)
 if(WIN32 OR MINGW)
 	set(ppp_SRCS ${ppp_SRCS} ppp.rc)
 endif()
-ADD_EXECUTABLE(ppplay ${ppp_SRCS})
+ADD_EXECUTABLE(ppplay ${ppp_SRCS} config.h)
 
 if(MINGW)
 	target_link_libraries(ppplay stdc++ mingw32)
@@ -155,6 +155,7 @@ function(trylinklib LIBNAME ATTRIBS)
 		add_library("${LIBNAME}" ${ATTRIBS} IMPORTED)
 		target_link_libraries(ppplay ${${LIBNAME}_LIB})
 	endif(NOT "${LIBNAME}_LIB")
+	mark_as_advanced(FORCE "${LIBNAME}_LIB")
 endfunction(trylinklib)
 trylinklib("mp3lame" SHARED)
 if(NOT mp3lame_LIB)
@@ -213,11 +214,13 @@ endif()
 #########
 include(FindDoxygen)
 if(DOXYGEN_FOUND AND DOXYGEN_DOT_FOUND)
-	add_custom_target(docs
+	add_custom_target(
+		docs
 		COMMAND doxygen "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile"
 		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 		COMMENT "Building the Doxygen docs..."
 		SOURCES Doxyfile
+		DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile"
 	)
 	configure_file(
 		"${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in"
@@ -225,16 +228,14 @@ if(DOXYGEN_FOUND AND DOXYGEN_DOT_FOUND)
 		ESCAPE_QUOTES
 	)
 endif()
+
 add_feature_info(Doxygen DOXYGEN_FOUND "Doxygen is used to generate the API documentation.")
+
 configure_file(
 	"${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
 	"${CMAKE_CURRENT_SOURCE_DIR}/config.h"
 	ESCAPE_QUOTES
 )
-# set_source_files_properties(Doxyfile config.h PROPERTIES GENERATED TRUE)
-
-add_dependencies(ppplay config.h)
-add_dependencies(docs Doxyfile)
 
 set_package_info(Threads "Threads library")
 
