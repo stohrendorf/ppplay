@@ -28,6 +28,7 @@
 #include "stream/iserializable.h"
 
 #include <cstdint>
+#include "gensample.h"
 
 namespace ppp {
 
@@ -46,9 +47,9 @@ class BresenInterpolation : public ISerializable {
 		DISABLE_COPY(BresenInterpolation)
 		BresenInterpolation() = delete;
 	private:
-		uint32_t m_dx; //!< @brief Width of the line
-		uint32_t m_dy; //!< @brief Height of the line
-		int32_t m_err; //!< @brief Error variable
+		uint_fast32_t m_dx; //!< @brief Width of the line
+		uint_fast32_t m_dy; //!< @brief Height of the line
+		int_fast32_t m_err; //!< @brief Error variable
 	public:
 		/**
 		 * @brief Constructor
@@ -60,7 +61,7 @@ class BresenInterpolation : public ISerializable {
 		 * @brief Calculates the next interpolation step
 		 * @param[in,out] pos Interpolation Y point to adjust
 		 */
-		inline void next(int32_t& pos) {
+		inline void next(GenSample::PositionType& pos) {
 			for(m_err -= m_dy; m_err < 0; m_err += m_dx) {
 				pos++;
 			}
@@ -72,7 +73,7 @@ class BresenInterpolation : public ISerializable {
 		 * @note Use this for tick simulation purposes
 		 * @see next()
 		 */
-		inline void fastNext(uint32_t bigDx, int32_t& pos) {
+		inline void fastNext(uint32_t bigDx, GenSample::PositionType& pos) {
 			uint32_t bigDy = m_dy*bigDx/m_dx;
 			pos += bigDy;
 			m_err -= m_dy*bigDx;

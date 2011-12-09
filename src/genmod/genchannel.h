@@ -27,6 +27,7 @@
 #include "stream/iserializable.h"
 #include "output/audiotypes.h"
 #include "stuff/utils.h"
+#include "gensample.h"
 
 #include "light4cxx/logger.h"
 
@@ -47,7 +48,7 @@ class GenChannel : public ISerializable {
 	private:
 		bool m_active; //!< @brief @c true if channel is active
 		bool m_disabled; //!< @brief @c true if channel is disabled
-		int32_t m_position; //!< @brief Current sample position
+		GenSample::PositionType m_position; //!< @brief Current sample position
 		std::string m_statusString; //!< @brief Status string
 		std::mutex m_statusStringMutex; //!< @brief Mutex for accessing m_statusString
 	public:
@@ -88,7 +89,7 @@ class GenChannel : public ISerializable {
 		 * @brief Get the playback position
 		 * @return Playback position in the channel's sample
 		 */
-		int32_t position() const;
+		GenSample::PositionType position() const;
 		/**
 		 * @brief Disables this channel.
 		 */
@@ -140,7 +141,7 @@ class GenChannel : public ISerializable {
 		 * @brief Set the m_position value
 		 * @param[in] p The new value
 		 */
-		void setPosition(int32_t p);
+		void setPosition( ppp::GenSample::PositionType p );
 		/**
 		 * @brief Sets m_statusString
 		 * @param[in] s The new string

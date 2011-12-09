@@ -28,7 +28,7 @@ namespace ppp {
 
 GenChannel::GenChannel() :
 	m_active(false), m_disabled(true),
-	m_position(0),
+	m_position(GenSample::EndOfSample),
 	m_statusString(),
 	m_statusStringMutex() {
 }
@@ -54,7 +54,7 @@ void GenChannel::setActive(bool a) {
 	m_active = a;
 }
 
-void GenChannel::setPosition(int32_t p) {
+void GenChannel::setPosition(GenSample::PositionType p) {
 	m_position = p;
 }
 
@@ -66,7 +66,7 @@ void GenChannel::disable() {
 	m_disabled = true;
 }
 
-int32_t GenChannel::position() const {
+GenSample::PositionType GenChannel::position() const {
 	return m_position;
 }
 

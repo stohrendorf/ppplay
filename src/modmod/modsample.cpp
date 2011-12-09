@@ -61,7 +61,7 @@ bool ModSample::loadHeader(BinStream& stream)
 	swapEndian(&hdr.loopStart);
 	swapEndian(&hdr.loopLength);
 	if(hdr.length>1) {
-		setLength(hdr.length<<1);
+		resizeData(hdr.length<<1);
 	}
 	if(hdr.loopLength>1 && (hdr.loopLength+hdr.loopStart<=hdr.length)) {
 		setLoopStart(hdr.loopStart<<1);
@@ -83,14 +83,12 @@ bool ModSample::loadData(BinStream& stream)
 	}
 	if(stream.pos()+length()>stream.size()) {
 		logger()->warn(L4CXX_LOCATION, boost::format("File truncated: %u bytes requested while only %u bytes left. Truncating sample.")%length()%(stream.size()-stream.pos()));
-		setLength( stream.size()-stream.pos() );
+		resizeData( stream.size()-stream.pos() );
 	}
-	setDataMono( new BasicSample[length()] );
-	BasicSample* s = nonConstDataMono();
-	for(size_t i=0; i<length(); i++) {
+	for(auto it=beginIterator(); it!=endIterator(); it++) {
 		int8_t tmp;
 		stream.read(&tmp);
-		*(s++) = tmp<<8;
+		it->left = it->right = tmp<<8;
 	}
 	return stream.good();
 }

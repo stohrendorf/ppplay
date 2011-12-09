@@ -221,7 +221,7 @@ bool S3mModule::load(const std::string& fn) {
 			if(!str.good()) {
 				return false;
 			}
-			schismTest |= (m_samples.at(i)->isHighQuality() || m_samples.at(i)->isStereo());
+			schismTest |= m_samples.at(i)->isHighQuality();
 		}
 		if(schismTest != 0) {
 			logger()->info(L4CXX_LOCATION, "Enabling Schism Tracker compatibility mode");

@@ -275,7 +275,7 @@ void ModChannel::simTick(size_t bufsize)
 		return;
 	}
 	// TODO glissando
-	int32_t pos = position() + (FrequencyBase / m_module->frequency() * bufsize / (m_physPeriod));
+	GenSample::PositionType pos = position() + (FrequencyBase / m_module->frequency() * bufsize / (m_physPeriod));
 	currentSample()->adjustPosition(pos);
 	if(pos == GenSample::EndOfSample) {
 		setActive(false);
@@ -300,15 +300,16 @@ void ModChannel::mixTick(MixerFrameBuffer& mixBuffer)
 // 	setStatusString( statusString() + stringf(" %d +- %u",FrequencyBase/m_period, m_finetune) );
 	// TODO glissando
 	ModSample::Ptr currSmp = currentSample();
-	int32_t pos = position();
+	GenSample::PositionType pos = position();
 	if(pos == GenSample::EndOfSample) {
 		setActive(false);
 		return;
 	}
 	for(MixerSampleFrame& frame : *mixBuffer) {
 		// TODO panning
-		frame.left += (currSmp->leftSampleAt(pos)*m_physVolume)>>6;
-		frame.right += (currSmp->rightSampleAt(pos)*m_physVolume)>>6;
+		BasicSampleFrame sample = currSmp->sampleAt(pos);
+		sample.mulRShift(m_physVolume, 6);
+		frame += sample;
 		if(pos == GenSample::EndOfSample) {
 			break;
 		}

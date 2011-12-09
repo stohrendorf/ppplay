@@ -648,7 +648,7 @@ void XmChannel::mixTick(MixerFrameBuffer& mixBuffer) {
 		return;
 	m_bres.reset(m_module->frequency(), m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod));
 	XmSample::Ptr currSmp = currentSample();
-	int32_t pos = position();
+	GenSample::PositionType pos = position();
 	uint8_t volLeft = 0x80;
 	if(m_realPanning > 0x80) {
 		volLeft = 0xff - m_realPanning;
@@ -658,10 +658,10 @@ void XmChannel::mixTick(MixerFrameBuffer& mixBuffer) {
 		volRight = m_realPanning;
 	}
 	for(MixerSampleFrame& frame : *mixBuffer) {
-		int16_t sampleVal = (currSmp->leftSampleAt(pos) * volLeft) >> 7;
-		frame.left += (sampleVal * m_realVolume) >> 6;
-		sampleVal = (currSmp->rightSampleAt(pos) * volRight) >> 7;
-		frame.right += (sampleVal * m_realVolume) >> 6;
+		BasicSampleFrame sampleVal = currSmp->sampleAt(pos);
+		sampleVal.mulRShift(volLeft, volRight, 7);
+		sampleVal.mulRShift(m_realVolume, 6);
+		frame += sampleVal;
 		if(pos == GenSample::EndOfSample) {
 			break;
 		}
@@ -681,7 +681,7 @@ void XmChannel::simTick(size_t bufSize) {
 		return;
 	m_bres.reset(m_module->frequency(), m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod));
 	XmSample::Ptr currSmp = currentSample();
-	int32_t pos = position();
+	GenSample::PositionType pos = position();
 	m_bres.fastNext(bufSize, pos);
 // 	pos += m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod) * bufSize / m_module->frequency();
 	currSmp->adjustPosition(pos);

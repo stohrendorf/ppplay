@@ -43,10 +43,18 @@ typedef int16_t BasicSample;
  */
 #pragma pack(push, 1)
 struct BasicSampleFrame {
+	typedef std::vector<BasicSampleFrame> Vector;
 	//! @brief Left sample value
 	BasicSample left;
 	//! @brief Right sample value
 	BasicSample right;
+	inline void mulRShift(uint8_t mul, uint8_t shift) {
+		mulRShift(mul,mul,shift);
+	}
+	inline void mulRShift(uint8_t mulLeft, uint8_t mulRight, uint8_t shift) {
+		left = (left*mulLeft)>>shift;
+		right = (right*mulRight)>>shift;
+	}
 };
 #pragma pack(pop)
 
@@ -69,6 +77,11 @@ struct MixerSampleFrame {
 	MixerSample left;
 	//! @brief Right sample value
 	MixerSample right;
+	inline MixerSampleFrame operator+=(const BasicSampleFrame& rhs) {
+		left += rhs.left;
+		right += rhs.right;
+		return *this;
+	}
 };
 #pragma pack(pop)
 

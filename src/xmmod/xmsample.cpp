@@ -55,12 +55,12 @@ bool XmSample::load(BinStream& str) {
 	}
 	m_16bit = (type & 0x10) != 0;
 	if(m_16bit) {
-		setLength(dataSize / 2);
+		resizeData(dataSize / 2);
 		setLoopStart(loopStart / 2);
 		setLoopEnd((loopStart + loopLen) / 2);
 	}
 	else {
-		setLength(dataSize);
+		resizeData(dataSize);
 		setLoopStart(loopStart);
 		setLoopEnd(loopStart + loopLen);
 	}
@@ -74,8 +74,6 @@ bool XmSample::load(BinStream& str) {
 		str.read(title, 22);
 		setTitle(stringncpy(title, 22));
 	}
-	setDataMono(new BasicSample[length()]);
-	std::fill_n(nonConstDataMono(), length(), 0);
 	return str.good();
 }
 
@@ -84,22 +82,20 @@ bool XmSample::loadData(BinStream& str) {
 		return true;
 	if(m_16bit) {   // 16 bit
 		int16_t smp16 = 0;
-		BasicSample* smpPtr = nonConstDataMono();
-		for(size_t i = 0; i < length(); i++) {
+		for(auto it=beginIterator(); it!=endIterator(); it++) {
 			int16_t delta;
 			str.read(&delta);
 			smp16 += delta;
-			*(smpPtr++) = smp16;
+			it->left = it->right = smp16;
 		}
 	}
 	else { // 8 bit
 		int8_t smp8 = 0;
-		BasicSample* smpPtr = nonConstDataMono();
-		for(size_t i = 0; i < length(); i++) {
+		for(auto it=beginIterator(); it!=endIterator(); it++) {
 			int8_t delta;
 			str.read(&delta);
 			smp8 += delta;
-			*(smpPtr++) = smp8 << 8;
+			it->left = it->right = smp8 << 8;
 		}
 	}
 	return str.good();

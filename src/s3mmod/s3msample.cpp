@@ -67,7 +67,6 @@ S3mSample::S3mSample() : GenSample(), m_highQuality(false) {
 
 bool S3mSample::load(BinStream& str, const size_t pos, bool imagoLoopEnd) {
 	try {
-		BOOST_ASSERT(dataLeft() == nullptr && dataRight() == nullptr);
 		str.seek(pos);
 		S3mSampleHeader smpHdr;
 		str.read(reinterpret_cast<char*>(&smpHdr), sizeof(smpHdr));
@@ -87,7 +86,7 @@ bool S3mSample::load(BinStream& str, const size_t pos, bool imagoLoopEnd) {
 			return true;
 		}
 		/// @warning This could be a much too high value...
-		setLength((smpHdr.hiLength << 16) | smpHdr.length);
+		resizeData((smpHdr.hiLength << 16) | smpHdr.length);
 		//	aLength = (aLength>64000) ? 64000 : aLength;
 		setLoopStart((smpHdr.hiLoopStart << 16) | smpHdr.loopStart);
 		//	aLoopStart = (aLoopStart>64000) ? 64000 : aLoopStart;
@@ -110,64 +109,58 @@ bool S3mSample::load(BinStream& str, const size_t pos, bool imagoLoopEnd) {
 			logger()->warn(L4CXX_LOCATION, "Seek failed or length is zero, assuming empty.");
 			return true;
 		}
-		if(loadStereo) {
-			setDataLeft(new BasicSample[length()]);
-			std::fill_n(nonConstDataL(), length(), 0);
-			setDataRight(new BasicSample[length()]);
-			std::fill_n(nonConstDataR(), length(), 0);
-		}
-		else {
-			setDataMono(new BasicSample[length()]);
-			std::fill_n(nonConstDataR(), length(), 0);
-		}
 		if(smpHdr.flags & s3mFlagSmp16bit) {
 			logger()->info(L4CXX_LOCATION, "Loading 16-bit sample");
 			m_highQuality = true;
 			uint16_t smp16;
-			BasicSample* smpPtr = nonConstDataL();
-			for(uint32_t i = 0; i < length(); i++) {
+			auto smpPtr = beginIterator();
+			for(int_fast32_t i = 0; i < length(); i++) {
 				str.read(&smp16);
 				if(str.fail()) {
 					logger()->warn(L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes.");
 					return true;
 				}
-				*(smpPtr++) = clip(smp16 - 32768, -32767, 32767);     // negating -32768 fails otherwise in surround mode
+				smpPtr->left = smpPtr->right = clip(smp16 - 32768, -32767, 32767);     // negating -32768 fails otherwise in surround mode
+				smpPtr++;
 			}
 			if(loadStereo) {
 				logger()->info(L4CXX_LOCATION, "Loading Stereo...");
-				smpPtr = nonConstDataR();
-				for(uint32_t i = 0; i < length(); i++) {
+				smpPtr = beginIterator();
+				for(int_fast32_t i = 0; i < length(); i++) {
 					str.read(&smp16);
 					if(str.fail()) {
 						logger()->warn(L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes.");
 						return true;
 					}
-					*(smpPtr++) = clip(smp16 - 32768, -32767, 32767);     // negating -32768 fails otherwise in surround mode
+					smpPtr->right = clip(smp16 - 32768, -32767, 32767);     // negating -32768 fails otherwise in surround mode
+					smpPtr++;
 				}
 			}
 		}
 		else { // convert 8-bit samples to 16-bit ones
 			logger()->info(L4CXX_LOCATION, "Loading 8-bit sample");
 			uint8_t smp8;
-			BasicSample* smpPtr = nonConstDataL();
-			for(uint32_t i = 0; i < length(); i++) {
+			auto smpPtr = beginIterator();
+			for(int_fast32_t i = 0; i < length(); i++) {
 				str.read(&smp8);
 				if(str.fail()) {
 					logger()->warn(L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes.");
 					return true;
 				}
-				*(smpPtr++) = clip((smp8 - 128) << 8, -32767, 32767);       // negating -32768 fails otherwise in surround mode
+				smpPtr->left = smpPtr->right = clip((smp8 - 128) << 8, -32767, 32767);       // negating -32768 fails otherwise in surround mode
+				smpPtr++;
 			}
 			if(loadStereo) {
 				logger()->info(L4CXX_LOCATION, "Loading Stereo...");
-				smpPtr = nonConstDataR();
-				for(uint32_t i = 0; i < length(); i++) {
+				smpPtr = beginIterator();
+				for(int_fast32_t i = 0; i < length(); i++) {
 					str.read(&smp8);
 					if(str.fail()) {
 						logger()->warn(L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes.");
 						return true;
 					}
-					*(smpPtr++) = clip((smp8 - 128) << 8, -32767, 32767);       // negating -32768 fails otherwise in surround mode
+					smpPtr->right = clip((smp8 - 128) << 8, -32767, 32767);       // negating -32768 fails otherwise in surround mode
+					smpPtr++;
 				}
 			}
 		}
