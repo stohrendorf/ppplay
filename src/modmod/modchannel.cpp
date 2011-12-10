@@ -91,9 +91,9 @@ void ModChannel::update(const ModCell::Ptr& cell, bool patDelay)
 				setPosition(0);
 				setActive(true);
 			}
-			else {
+// 			else {
 				setTonePortaTarget();
-			}
+// 			}
 			setActive(m_period != 0);
 			if((m_vibratoWaveform&4) == 0) {
 				// reset phase to 0 on a new note
@@ -335,13 +335,13 @@ void ModChannel::setCellPeriod()
 			break;
 		}
 	}
-	if(perIdx == fullPeriods.at(0).size()) {
-		m_period = fullPeriods.at(m_finetune).at(perIdx-1);
+	if(perIdx >= fullPeriods.at(0).size()) {
+		m_period = fullPeriods.at(m_finetune).back();
 	}
 	else {
 		m_period = fullPeriods.at(m_finetune).at(perIdx);
 	}
-	if(m_currentCell.effect()==0x0e && m_currentCell.effectValue()==0x0d) {
+	if(m_currentCell.effect()==0x0e && highNibble(m_currentCell.effectValue())==0x0d) {
 		// note delay
 		return;
 	}
@@ -352,6 +352,7 @@ void ModChannel::setCellPeriod()
 	if((m_tremoloWaveform&4)==0) {
 		m_vibratoPhase = 0;
 	}
+	// mt_CheckMoreEfx
 }
 
 void ModChannel::setTonePortaTarget()
@@ -366,14 +367,21 @@ void ModChannel::setTonePortaTarget()
 			break;
 		}
 	}
-	if(perIdx == fullPeriods.at(m_finetune).size()) {
-		m_portaTarget = fullPeriods.at(m_finetune).at(perIdx-1);
+	if(perIdx!=0 && (m_finetune&8)!=0) {
+		perIdx--;
+	}
+	if(perIdx >= fullPeriods.at(m_finetune).size()) {
+		m_portaTarget = fullPeriods.at(m_finetune).back();
 	}
 	else {
 		m_portaTarget = fullPeriods.at(m_finetune).at(perIdx);
 	}
+    m_portaDirUp = 0;
 	if(m_portaTarget == m_period) {
 		m_portaTarget = 0;
+	}
+	else if(m_period > m_portaTarget) {
+        m_portaDirUp = 1;
 	}
 }
 
@@ -452,11 +460,9 @@ void ModChannel::efxFineSlideDown(uint8_t fxByte)
 	if(m_module->tick() != 0) {
 		return;
 	}
-	m_period += lowNibble(fxByte);
-	if(m_period > 856) {
-		m_period = 856;
-	}
-	m_physPeriod = m_period;
+	m_lowMask = 0x0f;
+	fxPortaDown(fxByte);
+	m_effectDescription = "Ptch \x1f";
 }
 
 void ModChannel::efxFineSlideUp(uint8_t fxByte)
@@ -465,11 +471,9 @@ void ModChannel::efxFineSlideUp(uint8_t fxByte)
 	if(m_module->tick() != 0) {
 		return;
 	}
-	m_period -= lowNibble(fxByte);
-	if(m_period < 113) {
-		m_period = 113;
-	}
-	m_physPeriod = m_period;
+	m_lowMask = 0x0f;
+	fxPortaUp(fxByte);
+	m_effectDescription = "Ptch \x1e";
 }
 
 void ModChannel::fxOffset(uint8_t fxByte)
@@ -486,7 +490,7 @@ void ModChannel::fxOffset(uint8_t fxByte)
 		if(currentSample()) {
 			logger()->debug(L4CXX_LOCATION, boost::format("Offset effect: length()=%d, request=%d")%currentSample()->length()%(fxByte<<8));
 		}
-		//setActive(false);
+		setActive(false);
 	}
 }
 
@@ -498,34 +502,36 @@ void ModChannel::fxSetVolume(uint8_t fxByte)
 
 void ModChannel::fxVolSlide(uint8_t fxByte)
 {
-	if(highNibble(fxByte)!=0) {
-		m_effectDescription = "VSld \x1e";
-		m_physVolume = m_volume = std::min(0x40, m_volume+highNibble(fxByte));
-	}
-	else {
+	if(highNibble(fxByte)==0) {
+		// vol slide down
 		m_effectDescription = "VSld \x1f";
 		m_physVolume = m_volume = std::max<int>(0x0, m_volume-lowNibble(fxByte));
+	}
+	else {
+		m_effectDescription = "VSld \x1e";
+		m_physVolume = m_volume = std::min(0x40, m_volume+highNibble(fxByte));
 	}
 }
 
 void ModChannel::fxVibVolSlide(uint8_t fxByte)
 {
-	fxVolSlide(fxByte);
 	fxVibrato(0);
+	fxVolSlide(fxByte);
 	m_effectDescription = "VibVo\xf7";
 }
 
 void ModChannel::fxPortaVolSlide(uint8_t fxByte)
 {
-	fxVolSlide(fxByte);
 	fxPorta(0);
+	fxVolSlide(fxByte);
 	m_effectDescription = "PrtVo\x12";
 }
 
 void ModChannel::fxPortaDown(uint8_t fxByte)
 {
 	m_effectDescription = "Ptch \x1f";
-	m_period += fxByte;
+	m_period += fxByte&m_lowMask;
+	m_lowMask = 0xff;
 	if(m_period > 856) {
 		m_period = 856;
 	}
@@ -536,7 +542,8 @@ void ModChannel::fxPortaDown(uint8_t fxByte)
 void ModChannel::fxPortaUp(uint8_t fxByte)
 {
 	m_effectDescription = "Ptch \x1e";
-	m_period -= fxByte;
+	m_period -= fxByte&m_lowMask;
+	m_lowMask = 0xff;
 	if(m_period < 113) {
 		m_period = 113;
 	}
@@ -579,18 +586,22 @@ void ModChannel::fxPorta(uint8_t fxByte)
 	m_effectDescription = "Porta\x12";
 	reuseIfZero(m_portaSpeed, fxByte);
 	if(m_portaTarget == 0) {
+        setTonePortaTarget();
 		return;
 	}
-	if(m_portaTarget < m_period) {
+	if(m_portaDirUp == 1) {
+		// porta up
+		logger()->trace(L4CXX_LOCATION, "Porta up");
 		m_period = std::max<int>(m_portaTarget, m_period-fxByte);
 	}
-	else if(m_portaTarget > m_period) {
+	else {
+		// porta down
+        logger()->trace(L4CXX_LOCATION, "Porta down");
 		m_period = std::min<int>(m_portaTarget, m_period+fxByte);
 	}
 	if(m_period == m_portaTarget) {
 		m_portaTarget = 0;
 	}
-	m_period = clip<uint16_t>(113,856,m_period);
 	applyGlissando();
 }
 
@@ -639,7 +650,7 @@ void ModChannel::fxArpeggio(uint8_t fxByte)
 			return;
 		}
 	}
-	m_physPeriod = fullPeriods.at(m_finetune).at( fullPeriods.at(m_finetune).size()-1 );
+	m_physPeriod = fullPeriods.at(m_finetune).back();
 }
 
 void ModChannel::fxPatBreak(uint8_t)
@@ -688,7 +699,7 @@ void ModChannel::fxTremolo(uint8_t fxByte)
 	if((m_tremoloPhase&0x20) != 0) {
 		vibVal = -vibVal;
 	}
-	m_physVolume = clip<int>(0, 0x40, m_volume+vibVal);
+	m_physVolume = clip<int>(m_volume+vibVal, 0, 0x40);
 	m_tremoloPhase += highNibble(fxByte);
 	m_tremoloPhase &= 0x3f;
 }
@@ -741,7 +752,7 @@ void ModChannel::applyGlissando()
 			return;
 		}
 	}
-	m_physPeriod = fullPeriods.at(m_finetune).at( fullPeriods.at(m_finetune).size()-1 );
+	m_physPeriod = fullPeriods.at(m_finetune).back();
 }
 
 light4cxx::Logger::Ptr ModChannel::logger()

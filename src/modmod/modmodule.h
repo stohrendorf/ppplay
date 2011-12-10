@@ -54,7 +54,7 @@ private:
 	int m_patLoopCount;
 	int8_t m_breakRow;
 	int m_patDelayCount;
-	size_t m_breakOrder;
+	uint16_t m_breakOrder;
 	bool adjustPosition(bool increaseTick, bool doStore);
 	void checkGlobalFx();
 	ModPattern::Ptr getPattern(size_t idx) const;

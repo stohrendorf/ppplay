@@ -227,6 +227,7 @@ void ModModule::buildTick(AudioFrameBuffer& buf)
 			*(bufPtr++) = clipSample(*(mixerBufferPtr++) >> 2);
 		}
 		if(!adjustPosition(true, false)) {
+			logger()->info(L4CXX_LOCATION, "Song end reached: adjustPosition() failed");
 			buf.reset();
 			return;
 		}
@@ -251,9 +252,11 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 		m_patDelayCount = -1;
 		if(m_breakOrder != 0xffff) {
 			orderAt(order())->increasePlaybackCount();
+			logger()->debug(L4CXX_LOCATION, "Order break");
 			if(m_breakOrder < orderCount()) {
 				setOrder(m_breakOrder);
 				if(order() >= orderCount()) {
+					logger()->debug(L4CXX_LOCATION, "order()>=orderCount()");
 					return false;
 				}
 				orderChanged = true;
@@ -267,8 +270,10 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 			if(m_breakOrder == 0xffff) {
 				if(m_patLoopCount == -1) {
 					orderAt(order())->increasePlaybackCount();
+					logger()->debug(L4CXX_LOCATION, "Row break");
 					setOrder(order() + 1);
 					if(order() >= orderCount()) {
+						logger()->debug(L4CXX_LOCATION, "order()>=orderCount()");
 						return false;
 					}
 					orderChanged = true;
@@ -282,8 +287,10 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 			setRow((row() + 1) & 0x3f);
 			if(row() == 0) {
 				orderAt(order())->increasePlaybackCount();
+				logger()->debug(L4CXX_LOCATION, "New pattern");
 				setOrder(order() + 1);
 				if(order() >= orderCount()) {
+					logger()->debug(L4CXX_LOCATION, "order()>=orderCount()");
 					return false;
 				}
 				orderChanged = true;
@@ -293,6 +300,7 @@ bool ModModule::adjustPosition(bool increaseTick, bool doStore)
 		m_breakOrder = ~0;
 	}
 	if(order() >= orderCount()) {
+		logger()->debug(L4CXX_LOCATION, "order()>=orderCount()");
 		return false;
 	}
 	setPatternIndex(mapOrder(order())->index());
@@ -327,18 +335,24 @@ void ModModule::simulateTick(size_t& bufLen)
 		if(tick() == 0)
 			checkGlobalFx();
 		bufLen = 0;
-		if(!adjustPosition(false, true))
+		if(!adjustPosition(false, true)) {
+			logger()->debug(L4CXX_LOCATION, "adjustPosition() failed");
 			return;
+		}
 		BOOST_ASSERT( mapOrder(order()).use_count()>0 );
-		if(orderAt(order())->playbackCount() >= maxRepeat())
+		if(orderAt(order())->playbackCount() >= maxRepeat()) {
+			logger()->debug(L4CXX_LOCATION, "maxRepeat() reached");
 			return;
+		}
 		// update channels...
 		setPatternIndex(mapOrder(order())->index());
 		ModPattern::Ptr currPat = getPattern(patternIndex());
-		if(!currPat)
+		if(!currPat) {
+			logger()->warn(L4CXX_LOCATION, "pattern is null");
 			return;
+		}
 		bufLen = tickBufferLength(); // in frames
-		for(unsigned short currTrack = 0; currTrack < channelCount(); currTrack++) {
+		for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++) {
 			ModChannel::Ptr chan = m_channels.at(currTrack);
 			BOOST_ASSERT(chan.use_count()>0);
 			ModCell::Ptr cell = currPat->cellAt(currTrack, row());
@@ -346,6 +360,7 @@ void ModModule::simulateTick(size_t& bufLen)
 			chan->simTick(bufLen);
 		}
 		if(!adjustPosition(true, true)) {
+			logger()->debug(L4CXX_LOCATION, "adjustPosition() failed");
 			bufLen = 0;
 			return;
 		}
