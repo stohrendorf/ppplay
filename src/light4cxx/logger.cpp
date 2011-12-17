@@ -29,7 +29,8 @@
  * @{
  */
 
-namespace light4cxx {
+namespace light4cxx
+{
 
 /**
  * @brief The current logging level filter
@@ -41,33 +42,33 @@ Level Logger::level()
 	return s_level;
 }
 
-void Logger::setLevel(Level l)
+void Logger::setLevel( Level l )
 {
 	s_level = l;
 }
 
 Logger::Ptr Logger::root()
 {
-	return get("root");
+	return get( "root" );
 }
 
-Logger::Ptr Logger::get(const std::string& name)
+Logger::Ptr Logger::get( const std::string& name )
 {
 	typedef std::unordered_map<std::string, Logger::Ptr> RepoMap; //!< @brief Maps logger names to their instances
 	static RepoMap s_repository; //!< @brief The logger repository
 	static std::recursive_mutex lockMutex; //!< @brief Mutex for locking the repository
-	std::lock_guard<std::recursive_mutex> lockGuard(lockMutex);
-	
-	RepoMap::const_iterator elem = s_repository.find(name);
-	if(elem != s_repository.end()) {
+	std::lock_guard<std::recursive_mutex> lockGuard( lockMutex );
+
+	RepoMap::const_iterator elem = s_repository.find( name );
+	if( elem != s_repository.end() ) {
 		return elem->second;
 	}
-	Ptr res(new Logger(name));
-	s_repository.insert( std::make_pair(name, res) );
+	Ptr res( new Logger( name ) );
+	s_repository.insert( std::make_pair( name, res ) );
 	return res;
 }
 
-Logger::Logger(const std::string& name) : m_name(name)
+Logger::Logger( const std::string& name ) : m_name( name )
 {
 }
 
@@ -76,18 +77,18 @@ Logger::Logger(const std::string& name) : m_name(name)
  */
 static std::mutex outMutex;
 
-void Logger::log(light4cxx::Level l, const light4cxx::Location& loc, const std::string& str) const
+void Logger::log( light4cxx::Level l, const light4cxx::Location& loc, const std::string& str ) const
 {
-	if(l < s_level || s_level==Level::Off) {
+	if( l < s_level || s_level == Level::Off ) {
 		return;
 	}
-	std::lock_guard<std::mutex> outLock(outMutex);
+	std::lock_guard<std::mutex> outLock( outMutex );
 	std::cout << loc.toString( l, *this, str );
 }
 
-void Logger::log(Level l, const Location& loc, const boost::format& fmt) const
+void Logger::log( Level l, const Location& loc, const boost::format& fmt ) const
 {
-	log(l, loc, fmt.str());
+	log( l, loc, fmt.str() );
 }
 
 }

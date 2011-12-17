@@ -30,7 +30,8 @@
 
 #include <array>
 
-namespace ppp {
+namespace ppp
+{
 
 /**
  * @brief General note names
@@ -43,8 +44,9 @@ extern const std::array<const char[3], 12> NoteNames;
  * @return Clipped 16-bit sample
  * @note Time-critical
  */
-inline int16_t clipSample(int32_t smp) {
-	return clip(smp, -32768, 32767);
+inline int16_t clipSample( int32_t smp )
+{
+	return clip( smp, -32768, 32767 );
 }
 
 } // namespace ppp

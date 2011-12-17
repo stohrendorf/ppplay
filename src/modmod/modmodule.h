@@ -29,13 +29,15 @@
 #include "modpattern.h"
 #include "modchannel.h"
 
-namespace ppp {
-namespace mod {
+namespace ppp
+{
+namespace mod
+{
 
 class ModModule : public GenModule
 {
-	DISABLE_COPY(ModModule)
-    ModModule() = delete;
+	DISABLE_COPY( ModModule )
+	ModModule() = delete;
 public:
 	typedef std::shared_ptr<ModModule> Ptr; //!< @brief Class pointer
 	/**
@@ -45,7 +47,7 @@ public:
 	 * @param[in] maxRpt Maximum repeat count
 	 * @return Module pointer or nullptr
 	 */
-	static GenModule::Ptr factory(const std::string& filename, uint32_t frequency, uint8_t maxRpt = 2);
+	static GenModule::Ptr factory( const std::string& filename, uint32_t frequency, uint8_t maxRpt = 2 );
 private:
 	ModSample::Vector m_samples; //!< @brief Samples
 	ModPattern::Vector m_patterns; //!< @brief Patterns
@@ -55,28 +57,28 @@ private:
 	int8_t m_breakRow;
 	int m_patDelayCount;
 	uint16_t m_breakOrder;
-	bool adjustPosition(bool increaseTick, bool doStore);
+	bool adjustPosition( bool increaseTick, bool doStore );
 	void checkGlobalFx();
-	ModPattern::Ptr getPattern(size_t idx) const;
+	ModPattern::Ptr getPattern( size_t idx ) const;
 protected:
-	virtual IArchive& serialize(IArchive* data);
+	virtual IArchive& serialize( IArchive* data );
 public:
-	ModModule(uint8_t maxRpt = 2);
+	ModModule( uint8_t maxRpt = 2 );
 	virtual ~ModModule();
-	bool load(const std::string& filename);
-	virtual void buildTick(AudioFrameBuffer& buf);
-	virtual void simulateTick(size_t& bufLen);
-	virtual GenOrder::Ptr mapOrder(int16_t order);
-	virtual std::string channelStatus(size_t idx);
+	bool load( const std::string& filename );
+	virtual void buildTick( AudioFrameBuffer& buf );
+	virtual void simulateTick( size_t& bufLen );
+	virtual GenOrder::Ptr mapOrder( int16_t order );
+	virtual std::string channelStatus( size_t idx );
 	virtual bool jumpNextSong();
 	virtual bool jumpPrevSong();
 	virtual bool jumpNextOrder();
 	virtual bool jumpPrevOrder();
-	virtual std::string channelCellString(size_t idx);
-	virtual bool initialize(uint32_t frq);
+	virtual std::string channelCellString( size_t idx );
+	virtual bool initialize( uint32_t frq );
 	virtual uint8_t channelCount() const;
-	ModSample::Ptr sampleAt(size_t idx) const;
-	bool existsSample(size_t idx) const;
+	ModSample::Ptr sampleAt( size_t idx ) const;
+	bool existsSample( size_t idx ) const;
 protected:
 	/**
 	 * @brief Get the logger

@@ -26,12 +26,14 @@
 #include <boost/assert.hpp>
 #include <cstdarg>
 
-namespace ppp {
+namespace ppp
+{
 
-std::string stringncpy(const char src[], size_t maxlen) {
+std::string stringncpy( const char src[], size_t maxlen )
+{
 	std::string res;
-	for(size_t i = 0; i < maxlen; i++) {
-		if(src[i] == 0x00) {
+	for( size_t i = 0; i < maxlen; i++ ) {
+		if( src[i] == 0x00 ) {
 			break;
 		}
 		res += src[i];
@@ -39,9 +41,10 @@ std::string stringncpy(const char src[], size_t maxlen) {
 	return res;
 }
 
-void swapEndian(char data[], size_t size) {
-	for(size_t i = 0; i < size / 2; i++) {
-		std::swap(data[i], data[size - i - 1]);
+void swapEndian( char data[], size_t size )
+{
+	for( size_t i = 0; i < size / 2; i++ ) {
+		std::swap( data[i], data[size - i - 1] );
 	}
 }
 

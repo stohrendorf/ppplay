@@ -28,70 +28,73 @@
 #include "xmbase.h"
 #include "stream/binstream.h"
 
-namespace ppp {
-namespace xm {
+namespace ppp
+{
+namespace xm
+{
 
 /**
  * @class XmCell
  * @brief Cell of a pattern
  */
-class XmCell : public IPatternCell {
-	public:
-		typedef std::shared_ptr<XmCell> Ptr; //!< @brief Class pointer
-		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
-	private:
-		uint8_t m_note; //!< @brief Note value
-		uint8_t m_instr; //!< @brief Instrument value
-		uint8_t m_volume; //!< @brief Volume value
-		Effect m_effect; //!< @brief Effect
-		uint8_t m_effectValue; //!< @brief Effect value
-	public:
-		XmCell();
-		virtual ~XmCell();
-		/**
-		 * @brief Load the cell data from a stream
-		 * @param[in] str The stream to load from
-		 * @return @c true on success
-		 */
-		bool load(BinStream& str);
-		virtual void clear();
-		virtual std::string trackerString() const;
-		/**
-		 * @brief Get the note string, e.g. in the form "C#3"
-		 * @return The note string
-		 */
-		std::string noteString() const;
-		/**
-		 * @brief Get the string representation of the effect/value columns
-		 * @return String in the form of e.g. "R0A"
-		 */
-		std::string fxString() const;
-		/**
-		 * @brief Get the note value
-		 * @return m_note
-		 */
-		uint8_t note() const;
-		/**
-		 * @brief Get the instrument value
-		 * @return m_instrument
-		 */
-		uint8_t instrument() const;
-		/**
-		 * @brief Get the volume value
-		 * @return m_volume
-		 */
-		uint8_t volume() const;
-		/**
-		 * @brief Get the effect
-		 * @return m_effect
-		 */
-		Effect effect() const;
-		/**
-		 * @brief Get the effect value
-		 * @return m_effectValue
-		 */
-		uint8_t effectValue() const;
-		virtual IArchive& serialize(IArchive* data);
+class XmCell : public IPatternCell
+{
+public:
+	typedef std::shared_ptr<XmCell> Ptr; //!< @brief Class pointer
+	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
+private:
+	uint8_t m_note; //!< @brief Note value
+	uint8_t m_instr; //!< @brief Instrument value
+	uint8_t m_volume; //!< @brief Volume value
+	Effect m_effect; //!< @brief Effect
+	uint8_t m_effectValue; //!< @brief Effect value
+public:
+	XmCell();
+	virtual ~XmCell();
+	/**
+	 * @brief Load the cell data from a stream
+	 * @param[in] str The stream to load from
+	 * @return @c true on success
+	 */
+	bool load( BinStream& str );
+	virtual void clear();
+	virtual std::string trackerString() const;
+	/**
+	 * @brief Get the note string, e.g. in the form "C#3"
+	 * @return The note string
+	 */
+	std::string noteString() const;
+	/**
+	 * @brief Get the string representation of the effect/value columns
+	 * @return String in the form of e.g. "R0A"
+	 */
+	std::string fxString() const;
+	/**
+	 * @brief Get the note value
+	 * @return m_note
+	 */
+	uint8_t note() const;
+	/**
+	 * @brief Get the instrument value
+	 * @return m_instrument
+	 */
+	uint8_t instrument() const;
+	/**
+	 * @brief Get the volume value
+	 * @return m_volume
+	 */
+	uint8_t volume() const;
+	/**
+	 * @brief Get the effect
+	 * @return m_effect
+	 */
+	Effect effect() const;
+	/**
+	 * @brief Get the effect value
+	 * @return m_effectValue
+	 */
+	uint8_t effectValue() const;
+	virtual IArchive& serialize( IArchive* data );
 };
 
 }

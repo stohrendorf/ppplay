@@ -29,7 +29,8 @@
  * @{
  */
 
-namespace light4cxx {
+namespace light4cxx
+{
 
 class Logger;
 
@@ -37,7 +38,8 @@ class Logger;
  * @class Location
  * @brief A class containing location information
  */
-class Location {
+class Location
+{
 private:
 	const int m_line; //!< @brief The line withing m_file
 	const std::string m_file; //!< @brief The file
@@ -52,9 +54,8 @@ public:
 	 * @param[in] function Function name of the location
 	 * @param[in] id Thread ID of the location
 	 */
-	inline Location(int line, const std::string& file, const std::string& function, const boost::thread::id& id)
-		: m_line(line), m_file(file), m_function(function), m_threadId(id)
-	{
+	inline Location( int line, const std::string& file, const std::string& function, const boost::thread::id& id )
+		: m_line( line ), m_file( file ), m_function( function ), m_threadId( id ) {
 	}
 	/**
 	 * @brief Get m_line
@@ -92,11 +93,11 @@ public:
 	 * @return The formatted string ready for output
 	 * @see toString()
 	 */
-	std::string toString(Level l, const Logger& logger, const std::string& msg) const;
+	std::string toString( Level l, const Logger& logger, const std::string& msg ) const;
 	/**
 	 * @brief Sets the format of the output of toString()
 	 * @param[in] fmt The format string
-	 * 
+	 *
 	 * @details
 	 * The format string is loosely based on printf. Its syntax is:
 	 * @code
@@ -157,12 +158,12 @@ public:
 	 * @code
 	 * [7fffa234 WARN  1.234] root (in dev/foo.cpp:123): A warning message
 	 * @endcode
-	 * 
+	 *
 	 * @note The format string is pretty strict, so make sure to check it twice,
 	 * otherwise you will encounter a std::runtime_error telling you that toString()
 	 * cannot parse the string.
 	 */
-	static void setFormat(const std::string& fmt);
+	static void setFormat( const std::string& fmt );
 };
 
 /**

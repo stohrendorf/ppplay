@@ -24,26 +24,29 @@
  * @{
  */
 
-namespace ppg {
+namespace ppg
+{
 
-	/**
-	 * @brief Enumeration values for Dos Color Mappings
-	 */
-	enum class Color {
-		Black, Blue, Green, Aqua, Red, Purple, Brown, White,
-		Gray, LightBlue, LightGreen, LightAqua, LightRed, LightPurple, Yellow, BrightWhite,
-		None
-	};
-	
-	/**
-	 * @brief Invert a color
-	 * @param[in] c Color to invert
-	 * @return Inverted color
-	 * @note This is DOS's default algorithm
-	 */
-	inline Color operator~(const Color& c) {
-		return static_cast<Color>(( static_cast<int>(c) & 7 ) ^ 7);
-	}
+/**
+ * @brief Enumeration values for Dos Color Mappings
+ */
+enum class Color
+{
+	Black, Blue, Green, Aqua, Red, Purple, Brown, White,
+	Gray, LightBlue, LightGreen, LightAqua, LightRed, LightPurple, Yellow, BrightWhite,
+	None
+};
+
+/**
+ * @brief Invert a color
+ * @param[in] c Color to invert
+ * @return Inverted color
+ * @note This is DOS's default algorithm
+ */
+inline Color operator~( const Color& c )
+{
+	return static_cast<Color>( ( static_cast<int>( c ) & 7 ) ^ 7 );
+}
 } // namespace ppg
 
 /**

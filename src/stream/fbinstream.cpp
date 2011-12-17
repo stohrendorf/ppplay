@@ -22,28 +22,32 @@
 
 FBinStream::FBinStream( const std::string& filename ) :
 	BinStream( SpIoStream( new std::fstream( filename.c_str(), std::ios::in | std::ios::binary ) ) ),
-	m_filename(filename), m_size(0)
+	m_filename( filename ), m_size( 0 )
 {
-	stream()->seekg(0, std::ios::end);
+	stream()->seekg( 0, std::ios::end );
 	m_size = stream()->tellg();
-	stream()->seekg(0);
+	stream()->seekg( 0 );
 }
 
-FBinStream::~FBinStream() {
-	if(stream().unique()) {
+FBinStream::~FBinStream()
+{
+	if( stream().unique() ) {
 		std::static_pointer_cast<std::fstream>( stream() )->close();
 	}
 }
 
-bool FBinStream::isOpen() const {
+bool FBinStream::isOpen() const
+{
 	return std::static_pointer_cast<std::fstream>( stream() )->is_open();
 }
 
-std::string FBinStream::filename() const {
+std::string FBinStream::filename() const
+{
 	return m_filename;
 }
 
-size_t FBinStream::size() const {
+size_t FBinStream::size() const
+{
 	return m_size;
 }
 

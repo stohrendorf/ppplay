@@ -25,20 +25,24 @@
  * @{
  */
 
-namespace ppp {
+namespace ppp
+{
 
-GenOrder::GenOrder(uint8_t idx) : m_index(idx), m_playbackCount(0)
+GenOrder::GenOrder( uint8_t idx ) : m_index( idx ), m_playbackCount( 0 )
 { }
 
-uint8_t GenOrder::index() const {
+uint8_t GenOrder::index() const
+{
 	return m_index;
 }
 
-void GenOrder::setIndex(uint8_t n) {
+void GenOrder::setIndex( uint8_t n )
+{
 	m_index = n;
 }
 
-IArchive& GenOrder::serialize(IArchive* data) {
+IArchive& GenOrder::serialize( IArchive* data )
+{
 	return *data % m_index % m_playbackCount;
 }
 
@@ -50,13 +54,13 @@ uint8_t GenOrder::playbackCount() const
 uint8_t GenOrder::increasePlaybackCount()
 {
 	// prevent overflow
-	BOOST_ASSERT( m_playbackCount<0xff );
+	BOOST_ASSERT( m_playbackCount < 0xff );
 	return ++m_playbackCount;
 }
 
 light4cxx::Logger::Ptr GenOrder::logger()
 {
-	return light4cxx::Logger::get("order");
+	return light4cxx::Logger::get( "order" );
 }
 
 }

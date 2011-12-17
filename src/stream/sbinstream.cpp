@@ -20,13 +20,14 @@
 
 #include <sstream>
 
-SBinStream::SBinStream() : BinStream(BinStream::SpIoStream(new std::stringstream(std::ios::in | std::ios::out | std::ios::binary))) {
+SBinStream::SBinStream() : BinStream( BinStream::SpIoStream( new std::stringstream( std::ios::in | std::ios::out | std::ios::binary ) ) )
+{
 }
 
 SBinStream::~SBinStream() = default;
 
 size_t SBinStream::size() const
 {
-	std::shared_ptr<std::stringstream> p = std::static_pointer_cast<std::stringstream>(stream());
+	std::shared_ptr<std::stringstream> p = std::static_pointer_cast<std::stringstream>( stream() );
 	return p->str().size();
 }

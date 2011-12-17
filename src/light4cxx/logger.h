@@ -33,14 +33,16 @@
  * @{
  */
 
-namespace light4cxx {
+namespace light4cxx
+{
 
 /**
  * @class Logger
  * @brief The logger class
  */
-class Logger {
-	DISABLE_COPY(Logger)
+class Logger
+{
+	DISABLE_COPY( Logger )
 	Logger() = delete;
 public:
 	/**
@@ -52,7 +54,7 @@ public:
 	 * @param[in] name The name of the new logger
 	 * @return Shared pointer to the new logger
 	 */
-	static Ptr get(const std::string& name);
+	static Ptr get( const std::string& name );
 	/**
 	 * @brief Get the root logger
 	 * @return Shared pointer to the root logger
@@ -73,71 +75,95 @@ public:
 	 * @param[in] str The message itself
 	 * @see L4CXX_LOCATION
 	 */
-	void log(Level l, const Location& loc, const std::string& str) const;
+	void log( Level l, const Location& loc, const std::string& str ) const;
 	/**
 	 * @overload
 	 */
-	void log(Level l, const Location& loc, const boost::format& str) const;
+	void log( Level l, const Location& loc, const boost::format& str ) const;
 	/**
 	 * @brief Log a message with Level::Trace
 	 * @param[in] loc The location
 	 * @param[in] str The message itself
 	 */
-	inline void trace(const Location& loc, const std::string& str) const { log(Level::Trace, loc, str); }
+	inline void trace( const Location& loc, const std::string& str ) const {
+		log( Level::Trace, loc, str );
+	}
 	/**
 	 * @overload
 	 */
-	inline void trace(const Location& loc, const boost::format& str) const { log(Level::Trace, loc, str); }
+	inline void trace( const Location& loc, const boost::format& str ) const {
+		log( Level::Trace, loc, str );
+	}
 	/**
 	 * @brief Log a message with Level::Debug
 	 * @param[in] loc The location
 	 * @param[in] str The message itself
 	 */
-	inline void debug(const Location& loc, const std::string& str) const { log(Level::Debug, loc, str); }
+	inline void debug( const Location& loc, const std::string& str ) const {
+		log( Level::Debug, loc, str );
+	}
 	/**
 	 * @overload
 	 */
-	inline void debug(const Location& loc, const boost::format& str) const { log(Level::Debug, loc, str); }
+	inline void debug( const Location& loc, const boost::format& str ) const {
+		log( Level::Debug, loc, str );
+	}
 	/**
 	 * @brief Log a message with Level::Info
 	 * @param[in] loc The location
 	 * @param[in] str The message itself
 	 */
-	inline void info(const Location& loc, const std::string& str) const { log(Level::Info, loc, str); }
+	inline void info( const Location& loc, const std::string& str ) const {
+		log( Level::Info, loc, str );
+	}
 	/**
 	 * @overload
 	 */
-	inline void info(const Location& loc, const boost::format& str) const { log(Level::Info, loc, str); }
+	inline void info( const Location& loc, const boost::format& str ) const {
+		log( Level::Info, loc, str );
+	}
 	/**
 	 * @brief Log a message with Level::Warn
 	 * @param[in] loc The location
 	 * @param[in] str The message itself
 	 */
-	inline void warn(const Location& loc, const std::string& str) const { log(Level::Warn, loc, str); }
+	inline void warn( const Location& loc, const std::string& str ) const {
+		log( Level::Warn, loc, str );
+	}
 	/**
 	 * @overload
 	 */
-	inline void warn(const Location& loc, const boost::format& str) const { log(Level::Warn, loc, str); }
+	inline void warn( const Location& loc, const boost::format& str ) const {
+		log( Level::Warn, loc, str );
+	}
 	/**
 	 * @brief Log a message with Level::Error
 	 * @param[in] loc The location
 	 * @param[in] str The message itself
 	 */
-	inline void error(const Location& loc, const std::string& str) const { log(Level::Error, loc, str); }
+	inline void error( const Location& loc, const std::string& str ) const {
+		log( Level::Error, loc, str );
+	}
 	/**
 	 * @overload
 	 */
-	inline void error(const Location& loc, const boost::format& str) const { log(Level::Error, loc, str); }
+	inline void error( const Location& loc, const boost::format& str ) const {
+		log( Level::Error, loc, str );
+	}
 	/**
 	 * @brief Log a message with Level::Fatal
 	 * @param[in] loc The location
 	 * @param[in] str The message itself
 	 */
-	inline void fatal(const Location& loc, const std::string& str) const { log(Level::Fatal, loc, str); }
+	inline void fatal( const Location& loc, const std::string& str ) const {
+		log( Level::Fatal, loc, str );
+	}
 	/**
 	 * @overload
 	 */
-	inline void fatal(const Location& loc, const boost::format& str) const { log(Level::Fatal, loc, str); }
+	inline void fatal( const Location& loc, const boost::format& str ) const {
+		log( Level::Fatal, loc, str );
+	}
 	/**
 	 * @brief Get the current log level filter
 	 * @return The log level filter, including Level::Off and Level::All
@@ -147,13 +173,13 @@ public:
 	 * @brief Sets the log level filter
 	 * @param[in] l The log level filter, including Level::Off and Level::All
 	 */
-	static void setLevel(Level l);
+	static void setLevel( Level l );
 private:
 	/**
 	 * @brief Private constructor
 	 * @param[in] name The logger's name
 	 */
-	Logger(const std::string& name);
+	Logger( const std::string& name );
 	/**
 	 * @brief The logger's name
 	 */

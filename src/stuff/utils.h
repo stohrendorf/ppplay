@@ -28,7 +28,8 @@
 #include <cstdint>
 #include <algorithm>
 
-namespace ppp {
+namespace ppp
+{
 /**
  * @brief Clip a value @a v in the range from @a a to @a b
  * @tparam T Value's type
@@ -39,8 +40,9 @@ namespace ppp {
  * @note Time-critical
  */
 template<typename T>
-inline const T& clip(const T& v, const T& a, const T& b) {
-	return std::min(b, std::max(v, a));
+inline const T& clip( const T& v, const T& a, const T& b )
+{
+	return std::min( b, std::max( v, a ) );
 }
 
 /**
@@ -53,8 +55,9 @@ inline const T& clip(const T& v, const T& a, const T& b) {
  * @note Time-critical
  */
 template<typename T>
-inline bool inRange(const T v, const T a, const T b) {
-	return (v >= a) && (v <= b);
+inline bool inRange( const T v, const T a, const T b )
+{
+	return ( v >= a ) && ( v <= b );
 }
 
 /**
@@ -64,7 +67,7 @@ inline bool inRange(const T v, const T a, const T b) {
  * @return Copied string
  * @note Stops at the NUL character
  */
-std::string stringncpy(const char src[], size_t maxlen);
+std::string stringncpy( const char src[], size_t maxlen );
 
 /**
  * @brief Get low nibble of a byte
@@ -72,7 +75,8 @@ std::string stringncpy(const char src[], size_t maxlen);
  * @return Low nibble of @a x
  * @note Time-critical
  */
-inline uint8_t lowNibble(uint8_t x) {
+inline uint8_t lowNibble( uint8_t x )
+{
 	return x & 0x0f;
 }
 
@@ -82,7 +86,8 @@ inline uint8_t lowNibble(uint8_t x) {
  * @return High nibble of @a x
  * @note Time-critical
  */
-inline uint8_t highNibble(uint8_t x) {
+inline uint8_t highNibble( uint8_t x )
+{
 	return x >> 4;
 }
 
@@ -93,7 +98,7 @@ inline uint8_t highNibble(uint8_t x) {
  * @details
  * Reverts the bytes in @a data
  */
-void swapEndian(char data[], size_t size);
+void swapEndian( char data[], size_t size );
 
 /**
  * @overload
@@ -102,8 +107,9 @@ void swapEndian(char data[], size_t size);
  * @param[in,out] data Data to swap
  */
 template<class T>
-void swapEndian(T* data) {
-	swapEndian(reinterpret_cast<char*>(data), sizeof(T));
+void swapEndian( T* data )
+{
+	swapEndian( reinterpret_cast<char*>( data ), sizeof( T ) );
 }
 
 /**
@@ -111,8 +117,9 @@ void swapEndian(T* data) {
  * @param[in,out] oldFx If this is 0, use @a newFx
  * @param[in,out] newFx If this is 0, use @a oldFx
  */
-inline void reuseIfZero(uint8_t& oldFx, uint8_t& newFx) {
-	if(newFx == 0) {
+inline void reuseIfZero( uint8_t& oldFx, uint8_t& newFx )
+{
+	if( newFx == 0 ) {
 		newFx = oldFx;
 	}
 	else {
@@ -125,8 +132,9 @@ inline void reuseIfZero(uint8_t& oldFx, uint8_t& newFx) {
  * @param[in,out] oldFx If @a newFx is not 0, assign @a newFx to this
  * @param[in] newFx If this is not 0, assign it to @a oldFx
  */
-inline void reuseIfZeroEx(uint8_t& oldFx, uint8_t newFx) {
-	if(newFx != 0) {
+inline void reuseIfZeroEx( uint8_t& oldFx, uint8_t newFx )
+{
+	if( newFx != 0 ) {
 		oldFx = newFx;
 	}
 }
@@ -136,15 +144,16 @@ inline void reuseIfZeroEx(uint8_t& oldFx, uint8_t newFx) {
  * @param[in,out] oldFx Old data
  * @param[in,out] newFx New data
  */
-inline void reuseNibblesIfZero(uint8_t& oldFx, uint8_t& newFx) {
-	if(newFx == 0) {
+inline void reuseNibblesIfZero( uint8_t& oldFx, uint8_t& newFx )
+{
+	if( newFx == 0 ) {
 		newFx = oldFx;
 	}
-	else if(highNibble(newFx) == 0) {
-		oldFx = (newFx & 0x0f) | (oldFx & 0xf0);
+	else if( highNibble( newFx ) == 0 ) {
+		oldFx = ( newFx & 0x0f ) | ( oldFx & 0xf0 );
 	}
-	else if(lowNibble(newFx) == 0) {
-		oldFx = (newFx & 0xf0) | (oldFx & 0x0f);
+	else if( lowNibble( newFx ) == 0 ) {
+		oldFx = ( newFx & 0xf0 ) | ( oldFx & 0x0f );
 	}
 	else {
 		oldFx = newFx;

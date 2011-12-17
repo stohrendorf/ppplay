@@ -27,8 +27,10 @@
 #include "stream/binstream.h"
 #include "genmod/ipatterncell.h"
 
-namespace ppp {
-namespace mod {
+namespace ppp
+{
+namespace mod
+{
 
 class ModCell : public IPatternCell
 {
@@ -37,14 +39,14 @@ public:
 	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 public:
 	ModCell();
-    virtual ~ModCell();
+	virtual ~ModCell();
 	/**
 	 * @brief Load this cell from a stream
 	 * @param[in,out] str Reference to the stream to load from
 	 * @retval true on success
 	 * @retval false if an error occured
 	 */
-	bool load(BinStream& str);
+	bool load( BinStream& str );
 	virtual void clear();
 	virtual std::string trackerString() const;
 	uint8_t sampleNumber() const;
@@ -52,7 +54,7 @@ public:
 	uint8_t effect() const;
 	uint8_t effectValue() const;
 	void reset();
-	virtual IArchive& serialize(IArchive* data);
+	virtual IArchive& serialize( IArchive* data );
 private:
 	uint8_t m_sampleNumber;
 	uint16_t m_period;

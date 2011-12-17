@@ -30,50 +30,58 @@
 /**
  * @brief Logger with name "stateiterator"
  */
-static light4cxx::Logger::Ptr logger = light4cxx::Logger::get("stateiterator");
+static light4cxx::Logger::Ptr logger = light4cxx::Logger::get( "stateiterator" );
 
-StateIterator::StateIterator() : m_states(), m_stateIndex(0) {
+StateIterator::StateIterator() : m_states(), m_stateIndex( 0 )
+{
 }
 
-IArchive::Ptr StateIterator::newState() {
-	IArchive::Ptr p(new MemArchive());
-	logger->info(L4CXX_LOCATION, boost::format("Creating new state %d")%m_states.size());
-	m_states.push_back(p);
+IArchive::Ptr StateIterator::newState()
+{
+	IArchive::Ptr p( new MemArchive() );
+	logger->info( L4CXX_LOCATION, boost::format( "Creating new state %d" ) % m_states.size() );
+	m_states.push_back( p );
 	return p;
 }
 
-IArchive::Ptr StateIterator::nextState() {
-	if(atEnd()) {
+IArchive::Ptr StateIterator::nextState()
+{
+	if( atEnd() ) {
 		return IArchive::Ptr();
 	}
 	m_stateIndex++;
-	logger->info(L4CXX_LOCATION, boost::format("Loading state %d of %d")%m_stateIndex%m_states.size());
-	return m_states.at(m_stateIndex);
+	logger->info( L4CXX_LOCATION, boost::format( "Loading state %d of %d" ) % m_stateIndex % m_states.size() );
+	return m_states.at( m_stateIndex );
 }
 
-IArchive::Ptr StateIterator::prevState() {
-	if(atFront()) {
+IArchive::Ptr StateIterator::prevState()
+{
+	if( atFront() ) {
 		return IArchive::Ptr();
 	}
 	m_stateIndex--;
-	logger->info(L4CXX_LOCATION, boost::format("Loading state %d of %d")%m_stateIndex%m_states.size());
-	return m_states.at(m_stateIndex);
+	logger->info( L4CXX_LOCATION, boost::format( "Loading state %d of %d" ) % m_stateIndex % m_states.size() );
+	return m_states.at( m_stateIndex );
 }
 
-IArchive::Ptr StateIterator::currentState() const {
-	BOOST_ASSERT(m_stateIndex<m_states.size());
-	return m_states.at(m_stateIndex);
+IArchive::Ptr StateIterator::currentState() const
+{
+	BOOST_ASSERT( m_stateIndex < m_states.size() );
+	return m_states.at( m_stateIndex );
 }
 
-bool StateIterator::atEnd() const {
-	return m_stateIndex+1 >= m_states.size();
+bool StateIterator::atEnd() const
+{
+	return m_stateIndex + 1 >= m_states.size();
 }
 
-bool StateIterator::atFront() const {
+bool StateIterator::atFront() const
+{
 	return m_stateIndex == 0;
 }
 
-void StateIterator::gotoFront() {
+void StateIterator::gotoFront()
+{
 	m_stateIndex = 0;
 }
 

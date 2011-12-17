@@ -24,9 +24,11 @@
  * @{
  */
 
-namespace ppp {
+namespace ppp
+{
 
-IArchive& BresenInterpolation::serialize( IArchive* archive ) {
+IArchive& BresenInterpolation::serialize( IArchive* archive )
+{
 	return *archive % m_dx % m_dy % m_err;
 }
 

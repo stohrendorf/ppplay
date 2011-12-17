@@ -27,24 +27,24 @@
  * @{
  */
 
-uint32_t SDLTimer::callback(uint32_t interval, void* userdata)
+uint32_t SDLTimer::callback( uint32_t interval, void* userdata )
 {
-	SDLTimer* timer = static_cast<SDLTimer*>(userdata);
+	SDLTimer* timer = static_cast<SDLTimer*>( userdata );
 	timer->onTimer();
 	return interval;
 }
 
-SDLTimer::SDLTimer(uint32_t interval) : ITimer(), m_interval(interval), m_id(nullptr)
+SDLTimer::SDLTimer( uint32_t interval ) : ITimer(), m_interval( interval ), m_id( nullptr )
 {
-	if(!SDL_WasInit(SDL_INIT_TIMER)) {
-		BOOST_ASSERT( SDL_InitSubSystem(SDL_INIT_TIMER)==0 );
+	if( !SDL_WasInit( SDL_INIT_TIMER ) ) {
+		BOOST_ASSERT( SDL_InitSubSystem( SDL_INIT_TIMER ) == 0 );
 	}
-	m_id = SDL_AddTimer(m_interval, callback, this );
+	m_id = SDL_AddTimer( m_interval, callback, this );
 }
 
 SDLTimer::~SDLTimer()
 {
-	SDL_RemoveTimer(m_id);
+	SDL_RemoveTimer( m_id );
 }
 
 uint32_t SDLTimer::interval() const

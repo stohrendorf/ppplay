@@ -24,7 +24,8 @@
  * @{
  */
 
-namespace ppg {
+namespace ppg
+{
 
 /**
  * @brief The 8x8 pixels font

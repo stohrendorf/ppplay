@@ -28,33 +28,34 @@
 
 #include <array>
 
-class UIMain : public ppg::Widget, public SDLTimer {
-		DISABLE_COPY( UIMain )
-	private:
-		ppg::Label* m_position;
-		ppg::Label* m_screenSep1;
-		ppg::Label* m_screenSep2;
-		ppg::Label* m_playbackInfo;
-		ppg::StereoPeakBar* m_volBar;
-		std::array<ppg::Label*, 16> m_chanInfos;
-		std::array<ppg::Label*, 16> m_chanCells;
-		ppg::Label* m_trackerInfo;
-		ppg::Label* m_modTitle;
-		ppg::ProgressBar* m_progress;
-		ppp::GenModule::WeakPtr m_module;
-		IAudioOutput::WeakPtr m_output;
-		virtual void drawThis();
-	public:
-		UIMain( Widget* parent, const ppp::GenModule::Ptr& module, const IAudioOutput::Ptr& output );
-		ppg::Label* posLabel();
-		ppg::Label* playbackInfo();
-		ppg::StereoPeakBar* volBar();
-		ppg::Label* chanInfo( size_t idx );
-		ppg::Label* chanCell( size_t idx );
-		ppg::Label* trackerInfo();
-		ppg::Label* modTitle();
-		ppg::ProgressBar* progressBar();
-		virtual void onTimer();
+class UIMain : public ppg::Widget, public SDLTimer
+{
+	DISABLE_COPY( UIMain )
+private:
+	ppg::Label* m_position;
+	ppg::Label* m_screenSep1;
+	ppg::Label* m_screenSep2;
+	ppg::Label* m_playbackInfo;
+	ppg::StereoPeakBar* m_volBar;
+	std::array<ppg::Label*, 16> m_chanInfos;
+	std::array<ppg::Label*, 16> m_chanCells;
+	ppg::Label* m_trackerInfo;
+	ppg::Label* m_modTitle;
+	ppg::ProgressBar* m_progress;
+	ppp::GenModule::WeakPtr m_module;
+	IAudioOutput::WeakPtr m_output;
+	virtual void drawThis();
+public:
+	UIMain( Widget* parent, const ppp::GenModule::Ptr& module, const IAudioOutput::Ptr& output );
+	ppg::Label* posLabel();
+	ppg::Label* playbackInfo();
+	ppg::StereoPeakBar* volBar();
+	ppg::Label* chanInfo( size_t idx );
+	ppg::Label* chanCell( size_t idx );
+	ppg::Label* trackerInfo();
+	ppg::Label* modTitle();
+	ppg::ProgressBar* progressBar();
+	virtual void onTimer();
 };
 
 #endif // UI_MAIN_H

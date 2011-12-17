@@ -27,33 +27,34 @@
  * @brief Class derived from BinStream for files
  * @note This is a read-only stream
  */
-class FBinStream : public BinStream {
-		DISABLE_COPY( FBinStream )
-		FBinStream() = delete;
-	private:
-		std::string m_filename; //!< @brief Filename of the file
-		size_t m_size; //!< @brief Cached size of the file
-	public:
-		/**
-		 * @brief Default contructor
-		 * @param[in] filename Filename of the file to open
-		 */
-		explicit FBinStream( const std::string& filename );
-		/**
-		 * @brief Destructor
-		 */
-		virtual ~FBinStream();
-		/**
-		 * @brief Check if the file is opened
-		 * @return @c true if the file is opened
-		 */
-		bool isOpen() const;
-		/**
-		 * @brief Get the filename
-		 * @return m_filename
-		 */
-		std::string filename() const;
-		size_t size() const;
+class FBinStream : public BinStream
+{
+	DISABLE_COPY( FBinStream )
+	FBinStream() = delete;
+private:
+	std::string m_filename; //!< @brief Filename of the file
+	size_t m_size; //!< @brief Cached size of the file
+public:
+	/**
+	 * @brief Default contructor
+	 * @param[in] filename Filename of the file to open
+	 */
+	explicit FBinStream( const std::string& filename );
+	/**
+	 * @brief Destructor
+	 */
+	virtual ~FBinStream();
+	/**
+	 * @brief Check if the file is opened
+	 * @return @c true if the file is opened
+	 */
+	bool isOpen() const;
+	/**
+	 * @brief Get the filename
+	 * @return m_filename
+	 */
+	std::string filename() const;
+	size_t size() const;
 };
 
 #endif

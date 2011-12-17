@@ -27,64 +27,67 @@
  * @{
  */
 
-namespace ppp {
-namespace xm {
+namespace ppp
+{
+namespace xm
+{
 
 /**
  * @class XmSample
  * @brief XM Sample storage class
  */
-class XmSample : public GenSample {
-		DISABLE_COPY(XmSample)
-	private:
-		//! @brief Sample finetune
-		int8_t m_finetune;
-		//! @brief Default panning
-		uint8_t m_panning;
-		//! @brief Relative note
-		int8_t m_relativeNote;
-		//! @brief Whether the sample is a 16-bit one
-		bool m_16bit;
-	public:
-		//! @brief Class Pointer
-		typedef std::shared_ptr<XmSample> Ptr;
-		//! @brief Vector of Class Pointers
-		typedef std::vector<Ptr> Vector;
-		//! @brief Default constructor
-		XmSample();
-		/**
-		 * @brief Loads the sample header
-		 * @param[in] str The stream to load from
-		 * @return @c true on success
-		 */
-		bool load(BinStream& str);
-		/**
-		 * @brief Loads the sample data
-		 * @param[in] str The stream to load from
-		 * @return @c true on success
-		 * @pre Make sure you have called load(BinStream&) previously
-		 */
-		bool loadData(BinStream& str);
-		/**
-		 * @brief Get the default finetune
-		 * @return The default finetune
-		 */
-		int8_t finetune() const;
-		/**
-		 * @brief Get the default panning
-		 * @return The default panning
-		 */
-		uint8_t panning() const;
-		/**
-		 * @brief Get the relative note offset
-		 * @return The relative note
-		 */
-		int8_t relativeNote() const;
-		/**
-		 * @brief Whether the sample is a 16-bit one
-		 * @return @c true when the sample is a 16-bit one, else @c false when it's an 8-bit one
-		 */
-		bool is16bit() const;
+class XmSample : public GenSample
+{
+	DISABLE_COPY( XmSample )
+private:
+	//! @brief Sample finetune
+	int8_t m_finetune;
+	//! @brief Default panning
+	uint8_t m_panning;
+	//! @brief Relative note
+	int8_t m_relativeNote;
+	//! @brief Whether the sample is a 16-bit one
+	bool m_16bit;
+public:
+	//! @brief Class Pointer
+	typedef std::shared_ptr<XmSample> Ptr;
+	//! @brief Vector of Class Pointers
+	typedef std::vector<Ptr> Vector;
+	//! @brief Default constructor
+	XmSample();
+	/**
+	 * @brief Loads the sample header
+	 * @param[in] str The stream to load from
+	 * @return @c true on success
+	 */
+	bool load( BinStream& str );
+	/**
+	 * @brief Loads the sample data
+	 * @param[in] str The stream to load from
+	 * @return @c true on success
+	 * @pre Make sure you have called load(BinStream&) previously
+	 */
+	bool loadData( BinStream& str );
+	/**
+	 * @brief Get the default finetune
+	 * @return The default finetune
+	 */
+	int8_t finetune() const;
+	/**
+	 * @brief Get the default panning
+	 * @return The default panning
+	 */
+	uint8_t panning() const;
+	/**
+	 * @brief Get the relative note offset
+	 * @return The relative note
+	 */
+	int8_t relativeNote() const;
+	/**
+	 * @brief Whether the sample is a 16-bit one
+	 * @return @c true when the sample is a 16-bit one, else @c false when it's an 8-bit one
+	 */
+	bool is16bit() const;
 };
 
 }

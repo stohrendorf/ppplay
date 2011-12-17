@@ -31,33 +31,34 @@
  * @class SDLAudioOutput
  * @brief Output class for SDL
  */
-class SDLAudioOutput : public IAudioOutput {
-		DISABLE_COPY(SDLAudioOutput)
-		SDLAudioOutput() = delete;
-	public:
-		//! @copydoc IAudioOutput::IAudioOutput(const IAudioSource::WeakPtr&)
-		explicit SDLAudioOutput(const IAudioSource::WeakPtr& src);
-		virtual ~SDLAudioOutput();
-		virtual int init(int desiredFrq);
-		virtual bool playing();
-		virtual bool paused();
-		virtual void play();
-		virtual void pause();
-	private:
-		/**
-		 * @brief SDL Audio callback handler
-		 * @param[in] userdata Pointer to SDLAudioOutput
-		 * @param[out] stream Audio buffer pointer
-		 * @param[in] len_bytes Byte length of @a stream
-		 * @note Declared here to get access to m_fifo
-		 */
-		static void sdlAudioCallback(void* userdata, uint8_t* stream, int len_bytes);
-	protected:
-		/**
-		 * @brief Get the logger
-		 * @return Child logger with attached ".sdl"
-		 */
-		static light4cxx::Logger::Ptr logger();
+class SDLAudioOutput : public IAudioOutput
+{
+	DISABLE_COPY( SDLAudioOutput )
+	SDLAudioOutput() = delete;
+public:
+	//! @copydoc IAudioOutput::IAudioOutput(const IAudioSource::WeakPtr&)
+	explicit SDLAudioOutput( const IAudioSource::WeakPtr& src );
+	virtual ~SDLAudioOutput();
+	virtual int init( int desiredFrq );
+	virtual bool playing();
+	virtual bool paused();
+	virtual void play();
+	virtual void pause();
+private:
+	/**
+	 * @brief SDL Audio callback handler
+	 * @param[in] userdata Pointer to SDLAudioOutput
+	 * @param[out] stream Audio buffer pointer
+	 * @param[in] len_bytes Byte length of @a stream
+	 * @note Declared here to get access to m_fifo
+	 */
+	static void sdlAudioCallback( void* userdata, uint8_t* stream, int len_bytes );
+protected:
+	/**
+	 * @brief Get the logger
+	 * @return Child logger with attached ".sdl"
+	 */
+	static light4cxx::Logger::Ptr logger();
 };
 
 /**

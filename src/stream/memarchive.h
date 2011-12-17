@@ -26,14 +26,15 @@
  * @ingroup Common
  * @brief Specialization of IArchive for memory storage
  */
-class MemArchive : public IArchive {
-		DISABLE_COPY(MemArchive)
-	public:
-		/**
-		 * @brief Constructs this archive using a SBinStream
-		 */
-		MemArchive();
-		virtual ~MemArchive();
+class MemArchive : public IArchive
+{
+	DISABLE_COPY( MemArchive )
+public:
+	/**
+	 * @brief Constructs this archive using a SBinStream
+	 */
+	MemArchive();
+	virtual ~MemArchive();
 };
 
 #endif

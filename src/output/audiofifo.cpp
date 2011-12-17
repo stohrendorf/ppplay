@@ -34,14 +34,15 @@
  * @return A more "natural" feeling value
  * @see AudioFifo::calcVolume()
  */
-static uint16_t logify(uint16_t value) {
+static uint16_t logify( uint16_t value )
+{
 	uint32_t tmp = value << 1;
-	if(tmp > 0x8000)
-		tmp = (0x8000 + tmp) >> 1;
-	if(tmp > 0xb000)
-		tmp = (0xb000 + tmp) >> 1;
-	if(tmp > 0xe000)
-		tmp = (0xe000 + tmp) >> 1;
+	if( tmp > 0x8000 )
+		tmp = ( 0x8000 + tmp ) >> 1;
+	if( tmp > 0xb000 )
+		tmp = ( 0xb000 + tmp ) >> 1;
+	if( tmp > 0xe000 )
+		tmp = ( 0xe000 + tmp ) >> 1;
 	return tmp > 0xffff ? 0xffff : tmp;
 }
 
@@ -51,100 +52,102 @@ static uint16_t logify(uint16_t value) {
  * @param[out] left Sum of absolute left sample values
  * @param[out] right Sum of absolute right sample values
  */
-static void sumAbsValues(const AudioFrameBuffer& buf, uint64_t& left, uint64_t& right)
+static void sumAbsValues( const AudioFrameBuffer& buf, uint64_t& left, uint64_t& right )
 {
 	left = right = 0;
-	for(const BasicSampleFrame& frame : *buf) {
-		left += std::abs(frame.left);
-		right += std::abs(frame.right);
+for( const BasicSampleFrame & frame : *buf ) {
+		left += std::abs( frame.left );
+		right += std::abs( frame.right );
 	}
 }
 
-void AudioFifo::requestThread(AudioFifo* fifo)
+void AudioFifo::requestThread( AudioFifo* fifo )
 {
-	BOOST_ASSERT(fifo != nullptr);
-	while(!fifo->m_source.expired()) {
+	BOOST_ASSERT( fifo != nullptr );
+	while( !fifo->m_source.expired() ) {
 		// continue if no data is available
-		if(fifo->m_queuedFrames >= fifo->m_minFrameCount) {
-			boost::this_thread::sleep(boost::posix_time::millisec(1));
+		if( fifo->m_queuedFrames >= fifo->m_minFrameCount ) {
+			boost::this_thread::sleep( boost::posix_time::millisec( 1 ) );
 			continue;
 		}
 		AudioFrameBuffer buffer;
 		IAudioSource::Ptr src = fifo->m_source.lock();
 		// keep it low to avoid blockings
 		int size = src->preferredBufferSize();
-		if(size == 0) {
-			size = std::max<int>(fifo->m_minFrameCount/2, fifo->m_minFrameCount - fifo->m_queuedFrames);
+		if( size == 0 ) {
+			size = std::max<int>( fifo->m_minFrameCount / 2, fifo->m_minFrameCount - fifo->m_queuedFrames );
 		}
-		if(size<=0) {
-			boost::this_thread::sleep(boost::posix_time::millisec(1));
+		if( size <= 0 ) {
+			boost::this_thread::sleep( boost::posix_time::millisec( 1 ) );
 			continue;
 		}
 		{
 			// request the data
-			IAudioSource::LockGuard guard(src.get());
-			if(0==src->getAudioData(buffer, size)) {
-				logger()->trace(L4CXX_LOCATION, "Audio source dry");
+			IAudioSource::LockGuard guard( src.get() );
+			if( 0 == src->getAudioData( buffer, size ) ) {
+				logger()->trace( L4CXX_LOCATION, "Audio source dry" );
 				break;
 			}
 		}
 		// add the data to the queue...
-		logger()->trace(L4CXX_LOCATION, boost::format("Adding %4d frames to a %4d-frame queue, minimum is %4d frames")%buffer->size()%fifo->m_queuedFrames%fifo->m_minFrameCount);
-		fifo->pushBuffer(buffer);
+		logger()->trace( L4CXX_LOCATION, boost::format( "Adding %4d frames to a %4d-frame queue, minimum is %4d frames" ) % buffer->size() % fifo->m_queuedFrames % fifo->m_minFrameCount );
+		fifo->pushBuffer( buffer );
 	}
 }
 
-AudioFifo::AudioFifo(const IAudioSource::WeakPtr& source, size_t frameCount) :
-	m_queue(), m_queuedFrames(0), m_minFrameCount(frameCount), m_queueMutex(),
-	m_requestThread(), m_source(source), m_volLeftSum(0), m_volRightSum(0)
+AudioFifo::AudioFifo( const IAudioSource::WeakPtr& source, size_t frameCount ) :
+	m_queue(), m_queuedFrames( 0 ), m_minFrameCount( frameCount ), m_queueMutex(),
+	m_requestThread(), m_source( source ), m_volLeftSum( 0 ), m_volRightSum( 0 )
 {
-	BOOST_ASSERT(!source.expired());
-	BOOST_ASSERT(m_minFrameCount >= 256);
-	logger()->debug(L4CXX_LOCATION, boost::format("Created with %d frames minimum")%frameCount);
-	m_requestThread = boost::thread(requestThread, this);
+	BOOST_ASSERT( !source.expired() );
+	BOOST_ASSERT( m_minFrameCount >= 256 );
+	logger()->debug( L4CXX_LOCATION, boost::format( "Created with %d frames minimum" ) % frameCount );
+	m_requestThread = boost::thread( requestThread, this );
 	m_requestThread.detach();
 }
 
-AudioFifo::~AudioFifo() {
-	logger()->trace(L4CXX_LOCATION, "Destroyed");
+AudioFifo::~AudioFifo()
+{
+	logger()->trace( L4CXX_LOCATION, "Destroyed" );
 }
 
-void AudioFifo::pushBuffer(const AudioFrameBuffer& buf)
+void AudioFifo::pushBuffer( const AudioFrameBuffer& buf )
 {
 	// copy, because AudioFrameBuffer is a shared_ptr that may be modified
-	AudioFrameBuffer cp(new AudioFrameBuffer::element_type);
+	AudioFrameBuffer cp( new AudioFrameBuffer::element_type );
 	*cp = *buf;
 	uint64_t left, right;
-	sumAbsValues(cp, left, right);
-	boost::lock_guard<boost::mutex> guard(m_queueMutex);
+	sumAbsValues( cp, left, right );
+	boost::lock_guard<boost::mutex> guard( m_queueMutex );
 	m_volLeftSum += left;
 	m_volRightSum += right;
 	m_queuedFrames += cp->size();
-	m_queue.push(cp);
+	m_queue.push( cp );
 }
 
-size_t AudioFifo::getAudioData(AudioFrameBuffer& data, size_t size) {
+size_t AudioFifo::getAudioData( AudioFrameBuffer& data, size_t size )
+{
 	// a modifying function, so we need a unique lock again
-	boost::lock_guard<boost::mutex> guard(m_queueMutex);
-	if(size > m_queuedFrames) {
-		logger()->warn(L4CXX_LOCATION, boost::format("Buffer underrun: Requested %d frames while only %d frames in queue")%size%m_queuedFrames);
+	boost::lock_guard<boost::mutex> guard( m_queueMutex );
+	if( size > m_queuedFrames ) {
+		logger()->warn( L4CXX_LOCATION, boost::format( "Buffer underrun: Requested %d frames while only %d frames in queue" ) % size % m_queuedFrames );
 		size = m_queuedFrames;
 	}
-	if(!data) {
-		data.reset(new AudioFrameBuffer::element_type(size, {0, 0}));
+	if( !data ) {
+		data.reset( new AudioFrameBuffer::element_type( size, {0, 0} ) );
 	}
-	if(data->size() < size) {
-		data->resize(size, {0, 0});
+	if( data->size() < size ) {
+		data->resize( size, {0, 0} );
 	}
 	size_t copied = 0;
 	size_t toCopy = size;
-	while(!m_queue.empty() && size != 0) {
+	while( !m_queue.empty() && size != 0 ) {
 		AudioFrameBuffer& current = m_queue.front();
-		toCopy = std::min(current->size(), size);
-		std::copy(current->begin(), current->begin() + toCopy, data->begin() + copied);
+		toCopy = std::min( current->size(), size );
+		std::copy( current->begin(), current->begin() + toCopy, data->begin() + copied );
 		copied += toCopy;
 		size -= toCopy;
-		if(toCopy == current->size()) {
+		if( toCopy == current->size() ) {
 			m_queuedFrames -= toCopy;
 			m_queue.pop();
 			toCopy = 0;
@@ -153,69 +156,76 @@ size_t AudioFifo::getAudioData(AudioFrameBuffer& data, size_t size) {
 			break;
 		}
 	}
-	if(toCopy != 0 && !m_queue.empty()) {
+	if( toCopy != 0 && !m_queue.empty() ) {
 		m_queuedFrames -= toCopy;
 		AudioFrameBuffer& current = m_queue.front();
-		current->erase(current->begin(), current->begin() + toCopy);
+		current->erase( current->begin(), current->begin() + toCopy );
 	}
-	if(data->size() != copied) {
-		logger()->error(L4CXX_LOCATION, boost::format("Copied %d frames into a buffer with %d frames")%copied%data->size());
+	if( data->size() != copied ) {
+		logger()->error( L4CXX_LOCATION, boost::format( "Copied %d frames into a buffer with %d frames" ) % copied % data->size() );
 	}
 	{
 		uint64_t left, right;
-		sumAbsValues(data, left, right);
+		sumAbsValues( data, left, right );
 		m_volLeftSum -= left;
 		m_volRightSum -= right;
 	}
 	return copied;
 }
 
-size_t AudioFifo::queuedLength() const {
+size_t AudioFifo::queuedLength() const
+{
 	return m_queuedFrames;
 }
 
-bool AudioFifo::isEmpty() const {
+bool AudioFifo::isEmpty() const
+{
 	return m_queuedFrames == 0;
 }
 
-uint16_t AudioFifo::volumeRight() const {
-	if(m_queuedFrames == 0) {
+uint16_t AudioFifo::volumeRight() const
+{
+	if( m_queuedFrames == 0 ) {
 		return 0;
 	}
-	return logify(m_volRightSum/(m_queuedFrames>>2));
+	return logify( m_volRightSum / ( m_queuedFrames >> 2 ) );
 }
 
-uint16_t AudioFifo::volumeLeft() const {
-	if(m_queuedFrames == 0) {
+uint16_t AudioFifo::volumeLeft() const
+{
+	if( m_queuedFrames == 0 ) {
 		return 0;
 	}
-	return logify(m_volLeftSum/(m_queuedFrames>>2));
+	return logify( m_volLeftSum / ( m_queuedFrames >> 2 ) );
 }
 
-void AudioFifo::setMinFrameCount(size_t len) {
-	BOOST_ASSERT(len >= 256);
+void AudioFifo::setMinFrameCount( size_t len )
+{
+	BOOST_ASSERT( len >= 256 );
 	m_minFrameCount = len;
 }
 
-size_t AudioFifo::queuedChunkCount() const {
+size_t AudioFifo::queuedChunkCount() const
+{
 	return m_queue.size();
 }
 
-size_t AudioFifo::minFrameCount() const {
+size_t AudioFifo::minFrameCount() const
+{
 	return m_minFrameCount;
 }
 
-bool AudioFifo::initialize(uint32_t frequency)
+bool AudioFifo::initialize( uint32_t frequency )
 {
-	logger()->trace(L4CXX_LOCATION, "Initializing");
-	BOOST_ASSERT(!m_source.expired());
-	IAudioSource::Ptr lock(m_source.lock());
-	return lock->initialize(frequency);
+	logger()->trace( L4CXX_LOCATION, "Initializing" );
+	BOOST_ASSERT( !m_source.expired() );
+	IAudioSource::Ptr lock( m_source.lock() );
+	return lock->initialize( frequency );
 }
 
 light4cxx::Logger::Ptr AudioFifo::logger()
 {
-	return light4cxx::Logger::get("audio.fifo");
+	return light4cxx::Logger::get( "audio.fifo" );
 }
 
 /**

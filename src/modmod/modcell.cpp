@@ -25,10 +25,12 @@
 
 #include <boost/format.hpp>
 
-namespace ppp {
-namespace mod {
+namespace ppp
+{
+namespace mod
+{
 
-ModCell::ModCell() : m_sampleNumber(0), m_period(0), m_effect(0), m_effectValue(0), m_note("---")
+ModCell::ModCell() : m_sampleNumber( 0 ), m_period( 0 ), m_effect( 0 ), m_effectValue( 0 ), m_note( "---" )
 {
 }
 
@@ -43,32 +45,32 @@ void ModCell::reset()
 
 ModCell::~ModCell() = default;
 
-bool ModCell::load(BinStream& str)
+bool ModCell::load( BinStream& str )
 {
 	clear();
 	uint8_t tmp;
-	str.read(&tmp);
-	m_sampleNumber = tmp&0xf0;
-	if(m_sampleNumber>32) {
-		logger()->warn(L4CXX_LOCATION, boost::format("Sample out of range: %d") % (m_sampleNumber+0));
+	str.read( &tmp );
+	m_sampleNumber = tmp & 0xf0;
+	if( m_sampleNumber > 32 ) {
+		logger()->warn( L4CXX_LOCATION, boost::format( "Sample out of range: %d" ) % ( m_sampleNumber + 0 ) );
 	}
 	m_sampleNumber &= 0x1f;
-	m_period = (tmp&0x0f)<<8;
-	str.read(&tmp);
+	m_period = ( tmp & 0x0f ) << 8;
+	str.read( &tmp );
 	m_period |= tmp;
 	m_period &= 0xfff;
-	str.read(&tmp);
-	m_sampleNumber |= tmp>>4;
-	m_effect = tmp&0x0f;
-	str.read(&tmp);
+	str.read( &tmp );
+	m_sampleNumber |= tmp >> 4;
+	m_effect = tmp & 0x0f;
+	str.read( &tmp );
 	m_effectValue = tmp;
-	if(m_period!=0) {
-		uint8_t idx = periodToNoteIndex(m_period);
-		if(idx!=255) {
-			m_note = (boost::format("%s%u") % NoteNames[idx%12] % (idx/12)).str();
+	if( m_period != 0 ) {
+		uint8_t idx = periodToNoteIndex( m_period );
+		if( idx != 255 ) {
+			m_note = ( boost::format( "%s%u" ) % NoteNames[idx % 12] % ( idx / 12 ) ).str();
 		}
 		else {
-			logger()->warn(L4CXX_LOCATION, boost::format("Period %d too low: Cannot find matching note name.") % m_period);
+			logger()->warn( L4CXX_LOCATION, boost::format( "Period %d too low: Cannot find matching note name." ) % m_period );
 			m_note = "^^^";
 		}
 	}
@@ -81,7 +83,7 @@ void ModCell::clear()
 	m_period = 0;
 	m_effect = 0;
 	m_effectValue = 0;
-	m_note.assign("---");
+	m_note.assign( "---" );
 }
 
 uint8_t ModCell::sampleNumber() const
@@ -106,30 +108,30 @@ uint8_t ModCell::effectValue() const
 
 std::string ModCell::trackerString() const
 {
-	std::string res(m_note);
-	if(m_sampleNumber!=0) {
-		res.append((boost::format(" %02u") % (m_sampleNumber+0)).str());
+	std::string res( m_note );
+	if( m_sampleNumber != 0 ) {
+		res.append( ( boost::format( " %02u" ) % ( m_sampleNumber + 0 ) ).str() );
 	}
 	else {
-		res.append(" --");
+		res.append( " --" );
 	}
-	if(m_effect == 0 && m_effectValue == 0) {
-		res.append(" ---");
+	if( m_effect == 0 && m_effectValue == 0 ) {
+		res.append( " ---" );
 	}
 	else {
-		res.append( (boost::format(" %01X%02X") % (m_effect+0) % (m_effectValue+0)).str() );
+		res.append( ( boost::format( " %01X%02X" ) % ( m_effect + 0 ) % ( m_effectValue + 0 ) ).str() );
 	}
 	return res;
 }
 
-IArchive& ModCell::serialize(IArchive* data)
+IArchive& ModCell::serialize( IArchive* data )
 {
 	*data % m_sampleNumber % m_period % m_effect % m_effectValue;
-	if(data->isLoading()) {
-		if(m_period!=0) {
-			uint8_t idx = periodToNoteIndex(m_period);
-			if(idx!=255) {
-				m_note = (boost::format("%s%u") % NoteNames[idx%12] % (idx/12)).str();
+	if( data->isLoading() ) {
+		if( m_period != 0 ) {
+			uint8_t idx = periodToNoteIndex( m_period );
+			if( idx != 255 ) {
+				m_note = ( boost::format( "%s%u" ) % NoteNames[idx % 12] % ( idx / 12 ) ).str();
 			}
 			else {
 				m_note = "^^^";

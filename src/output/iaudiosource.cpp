@@ -18,46 +18,55 @@
 
 #include "iaudiosource.h"
 
-IAudioSource::IAudioSource() : m_initialized(false), m_frequency(0), m_lockMutex() {
+IAudioSource::IAudioSource() : m_initialized( false ), m_frequency( 0 ), m_lockMutex()
+{
 }
 
 IAudioSource::~IAudioSource() = default;
 
-bool IAudioSource::initialized() const {
+bool IAudioSource::initialized() const
+{
 	return m_initialized;
 }
 
-bool IAudioSource::fail() {
+bool IAudioSource::fail()
+{
 	m_initialized = false;
 	m_frequency = 0;
 	return false;
 }
 
-bool IAudioSource::initialize(uint32_t frequency) {
+bool IAudioSource::initialize( uint32_t frequency )
+{
 	m_frequency = frequency;
 	m_initialized = true;
 	return true;
 }
 
-uint32_t IAudioSource::frequency() const {
+uint32_t IAudioSource::frequency() const
+{
 	return m_frequency;
 }
 
-bool IAudioSource::tryLock() {
+bool IAudioSource::tryLock()
+{
 	return m_lockMutex.try_lock();
 }
 
-void IAudioSource::waitLock() {
+void IAudioSource::waitLock()
+{
 	m_lockMutex.lock();
 }
 
-void IAudioSource::unlock() {
+void IAudioSource::unlock()
+{
 	m_lockMutex.unlock();
 }
 
-bool IAudioSource::isLocked() {
+bool IAudioSource::isLocked()
+{
 	bool tmp = tryLock();
-	if(tmp) {
+	if( tmp ) {
 		// we changed the state to "locked", so unlock it again
 		unlock();
 	}
@@ -82,5 +91,5 @@ size_t IAudioSource::preferredBufferSize() const
 
 light4cxx::Logger::Ptr IAudioSource::logger()
 {
-	return light4cxx::Logger::get("audio.source");
+	return light4cxx::Logger::get( "audio.source" );
 }

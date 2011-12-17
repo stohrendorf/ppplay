@@ -18,47 +18,58 @@
 
 #include "point.h"
 
-namespace ppg {
+namespace ppg
+{
 
-Point::Point() : m_x(0), m_y(0) {
+Point::Point() : m_x( 0 ), m_y( 0 )
+{
 }
 
-Point::Point(int x, int y) : m_x(x), m_y(y) {
+Point::Point( int x, int y ) : m_x( x ), m_y( y )
+{
 }
 
-const Point& Point::operator+=(const Point& rhs) {
+const Point& Point::operator+=( const Point& rhs )
+{
 	m_x += rhs.m_x;
 	m_y += rhs.m_y;
 	return *this;
 }
 
-const Point Point::operator+(const Point& rhs) const {
-	return Point(m_x + rhs.m_x, m_y + rhs.m_y);
+const Point Point::operator+( const Point& rhs ) const
+{
+	return Point( m_x + rhs.m_x, m_y + rhs.m_y );
 }
 
-const Point& Point::operator-=(const Point& rhs) {
+const Point& Point::operator-=( const Point& rhs )
+{
 	m_x -= rhs.m_x;
 	m_y -= rhs.m_y;
 	return *this;
 }
 
-const Point Point::operator-(const Point& rhs) const {
-	return Point(m_x - rhs.m_x, m_y - rhs.m_y);
+const Point Point::operator-( const Point& rhs ) const
+{
+	return Point( m_x - rhs.m_x, m_y - rhs.m_y );
 }
 
-int Point::x() const {
+int Point::x() const
+{
 	return m_x;
 }
 
-int Point::y() const {
+int Point::y() const
+{
 	return m_y;
 }
 
-void Point::setX(int x) {
+void Point::setX( int x )
+{
 	m_x = x;
 }
 
-void Point::setY(int y) {
+void Point::setY( int y )
+{
 	m_y = y;
 }
 

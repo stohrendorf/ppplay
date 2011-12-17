@@ -26,36 +26,41 @@
 #include "genmod/genbase.h"
 #include "stream/iarchive.h"
 
-namespace ppp {
-namespace xm {
+namespace ppp
+{
+namespace xm
+{
 
-XmCell::XmCell() : IPatternCell(), m_note(0), m_instr(0), m_volume(0), m_effect(Effect::None), m_effectValue(0) {
+XmCell::XmCell() : IPatternCell(), m_note( 0 ), m_instr( 0 ), m_volume( 0 ), m_effect( Effect::None ), m_effectValue( 0 )
+{
 }
 
 XmCell::~XmCell() = default;
 
-bool XmCell::load(BinStream& str) {
+bool XmCell::load( BinStream& str )
+{
 	uint8_t data;
-	str.read(&data);
-	if((data & 0x80) == 0) {
+	str.read( &data );
+	if( ( data & 0x80 ) == 0 ) {
 		m_note = data;
-		str.read(&m_instr).read(&m_volume).read(reinterpret_cast<uint8_t*>(&m_effect)).read(&m_effectValue);
+		str.read( &m_instr ).read( &m_volume ).read( reinterpret_cast<uint8_t*>( &m_effect ) ).read( &m_effectValue );
 		return !str.fail();
 	}
-	if(data & 0x01)
-		str.read(&m_note);
-	if(data & 0x02)
-		str.read(&m_instr);
-	if(data & 0x04)
-		str.read(&m_volume);
-	if(data & 0x08)
-		str.read(reinterpret_cast<uint8_t*>(&m_effect));
-	if(data & 0x10)
-		str.read(&m_effectValue);
+	if( data & 0x01 )
+		str.read( &m_note );
+	if( data & 0x02 )
+		str.read( &m_instr );
+	if( data & 0x04 )
+		str.read( &m_volume );
+	if( data & 0x08 )
+		str.read( reinterpret_cast<uint8_t*>( &m_effect ) );
+	if( data & 0x10 )
+		str.read( &m_effectValue );
 	return !str.fail();
 }
 
-void XmCell::clear() {
+void XmCell::clear()
+{
 	m_note = 0;
 	m_instr = 0xff;
 	m_volume = 0;
@@ -63,45 +68,48 @@ void XmCell::clear() {
 	m_effectValue = 0;
 }
 
-std::string XmCell::fxString() const {
-	if(m_effect == Effect::None) {
+std::string XmCell::fxString() const
+{
+	if( m_effect == Effect::None ) {
 		return "...";
 	}
-	else if(static_cast<uint8_t>(m_effect) <= 0x0f) {
-		return (boost::format("%1X%02X") % static_cast<int>(m_effect) % (m_effectValue+0)).str();
+	else if( static_cast<uint8_t>( m_effect ) <= 0x0f ) {
+		return ( boost::format( "%1X%02X" ) % static_cast<int>( m_effect ) % ( m_effectValue + 0 ) ).str();
 	}
-	else if(static_cast<uint8_t>(m_effect) <= 0x21) {
-		return (boost::format("%c%02X") % (static_cast<int>(m_effect) - 0x0f + 'F') % (m_effectValue+0)).str();
+	else if( static_cast<uint8_t>( m_effect ) <= 0x21 ) {
+		return ( boost::format( "%c%02X" ) % ( static_cast<int>( m_effect ) - 0x0f + 'F' ) % ( m_effectValue + 0 ) ).str();
 	}
 	else {
-		return (boost::format("?%02X") % (m_effectValue+0)).str();
+		return ( boost::format( "?%02X" ) % ( m_effectValue + 0 ) ).str();
 	}
 }
 
-std::string XmCell::noteString() const {
-	if(m_note == 0) {
+std::string XmCell::noteString() const
+{
+	if( m_note == 0 ) {
 		return "...";
 	}
-	else if(m_note == KeyOffNote) {
+	else if( m_note == KeyOffNote ) {
 		return "===";
 	}
-	else if(m_note < KeyOffNote) {
-		return (boost::format("%s%d") % NoteNames.at((m_note - 1) % 12) % ((m_note - 1) / 12)).str();
+	else if( m_note < KeyOffNote ) {
+		return ( boost::format( "%s%d" ) % NoteNames.at( ( m_note - 1 ) % 12 ) % ( ( m_note - 1 ) / 12 ) ).str();
 	}
 	else {
 		return "???";
 	}
 }
 
-std::string XmCell::trackerString() const {
+std::string XmCell::trackerString() const
+{
 	/*    if(!isActive())
 	        return "...       ...";*/
 	std::string xmsg = noteString();
-	if(m_instr == 0) {
+	if( m_instr == 0 ) {
 		xmsg += "    ";
 	}
 	else {
-		xmsg += (boost::format(" %2X ") % (m_instr+0)).str();
+		xmsg += ( boost::format( " %2X " ) % ( m_instr + 0 ) ).str();
 	}
 	/*
 	VfxVolSlideDown = 6,
@@ -116,7 +124,7 @@ std::string XmCell::trackerString() const {
 	VfxPorta = 0xf
 	 */
 	static const char vfxChars[] = "-+DUSVPLRM";
-	switch(highNibble(m_volume)) {
+	switch( highNibble( m_volume ) ) {
 		case 0:
 			xmsg += "   ";
 			break;
@@ -125,41 +133,47 @@ std::string XmCell::trackerString() const {
 		case 3:
 		case 4:
 		case 5:
-			xmsg += (boost::format("%2d ") % (m_volume - 0x10)).str();
+			xmsg += ( boost::format( "%2d " ) % ( m_volume - 0x10 ) ).str();
 			break;
 		default:
-			xmsg += (boost::format("%c%X ") % vfxChars[highNibble(m_volume) - 6] % (lowNibble(m_volume)+0)).str();
+			xmsg += ( boost::format( "%c%X " ) % vfxChars[highNibble( m_volume ) - 6] % ( lowNibble( m_volume ) + 0 ) ).str();
 			break;
 	}
 	return xmsg + fxString();
 }
 
-uint8_t XmCell::note() const {
+uint8_t XmCell::note() const
+{
 	return m_note;
 }
 
-uint8_t XmCell::instrument() const {
+uint8_t XmCell::instrument() const
+{
 	return m_instr;
 }
 
-uint8_t XmCell::volume() const {
+uint8_t XmCell::volume() const
+{
 	return m_volume;
 }
 
-Effect XmCell::effect() const {
+Effect XmCell::effect() const
+{
 	return m_effect;
 }
 
-uint8_t XmCell::effectValue() const {
+uint8_t XmCell::effectValue() const
+{
 	return m_effectValue;
 }
 
-IArchive& XmCell::serialize(IArchive* data) {
+IArchive& XmCell::serialize( IArchive* data )
+{
 	*data
 	% m_note
 	% m_instr
 	% m_volume
-	% *reinterpret_cast<uint8_t*>(&m_effect)
+	% *reinterpret_cast<uint8_t*>( &m_effect )
 	% m_effectValue;
 	return *data;
 }

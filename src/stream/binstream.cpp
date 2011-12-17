@@ -18,18 +18,20 @@
 
 #include "binstream.h"
 
-BinStream::BinStream(BinStream::SpIoStream stream) : m_stream(stream)
+BinStream::BinStream( BinStream::SpIoStream stream ) : m_stream( stream )
 {
 }
 
 template<typename TR>
-BinStream& BinStream::read(TR* data, const size_t count) {
-	m_stream->read(reinterpret_cast<char*>(data), sizeof(TR)*count);
+BinStream& BinStream::read( TR* data, const size_t count )
+{
+	m_stream->read( reinterpret_cast<char*>( data ), sizeof( TR )*count );
 	return *this;
 }
 template<typename TW>
-BinStream& BinStream::write(const TW* data, const size_t count) {
-	m_stream->write(reinterpret_cast<const char*>(data), sizeof(TW)*count);
+BinStream& BinStream::write( const TW* data, const size_t count )
+{
+	m_stream->write( reinterpret_cast<const char*>( data ), sizeof( TW )*count );
 	return *this;
 }
 
@@ -37,50 +39,58 @@ BinStream& BinStream::write(const TW* data, const size_t count) {
 	template BinStream &BinStream::read<tn>(tn *, size_t); \
 	template BinStream &BinStream::write<tn>(const tn*, size_t);
 
-BINSTREAM_RW_IMPL(int8_t)
-BINSTREAM_RW_IMPL(uint8_t)
-BINSTREAM_RW_IMPL(int16_t)
-BINSTREAM_RW_IMPL(uint16_t)
-BINSTREAM_RW_IMPL(int32_t)
-BINSTREAM_RW_IMPL(uint32_t)
-BINSTREAM_RW_IMPL(int64_t)
-BINSTREAM_RW_IMPL(uint64_t)
-BINSTREAM_RW_IMPL(char)
-BINSTREAM_RW_IMPL(bool)
-BINSTREAM_RW_IMPL(float)
+BINSTREAM_RW_IMPL( int8_t )
+BINSTREAM_RW_IMPL( uint8_t )
+BINSTREAM_RW_IMPL( int16_t )
+BINSTREAM_RW_IMPL( uint16_t )
+BINSTREAM_RW_IMPL( int32_t )
+BINSTREAM_RW_IMPL( uint32_t )
+BINSTREAM_RW_IMPL( int64_t )
+BINSTREAM_RW_IMPL( uint64_t )
+BINSTREAM_RW_IMPL( char )
+BINSTREAM_RW_IMPL( bool )
+BINSTREAM_RW_IMPL( float )
 
-bool BinStream::fail() const {
+bool BinStream::fail() const
+{
 	return m_stream->fail();
 }
 
-bool BinStream::good() const {
+bool BinStream::good() const
+{
 	return m_stream->good();
 }
 
-void BinStream::clear() {
+void BinStream::clear()
+{
 	m_stream->clear();
 }
 
-void BinStream::seek(uint32_t pos) {
-	m_stream->seekg(pos);
-	m_stream->seekp(pos);
+void BinStream::seek( uint32_t pos )
+{
+	m_stream->seekg( pos );
+	m_stream->seekp( pos );
 }
 
-void BinStream::seekrel(int32_t delta) {
+void BinStream::seekrel( int32_t delta )
+{
 	uint32_t p = pos();
-	m_stream->seekg(p + delta);
-	m_stream->seekp(p + delta);
+	m_stream->seekg( p + delta );
+	m_stream->seekp( p + delta );
 }
 
-uint32_t BinStream::pos() const {
+uint32_t BinStream::pos() const
+{
 	return m_stream->tellg();
 }
 
-const BinStream::SpIoStream& BinStream::stream() const {
+const BinStream::SpIoStream& BinStream::stream() const
+{
 	return m_stream;
 }
 
-BinStream::SpIoStream& BinStream::stream() {
+BinStream::SpIoStream& BinStream::stream()
+{
 	return m_stream;
 }
 

@@ -19,7 +19,8 @@
 #include <SDL.h>
 #include <boost/assert.hpp>
 
-static void __attribute__((constructor)) sdlInit() {
-	BOOST_ASSERT( SDL_Init(0)==0 );
-	BOOST_ASSERT( atexit(SDL_Quit)==0 );
+static void __attribute__( ( constructor ) ) sdlInit()
+{
+	BOOST_ASSERT( SDL_Init( 0 ) == 0 );
+	BOOST_ASSERT( atexit( SDL_Quit ) == 0 );
 }

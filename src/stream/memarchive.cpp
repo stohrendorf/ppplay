@@ -19,7 +19,7 @@
 #include "memarchive.h"
 #include "sbinstream.h"
 
-MemArchive::MemArchive() : IArchive(BinStream::Ptr(new SBinStream()))
+MemArchive::MemArchive() : IArchive( BinStream::Ptr( new SBinStream() ) )
 { }
 
 MemArchive::~MemArchive() = default;

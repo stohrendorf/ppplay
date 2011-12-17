@@ -28,18 +28,20 @@
 
 class BinStream;
 
-namespace ppp {
-namespace mod {
+namespace ppp
+{
+namespace mod
+{
 
 class ModSample : public GenSample
 {
-	DISABLE_COPY(ModSample)
+	DISABLE_COPY( ModSample )
 public:
 	typedef std::shared_ptr<ModSample> Ptr; //!< @brief Class pointer
 	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 	ModSample();
-	bool loadHeader(BinStream& stream);
-	bool loadData(BinStream& stream);
+	bool loadHeader( BinStream& stream );
+	bool loadData( BinStream& stream );
 	uint8_t finetune() const;
 private:
 	uint8_t m_finetune;

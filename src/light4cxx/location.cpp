@@ -25,16 +25,17 @@
 #include <sstream>
 #include <time.h>
 
-namespace light4cxx {
+namespace light4cxx
+{
 
 static timespec s_processTime; //!< @brief The current process CPU time
 static timespec s_realTime; //!< @brief The current runtime
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-void __attribute__((constructor)) initializer()
+void __attribute__( ( constructor ) ) initializer()
 {
-	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &s_processTime);
-	clock_gettime(CLOCK_REALTIME, &s_realTime);
+	clock_gettime( CLOCK_PROCESS_CPUTIME_ID, &s_processTime );
+	clock_gettime( CLOCK_REALTIME, &s_realTime );
 }
 #endif
 
@@ -42,22 +43,24 @@ void __attribute__((constructor)) initializer()
  * @brief Get the current process CPU time in seconds
  * @return Current process CPU time in seconds
  */
-static inline float_t processTime() {
+static inline float_t processTime()
+{
 	timespec tmp;
-	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tmp);
-	float_t res = (tmp.tv_sec-s_processTime.tv_sec)*1000.0f;
-	res += (tmp.tv_nsec-s_processTime.tv_nsec)/1000000.0f;
+	clock_gettime( CLOCK_THREAD_CPUTIME_ID, &tmp );
+	float_t res = ( tmp.tv_sec - s_processTime.tv_sec ) * 1000.0f;
+	res += ( tmp.tv_nsec - s_processTime.tv_nsec ) / 1000000.0f;
 	return res;
 }
 /**
  * @brief Get the current run-time in seconds
  * @return Current run-time in seconds
  */
-static inline float_t realTime() {
+static inline float_t realTime()
+{
 	timespec tmp;
-	clock_gettime(CLOCK_REALTIME, &tmp);
-	float_t res = (tmp.tv_sec-s_realTime.tv_sec)*1000.0f;
-	res += (tmp.tv_nsec-s_realTime.tv_nsec)/1000000.0f;
+	clock_gettime( CLOCK_REALTIME, &tmp );
+	float_t res = ( tmp.tv_sec - s_realTime.tv_sec ) * 1000.0f;
+	res += ( tmp.tv_nsec - s_realTime.tv_nsec ) / 1000000.0f;
 	return res;
 }
 
@@ -71,9 +74,9 @@ static std::string s_format = "[%T %<5t %p] %L (in %F:%l): %m%n";
  * @param[in] l The level to convert
  * @return String representation of @a l
  */
-static std::string levelString(Level l)
+static std::string levelString( Level l )
 {
-	switch(l) {
+	switch( l ) {
 		case Level::Off:
 			return std::string();
 		case Level::Trace:
@@ -89,28 +92,28 @@ static std::string levelString(Level l)
 		case Level::Fatal:
 			return "FATAL";
 		case Level::All:
-			throw std::runtime_error("Logging level invalid: Level::All should not be passed to levelString()");
+			throw std::runtime_error( "Logging level invalid: Level::All should not be passed to levelString()" );
 		default:
-			throw std::runtime_error("Logging level invalid: Unknown Level passed to levelString()");
+			throw std::runtime_error( "Logging level invalid: Unknown Level passed to levelString()" );
 	}
 }
 
-void Location::setFormat(const std::string& fmt)
+void Location::setFormat( const std::string& fmt )
 {
 	s_format = fmt;
 }
 
-std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logger, const std::string& msg) const
+std::string Location::toString( light4cxx::Level l, const light4cxx::Logger& logger, const std::string& msg ) const
 {
 	std::ostringstream oss;
 // 	const std::ios_base::fmtflags clearFlags = oss.flags();
 	int state = 0;
-	for(size_t i=0; i<s_format.length(); i++) {
-		char c = s_format.at(i);
-		switch(state) {
+	for( size_t i = 0; i < s_format.length(); i++ ) {
+		char c = s_format.at( i );
+		switch( state ) {
 			case 0:
 				// scan for %
-				if(c=='%') {
+				if( c == '%' ) {
 					state = 1;
 					break;
 				}
@@ -118,7 +121,7 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
 				break;
 			case 1:
 				// flags
-				switch(c) {
+				switch( c ) {
 					case '#':
 						oss << std::showbase;
 						break;
@@ -129,10 +132,10 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
 						oss << std::showpoint;
 						break;
 					case '0':
-						oss.fill('0');
+						oss.fill( '0' );
 						break;
 					case ' ':
-						oss.fill(' ');
+						oss.fill( ' ' );
 						break;
 					case '<':
 						oss << std::left;
@@ -157,8 +160,8 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
 				break;
 			case 2:
 				// field width
-				if(isdigit(c)) {
-					oss.width( c-'0' );
+				if( isdigit( c ) ) {
+					oss.width( c - '0' );
 				}
 				else {
 					i--;
@@ -167,7 +170,7 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
 				break;
 			case 3:
 				// precision dot
-				if(c=='.') {
+				if( c == '.' ) {
 					state = 4;
 				}
 				else {
@@ -178,18 +181,18 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
 				break;
 			case 4:
 				// precision value
-				if(isdigit(c)) {
-					oss.precision(c - '0');
+				if( isdigit( c ) ) {
+					oss.precision( c - '0' );
 				}
 				else {
-					oss.precision(0);
+					oss.precision( 0 );
 					i--;
 				}
 				state = 5;
 				break;
 			case 5:
 				// format specifier
-				switch(c) {
+				switch( c ) {
 					case '%':
 						oss << '%';
 						break;
@@ -212,34 +215,34 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
 						oss << std::endl;
 						break;
 					case 'p':
-						oss << processTime()/1000.0f;
+						oss << processTime() / 1000.0f;
 						break;
 					case 'P':
-						oss << static_cast<uint64_t>(processTime()/1000.0f);
+						oss << static_cast<uint64_t>( processTime() / 1000.0f );
 						break;
 					case 'r':
-						oss << realTime()/1000.0f;
+						oss << realTime() / 1000.0f;
 						break;
 					case 'R':
-						oss << static_cast<uint64_t>(realTime()/1000.0f);
+						oss << static_cast<uint64_t>( realTime() / 1000.0f );
 						break;
 					case 't':
-						oss << levelString(l);
+						oss << levelString( l );
 						break;
 					case 'T':
 						oss << std::hex << m_threadId;
 						break;
 					default:
-						throw std::runtime_error( std::string("Unknown format specifier at: ") + s_format.substr(i) );
+						throw std::runtime_error( std::string( "Unknown format specifier at: " ) + s_format.substr( i ) );
 				}
 				state = 0;
 				oss.copyfmt( std::ostringstream() );
-/*				oss.flags( clearFlags );
-				oss.fill(' ');
-				oss.width(0);*/
+				/*				oss.flags( clearFlags );
+								oss.fill(' ');
+								oss.width(0);*/
 				break;
 			default:
-				throw std::runtime_error("Invalid format parsing state");
+				throw std::runtime_error( "Invalid format parsing state" );
 		}
 	}
 	return oss.str();

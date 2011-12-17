@@ -58,54 +58,58 @@ struct InstrumentHeader2 {
 #pragma pack(pop)
 #endif
 
-namespace ppp {
-namespace xm {
+namespace ppp
+{
+namespace xm
+{
 
 XmInstrument::XmInstrument() :
 	m_samples(), m_map(), m_title(),
 	m_panEnvFlags(), m_volEnvFlags(),
 	m_panPoints(), m_volPoints(),
-	m_numVolPoints(0), m_numPanPoints(0),
-	m_volLoopStart(0), m_panLoopStart(0),
-	m_volLoopEnd(0), m_panLoopEnd(0),
-	m_volSustainPoint(0), m_panSustainPoint(0),
-	m_fadeout(0), m_vibRate(0), m_vibDepth(0), m_vibSweep(0), m_vibType(0) {
-	std::fill_n(m_map, 96, 0);
+	m_numVolPoints( 0 ), m_numPanPoints( 0 ),
+	m_volLoopStart( 0 ), m_panLoopStart( 0 ),
+	m_volLoopEnd( 0 ), m_panLoopEnd( 0 ),
+	m_volSustainPoint( 0 ), m_panSustainPoint( 0 ),
+	m_fadeout( 0 ), m_vibRate( 0 ), m_vibDepth( 0 ), m_vibSweep( 0 ), m_vibType( 0 )
+{
+	std::fill_n( m_map, 96, 0 );
 }
 
-bool XmInstrument::load(BinStream& str) {
+bool XmInstrument::load( BinStream& str )
+{
 	size_t startPos = str.pos();
 	InstrumentHeader hdr;
-	str.read(reinterpret_cast<char*>(&hdr), sizeof(hdr));
+	str.read( reinterpret_cast<char*>( &hdr ), sizeof( hdr ) );
 	/*	if(hdr.type!=0) {
 			LOG_WARNING("Instrument header type error @ 0x%.8x", str.pos()-sizeof(hdr));
 			return false;
 		}*/
-	if(hdr.numSamples == 0) {
-		str.seek(startPos + hdr.size);
+	if( hdr.numSamples == 0 ) {
+		str.seek( startPos + hdr.size );
 		return true;
 	}
-	BOOST_ASSERT(hdr.numSamples <= 255);
-	m_samples.resize(hdr.numSamples);
+	BOOST_ASSERT( hdr.numSamples <= 255 );
+	m_samples.resize( hdr.numSamples );
 	InstrumentHeader2 hdr2;
-	str.read(reinterpret_cast<char*>(&hdr2), sizeof(hdr2));
-	std::copy(hdr2.indices, hdr2.indices + 96, m_map);
-	str.seek(startPos + hdr.size);
-	for(uint16_t i = 0; i < hdr.numSamples; i++) {
-		XmSample::Ptr smp(new XmSample());
-		smp->load(str);
-		m_samples.at(i) = smp;
+	str.read( reinterpret_cast<char*>( &hdr2 ), sizeof( hdr2 ) );
+	std::copy( hdr2.indices, hdr2.indices + 96, m_map );
+	str.seek( startPos + hdr.size );
+	for( uint16_t i = 0; i < hdr.numSamples; i++ ) {
+		XmSample::Ptr smp( new XmSample() );
+		smp->load( str );
+		m_samples.at( i ) = smp;
 	}
-	for(uint16_t i = 0; i < hdr.numSamples; i++) {
-		m_samples.at(i)->loadData(str);
+	for( uint16_t i = 0; i < hdr.numSamples; i++ ) {
+		m_samples.at( i )->loadData( str );
 	}
-	m_title = ppp::stringncpy(hdr.name, 22);
-	m_panEnvFlags = static_cast<XmEnvelopeProcessor::EnvelopeFlags>(hdr2.panType);
-	for(uint8_t i = 0; i < 12; i++) {
-		m_panPoints.at(i).position = hdr2.panEnvelope[i].x;
-		m_panPoints.at(i).value = hdr2.panEnvelope[i].y;
+	m_title = ppp::stringncpy( hdr.name, 22 );
+	m_panEnvFlags = static_cast<XmEnvelopeProcessor::EnvelopeFlags>( hdr2.panType );
+	for( uint8_t i = 0; i < 12; i++ ) {
+		m_panPoints.at( i ).position = hdr2.panEnvelope[i].x;
+		m_panPoints.at( i ).value = hdr2.panEnvelope[i].y;
 	}
-	m_volEnvFlags = static_cast<XmEnvelopeProcessor::EnvelopeFlags>(hdr2.volType);
+	m_volEnvFlags = static_cast<XmEnvelopeProcessor::EnvelopeFlags>( hdr2.volType );
 	m_numVolPoints = hdr2.numVolPoints;
 	m_numPanPoints = hdr2.numPanPoints;
 	m_volLoopStart = hdr2.volLoopStart;
@@ -115,9 +119,9 @@ bool XmInstrument::load(BinStream& str) {
 	m_volSustainPoint = hdr2.volSustainPoint;
 	m_panSustainPoint = hdr2.panSustainPoint;
 	m_fadeout = hdr2.volFadeout;
-	for(uint8_t i = 0; i < 12; i++) {
-		m_volPoints.at(i).position = hdr2.volEnvelope[i].x;
-		m_volPoints.at(i).value = hdr2.volEnvelope[i].y;
+	for( uint8_t i = 0; i < 12; i++ ) {
+		m_volPoints.at( i ).position = hdr2.volEnvelope[i].x;
+		m_volPoints.at( i ).value = hdr2.volEnvelope[i].y;
 	}
 	m_vibDepth = hdr2.vibDepth;
 	m_vibRate = hdr2.vibRate;
@@ -126,56 +130,66 @@ bool XmInstrument::load(BinStream& str) {
 	return true;
 }
 
-uint8_t XmInstrument::mapNoteIndex(uint8_t note) const {
-	if(note >= 96)
+uint8_t XmInstrument::mapNoteIndex( uint8_t note ) const
+{
+	if( note >= 96 )
 		return 0xff;
 	return m_map[note] & 15;
 }
 
-XmSample::Ptr XmInstrument::mapNoteSample(uint8_t note) const {
-	if(note >= 96)
+XmSample::Ptr XmInstrument::mapNoteSample( uint8_t note ) const
+{
+	if( note >= 96 )
 		return XmSample::Ptr();
-	uint8_t mapped = mapNoteIndex(note);
-	if(mapped >= m_samples.size())
+	uint8_t mapped = mapNoteIndex( note );
+	if( mapped >= m_samples.size() )
 		return XmSample::Ptr();
-	return m_samples.at(mapped);
+	return m_samples.at( mapped );
 }
 
-std::string XmInstrument::title() const {
+std::string XmInstrument::title() const
+{
 	return m_title;
 }
 
-XmEnvelopeProcessor XmInstrument::volumeProcessor() const {
-	return XmEnvelopeProcessor(m_volEnvFlags, m_volPoints, m_numVolPoints, m_volSustainPoint, m_volLoopStart, m_volLoopEnd);
+XmEnvelopeProcessor XmInstrument::volumeProcessor() const
+{
+	return XmEnvelopeProcessor( m_volEnvFlags, m_volPoints, m_numVolPoints, m_volSustainPoint, m_volLoopStart, m_volLoopEnd );
 }
 
-XmEnvelopeProcessor XmInstrument::panningProcessor() const {
-	return XmEnvelopeProcessor(m_panEnvFlags, m_panPoints, m_numPanPoints, m_panSustainPoint, m_panLoopStart, m_panLoopEnd);
+XmEnvelopeProcessor XmInstrument::panningProcessor() const
+{
+	return XmEnvelopeProcessor( m_panEnvFlags, m_panPoints, m_numPanPoints, m_panSustainPoint, m_panLoopStart, m_panLoopEnd );
 }
 
-uint16_t XmInstrument::fadeout() const {
+uint16_t XmInstrument::fadeout() const
+{
 	return m_fadeout;
 }
 
-uint8_t XmInstrument::vibType() const {
+uint8_t XmInstrument::vibType() const
+{
 	return m_vibType;
 }
 
-uint8_t XmInstrument::vibSweep() const {
+uint8_t XmInstrument::vibSweep() const
+{
 	return m_vibSweep;
 }
 
-uint8_t XmInstrument::vibDepth() const {
+uint8_t XmInstrument::vibDepth() const
+{
 	return m_vibDepth;
 }
 
-uint8_t XmInstrument::vibRate() const {
+uint8_t XmInstrument::vibRate() const
+{
 	return m_vibRate;
 }
 
 light4cxx::Logger::Ptr XmInstrument::logger()
 {
-	return light4cxx::Logger::get("instrument.xm");
+	return light4cxx::Logger::get( "instrument.xm" );
 }
 
 }

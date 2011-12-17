@@ -23,7 +23,8 @@
 
 #include "genbase.h"
 
-namespace ppp {
+namespace ppp
+{
 
 const std::array<const char[3], 12> NoteNames = {
 	{

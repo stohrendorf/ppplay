@@ -27,8 +27,10 @@
  * @{
  */
 
-namespace ppp {
-namespace mod {
+namespace ppp
+{
+namespace mod
+{
 
 #pragma pack(push,1)
 /**
@@ -46,49 +48,49 @@ struct Header {
 };
 #pragma pack(pop)
 
-ModSample::ModSample() : m_finetune(0)
+ModSample::ModSample() : m_finetune( 0 )
 {
 }
 
-bool ModSample::loadHeader(BinStream& stream)
+bool ModSample::loadHeader( BinStream& stream )
 {
 	Header hdr;
-	stream.read(reinterpret_cast<char*>(&hdr), sizeof(hdr));
-	if(!stream.good()) {
+	stream.read( reinterpret_cast<char*>( &hdr ), sizeof( hdr ) );
+	if( !stream.good() ) {
 		return false;
 	}
-	swapEndian(&hdr.length);
-	swapEndian(&hdr.loopStart);
-	swapEndian(&hdr.loopLength);
-	if(hdr.length>1) {
-		resizeData(hdr.length<<1);
+	swapEndian( &hdr.length );
+	swapEndian( &hdr.loopStart );
+	swapEndian( &hdr.loopLength );
+	if( hdr.length > 1 ) {
+		resizeData( hdr.length << 1 );
 	}
-	if(hdr.loopLength>1 && (hdr.loopLength+hdr.loopStart<=hdr.length)) {
-		setLoopStart(hdr.loopStart<<1);
-		setLoopEnd((hdr.loopStart+hdr.loopLength)<<1);
-		setLoopType(LoopType::Forward);
+	if( hdr.loopLength > 1 && ( hdr.loopLength + hdr.loopStart <= hdr.length ) ) {
+		setLoopStart( hdr.loopStart << 1 );
+		setLoopEnd( ( hdr.loopStart + hdr.loopLength ) << 1 );
+		setLoopType( LoopType::Forward );
 	}
-	setTitle( stringncpy(hdr.name, 22) );
-	logger()->debug(L4CXX_LOCATION, boost::format("Length=%u, loop=%u+%u=%u, name='%s'")%length()%hdr.loopStart%hdr.loopLength%(hdr.loopStart+hdr.loopLength)%title());
+	setTitle( stringncpy( hdr.name, 22 ) );
+	logger()->debug( L4CXX_LOCATION, boost::format( "Length=%u, loop=%u+%u=%u, name='%s'" ) % length() % hdr.loopStart % hdr.loopLength % ( hdr.loopStart + hdr.loopLength ) % title() );
 // 	LOG_DEBUG("Loading sample (length=%u, loop=%u+%u=%u, name='%s', vol=%u)", length(), hdr.loopStart, hdr.loopLength, hdr.loopStart+hdr.loopLength, title().c_str(), hdr.volume);
 	setVolume( std::min<uint8_t>( hdr.volume, 0x40 ) );
-	m_finetune = hdr.finetune&0x0f;
+	m_finetune = hdr.finetune & 0x0f;
 	return stream.good();
 }
 
-bool ModSample::loadData(BinStream& stream)
+bool ModSample::loadData( BinStream& stream )
 {
-	if(length()==0) {
+	if( length() == 0 ) {
 		return true;
 	}
-	if(stream.pos()+length()>stream.size()) {
-		logger()->warn(L4CXX_LOCATION, boost::format("File truncated: %u bytes requested while only %u bytes left. Truncating sample.")%length()%(stream.size()-stream.pos()));
-		resizeData( stream.size()-stream.pos() );
+	if( stream.pos() + length() > stream.size() ) {
+		logger()->warn( L4CXX_LOCATION, boost::format( "File truncated: %u bytes requested while only %u bytes left. Truncating sample." ) % length() % ( stream.size() - stream.pos() ) );
+		resizeData( stream.size() - stream.pos() );
 	}
-	for(auto it=beginIterator(); it!=endIterator(); it++) {
+	for( auto it = beginIterator(); it != endIterator(); it++ ) {
 		int8_t tmp;
-		stream.read(&tmp);
-		it->left = it->right = tmp<<8;
+		stream.read( &tmp );
+		it->left = it->right = tmp << 8;
 	}
 	return stream.good();
 }

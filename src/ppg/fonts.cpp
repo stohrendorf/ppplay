@@ -27,7 +27,8 @@
 
 #include "fonts.h"
 
-namespace ppg {
+namespace ppg
+{
 
 const unsigned char plFont88[256][8] = {
 	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},

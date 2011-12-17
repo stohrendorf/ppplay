@@ -26,18 +26,19 @@ class IArchive;
  * @ingroup Common
  * @brief Interface for serialisable classes
  */
-class ISerializable {
-	public:
-		/**
-		 * @brief Serialise this object
-		 * @param[in,out] archive IArchive to serialize this object to
-		 * @return Reference to @a archive for pipelining
-		 */
-		virtual IArchive& serialize( IArchive* archive ) = 0;
-		/**
-		 * @brief Destructor
-		 */
-		virtual ~ISerializable() = 0;
+class ISerializable
+{
+public:
+	/**
+	 * @brief Serialise this object
+	 * @param[in,out] archive IArchive to serialize this object to
+	 * @return Reference to @a archive for pipelining
+	 */
+	virtual IArchive& serialize( IArchive* archive ) = 0;
+	/**
+	 * @brief Destructor
+	 */
+	virtual ~ISerializable() = 0;
 };
 
 #endif

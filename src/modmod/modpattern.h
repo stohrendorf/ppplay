@@ -26,42 +26,44 @@
 
 #include "modcell.h"
 
-namespace ppp {
-namespace mod {
+namespace ppp
+{
+namespace mod
+{
 
 class ModPattern
 {
-	DISABLE_COPY(ModPattern)
-	public:
-		typedef std::shared_ptr<ModPattern> Ptr; //!< @brief Class pointer
-		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
-	private:
-		std::vector<ModCell::Vector> m_channels; //!< @brief Channels in this pattern
-		/**
-		 * @brief Create a cell
-		 * @param[in] chanIdx Channel index
-		 * @param[in] row Row index
-		 * @return Pointer to the new cell
-		 */
-		ModCell::Ptr createCell(uint16_t chanIdx, int16_t row);
-	public:
-		/**
-		 * @brief Constructor
-		 */
-		ModPattern();
-		/**
-		 * @brief Load the pattern from a stream
-		 * @param[in] str The stream to load from
-		 * @return @c true on success
-		 */
-		bool load(BinStream& str, uint8_t numChans);
-		/**
-		 * @brief Get a cell from the pattern
-		 * @param[in] chanIdx Channel index
-		 * @param[in] row Row index
-		 * @return Pointer to the cell or nullptr
-		 */
-		ModCell::Ptr cellAt(uint16_t chanIdx, int16_t row);
+	DISABLE_COPY( ModPattern )
+public:
+	typedef std::shared_ptr<ModPattern> Ptr; //!< @brief Class pointer
+	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
+private:
+	std::vector<ModCell::Vector> m_channels; //!< @brief Channels in this pattern
+	/**
+	 * @brief Create a cell
+	 * @param[in] chanIdx Channel index
+	 * @param[in] row Row index
+	 * @return Pointer to the new cell
+	 */
+	ModCell::Ptr createCell( uint16_t chanIdx, int16_t row );
+public:
+	/**
+	 * @brief Constructor
+	 */
+	ModPattern();
+	/**
+	 * @brief Load the pattern from a stream
+	 * @param[in] str The stream to load from
+	 * @return @c true on success
+	 */
+	bool load( BinStream& str, uint8_t numChans );
+	/**
+	 * @brief Get a cell from the pattern
+	 * @param[in] chanIdx Channel index
+	 * @param[in] row Row index
+	 * @return Pointer to the cell or nullptr
+	 */
+	ModCell::Ptr cellAt( uint16_t chanIdx, int16_t row );
 };
 
 }

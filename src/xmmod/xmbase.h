@@ -24,38 +24,41 @@
  * @{
  */
 
-namespace ppp {
-namespace xm {
+namespace ppp
+{
+namespace xm
+{
 
 /**
  * @brief Available XM effects
  */
-enum class Effect : uint8_t {
-    Arpeggio = 0,
-    PortaUp = 1,
-    PortaDown = 2,
-    Porta = 3,
-    Vibrato = 4,
-    PortaVolSlide = 5,
-    VibratoVolSlide = 6,
-    Tremolo = 7,
-    SetPanning = 8,
-    Offset = 9,
-    VolSlide = 0x0a,
-    PosJump = 0x0b,
-    SetVolume = 0x0c,
-    PatBreak = 0x0d,
-    Extended = 0x0e,
-    SetTempoBpm = 0x0f,
-    SetGlobalVol = 0x10,
-    GlobalVolSlide = 0x11,
-    KeyOff = 0x14,
-    SetEnvPos = 0x15,
-    PanSlide = 0x19,
-    Retrigger = 0x1b,
-    Tremor = 0x1d,
-    ExtraFinePorta = 0x21,
-    None = 0xff
+enum class Effect : uint8_t
+{
+	Arpeggio = 0,
+	PortaUp = 1,
+	PortaDown = 2,
+	Porta = 3,
+	Vibrato = 4,
+	PortaVolSlide = 5,
+	VibratoVolSlide = 6,
+	Tremolo = 7,
+	SetPanning = 8,
+	Offset = 9,
+	VolSlide = 0x0a,
+	PosJump = 0x0b,
+	SetVolume = 0x0c,
+	PatBreak = 0x0d,
+	Extended = 0x0e,
+	SetTempoBpm = 0x0f,
+	SetGlobalVol = 0x10,
+	GlobalVolSlide = 0x11,
+	KeyOff = 0x14,
+	SetEnvPos = 0x15,
+	PanSlide = 0x19,
+	Retrigger = 0x1b,
+	Tremor = 0x1d,
+	ExtraFinePorta = 0x21,
+	None = 0xff
 };
 
 /**

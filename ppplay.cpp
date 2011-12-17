@@ -52,16 +52,18 @@ static IAudioOutput::Ptr output;
 static AudioFifo::Ptr fifo;
 // static SDL_TimerID updateTimer = nullptr;
 
-namespace config {
-	static bool noGUI = false;
-	static uint16_t maxRepeat = 2;
-	static std::string filename;
+namespace config
+{
+static bool noGUI = false;
+static uint16_t maxRepeat = 2;
+static std::string filename;
 #ifdef WITH_MP3LAME
-	static bool quickMp3 = false;
+static bool quickMp3 = false;
 #endif
 }
 
-static bool parseCmdLine( int argc, char* argv[] ) {
+static bool parseCmdLine( int argc, char* argv[] )
+{
 	int loglevel = 0;
 	namespace bpo = boost::program_options;
 	bpo::options_description genOpts( "General Options" );
@@ -70,13 +72,13 @@ static bool parseCmdLine( int argc, char* argv[] ) {
 	( "version", "Shows version information and exits" )
 	( "warranty", "Shows warranty information and exits" )
 	( "copyright", "Shows copyright information and exits" )
-	( "log-level,l", bpo::value<int>(&loglevel)->default_value(1), "Sets the log level. Possible values:\n - 0 No logging\n - 1 Errors\n - 2 Warnings\n - 3 Informational\n - 4 Debug\n - 5 Trace\nWhen an invalid level is passed, it will automatically be set to 'Trace'. Levels 4 and 5 will also produce a more verbose output." )
+	( "log-level,l", bpo::value<int>( &loglevel )->default_value( 1 ), "Sets the log level. Possible values:\n - 0 No logging\n - 1 Errors\n - 2 Warnings\n - 3 Informational\n - 4 Debug\n - 5 Trace\nWhen an invalid level is passed, it will automatically be set to 'Trace'. Levels 4 and 5 will also produce a more verbose output." )
 	( "no-gui,n", "No GUI" )
 	;
 	bpo::options_description ioOpts( "Input/Output Options" );
 	ioOpts.add_options()
-	( "max-repeat,m", bpo::value<uint16_t>(&config::maxRepeat)->default_value(2), "Maximum repeat count (the number of times an order can be played). Specify a number between 1 and 10,000." )
-	( "file,f", bpo::value<std::string>(&config::filename), "Module file to play" )
+	( "max-repeat,m", bpo::value<uint16_t>( &config::maxRepeat )->default_value( 2 ), "Maximum repeat count (the number of times an order can be played). Specify a number between 1 and 10,000." )
+	( "file,f", bpo::value<std::string>( &config::filename ), "Module file to play" )
 #ifdef WITH_MP3LAME
 	( "quick-mp3,q", "Produces only an mp3 without sound output" )
 #endif
@@ -91,13 +93,13 @@ static bool parseCmdLine( int argc, char* argv[] ) {
 	bpo::store( bpo::command_line_parser( argc, argv ).options( allOpts ).positional( p ).run(), vm );
 	bpo::notify( vm );
 
-	if(config::maxRepeat<1 || config::maxRepeat>10000) {
+	if( config::maxRepeat < 1 || config::maxRepeat > 10000 ) {
 		std::cout << "Error: Maximum repeat count not within 1 to 10,000" << std::endl;
 		return false;
 	}
 
-	light4cxx::Location::setFormat("[%T %<5t %>=7.3r] %L: %m%n");
-	switch(loglevel) {
+	light4cxx::Location::setFormat( "[%T %<5t %>=7.3r] %L: %m%n" );
+	switch( loglevel ) {
 		case 0:
 			light4cxx::Logger::setLevel( light4cxx::Level::Off );
 			break;
@@ -180,20 +182,21 @@ static bool parseCmdLine( int argc, char* argv[] ) {
 		cout << genOpts << ioOpts;
 		return false;
 	}
-	if( vm.count( "no-gui" )!=0 ) {
+	if( vm.count( "no-gui" ) != 0 ) {
 		config::noGUI = true;
 	}
 #ifdef WITH_MP3LAME
 	config::quickMp3 = vm.count( "quick-mp3" );
 #endif
-	return vm.count("file")!=0;
+	return vm.count( "file" ) != 0;
 }
 
-int main( int argc, char* argv[] ) {
+int main( int argc, char* argv[] )
+{
 	try {
-		if( !parseCmdLine(argc,argv) )
+		if( !parseCmdLine( argc, argv ) )
 			return EXIT_SUCCESS;
-		light4cxx::Logger::root()->info(L4CXX_LOCATION, boost::format("Trying to load '%s'")%config::filename );
+		light4cxx::Logger::root()->info( L4CXX_LOCATION, boost::format( "Trying to load '%s'" ) % config::filename );
 		ppp::GenModule::Ptr module;
 		try {
 			module = ppp::s3m::S3mModule::factory( config::filename, 44100, config::maxRepeat );
@@ -201,39 +204,39 @@ int main( int argc, char* argv[] ) {
 				module = ppp::xm::XmModule::factory( config::filename, 44100, config::maxRepeat );
 				if( !module ) {
 					module = ppp::mod::ModModule::factory( config::filename, 44100, config::maxRepeat );
-					if(!module) {
-						light4cxx::Logger::root()->error(L4CXX_LOCATION, "Error on loading the mod..." );
+					if( !module ) {
+						light4cxx::Logger::root()->error( L4CXX_LOCATION, "Error on loading the mod..." );
 						return EXIT_FAILURE;
 					}
 				}
 			}
 		}
 		catch( ... ) {
-			light4cxx::Logger::root()->fatal(L4CXX_LOCATION, boost::format("Main: %s") % boost::current_exception_diagnostic_information() );
+			light4cxx::Logger::root()->fatal( L4CXX_LOCATION, boost::format( "Main: %s" ) % boost::current_exception_diagnostic_information() );
 			return EXIT_FAILURE;
 		}
 		if( !config::noGUI ) {
-			light4cxx::Logger::root()->trace(L4CXX_LOCATION, "Initializing SDL Screen");
+			light4cxx::Logger::root()->trace( L4CXX_LOCATION, "Initializing SDL Screen" );
 			dosScreen.reset( new ppg::SDLScreen( 80, 25, PACKAGE_STRING ) );
-			dosScreen->setAutoDelete(false);
+			dosScreen->setAutoDelete( false );
 			dosScreen->show();
 		}
 #ifdef WITH_MP3LAME
 		if( !config::quickMp3 ) {
 #endif
-			light4cxx::Logger::root()->info(L4CXX_LOCATION, "Init Audio" );
+			light4cxx::Logger::root()->info( L4CXX_LOCATION, "Init Audio" );
 			fifo.reset( new AudioFifo( module, 4096 ) );
 			output.reset( new SDLAudioOutput( fifo ) );
 			if( !output->init( 44100 ) ) {
-				light4cxx::Logger::root()->fatal(L4CXX_LOCATION, "Audio Init failed" );
+				light4cxx::Logger::root()->fatal( L4CXX_LOCATION, "Audio Init failed" );
 				return EXIT_FAILURE;
 			}
 			output->play();
-			if(dosScreen) {
+			if( dosScreen ) {
 				uiMain.reset( new UIMain( dosScreen.get(), module, output ) );
 			}
 			SDL_Event event;
-			while(output) {
+			while( output ) {
 				if( output && output->errorCode() == IAudioOutput::InputDry ) {
 					if( !module->jumpNextSong() ) {
 						output.reset();
@@ -242,13 +245,13 @@ int main( int argc, char* argv[] ) {
 					output->init( module->frequency() );
 					output->play();
 				}
-				else if(output && output->errorCode() != IAudioOutput::NoError) {
+				else if( output && output->errorCode() != IAudioOutput::NoError ) {
 					output.reset();
 					break;
 				}
 				if( !SDL_PollEvent( &event ) ) {
 					// usleep( 10000 );
-					boost::this_thread::sleep(boost::posix_time::millisec(10));
+					boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 					continue;
 				}
 				if( event.type == SDL_KEYDOWN ) {
@@ -294,20 +297,20 @@ int main( int argc, char* argv[] ) {
 #ifdef WITH_MP3LAME
 		}
 		else {   // if(mp3File.is_open()) { // quickMp3
-			light4cxx::Logger::root()->info(L4CXX_LOCATION, "QuickMP3 Output Mode" );
+			light4cxx::Logger::root()->info( L4CXX_LOCATION, "QuickMP3 Output Mode" );
 			MP3AudioOutput* mp3out = new MP3AudioOutput( module, config::filename + ".mp3" );
 			output.reset( mp3out );
 			mp3out->setID3( module->trimmedTitle(), PACKAGE_STRING, module->trackerInfo() );
 			if( 0 == mp3out->init( 44100 ) ) {
 				if( mp3out->errorCode() == IAudioOutput::OutputUnavailable ) {
-					light4cxx::Logger::root()->error(L4CXX_LOCATION, "LAME unavailable: Maybe cannot create MP3 File" );
+					light4cxx::Logger::root()->error( L4CXX_LOCATION, "LAME unavailable: Maybe cannot create MP3 File" );
 				}
 				else {
-					light4cxx::Logger::root()->error(L4CXX_LOCATION, boost::format("LAME initialization error: '%s'") % mp3out->errorCode() );
+					light4cxx::Logger::root()->error( L4CXX_LOCATION, boost::format( "LAME initialization error: '%s'" ) % mp3out->errorCode() );
 				}
 				return EXIT_FAILURE;
 			}
-			if(dosScreen) {
+			if( dosScreen ) {
 				uiMain.reset( new UIMain( dosScreen.get(), module, output ) );
 			}
 			output->play();
@@ -318,7 +321,7 @@ int main( int argc, char* argv[] ) {
 #endif
 	}
 	catch( ... ) {
-		light4cxx::Logger::root()->fatal(L4CXX_LOCATION, boost::format("Main (end): %s") % boost::current_exception_diagnostic_information() );
+		light4cxx::Logger::root()->fatal( L4CXX_LOCATION, boost::format( "Main (end): %s" ) % boost::current_exception_diagnostic_information() );
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;

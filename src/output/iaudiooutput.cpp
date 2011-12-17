@@ -25,21 +25,24 @@
 
 IAudioOutput::~IAudioOutput() = default;
 
-IAudioOutput::ErrorCode IAudioOutput::errorCode() const {
+IAudioOutput::ErrorCode IAudioOutput::errorCode() const
+{
 	return m_errorCode;
 }
 
-void IAudioOutput::setErrorCode(IAudioOutput::ErrorCode ec) {
+void IAudioOutput::setErrorCode( IAudioOutput::ErrorCode ec )
+{
 	m_errorCode = ec;
 }
 
-IAudioSource::WeakPtr IAudioOutput::source() const {
+IAudioSource::WeakPtr IAudioOutput::source() const
+{
 	return m_source;
 }
 
 uint16_t IAudioOutput::volumeLeft() const
 {
-	if(!m_source.expired()) {
+	if( !m_source.expired() ) {
 		return m_source.lock()->volumeLeft();
 	}
 	return 0;
@@ -47,7 +50,7 @@ uint16_t IAudioOutput::volumeLeft() const
 
 uint16_t IAudioOutput::volumeRight() const
 {
-	if(!m_source.expired()) {
+	if( !m_source.expired() ) {
 		return m_source.lock()->volumeRight();
 	}
 	return 0;
@@ -55,7 +58,7 @@ uint16_t IAudioOutput::volumeRight() const
 
 light4cxx::Logger::Ptr IAudioOutput::logger()
 {
-	return light4cxx::Logger::get("audio.output");
+	return light4cxx::Logger::get( "audio.output" );
 }
 
 /**

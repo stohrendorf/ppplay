@@ -29,43 +29,46 @@
 
 #include "light4cxx/logger.h"
 
-namespace ppp {
-namespace s3m {
+namespace ppp
+{
+namespace s3m
+{
 
 /**
  * @class S3mSample
  * @brief Sample class for S3M Samples
  */
-class S3mSample : public GenSample {
-		DISABLE_COPY(S3mSample)
-	public:
-		typedef std::shared_ptr<S3mSample> Ptr; //!< @brief Class pointer
-		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
-	private:
-		//! @brief Whether this is a 16-bit sample
-		bool m_highQuality;
-	public:
-		//! @brief Constructor
-		S3mSample();
-		/**
-		 * @brief Load from a stream
-		 * @param[in] str The stream to load this sample from
-		 * @param[in] pos Position of the sample within @a str
-		 * @param[in] imagoLoopEnd If @c true, the loop end is decreased by 1
-		 * @return @c true on success
-		 */
-		bool load(BinStream& str, size_t pos, bool imagoLoopEnd);
-		/**
-		 * @brief Whether this is a 16-bit sample
-		 * @return m_highQuality
-		 */
-		bool isHighQuality() const;
-	protected:
-		/**
-		 * @brief Get the logger
-		 * @return Child logger with attached ".s3m"
-		 */
-		static light4cxx::Logger::Ptr logger();
+class S3mSample : public GenSample
+{
+	DISABLE_COPY( S3mSample )
+public:
+	typedef std::shared_ptr<S3mSample> Ptr; //!< @brief Class pointer
+	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
+private:
+	//! @brief Whether this is a 16-bit sample
+	bool m_highQuality;
+public:
+	//! @brief Constructor
+	S3mSample();
+	/**
+	 * @brief Load from a stream
+	 * @param[in] str The stream to load this sample from
+	 * @param[in] pos Position of the sample within @a str
+	 * @param[in] imagoLoopEnd If @c true, the loop end is decreased by 1
+	 * @return @c true on success
+	 */
+	bool load( BinStream& str, size_t pos, bool imagoLoopEnd );
+	/**
+	 * @brief Whether this is a 16-bit sample
+	 * @return m_highQuality
+	 */
+	bool isHighQuality() const;
+protected:
+	/**
+	 * @brief Get the logger
+	 * @return Child logger with attached ".s3m"
+	 */
+	static light4cxx::Logger::Ptr logger();
 };
 
 } // namespace ppp

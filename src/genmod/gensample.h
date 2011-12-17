@@ -29,186 +29,192 @@
 
 #include <limits>
 
-namespace ppp {
+namespace ppp
+{
 /**
  * @class GenSample
  * @brief An abstract sample class
  */
-class GenSample {
-		DISABLE_COPY(GenSample)
-	public:
-		typedef std::shared_ptr<GenSample> Ptr; //!< @brief Class pointer
-		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
-		typedef BasicSampleFrame::Vector::size_type PositionType;
-		//! @brief Loop type definitions
-		enum class LoopType {
-		    None, //!< @brief not looped
-		    Forward, //!< @brief Forward looped
-		    Pingpong //!< @brief Ping pong looped
-		};
-	private:
-		PositionType m_loopStart; //!< @brief Loop start sample
-		PositionType m_loopEnd; //!< @brief Loop end sample (points to 1 frame @e after the loop end)
-		uint8_t m_volume; //!< @brief Default volume of the sample
-		uint16_t m_frequency; //!< @brief Base frequency of the sample
-		BasicSampleFrame::Vector m_data; //!< @brief Sample data
-		std::string m_filename; //!< @brief Sample filename
-		std::string m_title; //!< @brief Sample title
-		LoopType m_looptype; //!< @brief Loop type
-		/**
-		 * @brief Wraps a virtual position of ping-pong looped samples to the real position
-		 * @param[in] pos Virtual position
-		 * @return Real position
-		 * @note Time-critical
-		 */
-		PositionType makeRealPos( PositionType pos ) const;
-	public:
-		/**
-		 * @brief Position returned when end of sample reached
-		 */
-		static const PositionType EndOfSample = std::numeric_limits<PositionType>::max();
-		/**
-		 * @brief Constructor
-		 */
-		GenSample();
-		/**
-		 * @brief Destructor
-		 */
-		virtual ~GenSample();
-		/**
-		 * @brief Get a sample
-		 * @param[in,out] pos Position of the requested sample
-		 * @return Sample value, 0 if invalid value for @a pos
-		 */
-		inline BasicSampleFrame sampleAt( PositionType& pos ) const;
-		/**
-		 * @brief Get the sample's Base Frequency
-		 * @return Base frequency
-		 */
-		uint16_t frequency() const;
-		/**
-		 * @brief Get the sample's default volume
-		 * @return Default volume
-		 */
-		uint8_t volume() const;
-		/**
-		 * @brief Adjust the playback position so it doesn't fall out of the sample data. Returns EndOfSample if it does
-		 * @param[in,out] pos Reference to the variable that should be adjusted
-		 * @return Adjusted position
-		 * @note Time-critical
-		 */
-		PositionType adjustPosition( PositionType& pos ) const;
-		/**
-		 * @brief Get the sample's name
-		 * @return Sample's name
-		 */
-		std::string title() const;
-		/**
-		 * @brief Is the sample looped?
-		 * @return @c true if the sample is looped
-		 */
-		bool isLooped() const;
-		/**
-		 * @brief Get the sample's length
-		 * @return The sample's length
-		 */
-		PositionType length() const;
-		/**
-		 * @brief Get the loop type
-		 * @return The loop type
-		 */
-		LoopType loopType() const;
-	protected:
-		/**
-		 * @brief Set m_frequency
-		 * @param[in] f The new frequency value
-		 */
-		void setFrequency(uint16_t f);
-		/**
-		 * @brief Set m_looptype
-		 * @param[in] l The new loop type value
-		 */
-		void setLoopType(LoopType l);
-		inline BasicSampleFrame::Vector::iterator beginIterator() {
-			return m_data.begin();
-		}
-		inline BasicSampleFrame::Vector::iterator endIterator() {
-			return m_data.end();
-		}
-		inline BasicSampleFrame::Vector::const_iterator beginIterator() const {
-			return m_data.begin();
-		}
-		inline BasicSampleFrame::Vector::const_iterator endIterator() const {
-			return m_data.cend();
-		}
-		/**
-		 * @brief Set the sample's name
-		 * @param[in] t The new name
-		 */
-		void setTitle(const std::string& t);
-		/**
-		 * @brief Set the sample's filename
-		 * @param[in] f The new filename
-		 */
-		void setFilename(const std::string& f);
-		/**
-		 * @brief Set the sample's loop start
-		 * @param[in] s The new loop start
-		 */
-		void setLoopStart( PositionType s );
-		/**
-		 * @brief Set the sample's loop end
-		 * @param[in] e The new loop end
-		 */
-		void setLoopEnd( PositionType e );
-		/**
-		 * @brief Set the sample's default volume
-		 * @param[in] v The new volume
-		 */
-		void setVolume(uint8_t v);
-		inline void resizeData(PositionType size) {
-			m_data.resize(size, {0,0});
-		}
-		/**
-		 * @brief Get the logger
-		 * @return Logger with name "sample"
-		 */
-		static light4cxx::Logger::Ptr logger();
+class GenSample
+{
+	DISABLE_COPY( GenSample )
+public:
+	typedef std::shared_ptr<GenSample> Ptr; //!< @brief Class pointer
+	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
+	typedef BasicSampleFrame::Vector::size_type PositionType;
+	//! @brief Loop type definitions
+	enum class LoopType
+	{
+		None, //!< @brief not looped
+		Forward, //!< @brief Forward looped
+		Pingpong //!< @brief Ping pong looped
+	};
+private:
+	PositionType m_loopStart; //!< @brief Loop start sample
+	PositionType m_loopEnd; //!< @brief Loop end sample (points to 1 frame @e after the loop end)
+	uint8_t m_volume; //!< @brief Default volume of the sample
+	uint16_t m_frequency; //!< @brief Base frequency of the sample
+	BasicSampleFrame::Vector m_data; //!< @brief Sample data
+	std::string m_filename; //!< @brief Sample filename
+	std::string m_title; //!< @brief Sample title
+	LoopType m_looptype; //!< @brief Loop type
+	/**
+	 * @brief Wraps a virtual position of ping-pong looped samples to the real position
+	 * @param[in] pos Virtual position
+	 * @return Real position
+	 * @note Time-critical
+	 */
+	PositionType makeRealPos( PositionType pos ) const;
+public:
+	/**
+	 * @brief Position returned when end of sample reached
+	 */
+	static const PositionType EndOfSample = std::numeric_limits<PositionType>::max();
+	/**
+	 * @brief Constructor
+	 */
+	GenSample();
+	/**
+	 * @brief Destructor
+	 */
+	virtual ~GenSample();
+	/**
+	 * @brief Get a sample
+	 * @param[in,out] pos Position of the requested sample
+	 * @return Sample value, 0 if invalid value for @a pos
+	 */
+	inline BasicSampleFrame sampleAt( PositionType& pos ) const;
+	/**
+	 * @brief Get the sample's Base Frequency
+	 * @return Base frequency
+	 */
+	uint16_t frequency() const;
+	/**
+	 * @brief Get the sample's default volume
+	 * @return Default volume
+	 */
+	uint8_t volume() const;
+	/**
+	 * @brief Adjust the playback position so it doesn't fall out of the sample data. Returns EndOfSample if it does
+	 * @param[in,out] pos Reference to the variable that should be adjusted
+	 * @return Adjusted position
+	 * @note Time-critical
+	 */
+	PositionType adjustPosition( PositionType& pos ) const;
+	/**
+	 * @brief Get the sample's name
+	 * @return Sample's name
+	 */
+	std::string title() const;
+	/**
+	 * @brief Is the sample looped?
+	 * @return @c true if the sample is looped
+	 */
+	bool isLooped() const;
+	/**
+	 * @brief Get the sample's length
+	 * @return The sample's length
+	 */
+	PositionType length() const;
+	/**
+	 * @brief Get the loop type
+	 * @return The loop type
+	 */
+	LoopType loopType() const;
+protected:
+	/**
+	 * @brief Set m_frequency
+	 * @param[in] f The new frequency value
+	 */
+	void setFrequency( uint16_t f );
+	/**
+	 * @brief Set m_looptype
+	 * @param[in] l The new loop type value
+	 */
+	void setLoopType( LoopType l );
+	inline BasicSampleFrame::Vector::iterator beginIterator() {
+		return m_data.begin();
+	}
+	inline BasicSampleFrame::Vector::iterator endIterator() {
+		return m_data.end();
+	}
+	inline BasicSampleFrame::Vector::const_iterator beginIterator() const {
+		return m_data.begin();
+	}
+	inline BasicSampleFrame::Vector::const_iterator endIterator() const {
+		return m_data.cend();
+	}
+	/**
+	 * @brief Set the sample's name
+	 * @param[in] t The new name
+	 */
+	void setTitle( const std::string& t );
+	/**
+	 * @brief Set the sample's filename
+	 * @param[in] f The new filename
+	 */
+	void setFilename( const std::string& f );
+	/**
+	 * @brief Set the sample's loop start
+	 * @param[in] s The new loop start
+	 */
+	void setLoopStart( PositionType s );
+	/**
+	 * @brief Set the sample's loop end
+	 * @param[in] e The new loop end
+	 */
+	void setLoopEnd( PositionType e );
+	/**
+	 * @brief Set the sample's default volume
+	 * @param[in] v The new volume
+	 */
+	void setVolume( uint8_t v );
+	inline void resizeData( PositionType size ) {
+		m_data.resize( size, {0, 0} );
+	}
+	/**
+	 * @brief Get the logger
+	 * @return Logger with name "sample"
+	 */
+	static light4cxx::Logger::Ptr logger();
 };
 
-inline BasicSampleFrame GenSample::sampleAt(PositionType& pos) const {
-	adjustPosition(pos);
-	if(pos == EndOfSample || m_data.empty())
-		return {0,0};
-	return m_data[makeRealPos(pos)];
+inline BasicSampleFrame GenSample::sampleAt( PositionType& pos ) const
+{
+	adjustPosition( pos );
+	if( pos == EndOfSample || m_data.empty() )
+		return {0, 0};
+	return m_data[makeRealPos( pos )];
 }
 
-inline GenSample::PositionType GenSample::adjustPosition(PositionType& pos) const {
-	if(pos == EndOfSample)
+inline GenSample::PositionType GenSample::adjustPosition( PositionType& pos ) const
+{
+	if( pos == EndOfSample )
 		return EndOfSample;
-	if(m_looptype != LoopType::None) {
-		if(m_loopEnd <= m_loopStart) {
+	if( m_looptype != LoopType::None ) {
+		if( m_loopEnd <= m_loopStart ) {
 			return pos = EndOfSample;
 		}
 		PositionType vLoopLen = m_loopEnd - m_loopStart;
 		PositionType vLoopEnd = m_loopEnd;
-		if(m_looptype == LoopType::Pingpong) {
+		if( m_looptype == LoopType::Pingpong ) {
 			vLoopLen *= 2;
 			vLoopEnd = m_loopStart + vLoopLen;
 		}
-		while(pos >= vLoopEnd) {
+		while( pos >= vLoopEnd ) {
 			pos -= vLoopLen;
 		}
 	}
-	else if(pos >= m_data.size()) {
+	else if( pos >= m_data.size() ) {
 		pos = EndOfSample;
 	}
 	return pos;
 }
 
-inline GenSample::PositionType GenSample::makeRealPos(PositionType pos) const {
-	if(m_looptype == LoopType::Pingpong) {
-		if(pos >= m_loopEnd) {
+inline GenSample::PositionType GenSample::makeRealPos( PositionType pos ) const
+{
+	if( m_looptype == LoopType::Pingpong ) {
+		if( pos >= m_loopEnd ) {
 			pos = 2 * m_loopEnd - pos;
 		}
 	}

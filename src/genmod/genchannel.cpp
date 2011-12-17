@@ -24,63 +24,75 @@
 #include "genchannel.h"
 #include "stream/iarchive.h"
 
-namespace ppp {
+namespace ppp
+{
 
 GenChannel::GenChannel() :
-	m_active(false), m_disabled(true),
-	m_position(GenSample::EndOfSample),
+	m_active( false ), m_disabled( true ),
+	m_position( GenSample::EndOfSample ),
 	m_statusString(),
-	m_statusStringMutex() {
+	m_statusStringMutex()
+{
 }
 
 GenChannel::~GenChannel() = default;
 
-IArchive& GenChannel::serialize(IArchive* data) {
+IArchive& GenChannel::serialize( IArchive* data )
+{
 	*data % m_active % m_disabled % m_position;
 	return *data;
 }
 
-std::string GenChannel::statusString() {
-	std::lock_guard<std::mutex> lock(m_statusStringMutex);
+std::string GenChannel::statusString()
+{
+	std::lock_guard<std::mutex> lock( m_statusStringMutex );
 	return m_statusString;
 }
 
-void GenChannel::setStatusString(const std::string& s) {
-	std::lock_guard<std::mutex> lock(m_statusStringMutex);
+void GenChannel::setStatusString( const std::string& s )
+{
+	std::lock_guard<std::mutex> lock( m_statusStringMutex );
 	m_statusString = s;
 }
 
-void GenChannel::setActive(bool a) {
+void GenChannel::setActive( bool a )
+{
 	m_active = a;
 }
 
-void GenChannel::setPosition(GenSample::PositionType p) {
+void GenChannel::setPosition( GenSample::PositionType p )
+{
 	m_position = p;
 }
 
-void GenChannel::enable() {
+void GenChannel::enable()
+{
 	m_disabled = false;
 }
 
-void GenChannel::disable() {
+void GenChannel::disable()
+{
 	m_disabled = true;
 }
 
-GenSample::PositionType GenChannel::position() const {
+GenSample::PositionType GenChannel::position() const
+{
 	return m_position;
 }
 
-bool GenChannel::isDisabled() const {
+bool GenChannel::isDisabled() const
+{
 	return m_disabled;
 }
 
-bool GenChannel::isActive() const {
+bool GenChannel::isActive() const
+{
 	return m_active;
 }
 
 light4cxx::Logger::Ptr GenChannel::logger()
 {
-	return light4cxx::Logger::get("channel");
+	return light4cxx::Logger::get( "channel" );
 }
 
 }

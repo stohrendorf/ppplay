@@ -23,70 +23,85 @@
  * @{
  */
 
-namespace ppp {
+namespace ppp
+{
 
 GenSample::GenSample() :
-	m_loopStart(0), m_loopEnd(0), m_volume(0),
-	m_frequency(0), m_data(), m_filename(), m_title(), m_looptype(LoopType::None) {
+	m_loopStart( 0 ), m_loopEnd( 0 ), m_volume( 0 ),
+	m_frequency( 0 ), m_data(), m_filename(), m_title(), m_looptype( LoopType::None )
+{
 }
 
 GenSample::~GenSample() = default;
 
-uint16_t GenSample::frequency() const {
+uint16_t GenSample::frequency() const
+{
 	return m_frequency;
 }
 
-uint8_t GenSample::volume() const {
+uint8_t GenSample::volume() const
+{
 	return m_volume;
 }
 
-std::string GenSample::title() const {
+std::string GenSample::title() const
+{
 	return m_title;
 }
 
-bool GenSample::isLooped() const {
+bool GenSample::isLooped() const
+{
 	return m_looptype != LoopType::None;
 }
 
-GenSample::PositionType GenSample::length() const {
+GenSample::PositionType GenSample::length() const
+{
 	return m_data.size();
 }
 
-GenSample::LoopType GenSample::loopType() const {
+GenSample::LoopType GenSample::loopType() const
+{
 	return m_looptype;
 }
 
-void GenSample::setFrequency(uint16_t f) {
+void GenSample::setFrequency( uint16_t f )
+{
 	m_frequency = f;
 }
 
-void GenSample::setLoopType(LoopType l) {
+void GenSample::setLoopType( LoopType l )
+{
 	m_looptype = l;
 }
 
-void GenSample::setTitle(const std::string& t) {
+void GenSample::setTitle( const std::string& t )
+{
 	m_title = t;
 }
 
-void GenSample::setFilename(const std::string& f) {
+void GenSample::setFilename( const std::string& f )
+{
 	m_filename = f;
 }
 
-void GenSample::setLoopStart(PositionType s) {
+void GenSample::setLoopStart( PositionType s )
+{
 	m_loopStart = s;
 }
 
-void GenSample::setLoopEnd( PositionType e ) {
+void GenSample::setLoopEnd( PositionType e )
+{
 	m_loopEnd = e;
 }
 
-void GenSample::setVolume(uint8_t v) {
+void GenSample::setVolume( uint8_t v )
+{
 	m_volume = v;
 }
 
 light4cxx::Logger::Ptr GenSample::logger()
 {
-	return light4cxx::Logger::get("sample");
+	return light4cxx::Logger::get( "sample" );
 }
 
 }

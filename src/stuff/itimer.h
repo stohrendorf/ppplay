@@ -33,7 +33,7 @@
  */
 class ITimer
 {
-	DISABLE_COPY(ITimer)
+	DISABLE_COPY( ITimer )
 public:
 	/**
 	 * @brief Default constructor

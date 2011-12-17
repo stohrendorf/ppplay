@@ -26,12 +26,13 @@
  * @ingroup Common
  * @brief Class derived from BinStream for a std::stringstream
  */
-class SBinStream : public BinStream {
-		DISABLE_COPY( SBinStream )
-	public:
-		explicit SBinStream();
-		virtual ~SBinStream();
-		virtual size_t size() const;
+class SBinStream : public BinStream
+{
+	DISABLE_COPY( SBinStream )
+public:
+	explicit SBinStream();
+	virtual ~SBinStream();
+	virtual size_t size() const;
 };
 
 #endif

@@ -32,52 +32,53 @@
  * @class StateIterator
  * @brief A dynamically growing, indexed IArchive holder
  */
-class StateIterator {
-	public:
-		typedef std::shared_ptr<StateIterator> Ptr; //!< @brief Class pointer
-	private:
-		IArchive::Vector m_states; //!< @brief The states
-		size_t m_stateIndex; //!< @brief Current index of the iterator
-	public:
-		static const uint16_t stopHere = ~0; //!< @brief Const to define unused track
-		/**
-		 * @brief Constructor
-		 */
-		StateIterator();
-		/**
-		 * @brief Creates a new MemArchive and adds it to m_states
-		 * @return The created archive
-		 */
-		IArchive::Ptr newState();
-		/**
-		 * @brief Increases m_stateIndex and returns the state pointer
-		 * @return The state pointer or @c nullptr if atEnd() returns @c true
-		 */
-		IArchive::Ptr nextState();
-		/**
-		 * @brief Decreases m_stateIndex and returns the state pointer
-		 * @return The state pointer or @c nullptr if atFront() returns @c true
-		 */
-		IArchive::Ptr prevState();
-		/**
-		 * @brief Returns the current state pointer
-		 * @return The current state pointer or nullptr
-		 */
-		IArchive::Ptr currentState() const;
-		/**
-		 * @brief Check if m_stateIndex is beyond the end of m_states
-		 * @return @c true if m_stateIndex is at the end
-		 */
-		bool atEnd() const;
-		/**
-		 * @brief Check if m_stateIndex is before the front of m_states
-		 * @return @c true if m_stateIndex is at the front
-		 */
-		bool atFront() const;
-		/**
-		 * @brief Sets m_stateIndex to 0
-		 */
-		void gotoFront();
+class StateIterator
+{
+public:
+	typedef std::shared_ptr<StateIterator> Ptr; //!< @brief Class pointer
+private:
+	IArchive::Vector m_states; //!< @brief The states
+	size_t m_stateIndex; //!< @brief Current index of the iterator
+public:
+	static const uint16_t stopHere = ~0; //!< @brief Const to define unused track
+	/**
+	 * @brief Constructor
+	 */
+	StateIterator();
+	/**
+	 * @brief Creates a new MemArchive and adds it to m_states
+	 * @return The created archive
+	 */
+	IArchive::Ptr newState();
+	/**
+	 * @brief Increases m_stateIndex and returns the state pointer
+	 * @return The state pointer or @c nullptr if atEnd() returns @c true
+	 */
+	IArchive::Ptr nextState();
+	/**
+	 * @brief Decreases m_stateIndex and returns the state pointer
+	 * @return The state pointer or @c nullptr if atFront() returns @c true
+	 */
+	IArchive::Ptr prevState();
+	/**
+	 * @brief Returns the current state pointer
+	 * @return The current state pointer or nullptr
+	 */
+	IArchive::Ptr currentState() const;
+	/**
+	 * @brief Check if m_stateIndex is beyond the end of m_states
+	 * @return @c true if m_stateIndex is at the end
+	 */
+	bool atEnd() const;
+	/**
+	 * @brief Check if m_stateIndex is before the front of m_states
+	 * @return @c true if m_stateIndex is at the front
+	 */
+	bool atFront() const;
+	/**
+	 * @brief Sets m_stateIndex to 0
+	 */
+	void gotoFront();
 };
 
 /**

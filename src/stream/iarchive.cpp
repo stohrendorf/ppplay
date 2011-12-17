@@ -19,32 +19,37 @@
 #include "iarchive.h"
 #include "iserializable.h"
 
-IArchive::IArchive(const BinStream::Ptr& stream) : m_loading(false), m_stream(stream)
+IArchive::IArchive( const BinStream::Ptr& stream ) : m_loading( false ), m_stream( stream )
 { }
 
 IArchive::~IArchive() = default;
 
-bool IArchive::isLoading() const {
+bool IArchive::isLoading() const
+{
 	return m_loading;
 }
 
-bool IArchive::isSaving() const {
+bool IArchive::isSaving() const
+{
 	return !m_loading;
 }
 
-IArchive& IArchive::archive(ISerializable* data) {
-	BOOST_ASSERT(data != nullptr);
-	return data->serialize(this);
+IArchive& IArchive::archive( ISerializable* data )
+{
+	BOOST_ASSERT( data != nullptr );
+	return data->serialize( this );
 }
 
-void IArchive::finishSave() {
-	BOOST_ASSERT(!m_loading);
-	m_stream->seek(0);
+void IArchive::finishSave()
+{
+	BOOST_ASSERT( !m_loading );
+	m_stream->seek( 0 );
 	m_loading = true;
 }
 
-void IArchive::finishLoad() {
-	BOOST_ASSERT(m_loading);
-	m_stream->seek(0);
+void IArchive::finishLoad()
+{
+	BOOST_ASSERT( m_loading );
+	m_stream->seek( 0 );
 }
 

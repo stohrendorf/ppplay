@@ -28,7 +28,8 @@
 #include "stream/stateiterator.h"
 #include "output/iaudiosource.h"
 
-namespace ppp {
+namespace ppp
+{
 
 /**
  * @class GenModule
@@ -36,317 +37,318 @@ namespace ppp {
  * @todo Create a function to retrieve only the module's title without loading the whole module
  * @todo Multi-song: Reset module/channels on each new song?
  */
-class GenModule : public ISerializable, public IAudioSource {
-		DISABLE_COPY(GenModule)
-		GenModule() = delete;
-	public:
-		typedef std::shared_ptr<GenModule> Ptr; //!< @brief Class pointer
-	private:
-		std::string m_filename; //!< @brief Filename of the loaded module, empty if none loaded
-		std::string m_title; //!< @brief Title of the module
-		std::string m_trackerInfo; //!< @brief Tracker information (Name and Version)
-		GenOrder::Vector m_orders; //!< @brief Order list @note @b Not @b initialized @b here!
-		uint16_t m_maxRepeat; //!< @brief Maximum module loops if module patterns are played multiple times
-		size_t m_playedFrames; //!< @brief Played Sample frames
-		std::vector<StateIterator> m_songs; //!< @brief Per-song infos
-		std::vector<size_t> m_songLengths; //!< @brief Per-song lengths in sample frames
-		uint16_t m_currentSongIndex; //!< @brief The current song index
-		int16_t m_tick; //!< @brief Current tick index
-		int16_t m_globalVolume; //!< @brief Current global volume
-		int16_t m_speed; //!< @brief Current speed
-		int16_t m_tempo; //!< @brief Current tempo
-		size_t m_order; //!< @brief Current Order
-		size_t m_pattern; //!< @brief Current pattern
-		int16_t m_row; //!< @brief Current row
-	public:
-		/**
-		 * @brief The constructor
-		 * @param[in] maxRpt Maximum repeat count for repeating modules
-		 * @pre @c maxRpt>0
-		 */
-		GenModule(uint8_t maxRpt);
-		/**
-		 * @brief The destructor
-		 */
-		virtual ~GenModule();
-		/**
-		 * @brief Returns the filename without the path
-		 * @return Filename, or empty if no module loaded
-		 */
-		std::string filename();
-		/**
-		 * @brief Returns the title
-		 * @return The title of the module
-		 */
-		std::string title() const;
-		/**
-		 * @brief Returns the title without left and right whitespaces
-		 * @return The trimmed title of the module
-		 */
-		std::string trimmedTitle() const;
-		/**
-		 * @brief Get the frame count of a tick
-		 * @return Sample frames per tick
-		 * @pre m_playbackInfo.tempo != 0
-		 */
-		uint16_t tickBufferLength() const;
-		/**
-		 * @brief Get a tick
-		 * @param[out] buf Reference to the destination buffer
-		 * @note Time-critical
-		 */
-		virtual void buildTick(AudioFrameBuffer& buf) = 0;
-		/**
-		 * @brief Get a tick without mixing for length calculation
-		 * @param[out] bufLen Number of sample frames in the current tick. If 0 after the call, the end was reached.
-		 */
-		virtual void simulateTick(size_t& bufLen) = 0;
-		/**
-		 * @brief Map an order number to a pattern
-		 * @param[in] order The order to map
-		 * @return Pattern number for @a order
-		 */
-		virtual GenOrder::Ptr mapOrder(int16_t order) = 0;
-		/**
-		 * @brief Returns the channel status string for a channel
-		 * @param[in] idx Requested channel
-		 * @return Status string
-		 */
-		virtual std::string channelStatus(size_t idx) = 0;
-		/**
-		 * @brief Get playback time in seconds
-		 * @return Playback time in seconds
-		 */
-		uint32_t timeElapsed() const;
-		/**
-		 * @brief Returns the current song's length
-		 * @return The current song's length
-		 * @see timeElapsed()
-		 */
-		size_t length() const;
-		/**
-		 * @brief Get information about the tracker
-		 * @return Tracker type and version, i.e. "ScreamTracker v3.20"
-		 */
-		std::string trackerInfo() const;
-		/**
-		 * @brief Returns @c true if this module contains multiple songs
-		 * @return @c true if this is a multi-song
-		 */
-		bool isMultiSong() const;
-		/**
-		 * @brief Jump to the next song if possible
-		 * @return @c false if there are no songs left
-		 */
-		virtual bool jumpNextSong() = 0;
-		/**
-		 * @brief Jump to the previous song if possible
-		 * @return @c false if this operation fails
-		 */
-		virtual bool jumpPrevSong() = 0;
-		/**
-		 * @brief Jump to the next order if possible
-		 * @return @c false if the end of the current song is reached
-		 */
-		virtual bool jumpNextOrder() = 0;
-		/**
-		 * @brief Jump to the previous order if possible
-		 * @return @c false if the current order is already the first one
-		 */
-		virtual bool jumpPrevOrder() = 0;
-		/**
-		 * @brief Get the current playback position in sample frames
-		 * @return m_playedFrames
-		 */
-		size_t position() const;
-		/**
-		 * @brief Get the number of songs in this module
-		 * @return Number of songs
-		 */
-		uint16_t songCount() const;
-		/**
-		 * @brief Get the currently playing song index
-		 * @return m_currentSongIndex
-		 */
-		uint16_t currentSongIndex() const;
-		/**
-		 * @brief Get the channel cell string
-		 * @param[in] idx Channel index
-		 * @return String representation of the channel's cell
-		 * @see GenChannel::getCellString
-		 */
-		virtual std::string channelCellString(size_t idx) = 0;
-		/**
-		 * @brief Get the number of actually used channels
-		 * @return Number of actually used channels
-		 */
-		virtual uint8_t channelCount() const = 0;
-		/**
-		 * @copydoc IAudioSource::getAudioData()
-		 * @note The buffer will contain full ticks, so the buffer will generally
-		 * have a different size as requested with @a requestedFrames.
-		 */
-		virtual size_t getAudioData(AudioFrameBuffer& buffer, size_t requestedFrames);
-		/**
-		 * @copydoc IAudioSource::preferredBufferSize()
-		 * @note This should generally return tickBufferLength()
-		 */
-		virtual size_t preferredBufferSize() const;
-		/**
-		 * @brief Set the global volume
-		 * @param[in] v The new global volume
-		 */
-		virtual void setGlobalVolume(int16_t v);
-		/**
-		 * @brief Get the current global volume
-		 * @return The global volume
-		 */
-		int16_t globalVolume() const;
-	protected:
-		virtual IArchive& serialize(IArchive* data);
-		/**
-		 * @brief Removes empty songs from the song list
-		 */
-		void removeEmptySongs();
-		/**
-		 * @brief Set the song's position in sample frames
-		 * @param[in] p The new position
-		 */
-		void setPosition(size_t p);
-		/**
-		 * @brief Adds an order to m_orders
-		 * @param[in] o The new order
-		 */
-		void addOrder(const GenOrder::Ptr& o);
-		/**
-		 * @brief Get the filename
-		 * @return m_filename
-		 */
-		std::string filename() const;
-		/**
-		 * @brief Set the filename
-		 * @param[in] f The new filename
-		 */
-		void setFilename(const std::string& f);
-		/**
-		 * @brief Set the tracker info
-		 * @param[in] t The new tracker info
-		 */
-		void setTrackerInfo(const std::string& t);
-		inline void setTrackerInfo(const boost::format& fmt) {
-			setTrackerInfo(fmt.str());
-		}
-		/**
-		 * @brief Get an order pointer
-		 * @param[in] idx Index of requested order
-		 * @return Order pointer
-		 */
-		GenOrder::Ptr orderAt(size_t idx) const;
-		/**
-		 * @brief Set the current pattern index
-		 * @param[in] i The new pattern index
-		 */
-		void setPatternIndex(size_t i);
-		/**
-		 * @brief Get the number of orders
-		 * @return Number of orders
-		 */
-		size_t orderCount() const;
-		/**
-		 * @brief Set the current song index
-		 * @param[in] t The new song index
-		 */
-		void setCurrentSongIndex(uint16_t t);
-		/**
-		 * @brief Set the module's title
-		 * @param[in] t The new title
-		 */
-		void setTitle(const std::string& t);
-		/**
-		 * @brief Get the state iterator for a song
-		 * @param[in] idx Song index
-		 * @return Reference to the state iterator
-		 */
-		StateIterator& multiSongAt(size_t idx);
-		/**
-		 * @brief Get the length of a song
-		 * @param[in] idx Song index
-		 * @return Reference to the length in sample frames
-		 */
-		size_t& multiSongLengthAt(size_t idx);
-		/**
-		 * @brief Add a multi-song state iterator
-		 * @param[in] t The new state iterator
-		 */
-		void addMultiSong(const StateIterator& t);
-		/**
-		 * @brief Get the maximum repeat count
-		 * @return The maximum repeat count
-		 */
-		uint16_t maxRepeat() const;
-		/**
-		 * @brief Set the order index
-		 * @param[in] o The new order index
-		 */
-		void setOrder(size_t o);
-		/**
-		 * @brief Set the current row index
-		 * @param[in] r The new row index
-		 */
-		void setRow(int16_t r);
-		/**
-		 * @brief Increase the current tick index
-		 * @pre m_playbackInfo.speed > 0
-		 * @post m_tick < m_playbackInfo.speed
-		 */
-		void nextTick();
-	public:
-		/**
-		 * @brief Sets the current tempo
-		 * @param[in] t The new tempo
-		 */
-		void setTempo(uint8_t t);
-		/**
-		 * @brief Get the current tempo
-		 * @return The current tempo
-		 */
-		int16_t tempo() const;
-		/**
-		 * @brief Sets the current speed
-		 * @param[in] s The new speed
-		 */
-		void setSpeed(uint8_t s);
-		/**
-		 * @brief Get the current speed
-		 * @return The current speed
-		 */
-		int16_t speed() const;
-		/**
-		 * @brief Get the current tick index
-		 * @return The current tick index
-		 */
-		uint8_t tick() const;
-		/**
-		 * @brief Get the current row index
-		 * @return The current row index
-		 */
-		int16_t row() const;
-		/**
-		 * @brief Get the current order index
-		 * @return The current order index
-		 */
-		size_t order() const;
-		/**
-		 * @brief Get the current pattern index
-		 * @return Current pattern index
-		 */
-		size_t patternIndex() const;
-	protected:
-		/**
-		 * @brief Get the logger
-		 * @return Logger with name "module"
-		 */
-		static light4cxx::Logger::Ptr logger();
+class GenModule : public ISerializable, public IAudioSource
+{
+	DISABLE_COPY( GenModule )
+	GenModule() = delete;
+public:
+	typedef std::shared_ptr<GenModule> Ptr; //!< @brief Class pointer
+private:
+	std::string m_filename; //!< @brief Filename of the loaded module, empty if none loaded
+	std::string m_title; //!< @brief Title of the module
+	std::string m_trackerInfo; //!< @brief Tracker information (Name and Version)
+	GenOrder::Vector m_orders; //!< @brief Order list @note @b Not @b initialized @b here!
+	uint16_t m_maxRepeat; //!< @brief Maximum module loops if module patterns are played multiple times
+	size_t m_playedFrames; //!< @brief Played Sample frames
+	std::vector<StateIterator> m_songs; //!< @brief Per-song infos
+	std::vector<size_t> m_songLengths; //!< @brief Per-song lengths in sample frames
+	uint16_t m_currentSongIndex; //!< @brief The current song index
+	int16_t m_tick; //!< @brief Current tick index
+	int16_t m_globalVolume; //!< @brief Current global volume
+	int16_t m_speed; //!< @brief Current speed
+	int16_t m_tempo; //!< @brief Current tempo
+	size_t m_order; //!< @brief Current Order
+	size_t m_pattern; //!< @brief Current pattern
+	int16_t m_row; //!< @brief Current row
+public:
+	/**
+	 * @brief The constructor
+	 * @param[in] maxRpt Maximum repeat count for repeating modules
+	 * @pre @c maxRpt>0
+	 */
+	GenModule( uint8_t maxRpt );
+	/**
+	 * @brief The destructor
+	 */
+	virtual ~GenModule();
+	/**
+	 * @brief Returns the filename without the path
+	 * @return Filename, or empty if no module loaded
+	 */
+	std::string filename();
+	/**
+	 * @brief Returns the title
+	 * @return The title of the module
+	 */
+	std::string title() const;
+	/**
+	 * @brief Returns the title without left and right whitespaces
+	 * @return The trimmed title of the module
+	 */
+	std::string trimmedTitle() const;
+	/**
+	 * @brief Get the frame count of a tick
+	 * @return Sample frames per tick
+	 * @pre m_playbackInfo.tempo != 0
+	 */
+	uint16_t tickBufferLength() const;
+	/**
+	 * @brief Get a tick
+	 * @param[out] buf Reference to the destination buffer
+	 * @note Time-critical
+	 */
+	virtual void buildTick( AudioFrameBuffer& buf ) = 0;
+	/**
+	 * @brief Get a tick without mixing for length calculation
+	 * @param[out] bufLen Number of sample frames in the current tick. If 0 after the call, the end was reached.
+	 */
+	virtual void simulateTick( size_t& bufLen ) = 0;
+	/**
+	 * @brief Map an order number to a pattern
+	 * @param[in] order The order to map
+	 * @return Pattern number for @a order
+	 */
+	virtual GenOrder::Ptr mapOrder( int16_t order ) = 0;
+	/**
+	 * @brief Returns the channel status string for a channel
+	 * @param[in] idx Requested channel
+	 * @return Status string
+	 */
+	virtual std::string channelStatus( size_t idx ) = 0;
+	/**
+	 * @brief Get playback time in seconds
+	 * @return Playback time in seconds
+	 */
+	uint32_t timeElapsed() const;
+	/**
+	 * @brief Returns the current song's length
+	 * @return The current song's length
+	 * @see timeElapsed()
+	 */
+	size_t length() const;
+	/**
+	 * @brief Get information about the tracker
+	 * @return Tracker type and version, i.e. "ScreamTracker v3.20"
+	 */
+	std::string trackerInfo() const;
+	/**
+	 * @brief Returns @c true if this module contains multiple songs
+	 * @return @c true if this is a multi-song
+	 */
+	bool isMultiSong() const;
+	/**
+	 * @brief Jump to the next song if possible
+	 * @return @c false if there are no songs left
+	 */
+	virtual bool jumpNextSong() = 0;
+	/**
+	 * @brief Jump to the previous song if possible
+	 * @return @c false if this operation fails
+	 */
+	virtual bool jumpPrevSong() = 0;
+	/**
+	 * @brief Jump to the next order if possible
+	 * @return @c false if the end of the current song is reached
+	 */
+	virtual bool jumpNextOrder() = 0;
+	/**
+	 * @brief Jump to the previous order if possible
+	 * @return @c false if the current order is already the first one
+	 */
+	virtual bool jumpPrevOrder() = 0;
+	/**
+	 * @brief Get the current playback position in sample frames
+	 * @return m_playedFrames
+	 */
+	size_t position() const;
+	/**
+	 * @brief Get the number of songs in this module
+	 * @return Number of songs
+	 */
+	uint16_t songCount() const;
+	/**
+	 * @brief Get the currently playing song index
+	 * @return m_currentSongIndex
+	 */
+	uint16_t currentSongIndex() const;
+	/**
+	 * @brief Get the channel cell string
+	 * @param[in] idx Channel index
+	 * @return String representation of the channel's cell
+	 * @see GenChannel::getCellString
+	 */
+	virtual std::string channelCellString( size_t idx ) = 0;
+	/**
+	 * @brief Get the number of actually used channels
+	 * @return Number of actually used channels
+	 */
+	virtual uint8_t channelCount() const = 0;
+	/**
+	 * @copydoc IAudioSource::getAudioData()
+	 * @note The buffer will contain full ticks, so the buffer will generally
+	 * have a different size as requested with @a requestedFrames.
+	 */
+	virtual size_t getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames );
+	/**
+	 * @copydoc IAudioSource::preferredBufferSize()
+	 * @note This should generally return tickBufferLength()
+	 */
+	virtual size_t preferredBufferSize() const;
+	/**
+	 * @brief Set the global volume
+	 * @param[in] v The new global volume
+	 */
+	virtual void setGlobalVolume( int16_t v );
+	/**
+	 * @brief Get the current global volume
+	 * @return The global volume
+	 */
+	int16_t globalVolume() const;
+protected:
+	virtual IArchive& serialize( IArchive* data );
+	/**
+	 * @brief Removes empty songs from the song list
+	 */
+	void removeEmptySongs();
+	/**
+	 * @brief Set the song's position in sample frames
+	 * @param[in] p The new position
+	 */
+	void setPosition( size_t p );
+	/**
+	 * @brief Adds an order to m_orders
+	 * @param[in] o The new order
+	 */
+	void addOrder( const GenOrder::Ptr& o );
+	/**
+	 * @brief Get the filename
+	 * @return m_filename
+	 */
+	std::string filename() const;
+	/**
+	 * @brief Set the filename
+	 * @param[in] f The new filename
+	 */
+	void setFilename( const std::string& f );
+	/**
+	 * @brief Set the tracker info
+	 * @param[in] t The new tracker info
+	 */
+	void setTrackerInfo( const std::string& t );
+	inline void setTrackerInfo( const boost::format& fmt ) {
+		setTrackerInfo( fmt.str() );
+	}
+	/**
+	 * @brief Get an order pointer
+	 * @param[in] idx Index of requested order
+	 * @return Order pointer
+	 */
+	GenOrder::Ptr orderAt( size_t idx ) const;
+	/**
+	 * @brief Set the current pattern index
+	 * @param[in] i The new pattern index
+	 */
+	void setPatternIndex( size_t i );
+	/**
+	 * @brief Get the number of orders
+	 * @return Number of orders
+	 */
+	size_t orderCount() const;
+	/**
+	 * @brief Set the current song index
+	 * @param[in] t The new song index
+	 */
+	void setCurrentSongIndex( uint16_t t );
+	/**
+	 * @brief Set the module's title
+	 * @param[in] t The new title
+	 */
+	void setTitle( const std::string& t );
+	/**
+	 * @brief Get the state iterator for a song
+	 * @param[in] idx Song index
+	 * @return Reference to the state iterator
+	 */
+	StateIterator& multiSongAt( size_t idx );
+	/**
+	 * @brief Get the length of a song
+	 * @param[in] idx Song index
+	 * @return Reference to the length in sample frames
+	 */
+	size_t& multiSongLengthAt( size_t idx );
+	/**
+	 * @brief Add a multi-song state iterator
+	 * @param[in] t The new state iterator
+	 */
+	void addMultiSong( const StateIterator& t );
+	/**
+	 * @brief Get the maximum repeat count
+	 * @return The maximum repeat count
+	 */
+	uint16_t maxRepeat() const;
+	/**
+	 * @brief Set the order index
+	 * @param[in] o The new order index
+	 */
+	void setOrder( size_t o );
+	/**
+	 * @brief Set the current row index
+	 * @param[in] r The new row index
+	 */
+	void setRow( int16_t r );
+	/**
+	 * @brief Increase the current tick index
+	 * @pre m_playbackInfo.speed > 0
+	 * @post m_tick < m_playbackInfo.speed
+	 */
+	void nextTick();
+public:
+	/**
+	 * @brief Sets the current tempo
+	 * @param[in] t The new tempo
+	 */
+	void setTempo( uint8_t t );
+	/**
+	 * @brief Get the current tempo
+	 * @return The current tempo
+	 */
+	int16_t tempo() const;
+	/**
+	 * @brief Sets the current speed
+	 * @param[in] s The new speed
+	 */
+	void setSpeed( uint8_t s );
+	/**
+	 * @brief Get the current speed
+	 * @return The current speed
+	 */
+	int16_t speed() const;
+	/**
+	 * @brief Get the current tick index
+	 * @return The current tick index
+	 */
+	uint8_t tick() const;
+	/**
+	 * @brief Get the current row index
+	 * @return The current row index
+	 */
+	int16_t row() const;
+	/**
+	 * @brief Get the current order index
+	 * @return The current order index
+	 */
+	size_t order() const;
+	/**
+	 * @brief Get the current pattern index
+	 * @return Current pattern index
+	 */
+	size_t patternIndex() const;
+protected:
+	/**
+	 * @brief Get the logger
+	 * @return Logger with name "module"
+	 */
+	static light4cxx::Logger::Ptr logger();
 };
 
 } // namespace ppp

@@ -33,7 +33,7 @@
  */
 class SDLTimer : public ITimer
 {
-	DISABLE_COPY(SDLTimer)
+	DISABLE_COPY( SDLTimer )
 private:
 	/**
 	 * @brief Timer interval for this timer
@@ -51,15 +51,15 @@ private:
 	 * @details
 	 * Calls ITimer::onTimer()
 	 */
-	static uint32_t callback(uint32_t interval, void* userdata);
+	static uint32_t callback( uint32_t interval, void* userdata );
 public:
 	/**
 	 * @brief Constructor
 	 * @param[in] interval Desired timer interval in milliseconds
 	 */
-	SDLTimer(uint32_t interval);
-    virtual ~SDLTimer();
-    virtual uint32_t interval() const;
+	SDLTimer( uint32_t interval );
+	virtual ~SDLTimer();
+	virtual uint32_t interval() const;
 };
 
 /**

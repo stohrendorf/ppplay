@@ -24,13 +24,15 @@
  * @{
  */
 
-namespace light4cxx {
+namespace light4cxx
+{
 
 /**
  * @brief Logging levels
  * @see light4cxx::Logger
  */
-enum class Level {
+enum class Level
+{
 	All, //!< @brief Everything will be logged
 	Trace, //!< @brief Trace messages and less verbose ones will be logged
 	Debug, //!< @brief Debug messages and less verbose ones will be logged

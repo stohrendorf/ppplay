@@ -32,36 +32,38 @@
 #include <string>
 #include <memory>
 
-namespace ppp {
+namespace ppp
+{
 
 /**
  * @interface IPatternCell
  * @ingroup GenMod
  * @brief General interface for pattern note cells
  */
-class IPatternCell : public ISerializable {
-	public:
-		typedef std::shared_ptr<IPatternCell> Ptr; //!< @brief Class pointer
-		typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
-		/**
-		 * @brief Destructor
-		 */
-		virtual ~IPatternCell();
-		/**
-		 * @brief Clears the cell's data
-		 */
-		virtual void clear() = 0;
-		/**
-		 * @brief Get the tracker-like string representation of this cell
-		 * @return Tracker-like string
-		 */
-		virtual std::string trackerString() const = 0;
-	protected:
-		/**
-		 * @brief Get the logger
-		 * @return Logger with name "cell"
-		 */
-		static light4cxx::Logger::Ptr logger();
+class IPatternCell : public ISerializable
+{
+public:
+	typedef std::shared_ptr<IPatternCell> Ptr; //!< @brief Class pointer
+	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
+	/**
+	 * @brief Destructor
+	 */
+	virtual ~IPatternCell();
+	/**
+	 * @brief Clears the cell's data
+	 */
+	virtual void clear() = 0;
+	/**
+	 * @brief Get the tracker-like string representation of this cell
+	 * @return Tracker-like string
+	 */
+	virtual std::string trackerString() const = 0;
+protected:
+	/**
+	 * @brief Get the logger
+	 * @return Logger with name "cell"
+	 */
+	static light4cxx::Logger::Ptr logger();
 };
 
 } // namespace ppp

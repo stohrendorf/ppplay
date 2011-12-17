@@ -36,116 +36,118 @@
  * @brief Audio source for IAudioOutput
  */
 
-class IAudioSource {
+class IAudioSource
+{
+private:
+	//! @brief @c true when this source was successfully inited
+	bool m_initialized;
+	//! @brief Frequency of this source
+	uint32_t m_frequency;
+	//! @brief Mutex for locking the source
+	boost::recursive_mutex m_lockMutex;
+protected:
+	/**
+	 * @brief Sets m_initialized to @c false and m_frequency to @c 0
+	 * @return @c false
+	 */
+	bool fail();
+public:
+	/**
+	 * @class LockGuard
+	 * @brief Lock guard helper
+	 * @details
+	 * Locks an IAudioSource on construction and automatically
+	 * unlocks it on destruction
+	 */
+	class LockGuard
+	{
+		DISABLE_COPY( LockGuard )
 	private:
-		//! @brief @c true when this source was successfully inited
-		bool m_initialized;
-		//! @brief Frequency of this source
-		uint32_t m_frequency;
-		//! @brief Mutex for locking the source
-		boost::recursive_mutex m_lockMutex;
-	protected:
-		/**
-		 * @brief Sets m_initialized to @c false and m_frequency to @c 0
-		 * @return @c false
-		 */
-		bool fail();
+		//! @brief STL mutex lock guard
+		boost::lock_guard<boost::recursive_mutex> m_guard;
 	public:
 		/**
-		 * @class LockGuard
-		 * @brief Lock guard helper
-		 * @details
-		 * Locks an IAudioSource on construction and automatically
-		 * unlocks it on destruction
+		 * @brief Constructor
+		 * @param[in] src IAudioSource to lock
 		 */
-		class LockGuard {
-			DISABLE_COPY(LockGuard)
-		private:
-			//! @brief STL mutex lock guard
-			boost::lock_guard<boost::recursive_mutex> m_guard;
-		public:
-			/**
-			 * @brief Constructor
-			 * @param[in] src IAudioSource to lock
-			 */
-			LockGuard(IAudioSource* src) : m_guard(src->m_lockMutex) { }
-		};
-		//! @brief Class pointer
-		typedef std::shared_ptr<IAudioSource> Ptr;
-		//! @brief Weak class pointer
-		typedef std::weak_ptr<IAudioSource> WeakPtr;
-		//! @brief Constructor
-		IAudioSource();
-		//! @brief Destructor
-		virtual ~IAudioSource();
-		/**
-		 * @brief Get audio data from the source
-		 * @param[out] buffer The buffer containing the retrieved data
-		 * @param[in] requestedFrames Number of requested frames
-		 * @returns The number of frames actually returned - should be equal to @c buffer->size()
-		 * @note If this function returns 0, the audio output device should stop playback
-		 * @see preferredBufferSize()
-		 */
-		virtual size_t getAudioData(AudioFrameBuffer& buffer, size_t requestedFrames) = 0;
-		/**
-		 * @brief Get the preferred buffer size to prevent unnecessary calls to getAudioData()
-		 * @retval 0 if no size is specified
-		 */
-		virtual size_t preferredBufferSize() const;
-		/**
-		 * @brief Initialized the source with given frequency
-		 * @param[in] frequency Requested frequency
-		 * @return @c true on success
-		 * @note This method has a default implementation that returns @c true. Make sure to call it in derived classes to set m_frequency.
-		 */
-		virtual bool initialize(uint32_t frequency) = 0;
-		/**
-		 * @brief Check if this source was successfully initialized
-		 * @return m_initialized
-		 */
-		bool initialized() const;
-		/**
-		 * @brief Get this source's frequency
-		 * @return m_frequency
-		 */
-		uint32_t frequency() const;
-		/**
-		 * @brief Waits until this IAudioSource is unlocked and then locks it
-		 */
-		void waitLock();
-		/**
-		 * @brief Tries to lock this IAudioSource
-		 * @return @c true if a lock could be acquired
-		 */
-		bool tryLock();
-		/**
-		 * @brief Unlocks this IAudioSource
-		 */
-		void unlock();
-		/**
-		 * @brief Check if this IAudioSource is locked
-		 * @return @c true if it is locked
-		 * @details
-		 * Internally calls tryLock(). If a lock could be acquired, it unlocks again
-		 * and returns @c false, else it returns @c true.
-		 */
-		bool isLocked();
-		/**
-		 * @brief Get the left channel's volume
-		 * @return Left channel's volume, default is 0
-		 */
-		virtual uint16_t volumeLeft() const ;
-		/**
-		 * @brief Get the right channel's volume
-		 * @return Right channel's volume, default is 0
-		 */
-		virtual uint16_t volumeRight() const;
-	protected:
-		/**
-		 * @brief Get the logger
-		 * @return Logger with name "audio.source"
-		 */
-		static light4cxx::Logger::Ptr logger();
+		LockGuard( IAudioSource* src ) : m_guard( src->m_lockMutex ) { }
+	};
+	//! @brief Class pointer
+	typedef std::shared_ptr<IAudioSource> Ptr;
+	//! @brief Weak class pointer
+	typedef std::weak_ptr<IAudioSource> WeakPtr;
+	//! @brief Constructor
+	IAudioSource();
+	//! @brief Destructor
+	virtual ~IAudioSource();
+	/**
+	 * @brief Get audio data from the source
+	 * @param[out] buffer The buffer containing the retrieved data
+	 * @param[in] requestedFrames Number of requested frames
+	 * @returns The number of frames actually returned - should be equal to @c buffer->size()
+	 * @note If this function returns 0, the audio output device should stop playback
+	 * @see preferredBufferSize()
+	 */
+	virtual size_t getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames ) = 0;
+	/**
+	 * @brief Get the preferred buffer size to prevent unnecessary calls to getAudioData()
+	 * @retval 0 if no size is specified
+	 */
+	virtual size_t preferredBufferSize() const;
+	/**
+	 * @brief Initialized the source with given frequency
+	 * @param[in] frequency Requested frequency
+	 * @return @c true on success
+	 * @note This method has a default implementation that returns @c true. Make sure to call it in derived classes to set m_frequency.
+	 */
+	virtual bool initialize( uint32_t frequency ) = 0;
+	/**
+	 * @brief Check if this source was successfully initialized
+	 * @return m_initialized
+	 */
+	bool initialized() const;
+	/**
+	 * @brief Get this source's frequency
+	 * @return m_frequency
+	 */
+	uint32_t frequency() const;
+	/**
+	 * @brief Waits until this IAudioSource is unlocked and then locks it
+	 */
+	void waitLock();
+	/**
+	 * @brief Tries to lock this IAudioSource
+	 * @return @c true if a lock could be acquired
+	 */
+	bool tryLock();
+	/**
+	 * @brief Unlocks this IAudioSource
+	 */
+	void unlock();
+	/**
+	 * @brief Check if this IAudioSource is locked
+	 * @return @c true if it is locked
+	 * @details
+	 * Internally calls tryLock(). If a lock could be acquired, it unlocks again
+	 * and returns @c false, else it returns @c true.
+	 */
+	bool isLocked();
+	/**
+	 * @brief Get the left channel's volume
+	 * @return Left channel's volume, default is 0
+	 */
+	virtual uint16_t volumeLeft() const ;
+	/**
+	 * @brief Get the right channel's volume
+	 * @return Right channel's volume, default is 0
+	 */
+	virtual uint16_t volumeRight() const;
+protected:
+	/**
+	 * @brief Get the logger
+	 * @return Logger with name "audio.source"
+	 */
+	static light4cxx::Logger::Ptr logger();
 };
 
 /**

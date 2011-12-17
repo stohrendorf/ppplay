@@ -23,13 +23,14 @@
  * @{
  */
 
-namespace ppp {
+namespace ppp
+{
 
 IPatternCell::~IPatternCell() = default;
 
 light4cxx::Logger::Ptr IPatternCell::logger()
 {
-	return light4cxx::Logger::get("cell");
+	return light4cxx::Logger::get( "cell" );
 }
 
 }
