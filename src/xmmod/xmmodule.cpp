@@ -183,11 +183,12 @@ void XmModule::buildTick( AudioFrameBuffer& buffer )
 		chan->mixTick( mixerBuffer );
 	}
 	buffer->resize( mixerBuffer->size() );
-	MixerSample* mixerBufferPtr = &mixerBuffer->front().left;
-	BasicSample* bufPtr = &buffer->front().left;
+	MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
+	BasicSampleFrame* bufPtr = &buffer->front();
 	for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
-		*( bufPtr++ ) = clipSample( *( mixerBufferPtr++ ) >> 2 );
-		*( bufPtr++ ) = clipSample( *( mixerBufferPtr++ ) >> 2 );
+			*bufPtr = mixerBufferPtr->rightShiftClip(2);
+			bufPtr++;
+			mixerBufferPtr++;
 	}
 	nextTick();
 	if( !adjustPosition( false ) ) {

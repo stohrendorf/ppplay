@@ -36,7 +36,8 @@ GenModule::GenModule( uint8_t maxRpt ) :
 	m_filename(), m_title(), m_trackerInfo(), m_orders(), m_maxRepeat( maxRpt ),
 	m_playedFrames( 0 ), m_songs(), m_songLengths(),
 	m_currentSongIndex( 0 ), m_tick( 0 ), m_globalVolume( 0x40 ),
-	m_speed( 0 ), m_tempo( 0 ), m_order( 0 ), m_pattern( 0 ), m_row( 0 )
+	m_speed( 0 ), m_tempo( 0 ), m_order( 0 ), m_pattern( 0 ), m_row( 0 ),
+	m_initialState(new MemArchive())
 {
 	BOOST_ASSERT( maxRpt != 0 );
 }
@@ -55,7 +56,7 @@ IArchive& GenModule::serialize( IArchive* data )
 	% m_pattern
 	% m_row
 	;
-for( const GenOrder::Ptr & order : m_orders ) {
+	for( const GenOrder::Ptr & order : m_orders ) {
 		data->archive( order.get() );
 	}
 	return *data;
@@ -303,6 +304,16 @@ size_t GenModule::order() const
 int16_t GenModule::row() const
 {
 	return m_row;
+}
+
+void GenModule::loadInitialState()
+{
+	m_initialState->archive( this ).finishLoad();
+}
+
+void GenModule::saveInitialState()
+{
+	m_initialState->archive( this ).finishSave();
 }
 
 }

@@ -224,11 +224,12 @@ void ModModule::buildTick( AudioFrameBuffer& buf )
 			chan->mixTick( mixerBuffer );
 		}
 		buf->resize( mixerBuffer->size() );
-		MixerSample* mixerBufferPtr = &mixerBuffer->front().left;
-		BasicSample* bufPtr = &buf->front().left;
+		MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
+		BasicSampleFrame* bufPtr = &buf->front();
 		for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
-			*( bufPtr++ ) = clipSample( *( mixerBufferPtr++ ) >> 2 );
-			*( bufPtr++ ) = clipSample( *( mixerBufferPtr++ ) >> 2 );
+			*bufPtr = mixerBufferPtr->rightShiftClip(2);
+			bufPtr++;
+			mixerBufferPtr++;
 		}
 		if( !adjustPosition( true, false ) ) {
 			logger()->info( L4CXX_LOCATION, "Song end reached: adjustPosition() failed" );

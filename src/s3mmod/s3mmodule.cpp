@@ -300,6 +300,7 @@ bool S3mModule::load( const std::string& fn )
 	catch( ... ) {
 		BOOST_THROW_EXCEPTION( std::runtime_error( "Unknown exception" ) );
 	}
+	saveInitialState();
 }
 
 bool S3mModule::initialize( uint32_t frq )
@@ -531,13 +532,12 @@ bool S3mModule::adjustPosition( bool increaseTick, bool doStore )
 void S3mModule::buildTick( AudioFrameBuffer& buf )
 {
 	try {
-		//PPP_TEST(!buf);
-		if( !buf )
+		if( !buf ) {
 			buf.reset( new AudioFrameBuffer::element_type );
-		if( tick() == 0 )
+		}
+		if( tick() == 0 ) {
 			checkGlobalFx();
-		//buf->resize(getTickBufLen());
-		//buf->clear();
+		}
 		if( !adjustPosition( false, false ) ) {
 			logger()->info( L4CXX_LOCATION, "Song end reached: adjustPosition() failed" );
 			buf.reset();
@@ -554,7 +554,7 @@ void S3mModule::buildTick( AudioFrameBuffer& buf )
 		if( !currPat )
 			return;
 		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength(), {0, 0} ) );
-		for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+		for( uint_fast8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			S3mChannel::Ptr chan = m_channels.at( currTrack );
 			BOOST_ASSERT( chan.use_count() > 0 );
 			S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
@@ -562,20 +562,18 @@ void S3mModule::buildTick( AudioFrameBuffer& buf )
 			chan->mixTick( mixerBuffer );
 		}
 		buf->resize( mixerBuffer->size() );
-		MixerSample* mixerBufferPtr = &mixerBuffer->front().left;
-		BasicSample* bufPtr = &buf->front().left;
+		MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
+		BasicSampleFrame* bufPtr = &buf->front();
 		for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
-			*( bufPtr++ ) = clipSample( *( mixerBufferPtr++ ) >> 2 );
-			*( bufPtr++ ) = clipSample( *( mixerBufferPtr++ ) >> 2 );
+			*bufPtr = mixerBufferPtr->rightShiftClip(2);
+			bufPtr++;
+			mixerBufferPtr++;
 		}
 		adjustPosition( true, false );
 		setPosition( position() + mixerBuffer->size() );
 	}
-	catch( boost::exception& e ) {
-		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
-	}
 	catch( ... ) {
-		BOOST_THROW_EXCEPTION( std::runtime_error( "Unknown exception" ) );
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
 	}
 }
 

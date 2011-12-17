@@ -60,6 +60,7 @@ private:
 	size_t m_order; //!< @brief Current Order
 	size_t m_pattern; //!< @brief Current pattern
 	int16_t m_row; //!< @brief Current row
+	IArchive::Ptr m_initialState; //!< @brief Initial module state
 public:
 	/**
 	 * @brief The constructor
@@ -343,6 +344,14 @@ public:
 	 * @return Current pattern index
 	 */
 	size_t patternIndex() const;
+	/**
+	 * @brief Saves the initial state
+	 */
+	void saveInitialState();
+	/**
+	 * @brief Restores the initial state
+	 */
+	void loadInitialState();
 protected:
 	/**
 	 * @brief Get the logger

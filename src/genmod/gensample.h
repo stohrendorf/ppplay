@@ -26,6 +26,7 @@
 
 #include "genbase.h"
 #include "output/audiotypes.h"
+#include "light4cxx/logger.h"
 
 #include <limits>
 

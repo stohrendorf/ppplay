@@ -24,6 +24,8 @@
  * @{
  */
 
+#include "stuff/utils.h"
+
 #include <queue>
 #include <cstdint>
 #include <memory>
@@ -81,6 +83,12 @@ struct MixerSampleFrame {
 		left += rhs.left;
 		right += rhs.right;
 		return *this;
+	}
+	inline BasicSampleFrame rightShiftClip( uint8_t shift ) const {
+		BasicSampleFrame result;
+		result.left = ppp::clip( left >> shift, -32768, 32767 );
+		result.right = ppp::clip( right >> shift, -32768, 32767 );
+		return result;
 	}
 };
 #pragma pack(pop)
