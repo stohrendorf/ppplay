@@ -46,3 +46,4 @@ std::string FBinStream::filename() const {
 size_t FBinStream::size() const {
 	return m_size;
 }
+

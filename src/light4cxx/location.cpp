@@ -246,3 +246,4 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
 }
 
 }
+

@@ -17,7 +17,10 @@ if(IS_BIG_ENDIAN)
 	message(FATAL_ERROR "This is a big-endian machine. Big Endian is not supported, sorry.")
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCXX)
+string(FIND 'clang' ${CMAKE_CXX_COMPILER} COMPILER_IS_CLANG)
+if(COMPILER_IS_CLANG)
+	message(STATUS "Detected clang compiler")
+elseif(CMAKE_COMPILER_IS_GNUCXX)
 	execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE _gcc_version)
 	string(STRIP ${_gcc_version} _gcc_version)
 	message(STATUS "Your GCC Version is ${_gcc_version}, required is 4.6.0")
@@ -77,6 +80,10 @@ INCLUDE(CPack)
 # setting compiler flags
 #########
 set(CMAKE_CXX_FLAGS "-Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtual -pedantic -std=c++0x")
+if(COMPILER_IS_CLANG)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+endif()
+
 option(WITH_PROFILING "Whether to enable profiling (-pg)" OFF)
 if(WITH_PROFILING)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")

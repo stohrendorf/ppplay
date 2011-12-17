@@ -62,7 +62,7 @@ class BinStream {
 		 * @param[in] count Count of data elements (NOT the byte size)
 		 * @return Reference to *this for pipelining
 		 */
-		template<typename TR> BinStream& read(TR* data, size_t count = 1) __attribute__((nonnull(1)));
+		template<typename TR> BinStream& read(TR* data, size_t count = 1);
 		/**
 		 * @brief Write data to the stream
 		 * @tparam TW Data type
@@ -70,7 +70,7 @@ class BinStream {
 		 * @param[in] count Count of data elements (NOT the byte size)
 		 * @return Reference to *this for pipelining
 		 */
-		template<typename TW> BinStream& write(const TW* data, size_t count = 1) __attribute__((nonnull(1)));
+		template<typename TW> BinStream& write(const TW* data, size_t count = 1);
 		/**
 		 * @brief Get the failbit of the IO Stream
 		 * @return @c true on error

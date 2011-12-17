@@ -47,3 +47,4 @@ void IArchive::finishLoad() {
 	BOOST_ASSERT(m_loading);
 	m_stream->seek(0);
 }
+
