@@ -83,7 +83,7 @@ bool S3mSample::load( BinStream& str, const size_t pos, bool imagoLoopEnd )
 			return true;
 		}
 		if( smpHdr.pack != 0 ) {
-			logger()->error( L4CXX_LOCATION, "Packed sample, not supported." );
+			logger()->error( L4CXX_LOCATION, "DP30ADPCM packed sample, not supported." );
 			return false;
 		}
 		if( smpHdr.type != 1 ) {
