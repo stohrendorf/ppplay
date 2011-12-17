@@ -494,7 +494,7 @@ void S3mChannel::update( const S3mCell::Ptr& cell, bool patDelay )
 	updateStatus();
 }
 
-void S3mChannel::mixTick( MixerFrameBuffer& mixBuffer )
+void S3mChannel::mixTick( MixerFrameBuffer& mixBuffer, bool estimateLength )
 {
 	if( isDisabled() )
 		return;
@@ -516,15 +516,13 @@ void S3mChannel::mixTick( MixerFrameBuffer& mixBuffer )
 	}
 	if( !isActive() )
 		return;
-	//LOG_TEST_ERROR(!m_module || m_module->frequency() == 0);
-	//LOG_TEST_ERROR(mixBuffer->size() == 0);
 	if( m_module->frequency() * mixBuffer->size() == 0 ) {
 		setActive( false );
 		return;
 	}
 	m_bresen.reset( m_module->frequency(), FRQ_VALUE / m_realPeriod );
 	recalcVolume();
-	uint16_t currVol = m_realVolume; //clip( volume() + m_deltaVolume, 0, 0x40 ) * m_globalVol;
+	uint16_t currVol = m_realVolume;
 	S3mSample::Ptr currSmp = currentSample();
 	GenSample::PositionType pos = position();
 	uint8_t volL = 0x20, volR = 0x20;
@@ -534,20 +532,26 @@ void S3mChannel::mixTick( MixerFrameBuffer& mixBuffer )
 		volR = m_panning;
 	else if( m_panning == 0xa4 )
 		volR = 0xa4;
-for( MixerSampleFrame & frame : *mixBuffer ) {
-		BasicSampleFrame sampleVal = currSmp->sampleAt( pos );
-		if( m_panning != 0xa4 ) {
-			sampleVal.mulRShift( volL, volR, 5 );
+	if(!estimateLength) {
+		for( MixerSampleFrame & frame : *mixBuffer ) {
+			BasicSampleFrame sampleVal = currSmp->sampleAt( pos );
+			if( m_panning != 0xa4 ) {
+				sampleVal.mulRShift( volL, volR, 5 );
+			}
+			else {
+				sampleVal.right = -sampleVal.right;
+			}
+			sampleVal.mulRShift( currVol, 6 );
+			frame += sampleVal;
+			if( pos == GenSample::EndOfSample ) {
+				break;
+			}
+			m_bresen.next( pos );
 		}
-		else {
-			sampleVal.right = -sampleVal.right;
-		}
-		sampleVal.mulRShift( currVol, 6 );
-		frame += sampleVal;
-		if( pos == GenSample::EndOfSample ) {
-			break;
-		}
-		m_bresen.next( pos );
+	}
+	else {
+		m_bresen.fastNext( mixBuffer->size(), pos );
+		currentSample()->adjustPosition( pos );
 	}
 	if( pos != GenSample::EndOfSample ) {
 		currentSample()->adjustPosition( pos );
@@ -556,42 +560,6 @@ for( MixerSampleFrame & frame : *mixBuffer ) {
 	if( pos == GenSample::EndOfSample ) {
 		setActive( false );
 	}
-}
-
-void S3mChannel::simTick( size_t bufSize )
-{
-	if( isDisabled() )
-		return;
-	if( !isActive() || !currentSample() || m_basePeriod == 0 )
-		return setActive( false );
-	if( m_module->tick() == 0 && m_zeroVolCounter != -1 && isActive() ) {
-		if( m_currentVolume == 0 )
-			m_zeroVolCounter++;
-		else
-			m_zeroVolCounter = 0;
-		if( m_zeroVolCounter == 3 ) {
-			m_zeroVolCounter = 0;
-			setActive( false );
-			m_note = s3mEmptyNote;
-			return;
-		}
-	}
-	BOOST_ASSERT( m_module && m_module->frequency() != 0 );
-	BOOST_ASSERT( bufSize != 0 );
-	if( m_basePeriod == 0 ) {
-		setActive( false );
-		setPosition( 0 );
-		return;
-	}
-	if( !isActive() )
-		return;
-	m_bresen.reset( m_module->frequency(), FRQ_VALUE / m_realPeriod );
-	GenSample::PositionType pos = position(); // + (FRQ_VALUE / m_module->frequency() * bufSize / m_realPeriod);
-	m_bresen.fastNext( bufSize, pos );
-	currentSample()->adjustPosition( pos );
-	if( pos == GenSample::EndOfSample )
-		setActive( false );
-	setPosition( pos );
 }
 
 std::string S3mChannel::cellString()

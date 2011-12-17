@@ -265,28 +265,7 @@ IArchive& ModChannel::serialize( IArchive* data )
 	return data->archive( &m_bresen );
 }
 
-void ModChannel::simTick( size_t bufsize )
-{
-	if( !isActive() || !currentSample() || m_physPeriod == 0 ) {
-		return setActive( false );
-	}
-	BOOST_ASSERT( m_module && m_module->frequency() != 0 );
-	BOOST_ASSERT( bufsize != 0 );
-	if( m_physPeriod == 0 ) {
-		setActive( false );
-		setPosition( 0 );
-		return;
-	}
-	// TODO glissando
-	GenSample::PositionType pos = position() + ( FrequencyBase / m_module->frequency() * bufsize / ( m_physPeriod ) );
-	currentSample()->adjustPosition( pos );
-	if( pos == GenSample::EndOfSample ) {
-		setActive( false );
-	}
-	setPosition( pos );
-}
-
-void ModChannel::mixTick( MixerFrameBuffer& mixBuffer )
+void ModChannel::mixTick( MixerFrameBuffer& mixBuffer, bool estimateOnly )
 {
 	if( !isActive() || !currentSample() || m_physPeriod == 0 ) {
 		return setActive( false );
@@ -308,15 +287,21 @@ void ModChannel::mixTick( MixerFrameBuffer& mixBuffer )
 		setActive( false );
 		return;
 	}
-for( MixerSampleFrame & frame : *mixBuffer ) {
-		// TODO panning
-		BasicSampleFrame sample = currSmp->sampleAt( pos );
-		sample.mulRShift( m_physVolume, 6 );
-		frame += sample;
-		if( pos == GenSample::EndOfSample ) {
-			break;
+	if( !estimateOnly ) {
+		for( MixerSampleFrame & frame : *mixBuffer ) {
+			// TODO panning
+			BasicSampleFrame sample = currSmp->sampleAt( pos );
+			sample.mulRShift( m_physVolume, 6 );
+			frame += sample;
+			if( pos == GenSample::EndOfSample ) {
+				break;
+			}
+			m_bresen.next( pos );
 		}
-		m_bresen.next( pos );
+	}
+	else {
+		m_bresen.fastNext( mixBuffer->size(), pos );
+		currentSample()->adjustPosition( pos );
 	}
 	if( pos != GenSample::EndOfSample ) {
 		currentSample()->adjustPosition( pos );

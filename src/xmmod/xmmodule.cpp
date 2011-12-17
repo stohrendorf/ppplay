@@ -180,7 +180,7 @@ void XmModule::buildTick( AudioFrameBuffer& buffer )
 		BOOST_ASSERT( chan.use_count() > 0 );
 		XmCell::Ptr cell = currPat->cellAt( currTrack, row() );
 		chan->update( cell );
-		chan->mixTick( mixerBuffer );
+		chan->mixTick( mixerBuffer, false );
 	}
 	buffer->resize( mixerBuffer->size() );
 	MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
@@ -210,7 +210,9 @@ void XmModule::simulateTick( size_t& bufferLength )
 			BOOST_ASSERT( chan.use_count() > 0 );
 			XmCell::Ptr cell = currPat->cellAt( currTrack, row() );
 			chan->update( cell );
-			chan->simTick( bufferLength );
+			MixerFrameBuffer buf( new MixerFrameBuffer::element_type(bufferLength) );
+			chan->mixTick( buf, true );
+			bufferLength = buf->size();
 		}
 		nextTick();
 		if( !adjustPosition( true ) ) {

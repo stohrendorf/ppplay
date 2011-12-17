@@ -202,8 +202,7 @@ public:
 	XmChannel( XmModule* module );
 	virtual std::string noteName();
 	virtual std::string effectName() const;
-	virtual void mixTick( MixerFrameBuffer& mixBuffer );
-	virtual void simTick( size_t bufSize );
+	virtual void mixTick( MixerFrameBuffer& mixBuffer, bool estimateOnly );
 	virtual void updateStatus();
 	virtual std::string effectDescription() const;
 	virtual std::string cellString();

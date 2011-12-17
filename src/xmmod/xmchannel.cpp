@@ -659,7 +659,7 @@ std::string XmChannel::noteName()
 	return ( boost::format( "%s%d" ) % NoteNames.at( ofs % 12 ) % ( ofs / 12 ) ).str();
 }
 
-void XmChannel::mixTick( MixerFrameBuffer& mixBuffer )
+void XmChannel::mixTick( MixerFrameBuffer& mixBuffer, bool estimateOnly )
 {
 	if( !isActive() )
 		return;
@@ -674,35 +674,22 @@ void XmChannel::mixTick( MixerFrameBuffer& mixBuffer )
 	if( m_realPanning < 0x80 ) {
 		volRight = m_realPanning;
 	}
-for( MixerSampleFrame & frame : *mixBuffer ) {
-		BasicSampleFrame sampleVal = currSmp->sampleAt( pos );
-		sampleVal.mulRShift( volLeft, volRight, 7 );
-		sampleVal.mulRShift( m_realVolume, 6 );
-		frame += sampleVal;
-		if( pos == GenSample::EndOfSample ) {
-			break;
+	if( !estimateOnly ) {
+		for( MixerSampleFrame & frame : *mixBuffer ) {
+			BasicSampleFrame sampleVal = currSmp->sampleAt( pos );
+			sampleVal.mulRShift( volLeft, volRight, 7 );
+			sampleVal.mulRShift( m_realVolume, 6 );
+			frame += sampleVal;
+			if( pos == GenSample::EndOfSample ) {
+				break;
+			}
+			m_bres.next( pos );
 		}
-		m_bres.next( pos );
 	}
-	if( pos != GenSample::EndOfSample )
-		currentSample()->adjustPosition( pos );
-	setPosition( pos );
-	if( pos == GenSample::EndOfSample )
-		setActive( false );
-}
-
-void XmChannel::simTick( size_t bufSize )
-{
-	BOOST_ASSERT( m_module && m_module->initialized() && m_module->frequency() != 0 );
-	BOOST_ASSERT( bufSize != 0 );
-	if( !isActive() )
-		return;
-	m_bres.reset( m_module->frequency(), m_module->periodToFrequency( m_currentPeriod + m_autoVibDeltaPeriod ) );
-	XmSample::Ptr currSmp = currentSample();
-	GenSample::PositionType pos = position();
-	m_bres.fastNext( bufSize, pos );
-// 	pos += m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod) * bufSize / m_module->frequency();
-	currSmp->adjustPosition( pos );
+	else {
+		m_bres.fastNext( mixBuffer->size(), pos );
+		currSmp->adjustPosition( pos );
+	}
 	if( pos != GenSample::EndOfSample )
 		currentSample()->adjustPosition( pos );
 	setPosition( pos );

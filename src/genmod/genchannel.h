@@ -103,15 +103,10 @@ public:
 	/**
 	 * @brief Mix the current channel into @a mixBuffer.
 	 * @param[in,out] mixBuffer Reference to the mixer buffer
+	 * @param[in] estimateLength Set to @c true to estimate the length without actually doing mixing
 	 * @note Time-critical
 	 */
-	virtual void mixTick( MixerFrameBuffer& mixBuffer ) = 0;
-	/**
-	 * @brief Simulates a tick without mixing
-	 * @param[in] bufSize Buffer size
-	 * @see mixTick(MixerFrameBuffer&)
-	 */
-	virtual void simTick( size_t bufSize ) = 0;
+	virtual void mixTick( MixerFrameBuffer& mixBuffer, bool estimateLength ) = 0;
 	/**
 	 * @brief Updates the status string returned by statusString()
 	 */

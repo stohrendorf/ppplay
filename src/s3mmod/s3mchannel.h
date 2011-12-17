@@ -132,8 +132,7 @@ public:
 	 * @param[in] patDelay For pattern delays
 	 */
 	void update( const S3mCell::Ptr& cell, bool patDelay = false );
-	virtual void mixTick( MixerFrameBuffer& mixBuffer );
-	virtual void simTick( size_t bufSize );
+	virtual void mixTick( MixerFrameBuffer& mixBuffer, bool estimateLength );
 	virtual void updateStatus();
 	virtual IArchive& serialize( IArchive* data );
 	virtual std::string cellString();

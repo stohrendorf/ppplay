@@ -221,7 +221,7 @@ void ModModule::buildTick( AudioFrameBuffer& buf )
 			BOOST_ASSERT( chan.use_count() > 0 );
 			ModCell::Ptr cell = currPat->cellAt( currTrack, row() );
 			chan->update( cell, false ); // m_patDelayCount != -1);
-			chan->mixTick( mixerBuffer );
+			chan->mixTick( mixerBuffer, false );
 		}
 		buf->resize( mixerBuffer->size() );
 		MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
@@ -362,7 +362,9 @@ void ModModule::simulateTick( size_t& bufLen )
 		BOOST_ASSERT( chan.use_count() > 0 );
 		ModCell::Ptr cell = currPat->cellAt( currTrack, row() );
 		chan->update( cell, false ); // m_patDelayCount != -1);
-		chan->simTick( bufLen );
+		MixerFrameBuffer buf( new MixerFrameBuffer::element_type(bufLen) );
+		chan->mixTick( buf, true );
+		bufLen = buf->size();
 	}
 	if( !adjustPosition( true, true ) ) {
 		logger()->debug( L4CXX_LOCATION, "adjustPosition() failed" );
@@ -370,13 +372,6 @@ void ModModule::simulateTick( size_t& bufLen )
 		return;
 	}
 	setPosition( position() + bufLen );
-	//}
-	//catch( boost::exception& e) {
-	//BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
-	//}
-	//catch(...) {
-	//BOOST_THROW_EXCEPTION( std::runtime_error("Unknown exception") );
-	//}
 }
 
 std::string ModModule::channelCellString( size_t idx )

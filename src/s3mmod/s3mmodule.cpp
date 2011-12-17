@@ -559,7 +559,7 @@ void S3mModule::buildTick( AudioFrameBuffer& buf )
 			BOOST_ASSERT( chan.use_count() > 0 );
 			S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
 			chan->update( cell, m_patDelayCount != -1 );
-			chan->mixTick( mixerBuffer );
+			chan->mixTick( mixerBuffer, false );
 		}
 		buf->resize( mixerBuffer->size() );
 		MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
@@ -599,7 +599,9 @@ void S3mModule::simulateTick( size_t& bufLen )
 			BOOST_ASSERT( chan.use_count() > 0 );
 			S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
 			chan->update( cell, m_patDelayCount != -1 );
-			chan->simTick( bufLen );
+			MixerFrameBuffer buf( new MixerFrameBuffer::element_type(bufLen) );
+			chan->mixTick( buf, true );
+			bufLen = buf->size();
 		}
 		adjustPosition( true, true );
 		setPosition( position() + bufLen );
