@@ -78,6 +78,10 @@ public:
 	void log( Level l, const Location& loc, const std::string& str ) const;
 	/**
 	 * @overload
+	 * @param[in] l The level of the message, except Level::Off or Level::All
+	 * @param[in] loc The location of the message
+	 * @param[in] str The message itself
+	 * @see L4CXX_LOCATION
 	 */
 	void log( Level l, const Location& loc, const boost::format& str ) const;
 	/**
@@ -90,6 +94,9 @@ public:
 	}
 	/**
 	 * @overload
+	 * @brief Log a message with Level::Trace
+	 * @param[in] loc The location
+	 * @param[in] str The message itself
 	 */
 	inline void trace( const Location& loc, const boost::format& str ) const {
 		log( Level::Trace, loc, str );
@@ -104,6 +111,9 @@ public:
 	}
 	/**
 	 * @overload
+	 * @brief Log a message with Level::Debug
+	 * @param[in] loc The location
+	 * @param[in] str The message itself
 	 */
 	inline void debug( const Location& loc, const boost::format& str ) const {
 		log( Level::Debug, loc, str );
@@ -118,6 +128,9 @@ public:
 	}
 	/**
 	 * @overload
+	 * @brief Log a message with Level::Info
+	 * @param[in] loc The location
+	 * @param[in] str The message itself
 	 */
 	inline void info( const Location& loc, const boost::format& str ) const {
 		log( Level::Info, loc, str );
@@ -132,6 +145,9 @@ public:
 	}
 	/**
 	 * @overload
+	 * @brief Log a message with Level::Warn
+	 * @param[in] loc The location
+	 * @param[in] str The message itself
 	 */
 	inline void warn( const Location& loc, const boost::format& str ) const {
 		log( Level::Warn, loc, str );
@@ -146,6 +162,9 @@ public:
 	}
 	/**
 	 * @overload
+	 * @brief Log a message with Level::Error
+	 * @param[in] loc The location
+	 * @param[in] str The message itself
 	 */
 	inline void error( const Location& loc, const boost::format& str ) const {
 		log( Level::Error, loc, str );
@@ -160,6 +179,9 @@ public:
 	}
 	/**
 	 * @overload
+	 * @brief Log a message with Level::Fatal
+	 * @param[in] loc The location
+	 * @param[in] str The message itself
 	 */
 	inline void fatal( const Location& loc, const boost::format& str ) const {
 		log( Level::Fatal, loc, str );
