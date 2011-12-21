@@ -45,14 +45,27 @@ typedef int16_t BasicSample;
  */
 #pragma pack(push, 1)
 struct BasicSampleFrame {
+	//! @brief Vector of BasicSampleFrame's
 	typedef std::vector<BasicSampleFrame> Vector;
 	//! @brief Left sample value
 	BasicSample left;
 	//! @brief Right sample value
 	BasicSample right;
+	/**
+	 * @brief Multiply and shift right
+	 * @param[in] mul Factor
+	 * @param[in] shift Amount to shift right
+	 */
 	inline void mulRShift( uint8_t mul, uint8_t shift ) {
 		mulRShift( mul, mul, shift );
 	}
+	/**
+	 * @overload
+	 * @brief Multiply and shift right
+	 * @param[in] mulLeft Factor for left data
+	 * @param[in] mulRight Factor for right data
+	 * @param[in] shift Amount to shift right
+	 */
 	inline void mulRShift( uint8_t mulLeft, uint8_t mulRight, uint8_t shift ) {
 		left = ( left * mulLeft ) >> shift;
 		right = ( right * mulRight ) >> shift;
@@ -79,11 +92,21 @@ struct MixerSampleFrame {
 	MixerSample left;
 	//! @brief Right sample value
 	MixerSample right;
+	/**
+	 * @brief Add a BasicSampleFrame
+	 * @param[in] rhs BasicSampleFrame to add
+	 * @return Copy of *this
+	 */
 	inline MixerSampleFrame operator+=( const BasicSampleFrame& rhs ) {
 		left += rhs.left;
 		right += rhs.right;
 		return *this;
 	}
+	/**
+	 * @brief Shift data right and clip
+	 * @param[in] shift Amount to shift right
+	 * @return Clipped BasicSampleFrame
+	 */
 	inline BasicSampleFrame rightShiftClip( uint8_t shift ) const {
 		BasicSampleFrame result;
 		result.left = ppp::clip( left >> shift, -32768, 32767 );
