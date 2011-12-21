@@ -159,7 +159,7 @@ ppg::Label* UIMain::modTitle()
 void UIMain::onTimer()
 {
 	if( m_module.expired() || m_output.expired() ) {
-		logger()->debug( L4CXX_LOCATION, "Module expired" );
+		logger()->trace( L4CXX_LOCATION, "Module expired" );
 		return;
 	}
 	{

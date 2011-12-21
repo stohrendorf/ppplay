@@ -102,11 +102,18 @@ public:
 	void enable();
 	/**
 	 * @brief Mix the current channel into @a mixBuffer.
-	 * @param[in,out] mixBuffer Reference to the mixer buffer
-	 * @param[in] estimateLength Set to @c true to estimate the length without actually doing mixing
+	 * @param[in,out] mixBuffer Pointer to the mixer buffer
 	 * @note Time-critical
+	 * @see GenModule::buildTick()
+	 * 
+	 * @details
+	 * When @a mixBuffer is @c NULL, only effects shall be executed that are
+	 * necessary for length estimation.
+	 * 
+	 * This behaviour is necessary here in the channel, because some effects may
+	 * cause callbacks to the GenModule or its derived children.
 	 */
-	virtual void mixTick( MixerFrameBuffer& mixBuffer, bool estimateLength ) = 0;
+	virtual void mixTick( MixerFrameBuffer* mixBuffer ) = 0;
 	/**
 	 * @brief Updates the status string returned by statusString()
 	 */
@@ -144,6 +151,11 @@ protected:
 	 * @param[in] s The new string
 	 */
 	void setStatusString( const std::string& s );
+	/**
+	 * @overload
+	 * @brief Sets m_statusString
+	 * @param[in] fmt The new string
+	 */
 	inline void setStatusString( const boost::format& fmt ) {
 		setStatusString( fmt.str() );
 	}

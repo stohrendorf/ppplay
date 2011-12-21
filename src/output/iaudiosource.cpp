@@ -18,7 +18,7 @@
 
 #include "iaudiosource.h"
 
-IAudioSource::IAudioSource() : m_initialized( false ), m_frequency( 0 ), m_lockMutex()
+IAudioSource::IAudioSource() : m_initialized( false ), m_frequency( 0 ), m_lockMutex(), m_isBusy( false )
 {
 }
 
@@ -48,32 +48,6 @@ uint32_t IAudioSource::frequency() const
 	return m_frequency;
 }
 
-bool IAudioSource::tryLock()
-{
-	return m_lockMutex.try_lock();
-}
-
-void IAudioSource::waitLock()
-{
-	m_lockMutex.lock();
-}
-
-void IAudioSource::unlock()
-{
-	m_lockMutex.unlock();
-}
-
-bool IAudioSource::isLocked()
-{
-	bool tmp = tryLock();
-	if( tmp ) {
-		// we changed the state to "locked", so unlock it again
-		unlock();
-	}
-	// the mutex is locked when a lock attempt fails
-	return !tmp;
-}
-
 uint16_t IAudioSource::volumeLeft() const
 {
 	return 0;
@@ -87,6 +61,16 @@ uint16_t IAudioSource::volumeRight() const
 size_t IAudioSource::preferredBufferSize() const
 {
 	return 0;
+}
+
+void IAudioSource::setBusy( bool value )
+{
+	m_isBusy = value;
+}
+
+bool IAudioSource::isBusy() const
+{
+	return m_isBusy;
 }
 
 light4cxx::Logger::Ptr IAudioSource::logger()

@@ -315,12 +315,12 @@ bool S3mModule::initialize( uint32_t frq )
 	logger()->info( L4CXX_LOCATION, "Calculating track lengths and preparing seek operations..." );
 	do {
 		logger()->info( L4CXX_LOCATION, boost::format( "Pre-processing Track %d" ) % currentSongIndex() );
-		size_t currTickLen = 0;
+		size_t len;
 		do {
-			simulateTick( currTickLen );
-			multiSongLengthAt( currentSongIndex() ) += currTickLen;
+			len = buildTick( nullptr );
+			multiSongLengthAt( currentSongIndex() ) += len;
 		}
-		while( currTickLen != 0 );
+		while( len != 0 );
 		logger()->info( L4CXX_LOCATION, "Preprocessed." );
 		for( size_t i = 0; i < orderCount(); i++ ) {
 			BOOST_ASSERT( orderAt( i ).use_count() > 0 );
@@ -361,18 +361,24 @@ void S3mModule::checkGlobalFx()
 	try {
 		setPatternIndex( mapOrder( order() )->index() );
 		S3mPattern::Ptr currPat = getPattern( patternIndex() );
-		if( !currPat )
+		if( !currPat ) {
 			return;
+		}
 		// check for pattern loops
 		int patLoopCounter = 0;
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
-			if( !cell ) continue;
-			if( cell->effect() == s3mEmptyCommand ) continue;
+			if( !cell || cell->effect() == s3mEmptyCommand ) {
+				continue;
+			}
 			uint8_t fx = cell->effect();
+			if( fx != s3mFxSpecial ) {
+				continue;
+			}
 			uint8_t fxVal = cell->effectValue();
-			if( fx != s3mFxSpecial ) continue;
-			if( highNibble( fxVal ) != s3mSFxPatLoop ) continue;
+			if( highNibble( fxVal ) != s3mSFxPatLoop ) {
+				continue;
+			}
 			if( lowNibble( fxVal ) == 0x00 ) {  // loop start
 				m_patLoopRow = row();
 			}
@@ -404,27 +410,37 @@ void S3mModule::checkGlobalFx()
 		uint8_t patDelayCounter = 0;
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
-			if( !cell ) continue;
-			if( cell->effect() == s3mEmptyCommand ) continue;
+			if( !cell || cell->effect() == s3mEmptyCommand ) {
+				continue;
+			}
 			uint8_t fx = cell->effect();
+			if( fx != s3mFxSpecial ) {
+				continue;
+			}
 			uint8_t fxVal = cell->effectValue();
-			if( fx != s3mFxSpecial ) continue;
-			if( highNibble( fxVal ) != s3mSFxPatDelay ) continue;
-			if( lowNibble( fxVal ) == 0 ) continue;
-			if( ++patDelayCounter != 1 ) continue;
-			if( m_patDelayCount != -1 ) continue;
+			if( highNibble( fxVal ) != s3mSFxPatDelay || lowNibble( fxVal ) == 0 ) {
+				continue;
+			}
+			if( ++patDelayCounter != 1 || m_patDelayCount != -1 ) {
+				continue;
+			}
 			m_patDelayCount = lowNibble( fxVal );
 		}
-		if( m_patDelayCount > 1 )
+		if( m_patDelayCount > 1 ) {
 			m_patDelayCount--;
-		else
+		}
+		else {
 			m_patDelayCount = -1;
+		}
 		// now check for breaking effects
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			if( m_patLoopCount != -1 ) break;
+			if( m_patLoopCount != -1 ) {
+				break;
+			}
 			S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
-			if( !cell ) continue;
-			if( cell->effect() == s3mEmptyCommand ) continue;
+			if( !cell || cell->effect() == s3mEmptyCommand ) {
+				continue;
+			}
 			uint8_t fx = cell->effect();
 			uint8_t fxVal = cell->effectValue();
 			if( fx == s3mFxJumpOrder ) {
@@ -436,22 +452,16 @@ void S3mModule::checkGlobalFx()
 			}
 		}
 	}
-	catch( boost::exception& e ) {
-		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
-	}
 	catch( ... ) {
-		BOOST_THROW_EXCEPTION( std::runtime_error( "Unknown exception" ) );
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
 	}
 }
 
-bool S3mModule::adjustPosition( bool increaseTick, bool doStore )
+bool S3mModule::adjustPosition( bool estimateOnly )
 {
 	BOOST_ASSERT( orderCount() != 0 );
 	bool orderChanged = false;
-	if( increaseTick ) {
-		nextTick();
-	}
-	if( ( tick() == 0 ) && increaseTick ) {
+	if( tick() == 0 ) {
 		m_patDelayCount = -1;
 		if( m_breakOrder != 0xffff ) {
 			orderAt( order() )->increasePlaybackCount();
@@ -471,9 +481,6 @@ bool S3mModule::adjustPosition( bool increaseTick, bool doStore )
 					setOrder( order() + 1 );
 					orderChanged = true;
 				}
-				//else {
-				//	LOG_MESSAGE(stringf("oO... aPatLoopCount=%d",aPatLoopCount));
-				//}
 			}
 		}
 		if( ( m_breakRow == 0xffff ) && ( m_breakOrder == 0xffff ) && ( m_patDelayCount == -1 ) ) {
@@ -490,7 +497,6 @@ bool S3mModule::adjustPosition( bool increaseTick, bool doStore )
 	// skip "--" and "++" marks
 	while( patternIndex() >= 254 ) {
 		if( patternIndex() == s3mOrderEnd ) {
-			//LOG_TEST_MESSAGE(patternIndex() == s3mOrderEnd);
 			return false;
 		}
 		if( !mapOrder( order() ) )
@@ -507,133 +513,77 @@ bool S3mModule::adjustPosition( bool increaseTick, bool doStore )
 	if( orderChanged ) {
 		m_patLoopRow = 0;
 		m_patLoopCount = -1;
-		try {
-			if( doStore ) {
-				multiSongAt( currentSongIndex() ).newState()->archive( this ).finishSave();
-			}
-			else {
-				bool wasLocked = tryLock();
-				multiSongAt( currentSongIndex() ).nextState()->archive( this ).finishLoad();
-				if( wasLocked ) {
-					unlock();
-				}
-			}
-		}
-		catch( boost::exception& e ) {
-			BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
-		}
-		catch( ... ) {
-			BOOST_THROW_EXCEPTION( std::runtime_error( "Unknown exception" ) );
-		}
+		notifyOrderChanged(estimateOnly);
 	}
 	return true;
 }
 
-void S3mModule::buildTick( AudioFrameBuffer& buf )
+size_t S3mModule::buildTick( AudioFrameBuffer* buf )
 {
 	try {
-		if( !buf ) {
-			buf.reset( new AudioFrameBuffer::element_type );
+		if( buf && !buf->get() ) {
+			buf->reset( new AudioFrameBuffer::element_type );
 		}
 		if( tick() == 0 ) {
 			checkGlobalFx();
 		}
-		if( !adjustPosition( false, false ) ) {
-			logger()->info( L4CXX_LOCATION, "Song end reached: adjustPosition() failed" );
-			buf.reset();
-			return;
-		}
 		if( orderAt( order() )->playbackCount() >= maxRepeat() ) {
 			logger()->info( L4CXX_LOCATION, "Song end reached: Maximum repeat count reached" );
-			buf.reset();
-			return;
+			if(buf) {
+				buf->reset();
+			}
+			return 0;
 		}
 		// update channels...
 		setPatternIndex( mapOrder( order() )->index() );
 		S3mPattern::Ptr currPat = getPattern( patternIndex() );
-		if( !currPat )
-			return;
-		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength(), {0, 0} ) );
-		for( uint_fast8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			S3mChannel::Ptr chan = m_channels.at( currTrack );
-			BOOST_ASSERT( chan.use_count() > 0 );
-			S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
-			chan->update( cell, m_patDelayCount != -1 );
-			chan->mixTick( mixerBuffer, false );
+		if( !currPat ) {
+			logger()->error(L4CXX_LOCATION, "Did not find a pattern for current order");
+			if(buf) {
+				buf->reset();
+			}
+			return 0;
 		}
-		buf->resize( mixerBuffer->size() );
-		MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
-		BasicSampleFrame* bufPtr = &buf->front();
-		for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
-			*bufPtr = mixerBufferPtr->rightShiftClip(2);
-			bufPtr++;
-			mixerBufferPtr++;
+		if( buf ) {
+			MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength(), {0, 0} ) );
+			for( uint_fast8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+				S3mChannel::Ptr chan = m_channels.at( currTrack );
+				BOOST_ASSERT( chan.use_count() > 0 );
+				S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
+				chan->update( cell, m_patDelayCount != -1, false );
+				chan->mixTick( &mixerBuffer );
+			}
+			buf->get()->resize( mixerBuffer->size() );
+			MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
+			BasicSampleFrame* bufPtr = &buf->get()->front();
+			for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
+				*bufPtr = mixerBufferPtr->rightShiftClip(2);
+				bufPtr++;
+				mixerBufferPtr++;
+			}
 		}
-		adjustPosition( true, false );
-		setPosition( position() + mixerBuffer->size() );
+		else {
+			for( uint_fast8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+				S3mChannel::Ptr chan = m_channels.at( currTrack );
+				BOOST_ASSERT( chan.use_count() > 0 );
+				S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
+				chan->update( cell, m_patDelayCount != -1, true );
+			}
+		}
+		setPosition( position() + tickBufferLength() );
+		nextTick();
+		if( !adjustPosition(!buf) ) {
+			logger()->info( L4CXX_LOCATION, "Song end reached: adjustPosition() failed" );
+			if(buf) {
+				buf->reset();
+			}
+			return 0;
+		}
+		return tickBufferLength();
 	}
 	catch( ... ) {
 		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
 	}
-}
-
-void S3mModule::simulateTick( size_t& bufLen )
-{
-	try {
-		if( tick() == 0 )
-			checkGlobalFx();
-		bufLen = 0;
-		if( !adjustPosition( false, true ) )
-			return;
-		BOOST_ASSERT( mapOrder( order() ).use_count() > 0 );
-		if( orderAt( order() )->playbackCount() >= maxRepeat() )
-			return;
-		// update channels...
-		setPatternIndex( mapOrder( order() )->index() );
-		S3mPattern::Ptr currPat = getPattern( patternIndex() );
-		if( !currPat )
-			return;
-		bufLen = tickBufferLength(); // in frames
-		for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			S3mChannel::Ptr chan = m_channels.at( currTrack );
-			BOOST_ASSERT( chan.use_count() > 0 );
-			S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
-			chan->update( cell, m_patDelayCount != -1 );
-			MixerFrameBuffer buf( new MixerFrameBuffer::element_type(bufLen) );
-			chan->mixTick( buf, true );
-			bufLen = buf->size();
-		}
-		adjustPosition( true, true );
-		setPosition( position() + bufLen );
-	}
-	catch( boost::exception& e ) {
-		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
-	}
-	catch( ... ) {
-		BOOST_THROW_EXCEPTION( std::runtime_error( "Unknown exception" ) );
-	}
-}
-
-bool S3mModule::jumpNextOrder()
-{
-	IArchive::Ptr next = multiSongAt( currentSongIndex() ).nextState();
-	if( !next ) {
-		return false;
-	}
-	IAudioSource::LockGuard guard( this );
-	next->archive( this ).finishLoad();
-	return true;
-}
-
-bool S3mModule::jumpPrevOrder()
-{
-	IArchive::Ptr next = multiSongAt( currentSongIndex() ).prevState();
-	if( !next ) {
-		return false;
-	}
-	IAudioSource::LockGuard guard( this );
-	next->archive( this ).finishLoad();
-	return true;
 }
 
 GenOrder::Ptr S3mModule::mapOrder( int16_t order )

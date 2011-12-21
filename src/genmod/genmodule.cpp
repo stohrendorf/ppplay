@@ -33,10 +33,22 @@ namespace ppp
 {
 
 GenModule::GenModule( uint8_t maxRpt ) :
-	m_filename(), m_title(), m_trackerInfo(), m_orders(), m_maxRepeat( maxRpt ),
-	m_playedFrames( 0 ), m_songs(), m_songLengths(),
-	m_currentSongIndex( 0 ), m_tick( 0 ), m_globalVolume( 0x40 ),
-	m_speed( 0 ), m_tempo( 0 ), m_order( 0 ), m_pattern( 0 ), m_row( 0 ),
+	m_filename(),
+	m_title(),
+	m_trackerInfo(),
+	m_orders(),
+	m_speed( 0 ),
+	m_tempo( 0 ),
+	m_order( 0 ),
+	m_row( 0 ),
+	m_tick( 0 ),
+	m_globalVolume( 0x40 ),
+	m_playedFrames( 0 ),
+	m_pattern( 0 ),
+	m_maxRepeat( maxRpt ),
+	m_songs(),
+	m_songLengths(),
+	m_currentSongIndex( 0 ),
 	m_initialState(new MemArchive())
 {
 	BOOST_ASSERT( maxRpt != 0 );
@@ -47,14 +59,14 @@ GenModule::~GenModule() = default;
 IArchive& GenModule::serialize( IArchive* data )
 {
 	*data
-	% m_playedFrames
-	% m_tick
-	% m_globalVolume
 	% m_speed
 	% m_tempo
 	% m_order
-	% m_pattern
 	% m_row
+	% m_tick
+	% m_globalVolume
+	% m_playedFrames
+	% m_pattern
 	;
 	for( const GenOrder::Ptr & order : m_orders ) {
 		data->archive( order.get() );
@@ -122,11 +134,15 @@ size_t GenModule::getAudioData( AudioFrameBuffer& buffer, size_t size )
 	if( !buffer ) {
 		buffer.reset( new AudioFrameBuffer::element_type );
 	}
+	buffer->reserve( size );
+	buffer->resize( 0 );
+	AudioFrameBuffer tmpBuf;
 	while( buffer->size() < size ) {
-		AudioFrameBuffer tmpBuf;
-		buildTick( tmpBuf );
-		if( !tmpBuf || tmpBuf->size() == 0 )
+		size_t size = buildTick( &tmpBuf );
+		if( !tmpBuf || tmpBuf->empty() || size==0 ) {
+			logger()->debug(L4CXX_LOCATION, "buildTick() returned 0");
 			return 0;
+		}
 		buffer->insert( buffer->end(), tmpBuf->begin(), tmpBuf->end() );
 	}
 	return buffer->size();
@@ -308,12 +324,80 @@ int16_t GenModule::row() const
 
 void GenModule::loadInitialState()
 {
+	logger()->info(L4CXX_LOCATION, "Loading initial state");
 	m_initialState->archive( this ).finishLoad();
 }
 
 void GenModule::saveInitialState()
 {
+	logger()->info(L4CXX_LOCATION, "Storing initial state");
 	m_initialState->archive( this ).finishSave();
+}
+
+bool GenModule::jumpNextOrder()
+{
+	IAudioSource::LockGuard guard( this );
+	IArchive::Ptr next = multiSongAt( currentSongIndex() ).nextState();
+	if( next ) {
+		logger()->debug(L4CXX_LOCATION, "Already preprocessed - loading");
+		next->archive( this ).finishLoad();
+		return true;
+	}
+	// maybe not processed yet, so try to jump to the next order...
+	logger()->debug(L4CXX_LOCATION, "Not preprocessed yet");
+	size_t ord = order();
+	setBusy(true);
+	do {
+		AudioFrameBuffer buf;
+		buildTick(&buf);
+		if(!buf) {
+			return false;
+		}
+	} while(ord == order());
+	setBusy(false);
+	return true;
+}
+
+bool GenModule::jumpPrevOrder()
+{
+	IAudioSource::LockGuard guard( this );
+	IArchive::Ptr next = multiSongAt( currentSongIndex() ).prevState();
+	if( !next ) {
+		return false;
+	}
+	next->archive( this ).finishLoad();
+	return true;
+}
+
+bool GenModule::isBusy() const
+{
+	return IAudioSource::isBusy();
+}
+
+void GenModule::setBusy( bool value )
+{
+	IAudioSource::setBusy(value);
+}
+
+void GenModule::notifyOrderChanged( bool estimateOnly )
+{
+	try {
+		if(!estimateOnly) {
+			IAudioSource::TryLockGuard guard( this );
+			IArchive::Ptr state = multiSongAt( currentSongIndex() ).nextState();
+			if(state) {
+				state->archive( this ).finishLoad();
+			}
+			else {
+				multiSongAt( currentSongIndex() ).newState()->archive( this ).finishSave();
+				multiSongAt( currentSongIndex() ).nextState();
+			}
+		}
+		logger()->info(L4CXX_LOCATION, boost::format("Order changed to %d (pattern %d)") % order() % patternIndex() );
+	}
+	catch( ... ) {
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+	}
 }
 
 }

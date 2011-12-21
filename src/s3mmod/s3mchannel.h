@@ -130,9 +130,10 @@ public:
 	 * @brief Update the channel
 	 * @param[in] cell Pointer to a note cell
 	 * @param[in] patDelay For pattern delays
+	 * @param[in] estimateOnly Used when estimating track length
 	 */
-	void update( const S3mCell::Ptr& cell, bool patDelay = false );
-	virtual void mixTick( MixerFrameBuffer& mixBuffer, bool estimateLength );
+	void update( const ppp::s3m::S3mCell::Ptr& cell, bool patDelay, bool estimateOnly );
+	virtual void mixTick( MixerFrameBuffer* mixBuffer );
 	virtual void updateStatus();
 	virtual IArchive& serialize( IArchive* data );
 	virtual std::string cellString();

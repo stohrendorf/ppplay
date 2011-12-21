@@ -235,9 +235,26 @@ static const std::array<int8_t, 256> g_AutoVibTable = {{
 };
 #endif
 
-void XmChannel::update( const ppp::xm::XmCell::Ptr& cell )
+void XmChannel::update( const XmCell::Ptr& cell, bool estimateOnly )
 {
 	if( m_module->tick() == 0 && !m_module->isRunningPatDelay() ) {
+		if( estimateOnly ) {
+			if( !cell ) {
+				return;
+			}
+			switch( cell->effect() ) {
+				case Effect::Extended:
+					fxExtended( cell->effectValue(), true );
+					break;
+				case Effect::SetTempoBpm:
+					fxSetTempoBpm( cell->effectValue() );
+					break;
+				default:
+					// silence "not handled" warnings
+					break;
+			}
+			return;
+		}
 		m_noteChanged = false;
 		if( cell ) {
 			m_currentCell = *cell;
@@ -429,7 +446,7 @@ void XmChannel::update( const ppp::xm::XmCell::Ptr& cell )
 				m_fxString = "StVol=";
 				break;
 			case Effect::Extended:
-				fxExtended( m_currentCell.effectValue() );
+				fxExtended( m_currentCell.effectValue(), false );
 				break;
 			case Effect::SetTempoBpm:
 				fxSetTempoBpm( m_currentCell.effectValue() );
@@ -463,6 +480,26 @@ void XmChannel::update( const ppp::xm::XmCell::Ptr& cell )
 		}
 	}
 	else { // tick 1+
+		if( estimateOnly ) {
+			if( !cell ) {
+				return;
+			}
+			switch( cell->effect() ) {
+				case Effect::Extended:
+					fxExtended( cell->effectValue(), true );
+					break;
+				case Effect::PatBreak:
+					m_module->doPatternBreak( highNibble( cell->effectValue() ) * 10 + lowNibble( cell->effectValue() ) );
+					break;
+				case Effect::PosJump:
+					m_module->doJumpPos( cell->effectValue() );
+					break;
+				default:
+					// silence "not handled" warnings
+					break;
+			}
+			return;
+		}
 		if( m_currentCell.effect() == Effect::Extended ) {
 			if( highNibble( m_currentCell.effectValue() ) == EfxNoteDelay ) {
 				if( lowNibble( m_currentCell.effectValue() ) == m_module->tick() ) {
@@ -517,7 +554,7 @@ void XmChannel::update( const ppp::xm::XmCell::Ptr& cell )
 				fxVolSlide( m_currentCell.effectValue() );
 				break;
 			case Effect::Extended:
-				fxExtended( m_currentCell.effectValue() );
+				fxExtended( m_currentCell.effectValue(), false );
 				break;
 			case Effect::Porta:
 				fxPorta();
@@ -659,9 +696,9 @@ std::string XmChannel::noteName()
 	return ( boost::format( "%s%d" ) % NoteNames.at( ofs % 12 ) % ( ofs / 12 ) ).str();
 }
 
-void XmChannel::mixTick( MixerFrameBuffer& mixBuffer, bool estimateOnly )
+void XmChannel::mixTick( MixerFrameBuffer* mixBuffer )
 {
-	if( !isActive() )
+	if( !isActive() || !mixBuffer )
 		return;
 	m_bres.reset( m_module->frequency(), m_module->periodToFrequency( m_currentPeriod + m_autoVibDeltaPeriod ) );
 	XmSample::Ptr currSmp = currentSample();
@@ -674,27 +711,23 @@ void XmChannel::mixTick( MixerFrameBuffer& mixBuffer, bool estimateOnly )
 	if( m_realPanning < 0x80 ) {
 		volRight = m_realPanning;
 	}
-	if( !estimateOnly ) {
-		for( MixerSampleFrame & frame : *mixBuffer ) {
-			BasicSampleFrame sampleVal = currSmp->sampleAt( pos );
-			sampleVal.mulRShift( volLeft, volRight, 7 );
-			sampleVal.mulRShift( m_realVolume, 6 );
-			frame += sampleVal;
-			if( pos == GenSample::EndOfSample ) {
-				break;
-			}
-			m_bres.next( pos );
+	for( MixerSampleFrame & frame :** mixBuffer ) {
+		BasicSampleFrame sampleVal = currSmp->sampleAt( pos );
+		sampleVal.mulRShift( volLeft, volRight, 7 );
+		sampleVal.mulRShift( m_realVolume, 6 );
+		frame += sampleVal;
+		if( pos == GenSample::EndOfSample ) {
+			break;
 		}
+		m_bres.next( pos );
 	}
-	else {
-		m_bres.fastNext( mixBuffer->size(), pos );
-		currSmp->adjustPosition( pos );
-	}
-	if( pos != GenSample::EndOfSample )
+	if( pos != GenSample::EndOfSample ) {
 		currentSample()->adjustPosition( pos );
+	}
 	setPosition( pos );
-	if( pos == GenSample::EndOfSample )
+	if( pos == GenSample::EndOfSample ) {
 		setActive( false );
+	}
 }
 
 void XmChannel::updateStatus()
@@ -838,8 +871,23 @@ void XmChannel::fxExtraFinePorta( uint8_t fxByte )
 	}
 }
 
-void XmChannel::fxExtended( uint8_t fxByte )
+void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 {
+	if( estimateOnly ) {
+		switch( highNibble( fxByte ) ) {
+			case EfxPatLoop:
+				if( m_module->tick() == 0 ) {
+					efxPatLoop( fxByte );
+				}
+				break;
+			case EfxPatDelay:
+				if( m_module->tick() == 0 ) {
+					m_module->doPatDelay( lowNibble( fxByte ) );
+				}
+				break;
+		}
+		return;
+	}
 	switch( highNibble( fxByte ) ) {
 		case EfxFinePortaUp:
 			efxFinePortaUp( fxByte );

@@ -25,20 +25,24 @@ void SDLAudioOutput::sdlAudioCallback( void* userdata, uint8_t* stream, int len_
 {
 	std::fill_n( stream, len_bytes, 0 );
 	SDLAudioOutput* outpSdl = static_cast<SDLAudioOutput*>( userdata );
-	while( len_bytes > 0 ) {
-		AudioFrameBuffer buffer;
-		IAudioSource::Ptr src( outpSdl->source().lock() );
+	outpSdl->logger()->trace(L4CXX_LOCATION, boost::format("Requested %d bytes of data")%len_bytes);
+	AudioFrameBuffer buffer;
+	IAudioSource::Ptr src( outpSdl->source().lock() );
+	if(!src->isBusy()) {
 		size_t copied = src->getAudioData( buffer, len_bytes / sizeof( BasicSampleFrame ) );
 		if( copied == 0 ) {
+			outpSdl->logger()->trace(L4CXX_LOCATION, "Source did not return any data - input is dry");
 			outpSdl->setErrorCode( InputDry );
-			outpSdl->pause();
-			break;
 		}
 		copied *= sizeof( BasicSampleFrame );
 		len_bytes -= copied;
+		if(len_bytes != 0) {
+			outpSdl->logger()->trace(L4CXX_LOCATION, boost::format("Source provided not enough data: %d bytes missing")%len_bytes);
+		}
 		std::copy( buffer->begin(), buffer->end(), reinterpret_cast<BasicSampleFrame*>( stream ) );
 		stream += copied;
 	}
+	std::fill_n(stream, len_bytes, 0);
 }
 
 SDLAudioOutput::SDLAudioOutput( const IAudioSource::WeakPtr& src ) : IAudioOutput( src )

@@ -238,14 +238,17 @@ int main( int argc, char* argv[] )
 			SDL_Event event;
 			while( output ) {
 				if( output && output->errorCode() == IAudioOutput::InputDry ) {
+					light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Input is dry, trying to jump to the next song");
 					if( !module->jumpNextSong() ) {
+						light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Jump failed, quitting");
 						output.reset();
 						break;
 					}
-					output->init( module->frequency() );
-					output->play();
+// 					output->init( module->frequency() );
+// 					output->play();
 				}
 				else if( output && output->errorCode() != IAudioOutput::NoError ) {
+					light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Input has error, quitting");
 					output.reset();
 					break;
 				}

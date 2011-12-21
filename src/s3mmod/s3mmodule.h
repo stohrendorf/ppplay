@@ -44,6 +44,7 @@ class S3mModule : public GenModule
 {
 	DISABLE_COPY( S3mModule )
 	S3mModule() = delete;
+	friend class S3mChannel;
 public:
 	typedef std::shared_ptr<S3mModule> Ptr; //!< @brief Class pointer
 	/**
@@ -75,27 +76,36 @@ private:
 	 * @return Pattern pointer or nullptr
 	 */
 	S3mPattern::Ptr getPattern( size_t idx ) const;
-	/**
-	 * @brief Apply global effects
-	 */
-	void checkGlobalFx();
-	/**
-	 * @brief Adjust the playback position
-	 * @param[in] increaseTick Whether to increase the tick value
-	 * @param[in] doStore Set this to @c true to store the current state, and to @c false to restore it on order change
-	 * @retval false if the end of the current song is reached
-	 * @retval true otherwise
-	 */
-	bool adjustPosition( bool increaseTick, bool doStore );
 protected:
 	virtual IArchive& serialize( IArchive* data );
 public:
+	virtual ~S3mModule();
+	virtual uint8_t channelCount() const;
+	virtual size_t buildTick( AudioFrameBuffer* buf );
+	virtual GenOrder::Ptr mapOrder( int16_t order );
+	virtual std::string channelStatus( size_t idx );
+	virtual bool jumpNextSong();
+	virtual bool jumpPrevSong();
+	virtual std::string channelCellString( size_t idx );
+protected:
+	virtual void setGlobalVolume( int16_t v );
+	virtual bool initialize( uint32_t frq );
+private:
 	/**
 	 * @copydoc ppp::GenModule::GenModule(uint8_t)
 	 */
 	S3mModule( uint8_t maxRpt = 2 );
-	virtual ~S3mModule();
-	virtual uint8_t channelCount() const;
+	/**
+	 * @brief Apply global effects
+	 */
+	void checkGlobalFx(  );
+	/**
+	 * @brief Adjust the playback position
+	 * @param[in] estimateOnly Used when estimating track length
+	 * @retval false if the end of the current song is reached
+	 * @retval true otherwise
+	 */
+	bool adjustPosition( bool estimateOnly );
 	/**
 	 * @brief Load the module
 	 * @param[in] fn Filename of the module to load
@@ -109,15 +119,6 @@ public:
 	 * @retval false otherwise
 	 */
 	bool existsSample( int16_t idx );
-	virtual void buildTick( AudioFrameBuffer& buf );
-	virtual void simulateTick( size_t& bufLen );
-	virtual GenOrder::Ptr mapOrder( int16_t order );
-	virtual std::string channelStatus( size_t idx );
-	virtual bool jumpNextSong();
-	virtual bool jumpPrevSong();
-	virtual bool jumpNextOrder();
-	virtual bool jumpPrevOrder();
-	virtual std::string channelCellString( size_t idx );
 	/**
 	 * @brief Check if amiga limits are present
 	 * @return m_amigaLimits
@@ -144,14 +145,11 @@ public:
 	 * @return Sample pointer or nullptr
 	 */
 	S3mSample::Ptr sampleAt( size_t idx ) const;
-	virtual void setGlobalVolume( int16_t v );
 	/**
 	 * @brief Check if zero volume optimizations are present
 	 * @return m_zeroVolOpt
 	 */
 	bool hasZeroVolOpt() const;
-	virtual bool initialize( uint32_t frq );
-protected:
 	/**
 	 * @brief Get the logger
 	 * @return Child logger with attached ".s3m"

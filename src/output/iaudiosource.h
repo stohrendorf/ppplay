@@ -30,6 +30,7 @@
 #include "light4cxx/logger.h"
 
 #include <boost/thread.hpp>
+#include <boost/thread/locks.hpp>
 
 /**
  * @interface IAudioSource
@@ -44,7 +45,8 @@ private:
 	//! @brief Frequency of this source
 	uint32_t m_frequency;
 	//! @brief Mutex for locking the source
-	boost::recursive_mutex m_lockMutex;
+	boost::mutex m_lockMutex;
+	bool m_isBusy;
 protected:
 	/**
 	 * @brief Sets m_initialized to @c false and m_frequency to @c 0
@@ -63,14 +65,31 @@ public:
 	{
 		DISABLE_COPY( LockGuard )
 	private:
-		//! @brief STL mutex lock guard
-		boost::lock_guard<boost::recursive_mutex> m_guard;
+		//! @brief Mutex lock guard
+		boost::unique_lock<boost::mutex> m_guard;
 	public:
 		/**
 		 * @brief Constructor
 		 * @param[in] src IAudioSource to lock
 		 */
 		LockGuard( IAudioSource* src ) : m_guard( src->m_lockMutex ) { }
+	};
+	/**
+	 * @class TryLockGuard
+	 * @brief Lock guard helper
+	 */
+	class TryLockGuard
+	{
+		DISABLE_COPY( TryLockGuard )
+	private:
+		//! @brief Mutex lock guard
+		boost::unique_lock<boost::mutex> m_guard;
+	public:
+		/**
+		 * @brief Constructor
+		 * @param[in] src IAudioSource to lock
+		 */
+		TryLockGuard( IAudioSource* src ) : m_guard( src->m_lockMutex, boost::try_to_lock ) { }
 	};
 	//! @brief Class pointer
 	typedef std::shared_ptr<IAudioSource> Ptr;
@@ -87,6 +106,7 @@ public:
 	 * @returns The number of frames actually returned - should be equal to @c buffer->size()
 	 * @note If this function returns 0, the audio output device should stop playback
 	 * @see preferredBufferSize()
+	 * @see isBusy()
 	 */
 	virtual size_t getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames ) = 0;
 	/**
@@ -112,27 +132,6 @@ public:
 	 */
 	uint32_t frequency() const;
 	/**
-	 * @brief Waits until this IAudioSource is unlocked and then locks it
-	 */
-	void waitLock();
-	/**
-	 * @brief Tries to lock this IAudioSource
-	 * @return @c true if a lock could be acquired
-	 */
-	bool tryLock();
-	/**
-	 * @brief Unlocks this IAudioSource
-	 */
-	void unlock();
-	/**
-	 * @brief Check if this IAudioSource is locked
-	 * @return @c true if it is locked
-	 * @details
-	 * Internally calls tryLock(). If a lock could be acquired, it unlocks again
-	 * and returns @c false, else it returns @c true.
-	 */
-	bool isLocked();
-	/**
 	 * @brief Get the left channel's volume
 	 * @return Left channel's volume, default is 0
 	 */
@@ -142,6 +141,8 @@ public:
 	 * @return Right channel's volume, default is 0
 	 */
 	virtual uint16_t volumeRight() const;
+	virtual void setBusy( bool value ) = 0;
+	virtual bool isBusy() const = 0;
 protected:
 	/**
 	 * @brief Get the logger

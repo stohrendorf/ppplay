@@ -265,16 +265,17 @@ IArchive& ModChannel::serialize( IArchive* data )
 	return data->archive( &m_bresen );
 }
 
-void ModChannel::mixTick( MixerFrameBuffer& mixBuffer, bool estimateOnly )
+void ModChannel::mixTick( MixerFrameBuffer* mixBuffer )
 {
 	if( !isActive() || !currentSample() || m_physPeriod == 0 ) {
 		return setActive( false );
 	}
 	BOOST_ASSERT( m_module && m_module->frequency() != 0 );
-	if( mixBuffer->empty() ) {
+	if( mixBuffer && mixBuffer->get()->empty() ) {
 		logger()->error( L4CXX_LOCATION, "mixBuffer is empty" );
+		return;
 	}
-	if( m_module->frequency() * mixBuffer->size() == 0 ) {
+	if( mixBuffer && m_module->frequency() * mixBuffer->get()->size() == 0 ) {
 		setActive( false );
 		return;
 	}
@@ -287,8 +288,8 @@ void ModChannel::mixTick( MixerFrameBuffer& mixBuffer, bool estimateOnly )
 		setActive( false );
 		return;
 	}
-	if( !estimateOnly ) {
-		for( MixerSampleFrame & frame : *mixBuffer ) {
+	if( mixBuffer ) {
+		for( MixerSampleFrame & frame : **mixBuffer ) {
 			// TODO panning
 			BasicSampleFrame sample = currSmp->sampleAt( pos );
 			sample.mulRShift( m_physVolume, 6 );
@@ -298,17 +299,13 @@ void ModChannel::mixTick( MixerFrameBuffer& mixBuffer, bool estimateOnly )
 			}
 			m_bresen.next( pos );
 		}
-	}
-	else {
-		m_bresen.fastNext( mixBuffer->size(), pos );
-		currentSample()->adjustPosition( pos );
-	}
-	if( pos != GenSample::EndOfSample ) {
-		currentSample()->adjustPosition( pos );
-	}
-	setPosition( pos );
-	if( pos == GenSample::EndOfSample ) {
-		setActive( false );
+		if( pos != GenSample::EndOfSample ) {
+			currentSample()->adjustPosition( pos );
+		}
+		setPosition( pos );
+		if( pos == GenSample::EndOfSample ) {
+			setActive( false );
+		}
 	}
 }
 
@@ -475,9 +472,6 @@ void ModChannel::fxOffset( uint8_t fxByte )
 		setPosition( fxByte << 8 );
 	}
 	else {
-		if( currentSample() ) {
-			logger()->debug( L4CXX_LOCATION, boost::format( "Offset effect: length()=%d, request=%d" ) % currentSample()->length() % ( fxByte << 8 ) );
-		}
 		setActive( false );
 	}
 }
@@ -634,7 +628,7 @@ void ModChannel::fxArpeggio( uint8_t fxByte )
 	for( uint8_t i = 0; i < fullPeriods.at( m_finetune ).size() - delta; i++ ) {
 		if( fullPeriods.at( m_finetune ).at( i ) <= m_period ) {
 			m_physPeriod = fullPeriods.at( m_finetune ).at( i + delta );
-			logger()->debug( L4CXX_LOCATION, boost::format( "Arpeggio: period=%d, physPeriod=%d, delta=%d, finetune=%d" ) % m_period % m_physPeriod % ( delta + 0 ) % ( m_finetune + 0 ) );
+// 			logger()->debug( L4CXX_LOCATION, boost::format( "Arpeggio: period=%d, physPeriod=%d, delta=%d, finetune=%d" ) % m_period % m_physPeriod % ( delta + 0 ) % ( m_finetune + 0 ) );
 			return;
 		}
 	}
@@ -695,7 +689,7 @@ void ModChannel::fxTremolo( uint8_t fxByte )
 void ModChannel::efxPatLoop( uint8_t fxByte )
 {
 	m_effectDescription = "PLoop\xe8";
-	logger()->warn( L4CXX_LOCATION, "Not implemented: Effect Pattern Loop" );
+	//logger()->warn( L4CXX_LOCATION, "Not implemented: Effect Pattern Loop" );
 	// TODO
 }
 

@@ -190,70 +190,79 @@ for( const ModSample::Ptr & smp : m_samples ) {
 	return stream.good();
 }
 
-void ModModule::buildTick( AudioFrameBuffer& buf )
+size_t ModModule::buildTick( AudioFrameBuffer* buf )
 {
 	try {
 		//PPP_TEST(!buf);
-		if( !buf )
-			buf.reset( new AudioFrameBuffer::element_type );
-		if( tick() == 0 )
+		if( buf && !buf->get() ) {
+			buf->reset( new AudioFrameBuffer::element_type );
+		}
+		if( tick() == 0 ) {
 			checkGlobalFx();
+		}
 		//buf->resize(getTickBufLen());
 		//buf->clear();
-		if( !adjustPosition( false, false ) ) {
-			logger()->info( L4CXX_LOCATION, "Song end reached: adjustPosition() failed" );
-			buf.reset();
-			return;
-		}
 		if( orderAt( order() )->playbackCount() >= maxRepeat() ) {
 			logger()->info( L4CXX_LOCATION, "Song end reached: Maximum repeat count reached" );
-			buf.reset();
-			return;
+			if(buf) {
+				buf->reset();
+			}
+			return 0;
 		}
 		// update channels...
 		setPatternIndex( mapOrder( order() )->index() );
 		ModPattern::Ptr currPat = getPattern( patternIndex() );
-		if( !currPat )
-			return;
-		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength(), {0, 0} ) );
-		for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			ModChannel::Ptr chan = m_channels.at( currTrack );
-			BOOST_ASSERT( chan.use_count() > 0 );
-			ModCell::Ptr cell = currPat->cellAt( currTrack, row() );
-			chan->update( cell, false ); // m_patDelayCount != -1);
-			chan->mixTick( mixerBuffer, false );
+		if( !currPat ) {
+			return 0;
 		}
-		buf->resize( mixerBuffer->size() );
-		MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
-		BasicSampleFrame* bufPtr = &buf->front();
-		for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
-			*bufPtr = mixerBufferPtr->rightShiftClip(2);
-			bufPtr++;
-			mixerBufferPtr++;
+		if(buf) {
+			MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength(), {0, 0} ) );
+			for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+				ModChannel::Ptr chan = m_channels.at( currTrack );
+				BOOST_ASSERT( chan.use_count() > 0 );
+				ModCell::Ptr cell = currPat->cellAt( currTrack, row() );
+				chan->update( cell, false ); // m_patDelayCount != -1);
+				chan->mixTick( &mixerBuffer );
+			}
+			buf->get()->resize( mixerBuffer->size() );
+			MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
+			BasicSampleFrame* bufPtr = &buf->get()->front();
+			for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
+				*bufPtr = mixerBufferPtr->rightShiftClip(2);
+				bufPtr++;
+				mixerBufferPtr++;
+			}
 		}
-		if( !adjustPosition( true, false ) ) {
+		else {
+			for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+				ModChannel::Ptr chan = m_channels.at( currTrack );
+				BOOST_ASSERT( chan.use_count() > 0 );
+				ModCell::Ptr cell = currPat->cellAt( currTrack, row() );
+				chan->update( cell, false ); // m_patDelayCount != -1);
+				chan->mixTick( nullptr );
+			}
+		}
+		nextTick();
+		if( !adjustPosition( !buf ) ) {
 			logger()->info( L4CXX_LOCATION, "Song end reached: adjustPosition() failed" );
-			buf.reset();
-			return;
+			if(buf) {
+				buf->reset();
+			}
+			return 0;
 		}
-		setPosition( position() + mixerBuffer->size() );
-	}
-	catch( boost::exception& e ) {
-		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+		setPosition( position() +tickBufferLength() );
+		return tickBufferLength();
 	}
 	catch( ... ) {
-		BOOST_THROW_EXCEPTION( std::runtime_error( "Unknown exception" ) );
+		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
 	}
 }
 
-bool ModModule::adjustPosition( bool increaseTick, bool doStore )
+bool ModModule::adjustPosition( bool estimateOnly )
 {
 	BOOST_ASSERT( orderCount() != 0 );
 	bool orderChanged = false;
-	if( increaseTick ) {
-		nextTick();
-	}
-	if( ( tick() == 0 ) && increaseTick ) {
+	if( tick() == 0 ) {
 		m_patDelayCount = -1;
 		if( m_breakOrder != 0xffff ) {
 			orderAt( order() )->increasePlaybackCount();
@@ -292,7 +301,6 @@ bool ModModule::adjustPosition( bool increaseTick, bool doStore )
 			setRow( ( row() + 1 ) & 0x3f );
 			if( row() == 0 ) {
 				orderAt( order() )->increasePlaybackCount();
-				logger()->debug( L4CXX_LOCATION, "New pattern" );
 				setOrder( order() + 1 );
 				if( order() >= orderCount() ) {
 					logger()->debug( L4CXX_LOCATION, "order()>=orderCount()" );
@@ -308,70 +316,13 @@ bool ModModule::adjustPosition( bool increaseTick, bool doStore )
 		logger()->debug( L4CXX_LOCATION, "order()>=orderCount()" );
 		return false;
 	}
-	setPatternIndex( mapOrder( order() )->index() );
 	if( orderChanged ) {
 		m_patLoopRow = 0;
 		m_patLoopCount = -1;
-		try {
-			if( doStore ) {
-				multiSongAt( currentSongIndex() ).newState()->archive( this ).finishSave();
-			}
-			else {
-				bool wasLocked = tryLock();
-				multiSongAt( currentSongIndex() ).nextState()->archive( this ).finishLoad();
-				if( wasLocked ) {
-					unlock();
-				}
-			}
-		}
-		catch( boost::exception& e ) {
-			BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
-		}
-		catch( ... ) {
-			BOOST_THROW_EXCEPTION( std::runtime_error( "Unknown exception" ) );
-		}
+		setPatternIndex( mapOrder( order() )->index() );
+		notifyOrderChanged(estimateOnly);
 	}
 	return true;
-}
-
-void ModModule::simulateTick( size_t& bufLen )
-{
-	//try {
-	if( tick() == 0 )
-		checkGlobalFx();
-	bufLen = 0;
-	if( !adjustPosition( false, true ) ) {
-		logger()->debug( L4CXX_LOCATION, "adjustPosition() failed" );
-		return;
-	}
-	BOOST_ASSERT( mapOrder( order() ).use_count() > 0 );
-	if( orderAt( order() )->playbackCount() >= maxRepeat() ) {
-		logger()->debug( L4CXX_LOCATION, "maxRepeat() reached" );
-		return;
-	}
-	// update channels...
-	setPatternIndex( mapOrder( order() )->index() );
-	ModPattern::Ptr currPat = getPattern( patternIndex() );
-	if( !currPat ) {
-		logger()->warn( L4CXX_LOCATION, "pattern is null" );
-		return;
-	}
-	bufLen = tickBufferLength(); // in frames
-	for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-		ModChannel::Ptr chan = m_channels.at( currTrack );
-		BOOST_ASSERT( chan.use_count() > 0 );
-		ModCell::Ptr cell = currPat->cellAt( currTrack, row() );
-		chan->update( cell, false ); // m_patDelayCount != -1);
-		MixerFrameBuffer buf( new MixerFrameBuffer::element_type(bufLen) );
-		chan->mixTick( buf, true );
-		bufLen = buf->size();
-	}
-	if( !adjustPosition( true, true ) ) {
-		logger()->debug( L4CXX_LOCATION, "adjustPosition() failed" );
-		bufLen = 0;
-		return;
-	}
-	setPosition( position() + bufLen );
 }
 
 std::string ModModule::channelCellString( size_t idx )
@@ -398,12 +349,12 @@ bool ModModule::initialize( uint32_t frq )
 	logger()->info( L4CXX_LOCATION, "Calculating track lengths and preparing seek operations..." );
 	do {
 		logger()->info( L4CXX_LOCATION, boost::format( "Pre-processing Track %d" ) % currentSongIndex() );
-		size_t currTickLen = 0;
+		size_t len;
 		do {
-			simulateTick( currTickLen );
-			multiSongLengthAt( currentSongIndex() ) += currTickLen;
+			len = buildTick( nullptr );
+			multiSongLengthAt( currentSongIndex() ) += len;
 		}
-		while( currTickLen != 0 );
+		while( len != 0 );
 		logger()->info( L4CXX_LOCATION, "Preprocessed." );
 		for( size_t i = 0; i < orderCount(); i++ ) {
 			BOOST_ASSERT( orderAt( i ).use_count() > 0 );

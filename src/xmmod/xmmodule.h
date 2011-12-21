@@ -41,6 +41,7 @@ namespace xm
 class XmModule : public GenModule
 {
 	DISABLE_COPY( XmModule )
+	friend class XmChannel;
 private:
 	//! @brief @c true if amiga period table is used
 	bool m_amiga;
@@ -66,12 +67,6 @@ private:
 	uint8_t m_currentPatternDelay;
 	//! @brief The requested pattern delay countdown, 0 if unused
 	uint8_t m_requestedPatternDelay;
-	/**
-	 * @brief Increases tick values and processes jumps
-	 * @param[in] doStore Set to @c true to store the state on order change
-	 * @return @c false when end of song is reached
-	 */
-	bool adjustPosition( bool doStore );
 public:
 	/**
 	 * @brief Factory method
@@ -83,8 +78,17 @@ public:
 	 * Loads and initializes the module if possible
 	 */
 	static GenModule::Ptr factory( const std::string& filename, uint32_t frequency, uint8_t maxRpt );
+	virtual ~XmModule();
 	//! @brief Class pointer
 	typedef std::shared_ptr<XmModule> Ptr;
+	virtual size_t buildTick( AudioFrameBuffer* buffer );
+	virtual ppp::GenOrder::Ptr mapOrder( int16_t );
+	virtual std::string channelStatus( size_t );
+	virtual bool jumpNextSong();
+	virtual bool jumpPrevSong();
+	virtual std::string channelCellString( size_t );
+	virtual uint8_t channelCount() const;
+private:
 	/**
 	 * @brief Constructor
 	 * @param[in] maxRpt maximum repeat count per order
@@ -97,16 +101,12 @@ public:
 	 * @retval false on error
 	 */
 	bool load( const std::string& filename );
-	virtual void buildTick( AudioFrameBuffer& buffer );
-	virtual void simulateTick( size_t& );
-	virtual ppp::GenOrder::Ptr mapOrder( int16_t );
-	virtual std::string channelStatus( size_t );
-	virtual bool jumpNextSong();
-	virtual bool jumpPrevSong();
-	virtual bool jumpNextOrder();
-	virtual bool jumpPrevOrder();
-	virtual std::string channelCellString( size_t );
-	virtual uint8_t channelCount() const;
+	/**
+	 * @brief Processes jumps
+	 * @param[in] estimateOnly Used when estimating track length
+	 * @return @c false when end of song is reached
+	 */
+	bool adjustPosition( bool estimateOnly );
 	/**
 	 * @brief Get an instrument
 	 * @param[in] idx 1-based instrument index
@@ -170,7 +170,6 @@ public:
 	 * @note Ignored if there is already a running pattern delay
 	 */
 	void doPatDelay( uint8_t counter );
-protected:
 	/**
 	 * @brief Get the logger
 	 * @return Child logger with attached ".xm"

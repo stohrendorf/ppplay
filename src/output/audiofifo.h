@@ -104,6 +104,8 @@ public:
 	// ------------------
 	virtual size_t getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames );
 	virtual bool initialize( uint32_t frequency );
+	virtual void setBusy( bool value );
+	virtual bool isBusy() const;
 protected:
 	/**
 	 * @brief Get the logger

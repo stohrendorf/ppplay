@@ -76,6 +76,8 @@ XmModule::XmModule( uint8_t maxRpt ):
 {
 }
 
+XmModule::~XmModule() = default;
+
 bool XmModule::load( const std::string& filename )
 {
 	XmHeader hdr;
@@ -168,64 +170,52 @@ bool XmModule::load( const std::string& filename )
 	return true;
 }
 
-void XmModule::buildTick( AudioFrameBuffer& buffer )
+size_t XmModule::buildTick( AudioFrameBuffer* buffer )
 {
-	if( !buffer ) {
-		buffer.reset( new AudioFrameBuffer::element_type );
+	if( buffer && !buffer->get() ) {
+		buffer->reset( new AudioFrameBuffer::element_type );
 	}
-	MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength(), {0, 0} ) );
-	XmPattern::Ptr currPat = m_patterns.at( patternIndex() );
-	for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-		XmChannel::Ptr chan = m_channels.at( currTrack );
-		BOOST_ASSERT( chan.use_count() > 0 );
-		XmCell::Ptr cell = currPat->cellAt( currTrack, row() );
-		chan->update( cell );
-		chan->mixTick( mixerBuffer, false );
-	}
-	buffer->resize( mixerBuffer->size() );
-	MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
-	BasicSampleFrame* bufPtr = &buffer->front();
-	for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
-			*bufPtr = mixerBufferPtr->rightShiftClip(2);
-			bufPtr++;
-			mixerBufferPtr++;
-	}
-	nextTick();
-	if( !adjustPosition( false ) ) {
-		buffer.reset();
-		return;
-	}
-	setPosition( position() + mixerBuffer->size() );
-}
-
-void XmModule::simulateTick( size_t& bufferLength )
-{
-	try {
-		bufferLength = tickBufferLength();
-		BOOST_ASSERT( patternIndex() < m_patterns.size() );
+	if(buffer) {
+		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength(), {0, 0} ) );
 		XmPattern::Ptr currPat = m_patterns.at( patternIndex() );
-		BOOST_ASSERT( currPat.use_count() > 0 );
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			XmChannel::Ptr chan = m_channels.at( currTrack );
 			BOOST_ASSERT( chan.use_count() > 0 );
 			XmCell::Ptr cell = currPat->cellAt( currTrack, row() );
-			chan->update( cell );
-			MixerFrameBuffer buf( new MixerFrameBuffer::element_type(bufferLength) );
-			chan->mixTick( buf, true );
-			bufferLength = buf->size();
+			chan->update( cell, false );
+			chan->mixTick( &mixerBuffer );
 		}
-		nextTick();
-		if( !adjustPosition( true ) ) {
-			bufferLength = 0;
+		buffer->get()->resize( mixerBuffer->size() );
+		MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
+		BasicSampleFrame* bufPtr = &buffer->get()->front();
+		for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
+			*bufPtr = mixerBufferPtr->rightShiftClip(2);
+			bufPtr++;
+			mixerBufferPtr++;
 		}
-		setPosition( position() + bufferLength );
 	}
-	catch( ... ) {
-		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information().c_str() ) );
+	else {
+		XmPattern::Ptr currPat = m_patterns.at( patternIndex() );
+		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+			XmChannel::Ptr chan = m_channels.at( currTrack );
+			BOOST_ASSERT( chan.use_count() > 0 );
+			XmCell::Ptr cell = currPat->cellAt( currTrack, row() );
+			chan->update( cell, true );
+			chan->mixTick( nullptr );
+		}
 	}
+	nextTick();
+	if( !adjustPosition( !buffer ) ) {
+		if(buffer) {
+			buffer->reset();
+		}
+		return 0;
+	}
+	setPosition( position() + tickBufferLength() );
+	return tickBufferLength();
 }
 
-bool XmModule::adjustPosition( bool doStore )
+bool XmModule::adjustPosition( bool estimateOnly )
 {
 	bool orderChanged = false;
 	if( tick() == 0 ) {
@@ -235,7 +225,6 @@ bool XmModule::adjustPosition( bool doStore )
 		}
 		if( m_currentPatternDelay != 0 ) {
 			m_currentPatternDelay--;
-			logger()->debug( L4CXX_LOCATION, boost::format( "Pattern delay, %d rows left..." ) % ( m_currentPatternDelay + 0 ) );
 		}
 		if( m_isPatLoop || m_doPatJump ) {
 			if( m_isPatLoop ) {
@@ -270,22 +259,11 @@ bool XmModule::adjustPosition( bool doStore )
 		m_doPatJump = m_isPatLoop = false;
 	}
 	if( orderChanged ) {
-		if( order() < orderCount() ) {
-			setPatternIndex( orderAt( order() )->index() );
-			if( doStore ) {
-				multiSongAt( 0 ).newState()->archive( this ).finishSave();
-			}
-			else {
-				bool wasLocked = tryLock();
-				multiSongAt( 0 ).nextState()->archive( this ).finishLoad();
-				if( wasLocked ) {
-					unlock();
-				}
-			}
-		}
-		else {
+		if( order() >= orderCount() ) {
 			return false;
 		}
+		setPatternIndex( orderAt( order() )->index() );
+		notifyOrderChanged(estimateOnly);
 	}
 	if( orderAt( order() )->playbackCount() >= maxRepeat() ) {
 		return false;
@@ -314,28 +292,6 @@ bool XmModule::jumpNextSong()
 bool XmModule::jumpPrevSong()
 {
 	return false;
-}
-
-bool XmModule::jumpNextOrder()
-{
-	IArchive::Ptr next = multiSongAt( 0 ).nextState();
-	if( !next ) {
-		return false;
-	}
-	IAudioSource::LockGuard guard( this );
-	next->archive( this ).finishLoad();
-	return true;
-}
-
-bool XmModule::jumpPrevOrder()
-{
-	IArchive::Ptr next = multiSongAt( 0 ).prevState();
-	if( !next ) {
-		return false;
-	}
-	IAudioSource::LockGuard guard( this );
-	next->archive( this ).finishLoad();
-	return true;
 }
 
 std::string XmModule::channelCellString( size_t idx )
@@ -597,9 +553,8 @@ void XmModule::doPatLoop( int16_t next )
 
 IArchive& XmModule::serialize( IArchive* data )
 {
-	GenModule::serialize( data )
-	% m_amiga;
-for( const XmChannel::Ptr & chan : m_channels ) {
+	GenModule::serialize( data );
+	for( const XmChannel::Ptr & chan : m_channels ) {
 		if( !chan ) {
 			continue;
 		}
@@ -622,15 +577,15 @@ bool XmModule::initialize( uint32_t frq )
 		return true;
 	}
 	IAudioSource::initialize( frq );
-	logger()->info( L4CXX_LOCATION, "Calculating track length and preparing seek operations..." );
-	size_t currTickLen = 0;
+	logger()->info( L4CXX_LOCATION, "Estimating song length..." );
+	size_t len;
 // 	multiTrackAt(0).startOrder = playbackInfo().order;
 	do {
-		simulateTick( currTickLen );
-		multiSongLengthAt( 0 ) += currTickLen;
+		len = buildTick( nullptr );
+		multiSongLengthAt( 0 ) += len;
 	}
-	while( currTickLen != 0 );
-	logger()->info( L4CXX_LOCATION, "Preprocessed. Resetting module." );
+	while( len != 0 );
+	logger()->info( L4CXX_LOCATION, "Length estimated. Resetting module." );
 	if( songCount() > 0 ) {
 		IAudioSource::LockGuard guard( this );
 		multiSongAt( 0 ).currentState()->archive( this ).finishLoad();

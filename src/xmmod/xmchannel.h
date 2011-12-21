@@ -202,15 +202,16 @@ public:
 	XmChannel( XmModule* module );
 	virtual std::string noteName();
 	virtual std::string effectName() const;
-	virtual void mixTick( MixerFrameBuffer& mixBuffer, bool estimateOnly );
+	virtual void mixTick( MixerFrameBuffer* mixBuffer );
 	virtual void updateStatus();
 	virtual std::string effectDescription() const;
 	virtual std::string cellString();
 	/**
 	 * @brief Update the channel values
 	 * @param[in] cell The new cell
+	 * @param[in] estimateOnly Set to @c true to skip expensive effects
 	 */
-	void update( const XmCell::Ptr& cell );
+	void update( const XmCell::Ptr& cell, bool estimateOnly );
 	virtual IArchive& serialize( IArchive* data );
 private:
 	/** @name Effect handlers
@@ -269,8 +270,9 @@ private:
 	/**
 	 * @brief Effect E: Extended effect
 	 * @param[in] fxByte Effect value byte
+	 * @param[in] estimateOnly Set to @c true to skip expensive effects
 	 */
-	void fxExtended( uint8_t fxByte );
+	void fxExtended( uint8_t fxByte, bool estimateOnly );
 	/**
 	 * @brief Effect 3: Tone porta
 	 */

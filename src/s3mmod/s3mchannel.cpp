@@ -299,11 +299,29 @@ std::string S3mChannel::effectDescription() const
 	return m_currentFxStr;
 }
 
-void S3mChannel::update( const S3mCell::Ptr& cell, bool patDelay )
+void S3mChannel::update( const S3mCell::Ptr& cell, bool patDelay, bool estimateOnly )
 {
-	if( isDisabled() )
+	if( isDisabled() ) {
 		return;
+	}
 	if( m_module->tick() == 0 ) {
+		if(estimateOnly) {
+			if(!cell) {
+				return;
+			}
+			switch( static_cast<S3mEffects>( cell->effect() ) ) {
+				case s3mFxSpeed:
+					fxSpeed( cell->effectValue() );
+					break;
+				case s3mFxTempo:
+					fxTempo( cell->effectValue() );
+					break;
+				default:
+					// silence ;-)
+					break;
+			}
+			return;
+		}
 		m_noteChanged = false;
 		m_currentFxStr = "      ";
 		m_currentCell.clear();
@@ -433,7 +451,7 @@ void S3mChannel::update( const S3mCell::Ptr& cell, bool patDelay )
 				break;
 		}
 	} // endif(tick==0)
-	else if( m_currentCell.effect() != 0 ) { // if(tick!=0)
+	else if( m_currentCell.effect() != 0 && !estimateOnly ) { // if(tick!=0)
 		switch( static_cast<S3mEffects>( m_currentCell.effect() ) ) {
 			case s3mFxVolSlide:
 				fxVolSlide( m_currentCell.effectValue() );
@@ -494,19 +512,25 @@ void S3mChannel::update( const S3mCell::Ptr& cell, bool patDelay )
 	updateStatus();
 }
 
-void S3mChannel::mixTick( MixerFrameBuffer& mixBuffer, bool estimateLength )
+void S3mChannel::mixTick( MixerFrameBuffer* mixBuffer )
 {
-	if( isDisabled() )
+	if( !mixBuffer ) {
 		return;
+	}
+	if( isDisabled() ) {
+		return;
+	}
 	if( !isActive() || !currentSample() || m_basePeriod == 0 ) {
 		setActive( false );
 		return;
 	}
 	if( m_module->tick() == 0 && m_zeroVolCounter != -1 && isActive() ) {
-		if( m_currentVolume == 0 )
+		if( m_currentVolume == 0 ) {
 			m_zeroVolCounter++;
-		else
+		}
+		else {
 			m_zeroVolCounter = 0;
+		}
 		if( m_zeroVolCounter == 3 ) {
 			m_zeroVolCounter = 0;
 			setActive( false );
@@ -514,9 +538,10 @@ void S3mChannel::mixTick( MixerFrameBuffer& mixBuffer, bool estimateLength )
 			return;
 		}
 	}
-	if( !isActive() )
+	if( !isActive() ) {
 		return;
-	if( m_module->frequency() * mixBuffer->size() == 0 ) {
+	}
+	if( m_module->frequency() * (*mixBuffer)->size() == 0 ) {
 		setActive( false );
 		return;
 	}
@@ -526,32 +551,29 @@ void S3mChannel::mixTick( MixerFrameBuffer& mixBuffer, bool estimateLength )
 	S3mSample::Ptr currSmp = currentSample();
 	GenSample::PositionType pos = position();
 	uint8_t volL = 0x20, volR = 0x20;
-	if( m_panning > 0x20 && m_panning != 0xa4 )
+	if( m_panning > 0x20 && m_panning != 0xa4 ) {
 		volL = 0x40 - m_panning;
-	if( m_panning < 0x20 )
-		volR = m_panning;
-	else if( m_panning == 0xa4 )
-		volR = 0xa4;
-	if(!estimateLength) {
-		for( MixerSampleFrame & frame : *mixBuffer ) {
-			BasicSampleFrame sampleVal = currSmp->sampleAt( pos );
-			if( m_panning != 0xa4 ) {
-				sampleVal.mulRShift( volL, volR, 5 );
-			}
-			else {
-				sampleVal.right = -sampleVal.right;
-			}
-			sampleVal.mulRShift( currVol, 6 );
-			frame += sampleVal;
-			if( pos == GenSample::EndOfSample ) {
-				break;
-			}
-			m_bresen.next( pos );
-		}
 	}
-	else {
-		m_bresen.fastNext( mixBuffer->size(), pos );
-		currentSample()->adjustPosition( pos );
+	if( m_panning < 0x20 ) {
+		volR = m_panning;
+	}
+	else if( m_panning == 0xa4 ) {
+		volR = 0xa4;
+	}
+	for( MixerSampleFrame & frame : **mixBuffer ) {
+		BasicSampleFrame sampleVal = currSmp->sampleAt( pos );
+		if( m_panning != 0xa4 ) {
+			sampleVal.mulRShift( volL, volR, 5 );
+		}
+		else {
+			sampleVal.right = -sampleVal.right;
+		}
+		sampleVal.mulRShift( currVol, 6 );
+		frame += sampleVal;
+		if( pos == GenSample::EndOfSample ) {
+			break;
+		}
+		m_bresen.next( pos );
 	}
 	if( pos != GenSample::EndOfSample ) {
 		currentSample()->adjustPosition( pos );
