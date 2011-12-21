@@ -42,7 +42,7 @@ class GenSample
 public:
 	typedef std::shared_ptr<GenSample> Ptr; //!< @brief Class pointer
 	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
-	typedef BasicSampleFrame::Vector::size_type PositionType;
+	typedef BasicSampleFrame::Vector::size_type PositionType; //!< @brief Sample position
 	//! @brief Loop type definitions
 	enum class LoopType
 	{
@@ -133,15 +133,31 @@ protected:
 	 * @param[in] l The new loop type value
 	 */
 	void setLoopType( LoopType l );
+	/**
+	 * @brief Get data start iterator
+	 * @return Data start iterator
+	 */
 	inline BasicSampleFrame::Vector::iterator beginIterator() {
 		return m_data.begin();
 	}
+	/**
+	 * @brief Get data end iterator
+	 * @return Data end iterator
+	 */
 	inline BasicSampleFrame::Vector::iterator endIterator() {
 		return m_data.end();
 	}
+	/**
+	 * @brief Get data start iterator
+	 * @return Data start iterator
+	 */
 	inline BasicSampleFrame::Vector::const_iterator beginIterator() const {
 		return m_data.begin();
 	}
+	/**
+	 * @brief Get data end iterator
+	 * @return Data end iterator
+	 */
 	inline BasicSampleFrame::Vector::const_iterator endIterator() const {
 		return m_data.cend();
 	}
@@ -170,6 +186,10 @@ protected:
 	 * @param[in] v The new volume
 	 */
 	void setVolume( uint8_t v );
+	/**
+	 * @brief Resize the data
+	 * @param[in] size New size
+	 */
 	inline void resizeData( PositionType size ) {
 		m_data.resize( size, {0, 0} );
 	}
