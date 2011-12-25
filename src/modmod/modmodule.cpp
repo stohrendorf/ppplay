@@ -3,6 +3,8 @@
 #include "stream/iarchive.h"
 #include "stream/fbinstream.h"
 
+#include "stuff/moduleregistry.h"
+
 #include <boost/exception/all.hpp>
 #include <boost/format.hpp>
 

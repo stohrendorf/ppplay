@@ -27,10 +27,13 @@
 
 #include "stream/fbinstream.h"
 
+#include "stuff/moduleregistry.h"
+
 #include <boost/format.hpp>
 
 namespace ppp
 {
+
 namespace s3m
 {
 

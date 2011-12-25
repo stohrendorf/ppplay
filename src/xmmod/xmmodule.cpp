@@ -25,6 +25,7 @@
 
 #include "xmmodule.h"
 #include "stream/fbinstream.h"
+#include "stuff/moduleregistry.h"
 
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
