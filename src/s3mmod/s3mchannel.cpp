@@ -752,14 +752,18 @@ void S3mChannel::fxVolSlide( uint8_t fxByte )
 			}
 		}
 	}
-	else if( m_module->hasFastVolSlides() || m_module->tick() != 0 ) {
+	else {
 		if( lowNibble( fxByte ) == 0 ) {
 			m_currentFxStr = "VSld \x1e";
-			m_currentVolume = std::min( 63, m_currentVolume + highNibble( fxByte ) );
+			if( m_module->hasFastVolSlides() || m_module->tick() != 0 ) {
+				m_currentVolume = std::min( 63, m_currentVolume + highNibble( fxByte ) );
+			}
 		}
 		else {
 			m_currentFxStr = "VSld \x1f";
-			m_currentVolume = std::max( 0, m_currentVolume - lowNibble( fxByte ) );
+			if( m_module->hasFastVolSlides() || m_module->tick() != 0 ) {
+				m_currentVolume = std::max( 0, m_currentVolume - lowNibble( fxByte ) );
+			}
 		}
 	}
 	recalcVolume();
