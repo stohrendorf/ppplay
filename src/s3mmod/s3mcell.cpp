@@ -111,7 +111,7 @@ std::string S3mCell::trackerString() const
 	else
 		xmsg += ".. ";
 	if( m_effect != s3mEmptyCommand )
-		xmsg += ( boost::format( "%c%02x" ) % ( 'A' - 1 + m_effect ) % ( m_effectValue + 0 ) ).str();
+		xmsg += ( boost::format( "%c%02x" ) % static_cast<char>( 'A' - 1 + m_effect ) % ( m_effectValue + 0 ) ).str();
 	else
 		xmsg += "...";
 	return xmsg;

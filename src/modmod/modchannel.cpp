@@ -54,9 +54,13 @@ static inline double finetuneMultiplicator( uint8_t finetune )
  * are clipped to a range of 0x71..0x358 (113..856 decimal respectively).
  */
 
-ModChannel::ModChannel( ModModule* parent ) : m_module( parent ), m_currentCell(), m_volume( 0 ), m_physVolume( 0 ),
-	m_finetune( 0 ), m_tremoloWaveform( 0 ), m_tremoloPhase( 0 ), m_vibratoWaveform( 0 ), m_vibratoPhase( 0 ), m_glissando( false ),
-	m_period( 0 ), m_physPeriod( 0 ), m_portaTarget( 0 ), m_lastVibratoFx( 0 ), m_lastTremoloFx( 0 ), m_portaSpeed( 0 ), m_lastOffsetFx( 0 ), m_sampleIndex( 0 ), m_bresen( 1, 1 ),
+ModChannel::ModChannel( ModModule* parent ) :
+	m_module( parent ), m_currentCell(), m_volume( 0 ), m_physVolume( 0 ),
+	m_finetune( 0 ), m_tremoloWaveform( 0 ), m_tremoloPhase( 0 ),
+	m_vibratoWaveform( 0 ), m_vibratoPhase( 0 ), m_glissando( false ),
+	m_period( 0 ), m_physPeriod( 0 ), m_portaTarget( 0 ),
+	m_lastVibratoFx( 0 ), m_lastTremoloFx( 0 ), m_portaSpeed( 0 ),
+	m_lastOffsetFx( 0 ), m_sampleIndex( 0 ), m_bresen( 1, 1 ),
 	m_effectDescription( "      " )
 {
 	BOOST_ASSERT( parent != nullptr );
@@ -280,7 +284,6 @@ void ModChannel::mixTick( MixerFrameBuffer* mixBuffer )
 		return;
 	}
 	m_bresen.reset( m_module->frequency(), FrequencyBase / m_physPeriod );
-// 	setStatusString( statusString() + stringf(" %d +- %u",FrequencyBase/m_period, m_finetune) );
 	// TODO glissando
 	ModSample::Ptr currSmp = currentSample();
 	GenSample::PositionType pos = position();
@@ -572,13 +575,9 @@ void ModChannel::fxPorta( uint8_t fxByte )
 		return;
 	}
 	if( m_portaDirUp == 1 ) {
-		// porta up
-		logger()->trace( L4CXX_LOCATION, "Porta up" );
 		m_period = std::max<int>( m_portaTarget, m_period - fxByte );
 	}
 	else {
-		// porta down
-		logger()->trace( L4CXX_LOCATION, "Porta down" );
 		m_period = std::min<int>( m_portaTarget, m_period + fxByte );
 	}
 	if( m_period == m_portaTarget ) {
@@ -628,7 +627,6 @@ void ModChannel::fxArpeggio( uint8_t fxByte )
 	for( uint8_t i = 0; i < fullPeriods.at( m_finetune ).size() - delta; i++ ) {
 		if( fullPeriods.at( m_finetune ).at( i ) <= m_period ) {
 			m_physPeriod = fullPeriods.at( m_finetune ).at( i + delta );
-// 			logger()->debug( L4CXX_LOCATION, boost::format( "Arpeggio: period=%d, physPeriod=%d, delta=%d, finetune=%d" ) % m_period % m_physPeriod % ( delta + 0 ) % ( m_finetune + 0 ) );
 			return;
 		}
 	}
@@ -639,14 +637,12 @@ void ModChannel::fxPatBreak( uint8_t )
 {
 	m_effectDescription = "PBrk \xf6";
 	// implemented in ModModule
-	// logger()->warn(L4CXX_LOCATION, "Not implemented: Effect Pattern Break");
 }
 
 void ModChannel::fxPosJmp( uint8_t )
 {
 	m_effectDescription = "JmOrd\x1a";
 	// implemented in ModModule
-	// logger()->warn(L4CXX_LOCATION, "Not implemented: Effect Position Jump");
 }
 
 void ModChannel::fxSetFinePan( uint8_t fxByte )
