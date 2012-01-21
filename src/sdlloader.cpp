@@ -19,8 +19,11 @@
 #include <SDL.h>
 #include <boost/assert.hpp>
 
-static void __attribute__( ( constructor ) ) sdlInit()
+static void __attribute__(( constructor )) sdlInit()
 {
-	BOOST_ASSERT( SDL_Init( 0 ) == 0 );
+	// SDL wiki says that the eventthread is only running when video is initialized, so...
+	BOOST_ASSERT( SDL_Init( SDL_INIT_EVENTTHREAD|SDL_INIT_VIDEO ) == 0 );
+	// set the keyboard repetition
+	BOOST_ASSERT( SDL_EnableKeyRepeat( SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL ) == 0 );
 	BOOST_ASSERT( atexit( SDL_Quit ) == 0 );
 }
