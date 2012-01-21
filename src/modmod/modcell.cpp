@@ -54,7 +54,7 @@ bool ModCell::load( BinStream& str )
 	if( m_sampleNumber > 32 ) {
 		logger()->warn( L4CXX_LOCATION, boost::format( "Sample out of range: %d" ) % ( m_sampleNumber + 0 ) );
 	}
-	m_sampleNumber &= 0x1f;
+	//m_sampleNumber &= 0x1f;
 	m_period = ( tmp & 0x0f ) << 8;
 	str.read( &tmp );
 	m_period |= tmp;

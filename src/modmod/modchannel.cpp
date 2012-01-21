@@ -93,7 +93,7 @@ void ModChannel::update( const ModCell::Ptr& cell, bool patDelay )
 			}
 		}
 		if( m_currentCell.period() != 0 ) {
-			if( m_currentCell.effect() != 3 && m_currentCell.effect() != 5 ) {
+			if( m_period == 0 || (m_currentCell.effect() != 3 && m_currentCell.effect() != 5) ) {
 				setCellPeriod();
 				setPosition( 0 );
 				setActive( true );
