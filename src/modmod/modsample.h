@@ -42,6 +42,7 @@ public:
 	ModSample();
 	bool loadHeader( BinStream& stream );
 	bool loadData( BinStream& stream );
+	bool loadAdpcmData( BinStream& stream );
 	uint8_t finetune() const;
 private:
 	uint8_t m_finetune;

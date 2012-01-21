@@ -22,6 +22,8 @@
 
 #include <boost/format.hpp>
 
+#include <cstring>
+
 /**
  * @ingroup ModMod
  * @{
@@ -65,13 +67,16 @@ bool ModSample::loadHeader( BinStream& stream )
 	if( hdr.length > 1 ) {
 		resizeData( hdr.length << 1 );
 	}
+	else {
+		resizeData( 0 );
+	}
 	if( hdr.loopLength > 1 && ( hdr.loopLength + hdr.loopStart <= hdr.length ) ) {
 		setLoopStart( hdr.loopStart << 1 );
 		setLoopEnd( ( hdr.loopStart + hdr.loopLength ) << 1 );
 		setLoopType( LoopType::Forward );
 	}
 	setTitle( stringncpy( hdr.name, 22 ) );
-	logger()->debug( L4CXX_LOCATION, boost::format( "Length=%u, loop=%u+%u=%u, name='%s'" ) % length() % hdr.loopStart % hdr.loopLength % ( hdr.loopStart + hdr.loopLength ) % title() );
+	logger()->debug( L4CXX_LOCATION, boost::format( "Length=%u, loop=%u+%u=%u, name='%s'" ) % length() % (hdr.loopStart<<1) % (hdr.loopLength<<1) % (( hdr.loopStart + hdr.loopLength )<<1) % title() );
 // 	LOG_DEBUG("Loading sample (length=%u, loop=%u+%u=%u, name='%s', vol=%u)", length(), hdr.loopStart, hdr.loopLength, hdr.loopStart+hdr.loopLength, title().c_str(), hdr.volume);
 	setVolume( std::min<uint8_t>( hdr.volume, 0x40 ) );
 	m_finetune = hdr.finetune & 0x0f;
@@ -83,6 +88,17 @@ bool ModSample::loadData( BinStream& stream )
 	if( length() == 0 ) {
 		return true;
 	}
+	{
+		// check for the funny adpcm data
+		char tmp[5];
+		stream.read(tmp, 5);
+		if(strncasecmp(tmp, "ADPCM", 5) == 0) {
+			logger()->debug(L4CXX_LOCATION, "Detected ADPCM compressed sample data");
+			return loadAdpcmData(stream);
+		}
+		stream.seekrel(-5);
+	}
+	logger()->debug(L4CXX_LOCATION, boost::format("Loading %d bytes sample data") % length());
 	if( stream.pos() + length() > stream.size() ) {
 		logger()->warn( L4CXX_LOCATION, boost::format( "File truncated: %u bytes requested while only %u bytes left. Truncating sample." ) % length() % ( stream.size() - stream.pos() ) );
 		resizeData( stream.size() - stream.pos() );
@@ -91,6 +107,25 @@ bool ModSample::loadData( BinStream& stream )
 		int8_t tmp;
 		stream.read( &tmp );
 		it->left = it->right = tmp << 8;
+	}
+	return stream.good();
+}
+
+bool ModSample::loadAdpcmData( BinStream& stream )
+{
+	int8_t compressionTable[16];
+	stream.read(compressionTable, 16);
+	// signed char GetDeltaValue(signed char prev, UINT n) const { return (signed char)(prev + CompressionTable[n & 0x0F]); }
+	int8_t delta = 0;
+	for(auto it = beginIterator(); it < endIterator(); ) {
+		uint8_t tmpByte;
+		stream.read( &tmpByte );
+		delta += compressionTable[ lowNibble(tmpByte) ];
+		it->left = it->right = delta<<8;
+		it++;
+		delta += compressionTable[ highNibble(tmpByte) ];
+		it->left = it->right = delta<<8;
+		it++;
 	}
 	return stream.good();
 }
