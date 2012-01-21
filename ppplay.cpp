@@ -36,6 +36,7 @@
 
 #include <boost/program_options.hpp>
 #include <boost/format.hpp>
+#include <boost/progress.hpp>
 
 #include "light4cxx/logger.h"
 
@@ -199,19 +200,20 @@ int main( int argc, char* argv[] )
 	ppp::ModuleRegistry::registerLoader(ppp::s3m::S3mModule::factory);
 	ppp::ModuleRegistry::registerLoader(ppp::mod::ModModule::factory);
 	try {
-		if( !parseCmdLine( argc, argv ) )
+		if( !parseCmdLine( argc, argv ) ) {
 			return EXIT_SUCCESS;
+		}
 		light4cxx::Logger::root()->info( L4CXX_LOCATION, boost::format( "Trying to load '%s'" ) % config::filename );
 		ppp::GenModule::Ptr module;
 		try {
 			module = ppp::ModuleRegistry::tryLoad(config::filename, 44100, config::maxRepeat);
 			if( !module ) {
-				light4cxx::Logger::root()->error( L4CXX_LOCATION, "Error on loading the mod..." );
+				light4cxx::Logger::root()->error( L4CXX_LOCATION, boost::format("Error on loading '%s'") % config::filename );
 				return EXIT_FAILURE;
 			}
 		}
 		catch( ... ) {
-			light4cxx::Logger::root()->fatal( L4CXX_LOCATION, boost::format( "Main: %s" ) % boost::current_exception_diagnostic_information() );
+			light4cxx::Logger::root()->fatal( L4CXX_LOCATION, boost::format( "Exception on module loading: %s" ) % boost::current_exception_diagnostic_information() );
 			return EXIT_FAILURE;
 		}
 		if( !config::noGUI ) {
@@ -316,8 +318,10 @@ int main( int argc, char* argv[] )
 				uiMain.reset( new UIMain( dosScreen.get(), module, output ) );
 			}
 			output->play();
+			boost::progress_display progress(module->length(), std::cout, (boost::format("QuickMP3: %s\n") % config::filename).str());
 			while( output->playing() ) {
-				// ...
+				boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
+				progress += module->position()-progress.count();
 			}
 		}
 #endif
