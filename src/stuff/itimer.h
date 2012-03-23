@@ -38,7 +38,7 @@ public:
 	/**
 	 * @brief Default constructor
 	 */
-	ITimer() = default;
+	constexpr ITimer() = default;
 	/**
 	 * @brief Virtual default destructor
 	 */

@@ -6,4 +6,5 @@ add_library(xmmod STATIC
 	xmchannel.cpp
 	xmenvelopeprocessor.cpp
 	xmcell.cpp
+	xmorder.cpp
 )

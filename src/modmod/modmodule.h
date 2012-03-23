@@ -70,12 +70,7 @@ public:
 	virtual size_t buildTick( AudioFrameBuffer* buf );
 	virtual GenOrder::Ptr mapOrder( int16_t order );
 	virtual std::string channelStatus( size_t idx );
-	virtual bool jumpNextSong();
-	virtual bool jumpPrevSong();
-	virtual bool jumpNextOrder();
-	virtual bool jumpPrevOrder();
 	virtual std::string channelCellString( size_t idx );
-	virtual bool initialize( uint32_t frq );
 	virtual uint8_t channelCount() const;
 private:
 	ModSample::Ptr sampleAt( size_t idx ) const;

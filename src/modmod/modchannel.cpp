@@ -329,10 +329,10 @@ void ModChannel::setCellPeriod()
 	else {
 		m_period = fullPeriods.at( m_finetune ).at( perIdx );
 	}
-	if( m_currentCell.effect() == 0x0e && highNibble( m_currentCell.effectValue() ) == 0x0d ) {
+// 	if( m_currentCell.effect() == 0x0e && highNibble( m_currentCell.effectValue() ) == 0x0d ) {
 		// note delay
-		return;
-	}
+// 		return;
+// 	}
 	m_physPeriod = m_period;
 	if( ( m_vibratoWaveform & 4 ) == 0 ) {
 		m_vibratoPhase = 0;
@@ -473,9 +473,6 @@ void ModChannel::fxOffset( uint8_t fxByte )
 	}
 	if( currentSample() && currentSample()->length() > ( fxByte << 8 ) ) {
 		setPosition( fxByte << 8 );
-	}
-	else {
-		setActive( false );
 	}
 }
 

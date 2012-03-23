@@ -25,6 +25,7 @@
  */
 
 #include "stuff/utils.h"
+//#include "stuff/readwritelockable.h"
 #include "audiotypes.h"
 
 #include "light4cxx/logger.h"
@@ -44,9 +45,9 @@ private:
 	bool m_initialized;
 	//! @brief Frequency of this source
 	uint32_t m_frequency;
-	//! @brief Mutex for locking the source
-	boost::mutex m_lockMutex;
-	bool m_isBusy;
+	bool m_paused;
+	//ReadWriteLockable m_readWriteLock;
+	mutable boost::recursive_mutex m_mutex;
 protected:
 	/**
 	 * @brief Sets m_initialized to @c false and m_frequency to @c 0
@@ -54,43 +55,6 @@ protected:
 	 */
 	bool fail();
 public:
-	/**
-	 * @class LockGuard
-	 * @brief Lock guard helper
-	 * @details
-	 * Locks an IAudioSource on construction and automatically
-	 * unlocks it on destruction
-	 */
-	class LockGuard
-	{
-		DISABLE_COPY( LockGuard )
-	private:
-		//! @brief Mutex lock guard
-		boost::unique_lock<boost::mutex> m_guard;
-	public:
-		/**
-		 * @brief Constructor
-		 * @param[in] src IAudioSource to lock
-		 */
-		LockGuard( IAudioSource* src ) : m_guard( src->m_lockMutex ) { }
-	};
-	/**
-	 * @class TryLockGuard
-	 * @brief Lock guard helper
-	 */
-	class TryLockGuard
-	{
-		DISABLE_COPY( TryLockGuard )
-	private:
-		//! @brief Mutex lock guard
-		boost::unique_lock<boost::mutex> m_guard;
-	public:
-		/**
-		 * @brief Constructor
-		 * @param[in] src IAudioSource to lock
-		 */
-		TryLockGuard( IAudioSource* src ) : m_guard( src->m_lockMutex, boost::try_to_lock ) { }
-	};
 	//! @brief Class pointer
 	typedef std::shared_ptr<IAudioSource> Ptr;
 	//! @brief Weak class pointer
@@ -141,8 +105,14 @@ public:
 	 * @return Right channel's volume, default is 0
 	 */
 	virtual uint16_t volumeRight() const;
-	virtual void setBusy( bool value ) = 0;
-	virtual bool isBusy() const = 0;
+	inline bool paused() const {
+		boost::recursive_mutex::scoped_lock lock(m_mutex);
+		return m_paused;
+	}
+	inline void setPaused(bool p = true) {
+		boost::recursive_mutex::scoped_lock lock(m_mutex);
+		m_paused = p;
+	}
 protected:
 	/**
 	 * @brief Get the logger

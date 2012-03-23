@@ -34,7 +34,7 @@ class XmOrder : public GenOrder
 public:
 	inline XmOrder( uint8_t idx ) : GenOrder( idx ) {
 	}
-	virtual bool playable() const;
+	virtual bool isUnplayed() const;
 };
 
 }

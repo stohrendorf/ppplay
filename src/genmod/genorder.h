@@ -75,6 +75,8 @@ public:
 	 * @return The new value of m_playbackCount
 	 */
 	uint8_t increasePlaybackCount();
+	
+	virtual bool isUnplayed() const = 0;
 protected:
 	/**
 	 * @brief Get the logger

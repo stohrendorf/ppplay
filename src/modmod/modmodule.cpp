@@ -1,4 +1,5 @@
 #include "modmodule.h"
+#include "modorder.h"
 
 #include "stream/iarchive.h"
 #include "stream/fbinstream.h"
@@ -63,9 +64,9 @@ static const std::array<IdMetaInfo, 31> idMetaData  = {{
 		{"TDZ1", 1, "TakeTracker"},
 		{"TDZ2", 2, "TakeTracker"},
 		{"TDZ3", 3, "TakeTracker"},
-		{"5CHN", 1, "TakeTracker"},
-		{"7CHN", 1, "TakeTracker"},
-		{"9CHN", 1, "TakeTracker"},
+		{"5CHN", 5, "TakeTracker"},
+		{"7CHN", 7, "TakeTracker"},
+		{"9CHN", 9, "TakeTracker"},
 		{"11CH", 11, "TakeTracker"},
 		{"13CH", 13, "TakeTracker"},
 		{"15CH", 15, "TakeTracker"},
@@ -146,7 +147,6 @@ bool ModModule::load( const std::string& filename )
 	{
 		// load orders
 		uint8_t songLen;
-// 		LOG_DEBUG("Song len @ 0x%x", stream.pos());
 		stream.read( &songLen );
 		if( songLen > 128 ) {
 			songLen = 128;
@@ -154,28 +154,24 @@ bool ModModule::load( const std::string& filename )
 		logger()->debug( L4CXX_LOCATION, boost::format( "Song length: %d" ) % ( songLen + 0 ) );
 		uint8_t tmp;
 		stream.read( &tmp ); // skip the restart pos
-		for( uint8_t i = 0; i < 128; i++ ) {
+		for( uint8_t i = 0; i < songLen; i++ ) {
 			stream.read( &tmp );
 			if( tmp >= 64 ) {
 				continue;
 			}
-			else if( tmp > maxPatNum ) {
+			if( tmp > maxPatNum ) {
 				maxPatNum = tmp;
 			}
-			//if(maxPatNum > 63) {
-			//LOG_WARNING("Pattern number out of range: %u", maxPatNum);
-			//return false;
-			//}
-			//LOG_DEBUG("Order: %u", tmp);
-			if( i < songLen ) {
-				addOrder( GenOrder::Ptr( new GenOrder( tmp ) ) );
-			}
+			logger()->trace(L4CXX_LOCATION, boost::format("Order %d index: %d")%(i+0)%(tmp+0));
+			addOrder( GenOrder::Ptr( new ModOrder( tmp ) ) );
 		}
+		stream.seekrel(128-songLen);
 	}
 	stream.seekrel( 4 ); // skip the ID
 	logger()->debug( L4CXX_LOCATION, boost::format( "%d patterns @ %#x" ) % ( maxPatNum + 0 ) % stream.pos() );
 	for( uint8_t i = 0; i <= maxPatNum; i++ ) {
 		ModPattern::Ptr pat( new ModPattern() );
+		logger()->debug(L4CXX_LOCATION, boost::format("Loading pattern %u")%(i+0));
 		if( !pat->load( stream, meta.channels ) ) {
 			logger()->warn( L4CXX_LOCATION, "Could not load pattern" );
 			return false;
@@ -183,7 +179,7 @@ bool ModModule::load( const std::string& filename )
 		m_patterns.push_back( pat );
 	}
 	logger()->debug( L4CXX_LOCATION, boost::format( "Sample start @ %#x" ) % stream.pos() );
-for( const ModSample::Ptr & smp : m_samples ) {
+	for( const ModSample::Ptr & smp : m_samples ) {
 		if( !smp->loadData( stream ) ) {
 			logger()->warn( L4CXX_LOCATION, "Could not load sample data" );
 		}
@@ -267,14 +263,9 @@ bool ModModule::adjustPosition( bool estimateOnly )
 	if( tick() == 0 ) {
 		m_patDelayCount = -1;
 		if( m_breakOrder != 0xffff ) {
-			orderAt( order() )->increasePlaybackCount();
 			logger()->debug( L4CXX_LOCATION, "Order break" );
 			if( m_breakOrder < orderCount() ) {
-				setOrder( m_breakOrder );
-				if( order() >= orderCount() ) {
-					logger()->debug( L4CXX_LOCATION, "order()>=orderCount()" );
-					return false;
-				}
+				setOrder( m_breakOrder, estimateOnly, m_breakRow == -1 );
 				orderChanged = true;
 			}
 			setRow( 0 );
@@ -285,13 +276,8 @@ bool ModModule::adjustPosition( bool estimateOnly )
 			}
 			if( m_breakOrder == 0xffff ) {
 				if( m_patLoopCount == -1 ) {
-					orderAt( order() )->increasePlaybackCount();
 					logger()->debug( L4CXX_LOCATION, "Row break" );
-					setOrder( order() + 1 );
-					if( order() >= orderCount() ) {
-						logger()->debug( L4CXX_LOCATION, "order()>=orderCount()" );
-						return false;
-					}
+					setOrder( order() + 1, estimateOnly );
 					orderChanged = true;
 				}
 				//else {
@@ -302,12 +288,7 @@ bool ModModule::adjustPosition( bool estimateOnly )
 		if( ( m_breakRow == -1 ) && ( m_breakOrder == 0xffff ) && ( m_patDelayCount == -1 ) ) {
 			setRow( ( row() + 1 ) & 0x3f );
 			if( row() == 0 ) {
-				orderAt( order() )->increasePlaybackCount();
-				setOrder( order() + 1 );
-				if( order() >= orderCount() ) {
-					logger()->debug( L4CXX_LOCATION, "order()>=orderCount()" );
-					return false;
-				}
+				setOrder( order() + 1, estimateOnly );
 				orderChanged = true;
 			}
 		}
@@ -322,7 +303,7 @@ bool ModModule::adjustPosition( bool estimateOnly )
 		m_patLoopRow = 0;
 		m_patLoopCount = -1;
 		setPatternIndex( mapOrder( order() )->index() );
-		notifyOrderChanged(estimateOnly);
+		setOrder(order(), estimateOnly);
 	}
 	return true;
 }
@@ -337,124 +318,6 @@ std::string ModModule::channelStatus( size_t idx )
 {
 	BOOST_ASSERT( idx < m_channels.size() );
 	return m_channels.at( idx )->statusString();
-}
-
-bool ModModule::initialize( uint32_t frq )
-{
-	if( initialized() ) {
-		return true;
-	}
-	IAudioSource::initialize( frq );
-	addMultiSong( StateIterator() );
-	multiSongAt( currentSongIndex() ).newState()->archive( this ).finishSave();
-	// calculate total length...
-	logger()->info( L4CXX_LOCATION, "Calculating track lengths and preparing seek operations..." );
-	do {
-		logger()->info( L4CXX_LOCATION, boost::format( "Pre-processing Track %d" ) % currentSongIndex() );
-		size_t len;
-		do {
-			len = buildTick( nullptr );
-			multiSongLengthAt( currentSongIndex() ) += len;
-		}
-		while( len != 0 );
-		logger()->info( L4CXX_LOCATION, "Preprocessed." );
-		for( size_t i = 0; i < orderCount(); i++ ) {
-			BOOST_ASSERT( orderAt( i ).use_count() > 0 );
-			if( orderAt( i )->playbackCount() == 0 ) {
-				addMultiSong( StateIterator() );
-				setCurrentSongIndex( currentSongIndex() + 1 );
-				break;
-			}
-		}
-		logger()->info( L4CXX_LOCATION, "Trying to jump to the next song" );
-	}
-	while( jumpNextSong() );
-	if( songCount() > 0 ) {
-		logger()->info( L4CXX_LOCATION, "Preprocessed." );
-		IAudioSource::LockGuard guard( this );
-		multiSongAt( 0 ).currentState()->archive( this ).finishLoad();
-	}
-	removeEmptySongs();
-	return true;
-}
-
-bool ModModule::jumpNextOrder()
-{
-	IArchive::Ptr next = multiSongAt( currentSongIndex() ).nextState();
-	if( !next ) {
-		return false;
-	}
-	IAudioSource::LockGuard guard( this );
-	next->archive( this ).finishLoad();
-	return true;
-}
-
-bool ModModule::jumpNextSong()
-{
-	if( !isMultiSong() ) {
-		logger()->info( L4CXX_LOCATION, "This is not a multi-song" );
-		return false;
-	}
-	BOOST_ASSERT( mapOrder( order() ).use_count() > 0 );
-	orderAt( order() )->increasePlaybackCount();
-	setCurrentSongIndex( currentSongIndex() + 1 );
-	if( currentSongIndex() >= songCount() ) {
-		for( uint16_t i = 0; i < orderCount(); i++ ) {
-			BOOST_ASSERT( orderAt( i ).use_count() > 0 );
-			if( orderAt( i )->playbackCount() == 0 ) {
-				BOOST_ASSERT( mapOrder( i ).use_count() > 0 );
-				setPatternIndex( mapOrder( i )->index() );
-				setOrder( i );
-				addMultiSong( StateIterator() );
-				setPosition( 0 );
-				IAudioSource::LockGuard guard( this );
-				multiSongAt( currentSongIndex() ).newState()->archive( this ).finishSave();
-				return true;
-			}
-		}
-		addMultiSong( StateIterator() );
-		return false;
-	}
-	else {
-		IAudioSource::LockGuard guard( this );
-		multiSongAt( currentSongIndex() ).gotoFront();
-		multiSongAt( currentSongIndex() ).currentState()->archive( this ).finishLoad();
-		BOOST_ASSERT( mapOrder( order() ).use_count() > 0 );
-		setPatternIndex( mapOrder( order() )->index() );
-		return true;
-	}
-	logger()->fatal( L4CXX_LOCATION, "This should definitively NOT have happened..." );
-	return false;
-}
-
-bool ModModule::jumpPrevOrder()
-{
-	IArchive::Ptr next = multiSongAt( currentSongIndex() ).prevState();
-	if( !next ) {
-		return false;
-	}
-	IAudioSource::LockGuard guard( this );
-	next->archive( this ).finishLoad();
-	return true;
-}
-
-bool ModModule::jumpPrevSong()
-{
-	if( !isMultiSong() ) {
-		logger()->info( L4CXX_LOCATION, "This is not a multi-song" );
-		return false;
-	}
-	if( currentSongIndex() == 0 ) {
-		logger()->info( L4CXX_LOCATION, "Already on first song" );
-		return false;
-	}
-	setCurrentSongIndex( currentSongIndex() - 1 );
-	IAudioSource::LockGuard guard( this );
-	multiSongAt( currentSongIndex() ).gotoFront();
-	multiSongAt( currentSongIndex() ).currentState()->archive( this ).finishLoad();
-	BOOST_ASSERT( mapOrder( order() ).use_count() > 0 );
-	setPatternIndex( mapOrder( order() )->index() );
-	return true;
 }
 
 GenOrder::Ptr ModModule::mapOrder( int16_t order )
@@ -473,7 +336,7 @@ IArchive& ModModule::serialize( IArchive* data )
 	% m_patLoopRow
 	% m_patLoopCount
 	% m_patDelayCount;
-for( ModChannel::Ptr & chan : m_channels ) {
+	for( ModChannel::Ptr & chan : m_channels ) {
 		if( !chan ) {
 			continue;
 		}
@@ -585,7 +448,7 @@ void ModModule::checkGlobalFx()
 
 ModPattern::Ptr ModModule::getPattern( size_t idx ) const
 {
-	if( idx >= m_patterns.size() ) return ModPattern::Ptr();
+	//if( idx >= m_patterns.size() ) return ModPattern::Ptr();
 	return m_patterns.at( idx );
 }
 

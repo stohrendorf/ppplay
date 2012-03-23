@@ -31,7 +31,7 @@
 
 #include "light4cxx/logger.h"
 
-#include <mutex>
+#include <boost/thread.hpp>
 
 namespace ppp
 {
@@ -52,7 +52,7 @@ private:
 	bool m_disabled; //!< @brief @c true if channel is disabled
 	GenSample::PositionType m_position; //!< @brief Current sample position
 	std::string m_statusString; //!< @brief Status string
-	std::mutex m_statusStringMutex; //!< @brief Mutex for accessing m_statusString
+	boost::recursive_mutex m_statusStringMutex; //!< @brief Mutex for accessing m_statusString
 public:
 	/**
 	 * @brief The constructor

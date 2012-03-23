@@ -240,11 +240,22 @@ int main( int argc, char* argv[] )
 			while( output ) {
 				if( output && output->errorCode() == IAudioOutput::InputDry ) {
 					light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Input is dry, trying to jump to the next song");
+					module->setPaused(true);
+					output->pause();
 					if( !module->jumpNextSong() ) {
 						light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Jump failed, quitting");
 						output.reset();
 						break;
 					}
+					for(int i=0; i<10; i++) {
+						output->setErrorCode( IAudioOutput::NoError );
+						boost::this_thread::sleep( boost::posix_time::millisec(50) );
+						if( output->errorCode() == IAudioOutput::NoError ) {
+							break;
+						}
+					}
+					module->setPaused(false);
+					output->play();
 // 					output->init( module->frequency() );
 // 					output->play();
 				}
@@ -264,10 +275,12 @@ int main( int argc, char* argv[] )
 							output.reset();
 							break;
 						case SDLK_SPACE:
-							if( output->playing() )
+							if( output->playing() ) {
 								output->pause();
-							else if( output->paused() )
+							}
+							else if( output->paused() ) {
 								output->play();
+							}
 							break;
 						case SDLK_END:
 							if( !module->jumpNextSong() )

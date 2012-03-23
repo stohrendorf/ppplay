@@ -30,11 +30,12 @@
 uint32_t SDLTimer::callback( uint32_t interval, void* userdata )
 {
 	SDLTimer* timer = static_cast<SDLTimer*>( userdata );
+	boost::recursive_mutex::scoped_lock lock(timer->m_callbackMutex);
 	timer->onTimer();
 	return interval;
 }
 
-SDLTimer::SDLTimer( uint32_t interval ) : ITimer(), m_interval( interval ), m_id( nullptr )
+SDLTimer::SDLTimer( uint32_t interval ) : ITimer(), m_interval( interval ), m_id( nullptr ), m_callbackMutex()
 {
 	if( !SDL_WasInit( SDL_INIT_TIMER ) ) {
 		BOOST_ASSERT( SDL_InitSubSystem( SDL_INIT_TIMER ) == 0 );
@@ -45,6 +46,7 @@ SDLTimer::SDLTimer( uint32_t interval ) : ITimer(), m_interval( interval ), m_id
 SDLTimer::~SDLTimer()
 {
 	SDL_RemoveTimer( m_id );
+	boost::recursive_mutex::scoped_lock lock(m_callbackMutex);
 }
 
 uint32_t SDLTimer::interval() const

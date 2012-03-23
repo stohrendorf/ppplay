@@ -45,13 +45,13 @@ IArchive& GenChannel::serialize( IArchive* data )
 
 std::string GenChannel::statusString()
 {
-	std::lock_guard<std::mutex> lock( m_statusStringMutex );
+	boost::recursive_mutex::scoped_lock lock( m_statusStringMutex );
 	return m_statusString;
 }
 
 void GenChannel::setStatusString( const std::string& s )
 {
-	std::lock_guard<std::mutex> lock( m_statusStringMutex );
+	boost::recursive_mutex::scoped_lock lock( m_statusStringMutex );
 	m_statusString = s;
 }
 

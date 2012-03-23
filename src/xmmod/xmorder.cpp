@@ -25,7 +25,7 @@ namespace ppp
 namespace xm
 {
 
-bool XmOrder::playable() const
+bool XmOrder::isUnplayed() const
 {
 	return playbackCount() == 0;
 }

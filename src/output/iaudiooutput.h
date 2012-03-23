@@ -26,6 +26,8 @@
 
 #include "iaudiosource.h"
 
+#include <boost/thread.hpp>
+
 /**
  * @interface IAudioOutput
  * @brief Abstract base class for sound output
@@ -52,7 +54,9 @@ public:
 	 * @brief Constructor
 	 * @param[in] src Pointer to an audio data source
 	 */
-	explicit IAudioOutput( const IAudioSource::WeakPtr& src ) : m_source( src ), m_errorCode( NoError ) {}
+	inline explicit IAudioOutput( const IAudioSource::WeakPtr& src ) : m_source( src ), m_errorCode( NoError ), m_mutex()
+	{
+	}
 	//! @brief Destructor
 	virtual ~IAudioOutput();
 	/**
@@ -100,12 +104,12 @@ public:
 	 * @return Internal error code
 	 */
 	ErrorCode errorCode() const;
-protected:
 	/**
 	 * @brief Set the internal error code
 	 * @param[in] ec New error code
 	 */
 	void setErrorCode( ErrorCode ec );
+protected:
 	/**
 	 * @brief Get the logger
 	 * @return Logger with name "audio.output"
@@ -114,6 +118,8 @@ protected:
 private:
 	IAudioSource::WeakPtr m_source; //!< @brief The audio source
 	ErrorCode m_errorCode; //!< @brief Internal error code
+	//ReadWriteLockable m_readWriteLock;
+	mutable boost::recursive_mutex m_mutex;
 };
 
 /**

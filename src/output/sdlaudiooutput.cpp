@@ -28,7 +28,7 @@ void SDLAudioOutput::sdlAudioCallback( void* userdata, uint8_t* stream, int len_
 	outpSdl->logger()->trace(L4CXX_LOCATION, boost::format("Requested %d bytes of data")%len_bytes);
 	AudioFrameBuffer buffer;
 	IAudioSource::Ptr src( outpSdl->source().lock() );
-	if(!src->isBusy()) {
+	if(src && !src->paused()) {
 		size_t copied = src->getAudioData( buffer, len_bytes / sizeof( BasicSampleFrame ) );
 		if( copied == 0 ) {
 			outpSdl->logger()->trace(L4CXX_LOCATION, "Source did not return any data - input is dry");

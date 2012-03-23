@@ -24,6 +24,7 @@
 #include <boost/exception/all.hpp>
 
 #include "s3mmodule.h"
+#include "s3morder.h"
 
 #include "stream/fbinstream.h"
 
@@ -93,7 +94,7 @@ S3mModule::S3mModule( uint8_t maxRpt ) : GenModule( maxRpt ),
 {
 	try {
 		for( uint16_t i = 0; i < 256; i++ ) {
-			addOrder( GenOrder::Ptr( new GenOrder( s3mOrderEnd ) ) );
+			addOrder( GenOrder::Ptr( new S3mOrder( s3mOrderEnd ) ) );
 			m_patterns.push_back( S3mPattern::Ptr() );
 			m_samples.push_back( S3mSample::Ptr() );
 		}
@@ -303,48 +304,7 @@ bool S3mModule::load( const std::string& fn )
 	catch( ... ) {
 		BOOST_THROW_EXCEPTION( std::runtime_error( "Unknown exception" ) );
 	}
-	saveInitialState();
 }
-
-bool S3mModule::initialize( uint32_t frq )
-{
-	if( initialized() ) {
-		return true;
-	}
-	IAudioSource::initialize( frq );
-	addMultiSong( StateIterator() );
-	multiSongAt( currentSongIndex() ).newState()->archive( this ).finishSave();
-	// calculate total length...
-	logger()->info( L4CXX_LOCATION, "Calculating track lengths and preparing seek operations..." );
-	do {
-		logger()->info( L4CXX_LOCATION, boost::format( "Pre-processing Track %d" ) % currentSongIndex() );
-		size_t len;
-		do {
-			len = buildTick( nullptr );
-			multiSongLengthAt( currentSongIndex() ) += len;
-		}
-		while( len != 0 );
-		logger()->info( L4CXX_LOCATION, "Preprocessed." );
-		for( size_t i = 0; i < orderCount(); i++ ) {
-			BOOST_ASSERT( orderAt( i ).use_count() > 0 );
-			if( ( orderAt( i )->index() != s3mOrderEnd ) && ( orderAt( i )->index() != s3mOrderSkip ) && ( orderAt( i )->playbackCount() == 0 ) ) {
-				addMultiSong( StateIterator() );
-				setCurrentSongIndex( currentSongIndex() + 1 );
-				break;
-			}
-		}
-		logger()->info( L4CXX_LOCATION, "Trying to jump to the next track" );
-	}
-	while( jumpNextSong() );
-	logger()->info( L4CXX_LOCATION, "Lengths calculated, resetting module." );
-	if( songCount() > 0 ) {
-		IAudioSource::LockGuard guard( this );
-		multiSongAt( 0 ).currentState()->archive( this ).finishLoad();
-	}
-	removeEmptySongs();
-	return true;
-}
-
 
 bool S3mModule::existsSample( int16_t idx )
 {
@@ -467,9 +427,8 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 	if( tick() == 0 ) {
 		m_patDelayCount = -1;
 		if( m_breakOrder != 0xffff ) {
-			orderAt( order() )->increasePlaybackCount();
 			if( m_breakOrder < orderCount() ) {
-				setOrder( m_breakOrder );
+				setOrder( m_breakOrder, estimateOnly );
 				orderChanged = true;
 			}
 			setRow( 0 );
@@ -480,8 +439,7 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 			}
 			if( m_breakOrder == 0xffff ) {
 				if( m_patLoopCount == -1 ) {
-					orderAt( order() )->increasePlaybackCount();
-					setOrder( order() + 1 );
+					setOrder( order() + 1, estimateOnly );
 					orderChanged = true;
 				}
 			}
@@ -489,8 +447,7 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 		if( ( m_breakRow == 0xffff ) && ( m_breakOrder == 0xffff ) && ( m_patDelayCount == -1 ) ) {
 			setRow( ( row() + 1 ) & 0x3f );
 			if( row() == 0 ) {
-				orderAt( order() )->increasePlaybackCount();
-				setOrder( order() + 1 );
+				setOrder( order() + 1, estimateOnly );
 				orderChanged = true;
 			}
 		}
@@ -504,8 +461,7 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 		}
 		if( !mapOrder( order() ) )
 			return false;
-		orderAt( order() )->increasePlaybackCount();
-		setOrder( order() + 1 );
+		setOrder( order() + 1, estimateOnly );
 		orderChanged = true;
 		if( order() >= orderCount() ) {
 			logger()->info( L4CXX_LOCATION, "Song end reached: End of orders" );
@@ -516,7 +472,6 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 	if( orderChanged ) {
 		m_patLoopRow = 0;
 		m_patLoopCount = -1;
-		notifyOrderChanged(estimateOnly);
 	}
 	return true;
 }
@@ -591,7 +546,7 @@ size_t S3mModule::buildTick( AudioFrameBuffer* buf )
 
 GenOrder::Ptr S3mModule::mapOrder( int16_t order )
 {
-	static GenOrder::Ptr xxx( new GenOrder( s3mOrderEnd ) );
+	static GenOrder::Ptr xxx( new S3mOrder( s3mOrderEnd ) );
 	if( !inRange<int16_t>( order, 0, orderCount() - 1 ) ) {
 		return xxx;
 	}
@@ -612,63 +567,6 @@ std::string S3mModule::channelCellString( size_t idx )
 	if( !x )
 		return std::string();
 	return x->cellString();
-}
-
-bool S3mModule::jumpNextSong()
-{
-	if( !isMultiSong() ) {
-		logger()->info( L4CXX_LOCATION, "This is not a multi-song" );
-		return false;
-	}
-	BOOST_ASSERT( mapOrder( order() ).use_count() > 0 );
-	orderAt( order() )->increasePlaybackCount();
-	setCurrentSongIndex( currentSongIndex() + 1 );
-	if( currentSongIndex() >= songCount() ) {
-		for( uint16_t i = 0; i < orderCount(); i++ ) {
-			BOOST_ASSERT( orderAt( i ).use_count() > 0 );
-			if( ( orderAt( i )->index() != s3mOrderEnd ) && ( orderAt( i )->index() != s3mOrderSkip ) && ( orderAt( i )->playbackCount() == 0 ) ) {
-				BOOST_ASSERT( mapOrder( i ).use_count() > 0 );
-				setPatternIndex( mapOrder( i )->index() );
-				setOrder( i );
-				addMultiSong( StateIterator() );
-				setPosition( 0 );
-				IAudioSource::LockGuard guard( this );
-				multiSongAt( currentSongIndex() ).newState()->archive( this ).finishSave();
-				return true;
-			}
-		}
-		addMultiSong( StateIterator() );
-		return false;
-	}
-	else {
-		IAudioSource::LockGuard guard( this );
-		multiSongAt( currentSongIndex() ).gotoFront();
-		multiSongAt( currentSongIndex() ).currentState()->archive( this ).finishLoad();
-		BOOST_ASSERT( mapOrder( order() ).use_count() > 0 );
-		setPatternIndex( mapOrder( order() )->index() );
-		return true;
-	}
-	logger()->fatal( L4CXX_LOCATION, "This should definitively NOT have happened..." );
-	return false;
-}
-
-bool S3mModule::jumpPrevSong()
-{
-	if( !isMultiSong() ) {
-		logger()->info( L4CXX_LOCATION, "This is not a multi-song" );
-		return false;
-	}
-	if( currentSongIndex() == 0 ) {
-		logger()->info( L4CXX_LOCATION, "Already on first song" );
-		return false;
-	}
-	setCurrentSongIndex( currentSongIndex() - 1 );
-	IAudioSource::LockGuard guard( this );
-	multiSongAt( currentSongIndex() ).gotoFront();
-	multiSongAt( currentSongIndex() ).currentState()->archive( this ).finishLoad();
-	BOOST_ASSERT( mapOrder( order() ).use_count() > 0 );
-	setPatternIndex( mapOrder( order() )->index() );
-	return true;
 }
 
 IArchive& S3mModule::serialize( IArchive* data )

@@ -40,7 +40,7 @@ namespace ppp
  * @note Time-critical
  */
 template<typename T>
-inline const T& clip( const T& v, const T& a, const T& b )
+inline constexpr const T& clip( const T& v, const T& a, const T& b )
 {
 	return std::min( b, std::max( v, a ) );
 }
@@ -55,7 +55,7 @@ inline const T& clip( const T& v, const T& a, const T& b )
  * @note Time-critical
  */
 template<typename T>
-inline bool inRange( const T v, const T a, const T b )
+inline constexpr bool inRange( const T v, const T a, const T b )
 {
 	return ( v >= a ) && ( v <= b );
 }
@@ -75,7 +75,7 @@ std::string stringncpy( const char src[], size_t maxlen );
  * @return Low nibble of @a x
  * @note Time-critical
  */
-inline uint8_t lowNibble( uint8_t x )
+inline constexpr uint8_t lowNibble( uint8_t x )
 {
 	return x & 0x0f;
 }
@@ -86,7 +86,7 @@ inline uint8_t lowNibble( uint8_t x )
  * @return High nibble of @a x
  * @note Time-critical
  */
-inline uint8_t highNibble( uint8_t x )
+inline constexpr uint8_t highNibble( uint8_t x )
 {
 	return x >> 4;
 }

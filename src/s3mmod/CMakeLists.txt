@@ -4,5 +4,6 @@ add_library(s3mmod STATIC
 	s3mchannel.cpp
 	s3mmodule.cpp
 	s3mcell.cpp
+	s3morder.cpp
 )
 # target_link_libraries(s3mmod genmod)

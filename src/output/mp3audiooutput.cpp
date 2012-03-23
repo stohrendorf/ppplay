@@ -28,17 +28,18 @@ void MP3AudioOutput::encodeThread( MP3AudioOutput* src )
 			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 		}
 		AudioFrameBuffer buffer;
-		IAudioSource::Ptr lock = src->source().lock();
-		while(lock->isBusy()) {
+		IAudioSource::Ptr source = src->source().lock();
+		while( source->paused() ) {
 			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 		}
-		size_t size = lock->getAudioData( buffer, src->source().lock()->preferredBufferSize() );
+		size_t size = source->getAudioData( buffer, src->source().lock()->preferredBufferSize() );
 		if( size == 0 || !buffer || buffer->empty() ) {
 			src->setErrorCode( InputDry );
 			src->pause();
 			return;
 		}
-		src->m_bufferMutex.lock();
+		boost::recursive_mutex::scoped_lock lock(src->m_mutex);
+		
 		int res = lame_encode_buffer_interleaved( src->m_lameGlobalFlags, &buffer->front().left, buffer->size(), src->m_buffer, BufferSize );
 		if( res < 0 ) {
 			if( res == -1 ) {
@@ -51,13 +52,12 @@ void MP3AudioOutput::encodeThread( MP3AudioOutput* src )
 		else {
 			src->m_file.write( reinterpret_cast<char*>( src->m_buffer ), res );
 		}
-		src->m_bufferMutex.unlock();
 	}
 }
 
 
 MP3AudioOutput::MP3AudioOutput( const IAudioSource::WeakPtr& src, const std::string& filename ): IAudioOutput( src ),
-	m_lameGlobalFlags( nullptr ), m_file(), m_filename( filename ), m_buffer( nullptr ), m_encoderThread(), m_bufferMutex(), m_paused( true )
+	m_lameGlobalFlags( nullptr ), m_file(), m_filename( filename ), m_buffer( nullptr ), m_encoderThread(), m_paused( true ), m_mutex()
 {
 	m_buffer = new uint8_t[BufferSize];
 	m_lameGlobalFlags = lame_init();
@@ -66,6 +66,8 @@ MP3AudioOutput::MP3AudioOutput( const IAudioSource::WeakPtr& src, const std::str
 
 MP3AudioOutput::~MP3AudioOutput()
 {
+	m_encoderThread.join();
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	delete[] m_buffer;
 	lame_close( m_lameGlobalFlags );
 	logger()->trace( L4CXX_LOCATION, "Destroyed" );
@@ -83,26 +85,31 @@ uint16_t MP3AudioOutput::volumeLeft() const
 
 void MP3AudioOutput::pause()
 {
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_paused = true;
 }
 
 void MP3AudioOutput::play()
 {
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_paused = false;
 }
 
 bool MP3AudioOutput::paused()
 {
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_paused;
 }
 
 bool MP3AudioOutput::playing()
 {
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return !m_paused;
 }
 
 int MP3AudioOutput::init( int desiredFrq )
 {
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	logger()->trace( L4CXX_LOCATION, "Initializing LAME" );
 	m_file.open( m_filename, std::ios::in );
 	if( m_file.is_open() ) {
@@ -127,13 +134,14 @@ int MP3AudioOutput::init( int desiredFrq )
 		return 0;
 	}
 	m_encoderThread = boost::thread( encodeThread, this );
-	m_encoderThread.detach();
+	//m_encoderThread.detach();
 	logger()->trace( L4CXX_LOCATION, "LAME initialized" );
 	return desiredFrq;
 }
 
 void MP3AudioOutput::setID3( const std::string& title, const std::string& album, const std::string& artist )
 {
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	id3tag_init( m_lameGlobalFlags );
 	id3tag_add_v2( m_lameGlobalFlags );
 	id3tag_set_title( m_lameGlobalFlags, title.c_str() );

@@ -24,6 +24,7 @@
 #include <boost/exception/all.hpp>
 
 #include "xmmodule.h"
+#include "xmorder.h"
 #include "stream/fbinstream.h"
 #include "stuff/moduleregistry.h"
 
@@ -57,7 +58,7 @@ struct XmHeader {
 };
 #pragma pack(pop)
 
-static const std::array<const uint16_t, 12 * 8> g_PeriodTable = {{
+static constexpr std::array<const uint16_t, 12 * 8> g_PeriodTable = {{
 		907, 900, 894, 887, 881, 875, 868, 862, 856, 850, 844, 838, 832, 826, 820, 814,
 		808, 802, 796, 791, 785, 779, 774, 768, 762, 757, 752, 746, 741, 736, 730, 725,
 		720, 715, 709, 704, 699, 694, 689, 684, 678, 675, 670, 665, 660, 655, 651, 646,
@@ -96,7 +97,7 @@ bool XmModule::load( const std::string& filename )
 	for( int i = 0; i < ( hdr.songLength & 0xff ); i++ ) {
 		uint8_t tmp;
 		file.read( &tmp );
-		addOrder( GenOrder::Ptr( new GenOrder( tmp ) ) );
+		addOrder( GenOrder::Ptr( new XmOrder( tmp ) ) );
 	}
 	file.seek( hdr.headerSize + offsetof( XmHeader, headerSize ) );
 	{
@@ -152,7 +153,7 @@ bool XmModule::load( const std::string& filename )
 				destOfs += 2;
 			}
 		}
-		for( size_t i = 0; i < 967; i++ ) {
+		for( size_t i = 0; i < (m_noteToPeriod.size()-1)/2; i++ ) {
 			m_noteToPeriod.at( i * 2 + 1 ) = ( m_noteToPeriod.at( i * 2 + 0 ) + m_noteToPeriod.at( i * 2 + 2 ) ) >> 1;
 		}
 	}
@@ -165,8 +166,8 @@ bool XmModule::load( const std::string& filename )
 		}
 	}
 	setPatternIndex( orderAt( 0 )->index() );
-	addMultiSong( StateIterator() );
-	multiSongAt( 0 ).newState()->archive( this ).finishSave();
+// 	addMultiSong( StateIterator() );
+// 	multiSongAt( 0 ).newState()->archive( this ).finishSave();
 // 	multiTrackAt(0).startOrder = playbackInfo().order;
 	return true;
 }
@@ -176,7 +177,7 @@ size_t XmModule::buildTick( AudioFrameBuffer* buffer )
 	if( buffer && !buffer->get() ) {
 		buffer->reset( new AudioFrameBuffer::element_type );
 	}
-	if(buffer) {
+	if( buffer ) {
 		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength(), {0, 0} ) );
 		XmPattern::Ptr currPat = m_patterns.at( patternIndex() );
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
@@ -190,7 +191,7 @@ size_t XmModule::buildTick( AudioFrameBuffer* buffer )
 		MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
 		BasicSampleFrame* bufPtr = &buffer->get()->front();
 		for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
-			*bufPtr = mixerBufferPtr->rightShiftClip(2);
+			*bufPtr = mixerBufferPtr->rightShiftClip( 2 );
 			bufPtr++;
 			mixerBufferPtr++;
 		}
@@ -207,7 +208,7 @@ size_t XmModule::buildTick( AudioFrameBuffer* buffer )
 	}
 	nextTick();
 	if( !adjustPosition( !buffer ) ) {
-		if(buffer) {
+		if( buffer ) {
 			buffer->reset();
 		}
 		return 0;
@@ -240,8 +241,7 @@ bool XmModule::adjustPosition( bool estimateOnly )
 				if( m_jumpOrder >= orderCount() ) {
 					m_jumpOrder = m_restartPos;
 				}
-				orderAt( order() )->increasePlaybackCount();
-				setOrder( m_jumpOrder );
+				setOrder( m_jumpOrder, estimateOnly );
 				orderChanged = true;
 			}
 		}
@@ -250,8 +250,10 @@ bool XmModule::adjustPosition( bool estimateOnly )
 				XmPattern::Ptr currPat = m_patterns.at( patternIndex() );
 				setRow( ( row() + 1 ) % currPat->numRows() );
 				if( row() == 0 ) {
-					orderAt( order() )->increasePlaybackCount();
-					setOrder( order() + 1 );
+// 					if( order() + 1 >= orderCount() ) {
+// 						return false;
+// 					}
+					setOrder( order() + 1, estimateOnly );
 					orderChanged = true;
 				}
 			}
@@ -264,7 +266,7 @@ bool XmModule::adjustPosition( bool estimateOnly )
 			return false;
 		}
 		setPatternIndex( orderAt( order() )->index() );
-		notifyOrderChanged(estimateOnly);
+		setOrder( order(), estimateOnly );
 	}
 	if( orderAt( order() )->playbackCount() >= maxRepeat() ) {
 		return false;
@@ -274,7 +276,7 @@ bool XmModule::adjustPosition( bool estimateOnly )
 
 GenOrder::Ptr XmModule::mapOrder( int16_t order )
 {
-	static GenOrder::Ptr xxx( new GenOrder( 0xff ) );
+	static GenOrder::Ptr xxx( new XmOrder( 0xff ) );
 	if( !inRange<int16_t>( order, 0, orderCount() - 1 ) )
 		return xxx;
 	return orderAt( order );
@@ -283,16 +285,6 @@ GenOrder::Ptr XmModule::mapOrder( int16_t order )
 std::string XmModule::channelStatus( size_t idx )
 {
 	return m_channels.at( idx )->statusString();
-}
-
-bool XmModule::jumpNextSong()
-{
-	return false;
-}
-
-bool XmModule::jumpPrevSong()
-{
-	return false;
 }
 
 std::string XmModule::channelCellString( size_t idx )
@@ -325,7 +317,7 @@ uint16_t XmModule::noteToPeriod( uint8_t note, int8_t finetune ) const
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-static const std::array<uint32_t, 12 * 16 * 4> g_linearMult = {{
+static constexpr std::array<const uint32_t, 12 * 16 * 4> g_linearMult = {{
 		0x1000000, 0x1003B2D, 0x1007667, 0x100B1B0, 0x100ED06,
 		0x1012869, 0x10163DB, 0x1019F5A, 0x101DAE7, 0x1021681,
 		0x102522A, 0x1028DE0, 0x102C9A4, 0x1030576, 0x1034155,
@@ -570,31 +562,6 @@ IArchive& XmModule::serialize( IArchive* data )
 	% m_requestedPatternDelay
 	% m_currentPatternDelay;
 	return *data;
-}
-
-bool XmModule::initialize( uint32_t frq )
-{
-	if( initialized() ) {
-		return true;
-	}
-	IAudioSource::initialize( frq );
-	logger()->info( L4CXX_LOCATION, "Estimating song length..." );
-	size_t len;
-// 	multiTrackAt(0).startOrder = playbackInfo().order;
-	do {
-		len = buildTick( nullptr );
-		multiSongLengthAt( 0 ) += len;
-	}
-	while( len != 0 );
-	logger()->info( L4CXX_LOCATION, "Length estimated. Resetting module." );
-	if( songCount() > 0 ) {
-		IAudioSource::LockGuard guard( this );
-		multiSongAt( 0 ).currentState()->archive( this ).finishLoad();
-	}
-	else {
-		return false;
-	}
-	return true;
 }
 
 GenModule::Ptr XmModule::factory( const std::string& filename, uint32_t frequency, uint8_t maxRpt )

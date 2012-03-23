@@ -48,10 +48,10 @@ private:
 	uint8_t* m_buffer;
 	//! @brief Encoder thread holder
 	boost::thread m_encoderThread;
-	//! @brief Mutex that locks m_buffer
-	boost::recursive_mutex m_bufferMutex;
 	//! @brief Whether the output is paused
 	bool m_paused;
+	//ReadWriteLockable m_readWriteLockable;
+	mutable boost::recursive_mutex m_mutex;
 	//! @brief Default size of m_buffer
 	static const size_t BufferSize = 4096;
 	/**

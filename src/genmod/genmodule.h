@@ -82,12 +82,14 @@ private:
 	uint16_t m_maxRepeat; //!< @brief Maximum module loops if module patterns are played multiple times
 	std::vector<StateIterator> m_songs; //!< @brief Per-song infos
 	std::vector<size_t> m_songLengths; //!< @brief Per-song lengths in sample frames
-	uint16_t m_currentSongIndex; //!< @brief The current song index
+	int16_t m_currentSongIndex; //!< @brief The current song index
 	IArchive::Ptr m_initialState; //!< @brief Initial module state
 	/**
 	 * @}
 	 */
 	//END
+	//ReadWriteLockable m_readWriteLockable;
+	mutable boost::recursive_mutex m_mutex;
 public:
 	//BEGIN Construction/destruction
 	/**
@@ -183,7 +185,7 @@ public:
 	 * @see isMultiSong()
 	 * @see songCount()
 	 */
-	uint16_t currentSongIndex() const;
+	int16_t currentSongIndex() const;
 	/**
 	 * @brief Get the channel cell string
 	 * @param[in] idx Channel index
@@ -256,12 +258,12 @@ public:
 	 * @brief Jump to the next song if possible
 	 * @return @c false if there are no songs left
 	 */
-	virtual bool jumpNextSong() = 0;
+	bool jumpNextSong();
 	/**
 	 * @brief Jump to the previous song if possible
 	 * @return @c false if this operation fails
 	 */
-	virtual bool jumpPrevSong() = 0;
+	bool jumpPrevSong();
 	/**
 	 * @brief Jump to the next order if possible
 	 * @return @c false if the end of the current song is reached
@@ -320,8 +322,7 @@ public:
 	 * @}
 	 */
 	//END
-	virtual void setBusy( bool value );
-	virtual bool isBusy() const;
+	virtual bool initialize( uint32_t frq );
 protected:
 	/**
 	 * @copydoc ISerializable::serialize()
@@ -399,6 +400,17 @@ protected:
 	 * @return Reference to the state iterator
 	 */
 	StateIterator& multiSongAt( size_t idx );
+	
+	inline StateIterator& currentMultiSong() {
+		return multiSongAt( currentSongIndex() );
+	}
+	
+	inline StateIterator& createMultiSong() {
+		addMultiSong( StateIterator() );
+		setCurrentSongIndex( currentSongIndex()+1 );
+		return currentMultiSong();
+	}
+	
 	/**
 	 * @brief Get the length of a song
 	 * @param[in] idx Song index
@@ -416,10 +428,13 @@ protected:
 	 */
 	uint16_t maxRepeat() const;
 	/**
-	 * @brief Set the order index
+	 * @brief Set the order index and handle preprocessing states
 	 * @param[in] o The new order index
+	 * @param[in] estimateOnly Decide whether to store or to load states
+	 * @param[in] forceSave Forces to save the state even if the order did not changes
+	 * @retval true if the new order index is valid
 	 */
-	void setOrder( size_t o );
+	bool setOrder( size_t o, bool estimateOnly, bool forceSave = false );
 	/**
 	 * @brief Set the current row index
 	 * @param[in] r The new row index
@@ -455,7 +470,6 @@ protected:
 	 * @brief Restores the initial state
 	 */
 	void loadInitialState();
-	void notifyOrderChanged(bool estimateOnly);
 //protected:
 	/**
 	 * @brief Get the logger

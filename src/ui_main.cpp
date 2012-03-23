@@ -38,7 +38,8 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IA
 	m_modTitle( nullptr ),
 	m_progress( nullptr ),
 	m_module( module ),
-	m_output( output )
+	m_output( output ),
+	m_timerMutex()
 {
 	logger()->trace( L4CXX_LOCATION, "Initializing" );
 	setSize( parent->area().size() );
@@ -117,6 +118,11 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IA
 	logger()->trace( L4CXX_LOCATION, "Initialized" );
 }
 
+UIMain::~UIMain()
+{
+	boost::recursive_mutex::scoped_lock lock(m_timerMutex);
+}
+
 void UIMain::drawThis()
 {
 }
@@ -158,6 +164,9 @@ ppg::Label* UIMain::modTitle()
 
 void UIMain::onTimer()
 {
+	boost::recursive_mutex::scoped_lock lock(m_timerMutex);
+	IAudioOutput::Ptr outLock( m_output.lock() );
+	ppp::GenModule::Ptr modLock( std::static_pointer_cast<ppp::GenModule>( m_module.lock() ) );
 	if( m_module.expired() || m_output.expired() ) {
 		logger()->trace( L4CXX_LOCATION, "Module expired" );
 		return;
@@ -166,10 +175,8 @@ void UIMain::onTimer()
 		logger()->trace( L4CXX_LOCATION, "Updating" );
 		// this MUST be in its own scope so that the lock gets released
 		// before drawing. drawing may block.
-		ppp::GenModule::Ptr modLock( std::static_pointer_cast<ppp::GenModule>( m_module.lock() ) );
-		IAudioSource::LockGuard guard( modLock.get() );
+		//IAudioSource::LockGuard guard( modLock.get() );
 		logger()->trace( L4CXX_LOCATION, "Module locked" );
-		IAudioOutput::Ptr outLock( m_output.lock() );
 		logger()->trace( L4CXX_LOCATION, "Output device locked" );
 		ppg::SDLScreen::instance()->clear( ' ', ppg::Color::White, ppg::Color::Black );
 		m_volBar->shift( outLock->volumeLeft() >> 8, outLock->volumeRight() >> 8 );

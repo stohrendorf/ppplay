@@ -68,7 +68,7 @@ void AudioFifo::requestThread( AudioFifo* fifo )
 	while( !fifo->m_source.expired() ) {
 		IAudioSource::Ptr src = fifo->m_source.lock();
 		// continue if no data is available
-		if( src->isBusy() || fifo->m_queuedFrames >= fifo->m_minFrameCount ) {
+		if( src->paused() || fifo->m_queuedFrames >= fifo->m_minFrameCount ) {
 			logger()->trace(L4CXX_LOCATION, "FIFO filled, waiting..." );
 			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 			continue;
@@ -83,9 +83,9 @@ void AudioFifo::requestThread( AudioFifo* fifo )
 			continue;
 		}
 		src->getAudioData( buffer, size );
-		if( !buffer || buffer->empty() ) {
+		if( !src->paused() && (!buffer || buffer->empty()) ) {
 			logger()->debug( L4CXX_LOCATION, "Audio source dry" );
-			break;
+			continue;
 		}
 		// add the data to the queue...
 		logger()->trace( L4CXX_LOCATION, boost::format( "Adding %4d frames to a %4d-frame queue, minimum is %4d frames" ) % buffer->size() % fifo->m_queuedFrames % fifo->m_minFrameCount );
@@ -94,29 +94,32 @@ void AudioFifo::requestThread( AudioFifo* fifo )
 }
 
 AudioFifo::AudioFifo( const IAudioSource::WeakPtr& source, size_t frameCount ) :
-	m_queue(), m_queuedFrames( 0 ), m_minFrameCount( frameCount ), m_queueMutex(),
-	m_requestThread(), m_source( source ), m_volLeftSum( 0 ), m_volRightSum( 0 )
+	m_queue(), m_queuedFrames( 0 ), m_minFrameCount( frameCount ),
+	m_requestThread(), m_source( source ), m_volLeftSum( 0 ), m_volRightSum( 0 ),
+	m_mutex()
 {
 	BOOST_ASSERT( !source.expired() );
 	BOOST_ASSERT( m_minFrameCount >= 256 );
 	logger()->debug( L4CXX_LOCATION, boost::format( "Created with %d frames minimum" ) % frameCount );
 	m_requestThread = boost::thread( requestThread, this );
-	m_requestThread.detach();
+	//m_requestThread.detach();
 }
 
 AudioFifo::~AudioFifo()
 {
+	m_requestThread.join();
 	logger()->trace( L4CXX_LOCATION, "Destroyed" );
 }
 
 void AudioFifo::pushBuffer( const AudioFrameBuffer& buf )
 {
+	//ReadWriteLockable::WriteLock lock(&m_readWriteLockable);
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	// copy, because AudioFrameBuffer is a shared_ptr that may be modified
 	AudioFrameBuffer cp( new AudioFrameBuffer::element_type );
 	*cp = *buf;
 	uint64_t left, right;
 	sumAbsValues( cp, left, right );
-	boost::unique_lock<boost::mutex> guard( m_queueMutex );
 	m_volLeftSum += left;
 	m_volRightSum += right;
 	m_queuedFrames += cp->size();
@@ -126,7 +129,8 @@ void AudioFifo::pushBuffer( const AudioFrameBuffer& buf )
 size_t AudioFifo::getAudioData( AudioFrameBuffer& data, size_t size )
 {
 	// a modifying function, so we need a unique lock again
-	boost::unique_lock<boost::mutex> guard( m_queueMutex );
+	//ReadWriteLockable::WriteLock lock(&m_readWriteLockable);
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if( size > m_queuedFrames ) {
 		logger()->trace( L4CXX_LOCATION, boost::format( "Buffer underrun: Requested %d frames while only %d frames in queue" ) % size % m_queuedFrames );
 		size = m_queuedFrames;
@@ -174,16 +178,22 @@ size_t AudioFifo::getAudioData( AudioFrameBuffer& data, size_t size )
 
 size_t AudioFifo::queuedLength() const
 {
+	//ReadWriteLockable::ReadLock lock(&m_readWriteLockable);
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_queuedFrames;
 }
 
 bool AudioFifo::isEmpty() const
 {
+	//ReadWriteLockable::ReadLock lock(&m_readWriteLockable);
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_queuedFrames == 0;
 }
 
 uint16_t AudioFifo::volumeRight() const
 {
+	//ReadWriteLockable::ReadLock lock(&m_readWriteLockable);
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if( m_queuedFrames == 0 ) {
 		return 0;
 	}
@@ -192,6 +202,8 @@ uint16_t AudioFifo::volumeRight() const
 
 uint16_t AudioFifo::volumeLeft() const
 {
+	//ReadWriteLockable::ReadLock lock(&m_readWriteLockable);
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if( m_queuedFrames == 0 ) {
 		return 0;
 	}
@@ -200,41 +212,39 @@ uint16_t AudioFifo::volumeLeft() const
 
 void AudioFifo::setMinFrameCount( size_t len )
 {
+	//ReadWriteLockable::WriteLock lock(&m_readWriteLockable);
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	BOOST_ASSERT( len >= 256 );
 	m_minFrameCount = len;
 }
 
 size_t AudioFifo::queuedChunkCount() const
 {
+	//ReadWriteLockable::ReadLock lock(&m_readWriteLockable);
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_queue.size();
 }
 
 size_t AudioFifo::minFrameCount() const
 {
+	//ReadWriteLockable::ReadLock lock(&m_readWriteLockable);
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_minFrameCount;
 }
 
 bool AudioFifo::initialize( uint32_t frequency )
 {
+	//ReadWriteLockable::WriteLock lock(&m_readWriteLockable);
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	logger()->trace( L4CXX_LOCATION, "Initializing" );
+	IAudioSource::Ptr source( m_source.lock() );
 	BOOST_ASSERT( !m_source.expired() );
-	IAudioSource::Ptr lock( m_source.lock() );
-	return lock->initialize( frequency );
+	return source->initialize( frequency );
 }
 
 light4cxx::Logger::Ptr AudioFifo::logger()
 {
 	return light4cxx::Logger::get( "audio.fifo" );
-}
-
-bool AudioFifo::isBusy() const
-{
-	return m_source.lock()->isBusy();
-}
-
-void AudioFifo::setBusy( bool value )
-{
-	m_source.lock()->setBusy(value);
 }
 
 /**

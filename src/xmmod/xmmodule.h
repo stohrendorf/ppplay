@@ -84,8 +84,6 @@ public:
 	virtual size_t buildTick( AudioFrameBuffer* buffer );
 	virtual ppp::GenOrder::Ptr mapOrder( int16_t );
 	virtual std::string channelStatus( size_t );
-	virtual bool jumpNextSong();
-	virtual bool jumpPrevSong();
 	virtual std::string channelCellString( size_t );
 	virtual uint8_t channelCount() const;
 private:
@@ -158,7 +156,6 @@ private:
 	 */
 	void doPatLoop( int16_t next );
 	IArchive& serialize( IArchive* data );
-	virtual bool initialize( uint32_t frq );
 	/**
 	 * @brief Check if there is a running pattern delay
 	 * @retval true if there is a running pattern delay

@@ -26,7 +26,7 @@ namespace ppp
 namespace s3m
 {
 
-bool S3mOrder::playable() const
+bool S3mOrder::isUnplayed() const
 {
 	return index() != s3mOrderEnd && index() != s3mOrderSkip && playbackCount() == 0;
 }

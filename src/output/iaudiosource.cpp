@@ -18,7 +18,7 @@
 
 #include "iaudiosource.h"
 
-IAudioSource::IAudioSource() : m_initialized( false ), m_frequency( 0 ), m_lockMutex(), m_isBusy( false )
+IAudioSource::IAudioSource() : m_initialized( false ), m_frequency( 0 ), m_paused(false), m_mutex()
 {
 }
 
@@ -26,11 +26,13 @@ IAudioSource::~IAudioSource() = default;
 
 bool IAudioSource::initialized() const
 {
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_initialized;
 }
 
 bool IAudioSource::fail()
 {
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_initialized = false;
 	m_frequency = 0;
 	return false;
@@ -38,6 +40,7 @@ bool IAudioSource::fail()
 
 bool IAudioSource::initialize( uint32_t frequency )
 {
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_frequency = frequency;
 	m_initialized = true;
 	return true;
@@ -45,6 +48,7 @@ bool IAudioSource::initialize( uint32_t frequency )
 
 uint32_t IAudioSource::frequency() const
 {
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_frequency;
 }
 
@@ -61,16 +65,6 @@ uint16_t IAudioSource::volumeRight() const
 size_t IAudioSource::preferredBufferSize() const
 {
 	return 0;
-}
-
-void IAudioSource::setBusy( bool value )
-{
-	m_isBusy = value;
-}
-
-bool IAudioSource::isBusy() const
-{
-	return m_isBusy;
 }
 
 light4cxx::Logger::Ptr IAudioSource::logger()

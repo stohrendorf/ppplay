@@ -84,12 +84,9 @@ public:
 	virtual size_t buildTick( AudioFrameBuffer* buf );
 	virtual GenOrder::Ptr mapOrder( int16_t order );
 	virtual std::string channelStatus( size_t idx );
-	virtual bool jumpNextSong();
-	virtual bool jumpPrevSong();
 	virtual std::string channelCellString( size_t idx );
 protected:
 	virtual void setGlobalVolume( int16_t v );
-	virtual bool initialize( uint32_t frq );
 private:
 	/**
 	 * @copydoc ppp::GenModule::GenModule(uint8_t)
