@@ -1,6 +1,6 @@
 /*
-    PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
+    <one line to give the program's name and a brief idea of what it does.>
+    Copyright (C) 2012  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,43 +16,28 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "point.h"
 
-namespace ppg
+#ifndef S3MORDER_H
+#define S3MORDER_H
+
+#include "genmod/genorder.h"
+
+namespace ppp
+{
+namespace s3m
 {
 
-const Point& Point::operator+=( const Point& rhs )
+class S3mOrder : public GenOrder
 {
-	m_x += rhs.m_x;
-	m_y += rhs.m_y;
-	return *this;
-}
-
-const Point Point::operator+( const Point& rhs ) const
-{
-	return Point( m_x + rhs.m_x, m_y + rhs.m_y );
-}
-
-const Point& Point::operator-=( const Point& rhs )
-{
-	m_x -= rhs.m_x;
-	m_y -= rhs.m_y;
-	return *this;
-}
-
-const Point Point::operator-( const Point& rhs ) const
-{
-	return Point( m_x - rhs.m_x, m_y - rhs.m_y );
-}
-
-void Point::setX( int x )
-{
-	m_x = x;
-}
-
-void Point::setY( int y )
-{
-	m_y = y;
-}
+	DISABLE_COPY( S3mOrder )
+	S3mOrder() = delete;
+public:
+	inline S3mOrder( uint8_t idx ) : GenOrder( idx ) {
+	}
+	virtual bool playable() const;
+};
 
 }
+}
+
+#endif // S3MORDER_H

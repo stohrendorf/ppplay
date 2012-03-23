@@ -45,12 +45,17 @@ public:
 	 * @param[in] width The width of the area
 	 * @param[in] height The height of the area
 	 */
-	Rect( int x, int y, int width, int height );
+	constexpr Rect( int x, int y, int width, int height ) : m_topLeft( x, y ), m_bottomRight( x + width - 1, y + height - 1 )
+	{
+	}
 	/**
 	 * @brief Get the top coordinate
 	 * @return The top coordinate
 	 */
-	int top() const;
+	constexpr int top() const
+	{
+		return m_topLeft.y();
+	}
 	/**
 	 * @brief Set the top coordinate
 	 * @param[in] top The top coordinate
@@ -60,7 +65,10 @@ public:
 	 * @brief Get the left coordinate
 	 * @return The left coordinate
 	 */
-	int left() const;
+	constexpr int left() const
+	{
+		return m_topLeft.x();
+	}
 	/**
 	 * @brief Set the left coordinate
 	 * @param[in] left The left coordinate
@@ -70,7 +78,10 @@ public:
 	 * @brief Get the bottom coordinate
 	 * @return The bottom coordinate
 	 */
-	int bottom() const;
+	constexpr int bottom() const
+	{
+		return m_bottomRight.y();
+	}
 	/**
 	 * @brief Set the bottom coordinate
 	 * @param[in] bottom The bottom coordinate
@@ -80,7 +91,10 @@ public:
 	 * @brief Get the right coordinate
 	 * @return The right coordinate
 	 */
-	int right() const;
+	constexpr int right() const
+	{
+		return m_bottomRight.x();
+	}
 	/**
 	 * @brief Set the right coordinate
 	 * @param[in] right The right coordinate
@@ -90,7 +104,10 @@ public:
 	 * @brief Get the area's width
 	 * @return The area's width
 	 */
-	int width() const;
+	constexpr int width() const
+	{
+		return m_bottomRight.x() - m_topLeft.x() + 1;
+	}
 	/**
 	 * @brief Set the area's width
 	 * @param[in] width The new area's width
@@ -100,7 +117,10 @@ public:
 	 * @brief Get the area's height
 	 * @return The area's height
 	 */
-	int height() const;
+	constexpr int height() const
+	{
+		return m_bottomRight.y() - m_topLeft.y() + 1;
+	}
 	/**
 	 * @brief Set the area's height
 	 * @param[in] height The new area's height
@@ -110,7 +130,10 @@ public:
 	 * @brief Get the top left point
 	 * @return The top left point
 	 */
-	Point topLeft() const;
+	constexpr Point topLeft() const
+	{
+		return m_topLeft;
+	}
 	/**
 	 * @overload
 	 * @return The top left point
@@ -120,7 +143,10 @@ public:
 	 * @brief Get the bottom right point
 	 * @return The bottom right point
 	 */
-	Point bottomRight() const;
+	constexpr Point bottomRight() const
+	{
+		return m_bottomRight;
+	}
 	/**
 	 * @overload
 	 * @return The bottom right point
@@ -130,13 +156,17 @@ public:
 	 * @brief Get the area's size
 	 * @return The area's size
 	 */
-	Point size() const;
+	constexpr Point size() const
+	{
+		return Point( width(), height() );
+	}
 	/**
 	 * @brief Check if this rect contains a point
 	 * @param[in] pt Point to check
 	 * @return @c true if the area contains the point
 	 */
-	bool contains( const Point& pt ) const {
+	constexpr bool contains( const Point& pt ) const
+	{
 		return contains( pt.x(), pt.y() );
 	}
 	/**
@@ -145,7 +175,8 @@ public:
 	 * @param[in] y Y coordinate of the point
 	 * @return @c true if the area contains the point
 	 */
-	bool contains( int x, int y ) const {
+	constexpr bool contains( int x, int y ) const
+	{
 		return x >= m_topLeft.x() && x <= m_bottomRight.x() && y >= m_topLeft.y() && y <= m_bottomRight.y();
 	}
 };

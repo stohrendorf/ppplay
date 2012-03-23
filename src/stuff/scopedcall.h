@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
+    Copyright (C) 2012  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,41 +16,27 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PPG_H
-#define PPG_H
+#ifndef SCOPEDCALL_H
+#define SCOPEDCALL_H
 
-/**
- * @ingroup Ppg
- * @{
- */
+#include "utils.h"
 
-namespace ppg
+#include <boost/function.hpp>
+
+class ScopedCall
 {
-
-/**
- * @brief Enumeration values for Dos Color Mappings
- */
-enum class Color
-{
-	Black, Blue, Green, Aqua, Red, Purple, Brown, White,
-	Gray, LightBlue, LightGreen, LightAqua, LightRed, LightPurple, Yellow, BrightWhite,
-	None
+	DISABLE_COPY(ScopedCall)
+	ScopedCall() = delete;
+private:
+	boost::function<void()> m_func;
+public:
+	ScopedCall(const boost::function<void()>& func) : m_func(func)
+	{
+	}
+	~ScopedCall()
+	{
+		m_func();
+	}
 };
 
-/**
- * @brief Invert a color
- * @param[in] c Color to invert
- * @return Inverted color
- * @note This is DOS's default algorithm
- */
-inline constexpr Color operator~( const Color& c )
-{
-	return static_cast<Color>( ( static_cast<int>( c ) & 7 ) ^ 7 );
-}
-} // namespace ppg
-
-/**
- * @}
- */
-
-#endif // ppgH
+#endif

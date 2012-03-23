@@ -65,7 +65,7 @@ void ProgressBar::setValue( size_t val )
 void ProgressBar::drawThis()
 {
 	int w = area().width();
-	const int pos = ( w - 2 ) * m_value / m_maxVal;
+	const int pos = m_maxVal==0 ? 0 : ( w - 2 ) * m_value / m_maxVal;
 	for( int i = 0; i < w; i++ ) {
 		if( i == 0 ) {
 			drawChar( i, 0, '[' );

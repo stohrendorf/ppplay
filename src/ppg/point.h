@@ -39,14 +39,18 @@ public:
 	/**
 	 * @brief Default constructor, sets m_x and m_y to 0
 	 */
-	Point();
+	constexpr Point() : m_x( 0 ), m_y( 0 )
+	{
+	}
 	/**
 	 * @overload
 	 * @brief Initializing constructor
 	 * @param[in] x Value for m_x
 	 * @param[in] y Value for m_y
 	 */
-	Point( int x, int y );
+	constexpr Point( int x, int y ) : m_x( x ), m_y( y )
+	{
+	}
 	/**
 	 * @brief Adds the coordinates of @a rhs to this
 	 * @param[in] rhs The coordinates to add
@@ -75,12 +79,18 @@ public:
 	 * @brief Get the X coordinate
 	 * @return The X coordinate
 	 */
-	int x() const;
+	constexpr int x() const
+	{
+		return m_x;
+	}
 	/**
 	 * @brief Get the Y coordinate
 	 * @return The Y coordinate
 	 */
-	int y() const;
+	constexpr int y() const
+	{
+		return m_y;
+	}
 	/**
 	 * @brief Set the X coordinate
 	 * @param[in] x The new X coordinate

@@ -39,7 +39,7 @@ Widget::Widget( Widget* parent ) :
 Widget::~Widget()
 {
 	List backup = m_children;
-for( Widget * tmp : backup ) {
+	for( Widget * tmp : backup ) {
 		tmp->m_parent = nullptr;
 		if( tmp->m_autodelete ) {
 			delete tmp;
@@ -128,6 +128,7 @@ Rect Widget::area() const
 {
 	return m_area;
 }
+
 Rect& Widget::area()
 {
 	return m_area;
@@ -141,11 +142,6 @@ void Widget::show()
 void Widget::hide()
 {
 	m_visible = false;
-}
-
-bool Widget::isVisible() const
-{
-	return m_visible;
 }
 
 void Widget::drawChar( int x, int y, char c )
@@ -241,7 +237,7 @@ void Widget::toTop( Widget* vp )
 
 bool Widget::onMouseMove( int x, int y )
 {
-for( Widget * current : m_children ) {
+	for( Widget * current : m_children ) {
 		if( !current ) {
 			continue;
 		}
@@ -256,6 +252,11 @@ for( Widget * current : m_children ) {
 void Widget::setAutoDelete( bool value )
 {
 	m_autodelete = value;
+}
+
+bool Widget::isVisible() const
+{
+	return m_visible;
 }
 
 } // namespace ppg
