@@ -39,8 +39,7 @@ namespace s3m
 {
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-enum :
-uint8_t {
+enum {
 	s3mFlagSt2Vibrato   = 0x01, //!< @brief Use st2 Vibrato, not supported
 	s3mFlagSt2Tempo     = 0x02, //!< @brief Use st2 Tempo, not supported
 	s3mFlagAmigaSlides  = 0x04, //!< @brief Use Amiga slides, not supported
@@ -503,7 +502,7 @@ size_t S3mModule::buildTick( AudioFrameBuffer* buf )
 			return 0;
 		}
 		if( buf ) {
-			MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength(), {0, 0} ) );
+			MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
 			for( uint_fast8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 				S3mChannel::Ptr chan = m_channels.at( currTrack );
 				BOOST_ASSERT( chan.use_count() > 0 );

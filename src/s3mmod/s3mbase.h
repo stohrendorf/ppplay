@@ -34,8 +34,7 @@ namespace s3m
 /**
  * @brief Some default values...
  */
-enum :
-uint8_t {
+enum {
 	s3mEmptyNote    = 0xff, //!< @brief Empty note
 	s3mKeyOffNote   = 0xfe, //!< @brief Key off note
 	s3mEmptyInstr   = 0x00, //!< @brief Empty sample
@@ -48,8 +47,7 @@ uint8_t {
 /**
  * @brief Tracker IDs
  */
-enum :
-uint8_t {
+enum {
 	s3mTIdScreamTracker = 0x01, //!< @brief Scream Tracker 3
 	s3mTIdImagoOrpheus = 0x02, //!< @brief Imago Orpheus
 	s3mTIdImpulseTracker = 0x03, //!< @brief Impulse Tracker
@@ -64,8 +62,7 @@ uint8_t {
  * means that this effect has its own backup variable for saving the last used effect value. See ::s3mFxVibVolSlide for
  * example.
  */
-enum S3mEffects :
-uint8_t {
+enum S3mEffects {
 	/**
 	 * @brief (A) Set speed
 	 * @note Global
@@ -181,8 +178,7 @@ uint8_t {
  * @brief Special Commands/effects
  * @see s3mFxSpecial
  */
-enum S3mSpecialEffects :
-uint8_t {
+enum S3mSpecialEffects {
 	//! @brief Special FX: Set Glissando control
 	s3mSFxSetGlissando = 0x01,
 	//! @brief Special FX: Set Finetune

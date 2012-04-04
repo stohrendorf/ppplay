@@ -21,8 +21,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <boost/exception/all.hpp>
-
-#include <mutex>
+#include <boost/thread.hpp>
 
 /**
  * @ingroup light4cxx
@@ -56,8 +55,8 @@ Logger::Ptr Logger::get( const std::string& name )
 {
 	typedef std::unordered_map<std::string, Logger::Ptr> RepoMap; //!< @brief Maps logger names to their instances
 	static RepoMap s_repository; //!< @brief The logger repository
-	static std::recursive_mutex lockMutex; //!< @brief Mutex for locking the repository
-	std::lock_guard<std::recursive_mutex> lockGuard( lockMutex );
+	static boost::recursive_mutex lockMutex; //!< @brief Mutex for locking the repository
+	boost::recursive_mutex::scoped_lock lockGuard( lockMutex );
 
 	RepoMap::const_iterator elem = s_repository.find( name );
 	if( elem != s_repository.end() ) {
@@ -75,14 +74,14 @@ Logger::Logger( const std::string& name ) : m_name( name )
 /**
  * @brief The mutex that blocks parallel calls to std::cout
  */
-static std::mutex outMutex;
+static boost::recursive_mutex outMutex;
 
 void Logger::log( light4cxx::Level l, const light4cxx::Location& loc, const std::string& str ) const
 {
 	if( l < s_level || s_level == Level::Off ) {
 		return;
 	}
-	std::lock_guard<std::mutex> outLock( outMutex );
+	boost::recursive_mutex::scoped_lock outLock( outMutex );
 	std::cout << loc.toString( l, *this, str );
 }
 

@@ -70,7 +70,7 @@ public:
 	/**
 	 * @brief Position returned when end of sample reached
 	 */
-	static const PositionType EndOfSample = std::numeric_limits<PositionType>::max();
+	static const PositionType EndOfSample;
 	/**
 	 * @brief Constructor
 	 */
@@ -191,7 +191,7 @@ protected:
 	 * @param[in] size New size
 	 */
 	inline void resizeData( PositionType size ) {
-		m_data.resize( size, {0, 0} );
+		m_data.resize( size );
 	}
 	/**
 	 * @brief Get the logger
@@ -204,7 +204,7 @@ inline BasicSampleFrame GenSample::sampleAt( PositionType& pos ) const
 {
 	adjustPosition( pos );
 	if( pos == EndOfSample || m_data.empty() )
-		return {0, 0};
+		return BasicSampleFrame();
 	return m_data[makeRealPos( pos )];
 }
 

@@ -26,6 +26,8 @@
 namespace ppp
 {
 
+const GenSample::PositionType GenSample::EndOfSample = std::numeric_limits<GenSample::PositionType>::max();
+
 GenSample::GenSample() :
 	m_loopStart( 0 ), m_loopEnd( 0 ), m_volume( 0 ),
 	m_frequency( 0 ), m_data(), m_filename(), m_title(), m_looptype( LoopType::None )

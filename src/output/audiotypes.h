@@ -70,6 +70,13 @@ struct BasicSampleFrame {
 		left = ( left * mulLeft ) >> shift;
 		right = ( right * mulRight ) >> shift;
 	}
+
+	constexpr BasicSampleFrame(BasicSample l, BasicSample r) : left(l), right(r)
+	{
+	}
+	constexpr BasicSampleFrame() : left(0), right(0)
+	{
+	}
 };
 #pragma pack(pop)
 
@@ -112,6 +119,10 @@ struct MixerSampleFrame {
 		result.left = ppp::clip( left >> shift, -32768, 32767 );
 		result.right = ppp::clip( right >> shift, -32768, 32767 );
 		return result;
+	}
+
+	constexpr MixerSampleFrame() : left(0), right(0)
+	{
 	}
 };
 #pragma pack(pop)

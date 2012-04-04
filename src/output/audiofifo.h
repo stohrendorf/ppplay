@@ -30,8 +30,6 @@
 
 #include "light4cxx/logger.h"
 
-#include <atomic>
-
 /**
  * @class AudioFifo
  * @brief Audio FIFO buffer
@@ -46,8 +44,8 @@ class AudioFifo : public IAudioSource
 	AudioFifo() = delete;
 private:
 	AudioFrameBufferQueue m_queue; //!< @brief Queued audio chunks
-	std::atomic_size_t m_queuedFrames; //!< @brief Number of frames in the queue
-	std::atomic_size_t m_minFrameCount; //!< @brief Minimum number of frames the queue should contain
+	size_t m_queuedFrames; //!< @brief Number of frames in the queue
+	size_t m_minFrameCount; //!< @brief Minimum number of frames the queue should contain
 	boost::thread m_requestThread; //!< @brief The requester thread that pulls the audio data from the source
 	IAudioSource::WeakPtr m_source; //!< @brief The audio source to pull the data from
 	uint64_t m_volLeftSum; //!< @brief Sum of all left absolute sample values

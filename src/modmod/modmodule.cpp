@@ -214,7 +214,7 @@ size_t ModModule::buildTick( AudioFrameBuffer* buf )
 			return 0;
 		}
 		if(buf) {
-			MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength(), {0, 0} ) );
+			MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
 			for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 				ModChannel::Ptr chan = m_channels.at( currTrack );
 				BOOST_ASSERT( chan.use_count() > 0 );
@@ -285,7 +285,7 @@ bool ModModule::adjustPosition( bool estimateOnly )
 				//}
 			}
 		}
-		if( ( m_breakRow == -1 ) && ( m_breakOrder == 0xffff ) && ( m_patDelayCount == -1 ) ) {
+		if( m_breakRow == -1 && m_breakOrder == 0xffff && m_patDelayCount == -1 ) {
 			setRow( ( row() + 1 ) & 0x3f );
 			if( row() == 0 ) {
 				setOrder( order() + 1, estimateOnly );

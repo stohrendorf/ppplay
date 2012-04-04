@@ -178,7 +178,7 @@ size_t XmModule::buildTick( AudioFrameBuffer* buffer )
 		buffer->reset( new AudioFrameBuffer::element_type );
 	}
 	if( buffer ) {
-		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength(), {0, 0} ) );
+		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
 		XmPattern::Ptr currPat = m_patterns.at( patternIndex() );
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			XmChannel::Ptr chan = m_channels.at( currTrack );

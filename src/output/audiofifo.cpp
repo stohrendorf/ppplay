@@ -136,10 +136,10 @@ size_t AudioFifo::getAudioData( AudioFrameBuffer& data, size_t size )
 		size = m_queuedFrames;
 	}
 	if( !data ) {
-		data.reset( new AudioFrameBuffer::element_type( size, {0, 0} ) );
+		data.reset( new AudioFrameBuffer::element_type( size ) );
 	}
 	if( data->size() < size ) {
-		data->resize( size, {0, 0} );
+		data->resize( size );
 	}
 	size_t copied = 0;
 	size_t toCopy = size;

@@ -45,7 +45,7 @@ GenModule::Ptr ModuleRegistry::tryLoad( const std::string& filename, uint32_t fr
 {
 	GenModule::Ptr result;
 	for( const LoadFunc & func : instance().m_loaders ) {
-		if( result = func( filename, frq, maxRpt ) ) {
+		if(( result = func( filename, frq, maxRpt ) )) {
 			break;
 		}
 	}

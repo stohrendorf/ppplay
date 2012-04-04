@@ -34,8 +34,7 @@ namespace s3m
 {
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-enum :
-uint8_t {
+enum : uint8_t {
 	s3mFlagSmpLooped    = 0x01, //!< @brief Sample is looped
 	s3mFlagSmpStereo    = 0x02, //!< @brief Sample is stereo
 	s3mFlagSmp16bit     = 0x04  //!< @brief Sample has 16-bit samples
@@ -102,8 +101,8 @@ bool S3mSample::load( BinStream& str, const size_t pos, bool imagoLoopEnd )
 		//	aLoopEnd = (aLoopEnd>64000) ? 64000 : aLoopEnd;
 		setVolume( smpHdr.volume );
 		setFrequency( smpHdr.c2spd );
-		bool loadStereo = ( smpHdr.flags & s3mFlagSmpStereo ) != 0;
-		setLoopType( ( smpHdr.flags & s3mFlagSmpLooped ) == 0 ? GenSample::LoopType::None : GenSample::LoopType::Forward );
+		bool loadStereo = ( smpHdr.flags & static_cast<uint8_t>(s3mFlagSmpStereo) ) != 0;
+		setLoopType( ( smpHdr.flags & static_cast<uint8_t>(s3mFlagSmpLooped) ) == 0 ? GenSample::LoopType::None : GenSample::LoopType::Forward );
 		setTitle( stringncpy( smpHdr.sampleName, 28 ) );
 		setFilename( stringncpy( smpHdr.filename, 12 ) );
 		// ok, header loaded, now load the sample data
@@ -114,7 +113,7 @@ bool S3mSample::load( BinStream& str, const size_t pos, bool imagoLoopEnd )
 			logger()->warn( L4CXX_LOCATION, "Seek failed or length is zero, assuming empty." );
 			return true;
 		}
-		if( smpHdr.flags & s3mFlagSmp16bit ) {
+		if( smpHdr.flags & static_cast<uint8_t>(s3mFlagSmp16bit) ) {
 			logger()->info( L4CXX_LOCATION, "Loading 16-bit sample" );
 			m_highQuality = true;
 			uint16_t smp16;

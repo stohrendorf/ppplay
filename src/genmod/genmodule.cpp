@@ -414,17 +414,19 @@ bool GenModule::jumpNextOrder()
 	logger()->debug(L4CXX_LOCATION, "Not preprocessed yet");
 	size_t ord = order();
 	bool wasPaused = paused();
-	ScopedCall unpause([&](){ setPaused( wasPaused ); });
 	setPaused(true);
 	do {
 		if(order()>=orderCount()) {
+			setPaused( wasPaused );
 			return false;
 		}
 		AudioFrameBuffer buf;
 		if(buildTick(&buf)==0 || !buf) {
+			setPaused( wasPaused );
 			return false;
 		}
 	} while(ord == order());
+	setPaused( wasPaused );
 	return true;
 }
 
@@ -443,7 +445,6 @@ bool GenModule::jumpNextSong()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	bool wasPaused = paused();
-	ScopedCall unpause([&](){ setPaused( wasPaused ); });
 	setPaused(true);
 	
 	logger()->debug(L4CXX_LOCATION, "Trying to jump to next song: increasing song index");
@@ -458,15 +459,18 @@ bool GenModule::jumpNextSong()
 				setPatternIndex( mapOrder( i )->index() );
 				setOrder( i, false );
 				setPosition( 0 );
+				setPaused( wasPaused );
 				return true;
 			}
 		}
 		//addMultiSong( StateIterator() );
+		setPaused( wasPaused );
 		return false;
 	}
 	
 	if( !isMultiSong() ) {
 		logger()->info( L4CXX_LOCATION, "This is not a multi-song" );
+		setPaused( wasPaused );
 		return false;
 	}
 	
@@ -474,6 +478,7 @@ bool GenModule::jumpNextSong()
 	currentMultiSong().currentState()->archive( this ).finishLoad();
 	BOOST_ASSERT( mapOrder( order() ).use_count() > 0 );
 	setPatternIndex( mapOrder( order() )->index() );
+	setPaused( wasPaused );
 	return true;
 }
 
