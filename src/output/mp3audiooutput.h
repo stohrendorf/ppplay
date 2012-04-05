@@ -19,15 +19,15 @@
 #ifndef MP3AUDIOOUTPUT_H
 #define MP3AUDIOOUTPUT_H
 
+#include "iaudiooutput.h"
+
+#include <fstream>
+#include <boost/thread.hpp>
+
 /**
  * @ingroup Output
  * @{
  */
-
-#include "iaudiooutput.h"
-
-#include <boost/thread.hpp>
-#include <fstream>
 
 /**
  * @class MP3AudioOutput
@@ -56,10 +56,8 @@ private:
 	static const size_t BufferSize = 4096;
 	/**
 	 * @brief Encoder thread handler
-	 * @param[in] src Audio output source
-	 * @note Declared here to get access to private data members without need to declare it as a @c friend
 	 */
-	static void encodeThread( MP3AudioOutput* src );
+	void encodeThread();
 public:
 	/**
 	 * @brief Constructor

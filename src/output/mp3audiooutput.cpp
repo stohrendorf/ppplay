@@ -21,26 +21,26 @@
 #include <lame/lame.h>
 #include <boost/format.hpp>
 
-void MP3AudioOutput::encodeThread( MP3AudioOutput* src )
+void MP3AudioOutput::encodeThread()
 {
 	while( true ) {
-		while( src->m_paused ) {
+		while( m_paused ) {
 			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 		}
 		AudioFrameBuffer buffer;
-		IAudioSource::Ptr source = src->source().lock();
-		while( source->paused() ) {
+		IAudioSource::Ptr srcLock = source().lock();
+		while( srcLock->paused() ) {
 			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 		}
-		size_t size = source->getAudioData( buffer, src->source().lock()->preferredBufferSize() );
+		size_t size = srcLock->getAudioData( buffer, srcLock->preferredBufferSize() );
 		if( size == 0 || !buffer || buffer->empty() ) {
-			src->setErrorCode( InputDry );
-			src->pause();
+			setErrorCode( InputDry );
+			pause();
 			return;
 		}
-		boost::recursive_mutex::scoped_lock lock(src->m_mutex);
+		boost::recursive_mutex::scoped_lock lock(m_mutex);
 		
-		int res = lame_encode_buffer_interleaved( src->m_lameGlobalFlags, &buffer->front().left, buffer->size(), src->m_buffer, BufferSize );
+		int res = lame_encode_buffer_interleaved( m_lameGlobalFlags, &buffer->front().left, buffer->size(), m_buffer, BufferSize );
 		if( res < 0 ) {
 			if( res == -1 ) {
 				logger()->error( L4CXX_LOCATION, "Lame Encoding Buffer too small!" );
@@ -50,7 +50,7 @@ void MP3AudioOutput::encodeThread( MP3AudioOutput* src )
 			}
 		}
 		else {
-			src->m_file.write( reinterpret_cast<char*>( src->m_buffer ), res );
+			m_file.write( reinterpret_cast<char*>( m_buffer ), res );
 		}
 	}
 }
@@ -133,7 +133,7 @@ int MP3AudioOutput::init( int desiredFrq )
 		logger()->error( L4CXX_LOCATION, "LAME parameter initialization failed" );
 		return 0;
 	}
-	m_encoderThread = boost::thread( encodeThread, this );
+	m_encoderThread = boost::thread( boost::bind(&MP3AudioOutput::encodeThread, this) );
 	//m_encoderThread.detach();
 	logger()->trace( L4CXX_LOCATION, "LAME initialized" );
 	return desiredFrq;

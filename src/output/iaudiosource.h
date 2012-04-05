@@ -19,19 +19,17 @@
 #ifndef IAUDIOSOURCE_H
 #define IAUDIOSOURCE_H
 
-/**
- * @ingroup Output
- * @{
- */
-
 #include "stuff/utils.h"
-//#include "stuff/readwritelockable.h"
 #include "audiotypes.h"
 
 #include "light4cxx/logger.h"
 
 #include <boost/thread.hpp>
-#include <boost/thread/locks.hpp>
+
+/**
+ * @ingroup Output
+ * @{
+ */
 
 /**
  * @interface IAudioSource
