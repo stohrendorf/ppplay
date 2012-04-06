@@ -52,7 +52,7 @@ private:
 	bool m_disabled; //!< @brief @c true if channel is disabled
 	GenSample::PositionType m_position; //!< @brief Current sample position
 	std::string m_statusString; //!< @brief Status string
-	boost::recursive_mutex m_statusStringMutex; //!< @brief Mutex for accessing m_statusString
+	mutable boost::recursive_mutex m_mutex;
 public:
 	/**
 	 * @brief The constructor
@@ -73,21 +73,6 @@ public:
 	 */
 	bool isDisabled() const;
 	/**
-	 * @brief Get the name of the note
-	 * @return String containing note and octave (i.e. "C-3")
-	 * @note Return value is empty if channel is disabled or inactive
-	 * @see ppp::NoteNames
-	 */
-	virtual std::string noteName() = 0;
-	/**
-	 * @brief Get the effect string as shown in the tracker's FX column
-	 * @return Effect string
-	 * @note Return value is empty if no effect is playing, or if the channel is
-	 * disabled or inactive
-	 * @see effectDescription()
-	*/
-	virtual std::string effectName() const = 0;
-	/**
 	 * @brief Get the playback position
 	 * @return Playback position in the channel's sample
 	 */
@@ -101,40 +86,17 @@ public:
 	 */
 	void enable();
 	/**
-	 * @brief Mix the current channel into @a mixBuffer.
-	 * @param[in,out] mixBuffer Pointer to the mixer buffer
-	 * @note Time-critical
-	 * @see GenModule::buildTick()
-	 * 
-	 * @details
-	 * When @a mixBuffer is @c NULL, only effects shall be executed that are
-	 * necessary for length estimation.
-	 * 
-	 * This behaviour is necessary here in the channel, because some effects may
-	 * cause callbacks to the GenModule or its derived children.
-	 */
-	virtual void mixTick( MixerFrameBuffer* mixBuffer ) = 0;
-	/**
-	 * @brief Updates the status string returned by statusString()
-	 */
-	virtual void updateStatus() = 0;
-	/**
 	 * @brief Returns the status string
 	 * @return m_statusString
 	 */
 	std::string statusString();
-	/**
-	 * @brief Get a short description of the current effect
-	 * @return The current effect in the format @c xxxx[xS]S, where @c x is a short description and @c S is a symbol
-	 * @see effectName()
-	 */
-	virtual std::string effectDescription() const = 0;
-	/**
-	 * @brief Get a string representation of the current cell as displayed in the tracker
-	 * @return String representation of the current cell like in the tracker
-	 */
-	virtual std::string cellString() = 0;
 	virtual IArchive& serialize( IArchive* data );
+	std::string noteName();
+	std::string effectName() const;
+	void mixTick( MixerFrameBuffer* mixBuffer );
+	void updateStatus();
+	std::string effectDescription() const;
+	std::string cellString();
 protected:
 	/**
 	 * @brief Set the m_active value
@@ -164,6 +126,51 @@ protected:
 	 * @return Logger with name "channel"
 	 */
 	static light4cxx::Logger::Ptr logger();
+private:
+	/**
+	 * @brief Get the name of the note
+	 * @return String containing note and octave (i.e. "C-3")
+	 * @note Return value is empty if channel is disabled or inactive
+	 * @see ppp::NoteNames
+	 */
+	virtual std::string internal_noteName() = 0;
+	/**
+	 * @brief Get the effect string as shown in the tracker's FX column
+	 * @return Effect string
+	 * @note Return value is empty if no effect is playing, or if the channel is
+	 * disabled or inactive
+	 * @see effectDescription()
+	*/
+	virtual std::string internal_effectName() const = 0;
+	/**
+	 * @brief Mix the current channel into @a mixBuffer.
+	 * @param[in,out] mixBuffer Pointer to the mixer buffer
+	 * @note Time-critical
+	 * @see GenModule::buildTick()
+	 * 
+	 * @details
+	 * When @a mixBuffer is @c NULL, only effects shall be executed that are
+	 * necessary for length estimation.
+	 * 
+	 * This behaviour is necessary here in the channel, because some effects may
+	 * cause callbacks to the GenModule or its derived children.
+	 */
+	virtual void internal_mixTick( MixerFrameBuffer* mixBuffer ) = 0;
+	/**
+	 * @brief Updates the status string returned by statusString()
+	 */
+	virtual void internal_updateStatus() = 0;
+	/**
+	 * @brief Get a short description of the current effect
+	 * @return The current effect in the format @c xxxx[xS]S, where @c x is a short description and @c S is a symbol
+	 * @see effectName()
+	 */
+	virtual std::string internal_effectDescription() const = 0;
+	/**
+	 * @brief Get a string representation of the current cell as displayed in the tracker
+	 * @return String representation of the current cell like in the tracker
+	 */
+	virtual std::string internal_cellString() = 0;
 };
 
 } // namespace ppp

@@ -27,6 +27,8 @@
 #include "iaudiooutput.h"
 #include "audiofifo.h"
 
+#include <boost/thread.hpp>
+
 /**
  * @class SDLAudioOutput
  * @brief Output class for SDL
@@ -39,12 +41,8 @@ public:
 	//! @copydoc IAudioOutput::IAudioOutput(const IAudioSource::WeakPtr&)
 	explicit SDLAudioOutput( const IAudioSource::WeakPtr& src );
 	virtual ~SDLAudioOutput();
-	virtual int init( int desiredFrq );
-	virtual bool playing();
-	virtual bool paused();
-	virtual void play();
-	virtual void pause();
 private:
+	boost::recursive_mutex m_mutex;
 	/**
 	 * @brief SDL Audio callback handler
 	 * @param[in] userdata Pointer to SDLAudioOutput
@@ -53,6 +51,12 @@ private:
 	 * @note Declared here to get access to m_fifo
 	 */
 	static void sdlAudioCallback( void* userdata, uint8_t* stream, int len_bytes );
+	size_t getSdlData( BasicSampleFrame* data, size_t numFrames );
+	virtual int internal_init( int desiredFrq );
+	virtual bool internal_playing() const;
+	virtual bool internal_paused() const;
+	virtual void internal_play();
+	virtual void internal_pause();
 protected:
 	/**
 	 * @brief Get the logger

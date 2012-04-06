@@ -206,7 +206,7 @@ void XmChannel::doKeyOn()
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-static const std::array<int8_t, 256> g_AutoVibTable = {{
+constexpr std::array<const int8_t, 256> g_AutoVibTable = {{
 		0, -2, -3, -5, -6, -8, -9, -11, -12, -14, -16,
 		-17, -19, -20, -22, -23, -24, -26, -27, -29, -30, -32,
 		-33, -34, -36, -37, -38, -39, -41, -42, -43, -44, -45,
@@ -237,7 +237,7 @@ static const std::array<int8_t, 256> g_AutoVibTable = {{
 
 void XmChannel::update( const XmCell::Ptr& cell, bool estimateOnly )
 {
-	if( m_module->tick() == 0 && !m_module->isRunningPatDelay() ) {
+	if( m_module->state().tick == 0 && !m_module->isRunningPatDelay() ) {
 		if( estimateOnly ) {
 			if( !cell ) {
 				return;
@@ -502,7 +502,7 @@ void XmChannel::update( const XmCell::Ptr& cell, bool estimateOnly )
 		}
 		if( m_currentCell.effect() == Effect::Extended ) {
 			if( highNibble( m_currentCell.effectValue() ) == EfxNoteDelay ) {
-				if( lowNibble( m_currentCell.effectValue() ) == m_module->tick() ) {
+				if( lowNibble( m_currentCell.effectValue() ) == m_module->state().tick ) {
 					triggerNote();
 					applySampleDefaults();
 					doKeyOn();
@@ -583,7 +583,7 @@ void XmChannel::update( const XmCell::Ptr& cell, bool estimateOnly )
 				fxTremolo( m_currentCell.effectValue() );
 				break;
 			case Effect::KeyOff:
-				if( m_module->tick() == m_currentCell.effectValue() ) {
+				if( m_module->state().tick == m_currentCell.effectValue() ) {
 					doKeyOff();
 				}
 				break;
@@ -604,7 +604,7 @@ void XmChannel::update( const XmCell::Ptr& cell, bool estimateOnly )
 		}
 	}
 	m_volumeEnvelope.increasePosition( m_keyOn );
-	m_realVolume = m_volumeEnvelope.realVolume( m_currentVolume, m_module->globalVolume(), m_volScale );
+	m_realVolume = m_volumeEnvelope.realVolume( m_currentVolume, m_module->state().globalVolume, m_volScale );
 	m_panningEnvelope.increasePosition( m_keyOn );
 	m_realPanning = m_panningEnvelope.realPanning( m_panning );
 
@@ -662,22 +662,22 @@ void XmChannel::update( const XmCell::Ptr& cell, bool estimateOnly )
 	}
 }
 
-std::string XmChannel::cellString()
+std::string XmChannel::internal_cellString()
 {
 	return m_currentCell.trackerString();
 }
 
-std::string XmChannel::effectDescription() const
+std::string XmChannel::internal_effectDescription() const
 {
 	return m_fxString;
 }
 
-std::string XmChannel::effectName() const
+std::string XmChannel::internal_effectName() const
 {
 	return m_currentCell.fxString();
 }
 
-std::string XmChannel::noteName()
+std::string XmChannel::internal_noteName()
 {
 	if( m_baseNote == 0 ) {
 		return "...";
@@ -696,7 +696,7 @@ std::string XmChannel::noteName()
 	return ( boost::format( "%s%d" ) % NoteNames.at( ofs % 12 ) % ( ofs / 12 ) ).str();
 }
 
-void XmChannel::mixTick( MixerFrameBuffer* mixBuffer )
+void XmChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 {
 	if( !isActive() || !mixBuffer )
 		return;
@@ -730,7 +730,7 @@ void XmChannel::mixTick( MixerFrameBuffer* mixBuffer )
 	}
 }
 
-void XmChannel::updateStatus()
+void XmChannel::internal_updateStatus()
 {
 	if( !isActive() ) {
 		setStatusString( boost::format( "         %s %s" )
@@ -820,7 +820,7 @@ void XmChannel::vfxSlideUp( uint8_t fxByte )
 
 void XmChannel::fxSetGlobalVolume( uint8_t fxByte )
 {
-	m_module->setGlobalVolume( std::min<uint8_t>( fxByte, 0x40 ) );
+	m_module->state().globalVolume = std::min<uint8_t>( fxByte, 0x40 );
 }
 
 void XmChannel::efxFinePortaUp( uint8_t fxByte )
@@ -876,12 +876,12 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 	if( estimateOnly ) {
 		switch( highNibble( fxByte ) ) {
 			case EfxPatLoop:
-				if( m_module->tick() == 0 ) {
+				if( m_module->state().tick == 0 ) {
 					efxPatLoop( fxByte );
 				}
 				break;
 			case EfxPatDelay:
-				if( m_module->tick() == 0 ) {
+				if( m_module->state().tick == 0 ) {
 					m_module->doPatDelay( lowNibble( fxByte ) );
 				}
 				break;
@@ -918,13 +918,13 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 			m_fxString = "TWave\x9f";
 			break;
 		case EfxNoteCut:
-			if( m_module->tick() == lowNibble( fxByte ) ) {
+			if( m_module->state().tick == lowNibble( fxByte ) ) {
 				m_baseVolume = m_currentVolume = 0;
 			}
 			m_fxString = "NCut \xd4";
 			break;
 		case EfxNoteDelay:
-			if( m_module->tick() == lowNibble( fxByte ) ) {
+			if( m_module->state().tick == lowNibble( fxByte ) ) {
 				triggerNote();
 				applySampleDefaults();
 				doKeyOn();
@@ -939,7 +939,7 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 			break;
 		case EfxRetrigger:
 			if( lowNibble( fxByte ) != 0 ) {
-				if( m_module->tick() % lowNibble( fxByte ) == 0 ) {
+				if( m_module->state().tick % lowNibble( fxByte ) == 0 ) {
 					triggerNote();
 					doKeyOn();
 				}
@@ -947,19 +947,19 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 			m_fxString = "Retr \xec";
 			break;
 		case EfxPatLoop:
-			if( m_module->tick() == 0 ) {
+			if( m_module->state().tick == 0 ) {
 				efxPatLoop( fxByte );
 			}
 			m_fxString = "PLoop\xe8";
 			break;
 		case EfxPatDelay:
-			if( m_module->tick() == 0 ) {
+			if( m_module->state().tick == 0 ) {
 				m_module->doPatDelay( lowNibble( fxByte ) );
 			}
 			m_fxString = "PDlay\xc2";
 			break;
 		case EfxSetPan:
-			if( m_module->tick() == 0 ) {
+			if( m_module->state().tick == 0 ) {
 				m_panning = 0xff * lowNibble( fxByte ) / 0x0f;
 			}
 			m_fxString = "StPan\x1d";
@@ -1039,7 +1039,7 @@ void XmChannel::fxArpeggio( uint8_t fxByte )
 	if( fxByte == 0 ) {
 		return;
 	}
-	switch( m_module->tick() % 3 ) {
+	switch( m_module->state().tick % 3 ) {
 		case 0:
 			m_currentPeriod = m_basePeriod;
 			break;
@@ -1066,7 +1066,7 @@ void XmChannel::fxVibrato( uint8_t fxByte )
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-static const std::array<uint8_t, 32> g_VibTable = {{
+constexpr std::array<const uint8_t, 32> g_VibTable = {{
 		0, 24, 49, 74, 97, 120, 141, 161, 180, 197, 212, 224, 235,
 		244, 250, 253, 255, 253, 250, 244, 235, 224, 212, 197, 180, 161,
 		141, 120, 97, 74, 49, 24
@@ -1114,11 +1114,11 @@ void XmChannel::fxGlobalVolSlide( uint8_t fxByte )
 	reuseIfZero( m_lastGlobVolSlideFx, fxByte );
 	if( highNibble( fxByte ) == 0 ) {
 		fxByte = lowNibble( fxByte );
-		m_module->setGlobalVolume( std::max( 0, m_module->globalVolume() - fxByte ) );
+		m_module->state().globalVolume = std::max( 0, m_module->state().globalVolume - fxByte );
 	}
 	else {
 		fxByte = highNibble( fxByte );
-		m_module->setGlobalVolume( std::min( 0x40, m_module->globalVolume() + fxByte ) );
+		m_module->state().globalVolume = std::min( 0x40, m_module->state().globalVolume + fxByte );
 	}
 }
 
@@ -1267,7 +1267,7 @@ void XmChannel::efxPatLoop( uint8_t fxByte )
 {
 	fxByte = lowNibble( fxByte );
 	if( fxByte == 0 ) {
-		m_patLoopRow = m_module->row();
+		m_patLoopRow = m_module->state().row;
 		return;
 	}
 	if( m_patLoopCounter == 0 ) {

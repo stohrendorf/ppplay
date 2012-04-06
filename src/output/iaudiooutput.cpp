@@ -43,23 +43,63 @@ IAudioSource::WeakPtr IAudioOutput::source() const
 	return m_source;
 }
 
-uint16_t IAudioOutput::volumeLeft() const
+uint16_t IAudioOutput::internal_volumeLeft() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if( !m_source.expired() ) {
 		return m_source.lock()->volumeLeft();
 	}
 	return 0;
 }
 
-uint16_t IAudioOutput::volumeRight() const
+uint16_t IAudioOutput::internal_volumeRight() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	IAudioSource::Ptr source(m_source.lock());
 	if( !m_source.expired() ) {
 		return source->volumeRight();
 	}
 	return 0;
+}
+
+int IAudioOutput::init( int desiredFrq )
+{
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	return internal_init(desiredFrq);
+}
+
+void IAudioOutput::pause()
+{
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	internal_pause();
+}
+
+bool IAudioOutput::paused() const
+{
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	return internal_paused();
+}
+
+void IAudioOutput::play()
+{
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	internal_play();
+}
+
+bool IAudioOutput::playing() const
+{
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	return internal_playing();
+}
+
+uint16_t IAudioOutput::volumeLeft() const
+{
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	return internal_volumeLeft();
+}
+
+uint16_t IAudioOutput::volumeRight() const
+{
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	return internal_volumeRight();
 }
 
 light4cxx::Logger::Ptr IAudioOutput::logger()

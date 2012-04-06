@@ -33,10 +33,12 @@ namespace ppp
 namespace s3m
 {
 
+namespace
+{
 /**
  * @brief S3M sine wave lookup
  */
-static const std::array<const int16_t, 64> S3mWaveSine = {
+constexpr std::array<const int16_t, 64> S3mWaveSine = {
 	{
 		0, 24, 49, 74, 97, 120, 141, 161,
 		180, 197, 212, 224, 235, 244, 250, 253,
@@ -52,7 +54,7 @@ static const std::array<const int16_t, 64> S3mWaveSine = {
 /**
  * @brief S3M ramp wave lookup
  */
-static const std::array<const int16_t, 64> S3mWaveRamp = {
+constexpr std::array<const int16_t, 64> S3mWaveRamp = {
 	{
 		0, -0xF8, -0xF0, -0xE8, -0xE0, -0xD8, -0xD0, -0xC8,
 		-0xC0, -0xB8, -0xB0, -0xA8, -0xA0, -0x98, -0x90, -0x88,
@@ -67,7 +69,7 @@ static const std::array<const int16_t, 64> S3mWaveRamp = {
 /**
  * @brief S3M square wave lookup
  */
-static const std::array<const int16_t, 64> S3mWaveSquare = {
+constexpr std::array<const int16_t, 64> S3mWaveSquare = {
 	{
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -81,7 +83,7 @@ static const std::array<const int16_t, 64> S3mWaveSquare = {
 /**
  * @brief S3M finetunes lookup
  */
-static const std::array<const uint16_t, 16> S3mFinetunes = {
+constexpr std::array<const uint16_t, 16> S3mFinetunes = {
 	{
 		8363, 8413, 8463, 8529, 8581, 8651, 8723, 8757,
 		7895, 7941, 7985, 8046, 8107, 8169, 8232, 8280
@@ -91,14 +93,14 @@ static const std::array<const uint16_t, 16> S3mFinetunes = {
 /**
  * @brief Note periodic table for frequency calculations
  */
-static const std::array<const uint16_t, 12> Periods = {{1712 << 4, 1616 << 4, 1524 << 4, 1440 << 4, 1356 << 4, 1280 << 4, 1208 << 4, 1140 << 4, 1076 << 4, 1016 << 4,  960 << 4,  907 << 4}};
+const std::array<const uint16_t, 12> Periods = {{1712 << 4, 1616 << 4, 1524 << 4, 1440 << 4, 1356 << 4, 1280 << 4, 1208 << 4, 1140 << 4, 1076 << 4, 1016 << 4,  960 << 4,  907 << 4}};
 
 /**
  * @brief Get the octave out of a note
  * @param[in] x Note value
  * @return Octave of @a x
  */
-static inline uint8_t S3M_OCTAVE( uint8_t x )
+inline constexpr uint8_t S3M_OCTAVE( uint8_t x )
 {
 	return highNibble( x );
 }
@@ -108,7 +110,7 @@ static inline uint8_t S3M_OCTAVE( uint8_t x )
  * @param[in] x Note value
  * @return Note of @a x
  */
-static inline uint8_t S3M_NOTE( uint8_t x )
+inline constexpr uint8_t S3M_NOTE( uint8_t x )
 {
 	return lowNibble( x );
 }
@@ -116,7 +118,7 @@ static inline uint8_t S3M_NOTE( uint8_t x )
 /**
  * @brief A value for frequency calculation
  */
-static const uint32_t FRQ_VALUE = 14317056;
+constexpr uint32_t FRQ_VALUE = 14317056;
 
 /**
  * @brief Calculate the period for a given note, octave and base frequency
@@ -126,12 +128,9 @@ static const uint32_t FRQ_VALUE = 14317056;
  * @param[in] finetune Optional finetune
  * @return S3M Period for note @a note, base frequency @a c4spd and finetune @a finetune
  */
-static inline uint16_t st3PeriodEx( uint8_t note, uint8_t oct, uint16_t c4spd, uint16_t finetune = 8363 )
+inline uint16_t st3PeriodEx( uint8_t note, uint8_t oct, uint16_t c4spd, uint16_t finetune = 8363 )
 {
-	if( c4spd == 0 ) {
-		c4spd = 8636;
-	}
-	return ( Periods[note] >> oct ) * finetune / c4spd;
+	return ( Periods[note] >> oct ) * finetune / (c4spd==0 ? 8363 : c4spd);
 }
 /**
  * @brief Calculate the period for a given note and base frequency
@@ -140,7 +139,7 @@ static inline uint16_t st3PeriodEx( uint8_t note, uint8_t oct, uint16_t c4spd, u
  * @param[in] finetune Optional finetune
  * @return S3M Period for note @a note, base frequency @a c4spd and finetune @a finetune
  */
-static inline uint16_t st3Period( uint8_t note, uint16_t c4spd, uint16_t finetune = 8363 )
+inline uint16_t st3Period( uint8_t note, uint16_t c4spd, uint16_t finetune = 8363 )
 {
 	return st3PeriodEx( S3M_NOTE( note ), S3M_OCTAVE( note ), c4spd, finetune );
 }
@@ -152,7 +151,7 @@ static inline uint16_t st3Period( uint8_t note, uint16_t c4spd, uint16_t finetun
  * @param[in] finetune Optional finetune
  * @return Note offset (12*octave+note)
  */
-static inline uint8_t periodToNoteOffset( uint16_t per, uint16_t c4spd, uint16_t finetune = 8363 )
+inline uint8_t periodToNoteOffset( uint16_t per, uint16_t c4spd, uint16_t finetune = 8363 )
 {
 	return std::round( -12 * std::log2( static_cast<float>( per ) * c4spd / ( finetune * Periods[0] ) ) );
 }
@@ -165,7 +164,7 @@ static inline uint8_t periodToNoteOffset( uint16_t per, uint16_t c4spd, uint16_t
  * @return Note string
  * @note Time-critical
  */
-static inline std::string periodToNote( uint16_t per, uint16_t c2spd, uint16_t finetune = 8363 )
+inline std::string periodToNote( uint16_t per, uint16_t c2spd, uint16_t finetune = 8363 )
 {
 	if( per == 0 ) {
 		return "p??";
@@ -192,7 +191,7 @@ static inline std::string periodToNote( uint16_t per, uint16_t c2spd, uint16_t f
  * @param[in] delta Delta value
  * @return New note
  */
-static inline uint8_t deltaNote( uint8_t note, int8_t delta )
+inline uint8_t deltaNote( uint8_t note, int8_t delta )
 {
 	uint16_t x = S3M_OCTAVE( note ) * 12 + S3M_NOTE( note ) + delta;
 	return ( ( x / 12 ) << 4 ) | ( x % 12 );
@@ -204,7 +203,7 @@ static inline uint8_t deltaNote( uint8_t note, int8_t delta )
  * @param[in] period The period to clip
  * @return Clipped period
  */
-static uint16_t clipPeriod( bool amiga, uint16_t period )
+uint16_t clipPeriod( bool amiga, uint16_t period )
 {
 	if( amiga ) {
 		return clip<uint16_t>( period, 0x15c, 0xd60 );
@@ -213,6 +212,7 @@ static uint16_t clipPeriod( bool amiga, uint16_t period )
 		return clip<uint16_t>( period, 0x40, 0x7fff );
 	}
 }
+} // anonymous namespace
 
 void S3mChannel::setSampleIndex( int32_t idx )
 {
@@ -265,7 +265,7 @@ S3mSample::Ptr S3mChannel::currentSample()
 	return m_module->sampleAt( m_sampleIndex );
 }
 
-std::string S3mChannel::noteName()
+std::string S3mChannel::internal_noteName()
 {
 	if( m_note == s3mEmptyNote ) {
 		return "   ";
@@ -276,7 +276,7 @@ std::string S3mChannel::noteName()
 	return periodToNote( m_realPeriod, currentSample()->frequency() );
 }
 
-std::string S3mChannel::effectName() const
+std::string S3mChannel::internal_effectName() const
 {
 	if( m_currentCell.effect() == s3mEmptyCommand ) {
 		return "...";
@@ -294,7 +294,7 @@ std::string S3mChannel::effectName() const
 	}
 }
 
-std::string S3mChannel::effectDescription() const
+std::string S3mChannel::internal_effectDescription() const
 {
 	return m_currentFxStr;
 }
@@ -304,7 +304,7 @@ void S3mChannel::update( const S3mCell::Ptr& cell, bool patDelay, bool estimateO
 	if( isDisabled() ) {
 		return;
 	}
-	if( m_module->tick() == 0 ) {
+	if( m_module->state().tick == 0 ) {
 		if(estimateOnly) {
 			if(!cell) {
 				return;
@@ -512,7 +512,7 @@ void S3mChannel::update( const S3mCell::Ptr& cell, bool patDelay, bool estimateO
 	updateStatus();
 }
 
-void S3mChannel::mixTick( MixerFrameBuffer* mixBuffer )
+void S3mChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 {
 	if( !mixBuffer ) {
 		return;
@@ -524,7 +524,7 @@ void S3mChannel::mixTick( MixerFrameBuffer* mixBuffer )
 		setActive( false );
 		return;
 	}
-	if( m_module->tick() == 0 && m_zeroVolCounter != -1 && isActive() ) {
+	if( m_module->state().tick == 0 && m_zeroVolCounter != -1 && isActive() ) {
 		if( m_currentVolume == 0 ) {
 			m_zeroVolCounter++;
 		}
@@ -584,12 +584,12 @@ void S3mChannel::mixTick( MixerFrameBuffer* mixBuffer )
 	}
 }
 
-std::string S3mChannel::cellString()
+std::string S3mChannel::internal_cellString()
 {
 	return m_currentCell.trackerString();
 }
 
-void S3mChannel::updateStatus()
+void S3mChannel::internal_updateStatus()
 {
 	S3mSample::Ptr smp = currentSample();
 	if( !smp ) {
@@ -673,7 +673,7 @@ void S3mChannel::fxPitchSlideUp( uint8_t fxByte )
 		return;
 	reuseIfZero( m_lastFxByte, fxByte );
 	uint16_t delta = 0;
-	if( m_module->tick() == 0 ) {
+	if( m_module->state().tick == 0 ) {
 		if( fxByte <= 0xe0 ) {
 			m_currentFxStr = "Ptch\x1e\x1e";
 			return;
@@ -702,7 +702,7 @@ void S3mChannel::fxPitchSlideDown( uint8_t fxByte )
 		return;
 	reuseIfZero( m_lastFxByte, fxByte );
 	uint16_t delta = 0;
-	if( m_module->tick() == 0 ) {
+	if( m_module->state().tick == 0 ) {
 		if( fxByte <= 0xe0 ) {
 			m_currentFxStr = "Ptch\x1f\x1f";
 			return;
@@ -735,7 +735,7 @@ void S3mChannel::fxVolSlide( uint8_t fxByte )
 		}
 		else {
 			m_currentFxStr = "VSld \x18";
-			if( m_module->tick() == 0 ) {
+			if( m_module->state().tick == 0 ) {
 				m_currentVolume = std::min( 63, m_currentVolume + highNibble( fxByte ) );
 			}
 		}
@@ -747,7 +747,7 @@ void S3mChannel::fxVolSlide( uint8_t fxByte )
 		}
 		else {
 			m_currentFxStr = "VSld \x19";
-			if( m_module->tick() == 0 ) {
+			if( m_module->state().tick == 0 ) {
 				m_currentVolume = std::max( 0, m_currentVolume - lowNibble( fxByte ) );
 			}
 		}
@@ -755,13 +755,13 @@ void S3mChannel::fxVolSlide( uint8_t fxByte )
 	else {
 		if( lowNibble( fxByte ) == 0 ) {
 			m_currentFxStr = "VSld \x1e";
-			if( m_module->hasFastVolSlides() || m_module->tick() != 0 ) {
+			if( m_module->hasFastVolSlides() || m_module->state().tick != 0 ) {
 				m_currentVolume = std::min( 63, m_currentVolume + highNibble( fxByte ) );
 			}
 		}
 		else {
 			m_currentFxStr = "VSld \x1f";
-			if( m_module->hasFastVolSlides() || m_module->tick() != 0 ) {
+			if( m_module->hasFastVolSlides() || m_module->state().tick != 0 ) {
 				m_currentVolume = std::max( 0, m_currentVolume - lowNibble( fxByte ) );
 			}
 		}
@@ -783,13 +783,13 @@ void S3mChannel::recalcFrequency()
 
 void S3mChannel::recalcVolume()
 {
-	m_realVolume = ( static_cast<int>( m_module->globalVolume() ) * m_currentVolume ) >> 6;
+	m_realVolume = ( static_cast<int>( m_module->state().globalVolume ) * m_currentVolume ) >> 6;
 }
 
 void S3mChannel::fxPorta( uint8_t fxByte, bool noReuse )
 {
 	m_currentFxStr = "Porta\x12";
-	if( m_module->tick() == 0 ) {
+	if( m_module->state().tick == 0 ) {
 		return;
 	}
 	if( m_basePeriod == 0 ) {
@@ -883,7 +883,7 @@ void S3mChannel::fxNoteCut( uint8_t fxByte )
 {
 	m_currentFxStr = "NCut \xd4";
 	fxByte = lowNibble( fxByte );
-	if( m_module->tick() == 0 ) {
+	if( m_module->state().tick == 0 ) {
 		m_countdown = fxByte;
 		return;
 	}
@@ -899,7 +899,7 @@ void S3mChannel::fxNoteDelay( uint8_t fxByte )
 {
 	m_currentFxStr = "Delay\xc2";
 	fxByte = lowNibble( fxByte );
-	if( m_module->tick() == 0 ) {
+	if( m_module->state().tick == 0 ) {
 		m_countdown = fxByte;
 		return;
 	}
@@ -916,13 +916,13 @@ void S3mChannel::fxGlobalVolume( uint8_t fxByte )
 {
 	m_currentFxStr = "GloVol";
 	if( fxByte <= 64 )
-		m_module->setGlobalVolume( fxByte );
+		m_module->state().globalVolume = fxByte;
 }
 
 void S3mChannel::fxFineTune( uint8_t fxByte )
 {
 	m_currentFxStr = "FTune\xe6";
-	if( m_module->tick() != 0 )
+	if( m_module->state().tick != 0 )
 		return;
 	fxByte = lowNibble( fxByte );
 	m_c2spd = m_basePeriod = m_realPeriod = S3mFinetunes[fxByte];
@@ -1054,7 +1054,7 @@ void S3mChannel::fxArpeggio( uint8_t fxByte )
 	if( !currentSample() )
 		return;
 	reuseIfZero( m_lastFxByte, fxByte );
-	switch( m_module->tick() % 3 ) {
+	switch( m_module->state().tick % 3 ) {
 		case 0: // normal note
 			m_realPeriod = st3Period( m_note, currentSample()->frequency() );
 			break;

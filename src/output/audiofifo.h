@@ -50,7 +50,6 @@ private:
 	IAudioSource::WeakPtr m_source; //!< @brief The audio source to pull the data from
 	uint64_t m_volLeftSum; //!< @brief Sum of all left absolute sample values
 	uint64_t m_volRightSum; //!< @brief Sum of all right absolute sample values
-	//ReadWriteLockable m_readWriteLockable;
 	mutable boost::recursive_mutex m_mutex;
 	/**
 	 * @brief Audio data pulling thread function
@@ -58,12 +57,16 @@ private:
 	 * @note Declared here to get access to private members of the AudioFifo
 	 * @see m_requestThread
 	 */
-	static void requestThread( AudioFifo* fifo );
+	void requestThread();
 	/**
 	 * @brief Adds a buffer to the internal queue by copying its contents
 	 * @param[in] buf The buffer to add
 	 */
 	void pushBuffer( const AudioFrameBuffer& buf );
+	virtual uint16_t internal_volumeLeft() const;
+	virtual uint16_t internal_volumeRight() const;
+	virtual size_t internal_getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames );
+	virtual bool internal_initialize( uint32_t frequency );
 public:
 	/**
 	 * @brief Initialize the buffer
@@ -92,17 +95,12 @@ public:
 	 * @param[in] len The requested buffer length (minimum 256)
 	 */
 	void setMinFrameCount( size_t len );
-	virtual uint16_t volumeLeft() const;
-	virtual uint16_t volumeRight() const;
 	/**
 	 * @brief Check if the FIFO is empty
 	 * @retval true FIFO is empty
 	 * @retval false FIFO is not empty
 	 */
 	bool isEmpty() const;
-	// ------------------
-	virtual size_t getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames );
-	virtual bool initialize( uint32_t frequency );
 protected:
 	/**
 	 * @brief Get the logger

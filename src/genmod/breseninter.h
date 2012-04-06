@@ -19,16 +19,16 @@
 #ifndef BRESENINTER_H
 #define BRESENINTER_H
 
+#include "stuff/utils.h"
+#include "stream/iserializable.h"
+#include "gensample.h"
+
+#include <cstdint>
+
 /**
  * @ingroup GenMod
  * @{
  */
-
-#include "stuff/utils.h"
-#include "stream/iserializable.h"
-
-#include <cstdint>
-#include "gensample.h"
 
 namespace ppp
 {

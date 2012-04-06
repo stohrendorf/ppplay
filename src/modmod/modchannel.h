@@ -69,15 +69,15 @@ public:
 	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 	explicit ModChannel( ModModule* parent );
 	virtual ~ModChannel();
-	virtual std::string noteName();
-	virtual std::string effectName() const;
-	virtual void mixTick( MixerFrameBuffer* mixBuffer );
-	virtual void updateStatus();
-	virtual std::string effectDescription() const;
-	virtual std::string cellString();
 	virtual IArchive& serialize( IArchive* data );
 	void update( const ModCell::Ptr& cell, bool patDelay );
 private:
+	virtual std::string internal_noteName();
+	virtual std::string internal_effectName() const;
+	virtual void internal_mixTick( MixerFrameBuffer* mixBuffer );
+	virtual void internal_updateStatus();
+	virtual std::string internal_effectDescription() const;
+	virtual std::string internal_cellString();
 	void fxArpeggio( uint8_t fxByte );
 	void fxPortaUp( uint8_t fxByte );
 	void fxPortaDown( uint8_t fxByte );

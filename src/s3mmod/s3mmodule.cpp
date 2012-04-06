@@ -120,7 +120,7 @@ bool S3mModule::load( const std::string& fn )
 			//LOG_WARNING("%s could not be opened", fn.c_str());
 			return false;
 		}
-		setFilename( fn );
+		metaInfo().filename = fn;
 		S3mModuleHeader s3mHdr;
 		try {
 			str.seek( 0 );
@@ -159,31 +159,34 @@ bool S3mModule::load( const std::string& fn )
 		unsigned char schismTest = 0;
 		switch( ( s3mHdr.createdWith >> 12 ) & 0x0f ) {
 			case s3mTIdScreamTracker:
-				setTrackerInfo( "ScreamTracker v" );
+				metaInfo().trackerInfo = "ScreamTracker v";
 				break;
 			case s3mTIdImagoOrpheus:
-				setTrackerInfo( "Imago Orpheus v" );
+				metaInfo().trackerInfo = "Imago Orpheus v";
 				break;
 			case s3mTIdImpulseTracker:
-				setTrackerInfo( "Impulse Tracker v" );
+				metaInfo().trackerInfo = "Impulse Tracker v";
 				break;
 				// the following IDs were found in the Schism Tracker sources
 			case s3mTIdSchismTracker:
-				setTrackerInfo( "Schism Tracker v" );
+				metaInfo().trackerInfo = "Schism Tracker v";
 				schismTest = 1;
 				break;  // some versions of Schism Tracker use ID 1
 			case s3mTIdOpenMPT:
-				setTrackerInfo( "OpenMPT v" );
+				metaInfo().trackerInfo = "OpenMPT v";
 				break;
 			default:
-				setTrackerInfo( boost::format( "Unknown Tracker (%x) v" ) % ( s3mHdr.createdWith >> 12 ) );
+				metaInfo().trackerInfo = (boost::format( "Unknown Tracker (%x) v" ) % ( s3mHdr.createdWith >> 12 )).str();
 		}
-		setTrackerInfo( boost::format( "%s%x.%02x" ) % trackerInfo() % ( ( s3mHdr.createdWith >> 8 ) & 0x0f ) % ( s3mHdr.createdWith & 0xff ) );
+		metaInfo().trackerInfo =  (boost::format( "%s%x.%02x" ) % trackerInfo() % ( ( s3mHdr.createdWith >> 8 ) & 0x0f ) % ( s3mHdr.createdWith & 0xff )).str();
 		setTempo( s3mHdr.initialTempo );
 		//m_playbackInfo.speed = s3mHdr.initialSpeed;
 		setSpeed( s3mHdr.initialSpeed );
-		BOOST_ASSERT( speed() != 0 );
-		setGlobalVolume( s3mHdr.globalVolume );
+		BOOST_ASSERT( state().speed != 0 );
+		state().globalVolume = s3mHdr.globalVolume;
+		for( S3mChannel::Ptr & chan : m_channels ) {
+			chan->recalcVolume();
+		}
 		// parse flags
 		m_customData = ( s3mHdr.ffv & s3mFlagSpecial ) != 0;
 		// now read the orders...
@@ -192,11 +195,11 @@ bool S3mModule::load( const std::string& fn )
 			if( !str.good() ) {
 				return false;
 			}
-			unsigned char tmpOrd;
+			uint8_t tmpOrd;
 			str.read( &tmpOrd );
 			orderAt( i )->setIndex( tmpOrd );
 		}
-		unsigned char defPans[32];
+		uint8_t defPans[32];
 		if( s3mHdr.defaultPannings == 0xFC ) {
 			try {
 				str.seek( 0x60 + s3mHdr.ordNum + 2 * s3mHdr.smpNum + 2 * s3mHdr.patNum );
@@ -294,7 +297,7 @@ bool S3mModule::load( const std::string& fn )
 				}
 			}
 		}
-		setTitle( stringncpy( s3mHdr.title, 28 ) );
+		metaInfo().title = stringncpy( s3mHdr.title, 28 );
 		return true;
 	}
 	catch( boost::exception& e ) {
@@ -313,7 +316,7 @@ bool S3mModule::existsSample( int16_t idx )
 	return m_samples.at( idx ).use_count() > 0;
 }
 
-uint8_t S3mModule::channelCount() const
+uint8_t S3mModule::internal_channelCount() const
 {
 	return m_usedChannels;
 }
@@ -321,15 +324,15 @@ uint8_t S3mModule::channelCount() const
 void S3mModule::checkGlobalFx()
 {
 	try {
-		setPatternIndex( mapOrder( order() )->index() );
-		S3mPattern::Ptr currPat = getPattern( patternIndex() );
+		state().pattern = orderAt( state().order )->index();
+		S3mPattern::Ptr currPat = getPattern( state().pattern );
 		if( !currPat ) {
 			return;
 		}
 		// check for pattern loops
 		int patLoopCounter = 0;
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
+			S3mCell::Ptr cell = currPat->cellAt( currTrack, state().row );
 			if( !cell || cell->effect() == s3mEmptyCommand ) {
 				continue;
 			}
@@ -342,7 +345,7 @@ void S3mModule::checkGlobalFx()
 				continue;
 			}
 			if( lowNibble( fxVal ) == 0x00 ) {  // loop start
-				m_patLoopRow = row();
+				m_patLoopRow = state().row;
 			}
 			else { // loop return
 				patLoopCounter++;
@@ -358,7 +361,7 @@ void S3mModule::checkGlobalFx()
 					if( patLoopCounter == 1 ) {  // one loop, all ok
 						m_patLoopCount = -1;
 						m_breakRow = ~0;
-						m_patLoopRow = row() + 1;
+						m_patLoopRow = state().row + 1;
 					}
 					else { // we got an "infinite" loop...
 						m_patLoopCount = 127;
@@ -371,7 +374,7 @@ void S3mModule::checkGlobalFx()
 		// check for pattern delays
 		uint8_t patDelayCounter = 0;
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
+			S3mCell::Ptr cell = currPat->cellAt( currTrack, state().row );
 			if( !cell || cell->effect() == s3mEmptyCommand ) {
 				continue;
 			}
@@ -399,7 +402,7 @@ void S3mModule::checkGlobalFx()
 			if( m_patLoopCount != -1 ) {
 				break;
 			}
-			S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
+			S3mCell::Ptr cell = currPat->cellAt( currTrack, state().row );
 			if( !cell || cell->effect() == s3mEmptyCommand ) {
 				continue;
 			}
@@ -410,7 +413,7 @@ void S3mModule::checkGlobalFx()
 			}
 			else if( fx == s3mFxBreakPat ) {
 				m_breakRow = highNibble( fxVal ) * 10 + lowNibble( fxVal );
-				logger()->debug( L4CXX_LOCATION, boost::format( "Row %d: Break pattern to row %d" ) % row() % m_breakRow );
+				logger()->debug( L4CXX_LOCATION, boost::format( "Row %d: Break pattern to row %d" ) % state().row % m_breakRow );
 			}
 		}
 	}
@@ -423,7 +426,7 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 {
 	BOOST_ASSERT( orderCount() != 0 );
 	bool orderChanged = false;
-	if( tick() == 0 ) {
+	if( state().tick == 0 ) {
 		m_patDelayCount = -1;
 		if( m_breakOrder != 0xffff ) {
 			if( m_breakOrder < orderCount() ) {
@@ -438,35 +441,35 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 			}
 			if( m_breakOrder == 0xffff ) {
 				if( m_patLoopCount == -1 ) {
-					setOrder( order() + 1, estimateOnly );
+					setOrder( state().order + 1, estimateOnly );
 					orderChanged = true;
 				}
 			}
 		}
 		if( ( m_breakRow == 0xffff ) && ( m_breakOrder == 0xffff ) && ( m_patDelayCount == -1 ) ) {
-			setRow( ( row() + 1 ) & 0x3f );
-			if( row() == 0 ) {
-				setOrder( order() + 1, estimateOnly );
+			setRow( ( state().row + 1 ) & 0x3f );
+			if( state().row == 0 ) {
+				setOrder( state().order + 1, estimateOnly );
 				orderChanged = true;
 			}
 		}
 		m_breakRow = m_breakOrder = ~0;
 	}
-	setPatternIndex( mapOrder( order() )->index() );
+	state().pattern = orderAt( state().order )->index();
 	// skip "--" and "++" marks
-	while( patternIndex() >= 254 ) {
-		if( patternIndex() == s3mOrderEnd ) {
+	while( state().pattern >= 254 ) {
+		if( state().pattern == s3mOrderEnd ) {
 			return false;
 		}
-		if( !mapOrder( order() ) )
+		if( !orderAt( state().order ) )
 			return false;
-		setOrder( order() + 1, estimateOnly );
+		setOrder( state().order + 1, estimateOnly );
 		orderChanged = true;
-		if( order() >= orderCount() ) {
+		if( state().order >= orderCount() ) {
 			logger()->info( L4CXX_LOCATION, "Song end reached: End of orders" );
 			return false;
 		}
-		setPatternIndex( mapOrder( order() )->index() );
+		state().pattern = orderAt( state().order )->index();
 	}
 	if( orderChanged ) {
 		m_patLoopRow = 0;
@@ -475,84 +478,73 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 	return true;
 }
 
-size_t S3mModule::buildTick( AudioFrameBuffer* buf )
-{
-	try {
-		if( buf && !buf->get() ) {
-			buf->reset( new AudioFrameBuffer::element_type );
-		}
-		if( tick() == 0 ) {
-			checkGlobalFx();
-		}
-		if( orderAt( order() )->playbackCount() >= maxRepeat() ) {
-			logger()->info( L4CXX_LOCATION, "Song end reached: Maximum repeat count reached" );
-			if(buf) {
-				buf->reset();
-			}
-			return 0;
-		}
-		// update channels...
-		setPatternIndex( mapOrder( order() )->index() );
-		S3mPattern::Ptr currPat = getPattern( patternIndex() );
-		if( !currPat ) {
-			logger()->error(L4CXX_LOCATION, "Did not find a pattern for current order");
-			if(buf) {
-				buf->reset();
-			}
-			return 0;
-		}
-		if( buf ) {
-			MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
-			for( uint_fast8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-				S3mChannel::Ptr chan = m_channels.at( currTrack );
-				BOOST_ASSERT( chan.use_count() > 0 );
-				S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
-				chan->update( cell, m_patDelayCount != -1, false );
-				chan->mixTick( &mixerBuffer );
-			}
-			buf->get()->resize( mixerBuffer->size() );
-			MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
-			BasicSampleFrame* bufPtr = &buf->get()->front();
-			for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
-				*bufPtr = mixerBufferPtr->rightShiftClip(2);
-				bufPtr++;
-				mixerBufferPtr++;
-			}
-		}
-		else {
-			for( uint_fast8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-				S3mChannel::Ptr chan = m_channels.at( currTrack );
-				BOOST_ASSERT( chan.use_count() > 0 );
-				S3mCell::Ptr cell = currPat->cellAt( currTrack, row() );
-				chan->update( cell, m_patDelayCount != -1, true );
-			}
-		}
-		setPosition( position() + tickBufferLength() );
-		nextTick();
-		if( !adjustPosition(!buf) ) {
-			logger()->info( L4CXX_LOCATION, "Song end reached: adjustPosition() failed" );
-			if(buf) {
-				buf->reset();
-			}
-			return 0;
-		}
-		return tickBufferLength();
+size_t S3mModule::internal_buildTick( AudioFrameBuffer* buf )
+try {
+	if( buf && !buf->get() ) {
+		buf->reset( new AudioFrameBuffer::element_type );
 	}
-	catch( ... ) {
-		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+	if( state().tick == 0 ) {
+		checkGlobalFx();
 	}
+	if( orderAt( state().order )->playbackCount() >= maxRepeat() ) {
+		logger()->info( L4CXX_LOCATION, "Song end reached: Maximum repeat count reached" );
+		if(buf) {
+			buf->reset();
+		}
+		return 0;
+	}
+	// update channels...
+	state().pattern = orderAt( state().order )->index();
+	S3mPattern::Ptr currPat = getPattern( state().pattern );
+	if( !currPat ) {
+		logger()->error(L4CXX_LOCATION, "Did not find a pattern for current order");
+		if(buf) {
+			buf->reset();
+		}
+		return 0;
+	}
+	if( buf ) {
+		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
+		for( uint_fast8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+			S3mChannel::Ptr chan = m_channels.at( currTrack );
+			BOOST_ASSERT( chan.use_count() > 0 );
+			S3mCell::Ptr cell = currPat->cellAt( currTrack, state().row );
+			chan->update( cell, m_patDelayCount != -1, false );
+			chan->mixTick( &mixerBuffer );
+		}
+		buf->get()->resize( mixerBuffer->size() );
+		MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
+		BasicSampleFrame* bufPtr = &buf->get()->front();
+		for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
+			*bufPtr = mixerBufferPtr->rightShiftClip(2);
+			bufPtr++;
+			mixerBufferPtr++;
+		}
+	}
+	else {
+		for( uint_fast8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+			S3mChannel::Ptr chan = m_channels.at( currTrack );
+			BOOST_ASSERT( chan.use_count() > 0 );
+			S3mCell::Ptr cell = currPat->cellAt( currTrack, state().row );
+			chan->update( cell, m_patDelayCount != -1, true );
+		}
+	}
+	state().playedFrames += tickBufferLength();
+	nextTick();
+	if( !adjustPosition(!buf) ) {
+		logger()->info( L4CXX_LOCATION, "Song end reached: adjustPosition() failed" );
+		if(buf) {
+			buf->reset();
+		}
+		return 0;
+	}
+	return tickBufferLength();
+}
+catch( ... ) {
+	BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
 }
 
-GenOrder::Ptr S3mModule::mapOrder( int16_t order )
-{
-	static GenOrder::Ptr xxx( new S3mOrder( s3mOrderEnd ) );
-	if( !inRange<int16_t>( order, 0, orderCount() - 1 ) ) {
-		return xxx;
-	}
-	return orderAt( order );
-}
-
-std::string S3mModule::channelStatus( size_t idx )
+std::string S3mModule::internal_channelStatus( size_t idx ) const
 {
 	S3mChannel::Ptr x = m_channels.at( idx );
 	if( !x )
@@ -560,7 +552,7 @@ std::string S3mModule::channelStatus( size_t idx )
 	return x->statusString();
 }
 
-std::string S3mModule::channelCellString( size_t idx )
+std::string S3mModule::internal_channelCellString( size_t idx ) const
 {
 	S3mChannel::Ptr x = m_channels.at( idx );
 	if( !x )
@@ -577,21 +569,13 @@ IArchive& S3mModule::serialize( IArchive* data )
 	% m_patLoopCount
 	% m_patDelayCount
 	% m_customData;
-for( S3mChannel::Ptr & chan : m_channels ) {
+	for( S3mChannel::Ptr & chan : m_channels ) {
 		if( !chan ) {
 			continue;
 		}
 		data->archive( chan.get() );
 	}
 	return *data;
-}
-
-void S3mModule::setGlobalVolume( int16_t v )
-{
-	GenModule::setGlobalVolume( v );
-for( S3mChannel::Ptr & chan : m_channels ) {
-		chan->recalcVolume();
-	}
 }
 
 GenModule::Ptr S3mModule::factory( const std::string& filename, uint32_t frequency, uint8_t maxRpt )

@@ -67,12 +67,11 @@ public:
 	ModModule( uint8_t maxRpt = 2 );
 	virtual ~ModModule();
 	bool load( const std::string& filename );
-	virtual size_t buildTick( AudioFrameBuffer* buf );
-	virtual GenOrder::Ptr mapOrder( int16_t order );
-	virtual std::string channelStatus( size_t idx );
-	virtual std::string channelCellString( size_t idx );
-	virtual uint8_t channelCount() const;
 private:
+	virtual size_t internal_buildTick( AudioFrameBuffer* buf );
+	virtual std::string internal_channelStatus( size_t idx ) const;
+	virtual std::string internal_channelCellString( size_t idx ) const;
+	virtual uint8_t internal_channelCount() const;
 	ModSample::Ptr sampleAt( size_t idx ) const;
 	bool existsSample( size_t idx ) const;
 	/**

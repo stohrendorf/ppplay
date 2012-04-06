@@ -118,6 +118,13 @@ private:
 	void playNote();
 	void recalcFrequency();
 	uint16_t glissando( uint16_t period );
+
+	virtual std::string internal_noteName();
+	virtual void internal_mixTick( MixerFrameBuffer* mixBuffer );
+	virtual void internal_updateStatus();
+	virtual std::string internal_cellString();
+	virtual std::string internal_effectName() const;
+	virtual std::string internal_effectDescription() const;
 public:
 	/**
 	 * @brief Constructor
@@ -125,7 +132,7 @@ public:
 	 */
 	S3mChannel( S3mModule* module );
 	virtual ~S3mChannel();
-	virtual std::string noteName();
+	virtual IArchive& serialize( IArchive* data );
 	/**
 	 * @brief Update the channel
 	 * @param[in] cell Pointer to a note cell
@@ -133,12 +140,6 @@ public:
 	 * @param[in] estimateOnly Used when estimating track length
 	 */
 	void update( const ppp::s3m::S3mCell::Ptr& cell, bool patDelay, bool estimateOnly );
-	virtual void mixTick( MixerFrameBuffer* mixBuffer );
-	virtual void updateStatus();
-	virtual IArchive& serialize( IArchive* data );
-	virtual std::string cellString();
-	virtual std::string effectName() const;
-	virtual std::string effectDescription() const;
 	/**
 	 * @brief Recalculates the real output volume
 	 */

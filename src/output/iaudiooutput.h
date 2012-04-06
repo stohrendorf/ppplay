@@ -60,46 +60,6 @@ public:
 	//! @brief Destructor
 	virtual ~IAudioOutput();
 	/**
-	 * @brief Initialize output device
-	 * @param[in] desiredFrq Desired output frequency
-	 * @retval 0 Initialization failed
-	 * @retval other Real output frequency
-	 */
-	virtual int init( int desiredFrq ) = 0;
-	/**
-	 * @brief Check if the output is in playing state
-	 * @return @c true if the output is in playing state
-	 */
-	virtual bool playing() = 0;
-	/**
-	 * @brief Check if the output is in paused state
-	 * @return @c true if the output is in paused state
-	 */
-	virtual bool paused() = 0;
-	/**
-	 * @brief Start playback
-	 */
-	virtual void play() = 0;
-	/**
-	 * @brief Pause playback
-	 */
-	virtual void pause() = 0;
-	/**
-	 * @brief Get the attached audio source
-	 * @return Pointer to the attached audio source
-	 */
-	IAudioSource::WeakPtr source() const;
-	/**
-	 * @brief Get the left channel's volume
-	 * @return Left channel's volume, defaults to the source's volume
-	 */
-	virtual uint16_t volumeLeft() const;
-	/**
-	 * @brief Get the right channel's volume
-	 * @return Right channel's volume, defaults to the source's volume
-	 */
-	virtual uint16_t volumeRight() const;
-	/**
 	 * @brief Get the internal error code
 	 * @return Internal error code
 	 */
@@ -109,6 +69,18 @@ public:
 	 * @param[in] ec New error code
 	 */
 	void setErrorCode( ErrorCode ec );
+	int init( int desiredFrq );
+	bool playing() const;
+	bool paused() const;
+	void play();
+	void pause();
+	uint16_t volumeLeft() const;
+	uint16_t volumeRight() const;
+	/**
+	 * @brief Get the attached audio source
+	 * @return Pointer to the attached audio source
+	 */
+	IAudioSource::WeakPtr source() const;
 protected:
 	/**
 	 * @brief Get the logger
@@ -120,6 +92,41 @@ private:
 	ErrorCode m_errorCode; //!< @brief Internal error code
 	//ReadWriteLockable m_readWriteLock;
 	mutable boost::recursive_mutex m_mutex;
+	/**
+	 * @brief Initialize output device
+	 * @param[in] desiredFrq Desired output frequency
+	 * @retval 0 Initialization failed
+	 * @retval other Real output frequency
+	 */
+	virtual int internal_init( int desiredFrq ) = 0;
+	/**
+	 * @brief Check if the output is in playing state
+	 * @return @c true if the output is in playing state
+	 */
+	virtual bool internal_playing() const = 0;
+	/**
+	 * @brief Check if the output is in paused state
+	 * @return @c true if the output is in paused state
+	 */
+	virtual bool internal_paused() const = 0;
+	/**
+	 * @brief Start playback
+	 */
+	virtual void internal_play() = 0;
+	/**
+	 * @brief Pause playback
+	 */
+	virtual void internal_pause() = 0;
+	/**
+	 * @brief Get the left channel's volume
+	 * @return Left channel's volume, defaults to the source's volume
+	 */
+	virtual uint16_t internal_volumeLeft() const;
+	/**
+	 * @brief Get the right channel's volume
+	 * @return Right channel's volume, defaults to the source's volume
+	 */
+	virtual uint16_t internal_volumeRight() const;
 };
 
 /**

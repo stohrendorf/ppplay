@@ -31,10 +31,13 @@
 namespace light4cxx
 {
 
+namespace
+{
 /**
  * @brief The current logging level filter
  */
-static Level s_level = Level::Debug;
+Level s_level = Level::Debug;
+}
 
 Level Logger::level()
 {
@@ -71,16 +74,12 @@ Logger::Logger( const std::string& name ) : m_name( name )
 {
 }
 
-/**
- * @brief The mutex that blocks parallel calls to std::cout
- */
-static boost::recursive_mutex outMutex;
-
 void Logger::log( light4cxx::Level l, const light4cxx::Location& loc, const std::string& str ) const
 {
 	if( l < s_level || s_level == Level::Off ) {
 		return;
 	}
+	static boost::recursive_mutex outMutex;
 	boost::recursive_mutex::scoped_lock outLock( outMutex );
 	std::cout << loc.toString( l, *this, str );
 }

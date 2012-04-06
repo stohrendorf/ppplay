@@ -80,14 +80,11 @@ protected:
 	virtual IArchive& serialize( IArchive* data );
 public:
 	virtual ~S3mModule();
-	virtual uint8_t channelCount() const;
-	virtual size_t buildTick( AudioFrameBuffer* buf );
-	virtual GenOrder::Ptr mapOrder( int16_t order );
-	virtual std::string channelStatus( size_t idx );
-	virtual std::string channelCellString( size_t idx );
-protected:
-	virtual void setGlobalVolume( int16_t v );
 private:
+	virtual uint8_t internal_channelCount() const;
+	virtual size_t internal_buildTick( AudioFrameBuffer* buf );
+	virtual std::string internal_channelStatus( size_t idx ) const;
+	virtual std::string internal_channelCellString( size_t idx ) const;
 	/**
 	 * @copydoc ppp::GenModule::GenModule(uint8_t)
 	 */

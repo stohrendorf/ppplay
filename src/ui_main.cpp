@@ -166,7 +166,7 @@ void UIMain::onTimer()
 {
 	boost::recursive_mutex::scoped_lock lock(m_timerMutex);
 	IAudioOutput::Ptr outLock( m_output.lock() );
-	ppp::GenModule::Ptr modLock( std::static_pointer_cast<ppp::GenModule>( m_module.lock() ) );
+	const auto modLock( std::static_pointer_cast<const ppp::GenModule>( m_module.lock() ) );
 	if( m_module.expired() || m_output.expired() ) {
 		logger()->trace( L4CXX_LOCATION, "Module expired" );
 		return;
@@ -182,10 +182,11 @@ void UIMain::onTimer()
 		m_volBar->shift( outLock->volumeLeft() >> 8, outLock->volumeRight() >> 8 );
 		size_t msecs = modLock->position() / 441;
 		size_t msecslen = modLock->length() / 441;
+		const ppp::ModuleState state = modLock->state();
 		boost::format posStr = boost::format( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %02d:%02d.%02d/%02d:%02d.%02d" )
-							   % modLock->order()
-							   % modLock->patternIndex()
-							   % modLock->row()
+							   % state.order
+							   % state.pattern
+							   % state.row
 							   % ( msecs / 6000 )
 							   % ( msecs / 100 % 60 )
 							   % ( msecs % 100 )
@@ -209,7 +210,7 @@ void UIMain::onTimer()
 // 									msecslen / 6000, msecslen / 100 % 60, msecslen % 100
 // 									) );
 // 		}
-		m_playbackInfo->setEscapedText( ( boost::format( "{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%" ) % modLock->speed() % modLock->tempo() % ( modLock->globalVolume() * 100 / 0x40 ) ).str() );
+		m_playbackInfo->setEscapedText( ( boost::format( "{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%" ) % state.speed % state.tempo % ( state.globalVolume * 100 / 0x40 ) ).str() );
 		for( uint8_t i = 0; i < modLock->channelCount(); i++ ) {
 			if( i >= 16 )
 				break;

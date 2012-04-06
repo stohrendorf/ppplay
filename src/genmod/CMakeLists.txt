@@ -6,6 +6,7 @@ add_library(genmod STATIC
 	genorder.cpp
 	breseninter.cpp
 	ipatterncell.cpp
+	modulestate.cpp
 )
 
 # target_link_libraries(genmod binstream)

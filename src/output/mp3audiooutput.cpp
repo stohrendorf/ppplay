@@ -38,8 +38,8 @@ void MP3AudioOutput::encodeThread()
 			pause();
 			return;
 		}
-		boost::recursive_mutex::scoped_lock lock(m_mutex);
 		
+		boost::recursive_mutex::scoped_lock lock(m_mutex);
 		int res = lame_encode_buffer_interleaved( m_lameGlobalFlags, &buffer->front().left, buffer->size(), m_buffer, BufferSize );
 		if( res < 0 ) {
 			if( res == -1 ) {
@@ -69,47 +69,43 @@ MP3AudioOutput::~MP3AudioOutput()
 	m_encoderThread.join();
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	delete[] m_buffer;
+	m_buffer = nullptr;
 	lame_close( m_lameGlobalFlags );
 	logger()->trace( L4CXX_LOCATION, "Destroyed" );
 }
 
-uint16_t MP3AudioOutput::volumeRight() const
+uint16_t MP3AudioOutput::internal_volumeRight() const
 {
 	return 0;
 }
 
-uint16_t MP3AudioOutput::volumeLeft() const
+uint16_t MP3AudioOutput::internal_volumeLeft() const
 {
 	return 0;
 }
 
-void MP3AudioOutput::pause()
+void MP3AudioOutput::internal_pause()
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_paused = true;
 }
 
-void MP3AudioOutput::play()
+void MP3AudioOutput::internal_play()
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_paused = false;
 }
 
-bool MP3AudioOutput::paused()
+bool MP3AudioOutput::internal_paused() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_paused;
 }
 
-bool MP3AudioOutput::playing()
+bool MP3AudioOutput::internal_playing() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return !m_paused;
 }
 
-int MP3AudioOutput::init( int desiredFrq )
+int MP3AudioOutput::internal_init( int desiredFrq )
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	logger()->trace( L4CXX_LOCATION, "Initializing LAME" );
 	m_file.open( m_filename, std::ios::in );
 	if( m_file.is_open() ) {
@@ -141,7 +137,9 @@ int MP3AudioOutput::init( int desiredFrq )
 
 void MP3AudioOutput::setID3( const std::string& title, const std::string& album, const std::string& artist )
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	if( m_file.is_open() ) {
+		return;
+	}
 	id3tag_init( m_lameGlobalFlags );
 	id3tag_add_v2( m_lameGlobalFlags );
 	id3tag_set_title( m_lameGlobalFlags, title.c_str() );

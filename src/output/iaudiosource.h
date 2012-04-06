@@ -44,7 +44,6 @@ private:
 	//! @brief Frequency of this source
 	uint32_t m_frequency;
 	bool m_paused;
-	//ReadWriteLockable m_readWriteLock;
 	mutable boost::recursive_mutex m_mutex;
 protected:
 	/**
@@ -52,6 +51,37 @@ protected:
 	 * @return @c false
 	 */
 	bool fail();
+	/**
+	 * @brief Get audio data from the source
+	 * @param[out] buffer The buffer containing the retrieved data
+	 * @param[in] requestedFrames Number of requested frames
+	 * @returns The number of frames actually returned - should be equal to @c buffer->size()
+	 * @note If this function returns 0, the audio output device should stop playback
+	 * @see preferredBufferSize()
+	 * @see isBusy()
+	 */
+	virtual size_t internal_getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames ) = 0;
+	/**
+	 * @brief Get the preferred buffer size to prevent unnecessary calls to getAudioData()
+	 * @retval 0 if no size is specified
+	 */
+	virtual size_t internal_preferredBufferSize() const;
+	/**
+	 * @brief Initializes the source with given frequency
+	 * @param[in] frequency Requested frequency
+	 * @return @c true on success
+	 */
+	virtual bool internal_initialize( uint32_t frequency ) = 0;
+	/**
+	 * @brief Get the left channel's volume
+	 * @return Left channel's volume, default is 0
+	 */
+	virtual uint16_t internal_volumeLeft() const ;
+	/**
+	 * @brief Get the right channel's volume
+	 * @return Right channel's volume, default is 0
+	 */
+	virtual uint16_t internal_volumeRight() const;
 public:
 	//! @brief Class pointer
 	typedef std::shared_ptr<IAudioSource> Ptr;
@@ -62,29 +92,7 @@ public:
 	//! @brief Destructor
 	virtual ~IAudioSource();
 	/**
-	 * @brief Get audio data from the source
-	 * @param[out] buffer The buffer containing the retrieved data
-	 * @param[in] requestedFrames Number of requested frames
-	 * @returns The number of frames actually returned - should be equal to @c buffer->size()
-	 * @note If this function returns 0, the audio output device should stop playback
-	 * @see preferredBufferSize()
-	 * @see isBusy()
-	 */
-	virtual size_t getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames ) = 0;
-	/**
-	 * @brief Get the preferred buffer size to prevent unnecessary calls to getAudioData()
-	 * @retval 0 if no size is specified
-	 */
-	virtual size_t preferredBufferSize() const;
-	/**
-	 * @brief Initialized the source with given frequency
-	 * @param[in] frequency Requested frequency
-	 * @return @c true on success
-	 * @note This method has a default implementation that returns @c true. Make sure to call it in derived classes to set m_frequency.
-	 */
-	virtual bool initialize( uint32_t frequency ) = 0;
-	/**
-	 * @brief Check if this source was successfully initialized
+	 * @brief Check whether this source was successfully initialized
 	 * @return m_initialized
 	 */
 	bool initialized() const;
@@ -93,24 +101,18 @@ public:
 	 * @return m_frequency
 	 */
 	uint32_t frequency() const;
-	/**
-	 * @brief Get the left channel's volume
-	 * @return Left channel's volume, default is 0
-	 */
-	virtual uint16_t volumeLeft() const ;
-	/**
-	 * @brief Get the right channel's volume
-	 * @return Right channel's volume, default is 0
-	 */
-	virtual uint16_t volumeRight() const;
-	inline bool paused() const {
-		boost::recursive_mutex::scoped_lock lock(m_mutex);
-		return m_paused;
-	}
-	inline void setPaused(bool p = true) {
-		boost::recursive_mutex::scoped_lock lock(m_mutex);
-		m_paused = p;
-	}
+	inline bool paused() const;
+	inline void setPaused(bool p = true);
+	//! @copydoc @internal_getAudioData
+	size_t getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames );
+	//! @copydoc @internal_preferredBufferSize
+	size_t preferredBufferSize() const;
+	//! @copydoc internal_initialize
+	bool initialize( uint32_t frequency );
+	//! @copydoc internal_volumeLeft
+	uint16_t volumeLeft() const;
+	//! @copydoc internal_volumeRight
+	uint16_t volumeRight() const;
 protected:
 	/**
 	 * @brief Get the logger
@@ -118,6 +120,15 @@ protected:
 	 */
 	static light4cxx::Logger::Ptr logger();
 };
+
+bool IAudioSource::paused() const {
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	return m_paused;
+}
+void IAudioSource::setPaused(bool p) {
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	m_paused = p;
+}
 
 /**
  * @}

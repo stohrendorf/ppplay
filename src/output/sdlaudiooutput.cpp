@@ -23,29 +23,34 @@
 
 void SDLAudioOutput::sdlAudioCallback( void* userdata, uint8_t* stream, int len_bytes )
 {
-	std::fill_n( stream, len_bytes, 0 );
 	SDLAudioOutput* outpSdl = static_cast<SDLAudioOutput*>( userdata );
-	outpSdl->logger()->trace(L4CXX_LOCATION, boost::format("Requested %d bytes of data")%len_bytes);
-	AudioFrameBuffer buffer;
-	IAudioSource::Ptr src( outpSdl->source().lock() );
-	if(src && !src->paused()) {
-		size_t copied = src->getAudioData( buffer, len_bytes / sizeof( BasicSampleFrame ) );
-		if( copied == 0 ) {
-			outpSdl->logger()->trace(L4CXX_LOCATION, "Source did not return any data - input is dry");
-			outpSdl->setErrorCode( InputDry );
-		}
-		copied *= sizeof( BasicSampleFrame );
-		len_bytes -= copied;
-		if(len_bytes != 0) {
-			outpSdl->logger()->trace(L4CXX_LOCATION, boost::format("Source provided not enough data: %d bytes missing")%len_bytes);
-		}
-		std::copy( buffer->begin(), buffer->end(), reinterpret_cast<BasicSampleFrame*>( stream ) );
-		stream += copied;
-	}
+	logger()->trace(L4CXX_LOCATION, boost::format("Requested %d bytes of data")%len_bytes);
+	len_bytes -= sizeof(BasicSampleFrame) * outpSdl->getSdlData(reinterpret_cast<BasicSampleFrame*>(stream), len_bytes/sizeof(BasicSampleFrame));
 	std::fill_n(stream, len_bytes, 0);
 }
 
-SDLAudioOutput::SDLAudioOutput( const IAudioSource::WeakPtr& src ) : IAudioOutput( src )
+size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
+{
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	AudioFrameBuffer buffer;
+	IAudioSource::Ptr src( source().lock() );
+	if( !src || src->paused() ) {
+		return 0;
+	}
+	size_t copied = src->getAudioData( buffer, numFrames );
+	if( copied == 0 ) {
+		logger()->trace(L4CXX_LOCATION, "Source did not return any data - input is dry");
+		setErrorCode( InputDry );
+	}
+	numFrames -= copied;
+	if(numFrames != 0) {
+		logger()->trace(L4CXX_LOCATION, boost::format("Source provided not enough data: %d frames missing")%numFrames);
+	}
+	std::copy( buffer->begin(), buffer->end(), data );
+	return copied;
+}
+
+SDLAudioOutput::SDLAudioOutput( const IAudioSource::WeakPtr& src ) : IAudioOutput( src ), m_mutex()
 {
 	logger()->trace( L4CXX_LOCATION, "Created" );
 }
@@ -57,7 +62,7 @@ SDLAudioOutput::~SDLAudioOutput()
 	logger()->trace( L4CXX_LOCATION, "Destroyed" );
 }
 
-int SDLAudioOutput::init( int desiredFrq )
+int SDLAudioOutput::internal_init( int desiredFrq )
 {
 	logger()->trace( L4CXX_LOCATION, "Initializing" );
 	if( !SDL_WasInit( SDL_INIT_AUDIO ) ) {
@@ -99,20 +104,20 @@ int SDLAudioOutput::init( int desiredFrq )
 	return desiredFrq;
 }
 
-bool SDLAudioOutput::playing()
+bool SDLAudioOutput::internal_playing() const
 {
 	return SDL_GetAudioStatus() == SDL_AUDIO_PLAYING;
 }
-bool SDLAudioOutput::paused()
+bool SDLAudioOutput::internal_paused() const
 {
 	return SDL_GetAudioStatus() == SDL_AUDIO_PAUSED;
 }
 
-void SDLAudioOutput::play()
+void SDLAudioOutput::internal_play()
 {
 	SDL_PauseAudio( 0 );
 }
-void SDLAudioOutput::pause()
+void SDLAudioOutput::internal_pause()
 {
 	SDL_PauseAudio( 1 );
 }

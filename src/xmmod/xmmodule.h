@@ -81,12 +81,11 @@ public:
 	virtual ~XmModule();
 	//! @brief Class pointer
 	typedef std::shared_ptr<XmModule> Ptr;
-	virtual size_t buildTick( AudioFrameBuffer* buffer );
-	virtual ppp::GenOrder::Ptr mapOrder( int16_t );
-	virtual std::string channelStatus( size_t );
-	virtual std::string channelCellString( size_t );
-	virtual uint8_t channelCount() const;
 private:
+	virtual size_t internal_buildTick( AudioFrameBuffer* buffer );
+	virtual std::string internal_channelStatus( size_t ) const;
+	virtual std::string internal_channelCellString( size_t ) const;
+	virtual uint8_t internal_channelCount() const;
 	/**
 	 * @brief Constructor
 	 * @param[in] maxRpt maximum repeat count per order

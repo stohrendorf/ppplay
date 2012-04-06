@@ -50,14 +50,20 @@ private:
 	boost::thread m_encoderThread;
 	//! @brief Whether the output is paused
 	bool m_paused;
-	//ReadWriteLockable m_readWriteLockable;
 	mutable boost::recursive_mutex m_mutex;
 	//! @brief Default size of m_buffer
-	static const size_t BufferSize = 4096;
+	static constexpr size_t BufferSize = 4096;
 	/**
 	 * @brief Encoder thread handler
 	 */
 	void encodeThread();
+	virtual uint16_t internal_volumeRight() const;
+	virtual uint16_t internal_volumeLeft() const;
+	virtual void internal_pause();
+	virtual void internal_play();
+	virtual bool internal_paused() const;
+	virtual bool internal_playing() const;
+	virtual int internal_init( int desiredFrq );
 public:
 	/**
 	 * @brief Constructor
@@ -66,13 +72,6 @@ public:
 	 */
 	explicit MP3AudioOutput( const IAudioSource::WeakPtr& src, const std::string& filename );
 	virtual ~MP3AudioOutput();
-	virtual uint16_t volumeRight() const;
-	virtual uint16_t volumeLeft() const;
-	virtual void pause();
-	virtual void play();
-	virtual bool paused();
-	virtual bool playing();
-	virtual int init( int desiredFrq );
 	/**
 	 * @brief Set the ID3 tags of the output file
 	 * @param[in] title Title tag

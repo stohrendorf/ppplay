@@ -28,7 +28,10 @@
 
 #include <boost/format.hpp>
 
-static light4cxx::Logger::Ptr logger = light4cxx::Logger::get( "ppg.sdl" );
+namespace
+{
+light4cxx::Logger::Ptr logger = light4cxx::Logger::get( "ppg.sdl" );
+}
 
 /**
  * @ingroup Ppg
@@ -38,6 +41,8 @@ static light4cxx::Logger::Ptr logger = light4cxx::Logger::get( "ppg.sdl" );
 namespace ppg
 {
 
+namespace
+{
 /**
  * @name Internal data and functions
  * @{
@@ -51,39 +56,40 @@ namespace ppg
  * @brief Maps DOS color values to their on-screen representation
  * @see ppg::Color
  */
-static Uint32 g_dosColors[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+Uint32 g_dosColors[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 /**
  * @brief Contains the chars to be displayed
  * @see g_currentChars
  */
-static char* g_chars = nullptr;
+char* g_chars = nullptr;
 /**
  * @brief Contains the chars currently visible to determine what needs to be drawn
  * @see g_chars
  */
-static char* g_currentChars = nullptr;
+char* g_currentChars = nullptr;
 /**
  * @brief Contains the foreground colors to be displayed
  */
-static Color* g_colorsF = nullptr;
+Color* g_colorsF = nullptr;
 /**
  * @brief Contains the foreground colors currently visible to determine what needs to be drawn
  */
-static Color* g_currentColorsF = nullptr;
+Color* g_currentColorsF = nullptr;
 /**
  * @brief Contains the background colors to be displayed
  */
-static Color* g_colorsB = nullptr;
+Color* g_colorsB = nullptr;
 /**
  * @brief Contains the background colors currently visible to determine what needs to be drawn
  */
-static Color* g_currentColorsB = nullptr;
+Color* g_currentColorsB = nullptr;
 /**
  * @brief The current SDL screen surface instance
  */
-static SDL_Surface* g_screenSurface = nullptr;
+SDL_Surface* g_screenSurface = nullptr;
 
-static SDLScreen* g_instance = nullptr;
+SDLScreen* g_instance = nullptr;
+} // anonymous namespace
 
 SDLScreen* SDLScreen::instance()
 {

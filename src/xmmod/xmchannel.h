@@ -200,12 +200,6 @@ public:
 	 * @param[in] module Pointer to the owning module
 	 */
 	XmChannel( XmModule* module );
-	virtual std::string noteName();
-	virtual std::string effectName() const;
-	virtual void mixTick( MixerFrameBuffer* mixBuffer );
-	virtual void updateStatus();
-	virtual std::string effectDescription() const;
-	virtual std::string cellString();
 	/**
 	 * @brief Update the channel values
 	 * @param[in] cell The new cell
@@ -214,6 +208,12 @@ public:
 	void update( const XmCell::Ptr& cell, bool estimateOnly );
 	virtual IArchive& serialize( IArchive* data );
 private:
+	virtual std::string internal_noteName();
+	virtual std::string internal_effectName() const;
+	virtual void internal_mixTick( MixerFrameBuffer* mixBuffer );
+	virtual void internal_updateStatus();
+	virtual std::string internal_effectDescription() const;
+	virtual std::string internal_cellString();
 	/** @name Effect handlers
 	 * @{
 	 */

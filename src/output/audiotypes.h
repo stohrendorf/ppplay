@@ -71,9 +71,6 @@ struct BasicSampleFrame {
 		right = ( right * mulRight ) >> shift;
 	}
 
-	constexpr BasicSampleFrame(BasicSample l, BasicSample r) : left(l), right(r)
-	{
-	}
 	constexpr BasicSampleFrame() : left(0), right(0)
 	{
 	}

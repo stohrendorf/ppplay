@@ -19,12 +19,12 @@
 #ifndef GENBASE_H
 #define GENBASE_H
 
+#include <array>
+
 /**
  * @ingroup GenMod
  * @{
  */
-
-#include <array>
 
 namespace ppp
 {

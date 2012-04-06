@@ -40,7 +40,7 @@ private:
 	IArchive::Vector m_states; //!< @brief The states
 	size_t m_stateIndex; //!< @brief Current index of the iterator
 public:
-	static const uint16_t stopHere = ~0; //!< @brief Const to define unused track
+	static constexpr uint16_t stopHere = ~0; //!< @brief Const to define unused track
 	/**
 	 * @brief Constructor
 	 */

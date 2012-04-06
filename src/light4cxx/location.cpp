@@ -28,8 +28,12 @@
 namespace light4cxx
 {
 
-static timespec s_processTime; //!< @brief The current process CPU time
-static timespec s_realTime; //!< @brief The current runtime
+namespace
+{
+//! @brief The current process CPU time
+timespec s_processTime;
+//! @brief The current runtime
+timespec s_realTime;
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 void __attribute__( ( constructor ) ) initializer()
@@ -43,7 +47,7 @@ void __attribute__( ( constructor ) ) initializer()
  * @brief Get the current process CPU time in seconds
  * @return Current process CPU time in seconds
  */
-static inline float_t processTime()
+inline float_t processTime()
 {
 	timespec tmp;
 	clock_gettime( CLOCK_THREAD_CPUTIME_ID, &tmp );
@@ -55,7 +59,7 @@ static inline float_t processTime()
  * @brief Get the current run-time in seconds
  * @return Current run-time in seconds
  */
-static inline float_t realTime()
+inline float_t realTime()
 {
 	timespec tmp;
 	clock_gettime( CLOCK_REALTIME, &tmp );
@@ -67,14 +71,14 @@ static inline float_t realTime()
 /**
  * @brief The current message format
  */
-static std::string s_format = "[%T %<5t %p] %L (in %F:%l): %m%n";
+std::string s_format = "[%T %<5t %p] %L (in %F:%l): %m%n";
 
 /**
  * @brief Converts a Level to a string
  * @param[in] l The level to convert
  * @return String representation of @a l
  */
-static std::string levelString( Level l )
+std::string levelString( Level l )
 {
 	switch( l ) {
 		case Level::Off:
@@ -97,6 +101,8 @@ static std::string levelString( Level l )
 			throw std::runtime_error( "Logging level invalid: Unknown Level passed to levelString()" );
 	}
 }
+
+} // anonymous namespace
 
 void Location::setFormat( const std::string& fmt )
 {

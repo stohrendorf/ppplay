@@ -29,9 +29,10 @@
 
 using namespace ppp::FFT;
 
-static const uint8_t inputBits     = 11;
-static const uint16_t inputLength  = 1 << inputBits;
-static const uint16_t inputLength2 = inputLength / 2;
+constexpr uint8_t  inputBits    = 11;
+constexpr uint16_t inputLength  = 1 << inputBits;
+constexpr uint16_t inputLength2 = inputLength / 2;
+
 namespace ppp {
 	namespace FFT {
 		const size_t fftSampleCount = inputLength;
@@ -49,11 +50,14 @@ dir =  1 gives forward transform
 dir = -1 gives reverse transform
 */
 
-static const bool reverseFFT = false;
+namespace
+{
 
-static std::complex<float> cArr[inputLength];
+constexpr bool reverseFFT = false;
 
-static void DFFT() {
+std::complex<float> cArr[inputLength];
+
+void DFFT() {
 	uint16_t j = 0;
 	for( uint16_t i = 0; i < inputLength - 1; i++ ) {
 		if( i < j )
@@ -89,18 +93,20 @@ static void DFFT() {
 		}   */
 }
 
-static void prepare( BasicSample* smpPtr ) {
+void prepare( BasicSample* smpPtr ) {
 	for( uint16_t i = 0; i < inputLength; i++ )
 		cArr[i] = std::complex<float>( *( smpPtr += 2 ) / 32768.0f, 0 );
 }
 
-static void post( AmpsData& amps ) {
+void post( AmpsData& amps ) {
 	amps.reset( new std::vector<uint16_t>( inputLength2 ) );
 	uint16_t* ampsPtr = &amps->front();
 	for( uint16_t i = 0; i < inputLength2; i++ ) {
 		*( ampsPtr++ ) = abs( cArr[i] ) * sqrt( i );
 	}
 }
+
+} // anonymous namespace
 
 namespace ppp {
 	namespace FFT {

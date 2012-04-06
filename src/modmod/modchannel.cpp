@@ -30,13 +30,15 @@ namespace ppp
 namespace mod
 {
 
+namespace
+{
 #ifdef MOD_USE_NTSC_FREQUENCY
-static const uint32_t FrequencyBase = 7159090.5 / 2;
+constexpr uint32_t FrequencyBase = 7159090.5 / 2;
 #else
-static const uint32_t FrequencyBase = 7093789.2 / 2;
+constexpr uint32_t FrequencyBase = 7093789.2 / 2;
 #endif
 
-static const std::array<const int16_t, 32> WaveSine = {{
+constexpr std::array<const int16_t, 32> WaveSine = {{
 		0, 24, 49, 74, 97, 120, 141, 161,
 		180, 197, 212, 224, 235, 244, 250, 253,
 		255, 253, 250, 244, 235, 224, 212, 197,
@@ -44,10 +46,11 @@ static const std::array<const int16_t, 32> WaveSine = {{
 	}
 };
 
-static inline double finetuneMultiplicator( uint8_t finetune )
+inline constexpr double finetuneMultiplicator( uint8_t finetune )
 {
 	return pow( 2.0, -( finetune > 7 ? finetune - 16 : finetune ) / ( 12 * 8 ) );
 }
+} // anonymouse namespace
 
 /**
  * @todo According to some Amiga assembler sources, periods
@@ -77,7 +80,7 @@ void ModChannel::update( const ModCell::Ptr& cell, bool patDelay )
 	if( cell && cell->effect() == 0x0e && highNibble( cell->effectValue() ) == 0x0d ) {
 		delayTick = lowNibble( cell->effectValue() );
 	}
-	if( m_module->tick() == delayTick ) {
+	if( m_module->state().tick == delayTick ) {
 // 		m_noteChanged = false;
 // 		m_currentFxStr = "      ";
 		m_currentCell.clear();
@@ -217,17 +220,17 @@ ModSample::Ptr ModChannel::currentSample() const
 	return m_module->sampleAt( m_sampleIndex );
 }
 
-std::string ModChannel::cellString()
+std::string ModChannel::internal_cellString()
 {
 	return m_currentCell.trackerString();
 }
 
-std::string ModChannel::effectDescription() const
+std::string ModChannel::internal_effectDescription() const
 {
 	return m_effectDescription;
 }
 
-std::string ModChannel::effectName() const
+std::string ModChannel::internal_effectName() const
 {
 	if( m_currentCell.effect() == 0 && m_currentCell.effectValue() == 0 ) {
 		return "---";
@@ -235,7 +238,7 @@ std::string ModChannel::effectName() const
 	return ( boost::format( "%X%02X" ) % ( m_currentCell.effect() + 0 ) % ( m_currentCell.effectValue() + 0 ) ).str();
 }
 
-std::string ModChannel::noteName()
+std::string ModChannel::internal_noteName()
 {
 	uint8_t idx = periodToNoteIndex( m_period );
 	if( idx == 255 ) {
@@ -269,7 +272,7 @@ IArchive& ModChannel::serialize( IArchive* data )
 	return data->archive( &m_bresen );
 }
 
-void ModChannel::mixTick( MixerFrameBuffer* mixBuffer )
+void ModChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 {
 	if( !isActive() || !currentSample() || m_physPeriod == 0 ) {
 		return setActive( false );
@@ -391,7 +394,7 @@ void ModChannel::efxNoteCut( uint8_t fxByte )
 {
 	m_effectDescription = "NCut \xd4";
 	fxByte = lowNibble( fxByte );
-	if( fxByte == m_module->tick() ) {
+	if( fxByte == m_module->state().tick ) {
 		setActive( false );
 		m_volume = 0;
 	}
@@ -400,7 +403,7 @@ void ModChannel::efxNoteCut( uint8_t fxByte )
 void ModChannel::efxFineVolSlideDown( uint8_t fxByte )
 {
 	m_effectDescription = "VSld \x19";
-	if( m_module->tick() != 0 ) {
+	if( m_module->state().tick != 0 ) {
 		return;
 	}
 	fxByte = lowNibble( fxByte );
@@ -410,7 +413,7 @@ void ModChannel::efxFineVolSlideDown( uint8_t fxByte )
 void ModChannel::efxFineVolSlideUp( uint8_t fxByte )
 {
 	m_effectDescription = "VSld \x18";
-	if( m_module->tick() != 0 ) {
+	if( m_module->state().tick != 0 ) {
 		return;
 	}
 	fxByte = lowNibble( fxByte );
@@ -445,7 +448,7 @@ void ModChannel::efxGlissando( uint8_t fxByte )
 void ModChannel::efxFineSlideDown( uint8_t fxByte )
 {
 	m_effectDescription = "Ptch \x1f";
-	if( m_module->tick() != 0 ) {
+	if( m_module->state().tick != 0 ) {
 		return;
 	}
 	m_lowMask = 0x0f;
@@ -456,7 +459,7 @@ void ModChannel::efxFineSlideDown( uint8_t fxByte )
 void ModChannel::efxFineSlideUp( uint8_t fxByte )
 {
 	m_effectDescription = "Ptch \x1e";
-	if( m_module->tick() != 0 ) {
+	if( m_module->state().tick != 0 ) {
 		return;
 	}
 	m_lowMask = 0x0f;
@@ -468,7 +471,7 @@ void ModChannel::fxOffset( uint8_t fxByte )
 {
 	m_effectDescription = "Offs \xaa";
 	reuseIfZero( m_lastOffsetFx, fxByte );
-	if( m_module->tick() != 0 || m_currentCell.period() == 0 ) {
+	if( m_module->state().tick != 0 || m_currentCell.period() == 0 ) {
 		return;
 	}
 	if( currentSample() && currentSample()->length() > ( fxByte << 8 ) ) {
@@ -583,7 +586,7 @@ void ModChannel::fxPorta( uint8_t fxByte )
 	applyGlissando();
 }
 
-void ModChannel::updateStatus()
+void ModChannel::internal_updateStatus()
 {
 	if( !isActive() ) {
 		setStatusString( "" );
@@ -610,12 +613,12 @@ void ModChannel::fxArpeggio( uint8_t fxByte )
 		return;
 	}
 	m_effectDescription = "Arp  \xf0";
-	if( ( m_module->tick() % 3 ) == 0 ) {
+	if( ( m_module->state().tick % 3 ) == 0 ) {
 		m_physPeriod = m_period;
 		return;
 	}
 	uint8_t delta = 0;
-	if( ( m_module->tick() % 3 ) == 1 ) {
+	if( ( m_module->state().tick % 3 ) == 1 ) {
 		delta = highNibble( fxByte );
 	}
 	else {
@@ -709,7 +712,7 @@ void ModChannel::efxRetrigger( uint8_t fxByte )
 	if( lowNibble( fxByte ) == 0 || m_currentCell.period() == 0 ) {
 		return;
 	}
-	if( m_module->tick() % lowNibble( fxByte ) != 0 ) {
+	if( m_module->state().tick % lowNibble( fxByte ) != 0 ) {
 		return;
 	}
 	setPosition( 0 );

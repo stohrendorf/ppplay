@@ -44,28 +44,25 @@
 
 #include <SDL.h>
 
-// static const size_t BUFFERSIZE = 4096;
-// static const size_t SAMPLECOUNT = BUFFERSIZE / sizeof( BasicSample );
-// static const size_t FRAMECOUNT = BUFFERSIZE / sizeof( BasicSampleFrame );
+namespace
+{
+std::shared_ptr<ppg::SDLScreen> dosScreen;
+std::shared_ptr<UIMain> uiMain;
 
-static std::shared_ptr<ppg::SDLScreen> dosScreen;
-static std::shared_ptr<UIMain> uiMain;
-
-static IAudioOutput::Ptr output;
-static AudioFifo::Ptr fifo;
-// static SDL_TimerID updateTimer = nullptr;
+IAudioOutput::Ptr output;
+AudioFifo::Ptr fifo;
 
 namespace config
 {
-static bool noGUI = false;
-static uint16_t maxRepeat = 2;
-static std::string filename;
+bool noGUI = false;
+uint16_t maxRepeat = 2;
+std::string filename;
 #ifdef WITH_MP3LAME
-static bool quickMp3 = false;
+bool quickMp3 = false;
 #endif
 }
 
-static bool parseCmdLine( int argc, char* argv[] )
+bool parseCmdLine( int argc, char* argv[] )
 {
 	int loglevel = 0;
 	namespace bpo = boost::program_options;
@@ -194,6 +191,8 @@ static bool parseCmdLine( int argc, char* argv[] )
 	return vm.count( "file" ) != 0;
 }
 
+} // anonymous namespace
+
 int main( int argc, char* argv[] )
 {
 	ppp::ModuleRegistry::registerLoader(ppp::xm::XmModule::factory);
@@ -238,7 +237,7 @@ int main( int argc, char* argv[] )
 			}
 			SDL_Event event;
 			while( output ) {
-				if( output && output->errorCode() == IAudioOutput::InputDry ) {
+				if( output->errorCode() == IAudioOutput::InputDry ) {
 					light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Input is dry, trying to jump to the next song");
 					module->setPaused(true);
 					output->pause();
@@ -259,7 +258,7 @@ int main( int argc, char* argv[] )
 // 					output->init( module->frequency() );
 // 					output->play();
 				}
-				else if( output && output->errorCode() != IAudioOutput::NoError ) {
+				else if( output->errorCode() != IAudioOutput::NoError ) {
 					light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Input has error, quitting");
 					output.reset();
 					break;

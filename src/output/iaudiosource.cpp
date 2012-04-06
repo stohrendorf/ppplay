@@ -38,33 +38,66 @@ bool IAudioSource::fail()
 	return false;
 }
 
-bool IAudioSource::initialize( uint32_t frequency )
-{
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	m_frequency = frequency;
-	m_initialized = true;
-	return true;
-}
-
 uint32_t IAudioSource::frequency() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_frequency;
 }
 
+bool IAudioSource::initialize( uint32_t frequency )
+{
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	m_frequency = frequency;
+	bool res = internal_initialize(frequency);
+	if( res ) {
+		m_frequency = frequency;
+		m_initialized = true;
+	}
+	else {
+		m_frequency = 0;
+		m_initialized = false;
+	}
+	return res;
+}
+
+
+uint16_t IAudioSource::internal_volumeLeft() const
+{
+	return 0;
+}
+
 uint16_t IAudioSource::volumeLeft() const
+{
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	return internal_volumeLeft();
+}
+
+uint16_t IAudioSource::internal_volumeRight() const
 {
 	return 0;
 }
 
 uint16_t IAudioSource::volumeRight() const
 {
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	return internal_volumeRight();
+}
+
+size_t IAudioSource::internal_preferredBufferSize() const
+{
 	return 0;
 }
 
 size_t IAudioSource::preferredBufferSize() const
 {
-	return 0;
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	return internal_preferredBufferSize();
+}
+
+size_t IAudioSource::getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames )
+{
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	return internal_getAudioData(buffer,requestedFrames);
 }
 
 light4cxx::Logger::Ptr IAudioSource::logger()
