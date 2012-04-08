@@ -25,14 +25,15 @@
  */
 
 #include "genmod/genmodule.h"
-#include "modsample.h"
-#include "modpattern.h"
-#include "modchannel.h"
 
 namespace ppp
 {
 namespace mod
 {
+
+class ModPattern;
+class ModSample;
+class ModChannel;
 
 class ModModule : public GenModule
 {
@@ -48,11 +49,11 @@ public:
 	 * @param[in] maxRpt Maximum repeat count
 	 * @return Module pointer or nullptr
 	 */
-	static GenModule::Ptr factory( const std::string& filename, uint32_t frequency, uint8_t maxRpt = 2 );
+	static GenModule::Ptr factory( const std::string& filename, uint32_t frequency, int maxRpt = 2 );
 private:
-	ModSample::Vector m_samples; //!< @brief Samples
-	ModPattern::Vector m_patterns; //!< @brief Patterns
-	std::vector<ModChannel::Ptr> m_channels; //!< @brief Channels
+	std::vector<ModSample*> m_samples; //!< @brief Samples
+	std::vector<ModPattern*> m_patterns; //!< @brief Patterns
+	std::vector<ModChannel*> m_channels; //!< @brief Channels
 	int8_t m_patLoopRow;
 	int m_patLoopCount;
 	int8_t m_breakRow;
@@ -60,11 +61,11 @@ private:
 	uint16_t m_breakOrder;
 	bool adjustPosition( bool estimateOnly );
 	void checkGlobalFx();
-	ModPattern::Ptr getPattern( size_t idx ) const;
+	ModPattern* getPattern( size_t idx ) const;
 protected:
 	virtual IArchive& serialize( IArchive* data );
 public:
-	ModModule( uint8_t maxRpt = 2 );
+	ModModule( int maxRpt = 2 );
 	virtual ~ModModule();
 	bool load( const std::string& filename );
 private:
@@ -72,7 +73,7 @@ private:
 	virtual std::string internal_channelStatus( size_t idx ) const;
 	virtual std::string internal_channelCellString( size_t idx ) const;
 	virtual uint8_t internal_channelCount() const;
-	ModSample::Ptr sampleAt( size_t idx ) const;
+	ModSample* sampleAt( size_t idx ) const;
 	bool existsSample( size_t idx ) const;
 	/**
 	 * @brief Get the logger

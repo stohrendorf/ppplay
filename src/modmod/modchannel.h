@@ -26,22 +26,21 @@
 #include "genmod/genchannel.h"
 #include "genmod/breseninter.h"
 
-#include "modcell.h"
-#include "modsample.h"
-
 namespace ppp
 {
 namespace mod
 {
 
 class ModModule;
+class ModCell;
+class ModSample;
 
 class ModChannel : public GenChannel
 {
 	DISABLE_COPY( ModChannel )
 private:
 	ModModule* m_module;
-	ModCell m_currentCell;
+	ModCell* m_currentCell;
 	uint8_t m_volume;
 	uint8_t m_physVolume;
 	uint8_t m_finetune;
@@ -65,19 +64,17 @@ private:
 	void setCellPeriod();
 	void setTonePortaTarget();
 public:
-	typedef std::shared_ptr<ModChannel> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 	explicit ModChannel( ModModule* parent );
 	virtual ~ModChannel();
 	virtual IArchive& serialize( IArchive* data );
-	void update( const ModCell::Ptr& cell, bool patDelay );
+	void update( const ModCell* cell, bool patDelay );
 private:
-	virtual std::string internal_noteName();
+	virtual std::string internal_noteName() const;
 	virtual std::string internal_effectName() const;
 	virtual void internal_mixTick( MixerFrameBuffer* mixBuffer );
 	virtual void internal_updateStatus();
 	virtual std::string internal_effectDescription() const;
-	virtual std::string internal_cellString();
+	virtual std::string internal_cellString() const;
 	void fxArpeggio( uint8_t fxByte );
 	void fxPortaUp( uint8_t fxByte );
 	void fxPortaDown( uint8_t fxByte );
@@ -107,7 +104,7 @@ private:
 	void efxNoteDelay( uint8_t fxByte );
 	void efxPatDelay( uint8_t fxByte );
 	void fxSetSpeed( uint8_t fxByte );
-	ModSample::Ptr currentSample() const;
+	const ModSample* currentSample() const;
 	void applyGlissando();
 protected:
 	/**

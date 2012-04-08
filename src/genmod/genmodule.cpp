@@ -21,8 +21,10 @@
  * @{
  */
 
-#include "genbase.h"
 #include "genmodule.h"
+
+#include "genbase.h"
+#include "genorder.h"
 #include "stream/memarchive.h"
 #include "stuff/scopedcall.h"
 
@@ -33,7 +35,7 @@
 namespace ppp
 {
 
-GenModule::GenModule( uint8_t maxRpt ) :
+GenModule::GenModule( int maxRpt ) :
 	m_metaInfo(),
 	m_orders(),
 	m_state(),
@@ -44,13 +46,16 @@ GenModule::GenModule( uint8_t maxRpt ) :
 	BOOST_ASSERT_MSG( maxRpt != 0, "Maximum repeat count may not be 0" );
 }
 
-GenModule::~GenModule() = default;
+GenModule::~GenModule()
+{
+	deleteAll(m_orders);
+}
 
 IArchive& GenModule::serialize( IArchive* data )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	for( const GenOrder::Ptr & order : m_orders ) {
-		data->archive( order.get() );
+	for( GenOrder* order : m_orders ) {
+		data->archive( order );
 	}
 	data->archive( &m_state );
 	return *data;
@@ -124,13 +129,13 @@ size_t GenModule::internal_preferredBufferSize() const
 	return tickBufferLength();
 }
 
-void GenModule::addOrder( const GenOrder::Ptr& o )
+void GenModule::addOrder( GenOrder* o )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_orders.push_back( o );
 }
 
-GenOrder::Ptr GenModule::orderAt( size_t idx ) const
+GenOrder* GenModule::orderAt( size_t idx )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if(idx >= m_orders.size()) {
@@ -146,7 +151,7 @@ size_t GenModule::orderCount() const
 	return m_orders.size();
 }
 
-uint16_t GenModule::maxRepeat() const
+int GenModule::maxRepeat() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_maxRepeat;
@@ -160,7 +165,9 @@ bool GenModule::setOrder( size_t o, bool estimateOnly, bool forceSave )
 		orderAt( m_state.order )->increasePlaybackCount();
 	}
 	m_state.order = o;
+	m_state.pattern = orderAt( m_state.order)->index();
 	if( orderChanged ) {
+		logger()->info(L4CXX_LOCATION, boost::format("Order change%s to %d (pattern %d)") % (forceSave ? " (forced save)" : "") % m_state.order % m_state.pattern );
 		try {
 			if(!estimateOnly) {
 				IArchive::Ptr state = m_songs.current().states.nextState();
@@ -172,7 +179,6 @@ bool GenModule::setOrder( size_t o, bool estimateOnly, bool forceSave )
 					m_songs.current().states.nextState();
 				}
 			}
-			logger()->info(L4CXX_LOCATION, boost::format("Order change%s to %d (pattern %d)") % (forceSave ? " (forced save)" : "") % m_state.order % m_state.pattern );
 		}
 		catch( ... ) {
 			BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
@@ -301,7 +307,6 @@ bool GenModule::jumpNextSong()
 	logger()->debug(L4CXX_LOCATION, "Trying to jump to next song");
 	if( !initialized() ) {
 		for( uint16_t i = 0; i < orderCount(); i++ ) {
-			BOOST_ASSERT_MSG( orderAt( i ).use_count() > 0, "Requested nullptr order" );
 			if( !orderAt(i)->isUnplayed() ) {
 				continue;
 			}
@@ -327,7 +332,7 @@ bool GenModule::jumpNextSong()
 	m_songs.setIndex( m_songs.index() + 1 );
 	m_songs.current().states.gotoFront();
 	m_songs.current().states.currentState()->archive( this ).finishLoad();
-	BOOST_ASSERT_MSG( orderAt( m_state.order ).use_count() > 0, "Current order is a nullptr" );
+	//BOOST_ASSERT_MSG( orderAt( m_state.order ).use_count() > 0, "Current order is a nullptr" );
 	m_state.pattern = orderAt( m_state.order )->index();
 	setPaused( wasPaused );
 	return true;
@@ -347,9 +352,7 @@ bool GenModule::jumpPrevSong()
 	m_songs.setIndex( m_songs.index() - 1 );
 	m_songs.current().states.gotoFront();
 	m_songs.current().states.currentState()->archive( this ).finishLoad();
-	GenOrder::Ptr ord = orderAt( m_state.order );
-	BOOST_ASSERT_MSG( ord.use_count() > 0, "Current order is a nullptr" );
-	state().pattern = ord->index();
+	//state().pattern = orderAt( m_state.order ).index();
 	return true;
 }
 

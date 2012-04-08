@@ -24,14 +24,16 @@
  * @{
  */
 
-#include "s3mcell.h"
-
 #include "light4cxx/logger.h"
+
+class BinStream;
 
 namespace ppp
 {
 namespace s3m
 {
+
+class S3mCell;
 
 /**
  * @class S3mPattern
@@ -40,21 +42,19 @@ namespace s3m
 class S3mPattern
 {
 	DISABLE_COPY( S3mPattern )
-public:
-	typedef std::shared_ptr<S3mPattern> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 private:
-	std::vector<S3mCell::Vector> m_channels; //!< @brief Channels in this pattern
+	std::vector<std::vector<S3mCell*>> m_channels; //!< @brief Channels in this pattern
 	/**
 	 * @brief Create a cell
 	 * @param[in] chanIdx Channel index
 	 * @param[in] row Row index
 	 * @return Pointer to the new cell
 	 */
-	S3mCell::Ptr createCell( uint16_t chanIdx, int16_t row );
+	S3mCell* createCell( uint16_t chanIdx, int16_t row );
 public:
 	//! @brief Constructor
 	S3mPattern();
+	~S3mPattern();
 	/**
 	 * @brief Load the cell from a stream
 	 * @param[in] str The stream to load from
@@ -68,7 +68,7 @@ public:
 	 * @param[in] row Row index
 	 * @return Pointer to the cell or nullptr
 	 */
-	S3mCell::Ptr cellAt( uint16_t chanIdx, int16_t row );
+	S3mCell* cellAt( uint16_t chanIdx, int16_t row );
 protected:
 	/**
 	 * @brief Get the logger

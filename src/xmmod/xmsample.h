@@ -20,7 +20,8 @@
 #define XMSAMPLE_H
 
 #include "genmod/gensample.h"
-#include "stream/binstream.h"
+
+class BinStream;
 
 /**
  * @ingroup XmModule
@@ -49,10 +50,6 @@ private:
 	//! @brief Whether the sample is a 16-bit one
 	bool m_16bit;
 public:
-	//! @brief Class Pointer
-	typedef std::shared_ptr<XmSample> Ptr;
-	//! @brief Vector of Class Pointers
-	typedef std::vector<Ptr> Vector;
 	//! @brief Default constructor
 	XmSample();
 	/**

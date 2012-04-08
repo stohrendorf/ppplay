@@ -26,7 +26,8 @@
 
 #include "genmod/ipatterncell.h"
 #include "xmbase.h"
-#include "stream/binstream.h"
+
+class BinStream;
 
 namespace ppp
 {
@@ -39,9 +40,6 @@ namespace xm
  */
 class XmCell : public IPatternCell
 {
-public:
-	typedef std::shared_ptr<XmCell> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 private:
 	uint8_t m_note; //!< @brief Note value
 	uint8_t m_instr; //!< @brief Instrument value

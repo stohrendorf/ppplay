@@ -29,8 +29,6 @@
 
 #include "light4cxx/logger.h"
 
-#include <memory>
-
 namespace ppp
 {
 
@@ -42,9 +40,6 @@ class GenOrder : public ISerializable
 {
 	DISABLE_COPY( GenOrder )
 	GenOrder() = delete;
-public:
-	typedef std::shared_ptr<GenOrder> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 private:
 	uint8_t m_index; //!< @brief Pattern index of this order
 	int m_playbackCount; //!< @brief Playback count of this order

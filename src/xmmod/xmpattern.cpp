@@ -22,6 +22,9 @@
  */
 
 #include "xmpattern.h"
+#include "xmcell.h"
+#include "stuff/utils.h"
+#include "stream/binstream.h"
 
 #include <boost/assert.hpp>
 #include <boost/format.hpp>
@@ -31,22 +34,31 @@ namespace ppp
 namespace xm
 {
 
-XmCell::Ptr XmPattern::createCell( uint16_t trackIndex, uint16_t row )
+XmCell* XmPattern::createCell( uint16_t trackIndex, uint16_t row )
 {
 	BOOST_ASSERT( row < numRows() );
 	BOOST_ASSERT( trackIndex < numChannels() );
-	XmCell::Vector* track = &m_columns.at( trackIndex );
-	XmCell::Ptr& cell = track->at( row );
+	std::vector<XmCell*>* track = &m_columns.at( trackIndex );
+	XmCell*& cell = track->at( row );
 	if( cell ) {
 		return cell;
 	}
-	cell.reset( new XmCell() );
+	cell = new XmCell();
 	return cell;
 }
 
 XmPattern::XmPattern( int16_t chans ) : m_columns( chans )
 {
 }
+
+XmPattern::~XmPattern()
+{
+	for( auto& col : m_columns ) {
+		deleteAll(col);
+	}
+	m_columns.clear();
+}
+
 
 bool XmPattern::load( BinStream& str )
 {
@@ -65,9 +77,9 @@ bool XmPattern::load( BinStream& str )
 	if( rows == 0 ) {
 		// create a 64-row default pattern
 		logger()->debug( L4CXX_LOCATION, "Number of rows = 0, creating 64-rows default pattern." );
-	for( XmCell::Vector & chan : m_columns ) {
+	for( auto& chan : m_columns ) {
 			for( int r = 0; r < 64; r++ ) {
-				chan.push_back( XmCell::Ptr( new XmCell() ) );
+				chan.push_back( new XmCell() );
 			}
 		}
 		return true;
@@ -76,8 +88,8 @@ bool XmPattern::load( BinStream& str )
 		logger()->warn( L4CXX_LOCATION, boost::format( "Number of rows out of range: %d" ) % rows );
 		return false;
 	}
-for( XmCell::Vector & chan : m_columns ) {
-		chan.resize( rows, XmCell::Ptr() );
+	for( auto& chan : m_columns ) {
+		chan.resize( rows, nullptr );
 	}
 	uint16_t packedSize;
 	str.read( &packedSize );
@@ -93,24 +105,23 @@ for( XmCell::Vector & chan : m_columns ) {
 		return true;
 	}
 	for( uint16_t row = 0; row < rows; row++ ) {
-	for( XmCell::Vector & chan : m_columns ) {
+	for( auto& chan : m_columns ) {
 			XmCell* cell = new XmCell();
+			chan.at( row ) = cell;
 			if( !cell->load( str ) ) {
 				return false;
 			}
-			chan.at( row ).reset( cell );
 		}
 	}
 	return !str.fail();
 }
 
-XmCell::Ptr XmPattern::cellAt( uint16_t column, uint16_t row )
+XmCell* XmPattern::cellAt( uint16_t column, uint16_t row )
 {
 	if( column >= numChannels() || row >= numRows() ) {
-		return XmCell::Ptr();
+		return nullptr;
 	}
-	const XmCell::Vector& track = m_columns.at( column );
-	return track.at( row );
+	return m_columns.at( column ).at( row );
 }
 
 size_t XmPattern::numRows() const
@@ -126,12 +137,12 @@ size_t XmPattern::numChannels() const
 	return m_columns.size();
 }
 
-XmPattern::Ptr XmPattern::createDefaultPattern( int16_t chans )
+XmPattern* XmPattern::createDefaultPattern( int16_t chans )
 {
-	XmPattern::Ptr result( new XmPattern( chans ) );
+	XmPattern* result = new XmPattern( chans );
 	for( int i = 0; i < chans; i++ ) {
 		for( int r = 0; r < 64; r++ ) {
-			result->m_columns.at( i ).push_back( XmCell::Ptr( new XmCell() ) );
+			result->m_columns.at( i ).push_back( new XmCell() );
 		}
 	}
 	return result;

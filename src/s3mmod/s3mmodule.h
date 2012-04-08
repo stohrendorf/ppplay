@@ -25,9 +25,6 @@
  */
 
 #include "genmod/genmodule.h"
-#include "s3mchannel.h"
-#include "s3mpattern.h"
-#include "s3msample.h"
 
 #include <array>
 
@@ -35,6 +32,10 @@ namespace ppp
 {
 namespace s3m
 {
+
+class S3mSample;
+class S3mPattern;
+class S3mChannel;
 
 /**
  * @class S3mModule
@@ -54,7 +55,7 @@ public:
 	 * @param[in] maxRpt Maximum repeat count
 	 * @return Module pointer or nullptr
 	 */
-	static GenModule::Ptr factory( const std::string& filename, uint32_t frequency, uint8_t maxRpt = 2 );
+	static GenModule::Ptr factory( const std::string& filename, uint32_t frequency, int maxRpt = 2 );
 private:
 	uint16_t m_breakRow;      //!< @brief Row to break to, ~0 if unused
 	uint16_t m_breakOrder;    //!< @brief Order to break to, ~0 if unused
@@ -62,9 +63,9 @@ private:
 	int16_t m_patLoopCount;  //!< @brief Loop counter for pattern loop, -1 if unused
 	int16_t m_patDelayCount; //!< @brief Delay counter for Pattern Delay, -1 if unused
 	bool m_customData;     //!< @brief @c true if module contains special custom data
-	S3mSample::Vector m_samples; //!< @brief Samples
-	S3mPattern::Vector m_patterns; //!< @brief Patterns
-	std::array<S3mChannel::Ptr, 32> m_channels; //!< @brief Channels
+	std::vector<S3mSample*> m_samples; //!< @brief Samples
+	std::vector<S3mPattern*> m_patterns; //!< @brief Patterns
+	std::array<S3mChannel*, 32> m_channels; //!< @brief Channels
 	uint8_t m_usedChannels; //!< @brief Number of used channels
 	bool m_amigaLimits; //!< @brief @c true if amiga limits are present
 	bool m_fastVolSlides; //!< @brief @c true if fast volume slides are present
@@ -75,7 +76,7 @@ private:
 	 * @param[in] idx Pattern index of the requested pattern
 	 * @return Pattern pointer or nullptr
 	 */
-	S3mPattern::Ptr getPattern( size_t idx ) const;
+	S3mPattern* getPattern( size_t idx ) const;
 protected:
 	virtual IArchive& serialize( IArchive* data );
 public:
@@ -88,7 +89,7 @@ private:
 	/**
 	 * @copydoc ppp::GenModule::GenModule(uint8_t)
 	 */
-	S3mModule( uint8_t maxRpt = 2 );
+	S3mModule( int maxRpt = 2 );
 	/**
 	 * @brief Apply global effects
 	 */
@@ -138,7 +139,7 @@ private:
 	 * @param[in] idx Sample index
 	 * @return Sample pointer or nullptr
 	 */
-	S3mSample::Ptr sampleAt( size_t idx ) const;
+	const S3mSample* sampleAt( size_t idx ) const;
 	/**
 	 * @brief Check if zero volume optimizations are present
 	 * @return m_zeroVolOpt

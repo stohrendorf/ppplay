@@ -25,6 +25,11 @@
 
 #include "xmmodule.h"
 #include "xmorder.h"
+#include "xmchannel.h"
+#include "xmcell.h"
+#include "xmpattern.h"
+#include "xminstrument.h"
+
 #include "stream/fbinstream.h"
 #include "stuff/moduleregistry.h"
 
@@ -69,7 +74,7 @@ static constexpr std::array<const uint16_t, 12 * 8> g_PeriodTable = {{
 };
 #endif
 
-XmModule::XmModule( uint8_t maxRpt ):
+XmModule::XmModule( int maxRpt ):
 	GenModule( maxRpt ),
 	m_amiga( false ), m_patterns(), m_instruments(), m_channels(),
 	m_noteToPeriod(), m_jumpRow( ~0 ), m_jumpOrder( ~0 ),
@@ -78,7 +83,12 @@ XmModule::XmModule( uint8_t maxRpt ):
 {
 }
 
-XmModule::~XmModule() = default;
+XmModule::~XmModule()
+{
+	deleteAll(m_channels);
+	deleteAll(m_patterns);
+	deleteAll(m_instruments);
+}
 
 bool XmModule::load( const std::string& filename )
 {
@@ -97,7 +107,7 @@ bool XmModule::load( const std::string& filename )
 	for( int i = 0; i < ( hdr.songLength & 0xff ); i++ ) {
 		uint8_t tmp;
 		file.read( &tmp );
-		addOrder( GenOrder::Ptr( new XmOrder( tmp ) ) );
+		addOrder( new XmOrder( tmp ) );
 	}
 	file.seek( hdr.headerSize + offsetof( XmHeader, headerSize ) );
 	{
@@ -122,25 +132,25 @@ bool XmModule::load( const std::string& filename )
 	m_amiga = ( hdr.flags & 1 ) == 0;
 	m_channels.clear();
 	for( int i = 0; i < hdr.numChannels; i++ )
-		m_channels.push_back( XmChannel::Ptr( new XmChannel( this ) ) );
+		m_channels.push_back( new XmChannel( this ) );
 	for( uint16_t i = 0; i < hdr.numPatterns; i++ ) {
-		XmPattern::Ptr pat( new XmPattern( hdr.numChannels ) );
+		XmPattern* pat = new XmPattern( hdr.numChannels );
+		m_patterns.push_back( pat );
 		if( !pat->load( file ) ) {
 			logger()->error( L4CXX_LOCATION, "Pattern loading error" );
 			return false;
 		}
-		m_patterns.push_back( pat );
 	}
 	while( m_patterns.size() < 256 ) {
 		m_patterns.push_back( XmPattern::createDefaultPattern( hdr.numChannels ) );
 	}
 	for( uint16_t i = 0; i < hdr.numInstruments; i++ ) {
-		XmInstrument::Ptr ins( new XmInstrument() );
+		XmInstrument* ins = new XmInstrument();
+		m_instruments.push_back( ins );
 		if( !ins->load( file ) ) {
 			logger()->error( L4CXX_LOCATION, "Instrument loading error" );
 			return false;
 		}
-		m_instruments.push_back( ins );
 	}
 	if( m_amiga ) {
 		logger()->debug( L4CXX_LOCATION, "Initializing Amiga period table" );
@@ -179,11 +189,11 @@ size_t XmModule::internal_buildTick( AudioFrameBuffer* buffer )
 	}
 	if( buffer ) {
 		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
-		XmPattern::Ptr currPat = m_patterns.at( state().pattern );
+		XmPattern* currPat = m_patterns.at( state().pattern );
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			XmChannel::Ptr chan = m_channels.at( currTrack );
-			BOOST_ASSERT( chan.use_count() > 0 );
-			XmCell::Ptr cell = currPat->cellAt( currTrack, state().row );
+			XmChannel* chan = m_channels.at( currTrack );
+			BOOST_ASSERT( chan!=nullptr );
+			XmCell* cell = currPat->cellAt( currTrack, state().row );
 			chan->update( cell, false );
 			chan->mixTick( &mixerBuffer );
 		}
@@ -197,11 +207,11 @@ size_t XmModule::internal_buildTick( AudioFrameBuffer* buffer )
 		}
 	}
 	else {
-		XmPattern::Ptr currPat = m_patterns.at( state().pattern );
+		XmPattern* currPat = m_patterns.at( state().pattern );
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			XmChannel::Ptr chan = m_channels.at( currTrack );
-			BOOST_ASSERT( chan.use_count() > 0 );
-			XmCell::Ptr cell = currPat->cellAt( currTrack, state().row );
+			XmChannel* chan = m_channels.at( currTrack );
+			BOOST_ASSERT( chan!=nullptr );
+			XmCell* cell = currPat->cellAt( currTrack, state().row );
 			chan->update( cell, true );
 			chan->mixTick( nullptr );
 		}
@@ -247,7 +257,7 @@ bool XmModule::adjustPosition( bool estimateOnly )
 		}
 		else {
 			if( !isRunningPatDelay() ) {
-				XmPattern::Ptr currPat = m_patterns.at( state().pattern );
+				XmPattern* currPat = m_patterns.at( state().pattern );
 				setRow( ( state().row + 1 ) % currPat->numRows() );
 				if( state().row == 0 ) {
 // 					if( state().order + 1 >= orderCount() ) {
@@ -281,9 +291,10 @@ std::string XmModule::internal_channelStatus( size_t idx ) const
 
 std::string XmModule::internal_channelCellString( size_t idx ) const
 {
-	XmChannel::Ptr x = m_channels.at( idx );
-	if( !x )
+	XmChannel* x = m_channels.at( idx );
+	if( !x ) {
 		return "";
+	}
 	return x->cellString();
 }
 
@@ -292,10 +303,11 @@ uint8_t XmModule::internal_channelCount() const
 	return m_channels.size();
 }
 
-XmInstrument::Ptr XmModule::getInstrument( int idx ) const
+const XmInstrument* XmModule::getInstrument( int idx ) const
 {
-	if( !inRange<int>( idx, 1, m_instruments.size() ) )
-		return XmInstrument::Ptr();
+	if( !inRange<int>( idx, 1, m_instruments.size() ) ) {
+		return nullptr;
+	}
 	return m_instruments.at( idx - 1 );
 }
 
@@ -539,11 +551,11 @@ void XmModule::doPatLoop( int16_t next )
 IArchive& XmModule::serialize( IArchive* data )
 {
 	GenModule::serialize( data );
-	for( const XmChannel::Ptr & chan : m_channels ) {
+	for( XmChannel*& chan : m_channels ) {
 		if( !chan ) {
 			continue;
 		}
-		data->archive( chan.get() );
+		data->archive( chan );
 	}
 	*data
 	% m_jumpRow
@@ -556,7 +568,7 @@ IArchive& XmModule::serialize( IArchive* data )
 	return *data;
 }
 
-GenModule::Ptr XmModule::factory( const std::string& filename, uint32_t frequency, uint8_t maxRpt )
+GenModule::Ptr XmModule::factory( const std::string& filename, uint32_t frequency, int maxRpt )
 {
 	XmModule::Ptr result( new XmModule( maxRpt ) );
 	if( !result ) {

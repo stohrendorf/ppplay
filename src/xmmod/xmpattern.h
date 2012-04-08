@@ -19,17 +19,22 @@
 #ifndef XMPATTERN_H
 #define XMPATTERN_H
 
+#include "stuff/utils.h"
+#include "light4cxx/logger.h"
+
 /**
  * @ingroup XmModule
  * @{
  */
 
-#include "xmcell.h"
+class BinStream;
 
 namespace ppp
 {
 namespace xm
 {
+
+class XmCell;
 
 /**
  * @class XmPattern
@@ -39,25 +44,23 @@ class XmPattern
 {
 	DISABLE_COPY( XmPattern )
 	XmPattern() = delete;
-public:
-	typedef std::shared_ptr<XmPattern> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 private:
 	//! @brief Columns in the pattern
-	std::vector<XmCell::Vector> m_columns;
+	std::vector<std::vector<XmCell*>> m_columns;
 	/**
 	 * @brief Create a cell if necessary
 	 * @param[in] column Column index
 	 * @param[in] row Row index
 	 * @return Pointer to the cell
 	 */
-	XmCell::Ptr createCell( uint16_t column, uint16_t row );
+	XmCell* createCell( uint16_t column, uint16_t row );
 public:
 	/**
 	 * @brief Constructor
 	 * @param[in] chans Number of channels/columns needed
 	 */
 	XmPattern( int16_t chans );
+	~XmPattern();
 	/**
 	 * @brief Load the pattern from a stream
 	 * @param[in] str Stream to load from
@@ -70,7 +73,7 @@ public:
 	 * @param[in] row Row of the cell
 	 * @return Pointer to the cell or nullptr
 	 */
-	XmCell::Ptr cellAt( uint16_t column, uint16_t row );
+	XmCell* cellAt( uint16_t column, uint16_t row );
 	/**
 	 * @brief Number of rows in this pattern
 	 * @return Number of rows
@@ -86,7 +89,7 @@ public:
 	 * @param[in] chans Number of channels for the new pattern
 	 * @return Pointer to the new pattern
 	 */
-	static XmPattern::Ptr createDefaultPattern( int16_t chans );
+	static XmPattern* createDefaultPattern( int16_t chans );
 protected:
 	/**
 	 * @brief Get the logger

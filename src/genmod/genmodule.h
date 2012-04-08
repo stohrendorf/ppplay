@@ -24,7 +24,6 @@
  * @{
  */
 
-#include "genorder.h"
 #include "modulemetainfo.h"
 #include "modulestate.h"
 #include "songinfocontainer.h"
@@ -34,6 +33,7 @@
 namespace ppp
 {
 
+class GenOrder;
 /**
  * @class GenModule
  * @brief An abstract class for all module classes
@@ -49,11 +49,11 @@ public:
 private:
 	ModuleMetaInfo m_metaInfo;
 	//! @brief Order list @note <b>Not initialized here!</b>
-	GenOrder::Vector m_orders;
+	std::vector<GenOrder*> m_orders;
 	ModuleState m_state;
 	SongInfoContainer m_songs;
 	//! @brief Maximum module loops if module patterns are played multiple times
-	uint16_t m_maxRepeat;
+	int m_maxRepeat;
 	mutable boost::recursive_mutex m_mutex;
 public:
 	//BEGIN Construction/destruction
@@ -66,7 +66,7 @@ public:
 	 * @param[in] maxRpt Maximum repeat count for repeating modules
 	 * @pre @c maxRpt>0
 	 */
-	GenModule( uint8_t maxRpt );
+	GenModule( int maxRpt );
 	/**
 	 * @brief The destructor
 	 */
@@ -225,13 +225,13 @@ protected:
 	 * @brief Adds an order to m_orders
 	 * @param[in] o The new order
 	 */
-	void addOrder( const GenOrder::Ptr& o );
+	void addOrder( ppp::GenOrder* o );
 	/**
 	 * @brief Get an order pointer
 	 * @param[in] idx Index of requested order
 	 * @return Order pointer
 	 */
-	GenOrder::Ptr orderAt( size_t idx ) const;
+	GenOrder* orderAt( size_t idx );
 	/**
 	 * @brief Get the number of orders
 	 * @return Number of orders
@@ -242,7 +242,7 @@ protected:
 	 * @brief Get the maximum repeat count
 	 * @return The maximum repeat count
 	 */
-	uint16_t maxRepeat() const;
+	int maxRepeat() const;
 	/**
 	 * @brief Set the order index and handle preprocessing states
 	 * @param[in] o The new order index

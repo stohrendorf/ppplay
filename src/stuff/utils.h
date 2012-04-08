@@ -27,6 +27,7 @@
 #include <string>
 #include <cstdint>
 #include <algorithm>
+#include <array>
 
 namespace ppp
 {
@@ -171,6 +172,19 @@ inline void reuseNibblesIfZero( uint8_t& oldFx, uint8_t& newFx )
 #define DISABLE_COPY(classname) \
 	classname(const classname&) = delete; \
 	classname& operator=(const classname&) = delete;
+
+template<class T>
+inline void deleteAll(T& container)
+{
+	std::for_each(container.begin(), container.end(), [](typename T::reference val){delete val;});
+	container.clear();
+}
+
+template<class T, size_t N>
+inline void deleteAll(std::array<T, N>& container)
+{
+	std::for_each(container.begin(), container.end(), [](typename std::array<T,N>::reference val){delete val; val=nullptr;});
+}
 
 /**
  * @}

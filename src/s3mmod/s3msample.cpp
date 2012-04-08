@@ -24,6 +24,7 @@
 #include <boost/exception/all.hpp>
 
 #include "s3msample.h"
+#include "stream/binstream.h"
 
 #include <algorithm>
 #include <boost/format.hpp>

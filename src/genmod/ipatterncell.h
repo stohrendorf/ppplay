@@ -23,9 +23,7 @@
 
 #include "light4cxx/logger.h"
 
-#include <vector>
 #include <string>
-#include <memory>
 
 /**
  * @ingroup GenMod
@@ -43,8 +41,6 @@ namespace ppp
 class IPatternCell : public ISerializable
 {
 public:
-	typedef std::shared_ptr<IPatternCell> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 	/**
 	 * @brief Destructor
 	 */

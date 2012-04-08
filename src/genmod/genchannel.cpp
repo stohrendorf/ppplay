@@ -44,7 +44,7 @@ IArchive& GenChannel::serialize( IArchive* data )
 	return *data;
 }
 
-std::string GenChannel::statusString()
+std::string GenChannel::statusString() const
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_statusString;
@@ -98,7 +98,7 @@ bool GenChannel::isActive() const
 	return m_active;
 }
 
-std::string GenChannel::cellString()
+std::string GenChannel::cellString() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return internal_cellString();
@@ -122,7 +122,7 @@ void GenChannel::mixTick( MixerFrameBuffer* mixBuffer )
 	internal_mixTick(mixBuffer);
 }
 
-std::string GenChannel::noteName()
+std::string GenChannel::noteName() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return internal_noteName();

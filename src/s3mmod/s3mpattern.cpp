@@ -24,6 +24,8 @@
 #include <boost/exception/all.hpp>
 
 #include "s3mpattern.h"
+#include "s3mcell.h"
+#include "stream/binstream.h"
 
 namespace ppp
 {
@@ -33,30 +35,39 @@ namespace s3m
 S3mPattern::S3mPattern() : m_channels()
 {
 	for( uint8_t i = 0; i < 32; i++ ) {
-		m_channels.push_back( S3mCell::Vector( 64 ) );
+		m_channels.push_back( std::vector<S3mCell*>( 64, nullptr ) );
 	}
 }
 
-S3mCell::Ptr S3mPattern::createCell( uint16_t trackIndex, int16_t row )
+S3mPattern::~S3mPattern()
 {
-	BOOST_ASSERT( ( row >= 0 ) && ( row <= 63 ) );
-	BOOST_ASSERT( trackIndex < m_channels.size() );
-	S3mCell::Vector& track = m_channels.at( trackIndex );
-	S3mCell::Ptr& cell = track.at( row );
-	if( cell ) {
+	for( std::vector<S3mCell*>& chan : m_channels ) {
+		deleteAll(chan);
+	}
+	m_channels.clear();
+}
+
+S3mCell* S3mPattern::createCell( uint16_t chanIdx, int16_t row )
+{
+	if( row < 0 || row > 63 ) {
+		throw std::out_of_range("Invalid row index");
+	}
+	if( chanIdx >= m_channels.size() ) {
+		throw std::out_of_range("Invalid channel index");
+	}
+	auto& chan = m_channels.at( chanIdx );
+	auto& cell = chan.at( row );
+	if( cell != nullptr ) {
 		return cell;
 	}
-	cell.reset( new S3mCell() );
+	cell = new S3mCell();
 	return cell;
 }
 
-S3mCell::Ptr S3mPattern::cellAt( uint16_t chanIdx, int16_t row )
+S3mCell* S3mPattern::cellAt( uint16_t chanIdx, int16_t row )
 {
-	if( row < 0 ) {
-		return S3mCell::Ptr();
-	}
-	if( chanIdx >= m_channels.size() ) {
-		return S3mCell::Ptr();
+	if( row < 0 || chanIdx >= m_channels.size() ) {
+		return nullptr;
 	}
 	return m_channels.at( chanIdx ).at( row );
 }
@@ -81,7 +92,7 @@ bool S3mPattern::load( BinStream& str, size_t pos )
 				logger()->error( L4CXX_LOCATION, "str.fail()..." );
 				return false;
 			}
-			S3mCell::Ptr cell = createCell( currTrack, currRow );
+			S3mCell* cell = createCell( currTrack, currRow );
 			if( !cell->load( str ) ) {
 				logger()->error( L4CXX_LOCATION, "Cell loading: ERROR" );
 				return false;

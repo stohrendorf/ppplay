@@ -24,7 +24,6 @@
  * @{
  */
 
-#include "genbase.h"
 #include "output/audiotypes.h"
 #include "light4cxx/logger.h"
 
@@ -40,8 +39,6 @@ class GenSample
 {
 	DISABLE_COPY( GenSample )
 public:
-	typedef std::shared_ptr<GenSample> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 	typedef BasicSampleFrame::Vector::size_type PositionType; //!< @brief Sample position
 	//! @brief Loop type definitions
 	enum class LoopType

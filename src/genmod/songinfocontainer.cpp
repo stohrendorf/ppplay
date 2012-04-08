@@ -17,6 +17,8 @@
 */
 
 #include "songinfocontainer.h"
+#include "stream/memarchive.h"
+
 #include <stdexcept>
 
 namespace ppp

@@ -22,6 +22,9 @@
  */
 
 #include "xminstrument.h"
+#include "xmsample.h"
+
+#include "stream/binstream.h"
 
 #include <cstdint>
 #include <boost/assert.hpp>
@@ -76,6 +79,11 @@ XmInstrument::XmInstrument() :
 	std::fill_n( m_map, 96, 0 );
 }
 
+XmInstrument::~XmInstrument()
+{
+	deleteAll(m_samples);
+}
+
 bool XmInstrument::load( BinStream& str )
 {
 	size_t startPos = str.pos();
@@ -98,9 +106,9 @@ bool XmInstrument::load( BinStream& str )
 	std::copy( hdr2.indices, hdr2.indices + 96, m_map );
 	str.seek( startPos + hdr.size );
 	for( uint16_t i = 0; i < hdr.numSamples; i++ ) {
-		XmSample::Ptr smp( new XmSample() );
-		smp->load( str );
+		XmSample* smp = new XmSample();
 		m_samples.at( i ) = smp;
+		smp->load( str );
 	}
 	for( uint16_t i = 0; i < hdr.numSamples; i++ ) {
 		m_samples.at( i )->loadData( str );
@@ -139,13 +147,15 @@ uint8_t XmInstrument::mapNoteIndex( uint8_t note ) const
 	return m_map[note] & 15;
 }
 
-XmSample::Ptr XmInstrument::mapNoteSample( uint8_t note ) const
+XmSample* XmInstrument::mapNoteSample( uint8_t note ) const
 {
-	if( note >= 96 )
-		return XmSample::Ptr();
+	if( note >= 96 ) {
+		return nullptr;
+	}
 	uint8_t mapped = mapNoteIndex( note );
-	if( mapped >= m_samples.size() )
-		return XmSample::Ptr();
+	if( mapped >= m_samples.size() ) {
+		return nullptr;
+	}
 	return m_samples.at( mapped );
 }
 

@@ -24,15 +24,18 @@
  * @{
  */
 
-#include "xmsample.h"
 #include "xmenvelopeprocessor.h"
 
 #include "light4cxx/logger.h"
+
+class BinStream;
 
 namespace ppp
 {
 namespace xm
 {
+
+class XmSample;
 
 /**
  * @class XmInstrument
@@ -43,7 +46,7 @@ class XmInstrument
 	DISABLE_COPY( XmInstrument )
 private:
 	//! @brief Samples this instrument contains
-	XmSample::Vector m_samples;
+	std::vector<XmSample*> m_samples;
 	//! @brief Note map that maps notes to the samples
 	uint8_t m_map[96];
 	//! @brief This instrument's title
@@ -83,10 +86,9 @@ private:
 	//! @brief Auto vibrato type
 	uint8_t m_vibType;
 public:
-	typedef std::shared_ptr<XmInstrument> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 	//! @brief Constructor
 	XmInstrument();
+	~XmInstrument();
 	/**
 	 * @brief Load this instrument from a stream
 	 * @param[in] str The stream to load from
@@ -106,7 +108,7 @@ public:
 	 * @return Mapped sample
 	 * @note @a note is zero-based!
 	 */
-	XmSample::Ptr mapNoteSample( uint8_t note ) const;
+	XmSample* mapNoteSample( uint8_t note ) const;
 	/**
 	 * @brief Get the instrument's title
 	 * @return m_title

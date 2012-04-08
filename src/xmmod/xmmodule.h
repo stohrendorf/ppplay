@@ -25,15 +25,15 @@
  */
 
 #include "genmod/genmodule.h"
-#include "xmpattern.h"
-#include "xminstrument.h"
-#include "xmchannel.h"
 
 namespace ppp
 {
 namespace xm
 {
 
+class XmChannel;
+class XmPattern;
+class XmInstrument;
 /**
  * @class XmModule
  * @brief XM module class
@@ -46,11 +46,11 @@ private:
 	//! @brief @c true if amiga period table is used
 	bool m_amiga;
 	//! @brief Module patterns
-	XmPattern::Vector m_patterns;
+	std::vector<XmPattern*> m_patterns;
 	//! @brief Module instruments
-	XmInstrument::Vector m_instruments;
+	std::vector<XmInstrument*> m_instruments;
 	//! @brief Module channels
-	XmChannel::Vector m_channels;
+	std::vector<XmChannel*> m_channels;
 	//! @brief Maps notes including finetune to their periods
 	std::array<uint16_t, 121 * 16> m_noteToPeriod;
 	//! @brief Contains the row to break to
@@ -77,7 +77,7 @@ public:
 	 * @details
 	 * Loads and initializes the module if possible
 	 */
-	static GenModule::Ptr factory( const std::string& filename, uint32_t frequency, uint8_t maxRpt );
+	static GenModule::Ptr factory( const std::string& filename, uint32_t frequency, int maxRpt );
 	virtual ~XmModule();
 	//! @brief Class pointer
 	typedef std::shared_ptr<XmModule> Ptr;
@@ -90,7 +90,7 @@ private:
 	 * @brief Constructor
 	 * @param[in] maxRpt maximum repeat count per order
 	 */
-	XmModule( uint8_t maxRpt );
+	XmModule( int maxRpt );
 	/**
 	 * @brief Try to load a XM module
 	 * @param[in] filename Filename of the module to load
@@ -109,7 +109,7 @@ private:
 	 * @param[in] idx 1-based instrument index
 	 * @return Instrument pointer or nullptr
 	 */
-	XmInstrument::Ptr getInstrument( int idx ) const;
+	const XmInstrument* getInstrument( int idx ) const;
 	/**
 	 * @brief Map a note and finetune to its base period
 	 * @param[in] note Note

@@ -26,8 +26,8 @@ StereoPeakBar::StereoPeakBar( Widget* parent, int width, int max, int interLen, 
 	m_interArrL(), m_interArrR(), m_max( 0 ), m_barLength( 0 ), m_showPeak( false ),
 	m_peakPosL( 0 ), m_peakPosR( 0 ), m_peakFalloffSpeedL( 0 ), m_peakFalloffSpeedR( 0 )
 {
-	width = std::min(width,8);
-	interLen = std::min(interLen,1);
+	width = std::max(width,8);
+	interLen = std::max(interLen,1);
 	m_interArrL = std::vector<int>( interLen, 0 );
 	m_interArrR = std::vector<int>( interLen, 0 );
 	m_showPeak = showPeak;

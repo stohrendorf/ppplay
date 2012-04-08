@@ -35,13 +35,12 @@ void ModuleRegistry::registerLoader( LoadFunc func )
 {
 	ModuleRegistry& inst = instance();
 	if( std::find( inst.m_loaders.begin(), inst.m_loaders.end(), func ) != inst.m_loaders.end() ) {
-		std::cout << "Already...\n";
 		return;
 	}
 	inst.m_loaders.push_back( func );
 }
 
-GenModule::Ptr ModuleRegistry::tryLoad( const std::string& filename, uint32_t frq, uint8_t maxRpt )
+GenModule::Ptr ModuleRegistry::tryLoad( const std::string& filename, uint32_t frq, int maxRpt )
 {
 	GenModule::Ptr result;
 	for( const LoadFunc & func : instance().m_loaders ) {

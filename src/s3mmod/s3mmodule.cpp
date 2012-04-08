@@ -25,6 +25,11 @@
 
 #include "s3mmodule.h"
 #include "s3morder.h"
+#include "s3mbase.h"
+#include "s3mchannel.h"
+#include "s3mpattern.h"
+#include "s3msample.h"
+#include "s3mcell.h"
 
 #include "stream/fbinstream.h"
 
@@ -86,21 +91,21 @@ struct S3mModuleHeader {
 #pragma pack(pop)
 #endif
 
-S3mModule::S3mModule( uint8_t maxRpt ) : GenModule( maxRpt ),
+S3mModule::S3mModule( int maxRpt ) : GenModule( maxRpt ),
 	m_breakRow( ~0 ), m_breakOrder( ~0 ), m_patLoopRow( -1 ), m_patLoopCount( -1 ), m_patDelayCount( -1 ),
 	m_customData( false ), m_samples(), m_patterns(), m_channels(), m_usedChannels( 0 ),
 	m_amigaLimits( false ), m_fastVolSlides( false ), m_st2Vibrato( false ), m_zeroVolOpt( false )
 {
 	try {
 		for( uint16_t i = 0; i < 256; i++ ) {
-			addOrder( GenOrder::Ptr( new S3mOrder( s3mOrderEnd ) ) );
-			m_patterns.push_back( S3mPattern::Ptr() );
-			m_samples.push_back( S3mSample::Ptr() );
+			addOrder( new S3mOrder( s3mOrderEnd ) );
+			m_patterns.push_back( nullptr );
+			m_samples.push_back( nullptr );
 		}
-	for( S3mChannel::Ptr & chan : m_channels ) {
-			chan.reset( new S3mChannel( this ) );
+		for( S3mChannel*& chan : m_channels ) {
+				chan = new S3mChannel( this );
+			}
 		}
-	}
 	catch( boost::exception& e ) {
 		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
 	}
@@ -109,7 +114,12 @@ S3mModule::S3mModule( uint8_t maxRpt ) : GenModule( maxRpt ),
 	}
 }
 
-S3mModule::~S3mModule() = default;
+S3mModule::~S3mModule()
+{
+	deleteAll(m_channels);
+	deleteAll(m_patterns);
+	deleteAll(m_samples);
+}
 
 bool S3mModule::load( const std::string& fn )
 {
@@ -183,7 +193,7 @@ bool S3mModule::load( const std::string& fn )
 		//m_playbackInfo.speed = s3mHdr.initialSpeed;
 		setSpeed( s3mHdr.initialSpeed );
 		state().globalVolume = s3mHdr.globalVolume;
-		for( S3mChannel::Ptr & chan : m_channels ) {
+		for( S3mChannel* chan : m_channels ) {
 			chan->recalcVolume();
 		}
 		// parse flags
@@ -225,7 +235,7 @@ bool S3mModule::load( const std::string& fn )
 			str.read( &pp );
 			if( pp == 0 )
 				continue;
-			m_samples.at( i ).reset( new S3mSample() );
+			m_samples.at( i ) = new S3mSample();
 			if( !( m_samples.at( i )->load( str, pp * 16, ( ( s3mHdr.createdWith >> 12 ) & 0x0f ) == s3mTIdImagoOrpheus ) ) ) {
 				return false;
 			}
@@ -246,7 +256,7 @@ bool S3mModule::load( const std::string& fn )
 			if( pp == 0 )
 				continue;
 			S3mPattern* pat = new S3mPattern();
-			m_patterns.at( i ).reset( pat );
+			m_patterns.at( i ) = pat;
 			if( !pat->load( str, pp * 16 ) ) {
 				return false;
 			}
@@ -259,7 +269,7 @@ bool S3mModule::load( const std::string& fn )
 		logger()->info( L4CXX_LOCATION, "Preparing channels..." );
 		for( int i = 0; i < 32; i++ ) {
 			S3mChannel* s3mChan = new S3mChannel( this );
-			m_channels.at( i ).reset( s3mChan );
+			m_channels.at( i ) = s3mChan;
 			if( ( s3mHdr.pannings[i] & 0x80 ) != 0 ) {
 				s3mChan->disable();
 				continue;
@@ -312,7 +322,7 @@ bool S3mModule::existsSample( int16_t idx )
 	idx--;
 	if( !inRange<int>( idx, 0, m_samples.size() - 1 ) )
 		return false;
-	return m_samples.at( idx ).use_count() > 0;
+	return m_samples.at( idx ) != nullptr;
 }
 
 uint8_t S3mModule::internal_channelCount() const
@@ -324,14 +334,14 @@ void S3mModule::checkGlobalFx()
 {
 	try {
 		state().pattern = orderAt( state().order )->index();
-		S3mPattern::Ptr currPat = getPattern( state().pattern );
+		S3mPattern* currPat = getPattern( state().pattern );
 		if( !currPat ) {
 			return;
 		}
 		// check for pattern loops
 		int patLoopCounter = 0;
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			S3mCell::Ptr cell = currPat->cellAt( currTrack, state().row );
+			S3mCell* cell = currPat->cellAt( currTrack, state().row );
 			if( !cell || cell->effect() == s3mEmptyCommand ) {
 				continue;
 			}
@@ -373,7 +383,7 @@ void S3mModule::checkGlobalFx()
 		// check for pattern delays
 		uint8_t patDelayCounter = 0;
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			S3mCell::Ptr cell = currPat->cellAt( currTrack, state().row );
+			const S3mCell* cell = currPat->cellAt( currTrack, state().row );
 			if( !cell || cell->effect() == s3mEmptyCommand ) {
 				continue;
 			}
@@ -401,7 +411,7 @@ void S3mModule::checkGlobalFx()
 			if( m_patLoopCount != -1 ) {
 				break;
 			}
-			S3mCell::Ptr cell = currPat->cellAt( currTrack, state().row );
+			const S3mCell* cell = currPat->cellAt( currTrack, state().row );
 			if( !cell || cell->effect() == s3mEmptyCommand ) {
 				continue;
 			}
@@ -460,8 +470,6 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 		if( state().pattern == s3mOrderEnd ) {
 			return false;
 		}
-		if( !orderAt( state().order ) )
-			return false;
 		setOrder( state().order + 1, estimateOnly );
 		orderChanged = true;
 		if( state().order >= orderCount() ) {
@@ -494,7 +502,7 @@ try {
 	}
 	// update channels...
 	state().pattern = orderAt( state().order )->index();
-	S3mPattern::Ptr currPat = getPattern( state().pattern );
+	S3mPattern* currPat = getPattern( state().pattern );
 	if( !currPat ) {
 		logger()->error(L4CXX_LOCATION, "Did not find a pattern for current order");
 		if(buf) {
@@ -505,9 +513,9 @@ try {
 	if( buf ) {
 		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
 		for( uint_fast8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			S3mChannel::Ptr chan = m_channels.at( currTrack );
-			BOOST_ASSERT( chan.use_count() > 0 );
-			S3mCell::Ptr cell = currPat->cellAt( currTrack, state().row );
+			S3mChannel* chan = m_channels.at( currTrack );
+			BOOST_ASSERT( chan != nullptr );
+			const S3mCell* cell = currPat->cellAt( currTrack, state().row );
 			chan->update( cell, m_patDelayCount != -1, false );
 			chan->mixTick( &mixerBuffer );
 		}
@@ -522,9 +530,9 @@ try {
 	}
 	else {
 		for( uint_fast8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			S3mChannel::Ptr chan = m_channels.at( currTrack );
-			BOOST_ASSERT( chan.use_count() > 0 );
-			S3mCell::Ptr cell = currPat->cellAt( currTrack, state().row );
+			S3mChannel* chan = m_channels.at( currTrack );
+			BOOST_ASSERT( chan!=nullptr );
+			const S3mCell* cell = currPat->cellAt( currTrack, state().row );
 			chan->update( cell, m_patDelayCount != -1, true );
 		}
 	}
@@ -545,17 +553,19 @@ catch( ... ) {
 
 std::string S3mModule::internal_channelStatus( size_t idx ) const
 {
-	S3mChannel::Ptr x = m_channels.at( idx );
-	if( !x )
+	const S3mChannel* x = m_channels.at( idx );
+	if( !x ) {
 		return std::string();
+	}
 	return x->statusString();
 }
 
 std::string S3mModule::internal_channelCellString( size_t idx ) const
 {
-	S3mChannel::Ptr x = m_channels.at( idx );
-	if( !x )
+	const S3mChannel* x = m_channels.at( idx );
+	if( !x ) {
 		return std::string();
+	}
 	return x->cellString();
 }
 
@@ -568,16 +578,16 @@ IArchive& S3mModule::serialize( IArchive* data )
 	% m_patLoopCount
 	% m_patDelayCount
 	% m_customData;
-	for( S3mChannel::Ptr & chan : m_channels ) {
+	for( S3mChannel*& chan : m_channels ) {
 		if( !chan ) {
 			continue;
 		}
-		data->archive( chan.get() );
+		data->archive( chan );
 	}
 	return *data;
 }
 
-GenModule::Ptr S3mModule::factory( const std::string& filename, uint32_t frequency, uint8_t maxRpt )
+GenModule::Ptr S3mModule::factory( const std::string& filename, uint32_t frequency, int maxRpt )
 {
 	S3mModule::Ptr result( new S3mModule( maxRpt ) );
 	if( !result->load( filename ) ) {
@@ -594,9 +604,9 @@ bool S3mModule::hasZeroVolOpt() const
 	return m_zeroVolOpt;
 }
 
-S3mSample::Ptr S3mModule::sampleAt( size_t idx ) const
+const S3mSample* S3mModule::sampleAt( size_t idx ) const
 {
-	return m_samples.at( idx );
+	return m_samples.at(idx);
 }
 
 size_t S3mModule::numSamples() const
@@ -619,9 +629,11 @@ bool S3mModule::hasAmigaLimits() const
 	return m_amigaLimits;
 }
 
-S3mPattern::Ptr S3mModule::getPattern( size_t idx ) const
+S3mPattern* S3mModule::getPattern( size_t idx ) const
 {
-	if( idx >= m_patterns.size() ) return S3mPattern::Ptr();
+	if( idx >= m_patterns.size() ) {
+		return nullptr;
+	}
 	return m_patterns.at( idx );
 }
 

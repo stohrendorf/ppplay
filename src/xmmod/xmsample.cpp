@@ -22,6 +22,7 @@
  */
 
 #include "xmsample.h"
+#include "stream/binstream.h"
 
 namespace ppp
 {

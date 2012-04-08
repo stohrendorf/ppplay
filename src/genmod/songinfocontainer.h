@@ -20,7 +20,6 @@
 #define SONGINFOCONTAINER_H
 
 #include "songinfo.h"
-#include "stream/memarchive.h"
 
 /**
  * @ingroup GenMod

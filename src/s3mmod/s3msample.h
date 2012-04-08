@@ -25,9 +25,10 @@
  */
 
 #include "genmod/gensample.h"
-#include "stream/binstream.h"
 
 #include "light4cxx/logger.h"
+
+class BinStream;
 
 namespace ppp
 {
@@ -41,9 +42,6 @@ namespace s3m
 class S3mSample : public GenSample
 {
 	DISABLE_COPY( S3mSample )
-public:
-	typedef std::shared_ptr<S3mSample> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 private:
 	//! @brief Whether this is a 16-bit sample
 	bool m_highQuality;

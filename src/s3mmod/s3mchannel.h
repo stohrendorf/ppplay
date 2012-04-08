@@ -25,9 +25,6 @@
  */
 
 #include "genmod/genchannel.h"
-#include "s3mcell.h"
-#include "s3msample.h"
-#include "s3mbase.h"
 #include "genmod/breseninter.h"
 
 #include <array>
@@ -36,7 +33,11 @@ namespace ppp
 {
 namespace s3m
 {
+
 class S3mModule;
+class S3mCell;
+class S3mSample;
+
 /**
  * @class S3mChannel
  * @brief The S3M Channel
@@ -48,9 +49,6 @@ class S3mChannel : public GenChannel
 {
 	S3mChannel() = delete; //!< @brief No default constructor
 	DISABLE_COPY( S3mChannel )
-public:
-	typedef std::shared_ptr<S3mChannel> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 private:
 	uint8_t m_note;          //!< @brief Currently playing note
 	uint8_t m_lastFxByte;        //!< @brief Last FX Value
@@ -76,7 +74,7 @@ private:
 	uint8_t m_tremorCounter; //!< @brief Countdown helper for Tremor effect
 	uint16_t m_c2spd; //!< @brief Current C2 frequency
 	bool m_glissando; //!< @brief @c true if Glissando control is enabled
-	S3mCell m_currentCell; //!< @brief Current note cell
+	S3mCell* m_currentCell; //!< @brief Current note cell
 	BresenInterpolation m_bresen; //!< @brief Output rate controller
 	std::string m_currentFxStr; //!< @brief Current effect string
 	int m_sampleIndex; //!< @brief Current sample index
@@ -86,7 +84,7 @@ private:
 	 * @brief Get the current sample
 	 * @return Pointer to current sample or nullptr
 	 */
-	S3mSample::Ptr currentSample();
+	const S3mSample* currentSample() const;
 	/**
 	 * @brief Set the current sample index
 	 * @param[in] idx New sample index
@@ -119,10 +117,10 @@ private:
 	void recalcFrequency();
 	uint16_t glissando( uint16_t period );
 
-	virtual std::string internal_noteName();
+	virtual std::string internal_noteName() const;
 	virtual void internal_mixTick( MixerFrameBuffer* mixBuffer );
 	virtual void internal_updateStatus();
-	virtual std::string internal_cellString();
+	virtual std::string internal_cellString() const;
 	virtual std::string internal_effectName() const;
 	virtual std::string internal_effectDescription() const;
 public:
@@ -139,7 +137,7 @@ public:
 	 * @param[in] patDelay For pattern delays
 	 * @param[in] estimateOnly Used when estimating track length
 	 */
-	void update( const ppp::s3m::S3mCell::Ptr& cell, bool patDelay, bool estimateOnly );
+	void update( const S3mCell* cell, bool patDelay, bool estimateOnly );
 	/**
 	 * @brief Recalculates the real output volume
 	 */

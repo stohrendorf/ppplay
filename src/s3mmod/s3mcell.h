@@ -24,8 +24,9 @@
  * @{
  */
 
-#include "stream/binstream.h"
 #include "genmod/ipatterncell.h"
+
+class BinStream;
 
 namespace ppp
 {
@@ -38,9 +39,6 @@ namespace s3m
  */
 class S3mCell : public IPatternCell
 {
-public:
-	typedef std::shared_ptr<S3mCell> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 private:
 	uint8_t m_note; //!< @brief Note value
 	uint8_t m_instr; //!< @brief Instrument value

@@ -21,8 +21,8 @@
 
 #include "genmod/genchannel.h"
 #include "genmod/breseninter.h"
-#include "xmpattern.h"
-#include "xminstrument.h"
+
+#include "xmenvelopeprocessor.h"
 
 /**
  * @ingroup XmModule
@@ -35,6 +35,9 @@ namespace xm
 {
 
 class XmModule;
+class XmCell;
+class XmSample;
+class XmInstrument;
 
 /**
  * @class XmChannel
@@ -44,11 +47,6 @@ class XmChannel : public GenChannel
 {
 	DISABLE_COPY( XmChannel )
 	XmChannel() = delete;
-public:
-	//! @brief Class Pointer
-	typedef std::shared_ptr<XmChannel> Ptr;
-	//! @brief Vector of class pointers
-	typedef std::vector<Ptr> Vector;
 private:
 	/** @name Basic channel variables
 	 * @{
@@ -78,7 +76,7 @@ private:
 	//! @brief Current real note (0-based, including relative note)
 	uint8_t m_realNote;
 	//! @brief The current note cell
-	XmCell m_currentCell;
+	XmCell* m_currentCell;
 	/** @} */
 
 	/** @name Envelopes variables
@@ -188,32 +186,33 @@ private:
 	 * @brief Get the current sample
 	 * @return Pointer to the current sample or nullptr
 	 */
-	XmSample::Ptr currentSample();
+	const XmSample* currentSample() const;
 	/**
 	 * @brief Get the current instrument
 	 * @return Pointer to the current instrument or nullptr
 	 */
-	XmInstrument::Ptr currentInstrument();
+	const XmInstrument* currentInstrument() const;
 public:
 	/**
 	 * @brief Constructor
 	 * @param[in] module Pointer to the owning module
 	 */
 	XmChannel( XmModule* module );
+	~XmChannel();
 	/**
 	 * @brief Update the channel values
 	 * @param[in] cell The new cell
 	 * @param[in] estimateOnly Set to @c true to skip expensive effects
 	 */
-	void update( const XmCell::Ptr& cell, bool estimateOnly );
+	void update( const XmCell* cell, bool estimateOnly );
 	virtual IArchive& serialize( IArchive* data );
 private:
-	virtual std::string internal_noteName();
+	virtual std::string internal_noteName() const;
 	virtual std::string internal_effectName() const;
 	virtual void internal_mixTick( MixerFrameBuffer* mixBuffer );
 	virtual void internal_updateStatus();
 	virtual std::string internal_effectDescription() const;
-	virtual std::string internal_cellString();
+	virtual std::string internal_cellString() const;
 	/** @name Effect handlers
 	 * @{
 	 */

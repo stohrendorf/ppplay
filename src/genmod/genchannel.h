@@ -44,9 +44,6 @@ namespace ppp
 class GenChannel : public ISerializable
 {
 	DISABLE_COPY( GenChannel )
-public:
-	typedef std::shared_ptr<GenChannel> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 private:
 	bool m_active; //!< @brief @c true if channel is active
 	bool m_disabled; //!< @brief @c true if channel is disabled
@@ -89,14 +86,14 @@ public:
 	 * @brief Returns the status string
 	 * @return m_statusString
 	 */
-	std::string statusString();
+	std::string statusString() const;
 	virtual IArchive& serialize( IArchive* data );
-	std::string noteName();
+	std::string noteName() const;
 	std::string effectName() const;
 	void mixTick( MixerFrameBuffer* mixBuffer );
 	void updateStatus();
 	std::string effectDescription() const;
-	std::string cellString();
+	std::string cellString() const;
 protected:
 	/**
 	 * @brief Set the m_active value
@@ -133,7 +130,7 @@ private:
 	 * @note Return value is empty if channel is disabled or inactive
 	 * @see ppp::NoteNames
 	 */
-	virtual std::string internal_noteName() = 0;
+	virtual std::string internal_noteName() const = 0;
 	/**
 	 * @brief Get the effect string as shown in the tracker's FX column
 	 * @return Effect string
@@ -170,7 +167,7 @@ private:
 	 * @brief Get a string representation of the current cell as displayed in the tracker
 	 * @return String representation of the current cell like in the tracker
 	 */
-	virtual std::string internal_cellString() = 0;
+	virtual std::string internal_cellString() const = 0;
 };
 
 } // namespace ppp

@@ -1,5 +1,9 @@
 #include "modmodule.h"
 #include "modorder.h"
+#include "modsample.h"
+#include "modchannel.h"
+#include "modpattern.h"
+#include "modcell.h"
 
 #include "stream/iarchive.h"
 #include "stream/fbinstream.h"
@@ -14,7 +18,7 @@ namespace ppp
 namespace mod
 {
 
-GenModule::Ptr ModModule::factory( const std::string& filename, uint32_t frequency, uint8_t maxRpt )
+GenModule::Ptr ModModule::factory( const std::string& filename, uint32_t frequency, int maxRpt )
 {
 	ModModule::Ptr result( new ModModule( maxRpt ) );
 	if( !result->load( filename ) ) {
@@ -26,22 +30,27 @@ GenModule::Ptr ModModule::factory( const std::string& filename, uint32_t frequen
 	return result;
 }
 
-ModModule::ModModule( uint8_t maxRpt ): GenModule( maxRpt ),
+ModModule::ModModule( int maxRpt ): GenModule( maxRpt ),
 	m_samples(), m_patterns(), m_channels(), m_patLoopRow( -1 ),
 	m_patLoopCount( -1 ), m_breakRow( -1 ), m_patDelayCount( -1 ), m_breakOrder( ~0 )
 {
 }
 
-ModModule::~ModModule() = default;
+ModModule::~ModModule()
+{
+	deleteAll(m_samples);
+	deleteAll(m_patterns);
+	deleteAll(m_channels);
+}
 
-ModSample::Ptr ModModule::sampleAt( size_t idx ) const
+ModSample* ModModule::sampleAt( size_t idx ) const
 {
 	if( idx == 0 ) {
-		return ModSample::Ptr();
+		return nullptr;
 	}
 	idx--;
 	if( idx >= m_samples.size() ) {
-		return ModSample::Ptr();
+		return nullptr;
 	}
 	return m_samples.at( idx );
 }
@@ -136,16 +145,16 @@ bool ModModule::load( const std::string& filename )
 	logger()->debug( L4CXX_LOCATION, boost::format( "%d-channel, ID '%s', Tracker '%s'" ) % ( meta.channels + 0 ) % meta.id % meta.tracker );
 	metaInfo().trackerInfo = meta.tracker;
 	for( int i = 0; i < meta.channels; i++ ) {
-		m_channels.push_back( ModChannel::Ptr( new ModChannel( this ) ) );
+		m_channels.push_back( new ModChannel( this ) );
 	}
 	stream.seek( 20 );
 	for( uint8_t i = 0; i < 31; i++ ) {
-		ModSample::Ptr smp( new ModSample() );
+		ModSample* smp = new ModSample();
+		m_samples.push_back( smp );
 		if( !smp->loadHeader( stream ) ) {
 			logger()->warn( L4CXX_LOCATION, "Sample header could not be loaded" );
 			return false;
 		}
-		m_samples.push_back( smp );
 	}
 	uint8_t maxPatNum = 0;
 	{
@@ -167,23 +176,23 @@ bool ModModule::load( const std::string& filename )
 				maxPatNum = tmp;
 			}
 			logger()->trace(L4CXX_LOCATION, boost::format("Order %d index: %d")%(i+0)%(tmp+0));
-			addOrder( GenOrder::Ptr( new ModOrder( tmp ) ) );
+			addOrder( new ModOrder( tmp ) );
 		}
 		stream.seekrel(128-songLen);
 	}
 	stream.seekrel( 4 ); // skip the ID
 	logger()->debug( L4CXX_LOCATION, boost::format( "%d patterns @ %#x" ) % ( maxPatNum + 0 ) % stream.pos() );
 	for( uint8_t i = 0; i <= maxPatNum; i++ ) {
-		ModPattern::Ptr pat( new ModPattern() );
+		ModPattern* pat = new ModPattern();
+		m_patterns.push_back( pat );
 		logger()->debug(L4CXX_LOCATION, boost::format("Loading pattern %u")%(i+0));
 		if( !pat->load( stream, meta.channels ) ) {
 			logger()->warn( L4CXX_LOCATION, "Could not load pattern" );
 			return false;
 		}
-		m_patterns.push_back( pat );
 	}
 	logger()->debug( L4CXX_LOCATION, boost::format( "Sample start @ %#x" ) % stream.pos() );
-	for( const ModSample::Ptr & smp : m_samples ) {
+	for( auto& smp : m_samples ) {
 		if( !smp->loadData( stream ) ) {
 			logger()->warn( L4CXX_LOCATION, "Could not load sample data" );
 		}
@@ -213,15 +222,15 @@ size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
 		}
 		// update channels...
 		state().pattern = orderAt( state().order )->index();
-		ModPattern::Ptr currPat = getPattern( state().pattern );
+		ModPattern* currPat = getPattern( state().pattern );
 		if( !currPat ) {
 			return 0;
 		}
 		if(buf) {
 			MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
 			for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-				ModChannel::Ptr chan = m_channels.at( currTrack );
-				ModCell::Ptr cell = currPat->cellAt( currTrack, state().row );
+				ModChannel* chan = m_channels.at( currTrack );
+				ModCell* cell = currPat->cellAt( currTrack, state().row );
 				chan->update( cell, false ); // m_patDelayCount != -1);
 				chan->mixTick( &mixerBuffer );
 			}
@@ -236,8 +245,8 @@ size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
 		}
 		else {
 			for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-				ModChannel::Ptr chan = m_channels.at( currTrack );
-				ModCell::Ptr cell = currPat->cellAt( currTrack, state().row );
+				ModChannel* chan = m_channels.at( currTrack );
+				ModCell* cell = currPat->cellAt( currTrack, state().row );
 				chan->update( cell, false ); // m_patDelayCount != -1);
 				chan->mixTick( nullptr );
 			}
@@ -333,11 +342,11 @@ IArchive& ModModule::serialize( IArchive* data )
 	% m_patLoopRow
 	% m_patLoopCount
 	% m_patDelayCount;
-	for( ModChannel::Ptr & chan : m_channels ) {
+	for( auto& chan : m_channels ) {
 		if( !chan ) {
 			continue;
 		}
-		data->archive( chan.get() );
+		data->archive( chan );
 	}
 	return *data;
 }
@@ -359,13 +368,13 @@ void ModModule::checkGlobalFx()
 {
 	try {
 		state().pattern = orderAt( state().order )->index();
-		ModPattern::Ptr currPat = getPattern( state().pattern );
+		ModPattern* currPat = getPattern( state().pattern );
 		if( !currPat )
 			return;
 		// check for pattern loops
 		int patLoopCounter = 0;
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			ModCell::Ptr cell = currPat->cellAt( currTrack, state().row );
+			ModCell* cell = currPat->cellAt( currTrack, state().row );
 			if( !cell ) continue;
 			if( cell->effect() == 0x0f ) continue;
 			uint8_t fx = cell->effect();
@@ -402,7 +411,7 @@ void ModModule::checkGlobalFx()
 		// check for pattern delays
 		uint8_t patDelayCounter = 0;
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			ModCell::Ptr cell = currPat->cellAt( currTrack, state().row );
+			ModCell* cell = currPat->cellAt( currTrack, state().row );
 			if( !cell ) continue;
 			if( cell->effect() == 0x0f ) continue;
 			uint8_t fx = cell->effect();
@@ -421,7 +430,7 @@ void ModModule::checkGlobalFx()
 		// now check for breaking effects
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			if( m_patLoopCount != -1 ) break;
-			ModCell::Ptr cell = currPat->cellAt( currTrack, state().row );
+			ModCell* cell = currPat->cellAt( currTrack, state().row );
 			if( !cell ) continue;
 			if( cell->effect() == 0x0f ) continue;
 			uint8_t fx = cell->effect();
@@ -443,7 +452,7 @@ void ModModule::checkGlobalFx()
 	}
 }
 
-ModPattern::Ptr ModModule::getPattern( size_t idx ) const
+ModPattern* ModModule::getPattern( size_t idx ) const
 {
 	//if( idx >= m_patterns.size() ) return ModPattern::Ptr();
 	return m_patterns.at( idx );

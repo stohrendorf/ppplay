@@ -37,8 +37,6 @@ class ModSample : public GenSample
 {
 	DISABLE_COPY( ModSample )
 public:
-	typedef std::shared_ptr<ModSample> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 	ModSample();
 	bool loadHeader( BinStream& stream );
 	bool loadData( BinStream& stream );

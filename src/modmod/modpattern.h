@@ -19,38 +19,40 @@
 #ifndef MODPATTERN_H
 #define MODPATTERN_H
 
+#include "stuff/utils.h"
+
+class BinStream;
+
 /**
  * @ingroup ModMod
  * @{
  */
-
-#include "modcell.h"
 
 namespace ppp
 {
 namespace mod
 {
 
+class ModCell;
+
 class ModPattern
 {
 	DISABLE_COPY( ModPattern )
-public:
-	typedef std::shared_ptr<ModPattern> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 private:
-	std::vector<ModCell::Vector> m_channels; //!< @brief Channels in this pattern
+	std::vector<std::vector<ModCell*>> m_channels; //!< @brief Channels in this pattern
 	/**
 	 * @brief Create a cell
 	 * @param[in] chanIdx Channel index
 	 * @param[in] row Row index
 	 * @return Pointer to the new cell
 	 */
-	ModCell::Ptr createCell( uint16_t chanIdx, int16_t row );
+	ModCell* createCell( uint16_t chanIdx, int16_t row );
 public:
 	/**
 	 * @brief Constructor
 	 */
 	ModPattern();
+	~ModPattern();
 	/**
 	 * @brief Load the pattern from a stream
 	 * @param[in] str The stream to load from
@@ -63,7 +65,7 @@ public:
 	 * @param[in] row Row index
 	 * @return Pointer to the cell or nullptr
 	 */
-	ModCell::Ptr cellAt( uint16_t chanIdx, int16_t row );
+	ModCell* cellAt( uint16_t chanIdx, int16_t row );
 };
 
 }

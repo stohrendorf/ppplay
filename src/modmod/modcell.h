@@ -35,9 +35,6 @@ namespace mod
 class ModCell : public IPatternCell
 {
 public:
-	typedef std::shared_ptr<ModCell> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
-public:
 	ModCell();
 	virtual ~ModCell();
 	/**
