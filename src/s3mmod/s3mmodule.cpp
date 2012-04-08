@@ -182,7 +182,6 @@ bool S3mModule::load( const std::string& fn )
 		setTempo( s3mHdr.initialTempo );
 		//m_playbackInfo.speed = s3mHdr.initialSpeed;
 		setSpeed( s3mHdr.initialSpeed );
-		BOOST_ASSERT( state().speed != 0 );
 		state().globalVolume = s3mHdr.globalVolume;
 		for( S3mChannel::Ptr & chan : m_channels ) {
 			chan->recalcVolume();

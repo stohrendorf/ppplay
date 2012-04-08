@@ -47,7 +47,7 @@ public:
 	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 private:
 	uint8_t m_index; //!< @brief Pattern index of this order
-	uint8_t m_playbackCount; //!< @brief Playback count of this order
+	int m_playbackCount; //!< @brief Playback count of this order
 public:
 	/**
 	 * @brief Constructor
@@ -69,12 +69,12 @@ public:
 	 * @brief Get the playback count of this order
 	 * @return m_playbackCount
 	 */
-	uint8_t playbackCount() const;
+	int playbackCount() const;
 	/**
 	 * @brief Increase the playback count
 	 * @return The new value of m_playbackCount
 	 */
-	uint8_t increasePlaybackCount();
+	int increasePlaybackCount();
 	
 	virtual bool isUnplayed() const = 0;
 protected:

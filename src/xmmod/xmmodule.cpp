@@ -261,10 +261,10 @@ bool XmModule::adjustPosition( bool estimateOnly )
 		m_jumpOrder = m_jumpRow = 0;
 		m_doPatJump = m_isPatLoop = false;
 	}
+	if( state().order >= orderCount() ) {
+		return false;
+	}
 	if( orderChanged ) {
-		if( state().order >= orderCount() ) {
-			return false;
-		}
 		state().pattern = orderAt( state().order )->index();
 		setOrder( state().order, estimateOnly );
 	}

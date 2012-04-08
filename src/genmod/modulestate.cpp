@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
+    Copyright (C) 2012  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "genorder.h"
+#include "modulestate.h"
 
 #include "stream/iarchive.h"
 
@@ -28,37 +28,19 @@
 namespace ppp
 {
 
-GenOrder::GenOrder( uint8_t idx ) : m_index( idx ), m_playbackCount( 0 )
-{ }
-
-uint8_t GenOrder::index() const
+IArchive& ModuleState::serialize(IArchive* data)
 {
-	return m_index;
-}
-
-void GenOrder::setIndex( uint8_t n )
-{
-	m_index = n;
-}
-
-IArchive& GenOrder::serialize( IArchive* data )
-{
-	return *data % m_index % m_playbackCount;
-}
-
-int GenOrder::playbackCount() const
-{
-	return m_playbackCount;
-}
-
-int GenOrder::increasePlaybackCount()
-{
-	return ++m_playbackCount;
-}
-
-light4cxx::Logger::Ptr GenOrder::logger()
-{
-	return light4cxx::Logger::get( "order" );
+	*data
+	% speed
+	% tempo
+	% order
+	% row
+	% tick
+	% globalVolume
+	% playedFrames
+	% pattern
+	;
+	return *data;
 }
 
 }

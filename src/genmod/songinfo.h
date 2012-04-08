@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
+    Copyright (C) 2012  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,9 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "genorder.h"
+#ifndef SONGINFO_H
+#define SONGINFO_H
 
-#include "stream/iarchive.h"
+#include "stream/stateiterator.h"
 
 /**
  * @ingroup GenMod
@@ -28,41 +29,26 @@
 namespace ppp
 {
 
-GenOrder::GenOrder( uint8_t idx ) : m_index( idx ), m_playbackCount( 0 )
-{ }
-
-uint8_t GenOrder::index() const
+/**
+ * @struct SongInfo
+ * @brief Information about a sub-song within a module
+ */
+struct SongInfo
 {
-	return m_index;
-}
-
-void GenOrder::setIndex( uint8_t n )
-{
-	m_index = n;
-}
-
-IArchive& GenOrder::serialize( IArchive* data )
-{
-	return *data % m_index % m_playbackCount;
-}
-
-int GenOrder::playbackCount() const
-{
-	return m_playbackCount;
-}
-
-int GenOrder::increasePlaybackCount()
-{
-	return ++m_playbackCount;
-}
-
-light4cxx::Logger::Ptr GenOrder::logger()
-{
-	return light4cxx::Logger::get( "order" );
-}
+	explicit SongInfo(const StateIterator& it) : states(it), length(0)
+	{
+	}
+	
+	//! @brief States for seeking
+	StateIterator states;
+	//! @brief Length in sample frames
+	size_t length;
+};
 
 }
 
 /**
  * @}
  */
+
+#endif

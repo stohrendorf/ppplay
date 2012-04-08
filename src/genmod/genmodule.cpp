@@ -79,7 +79,6 @@ std::string GenModule::trimmedTitle() const
 uint32_t GenModule::timeElapsed() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	BOOST_ASSERT( frequency() != 0 );
 	return static_cast<uint32_t>( m_state.playedFrames / frequency() );
 }
 
@@ -136,8 +135,8 @@ GenOrder::Ptr GenModule::orderAt( size_t idx ) const
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if(idx >= m_orders.size()) {
 		logger()->error(L4CXX_LOCATION, boost::format("Requested order index out of range: %d >= %d")%idx%m_orders.size());
+		throw std::out_of_range("Requested order index out of range");
 	}
-	BOOST_ASSERT( idx < m_orders.size() );
 	return m_orders.at( idx );
 }
 
@@ -191,7 +190,7 @@ void GenModule::setRow( int16_t r )
 void GenModule::nextTick()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	BOOST_ASSERT( m_state.speed != 0 );
+	BOOST_ASSERT_MSG( m_state.speed != 0, "Data corruption: speed==0" );
 	m_state.tick = ( m_state.tick + 1 ) % m_state.speed;
 }
 
@@ -230,7 +229,7 @@ int16_t GenModule::currentSongIndex() const
 uint16_t GenModule::tickBufferLength() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	BOOST_ASSERT( m_state.tempo != 0 );
+	BOOST_ASSERT_MSG( m_state.tempo != 0, "Data corruption: tempo==0" );
 	return frequency() * 5 / ( m_state.tempo << 1 );
 }
 
@@ -302,7 +301,7 @@ bool GenModule::jumpNextSong()
 	logger()->debug(L4CXX_LOCATION, "Trying to jump to next song");
 	if( !initialized() ) {
 		for( uint16_t i = 0; i < orderCount(); i++ ) {
-			BOOST_ASSERT( orderAt( i ).use_count() > 0 );
+			BOOST_ASSERT_MSG( orderAt( i ).use_count() > 0, "Requested nullptr order" );
 			if( !orderAt(i)->isUnplayed() ) {
 				continue;
 			}
@@ -328,7 +327,7 @@ bool GenModule::jumpNextSong()
 	m_songs.setIndex( m_songs.index() + 1 );
 	m_songs.current().states.gotoFront();
 	m_songs.current().states.currentState()->archive( this ).finishLoad();
-	BOOST_ASSERT( orderAt( m_state.order ).use_count() > 0 );
+	BOOST_ASSERT_MSG( orderAt( m_state.order ).use_count() > 0, "Current order is a nullptr" );
 	m_state.pattern = orderAt( m_state.order )->index();
 	setPaused( wasPaused );
 	return true;
@@ -349,7 +348,7 @@ bool GenModule::jumpPrevSong()
 	m_songs.current().states.gotoFront();
 	m_songs.current().states.currentState()->archive( this ).finishLoad();
 	GenOrder::Ptr ord = orderAt( m_state.order );
-	BOOST_ASSERT( ord.use_count() > 0 );
+	BOOST_ASSERT_MSG( ord.use_count() > 0, "Current order is a nullptr" );
 	state().pattern = ord->index();
 	return true;
 }

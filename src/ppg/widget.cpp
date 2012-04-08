@@ -86,15 +86,17 @@ bool Widget::setPosition( const Point& pos, bool absolute )
 
 int Widget::setWidth( int w )
 {
-	BOOST_ASSERT( w > 0 );
-	m_area.setWidth( w );
+	if( w>0 ) {
+		m_area.setWidth( w );
+	}
 	return m_area.width();
 }
 
 int Widget::setHeight( int h )
 {
-	BOOST_ASSERT( h > 0 );
-	m_area.setHeight( h );
+	if( h>0 ) {
+		m_area.setHeight( h );
+	}
 	return m_area.height();
 }
 

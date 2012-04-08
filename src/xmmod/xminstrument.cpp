@@ -89,7 +89,9 @@ bool XmInstrument::load( BinStream& str )
 		str.seek( startPos + hdr.size );
 		return true;
 	}
-	BOOST_ASSERT( hdr.numSamples <= 255 );
+	if( hdr.numSamples > 255 ) {
+		return false;
+	}
 	m_samples.resize( hdr.numSamples );
 	InstrumentHeader2 hdr2;
 	str.read( reinterpret_cast<char*>( &hdr2 ), sizeof( hdr2 ) );

@@ -116,7 +116,9 @@ static inline void g_drawPixel( int x, int y, Uint32 color )
 
 SDLScreen::SDLScreen( int w, int h, const std::string& title ) : Widget( nullptr ), m_cursorX( 0 ), m_cursorY( 0 )
 {
-	BOOST_ASSERT( g_screenSurface == nullptr );
+	if( g_screenSurface != nullptr ) {
+		throw std::runtime_error("SDL Screen Surface already aquired");
+	}
 	if( !SDL_WasInit( SDL_INIT_VIDEO ) ) {
 		if( SDL_Init( SDL_INIT_VIDEO ) == -1 ) {
 			BOOST_THROW_EXCEPTION( std::runtime_error( "Initialization of SDL Video surface failed" ) );

@@ -66,7 +66,7 @@ ModChannel::ModChannel( ModModule* parent ) :
 	m_lastOffsetFx( 0 ), m_sampleIndex( 0 ), m_bresen( 1, 1 ),
 	m_effectDescription( "      " )
 {
-	BOOST_ASSERT( parent != nullptr );
+	BOOST_ASSERT_MSG( parent != nullptr, "ModChannel may not have a nullptr as a parent" );
 }
 
 ModChannel::~ModChannel() = default;
@@ -277,7 +277,6 @@ void ModChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 	if( !isActive() || !currentSample() || m_physPeriod == 0 ) {
 		return setActive( false );
 	}
-	BOOST_ASSERT( m_module && m_module->frequency() != 0 );
 	if( mixBuffer && mixBuffer->get()->empty() ) {
 		logger()->error( L4CXX_LOCATION, "mixBuffer is empty" );
 		return;

@@ -66,7 +66,9 @@ namespace
  */
 std::string getColorString( const std::string& str, size_t start )
 {
-	BOOST_ASSERT( start < str.length() && str.at( start ) == '{' );
+	if( start>=str.length() || str[start]!='{' ) {
+		return std::string();
+	}
 	size_t end = str.find( '}', start );
 	if( end == std::string::npos ) {
 		// treat as normal text
@@ -106,9 +108,13 @@ Color stringToColor( const std::string& str )
  */
 Color extractFgColor( const std::string& str )
 {
-	BOOST_ASSERT( str.size() >= 3 && str.at( 0 ) == '{' && str.at( str.length() - 1 ) == '}' );
+	if( str.size() < 3 || str.front() != '{' || str.back() != '}' ) {
+		return Color::None;
+	}
 	size_t pos = str.find( ';' );
-	BOOST_ASSERT( pos != std::string::npos );
+	if( pos == std::string::npos ) {
+		return Color::None;
+	}
 	return stringToColor( str.substr( 1, pos - 1 ) );
 }
 
@@ -119,9 +125,13 @@ Color extractFgColor( const std::string& str )
  */
 Color extractBgColor( const std::string& str )
 {
-	BOOST_ASSERT( str.size() >= 3 && str.at( 0 ) == '{' && str.at( str.length() - 1 ) == '}' );
+	if( str.size() < 3 || str.front() != '{' || str.back() != '}' ) {
+		return Color::None;
+	}
 	size_t pos = str.find( ';' );
-	BOOST_ASSERT( pos != std::string::npos );
+	if( pos == std::string::npos ) {
+		return Color::None;
+	}
 	return stringToColor( str.substr( pos + 1, str.length() - pos - 2 ) );
 }
 } // anonymous namespace

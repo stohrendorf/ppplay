@@ -1196,7 +1196,9 @@ void S3mChannel::playNote()
 
 void S3mChannel::setPanning( uint8_t pan )
 {
-	BOOST_ASSERT( pan <= 0x40 || pan == 0xa4 );
+	if( pan > 0x40 && pan != 0xa4 ) {
+		return;
+	}
 	m_panning = pan;
 }
 

@@ -221,7 +221,6 @@ size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
 			MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
 			for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 				ModChannel::Ptr chan = m_channels.at( currTrack );
-				BOOST_ASSERT( chan.use_count() > 0 );
 				ModCell::Ptr cell = currPat->cellAt( currTrack, state().row );
 				chan->update( cell, false ); // m_patDelayCount != -1);
 				chan->mixTick( &mixerBuffer );
@@ -238,7 +237,6 @@ size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
 		else {
 			for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 				ModChannel::Ptr chan = m_channels.at( currTrack );
-				BOOST_ASSERT( chan.use_count() > 0 );
 				ModCell::Ptr cell = currPat->cellAt( currTrack, state().row );
 				chan->update( cell, false ); // m_patDelayCount != -1);
 				chan->mixTick( nullptr );
@@ -262,7 +260,6 @@ size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
 
 bool ModModule::adjustPosition( bool estimateOnly )
 {
-	BOOST_ASSERT( orderCount() != 0 );
 	bool orderChanged = false;
 	if( state().tick == 0 ) {
 		m_patDelayCount = -1;
@@ -314,13 +311,17 @@ bool ModModule::adjustPosition( bool estimateOnly )
 
 std::string ModModule::internal_channelCellString( size_t idx ) const
 {
-	BOOST_ASSERT( idx < m_channels.size() );
+	if( idx >= m_channels.size() ) {
+		throw std::out_of_range("Requested channel index out of range");
+	}
 	return m_channels.at( idx )->cellString();
 }
 
 std::string ModModule::internal_channelStatus( size_t idx ) const
 {
-	BOOST_ASSERT( idx < m_channels.size() );
+	if( idx >= m_channels.size() ) {
+		throw std::out_of_range("Requested channel index out of range");
+	}
 	return m_channels.at( idx )->statusString();
 }
 

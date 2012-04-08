@@ -16,16 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef IPATTERNCELL_H
-#define IPATTERNCELL_H
+#ifndef MODULEMETAINFO_H
+#define MODULEMETAINFO_H
 
-#include "stream/iserializable.h"
-
-#include "light4cxx/logger.h"
-
-#include <vector>
 #include <string>
-#include <memory>
 
 /**
  * @ingroup GenMod
@@ -36,37 +30,24 @@ namespace ppp
 {
 
 /**
- * @interface IPatternCell
- * @ingroup GenMod
- * @brief General interface for pattern note cells
+ * @class ModuleMetaInfo
+ * @brief Meta information about a module
  */
-class IPatternCell : public ISerializable
+struct ModuleMetaInfo
 {
-public:
-	typedef std::shared_ptr<IPatternCell> Ptr; //!< @brief Class pointer
-	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
-	/**
-	 * @brief Destructor
-	 */
-	virtual ~IPatternCell();
-	/**
-	 * @brief Clears the cell's data
-	 */
-	virtual void clear() = 0;
-	/**
-	 * @brief Get the tracker-like string representation of this cell
-	 * @return Tracker-like string
-	 */
-	virtual std::string trackerString() const = 0;
-protected:
-	/**
-	 * @brief Get the logger
-	 * @return Logger with name "cell"
-	 */
-	static light4cxx::Logger::Ptr logger();
+	explicit ModuleMetaInfo() : filename(), title(), trackerInfo()
+	{
+	}
+	
+	//! @brief Filename of the module
+	std::string filename;
+	//! @brief Title of the module
+	std::string title;
+	//! @brief Tracker information (Name and Version)
+	std::string trackerInfo;
 };
 
-} // namespace ppp
+}
 
 /**
  * @}
