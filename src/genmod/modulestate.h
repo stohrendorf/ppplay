@@ -24,13 +24,13 @@
 #include <cstdint>
 #include <cstddef>
 
+namespace ppp
+{
+
 /**
  * @ingroup GenMod
  * @{
  */
-
-namespace ppp
-{
 
 /**
  * @struct ModuleState
@@ -69,10 +69,10 @@ struct ModuleState : public ISerializable
 	size_t pattern;
 };
 
-}
-
 /**
  * @}
  */
+
+}
 
 #endif

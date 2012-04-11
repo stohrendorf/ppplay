@@ -25,13 +25,13 @@
 
 #include <cstdint>
 
+namespace ppp
+{
+
 /**
  * @ingroup GenMod
  * @{
  */
-
-namespace ppp
-{
 
 /**
  * @class BresenInterpolation
@@ -49,16 +49,24 @@ class BresenInterpolation : public ISerializable
 	DISABLE_COPY( BresenInterpolation )
 	BresenInterpolation() = delete;
 private:
-	uint_fast32_t m_dx; //!< @brief Width of the line
-	uint_fast32_t m_dy; //!< @brief Height of the line
-	int_fast32_t m_err; //!< @brief Error variable
+	//! @brief Width of the line
+	uint_fast32_t m_dx;
+	//! @brief Height of the line
+	uint_fast32_t m_dy;
+	//! @brief Error variable
+	int_fast32_t m_err;
 public:
 	/**
 	 * @brief Constructor
 	 * @param[in] dx Width of the interpolation line
 	 * @param[in] dy Height of the interpolation line
 	 */
-	BresenInterpolation( uint32_t dx, uint32_t dy ) : m_dx( dx ), m_dy( dy ), m_err( m_dx / 2 ) { }
+	constexpr BresenInterpolation( uint32_t dx, uint32_t dy ) :
+		m_dx( dx ),
+		m_dy( dy ),
+		m_err( dx / 2 )
+	{
+	}
 	/**
 	 * @brief Calculates the next interpolation step
 	 * @param[in,out] pos Interpolation Y point to adjust
@@ -76,11 +84,9 @@ public:
 	 * @see next()
 	 */
 	inline void fastNext( uint32_t bigDx, GenSample::PositionType& pos ) {
-		uint32_t bigDy = m_dy * bigDx / m_dx;
-		pos += bigDy;
+		pos += m_dy * bigDx / m_dx;
 		m_err -= m_dy * bigDx;
-		int fac = -m_err / m_dx;
-		m_err += fac * m_dx;
+		m_err -= m_err / m_dx * m_dx;
 		while( m_err < 0 ) {
 			m_err += m_dx;
 		}
@@ -97,10 +103,10 @@ public:
 	virtual IArchive& serialize( IArchive* archive );
 };
 
-}
-
 /**
  * @}
  */
+
+}
 
 #endif // breseninterH

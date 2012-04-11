@@ -19,11 +19,6 @@
 #ifndef GENMODULE_H
 #define GENMODULE_H
 
-/**
- * @ingroup GenMod
- * @{
- */
-
 #include "modulemetainfo.h"
 #include "modulestate.h"
 #include "songinfocontainer.h"
@@ -32,6 +27,11 @@
 
 namespace ppp
 {
+
+/**
+ * @ingroup GenMod
+ * @{
+ */
 
 class GenOrder;
 /**
@@ -201,9 +201,13 @@ public:
 	{
 		return m_state;
 	}
+	//! @copydoc internal_channelStatus
 	std::string channelStatus( size_t idx ) const;
+	//! @copydoc internal_channelCellString
 	std::string channelCellString( size_t idx ) const;
+	//! @copydoc internal_channelCount
 	uint8_t channelCount() const;
+	//! @copydoc internal_buildTick
 	size_t buildTick( AudioFrameBuffer* buf );
 protected:
 	ModuleMetaInfo& metaInfo()
@@ -333,11 +337,11 @@ private:
 	virtual size_t internal_preferredBufferSize() const;
 };
 
-} // namespace ppp
-
 /**
  * @}
  */
+
+} // namespace ppp
 
 #endif
 

@@ -19,21 +19,21 @@
 #include "breseninter.h"
 #include "stream/iarchive.h"
 
+namespace ppp
+{
+
 /**
  * @ingroup GenMod
  * @{
  */
-
-namespace ppp
-{
 
 IArchive& BresenInterpolation::serialize( IArchive* archive )
 {
 	return *archive % m_dx % m_dy % m_err;
 }
 
-}
-
 /**
  * @}
  */
+
+}

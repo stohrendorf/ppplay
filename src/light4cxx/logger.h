@@ -28,13 +28,13 @@
 
 #include <memory>
 
+namespace light4cxx
+{
+
 /**
  * @ingroup light4cxx
  * @{
  */
-
-namespace light4cxx
-{
 
 /**
  * @class Logger
@@ -208,10 +208,10 @@ private:
 	std::string m_name;
 };
 
-}
-
 /**
  * @}
  */
+
+}
 
 #endif

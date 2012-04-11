@@ -18,13 +18,13 @@
 
 #include "gensample.h"
 
+namespace ppp
+{
+
 /**
  * @ingroup GenMod
  * @{
  */
-
-namespace ppp
-{
 
 const GenSample::PositionType GenSample::EndOfSample = std::numeric_limits<GenSample::PositionType>::max();
 
@@ -106,8 +106,8 @@ light4cxx::Logger::Ptr GenSample::logger()
 	return light4cxx::Logger::get( "sample" );
 }
 
-}
-
 /**
  * @}
  */
+
+}

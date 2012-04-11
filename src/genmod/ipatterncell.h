@@ -25,13 +25,13 @@
 
 #include <string>
 
+namespace ppp
+{
+
 /**
  * @ingroup GenMod
  * @{
  */
-
-namespace ppp
-{
 
 /**
  * @interface IPatternCell
@@ -62,10 +62,10 @@ protected:
 	static light4cxx::Logger::Ptr logger();
 };
 
-} // namespace ppp
-
 /**
  * @}
  */
+
+} // namespace ppp
 
 #endif

@@ -24,13 +24,13 @@
 #include <boost/thread.hpp>
 #include <string>
 
+namespace light4cxx
+{
+
 /**
  * @ingroup light4cxx
  * @{
  */
-
-namespace light4cxx
-{
 
 class Logger;
 
@@ -172,10 +172,10 @@ public:
  */
 #define L4CXX_LOCATION ::light4cxx::Location(__LINE__, __FILE__, __PRETTY_FUNCTION__, ::boost::this_thread::get_id())
 
-}
-
 /**
  * @}
  */
+
+}
 
 #endif

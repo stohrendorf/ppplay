@@ -19,11 +19,6 @@
 #ifndef GENCHANNEL_H
 #define GENCHANNEL_H
 
-/**
- * @ingroup GenMod
- * @{
- */
-
 #include "stream/iserializable.h"
 #include "output/audiotypes.h"
 #include "stuff/utils.h"
@@ -36,6 +31,11 @@
 namespace ppp
 {
 /**
+ * @ingroup GenMod
+ * @{
+ */
+
+/**
  * @class GenChannel
  * @brief A general channel
  * @details Every module must be compatible with this abstract
@@ -45,10 +45,14 @@ class GenChannel : public ISerializable
 {
 	DISABLE_COPY( GenChannel )
 private:
-	bool m_active; //!< @brief @c true if channel is active
-	bool m_disabled; //!< @brief @c true if channel is disabled
-	GenSample::PositionType m_position; //!< @brief Current sample position
-	std::string m_statusString; //!< @brief Status string
+	//! @brief @c true if channel is active
+	bool m_active;
+	//! @brief @c true if channel is disabled
+	bool m_disabled;
+	//! @brief Current sample position
+	GenSample::PositionType m_position;
+	//! @brief Status string
+	std::string m_statusString;
 	mutable boost::recursive_mutex m_mutex;
 public:
 	/**
@@ -88,11 +92,17 @@ public:
 	 */
 	std::string statusString() const;
 	virtual IArchive& serialize( IArchive* data );
+	//! @copydoc internal_noteName
 	std::string noteName() const;
+	//! @copydoc internal_effectName
 	std::string effectName() const;
+	//! @copydoc internal_mixTick
 	void mixTick( MixerFrameBuffer* mixBuffer );
+	//! @copydoc internal_updateStatus
 	void updateStatus();
+	//! @copydoc internal_effectDescription
 	std::string effectDescription() const;
+	//! @copydoc internal_cellString
 	std::string cellString() const;
 protected:
 	/**
@@ -170,10 +180,10 @@ private:
 	virtual std::string internal_cellString() const = 0;
 };
 
-} // namespace ppp
-
 /**
  * @}
  */
+
+} // namespace ppp
 
 #endif

@@ -16,11 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/**
- * @ingroup Common
- * @{
- */
-
 #include "utils.h"
 
 #include <boost/assert.hpp>
@@ -28,6 +23,11 @@
 
 namespace ppp
 {
+
+/**
+ * @ingroup Common
+ * @{
+ */
 
 std::string stringncpy( const char src[], size_t maxlen )
 {
@@ -48,8 +48,8 @@ void swapEndian( char data[], size_t size )
 	}
 }
 
-}
-
 /**
  * @}
  */
+
+}

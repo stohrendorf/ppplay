@@ -19,15 +19,15 @@
 #ifndef SDLAUDIOOUTPUT_H
 #define SDLAUDIOOUTPUT_H
 
-/**
- * @ingroup Output
- * @{
- */
-
 #include "iaudiooutput.h"
 #include "audiofifo.h"
 
 #include <boost/thread.hpp>
+
+/**
+ * @ingroup Output
+ * @{
+ */
 
 /**
  * @class SDLAudioOutput

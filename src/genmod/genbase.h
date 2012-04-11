@@ -21,23 +21,24 @@
 
 #include <array>
 
+namespace ppp
+{
+
 /**
  * @ingroup GenMod
  * @{
  */
-
-namespace ppp
-{
 
 /**
  * @brief General note names
  */
 extern const std::array<const char[3], 12> NoteNames;
 
-} // namespace ppp
 
 /**
  * @}
  */
+
+} // namespace ppp
 
 #endif

@@ -21,13 +21,13 @@
 
 #include <string>
 
+namespace ppp
+{
+
 /**
  * @ingroup GenMod
  * @{
  */
-
-namespace ppp
-{
 
 /**
  * @class ModuleMetaInfo
@@ -47,10 +47,10 @@ struct ModuleMetaInfo
 	std::string trackerInfo;
 };
 
-}
-
 /**
  * @}
  */
+
+}
 
 #endif

@@ -19,14 +19,14 @@
 #ifndef IAUDIOOUTPUT_H
 #define IAUDIOOUTPUT_H
 
+#include "iaudiosource.h"
+
+#include <boost/thread.hpp>
+
 /**
  * @ingroup Output
  * @{
  */
-
-#include "iaudiosource.h"
-
-#include <boost/thread.hpp>
 
 /**
  * @interface IAudioOutput
@@ -69,12 +69,19 @@ public:
 	 * @param[in] ec New error code
 	 */
 	void setErrorCode( ErrorCode ec );
+	//! @copydoc internal_init
 	int init( int desiredFrq );
+	//! @copydoc internal_playing
 	bool playing() const;
+	//! @copydoc internal_paused
 	bool paused() const;
+	//! @copydoc internal_play
 	void play();
+	//! @copydoc internal_pause
 	void pause();
+	//! @copydoc internal_volumeLeft
 	uint16_t volumeLeft() const;
+	//! @copydoc internal_volumeRight
 	uint16_t volumeRight() const;
 	/**
 	 * @brief Get the attached audio source

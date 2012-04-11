@@ -19,11 +19,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-/**
- * @ingroup Common
- * @{
- */
-
 #include <string>
 #include <cstdint>
 #include <algorithm>
@@ -31,6 +26,11 @@
 
 namespace ppp
 {
+/**
+ * @ingroup Common
+ * @{
+ */
+
 /**
  * @brief Clip a value @a v in the range from @a a to @a b
  * @tparam T Value's type
@@ -162,7 +162,16 @@ inline void reuseNibblesIfZero( uint8_t& oldFx, uint8_t& newFx )
 	newFx = oldFx;
 }
 
+/**
+ * @}
+ */
+
 }
+
+/**
+ * @ingroup Common
+ * @{
+ */
 
 /**
  * @def DISABLE_COPY(classname)

@@ -19,11 +19,6 @@
 #ifndef GENORDER_H
 #define GENORDER_H
 
-/**
- * @ingroup GenMod
- * @{
- */
-
 #include "stream/iserializable.h"
 #include "stuff/utils.h"
 
@@ -31,6 +26,11 @@
 
 namespace ppp
 {
+
+/**
+ * @ingroup GenMod
+ * @{
+ */
 
 /**
  * @class GenOrder
@@ -41,8 +41,10 @@ class GenOrder : public ISerializable
 	DISABLE_COPY( GenOrder )
 	GenOrder() = delete;
 private:
-	uint8_t m_index; //!< @brief Pattern index of this order
-	int m_playbackCount; //!< @brief Playback count of this order
+	//! @brief Pattern index of this order
+	uint8_t m_index;
+	//! @brief Playback count of this order
+	int m_playbackCount;
 public:
 	/**
 	 * @brief Constructor
@@ -80,10 +82,10 @@ protected:
 	static light4cxx::Logger::Ptr logger();
 };
 
-}
-
 /**
  * @}
  */
+
+}
 
 #endif

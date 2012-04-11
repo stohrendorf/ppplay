@@ -19,13 +19,13 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 
+namespace light4cxx
+{
+
 /**
  * @ingroup light4cxx
  * @{
  */
-
-namespace light4cxx
-{
 
 /**
  * @brief Logging levels
@@ -43,11 +43,11 @@ enum class Level
 	Off //!< @brief Nothing will be logged
 };
 
-}
-
 /**
  * @}
  */
+
+}
 
 #endif
 

@@ -19,11 +19,6 @@
 #ifndef GENSAMPLE_H
 #define GENSAMPLE_H
 
-/**
- * @ingroup GenMod
- * @{
- */
-
 #include "output/audiotypes.h"
 #include "light4cxx/logger.h"
 
@@ -32,6 +27,11 @@
 namespace ppp
 {
 /**
+ * @ingroup GenMod
+ * @{
+ */
+
+/**
  * @class GenSample
  * @brief An abstract sample class
  */
@@ -39,7 +39,8 @@ class GenSample
 {
 	DISABLE_COPY( GenSample )
 public:
-	typedef BasicSampleFrame::Vector::size_type PositionType; //!< @brief Sample position
+	//! @brief Sample position
+	typedef BasicSampleFrame::Vector::size_type PositionType;
 	//! @brief Loop type definitions
 	enum class LoopType
 	{
@@ -48,14 +49,22 @@ public:
 		Pingpong //!< @brief Ping pong looped
 	};
 private:
-	PositionType m_loopStart; //!< @brief Loop start sample
-	PositionType m_loopEnd; //!< @brief Loop end sample (points to 1 frame @e after the loop end)
-	uint8_t m_volume; //!< @brief Default volume of the sample
-	uint16_t m_frequency; //!< @brief Base frequency of the sample
-	BasicSampleFrame::Vector m_data; //!< @brief Sample data
-	std::string m_filename; //!< @brief Sample filename
-	std::string m_title; //!< @brief Sample title
-	LoopType m_looptype; //!< @brief Loop type
+	//! @brief Loop start sample
+	PositionType m_loopStart;
+	//! @brief Loop end sample (points to 1 frame @e after the loop end)
+	PositionType m_loopEnd;
+	//! @brief Default volume of the sample
+	uint8_t m_volume;
+	//! @brief Base frequency of the sample
+	uint16_t m_frequency;
+	//! @brief Sample data
+	BasicSampleFrame::Vector m_data;
+	//! @brief Sample filename
+	std::string m_filename;
+	//! @brief Sample title
+	std::string m_title;
+	//! @brief Loop type
+	LoopType m_looptype;
 	/**
 	 * @brief Wraps a virtual position of ping-pong looped samples to the real position
 	 * @param[in] pos Virtual position
@@ -120,6 +129,8 @@ public:
 	 */
 	LoopType loopType() const;
 protected:
+	typedef BasicSampleFrame::Vector::iterator Iterator;
+	typedef BasicSampleFrame::Vector::const_iterator ConstIterator;
 	/**
 	 * @brief Set m_frequency
 	 * @param[in] f The new frequency value
@@ -134,28 +145,28 @@ protected:
 	 * @brief Get data start iterator
 	 * @return Data start iterator
 	 */
-	inline BasicSampleFrame::Vector::iterator beginIterator() {
+	inline Iterator beginIterator() {
 		return m_data.begin();
 	}
 	/**
 	 * @brief Get data end iterator
 	 * @return Data end iterator
 	 */
-	inline BasicSampleFrame::Vector::iterator endIterator() {
+	inline Iterator endIterator() {
 		return m_data.end();
 	}
 	/**
 	 * @brief Get data start iterator
 	 * @return Data start iterator
 	 */
-	inline BasicSampleFrame::Vector::const_iterator beginIterator() const {
+	inline ConstIterator beginIterator() const {
 		return m_data.begin();
 	}
 	/**
 	 * @brief Get data end iterator
 	 * @return Data end iterator
 	 */
-	inline BasicSampleFrame::Vector::const_iterator endIterator() const {
+	inline ConstIterator endIterator() const {
 		return m_data.cend();
 	}
 	/**
@@ -239,10 +250,10 @@ inline GenSample::PositionType GenSample::makeRealPos( PositionType pos ) const
 	return pos;
 }
 
-} // namespace ppp
-
 /**
  * @}
  */
+
+} // namespace ppp
 
 #endif

@@ -165,6 +165,9 @@ bool GenModule::setOrder( size_t o, bool estimateOnly, bool forceSave )
 		orderAt( m_state.order )->increasePlaybackCount();
 	}
 	m_state.order = o;
+	if( o >= orderCount() ) {
+		return false;
+	}
 	m_state.pattern = orderAt( m_state.order)->index();
 	if( orderChanged ) {
 		logger()->info(L4CXX_LOCATION, boost::format("Order change%s to %d (pattern %d)") % (forceSave ? " (forced save)" : "") % m_state.order % m_state.pattern );

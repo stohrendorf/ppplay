@@ -21,13 +21,13 @@
 
 #include "songinfo.h"
 
+namespace ppp
+{
+
 /**
  * @ingroup GenMod
  * @{
  */
-
-namespace ppp
-{
 
 /**
  * @class SongInfoContainer
@@ -114,10 +114,10 @@ public:
 	void removeEmptySongs();
 };
 
-}
-
 /**
  * @}
  */
+
+}
 
 #endif

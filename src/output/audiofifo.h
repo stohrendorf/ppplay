@@ -19,16 +19,16 @@
 #ifndef AUDIOFIFO_H
 #define AUDIOFIFO_H
 
-/**
- * @ingroup Output
- * @{
- */
-
 #include "stuff/utils.h"
 #include "audiotypes.h"
 #include "iaudiosource.h"
 
 #include "light4cxx/logger.h"
+
+/**
+ * @ingroup Output
+ * @{
+ */
 
 /**
  * @class AudioFifo

@@ -21,13 +21,13 @@
 
 #include "stream/stateiterator.h"
 
+namespace ppp
+{
+
 /**
  * @ingroup GenMod
  * @{
  */
-
-namespace ppp
-{
 
 /**
  * @struct SongInfo
@@ -45,10 +45,10 @@ struct SongInfo
 	size_t length;
 };
 
-}
-
 /**
  * @}
  */
+
+}
 
 #endif

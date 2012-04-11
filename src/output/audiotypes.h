@@ -19,17 +19,17 @@
 #ifndef AUDIOTYPES_H
 #define AUDIOTYPES_H
 
-/**
- * @ingroup Output
- * @{
- */
-
 #include "stuff/utils.h"
 
 #include <queue>
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+/**
+ * @ingroup Output
+ * @{
+ */
 
 /**
  * @brief Basic sample
