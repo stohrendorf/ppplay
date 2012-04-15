@@ -76,8 +76,7 @@ bool ModSample::loadHeader( BinStream& stream )
 		setLoopType( LoopType::Forward );
 	}
 	setTitle( stringncpy( hdr.name, 22 ) );
-	logger()->debug( L4CXX_LOCATION, boost::format( "Length=%u, loop=%u+%u=%u, name='%s'" ) % length() % (hdr.loopStart<<1) % (hdr.loopLength<<1) % (( hdr.loopStart + hdr.loopLength )<<1) % title() );
-// 	LOG_DEBUG("Loading sample (length=%u, loop=%u+%u=%u, name='%s', vol=%u)", length(), hdr.loopStart, hdr.loopLength, hdr.loopStart+hdr.loopLength, title().c_str(), hdr.volume);
+	logger()->debug( L4CXX_LOCATION, "Length=%u, loop=%u+%u=%u, name='%s'", length(), hdr.loopStart<<1, hdr.loopLength<<1, ( hdr.loopStart + hdr.loopLength )<<1, title() );
 	setVolume( std::min<uint8_t>( hdr.volume, 0x40 ) );
 	m_finetune = hdr.finetune & 0x0f;
 	return stream.good();
@@ -98,9 +97,9 @@ bool ModSample::loadData( BinStream& stream )
 		}
 		stream.seekrel(-5);
 	}
-	logger()->debug(L4CXX_LOCATION, boost::format("Loading %d bytes sample data") % length());
+	logger()->debug(L4CXX_LOCATION, "Loading %d bytes sample data", length());
 	if( stream.pos() + length() > stream.size() ) {
-		logger()->warn( L4CXX_LOCATION, boost::format( "File truncated: %u bytes requested while only %u bytes left. Truncating sample." ) % length() % ( stream.size() - stream.pos() ) );
+		logger()->warn( L4CXX_LOCATION, "File truncated: %u bytes requested while only %u bytes left. Truncating sample.", length(), stream.size() - stream.pos() );
 		resizeData( stream.size() - stream.pos() );
 	}
 	for( auto it = beginIterator(); it != endIterator(); it++ ) {

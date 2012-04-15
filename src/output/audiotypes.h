@@ -19,7 +19,7 @@
 #ifndef AUDIOTYPES_H
 #define AUDIOTYPES_H
 
-#include "stuff/utils.h"
+#include "stuff/numberutils.h"
 
 #include <queue>
 #include <cstdint>

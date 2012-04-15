@@ -21,6 +21,9 @@
 
 #include "stuff/utils.h"
 
+#include <vector>
+#include <cstdint>
+
 class BinStream;
 
 /**

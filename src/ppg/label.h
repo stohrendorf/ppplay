@@ -21,6 +21,7 @@
 
 #include "widget.h"
 
+#include <string>
 #include <vector>
 
 /**

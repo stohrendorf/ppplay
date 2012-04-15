@@ -113,7 +113,7 @@ bool XmInstrument::load( BinStream& str )
 	for( uint16_t i = 0; i < hdr.numSamples; i++ ) {
 		m_samples.at( i )->loadData( str );
 	}
-	m_title = ppp::stringncpy( hdr.name, 22 );
+	m_title = stringncpy( hdr.name, 22 );
 	m_panEnvFlags = static_cast<XmEnvelopeProcessor::EnvelopeFlags>( hdr2.panType );
 	for( uint8_t i = 0; i < 12; i++ ) {
 		m_panPoints.at( i ).position = hdr2.panEnvelope[i].x;

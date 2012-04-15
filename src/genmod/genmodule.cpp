@@ -139,7 +139,7 @@ GenOrder* GenModule::orderAt( size_t idx )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if(idx >= m_orders.size()) {
-		logger()->error(L4CXX_LOCATION, boost::format("Requested order index out of range: %d >= %d")%idx%m_orders.size());
+		logger()->error(L4CXX_LOCATION, "Requested order index out of range: %d >= %d", idx, m_orders.size());
 		throw std::out_of_range("Requested order index out of range");
 	}
 	return m_orders.at( idx );
@@ -170,7 +170,7 @@ bool GenModule::setOrder( size_t o, bool estimateOnly, bool forceSave )
 	}
 	m_state.pattern = orderAt( m_state.order)->index();
 	if( orderChanged ) {
-		logger()->info(L4CXX_LOCATION, boost::format("Order change%s to %d (pattern %d)") % (forceSave ? " (forced save)" : "") % m_state.order % m_state.pattern );
+		logger()->info(L4CXX_LOCATION, "Order change%s to %d (pattern %d)", (forceSave ? " (forced save)" : ""), m_state.order, m_state.pattern );
 		try {
 			if(!estimateOnly) {
 				IArchive::Ptr state = m_songs.current().states.nextState();
@@ -313,7 +313,7 @@ bool GenModule::jumpNextSong()
 			if( !orderAt(i)->isUnplayed() ) {
 				continue;
 			}
-			logger()->debug(L4CXX_LOCATION, boost::format("Found unplayed order %d pattern %d") % i % (0+orderAt(i)->index()));
+			logger()->debug(L4CXX_LOCATION, "Found unplayed order %d pattern %d", i, 0+orderAt(i)->index());
 			m_songs.setIndex( m_songs.size() );
 			m_songs.append(SongInfo(StateIterator()));
 			m_state.playedFrames = 0;
@@ -368,7 +368,7 @@ bool GenModule::internal_initialize( uint32_t )
 	
 	logger()->info( L4CXX_LOCATION, "Calculating song lengths and preparing seek operations..." );
 	while( jumpNextSong() ) {
-		logger()->info( L4CXX_LOCATION, boost::format( "Pre-processing song %d" ) % (m_songs.index()+1) );
+		logger()->info( L4CXX_LOCATION, "Pre-processing song %d", m_songs.index()+1 );
 		while( size_t len = buildTick( nullptr ) ) {
 			m_songs.current().length += len;
 		}

@@ -20,8 +20,11 @@
 #define IARCHIVE_H
 
 #include "binstream.h"
+#include "stuff/numberutils.h"
 
 #include <boost/assert.hpp>
+
+#include <vector>
 
 class ISerializable;
 

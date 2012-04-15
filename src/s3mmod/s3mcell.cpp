@@ -56,7 +56,7 @@ bool S3mCell::load( BinStream& str )
 			str.read( &buf );
 			m_note = buf;
 			if( ( m_note >= 0x9b ) && ( m_note != s3mEmptyNote ) && ( m_note != s3mKeyOffNote ) ) {
-				logger()->warn( L4CXX_LOCATION, boost::format( "File Position %#x: Note out of range: %d" ) % str.pos() % ( m_note + 0 ) );
+				logger()->warn( L4CXX_LOCATION, "File Position %#x: Note out of range: %d", str.pos(), int(m_note) );
 				m_note = s3mEmptyNote;
 			}
 			str.read( &buf );
@@ -66,7 +66,7 @@ bool S3mCell::load( BinStream& str )
 			str.read( &buf );
 			m_volume = buf;
 			if( buf > 0x40 ) {
-				logger()->warn( L4CXX_LOCATION, boost::format( "File Position %#x: Volume out of range: %d" ) % str.pos() % ( m_volume + 0 ) );
+				logger()->warn( L4CXX_LOCATION, "File Position %#x: Volume out of range: %d", str.pos(), int(m_volume) );
 				m_volume = s3mEmptyVolume;
 			}
 		}
@@ -101,17 +101,17 @@ std::string S3mCell::trackerString() const
 	else if( m_note == s3mKeyOffNote )
 		xmsg += "^^  ";
 	else
-		xmsg += ( boost::format( "%s%d " ) % NoteNames.at( m_note & 0x0f ) % ( ( m_note >> 4 ) + 0 ) ).str();
+		xmsg += stringFmt( "%s%d ", NoteNames.at( m_note & 0x0f ), int(m_note >> 4) );
 	if( m_instr != s3mEmptyInstr )
-		xmsg += ( boost::format( "%02d " ) % ( m_instr + 0 ) ).str();
+		xmsg += stringFmt( "%02d ", int(m_instr) );
 	else
 		xmsg += ".. ";
 	if( m_volume != s3mEmptyVolume )
-		xmsg += ( boost::format( "%02d " ) % ( m_volume + 0 ) ).str();
+		xmsg += stringFmt( "%02d ", int(m_volume) );
 	else
 		xmsg += ".. ";
 	if( m_effect != s3mEmptyCommand )
-		xmsg += ( boost::format( "%c%02x" ) % static_cast<char>( 'A' - 1 + m_effect ) % ( m_effectValue + 0 ) ).str();
+		xmsg += stringFmt( "%c%02x", char( 'A' - 1 + m_effect ), int(m_effectValue) );
 	else
 		xmsg += "...";
 	return xmsg;

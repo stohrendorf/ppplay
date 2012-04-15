@@ -24,7 +24,7 @@
 void SDLAudioOutput::sdlAudioCallback( void* userdata, uint8_t* stream, int len_bytes )
 {
 	SDLAudioOutput* outpSdl = static_cast<SDLAudioOutput*>( userdata );
-	logger()->trace(L4CXX_LOCATION, boost::format("Requested %d bytes of data")%len_bytes);
+	logger()->trace(L4CXX_LOCATION, "Requested %d bytes of data", len_bytes);
 	len_bytes -= sizeof(BasicSampleFrame) * outpSdl->getSdlData(reinterpret_cast<BasicSampleFrame*>(stream), len_bytes/sizeof(BasicSampleFrame));
 	std::fill_n(stream, len_bytes, 0);
 }
@@ -44,7 +44,7 @@ size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
 	}
 	numFrames -= copied;
 	if(numFrames != 0) {
-		logger()->trace(L4CXX_LOCATION, boost::format("Source provided not enough data: %d frames missing")%numFrames);
+		logger()->trace(L4CXX_LOCATION, "Source provided not enough data: %d frames missing", numFrames);
 	}
 	std::copy( buffer->begin(), buffer->end(), data );
 	return copied;
@@ -68,7 +68,7 @@ int SDLAudioOutput::internal_init( int desiredFrq )
 	if( !SDL_WasInit( SDL_INIT_AUDIO ) ) {
 		logger()->trace( L4CXX_LOCATION, "Initializing SDL Audio component" );
 		if( -1 == SDL_Init( SDL_INIT_AUDIO ) ) {
-			logger()->fatal( L4CXX_LOCATION, boost::format( "SDL Audio component initialization failed. SDL Error: '%s'" ) % SDL_GetError() );
+			logger()->fatal( L4CXX_LOCATION, "SDL Audio component initialization failed. SDL Error: '%s'", SDL_GetError() );
 			setErrorCode( OutputError );
 			return 0;
 		}
@@ -86,7 +86,7 @@ int SDLAudioOutput::internal_init( int desiredFrq )
 	desired->callback = sdlAudioCallback;
 	desired->userdata = this;
 	if( SDL_OpenAudio( desired.get(), obtained.get() ) < 0 ) {
-		logger()->fatal( L4CXX_LOCATION, boost::format( "Couldn't open audio. SDL Error: '%s'" ) % SDL_GetError() );
+		logger()->fatal( L4CXX_LOCATION, "Couldn't open audio. SDL Error: '%s'", SDL_GetError() );
 		setErrorCode( OutputError );
 		return 0;
 	}
@@ -97,7 +97,7 @@ int SDLAudioOutput::internal_init( int desiredFrq )
 	desiredFrq = desired->freq;
 	char driverName[256];
 	if( SDL_AudioDriverName( driverName, 255 ) ) {
-		logger()->info( L4CXX_LOCATION, boost::format( "Using audio driver '%s'" ) % driverName );
+		logger()->info( L4CXX_LOCATION, "Using audio driver '%s'", driverName );
 	}
 	setErrorCode( NoError );
 	logger()->trace( L4CXX_LOCATION, "Initialized" );
@@ -108,6 +108,7 @@ bool SDLAudioOutput::internal_playing() const
 {
 	return SDL_GetAudioStatus() == SDL_AUDIO_PLAYING;
 }
+
 bool SDLAudioOutput::internal_paused() const
 {
 	return SDL_GetAudioStatus() == SDL_AUDIO_PAUSED;
@@ -117,6 +118,7 @@ void SDLAudioOutput::internal_play()
 {
 	SDL_PauseAudio( 0 );
 }
+
 void SDLAudioOutput::internal_pause()
 {
 	SDL_PauseAudio( 1 );

@@ -90,7 +90,7 @@ void AudioFifo::requestThread()
 			continue;
 		}
 		// add the data to the queue...
-		logger()->trace( L4CXX_LOCATION, boost::format( "Adding %4d frames to a %4d-frame queue, minimum is %4d frames" ) % buffer->size() % m_queuedFrames % m_minFrameCount );
+		logger()->trace( L4CXX_LOCATION, "Adding %4d frames to a %4d-frame queue, minimum is %4d frames", buffer->size(), m_queuedFrames, m_minFrameCount );
 		pushBuffer( buffer );
 	}
 }
@@ -102,7 +102,7 @@ AudioFifo::AudioFifo( const IAudioSource::WeakPtr& source, size_t frameCount ) :
 {
 	BOOST_ASSERT_MSG( !source.expired(), "Invalid source passed to AudioFifo constructor" );
 	BOOST_ASSERT_MSG( m_minFrameCount >= 256, "Minimum frame count may not be less than 256" );
-	logger()->debug( L4CXX_LOCATION, boost::format( "Created with %d frames minimum" ) % frameCount );
+	logger()->debug( L4CXX_LOCATION, "Created with %d frames minimum", minFrameCount );
 	m_requestThread = boost::thread( boost::bind(&AudioFifo::requestThread, this) );
 	//m_requestThread.detach();
 }
@@ -130,11 +130,9 @@ void AudioFifo::pushBuffer( const AudioFrameBuffer& buf )
 
 size_t AudioFifo::internal_getAudioData( AudioFrameBuffer& data, size_t size )
 {
-	// a modifying function, so we need a unique lock again
-	//ReadWriteLockable::WriteLock lock(&m_readWriteLockable);
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if( size > m_queuedFrames ) {
-		logger()->trace( L4CXX_LOCATION, boost::format( "Buffer underrun: Requested %d frames while only %d frames in queue" ) % size % m_queuedFrames );
+		logger()->trace( L4CXX_LOCATION, "Buffer underrun: Requested %d frames while only %d frames in queue", size, m_queuedFrames );
 		size = m_queuedFrames;
 	}
 	if( !data ) {
@@ -166,7 +164,7 @@ size_t AudioFifo::internal_getAudioData( AudioFrameBuffer& data, size_t size )
 		current->erase( current->begin(), current->begin() + toCopy );
 	}
 	if( data->size() != copied ) {
-		logger()->error( L4CXX_LOCATION, boost::format( "Copied %d frames into a buffer with %d frames" ) % copied % data->size() );
+		logger()->error( L4CXX_LOCATION, "Copied %d frames into a buffer with %d frames", copied, data->size() );
 	}
 	{
 		uint64_t left, right;
@@ -174,7 +172,7 @@ size_t AudioFifo::internal_getAudioData( AudioFrameBuffer& data, size_t size )
 		m_volLeftSum -= left;
 		m_volRightSum -= right;
 	}
-	logger()->trace( L4CXX_LOCATION, boost::format( "Pulled %d frames, %d frames left" ) % copied % m_queuedFrames );
+	logger()->trace( L4CXX_LOCATION, "Pulled %d frames, %d frames left", copied, m_queuedFrames );
 	return copied;
 }
 

@@ -26,6 +26,8 @@
 
 #include "genmod/genmodule.h"
 
+#include <array>
+
 namespace ppp
 {
 namespace xm

@@ -23,6 +23,7 @@
 #include "location.h"
 
 #include "stuff/utils.h"
+#include "stuff/stringutils.h"
 
 #include <boost/format.hpp>
 
@@ -77,114 +78,64 @@ public:
 	 */
 	void log( Level l, const Location& loc, const std::string& str ) const;
 	/**
-	 * @overload
-	 * @param[in] l The level of the message, except Level::Off or Level::All
-	 * @param[in] loc The location of the message
-	 * @param[in] str The message itself
-	 * @see L4CXX_LOCATION
-	 */
-	void log( Level l, const Location& loc, const boost::format& str ) const;
-	/**
 	 * @brief Log a message with Level::Trace
 	 * @param[in] loc The location
-	 * @param[in] str The message itself
+	 * @param[in] fmt The message format string
 	 */
-	inline void trace( const Location& loc, const std::string& str ) const {
-		log( Level::Trace, loc, str );
-	}
-	/**
-	 * @overload
-	 * @brief Log a message with Level::Trace
-	 * @param[in] loc The location
-	 * @param[in] str The message itself
-	 */
-	inline void trace( const Location& loc, const boost::format& str ) const {
-		log( Level::Trace, loc, str );
+	template<class ...Args>
+	void trace(const Location& loc, const std::string& fmt, const Args& ...args)
+	{
+		log(Level::Trace, loc, stringFmt(fmt, args...));
 	}
 	/**
 	 * @brief Log a message with Level::Debug
 	 * @param[in] loc The location
 	 * @param[in] str The message itself
 	 */
-	inline void debug( const Location& loc, const std::string& str ) const {
-		log( Level::Debug, loc, str );
-	}
-	/**
-	 * @overload
-	 * @brief Log a message with Level::Debug
-	 * @param[in] loc The location
-	 * @param[in] str The message itself
-	 */
-	inline void debug( const Location& loc, const boost::format& str ) const {
-		log( Level::Debug, loc, str );
+	template<class ...Args>
+	void debug(const Location& loc, const std::string& fmt, const Args& ...args)
+	{
+		log(Level::Debug, loc, stringFmt(fmt, args...));
 	}
 	/**
 	 * @brief Log a message with Level::Info
 	 * @param[in] loc The location
 	 * @param[in] str The message itself
 	 */
-	inline void info( const Location& loc, const std::string& str ) const {
-		log( Level::Info, loc, str );
-	}
-	/**
-	 * @overload
-	 * @brief Log a message with Level::Info
-	 * @param[in] loc The location
-	 * @param[in] str The message itself
-	 */
-	inline void info( const Location& loc, const boost::format& str ) const {
-		log( Level::Info, loc, str );
+	template<class ...Args>
+	void info(const Location& loc, const std::string& fmt, const Args& ...args)
+	{
+		log(Level::Info, loc, stringFmt(fmt, args...));
 	}
 	/**
 	 * @brief Log a message with Level::Warn
 	 * @param[in] loc The location
 	 * @param[in] str The message itself
 	 */
-	inline void warn( const Location& loc, const std::string& str ) const {
-		log( Level::Warn, loc, str );
-	}
-	/**
-	 * @overload
-	 * @brief Log a message with Level::Warn
-	 * @param[in] loc The location
-	 * @param[in] str The message itself
-	 */
-	inline void warn( const Location& loc, const boost::format& str ) const {
-		log( Level::Warn, loc, str );
+	template<class ...Args>
+	void warn(const Location& loc, const std::string& fmt, const Args& ...args)
+	{
+		log(Level::Warn, loc, stringFmt(fmt, args...));
 	}
 	/**
 	 * @brief Log a message with Level::Error
 	 * @param[in] loc The location
 	 * @param[in] str The message itself
 	 */
-	inline void error( const Location& loc, const std::string& str ) const {
-		log( Level::Error, loc, str );
-	}
-	/**
-	 * @overload
-	 * @brief Log a message with Level::Error
-	 * @param[in] loc The location
-	 * @param[in] str The message itself
-	 */
-	inline void error( const Location& loc, const boost::format& str ) const {
-		log( Level::Error, loc, str );
+	template<class ...Args>
+	void error(const Location& loc, const std::string& fmt, const Args& ...args)
+	{
+		log(Level::Error, loc, stringFmt(fmt, args...));
 	}
 	/**
 	 * @brief Log a message with Level::Fatal
 	 * @param[in] loc The location
 	 * @param[in] str The message itself
 	 */
-	inline void fatal( const Location& loc, const std::string& str ) const {
-		log( Level::Fatal, loc, str );
-	}
-	/**
-	 * @overload
-	 * @brief Log a message with Level::Fatal
-	 * @param[in] loc The location
-	 * @param[in] str The message itself
-	 */
-	inline void fatal( const Location& loc, const boost::format& str ) const {
-		log( Level::Fatal, loc, str );
+	template<class ...Args>
+	void fatal(const Location& loc, const std::string& fmt, const Args& ...args)
+	{
+		log(Level::Fatal, loc, stringFmt(fmt, args...));
 	}
 	/**
 	 * @brief Get the current log level filter

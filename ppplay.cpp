@@ -202,17 +202,17 @@ int main( int argc, char* argv[] )
 		if( !parseCmdLine( argc, argv ) ) {
 			return EXIT_SUCCESS;
 		}
-		light4cxx::Logger::root()->info( L4CXX_LOCATION, boost::format( "Trying to load '%s'" ) % config::filename );
+		light4cxx::Logger::root()->info( L4CXX_LOCATION, "Trying to load '%s'", config::filename );
 		ppp::GenModule::Ptr module;
 		try {
 			module = ppp::ModuleRegistry::tryLoad(config::filename, 44100, config::maxRepeat);
 			if( !module ) {
-				light4cxx::Logger::root()->error( L4CXX_LOCATION, boost::format("Error on loading '%s'") % config::filename );
+				light4cxx::Logger::root()->error( L4CXX_LOCATION, "Error on loading '%s'", config::filename );
 				return EXIT_FAILURE;
 			}
 		}
 		catch( ... ) {
-			light4cxx::Logger::root()->fatal( L4CXX_LOCATION, boost::format( "Exception on module loading: %s" ) % boost::current_exception_diagnostic_information() );
+			light4cxx::Logger::root()->fatal( L4CXX_LOCATION, "Exception on module loading: %s", boost::current_exception_diagnostic_information() );
 			return EXIT_FAILURE;
 		}
 		if( !config::noGUI ) {
@@ -322,7 +322,7 @@ int main( int argc, char* argv[] )
 					light4cxx::Logger::root()->error( L4CXX_LOCATION, "LAME unavailable: Maybe cannot create MP3 File" );
 				}
 				else {
-					light4cxx::Logger::root()->error( L4CXX_LOCATION, boost::format( "LAME initialization error: '%s'" ) % mp3out->errorCode() );
+					light4cxx::Logger::root()->error( L4CXX_LOCATION, "LAME initialization error: '%d'", mp3out->errorCode() );
 				}
 				return EXIT_FAILURE;
 			}
@@ -330,7 +330,7 @@ int main( int argc, char* argv[] )
 				uiMain.reset( new UIMain( dosScreen.get(), module, output ) );
 			}
 			output->play();
-			boost::progress_display progress(module->length(), std::cout, (boost::format("QuickMP3: %s\n") % config::filename).str());
+			boost::progress_display progress(module->length(), std::cout, stringFmt("QuickMP3: %s\n", config::filename));
 			while( output->playing() ) {
 				boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 				progress += module->position()-progress.count();
@@ -339,7 +339,7 @@ int main( int argc, char* argv[] )
 #endif
 	}
 	catch( ... ) {
-		light4cxx::Logger::root()->fatal( L4CXX_LOCATION, boost::format( "Main (end): %s" ) % boost::current_exception_diagnostic_information() );
+		light4cxx::Logger::root()->fatal( L4CXX_LOCATION, stringFmt( "Main (end): %s", boost::current_exception_diagnostic_information()) );
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;

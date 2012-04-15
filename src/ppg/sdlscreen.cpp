@@ -145,7 +145,7 @@ SDLScreen::SDLScreen( int w, int h, const std::string& title ) : Widget( nullptr
 	{
 		char videoDrv[256];
 		if( SDL_VideoDriverName( videoDrv, 255 ) ) {
-			logger->info( L4CXX_LOCATION, boost::format( "Using video driver '%s'" ) % videoDrv );
+			logger->info( L4CXX_LOCATION, "Using video driver '%s'", videoDrv );
 		}
 	}
 	setPosition( 0, 0 );
@@ -281,7 +281,7 @@ void SDLScreen::drawThis()
 void SDLScreen::drawChar( int x, int y, char c )
 {
 	if( !area().contains( x, y ) ) {
-		logger->error( L4CXX_LOCATION, boost::format( "Out of range: %d, %d" ) % x % y );
+		logger->error( L4CXX_LOCATION, "Out of range: %d, %d", x, y );
 		return;
 	}
 	g_chars[x + y * area().width()] = c;

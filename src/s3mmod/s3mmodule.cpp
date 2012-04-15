@@ -186,9 +186,9 @@ bool S3mModule::load( const std::string& fn )
 				metaInfo().trackerInfo = "OpenMPT v";
 				break;
 			default:
-				metaInfo().trackerInfo = (boost::format( "Unknown Tracker (%x) v" ) % ( s3mHdr.createdWith >> 12 )).str();
+				metaInfo().trackerInfo = stringFmt( "Unknown Tracker (%x) v", s3mHdr.createdWith >> 12 );
 		}
-		metaInfo().trackerInfo =  (boost::format( "%s%x.%02x" ) % trackerInfo() % ( ( s3mHdr.createdWith >> 8 ) & 0x0f ) % ( s3mHdr.createdWith & 0xff )).str();
+		metaInfo().trackerInfo = stringFmt( "%s%x.%02x", trackerInfo(), ( s3mHdr.createdWith >> 8 ) & 0x0f, s3mHdr.createdWith & 0xff );
 		setTempo( s3mHdr.initialTempo );
 		//m_playbackInfo.speed = s3mHdr.initialSpeed;
 		setSpeed( s3mHdr.initialSpeed );
@@ -422,7 +422,7 @@ void S3mModule::checkGlobalFx()
 			}
 			else if( fx == s3mFxBreakPat ) {
 				m_breakRow = highNibble( fxVal ) * 10 + lowNibble( fxVal );
-				logger()->debug( L4CXX_LOCATION, boost::format( "Row %d: Break pattern to row %d" ) % state().row % m_breakRow );
+				logger()->debug( L4CXX_LOCATION, "Row %d: Break pattern to row %d", state().row, m_breakRow );
 			}
 		}
 	}

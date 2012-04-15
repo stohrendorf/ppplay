@@ -13,6 +13,8 @@
 #include <boost/exception/all.hpp>
 #include <boost/format.hpp>
 
+#include <array>
+
 namespace ppp
 {
 namespace mod
@@ -121,7 +123,7 @@ for( const IdMetaInfo & mi : idMetaData ) {
 
 bool ModModule::load( const std::string& filename )
 {
-	logger()->info( L4CXX_LOCATION, boost::format( "Opening '%s'" ) % filename );
+	logger()->info( L4CXX_LOCATION, "Opening '%s'", filename );
 	FBinStream stream( filename );
 	if( !stream.isOpen() ) {
 		logger()->warn( L4CXX_LOCATION, "Could not open file" );
@@ -142,7 +144,7 @@ bool ModModule::load( const std::string& filename )
 		logger()->warn( L4CXX_LOCATION, "Could not find a valid module ID" );
 		return false;
 	}
-	logger()->debug( L4CXX_LOCATION, boost::format( "%d-channel, ID '%s', Tracker '%s'" ) % ( meta.channels + 0 ) % meta.id % meta.tracker );
+	logger()->debug( L4CXX_LOCATION, "%d-channel, ID '%s', Tracker '%s'", int(meta.channels), meta.id, meta.tracker );
 	metaInfo().trackerInfo = meta.tracker;
 	for( int i = 0; i < meta.channels; i++ ) {
 		m_channels.push_back( new ModChannel( this ) );
@@ -164,7 +166,7 @@ bool ModModule::load( const std::string& filename )
 		if( songLen > 128 ) {
 			songLen = 128;
 		}
-		logger()->debug( L4CXX_LOCATION, boost::format( "Song length: %d" ) % ( songLen + 0 ) );
+		logger()->debug( L4CXX_LOCATION, "Song length: %d", int(songLen) );
 		uint8_t tmp;
 		stream.read( &tmp ); // skip the restart pos
 		for( uint8_t i = 0; i < songLen; i++ ) {
@@ -175,29 +177,29 @@ bool ModModule::load( const std::string& filename )
 			if( tmp > maxPatNum ) {
 				maxPatNum = tmp;
 			}
-			logger()->trace(L4CXX_LOCATION, boost::format("Order %d index: %d")%(i+0)%(tmp+0));
+			logger()->trace(L4CXX_LOCATION, "Order %d index: %d", int(i), int(tmp));
 			addOrder( new ModOrder( tmp ) );
 		}
 		stream.seekrel(128-songLen);
 	}
 	stream.seekrel( 4 ); // skip the ID
-	logger()->debug( L4CXX_LOCATION, boost::format( "%d patterns @ %#x" ) % ( maxPatNum + 0 ) % stream.pos() );
+	logger()->debug( L4CXX_LOCATION, "%d patterns @ %#x", int(maxPatNum), stream.pos() );
 	for( uint8_t i = 0; i <= maxPatNum; i++ ) {
 		ModPattern* pat = new ModPattern();
 		m_patterns.push_back( pat );
-		logger()->debug(L4CXX_LOCATION, boost::format("Loading pattern %u")%(i+0));
+		logger()->debug(L4CXX_LOCATION, "Loading pattern %u", int(i));
 		if( !pat->load( stream, meta.channels ) ) {
 			logger()->warn( L4CXX_LOCATION, "Could not load pattern" );
 			return false;
 		}
 	}
-	logger()->debug( L4CXX_LOCATION, boost::format( "Sample start @ %#x" ) % stream.pos() );
+	logger()->debug( L4CXX_LOCATION, "Sample start @ %#x", stream.pos() );
 	for( auto& smp : m_samples ) {
 		if( !smp->loadData( stream ) ) {
 			logger()->warn( L4CXX_LOCATION, "Could not load sample data" );
 		}
 	}
-	logger()->debug( L4CXX_LOCATION, boost::format( "pos=%#x size=%#x delta=%#x" ) % stream.pos() % stream.size() % ( stream.size() - stream.pos() ) );
+	logger()->debug( L4CXX_LOCATION, "pos=%#x size=%#x delta=%#x", stream.pos(), stream.size(), stream.size() - stream.pos() );
 	return stream.good();
 }
 
@@ -440,7 +442,7 @@ void ModModule::checkGlobalFx()
 			}
 			else if( fx == 0x0d ) {
 				m_breakRow = highNibble( fxVal ) * 10 + lowNibble( fxVal );
-				logger()->info( L4CXX_LOCATION, boost::format( "Row %1%: Break pattern to row %2%" ) % state().row % ( m_breakRow + 0 ) );
+				logger()->info( L4CXX_LOCATION, "Row %1%: Break pattern to row %2%", state().row , int(m_breakRow) );
 			}
 		}
 	}

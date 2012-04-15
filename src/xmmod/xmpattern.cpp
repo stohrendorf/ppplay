@@ -62,14 +62,14 @@ XmPattern::~XmPattern()
 
 bool XmPattern::load( BinStream& str )
 {
-	logger()->trace( L4CXX_LOCATION, boost::format( "Start: %#x" ) % str.pos() );
+	logger()->trace( L4CXX_LOCATION, "Start: %#x", str.pos() );
 	uint32_t hdrLen;
 	str.read( &hdrLen );
-	logger()->trace( L4CXX_LOCATION, boost::format( "hdrLen=%d" ) % hdrLen );
+	logger()->trace( L4CXX_LOCATION, "hdrLen=%d", hdrLen );
 	uint8_t packType;
 	str.read( &packType );
 	if( packType != 0 ) {
-		logger()->error( L4CXX_LOCATION, boost::format( "Unsupported Pattern pack type: %d" ) % ( packType + 0 ) );
+		logger()->error( L4CXX_LOCATION, "Unsupported Pattern pack type: %d", int(packType) );
 		return false;
 	}
 	uint16_t rows;
@@ -85,7 +85,7 @@ bool XmPattern::load( BinStream& str )
 		return true;
 	}
 	else if( rows < 1 || rows > 256 ) {
-		logger()->warn( L4CXX_LOCATION, boost::format( "Number of rows out of range: %d" ) % rows );
+		logger()->warn( L4CXX_LOCATION, "Number of rows out of range: %d", rows );
 		return false;
 	}
 	for( auto& chan : m_columns ) {
@@ -93,7 +93,7 @@ bool XmPattern::load( BinStream& str )
 	}
 	uint16_t packedSize;
 	str.read( &packedSize );
-	logger()->trace( L4CXX_LOCATION, boost::format( "Header end: %#x" ) % str.pos() );
+	logger()->trace( L4CXX_LOCATION, "Header end: %#x", str.pos() );
 	str.seekrel( hdrLen - 9 ); // copied from schismtracker
 	if( packedSize == 0 ) {
 		/*		for(size_t i = 0; i < m_columns.size(); i++) {

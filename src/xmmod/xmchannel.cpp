@@ -702,7 +702,7 @@ std::string XmChannel::internal_noteName() const
 		return "___";
 	}
 	int ofs = std::round( fofs );
-	return ( boost::format( "%s%d" ) % NoteNames.at( ofs % 12 ) % ( ofs / 12 ) ).str();
+	return stringFmt( "%s%d", NoteNames.at( ofs % 12 ), ofs / 12 );
 }
 
 void XmChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
@@ -742,10 +742,7 @@ void XmChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 void XmChannel::internal_updateStatus()
 {
 	if( !isActive() ) {
-		setStatusString( boost::format( "         %s %s" )
-						 % effectName()
-						 % effectDescription()
-					   );
+		setStatusString( stringFmt( "         %s %s", effectName(), effectDescription() ) );
 		return;
 	}
 	std::string panStr;
@@ -756,20 +753,20 @@ void XmChannel::internal_updateStatus()
 	else if( m_realPanning == 0xff )
 		panStr = "Right";
 	else
-		panStr = ( boost::format( "%4d%%" ) % ( ( m_realPanning - 0x80 ) * 100 / 0x80 ) ).str();
-	std::string volStr = ( boost::format( "%3d%%" ) % ( clip<int>( m_realVolume , 0, 0x40 ) * 100 / 0x40 ) ).str();
-	setStatusString( boost::format( "%02X: %s%s %s %s P:%s V:%s %s" )
-					 % ( m_instrumentIndex + 0 )
-					 % ( m_noteChanged ? "*" : " " )
-					 % noteName()
-					 % effectName()
-					 % effectDescription()
-					 % panStr
-					 % volStr
-					 % ( currentInstrument() ? currentInstrument()->title().c_str() : "" )
-				   );
-	/*	setStatusString( stringf("vol=%.2u pan=%.2x vfx=%.2x fx=%.2x/%.2x [PE=%s] [VE=%s]",
-								 m_realVolume, m_realPanning, m_currentCell.volume(), m_currentCell.effect(), m_currentCell.effectValue(), m_panningEnvelope.toString().c_str(), m_volumeEnvelope.toString().c_str() ));*/
+		panStr = stringFmt( "%4d%%", ( m_realPanning - 0x80 ) * 100 / 0x80 );
+	std::string volStr = stringFmt( "%3d%%", clip<int>( m_realVolume , 0, 0x40 ) * 100 / 0x40 );
+	setStatusString( stringFmt(
+		"%02X: %s%s %s %s P:%s V:%s %s",
+		int(m_instrumentIndex),
+		m_noteChanged ? "*" : " ",
+		noteName(),
+		effectName(),
+		effectDescription(),
+		panStr,
+		volStr,
+		currentInstrument() ? currentInstrument()->title() : ""
+		)
+	);
 }
 
 void XmChannel::fxSetVolume( uint8_t fxByte )

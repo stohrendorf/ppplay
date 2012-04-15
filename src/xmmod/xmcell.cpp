@@ -74,13 +74,13 @@ std::string XmCell::fxString() const
 		return "...";
 	}
 	else if( static_cast<uint8_t>( m_effect ) <= 0x0f ) {
-		return ( boost::format( "%1X%02X" ) % static_cast<int>( m_effect ) % ( m_effectValue + 0 ) ).str();
+		return stringFmt( "%1X%02X", int(m_effect), int(m_effectValue) );
 	}
 	else if( static_cast<uint8_t>( m_effect ) <= 0x21 ) {
-		return ( boost::format( "%c%02X" ) % ( static_cast<int>( m_effect ) - 0x0f + 'F' ) % ( m_effectValue + 0 ) ).str();
+		return stringFmt( "%c%02X", int( m_effect ) - 0x0f + 'F', int(m_effectValue) );
 	}
 	else {
-		return ( boost::format( "?%02X" ) % ( m_effectValue + 0 ) ).str();
+		return stringFmt( "?%02X", int(m_effectValue) );
 	}
 }
 
@@ -93,7 +93,7 @@ std::string XmCell::noteString() const
 		return "===";
 	}
 	else if( m_note < KeyOffNote ) {
-		return ( boost::format( "%s%d" ) % NoteNames.at( ( m_note - 1 ) % 12 ) % ( ( m_note - 1 ) / 12 ) ).str();
+		return stringFmt( "%s%d", NoteNames.at( ( m_note - 1 ) % 12 ), ( m_note - 1 ) / 12 );
 	}
 	else {
 		return "???";
@@ -109,7 +109,7 @@ std::string XmCell::trackerString() const
 		xmsg += "    ";
 	}
 	else {
-		xmsg += ( boost::format( " %2X " ) % ( m_instr + 0 ) ).str();
+		xmsg += stringFmt( " %2X ", int(m_instr) );
 	}
 	/*
 	VfxVolSlideDown = 6,
@@ -133,10 +133,10 @@ std::string XmCell::trackerString() const
 		case 3:
 		case 4:
 		case 5:
-			xmsg += ( boost::format( "%2d " ) % ( m_volume - 0x10 ) ).str();
+			xmsg += stringFmt( "%2d ", m_volume - 0x10 );
 			break;
 		default:
-			xmsg += ( boost::format( "%c%X " ) % vfxChars[highNibble( m_volume ) - 6] % ( lowNibble( m_volume ) + 0 ) ).str();
+			xmsg += stringFmt( "%c%X ", vfxChars[highNibble( m_volume ) - 6], int(lowNibble( m_volume )) );
 			break;
 	}
 	return xmsg + fxString();

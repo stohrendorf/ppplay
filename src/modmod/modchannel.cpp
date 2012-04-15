@@ -241,7 +241,7 @@ std::string ModChannel::internal_effectName() const
 	if( m_currentCell->effect() == 0 && m_currentCell->effectValue() == 0 ) {
 		return "---";
 	}
-	return ( boost::format( "%X%02X" ) % ( m_currentCell->effect() + 0 ) % ( m_currentCell->effectValue() + 0 ) ).str();
+	return stringFmt( "%X%02X", int(m_currentCell->effect()), int(m_currentCell->effectValue()) );
 }
 
 std::string ModChannel::internal_noteName() const
@@ -251,7 +251,7 @@ std::string ModChannel::internal_noteName() const
 		return "^^^";
 	}
 	else {
-		return ( boost::format( "%s%u" ) % NoteNames[idx % 12] % ( idx / 12 ) ).str();
+		return stringFmt( "%s%u", NoteNames[idx % 12], idx / 12 );
 	}
 }
 
@@ -597,18 +597,19 @@ void ModChannel::internal_updateStatus()
 		setStatusString( "" );
 		return;
 	}
-	std::string volStr = ( boost::format( "%3d%%" ) % ( clip<int>( m_volume, 0, 0x40 ) * 100 / 0x40 ) ).str();
-	setStatusString( boost::format( "%02X: %s%s %s %s P:%s V:%s %s" )
-					 % ( m_sampleIndex + 0 )
-					 % " "
-					 //(m_noteChanged ? "*" : " "),
-					 % noteName()
-					 % effectName()
-					 % m_effectDescription
-					 % "-----"
-					 % volStr.c_str()
-					 % ( currentSample() ? currentSample()->title() : "" )
-				   );
+	std::string volStr = stringFmt( "%3d%%", clip<int>( m_volume, 0, 0x40 ) * 100 / 0x40 );
+	setStatusString( stringFmt(
+		"%02X: %s%s %s %s P:%s V:%s %s",
+		int(m_sampleIndex),
+		" ", //(m_noteChanged ? "*" : " "),
+		noteName(),
+		effectName(),
+		m_effectDescription,
+		"-----",
+		volStr,
+		currentSample() ? currentSample()->title() : ""
+		)
+	);
 }
 
 void ModChannel::fxArpeggio( uint8_t fxByte )

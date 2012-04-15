@@ -185,7 +185,7 @@ inline std::string periodToNote( uint16_t per, uint16_t c2spd, uint16_t finetune
 	if( ( minoct > 9 ) || ( minnote > 11 ) ) {
 		return "???";
 	}
-	return ( boost::format( "%s%d" ) % NoteNames[minnote] % ( minoct + 0 ) ).str();
+	return stringFmt( "%s%d", NoteNames[minnote], int(minoct) );
 }
 
 /**
@@ -290,12 +290,12 @@ std::string S3mChannel::internal_effectName() const
 	uint8_t fx = m_currentCell->effect();
 	bool fxRangeOk = inRange<int>( fx, 1, 27 );
 	if( fxRangeOk ) {
-		return ( boost::format( "%c%02X" ) % static_cast<char>( fx - 1 + 'A' ) % ( m_currentCell->effectValue() + 0 ) ).str();
+		return stringFmt( "%c%02X", char( fx - 1 + 'A' ), int(m_currentCell->effectValue()) );
 // 		return stringf("%c%.2X", fx + 'A' - 1, m_currentCell.effectValue());
 	}
 	else {
-		logger()->warn( L4CXX_LOCATION, boost::format( "Effect out of range: %#x" ) % ( fx + 0 ) );
-		return ( boost::format( "?%02X" ) % ( m_currentCell->effectValue() + 0 ) ).str();
+		logger()->warn( L4CXX_LOCATION, "Effect out of range: %#x", int(fx) );
+		return stringFmt( "?%02X", int(m_currentCell->effectValue()) );
 // 		return stringf("?%.2X", m_currentCell.effectValue());
 	}
 }
@@ -618,26 +618,30 @@ void S3mChannel::internal_updateStatus()
 			panStr = "Right";
 		}
 		else {
-			panStr = ( boost::format( "%4d%%" ) % ( ( m_panning - 0x20 ) * 100 / 0x40 ) ).str();
+			panStr = stringFmt( "%4d%%", ( m_panning - 0x20 ) * 100 / 0x40 );
 		}
-		std::string volStr = ( boost::format( "%3d%%" ) % ( clip<int>( m_currentVolume , 0, 0x3f ) * 100 / 0x3f ) ).str();
-		setStatusString( boost::format( "%02d: %s%s %s %s P:%s V:%s %s" )
-						 % ( m_sampleIndex + 1 )
-						 % ( m_noteChanged ? "*" : " " )
-						 % noteName()
-						 % effectName()
-						 % effectDescription()
-						 % panStr
-						 % volStr
-						 % smp->title()
-					   );
+		std::string volStr = stringFmt( "%3d%%", clip<int>( m_currentVolume , 0, 0x3f ) * 100 / 0x3f );
+		setStatusString( stringFmt(
+			"%02d: %s%s %s %s P:%s V:%s %s",
+			m_sampleIndex + 1,
+			m_noteChanged ? "*" : " ",
+			noteName(),
+			effectName(),
+			effectDescription(),
+			panStr,
+			volStr,
+			smp->title()
+			)
+		);
 	}
 	else {
-		setStatusString( boost::format( "     %s %s %s" )
-						 % ( m_currentCell->note() == s3mKeyOffNote ? "^^ " : "   " )
-						 % effectName()
-						 % effectDescription()
-					   );
+		setStatusString( stringFmt(
+			"     %s %s %s",
+			m_currentCell->note() == s3mKeyOffNote ? "^^ " : "   ",
+			effectName(),
+			effectDescription()
+			)
+		);
 	}
 }
 

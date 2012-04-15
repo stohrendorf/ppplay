@@ -87,7 +87,7 @@ bool S3mSample::load( BinStream& str, const size_t pos, bool imagoLoopEnd )
 			return false;
 		}
 		if( smpHdr.type != 1 ) {
-			logger()->warn( L4CXX_LOCATION, boost::format( "Sample Type not 0x01 (is %#.2x), assuming empty." ) % ( smpHdr.type + 0 ) );
+			logger()->warn( L4CXX_LOCATION, "Sample Type not 0x01 (is %#.2x), assuming empty.", int(smpHdr.type) );
 			return true;
 		}
 		/// @warning This could be a much too high value...

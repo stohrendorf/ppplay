@@ -100,7 +100,7 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IA
 	m_modTitle->alignment = ppg::Label::Alignment::Center;
 	m_modTitle->setFgColorRange( 0, ppg::Color::BrightWhite, 0 );
 	m_modTitle->show();
-	m_trackerInfo->setText( ( boost::format( "Tracker: %s - Channels: %d" ) % module->trackerInfo() % ( module->channelCount() + 0 ) ).str() );
+	m_trackerInfo->setText( stringFmt( "Tracker: %s - Channels: %d", module->trackerInfo(), int(module->channelCount()) ) );
 	if( module->isMultiSong() ) {
 		m_trackerInfo->setText( m_trackerInfo->text() + " - Multi-song" );
 	}
@@ -210,7 +210,7 @@ void UIMain::onTimer()
 // 									msecslen / 6000, msecslen / 100 % 60, msecslen % 100
 // 									) );
 // 		}
-		m_playbackInfo->setEscapedText( ( boost::format( "{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%" ) % state.speed % state.tempo % ( state.globalVolume * 100 / 0x40 ) ).str() );
+		m_playbackInfo->setEscapedText( stringFmt( "{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", state.speed, state.tempo, state.globalVolume * 100 / 0x40 ) );
 		for( uint8_t i = 0; i < modLock->channelCount(); i++ ) {
 			if( i >= 16 )
 				break;

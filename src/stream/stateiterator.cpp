@@ -40,7 +40,7 @@ StateIterator::StateIterator() : m_states(), m_stateIndex( 0 )
 IArchive::Ptr StateIterator::newState()
 {
 	IArchive::Ptr p( new MemArchive() );
-	logger->debug( L4CXX_LOCATION, boost::format( "Creating new state %d" ) % (m_states.size()+1) );
+	logger->debug( L4CXX_LOCATION, "Creating new state %d" , m_states.size()+1 );
 	m_states.push_back( p );
 	return p;
 }
@@ -51,7 +51,7 @@ IArchive::Ptr StateIterator::nextState()
 		return IArchive::Ptr();
 	}
 	m_stateIndex++;
-	logger->debug( L4CXX_LOCATION, boost::format( "Loading state %d of %d" ) % (m_stateIndex+1) % m_states.size() );
+	logger->debug( L4CXX_LOCATION, "Loading state %d of %d", m_stateIndex+1, m_states.size() );
 	return m_states.at( m_stateIndex );
 }
 
@@ -61,7 +61,7 @@ IArchive::Ptr StateIterator::prevState()
 		return IArchive::Ptr();
 	}
 	m_stateIndex--;
-	logger->debug( L4CXX_LOCATION, boost::format( "Loading state %d of %d" ) % (m_stateIndex+1) % m_states.size() );
+	logger->debug( L4CXX_LOCATION, "Loading state %d of %d", m_stateIndex+1, m_states.size() );
 	return m_states.at( m_stateIndex );
 }
 

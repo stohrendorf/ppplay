@@ -52,7 +52,7 @@ bool ModCell::load( BinStream& str )
 	str.read( &tmp );
 	m_sampleNumber = tmp & 0xf0;
 	if( m_sampleNumber > 32 ) {
-		logger()->warn( L4CXX_LOCATION, boost::format( "Sample out of range: %d" ) % ( m_sampleNumber + 0 ) );
+		logger()->warn( L4CXX_LOCATION, "Sample out of range: %d", int(m_sampleNumber) );
 	}
 	//m_sampleNumber &= 0x1f;
 	m_period = ( tmp & 0x0f ) << 8;
@@ -67,10 +67,10 @@ bool ModCell::load( BinStream& str )
 	if( m_period != 0 ) {
 		uint8_t idx = periodToNoteIndex( m_period );
 		if( idx != 255 ) {
-			m_note = ( boost::format( "%s%u" ) % NoteNames[idx % 12] % ( idx / 12 ) ).str();
+			m_note = stringFmt( "%s%u", NoteNames[idx % 12], idx / 12 );
 		}
 		else {
-			logger()->warn( L4CXX_LOCATION, boost::format( "Period %d too low: Cannot find matching note name." ) % m_period );
+			logger()->warn( L4CXX_LOCATION, "Period %d too low: Cannot find matching note name.", m_period );
 			m_note = "^^^";
 		}
 	}
@@ -110,7 +110,7 @@ std::string ModCell::trackerString() const
 {
 	std::string res( m_note );
 	if( m_sampleNumber != 0 ) {
-		res.append( ( boost::format( " %02u" ) % ( m_sampleNumber + 0 ) ).str() );
+		res.append( stringFmt( " %02u", int(m_sampleNumber) ) );
 	}
 	else {
 		res.append( " --" );
@@ -119,7 +119,7 @@ std::string ModCell::trackerString() const
 		res.append( " ---" );
 	}
 	else {
-		res.append( ( boost::format( " %01X%02X" ) % ( m_effect + 0 ) % ( m_effectValue + 0 ) ).str() );
+		res.append( stringFmt( " %01X%02X", int(m_effect), int(m_effectValue) ) );
 	}
 	return res;
 }
@@ -131,7 +131,7 @@ IArchive& ModCell::serialize( IArchive* data )
 		if( m_period != 0 ) {
 			uint8_t idx = periodToNoteIndex( m_period );
 			if( idx != 255 ) {
-				m_note = ( boost::format( "%s%u" ) % NoteNames[idx % 12] % ( idx / 12 ) ).str();
+				m_note = stringFmt( "%s%u", NoteNames[idx % 12] ,idx / 12 );
 			}
 			else {
 				m_note = "^^^";

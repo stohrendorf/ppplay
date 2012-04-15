@@ -101,7 +101,7 @@ bool XmModule::load( const std::string& filename )
 		return false;
 	}
 	if( hdr.version != 0x0104 ) {
-		logger()->warn( L4CXX_LOCATION, boost::format( "Unsupported XM Version %#x" ) % hdr.version );
+		logger()->warn( L4CXX_LOCATION, "Unsupported XM Version %#x", hdr.version );
 		return false;
 	}
 	for( int i = 0; i < ( hdr.songLength & 0xff ); i++ ) {

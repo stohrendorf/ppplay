@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
+    Copyright (C) 2012  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,48 +16,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "numberutils.h"
 
-#ifndef ITIMER_H
-#define ITIMER_H
-
-#include "utils.h"
-
-#include <cstdint>
-
-/**
- * @ingroup Common
- * @{
- */
-
-/**
- * @interface ITimer
- * @brief Timer interface
- */
-class ITimer
+namespace ppp
 {
-	DISABLE_COPY( ITimer )
-public:
-	/**
-	 * @brief Default constructor
-	 */
-	ITimer() = default;
-	/**
-	 * @brief Virtual default destructor
-	 */
-	virtual ~ITimer();
-	/**
-	 * @brief The timer interval in milliseconds
-	 * @return The timer interval in milliseconds
-	 */
-	virtual uint32_t interval() const = 0;
-	/**
-	 * @brief Timer handler, called every interval() milliseconds
-	 */
-	virtual void onTimer() = 0;
-};
 
-/**
- * @}
- */
+void swapEndian( char data[], size_t size )
+{
+	for( size_t i = 0; i < size / 2; i++ ) {
+		std::swap( data[i], data[size - i - 1] );
+	}
+}
 
-#endif // TIMER_H
+}

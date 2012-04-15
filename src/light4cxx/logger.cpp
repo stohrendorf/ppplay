@@ -84,11 +84,6 @@ void Logger::log( light4cxx::Level l, const light4cxx::Location& loc, const std:
 	std::cout << loc.toString( l, *this, str );
 }
 
-void Logger::log( Level l, const Location& loc, const boost::format& fmt ) const
-{
-	log( l, loc, fmt.str() );
-}
-
 }
 
 /**

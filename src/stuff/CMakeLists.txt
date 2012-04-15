@@ -2,8 +2,9 @@
 #	fft.cpp)
 
 add_library(utils STATIC
-	utils.cpp
 	moduleregistry.cpp
+	numberutils.cpp
+	stringutils.cpp
 )
 
 add_library(timer STATIC
