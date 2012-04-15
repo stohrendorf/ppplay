@@ -33,11 +33,7 @@ size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	AudioFrameBuffer buffer;
-	IAudioSource::Ptr src( source().lock() );
-	if( !src || src->paused() ) {
-		return 0;
-	}
-	size_t copied = src->getAudioData( buffer, numFrames );
+	size_t copied = m_fifo.pullData( buffer, numFrames );
 	if( copied == 0 ) {
 		logger()->trace(L4CXX_LOCATION, "Source did not return any data - input is dry");
 		setErrorCode( InputDry );
@@ -50,7 +46,10 @@ size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
 	return copied;
 }
 
-SDLAudioOutput::SDLAudioOutput( const IAudioSource::WeakPtr& src ) : IAudioOutput( src ), m_mutex()
+SDLAudioOutput::SDLAudioOutput( const IAudioSource::WeakPtr& src ) :
+	IAudioOutput( src ),
+	m_mutex(),
+	m_fifo(src, 4096, true)
 {
 	logger()->trace( L4CXX_LOCATION, "Created" );
 }
@@ -122,6 +121,16 @@ void SDLAudioOutput::internal_play()
 void SDLAudioOutput::internal_pause()
 {
 	SDL_PauseAudio( 1 );
+}
+
+uint16_t SDLAudioOutput::internal_volumeLeft() const
+{
+	return m_fifo.volumeLeft();
+}
+
+uint16_t SDLAudioOutput::internal_volumeRight() const
+{
+	return m_fifo.volumeRight();
 }
 
 light4cxx::Logger::Ptr SDLAudioOutput::logger()

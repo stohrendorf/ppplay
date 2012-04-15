@@ -43,6 +43,7 @@ public:
 	virtual ~SDLAudioOutput();
 private:
 	boost::recursive_mutex m_mutex;
+	AudioFifo m_fifo;
 	/**
 	 * @brief SDL Audio callback handler
 	 * @param[in] userdata Pointer to SDLAudioOutput
@@ -57,6 +58,8 @@ private:
 	virtual bool internal_paused() const;
 	virtual void internal_play();
 	virtual void internal_pause();
+	virtual uint16_t internal_volumeLeft() const;
+	virtual uint16_t internal_volumeRight() const;
 protected:
 	/**
 	 * @brief Get the logger

@@ -38,18 +38,27 @@
  * A simple thread is created that continuously requests data from the connected
  * IAudioSource.
  */
-class AudioFifo : public IAudioSource
+class AudioFifo
 {
 	DISABLE_COPY( AudioFifo )
 	AudioFifo() = delete;
 private:
-	AudioFrameBufferQueue m_queue; //!< @brief Queued audio chunks
-	size_t m_queuedFrames; //!< @brief Number of frames in the queue
-	size_t m_minFrameCount; //!< @brief Minimum number of frames the queue should contain
-	boost::thread m_requestThread; //!< @brief The requester thread that pulls the audio data from the source
-	IAudioSource::WeakPtr m_source; //!< @brief The audio source to pull the data from
-	uint64_t m_volLeftSum; //!< @brief Sum of all left absolute sample values
-	uint64_t m_volRightSum; //!< @brief Sum of all right absolute sample values
+	//! @brief Queued audio chunks
+	AudioFrameBufferQueue m_queue;
+	//! @brief Number of frames in the queue
+	size_t m_queuedFrames;
+	//! @brief Minimum number of frames the queue should contain
+	size_t m_minFrameCount;
+	//! @brief The requester thread that pulls the audio data from the source
+	boost::thread m_requestThread;
+	//! @brief The audio source to pull the data from
+	IAudioSource::WeakPtr m_source;
+	//! @brief Sum of all left absolute sample values
+	uint64_t m_volLeftSum;
+	//! @brief Sum of all right absolute sample values
+	uint64_t m_volRightSum;
+	const bool m_doVolumeCalc;
+	bool m_stopping;
 	mutable boost::recursive_mutex m_mutex;
 	/**
 	 * @brief Audio data pulling thread function
@@ -63,18 +72,14 @@ private:
 	 * @param[in] buf The buffer to add
 	 */
 	void pushBuffer( const AudioFrameBuffer& buf );
-	virtual uint16_t internal_volumeLeft() const;
-	virtual uint16_t internal_volumeRight() const;
-	virtual size_t internal_getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames );
-	virtual bool internal_initialize( uint32_t frequency );
 public:
 	/**
 	 * @brief Initialize the buffer
 	 * @param[in] source The audio source that should be buffered
 	 * @param[in] minFrameCount Initial value for m_minFrameCount (minimum 256)
 	 */
-	AudioFifo( const IAudioSource::WeakPtr& source, size_t minFrameCount );
-	virtual ~AudioFifo();
+	AudioFifo( const IAudioSource::WeakPtr& source, size_t minFrameCount, bool doVolumeCalc );
+	~AudioFifo();
 	/**
 	 * @brief Get the number of buffered frames
 	 * @return Number of buffered frames
@@ -101,6 +106,9 @@ public:
 	 * @retval false FIFO is not empty
 	 */
 	bool isEmpty() const;
+	uint16_t volumeLeft() const;
+	uint16_t volumeRight() const;
+	size_t pullData( AudioFrameBuffer& buffer, size_t requestedFrames );
 protected:
 	/**
 	 * @brief Get the logger

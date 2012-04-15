@@ -27,7 +27,6 @@
 #include "src/xmmod/xmmodule.h"
 #include "src/modmod/modmodule.h"
 
-#include "src/output/audiofifo.h"
 #include "src/output/sdlaudiooutput.h"
 
 #ifdef WITH_MP3LAME
@@ -50,7 +49,6 @@ std::shared_ptr<ppg::SDLScreen> dosScreen;
 std::shared_ptr<UIMain> uiMain;
 
 IAudioOutput::Ptr output;
-AudioFifo::Ptr fifo;
 
 namespace config
 {
@@ -225,8 +223,7 @@ int main( int argc, char* argv[] )
 		if( !config::quickMp3 ) {
 #endif
 			light4cxx::Logger::root()->info( L4CXX_LOCATION, "Init Audio" );
-			fifo.reset( new AudioFifo( module, 4096 ) );
-			output.reset( new SDLAudioOutput( fifo ) );
+			output.reset( new SDLAudioOutput( module ) );
 			if( !output->init( 44100 ) ) {
 				light4cxx::Logger::root()->fatal( L4CXX_LOCATION, "Audio Init failed" );
 				return EXIT_FAILURE;
