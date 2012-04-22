@@ -24,9 +24,9 @@ ModPattern::~ModPattern()
 
 ModCell* ModPattern::createCell( uint16_t chanIdx, int16_t row )
 {
-	BOOST_ASSERT( ( row >= 0 ) && ( row <= 63 ) );
-	BOOST_ASSERT( chanIdx < m_channels.size() );
-	auto& track = m_channels.at( chanIdx );
+	BOOST_ASSERT_MSG( ( row >= 0 ) && ( row <= 63 ), "Row index out of range" );
+	BOOST_ASSERT_MSG( chanIdx < m_channels.size(), "Channel index out of range" );
+	auto& track = m_channels[ chanIdx ];
 	auto& cell = track.at( row );
 	if( cell ) {
 		return cell;
@@ -43,7 +43,7 @@ ModCell* ModPattern::cellAt( uint16_t chanIdx, int16_t row )
 	if( chanIdx >= m_channels.size() ) {
 		return nullptr;
 	}
-	return m_channels.at( chanIdx ).at( row );
+	return m_channels[ chanIdx ].at( row );
 }
 
 bool ModPattern::load( BinStream& str, uint8_t numChans )

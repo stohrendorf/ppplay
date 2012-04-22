@@ -52,7 +52,7 @@ S3mCell* S3mPattern::createCell( uint16_t chanIdx, int16_t row )
 	if( chanIdx >= m_channels.size() ) {
 		throw std::out_of_range("Invalid channel index");
 	}
-	auto& chan = m_channels.at( chanIdx );
+	auto& chan = m_channels[ chanIdx ];
 	auto& cell = chan.at( row );
 	if( cell != nullptr ) {
 		return cell;
@@ -66,7 +66,7 @@ S3mCell* S3mPattern::cellAt( uint16_t chanIdx, int16_t row )
 	if( row < 0 || chanIdx >= m_channels.size() ) {
 		return nullptr;
 	}
-	return m_channels.at( chanIdx ).at( row );
+	return m_channels[ chanIdx ].at( row );
 }
 
 bool S3mPattern::load( BinStream& str, size_t pos )

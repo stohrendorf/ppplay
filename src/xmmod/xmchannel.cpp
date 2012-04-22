@@ -631,7 +631,7 @@ void XmChannel::update( const ppp::xm::XmCell* cell, bool estimateOnly )
 		int8_t value = 0;
 		switch( m_vibratoCtrl & 3 ) {
 			case 0:
-				value = g_AutoVibTable.at( m_autoVibPhase );
+				value = g_AutoVibTable[ m_autoVibPhase ];
 				break;
 			case 1:
 				if( ( m_autoVibPhase & 0x80 ) == 0 ) {
@@ -1085,7 +1085,7 @@ void XmChannel::doVibrato()
 	uint8_t value = ( m_vibratoPhase >> 2 ) & 0x1f;
 	switch( m_vibratoCtrl & 3 ) {
 		case 0:
-			value = g_VibTable.at( value );
+			value = g_VibTable[ value ];
 			break;
 		case 1:
 			value <<= 3;
@@ -1139,7 +1139,7 @@ void XmChannel::fxTremolo( uint8_t fxByte )
 	uint8_t value = ( m_tremoloPhase >> 2 ) & 0x1f;
 	switch( m_tremoloCtrl & 3 ) {
 		case 0:
-			value = g_VibTable.at( value );
+			value = g_VibTable[ value ];
 			break;
 		case 1:
 			value <<= 3;

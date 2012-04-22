@@ -143,7 +143,7 @@ void Label::setEscapedText( const std::string& txt )
 	std::string stripped;
 	std::vector<Color> fgc, bgc;
 	for( size_t i = 0; i < txt.length(); i++ ) {
-		if( txt.at( i ) == '{' ) {
+		if( txt[ i ] == '{' ) {
 			std::string colStr = getColorString( txt, i );
 			if( !colStr.empty() ) {
 				currentFg = extractFgColor( colStr );
@@ -152,7 +152,7 @@ void Label::setEscapedText( const std::string& txt )
 				continue;
 			}
 		}
-		stripped.push_back( txt.at( i ) );
+		stripped.push_back( txt[ i ] );
 		fgc.push_back( currentFg );
 		bgc.push_back( currentBg );
 	}
@@ -199,8 +199,9 @@ void Label::setBgColorRange( size_t pos, Color color, size_t len )
 
 void Label::drawThis()
 {
-	if( length() == 0 )
+	if( length() == 0 ) {
 		return;
+	}
 	int offset;
 	switch( alignment ) {
 		case Alignment::Left:
@@ -218,13 +219,16 @@ void Label::drawThis()
 	int w = area().width();
 	for( int localX = offset; localX < w; localX++ ) {
 		size_t textPos = localX - offset;
-		if( textPos >= length() )
+		if( textPos >= length() ) {
 			break;
-		drawChar( localX, 0, m_text.at( textPos ) );
-		if( m_fgColors.at( textPos ) != Color::None )
-			setFgColorAt( localX, 0, m_fgColors.at( textPos ) );
-		if( m_bgColors.at( textPos ) != Color::None )
-			setBgColorAt( localX, 0, m_bgColors.at( textPos ) );
+		}
+		drawChar( localX, 0, m_text[ textPos ] );
+		if( m_fgColors[ textPos ] != Color::None ) {
+			setFgColorAt( localX, 0, m_fgColors[ textPos ] );
+		}
+		if( m_bgColors.at( textPos ) != Color::None ) {
+			setBgColorAt( localX, 0, m_bgColors[ textPos ] );
+		}
 	}
 }
 

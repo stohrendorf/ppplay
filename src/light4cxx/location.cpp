@@ -115,7 +115,7 @@ std::string Location::toString( light4cxx::Level l, const light4cxx::Logger& log
 // 	const std::ios_base::fmtflags clearFlags = oss.flags();
 	int state = 0;
 	for( size_t i = 0; i < s_format.length(); i++ ) {
-		char c = s_format.at( i );
+		char c = s_format[ i ];
 		switch( state ) {
 			case 0:
 				// scan for %

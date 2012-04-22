@@ -326,16 +326,16 @@ void ModChannel::setCellPeriod()
 		return;
 	}
 	size_t perIdx = 0;
-	for( perIdx = 0; perIdx < fullPeriods.at( 0 ).size(); perIdx++ ) {
-		if( m_currentCell->period() >= fullPeriods.at( 0 ).at( perIdx ) ) {
+	for( perIdx = 0; perIdx < fullPeriods.front().size(); perIdx++ ) {
+		if( m_currentCell->period() >= fullPeriods.front().at( perIdx ) ) {
 			break;
 		}
 	}
-	if( perIdx >= fullPeriods.at( 0 ).size() ) {
+	if( perIdx >= fullPeriods.front().size() ) {
 		m_period = fullPeriods.at( m_finetune ).back();
 	}
 	else {
-		m_period = fullPeriods.at( m_finetune ).at( perIdx );
+		m_period = fullPeriods.at( m_finetune )[ perIdx ];
 	}
 // 	if( m_currentCell.effect() == 0x0e && highNibble( m_currentCell.effectValue() ) == 0x0d ) {
 		// note delay
@@ -548,7 +548,7 @@ void ModChannel::fxVibrato( uint8_t fxByte )
 	int16_t vibVal = 0;
 	switch( m_vibratoWaveform & 3 ) {
 		case 0: // sine
-			vibVal = WaveSine.at( m_vibratoPhase & 0x1f );
+			vibVal = WaveSine[ m_vibratoPhase & 0x1f ];
 			break;
 		case 1: // ramp
 			if( ( m_vibratoPhase & 0x20 ) != 0 ) {
@@ -631,8 +631,8 @@ void ModChannel::fxArpeggio( uint8_t fxByte )
 		delta = lowNibble( fxByte );
 	}
 	for( uint_fast8_t i = 0; i < fullPeriods.at( m_finetune ).size() - delta; i++ ) {
-		if( fullPeriods.at( m_finetune ).at( i ) <= m_period ) {
-			m_physPeriod = fullPeriods.at( m_finetune ).at( i + delta );
+		if( fullPeriods.at( m_finetune )[ i ] <= m_period ) {
+			m_physPeriod = fullPeriods.at( m_finetune )[ i + delta ];
 			return;
 		}
 	}
@@ -665,7 +665,7 @@ void ModChannel::fxTremolo( uint8_t fxByte )
 	int16_t vibVal = 0;
 	switch( m_tremoloWaveform & 3 ) {
 		case 0: // sine
-			vibVal = WaveSine.at( m_tremoloPhase & 0x1f );
+			vibVal = WaveSine[ m_tremoloPhase & 0x1f ];
 			break;
 		case 1: // ramp
 			if( ( m_vibratoPhase & 0x20 ) != 0 ) {

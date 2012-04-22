@@ -54,7 +54,7 @@ ModSample* ModModule::sampleAt( size_t idx ) const
 	if( idx >= m_samples.size() ) {
 		return nullptr;
 	}
-	return m_samples.at( idx );
+	return m_samples[ idx ];
 }
 
 namespace
@@ -231,7 +231,7 @@ size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
 		if(buf) {
 			MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
 			for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-				ModChannel* chan = m_channels.at( currTrack );
+				ModChannel* chan = m_channels[ currTrack ];
 				ModCell* cell = currPat->cellAt( currTrack, state().row );
 				chan->update( cell, false ); // m_patDelayCount != -1);
 				chan->mixTick( &mixerBuffer );
@@ -247,7 +247,7 @@ size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
 		}
 		else {
 			for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-				ModChannel* chan = m_channels.at( currTrack );
+				ModChannel* chan = m_channels[ currTrack ];
 				ModCell* cell = currPat->cellAt( currTrack, state().row );
 				chan->update( cell, false ); // m_patDelayCount != -1);
 				chan->mixTick( nullptr );
@@ -325,7 +325,7 @@ std::string ModModule::internal_channelCellString( size_t idx ) const
 	if( idx >= m_channels.size() ) {
 		throw std::out_of_range("Requested channel index out of range");
 	}
-	return m_channels.at( idx )->cellString();
+	return m_channels[ idx ]->cellString();
 }
 
 std::string ModModule::internal_channelStatus( size_t idx ) const
@@ -333,7 +333,7 @@ std::string ModModule::internal_channelStatus( size_t idx ) const
 	if( idx >= m_channels.size() ) {
 		throw std::out_of_range("Requested channel index out of range");
 	}
-	return m_channels.at( idx )->statusString();
+	return m_channels[ idx ]->statusString();
 }
 
 IArchive& ModModule::serialize( IArchive* data )
@@ -363,7 +363,7 @@ bool ModModule::existsSample( size_t idx ) const
 	if( idx == 0 || idx > 30 ) {
 		return false;
 	}
-	return m_samples.at( idx - 1 )->length() > 0;
+	return m_samples[ idx - 1 ]->length() > 0;
 }
 
 void ModModule::checkGlobalFx()
@@ -456,8 +456,10 @@ void ModModule::checkGlobalFx()
 
 ModPattern* ModModule::getPattern( size_t idx ) const
 {
-	//if( idx >= m_patterns.size() ) return ModPattern::Ptr();
-	return m_patterns.at( idx );
+	if( idx >= m_patterns.size() ) {
+		return nullptr;
+	}
+	return m_patterns[ idx ];
 }
 
 light4cxx::Logger::Ptr ModModule::logger()

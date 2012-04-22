@@ -93,7 +93,7 @@ std::string XmCell::noteString() const
 		return "===";
 	}
 	else if( m_note < KeyOffNote ) {
-		return stringFmt( "%s%d", NoteNames.at( ( m_note - 1 ) % 12 ), ( m_note - 1 ) / 12 );
+		return stringFmt( "%s%d", NoteNames[ ( m_note - 1 ) % 12 ], ( m_note - 1 ) / 12 );
 	}
 	else {
 		return "???";

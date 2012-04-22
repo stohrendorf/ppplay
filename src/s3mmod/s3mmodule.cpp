@@ -236,13 +236,13 @@ bool S3mModule::load( const std::string& fn )
 			if( pp == 0 )
 				continue;
 			m_samples.at( i ) = new S3mSample();
-			if( !( m_samples.at( i )->load( str, pp * 16, ( ( s3mHdr.createdWith >> 12 ) & 0x0f ) == s3mTIdImagoOrpheus ) ) ) {
+			if( !( m_samples[i]->load( str, pp * 16, ( ( s3mHdr.createdWith >> 12 ) & 0x0f ) == s3mTIdImagoOrpheus ) ) ) {
 				return false;
 			}
 			if( !str.good() ) {
 				return false;
 			}
-			schismTest |= m_samples.at( i )->isHighQuality();
+			schismTest |= m_samples[i]->isHighQuality();
 		}
 		if( schismTest != 0 ) {
 			logger()->info( L4CXX_LOCATION, "Enabling Schism Tracker compatibility mode" );
@@ -320,9 +320,10 @@ bool S3mModule::load( const std::string& fn )
 bool S3mModule::existsSample( int16_t idx )
 {
 	idx--;
-	if( !inRange<int>( idx, 0, m_samples.size() - 1 ) )
+	if( !inRange<int>( idx, 0, m_samples.size() - 1 ) ) {
 		return false;
-	return m_samples.at( idx ) != nullptr;
+	}
+	return m_samples[ idx ] != nullptr;
 }
 
 int S3mModule::internal_channelCount() const
@@ -513,7 +514,7 @@ try {
 	if( buf ) {
 		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
 		for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			S3mChannel* chan = m_channels.at( currTrack );
+			S3mChannel* chan = m_channels[ currTrack ];
 			BOOST_ASSERT( chan != nullptr );
 			const S3mCell* cell = currPat->cellAt( currTrack, state().row );
 			chan->update( cell, m_patDelayCount != -1, false );
@@ -530,7 +531,7 @@ try {
 	}
 	else {
 		for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			S3mChannel* chan = m_channels.at( currTrack );
+			S3mChannel* chan = m_channels[ currTrack ];
 			BOOST_ASSERT( chan!=nullptr );
 			const S3mCell* cell = currPat->cellAt( currTrack, state().row );
 			chan->update( cell, m_patDelayCount != -1, true );
@@ -634,7 +635,7 @@ S3mPattern* S3mModule::getPattern( size_t idx ) const
 	if( idx >= m_patterns.size() ) {
 		return nullptr;
 	}
-	return m_patterns.at( idx );
+	return m_patterns[ idx ];
 }
 
 light4cxx::Logger::Ptr S3mModule::logger()

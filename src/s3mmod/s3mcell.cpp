@@ -96,24 +96,36 @@ void S3mCell::clear()
 std::string S3mCell::trackerString() const
 {
 	std::string xmsg = "";
-	if( m_note == s3mEmptyNote )
+	if( m_note == s3mEmptyNote ) {
 		xmsg += "... ";
-	else if( m_note == s3mKeyOffNote )
+	}
+	else if( m_note == s3mKeyOffNote ) {
 		xmsg += "^^  ";
-	else
+	}
+	else {
 		xmsg += stringFmt( "%s%d ", NoteNames.at( m_note & 0x0f ), int(m_note >> 4) );
-	if( m_instr != s3mEmptyInstr )
+	}
+	
+	if( m_instr != s3mEmptyInstr ) {
 		xmsg += stringFmt( "%02d ", int(m_instr) );
-	else
+	}
+	else {
 		xmsg += ".. ";
-	if( m_volume != s3mEmptyVolume )
+	}
+	
+	if( m_volume != s3mEmptyVolume ) {
 		xmsg += stringFmt( "%02d ", int(m_volume) );
-	else
+	}
+	else {
 		xmsg += ".. ";
-	if( m_effect != s3mEmptyCommand )
+	}
+	
+	if( m_effect != s3mEmptyCommand ) {
 		xmsg += stringFmt( "%c%02x", char( 'A' - 1 + m_effect ), int(m_effectValue) );
-	else
+	}
+	else {
 		xmsg += "...";
+	}
 	return xmsg;
 }
 

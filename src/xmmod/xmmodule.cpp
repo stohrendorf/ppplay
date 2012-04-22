@@ -111,10 +111,7 @@ bool XmModule::load( const std::string& filename )
 	}
 	file.seek( hdr.headerSize + offsetof( XmHeader, headerSize ) );
 	{
-		std::string title = stringncpy( hdr.title, 20 );
-		while( title.length() > 0 && title.at( title.length() - 1 ) == ' ' )
-			title.erase( title.length() - 1, 1 );
-		metaInfo().title = title;
+		metaInfo().title = boost::algorithm::trim_copy( stringncpy( hdr.title, 20 ) );
 	}
 	m_restartPos = hdr.restartPos;
 	{
@@ -171,7 +168,7 @@ bool XmModule::load( const std::string& filename )
 		logger()->debug( L4CXX_LOCATION, "Initializing linear frequency table" );
 		uint16_t val = 121 * 16;
 		for( size_t i = 0; i < m_noteToPeriod.size(); i++ ) {
-			m_noteToPeriod.at( i ) = val * 4;
+			m_noteToPeriod[ i ] = val * 4;
 			val--;
 		}
 	}
@@ -191,7 +188,7 @@ size_t XmModule::internal_buildTick( AudioFrameBuffer* buffer )
 		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
 		XmPattern* currPat = m_patterns.at( state().pattern );
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			XmChannel* chan = m_channels.at( currTrack );
+			XmChannel* chan = m_channels[ currTrack ];
 			BOOST_ASSERT( chan!=nullptr );
 			XmCell* cell = currPat->cellAt( currTrack, state().row );
 			chan->update( cell, false );
@@ -209,7 +206,7 @@ size_t XmModule::internal_buildTick( AudioFrameBuffer* buffer )
 	else {
 		XmPattern* currPat = m_patterns.at( state().pattern );
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			XmChannel* chan = m_channels.at( currTrack );
+			XmChannel* chan = m_channels[ currTrack ];
 			BOOST_ASSERT( chan!=nullptr );
 			XmCell* cell = currPat->cellAt( currTrack, state().row );
 			chan->update( cell, true );
@@ -293,7 +290,7 @@ std::string XmModule::internal_channelCellString( size_t idx ) const
 {
 	XmChannel* x = m_channels.at( idx );
 	if( !x ) {
-		return "";
+		return std::string();
 	}
 	return x->cellString();
 }
@@ -308,7 +305,7 @@ const XmInstrument* XmModule::getInstrument( int idx ) const
 	if( !inRange<int>( idx, 1, m_instruments.size() ) ) {
 		return nullptr;
 	}
-	return m_instruments.at( idx - 1 );
+	return m_instruments[ idx - 1 ];
 }
 
 uint16_t XmModule::noteToPeriod( uint8_t note, int8_t finetune ) const
@@ -317,7 +314,7 @@ uint16_t XmModule::noteToPeriod( uint8_t note, int8_t finetune ) const
 	if( tuned >= m_noteToPeriod.size() ) {
 		return 0;
 	}
-	return clip<int>( m_noteToPeriod.at( tuned ), 1, 0x7cff );
+	return clip<int>( m_noteToPeriod[ tuned ], 1, 0x7cff );
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -490,7 +487,7 @@ uint32_t XmModule::periodToFrequency( uint16_t period ) const
 	else {
 		uint32_t tmp = 12 * 12 * 16 * 4 - period;
 		uint32_t div = 14 - tmp / ( 12 * 16 * 4 );
-		uint64_t res = static_cast<uint64_t>( 256.0f * 65536.0f * 8363.0f / pbFrq * g_linearMult.at( tmp % ( 12 * 16 * 4 ) ) * adjFac );
+		uint64_t res = static_cast<uint64_t>( 256.0f * 65536.0f * 8363.0f / pbFrq * g_linearMult[ tmp % ( 12 * 16 * 4 ) ] * adjFac );
 		res <<= 8;
 		res >>= div;
 		return res >> 32;

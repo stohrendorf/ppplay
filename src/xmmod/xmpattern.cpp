@@ -38,8 +38,8 @@ XmCell* XmPattern::createCell( uint16_t trackIndex, uint16_t row )
 {
 	BOOST_ASSERT( row < numRows() );
 	BOOST_ASSERT( trackIndex < numChannels() );
-	std::vector<XmCell*>* track = &m_columns.at( trackIndex );
-	XmCell*& cell = track->at( row );
+	std::vector<XmCell*>& track = m_columns[ trackIndex ];
+	XmCell*& cell = track[row];
 	if( cell ) {
 		return cell;
 	}
@@ -96,16 +96,10 @@ bool XmPattern::load( BinStream& str )
 	logger()->trace( L4CXX_LOCATION, "Header end: %#x", str.pos() );
 	str.seekrel( hdrLen - 9 ); // copied from schismtracker
 	if( packedSize == 0 ) {
-		/*		for(size_t i = 0; i < m_columns.size(); i++) {
-					m_columns.at(i).clear();
-					for(int r = 0; r < 64; r++) {
-						m_columns.at(i).push_back(XmCell::Ptr(new XmCell()));
-					}
-				}*/
 		return true;
 	}
 	for( uint16_t row = 0; row < rows; row++ ) {
-	for( auto& chan : m_columns ) {
+		for( auto& chan : m_columns ) {
 			XmCell* cell = new XmCell();
 			chan.at( row ) = cell;
 			if( !cell->load( str ) ) {
@@ -121,7 +115,7 @@ XmCell* XmPattern::cellAt( uint16_t column, uint16_t row )
 	if( column >= numChannels() || row >= numRows() ) {
 		return nullptr;
 	}
-	return m_columns.at( column ).at( row );
+	return m_columns[column][row];
 }
 
 size_t XmPattern::numRows() const
@@ -129,7 +123,7 @@ size_t XmPattern::numRows() const
 	if( numChannels() == 0 ) {
 		return 0;
 	}
-	return m_columns.at( 0 ).size();
+	return m_columns.front().size();
 }
 
 size_t XmPattern::numChannels() const
@@ -142,7 +136,7 @@ XmPattern* XmPattern::createDefaultPattern( int16_t chans )
 	XmPattern* result = new XmPattern( chans );
 	for( int i = 0; i < chans; i++ ) {
 		for( int r = 0; r < 64; r++ ) {
-			result->m_columns.at( i ).push_back( new XmCell() );
+			result->m_columns[i].push_back( new XmCell() );
 		}
 	}
 	return result;

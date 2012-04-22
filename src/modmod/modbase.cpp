@@ -26,7 +26,7 @@ namespace mod
 uint16_t noteIndexToPeriod( uint8_t index )
 {
 	constexpr std::array<uint16_t, 12> periods = {{1712, 1616, 1524, 1440, 1356, 1280, 1208, 1140, 1076, 1016, 960, 906}};
-	return periods.at( index % 12 ) >> ( index / 12 );
+	return periods[index % 12] >> ( index / 12 );
 }
 
 uint8_t periodToNoteIndex( uint16_t period )
@@ -161,16 +161,6 @@ const std::array<const std::array<const uint16_t, 5 * 12>, 16> fullPeriods = {{
 		}
 	}
 };
-
-uint16_t findPeriod( uint16_t period, uint8_t finetune )
-{
-	for( auto val : fullPeriods.front() ) {
-		if( period >= val ) {
-			return val;
-		}
-	}
-	return 0;
-}
 
 }
 }

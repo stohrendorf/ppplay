@@ -151,7 +151,7 @@ void XmEnvelopeProcessor::setPosition( uint8_t pos )
 	m_position = pos - 1;
 	if( m_numPoints <= 1 ) {
 		m_currentRate = 0;
-		m_currentValue = m_points.at( 0 ).value;
+		m_currentValue = m_points.front().value;
 	}
 	else {
 		int foundPoint;
