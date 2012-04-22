@@ -42,7 +42,7 @@ private:
 	ppg::Label* m_trackerInfo;
 	ppg::Label* m_modTitle;
 	ppg::ProgressBar* m_progress;
-	ppp::GenModule::WeakPtr m_module;
+	std::weak_ptr<ppp::GenModule> m_module;
 	IAudioOutput::WeakPtr m_output;
 	boost::recursive_mutex m_timerMutex;
 	virtual void drawThis();

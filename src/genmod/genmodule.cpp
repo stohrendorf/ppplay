@@ -70,12 +70,6 @@ std::string GenModule::filename()
 	return path.filename().native();
 }
 
-std::string GenModule::title() const
-{
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	return m_metaInfo.title;
-}
-
 std::string GenModule::trimmedTitle() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
@@ -92,12 +86,6 @@ size_t GenModule::length() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_songs.current().length;
-}
-
-std::string GenModule::trackerInfo() const
-{
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	return m_metaInfo.trackerInfo;
 }
 
 bool GenModule::isMultiSong() const
@@ -181,8 +169,6 @@ bool GenModule::setOrder( size_t o, bool estimateOnly, bool forceSave )
 				else {
 					m_songs.current().states.append(new MemArchive())->archive(this).finishSave();
 					m_songs.current().states.next();
-// 					m_songs.current().states.newState()->archive( this ).finishSave();
-// 					m_songs.current().states.nextState();
 				}
 			}
 		}
@@ -218,12 +204,6 @@ void GenModule::setSpeed( uint8_t s )
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if( s == 0 ) return;
 	m_state.speed = s;
-}
-
-size_t GenModule::position() const
-{
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	return m_state.playedFrames;
 }
 
 uint16_t GenModule::songCount() const
@@ -267,9 +247,9 @@ void GenModule::saveInitialState()
 bool GenModule::jumpNextOrder()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	IArchive::Ptr next = m_songs.current().states.next();
-	if( next ) {
+	if( !m_songs.current().states.atEnd() ) {
 		logger()->debug(L4CXX_LOCATION, "Already preprocessed - loading");
+		IArchive::Ptr next = m_songs.current().states.next();
 		next->archive( this ).finishLoad();
 		return true;
 	}
@@ -296,8 +276,8 @@ bool GenModule::jumpNextOrder()
 bool GenModule::jumpPrevOrder()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	if( IArchive::Ptr prev = m_songs.current().states.prev() ) {
-		prev->archive( this ).finishLoad();
+	if( !m_songs.current().states.atFront() ) {
+		m_songs.current().states.prev()->archive( this ).finishLoad();
 		return true;
 	}
 	return false;

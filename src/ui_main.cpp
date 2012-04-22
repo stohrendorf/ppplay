@@ -100,7 +100,7 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IA
 	m_modTitle->alignment = ppg::Label::Alignment::Center;
 	m_modTitle->setFgColorRange( 0, ppg::Color::BrightWhite, 0 );
 	m_modTitle->show();
-	m_trackerInfo->setText( stringFmt( "Tracker: %s - Channels: %d", module->trackerInfo(), int(module->channelCount()) ) );
+	m_trackerInfo->setText( stringFmt( "Tracker: %s - Channels: %d", std::const_pointer_cast<const ppp::GenModule>(module)->metaInfo().trackerInfo, int(module->channelCount()) ) );
 	if( module->isMultiSong() ) {
 		m_trackerInfo->setText( m_trackerInfo->text() + " - Multi-song" );
 	}
@@ -166,7 +166,7 @@ void UIMain::onTimer()
 {
 	boost::recursive_mutex::scoped_lock lock(m_timerMutex);
 	IAudioOutput::Ptr outLock( m_output.lock() );
-	const auto modLock( std::static_pointer_cast<const ppp::GenModule>( m_module.lock() ) );
+	const std::shared_ptr<const ppp::GenModule> modLock = std::const_pointer_cast<const ppp::GenModule>( m_module.lock() );
 	if( m_module.expired() || m_output.expired() ) {
 		logger()->trace( L4CXX_LOCATION, "Module expired" );
 		return;
@@ -180,7 +180,7 @@ void UIMain::onTimer()
 		logger()->trace( L4CXX_LOCATION, "Output device locked" );
 		ppg::SDLScreen::instance()->clear( ' ', ppg::Color::White, ppg::Color::Black );
 		m_volBar->shift( outLock->volumeLeft() >> 8, outLock->volumeRight() >> 8 );
-		size_t msecs = modLock->position() / 441;
+		size_t msecs = modLock->state().playedFrames / 441;
 		size_t msecslen = modLock->length() / 441;
 		const ppp::ModuleState state = modLock->state();
 		boost::format posStr = boost::format( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %02d:%02d.%02d/%02d:%02d.%02d" )
@@ -218,7 +218,7 @@ void UIMain::onTimer()
 			m_chanCells.at( i )->setText( modLock->channelCellString( i ) );
 		}
 		m_progress->setMax( modLock->length() );
-		m_progress->setValue( modLock->position() );
+		m_progress->setValue( modLock->state().playedFrames );
 	}
 	logger()->trace( L4CXX_LOCATION, "Drawing" );
 	ppg::SDLScreen::instance()->draw();

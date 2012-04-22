@@ -188,7 +188,7 @@ bool S3mModule::load( const std::string& fn )
 			default:
 				metaInfo().trackerInfo = stringFmt( "Unknown Tracker (%x) v", s3mHdr.createdWith >> 12 );
 		}
-		metaInfo().trackerInfo = stringFmt( "%s%x.%02x", trackerInfo(), ( s3mHdr.createdWith >> 8 ) & 0x0f, s3mHdr.createdWith & 0xff );
+		metaInfo().trackerInfo += stringFmt( "%x.%02x", ( s3mHdr.createdWith >> 8 ) & 0x0f, s3mHdr.createdWith & 0xff );
 		setTempo( s3mHdr.initialTempo );
 		//m_playbackInfo.speed = s3mHdr.initialSpeed;
 		setSpeed( s3mHdr.initialSpeed );
@@ -505,7 +505,7 @@ try {
 	state().pattern = orderAt( state().order )->index();
 	S3mPattern* currPat = getPattern( state().pattern );
 	if( !currPat ) {
-		logger()->error(L4CXX_LOCATION, "Did not find a pattern for current order");
+		// logger()->error(L4CXX_LOCATION, "Did not find a pattern for current order");
 		if(buf) {
 			buf->reset();
 		}
@@ -537,7 +537,6 @@ try {
 			chan->update( cell, m_patDelayCount != -1, true );
 		}
 	}
-	state().playedFrames += tickBufferLength();
 	nextTick();
 	if( !adjustPosition(!buf) ) {
 		logger()->info( L4CXX_LOCATION, "Song end reached: adjustPosition() failed" );
@@ -546,6 +545,7 @@ try {
 		}
 		return 0;
 	}
+	state().playedFrames += tickBufferLength();
 	return tickBufferLength();
 }
 catch( ... ) {

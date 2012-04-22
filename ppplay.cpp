@@ -313,7 +313,7 @@ int main( int argc, char* argv[] )
 			light4cxx::Logger::root()->info( L4CXX_LOCATION, "QuickMP3 Output Mode" );
 			MP3AudioOutput* mp3out = new MP3AudioOutput( module, config::filename + ".mp3" );
 			output.reset( mp3out );
-			mp3out->setID3( module->trimmedTitle(), PACKAGE_STRING, module->trackerInfo() );
+			mp3out->setID3( module->trimmedTitle(), PACKAGE_STRING, std::const_pointer_cast<const ppp::GenModule>(module)->metaInfo().trackerInfo );
 			if( 0 == mp3out->init( 44100 ) ) {
 				if( mp3out->errorCode() == IAudioOutput::OutputUnavailable ) {
 					light4cxx::Logger::root()->error( L4CXX_LOCATION, "LAME unavailable: Maybe cannot create MP3 File" );
@@ -330,7 +330,7 @@ int main( int argc, char* argv[] )
 			boost::progress_display progress(module->length(), std::cout, stringFmt("QuickMP3: %s\n", config::filename));
 			while( output->playing() ) {
 				boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
-				progress += module->position()-progress.count();
+				progress += std::const_pointer_cast<const ppp::GenModule>(module)->state().playedFrames-progress.count();
 			}
 		}
 #endif

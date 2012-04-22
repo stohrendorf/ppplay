@@ -87,11 +87,6 @@ public:
 	 */
 	std::string filename();
 	/**
-	 * @brief Returns the title
-	 * @return The title of the module
-	 */
-	std::string title() const;
-	/**
 	 * @brief Returns the title without left and right whitespaces
 	 * @return The trimmed title of the module
 	 */
@@ -112,19 +107,6 @@ public:
 	 * @see frequency()
 	 */
 	size_t length() const;
-	/**
-	 * @brief Get the current playback position in sample frames
-	 * @return m_playedFrames
-	 * @see length()
-	 * @see timeElapsed()
-	 * @see frequency()
-	 */
-	size_t position() const;
-	/**
-	 * @brief Get information about the tracker
-	 * @return Tracker type and version, i.e. "ScreamTracker v3.20"
-	 */
-	std::string trackerInfo() const;
 	/**
 	 * @brief Returns @c true if this module contains multiple songs
 	 * @return @c true if this is a multi-song
@@ -194,11 +176,11 @@ public:
 	 * @}
 	 */
 	//END
-	const ModuleMetaInfo& metaInfo() const
+	const ModuleMetaInfo metaInfo() const
 	{
 		return m_metaInfo;
 	}
-	const ModuleState& state() const
+	const ModuleState state() const
 	{
 		return m_state;
 	}
