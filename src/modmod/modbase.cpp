@@ -31,7 +31,7 @@ uint16_t noteIndexToPeriod( uint8_t index )
 
 uint8_t periodToNoteIndex( uint16_t period )
 {
-	for( uint8_t i = 0; i < 12 * 5; i++ ) {
+	for( uint_fast8_t i = 0; i < 12 * 5; i++ ) {
 		if( noteIndexToPeriod( i ) <= period ) {
 			return i;
 		}
@@ -164,9 +164,9 @@ const std::array<const std::array<const uint16_t, 5 * 12>, 16> fullPeriods = {{
 
 uint16_t findPeriod( uint16_t period, uint8_t finetune )
 {
-	for( uint8_t idx = 0; idx < fullPeriods.front().size(); idx++ ) {
-		if( period >= fullPeriods.front().at( idx ) ) {
-			return fullPeriods.at( finetune ).at( idx );
+	for( auto val : fullPeriods.front() ) {
+		if( period >= val ) {
+			return val;
 		}
 	}
 	return 0;

@@ -32,11 +32,8 @@ namespace ppp
 namespace s3m
 {
 
-S3mPattern::S3mPattern() : m_channels()
+S3mPattern::S3mPattern() : m_channels(32, std::vector<S3mCell*>( 64, nullptr ))
 {
-	for( uint8_t i = 0; i < 32; i++ ) {
-		m_channels.push_back( std::vector<S3mCell*>( 64, nullptr ) );
-	}
 }
 
 S3mPattern::~S3mPattern()

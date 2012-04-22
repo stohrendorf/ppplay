@@ -5,5 +5,4 @@ add_library(binstream STATIC
 	memarchive.cpp
 	iarchive.cpp
 	iserializable.cpp
-	stateiterator.cpp
 )

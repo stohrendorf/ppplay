@@ -211,7 +211,7 @@ void UIMain::onTimer()
 // 									) );
 // 		}
 		m_playbackInfo->setEscapedText( stringFmt( "{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", state.speed, state.tempo, state.globalVolume * 100 / 0x40 ) );
-		for( uint8_t i = 0; i < modLock->channelCount(); i++ ) {
+		for( int i = 0; i < modLock->channelCount(); i++ ) {
 			if( i >= 16 )
 				break;
 			m_chanInfos.at( i )->setText( modLock->channelStatus( i ) );

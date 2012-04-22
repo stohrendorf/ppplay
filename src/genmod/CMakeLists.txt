@@ -7,7 +7,6 @@ add_library(genmod STATIC
 	breseninter.cpp
 	ipatterncell.cpp
 	modulestate.cpp
-	songinfocontainer.cpp
 )
 
 # target_link_libraries(genmod binstream)

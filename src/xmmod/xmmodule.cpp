@@ -133,7 +133,7 @@ bool XmModule::load( const std::string& filename )
 	m_channels.clear();
 	for( int i = 0; i < hdr.numChannels; i++ )
 		m_channels.push_back( new XmChannel( this ) );
-	for( uint16_t i = 0; i < hdr.numPatterns; i++ ) {
+	for( uint_fast16_t i = 0; i < hdr.numPatterns; i++ ) {
 		XmPattern* pat = new XmPattern( hdr.numChannels );
 		m_patterns.push_back( pat );
 		if( !pat->load( file ) ) {
@@ -144,7 +144,7 @@ bool XmModule::load( const std::string& filename )
 	while( m_patterns.size() < 256 ) {
 		m_patterns.push_back( XmPattern::createDefaultPattern( hdr.numChannels ) );
 	}
-	for( uint16_t i = 0; i < hdr.numInstruments; i++ ) {
+	for( uint_fast16_t i = 0; i < hdr.numInstruments; i++ ) {
 		XmInstrument* ins = new XmInstrument();
 		m_instruments.push_back( ins );
 		if( !ins->load( file ) ) {
@@ -155,9 +155,9 @@ bool XmModule::load( const std::string& filename )
 	if( m_amiga ) {
 		logger()->debug( L4CXX_LOCATION, "Initializing Amiga period table" );
 		uint16_t destOfs = 0;
-		for( int16_t octave = 10; octave > 0; octave-- ) {
+		for( int octave = 10; octave > 0; octave-- ) {
 			uint16_t octaveMask = ~( 0xffff << ( 10 - octave ) );
-		for( uint16_t amigaVal : g_PeriodTable ) {
+			for( uint16_t amigaVal : g_PeriodTable ) {
 				amigaVal = ( ( amigaVal << 6 ) + octaveMask ) >> ( 11 - octave );
 				m_noteToPeriod.at( destOfs ) = m_noteToPeriod.at( destOfs + 1 ) = amigaVal;
 				destOfs += 2;
@@ -298,7 +298,7 @@ std::string XmModule::internal_channelCellString( size_t idx ) const
 	return x->cellString();
 }
 
-uint8_t XmModule::internal_channelCount() const
+int XmModule::internal_channelCount() const
 {
 	return m_channels.size();
 }

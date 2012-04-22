@@ -203,8 +203,8 @@ void SDLScreen::drawChar8( int x, int y, uint8_t c, uint32_t foreground, uint32_
 {
 	x <<= 3;
 	y <<= 3;
-	for( unsigned char py = 0; py < 8; py++ ) {
-		for( unsigned char px = 0; px < 8; px++ ) {
+	for( int py = 0; py < 8; py++ ) {
+		for( int px = 0; px < 8; px++ ) {
 			if( plFont88[c][py] & ( 0x80 >> px ) ) {
 				g_drawPixel( x + px, y + py, foreground );
 			}
@@ -219,8 +219,8 @@ void SDLScreen::drawChar16( int x, int y, uint8_t c, uint32_t foreground, uint32
 {
 	x <<= 3;
 	y <<= 4;
-	for( unsigned char py = 0; py < 16; py++ ) {
-		for( unsigned char px = 0; px < 8; px++ ) {
+	for( int py = 0; py < 16; py++ ) {
+		for( int px = 0; px < 8; px++ ) {
 			if( plFont816[c][py] & ( 0x80 >> px ) ) {
 				g_drawPixel( x + px, y + py, foreground );
 			}

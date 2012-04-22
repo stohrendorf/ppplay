@@ -82,7 +82,7 @@ protected:
 public:
 	virtual ~S3mModule();
 private:
-	virtual uint8_t internal_channelCount() const;
+	virtual int internal_channelCount() const;
 	virtual size_t internal_buildTick( AudioFrameBuffer* buf );
 	virtual std::string internal_channelStatus( size_t idx ) const;
 	virtual std::string internal_channelCellString( size_t idx ) const;

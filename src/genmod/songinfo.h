@@ -19,7 +19,8 @@
 #ifndef SONGINFO_H
 #define SONGINFO_H
 
-#include "stream/stateiterator.h"
+#include "stuff/trackingcontainer.h"
+#include "stream/iarchive.h"
 
 namespace ppp
 {
@@ -35,12 +36,12 @@ namespace ppp
  */
 struct SongInfo
 {
-	explicit SongInfo(const StateIterator& it) : states(it), length(0)
+	explicit SongInfo() : states(), length(0)
 	{
 	}
 	
 	//! @brief States for seeking
-	StateIterator states;
+	TrackingContainer<IArchive::Ptr> states;
 	//! @brief Length in sample frames
 	size_t length;
 };

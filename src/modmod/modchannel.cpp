@@ -325,7 +325,7 @@ void ModChannel::setCellPeriod()
 	if( m_currentCell->period() == 0 ) {
 		return;
 	}
-	uint8_t perIdx = 0;
+	size_t perIdx = 0;
 	for( perIdx = 0; perIdx < fullPeriods.at( 0 ).size(); perIdx++ ) {
 		if( m_currentCell->period() >= fullPeriods.at( 0 ).at( perIdx ) ) {
 			break;
@@ -357,7 +357,7 @@ void ModChannel::setTonePortaTarget()
 	if( m_currentCell->period() == 0 ) {
 		return;
 	}
-	uint8_t perIdx = 0;
+	size_t perIdx = 0;
 	for( perIdx = 0; perIdx < fullPeriods.at( m_finetune ).size(); perIdx++ ) {
 		if( m_currentCell->period() >= fullPeriods.at( m_finetune ).at( perIdx ) ) {
 			break;
@@ -630,7 +630,7 @@ void ModChannel::fxArpeggio( uint8_t fxByte )
 	else {
 		delta = lowNibble( fxByte );
 	}
-	for( uint8_t i = 0; i < fullPeriods.at( m_finetune ).size() - delta; i++ ) {
+	for( uint_fast8_t i = 0; i < fullPeriods.at( m_finetune ).size() - delta; i++ ) {
 		if( fullPeriods.at( m_finetune ).at( i ) <= m_period ) {
 			m_physPeriod = fullPeriods.at( m_finetune ).at( i + delta );
 			return;
@@ -730,9 +730,9 @@ void ModChannel::applyGlissando()
 		m_physPeriod = m_period;
 		return;
 	}
-	for( uint8_t i = 0; i < fullPeriods.at( m_finetune ).size(); i++ ) {
-		if( m_period >= fullPeriods.at( m_finetune ).at( i ) ) {
-			m_physPeriod = fullPeriods.at( m_finetune ).at( i );
+	for( auto val : fullPeriods.at( m_finetune ) ) {
+		if( m_period >= val ) {
+			m_physPeriod = val;
 			return;
 		}
 	}

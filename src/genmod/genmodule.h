@@ -21,9 +21,9 @@
 
 #include "modulemetainfo.h"
 #include "modulestate.h"
-#include "songinfocontainer.h"
-#include "stream/stateiterator.h"
 #include "output/iaudiosource.h"
+#include "stuff/trackingcontainer.h"
+#include "songinfo.h"
 
 namespace ppp
 {
@@ -51,9 +51,10 @@ private:
 	//! @brief Order list @note <b>Not initialized here!</b>
 	std::vector<GenOrder*> m_orders;
 	ModuleState m_state;
-	SongInfoContainer m_songs;
+	TrackingContainer<SongInfo> m_songs;
 	//! @brief Maximum module loops if module patterns are played multiple times
 	int m_maxRepeat;
+	IArchive::Ptr m_initialState;
 	mutable boost::recursive_mutex m_mutex;
 public:
 	//BEGIN Construction/destruction
@@ -206,7 +207,7 @@ public:
 	//! @copydoc internal_channelCellString
 	std::string channelCellString( size_t idx ) const;
 	//! @copydoc internal_channelCount
-	uint8_t channelCount() const;
+	int channelCount() const;
 	//! @copydoc internal_buildTick
 	size_t buildTick( AudioFrameBuffer* buf );
 protected:
@@ -308,7 +309,7 @@ private:
 	 * @brief Get the number of actually used channels
 	 * @return Number of actually used channels
 	 */
-	virtual uint8_t internal_channelCount() const = 0;
+	virtual int internal_channelCount() const = 0;
 	/**
 	 * @brief Get a tick
 	 * @param[out] buf Pointer to the destination buffer or @c NULL to to only length estimation

@@ -150,7 +150,7 @@ bool ModModule::load( const std::string& filename )
 		m_channels.push_back( new ModChannel( this ) );
 	}
 	stream.seek( 20 );
-	for( uint8_t i = 0; i < 31; i++ ) {
+	for( int i = 0; i < 31; i++ ) {
 		ModSample* smp = new ModSample();
 		m_samples.push_back( smp );
 		if( !smp->loadHeader( stream ) ) {
@@ -169,7 +169,7 @@ bool ModModule::load( const std::string& filename )
 		logger()->debug( L4CXX_LOCATION, "Song length: %d", int(songLen) );
 		uint8_t tmp;
 		stream.read( &tmp ); // skip the restart pos
-		for( uint8_t i = 0; i < songLen; i++ ) {
+		for( uint_fast8_t i = 0; i < songLen; i++ ) {
 			stream.read( &tmp );
 			if( tmp >= 64 ) {
 				continue;
@@ -184,7 +184,7 @@ bool ModModule::load( const std::string& filename )
 	}
 	stream.seekrel( 4 ); // skip the ID
 	logger()->debug( L4CXX_LOCATION, "%d patterns @ %#x", int(maxPatNum), stream.pos() );
-	for( uint8_t i = 0; i <= maxPatNum; i++ ) {
+	for( uint_fast8_t i = 0; i <= maxPatNum; i++ ) {
 		ModPattern* pat = new ModPattern();
 		m_patterns.push_back( pat );
 		logger()->debug(L4CXX_LOCATION, "Loading pattern %u", int(i));
@@ -230,7 +230,7 @@ size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
 		}
 		if(buf) {
 			MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
-			for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+			for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 				ModChannel* chan = m_channels.at( currTrack );
 				ModCell* cell = currPat->cellAt( currTrack, state().row );
 				chan->update( cell, false ); // m_patDelayCount != -1);
@@ -246,7 +246,7 @@ size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
 			}
 		}
 		else {
-			for( unsigned short currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+			for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 				ModChannel* chan = m_channels.at( currTrack );
 				ModCell* cell = currPat->cellAt( currTrack, state().row );
 				chan->update( cell, false ); // m_patDelayCount != -1);
@@ -353,7 +353,7 @@ IArchive& ModModule::serialize( IArchive* data )
 	return *data;
 }
 
-uint8_t ModModule::internal_channelCount() const
+int ModModule::internal_channelCount() const
 {
 	return m_channels.size();
 }
@@ -375,7 +375,7 @@ void ModModule::checkGlobalFx()
 			return;
 		// check for pattern loops
 		int patLoopCounter = 0;
-		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+		for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			ModCell* cell = currPat->cellAt( currTrack, state().row );
 			if( !cell ) continue;
 			if( cell->effect() == 0x0f ) continue;
@@ -412,7 +412,7 @@ void ModModule::checkGlobalFx()
 		}
 		// check for pattern delays
 		uint8_t patDelayCounter = 0;
-		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+		for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			ModCell* cell = currPat->cellAt( currTrack, state().row );
 			if( !cell ) continue;
 			if( cell->effect() == 0x0f ) continue;
@@ -430,7 +430,7 @@ void ModModule::checkGlobalFx()
 		else
 			m_patDelayCount = -1;
 		// now check for breaking effects
-		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+		for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			if( m_patLoopCount != -1 ) break;
 			ModCell* cell = currPat->cellAt( currTrack, state().row );
 			if( !cell ) continue;

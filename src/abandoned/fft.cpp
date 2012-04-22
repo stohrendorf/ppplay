@@ -58,11 +58,11 @@ constexpr bool reverseFFT = false;
 std::complex<float> cArr[inputLength];
 
 void DFFT() {
-	uint16_t j = 0;
-	for( uint16_t i = 0; i < inputLength - 1; i++ ) {
+	uint_fast16_t j = 0;
+	for( uint_fast16_t i = 0; i < inputLength - 1; i++ ) {
 		if( i < j )
 			std::swap( cArr[i], cArr[j] );
-		uint16_t k = inputLength2;
+		uint_fast16_t k = inputLength2;
 		while( k <= j ) {
 			j -= k;
 			k >>= 1;
@@ -73,8 +73,8 @@ void DFFT() {
 	for( uint8_t l = 0; l < inputBits; l++ ) {
 		std::complex<float> u( 1, 0 );
 		for( j = 0; j < ( 1 << l ); j++ ) {
-			for( uint16_t i = j; i < inputLength; i += 2 << l ) {
-				uint16_t i1 = i + ( 1 << l );
+			for( uint_fast16_t i = j; i < inputLength; i += 2 << l ) {
+				uint_fast16_t i1 = i + ( 1 << l );
 				std::complex<float> t1 = u * cArr[i1];
 				cArr[i1] = cArr[i] - t1;
 				cArr[i] += t1;
@@ -94,14 +94,14 @@ void DFFT() {
 }
 
 void prepare( BasicSample* smpPtr ) {
-	for( uint16_t i = 0; i < inputLength; i++ )
+	for( uint_fast16_t i = 0; i < inputLength; i++ )
 		cArr[i] = std::complex<float>( *( smpPtr += 2 ) / 32768.0f, 0 );
 }
 
 void post( AmpsData& amps ) {
 	amps.reset( new std::vector<uint16_t>( inputLength2 ) );
-	uint16_t* ampsPtr = &amps->front();
-	for( uint16_t i = 0; i < inputLength2; i++ ) {
+	uint_fast16_t* ampsPtr = &amps->front();
+	for( uint_fast16_t i = 0; i < inputLength2; i++ ) {
 		*( ampsPtr++ ) = abs( cArr[i] ) * sqrt( i );
 	}
 }

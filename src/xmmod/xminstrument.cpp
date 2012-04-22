@@ -105,17 +105,17 @@ bool XmInstrument::load( BinStream& str )
 	str.read( reinterpret_cast<char*>( &hdr2 ), sizeof( hdr2 ) );
 	std::copy( hdr2.indices, hdr2.indices + 96, m_map );
 	str.seek( startPos + hdr.size );
-	for( uint16_t i = 0; i < hdr.numSamples; i++ ) {
+	for( uint_fast16_t i = 0; i < hdr.numSamples; i++ ) {
 		XmSample* smp = new XmSample();
 		m_samples.at( i ) = smp;
 		smp->load( str );
 	}
-	for( uint16_t i = 0; i < hdr.numSamples; i++ ) {
+	for( uint_fast16_t i = 0; i < hdr.numSamples; i++ ) {
 		m_samples.at( i )->loadData( str );
 	}
 	m_title = stringncpy( hdr.name, 22 );
 	m_panEnvFlags = static_cast<XmEnvelopeProcessor::EnvelopeFlags>( hdr2.panType );
-	for( uint8_t i = 0; i < 12; i++ ) {
+	for( int i = 0; i < 12; i++ ) {
 		m_panPoints.at( i ).position = hdr2.panEnvelope[i].x;
 		m_panPoints.at( i ).value = hdr2.panEnvelope[i].y;
 	}
@@ -129,7 +129,7 @@ bool XmInstrument::load( BinStream& str )
 	m_volSustainPoint = hdr2.volSustainPoint;
 	m_panSustainPoint = hdr2.panSustainPoint;
 	m_fadeout = hdr2.volFadeout;
-	for( uint8_t i = 0; i < 12; i++ ) {
+	for( int i = 0; i < 12; i++ ) {
 		m_volPoints.at( i ).position = hdr2.volEnvelope[i].x;
 		m_volPoints.at( i ).value = hdr2.volEnvelope[i].y;
 	}

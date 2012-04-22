@@ -87,7 +87,7 @@ private:
 	virtual size_t internal_buildTick( AudioFrameBuffer* buffer );
 	virtual std::string internal_channelStatus( size_t ) const;
 	virtual std::string internal_channelCellString( size_t ) const;
-	virtual uint8_t internal_channelCount() const;
+	virtual int internal_channelCount() const;
 	/**
 	 * @brief Constructor
 	 * @param[in] maxRpt maximum repeat count per order

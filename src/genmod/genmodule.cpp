@@ -41,6 +41,7 @@ GenModule::GenModule( int maxRpt ) :
 	m_state(),
 	m_songs(),
 	m_maxRepeat(maxRpt),
+	m_initialState(new MemArchive()),
 	m_mutex()
 {
 	BOOST_ASSERT_MSG( maxRpt != 0, "Maximum repeat count may not be 0" );
@@ -173,13 +174,15 @@ bool GenModule::setOrder( size_t o, bool estimateOnly, bool forceSave )
 		logger()->info(L4CXX_LOCATION, "Order change%s to %d (pattern %d)", (forceSave ? " (forced save)" : ""), m_state.order, m_state.pattern );
 		try {
 			if(!estimateOnly) {
-				IArchive::Ptr state = m_songs.current().states.nextState();
-				if(state) {
+				if(!m_songs.current().states.atEnd()) {
+					IArchive::Ptr state = m_songs.current().states.next();
 					state->archive( this ).finishLoad();
 				}
 				else {
-					m_songs.current().states.newState()->archive( this ).finishSave();
-					m_songs.current().states.nextState();
+					m_songs.current().states.append(new MemArchive())->archive(this).finishSave();
+					m_songs.current().states.next();
+// 					m_songs.current().states.newState()->archive( this ).finishSave();
+// 					m_songs.current().states.nextState();
 				}
 			}
 		}
@@ -232,7 +235,7 @@ uint16_t GenModule::songCount() const
 int16_t GenModule::currentSongIndex() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	return m_songs.index();
+	return m_songs.where();
 }
 
 uint16_t GenModule::tickBufferLength() const
@@ -251,20 +254,20 @@ void GenModule::loadInitialState()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	logger()->info(L4CXX_LOCATION, "Loading initial state");
-	m_songs.initialState()->archive( this ).finishLoad();
+	m_initialState->archive( this ).finishLoad();
 }
 
 void GenModule::saveInitialState()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	logger()->info(L4CXX_LOCATION, "Storing initial state");
-	m_songs.initialState()->archive( this ).finishSave();
+	m_initialState->archive( this ).finishSave();
 }
 
 bool GenModule::jumpNextOrder()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	IArchive::Ptr next = m_songs.current().states.nextState();
+	IArchive::Ptr next = m_songs.current().states.next();
 	if( next ) {
 		logger()->debug(L4CXX_LOCATION, "Already preprocessed - loading");
 		next->archive( this ).finishLoad();
@@ -293,12 +296,11 @@ bool GenModule::jumpNextOrder()
 bool GenModule::jumpPrevOrder()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	IArchive::Ptr next = m_songs.current().states.prevState();
-	if( !next ) {
-		return false;
+	if( IArchive::Ptr prev = m_songs.current().states.prev() ) {
+		prev->archive( this ).finishLoad();
+		return true;
 	}
-	next->archive( this ).finishLoad();
-	return true;
+	return false;
 }
 
 bool GenModule::jumpNextSong()
@@ -309,13 +311,13 @@ bool GenModule::jumpNextSong()
 	
 	logger()->debug(L4CXX_LOCATION, "Trying to jump to next song");
 	if( !initialized() ) {
-		for( uint16_t i = 0; i < orderCount(); i++ ) {
+		for( size_t i = 0; i < orderCount(); i++ ) {
 			if( !orderAt(i)->isUnplayed() ) {
 				continue;
 			}
 			logger()->debug(L4CXX_LOCATION, "Found unplayed order %d pattern %d", i, 0+orderAt(i)->index());
-			m_songs.setIndex( m_songs.size() );
-			m_songs.append(SongInfo(StateIterator()));
+			m_songs.append();
+			++m_songs;
 			m_state.playedFrames = 0;
 			m_state.pattern = orderAt( i )->index();
 			setOrder( i, false );
@@ -325,16 +327,13 @@ bool GenModule::jumpNextSong()
 		setPaused( wasPaused );
 		return false;
 	}
-	
-	if( !isMultiSong() ) {
-		logger()->info( L4CXX_LOCATION, "This is not a multi-song" );
+	if(m_songs.atEnd()) {
 		setPaused( wasPaused );
 		return false;
 	}
-	
-	m_songs.setIndex( m_songs.index() + 1 );
-	m_songs.current().states.gotoFront();
-	m_songs.current().states.currentState()->archive( this ).finishLoad();
+	++m_songs;
+	m_songs.current().states.revert();
+	m_songs.current().states.current()->archive( this ).finishLoad();
 	//BOOST_ASSERT_MSG( orderAt( m_state.order ).use_count() > 0, "Current order is a nullptr" );
 	m_state.pattern = orderAt( m_state.order )->index();
 	setPaused( wasPaused );
@@ -348,13 +347,13 @@ bool GenModule::jumpPrevSong()
 		logger()->info( L4CXX_LOCATION, "This is not a multi-song" );
 		return false;
 	}
-	if( m_songs.index() == 0 ) {
+	if( m_songs.atFront() ) {
 		logger()->info( L4CXX_LOCATION, "Already on first song" );
 		return false;
 	}
-	m_songs.setIndex( m_songs.index() - 1 );
-	m_songs.current().states.gotoFront();
-	m_songs.current().states.currentState()->archive( this ).finishLoad();
+	--m_songs;
+	m_songs.current().states.revert();
+	m_songs.current().states.current()->archive( this ).finishLoad();
 	//state().pattern = orderAt( m_state.order ).index();
 	return true;
 }
@@ -368,7 +367,7 @@ bool GenModule::internal_initialize( uint32_t )
 	
 	logger()->info( L4CXX_LOCATION, "Calculating song lengths and preparing seek operations..." );
 	while( jumpNextSong() ) {
-		logger()->info( L4CXX_LOCATION, "Pre-processing song %d", m_songs.index()+1 );
+		logger()->info( L4CXX_LOCATION, "Pre-processing song %d", m_songs.where()+1 );
 		while( size_t len = buildTick( nullptr ) ) {
 			m_songs.current().length += len;
 		}
@@ -376,7 +375,8 @@ bool GenModule::internal_initialize( uint32_t )
 	}
 	logger()->info( L4CXX_LOCATION, "Lengths calculated, resetting module." );
 	loadInitialState();
-	m_songs.removeEmptySongs();
+	// FIXME m_songs.removeEmptySongs();
+	m_songs.revert();
 	return true;
 }
 
@@ -392,7 +392,7 @@ std::string GenModule::channelCellString( size_t idx ) const
 	return internal_channelCellString(idx);
 }
 
-uint8_t GenModule::channelCount() const
+int GenModule::channelCount() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return internal_channelCount();
