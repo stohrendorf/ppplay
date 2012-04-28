@@ -271,7 +271,7 @@ protected:
 	 * @brief Get the logger
 	 * @return Logger with name "module"
 	 */
-	static light4cxx::Logger::Ptr logger();
+	static light4cxx::Logger* logger();
 private:
 	virtual bool internal_initialize( uint32_t frq );
 	/**

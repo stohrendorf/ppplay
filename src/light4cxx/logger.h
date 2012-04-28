@@ -47,21 +47,17 @@ class Logger
 	Logger() = delete;
 public:
 	/**
-	 * @brief Class pointer
-	 */
-	typedef std::shared_ptr<Logger> Ptr;
-	/**
 	 * @brief Create a new or get an existing logger
 	 * @param[in] name The name of the new logger
 	 * @return Shared pointer to the new logger
 	 */
-	static Ptr get( const std::string& name );
+	static Logger* get( const std::string& name );
 	/**
 	 * @brief Get the root logger
 	 * @return Shared pointer to the root logger
 	 * @note The root logger will always be named "root"
 	 */
-	static Ptr root();
+	static Logger* root();
 	/**
 	 * @brief Get the logger's name
 	 * @return m_name

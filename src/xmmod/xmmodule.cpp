@@ -593,7 +593,7 @@ void XmModule::doPatDelay( uint8_t counter )
 	m_requestedPatternDelay = counter + 1;
 }
 
-light4cxx::Logger::Ptr XmModule::logger()
+light4cxx::Logger* XmModule::logger()
 {
 	return light4cxx::Logger::get( GenModule::logger()->name() + ".xm" );
 }

@@ -56,7 +56,7 @@ int GenOrder::increasePlaybackCount()
 	return ++m_playbackCount;
 }
 
-light4cxx::Logger::Ptr GenOrder::logger()
+light4cxx::Logger* GenOrder::logger()
 {
 	return light4cxx::Logger::get( "order" );
 }

@@ -133,7 +133,7 @@ uint16_t SDLAudioOutput::internal_volumeRight() const
 	return m_fifo.volumeRight();
 }
 
-light4cxx::Logger::Ptr SDLAudioOutput::logger()
+light4cxx::Logger* SDLAudioOutput::logger()
 {
 	return light4cxx::Logger::get( IAudioOutput::logger()->name() + ".sdl" );
 }

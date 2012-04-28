@@ -224,7 +224,7 @@ uint16_t GenModule::tickBufferLength() const
 	return frequency() * 5 / ( m_state.tempo << 1 );
 }
 
-light4cxx::Logger::Ptr GenModule::logger()
+light4cxx::Logger* GenModule::logger()
 {
 	return light4cxx::Logger::get( "module" );
 }

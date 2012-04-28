@@ -134,7 +134,7 @@ uint8_t ModSample::finetune() const
 	return m_finetune;
 }
 
-light4cxx::Logger::Ptr ModSample::logger()
+light4cxx::Logger* ModSample::logger()
 {
 	return light4cxx::Logger::get( GenSample::logger()->name() + ".mod" );
 }

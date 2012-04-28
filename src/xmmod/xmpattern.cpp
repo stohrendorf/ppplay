@@ -142,7 +142,7 @@ XmPattern* XmPattern::createDefaultPattern( int16_t chans )
 	return result;
 }
 
-light4cxx::Logger::Ptr XmPattern::logger()
+light4cxx::Logger* XmPattern::logger()
 {
 	return light4cxx::Logger::get( "pattern.xm" );
 }

@@ -100,7 +100,7 @@ size_t IAudioSource::getAudioData( AudioFrameBuffer& buffer, size_t requestedFra
 	return internal_getAudioData(buffer,requestedFrames);
 }
 
-light4cxx::Logger::Ptr IAudioSource::logger()
+light4cxx::Logger* IAudioSource::logger()
 {
 	return light4cxx::Logger::get( "audio.source" );
 }

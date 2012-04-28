@@ -147,7 +147,7 @@ void MP3AudioOutput::setID3( const std::string& title, const std::string& album,
 	id3tag_set_album( m_lameGlobalFlags, album.c_str() );
 }
 
-light4cxx::Logger::Ptr MP3AudioOutput::logger()
+light4cxx::Logger* MP3AudioOutput::logger()
 {
 	return light4cxx::Logger::get( IAudioOutput::logger()->name() + ".mp3" );
 }

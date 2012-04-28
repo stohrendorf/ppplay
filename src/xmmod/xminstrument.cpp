@@ -199,7 +199,7 @@ uint8_t XmInstrument::vibRate() const
 	return m_vibRate;
 }
 
-light4cxx::Logger::Ptr XmInstrument::logger()
+light4cxx::Logger* XmInstrument::logger()
 {
 	return light4cxx::Logger::get( "instrument.xm" );
 }

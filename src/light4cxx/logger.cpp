@@ -49,24 +49,24 @@ void Logger::setLevel( Level l )
 	s_level = l;
 }
 
-Logger::Ptr Logger::root()
+Logger* Logger::root()
 {
 	return get( "root" );
 }
 
-Logger::Ptr Logger::get( const std::string& name )
+Logger* Logger::get( const std::string& name )
 {
-	typedef std::unordered_map<std::string, Logger::Ptr> RepoMap; //!< @brief Maps logger names to their instances
+	typedef std::unordered_map<std::string, std::shared_ptr<Logger>> RepoMap; //!< @brief Maps logger names to their instances
 	static RepoMap s_repository; //!< @brief The logger repository
 	static boost::recursive_mutex lockMutex; //!< @brief Mutex for locking the repository
 	boost::recursive_mutex::scoped_lock lockGuard( lockMutex );
 
 	RepoMap::const_iterator elem = s_repository.find( name );
 	if( elem != s_repository.end() ) {
-		return elem->second;
+		return elem->second.get();
 	}
-	Ptr res( new Logger( name ) );
-	s_repository.insert( std::make_pair( name, res ) );
+	Logger* res = new Logger( name );
+	s_repository.insert( std::make_pair( name, std::shared_ptr<Logger>(res) ) );
 	return res;
 }
 

@@ -184,7 +184,7 @@ bool S3mSample::isHighQuality() const
 	return m_highQuality;
 }
 
-light4cxx::Logger::Ptr S3mSample::logger()
+light4cxx::Logger* S3mSample::logger()
 {
 	return light4cxx::Logger::get( GenSample::logger()->name() + ".s3m" );
 }

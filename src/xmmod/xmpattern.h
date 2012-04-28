@@ -95,7 +95,7 @@ protected:
 	 * @brief Get the logger
 	 * @return Child logger with attached ".xm"
 	 */
-	static light4cxx::Logger::Ptr logger();
+	static light4cxx::Logger* logger();
 };
 
 } // namespace xm

@@ -1212,7 +1212,7 @@ void S3mChannel::setPanning( uint8_t pan )
 	m_panning = pan;
 }
 
-light4cxx::Logger::Ptr S3mChannel::logger()
+light4cxx::Logger* S3mChannel::logger()
 {
 	return light4cxx::Logger::get( GenChannel::logger()->name() + ".s3m" );
 }

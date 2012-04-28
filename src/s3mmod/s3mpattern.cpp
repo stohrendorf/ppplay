@@ -105,7 +105,7 @@ bool S3mPattern::load( BinStream& str, size_t pos )
 	}
 }
 
-light4cxx::Logger::Ptr S3mPattern::logger()
+light4cxx::Logger* S3mPattern::logger()
 {
 	return light4cxx::Logger::get( "pattern.s3m" );
 }

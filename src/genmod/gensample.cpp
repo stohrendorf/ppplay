@@ -101,7 +101,7 @@ void GenSample::setVolume( uint8_t v )
 	m_volume = v;
 }
 
-light4cxx::Logger::Ptr GenSample::logger()
+light4cxx::Logger* GenSample::logger()
 {
 	return light4cxx::Logger::get( "sample" );
 }

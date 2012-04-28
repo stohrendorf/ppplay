@@ -30,7 +30,7 @@
 
 namespace
 {
-light4cxx::Logger::Ptr logger = light4cxx::Logger::get( "ppg.sdl" );
+light4cxx::Logger* logger = light4cxx::Logger::get( "ppg.sdl" );
 }
 
 /**

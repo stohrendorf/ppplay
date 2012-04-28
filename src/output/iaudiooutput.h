@@ -93,7 +93,7 @@ protected:
 	 * @brief Get the logger
 	 * @return Logger with name "audio.output"
 	 */
-	static light4cxx::Logger::Ptr logger();
+	static light4cxx::Logger* logger();
 private:
 	IAudioSource::WeakPtr m_source; //!< @brief The audio source
 	ErrorCode m_errorCode; //!< @brief Internal error code

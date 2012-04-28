@@ -205,7 +205,7 @@ protected:
 	 * @brief Get the logger
 	 * @return Logger with name "sample"
 	 */
-	static light4cxx::Logger::Ptr logger();
+	static light4cxx::Logger* logger();
 };
 
 inline BasicSampleFrame GenSample::sampleAt( PositionType& pos ) const

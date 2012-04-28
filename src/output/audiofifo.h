@@ -114,7 +114,7 @@ protected:
 	 * @brief Get the logger
 	 * @return Logger with name "audio.fifo"
 	 */
-	static light4cxx::Logger::Ptr logger();
+	static light4cxx::Logger* logger();
 };
 
 /**

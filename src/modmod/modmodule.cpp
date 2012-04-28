@@ -462,7 +462,7 @@ ModPattern* ModModule::getPattern( size_t idx ) const
 	return m_patterns[ idx ];
 }
 
-light4cxx::Logger::Ptr ModModule::logger()
+light4cxx::Logger* ModModule::logger()
 {
 	return light4cxx::Logger::get( GenModule::logger()->name() + ".mod" );
 }

@@ -638,7 +638,7 @@ S3mPattern* S3mModule::getPattern( size_t idx ) const
 	return m_patterns[ idx ];
 }
 
-light4cxx::Logger::Ptr S3mModule::logger()
+light4cxx::Logger* S3mModule::logger()
 {
 	return light4cxx::Logger::get( GenModule::logger()->name() + ".s3m" );
 }

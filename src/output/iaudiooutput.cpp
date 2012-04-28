@@ -102,7 +102,7 @@ uint16_t IAudioOutput::volumeRight() const
 	return internal_volumeRight();
 }
 
-light4cxx::Logger::Ptr IAudioOutput::logger()
+light4cxx::Logger* IAudioOutput::logger()
 {
 	return light4cxx::Logger::get( "audio.output" );
 }

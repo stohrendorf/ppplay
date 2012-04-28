@@ -134,7 +134,7 @@ void GenChannel::updateStatus()
 	internal_updateStatus();
 }
 
-light4cxx::Logger::Ptr GenChannel::logger()
+light4cxx::Logger* GenChannel::logger()
 {
 	return light4cxx::Logger::get( "channel" );
 }

@@ -20,7 +20,7 @@
 
 #include "ppg/sdlscreen.h"
 
-static light4cxx::Logger::Ptr logger()
+static light4cxx::Logger* logger()
 {
 	return light4cxx::Logger::get( "ui.main" );
 }

@@ -85,7 +85,7 @@ protected:
 	 * @brief Get the logger
 	 * @return Child logger with attached ".mp3"
 	 */
-	static light4cxx::Logger::Ptr logger();
+	static light4cxx::Logger* logger();
 };
 
 /**

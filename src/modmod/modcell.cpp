@@ -144,7 +144,7 @@ IArchive& ModCell::serialize( IArchive* data )
 	return *data;
 }
 
-light4cxx::Logger::Ptr ModCell::logger()
+light4cxx::Logger* ModCell::logger()
 {
 	return light4cxx::Logger::get( IPatternCell::logger()->name() + ".mod" );
 }

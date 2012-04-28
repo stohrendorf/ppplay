@@ -739,7 +739,7 @@ void ModChannel::applyGlissando()
 	m_physPeriod = fullPeriods.at( m_finetune ).back();
 }
 
-light4cxx::Logger::Ptr ModChannel::logger()
+light4cxx::Logger* ModChannel::logger()
 {
 	return light4cxx::Logger::get( GenChannel::logger()->name() + ".mod" );
 }

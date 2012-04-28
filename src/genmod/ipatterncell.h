@@ -59,7 +59,7 @@ protected:
 	 * @brief Get the logger
 	 * @return Logger with name "cell"
 	 */
-	static light4cxx::Logger::Ptr logger();
+	static light4cxx::Logger* logger();
 };
 
 /**

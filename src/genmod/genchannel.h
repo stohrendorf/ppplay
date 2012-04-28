@@ -121,18 +121,10 @@ protected:
 	 */
 	void setStatusString( const std::string& s );
 	/**
-	 * @overload
-	 * @brief Sets m_statusString
-	 * @param[in] fmt The new string
-	 */
-	inline void setStatusString( const boost::format& fmt ) {
-		setStatusString( fmt.str() );
-	}
-	/**
 	 * @brief Get the logger
 	 * @return Logger with name "channel"
 	 */
-	static light4cxx::Logger::Ptr logger();
+	static light4cxx::Logger* logger();
 private:
 	/**
 	 * @brief Get the name of the note

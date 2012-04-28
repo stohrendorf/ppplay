@@ -165,7 +165,7 @@ IArchive& S3mCell::serialize( IArchive* data )
 	return *data;
 }
 
-light4cxx::Logger::Ptr S3mCell::logger()
+light4cxx::Logger* S3mCell::logger()
 {
 	return light4cxx::Logger::get( IPatternCell::logger()->name() + ".s3m" );
 }
