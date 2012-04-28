@@ -102,7 +102,7 @@ public:
 	 */
 	uint32_t frequency() const;
 	inline bool paused() const;
-	inline void setPaused(bool p = true);
+	inline void setPaused( bool p = true );
 	//! @copydoc @internal_getAudioData
 	size_t getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames );
 	//! @copydoc @internal_preferredBufferSize
@@ -118,15 +118,17 @@ protected:
 	 * @brief Get the logger
 	 * @return Logger with name "audio.source"
 	 */
-	static light4cxx::Logger* logger();
+	light4cxx::Logger* logger();
 };
 
-bool IAudioSource::paused() const {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+bool IAudioSource::paused() const
+{
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_paused;
 }
-void IAudioSource::setPaused(bool p) {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+void IAudioSource::setPaused( bool p )
+{
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	m_paused = p;
 }
 

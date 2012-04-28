@@ -39,8 +39,7 @@ public:
 	/**
 	 * @brief Default constructor, sets m_x and m_y to 0
 	 */
-	constexpr Point() : m_x( 0 ), m_y( 0 )
-	{
+	constexpr Point() : m_x( 0 ), m_y( 0 ) {
 	}
 	/**
 	 * @overload
@@ -48,8 +47,7 @@ public:
 	 * @param[in] x Value for m_x
 	 * @param[in] y Value for m_y
 	 */
-	constexpr Point( int x, int y ) : m_x( x ), m_y( y )
-	{
+	constexpr Point( int x, int y ) : m_x( x ), m_y( y ) {
 	}
 	/**
 	 * @brief Adds the coordinates of @a rhs to this

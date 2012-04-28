@@ -86,7 +86,7 @@ bool Widget::setPosition( const Point& pos, bool absolute )
 
 int Widget::setWidth( int w )
 {
-	if( w>0 ) {
+	if( w > 0 ) {
 		m_area.setWidth( w );
 	}
 	return m_area.width();
@@ -94,7 +94,7 @@ int Widget::setWidth( int w )
 
 int Widget::setHeight( int h )
 {
-	if( h>0 ) {
+	if( h > 0 ) {
 		m_area.setHeight( h );
 	}
 	return m_area.height();

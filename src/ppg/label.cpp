@@ -66,7 +66,7 @@ namespace
  */
 std::string getColorString( const std::string& str, size_t start )
 {
-	if( start>=str.length() || str[start]!='{' ) {
+	if( start >= str.length() || str[start] != '{' ) {
 		return std::string();
 	}
 	size_t end = str.find( '}', start );

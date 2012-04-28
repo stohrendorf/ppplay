@@ -31,7 +31,7 @@ namespace ppg
 ProgressBar::ProgressBar( Widget* parent, size_t maxVal, int w ): Widget( parent ), m_maxVal( maxVal ), m_value( 0 ), m_fgColor( Color::White ), m_bgColor( Color::None )
 {
 	Widget::setHeight( 1 );
-	setWidth( std::max(w,2) );
+	setWidth( std::max( w, 2 ) );
 }
 
 ProgressBar::~ProgressBar() = default;
@@ -64,7 +64,7 @@ void ProgressBar::setValue( size_t val )
 void ProgressBar::drawThis()
 {
 	int w = area().width();
-	const int pos = m_maxVal==0 ? 0 : ( w - 2 ) * m_value / m_maxVal;
+	const int pos = m_maxVal == 0 ? 0 : ( w - 2 ) * m_value / m_maxVal;
 	for( int i = 0; i < w; i++ ) {
 		if( i == 0 ) {
 			drawChar( i, 0, '[' );

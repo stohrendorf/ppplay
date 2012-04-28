@@ -43,8 +43,8 @@ void ModuleRegistry::registerLoader( LoadFunc func )
 GenModule::Ptr ModuleRegistry::tryLoad( const std::string& filename, uint32_t frq, int maxRpt )
 {
 	GenModule::Ptr result;
-	for( const LoadFunc & func : instance().m_loaders ) {
-		if(( result = func( filename, frq, maxRpt ) )) {
+	for( const LoadFunc& func : instance().m_loaders ) {
+		if( ( result = func( filename, frq, maxRpt ) ) ) {
 			break;
 		}
 	}

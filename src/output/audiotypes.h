@@ -71,8 +71,7 @@ struct BasicSampleFrame {
 		right = ( right * mulRight ) >> shift;
 	}
 
-	constexpr BasicSampleFrame() : left(0), right(0)
-	{
+	constexpr BasicSampleFrame() : left( 0 ), right( 0 ) {
 	}
 };
 #pragma pack(pop)
@@ -118,8 +117,7 @@ struct MixerSampleFrame {
 		return result;
 	}
 
-	constexpr MixerSampleFrame() : left(0), right(0)
-	{
+	constexpr MixerSampleFrame() : left( 0 ), right( 0 ) {
 	}
 };
 #pragma pack(pop)

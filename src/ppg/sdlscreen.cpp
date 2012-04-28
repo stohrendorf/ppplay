@@ -117,7 +117,7 @@ static inline void g_drawPixel( int x, int y, Uint32 color )
 SDLScreen::SDLScreen( int w, int h, const std::string& title ) : Widget( nullptr ), m_cursorX( 0 ), m_cursorY( 0 )
 {
 	if( g_screenSurface != nullptr ) {
-		throw std::runtime_error("SDL Screen Surface already aquired");
+		throw std::runtime_error( "SDL Screen Surface already aquired" );
 	}
 	if( !SDL_WasInit( SDL_INIT_VIDEO ) ) {
 		if( SDL_Init( SDL_INIT_VIDEO ) == -1 ) {
@@ -131,12 +131,6 @@ SDLScreen::SDLScreen( int w, int h, const std::string& title ) : Widget( nullptr
 		if( info->vfmt ) {
 			bestBpp = info->vfmt->BitsPerPixel;
 		}
-// 			if( info->hw_available ) {
-// 				bestFlags |= SDL_HWSURFACE;
-// 			}
-// 			else {
-// 				bestFlags |= SDL_SWSURFACE;
-// 			}
 	}
 	g_screenSurface = SDL_SetVideoMode( w * 8, h * 16, bestBpp, bestFlags );
 	if( !g_screenSurface ) {
@@ -258,9 +252,9 @@ void SDLScreen::drawThis()
 	}
 	{
 		size_t size = w * h;
-		std::copy( g_chars, g_chars + size, g_currentChars );
-		std::copy( g_colorsF, g_colorsF + size, g_currentColorsF );
-		std::copy( g_colorsB, g_colorsB + size, g_currentColorsB );
+		std::copy_n( g_chars, size, g_currentChars );
+		std::copy_n( g_colorsF, size, g_currentColorsF );
+		std::copy_n( g_colorsB, size, g_currentColorsB );
 	}
 	if( hasMouseFocus() && area().contains( m_cursorX, m_cursorY ) ) {
 		size_t ofs = m_cursorX + m_cursorY * w;

@@ -165,8 +165,7 @@ public:
 	 * @param[in] pt Point to check
 	 * @return @c true if the area contains the point
 	 */
-	constexpr bool contains( const Point& pt ) const
-	{
+	constexpr bool contains( const Point& pt ) const {
 		return contains( pt.x(), pt.y() );
 	}
 	/**
@@ -175,8 +174,7 @@ public:
 	 * @param[in] y Y coordinate of the point
 	 * @return @c true if the area contains the point
 	 */
-	constexpr bool contains( int x, int y ) const
-	{
+	constexpr bool contains( int x, int y ) const {
 		return x >= m_topLeft.x() && x <= m_bottomRight.x() && y >= m_topLeft.y() && y <= m_bottomRight.y();
 	}
 };

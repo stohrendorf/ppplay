@@ -73,7 +73,7 @@ void AudioFifo::requestThread()
 		}
 		// continue if no data is available
 		if( src->paused() || m_queuedFrames >= m_minFrameCount ) {
-			logger()->trace(L4CXX_LOCATION, "FIFO filled, waiting..." );
+			logger()->trace( L4CXX_LOCATION, "FIFO filled, waiting..." );
 			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 			continue;
 		}
@@ -86,7 +86,7 @@ void AudioFifo::requestThread()
 			continue;
 		}
 		src->getAudioData( buffer, size );
-		if( !src->paused() && (!buffer || buffer->empty()) ) {
+		if( !src->paused() && ( !buffer || buffer->empty() ) ) {
 			logger()->debug( L4CXX_LOCATION, "Audio source dry" );
 			continue;
 		}
@@ -99,12 +99,12 @@ void AudioFifo::requestThread()
 AudioFifo::AudioFifo( const IAudioSource::WeakPtr& source, size_t minFrameCount, bool doVolumeCalc ) :
 	m_queue(), m_queuedFrames( 0 ), m_minFrameCount( minFrameCount ),
 	m_requestThread(), m_source( source ), m_volLeftSum( 0 ), m_volRightSum( 0 ),
-	m_doVolumeCalc(doVolumeCalc), m_stopping(false), m_mutex()
+	m_doVolumeCalc( doVolumeCalc ), m_stopping( false ), m_mutex()
 {
 	BOOST_ASSERT_MSG( !source.expired(), "Invalid source passed to AudioFifo constructor" );
 	BOOST_ASSERT_MSG( minFrameCount >= 256, "Minimum frame count may not be less than 256" );
 	logger()->debug( L4CXX_LOCATION, "Created with %d frames minimum", minFrameCount );
-	m_requestThread = boost::thread( boost::bind(&AudioFifo::requestThread, this) );
+	m_requestThread = boost::thread( boost::bind( &AudioFifo::requestThread, this ) );
 	//m_requestThread.detach();
 }
 
@@ -118,11 +118,11 @@ AudioFifo::~AudioFifo()
 
 void AudioFifo::pushBuffer( const AudioFrameBuffer& buf )
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	// copy, because AudioFrameBuffer is a shared_ptr that may be modified
 	AudioFrameBuffer cp( new AudioFrameBuffer::element_type );
 	*cp = *buf;
-	if(m_doVolumeCalc) {
+	if( m_doVolumeCalc ) {
 		uint64_t left, right;
 		sumAbsValues( cp, left, right );
 		m_volLeftSum += left;
@@ -134,7 +134,7 @@ void AudioFifo::pushBuffer( const AudioFrameBuffer& buf )
 
 size_t AudioFifo::pullData( AudioFrameBuffer& data, size_t size )
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	if( size > m_queuedFrames ) {
 		logger()->trace( L4CXX_LOCATION, "Buffer underrun: Requested %d frames while only %d frames in queue", size, m_queuedFrames );
 		size = m_queuedFrames;
@@ -170,7 +170,7 @@ size_t AudioFifo::pullData( AudioFrameBuffer& data, size_t size )
 	if( data->size() != copied ) {
 		logger()->error( L4CXX_LOCATION, "Copied %d frames into a buffer with %d frames", copied, data->size() );
 	}
-	if(m_doVolumeCalc) {
+	if( m_doVolumeCalc ) {
 		uint64_t left, right;
 		sumAbsValues( data, left, right );
 		m_volLeftSum -= left;
@@ -182,22 +182,22 @@ size_t AudioFifo::pullData( AudioFrameBuffer& data, size_t size )
 
 size_t AudioFifo::queuedLength() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_queuedFrames;
 }
 
 bool AudioFifo::isEmpty() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_queuedFrames == 0;
 }
 
 uint16_t AudioFifo::volumeRight() const
 {
-	if(!m_doVolumeCalc) {
+	if( !m_doVolumeCalc ) {
 		return 0;
 	}
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	if( m_queuedFrames == 0 ) {
 		return 0;
 	}
@@ -206,10 +206,10 @@ uint16_t AudioFifo::volumeRight() const
 
 uint16_t AudioFifo::volumeLeft() const
 {
-	if(!m_doVolumeCalc) {
+	if( !m_doVolumeCalc ) {
 		return 0;
 	}
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	if( m_queuedFrames == 0 ) {
 		return 0;
 	}
@@ -218,20 +218,20 @@ uint16_t AudioFifo::volumeLeft() const
 
 void AudioFifo::setMinFrameCount( size_t len )
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	BOOST_ASSERT_MSG( len >= 256, "Frame count too low (minimum 256)" );
 	m_minFrameCount = len;
 }
 
 size_t AudioFifo::queuedChunkCount() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_queue.size();
 }
 
 size_t AudioFifo::minFrameCount() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_minFrameCount;
 }
 

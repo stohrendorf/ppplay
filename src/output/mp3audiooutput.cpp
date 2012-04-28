@@ -38,8 +38,8 @@ void MP3AudioOutput::encodeThread()
 			pause();
 			return;
 		}
-		
-		boost::recursive_mutex::scoped_lock lock(m_mutex);
+
+		boost::recursive_mutex::scoped_lock lock( m_mutex );
 		int res = lame_encode_buffer_interleaved( m_lameGlobalFlags, &buffer->front().left, buffer->size(), m_buffer, BufferSize );
 		if( res < 0 ) {
 			if( res == -1 ) {
@@ -67,7 +67,7 @@ MP3AudioOutput::MP3AudioOutput( const IAudioSource::WeakPtr& src, const std::str
 MP3AudioOutput::~MP3AudioOutput()
 {
 	m_encoderThread.join();
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	delete[] m_buffer;
 	m_buffer = nullptr;
 	lame_close( m_lameGlobalFlags );
@@ -129,8 +129,7 @@ int MP3AudioOutput::internal_init( int desiredFrq )
 		logger()->error( L4CXX_LOCATION, "LAME parameter initialization failed" );
 		return 0;
 	}
-	m_encoderThread = boost::thread( boost::bind(&MP3AudioOutput::encodeThread, this) );
-	//m_encoderThread.detach();
+	m_encoderThread = boost::thread( boost::bind( &MP3AudioOutput::encodeThread, this ) );
 	logger()->trace( L4CXX_LOCATION, "LAME initialized" );
 	return desiredFrq;
 }

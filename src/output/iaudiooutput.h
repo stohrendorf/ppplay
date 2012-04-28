@@ -54,8 +54,7 @@ public:
 	 * @brief Constructor
 	 * @param[in] src Pointer to an audio data source
 	 */
-	inline explicit IAudioOutput( const IAudioSource::WeakPtr& src ) : m_source( src ), m_errorCode( NoError ), m_mutex()
-	{
+	inline explicit IAudioOutput( const IAudioSource::WeakPtr& src ) : m_source( src ), m_errorCode( NoError ), m_mutex() {
 	}
 	//! @brief Destructor
 	virtual ~IAudioOutput();

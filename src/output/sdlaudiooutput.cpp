@@ -24,23 +24,23 @@
 void SDLAudioOutput::sdlAudioCallback( void* userdata, uint8_t* stream, int len_bytes )
 {
 	SDLAudioOutput* outpSdl = static_cast<SDLAudioOutput*>( userdata );
-	logger()->trace(L4CXX_LOCATION, "Requested %d bytes of data", len_bytes);
-	len_bytes -= sizeof(BasicSampleFrame) * outpSdl->getSdlData(reinterpret_cast<BasicSampleFrame*>(stream), len_bytes/sizeof(BasicSampleFrame));
-	std::fill_n(stream, len_bytes, 0);
+	logger()->trace( L4CXX_LOCATION, "Requested %d bytes of data", len_bytes );
+	len_bytes -= sizeof( BasicSampleFrame ) * outpSdl->getSdlData( reinterpret_cast<BasicSampleFrame*>( stream ), len_bytes / sizeof( BasicSampleFrame ) );
+	std::fill_n( stream, len_bytes, 0 );
 }
 
 size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	AudioFrameBuffer buffer;
 	size_t copied = m_fifo.pullData( buffer, numFrames );
 	if( copied == 0 ) {
-		logger()->trace(L4CXX_LOCATION, "Source did not return any data - input is dry");
+		logger()->trace( L4CXX_LOCATION, "Source did not return any data - input is dry" );
 		setErrorCode( InputDry );
 	}
 	numFrames -= copied;
-	if(numFrames != 0) {
-		logger()->trace(L4CXX_LOCATION, "Source provided not enough data: %d frames missing", numFrames);
+	if( numFrames != 0 ) {
+		logger()->trace( L4CXX_LOCATION, "Source provided not enough data: %d frames missing", numFrames );
 	}
 	std::copy( buffer->begin(), buffer->end(), data );
 	return copied;
@@ -49,7 +49,7 @@ size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
 SDLAudioOutput::SDLAudioOutput( const IAudioSource::WeakPtr& src ) :
 	IAudioOutput( src ),
 	m_mutex(),
-	m_fifo(src, 4096, true)
+	m_fifo( src, 4096, true )
 {
 	logger()->trace( L4CXX_LOCATION, "Created" );
 }

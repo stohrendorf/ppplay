@@ -27,19 +27,19 @@ IAudioOutput::~IAudioOutput() = default;
 
 IAudioOutput::ErrorCode IAudioOutput::errorCode() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_errorCode;
 }
 
 void IAudioOutput::setErrorCode( IAudioOutput::ErrorCode ec )
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	m_errorCode = ec;
 }
 
 IAudioSource::WeakPtr IAudioOutput::source() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_source;
 }
 
@@ -53,7 +53,7 @@ uint16_t IAudioOutput::internal_volumeLeft() const
 
 uint16_t IAudioOutput::internal_volumeRight() const
 {
-	IAudioSource::Ptr source(m_source.lock());
+	IAudioSource::Ptr source( m_source.lock() );
 	if( !m_source.expired() ) {
 		return source->volumeRight();
 	}
@@ -62,43 +62,43 @@ uint16_t IAudioOutput::internal_volumeRight() const
 
 int IAudioOutput::init( int desiredFrq )
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	return internal_init(desiredFrq);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
+	return internal_init( desiredFrq );
 }
 
 void IAudioOutput::pause()
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	internal_pause();
 }
 
 bool IAudioOutput::paused() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return internal_paused();
 }
 
 void IAudioOutput::play()
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	internal_play();
 }
 
 bool IAudioOutput::playing() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return internal_playing();
 }
 
 uint16_t IAudioOutput::volumeLeft() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return internal_volumeLeft();
 }
 
 uint16_t IAudioOutput::volumeRight() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return internal_volumeRight();
 }
 
