@@ -85,7 +85,7 @@ uint32_t GenModule::timeElapsed() const
 size_t GenModule::length() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	return m_songs.current().length;
+	return m_songs->length;
 }
 
 bool GenModule::isMultiSong() const
@@ -162,13 +162,12 @@ bool GenModule::setOrder( size_t o, bool estimateOnly, bool forceSave )
 		logger()->info(L4CXX_LOCATION, "Order change%s to %d (pattern %d)", (forceSave ? " (forced save)" : ""), m_state.order, m_state.pattern );
 		try {
 			if(!estimateOnly) {
-				if(!m_songs.current().states.atEnd()) {
-					IArchive::Ptr state = m_songs.current().states.next();
-					state->archive( this ).finishLoad();
+				if(!m_songs->states.atEnd()) {
+					m_songs->states.next()->archive( this ).finishLoad();
 				}
 				else {
-					m_songs.current().states.append(new MemArchive())->archive(this).finishSave();
-					m_songs.current().states.next();
+					m_songs->states.append(new MemArchive())->archive(this).finishSave();
+					m_songs->states.next();
 				}
 			}
 		}
@@ -247,10 +246,9 @@ void GenModule::saveInitialState()
 bool GenModule::jumpNextOrder()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	if( !m_songs.current().states.atEnd() ) {
+	if( !m_songs->states.atEnd() ) {
 		logger()->debug(L4CXX_LOCATION, "Already preprocessed - loading");
-		IArchive::Ptr next = m_songs.current().states.next();
-		next->archive( this ).finishLoad();
+		m_songs->states.next()->archive( this ).finishLoad();
 		return true;
 	}
 	// maybe not processed yet, so try to jump to the next order...
@@ -276,8 +274,8 @@ bool GenModule::jumpNextOrder()
 bool GenModule::jumpPrevOrder()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	if( !m_songs.current().states.atFront() ) {
-		m_songs.current().states.prev()->archive( this ).finishLoad();
+	if( !m_songs->states.atFront() ) {
+		m_songs->states.prev()->archive( this ).finishLoad();
 		return true;
 	}
 	return false;
@@ -312,8 +310,8 @@ bool GenModule::jumpNextSong()
 		return false;
 	}
 	++m_songs;
-	m_songs.current().states.revert();
-	m_songs.current().states.current()->archive( this ).finishLoad();
+	m_songs->states.revert();
+	m_songs->states.current()->archive( this ).finishLoad();
 	//BOOST_ASSERT_MSG( orderAt( m_state.order ).use_count() > 0, "Current order is a nullptr" );
 	m_state.pattern = orderAt( m_state.order )->index();
 	setPaused( wasPaused );
@@ -332,8 +330,8 @@ bool GenModule::jumpPrevSong()
 		return false;
 	}
 	--m_songs;
-	m_songs.current().states.revert();
-	m_songs.current().states.current()->archive( this ).finishLoad();
+	m_songs->states.revert();
+	m_songs->states.current()->archive( this ).finishLoad();
 	//state().pattern = orderAt( m_state.order ).index();
 	return true;
 }
@@ -349,7 +347,7 @@ bool GenModule::internal_initialize( uint32_t )
 	while( jumpNextSong() ) {
 		logger()->info( L4CXX_LOCATION, "Pre-processing song %d", m_songs.where()+1 );
 		while( size_t len = buildTick( nullptr ) ) {
-			m_songs.current().length += len;
+			m_songs->length += len;
 		}
 		logger()->info( L4CXX_LOCATION, "Song preprocessed, trying to jump to the next song." );
 	}
