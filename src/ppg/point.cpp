@@ -28,31 +28,11 @@ const Point& Point::operator+=( const Point& rhs )
 	return *this;
 }
 
-const Point Point::operator+( const Point& rhs ) const
-{
-	return Point( m_x + rhs.m_x, m_y + rhs.m_y );
-}
-
 const Point& Point::operator-=( const Point& rhs )
 {
 	m_x -= rhs.m_x;
 	m_y -= rhs.m_y;
 	return *this;
-}
-
-const Point Point::operator-( const Point& rhs ) const
-{
-	return Point( m_x - rhs.m_x, m_y - rhs.m_y );
-}
-
-void Point::setX( int x )
-{
-	m_x = x;
-}
-
-void Point::setY( int y )
-{
-	m_y = y;
 }
 
 }

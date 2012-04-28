@@ -88,7 +88,7 @@ inline constexpr uint8_t highNibble( uint8_t x )
  * @details
  * Reverts the bytes in @a data
  */
-void swapEndian( char data[], size_t size );
+extern void swapEndian( char data[], size_t size );
 
 /**
  * @overload
@@ -97,7 +97,7 @@ void swapEndian( char data[], size_t size );
  * @param[in,out] data Data to swap
  */
 template<class T>
-void swapEndian( T* data )
+inline void swapEndian( T* data )
 {
 	swapEndian( reinterpret_cast<char*>( data ), sizeof( T ) );
 }

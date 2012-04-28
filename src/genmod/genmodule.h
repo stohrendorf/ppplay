@@ -45,7 +45,7 @@ class GenModule : public ISerializable, public IAudioSource
 	DISABLE_COPY( GenModule )
 	GenModule() = delete;
 public:
-	typedef std::shared_ptr<GenModule> Ptr; //!< @brief Class pointer
+	typedef std::shared_ptr<GenModule> Ptr;
 private:
 	ModuleMetaInfo m_metaInfo;
 	//! @brief Order list @note <b>Not initialized here!</b>
@@ -54,7 +54,7 @@ private:
 	TrackingContainer<SongInfo> m_songs;
 	//! @brief Maximum module loops if module patterns are played multiple times
 	int m_maxRepeat;
-	IArchive::Ptr m_initialState;
+	IArchive* m_initialState;
 	mutable boost::recursive_mutex m_mutex;
 public:
 	//BEGIN Construction/destruction

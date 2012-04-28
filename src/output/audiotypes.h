@@ -130,6 +130,8 @@ struct MixerSampleFrame {
  * the front element.
  */
 typedef std::shared_ptr< std::vector<BasicSampleFrame> > AudioFrameBuffer;
+extern template class std::vector<BasicSampleFrame>;
+extern template class std::shared_ptr< std::vector<BasicSampleFrame> >;
 
 /**
  * @brief Shared pointer to a vector of MixerSampleFrame's
@@ -139,6 +141,8 @@ typedef std::shared_ptr< std::vector<BasicSampleFrame> > AudioFrameBuffer;
  * the front element.
  */
 typedef std::shared_ptr< std::vector<MixerSampleFrame> > MixerFrameBuffer;
+extern template class std::vector<MixerSampleFrame>;
+extern template class std::shared_ptr< std::vector<MixerSampleFrame> >;
 
 /**
  * @brief Double-ended queue of AudioFrameBuffer's
@@ -146,6 +150,7 @@ typedef std::shared_ptr< std::vector<MixerSampleFrame> > MixerFrameBuffer;
  * Used to create FIFO buffers.
  */
 typedef std::queue< AudioFrameBuffer > AudioFrameBufferQueue;
+extern template class std::queue<AudioFrameBuffer>;
 
 /**
  * @}

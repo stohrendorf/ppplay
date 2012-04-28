@@ -44,7 +44,7 @@ public:
 	/**
 	 * @brief Virtual default destructor
 	 */
-	virtual ~ITimer();
+	inline virtual ~ITimer();
 	/**
 	 * @brief The timer interval in milliseconds
 	 * @return The timer interval in milliseconds
@@ -55,6 +55,8 @@ public:
 	 */
 	virtual void onTimer() = 0;
 };
+
+inline ITimer::~ITimer() = default;
 
 /**
  * @}

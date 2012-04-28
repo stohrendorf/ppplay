@@ -26,7 +26,6 @@
 #include "genbase.h"
 #include "genorder.h"
 #include "stream/memarchive.h"
-#include "stuff/scopedcall.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>

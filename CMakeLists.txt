@@ -143,7 +143,7 @@ endif()
 target_link_libraries(ppplay rt)
 target_link_libraries(ppplay modmod xmmod s3mmod genmod audioout)
 target_link_libraries(ppplay utils binstream light4cxx)
-target_link_libraries(ppplay ppg timer)
+target_link_libraries(ppplay ppg sdltimer)
 
 #########
 # link libraries

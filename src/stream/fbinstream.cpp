@@ -50,4 +50,3 @@ size_t FBinStream::size() const
 {
 	return m_size;
 }
-

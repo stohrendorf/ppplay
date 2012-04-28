@@ -41,4 +41,6 @@ public:
 	virtual ~ISerializable() = 0;
 };
 
+inline ISerializable::~ISerializable() = default;
+
 #endif

@@ -41,7 +41,7 @@ struct SongInfo
 	}
 	
 	//! @brief States for seeking
-	TrackingContainer<IArchive::Ptr> states;
+	TrackingContainer<IArchive*> states;
 	//! @brief Length in sample frames
 	size_t length;
 };
@@ -51,5 +51,7 @@ struct SongInfo
  */
 
 }
+
+extern template class TrackingContainer<IArchive*>;
 
 #endif

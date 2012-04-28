@@ -239,7 +239,7 @@ void Widget::toTop( Widget* vp )
 
 bool Widget::onMouseMove( int x, int y )
 {
-	for( Widget * current : m_children ) {
+for( Widget * current : m_children ) {
 		if( !current ) {
 			continue;
 		}

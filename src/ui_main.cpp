@@ -168,58 +168,39 @@ void UIMain::onTimer()
 	IAudioOutput::Ptr outLock( m_output.lock() );
 	const std::shared_ptr<const ppp::GenModule> modLock = std::const_pointer_cast<const ppp::GenModule>( m_module.lock() );
 	if( m_module.expired() || m_output.expired() ) {
-		logger()->trace( L4CXX_LOCATION, "Module expired" );
+		logger()->trace( L4CXX_LOCATION, "Module or Output Device expired" );
 		return;
 	}
-	{
-		logger()->trace( L4CXX_LOCATION, "Updating" );
-		// this MUST be in its own scope so that the lock gets released
-		// before drawing. drawing may block.
-		//IAudioSource::LockGuard guard( modLock.get() );
-		logger()->trace( L4CXX_LOCATION, "Module locked" );
-		logger()->trace( L4CXX_LOCATION, "Output device locked" );
-		ppg::SDLScreen::instance()->clear( ' ', ppg::Color::White, ppg::Color::Black );
-		m_volBar->shift( outLock->volumeLeft() >> 8, outLock->volumeRight() >> 8 );
-		size_t msecs = modLock->state().playedFrames / 441;
-		size_t msecslen = modLock->length() / 441;
-		const ppp::ModuleState state = modLock->state();
-		boost::format posStr = boost::format( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %02d:%02d.%02d/%02d:%02d.%02d" )
-							   % state.order
-							   % state.pattern
-							   % state.row
-							   % ( msecs / 6000 )
-							   % ( msecs / 100 % 60 )
-							   % ( msecs % 100 )
-							   % ( msecslen / 6000 )
-							   % ( msecslen / 100 % 60 )
-							   % ( msecslen % 100 );
-		if( modLock->isMultiSong() ) {
-			posStr = boost::format( "%s \xf9 Song %d/%d" ) % posStr % ( modLock->currentSongIndex() + 1 ) % modLock->songCount();
-		}
-		m_position->setEscapedText( posStr.str() );
-// 		if(modLock->isMultiSong()) {
-// 			m_position->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d \xf9 Song %d/%d",
-// 									modLock->order(), modLock->patternIndex(), modLock->row(), msecs / 6000, msecs / 100 % 60, msecs % 100,
-// 									msecslen / 6000, msecslen / 100 % 60, msecslen % 100,
-// 									modLock->currentSongIndex() + 1, modLock->songCount()
-// 									) );
-// 		}
-// 		else {
-// 			m_position->setEscapedText( ppp::stringf( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %.2d:%.2d.%.2d/%.2d:%.2d.%.2d",
-// 									modLock->order(), modLock->patternIndex(), modLock->row(), msecs / 6000, msecs / 100 % 60, msecs % 100,
-// 									msecslen / 6000, msecslen / 100 % 60, msecslen % 100
-// 									) );
-// 		}
-		m_playbackInfo->setEscapedText( stringFmt( "{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", state.speed, state.tempo, state.globalVolume * 100 / 0x40 ) );
-		for( int i = 0; i < modLock->channelCount(); i++ ) {
-			if( i >= 16 )
-				break;
-			m_chanInfos.at( i )->setText( modLock->channelStatus( i ) );
-			m_chanCells.at( i )->setText( modLock->channelCellString( i ) );
-		}
-		m_progress->setMax( modLock->length() );
-		m_progress->setValue( modLock->state().playedFrames );
+	logger()->trace( L4CXX_LOCATION, "Updating" );
+	ppg::SDLScreen::instance()->clear( ' ', ppg::Color::White, ppg::Color::Black );
+	m_volBar->shift( outLock->volumeLeft() >> 8, outLock->volumeRight() >> 8 );
+	size_t msecs = modLock->state().playedFrames / 441;
+	size_t msecslen = modLock->length() / 441;
+	const ppp::ModuleState state = modLock->state();
+	std::string posStr = stringFmt( "{BrightWhite;}%3d{White;}(%3d){BrightWhite;}/%2d \xf9 %02d:%02d.%02d/%02d:%02d.%02d",
+							state.order,
+							state.pattern,
+							state.row,
+							msecs / 6000,
+							msecs / 100 % 60,
+							msecs % 100,
+							msecslen / 6000,
+							msecslen / 100 % 60,
+							msecslen % 100 );
+	if( modLock->isMultiSong() ) {
+		posStr += stringFmt( " \xf9 Song %d/%d", modLock->currentSongIndex() + 1, modLock->songCount());
 	}
+	m_position->setEscapedText( posStr );
+	m_playbackInfo->setEscapedText( stringFmt( "{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", state.speed, state.tempo, state.globalVolume * 100 / 0x40 ) );
+	for( int i = 0; i < modLock->channelCount(); i++ ) {
+		if( i >= 16 ) {
+			break;
+		}
+		m_chanInfos.at( i )->setText( modLock->channelStatus( i ) );
+		m_chanCells.at( i )->setText( modLock->channelCellString( i ) );
+	}
+	m_progress->setMax( modLock->length() );
+	m_progress->setValue( modLock->state().playedFrames );
 	logger()->trace( L4CXX_LOCATION, "Drawing" );
 	ppg::SDLScreen::instance()->draw();
 }

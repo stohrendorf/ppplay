@@ -63,6 +63,8 @@ light4cxx::Logger* GenOrder::logger()
 
 }
 
+template class std::vector<ppp::GenOrder*>;
+
 /**
  * @}
  */

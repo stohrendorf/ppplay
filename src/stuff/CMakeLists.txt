@@ -7,7 +7,7 @@ add_library(utils STATIC
 	stringutils.cpp
 )
 
-add_library(timer STATIC
-	itimer.cpp
+add_library(
+	sdltimer STATIC
 	sdltimer.cpp
 )

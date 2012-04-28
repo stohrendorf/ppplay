@@ -41,7 +41,6 @@ class ModModule : public GenModule
 	ModModule() = delete;
 	friend class ModChannel;
 public:
-	typedef std::shared_ptr<ModModule> Ptr; //!< @brief Class pointer
 	/**
 	 * @brief Factory method
 	 * @param[in] filename Module filename

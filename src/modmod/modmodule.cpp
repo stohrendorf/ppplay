@@ -22,14 +22,16 @@ namespace mod
 
 GenModule::Ptr ModModule::factory( const std::string& filename, uint32_t frequency, int maxRpt )
 {
-	ModModule::Ptr result( new ModModule( maxRpt ) );
+	ModModule* result = new ModModule( maxRpt );
 	if( !result->load( filename ) ) {
+		delete result;
 		return GenModule::Ptr();
 	}
 	if( !result->initialize( frequency ) ) {
+		delete result;
 		return GenModule::Ptr();
 	}
-	return result;
+	return GenModule::Ptr(result);
 }
 
 ModModule::ModModule( int maxRpt ): GenModule( maxRpt ),
@@ -109,7 +111,7 @@ IdMetaInfo findMeta( BinStream* stream )
 	char id[5];
 	stream->read( id, 4 );
 	id[4] = '\0';
-for( const IdMetaInfo & mi : idMetaData ) {
+	for( const IdMetaInfo & mi : idMetaData ) {
 		if( id == mi.id ) {
 			return mi;
 		}
@@ -205,16 +207,19 @@ bool ModModule::load( const std::string& filename )
 
 size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
 {
+	if(state().tick==0 && state().order >= orderCount()) {
+		if(buf) {
+			buf->reset();
+		}
+		return 0;
+	}
 	try {
-		//PPP_TEST(!buf);
 		if( buf && !buf->get() ) {
 			buf->reset( new AudioFrameBuffer::element_type );
 		}
 		if( state().tick == 0 ) {
 			checkGlobalFx();
 		}
-		//buf->resize(getTickBufLen());
-		//buf->clear();
 		if( orderAt( state().order )->playbackCount() >= maxRepeat() ) {
 			logger()->info( L4CXX_LOCATION, "Song end reached: Maximum repeat count reached" );
 			if(buf) {

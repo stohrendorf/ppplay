@@ -60,7 +60,9 @@ public:
 	 * @param[in] rhs The coordinates to add
 	 * @return New Point
 	 */
-	const Point operator+( const Point& rhs ) const;
+	constexpr const Point operator+( const Point& rhs ) const {
+		return Point( m_x + rhs.m_x, m_y + rhs.m_y );
+	}
 	/**
 	 * @brief Subtracts the coordinates of @a rhs from this
 	 * @param[in] rhs The coordinates to subtract
@@ -72,33 +74,37 @@ public:
 	 * @param[in] rhs The coordinates to subtract
 	 * @return New Point
 	 */
-	const Point operator-( const Point& rhs ) const;
+	constexpr const Point operator-( const Point& rhs ) const {
+		return Point( m_x - rhs.m_x, m_y - rhs.m_y );
+	}
 	/**
 	 * @brief Get the X coordinate
 	 * @return The X coordinate
 	 */
-	constexpr int x() const
-	{
+	constexpr int x() const {
 		return m_x;
 	}
 	/**
 	 * @brief Get the Y coordinate
 	 * @return The Y coordinate
 	 */
-	constexpr int y() const
-	{
+	constexpr int y() const {
 		return m_y;
 	}
 	/**
 	 * @brief Set the X coordinate
 	 * @param[in] x The new X coordinate
 	 */
-	void setX( int x );
+	inline void setX( int x ) {
+		m_x = x;
+	}
 	/**
 	 * @brief Set the Y coordinate
 	 * @param[in] y The new Y coordinate
 	 */
-	void setY( int y );
+	inline void setY( int y ) {
+		m_y = y;
+	}
 };
 
 }

@@ -73,7 +73,7 @@ public:
 	 * @return Reference to *this
 	 * @note Operation depends on m_loading
 	 */
-	template<class T> IArchive& operator%( T& data ) {
+	template<class T> inline IArchive& operator%( T& data ) {
 		if( m_loading ) {
 			m_stream->read( &data, 1 );
 		}
@@ -91,7 +91,7 @@ public:
 	 * @return Reference to *this
 	 * @note Operation depends on m_loading
 	 */
-	template<class T> IArchive& array( T* data, size_t count ) {
+	template<class T> inline IArchive& array( T* data, size_t count ) {
 		BOOST_ASSERT( data != nullptr );
 		if( m_loading ) {
 			m_stream->read( data, count );

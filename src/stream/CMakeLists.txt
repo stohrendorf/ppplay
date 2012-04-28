@@ -4,5 +4,4 @@ add_library(binstream STATIC
 	sbinstream.cpp
 	memarchive.cpp
 	iarchive.cpp
-	iserializable.cpp
 )

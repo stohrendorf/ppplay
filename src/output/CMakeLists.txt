@@ -1,4 +1,4 @@
-set(audioout_SRCS audiofifo.cpp iaudiosource.cpp iaudiooutput.cpp sdlaudiooutput.cpp)
+set(audioout_SRCS audiofifo.cpp iaudiosource.cpp iaudiooutput.cpp sdlaudiooutput.cpp audiotypes.cpp)
 if(${WITH_MP3LAME})
 	set(audioout_SRCS ${audioout_SRCS} mp3audiooutput.cpp)
 endif()

@@ -19,6 +19,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <boost/checked_delete.hpp>
+
 /**
  * @ingroup Common
  * @{
@@ -34,10 +36,10 @@
 	classname& operator=(const classname&) = delete;
 
 template<class T>
-inline void deleteAll(T& container)
+inline void deleteAll( T& container )
 {
-	for(auto& val : container) {
-		delete val;
+	for( auto & val : container ) {
+		boost::checked_delete(val);
 		val = nullptr;
 	}
 }

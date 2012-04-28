@@ -24,6 +24,8 @@
 
 #include "light4cxx/logger.h"
 
+#include <vector>
+
 namespace ppp
 {
 
@@ -79,7 +81,7 @@ protected:
 	 * @brief Get the logger
 	 * @return Logger with name "order"
 	 */
-	static light4cxx::Logger* logger();
+	light4cxx::Logger* logger();
 };
 
 /**
@@ -87,5 +89,7 @@ protected:
  */
 
 }
+
+extern template class std::vector<ppp::GenOrder*>;
 
 #endif

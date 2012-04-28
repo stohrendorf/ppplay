@@ -45,119 +45,125 @@ public:
 	 * @param[in] width The width of the area
 	 * @param[in] height The height of the area
 	 */
-	constexpr Rect( int x, int y, int width, int height ) : m_topLeft( x, y ), m_bottomRight( x + width - 1, y + height - 1 )
-	{
+	constexpr Rect( int x, int y, int width, int height ) : m_topLeft( x, y ), m_bottomRight( x + width - 1, y + height - 1 ) {
 	}
 	/**
 	 * @brief Get the top coordinate
 	 * @return The top coordinate
 	 */
-	constexpr int top() const
-	{
+	constexpr int top() const {
 		return m_topLeft.y();
 	}
 	/**
 	 * @brief Set the top coordinate
 	 * @param[in] top The top coordinate
 	 */
-	void setTop( int top );
+	inline void setTop( int top ) {
+		m_topLeft.setY( top );
+	}
 	/**
 	 * @brief Get the left coordinate
 	 * @return The left coordinate
 	 */
-	constexpr int left() const
-	{
+	constexpr int left() const {
 		return m_topLeft.x();
 	}
 	/**
 	 * @brief Set the left coordinate
 	 * @param[in] left The left coordinate
 	 */
-	void setLeft( int left );
+	inline void setLeft( int left ) {
+		m_topLeft.setX( left );
+	}
 	/**
 	 * @brief Get the bottom coordinate
 	 * @return The bottom coordinate
 	 */
-	constexpr int bottom() const
-	{
+	constexpr int bottom() const {
 		return m_bottomRight.y();
 	}
 	/**
 	 * @brief Set the bottom coordinate
 	 * @param[in] bottom The bottom coordinate
 	 */
-	void setBottom( int bottom );
+	inline void setBottom( int bottom ) {
+		m_bottomRight.setY( bottom );
+	}
 	/**
 	 * @brief Get the right coordinate
 	 * @return The right coordinate
 	 */
-	constexpr int right() const
-	{
+	constexpr int right() const {
 		return m_bottomRight.x();
 	}
 	/**
 	 * @brief Set the right coordinate
 	 * @param[in] right The right coordinate
 	 */
-	void setRight( int right );
+	inline void setRight( int right ) {
+		m_bottomRight.setX( right );
+	}
 	/**
 	 * @brief Get the area's width
 	 * @return The area's width
 	 */
-	constexpr int width() const
-	{
+	constexpr int width() const {
 		return m_bottomRight.x() - m_topLeft.x() + 1;
 	}
 	/**
 	 * @brief Set the area's width
 	 * @param[in] width The new area's width
 	 */
-	void setWidth( int width );
+	inline void setWidth( int width ) {
+		m_bottomRight.setX( m_topLeft.x() + width - 1 );
+	}
 	/**
 	 * @brief Get the area's height
 	 * @return The area's height
 	 */
-	constexpr int height() const
-	{
+	constexpr int height() const {
 		return m_bottomRight.y() - m_topLeft.y() + 1;
 	}
 	/**
 	 * @brief Set the area's height
 	 * @param[in] height The new area's height
 	 */
-	void setHeight( int height );
+	inline void setHeight( int height ) {
+		m_bottomRight.setY( m_topLeft.y() + height - 1 );
+	}
 	/**
 	 * @brief Get the top left point
 	 * @return The top left point
 	 */
-	constexpr Point topLeft() const
-	{
+	constexpr Point topLeft() const {
 		return m_topLeft;
 	}
 	/**
 	 * @overload
 	 * @return The top left point
 	 */
-	Point& topLeft();
+	inline Point& topLeft() {
+		return m_topLeft;
+	}
 	/**
 	 * @brief Get the bottom right point
 	 * @return The bottom right point
 	 */
-	constexpr Point bottomRight() const
-	{
+	constexpr Point bottomRight() const {
 		return m_bottomRight;
 	}
 	/**
 	 * @overload
 	 * @return The bottom right point
 	 */
-	Point& bottomRight();
+	inline Point& bottomRight() {
+		return m_bottomRight;
+	}
 	/**
 	 * @brief Get the area's size
 	 * @return The area's size
 	 */
-	constexpr Point size() const
-	{
+	constexpr Point size() const {
 		return Point( width(), height() );
 	}
 	/**
