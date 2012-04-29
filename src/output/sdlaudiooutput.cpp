@@ -26,7 +26,7 @@ void SDLAudioOutput::sdlAudioCallback( void* userdata, uint8_t* stream, int len_
 	SDLAudioOutput* outpSdl = static_cast<SDLAudioOutput*>( userdata );
 	logger()->trace( L4CXX_LOCATION, "Requested %d bytes of data", len_bytes );
 	len_bytes -= sizeof( BasicSampleFrame ) * outpSdl->getSdlData( reinterpret_cast<BasicSampleFrame*>( stream ), len_bytes / sizeof( BasicSampleFrame ) );
-	std::fill_n( stream, len_bytes, 0 );
+	std::fill_n( stream+len_bytes, len_bytes, 0 );
 }
 
 size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
@@ -89,10 +89,6 @@ int SDLAudioOutput::internal_init( int desiredFrq )
 		setErrorCode( OutputError );
 		return 0;
 	}
-	/*	LOG_TEST_ERROR(desired->freq != obtained->freq);
-		LOG_TEST_ERROR(desired->channels != obtained->channels);
-		LOG_TEST_ERROR(desired->format != obtained->format);
-		LOG_TEST_WARN(desired->samples != obtained->samples);*/
 	desiredFrq = desired->freq;
 	char driverName[256];
 	if( SDL_AudioDriverName( driverName, 255 ) ) {

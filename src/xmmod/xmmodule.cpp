@@ -72,252 +72,7 @@ static constexpr std::array<const uint16_t, 12 * 8> g_PeriodTable = {{
 		508, 505, 502, 498, 494, 491, 487, 484, 480, 477, 474, 470, 467, 463, 460, 457
 	}
 };
-#endif
 
-XmModule::XmModule( int maxRpt ):
-	GenModule( maxRpt ),
-	m_amiga( false ), m_patterns(), m_instruments(), m_channels(),
-	m_noteToPeriod(), m_jumpRow( ~0 ), m_jumpOrder( ~0 ),
-	m_isPatLoop( false ), m_doPatJump( false ), m_restartPos( 0 ),
-	m_currentPatternDelay( 0 ), m_requestedPatternDelay( 0 )
-{
-}
-
-XmModule::~XmModule()
-{
-	deleteAll(m_channels);
-	deleteAll(m_patterns);
-	deleteAll(m_instruments);
-}
-
-bool XmModule::load( const std::string& filename )
-{
-	XmHeader hdr;
-	FBinStream file( filename );
-	metaInfo().filename = filename;
-	file.read( reinterpret_cast<char*>( &hdr ), sizeof( hdr ) );
-	if( !std::equal( hdr.id, hdr.id + 17, "Extended Module: " ) || hdr.endOfFile != 0x1a /*|| hdr.numChannels > 32*/ ) {
-		logger()->warn( L4CXX_LOCATION, "XM Header invalid" );
-		return false;
-	}
-	if( hdr.version != 0x0104 ) {
-		logger()->warn( L4CXX_LOCATION, "Unsupported XM Version %#x", hdr.version );
-		return false;
-	}
-	for( int i = 0; i < ( hdr.songLength & 0xff ); i++ ) {
-		uint8_t tmp;
-		file.read( &tmp );
-		addOrder( new XmOrder( tmp ) );
-	}
-	file.seek( hdr.headerSize + offsetof( XmHeader, headerSize ) );
-	{
-		metaInfo().title = boost::algorithm::trim_copy( stringncpy( hdr.title, 20 ) );
-	}
-	m_restartPos = hdr.restartPos;
-	{
-		std::string tmp = boost::algorithm::trim_copy( stringncpy( hdr.trackerName, 20 ) );
-		if( !tmp.empty() ) {
-			metaInfo().trackerInfo = tmp;
-		}
-		else {
-			metaInfo().trackerInfo = "<unknown>";
-		}
-	}
-	setTempo( hdr.defaultTempo & 0xff );
-	setSpeed( hdr.defaultSpeed & 0xff );
-	state().globalVolume = 0x40;
-	m_amiga = ( hdr.flags & 1 ) == 0;
-	m_channels.clear();
-	for( int i = 0; i < hdr.numChannels; i++ )
-		m_channels.push_back( new XmChannel( this ) );
-	for( uint_fast16_t i = 0; i < hdr.numPatterns; i++ ) {
-		XmPattern* pat = new XmPattern( hdr.numChannels );
-		m_patterns.push_back( pat );
-		if( !pat->load( file ) ) {
-			logger()->error( L4CXX_LOCATION, "Pattern loading error" );
-			return false;
-		}
-	}
-	while( m_patterns.size() < 256 ) {
-		m_patterns.push_back( XmPattern::createDefaultPattern( hdr.numChannels ) );
-	}
-	for( uint_fast16_t i = 0; i < hdr.numInstruments; i++ ) {
-		XmInstrument* ins = new XmInstrument();
-		m_instruments.push_back( ins );
-		if( !ins->load( file ) ) {
-			logger()->error( L4CXX_LOCATION, "Instrument loading error" );
-			return false;
-		}
-	}
-	if( m_amiga ) {
-		logger()->debug( L4CXX_LOCATION, "Initializing Amiga period table" );
-		uint16_t destOfs = 0;
-		for( int octave = 10; octave > 0; octave-- ) {
-			uint16_t octaveMask = ~( 0xffff << ( 10 - octave ) );
-			for( uint16_t amigaVal : g_PeriodTable ) {
-				amigaVal = ( ( amigaVal << 6 ) + octaveMask ) >> ( 11 - octave );
-				m_noteToPeriod.at( destOfs ) = m_noteToPeriod.at( destOfs + 1 ) = amigaVal;
-				destOfs += 2;
-			}
-		}
-		for( size_t i = 0; i < (m_noteToPeriod.size()-1)/2; i++ ) {
-			m_noteToPeriod.at( i * 2 + 1 ) = ( m_noteToPeriod.at( i * 2 + 0 ) + m_noteToPeriod.at( i * 2 + 2 ) ) >> 1;
-		}
-	}
-	else {
-		logger()->debug( L4CXX_LOCATION, "Initializing linear frequency table" );
-		uint16_t val = 121 * 16;
-		for( size_t i = 0; i < m_noteToPeriod.size(); i++ ) {
-			m_noteToPeriod[ i ] = val * 4;
-			val--;
-		}
-	}
-	state().pattern = orderAt( 0 )->index();
-// 	addMultiSong( StateIterator() );
-// 	multiSongAt( 0 ).newState()->archive( this ).finishSave();
-// 	multiTrackAt(0).startOrder = playbackInfo().order;
-	return true;
-}
-
-size_t XmModule::internal_buildTick( AudioFrameBuffer* buffer )
-{
-	if( buffer && !buffer->get() ) {
-		buffer->reset( new AudioFrameBuffer::element_type );
-	}
-	if( buffer ) {
-		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
-		XmPattern* currPat = m_patterns.at( state().pattern );
-		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			XmChannel* chan = m_channels[ currTrack ];
-			BOOST_ASSERT( chan!=nullptr );
-			XmCell* cell = currPat->cellAt( currTrack, state().row );
-			chan->update( cell, false );
-			chan->mixTick( &mixerBuffer );
-		}
-		buffer->get()->resize( mixerBuffer->size() );
-		MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
-		BasicSampleFrame* bufPtr = &buffer->get()->front();
-		for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
-			*bufPtr = mixerBufferPtr->rightShiftClip( 2 );
-			bufPtr++;
-			mixerBufferPtr++;
-		}
-	}
-	else {
-		XmPattern* currPat = m_patterns.at( state().pattern );
-		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			XmChannel* chan = m_channels[ currTrack ];
-			BOOST_ASSERT( chan!=nullptr );
-			XmCell* cell = currPat->cellAt( currTrack, state().row );
-			chan->update( cell, true );
-			chan->mixTick( nullptr );
-		}
-	}
-	nextTick();
-	if( !adjustPosition( !buffer ) ) {
-		if( buffer ) {
-			buffer->reset();
-		}
-		return 0;
-	}
-	state().playedFrames += tickBufferLength();
-	return tickBufferLength();
-}
-
-bool XmModule::adjustPosition( bool estimateOnly )
-{
-	bool orderChanged = false;
-	if( state().tick == 0 ) {
-		if( m_requestedPatternDelay != 0 ) {
-			m_currentPatternDelay = m_requestedPatternDelay;
-			m_requestedPatternDelay = 0;
-		}
-		if( m_currentPatternDelay != 0 ) {
-			m_currentPatternDelay--;
-		}
-		if( m_isPatLoop || m_doPatJump ) {
-			if( m_isPatLoop ) {
-				m_isPatLoop = false;
-				setRow( m_jumpRow );
-			}
-			if( m_doPatJump ) {
-				setRow( m_jumpRow );
-				m_jumpRow = 0;
-				m_doPatJump = false;
-				m_jumpOrder++;
-				if( m_jumpOrder >= orderCount() ) {
-					m_jumpOrder = m_restartPos;
-				}
-				setOrder( m_jumpOrder, estimateOnly );
-				orderChanged = true;
-			}
-		}
-		else {
-			if( !isRunningPatDelay() ) {
-				XmPattern* currPat = m_patterns.at( state().pattern );
-				setRow( ( state().row + 1 ) % currPat->numRows() );
-				if( state().row == 0 ) {
-// 					if( state().order + 1 >= orderCount() ) {
-// 						return false;
-// 					}
-					setOrder( state().order + 1, estimateOnly );
-					orderChanged = true;
-				}
-			}
-		}
-		m_jumpOrder = m_jumpRow = 0;
-		m_doPatJump = m_isPatLoop = false;
-	}
-	if( state().order >= orderCount() ) {
-		return false;
-	}
-	if( orderChanged ) {
-		state().pattern = orderAt( state().order )->index();
-		setOrder( state().order, estimateOnly );
-	}
-	if( orderAt( state().order )->playbackCount() >= maxRepeat() ) {
-		return false;
-	}
-	return true;
-}
-
-std::string XmModule::internal_channelStatus( size_t idx ) const
-{
-	return m_channels.at( idx )->statusString();
-}
-
-std::string XmModule::internal_channelCellString( size_t idx ) const
-{
-	XmChannel* x = m_channels.at( idx );
-	if( !x ) {
-		return std::string();
-	}
-	return x->cellString();
-}
-
-int XmModule::internal_channelCount() const
-{
-	return m_channels.size();
-}
-
-const XmInstrument* XmModule::getInstrument( int idx ) const
-{
-	if( !inRange<int>( idx, 1, m_instruments.size() ) ) {
-		return nullptr;
-	}
-	return m_instruments[ idx - 1 ];
-}
-
-uint16_t XmModule::noteToPeriod( uint8_t note, int8_t finetune ) const
-{
-	uint16_t tuned = ( note << 4 ) + ( finetune >> 3 ) + 16; // - 16*7;
-	if( tuned >= m_noteToPeriod.size() ) {
-		return 0;
-	}
-	return clip<int>( m_noteToPeriod[ tuned ], 1, 0x7cff );
-}
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 static constexpr std::array<const uint32_t, 12 * 16 * 4> g_linearMult = {{
 		0x1000000, 0x1003B2D, 0x1007667, 0x100B1B0, 0x100ED06,
 		0x1012869, 0x10163DB, 0x1019F5A, 0x101DAE7, 0x1021681,
@@ -477,20 +232,271 @@ static constexpr std::array<const uint32_t, 12 * 16 * 4> g_linearMult = {{
 };
 #endif
 
+XmModule::XmModule( int maxRpt ):
+	GenModule( maxRpt ),
+	m_amiga( false ), m_patterns(), m_instruments(), m_channels(),
+	m_noteToPeriod(), m_jumpRow( ~0 ), m_jumpOrder( ~0 ),
+	m_isPatLoop( false ), m_doPatJump( false ), m_restartPos( 0 ),
+	m_currentPatternDelay( 0 ), m_requestedPatternDelay( 0 )
+{
+}
+
+XmModule::~XmModule()
+{
+	deleteAll(m_channels);
+	deleteAll(m_patterns);
+	deleteAll(m_instruments);
+}
+
+bool XmModule::load( const std::string& filename )
+{
+	XmHeader hdr;
+	FBinStream file( filename );
+	metaInfo().filename = filename;
+	file.read( reinterpret_cast<char*>( &hdr ), sizeof( hdr ) );
+	if( !std::equal( hdr.id, hdr.id + 17, "Extended Module: " ) || hdr.endOfFile != 0x1a /*|| hdr.numChannels > 32*/ ) {
+		logger()->warn( L4CXX_LOCATION, "XM Header invalid" );
+		return false;
+	}
+	if( hdr.version != 0x0104 ) {
+		logger()->warn( L4CXX_LOCATION, "Unsupported XM Version %#x", hdr.version );
+		return false;
+	}
+	for( int i = 0; i < ( hdr.songLength & 0xff ); i++ ) {
+		uint8_t tmp;
+		file.read( &tmp );
+		addOrder( new XmOrder( tmp ) );
+	}
+	file.seek( hdr.headerSize + offsetof( XmHeader, headerSize ) );
+	metaInfo().title = boost::algorithm::trim_copy( stringncpy( hdr.title, 20 ) );
+	m_restartPos = hdr.restartPos;
+	{
+		std::string tmp = boost::algorithm::trim_copy( stringncpy( hdr.trackerName, 20 ) );
+		if( !tmp.empty() ) {
+			metaInfo().trackerInfo = tmp;
+		}
+		else {
+			metaInfo().trackerInfo = "<unknown>";
+		}
+	}
+	setTempo( hdr.defaultTempo & 0xff );
+	setSpeed( hdr.defaultSpeed & 0xff );
+	state().globalVolume = 0x40;
+	m_amiga = ( hdr.flags & 1 ) == 0;
+	m_channels.clear();
+	for( int i = 0; i < hdr.numChannels; i++ ) {
+		m_channels.push_back( new XmChannel( this ) );
+	}
+	for( uint_fast16_t i = 0; i < hdr.numPatterns; i++ ) {
+		XmPattern* pat = new XmPattern( hdr.numChannels );
+		m_patterns.push_back( pat );
+		if( !pat->load( file ) ) {
+			logger()->error( L4CXX_LOCATION, "Pattern loading error" );
+			return false;
+		}
+	}
+	while( m_patterns.size() < 256 ) {
+		m_patterns.push_back( XmPattern::createDefaultPattern( hdr.numChannels ) );
+	}
+	for( uint_fast16_t i = 0; i < hdr.numInstruments; i++ ) {
+		XmInstrument* ins = new XmInstrument();
+		m_instruments.push_back( ins );
+		if( !ins->load( file ) ) {
+			logger()->error( L4CXX_LOCATION, "Instrument loading error" );
+			return false;
+		}
+	}
+	if( m_amiga ) {
+		logger()->debug( L4CXX_LOCATION, "Initializing Amiga period table" );
+		uint16_t destOfs = 0;
+		for( int octave = 10; octave > 0; octave-- ) {
+			uint16_t octaveMask = ~( 0xffff << ( 10 - octave ) );
+			for( uint16_t amigaVal : g_PeriodTable ) {
+				amigaVal = ( ( amigaVal << 6 ) + octaveMask ) >> ( 11 - octave );
+				m_noteToPeriod.at( destOfs ) = m_noteToPeriod.at( destOfs + 1 ) = amigaVal;
+				destOfs += 2;
+			}
+		}
+		for( size_t i = 0; i < (m_noteToPeriod.size()-1)/2; i++ ) {
+			m_noteToPeriod.at( i * 2 + 1 ) = ( m_noteToPeriod.at( i * 2 + 0 ) + m_noteToPeriod.at( i * 2 + 2 ) ) >> 1;
+		}
+	}
+	else {
+		logger()->debug( L4CXX_LOCATION, "Initializing linear period table" );
+		uint16_t val = 121 * 16;
+		for( size_t i = 0; i < m_noteToPeriod.size(); i++ ) {
+			m_noteToPeriod[ i ] = val * 4;
+			val--;
+		}
+	}
+	state().pattern = orderAt( 0 )->index();
+	return true;
+}
+
+size_t XmModule::internal_buildTick( AudioFrameBuffer* buffer )
+{
+	if( state().order >= orderCount() ) {
+		if( buffer ) {
+			buffer->reset();
+		}
+		return 0;
+	}
+	if( buffer ) {
+		if( !buffer->get() ) {
+			buffer->reset( new AudioFrameBuffer::element_type );
+		}
+		MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
+		XmPattern* currPat = m_patterns.at( state().pattern );
+		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+			XmChannel* chan = m_channels[ currTrack ];
+			BOOST_ASSERT( chan!=nullptr );
+			XmCell* cell = currPat->cellAt( currTrack, state().row );
+			chan->update( cell, false );
+			chan->mixTick( &mixerBuffer );
+		}
+		buffer->get()->resize( mixerBuffer->size() );
+		MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
+		BasicSampleFrame* bufPtr = &buffer->get()->front();
+		for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
+			*bufPtr = mixerBufferPtr->rightShiftClip( 2 );
+			bufPtr++;
+			mixerBufferPtr++;
+		}
+	}
+	else {
+		XmPattern* currPat = m_patterns.at( state().pattern );
+		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
+			XmChannel* chan = m_channels[ currTrack ];
+			BOOST_ASSERT( chan!=nullptr );
+			XmCell* cell = currPat->cellAt( currTrack, state().row );
+			chan->update( cell, true );
+			chan->mixTick( nullptr );
+		}
+	}
+	nextTick();
+	if( !adjustPosition( !buffer ) ) {
+		if( buffer ) {
+			buffer->reset();
+		}
+		return 0;
+	}
+	state().playedFrames += tickBufferLength();
+	return tickBufferLength();
+}
+
+bool XmModule::adjustPosition( bool estimateOnly )
+{
+	bool orderChanged = false;
+	if( state().tick == 0 ) {
+		if( m_requestedPatternDelay != 0 ) {
+			m_currentPatternDelay = m_requestedPatternDelay;
+			m_requestedPatternDelay = 0;
+		}
+		if( m_currentPatternDelay != 0 ) {
+			m_currentPatternDelay--;
+		}
+		if( m_isPatLoop || m_doPatJump ) {
+			if( m_isPatLoop ) {
+				m_isPatLoop = false;
+				setRow( m_jumpRow );
+			}
+			if( m_doPatJump ) {
+				setRow( m_jumpRow );
+				m_jumpRow = 0;
+				m_doPatJump = false;
+				m_jumpOrder++;
+				if( m_jumpOrder >= orderCount() ) {
+					m_jumpOrder = m_restartPos;
+				}
+				setOrder( m_jumpOrder, estimateOnly );
+				orderChanged = true;
+			}
+		}
+		else {
+			if( !isRunningPatDelay() ) {
+				XmPattern* currPat = m_patterns.at( state().pattern );
+				setRow( ( state().row + 1 ) % currPat->numRows() );
+				if( state().row == 0 ) {
+					setOrder( state().order + 1, estimateOnly );
+					orderChanged = true;
+				}
+			}
+		}
+		m_jumpOrder = m_jumpRow = 0;
+		m_doPatJump = m_isPatLoop = false;
+	}
+	if( state().order >= orderCount() ) {
+		return false;
+	}
+	if( orderChanged ) {
+		state().pattern = orderAt( state().order )->index();
+		setOrder( state().order, estimateOnly );
+	}
+	if( orderAt( state().order )->playbackCount() >= maxRepeat() ) {
+		return false;
+	}
+	return true;
+}
+
+std::string XmModule::internal_channelStatus( size_t idx ) const
+{
+	return m_channels.at( idx )->statusString();
+}
+
+std::string XmModule::internal_channelCellString( size_t idx ) const
+{
+	XmChannel* x = m_channels.at( idx );
+	if( !x ) {
+		return std::string();
+	}
+	return x->cellString();
+}
+
+int XmModule::internal_channelCount() const
+{
+	return m_channels.size();
+}
+
+const XmInstrument* XmModule::getInstrument( int idx ) const
+{
+	if( !inRange<int>( idx, 1, m_instruments.size() ) ) {
+		return nullptr;
+	}
+	return m_instruments[ idx - 1 ];
+}
+
+uint16_t XmModule::noteToPeriod( uint8_t note, int8_t finetune ) const
+{
+	uint16_t tuned = ( note << 4 ) + ( finetune >> 3 ) + 16;
+	if( tuned >= m_noteToPeriod.size() ) {
+		return 0;
+	}
+	return clip<int>( m_noteToPeriod[ tuned ], 1, 0x7cff );
+}
+
 uint32_t XmModule::periodToFrequency( uint16_t period ) const
 {
 	float pbFrq = frequency();
 	constexpr float adjFac = pow( 2, -7.0f / 12 );
 	if( m_amiga ) {
-		return 8363.0f * 1712.0f * 65536.0f / pbFrq / period * adjFac;
+		/*
+   Period = (PeriodTab[((Note%12)*8 + FineTune/16]*(1-Frac(FineTune/16)) +
+             PeriodTab[(Note%12)*8 + FineTune/16+1]*(Frac(FineTune/16)))
+            *16/2^(Note/12);
+		 FRQ = 8363*1712/Period
+		 */
+		return ((8363ul * 1712)<<16) / pbFrq / period * adjFac;
 	}
 	else {
-		uint32_t tmp = 12 * 12 * 16 * 4 - period;
-		uint32_t div = 14 - tmp / ( 12 * 16 * 4 );
-		uint64_t res = static_cast<uint64_t>( 256.0f * 65536.0f * 8363.0f / pbFrq * g_linearMult[ tmp % ( 12 * 16 * 4 ) ] * adjFac );
-		res <<= 8;
-		res >>= div;
-		return res >> 32;
+		/*
+		Period = 10*12*16*4 - Note*16*4 - FineTune/2;
+		Frequency = 8363*2^((6*12*16*4 - Period) / (12*16*4));
+		*/
+		uint32_t tmp = 12 * g_linearMult.size() - period;
+		uint32_t exponent = 6 - tmp / g_linearMult.size();
+		uint64_t res = (8363ull<<32) / pbFrq * g_linearMult[ tmp % g_linearMult.size() ];
+		res >>= exponent+8+32;
+		return res * adjFac;
 	}
 }
 

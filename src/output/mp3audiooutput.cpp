@@ -107,6 +107,7 @@ bool MP3AudioOutput::internal_playing() const
 int MP3AudioOutput::internal_init( int desiredFrq )
 {
 	logger()->trace( L4CXX_LOCATION, "Initializing LAME" );
+	logger()->debug( L4CXX_LOCATION, "Using LAME %s, Bitness %s, PSY version %s", get_lame_version(), get_lame_os_bitness(), get_psy_version() );
 	m_file.open( m_filename, std::ios::in );
 	if( m_file.is_open() ) {
 		m_file.close();
@@ -120,11 +121,12 @@ int MP3AudioOutput::internal_init( int desiredFrq )
 		setErrorCode( OutputUnavailable );
 		return 0;
 	}
-	lame_set_in_samplerate( m_lameGlobalFlags, desiredFrq );
+	lame_set_out_samplerate( m_lameGlobalFlags, desiredFrq );
+	lame_set_in_samplerate( m_lameGlobalFlags, source().lock()->frequency() );
 	lame_set_num_channels( m_lameGlobalFlags, 2 );
 	lame_set_quality( m_lameGlobalFlags, 5 );
 	lame_set_mode( m_lameGlobalFlags, STEREO );
-	lame_set_VBR( m_lameGlobalFlags, vbr_off );
+	lame_set_VBR( m_lameGlobalFlags, vbr_default );
 	if( lame_init_params( m_lameGlobalFlags ) < 0 ) {
 		logger()->error( L4CXX_LOCATION, "LAME parameter initialization failed" );
 		return 0;
