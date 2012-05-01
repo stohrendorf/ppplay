@@ -60,14 +60,14 @@ inline constexpr double finetuneMultiplicator( uint8_t finetune )
  * are clipped to a range of 0x71..0x358 (113..856 decimal respectively).
  */
 
-ModChannel::ModChannel( ModModule* parent ) :
+ModChannel::ModChannel( ppp::mod::ModModule* parent, bool isLeftChan ) :
 	m_module( parent ), m_currentCell(new ModCell()), m_volume( 0 ), m_physVolume( 0 ),
 	m_finetune( 0 ), m_tremoloWaveform( 0 ), m_tremoloPhase( 0 ),
 	m_vibratoWaveform( 0 ), m_vibratoPhase( 0 ), m_glissando( false ),
 	m_period( 0 ), m_physPeriod( 0 ), m_portaTarget( 0 ),
 	m_lastVibratoFx( 0 ), m_lastTremoloFx( 0 ), m_portaSpeed( 0 ),
-	m_lastOffsetFx( 0 ), m_sampleIndex( 0 ), m_bresen( 1, 1 ),
-	m_effectDescription( "      " )
+	m_lastOffsetFx( 0 ), m_sampleIndex( 0 ), m_lowMask(0), m_portaDirUp(false), m_bresen( 1, 1 ),
+	m_effectDescription( "      " ), m_panning(isLeftChan ? 0 : 0xff)
 {
 	BOOST_ASSERT_MSG( parent != nullptr, "ModChannel may not have a nullptr as a parent" );
 }
@@ -300,10 +300,19 @@ void ModChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 		return;
 	}
 	if( mixBuffer ) {
+		uint8_t volL = 0x80;
+		if( m_panning > 0x80 ) {
+			volL = 0xff - m_panning;
+		}
+		uint8_t volR = 0x80;
+		if( m_panning < 0x80 ) {
+			volR = m_panning;
+		}
 		for( MixerSampleFrame & frame : **mixBuffer ) {
 			// TODO panning
 			BasicSampleFrame sample = currSmp->sampleAt( pos );
 			sample.mulRShift( m_physVolume, 6 );
+			sample.mulRShift( volL, volR, 7 );
 			frame += sample;
 			if( pos == GenSample::EndOfSample ) {
 				break;
@@ -598,6 +607,19 @@ void ModChannel::internal_updateStatus()
 		return;
 	}
 	std::string volStr = stringFmt( "%3d%%", clip<int>( m_volume, 0, 0x40 ) * 100 / 0x40 );
+	std::string panStr;
+	if( m_panning == 0x00 ) {
+		panStr = "Left ";
+	}
+	else if( m_panning == 0x80 ) {
+		panStr = "Centr";
+	}
+	else if( m_panning == 0xff ) {
+		panStr = "Right";
+	}
+	else {
+		panStr = stringFmt( "%4d%%", ( m_panning - 0x80 ) * 100 / 0x80 );
+	}
 	setStatusString( stringFmt(
 		"%02X: %s%s %s %s P:%s V:%s %s",
 		int(m_sampleIndex),
@@ -605,7 +627,7 @@ void ModChannel::internal_updateStatus()
 		noteName(),
 		effectName(),
 		m_effectDescription,
-		"-----",
+		panStr,
 		volStr,
 		currentSample() ? currentSample()->title() : ""
 		)
@@ -654,8 +676,7 @@ void ModChannel::fxPosJmp( uint8_t )
 void ModChannel::fxSetFinePan( uint8_t fxByte )
 {
 	m_effectDescription = "StPan\x1d";
-	logger()->warn( L4CXX_LOCATION, "Not implemented: Effect Fine Panning" );
-	// TODO
+	m_panning = fxByte;
 }
 
 void ModChannel::fxTremolo( uint8_t fxByte )
@@ -704,7 +725,7 @@ void ModChannel::efxSetPanning( uint8_t fxByte )
 {
 	m_effectDescription = "StPan\x1d";
 	logger()->warn( L4CXX_LOCATION, "Not implemented: Effect Set Panning" );
-	// TODO
+	m_panning = lowNibble(fxByte)*0xff/0x0f;
 }
 
 void ModChannel::efxPatDelay( uint8_t fxByte )

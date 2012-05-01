@@ -61,10 +61,11 @@ private:
 	uint8_t m_portaDirUp;
 	BresenInterpolation m_bresen;
 	std::string m_effectDescription;
+	uint8_t m_panning;
 	void setCellPeriod();
 	void setTonePortaTarget();
 public:
-	explicit ModChannel( ModModule* parent );
+	explicit ModChannel( ModModule* parent, bool isLeftChan );
 	virtual ~ModChannel();
 	virtual IArchive& serialize( IArchive* data );
 	void update( const ModCell* cell, bool patDelay );

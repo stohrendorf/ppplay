@@ -149,7 +149,7 @@ bool ModModule::load( const std::string& filename )
 	logger()->debug( L4CXX_LOCATION, "%d-channel, ID '%s', Tracker '%s'", int(meta.channels), meta.id, meta.tracker );
 	metaInfo().trackerInfo = meta.tracker;
 	for( int i = 0; i < meta.channels; i++ ) {
-		m_channels.push_back( new ModChannel( this ) );
+		m_channels.push_back( new ModChannel( this, ((i+1)&2)==0 ) );
 	}
 	stream.seek( 20 );
 	for( int i = 0; i < 31; i++ ) {
