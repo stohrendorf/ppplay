@@ -49,7 +49,7 @@ protected:
 	 * @brief Get the logger
 	 * @return Child logger with attached ".mod"
 	 */
-	light4cxx::Logger* logger();
+	static light4cxx::Logger* logger();
 };
 
 }

@@ -81,7 +81,7 @@ protected:
 	 * @brief Get the logger
 	 * @return Logger with name "order"
 	 */
-	light4cxx::Logger* logger();
+	static light4cxx::Logger* logger();
 };
 
 /**

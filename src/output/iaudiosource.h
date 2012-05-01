@@ -118,7 +118,7 @@ protected:
 	 * @brief Get the logger
 	 * @return Logger with name "audio.source"
 	 */
-	light4cxx::Logger* logger();
+	static light4cxx::Logger* logger();
 };
 
 bool IAudioSource::paused() const
