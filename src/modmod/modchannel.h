@@ -58,7 +58,7 @@ private:
 	uint8_t m_lastOffsetFx;
 	uint8_t m_sampleIndex;
 	uint8_t m_lowMask;
-	uint8_t m_portaDirUp;
+	bool m_portaDirUp;
 	BresenInterpolation m_bresen;
 	std::string m_effectDescription;
 	uint8_t m_panning;

@@ -381,12 +381,12 @@ void ModChannel::setTonePortaTarget()
 	else {
 		m_portaTarget = fullPeriods.at( m_finetune ).at( perIdx );
 	}
-	m_portaDirUp = 0;
+	m_portaDirUp = false;
 	if( m_portaTarget == m_period ) {
 		m_portaTarget = 0;
 	}
 	else if( m_period > m_portaTarget ) {
-		m_portaDirUp = 1;
+		m_portaDirUp = true;
 	}
 }
 
@@ -588,7 +588,7 @@ void ModChannel::fxPorta( uint8_t fxByte )
 		setTonePortaTarget();
 		return;
 	}
-	if( m_portaDirUp == 1 ) {
+	if( m_portaDirUp ) {
 		m_period = std::max<int>( m_portaTarget, m_period - fxByte );
 	}
 	else {
