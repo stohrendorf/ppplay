@@ -121,7 +121,7 @@ inline constexpr uint8_t S3M_NOTE( uint8_t x )
 /**
  * @brief A value for frequency calculation
  */
-constexpr uint32_t FRQ_VALUE = 14317056;
+constexpr uint32_t FRQ_VALUE = 8363*1712;
 
 /**
  * @brief Calculate the period for a given note, octave and base frequency
@@ -305,7 +305,7 @@ std::string S3mChannel::internal_effectDescription() const
 	return m_currentFxStr;
 }
 
-void S3mChannel::update( const ppp::s3m::S3mCell* cell, bool patDelay, bool estimateOnly )
+void S3mChannel::update( const S3mCell* cell, bool patDelay, bool estimateOnly )
 {
 	if( isDisabled() ) {
 		return;
