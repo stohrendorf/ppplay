@@ -24,8 +24,6 @@
 #include "s3msample.h"
 #include "s3mcell.h"
 
-#include <boost/format.hpp>
-
 /**
  * @ingroup S3mMod
  * @{
@@ -99,31 +97,6 @@ constexpr std::array<const uint16_t, 16> S3mFinetunes = {
 const std::array<const uint16_t, 12> Periods = {{1712 << 4, 1616 << 4, 1524 << 4, 1440 << 4, 1356 << 4, 1280 << 4, 1208 << 4, 1140 << 4, 1076 << 4, 1016 << 4,  960 << 4,  907 << 4}};
 
 /**
- * @brief Get the octave out of a note
- * @param[in] x Note value
- * @return Octave of @a x
- */
-inline constexpr uint8_t S3M_OCTAVE( uint8_t x )
-{
-	return highNibble( x );
-}
-
-/**
- * @brief Get the note out of a note
- * @param[in] x Note value
- * @return Note of @a x
- */
-inline constexpr uint8_t S3M_NOTE( uint8_t x )
-{
-	return lowNibble( x );
-}
-
-/**
- * @brief A value for frequency calculation
- */
-constexpr uint32_t FRQ_VALUE = 8363*1712;
-
-/**
  * @brief Calculate the period for a given note, octave and base frequency
  * @param[in] note Note value (without octave)
  * @param[in] oct Note octave
@@ -144,7 +117,7 @@ inline uint16_t st3PeriodEx( uint8_t note, uint8_t oct, uint16_t c4spd, uint16_t
  */
 inline uint16_t st3Period( uint8_t note, uint16_t c4spd, uint16_t finetune = 8363 )
 {
-	return st3PeriodEx( S3M_NOTE( note ), S3M_OCTAVE( note ), c4spd, finetune );
+	return st3PeriodEx( lowNibble( note ), highNibble( note ), c4spd, finetune );
 }
 
 /**
@@ -196,7 +169,7 @@ inline std::string periodToNote( uint16_t per, uint16_t c2spd, uint16_t finetune
  */
 inline uint8_t deltaNote( uint8_t note, int8_t delta )
 {
-	uint16_t x = S3M_OCTAVE( note ) * 12 + S3M_NOTE( note ) + delta;
+	uint16_t x = highNibble( note ) * 12 + lowNibble( note ) + delta;
 	return ( ( x / 12 ) << 4 ) | ( x % 12 );
 }
 
@@ -288,15 +261,12 @@ std::string S3mChannel::internal_effectName() const
 		return "...";
 	}
 	uint8_t fx = m_currentCell->effect();
-	bool fxRangeOk = inRange<int>( fx, 1, 27 );
-	if( fxRangeOk ) {
+	if( inRange<int>( fx, 1, 27 ) ) {
 		return stringFmt( "%c%02X", char( fx - 1 + 'A' ), int(m_currentCell->effectValue()) );
-// 		return stringf("%c%.2X", fx + 'A' - 1, m_currentCell.effectValue());
 	}
 	else {
 		logger()->warn( L4CXX_LOCATION, "Effect out of range: %#x", int(fx) );
 		return stringFmt( "?%02X", int(m_currentCell->effectValue()) );
-// 		return stringf("?%.2X", m_currentCell.effectValue());
 	}
 }
 
@@ -551,7 +521,7 @@ void S3mChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 		setActive( false );
 		return;
 	}
-	m_bresen.reset( m_module->frequency(), FRQ_VALUE / m_realPeriod );
+	m_bresen.reset( m_module->frequency(), 8363*1712 / m_realPeriod );
 	recalcVolume();
 	uint16_t currVol = m_realVolume;
 	const S3mSample* currSmp = currentSample();
