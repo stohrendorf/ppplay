@@ -728,10 +728,9 @@ void ModChannel::efxSetPanning( uint8_t fxByte )
 	m_panning = lowNibble(fxByte)*0xff/0x0f;
 }
 
-void ModChannel::efxPatDelay( uint8_t fxByte )
+void ModChannel::efxPatDelay( uint8_t /*fxByte*/ )
 {
-	// TODO
-	logger()->warn( L4CXX_LOCATION, "Not implemented: Effect Pattern Delay" );
+	// handled
 }
 
 void ModChannel::efxRetrigger( uint8_t fxByte )

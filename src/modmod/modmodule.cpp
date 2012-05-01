@@ -277,8 +277,10 @@ size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
 bool ModModule::adjustPosition( bool estimateOnly )
 {
 	bool orderChanged = false;
-	if( state().tick == 0 ) {
-		m_patDelayCount = -1;
+	if( m_patDelayCount != -1 ) {
+		m_patDelayCount--;
+	}
+	if( state().tick == 0 && m_patDelayCount == -1 ) {
 		if( m_breakOrder != 0xffff ) {
 			logger()->debug( L4CXX_LOCATION, "Order break" );
 			if( m_breakOrder < orderCount() ) {
@@ -416,7 +418,6 @@ void ModModule::checkGlobalFx()
 			}
 		}
 		// check for pattern delays
-		uint8_t patDelayCounter = 0;
 		for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			ModCell* cell = currPat->cellAt( currTrack, state().row );
 			if( !cell ) continue;
@@ -426,7 +427,6 @@ void ModModule::checkGlobalFx()
 			if( fx != 0x0e ) continue;
 			if( highNibble( fxVal ) != 0x0e ) continue;
 			if( lowNibble( fxVal ) == 0 ) continue;
-			if( ++patDelayCounter != 1 ) continue;
 			if( m_patDelayCount != -1 ) continue;
 			m_patDelayCount = lowNibble( fxVal );
 		}
