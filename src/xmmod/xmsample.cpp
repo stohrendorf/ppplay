@@ -45,6 +45,10 @@ bool XmSample::load( BinStream& str )
 	str.read( &m_finetune );
 	uint8_t type;
 	str.read( &type );
+	if(loopStart+loopLen>=dataSize) {
+		type &= ~3;
+		loopStart = loopLen = 0;
+	}
 	switch( type & 3 ) {
 		case 0:
 			setLoopType( LoopType::None );
@@ -68,8 +72,9 @@ bool XmSample::load( BinStream& str )
 		setLoopStart( loopStart );
 		setLoopEnd( loopStart + loopLen );
 	}
-	if( loopLen == 0 )
+	if( loopLen == 0 ) {
 		setLoopType( LoopType::None );
+	}
 	str.read( &m_panning );
 	str.read( &m_relativeNote );
 	str.seekrel( 1 );
