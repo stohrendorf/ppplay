@@ -108,13 +108,6 @@ public:
 	 */
 	size_t length() const;
 	/**
-	 * @brief Returns @c true if this module contains multiple songs
-	 * @return @c true if this is a multi-song
-	 * @see songCount()
-	 * @see currentSongIndex()
-	 */
-	bool isMultiSong() const;
-	/**
 	 * @brief Get the number of songs in this module
 	 * @return Number of songs
 	 * @see isMultiSong()
@@ -128,21 +121,6 @@ public:
 	 * @see songCount()
 	 */
 	int16_t currentSongIndex() const;
-	/**
-	 * @}
-	 */
-	//END
-	//BEGIN Audio data processing
-	/**
-	 * @name Audio data processing
-	 * @{
-	 */
-	/**
-	 * @brief Get the frame count of a tick
-	 * @return Sample frames per tick
-	 * @pre m_playbackInfo.tempo != 0
-	 */
-	uint16_t tickBufferLength() const;
 	/**
 	 * @}
 	 */
@@ -190,9 +168,13 @@ public:
 	std::string channelCellString( size_t idx ) const;
 	//! @copydoc internal_channelCount
 	int channelCount() const;
-	//! @copydoc internal_buildTick
-	size_t buildTick( AudioFrameBuffer* buf );
 protected:
+	/**
+	 * @brief Get the frame count of a tick
+	 * @return Sample frames per tick
+	 * @pre m_playbackInfo.tempo != 0
+	 */
+	uint16_t tickBufferLength() const;
 	ModuleMetaInfo& metaInfo()
 	{
 		return m_metaInfo;
@@ -273,6 +255,8 @@ protected:
 	 */
 	static light4cxx::Logger* logger();
 private:
+	//! @copydoc internal_buildTick
+	size_t buildTick( AudioFrameBuffer* buf );
 	virtual bool internal_initialize( uint32_t frq );
 	/**
 	 * @brief Returns the channel status string for a channel

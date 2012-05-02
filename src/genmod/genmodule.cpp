@@ -87,12 +87,6 @@ size_t GenModule::length() const
 	return m_songs->length;
 }
 
-bool GenModule::isMultiSong() const
-{
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	return m_songs.size() > 1;
-}
-
 size_t GenModule::internal_getAudioData( AudioFrameBuffer& buffer, size_t size )
 {
 	if( !buffer ) {
@@ -320,7 +314,7 @@ bool GenModule::jumpNextSong()
 bool GenModule::jumpPrevSong()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	if( !isMultiSong() ) {
+	if( songCount()<=1 ) {
 		logger()->info( L4CXX_LOCATION, "This is not a multi-song" );
 		return false;
 	}

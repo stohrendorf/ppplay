@@ -101,7 +101,7 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IA
 	m_modTitle->setFgColorRange( 0, ppg::Color::BrightWhite, 0 );
 	m_modTitle->show();
 	m_trackerInfo->setText( stringFmt( "Tracker: %s - Channels: %d", std::const_pointer_cast<const ppp::GenModule>(module)->metaInfo().trackerInfo, int(module->channelCount()) ) );
-	if( module->isMultiSong() ) {
+	if( module->songCount()>1 ) {
 		m_trackerInfo->setText( m_trackerInfo->text() + " - Multi-song" );
 	}
 	if( module->trimmedTitle().length() > 0 ) {
@@ -187,7 +187,7 @@ void UIMain::onTimer()
 							msecslen / 6000,
 							msecslen / 100 % 60,
 							msecslen % 100 );
-	if( modLock->isMultiSong() ) {
+	if( modLock->songCount()>1 ) {
 		posStr += stringFmt( " \xf9 Song %d/%d", modLock->currentSongIndex() + 1, modLock->songCount());
 	}
 	m_position->setEscapedText( posStr );
