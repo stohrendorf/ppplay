@@ -47,13 +47,13 @@ bool XmSample::load( BinStream& str )
 	str.read( &type );
 	switch( type & 3 ) {
 		case 0:
-		case 3:
 			setLoopType( LoopType::None );
 			break;
 		case 1:
 			setLoopType( LoopType::Forward );
 			break;
 		case 2:
+		case 3:
 			setLoopType( LoopType::Pingpong );
 			break;
 	}
