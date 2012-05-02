@@ -39,6 +39,9 @@ struct SongInfo
 	explicit SongInfo() : states(), length(0)
 	{
 	}
+	~SongInfo() {
+		deleteAll(states);
+	}
 	
 	//! @brief States for seeking
 	TrackingContainer<IArchive*> states;

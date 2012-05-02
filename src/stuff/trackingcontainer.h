@@ -98,6 +98,18 @@ public:
 	inline bool empty() const {
 		return m_container.empty();
 	}
+	inline typename std::vector<Type>::iterator begin() {
+		return m_container.begin();
+	}
+	inline typename std::vector<Type>::iterator end() {
+		return m_container.end();
+	}
+	inline typename std::vector<Type>::const_iterator begin() const {
+		return m_container.begin();
+	}
+	inline typename std::vector<Type>::const_iterator end() const {
+		return m_container.end();
+	}
 	/**
 	 * @}
 	 */
