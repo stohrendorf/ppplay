@@ -348,7 +348,7 @@ uint16_t XmModule::periodToFineNoteIndex( uint16_t period, int8_t finetune, uint
 {
 	int8_t tuned = ( finetune / 8 + 16 );
 	int16_t ofsLo = 0;
-	int16_t ofsHi = 1536;
+	int16_t ofsHi = m_noteToPeriod.size();
 	for( int i = 0; i < 8; i++ ) {
 		int16_t ofsMid = ( ofsLo + ofsHi ) >> 1;
 		ofsMid &= 0xfff0;
@@ -361,8 +361,11 @@ uint16_t XmModule::periodToFineNoteIndex( uint16_t period, int8_t finetune, uint
 		}
 	}
 	int16_t ofs = ofsLo + tuned + deltaNote;
-	if( ofs > 1550 ) {
-		ofs = 1551;
+	if( ofs >= m_noteToPeriod.size() ) {
+		ofs = m_noteToPeriod.size();
+	}
+	else if(ofs<0) {
+		ofs = 0;
 	}
 	return ofs;
 }
