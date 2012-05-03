@@ -338,7 +338,6 @@ uint32_t XmModule::periodToFrequency( uint16_t period ) const
 		constexpr int N = 12*16*4;
 		uint32_t tmp = 12 * N - period;
 		uint32_t exponent = 6 - tmp / N;
-		std::cout << std::hex << std::llround(0x1000000 * std::pow(2, static_cast<float>(tmp % N)/N)) << "\n";
 		uint64_t res = (8363ull<<32) / pbFrq * std::llround(0x1000000 * std::pow(2, static_cast<float>(tmp % N)/N));
 		res >>= exponent+8+32;
 		return res * adjFac;
