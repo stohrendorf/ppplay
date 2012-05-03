@@ -71,7 +71,7 @@ inline float_t realTime()
 /**
  * @brief The current message format
  */
-std::string s_format = "[%T %<5t %p] %L (in %F:%l): %m%n";
+std::string s_format = "[%T %<5t %p] %L (in %F:%l): %m";
 
 /**
  * @brief Converts a Level to a string
@@ -216,9 +216,6 @@ std::string Location::toString( light4cxx::Level l, const light4cxx::Logger& log
 						break;
 					case 'm':
 						oss << msg;
-						break;
-					case 'n':
-						oss << std::endl;
 						break;
 					case 'p':
 						oss << processTime() / 1000.0f;

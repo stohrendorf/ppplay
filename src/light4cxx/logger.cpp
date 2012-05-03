@@ -37,6 +37,7 @@ namespace
  * @brief The current logging level filter
  */
 Level s_level = Level::Debug;
+std::ostream* s_output = &std::cout;
 }
 
 Level Logger::level()
@@ -52,6 +53,11 @@ void Logger::setLevel( Level l )
 Logger* Logger::root()
 {
 	return get( "root" );
+}
+
+void Logger::setOutput( std::ostream* stream )
+{
+	s_output = stream;
 }
 
 Logger* Logger::get( const std::string& name )
@@ -81,7 +87,7 @@ void Logger::log( light4cxx::Level l, const light4cxx::Location& loc, const std:
 	}
 	static boost::recursive_mutex outMutex;
 	boost::recursive_mutex::scoped_lock outLock( outMutex );
-	std::cout << loc.toString( l, *this, str );
+	*s_output << loc.toString( l, *this, str );
 }
 
 }

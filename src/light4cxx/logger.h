@@ -25,10 +25,6 @@
 #include "stuff/utils.h"
 #include "stuff/stringutils.h"
 
-#include <boost/format.hpp>
-
-#include <memory>
-
 namespace light4cxx
 {
 
@@ -58,6 +54,7 @@ public:
 	 * @note The root logger will always be named "root"
 	 */
 	static Logger* root();
+	static void setOutput(std::ostream* stream);
 	/**
 	 * @brief Get the logger's name
 	 * @return m_name

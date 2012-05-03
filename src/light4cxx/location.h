@@ -140,7 +140,6 @@ public:
 	 *       <li>@b l - The line number.</li>
 	 *       <li>@b L - The logger's name.</li>
 	 *       <li>@b m - The message.</li>
-	 *       <li>@b n - A newline (std::endl exactly).</li>
 	 *       <li>@b p - Current process runtime in seconds (double precision).</li>
 	 *       <li>@b P - Current process runtime in seconds (integer precision).</li>
 	 *       <li>@b r - Current processor time in seconds (double precision).</li>
@@ -152,7 +151,7 @@ public:
 	 * </ul>
 	 * The default format string is
 	 * @code
-	 * "[%T %<5t %p] %L (in %F:%l): %m%n"
+	 * "[%T %<5t %p] %L (in %F:%l): %m"
 	 * @endcode
 	 * which will output something like
 	 * @code
