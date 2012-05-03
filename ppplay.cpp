@@ -96,7 +96,7 @@ bool parseCmdLine( int argc, char* argv[] )
 		return false;
 	}
 
-	light4cxx::Location::setFormat( "[%T %<5t %>=7.3r] %L: %m%n" );
+	light4cxx::Location::setFormat( "[%T %<5t %>=7.3r] %L: %m" );
 	switch( loglevel ) {
 		case 0:
 			light4cxx::Logger::setLevel( light4cxx::Level::Off );
