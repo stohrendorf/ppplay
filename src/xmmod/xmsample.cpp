@@ -45,21 +45,23 @@ bool XmSample::load( BinStream& str )
 	str.read( &m_finetune );
 	uint8_t type;
 	str.read( &type );
-	if(loopStart+loopLen>=dataSize) {
-		type &= ~3;
+	if(loopStart+loopLen>dataSize) {
 		loopStart = loopLen = 0;
+		setLoopType( LoopType::None );
 	}
-	switch( type & 3 ) {
-		case 0:
-			setLoopType( LoopType::None );
-			break;
-		case 1:
-			setLoopType( LoopType::Forward );
-			break;
-		case 2:
-		case 3:
-			setLoopType( LoopType::Pingpong );
-			break;
+	else {
+		switch( type & 3 ) {
+			case 0:
+				setLoopType( LoopType::None );
+				break;
+			case 1:
+				setLoopType( LoopType::Forward );
+				break;
+			case 2:
+			case 3:
+				setLoopType( LoopType::Pingpong );
+				break;
+		}
 	}
 	m_16bit = ( type & 0x10 ) != 0;
 	if( m_16bit ) {
@@ -71,9 +73,6 @@ bool XmSample::load( BinStream& str )
 		resizeData( dataSize );
 		setLoopStart( loopStart );
 		setLoopEnd( loopStart + loopLen );
-	}
-	if( loopLen == 0 ) {
-		setLoopType( LoopType::None );
 	}
 	str.read( &m_panning );
 	str.read( &m_relativeNote );

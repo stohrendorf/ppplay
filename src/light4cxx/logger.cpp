@@ -87,7 +87,7 @@ void Logger::log( light4cxx::Level l, const light4cxx::Location& loc, const std:
 	}
 	static boost::recursive_mutex outMutex;
 	boost::recursive_mutex::scoped_lock outLock( outMutex );
-	*s_output << loc.toString( l, *this, str );
+	*s_output << loc.toString( l, *this, str ) << std::endl;
 }
 
 }
