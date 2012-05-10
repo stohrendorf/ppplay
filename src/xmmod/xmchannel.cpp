@@ -39,7 +39,7 @@ XmChannel::XmChannel( ppp::xm::XmModule* module ) :
 	GenChannel(),
 	m_baseVolume( 0 ), m_currentVolume( 0 ), m_realVolume( 0 ), m_panning( 0x80 ),
 	m_realPanning( 0x80 ), m_basePeriod( 0 ), m_currentPeriod( 0 ), m_autoVibDeltaPeriod( 0 ),
-	m_finetune( 0 ), m_instrumentIndex( 0 ), m_baseNote( 0 ), m_realNote( 0 ), m_currentCell(new XmCell()),
+	m_finetune( 0 ), m_instrumentIndex( 0 ), m_baseNote( 0 ), m_realNote( 0 ), m_currentCell( new XmCell() ),
 	m_volumeEnvelope(), m_panningEnvelope(), m_volScale( 0 ), m_volScaleRate( 0 ), m_keyOn( false ),
 	m_lastVolSlideFx( 0 ), m_lastPortaUpFx( 0 ), m_lastPortaDownFx( 0 ), m_lastPanSlideFx( 0 ),
 	m_lastOffsetFx( 0 ), m_lastFinePortaUpFx( 0 ), m_lastFinePortaDownFx( 0 ), m_lastFineVolUpFx( 0 ),
@@ -129,14 +129,12 @@ void XmChannel::triggerNote()
 	m_baseNote = note;
 
 	if( !currentInstrument() ) {
-// 		m_instrumentIndex = 0;
 		setActive( false );
 		return;
 	}
 
 	if( !currentSample() ) {
 		m_realNote = m_baseNote;
-// 		m_finetune = 0;
 		m_basePeriod = m_currentPeriod = 0;
 		setActive( false );
 	}
@@ -285,9 +283,11 @@ void XmChannel::update( const ppp::xm::XmCell* cell, bool estimateOnly )
 		}
 		if( m_currentCell->effect() == Effect::Extended ) {
 			if( highNibble( m_currentCell->effectValue() ) == EfxNoteDelay && lowNibble( m_currentCell->effectValue() ) != 0 ) {
+				// note delay, but not on tick 0
 				return;
 			}
 			else if( highNibble( m_currentCell->effectValue() ) == EfxRetrigger && lowNibble( m_currentCell->effectValue() ) == 0 ) {
+				// retrigger every frame
 				if( m_currentCell->note() != KeyOffNote ) {
 					triggerNote();
 					applySampleDefaults();
@@ -701,7 +701,7 @@ std::string XmChannel::internal_noteName() const
 	if( fofs < 0 ) {
 		return "___";
 	}
-	int ofs = std::round( fofs );
+	int ofs = std::lround( fofs );
 	return stringFmt( "%s%d", NoteNames.at( ofs % 12 ), ofs / 12 );
 }
 
@@ -720,7 +720,7 @@ void XmChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 	if( m_realPanning < 0x80 ) {
 		volRight = m_realPanning;
 	}
-	for( MixerSampleFrame & frame :** mixBuffer ) {
+	for( MixerSampleFrame & frame : **mixBuffer ) {
 		BasicSampleFrame sampleVal = currSmp->sampleAt( pos );
 		sampleVal.mulRShift( volLeft, volRight, 7 );
 		sampleVal.mulRShift( m_realVolume, 6 );
@@ -756,17 +756,17 @@ void XmChannel::internal_updateStatus()
 		panStr = stringFmt( "%4d%%", ( m_realPanning - 0x80 ) * 100 / 0x80 );
 	std::string volStr = stringFmt( "%3d%%", clip<int>( m_realVolume , 0, 0x40 ) * 100 / 0x40 );
 	setStatusString( stringFmt(
-		"%02X: %s%s %s %s P:%s V:%s %s",
-		int(m_instrumentIndex),
-		m_noteChanged ? "*" : " ",
-		noteName(),
-		effectName(),
-		effectDescription(),
-		panStr,
-		volStr,
-		currentInstrument() ? currentInstrument()->title() : ""
-		)
-	);
+						 "%02X: %s%s %s %s P:%s V:%s %s",
+						 int( m_instrumentIndex ),
+						 m_noteChanged ? "*" : " ",
+						 noteName(),
+						 effectName(),
+						 effectDescription(),
+						 panStr,
+						 volStr,
+						 currentInstrument() ? currentInstrument()->title() : ""
+					 )
+				   );
 }
 
 void XmChannel::fxSetVolume( uint8_t fxByte )
@@ -853,14 +853,14 @@ void XmChannel::efxFineVolDown( uint8_t fxByte )
 {
 	fxByte = lowNibble( fxByte );
 	reuseIfZero( m_lastFineVolDownFx, fxByte );
-	m_currentVolume = m_baseVolume = std::max( m_baseVolume - fxByte, 0 );
+	m_currentVolume = m_baseVolume = std::max<int>( m_baseVolume - fxByte, 0 );
 }
 
 void XmChannel::efxFineVolUp( uint8_t fxByte )
 {
 	fxByte = lowNibble( fxByte );
 	reuseIfZero( m_lastFineVolUpFx, fxByte );
-	m_currentVolume = m_baseVolume = std::min( m_baseVolume + fxByte, 0x40 );
+	m_currentVolume = m_baseVolume = std::min<int>( m_baseVolume + fxByte, 0x40 );
 }
 
 void XmChannel::fxExtraFinePorta( uint8_t fxByte )
@@ -934,7 +934,7 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 				triggerNote();
 				applySampleDefaults();
 				doKeyOn();
-				if( m_currentCell->volume() >= 0x10 && m_currentCell->volume() <= 0x5f ) {
+				if( m_currentCell->volume() >= 0x10 && m_currentCell->volume() <= 0x4f ) {
 					m_currentVolume = m_baseVolume = m_currentCell->volume() - 0x10;
 				}
 				else if( highNibble( fxByte ) == VfxSetPanning ) {
@@ -1153,10 +1153,10 @@ void XmChannel::fxTremolo( uint8_t fxByte )
 	}
 	uint16_t delta = ( value * m_tremoloDepth ) >> 6;
 	if( m_tremoloPhase & 0x80 ) {
-		m_currentVolume = m_baseVolume - delta;
+		m_currentVolume = clip( m_baseVolume - delta, 0, 64 );
 	}
 	else {
-		m_currentVolume = m_baseVolume + delta;
+		m_currentVolume = clip( m_baseVolume + delta, 0, 64 );
 	}
 	m_tremoloPhase += m_tremoloSpeed;
 }

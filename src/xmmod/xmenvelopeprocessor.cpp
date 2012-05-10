@@ -100,10 +100,12 @@ uint8_t XmEnvelopeProcessor::realVolume( uint8_t volume, uint8_t globalVolume, u
 		return 0;
 	}
 	if( !enabled() ) {
-		return ( ( ( volume * scale ) >> 12 ) * globalVolume ) >> 9;
+		int tmp = ( volume * scale ) >> 12;
+		tmp = ( tmp * globalVolume ) >> 9;
+		return tmp;
 	}
 	else {
-		uint8_t tmp = m_currentValue >> 8;
+		int tmp = m_currentValue >> 8;
 		if( tmp > 0xa0 ) {
 			tmp = 0;
 			m_currentRate = 0;
@@ -112,7 +114,10 @@ uint8_t XmEnvelopeProcessor::realVolume( uint8_t volume, uint8_t globalVolume, u
 			tmp = 0x40;
 			m_currentRate = 0;
 		}
-		return ( ( ( ( tmp * volume >> 6 ) * scale ) >> 12 ) * globalVolume ) >> 9;
+		tmp = ( tmp * volume ) >> 6;
+		tmp = ( tmp * scale ) >> 12;
+		tmp = ( tmp * globalVolume ) >> 9;
+		return tmp;
 	}
 }
 
@@ -189,7 +194,7 @@ void XmEnvelopeProcessor::setPosition( uint8_t pos )
 IArchive& XmEnvelopeProcessor::serialize( IArchive* data )
 {
 	*data % ( *reinterpret_cast<uint8_t*>( &m_flags ) );
-for( EnvelopePoint & pt : m_points ) {
+	for( EnvelopePoint & pt : m_points ) {
 		*data % pt.position % pt.value;
 	}
 	*data

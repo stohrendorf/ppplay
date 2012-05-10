@@ -41,7 +41,7 @@ bool XmSample::load( BinStream& str )
 	str.read( &loopLen );
 	uint8_t volume;
 	str.read( &volume );
-	setVolume( volume );
+	setVolume( clip<int>(volume,0,64) );
 	str.read( &m_finetune );
 	uint8_t type;
 	str.read( &type );
