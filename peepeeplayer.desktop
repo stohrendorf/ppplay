@@ -9,4 +9,3 @@ Exec=ppplay %f
 MimeType=audio/x-s3m;audio/x-xm;audio/x-mod;
 NoDisplay=true
 StartupNotify=false
-

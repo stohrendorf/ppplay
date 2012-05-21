@@ -1277,12 +1277,16 @@ void XmChannel::efxPatLoop( uint8_t fxByte )
 		return;
 	}
 	if( m_patLoopCounter == 0 ) {
+		// when the loop counter is zero, this is the first loop running,
+		// so set the counter and wait for the next loop
 		m_patLoopCounter = fxByte;
 		m_module->doPatLoop( m_patLoopRow );
+		return;
 	}
+	// loop counter is not zero, meaning we are in a loop. in this case
+	// decrease it. if it is not zero then, we must jump back.
 	m_patLoopCounter--;
 	if( m_patLoopCounter != 0 ) {
-// 		m_patLoopCounter = fxByte;
 		m_module->doPatLoop( m_patLoopRow );
 	}
 }
