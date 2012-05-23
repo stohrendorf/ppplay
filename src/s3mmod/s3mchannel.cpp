@@ -1150,7 +1150,7 @@ void S3mChannel::playNote()
 		else if( currentSample() ) {
 			setActive( true );
 			m_portaTargetPeriod = st3Period( m_currentCell->note(), m_c2spd );
-			if( m_currentCell->effect() != s3mFxPorta && m_currentCell->effect() != s3mFxPortaVolSlide ) {
+			if( (m_basePeriod==0||m_portaTargetPeriod==0) || m_currentCell->effect() != s3mFxPorta && m_currentCell->effect() != s3mFxPortaVolSlide ) {
 				m_realPeriod = m_basePeriod = m_portaTargetPeriod;
 				m_tremoloPhase = m_vibratoPhase = 0;
 				recalcFrequency();
