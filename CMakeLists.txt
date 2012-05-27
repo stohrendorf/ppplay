@@ -140,11 +140,8 @@ if(MINGW)
 	target_link_libraries(ppplay stdc++ mingw32)
 endif()
 
-target_link_libraries(ppplay rt)
-target_link_libraries(ppplay modmod xmmod s3mmod genmod audioout)
-target_link_libraries(ppplay utils binstream light4cxx)
-target_link_libraries(ppplay ppg sdltimer)
-
+target_link_libraries(ppplay rt ppplay_core ppplay_ppg ppplay_output_mp3 ppplay_output_sdl)
+# 
 #########
 # link libraries
 #########
@@ -165,7 +162,7 @@ function(trylinklib LIBNAME ATTRIBS)
 	else(NOT "${LIBNAME}_LIB")
 		# message(STATUS "${LIBNAME} Library found: ${${LIBNAME}_LIB}")
 		add_library("${LIBNAME}" ${ATTRIBS} IMPORTED)
-		target_link_libraries(ppplay ${${LIBNAME}_LIB})
+# 		target_link_libraries(ppplay ${${LIBNAME}_LIB})
 	endif(NOT "${LIBNAME}_LIB")
 	mark_as_advanced(FORCE "${LIBNAME}_LIB")
 endfunction(trylinklib)
@@ -215,7 +212,7 @@ add_subdirectory(src)
 #########
 # set install command
 #########
-install(TARGETS ppplay RUNTIME DESTINATION bin COMPONENT application)
+install(TARGETS ppplay DESTINATION bin COMPONENT application)
 cpack_add_component(application DISPLAY_NAME PeePeePlayer REQUIRED)
 if(LINUX OR UNIX)
 	install(FILES peepeeplayer.desktop DESTINATION share/applications COMPONENT desktopfile)

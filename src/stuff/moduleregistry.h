@@ -32,11 +32,12 @@ class ModuleRegistry
 	DISABLE_COPY( ModuleRegistry )
 private:
 	ModuleRegistry();
-	typedef GenModule::Ptr( *LoadFunc )( const std::string& filename, uint32_t frequency, int maxRepeat );
-	std::list<LoadFunc> m_loaders;
+	~ModuleRegistry();
+	std::list<void*> m_handles;
+	static void findModules();
 public:
+	typedef GenModule::Ptr( *LoaderFunction )( const std::string& filename, uint32_t frequency, int maxRepeat );
 	static ModuleRegistry& instance();
-	static void registerLoader( ppp::ModuleRegistry::LoadFunc func );
 	static GenModule::Ptr tryLoad( const std::string& filename, uint32_t frq, int maxRpt );
 };
 

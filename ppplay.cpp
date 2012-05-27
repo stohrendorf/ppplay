@@ -23,9 +23,9 @@
 #include "src/ppg/sdlscreen.h"
 #include "src/ui_main.h"
 
-#include "src/s3mmod/s3mmodule.h"
-#include "src/xmmod/xmmodule.h"
-#include "src/modmod/modmodule.h"
+// #include "src/s3mmod/s3mmodule.h"
+// #include "src/xmmod/xmmodule.h"
+// #include "src/modmod/modmodule.h"
 
 #include "src/output/sdlaudiooutput.h"
 
@@ -193,9 +193,9 @@ bool parseCmdLine( int argc, char* argv[] )
 
 int main( int argc, char* argv[] )
 {
-	ppp::ModuleRegistry::registerLoader(ppp::xm::XmModule::factory);
-	ppp::ModuleRegistry::registerLoader(ppp::s3m::S3mModule::factory);
-	ppp::ModuleRegistry::registerLoader(ppp::mod::ModModule::factory);
+// 	ppp::ModuleRegistry::registerLoader(ppp::xm::XmModule::factory);
+// 	ppp::ModuleRegistry::registerLoader(ppp::s3m::S3mModule::factory);
+// 	ppp::ModuleRegistry::registerLoader(ppp::mod::ModModule::factory);
 	try {
 		if( !parseCmdLine( argc, argv ) ) {
 			return EXIT_SUCCESS;
