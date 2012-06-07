@@ -26,6 +26,7 @@ void MP3AudioOutput::encodeThread()
 	while( true ) {
 		while( m_paused ) {
 			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
+			m_encoderThread.yield();
 		}
 		IAudioSource::Ptr srcLock = source().lock();
 		if( !srcLock ) {
@@ -33,6 +34,7 @@ void MP3AudioOutput::encodeThread()
 		}
 		while( srcLock->paused() ) {
 			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
+			m_encoderThread.yield();
 		}
 		AudioFrameBuffer buffer;
 		size_t size = srcLock->getAudioData( buffer, srcLock->preferredBufferSize() );
