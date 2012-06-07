@@ -73,7 +73,7 @@ void AudioFifo::requestThread()
 		}
 		// continue if no data is available
 		if( src->paused() || m_queuedFrames >= m_minFrameCount ) {
-			logger()->trace( L4CXX_LOCATION, "FIFO filled, waiting..." );
+// 			logger()->trace( L4CXX_LOCATION, "FIFO filled, waiting..." );
 			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 			continue;
 		}
@@ -87,11 +87,11 @@ void AudioFifo::requestThread()
 		}
 		src->getAudioData( buffer, size );
 		if( !src->paused() && ( !buffer || buffer->empty() ) ) {
-			logger()->debug( L4CXX_LOCATION, "Audio source dry" );
+// 			logger()->debug( L4CXX_LOCATION, "Audio source dry" );
 			continue;
 		}
 		// add the data to the queue...
-		logger()->trace( L4CXX_LOCATION, "Adding %4d frames to a %4d-frame queue, minimum is %4d frames", buffer->size(), m_queuedFrames, m_minFrameCount );
+// 		logger()->trace( L4CXX_LOCATION, "Adding %4d frames to a %4d-frame queue, minimum is %4d frames", buffer->size(), m_queuedFrames, m_minFrameCount );
 		pushBuffer( buffer );
 	}
 }
