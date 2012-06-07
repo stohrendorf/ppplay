@@ -45,8 +45,8 @@ IAudioSource::WeakPtr IAudioOutput::source() const
 
 uint16_t IAudioOutput::internal_volumeLeft() const
 {
-	if( !m_source.expired() ) {
-		return m_source.lock()->volumeLeft();
+	if( IAudioSource::Ptr src = m_source.lock() ) {
+		return src->volumeLeft();
 	}
 	return 0;
 }

@@ -118,6 +118,9 @@ AudioFifo::~AudioFifo()
 
 void AudioFifo::pushBuffer( const AudioFrameBuffer& buf )
 {
+	if(!buf) {
+		return;
+	}
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	// copy, because AudioFrameBuffer is a shared_ptr that may be modified
 	AudioFrameBuffer cp( new AudioFrameBuffer::element_type );
@@ -198,7 +201,7 @@ uint16_t AudioFifo::volumeRight() const
 		return 0;
 	}
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
-	if( m_queuedFrames == 0 ) {
+	if( m_queuedFrames>>2 == 0 ) {
 		return 0;
 	}
 	return logify( m_volRightSum / ( m_queuedFrames >> 2 ) );
@@ -210,7 +213,7 @@ uint16_t AudioFifo::volumeLeft() const
 		return 0;
 	}
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
-	if( m_queuedFrames == 0 ) {
+	if( m_queuedFrames>>2 == 0 ) {
 		return 0;
 	}
 	return logify( m_volLeftSum / ( m_queuedFrames >> 2 ) );

@@ -25,8 +25,8 @@ void SDLAudioOutput::sdlAudioCallback( void* userdata, uint8_t* stream, int len_
 {
 	SDLAudioOutput* outpSdl = static_cast<SDLAudioOutput*>( userdata );
 	logger()->trace( L4CXX_LOCATION, "Requested %d bytes of data", len_bytes );
-	len_bytes -= sizeof( BasicSampleFrame ) * outpSdl->getSdlData( reinterpret_cast<BasicSampleFrame*>( stream ), len_bytes / sizeof( BasicSampleFrame ) );
-	std::fill_n( stream+len_bytes, len_bytes, 0 );
+	size_t copiedBytes = sizeof( BasicSampleFrame ) * outpSdl->getSdlData( reinterpret_cast<BasicSampleFrame*>( stream ), len_bytes / sizeof( BasicSampleFrame ) );
+	std::fill_n( stream+copiedBytes, len_bytes-copiedBytes, 0 );
 }
 
 size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
@@ -42,12 +42,13 @@ size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
 		logger()->trace( L4CXX_LOCATION, "Source did not return any data - input is dry" );
 		setErrorCode( InputDry );
 		pause();
+		return 0;
 	}
 	numFrames -= copied;
 	if( numFrames != 0 ) {
 		logger()->trace( L4CXX_LOCATION, "Source provided not enough data: %d frames missing", numFrames );
 	}
-	std::copy( buffer->begin(), buffer->end(), data );
+	std::copy_n( buffer->begin(), copied, data );
 	return copied;
 }
 
