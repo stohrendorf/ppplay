@@ -45,7 +45,7 @@ private:
 	 * @brief The internal SDL Timer ID
 	 */
 	struct _SDL_TimerID* m_id;
-	boost::recursive_mutex m_callbackMutex;
+	boost::mutex m_callbackMutex;
 	/**
 	 * @brief SDL Timer callback handler
 	 * @param[in] interval Timer interval
