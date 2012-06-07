@@ -44,7 +44,6 @@ private:
 	ppg::ProgressBar* m_progress;
 	std::weak_ptr<ppp::GenModule> m_module;
 	IAudioOutput::WeakPtr m_output;
-	boost::recursive_mutex m_timerMutex;
 	virtual void drawThis();
 public:
 	UIMain( Widget* parent, const ppp::GenModule::Ptr& module, const IAudioOutput::Ptr& output );

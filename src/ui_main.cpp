@@ -38,8 +38,7 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IA
 	m_modTitle( nullptr ),
 	m_progress( nullptr ),
 	m_module( module ),
-	m_output( output ),
-	m_timerMutex()
+	m_output( output )
 {
 	logger()->trace( L4CXX_LOCATION, "Initializing" );
 	setSize( parent->area().size() );
@@ -118,10 +117,7 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IA
 	logger()->trace( L4CXX_LOCATION, "Initialized" );
 }
 
-UIMain::~UIMain()
-{
-	boost::recursive_mutex::scoped_lock lock(m_timerMutex);
-}
+UIMain::~UIMain() = default;
 
 void UIMain::drawThis()
 {
@@ -164,11 +160,10 @@ ppg::Label* UIMain::modTitle()
 
 void UIMain::onTimer()
 {
-	boost::recursive_mutex::scoped_lock lock(m_timerMutex);
 	IAudioOutput::Ptr outLock( m_output.lock() );
 	const std::shared_ptr<const ppp::GenModule> modLock = std::const_pointer_cast<const ppp::GenModule>( m_module.lock() );
-	if( m_module.expired() || m_output.expired() ) {
-		logger()->trace( L4CXX_LOCATION, "Module or Output Device expired" );
+	if( m_module.expired() || m_output.expired() || !ppg::SDLScreen::instance() ) {
+		logger()->trace( L4CXX_LOCATION, "Module, Output Device or Screen expired" );
 		return;
 	}
 	logger()->trace( L4CXX_LOCATION, "Updating" );
