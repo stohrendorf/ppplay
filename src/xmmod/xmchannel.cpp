@@ -27,6 +27,7 @@
 #include "xmcell.h"
 #include "xmsample.h"
 #include "xminstrument.h"
+#include "xmbase.h"
 
 #include <cmath>
 
@@ -113,58 +114,66 @@ void XmChannel::fxPanSlide( uint8_t fxByte )
 	m_panning = clip( tmp, 0, 0xff );
 }
 
-void XmChannel::triggerNote()
+void XmChannel::updateEnvelopes()
 {
-	uint8_t note = m_currentCell->note();
-	if( note == KeyOffNote ) {
-		doKeyOff();
-		return;
-	}
-	else if( note == 0 ) {
-		note = m_baseNote;
-		if( note == 0 ) {
-			return;
-		}
-	}
-	m_baseNote = note;
+	//doesn't seem to be used in FT2  m_panningEnvelope.increasePosition(false);
+	m_volumeEnvelope.increasePosition(false);
+}
 
-	if( !currentInstrument() ) {
-		setActive( false );
+void XmChannel::triggerNote(uint8_t note)
+{
+	if( note == KeyOffNote ) {
+		m_keyOn = false;
+		updateEnvelopes();
 		return;
 	}
+	reuseIfZero( m_baseNote, note );
+	if( m_baseNote == 0 ) {
+		return;
+	}
+
+	const XmInstrument* instr = currentInstrument();
+	if( !instr ) {
+		instr = m_module->getInstrument( 0 );
+	}
+	
+	m_panningEnvelope = instr->panningProcessor();
+	m_volumeEnvelope = instr->volumeProcessor();
 
 	if( !currentSample() ) {
-		m_realNote = m_baseNote;
-		m_basePeriod = m_currentPeriod = 0;
-		setActive( false );
+		return;
+// 		m_realNote = m_baseNote;
+// 		m_basePeriod = m_currentPeriod = 0;
+// 		setActive( false );
+	}
+	int tmpNote = currentSample()->relativeNote();
+	tmpNote += m_baseNote;
+	if( !inRange( tmpNote, 1, 119 ) ) {
+		//LOG_WARNING("OUT OF RANGE NOTE: rel=%d base=%d r=%d", currentSample()->relativeNote(), m_baseNote, tmp);
+// 		setActive( false );
+		return;
+	}
+	m_realNote = tmpNote - 1;
+	setActive(true);
+	
+	if( m_currentCell->effect() == Effect::Extended && highNibble( m_currentCell->effectValue() ) == EfxSetFinetune ) {
+		m_finetune = ( lowNibble( m_currentCell->effectValue() ) << 4 ) - 0x80;
 	}
 	else {
-		int tmp = currentSample()->relativeNote();
-		tmp += m_baseNote;
-		if( !inRange( tmp, 1, 119 ) ) {
-			//LOG_WARNING("OUT OF RANGE NOTE: rel=%d base=%d r=%d", currentSample()->relativeNote(), m_baseNote, tmp);
-			setActive( false );
-			return;
-		}
-		m_realNote = tmp - 1;
-		if( m_currentCell->effect() == Effect::Extended && highNibble( m_currentCell->effectValue() ) == EfxSetFinetune ) {
-			m_finetune = ( lowNibble( m_currentCell->effectValue() ) << 4 ) - 0x80;
-		}
-		else {
-			m_finetune = currentSample()->finetune();
-		}
-		uint16_t newPer = m_module->noteToPeriod( m_realNote, m_finetune );
-		if( newPer != 0 ) {
+		m_finetune = currentSample()->finetune();
+	}
+	
+	if(m_realNote != 0) {
+		if( uint16_t newPer = m_module->noteToPeriod( m_realNote, m_finetune ) ) {
 			m_basePeriod = newPer;
 			m_currentPeriod = m_basePeriod;
 		}
-		if( m_currentCell->effect() == Effect::Offset ) {
-			fxOffset( m_currentCell->effectValue() );
-		}
-		else if( !( m_currentCell->effect() == Effect::Porta || m_currentCell->effect() == Effect::PortaVolSlide || highNibble( m_currentCell->volume() ) == VfxPorta ) ) {
-			setPosition( 0 );
-		}
-		setActive( true );
+	}
+	if( m_currentCell->effect() == Effect::Offset ) {
+		fxOffset( m_currentCell->effectValue() );
+	}
+	else {
+		setPosition( 0 );
 	}
 }
 
@@ -172,29 +181,26 @@ void XmChannel::doKeyOff()
 {
 	m_keyOn = false;
 	const XmInstrument* instr = currentInstrument();
-	if( !instr )
+	if( !instr ) {
 		return;
-
+	}
 	if( !m_volumeEnvelope.enabled() ) {
 		m_baseVolume = m_currentVolume = 0;
+	}
+	if( m_currentCell->instrument()!=0 ) {
+		applySampleDefaults();
 	}
 }
 
 void XmChannel::doKeyOn()
 {
-	if( !currentInstrument() ) {
-		doKeyOff();
-		setActive( false );
-		return;
-	}
+	m_keyOn = true;
 	m_noteChanged = true;
+	setActive( true );
 	if( ( m_vibratoCtrl & 4 ) == 0 ) {
 		m_vibratoPhase = 0;
 	}
 	m_tremoloPhase = m_retriggerCounter = m_tremorCountdown = 0;
-	m_keyOn = true;
-	m_volumeEnvelope = currentInstrument()->volumeProcessor();
-	m_panningEnvelope = currentInstrument()->panningProcessor();
 	m_volScale = 0x8000;
 	m_volScaleRate = currentInstrument()->fadeout();
 	if( currentInstrument()->vibDepth() == 0 ) {
@@ -209,7 +215,6 @@ void XmChannel::doKeyOn()
 		m_autoVibDepth = 0;
 		m_autoVibSweepRate = m_autoVibDepth / currentInstrument()->vibSweep();
 	}
-	setActive( true );
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -242,367 +247,394 @@ constexpr std::array<const int8_t, 256> g_AutoVibTable = {{
 };
 #endif
 
-void XmChannel::update( const ppp::xm::XmCell* cell, bool estimateOnly )
+void XmChannel::updateTick0( const XmCell* cell, bool estimateOnly )
 {
-	if( m_module->state().tick == 0 && !m_module->isRunningPatDelay() ) {
-		if( estimateOnly ) {
-			if( !cell ) {
-				return;
-			}
-			switch( cell->effect() ) {
-				case Effect::Extended:
-					fxExtended( cell->effectValue(), true );
-					break;
-				case Effect::SetTempoBpm:
-					fxSetTempoBpm( cell->effectValue() );
-					break;
-				default:
-					// silence "not handled" warnings
-					break;
-			}
+	if( estimateOnly ) {
+		if( !cell ) {
 			return;
 		}
-		m_noteChanged = false;
-		if( cell ) {
-			*m_currentCell = *cell;
+		switch( cell->effect() ) {
+			case Effect::Extended:
+				fxExtended( cell->effectValue(), true );
+				break;
+			case Effect::SetTempoBpm:
+				fxSetTempoBpm( cell->effectValue() );
+				break;
+			default:
+				// silence "not handled" warnings
+				break;
+		}
+		return;
+	}
+	
+	m_noteChanged = false;
+
+	{
+		bool vibratoStopped = m_currentCell->effectValue() != 0;
+		vibratoStopped &= m_currentCell->effect() == Effect::Vibrato || m_currentCell->effect() == Effect::VibratoVolSlide;
+		vibratoStopped &= cell != nullptr && cell->effect() != Effect::Vibrato && cell->effect() != Effect::VibratoVolSlide;
+		if( vibratoStopped ) {
+			// No more a vibrato effect, so reset the period.
+			m_currentPeriod = m_basePeriod;
+		}
+	}
+	
+	if( cell ) {
+		*m_currentCell = *cell;
+	}
+	else {
+		m_currentCell->clear();
+	}
+	
+	if( m_currentCell->instrument() != 0 ) {
+		if( m_currentCell->instrument() >= 0x80 ) {
+			m_instrumentIndex = 0;
 		}
 		else {
-			m_currentCell->clear();
-		}
-
-		if( ( m_vibratoCtrl & 4 ) == 0 ) {
-			// check for vib reset
-			if( m_currentCell->effect() != Effect::Vibrato && m_currentCell->effect() != Effect::VibratoVolSlide && highNibble( m_currentCell->volume() ) != VfxVibrato ) {
-				m_vibratoPhase = 0;
-			}
-		}
-
-		if( m_currentCell->instrument() != 0 && m_currentCell->instrument() < 0x80 ) {
 			m_instrumentIndex = m_currentCell->instrument();
-			applySampleDefaults(); // TODO check if it's right here
 		}
-		if( m_currentCell->effect() == Effect::Extended ) {
-			if( highNibble( m_currentCell->effectValue() ) == EfxNoteDelay && lowNibble( m_currentCell->effectValue() ) != 0 ) {
-				// note delay, but not on tick 0
-				return;
-			}
-			else if( highNibble( m_currentCell->effectValue() ) == EfxRetrigger && lowNibble( m_currentCell->effectValue() ) == 0 ) {
-				// retrigger every frame
-				if( m_currentCell->note() != KeyOffNote ) {
-					triggerNote();
+	}
+
+	if( m_currentCell->effect() == Effect::Extended ) {
+		if( highNibble( m_currentCell->effectValue() ) == EfxNoteDelay && lowNibble( m_currentCell->effectValue() ) != 0 ) {
+			// note delay, but not on tick 0
+			return;
+		}
+		else if( highNibble( m_currentCell->effectValue() ) == EfxRetrigger && lowNibble( m_currentCell->effectValue() ) == 0 ) {
+			// retrigger every frame
+			if( m_currentCell->note() != KeyOffNote ) {
+				triggerNote(m_currentCell->note());
+				if( m_currentCell->instrument() != 0 ) {
 					applySampleDefaults();
 					doKeyOn();
 				}
-				else {
-					doKeyOff();
+			}
+			else {
+				doKeyOff();
+				if( m_currentCell->instrument() != 0 ) {
 					applySampleDefaults();
 				}
 			}
 		}
-		if( highNibble( m_currentCell->volume() ) == VfxPorta ) {
-			if( lowNibble( m_currentCell->volume() ) != 0 ) {
-				m_portaSpeed = lowNibble( m_currentCell->volume() ) << 4;
-			}
-			applySampleDefaults();
-			if( m_currentCell->note() != 0 && m_currentCell->note() != KeyOffNote ) {
-				doKeyOn();
-			}
+	}
+	else if( highNibble( m_currentCell->volume() ) == VfxPorta ) {
+		if( lowNibble( m_currentCell->volume() ) != 0 ) {
+			m_portaSpeed = lowNibble( m_currentCell->volume() ) << 6;
 		}
-		else if( m_currentCell->effect() == Effect::Porta ) {
-			if( m_currentCell->effectValue() != 0 ) {
-				m_portaSpeed = m_currentCell->effectValue() << 2;
-			}
-			applySampleDefaults();
-			if( m_currentCell->note() != 0 && m_currentCell->note() != KeyOffNote ) {
-				doKeyOn();
-			}
+	}
+	else if( m_currentCell->effect() == Effect::Porta || m_currentCell->effect() == Effect::PortaVolSlide ) {
+		if( m_currentCell->effect() != Effect::PortaVolSlide && m_currentCell->effectValue() != 0 ) {
+			m_portaSpeed = m_currentCell->effectValue() << 2;
 		}
-		else if( m_currentCell->effect() == Effect::PortaVolSlide ) {
+		calculatePortaTarget( m_currentCell->note() );
+		if( m_currentCell->instrument()!=0 ) {
 			applySampleDefaults();
-			if( m_currentCell->note() != 0 && m_currentCell->note() != KeyOffNote ) {
-				doKeyOn();
-			}
+			doKeyOn();
 		}
-		else if( m_currentCell->note() != 0 ) {
-			if( m_currentCell->note() == KeyOffNote ) {
-				doKeyOff();
+	}
+	else if( m_currentCell->effect() == Effect::KeyOff && m_currentCell->effectValue()==0 ) {
+		doKeyOff();
+		if(m_currentCell->instrument()!=0) {
+			applySampleDefaults();
+		}
+	}
+	else if( m_currentCell->note() == 0 ) {
+		if(m_currentCell->instrument()!=0) {
+			applySampleDefaults();
+			doKeyOn();
+		}
+	}
+	else if( m_currentCell->note() == KeyOffNote ) {
+		doKeyOff();
+		if(m_currentCell->instrument()!=0) {
+			applySampleDefaults();
+		}
+	}
+	else {
+		triggerNote(m_currentCell->note());
+		if(m_currentCell->instrument()!=0) {
+			applySampleDefaults();
+			doKeyOn();
+		}
+	}
+
+	m_fxString = "      ";
+	switch( highNibble( m_currentCell->volume() ) ) {
+		case 0x01:
+		case 0x02:
+		case 0x03:
+		case 0x04:
+		case 0x05:
+			m_baseVolume = m_currentCell->volume() - 0x10;
+			m_currentVolume = m_baseVolume;
+			break;
+		case VfxFineVolSlideDown:
+			vfxFineVolSlideDown( m_currentCell->volume() );
+			m_fxString = "VSld \x19";
+			break;
+		case VfxFineVolSlideUp:
+			vfxFineVolSlideUp( m_currentCell->volume() );
+			m_fxString = "VSld \x18";
+			break;
+		case VfxSetVibSpeed:
+			vfxSetVibratoSpeed( m_currentCell->volume() );
+			m_fxString = "Vibr \xf7";
+			break;
+		case VfxSetPanning:
+			vfxSetPan( m_currentCell->volume() );
+			m_fxString = "StPan\x1d";
+			break;
+		case VfxVolSlideDown:
+			m_fxString = "VSld \x1f";
+			break;
+		case VfxVolSlideUp:
+			m_fxString = "VSld \x1e";
+			break;
+		case VfxPanSlideLeft:
+			m_fxString = "PSld \x1b";
+			break;
+		case VfxPanSlideRight:
+			m_fxString = "PSld \x1a";
+			break;
+		case VfxPorta:
+			m_fxString = "Porta\x12";
+			break;
+		case VfxVibrato:
+			m_fxString = "Vibr \xf7";
+			break;
+	}
+	switch( m_currentCell->effect() ) {
+		case Effect::None:
+			break;
+			// To get rid of the "enumeration value XY not handled in switch" warnings...
+		case Effect::Arpeggio:
+			m_fxString = "Arp  \xf0";
+			break;
+		case Effect::PortaUp:
+			m_fxString = "Ptch\x1e\x1e";
+			break;
+		case Effect::PortaDown:
+			m_fxString = "Ptch\x1f\x1f";
+			break;
+		case Effect::Porta:
+			m_fxString = "Porta\x12";
+			break;
+		case Effect::Vibrato:
+			m_fxString = "Vibr \xf7";
+			break;
+		case Effect::PortaVolSlide:
+			m_fxString = "PrtVo\x12";
+			break;
+		case Effect::VibratoVolSlide:
+			m_fxString = "VibVo\xf7";
+			break;
+		case Effect::Tremolo:
+			m_fxString = "Tremo\xec";
+			break;
+		case Effect::VolSlide:
+			if( highNibble( m_currentCell->effectValue() ) == 0 )
+				m_fxString = "VSld \x1f";
+			else
+				m_fxString = "VSld \x1e";
+			break;
+		case Effect::GlobalVolSlide:
+			if( highNibble( m_currentCell->effectValue() ) == 0 )
+				m_fxString = "GVSld\x1f";
+			else
+				m_fxString = "GVSld\x1e";
+			break;
+		case Effect::KeyOff:
+			m_fxString = "KOff \xd4";
+			break;
+		case Effect::PanSlide:
+			if( highNibble( m_currentCell->effectValue() ) == 0 )
+				m_fxString = "PSld \x1b";
+			else
+				m_fxString = "PSld \x1a";
+			break;
+		case Effect::Tremor:
+			m_fxString = "Tremr\xec";
+			break;
+		case Effect::PosJump:
+			m_fxString = "JmOrd\x1a";
+			break;
+		case Effect::PatBreak:
+			// All the above effects are handled in tick 1+
+			m_fxString = "PBrk \xf6";
+			break;
+		case Effect::Offset:
+			// this effect is handled in triggerNote()
+			m_fxString = "Offs \xaa";
+			break;
+		case Effect::SetPanning:
+			fxSetPan( m_currentCell->effectValue() );
+			m_fxString = "StPan\x1d";
+			break;
+		case Effect::SetVolume:
+			fxSetVolume( m_currentCell->effectValue() );
+			m_fxString = "StVol=";
+			break;
+		case Effect::Extended:
+			fxExtended( m_currentCell->effectValue(), false );
+			break;
+		case Effect::SetTempoBpm:
+			fxSetTempoBpm( m_currentCell->effectValue() );
+			m_fxString = "Tempo\x7f";
+			break;
+		case Effect::SetGlobalVol:
+			fxSetGlobalVolume( m_currentCell->effectValue() );
+			m_fxString = "GloVol";
+			break;
+		case Effect::ExtraFinePorta:
+			fxExtraFinePorta( m_currentCell->effectValue() );
+			if( highNibble( m_currentCell->effectValue() ) == 1 ) {
+				m_fxString = "Ptch \x18";
+			}
+			else if( highNibble( m_currentCell->effectValue() ) == 2 ) {
+				m_fxString = "Ptch \x19";
 			}
 			else {
-				triggerNote();
+				m_fxString = "      ";
+			}
+			break;
+		case Effect::Retrigger:
+			fxRetrigger( m_currentCell->effectValue() );
+			m_fxString = "Retr \xec";
+			break;
+		case Effect::SetEnvPos:
+			m_volumeEnvelope.setPosition( m_currentCell->effectValue() );
+			m_panningEnvelope.setPosition( m_currentCell->effectValue() );
+			m_fxString = "EnvP \x1d";
+			break;
+	}
+}
+
+void XmChannel::updateTick1( const XmCell* cell, bool estimateOnly )
+{
+	if( estimateOnly ) {
+		if( !cell ) {
+			return;
+		}
+		switch( cell->effect() ) {
+			case Effect::Extended:
+				fxExtended( cell->effectValue(), true );
+				break;
+			case Effect::PatBreak:
+				m_module->doPatternBreak( highNibble( cell->effectValue() ) * 10 + lowNibble( cell->effectValue() ) );
+				break;
+			case Effect::PosJump:
+				m_module->doJumpPos( cell->effectValue() );
+				break;
+			default:
+				// silence "not handled" warnings
+				break;
+		}
+		return;
+	}
+	if( m_currentCell->effect() == Effect::Extended ) {
+		if( highNibble( m_currentCell->effectValue() ) == EfxNoteDelay ) {
+			if( lowNibble( m_currentCell->effectValue() ) == m_module->state().tick ) {
+				triggerNote(m_currentCell->note());
 				applySampleDefaults();
 				doKeyOn();
 			}
 		}
+	}
+	switch( highNibble( m_currentCell->volume() ) ) {
+		case VfxVolSlideDown:
+			vfxSlideDown( m_currentCell->volume() );
+			break;
+		case VfxVolSlideUp:
+			vfxSlideUp( m_currentCell->volume() );
+			break;
+		case VfxPanSlideLeft:
+			vfxPanSlideLeft( m_currentCell->volume() );
+			break;
+		case VfxPanSlideRight:
+			vfxPanSlideRight( m_currentCell->volume() );
+			break;
+		case VfxPorta:
+			fxPorta();
+			break;
+		case VfxVibrato:
+			vfxVibrato( m_currentCell->volume() );
+			break;
+	}
+	switch( m_currentCell->effect() ) {
+		case Effect::SetPanning:
+		case Effect::Offset:
+		case Effect::SetVolume:
+		case Effect::SetTempoBpm:
+		case Effect::SetGlobalVol:
+		case Effect::PanSlide:
+		case Effect::ExtraFinePorta:
+		case Effect::None:
+		case Effect::SetEnvPos:
+			// already handled
+			break;
+		case Effect::Arpeggio:
+			fxArpeggio( m_currentCell->effectValue() );
+			break;
+		case Effect::PortaUp:
+			fxPortaUp( m_currentCell->effectValue() );
+			break;
+		case Effect::PortaDown:
+			fxPortaDown( m_currentCell->effectValue() );
+			break;
+		case Effect::VolSlide:
+			fxVolSlide( m_currentCell->effectValue() );
+			break;
+		case Effect::Extended:
+			fxExtended( m_currentCell->effectValue(), false );
+			break;
+		case Effect::Porta:
+			fxPorta();
+			break;
+		case Effect::PortaVolSlide:
+			fxPorta();
+			fxVolSlide( m_currentCell->effectValue() );
+			break;
+		case Effect::Vibrato:
+			fxVibrato( m_currentCell->effectValue() );
+			break;
+		case Effect::VibratoVolSlide:
+			fxVibrato( m_currentCell->effectValue() );
+			fxVolSlide( m_currentCell->effectValue() );
+			break;
+		case Effect::GlobalVolSlide:
+			fxGlobalVolSlide( m_currentCell->effectValue() );
+			break;
+		case Effect::PatBreak:
+			m_module->doPatternBreak( highNibble( m_currentCell->effectValue() ) * 10 + lowNibble( m_currentCell->effectValue() ) );
+			break;
+		case Effect::PosJump:
+			m_module->doJumpPos( m_currentCell->effectValue() );
+			break;
+		case Effect::Tremolo:
+			fxTremolo( m_currentCell->effectValue() );
+			break;
+		case Effect::KeyOff:
+			if( m_module->state().tick == m_currentCell->effectValue() ) {
+				doKeyOff();
+			}
+			break;
+		case Effect::Tremor:
+			fxTremor( m_currentCell->effectValue() );
+			break;
+		case Effect::Retrigger:
+			retriggerNote();
+			break;
+	}
+}
 
-		if( m_currentCell->note() != 0 && m_currentCell->note() != KeyOffNote ) {
-			calculatePortaTarget( m_currentCell->note() );
-		}
 
-		m_fxString = "      ";
-		switch( highNibble( m_currentCell->volume() ) ) {
-			case 0x01:
-			case 0x02:
-			case 0x03:
-			case 0x04:
-			case 0x05:
-				m_baseVolume = m_currentCell->volume() - 0x10;
-				m_currentVolume = m_baseVolume;
-				break;
-			case VfxFineVolSlideDown:
-				vfxFineVolSlideDown( m_currentCell->volume() );
-				m_fxString = "VSld \x19";
-				break;
-			case VfxFineVolSlideUp:
-				vfxFineVolSlideUp( m_currentCell->volume() );
-				m_fxString = "VSld \x18";
-				break;
-			case VfxSetVibSpeed:
-				vfxSetVibratoSpeed( m_currentCell->volume() );
-				m_fxString = "Vibr \xf7";
-				break;
-			case VfxSetPanning:
-				vfxSetPan( m_currentCell->volume() );
-				m_fxString = "StPan\x1d";
-				break;
-			case VfxVolSlideDown:
-				m_fxString = "VSld \x1f";
-				break;
-			case VfxVolSlideUp:
-				m_fxString = "VSld \x1e";
-				break;
-			case VfxPanSlideLeft:
-				m_fxString = "PSld \x1b";
-				break;
-			case VfxPanSlideRight:
-				m_fxString = "PSld \x1a";
-				break;
-			case VfxPorta:
-				m_fxString = "Porta\x12";
-				break;
-			case VfxVibrato:
-				m_fxString = "Vibr \xf7";
-				break;
-		}
-		switch( m_currentCell->effect() ) {
-			case Effect::None:
-				break;
-				// To get rid of the "enumeration value XY not handled in switch" warnings...
-			case Effect::Arpeggio:
-				m_fxString = "Arp  \xf0";
-				break;
-			case Effect::PortaUp:
-				m_fxString = "Ptch\x1e\x1e";
-				break;
-			case Effect::PortaDown:
-				m_fxString = "Ptch\x1f\x1f";
-				break;
-			case Effect::Porta:
-				m_fxString = "Porta\x12";
-				break;
-			case Effect::Vibrato:
-				m_fxString = "Vibr \xf7";
-				break;
-			case Effect::PortaVolSlide:
-				m_fxString = "PrtVo\x12";
-				break;
-			case Effect::VibratoVolSlide:
-				m_fxString = "VibVo\xf7";
-				break;
-			case Effect::Tremolo:
-				m_fxString = "Tremo\xec";
-				break;
-			case Effect::VolSlide:
-				if( highNibble( m_currentCell->effectValue() ) == 0 )
-					m_fxString = "VSld \x1f";
-				else
-					m_fxString = "VSld \x1e";
-				break;
-			case Effect::GlobalVolSlide:
-				if( highNibble( m_currentCell->effectValue() ) == 0 )
-					m_fxString = "GVSld\x1f";
-				else
-					m_fxString = "GVSld\x1e";
-				break;
-			case Effect::KeyOff:
-				m_fxString = "KOff \xd4";
-				break;
-			case Effect::PanSlide:
-				if( highNibble( m_currentCell->effectValue() ) == 0 )
-					m_fxString = "PSld \x1b";
-				else
-					m_fxString = "PSld \x1a";
-				break;
-			case Effect::Tremor:
-				m_fxString = "Tremr\xec";
-				break;
-			case Effect::PosJump:
-				m_fxString = "JmOrd\x1a";
-				break;
-			case Effect::PatBreak:
-				// All the above effects are handled in tick 1+
-				m_fxString = "PBrk \xf6";
-				break;
-			case Effect::Offset:
-				// this effect is handled in triggerNote()
-				m_fxString = "Offs \xaa";
-				break;
-			case Effect::SetPanning:
-				fxSetPan( m_currentCell->effectValue() );
-				m_fxString = "StPan\x1d";
-				break;
-			case Effect::SetVolume:
-				fxSetVolume( m_currentCell->effectValue() );
-				m_fxString = "StVol=";
-				break;
-			case Effect::Extended:
-				fxExtended( m_currentCell->effectValue(), false );
-				break;
-			case Effect::SetTempoBpm:
-				fxSetTempoBpm( m_currentCell->effectValue() );
-				m_fxString = "Tempo\x7f";
-				break;
-			case Effect::SetGlobalVol:
-				fxSetGlobalVolume( m_currentCell->effectValue() );
-				m_fxString = "GloVol";
-				break;
-			case Effect::ExtraFinePorta:
-				fxExtraFinePorta( m_currentCell->effectValue() );
-				if( highNibble( m_currentCell->effectValue() ) == 1 ) {
-					m_fxString = "Ptch \x18";
-				}
-				else if( highNibble( m_currentCell->effectValue() ) == 2 ) {
-					m_fxString = "Ptch \x19";
-				}
-				else {
-					m_fxString = "      ";
-				}
-				break;
-			case Effect::Retrigger:
-				fxRetrigger( m_currentCell->effectValue() );
-				m_fxString = "Retr \xec";
-				break;
-			case Effect::SetEnvPos:
-				m_volumeEnvelope.setPosition( m_currentCell->effectValue() );
-				m_panningEnvelope.setPosition( m_currentCell->effectValue() );
-				m_fxString = "EnvP \x1d";
-				break;
-		}
+void XmChannel::update( const XmCell* cell, bool estimateOnly )
+{
+	if( m_module->state().tick == 0 && !m_module->isRunningPatDelay() ) {
+		updateTick0(cell, estimateOnly);
 	}
 	else { // tick 1+
-		if( estimateOnly ) {
-			if( !cell ) {
-				return;
-			}
-			switch( cell->effect() ) {
-				case Effect::Extended:
-					fxExtended( cell->effectValue(), true );
-					break;
-				case Effect::PatBreak:
-					m_module->doPatternBreak( highNibble( cell->effectValue() ) * 10 + lowNibble( cell->effectValue() ) );
-					break;
-				case Effect::PosJump:
-					m_module->doJumpPos( cell->effectValue() );
-					break;
-				default:
-					// silence "not handled" warnings
-					break;
-			}
-			return;
-		}
-		if( m_currentCell->effect() == Effect::Extended ) {
-			if( highNibble( m_currentCell->effectValue() ) == EfxNoteDelay ) {
-				if( lowNibble( m_currentCell->effectValue() ) == m_module->state().tick ) {
-					triggerNote();
-					applySampleDefaults();
-					doKeyOn();
-				}
-			}
-		}
-		switch( highNibble( m_currentCell->volume() ) ) {
-			case VfxVolSlideDown:
-				vfxSlideDown( m_currentCell->volume() );
-				break;
-			case VfxVolSlideUp:
-				vfxSlideUp( m_currentCell->volume() );
-				break;
-			case VfxPanSlideLeft:
-				vfxPanSlideLeft( m_currentCell->volume() );
-				break;
-			case VfxPanSlideRight:
-				vfxPanSlideRight( m_currentCell->volume() );
-				break;
-			case VfxPorta:
-				fxPorta();
-				break;
-			case VfxVibrato:
-				vfxVibrato( m_currentCell->volume() );
-				break;
-		}
-		switch( m_currentCell->effect() ) {
-			case Effect::SetPanning:
-			case Effect::Offset:
-			case Effect::SetVolume:
-			case Effect::SetTempoBpm:
-			case Effect::SetGlobalVol:
-			case Effect::PanSlide:
-			case Effect::ExtraFinePorta:
-			case Effect::None:
-			case Effect::SetEnvPos:
-				// already handled
-				break;
-			case Effect::Arpeggio:
-				fxArpeggio( m_currentCell->effectValue() );
-				break;
-			case Effect::PortaUp:
-				fxPortaUp( m_currentCell->effectValue() );
-				break;
-			case Effect::PortaDown:
-				fxPortaDown( m_currentCell->effectValue() );
-				break;
-			case Effect::VolSlide:
-				fxVolSlide( m_currentCell->effectValue() );
-				break;
-			case Effect::Extended:
-				fxExtended( m_currentCell->effectValue(), false );
-				break;
-			case Effect::Porta:
-				fxPorta();
-				break;
-			case Effect::PortaVolSlide:
-				fxPorta();
-				fxVolSlide( m_currentCell->effectValue() );
-				break;
-			case Effect::Vibrato:
-				fxVibrato( m_currentCell->effectValue() );
-				break;
-			case Effect::VibratoVolSlide:
-				fxVibrato( m_currentCell->effectValue() );
-				fxVolSlide( m_currentCell->effectValue() );
-				break;
-			case Effect::GlobalVolSlide:
-				fxGlobalVolSlide( m_currentCell->effectValue() );
-				break;
-			case Effect::PatBreak:
-				m_module->doPatternBreak( highNibble( m_currentCell->effectValue() ) * 10 + lowNibble( m_currentCell->effectValue() ) );
-				break;
-			case Effect::PosJump:
-				m_module->doJumpPos( m_currentCell->effectValue() );
-				break;
-			case Effect::Tremolo:
-				fxTremolo( m_currentCell->effectValue() );
-				break;
-			case Effect::KeyOff:
-				if( m_module->state().tick == m_currentCell->effectValue() ) {
-					doKeyOff();
-				}
-				break;
-			case Effect::Tremor:
-				fxTremor( m_currentCell->effectValue() );
-				break;
-			case Effect::Retrigger:
-				retriggerNote();
-				break;
-		}
+		updateTick1(cell, estimateOnly);
 	}
 	if( !m_keyOn ) {
 		if( m_volScale >= m_volScaleRate ) {
@@ -618,7 +650,7 @@ void XmChannel::update( const ppp::xm::XmCell* cell, bool estimateOnly )
 	m_realPanning = m_panningEnvelope.realPanning( m_panning );
 
 	if( currentInstrument() ) {
-		if( m_autoVibSweepRate != 0 && m_keyOn ) {
+		if( m_autoVibSweepRate != 0 && m_autoVibDepth!=0 && m_keyOn ) {
 			uint16_t tmp = m_autoVibSweepRate + m_autoVibDepth;
 			if( tmp > currentInstrument()->vibDepth() ) {
 				m_autoVibSweepRate = 0;
@@ -931,7 +963,7 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 			break;
 		case EfxNoteDelay:
 			if( m_module->state().tick == lowNibble( fxByte ) ) {
-				triggerNote();
+				triggerNote(m_currentCell->note());
 				applySampleDefaults();
 				doKeyOn();
 				if( m_currentCell->volume() >= 0x10 && m_currentCell->volume() <= 0x4f ) {
@@ -946,7 +978,7 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 		case EfxRetrigger:
 			if( lowNibble( fxByte ) != 0 ) {
 				if( m_module->state().tick % lowNibble( fxByte ) == 0 ) {
-					triggerNote();
+					triggerNote(m_currentCell->note());
 					doKeyOn();
 				}
 			}
@@ -1252,7 +1284,7 @@ void XmChannel::retriggerNote()
 	else if( highNibble( m_currentCell->volume() ) == VfxSetPanning ) {
 		vfxSetPan( m_currentCell->volume() );
 	}
-	triggerNote();
+	triggerNote(m_currentCell->note());
 	doKeyOn();
 }
 

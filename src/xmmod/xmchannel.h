@@ -192,6 +192,10 @@ private:
 	 * @return Pointer to the current instrument or nullptr
 	 */
 	const XmInstrument* currentInstrument() const;
+	
+	void updateTick0( const XmCell* cell, bool estimateOnly );
+	void updateTick1( const XmCell* cell, bool estimateOnly );
+	void updateEnvelopes();
 public:
 	/**
 	 * @brief Constructor
@@ -394,7 +398,7 @@ private:
 	/**
 	 * @brief Trigger note
 	 */
-	void triggerNote();
+	void triggerNote( uint8_t note );
 	/**
 	 * @brief Retrigger note
 	 */
