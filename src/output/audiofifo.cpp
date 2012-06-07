@@ -57,7 +57,7 @@ uint16_t logify( uint16_t value )
 void sumAbsValues( const AudioFrameBuffer& buf, uint64_t& left, uint64_t& right )
 {
 	left = right = 0;
-for( const BasicSampleFrame & frame : *buf ) {
+	for( const BasicSampleFrame & frame : *buf ) {
 		left += std::abs( frame.left );
 		right += std::abs( frame.right );
 	}
