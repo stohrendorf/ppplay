@@ -64,8 +64,8 @@ Logger* Logger::get( const std::string& name )
 {
 	typedef std::unordered_map<std::string, std::shared_ptr<Logger>> RepoMap; //!< @brief Maps logger names to their instances
 	static RepoMap s_repository; //!< @brief The logger repository
-	static boost::recursive_mutex lockMutex; //!< @brief Mutex for locking the repository
-	boost::recursive_mutex::scoped_lock lockGuard( lockMutex );
+	static boost::mutex lockMutex; //!< @brief Mutex for locking the repository
+	boost::mutex::scoped_lock lockGuard( lockMutex );
 
 	RepoMap::const_iterator elem = s_repository.find( name );
 	if( elem != s_repository.end() ) {
@@ -85,8 +85,8 @@ void Logger::log( light4cxx::Level l, const light4cxx::Location& loc, const std:
 	if( l < s_level || s_level == Level::Off ) {
 		return;
 	}
-	static boost::recursive_mutex outMutex;
-	boost::recursive_mutex::scoped_lock outLock( outMutex );
+	static boost::mutex outMutex;
+	boost::mutex::scoped_lock outLock( outMutex );
 	*s_output << loc.toString( l, *this, str ) << std::endl;
 }
 
