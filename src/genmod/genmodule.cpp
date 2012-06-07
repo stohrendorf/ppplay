@@ -83,7 +83,8 @@ uint32_t GenModule::timeElapsed() const
 
 size_t GenModule::length() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+// HACK this is dangerous, but avoids a deadlock...
+// boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_songs->length;
 }
 
