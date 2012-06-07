@@ -46,7 +46,7 @@
 namespace
 {
 std::shared_ptr<ppg::SDLScreen> dosScreen;
-std::shared_ptr<UIMain> uiMain;
+UIMain *uiMain;
 
 IAudioOutput::Ptr output;
 
@@ -200,6 +200,7 @@ int main( int argc, char* argv[] )
 		if( !parseCmdLine( argc, argv ) ) {
 			return EXIT_SUCCESS;
 		}
+		SDL_Init(SDL_INIT_EVERYTHING);
 		light4cxx::Logger::root()->info( L4CXX_LOCATION, "Trying to load '%s'", config::filename );
 		ppp::GenModule::Ptr module;
 		try {
@@ -230,11 +231,13 @@ int main( int argc, char* argv[] )
 			}
 			output->play();
 			if( dosScreen ) {
-				uiMain.reset( new UIMain( dosScreen.get(), module, output ) );
+				uiMain = new UIMain( dosScreen.get(), module, output );
 			}
 			SDL_Event event;
 			while( output ) {
 				if( output->errorCode() == IAudioOutput::InputDry ) {
+// 					output.reset();
+					break;
 					light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Input is dry, trying to jump to the next song");
 					module->setPaused(true);
 					output->pause();
@@ -243,13 +246,13 @@ int main( int argc, char* argv[] )
 						output.reset();
 						break;
 					}
-					for(int i=0; i<10; i++) {
-						output->setErrorCode( IAudioOutput::NoError );
-						boost::this_thread::sleep( boost::posix_time::millisec(50) );
-						if( output->errorCode() == IAudioOutput::NoError ) {
-							break;
-						}
-					}
+// 					for(int i=0; i<10; i++) {
+// 						output->setErrorCode( IAudioOutput::NoError );
+// 						boost::this_thread::sleep( boost::posix_time::millisec(50) );
+// 						if( output->errorCode() == IAudioOutput::NoError ) {
+// 							break;
+// 						}
+// 					}
 					module->setPaused(false);
 					output->play();
 // 					output->init( module->frequency() );
@@ -324,7 +327,7 @@ int main( int argc, char* argv[] )
 				return EXIT_FAILURE;
 			}
 			if( dosScreen ) {
-				uiMain.reset( new UIMain( dosScreen.get(), module, output ) );
+				uiMain = new UIMain( dosScreen.get(), module, output );
 			}
 			output->play();
 			boost::progress_display progress(module->length(), std::cout, stringFmt("QuickMP3: %s\n", config::filename));
@@ -339,6 +342,8 @@ int main( int argc, char* argv[] )
 		light4cxx::Logger::root()->fatal( L4CXX_LOCATION, stringFmt( "Main (end): %s", boost::current_exception_diagnostic_information()) );
 		return EXIT_FAILURE;
 	}
+	dosScreen.reset();
+// 	uiMain.reset();
 	return EXIT_SUCCESS;
 }
 
