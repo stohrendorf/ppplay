@@ -50,7 +50,7 @@ private:
 	boost::thread m_encoderThread;
 	//! @brief Whether the output is paused
 	bool m_paused;
-	mutable boost::recursive_mutex m_mutex;
+	mutable boost::mutex m_mutex;
 	//! @brief Default size of m_buffer
 	static constexpr size_t BufferSize = 4096;
 	/**

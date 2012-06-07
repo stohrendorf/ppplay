@@ -63,11 +63,6 @@ public:
 	 * @return Internal error code
 	 */
 	ErrorCode errorCode() const;
-	/**
-	 * @brief Set the internal error code
-	 * @param[in] ec New error code
-	 */
-	void setErrorCode( ErrorCode ec );
 	//! @copydoc internal_init
 	int init( int desiredFrq );
 	//! @copydoc internal_playing
@@ -89,6 +84,11 @@ public:
 	IAudioSource::WeakPtr source() const;
 protected:
 	/**
+	 * @brief Set the internal error code
+	 * @param[in] ec New error code
+	 */
+	void setErrorCode( ErrorCode ec );
+	/**
 	 * @brief Get the logger
 	 * @return Logger with name "audio.output"
 	 */
@@ -97,7 +97,7 @@ private:
 	IAudioSource::WeakPtr m_source; //!< @brief The audio source
 	ErrorCode m_errorCode; //!< @brief Internal error code
 	//ReadWriteLockable m_readWriteLock;
-	mutable boost::recursive_mutex m_mutex;
+	mutable boost::mutex m_mutex;
 	/**
 	 * @brief Initialize output device
 	 * @param[in] desiredFrq Desired output frequency

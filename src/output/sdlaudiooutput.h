@@ -42,7 +42,7 @@ public:
 	explicit SDLAudioOutput( const IAudioSource::WeakPtr& src );
 	virtual ~SDLAudioOutput();
 private:
-	boost::recursive_mutex m_mutex;
+	boost::mutex m_mutex;
 	AudioFifo m_fifo;
 	/**
 	 * @brief SDL Audio callback handler
