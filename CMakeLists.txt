@@ -124,12 +124,7 @@ if(MINGW)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
 endif()
 
-if(NOT CMAKE_BUILD_TYPE)
-	message(STATUS "Build type is undefined, assuming 'RelWithDebInfo'")
-	set(CMAKE_BUILD_TYPE "RelWithDebInfo" FORCE)
-else()
-	message(STATUS "Build type is '${CMAKE_BUILD_TYPE}'")
-endif()
+message(STATUS "Build type is '${CMAKE_BUILD_TYPE}'")
 
 message(STATUS "CXX Flags (Debug)       : ${CMAKE_CXX_FLAGS_DEBUG}")
 message(STATUS "CXX Flags (Release)     : ${CMAKE_CXX_FLAGS_RELEASE}")
@@ -141,7 +136,7 @@ include(FeatureSummary)
 #########
 # init main application target settings
 #########
-set(ppp_SRCS ppplay.cpp src/ui_main.cpp src/sdlloader.cpp)
+set(ppp_SRCS ppplay.cpp src/ui_main.cpp)
 if(WIN32 OR MINGW)
 	set(ppp_SRCS ${ppp_SRCS} ppp.rc)
 endif()
@@ -151,7 +146,7 @@ if(MINGW)
 	target_link_libraries(ppplay stdc++ mingw32)
 endif()
 
-target_link_libraries(ppplay rt ppplay_core ppplay_ppg ppplay_output_mp3 ppplay_output_sdl)
+target_link_libraries(ppplay rt ppplay_core ppplay_module_base ppplay_ppg ppplay_output_mp3 ppplay_output_sdl)
 # 
 #########
 # link libraries

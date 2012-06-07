@@ -22,21 +22,16 @@ configure_file(
 
 set_source_files_properties(Mainpage.dox PROPERTIES GENERATED TRUE)
 
-add_library(ppplay_core SHARED
-	stuff/moduleregistry.cpp
-	stuff/numberutils.cpp
-	stuff/sdltimer.cpp
-	stuff/stringutils.cpp
+add_library(ppplay_stream SHARED
 	stream/binstream.cpp
 	stream/fbinstream.cpp
 	stream/iarchive.cpp
 	stream/memarchive.cpp
 	stream/sbinstream.cpp
-	output/audiofifo.cpp
-	output/audiotypes.cpp
-	output/iaudiooutput.cpp
-	output/iaudiosource.cpp
-	sdlloader.cpp
+)
+install(TARGETS ppplay_stream DESTINATION lib)
+
+add_library(ppplay_module_base SHARED
 	genmod/breseninter.cpp
 	genmod/genbase.cpp
 	genmod/genchannel.cpp
@@ -46,9 +41,21 @@ add_library(ppplay_core SHARED
 	genmod/ipatterncell.cpp
 	genmod/modulestate.cpp
 	genmod/songinfo.cpp
+)
+install(TARGETS ppplay_module_base DESTINATION lib)
+
+add_library(ppplay_core SHARED
+	stuff/moduleregistry.cpp
+	stuff/numberutils.cpp
+	stuff/sdltimer.cpp
+	stuff/stringutils.cpp
+	output/audiofifo.cpp
+	output/audiotypes.cpp
+	output/iaudiooutput.cpp
+	output/iaudiosource.cpp
 	light4cxx/location.cpp
 	light4cxx/logger.cpp
 )
 
-target_link_libraries(ppplay_core ${SDL_LIBRARY} ${Boost_LIBRARIES} ${mp3lame_LIB})
+target_link_libraries(ppplay_core ppplay_stream ${SDL_LIBRARY} ${Boost_LIBRARIES} ${mp3lame_LIB})
 install(TARGETS ppplay_core DESTINATION lib)
