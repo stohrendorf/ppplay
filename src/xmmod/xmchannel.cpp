@@ -295,25 +295,23 @@ void XmChannel::updateTick0( const XmCell* cell, bool estimateOnly )
 		}
 	}
 
-	if( m_currentCell->effect() == Effect::Extended ) {
-		if( highNibble( m_currentCell->effectValue() ) == EfxNoteDelay && lowNibble( m_currentCell->effectValue() ) != 0 ) {
-			// note delay, but not on tick 0
-			return;
-		}
-		else if( highNibble( m_currentCell->effectValue() ) == EfxRetrigger && lowNibble( m_currentCell->effectValue() ) == 0 ) {
-			// retrigger every frame
-			if( m_currentCell->note() != KeyOffNote ) {
-				triggerNote(m_currentCell->note());
-				if( m_currentCell->instrument() != 0 ) {
-					applySampleDefaults();
-					doKeyOn();
-				}
+	if( m_currentCell->effect() == Effect::Extended && highNibble( m_currentCell->effectValue() ) == EfxNoteDelay && lowNibble( m_currentCell->effectValue() ) != 0 ) {
+		// note delay, but not on tick 0
+		return;
+	}
+	else if( m_currentCell->effect() == Effect::Extended && highNibble( m_currentCell->effectValue() ) == EfxRetrigger && lowNibble( m_currentCell->effectValue() ) == 0 ) {
+		// retrigger every frame
+		if( m_currentCell->note() != KeyOffNote ) {
+			triggerNote(m_currentCell->note());
+			if( m_currentCell->instrument() != 0 ) {
+				applySampleDefaults();
+				doKeyOn();
 			}
-			else {
-				doKeyOff();
-				if( m_currentCell->instrument() != 0 ) {
-					applySampleDefaults();
-				}
+		}
+		else {
+			doKeyOff();
+			if( m_currentCell->instrument() != 0 ) {
+				applySampleDefaults();
 			}
 		}
 	}
@@ -1012,6 +1010,8 @@ void XmChannel::applySampleDefaults()
 		m_baseVolume = m_currentVolume = smp->volume();
 		m_panning = smp->panning();
 	}
+	m_volumeEnvelope.setPosition(0);
+	m_panningEnvelope.setPosition(0);
 }
 
 void XmChannel::vfxSetVibratoSpeed( uint8_t fxByte )
