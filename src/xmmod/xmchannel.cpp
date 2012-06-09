@@ -718,7 +718,7 @@ std::string XmChannel::internal_effectName() const
 
 std::string XmChannel::internal_noteName() const
 {
-	if( m_baseNote == 0 ) {
+	if( m_baseNote == 0 || !currentSample() ) {
 		return "...";
 	}
 	else if( m_baseNote == KeyOffNote ) {
@@ -741,6 +741,10 @@ void XmChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 		return;
 	m_bres.reset( m_module->frequency(), m_module->periodToFrequency( m_currentPeriod + m_autoVibDeltaPeriod ) );
 	const XmSample* currSmp = currentSample();
+	if(!currSmp) {
+		setActive(false);
+		return;
+	}
 	GenSample::PositionType pos = position();
 	uint8_t volLeft = 0x80;
 	if( m_realPanning > 0x80 ) {
