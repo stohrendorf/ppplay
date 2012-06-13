@@ -52,7 +52,7 @@ private:
 	bool m_paused;
 	mutable boost::mutex m_mutex;
 	//! @brief Default size of m_buffer
-	static constexpr size_t BufferSize = 4096;
+	static constexpr size_t BufferSize = 32768;
 	/**
 	 * @brief Encoder thread handler
 	 */

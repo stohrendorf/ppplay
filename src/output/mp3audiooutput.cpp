@@ -23,18 +23,12 @@
 
 void MP3AudioOutput::encodeThread()
 {
-	while( true ) {
-		while( m_paused ) {
+	while( IAudioSource::Ptr srcLock = source().lock() ) {
+		boost::mutex::scoped_lock lock( m_mutex );
+		if( m_paused || srcLock->paused() ) {
 			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 			m_encoderThread.yield();
-		}
-		IAudioSource::Ptr srcLock = source().lock();
-		if( !srcLock ) {
-			break;
-		}
-		while( srcLock->paused() ) {
-			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
-			m_encoderThread.yield();
+			continue;
 		}
 		AudioFrameBuffer buffer;
 		size_t size = srcLock->getAudioData( buffer, srcLock->preferredBufferSize() );
@@ -43,20 +37,29 @@ void MP3AudioOutput::encodeThread()
 			pause();
 			return;
 		}
-
-		boost::mutex::scoped_lock lock( m_mutex );
 		int res = lame_encode_buffer_interleaved( m_lameGlobalFlags, &buffer->front().left, buffer->size(), m_buffer, BufferSize );
 		if( res < 0 ) {
-			if( res == -1 ) {
-				logger()->error( L4CXX_LOCATION, "Lame Encoding Buffer too small!" );
+			switch(res) {
+				case -1:
+					logger()->error( L4CXX_LOCATION, "Encoding Buffer too small" );
+					break;
+				case -2:
+					logger()->error( L4CXX_LOCATION, "malloc() problem" );
+					break;
+				case -3:
+					logger()->error( L4CXX_LOCATION, "Missing lame_init_params() call" );
+					break;
+				case -4:
+					logger()->error( L4CXX_LOCATION, "Psycho acoustic problem" );
+					break;
+				default:
+					logger()->error( L4CXX_LOCATION, "Unknown error: %d", res );
 			}
-			else {
-				logger()->error( L4CXX_LOCATION, "Unknown error: %d", res );
-			}
+			pause();
+			setErrorCode(OutputError);
+			break;
 		}
-		else {
-			m_file.write( reinterpret_cast<char*>( m_buffer ), res );
-		}
+		m_file.write( reinterpret_cast<char*>( m_buffer ), res );
 	}
 }
 
@@ -73,9 +76,13 @@ MP3AudioOutput::~MP3AudioOutput()
 {
 	m_encoderThread.join();
 	boost::mutex::scoped_lock lock( m_mutex );
+	if( m_lameGlobalFlags != nullptr ) {
+		int size = lame_encode_flush(m_lameGlobalFlags, m_buffer, BufferSize);
+		m_file.write( reinterpret_cast<char*>(m_buffer), size );
+		lame_close( m_lameGlobalFlags );
+	}
 	delete[] m_buffer;
 	m_buffer = nullptr;
-	lame_close( m_lameGlobalFlags );
 	logger()->trace( L4CXX_LOCATION, "Destroyed" );
 }
 
