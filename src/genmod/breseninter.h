@@ -53,18 +53,19 @@ private:
 	uint_fast32_t m_dx;
 	//! @brief Height of the line
 	uint_fast32_t m_dy;
-	//! @brief Error variable
+	//! @brief Error variable. Range is [0, m_dx-1]
 	int_fast32_t m_err;
 public:
 	/**
 	 * @brief Constructor
 	 * @param[in] dx Width of the interpolation line
 	 * @param[in] dy Height of the interpolation line
+	 * @post 0 <= m_err < m_dx
 	 */
 	constexpr BresenInterpolation( uint32_t dx, uint32_t dy ) :
 		m_dx( dx ),
 		m_dy( dy ),
-		m_err( dx / 2 )
+		m_err( 0 )
 	{
 	}
 	/**
@@ -77,21 +78,6 @@ public:
 		}
 	}
 	/**
-	 * @brief Calculates the next interpolation steps
-	 * @param[in] bigDx The number of steps to calculate
-	 * @param[in,out] pos Interpolation Y point to adjust
-	 * @note Use this for tick simulation purposes
-	 * @see next()
-	 */
-	inline void fastNext( uint32_t bigDx, GenSample::PositionType& pos ) {
-		pos += m_dy * bigDx / m_dx;
-		m_err -= m_dy * bigDx;
-		m_err -= m_err / m_dx * m_dx;
-		while( m_err < 0 ) {
-			m_err += m_dx;
-		}
-	}
-	/**
 	 * @brief Sets width and height of the interpolation line
 	 * @param[in] dx New value for m_dx
 	 * @param[in] dy New value for m_dy
@@ -99,9 +85,38 @@ public:
 	inline void reset( uint32_t dx, uint32_t dy ) {
 		m_dx = dx;
 		m_dy = dy;
+		m_err = 0;
 	}
+	
+	inline int bias() const
+	{
+		return std::max<ulong>(0,std::min<ulong>(255,(m_err<<8)/m_dx));
+	}
+	
+	inline int16_t biased(int16_t v1, int16_t v2) const
+	{
+		int b = bias();
+		int v1b = v1*b;
+		int v2b = v2*(255-b);
+		return std::max(-32767,std::min(32767,(v1b+v2b)/255));
+	}
+	
+	inline BasicSampleFrame biased(const BasicSampleFrame& a, const BasicSampleFrame& b) const
+	{
+		return BasicSampleFrame(
+			biased(a.left, b.left),
+			biased(a.right, b.right)
+		);
+	}
+	
 	virtual IArchive& serialize( IArchive* archive );
 };
+
+inline ppp::GenSample::PositionType operator+=(ppp::GenSample::PositionType& left, BresenInterpolation& right)
+{
+	right.next(left);
+	return left;
+}
 
 /**
  * @}

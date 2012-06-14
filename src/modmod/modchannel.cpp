@@ -309,19 +309,20 @@ void ModChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 			volR = m_panning;
 		}
 		for( MixerSampleFrame & frame : **mixBuffer ) {
-			// TODO panning
+			if(currSmp->isAfterEnd(pos)) {
+				break;
+			}
 			BasicSampleFrame sample = currSmp->sampleAt( pos );
+#if 1
+			sample = m_bresen.biased(sample, currSmp->sampleAt(pos+1));
+#endif
+		
 			sample.mulRShift( m_physVolume, 6 );
 			sample.mulRShift( volL, volR, 7 );
 			frame += sample;
-			if( pos == GenSample::EndOfSample ) {
-				break;
-			}
-			m_bresen.next( pos );
+			pos += m_bresen;
 		}
-		if( pos != GenSample::EndOfSample ) {
-			currentSample()->adjustPosition( pos );
-		}
+		currentSample()->adjustPosition( pos );
 		setPosition( pos );
 		if( pos == GenSample::EndOfSample ) {
 			setActive( false );

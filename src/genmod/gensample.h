@@ -90,7 +90,7 @@ public:
 	 * @param[in,out] pos Position of the requested sample
 	 * @return Sample value, 0 if invalid value for @a pos
 	 */
-	inline BasicSampleFrame sampleAt( PositionType& pos ) const;
+	inline BasicSampleFrame sampleAt( PositionType pos ) const;
 	/**
 	 * @brief Get the sample's Base Frequency
 	 * @return Base frequency
@@ -128,6 +128,17 @@ public:
 	 * @return The loop type
 	 */
 	LoopType loopType() const;
+	
+	inline bool isAfterEnd(PositionType pos, bool ignoreLoopEnd = true) const
+	{
+		if( m_looptype != LoopType::None ) {
+			return false;
+		}
+		if( ignoreLoopEnd ) {
+			return pos >= m_data.size();
+		}
+		return pos >= m_loopEnd;
+	}
 protected:
 	typedef BasicSampleFrame::Vector::iterator Iterator;
 	typedef BasicSampleFrame::Vector::const_iterator ConstIterator;
@@ -208,7 +219,7 @@ protected:
 	static light4cxx::Logger* logger();
 };
 
-inline BasicSampleFrame GenSample::sampleAt( PositionType& pos ) const
+inline BasicSampleFrame GenSample::sampleAt( PositionType pos ) const
 {
 	adjustPosition( pos );
 	if( pos == EndOfSample || m_data.empty() )

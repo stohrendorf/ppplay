@@ -73,6 +73,8 @@ struct BasicSampleFrame {
 
 	constexpr BasicSampleFrame() : left( 0 ), right( 0 ) {
 	}
+	constexpr BasicSampleFrame(int16_t l, int16_t r) : left( l ), right( r ) {
+	}
 };
 #pragma pack(pop)
 

@@ -537,7 +537,14 @@ void S3mChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 		volR = 0xa4;
 	}
 	for( MixerSampleFrame & frame : **mixBuffer ) {
+		if(currSmp->isAfterEnd(pos)) {
+			break;
+		}
 		BasicSampleFrame sampleVal = currSmp->sampleAt( pos );
+#if 1
+		sampleVal = m_bresen.biased(sampleVal, currSmp->sampleAt(pos+1));
+#endif
+		
 		if( m_panning != 0xa4 ) {
 			sampleVal.mulRShift( volL, volR, 5 );
 		}
@@ -546,14 +553,9 @@ void S3mChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 		}
 		sampleVal.mulRShift( currVol, 6 );
 		frame += sampleVal;
-		if( pos == GenSample::EndOfSample ) {
-			break;
-		}
-		m_bresen.next( pos );
+		pos += m_bresen;
 	}
-	if( pos != GenSample::EndOfSample ) {
-		currentSample()->adjustPosition( pos );
-	}
+	currentSample()->adjustPosition( pos );
 	setPosition( pos );
 	if( pos == GenSample::EndOfSample ) {
 		setActive( false );
@@ -1150,7 +1152,7 @@ void S3mChannel::playNote()
 		else if( currentSample() ) {
 			setActive( true );
 			m_portaTargetPeriod = st3Period( m_currentCell->note(), m_c2spd );
-			if( (m_basePeriod==0||m_portaTargetPeriod==0) || m_currentCell->effect() != s3mFxPorta && m_currentCell->effect() != s3mFxPortaVolSlide ) {
+			if( (m_basePeriod==0||m_portaTargetPeriod==0) || (m_currentCell->effect() != s3mFxPorta && m_currentCell->effect() != s3mFxPortaVolSlide) ) {
 				m_realPeriod = m_basePeriod = m_portaTargetPeriod;
 				m_tremoloPhase = m_vibratoPhase = 0;
 				recalcFrequency();

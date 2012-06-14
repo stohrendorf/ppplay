@@ -745,7 +745,6 @@ void XmChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 		setActive(false);
 		return;
 	}
-	GenSample::PositionType pos = position();
 	uint8_t volLeft = 0x80;
 	if( m_realPanning > 0x80 ) {
 		volLeft = 0xff - m_realPanning;
@@ -754,19 +753,22 @@ void XmChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 	if( m_realPanning < 0x80 ) {
 		volRight = m_realPanning;
 	}
+	GenSample::PositionType pos = position();
 	for( MixerSampleFrame & frame : **mixBuffer ) {
+		if(currSmp->isAfterEnd(pos)) {
+			break;
+		}
 		BasicSampleFrame sampleVal = currSmp->sampleAt( pos );
+#if 1
+		sampleVal = m_bres.biased(sampleVal, currSmp->sampleAt(pos+1));
+#endif
+		
 		sampleVal.mulRShift( volLeft, volRight, 7 );
 		sampleVal.mulRShift( m_realVolume, 6 );
 		frame += sampleVal;
-		if( pos == GenSample::EndOfSample ) {
-			break;
-		}
-		m_bres.next( pos );
+		pos += m_bres;
 	}
-	if( pos != GenSample::EndOfSample ) {
-		currentSample()->adjustPosition( pos );
-	}
+	currentSample()->adjustPosition( pos );
 	setPosition( pos );
 	if( pos == GenSample::EndOfSample ) {
 		setActive( false );
