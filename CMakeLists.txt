@@ -146,7 +146,10 @@ if(MINGW)
 	target_link_libraries(ppplay stdc++ mingw32)
 endif()
 
-target_link_libraries(ppplay rt ppplay_core ppplay_module_base ppplay_ppg ppplay_output_mp3 ppplay_output_sdl)
+target_link_libraries(ppplay rt ppplay_core ppplay_module_base ppplay_ppg ppplay_output_sdl)
+if(WITH_MP3LAME)
+	target_link_libraries(ppplay ppplay_output_mp3)
+endif()
 # 
 #########
 # link libraries
