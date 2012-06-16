@@ -137,7 +137,12 @@ public:
 		if( ignoreLoopEnd ) {
 			return pos >= m_data.size();
 		}
-		return pos >= m_loopEnd;
+		if( m_looptype == LoopType::Forward ) {
+			return pos >= m_loopEnd;
+		}
+		else {
+			return pos >= 2 * m_loopEnd - m_loopStart;
+		}
 	}
 protected:
 	typedef BasicSampleFrame::Vector::iterator Iterator;
