@@ -56,7 +56,7 @@ struct BasicSampleFrame {
 	 * @param[in] mul Factor
 	 * @param[in] shift Amount to shift right
 	 */
-	inline void mulRShift( uint8_t mul, uint8_t shift ) {
+	inline void mulRShift( int mul, int shift ) {
 		mulRShift( mul, mul, shift );
 	}
 	/**
@@ -66,7 +66,7 @@ struct BasicSampleFrame {
 	 * @param[in] mulRight Factor for right data
 	 * @param[in] shift Amount to shift right
 	 */
-	inline void mulRShift( uint8_t mulLeft, uint8_t mulRight, uint8_t shift ) {
+	inline void mulRShift( int mulLeft, int mulRight, int shift ) {
 		left = ( left * mulLeft ) >> shift;
 		right = ( right * mulRight ) >> shift;
 	}

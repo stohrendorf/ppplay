@@ -26,6 +26,8 @@
 
 namespace ppp
 {
+
+class BresenInterpolation;
 /**
  * @ingroup GenMod
  * @{
@@ -40,7 +42,7 @@ class GenSample
 	DISABLE_COPY( GenSample )
 public:
 	//! @brief Sample position
-	typedef BasicSampleFrame::Vector::size_type PositionType;
+	typedef uint_fast32_t PositionType;
 	//! @brief Loop type definitions
 	enum class LoopType
 	{
@@ -72,6 +74,19 @@ private:
 	 * @note Time-critical
 	 */
 	PositionType makeRealPos( PositionType pos ) const;
+	/**
+	 * @brief Adjust the playback position so it doesn't fall out of the sample data. Returns EndOfSample if it does
+	 * @param[in,out] pos Reference to the variable that should be adjusted
+	 * @return Adjusted position
+	 * @note Time-critical
+	 */
+	PositionType adjustPosition( PositionType pos ) const;
+	/**
+	 * @brief Get a sample
+	 * @param[in,out] pos Position of the requested sample
+	 * @return Sample value, 0 if invalid value for @a pos
+	 */
+	inline BasicSampleFrame sampleAt( PositionType pos ) const;
 public:
 	/**
 	 * @brief Position returned when end of sample reached
@@ -86,12 +101,6 @@ public:
 	 */
 	virtual ~GenSample();
 	/**
-	 * @brief Get a sample
-	 * @param[in,out] pos Position of the requested sample
-	 * @return Sample value, 0 if invalid value for @a pos
-	 */
-	inline BasicSampleFrame sampleAt( PositionType pos ) const;
-	/**
 	 * @brief Get the sample's Base Frequency
 	 * @return Base frequency
 	 */
@@ -101,13 +110,6 @@ public:
 	 * @return Default volume
 	 */
 	uint8_t volume() const;
-	/**
-	 * @brief Adjust the playback position so it doesn't fall out of the sample data. Returns EndOfSample if it does
-	 * @param[in,out] pos Reference to the variable that should be adjusted
-	 * @return Adjusted position
-	 * @note Time-critical
-	 */
-	PositionType adjustPosition( PositionType& pos ) const;
 	/**
 	 * @brief Get the sample's name
 	 * @return Sample's name
@@ -129,21 +131,10 @@ public:
 	 */
 	LoopType loopType() const;
 	
-	inline bool isAfterEnd(PositionType pos, bool ignoreLoopEnd = true) const
-	{
-		if( m_looptype != LoopType::None ) {
-			return false;
-		}
-		if( ignoreLoopEnd ) {
-			return pos >= m_data.size();
-		}
-		if( m_looptype == LoopType::Forward ) {
-			return pos >= m_loopEnd;
-		}
-		else {
-			return pos >= 2 * m_loopEnd - m_loopStart;
-		}
-	}
+	inline bool isAfterEnd(PositionType pos, bool ignoreLoopEnd = false) const;
+	
+	bool mixNonInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
+	bool mixLinearInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
 protected:
 	typedef BasicSampleFrame::Vector::iterator Iterator;
 	typedef BasicSampleFrame::Vector::const_iterator ConstIterator;
@@ -224,46 +215,17 @@ protected:
 	static light4cxx::Logger* logger();
 };
 
-inline BasicSampleFrame GenSample::sampleAt( PositionType pos ) const
+inline bool GenSample::isAfterEnd(PositionType pos, bool ignoreLoopEnd) const
 {
-	adjustPosition( pos );
-	if( pos == EndOfSample || m_data.empty() )
-		return BasicSampleFrame();
-	return m_data[makeRealPos( pos )];
-}
-
-inline GenSample::PositionType GenSample::adjustPosition( PositionType& pos ) const
-{
-	if( pos == EndOfSample )
-		return EndOfSample;
-	if( m_looptype != LoopType::None ) {
-		if( m_loopEnd <= m_loopStart ) {
-			return pos = EndOfSample;
-		}
-		PositionType vLoopLen = m_loopEnd - m_loopStart;
-		PositionType vLoopEnd = m_loopEnd;
-		if( m_looptype == LoopType::Pingpong ) {
-			vLoopLen *= 2;
-			vLoopEnd = m_loopStart + vLoopLen;
-		}
-		while( pos >= vLoopEnd ) {
-			pos -= vLoopLen;
-		}
+	if( ignoreLoopEnd || m_looptype==LoopType::None ) {
+		return pos >= m_data.size();
 	}
-	else if( pos >= m_data.size() ) {
-		pos = EndOfSample;
+	else if( m_looptype == LoopType::Forward ) {
+		return pos >= m_loopEnd;
 	}
-	return pos;
-}
-
-inline GenSample::PositionType GenSample::makeRealPos( PositionType pos ) const
-{
-	if( m_looptype == LoopType::Pingpong ) {
-		if( pos >= m_loopEnd ) {
-			pos = 2 * m_loopEnd - pos;
-		}
+	else {
+		return pos >= 2 * m_loopEnd - m_loopStart;
 	}
-	return pos;
 }
 
 /**

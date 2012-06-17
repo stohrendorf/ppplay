@@ -29,7 +29,6 @@ namespace ppp
 
 GenChannel::GenChannel() :
 	m_active( false ), m_disabled( true ),
-	m_position( GenSample::EndOfSample ),
 	m_statusString(),
 	m_mutex()
 {
@@ -40,7 +39,7 @@ GenChannel::~GenChannel() = default;
 IArchive& GenChannel::serialize( IArchive* data )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	*data % m_active % m_disabled % m_position;
+	*data % m_active % m_disabled;
 	return *data;
 }
 
@@ -62,12 +61,6 @@ void GenChannel::setActive( bool a )
 	m_active = a;
 }
 
-void GenChannel::setPosition( GenSample::PositionType p )
-{
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	m_position = p;
-}
-
 void GenChannel::enable()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
@@ -78,12 +71,6 @@ void GenChannel::disable()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_disabled = true;
-}
-
-GenSample::PositionType GenChannel::position() const
-{
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	return m_position;
 }
 
 bool GenChannel::isDisabled() const

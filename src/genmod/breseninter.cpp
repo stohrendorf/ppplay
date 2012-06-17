@@ -29,7 +29,7 @@ namespace ppp
 
 IArchive& BresenInterpolation::serialize( IArchive* archive )
 {
-	return *archive % m_dx % m_dy % m_err;
+	return *archive % m_dx % m_dy % m_err % m_position;
 }
 
 /**

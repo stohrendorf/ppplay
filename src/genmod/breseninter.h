@@ -55,6 +55,7 @@ private:
 	int_fast32_t m_dy;
 	//! @brief Error variable (or fractional part). Range is [0, m_dx-1]
 	int_fast32_t m_err;
+	uint_fast32_t m_position;
 public:
 	/**
 	 * @brief Constructor
@@ -66,20 +67,38 @@ public:
 	constexpr BresenInterpolation( int dx, int dy ) :
 		m_dx( dx ),
 		m_dy( dy ),
-		m_err( dx-1 )
+		m_err( dx-1 ),
+		m_position(0)
 	{
 	}
+	
+	inline operator uint_fast32_t() const {
+		return m_position;
+	}
+	
+	inline BresenInterpolation& operator=(uint_fast32_t val) {
+		m_position = val;
+		return *this;
+	}
+	
 	/**
 	 * @brief Calculates the next interpolation step
 	 * @param[in,out] pos Interpolation Y point to adjust
 	 * @post 0 <= m_err < m_dx
 	 */
-	inline void next( GenSample::PositionType& pos ) {
-		BOOST_ASSERT(m_dx>1 && m_dy>0 && m_err>=0 && m_err<m_dx);
+	inline uint_fast32_t next() {
+		BOOST_ASSERT(m_dx>0 && m_dy>0 && m_err>=0 && m_err<m_dx);
 		for( m_err -= m_dy; m_err < 0; m_err += m_dx ) {
-			pos++;
+			m_position++;
 		}
+		return m_position;
 	}
+	
+	BresenInterpolation& operator++() {
+		next();
+		return *this;
+	}
+
 	/**
 	 * @brief Sets width and height of the interpolation line
 	 * @param[in] dx New value for m_dx
@@ -88,8 +107,8 @@ public:
 	inline void reset( int dx, int dy ) {
 		m_dx = dx;
 		m_dy = dy;
-		m_err = dx-1;
-		BOOST_ASSERT(dx>1 && dy>0);
+		// m_err = dx-1;
+		BOOST_ASSERT(dx>0 && dy>0);
 	}
 	
 	/**
@@ -123,12 +142,6 @@ public:
 	
 	virtual IArchive& serialize( IArchive* archive );
 };
-
-inline ppp::GenSample::PositionType operator+=(ppp::GenSample::PositionType& left, BresenInterpolation& right)
-{
-	right.next(left);
-	return left;
-}
 
 /**
  * @}

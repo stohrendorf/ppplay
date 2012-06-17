@@ -17,6 +17,7 @@
 */
 
 #include "gensample.h"
+#include "breseninter.h"
 
 namespace ppp
 {
@@ -104,6 +105,82 @@ void GenSample::setVolume( uint8_t v )
 light4cxx::Logger* GenSample::logger()
 {
 	return light4cxx::Logger::get( "sample" );
+}
+
+bool GenSample::mixNonInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const
+{
+	BOOST_ASSERT( bresen!=nullptr && buffer!=nullptr && rightShift>=0 );
+	for( MixerSampleFrame & frame : **buffer ) {
+		if(isAfterEnd(*bresen)) {
+			if((*bresen = adjustPosition( *bresen )) == GenSample::EndOfSample) {
+				return false;
+			}
+		}
+		BasicSampleFrame sampleVal = sampleAt( *bresen );
+		sampleVal.mulRShift(factorLeft, factorRight, rightShift);
+		frame += sampleVal;
+		bresen->next();
+	}
+	return true;
+}
+
+bool GenSample::mixLinearInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const
+{
+	BOOST_ASSERT( bresen!=nullptr && buffer!=nullptr && rightShift>=0 );
+	for( MixerSampleFrame & frame : **buffer ) {
+		if(isAfterEnd(*bresen)) {
+			if((*bresen = adjustPosition( *bresen )) == GenSample::EndOfSample) {
+				return false;
+			}
+		}
+		BasicSampleFrame sampleVal = sampleAt( *bresen );
+		sampleVal = bresen->biased(sampleVal, sampleAt(1+*bresen));
+		sampleVal.mulRShift(factorLeft, factorRight, rightShift);
+		frame += sampleVal;
+		bresen->next();
+	}
+	return true;
+}
+
+inline BasicSampleFrame GenSample::sampleAt( PositionType pos ) const
+{
+	adjustPosition( pos );
+	if( pos == EndOfSample || m_data.empty() )
+		return BasicSampleFrame();
+	return m_data[makeRealPos( pos )];
+}
+
+inline GenSample::PositionType GenSample::adjustPosition( PositionType pos ) const
+{
+	if( pos == EndOfSample || m_loopEnd<=m_loopStart ) {
+		return EndOfSample;
+	}
+	if( m_looptype == LoopType::None ) {
+		if( pos >= m_data.size() ) {
+			return EndOfSample;
+		}
+		return pos;
+	}
+	PositionType vLoopLen = m_loopEnd - m_loopStart;
+	PositionType vLoopEnd = m_loopEnd;
+	if( m_looptype == LoopType::Pingpong ) {
+		vLoopLen *= 2;
+		vLoopEnd = m_loopStart + vLoopLen;
+	}
+	while( pos >= vLoopEnd ) {
+		pos -= vLoopLen;
+	}
+	return pos;
+}
+
+inline GenSample::PositionType GenSample::makeRealPos( PositionType pos ) const
+{
+	if( m_looptype == LoopType::Pingpong ) {
+		if( pos >= m_loopEnd ) {
+			pos = 2 * m_loopEnd - pos;
+		}
+	}
+	return pos;
 }
 
 /**

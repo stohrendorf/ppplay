@@ -238,7 +238,6 @@ S3mChannel::~S3mChannel()
 const S3mSample* S3mChannel::currentSample() const
 {
 	if( !inRange<int>( m_sampleIndex, 0, m_module->numSamples() - 1 ) ) {
-		//setActive( false );
 		return nullptr;
 	}
 	return m_module->sampleAt( m_sampleIndex );
@@ -525,8 +524,8 @@ void S3mChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 	recalcVolume();
 	uint16_t currVol = m_realVolume;
 	const S3mSample* currSmp = currentSample();
-	GenSample::PositionType pos = position();
-	uint8_t volL = 0x20, volR = 0x20;
+	int volL = 0x20;
+	int volR = 0x20;
 	if( m_panning > 0x20 && m_panning != 0xa4 ) {
 		volL = 0x40 - m_panning;
 	}
@@ -534,32 +533,11 @@ void S3mChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 		volR = m_panning;
 	}
 	else if( m_panning == 0xa4 ) {
-		volR = 0xa4;
+		volR *= -1;
 	}
-	for( MixerSampleFrame & frame : **mixBuffer ) {
-		if(currSmp->isAfterEnd(pos)) {
-			break;
-		}
-		BasicSampleFrame sampleVal = currSmp->sampleAt( pos );
-#if 1
-		sampleVal = m_bresen.biased(sampleVal, currSmp->sampleAt(pos+1));
-#endif
-		
-		if( m_panning != 0xa4 ) {
-			sampleVal.mulRShift( volL, volR, 5 );
-		}
-		else {
-			sampleVal.right = -sampleVal.right;
-		}
-		sampleVal.mulRShift( currVol, 6 );
-		frame += sampleVal;
-		pos += m_bresen;
-	}
-	currentSample()->adjustPosition( pos );
-	setPosition( pos );
-	if( pos == GenSample::EndOfSample ) {
-		setActive( false );
-	}
+	volL *= currVol;
+	volR *= currVol;
+	setActive( currSmp->mixLinearInterpolated(&m_bresen, mixBuffer, volL, volR, 11) );
 }
 
 std::string S3mChannel::internal_cellString() const
@@ -932,7 +910,7 @@ void S3mChannel::fxRetrigger( uint8_t fxByte )
 		return;
 	}
 	m_countdown = 0;
-	setPosition( 0 );
+	m_bresen = 0;
 	int nvol = m_currentVolume;
 	switch( highNibble( fxByte ) ) {
 		case 0x0:
@@ -989,7 +967,7 @@ void S3mChannel::fxRetrigger( uint8_t fxByte )
 void S3mChannel::fxOffset( uint8_t fxByte )
 {
 	m_currentFxStr = "Offs \xaa";
-	setPosition( fxByte << 8 );
+	m_bresen = fxByte<<8;
 }
 
 void S3mChannel::fxTremor( uint8_t fxByte )
@@ -1160,7 +1138,7 @@ void S3mChannel::playNote()
 					fxOffset( m_currentCell->effectValue() );
 				}
 				else {
-					setPosition( 0 );
+					m_bresen = 0;
 				}
 				m_note = m_currentCell->note();
 				m_noteChanged = true;

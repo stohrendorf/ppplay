@@ -142,15 +142,10 @@ void XmChannel::triggerNote(uint8_t note)
 
 	if( !currentSample() ) {
 		return;
-// 		m_realNote = m_baseNote;
-// 		m_basePeriod = m_currentPeriod = 0;
-// 		setActive( false );
 	}
 	int tmpNote = currentSample()->relativeNote();
 	tmpNote += m_baseNote;
 	if( !inRange( tmpNote, 1, 119 ) ) {
-		//LOG_WARNING("OUT OF RANGE NOTE: rel=%d base=%d r=%d", currentSample()->relativeNote(), m_baseNote, tmp);
-// 		setActive( false );
 		return;
 	}
 	m_realNote = tmpNote - 1;
@@ -173,7 +168,7 @@ void XmChannel::triggerNote(uint8_t note)
 		fxOffset( m_currentCell->effectValue() );
 	}
 	else {
-		setPosition( 0 );
+		m_bres = 0;
 	}
 }
 
@@ -745,34 +740,17 @@ void XmChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 		setActive(false);
 		return;
 	}
-	uint8_t volLeft = 0x80;
+	int volLeft = 0x80;
 	if( m_realPanning > 0x80 ) {
 		volLeft = 0xff - m_realPanning;
 	}
-	uint8_t volRight = 0x80;
+	int volRight = 0x80;
 	if( m_realPanning < 0x80 ) {
 		volRight = m_realPanning;
 	}
-	GenSample::PositionType pos = position();
-	for( MixerSampleFrame & frame : **mixBuffer ) {
-		if(currSmp->isAfterEnd(pos)) {
-			break;
-		}
-		BasicSampleFrame sampleVal = currSmp->sampleAt( pos );
-#if 1
-		sampleVal = m_bres.biased(sampleVal, currSmp->sampleAt(pos+1));
-#endif
-		
-		sampleVal.mulRShift( volLeft, volRight, 7 );
-		sampleVal.mulRShift( m_realVolume, 6 );
-		frame += sampleVal;
-		pos += m_bres;
-	}
-	currentSample()->adjustPosition( pos );
-	setPosition( pos );
-	if( pos == GenSample::EndOfSample ) {
-		setActive( false );
-	}
+	volLeft *= m_realVolume;
+	volRight *= m_realVolume;
+	setActive( currSmp->mixLinearInterpolated(&m_bres, mixBuffer, volLeft, volRight, 13) );
 }
 
 void XmChannel::internal_updateStatus()
@@ -847,7 +825,7 @@ void XmChannel::vfxSetPan( uint8_t fxByte )
 void XmChannel::fxOffset( uint8_t fxByte )
 {
 	reuseIfZero( m_lastOffsetFx, fxByte );
-	setPosition( m_lastOffsetFx << 8 );
+	m_bres = 0;
 }
 
 void XmChannel::vfxSlideDown( uint8_t fxByte )

@@ -49,8 +49,6 @@ private:
 	bool m_active;
 	//! @brief @c true if channel is disabled
 	bool m_disabled;
-	//! @brief Current sample position
-	GenSample::PositionType m_position;
 	//! @brief Status string
 	std::string m_statusString;
 	mutable boost::recursive_mutex m_mutex;
@@ -73,11 +71,6 @@ public:
 	 * @return m_disabled
 	 */
 	bool isDisabled() const;
-	/**
-	 * @brief Get the playback position
-	 * @return Playback position in the channel's sample
-	 */
-	GenSample::PositionType position() const;
 	/**
 	 * @brief Disables this channel.
 	 */
@@ -110,11 +103,6 @@ protected:
 	 * @param[in] a The new value
 	 */
 	void setActive( bool a );
-	/**
-	 * @brief Set the m_position value
-	 * @param[in] p The new value
-	 */
-	void setPosition( ppp::GenSample::PositionType p );
 	/**
 	 * @brief Sets m_statusString
 	 * @param[in] s The new string

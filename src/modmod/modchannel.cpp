@@ -80,15 +80,11 @@ ModChannel::~ModChannel()
 // TODO mt_setfinetune
 void ModChannel::update( const ModCell* cell, bool patDelay )
 {
-// 	if(isDisabled())
-// 		return;
 	uint8_t delayTick = 0;
 	if( cell && cell->effect() == 0x0e && highNibble( cell->effectValue() ) == 0x0d ) {
 		delayTick = lowNibble( cell->effectValue() );
 	}
 	if( m_module->state().tick == delayTick ) {
-// 		m_noteChanged = false;
-// 		m_currentFxStr = "      ";
 		m_currentCell->clear();
 		if( cell && !patDelay ) {
 			*m_currentCell = *cell;
@@ -104,12 +100,10 @@ void ModChannel::update( const ModCell* cell, bool patDelay )
 		if( m_currentCell->period() != 0 ) {
 			if( m_period == 0 || (m_currentCell->effect() != 3 && m_currentCell->effect() != 5) ) {
 				setCellPeriod();
-				setPosition( 0 );
+				m_bresen = 0;
 				setActive( true );
 			}
-// 			else {
 			setTonePortaTarget();
-// 			}
 			setActive( m_period != 0 );
 			if( ( m_vibratoWaveform & 4 ) == 0 ) {
 				// reset phase to 0 on a new note
@@ -121,9 +115,6 @@ void ModChannel::update( const ModCell* cell, bool patDelay )
 		}
 		setActive( isActive() && m_period != 0 && currentSample() );
 	} // endif(tick==0)
-	//if(!isActive()) {
-	//return;
-	//}
 	switch( m_currentCell->effect() ) {
 		case 0x00:
 			fxArpeggio( m_currentCell->effectValue() );
@@ -294,39 +285,22 @@ void ModChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 	m_bresen.reset( m_module->frequency(), FrequencyBase / m_physPeriod );
 	// TODO glissando
 	const ModSample* currSmp = currentSample();
-	GenSample::PositionType pos = position();
-	if( pos == GenSample::EndOfSample ) {
+	if( m_bresen == GenSample::EndOfSample ) {
 		setActive( false );
 		return;
 	}
 	if( mixBuffer ) {
-		uint8_t volL = 0x80;
+		int volL = 0x80;
 		if( m_panning > 0x80 ) {
 			volL = 0xff - m_panning;
 		}
-		uint8_t volR = 0x80;
+		int volR = 0x80;
 		if( m_panning < 0x80 ) {
 			volR = m_panning;
 		}
-		for( MixerSampleFrame & frame : **mixBuffer ) {
-			if(currSmp->isAfterEnd(pos)) {
-				break;
-			}
-			BasicSampleFrame sample = currSmp->sampleAt( pos );
-#if 1
-			sample = m_bresen.biased(sample, currSmp->sampleAt(pos+1));
-#endif
-		
-			sample.mulRShift( m_physVolume, 6 );
-			sample.mulRShift( volL, volR, 7 );
-			frame += sample;
-			pos += m_bresen;
-		}
-		currentSample()->adjustPosition( pos );
-		setPosition( pos );
-		if( pos == GenSample::EndOfSample ) {
-			setActive( false );
-		}
+		volL *= m_physVolume;
+		volR *= m_physVolume;
+		setActive( currSmp->mixLinearInterpolated(&m_bresen, mixBuffer, volL, volR, 13) );
 	}
 }
 
@@ -347,10 +321,6 @@ void ModChannel::setCellPeriod()
 	else {
 		m_period = fullPeriods.at( m_finetune )[ perIdx ];
 	}
-// 	if( m_currentCell.effect() == 0x0e && highNibble( m_currentCell.effectValue() ) == 0x0d ) {
-		// note delay
-// 		return;
-// 	}
 	m_physPeriod = m_period;
 	if( ( m_vibratoWaveform & 4 ) == 0 ) {
 		m_vibratoPhase = 0;
@@ -490,7 +460,7 @@ void ModChannel::fxOffset( uint8_t fxByte )
 		return;
 	}
 	if( currentSample() && currentSample()->length() > ( fxByte << 8 ) ) {
-		setPosition( fxByte << 8 );
+		m_bresen = fxByte<<8;
 	}
 }
 
@@ -713,7 +683,6 @@ void ModChannel::fxTremolo( uint8_t fxByte )
 void ModChannel::efxPatLoop( uint8_t fxByte )
 {
 	m_effectDescription = "PLoop\xe8";
-	//logger()->warn( L4CXX_LOCATION, "Not implemented: Effect Pattern Loop" );
 	// TODO
 }
 
@@ -742,7 +711,7 @@ void ModChannel::efxRetrigger( uint8_t fxByte )
 	if( m_module->state().tick % lowNibble( fxByte ) != 0 ) {
 		return;
 	}
-	setPosition( 0 );
+	m_bresen = 0;
 }
 
 void ModChannel::applyGlissando()
