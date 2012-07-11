@@ -285,7 +285,7 @@ void ModChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 	m_bresen.reset( m_module->frequency(), FrequencyBase / m_physPeriod );
 	// TODO glissando
 	const ModSample* currSmp = currentSample();
-	if( m_bresen == GenSample::EndOfSample ) {
+	if( !m_bresen.isValid() ) {
 		setActive( false );
 		return;
 	}

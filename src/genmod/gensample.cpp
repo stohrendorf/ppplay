@@ -27,8 +27,6 @@ namespace ppp
  * @{
  */
 
-const GenSample::PositionType GenSample::EndOfSample = std::numeric_limits<GenSample::PositionType>::max();
-
 GenSample::GenSample() :
 	m_loopStart( 0 ), m_loopEnd( 0 ), m_volume( 0 ),
 	m_frequency( 0 ), m_data(), m_filename(), m_title(), m_looptype( LoopType::None )
@@ -111,10 +109,9 @@ bool GenSample::mixNonInterpolated( BresenInterpolation* bresen, MixerFrameBuffe
 {
 	BOOST_ASSERT( bresen!=nullptr && buffer!=nullptr && rightShift>=0 );
 	for( MixerSampleFrame & frame : **buffer ) {
-		if(isAfterEnd(*bresen)) {
-			if((*bresen = adjustPosition( *bresen )) == GenSample::EndOfSample) {
-				return false;
-			}
+		*bresen = adjustPosition( *bresen );
+		if(!bresen->isValid()) {
+			return false;
 		}
 		BasicSampleFrame sampleVal = sampleAt( *bresen );
 		sampleVal.mulRShift(factorLeft, factorRight, rightShift);
@@ -128,13 +125,12 @@ bool GenSample::mixLinearInterpolated( BresenInterpolation* bresen, MixerFrameBu
 {
 	BOOST_ASSERT( bresen!=nullptr && buffer!=nullptr && rightShift>=0 );
 	for( MixerSampleFrame & frame : **buffer ) {
-		if(isAfterEnd(*bresen)) {
-			if((*bresen = adjustPosition( *bresen )) == GenSample::EndOfSample) {
-				return false;
-			}
+		*bresen = adjustPosition( *bresen );
+		if(!bresen->isValid()) {
+			return false;
 		}
 		BasicSampleFrame sampleVal = sampleAt( *bresen );
-		sampleVal = bresen->biased(sampleVal, sampleAt(1+*bresen));
+		sampleVal = bresen->biased(sampleVal, sampleAt(adjustPosition(1+*bresen)));
 		sampleVal.mulRShift(factorLeft, factorRight, rightShift);
 		frame += sampleVal;
 		bresen->next();
@@ -144,20 +140,20 @@ bool GenSample::mixLinearInterpolated( BresenInterpolation* bresen, MixerFrameBu
 
 inline BasicSampleFrame GenSample::sampleAt( PositionType pos ) const
 {
-	adjustPosition( pos );
-	if( pos == EndOfSample || m_data.empty() )
+	if( pos == BresenInterpolation::InvalidPosition ) {
 		return BasicSampleFrame();
+	}
 	return m_data[makeRealPos( pos )];
 }
 
 inline GenSample::PositionType GenSample::adjustPosition( PositionType pos ) const
 {
-	if( pos == EndOfSample || m_loopEnd<=m_loopStart ) {
-		return EndOfSample;
+	if( pos == BresenInterpolation::InvalidPosition ) {
+		return BresenInterpolation::InvalidPosition;
 	}
 	if( m_looptype == LoopType::None ) {
 		if( pos >= m_data.size() ) {
-			return EndOfSample;
+			return BresenInterpolation::InvalidPosition;
 		}
 		return pos;
 	}

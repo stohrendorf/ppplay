@@ -57,6 +57,8 @@ private:
 	int_fast32_t m_err;
 	uint_fast32_t m_position;
 public:
+	static const uint_fast32_t InvalidPosition = std::numeric_limits<uint_fast32_t>::max();
+	
 	/**
 	 * @brief Constructor
 	 * @param[in] dx Width of the interpolation line
@@ -87,7 +89,7 @@ public:
 	 * @post 0 <= m_err < m_dx
 	 */
 	inline uint_fast32_t next() {
-		BOOST_ASSERT(m_dx>0 && m_dy>0 && m_err>=0 && m_err<m_dx);
+		BOOST_ASSERT(m_dx>0 && m_dy>=0 && m_err>=0 && m_err<m_dx);
 		for( m_err -= m_dy; m_err < 0; m_err += m_dx ) {
 			m_position++;
 		}
@@ -108,7 +110,7 @@ public:
 		m_dx = dx;
 		m_dy = dy;
 		// m_err = dx-1;
-		BOOST_ASSERT(dx>0 && dy>0);
+		BOOST_ASSERT(dx>0 && dy>=0);
 	}
 	
 	/**
@@ -138,6 +140,11 @@ public:
 			biased(a.left, b.left),
 			biased(a.right, b.right)
 		);
+	}
+	
+	inline bool isValid() const
+	{
+		return m_position != InvalidPosition;
 	}
 	
 	virtual IArchive& serialize( IArchive* archive );

@@ -22,8 +22,6 @@
 #include "output/audiotypes.h"
 #include "light4cxx/logger.h"
 
-#include <limits>
-
 namespace ppp
 {
 
@@ -89,10 +87,6 @@ private:
 	inline BasicSampleFrame sampleAt( PositionType pos ) const;
 public:
 	/**
-	 * @brief Position returned when end of sample reached
-	 */
-	static const PositionType EndOfSample;
-	/**
 	 * @brief Constructor
 	 */
 	GenSample();
@@ -130,8 +124,6 @@ public:
 	 * @return The loop type
 	 */
 	LoopType loopType() const;
-	
-	inline bool isAfterEnd(PositionType pos, bool ignoreLoopEnd = false) const;
 	
 	bool mixNonInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
 	bool mixLinearInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
@@ -214,19 +206,6 @@ protected:
 	 */
 	static light4cxx::Logger* logger();
 };
-
-inline bool GenSample::isAfterEnd(PositionType pos, bool ignoreLoopEnd) const
-{
-	if( ignoreLoopEnd || m_looptype==LoopType::None ) {
-		return pos >= m_data.size();
-	}
-	else if( m_looptype == LoopType::Forward ) {
-		return pos >= m_loopEnd;
-	}
-	else {
-		return pos >= 2 * m_loopEnd - m_loopStart;
-	}
-}
 
 /**
  * @}
