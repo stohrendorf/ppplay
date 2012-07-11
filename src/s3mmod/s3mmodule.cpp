@@ -521,9 +521,9 @@ try {
 			chan->update( cell, m_patDelayCount != -1, false );
 			chan->mixTick( &mixerBuffer );
 		}
-		buf->get()->resize( mixerBuffer->size() );
+		(*buf)->resize( mixerBuffer->size() );
 		MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
-		BasicSampleFrame* bufPtr = &buf->get()->front();
+		BasicSampleFrame* bufPtr = &(*buf)->front();
 		for( size_t i = 0; i < mixerBuffer->size(); i++ ) {  // postprocess...
 			*bufPtr = mixerBufferPtr->rightShiftClip(2);
 			bufPtr++;

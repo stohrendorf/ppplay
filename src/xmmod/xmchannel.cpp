@@ -78,8 +78,9 @@ void XmChannel::fxPortaUp( uint8_t fxByte )
 {
 	reuseIfZero( m_lastPortaUpFx, fxByte );
 	int tmp = m_basePeriod - ( fxByte << 2 );
-	if( tmp < 1 )
+	if( tmp < 1 ) {
 		tmp = 1;
+	}
 	m_basePeriod = m_currentPeriod = tmp;
 }
 
@@ -87,8 +88,9 @@ void XmChannel::fxPortaDown( uint8_t fxByte )
 {
 	reuseIfZero( m_lastPortaDownFx, fxByte );
 	int tmp = m_basePeriod + ( fxByte << 2 );
-	if( tmp > 0x7cff )
+	if( tmp > 0x7cff ) {
 		tmp = 0x7cff;
+	}
 	m_basePeriod = m_currentPeriod = tmp;
 }
 
@@ -96,10 +98,12 @@ void XmChannel::fxVolSlide( uint8_t fxByte )
 {
 	reuseIfZero( m_lastVolSlideFx, fxByte );
 	int tmp = m_baseVolume;
-	if( highNibble( fxByte ) == 0 )
+	if( highNibble( fxByte ) == 0 ) {
 		tmp -= lowNibble( fxByte );
-	else
+	}
+	else {
 		tmp += highNibble( fxByte );
+	}
 	m_baseVolume = m_currentVolume = clip<int>( tmp, 0, 0x40 );
 }
 
@@ -212,7 +216,6 @@ void XmChannel::doKeyOn()
 	}
 }
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 constexpr std::array<const int8_t, 256> g_AutoVibTable = {{
 		0, -2, -3, -5, -6, -8, -9, -11, -12, -14, -16,
 		-17, -19, -20, -22, -23, -24, -26, -27, -29, -30, -32,
@@ -240,7 +243,6 @@ constexpr std::array<const int8_t, 256> g_AutoVibTable = {{
 		5, 3, 2
 	}
 };
-#endif
 
 void XmChannel::updateTick0( const XmCell* cell, bool estimateOnly )
 {
@@ -265,11 +267,10 @@ void XmChannel::updateTick0( const XmCell* cell, bool estimateOnly )
 	m_noteChanged = false;
 
 	{
-		bool vibratoStopped = m_currentCell->effectValue() != 0;
-		vibratoStopped &= m_currentCell->effect() == Effect::Vibrato || m_currentCell->effect() == Effect::VibratoVolSlide;
-		vibratoStopped &= cell != nullptr && cell->effect() != Effect::Vibrato && cell->effect() != Effect::VibratoVolSlide;
-		if( vibratoStopped ) {
-			// No more a vibrato effect, so reset the period.
+		bool vibratoContinued = m_currentCell->effectValue() != 0;
+		vibratoContinued &= m_currentCell->effect() == Effect::Vibrato || m_currentCell->effect() == Effect::VibratoVolSlide;
+		vibratoContinued &= cell != nullptr && (cell->effect() == Effect::Vibrato || cell->effect() == Effect::VibratoVolSlide);
+		if( !vibratoContinued ) {
 			m_currentPeriod = m_basePeriod;
 		}
 	}
@@ -629,6 +630,7 @@ void XmChannel::update( const XmCell* cell, bool estimateOnly )
 	else { // tick 1+
 		updateTick1(cell, estimateOnly);
 	}
+	
 	if( !m_keyOn ) {
 		if( m_volScale >= m_volScaleRate ) {
 			m_volScale -= m_volScaleRate;
@@ -732,8 +734,9 @@ std::string XmChannel::internal_noteName() const
 
 void XmChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 {
-	if( !isActive() || !mixBuffer )
+	if( !isActive() || !mixBuffer ) {
 		return;
+	}
 	m_bres.reset( m_module->frequency(), m_module->periodToFrequency( m_currentPeriod + m_autoVibDeltaPeriod ) );
 	const XmSample* currSmp = currentSample();
 	if(!currSmp) {
@@ -1021,13 +1024,13 @@ void XmChannel::fxPorta()
 {
 	int tmp = m_basePeriod;
 	if( m_portaTargetPeriod < m_basePeriod ) {
-		tmp = m_basePeriod - m_portaSpeed;
+		tmp -= m_portaSpeed;
 		if( tmp < m_portaTargetPeriod ) {
 			tmp = m_portaTargetPeriod;
 		}
 	}
 	else if( m_portaTargetPeriod > m_basePeriod ) {
-		tmp = m_basePeriod + m_portaSpeed;
+		tmp += m_portaSpeed;
 		if( tmp > m_portaTargetPeriod ) {
 			tmp = m_portaTargetPeriod;
 		}
@@ -1087,14 +1090,12 @@ void XmChannel::fxVibrato( uint8_t fxByte )
 	doVibrato();
 }
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 constexpr std::array<const uint8_t, 32> g_VibTable = {{
 		0, 24, 49, 74, 97, 120, 141, 161, 180, 197, 212, 224, 235,
 		244, 250, 253, 255, 253, 250, 244, 235, 224, 212, 197, 180, 161,
 		141, 120, 97, 74, 49, 24
 	}
 };
-#endif
 
 void XmChannel::doVibrato()
 {
@@ -1109,7 +1110,7 @@ void XmChannel::doVibrato()
 				value = ~value;
 			}
 			break;
-		case 2:
+		default:
 			value = 0xff;
 	}
 	uint16_t delta = ( value * m_vibratoDepth ) >> 5;
@@ -1164,7 +1165,7 @@ void XmChannel::fxTremolo( uint8_t fxByte )
 				value = ~value;
 			}
 			break;
-		case 2:
+		default:
 			value = 0xff;
 	}
 	uint16_t delta = ( value * m_tremoloDepth ) >> 6;
@@ -1212,58 +1213,53 @@ void XmChannel::retriggerNote()
 		case 8:
 			break;
 		case 1:
-			newVol = std::max( 0, newVol - 1 );
+			newVol -= 1;
 			break;
 		case 2:
-			newVol = std::max( 0, newVol - 2 );
+			newVol -= 2;
 			break;
 		case 3:
-			newVol = std::max( 0, newVol - 4 );
+			newVol -= 4;
 			break;
 		case 4:
-			newVol = std::max( 0, newVol - 8 );
+			newVol -= 8;
 			break;
 		case 5:
-			newVol = std::max( 0, newVol - 16 );
+			newVol -= 16;
 			break;
 		case 6:
 			newVol >>= 1;
-			newVol += ( newVol >> 2 ) + ( newVol >> 3 );
+			newVol += ( newVol >> 3 ) + ( newVol >> 4 );
 			break;
 		case 7:
 			newVol >>= 1;
 			break;
 		case 9:
-			newVol = std::min( 0x40, newVol + 1 );
+			newVol += 1;
 			break;
 		case 10:
-			newVol = std::min( 0x40, newVol + 2 );
+			newVol += 2;
 			break;
 		case 11:
-			newVol = std::min( 0x40, newVol + 4 );
+			newVol += 4;
 			break;
 		case 12:
-			newVol = std::min( 0x40, newVol + 8 );
+			newVol += 8;
 			break;
 		case 13:
-			newVol = std::min( 0x40, newVol + 16 );
+			newVol += 16;
 			break;
 		case 14:
 			newVol += newVol >> 1;
-			if( newVol > 0x40 ) {
-				newVol = 0x40;
-			}
 			break;
 		case 15:
 			newVol <<= 1;
-			if( newVol > 0x40 ) {
-				newVol = 0x40;
-			}
 			break;
 	}
-	m_currentVolume = m_baseVolume = newVol;
-	if( m_currentCell->volume() >= 0x10 && m_currentCell->volume() <= 0x50 ) {
-		m_currentVolume = m_baseVolume = m_currentCell->volume() - 0x10;
+	m_currentVolume = m_baseVolume = clip(newVol,0,0x40);
+	const uint8_t cellVolFx = m_currentCell->volume();
+	if( cellVolFx >= 0x10 && cellVolFx <= 0x50 ) {
+		m_currentVolume = m_baseVolume = cellVolFx - 0x10;
 	}
 	else if( highNibble( m_currentCell->volume() ) == VfxSetPanning ) {
 		vfxSetPan( m_currentCell->volume() );
