@@ -469,6 +469,7 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 	// skip "--" and "++" marks
 	while( state().pattern >= 254 ) {
 		if( state().pattern == s3mOrderEnd ) {
+			logger()->info( L4CXX_LOCATION, "Song end reached: End marker reached" );
 			return false;
 		}
 		setOrder( state().order + 1, estimateOnly );
@@ -505,7 +506,7 @@ try {
 	state().pattern = orderAt( state().order )->index();
 	S3mPattern* currPat = getPattern( state().pattern );
 	if( !currPat ) {
-		// logger()->error(L4CXX_LOCATION, "Did not find a pattern for current order");
+		logger()->error(L4CXX_LOCATION, "Did not find a pattern for current order");
 		if(buf) {
 			buf->reset();
 		}
