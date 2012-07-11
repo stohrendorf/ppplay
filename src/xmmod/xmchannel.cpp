@@ -137,12 +137,10 @@ void XmChannel::triggerNote(uint8_t note)
 	}
 
 	const XmInstrument* instr = currentInstrument();
-	if( !instr ) {
-		instr = m_module->getInstrument( 0 );
+	if( instr ) {
+		m_panningEnvelope = instr->panningProcessor();
+		m_volumeEnvelope = instr->volumeProcessor();
 	}
-	
-	m_panningEnvelope = instr->panningProcessor();
-	m_volumeEnvelope = instr->volumeProcessor();
 
 	if( !currentSample() ) {
 		return;
