@@ -330,7 +330,8 @@ int main( int argc, char* argv[] )
 				uiMain = new UIMain( dosScreen.get(), module, output );
 			}
 			output->play();
-			boost::progress_display progress(module->length(), std::cout, stringFmt("QuickMP3: %s\n", config::filename));
+			int secs = module->length() / module->frequency();
+			boost::progress_display progress(module->length(), std::cout, stringFmt("QuickMP3: %s (%dm%02ds)\n", config::filename, secs/60, secs%60));
 			while( output->playing() ) {
 				boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 				progress += std::const_pointer_cast<const ppp::GenModule>(module)->state().playedFrames-progress.count();
