@@ -112,7 +112,7 @@ void XmChannel::fxPanSlide( uint8_t fxByte )
 	reuseIfZero( m_lastPanSlideFx, fxByte );
 	int tmp = m_panning;
 	if( highNibble( fxByte ) == 0 )
-		tmp -= fxByte;
+		tmp -= lowNibble( fxByte );
 	else
 		tmp += highNibble( fxByte );
 	m_panning = clip( tmp, 0, 0xff );
@@ -126,9 +126,9 @@ void XmChannel::updateEnvelopes()
 
 void XmChannel::triggerNote(uint8_t note)
 {
+	setActive(true);
 	if( note == KeyOffNote ) {
-		m_keyOn = false;
-		updateEnvelopes();
+		doKeyOff();
 		return;
 	}
 	reuseIfZero( m_baseNote, note );
@@ -147,13 +147,10 @@ void XmChannel::triggerNote(uint8_t note)
 	if( !currentSample() ) {
 		return;
 	}
-	int tmpNote = currentSample()->relativeNote();
-	tmpNote += m_baseNote;
-	if( !inRange( tmpNote, 1, 119 ) ) {
+	int tmpNote = m_baseNote + currentSample()->relativeNote();
+	if( !inRange( tmpNote, 0, 119 ) ) {
 		return;
 	}
-	m_realNote = tmpNote - 1;
-	setActive(true);
 	
 	if( m_currentCell->effect() == Effect::Extended && highNibble( m_currentCell->effectValue() ) == EfxSetFinetune ) {
 		m_finetune = ( lowNibble( m_currentCell->effectValue() ) << 4 ) - 0x80;
@@ -162,12 +159,13 @@ void XmChannel::triggerNote(uint8_t note)
 		m_finetune = currentSample()->finetune();
 	}
 	
-	if(m_realNote != 0) {
-		if( uint16_t newPer = m_module->noteToPeriod( m_realNote, m_finetune ) ) {
-			m_basePeriod = newPer;
-			m_currentPeriod = m_basePeriod;
+	if( tmpNote != 0 ) {
+		if( uint16_t newPer = m_module->noteToPeriod( tmpNote-1, m_finetune ) ) {
+			m_currentPeriod = m_basePeriod = newPer;
+			m_realNote = tmpNote-1;
 		}
 	}
+	
 	if( m_currentCell->effect() == Effect::Offset ) {
 		fxOffset( m_currentCell->effectValue() );
 	}
@@ -186,9 +184,6 @@ void XmChannel::doKeyOff()
 	if( !m_volumeEnvelope.enabled() ) {
 		m_baseVolume = m_currentVolume = 0;
 	}
-	if( m_currentCell->instrument()!=0 ) {
-		applySampleDefaults();
-	}
 }
 
 void XmChannel::doKeyOn()
@@ -196,10 +191,15 @@ void XmChannel::doKeyOn()
 	m_keyOn = true;
 	m_noteChanged = true;
 	setActive( true );
+	
 	if( ( m_vibratoCtrl & 4 ) == 0 ) {
 		m_vibratoPhase = 0;
 	}
 	m_tremoloPhase = m_retriggerCounter = m_tremorCountdown = 0;
+	
+	m_panningEnvelope = currentInstrument()->panningProcessor(); // .setPosition(0);
+	m_volumeEnvelope = currentInstrument()->volumeProcessor(); // .setPosition(0);
+	
 	m_volScale = 0x8000;
 	m_volScaleRate = currentInstrument()->fadeout();
 	if( currentInstrument()->vibDepth() == 0 ) {
@@ -282,20 +282,16 @@ void XmChannel::updateTick0( const XmCell* cell, bool estimateOnly )
 		m_currentCell->clear();
 	}
 	
-	if( m_currentCell->instrument() != 0 ) {
-		if( m_currentCell->instrument() >= 0x80 ) {
-			m_instrumentIndex = 0;
-		}
-		else {
-			m_instrumentIndex = m_currentCell->instrument();
-		}
+	if( inRange<uint8_t>( m_currentCell->instrument(), 1, 0x80 ) ) {
+		m_instrumentIndex = m_currentCell->instrument();
 	}
 
 	if( m_currentCell->effect() == Effect::Extended && highNibble( m_currentCell->effectValue() ) == EfxNoteDelay && lowNibble( m_currentCell->effectValue() ) != 0 ) {
 		// note delay, but not on tick 0
 		return;
 	}
-	else if( m_currentCell->effect() == Effect::Extended && highNibble( m_currentCell->effectValue() ) == EfxRetrigger && lowNibble( m_currentCell->effectValue() ) == 0 ) {
+	
+	if( m_currentCell->effect() == Effect::Extended && highNibble( m_currentCell->effectValue() ) == EfxRetrigger && lowNibble( m_currentCell->effectValue() ) == 0 ) {
 		// retrigger every frame
 		if( m_currentCell->note() != KeyOffNote ) {
 			triggerNote(m_currentCell->note());
@@ -315,13 +311,31 @@ void XmChannel::updateTick0( const XmCell* cell, bool estimateOnly )
 		if( lowNibble( m_currentCell->volume() ) != 0 ) {
 			m_portaSpeed = lowNibble( m_currentCell->volume() ) << 6;
 		}
+		if( m_currentCell->note() == 0 && m_currentCell->instrument() != 0 ) {
+			applySampleDefaults();
+			doKeyOn();
+		}
+		else if( m_currentCell->note() == KeyOffNote ) {
+			doKeyOff();
+			if( m_currentCell->instrument() != 0 ) {
+				applySampleDefaults();
+			}
+		}
 	}
 	else if( m_currentCell->effect() == Effect::Porta || m_currentCell->effect() == Effect::PortaVolSlide ) {
 		if( m_currentCell->effect() != Effect::PortaVolSlide && m_currentCell->effectValue() != 0 ) {
 			m_portaSpeed = m_currentCell->effectValue() << 2;
 		}
-		calculatePortaTarget( m_currentCell->note() );
-		if( m_currentCell->instrument()!=0 ) {
+		if( m_currentCell->note() != 0 && m_currentCell->note() != KeyOffNote ) {
+			calculatePortaTarget( m_currentCell->note() );
+		}
+		if( m_currentCell->note() == KeyOffNote ) {
+			doKeyOff();
+			if( m_currentCell->instrument() != 0 ) {
+				applySampleDefaults();
+			}
+		}
+		else if( m_currentCell->instrument() != 0 ) {
 			applySampleDefaults();
 			doKeyOn();
 		}
@@ -338,17 +352,17 @@ void XmChannel::updateTick0( const XmCell* cell, bool estimateOnly )
 			doKeyOn();
 		}
 	}
-	else if( m_currentCell->note() == KeyOffNote ) {
-		doKeyOff();
-		if(m_currentCell->instrument()!=0) {
-			applySampleDefaults();
-		}
-	}
-	else {
+	else if( m_currentCell->note() != KeyOffNote ) {
 		triggerNote(m_currentCell->note());
 		if(m_currentCell->instrument()!=0) {
 			applySampleDefaults();
 			doKeyOn();
+		}
+	}
+	else {
+		doKeyOff();
+		if(m_currentCell->instrument()!=0) {
+			applySampleDefaults();
 		}
 	}
 
@@ -828,7 +842,7 @@ void XmChannel::vfxSetPan( uint8_t fxByte )
 void XmChannel::fxOffset( uint8_t fxByte )
 {
 	reuseIfZero( m_lastOffsetFx, fxByte );
-	m_bres = 0;
+	m_bres = fxByte<<8;
 }
 
 void XmChannel::vfxSlideDown( uint8_t fxByte )
@@ -949,9 +963,11 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 		case EfxNoteDelay:
 			if( m_module->state().tick == lowNibble( fxByte ) ) {
 				triggerNote(m_currentCell->note());
-				applySampleDefaults();
+				if( m_currentCell->note() != 0 ) {
+					applySampleDefaults();
+				}
 				doKeyOn();
-				if( m_currentCell->volume() >= 0x10 && m_currentCell->volume() <= 0x4f ) {
+				if( m_currentCell->volume() >= 0x10 && m_currentCell->volume() <= 0x50 ) {
 					m_currentVolume = m_baseVolume = m_currentCell->volume() - 0x10;
 				}
 				else if( highNibble( fxByte ) == VfxSetPanning ) {
@@ -997,8 +1013,6 @@ void XmChannel::applySampleDefaults()
 		m_baseVolume = m_currentVolume = smp->volume();
 		m_panning = smp->panning();
 	}
-	m_volumeEnvelope.setPosition(0);
-	m_panningEnvelope.setPosition(0);
 }
 
 void XmChannel::vfxSetVibratoSpeed( uint8_t fxByte )
@@ -1079,13 +1093,11 @@ void XmChannel::fxArpeggio( uint8_t fxByte )
 
 void XmChannel::fxVibrato( uint8_t fxByte )
 {
-	if( fxByte != 0 ) {
-		if( lowNibble( fxByte ) != 0 ) {
-			m_vibratoDepth = lowNibble( fxByte );
-		}
-		if( highNibble( fxByte ) >> 2 != 0 ) {
-			m_vibratoSpeed = highNibble( fxByte ) >> 2;
-		}
+	if( lowNibble( fxByte ) != 0 ) {
+		m_vibratoDepth = lowNibble( fxByte );
+	}
+	if( highNibble( fxByte ) >> 2 != 0 ) {
+		m_vibratoSpeed = highNibble( fxByte ) << 2;
 	}
 	doVibrato();
 }
@@ -1261,15 +1273,18 @@ void XmChannel::retriggerNote()
 	if( cellVolFx >= 0x10 && cellVolFx <= 0x50 ) {
 		m_currentVolume = m_baseVolume = cellVolFx - 0x10;
 	}
-	else if( highNibble( m_currentCell->volume() ) == VfxSetPanning ) {
-		vfxSetPan( m_currentCell->volume() );
+	else if( highNibble( cellVolFx ) == VfxSetPanning ) {
+		m_panning = lowNibble(cellVolFx)<<4;
 	}
 	triggerNote(m_currentCell->note());
-	doKeyOn();
 }
 
 void XmChannel::fxRetrigger( uint8_t fxByte )
 {
+	if( m_module->state().tick != 0 ) {
+		retriggerNote();
+		return;
+	}
 	if( lowNibble( fxByte ) != 0 ) {
 		m_retriggerLength = lowNibble( fxByte );
 	}

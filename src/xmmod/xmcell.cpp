@@ -50,6 +50,8 @@ bool XmCell::load( BinStream& str )
 		str.read( &m_note );
 	if( data & 0x02 )
 		str.read( &m_instr );
+	if( m_instr > 0x80 )
+		m_instr = 0;
 	if( data & 0x04 )
 		str.read( &m_volume );
 	if( data & 0x08 )
