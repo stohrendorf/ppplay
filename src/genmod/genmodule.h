@@ -55,6 +55,7 @@ private:
 	//! @brief Maximum module loops if module patterns are played multiple times
 	int m_maxRepeat;
 	IArchive* m_initialState;
+	bool m_isPreprocessing;
 	mutable boost::recursive_mutex m_mutex;
 public:
 	//BEGIN Construction/destruction

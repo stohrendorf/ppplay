@@ -41,6 +41,7 @@ GenModule::GenModule( int maxRpt ) :
 	m_songs(),
 	m_maxRepeat(maxRpt),
 	m_initialState(new MemArchive()),
+	m_isPreprocessing(false),
 	m_mutex()
 {
 	BOOST_ASSERT_MSG( maxRpt != 0, "Maximum repeat count may not be 0" );
@@ -94,6 +95,11 @@ size_t GenModule::internal_getAudioData( AudioFrameBuffer& buffer, size_t size )
 		buffer.reset( new AudioFrameBuffer::element_type );
 	}
 	buffer->reserve( size );
+	if( m_isPreprocessing ) {
+		buffer->clear();
+		buffer->resize( tickBufferLength() );
+		return tickBufferLength();
+	}
 	buffer->resize( 0 );
 	AudioFrameBuffer tmpBuf;
 	while( buffer->size() < size ) {
@@ -245,23 +251,33 @@ bool GenModule::jumpNextOrder()
 		m_songs->states.next()->archive( this ).finishLoad();
 		return true;
 	}
+	lock.unlock();
+	BOOST_ASSERT( !m_isPreprocessing );
+	m_isPreprocessing = true;
 	// maybe not processed yet, so try to jump to the next order...
-	logger()->debug(L4CXX_LOCATION, "Not preprocessed yet");
-	size_t ord = m_state.order;
-	bool wasPaused = paused();
-	setPaused(true);
-	do {
-		if(m_state.order>=orderCount()) {
-			setPaused( wasPaused );
-			return false;
-		}
-		AudioFrameBuffer buf;
-		if(buildTick(&buf)==0 || !buf) {
-			setPaused( wasPaused );
-			return false;
-		}
-	} while(ord == m_state.order);
-	setPaused( wasPaused );
+// 	const bool wasPaused = paused();
+	try {
+		logger()->debug(L4CXX_LOCATION, "Not preprocessed yet");
+// 		setPaused(true);
+		size_t ord = m_state.order;
+		do {
+			if(m_state.order>=orderCount()) {
+// 				setPaused( wasPaused );
+				m_isPreprocessing = false;
+				return false;
+			}
+			AudioFrameBuffer buf;
+			if(internal_buildTick(&buf)==0 || !buf) {
+// 				setPaused( wasPaused );
+				m_isPreprocessing = false;
+				return false;
+			}
+		} while(ord == m_state.order);
+	}
+	catch(...) {
+	}
+// 	setPaused( wasPaused );
+	m_isPreprocessing = false;
 	return true;
 }
 
@@ -278,8 +294,9 @@ bool GenModule::jumpPrevOrder()
 bool GenModule::jumpNextSong()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	bool wasPaused = paused();
-	setPaused(true);
+// 	bool wasPaused = paused();
+// 	setPaused(true);
+	m_isPreprocessing = true;
 	
 	logger()->debug(L4CXX_LOCATION, "Trying to jump to next song");
 	if( !initialized() ) {
@@ -293,14 +310,17 @@ bool GenModule::jumpNextSong()
 			m_state.playedFrames = 0;
 			m_state.pattern = orderAt( i )->index();
 			setOrder( i, false );
-			setPaused( wasPaused );
+// 			setPaused( wasPaused );
+			m_isPreprocessing = false;
 			return true;
 		}
-		setPaused( wasPaused );
+// 		setPaused( wasPaused );
+		m_isPreprocessing = false;
 		return false;
 	}
 	if(m_songs.atEnd()) {
-		setPaused( wasPaused );
+// 		setPaused( wasPaused );
+		m_isPreprocessing = false;
 		return false;
 	}
 	++m_songs;
@@ -308,7 +328,8 @@ bool GenModule::jumpNextSong()
 	m_songs->states.current()->archive( this ).finishLoad();
 	//BOOST_ASSERT_MSG( orderAt( m_state.order ).use_count() > 0, "Current order is a nullptr" );
 	m_state.pattern = orderAt( m_state.order )->index();
-	setPaused( wasPaused );
+// 	setPaused( wasPaused );
+	m_isPreprocessing = false;
 	return true;
 }
 
