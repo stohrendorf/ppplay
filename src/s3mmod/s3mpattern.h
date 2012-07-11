@@ -53,7 +53,7 @@ private:
 	S3mCell* createCell( uint16_t chanIdx, int16_t row );
 public:
 	//! @brief Constructor
-	S3mPattern();
+	explicit S3mPattern();
 	~S3mPattern();
 	/**
 	 * @brief Load the cell from a stream
