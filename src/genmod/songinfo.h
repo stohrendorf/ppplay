@@ -20,7 +20,7 @@
 #define SONGINFO_H
 
 #include "stuff/trackingcontainer.h"
-#include "stream/iarchive.h"
+#include "stream/abstractarchive.h"
 
 namespace ppp
 {
@@ -44,7 +44,7 @@ struct SongInfo
 	}
 	
 	//! @brief States for seeking
-	TrackingContainer<IArchive*> states;
+	TrackingContainer<AbstractArchive*> states;
 	//! @brief Length in sample frames
 	size_t length;
 };
@@ -55,6 +55,6 @@ struct SongInfo
 
 }
 
-extern template class TrackingContainer<IArchive*>;
+extern template class TrackingContainer<AbstractArchive*>;
 
 #endif

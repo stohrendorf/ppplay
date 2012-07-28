@@ -24,7 +24,7 @@
  * @{
  */
 
-#include "genmod/genmodule.h"
+#include "genmod/abstractmodule.h"
 
 #include <array>
 
@@ -40,7 +40,7 @@ class XmInstrument;
  * @class XmModule
  * @brief XM module class
  */
-class XmModule : public GenModule
+class XmModule : public AbstractModule
 {
 	DISABLE_COPY( XmModule )
 	friend class XmChannel;
@@ -79,7 +79,7 @@ public:
 	 * @details
 	 * Loads and initializes the module if possible
 	 */
-	static GenModule::Ptr factory( const std::string& filename, uint32_t frequency, int maxRpt );
+	static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt );
 	virtual ~XmModule();
 	//! @brief Class pointer
 	typedef std::shared_ptr<XmModule> Ptr;
@@ -99,7 +99,7 @@ private:
 	 * @retval true on success
 	 * @retval false on error
 	 */
-	bool load( const std::string& filename );
+	bool load( Stream* stream );
 	/**
 	 * @brief Processes jumps
 	 * @param[in] estimateOnly Used when estimating track length
@@ -156,7 +156,7 @@ private:
 	 * @param[in] next Row to jump to
 	 */
 	void doPatLoop( int16_t next );
-	IArchive& serialize( IArchive* data );
+	AbstractArchive& serialize( AbstractArchive* data );
 	/**
 	 * @brief Check if there is a running pattern delay
 	 * @retval true if there is a running pattern delay

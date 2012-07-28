@@ -26,7 +26,7 @@
 
 #include "genmod/ipatterncell.h"
 
-class BinStream;
+class Stream;
 
 namespace ppp
 {
@@ -54,7 +54,7 @@ public:
 	 * @retval true on success
 	 * @retval false if an error occured
 	 */
-	bool load( BinStream& str );
+	bool load( Stream* str );
 	virtual void clear();
 	virtual std::string trackerString() const;
 	/**
@@ -82,7 +82,7 @@ public:
 	 * @return m_effectValue
 	 */
 	uint8_t effectValue() const;
-	virtual IArchive& serialize( IArchive* data );
+	virtual AbstractArchive& serialize( AbstractArchive* data );
 protected:
 	/**
 	 * @brief Get the logger

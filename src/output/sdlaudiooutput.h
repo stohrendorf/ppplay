@@ -19,7 +19,7 @@
 #ifndef SDLAUDIOOUTPUT_H
 #define SDLAUDIOOUTPUT_H
 
-#include "iaudiooutput.h"
+#include "abstractaudiooutput.h"
 #include "audiofifo.h"
 
 #include <boost/thread.hpp>
@@ -33,13 +33,13 @@
  * @class SDLAudioOutput
  * @brief Output class for SDL
  */
-class SDLAudioOutput : public IAudioOutput
+class SDLAudioOutput : public AbstractAudioOutput
 {
 	DISABLE_COPY( SDLAudioOutput )
 	SDLAudioOutput() = delete;
 public:
 	//! @copydoc IAudioOutput::IAudioOutput(const IAudioSource::WeakPtr&)
-	explicit SDLAudioOutput( const IAudioSource::WeakPtr& src );
+	explicit SDLAudioOutput( const AbstractAudioSource::WeakPtr& src );
 	virtual ~SDLAudioOutput();
 private:
 	boost::mutex m_mutex;

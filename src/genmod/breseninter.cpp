@@ -17,7 +17,7 @@
 */
 
 #include "breseninter.h"
-#include "stream/iarchive.h"
+#include "stream/abstractarchive.h"
 
 namespace ppp
 {
@@ -27,7 +27,7 @@ namespace ppp
  * @{
  */
 
-IArchive& BresenInterpolation::serialize( IArchive* archive )
+AbstractArchive& BresenInterpolation::serialize( AbstractArchive* archive )
 {
 	return *archive % m_dx % m_dy % m_err % m_position;
 }

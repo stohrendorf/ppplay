@@ -16,12 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AUDIOFIFO_H
-#define AUDIOFIFO_H
+#ifndef PPPLAY_AUDIOFIFO_H
+#define PPPLAY_AUDIOFIFO_H
 
 #include "stuff/utils.h"
 #include "audiotypes.h"
-#include "iaudiosource.h"
+#include "abstractaudiosource.h"
 
 #include "light4cxx/logger.h"
 
@@ -52,7 +52,7 @@ private:
 	//! @brief The requester thread that pulls the audio data from the source
 	boost::thread m_requestThread;
 	//! @brief The audio source to pull the data from
-	IAudioSource::WeakPtr m_source;
+	AbstractAudioSource::WeakPtr m_source;
 	//! @brief Sum of all left absolute sample values
 	uint64_t m_volLeftSum;
 	//! @brief Sum of all right absolute sample values
@@ -78,7 +78,7 @@ public:
 	 * @param[in] source The audio source that should be buffered
 	 * @param[in] minFrameCount Initial value for m_minFrameCount (minimum 256)
 	 */
-	AudioFifo( const IAudioSource::WeakPtr& source, size_t minFrameCount, bool doVolumeCalc );
+	AudioFifo( const AbstractAudioSource::WeakPtr& source, size_t minFrameCount, bool doVolumeCalc );
 	~AudioFifo();
 	/**
 	 * @brief Get the number of buffered frames

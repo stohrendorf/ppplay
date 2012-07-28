@@ -24,7 +24,7 @@
  * @{
  */
 
-#include "genmod/genmodule.h"
+#include "genmod/abstractmodule.h"
 
 namespace ppp
 {
@@ -35,7 +35,7 @@ class ModPattern;
 class ModSample;
 class ModChannel;
 
-class ModModule : public GenModule
+class ModModule : public AbstractModule
 {
 	DISABLE_COPY( ModModule )
 	ModModule() = delete;
@@ -48,7 +48,7 @@ public:
 	 * @param[in] maxRpt Maximum repeat count
 	 * @return Module pointer or nullptr
 	 */
-	static GenModule::Ptr factory( const std::string& filename, uint32_t frequency, int maxRpt = 2 );
+	static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt = 2 );
 private:
 	std::vector<ModSample*> m_samples; //!< @brief Samples
 	std::vector<ModPattern*> m_patterns; //!< @brief Patterns
@@ -62,11 +62,11 @@ private:
 	void checkGlobalFx();
 	ModPattern* getPattern( size_t idx ) const;
 protected:
-	virtual IArchive& serialize( IArchive* data );
+	virtual AbstractArchive& serialize( AbstractArchive* data );
 public:
 	ModModule( int maxRpt = 2 );
 	virtual ~ModModule();
-	bool load( const std::string& filename );
+	bool load( Stream* stream );
 private:
 	virtual size_t internal_buildTick( AudioFrameBuffer* buf );
 	virtual std::string internal_channelStatus( size_t idx ) const;

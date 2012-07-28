@@ -30,8 +30,7 @@
 #include "xmpattern.h"
 #include "xminstrument.h"
 
-#include "stream/fbinstream.h"
-#include "stuff/moduleregistry.h"
+#include "stream/stream.h"
 
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
@@ -76,7 +75,7 @@ constexpr std::array<const uint16_t, 12 * 8> g_PeriodTable = {{
 } // anonymous namespace
 
 XmModule::XmModule( int maxRpt ):
-	GenModule( maxRpt ),
+	AbstractModule( maxRpt ),
 	m_amiga( false ), m_patterns(), m_instruments(), m_channels(),
 	m_noteToPeriod(), m_jumpRow( ~0 ), m_jumpOrder( ~0 ),
 	m_isPatLoop( false ), m_doPatJump( false ), m_restartPos( 0 ),
@@ -91,12 +90,11 @@ XmModule::~XmModule()
 	deleteAll(m_instruments);
 }
 
-bool XmModule::load( const std::string& filename )
+bool XmModule::load( Stream* stream )
 {
 	XmHeader hdr;
-	FBinStream file( filename );
-	metaInfo().filename = filename;
-	file.read( reinterpret_cast<char*>( &hdr ), sizeof( hdr ) );
+	metaInfo().filename = stream->name();
+	*stream >> hdr;
 	if( !std::equal( hdr.id, hdr.id + 17, "Extended Module: " ) || hdr.endOfFile != 0x1a /*|| hdr.numChannels > 32*/ ) {
 		logger()->warn( L4CXX_LOCATION, "XM Header invalid" );
 		return false;
@@ -107,10 +105,10 @@ bool XmModule::load( const std::string& filename )
 	}
 	for( int i = 0; i < ( hdr.songLength & 0xff ); i++ ) {
 		uint8_t tmp;
-		file.read( &tmp );
+		*stream >> tmp;
 		addOrder( new XmOrder( tmp ) );
 	}
-	file.seek( hdr.headerSize + offsetof( XmHeader, headerSize ) );
+	stream->seek( hdr.headerSize + offsetof( XmHeader, headerSize ) );
 	metaInfo().title = boost::algorithm::trim_copy( stringncpy( hdr.title, 20 ) );
 	m_restartPos = hdr.restartPos;
 	{
@@ -133,7 +131,7 @@ bool XmModule::load( const std::string& filename )
 	for( uint_fast16_t i = 0; i < hdr.numPatterns; i++ ) {
 		XmPattern* pat = new XmPattern( hdr.numChannels );
 		m_patterns.push_back( pat );
-		if( !pat->load( file ) ) {
+		if( !pat->load( stream ) ) {
 			logger()->error( L4CXX_LOCATION, "Pattern loading error" );
 			return false;
 		}
@@ -144,7 +142,7 @@ bool XmModule::load( const std::string& filename )
 	for( uint_fast16_t i = 0; i < hdr.numInstruments; i++ ) {
 		XmInstrument* ins = new XmInstrument();
 		m_instruments.push_back( ins );
-		if( !ins->load( file ) ) {
+		if( !ins->load( stream ) ) {
 			logger()->error( L4CXX_LOCATION, "Instrument loading error" );
 			return false;
 		}
@@ -346,23 +344,23 @@ uint32_t XmModule::periodToFrequency( uint16_t period ) const
 
 uint16_t XmModule::periodToFineNoteIndex( uint16_t period, int8_t finetune, uint8_t deltaNote ) const
 {
-	const int8_t tuned = ( finetune / 8 + 16 );
-	int16_t ofsLo = 0;
-	int16_t ofsHi = m_noteToPeriod.size();
+	const int tuned = clip(finetune / 8 + 16, 8, 24);
+	int ofsLo = 0;
+	int ofsHi = 1536;
 	for( int i = 0; i < 8; i++ ) {
-		int16_t ofsMid = ( ofsLo + ofsHi ) >> 1;
+		int ofsMid = ( ofsLo + ofsHi ) / 2;
+		BOOST_ASSERT( ofsMid >= 0 );
 		ofsMid &= 0xfff0;
-		ofsMid += tuned;
-		if( period < m_noteToPeriod.at( ofsMid - 8 ) ) {
-			ofsLo = (ofsMid - tuned) & 0xfff0;
+		if( period < m_noteToPeriod.at( ofsMid + tuned - 8 ) ) {
+			ofsLo = ofsMid;
 		}
 		else {
-			ofsHi = (ofsMid - tuned) & 0xfff0;
+			ofsHi = ofsMid;
 		}
 	}
-	int16_t ofs = ofsLo + tuned + deltaNote;
-	if( ofs >= m_noteToPeriod.size() ) {
-		ofs = m_noteToPeriod.size();
+	int ofs = ofsLo + tuned + (deltaNote<<1);
+	if( ofs >= 1550 ) {
+		ofs = 1551;
 	}
 	else if(ofs<0) {
 		ofs = 0;
@@ -398,9 +396,9 @@ void XmModule::doPatLoop( int16_t next )
 	m_isPatLoop = true;
 }
 
-IArchive& XmModule::serialize( IArchive* data )
+AbstractArchive& XmModule::serialize( AbstractArchive* data )
 {
-	GenModule::serialize( data );
+	AbstractModule::serialize( data );
 	for( XmChannel*& chan : m_channels ) {
 		if( !chan ) {
 			continue;
@@ -418,17 +416,20 @@ IArchive& XmModule::serialize( IArchive* data )
 	return *data;
 }
 
-GenModule::Ptr XmModule::factory( const std::string& filename, uint32_t frequency, int maxRpt )
+AbstractModule* XmModule::factory( Stream* stream, uint32_t frequency, int maxRpt )
 {
-	XmModule::Ptr result( new XmModule( maxRpt ) );
+	XmModule* result( new XmModule( maxRpt ) );
 	if( !result ) {
-		return GenModule::Ptr();
+		delete result;
+		return nullptr;
 	}
-	if( !result->load( filename ) ) {
-		return GenModule::Ptr();
+	if( !result->load( stream ) ) {
+		delete result;
+		return nullptr;
 	}
 	if( !result->initialize( frequency ) ) {
-		return GenModule::Ptr();
+		delete result;
+		return nullptr;
 	}
 	return result;
 }
@@ -448,7 +449,7 @@ void XmModule::doPatDelay( uint8_t counter )
 
 light4cxx::Logger* XmModule::logger()
 {
-	return light4cxx::Logger::get( GenModule::logger()->name() + ".xm" );
+	return light4cxx::Logger::get( AbstractModule::logger()->name() + ".xm" );
 }
 
 }

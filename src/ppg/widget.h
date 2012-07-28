@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef WIDGET_H
-#define WIDGET_H
+#ifndef PPG_WIDGET_H
+#define PPG_WIDGET_H
 
 /**
  * @ingroup Ppg

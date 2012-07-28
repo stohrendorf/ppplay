@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef FONTS_H
-#define FONTS_H
+#ifndef PPG_FONTS_H
+#define PPG_FONTS_H
 
 /**
  * @ingroup Ppg

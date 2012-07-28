@@ -16,50 +16,31 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "filestream.h"
 
-#ifndef PPPLAY_ITIMER_H
-#define PPPLAY_ITIMER_H
+#include <boost/assert.hpp>
 
-#include "utils.h"
+#include <fstream>
 
-#include <cstdint>
-
-/**
- * @ingroup Common
- * @{
- */
-
-/**
- * @interface ITimer
- * @brief Timer interface
- */
-class ITimer
+FileStream::FileStream( const std::string& filename, Mode mode ) :
+	Stream( new std::fstream( filename.c_str(), (mode==Mode::Read ? std::ios::in : std::ios::out) | std::ios::binary ), filename ),
+	m_size( 0 )
 {
-	DISABLE_COPY( ITimer )
-public:
-	/**
-	 * @brief Default constructor
-	 */
-	ITimer() = default;
-	/**
-	 * @brief Virtual default destructor
-	 */
-	inline virtual ~ITimer();
-	/**
-	 * @brief The timer interval in milliseconds
-	 * @return The timer interval in milliseconds
-	 */
-	virtual uint32_t interval() const = 0;
-	/**
-	 * @brief Timer handler, called every interval() milliseconds
-	 */
-	virtual void onTimer() = 0;
-};
+	if( mode == Mode::Read ) {
+		stream()->seekg( 0, std::ios::end );
+		m_size = stream()->tellg();
+		stream()->seekg( 0 );
+	}
+}
 
-inline ITimer::~ITimer() = default;
+bool FileStream::isOpen() const
+{
+	const std::fstream* fs = dynamic_cast<const std::fstream*>(stream());
+	BOOST_ASSERT_MSG( fs!=nullptr, "Stream is not a file stream" );
+	return fs->is_open();
+}
 
-/**
- * @}
- */
-
-#endif // TIMER_H
+size_t FileStream::size() const
+{
+	return m_size;
+}

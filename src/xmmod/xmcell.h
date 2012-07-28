@@ -27,7 +27,7 @@
 #include "genmod/ipatterncell.h"
 #include "xmbase.h"
 
-class BinStream;
+class Stream;
 
 namespace ppp
 {
@@ -54,7 +54,7 @@ public:
 	 * @param[in] str The stream to load from
 	 * @return @c true on success
 	 */
-	bool load( BinStream& str );
+	bool load( Stream* str );
 	virtual void clear();
 	virtual std::string trackerString() const;
 	/**
@@ -92,7 +92,7 @@ public:
 	 * @return m_effectValue
 	 */
 	uint8_t effectValue() const;
-	virtual IArchive& serialize( IArchive* data );
+	virtual AbstractArchive& serialize( AbstractArchive* data );
 };
 
 }

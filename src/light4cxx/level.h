@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LEVEL_H
-#define LEVEL_H
+#ifndef LIGHT4CXX_LEVEL_H
+#define LIGHT4CXX_LEVEL_H
 
 namespace light4cxx
 {

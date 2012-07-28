@@ -23,8 +23,8 @@
 #include "ppg/stereopeakbar.h"
 #include "ppg/progressbar.h"
 #include "stuff/sdltimer.h"
-#include "genmod/genmodule.h"
-#include "output/iaudiooutput.h"
+#include "genmod/abstractmodule.h"
+#include "output/abstractaudiooutput.h"
 
 #include <array>
 
@@ -42,11 +42,11 @@ private:
 	ppg::Label* m_trackerInfo;
 	ppg::Label* m_modTitle;
 	ppg::ProgressBar* m_progress;
-	std::weak_ptr<ppp::GenModule> m_module;
-	IAudioOutput::WeakPtr m_output;
+	std::weak_ptr<ppp::AbstractModule> m_module;
+	AbstractAudioOutput::WeakPtr m_output;
 	virtual void drawThis();
 public:
-	UIMain( Widget* parent, const ppp::GenModule::Ptr& module, const IAudioOutput::Ptr& output );
+	UIMain( Widget* parent, const ppp::AbstractModule::Ptr& module, const AbstractAudioOutput::Ptr& output );
 	virtual ~UIMain();
 	ppg::Label* posLabel();
 	ppg::Label* playbackInfo();

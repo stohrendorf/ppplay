@@ -31,9 +31,7 @@
 #include "s3msample.h"
 #include "s3mcell.h"
 
-#include "stream/fbinstream.h"
-
-#include "stuff/moduleregistry.h"
+#include "stream/stream.h"
 
 #include <boost/format.hpp>
 
@@ -91,7 +89,7 @@ struct S3mModuleHeader {
 #pragma pack(pop)
 #endif
 
-S3mModule::S3mModule( int maxRpt ) : GenModule( maxRpt ),
+S3mModule::S3mModule( int maxRpt ) : AbstractModule( maxRpt ),
 	m_breakRow( ~0 ), m_breakOrder( ~0 ), m_patLoopRow( -1 ), m_patLoopCount( -1 ), m_patDelayCount( -1 ),
 	m_customData( false ), m_samples(), m_patterns(), m_channels(), m_usedChannels( 0 ),
 	m_amigaLimits( false ), m_fastVolSlides( false ), m_st2Vibrato( false ), m_zeroVolOpt( false )
@@ -121,25 +119,13 @@ S3mModule::~S3mModule()
 	deleteAll(m_samples);
 }
 
-bool S3mModule::load( const std::string& fn )
+bool S3mModule::load( Stream* stream )
 {
 	try {
-		//LOG_MESSAGE("Opening '%s'", fn.c_str());
-		FBinStream str( fn );
-		if( !str.isOpen() ) {
-			//LOG_WARNING("%s could not be opened", fn.c_str());
-			return false;
-		}
-		metaInfo().filename = fn;
+		metaInfo().filename = stream->name();
 		S3mModuleHeader s3mHdr;
-		try {
-			str.seek( 0 );
-			str.read( reinterpret_cast<char*>( &s3mHdr ), sizeof( s3mHdr ) );
-		}
-		catch( ... ) {
-			return false;
-		}
-		if( str.fail() ) {  // header read completely?
+		*stream >> s3mHdr;
+		if( !stream->good() ) {  // header read completely?
 			logger()->warn( L4CXX_LOCATION, "Header Error" );
 			return false;
 		}
@@ -199,20 +185,20 @@ bool S3mModule::load( const std::string& fn )
 		// parse flags
 		m_customData = ( s3mHdr.ffv & s3mFlagSpecial ) != 0;
 		// now read the orders...
-		str.seek( 0x60 );
+		stream->seek( 0x60 );
 		for( int i = 0; i < s3mHdr.ordNum; i++ ) {
-			if( !str.good() ) {
+			if( !stream->good() ) {
 				return false;
 			}
 			uint8_t tmpOrd;
-			str.read( &tmpOrd );
+			*stream >>tmpOrd;
 			orderAt( i )->setIndex( tmpOrd );
 		}
 		uint8_t defPans[32];
 		if( s3mHdr.defaultPannings == 0xFC ) {
 			try {
-				str.seek( 0x60 + s3mHdr.ordNum + 2 * s3mHdr.smpNum + 2 * s3mHdr.patNum );
-				str.read( defPans, 32 );
+				stream->seek( 0x60 + s3mHdr.ordNum + 2 * s3mHdr.smpNum + 2 * s3mHdr.patNum );
+				stream->read( defPans, 32 );
 			}
 			catch( ... ) {
 				return false;
@@ -224,22 +210,22 @@ bool S3mModule::load( const std::string& fn )
 		// load the samples
 		logger()->info( L4CXX_LOCATION, "Loading samples..." );
 		for( int i = 0; i < s3mHdr.smpNum; i++ ) {
-			if( !str.good() ) {
+			if( !stream->good() ) {
 				return false;
 			}
-			str.seek( s3mHdr.ordNum + 0x60 + 2 * i );
-			if( !str.good() ) {
+			stream->seek( s3mHdr.ordNum + 0x60 + 2 * i );
+			if( !stream->good() ) {
 				return false;
 			}
 			ParaPointer pp;
-			str.read( &pp );
+			*stream >> pp;
 			if( pp == 0 )
 				continue;
 			m_samples.at( i ) = new S3mSample();
-			if( !( m_samples[i]->load( str, pp * 16, ( ( s3mHdr.createdWith >> 12 ) & 0x0f ) == s3mTIdImagoOrpheus ) ) ) {
+			if( !( m_samples[i]->load( stream, pp * 16, ( ( s3mHdr.createdWith >> 12 ) & 0x0f ) == s3mTIdImagoOrpheus ) ) ) {
 				return false;
 			}
-			if( !str.good() ) {
+			if( !stream->good() ) {
 				return false;
 			}
 			schismTest |= m_samples[i]->isHighQuality();
@@ -250,21 +236,21 @@ bool S3mModule::load( const std::string& fn )
 		// ok, samples loaded, now load the patterns...
 		logger()->info( L4CXX_LOCATION, "Loading patterns..." );
 		for( int i = 0; i < s3mHdr.patNum; i++ ) {
-			str.seek( s3mHdr.ordNum + 2 * s3mHdr.smpNum + 0x60 + 2 * i );
+			stream->seek( s3mHdr.ordNum + 2 * s3mHdr.smpNum + 0x60 + 2 * i );
 			ParaPointer pp;
-			str.read( &pp );
+			*stream >> pp;
 			if( pp == 0 )
 				continue;
 			S3mPattern* pat = new S3mPattern();
 			m_patterns.at( i ) = pat;
-			if( !pat->load( str, pp * 16 ) ) {
+			if( !pat->load( stream, pp * 16 ) ) {
 				return false;
 			}
-			if( !str.good() ) {
+			if( !stream->good() ) {
 				return false;
 			}
 		}
-		//str.close();
+		//stream->close();
 		// set pannings...
 		logger()->info( L4CXX_LOCATION, "Preparing channels..." );
 		for( int i = 0; i < 32; i++ ) {
@@ -307,7 +293,7 @@ bool S3mModule::load( const std::string& fn )
 			}
 		}
 		metaInfo().title = stringncpy( s3mHdr.title, 28 );
-		return true;
+		return stream->good();
 	}
 	catch( boost::exception& e ) {
 		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
@@ -351,16 +337,16 @@ void S3mModule::checkGlobalFx()
 				continue;
 			}
 			uint8_t fxVal = cell->effectValue();
-			if( highNibble( fxVal ) != s3mSFxPatLoop ) {
+			if( ( fxVal>>4 ) != s3mSFxPatLoop ) {
 				continue;
 			}
-			if( lowNibble( fxVal ) == 0x00 ) {  // loop start
+			if( ( fxVal&0x0f ) == 0x00 ) {  // loop start
 				m_patLoopRow = state().row;
 			}
 			else { // loop return
 				patLoopCounter++;
 				if( m_patLoopCount == -1 ) {  // first loop return -> set loop count
-					m_patLoopCount = lowNibble( fxVal );
+					m_patLoopCount = fxVal&0x0f;
 					m_breakRow = m_patLoopRow;
 				}
 				else if( m_patLoopCount > 1 ) {  // non-initial return -> decrease loop counter
@@ -393,13 +379,13 @@ void S3mModule::checkGlobalFx()
 				continue;
 			}
 			uint8_t fxVal = cell->effectValue();
-			if( highNibble( fxVal ) != s3mSFxPatDelay || lowNibble( fxVal ) == 0 ) {
+			if( ( fxVal>>4 ) != s3mSFxPatDelay || ( fxVal&0x0f ) == 0 ) {
 				continue;
 			}
 			if( ++patDelayCounter != 1 || m_patDelayCount != -1 ) {
 				continue;
 			}
-			m_patDelayCount = lowNibble( fxVal );
+			m_patDelayCount = fxVal&0x0f;
 		}
 		if( m_patDelayCount > 1 ) {
 			m_patDelayCount--;
@@ -422,7 +408,7 @@ void S3mModule::checkGlobalFx()
 				m_breakOrder = fxVal;
 			}
 			else if( fx == s3mFxBreakPat ) {
-				m_breakRow = highNibble( fxVal ) * 10 + lowNibble( fxVal );
+				m_breakRow = ( fxVal>>4 ) * 10 + ( fxVal&0x0f );
 				logger()->debug( L4CXX_LOCATION, "Row %d: Break pattern to row %d", state().row, m_breakRow );
 			}
 		}
@@ -571,9 +557,9 @@ std::string S3mModule::internal_channelCellString( size_t idx ) const
 	return x->cellString();
 }
 
-IArchive& S3mModule::serialize( IArchive* data )
+AbstractArchive& S3mModule::serialize( AbstractArchive* data )
 {
-	GenModule::serialize( data )
+	AbstractModule::serialize( data )
 	% m_breakRow
 	% m_breakOrder
 	% m_patLoopRow
@@ -589,14 +575,16 @@ IArchive& S3mModule::serialize( IArchive* data )
 	return *data;
 }
 
-GenModule::Ptr S3mModule::factory( const std::string& filename, uint32_t frequency, int maxRpt )
+AbstractModule* S3mModule::factory( Stream* stream, uint32_t frequency, int maxRpt )
 {
-	S3mModule::Ptr result( new S3mModule( maxRpt ) );
-	if( !result->load( filename ) ) {
-		return GenModule::Ptr();
+	S3mModule* result( new S3mModule( maxRpt ) );
+	if( !result->load( stream ) ) {
+		delete result;
+		return nullptr;
 	}
 	if( !result->initialize( frequency ) ) {
-		return GenModule::Ptr();
+		delete result;
+		return nullptr;
 	}
 	return result;
 }
@@ -642,7 +630,7 @@ S3mPattern* S3mModule::getPattern( size_t idx ) const
 
 light4cxx::Logger* S3mModule::logger()
 {
-	return light4cxx::Logger::get( GenModule::logger()->name() + ".s3m" );
+	return light4cxx::Logger::get( AbstractModule::logger()->name() + ".s3m" );
 }
 
 }

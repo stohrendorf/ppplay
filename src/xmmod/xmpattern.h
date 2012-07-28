@@ -27,7 +27,7 @@
  * @{
  */
 
-class BinStream;
+class Stream;
 
 namespace ppp
 {
@@ -66,7 +66,7 @@ public:
 	 * @param[in] str Stream to load from
 	 * @return @c true on success
 	 */
-	bool load( BinStream& str );
+	bool load( Stream* str );
 	/**
 	 * @brief Get a cell
 	 * @param[in] column Column of the cell

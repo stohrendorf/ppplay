@@ -24,23 +24,23 @@
  * @{
  */
 
-#include "genmod/gensample.h"
+#include "genmod/sample.h"
 
-class BinStream;
+class Stream;
 
 namespace ppp
 {
 namespace mod
 {
 
-class ModSample : public GenSample
+class ModSample : public Sample
 {
 	DISABLE_COPY( ModSample )
 public:
 	ModSample();
-	bool loadHeader( BinStream& stream );
-	bool loadData( BinStream& stream );
-	bool loadAdpcmData( BinStream& stream );
+	bool loadHeader( Stream* stream );
+	bool loadData( Stream* stream );
+	bool loadAdpcmData( Stream* stream );
 	uint8_t finetune() const;
 private:
 	uint8_t m_finetune;

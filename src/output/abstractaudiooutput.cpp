@@ -21,88 +21,88 @@
  * @{
  */
 
-#include "iaudiooutput.h"
+#include "abstractaudiooutput.h"
 
-IAudioOutput::~IAudioOutput() = default;
+AbstractAudioOutput::~AbstractAudioOutput() = default;
 
-IAudioOutput::ErrorCode IAudioOutput::errorCode() const
+AbstractAudioOutput::ErrorCode AbstractAudioOutput::errorCode() const
 {
 	boost::mutex::scoped_lock lock( m_mutex );
 	return m_errorCode;
 }
 
-void IAudioOutput::setErrorCode( IAudioOutput::ErrorCode ec )
+void AbstractAudioOutput::setErrorCode( AbstractAudioOutput::ErrorCode ec )
 {
 // 	boost::mutex::scoped_lock lock( m_mutex );
 	m_errorCode = ec;
 }
 
-IAudioSource::WeakPtr IAudioOutput::source() const
+AbstractAudioSource::WeakPtr AbstractAudioOutput::source() const
 {
 // 	boost::mutex::scoped_lock lock( m_mutex );
 	return m_source;
 }
 
-uint16_t IAudioOutput::internal_volumeLeft() const
+uint16_t AbstractAudioOutput::internal_volumeLeft() const
 {
-	if( IAudioSource::Ptr src = m_source.lock() ) {
+	if( AbstractAudioSource::Ptr src = m_source.lock() ) {
 		return src->volumeLeft();
 	}
 	return 0;
 }
 
-uint16_t IAudioOutput::internal_volumeRight() const
+uint16_t AbstractAudioOutput::internal_volumeRight() const
 {
-	IAudioSource::Ptr source( m_source.lock() );
+	AbstractAudioSource::Ptr source( m_source.lock() );
 	if( !m_source.expired() ) {
 		return source->volumeRight();
 	}
 	return 0;
 }
 
-int IAudioOutput::init( int desiredFrq )
+int AbstractAudioOutput::init( int desiredFrq )
 {
 	boost::mutex::scoped_lock lock( m_mutex );
 	return internal_init( desiredFrq );
 }
 
-void IAudioOutput::pause()
+void AbstractAudioOutput::pause()
 {
 	boost::mutex::scoped_lock lock( m_mutex );
 	internal_pause();
 }
 
-bool IAudioOutput::paused() const
+bool AbstractAudioOutput::paused() const
 {
 	boost::mutex::scoped_lock lock( m_mutex );
 	return internal_paused();
 }
 
-void IAudioOutput::play()
+void AbstractAudioOutput::play()
 {
 	boost::mutex::scoped_lock lock( m_mutex );
 	internal_play();
 }
 
-bool IAudioOutput::playing() const
+bool AbstractAudioOutput::playing() const
 {
 	boost::mutex::scoped_lock lock( m_mutex );
 	return internal_playing();
 }
 
-uint16_t IAudioOutput::volumeLeft() const
+uint16_t AbstractAudioOutput::volumeLeft() const
 {
 	boost::mutex::scoped_lock lock( m_mutex );
 	return internal_volumeLeft();
 }
 
-uint16_t IAudioOutput::volumeRight() const
+uint16_t AbstractAudioOutput::volumeRight() const
 {
 	boost::mutex::scoped_lock lock( m_mutex );
 	return internal_volumeRight();
 }
 
-light4cxx::Logger* IAudioOutput::logger()
+light4cxx::Logger* AbstractAudioOutput::logger()
 {
 	return light4cxx::Logger::get( "audio.output" );
 }

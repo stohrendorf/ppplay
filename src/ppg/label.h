@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LABEL_H
-#define LABEL_H
+#ifndef PPG_LABEL_H
+#define PPG_LABEL_H
 
 #include "widget.h"
 

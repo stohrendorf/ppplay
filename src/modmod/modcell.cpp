@@ -21,7 +21,7 @@
 #include "modbase.h"
 
 #include "genmod/genbase.h"
-#include "stream/iarchive.h"
+#include "stream/abstractarchive.h"
 
 #include <boost/format.hpp>
 
@@ -45,24 +45,24 @@ void ModCell::reset()
 
 ModCell::~ModCell() = default;
 
-bool ModCell::load( BinStream& str )
+bool ModCell::load( Stream* str )
 {
 	clear();
 	uint8_t tmp;
-	str.read( &tmp );
+	*str >> tmp;
 	m_sampleNumber = tmp & 0xf0;
 	if( m_sampleNumber > 32 ) {
 		logger()->warn( L4CXX_LOCATION, "Sample out of range: %d", int(m_sampleNumber) );
 	}
 	//m_sampleNumber &= 0x1f;
 	m_period = ( tmp & 0x0f ) << 8;
-	str.read( &tmp );
+	*str >> tmp;
 	m_period |= tmp;
 	m_period &= 0xfff;
-	str.read( &tmp );
+	*str >> tmp;
 	m_sampleNumber |= tmp >> 4;
 	m_effect = tmp & 0x0f;
-	str.read( &tmp );
+	*str >> tmp;
 	m_effectValue = tmp;
 	if( m_period != 0 ) {
 		uint8_t idx = periodToNoteIndex( m_period );
@@ -74,7 +74,7 @@ bool ModCell::load( BinStream& str )
 			m_note = "^^^";
 		}
 	}
-	return str.good();
+	return str->good();
 }
 
 void ModCell::clear()
@@ -124,7 +124,7 @@ std::string ModCell::trackerString() const
 	return res;
 }
 
-IArchive& ModCell::serialize( IArchive* data )
+AbstractArchive& ModCell::serialize( AbstractArchive* data )
 {
 	*data % m_sampleNumber % m_period % m_effect % m_effectValue;
 	if( data->isLoading() ) {

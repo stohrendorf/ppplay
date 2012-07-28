@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PROGRESSBAR_H
-#define PROGRESSBAR_H
+#ifndef PPG_PROGRESSBAR_H
+#define PPG_PROGRESSBAR_H
 
 #include "widget.h"
 

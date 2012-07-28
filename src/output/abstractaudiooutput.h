@@ -16,10 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef IAUDIOOUTPUT_H
-#define IAUDIOOUTPUT_H
+#ifndef PPPLAY_ABSTRACTAUDIOOUTPUT_H
+#define PPPLAY_ABSTRACTAUDIOOUTPUT_H
 
-#include "iaudiosource.h"
+#include "abstractaudiosource.h"
 
 #include <boost/thread.hpp>
 
@@ -32,10 +32,10 @@
  * @interface IAudioOutput
  * @brief Abstract base class for sound output
  */
-class IAudioOutput
+class AbstractAudioOutput
 {
-	DISABLE_COPY( IAudioOutput )
-	IAudioOutput() = delete;
+	DISABLE_COPY( AbstractAudioOutput )
+	AbstractAudioOutput() = delete;
 public:
 	//! @brief Audio output device error codes
 	enum ErrorCode {
@@ -47,17 +47,17 @@ public:
 		OutputUnavailable //!< @brief Output device is unavailable
 	};
 	//! @brief Class pointer
-	typedef std::shared_ptr<IAudioOutput> Ptr;
+	typedef std::shared_ptr<AbstractAudioOutput> Ptr;
 	//! @brief Weak class pointer
-	typedef std::weak_ptr<IAudioOutput> WeakPtr;
+	typedef std::weak_ptr<AbstractAudioOutput> WeakPtr;
 	/**
 	 * @brief Constructor
 	 * @param[in] src Pointer to an audio data source
 	 */
-	inline explicit IAudioOutput( const IAudioSource::WeakPtr& src ) : m_source( src ), m_errorCode( NoError ), m_mutex() {
+	inline explicit AbstractAudioOutput( const AbstractAudioSource::WeakPtr& src ) : m_source( src ), m_errorCode( NoError ), m_mutex() {
 	}
 	//! @brief Destructor
-	virtual ~IAudioOutput();
+	virtual ~AbstractAudioOutput();
 	/**
 	 * @brief Get the internal error code
 	 * @return Internal error code
@@ -81,7 +81,7 @@ public:
 	 * @brief Get the attached audio source
 	 * @return Pointer to the attached audio source
 	 */
-	IAudioSource::WeakPtr source() const;
+	AbstractAudioSource::WeakPtr source() const;
 protected:
 	/**
 	 * @brief Set the internal error code
@@ -94,7 +94,7 @@ protected:
 	 */
 	static light4cxx::Logger* logger();
 private:
-	IAudioSource::WeakPtr m_source; //!< @brief The audio source
+	AbstractAudioSource::WeakPtr m_source; //!< @brief The audio source
 	ErrorCode m_errorCode; //!< @brief Internal error code
 	//ReadWriteLockable m_readWriteLock;
 	mutable boost::mutex m_mutex;

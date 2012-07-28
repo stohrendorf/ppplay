@@ -16,8 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "moduleregistry.h"
+#include "pluginregistry.h"
 #include "inputplugin.h"
+#include "stream/archivefilestream.h"
+#include "stream/filestream.h"
 
 #include <dlfcn.h>
 
@@ -27,38 +29,56 @@
 namespace ppp
 {
 
-ModuleRegistry::ModuleRegistry() : m_handles()
+PluginRegistry::PluginRegistry() : m_handles()
 {
 }
 
-ModuleRegistry::~ModuleRegistry()
+PluginRegistry::~PluginRegistry()
 {
 	for(void* handle : m_handles) {
 		dlclose(handle);
 	}
 }
 
-ModuleRegistry& ModuleRegistry::instance()
+PluginRegistry& PluginRegistry::instance()
 {
-	static ModuleRegistry registry;
+	static PluginRegistry registry;
 	return registry;
 }
 
-GenModule::Ptr ModuleRegistry::tryLoad( const std::string& filename, uint32_t frq, int maxRpt )
+AbstractModule::Ptr PluginRegistry::tryLoad( const std::string& filename, uint32_t frq, int maxRpt )
 {
-	findModules();
-	GenModule::Ptr result;
-	for(void* handle : instance().m_handles) {
-		InputPlugin* plugin = static_cast<InputPlugin*>(dlsym(handle, "plugin"));
-		LoaderFunction loader = plugin->loader();
-		if( ( result = loader( filename, frq, maxRpt ) ) ) {
-			break;
+	findPlugins();
+	{
+		FileStream file(filename);
+		if( file.isOpen() ) {
+			for(void* handle : instance().m_handles) {
+				InputPlugin* plugin = static_cast<InputPlugin*>(dlsym(handle, "plugin"));
+				file.clear();
+				file.seek(0);
+				if( AbstractModule* result = plugin->load( &file, frq, maxRpt ) ) {
+					return AbstractModule::Ptr(result);
+				}
+			}
 		}
 	}
-	return result;
+	{
+		ArchiveFileStream file(filename);
+		if( file.isOpen() ) {
+			for(void* handle : instance().m_handles) {
+				InputPlugin* plugin = static_cast<InputPlugin*>(dlsym(handle, "plugin"));
+				file.clear();
+				file.seek(0);
+				if( AbstractModule* result = plugin->load( &file, frq, maxRpt ) ) {
+					return AbstractModule::Ptr(result);
+				}
+			}
+		}
+	}
+	return AbstractModule::Ptr();
 }
 
-void ModuleRegistry::findModules()
+void PluginRegistry::findPlugins()
 {
 	if(!instance().m_handles.empty()) {
 		return;

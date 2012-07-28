@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AUDIOTYPES_H
-#define AUDIOTYPES_H
+#ifndef PPPLAY_AUDIOTYPES_H
+#define PPPLAY_AUDIOTYPES_H
 
 #include "stuff/numberutils.h"
 

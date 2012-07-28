@@ -24,7 +24,7 @@
 #include <vector>
 #include <cstdint>
 
-class BinStream;
+class Stream;
 
 /**
  * @ingroup ModMod
@@ -61,7 +61,7 @@ public:
 	 * @param[in] str The stream to load from
 	 * @return @c true on success
 	 */
-	bool load( BinStream& str, uint8_t numChans );
+	bool load( Stream* str, uint8_t numChans );
 	/**
 	 * @brief Get a cell from the pattern
 	 * @param[in] chanIdx Channel index

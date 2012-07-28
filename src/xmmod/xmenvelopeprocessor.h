@@ -132,7 +132,7 @@ public:
 	 * @param[in] pos The requested position (not the point index)
 	 */
 	void setPosition( uint8_t pos );
-	virtual IArchive& serialize( IArchive* data );
+	virtual AbstractArchive& serialize( AbstractArchive* data );
 };
 
 /**

@@ -52,8 +52,8 @@ size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
 	return copied;
 }
 
-SDLAudioOutput::SDLAudioOutput( const IAudioSource::WeakPtr& src ) :
-	IAudioOutput( src ),
+SDLAudioOutput::SDLAudioOutput( const AbstractAudioSource::WeakPtr& src ) :
+	AbstractAudioOutput( src ),
 	m_mutex(),
 	m_fifo( src, 4096, true )
 {
@@ -138,5 +138,5 @@ uint16_t SDLAudioOutput::internal_volumeRight() const
 
 light4cxx::Logger* SDLAudioOutput::logger()
 {
-	return light4cxx::Logger::get( IAudioOutput::logger()->name() + ".sdl" );
+	return light4cxx::Logger::get( AbstractAudioOutput::logger()->name() + ".sdl" );
 }

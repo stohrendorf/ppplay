@@ -19,8 +19,9 @@
 #ifndef XMCHANNEL_H
 #define XMCHANNEL_H
 
-#include "genmod/genchannel.h"
+#include "genmod/abstractchannel.h"
 #include "genmod/breseninter.h"
+#include "genmod/genbase.h"
 
 #include "xmenvelopeprocessor.h"
 
@@ -43,7 +44,7 @@ class XmInstrument;
  * @class XmChannel
  * @brief XM Channel class declaration
  */
-class XmChannel : public GenChannel
+class XmChannel : public AbstractChannel
 {
 	DISABLE_COPY( XmChannel )
 	XmChannel() = delete;
@@ -72,7 +73,7 @@ private:
 	//! @brief Current instrument index (1-based)
 	uint8_t m_instrumentIndex;
 	//! @brief Current base note (0-based)
-	uint8_t m_baseNote;
+	RememberByte<false> m_baseNote;
 	//! @brief Current real note (0-based, including relative note)
 	uint8_t m_realNote;
 	//! @brief The current note cell
@@ -98,31 +99,31 @@ private:
 	 * @{
 	 */
 	//! @brief Last volume slide effect value
-	uint8_t m_lastVolSlideFx;
+	RememberByte<false> m_lastVolSlideFx;
 	//! @brief Last porta up effect value
-	uint8_t m_lastPortaUpFx;
+	RememberByte<false> m_lastPortaUpFx;
 	//! @brief Last porta down effect value
-	uint8_t m_lastPortaDownFx;
+	RememberByte<false> m_lastPortaDownFx;
 	//! @brief Last panning slide effect value
-	uint8_t m_lastPanSlideFx;
+	RememberByte<false> m_lastPanSlideFx;
 	//! @brief Last offset effect value
-	uint8_t m_lastOffsetFx;
+	RememberByte<false> m_lastOffsetFx;
 	//! @brief Last fine porta up effect value
-	uint8_t m_lastFinePortaUpFx;
+	RememberByte<false> m_lastFinePortaUpFx;
 	//! @brief Last fine porta down effect value
-	uint8_t m_lastFinePortaDownFx;
+	RememberByte<false> m_lastFinePortaDownFx;
 	//! @brief Last fine volume slide up effect value
-	uint8_t m_lastFineVolUpFx;
+	RememberByte<false> m_lastFineVolUpFx;
 	//! @brief Last fine volume slide down effect value
-	uint8_t m_lastFineVolDownFx;
+	RememberByte<false> m_lastFineVolDownFx;
 	//! @brief Last extra fine porta up effect value
-	uint8_t m_lastXFinePortaUp;
+	RememberByte<false> m_lastXFinePortaUp;
 	//! @brief Last extra fine porta down effect value
-	uint8_t m_lastXFinePortaDown;
+	RememberByte<false> m_lastXFinePortaDown;
 	//! @brief Last global volume slide effect value
-	uint8_t m_lastGlobVolSlideFx;
+	RememberByte<false> m_lastGlobVolSlideFx;
 	//! @brief Last tremor effect value
-	uint8_t m_lastTremorFx;
+	RememberByte<false> m_lastTremorFx;
 	/** @} */
 
 	/** @name Effect state variables
@@ -195,7 +196,6 @@ private:
 	
 	void updateTick0( const XmCell* cell, bool estimateOnly );
 	void updateTick1( const XmCell* cell, bool estimateOnly );
-	void updateEnvelopes();
 public:
 	/**
 	 * @brief Constructor
@@ -209,7 +209,7 @@ public:
 	 * @param[in] estimateOnly Set to @c true to skip expensive effects
 	 */
 	void update( const XmCell* cell, bool estimateOnly );
-	virtual IArchive& serialize( IArchive* data );
+	virtual AbstractArchive& serialize( AbstractArchive* data );
 private:
 	virtual std::string internal_noteName() const;
 	virtual std::string internal_effectName() const;

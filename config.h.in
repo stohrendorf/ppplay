@@ -24,4 +24,4 @@
 #define VERSION "@CPACK_PACKAGE_VERSION@"
 
 #cmakedefine WITH_MP3LAME
-
+#cmakedefine WITH_OGG

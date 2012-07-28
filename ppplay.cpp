@@ -23,23 +23,25 @@
 #include "src/ppg/sdlscreen.h"
 #include "src/ui_main.h"
 
-// #include "src/s3mmod/s3mmodule.h"
-// #include "src/xmmod/xmmodule.h"
-// #include "src/modmod/modmodule.h"
-
 #include "src/output/sdlaudiooutput.h"
+#include "src/output/wavaudiooutput.h"
 
 #ifdef WITH_MP3LAME
 #include "src/output/mp3audiooutput.h"
 #endif
 
+#ifdef WITH_OGG
+#include "src/output/oggaudiooutput.h"
+#endif
+
 #include <boost/program_options.hpp>
 #include <boost/format.hpp>
 #include <boost/progress.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "light4cxx/logger.h"
 
-#include "src/stuff/moduleregistry.h"
+#include "src/stuff/pluginregistry.h"
 
 #include <SDL.h>
 
@@ -48,16 +50,14 @@ namespace
 std::shared_ptr<ppg::SDLScreen> dosScreen;
 UIMain *uiMain;
 
-IAudioOutput::Ptr output;
+AbstractAudioOutput::Ptr output;
 
 namespace config
 {
 bool noGUI = false;
 uint16_t maxRepeat = 2;
 std::string filename;
-#ifdef WITH_MP3LAME
-bool quickMp3 = false;
-#endif
+std::string outputFilename;
 }
 
 bool parseCmdLine( int argc, char* argv[] )
@@ -77,9 +77,7 @@ bool parseCmdLine( int argc, char* argv[] )
 	ioOpts.add_options()
 	( "max-repeat,m", bpo::value<uint16_t>( &config::maxRepeat )->default_value( 2 ), "Maximum repeat count (the number of times an order can be played). Specify a number between 1 and 10,000." )
 	( "file,f", bpo::value<std::string>( &config::filename ), "Module file to play" )
-#ifdef WITH_MP3LAME
-	( "quick-mp3,q", "Produces only an mp3 without sound output" )
-#endif
+	( "output,o", bpo::value<std::string>( &config::outputFilename )->default_value(std::string()), "Set mp3/wav filename" )
 	;
 	bpo::positional_options_description p;
 	p.add( "file", -1 );
@@ -183,9 +181,6 @@ bool parseCmdLine( int argc, char* argv[] )
 	if( vm.count( "no-gui" ) != 0 ) {
 		config::noGUI = true;
 	}
-#ifdef WITH_MP3LAME
-	config::quickMp3 = vm.count( "quick-mp3" );
-#endif
 	return vm.count( "file" ) != 0;
 }
 
@@ -193,20 +188,17 @@ bool parseCmdLine( int argc, char* argv[] )
 
 int main( int argc, char* argv[] )
 {
-// 	ppp::ModuleRegistry::registerLoader(ppp::xm::XmModule::factory);
-// 	ppp::ModuleRegistry::registerLoader(ppp::s3m::S3mModule::factory);
-// 	ppp::ModuleRegistry::registerLoader(ppp::mod::ModModule::factory);
 	try {
 		if( !parseCmdLine( argc, argv ) ) {
 			return EXIT_SUCCESS;
 		}
 		SDL_Init(SDL_INIT_EVERYTHING);
 		light4cxx::Logger::root()->info( L4CXX_LOCATION, "Trying to load '%s'", config::filename );
-		ppp::GenModule::Ptr module;
+		ppp::AbstractModule::Ptr module;
 		try {
-			module = ppp::ModuleRegistry::tryLoad(config::filename, 44100, config::maxRepeat);
+			module = ppp::PluginRegistry::tryLoad(config::filename, 44100, config::maxRepeat);
 			if( !module ) {
-				light4cxx::Logger::root()->error( L4CXX_LOCATION, "Error on loading '%s'", config::filename );
+				light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load '%s'", config::filename );
 				return EXIT_FAILURE;
 			}
 		}
@@ -220,9 +212,7 @@ int main( int argc, char* argv[] )
 			dosScreen->setAutoDelete( false );
 			dosScreen->show();
 		}
-#ifdef WITH_MP3LAME
-		if( !config::quickMp3 ) {
-#endif
+		if( config::outputFilename.empty() ) {
 			light4cxx::Logger::root()->info( L4CXX_LOCATION, "Init Audio" );
 			output.reset( new SDLAudioOutput( module ) );
 			if( !output->init( 44100 ) ) {
@@ -235,8 +225,7 @@ int main( int argc, char* argv[] )
 			}
 			SDL_Event event;
 			while( output ) {
-				if( output->errorCode() == IAudioOutput::InputDry ) {
-// 					output.reset();
+				if( output->errorCode() == AbstractAudioOutput::InputDry ) {
 					break;
 					light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Input is dry, trying to jump to the next song");
 					module->setPaused(true);
@@ -246,19 +235,10 @@ int main( int argc, char* argv[] )
 						output.reset();
 						break;
 					}
-// 					for(int i=0; i<10; i++) {
-// 						output->setErrorCode( IAudioOutput::NoError );
-// 						boost::this_thread::sleep( boost::posix_time::millisec(50) );
-// 						if( output->errorCode() == IAudioOutput::NoError ) {
-// 							break;
-// 						}
-// 					}
 					module->setPaused(false);
 					output->play();
-// 					output->init( module->frequency() );
-// 					output->play();
 				}
-				else if( output->errorCode() != IAudioOutput::NoError ) {
+				else if( output->errorCode() != AbstractAudioOutput::NoError ) {
 					light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Input has error, quitting");
 					output.reset();
 					break;
@@ -310,15 +290,46 @@ int main( int argc, char* argv[] )
 			}
 			if( output )
 				output.reset();
-#ifdef WITH_MP3LAME
 		}
-		else {   // if(mp3File.is_open()) { // quickMp3
+		else if( boost::iends_with(config::outputFilename, ".wav") ) {
+			light4cxx::Logger::root()->info( L4CXX_LOCATION, "QuickWAV Output Mode" );
+			if(config::outputFilename.empty()) {
+				config::outputFilename = config::filename + ".wav";
+			}
+			WavAudioOutput* wavout = new WavAudioOutput( module, config::outputFilename );
+			output.reset( wavout );
+			if( 0 == wavout->init( 44100 ) ) {
+				if( wavout->errorCode() == AbstractAudioOutput::OutputUnavailable ) {
+					light4cxx::Logger::root()->error( L4CXX_LOCATION, "Maybe cannot create WAV File" );
+				}
+				else {
+					light4cxx::Logger::root()->error( L4CXX_LOCATION, "WAV initialization error: '%d'", wavout->errorCode() );
+				}
+				return EXIT_FAILURE;
+			}
+			if( dosScreen ) {
+				uiMain = new UIMain( dosScreen.get(), module, output );
+			}
+			output->play();
+			int secs = module->length() / module->frequency();
+			boost::progress_display progress(module->length(), std::cout, stringFmt("QuickWAV: %s (%dm%02ds)\n", config::filename, secs/60, secs%60));
+			while( output->playing() ) {
+				boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
+				progress += std::const_pointer_cast<const ppp::AbstractModule>(module)->state().playedFrames-progress.count();
+			}
+			output.reset();
+		}
+#ifdef WITH_MP3LAME
+		else if( boost::iends_with(config::outputFilename, ".mp3") ) {
 			light4cxx::Logger::root()->info( L4CXX_LOCATION, "QuickMP3 Output Mode" );
-			MP3AudioOutput* mp3out = new MP3AudioOutput( module, config::filename + ".mp3" );
+			if(config::outputFilename.empty()) {
+				config::outputFilename = config::filename + ".mp3";
+			}
+			MP3AudioOutput* mp3out = new MP3AudioOutput( module, config::outputFilename );
 			output.reset( mp3out );
-			mp3out->setID3( module->trimmedTitle(), PACKAGE_STRING, std::const_pointer_cast<const ppp::GenModule>(module)->metaInfo().trackerInfo );
+			mp3out->setID3( module->trimmedTitle(), PACKAGE_STRING, std::const_pointer_cast<const ppp::AbstractModule>(module)->metaInfo().trackerInfo );
 			if( 0 == mp3out->init( 44100 ) ) {
-				if( mp3out->errorCode() == IAudioOutput::OutputUnavailable ) {
+				if( mp3out->errorCode() == AbstractAudioOutput::OutputUnavailable ) {
 					light4cxx::Logger::root()->error( L4CXX_LOCATION, "LAME unavailable: Maybe cannot create MP3 File" );
 				}
 				else {
@@ -334,8 +345,40 @@ int main( int argc, char* argv[] )
 			boost::progress_display progress(module->length(), std::cout, stringFmt("QuickMP3: %s (%dm%02ds)\n", config::filename, secs/60, secs%60));
 			while( output->playing() ) {
 				boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
-				progress += std::const_pointer_cast<const ppp::GenModule>(module)->state().playedFrames-progress.count();
+				progress += std::const_pointer_cast<const ppp::AbstractModule>(module)->state().playedFrames-progress.count();
 			}
+			output.reset();
+		}
+#endif
+#ifdef WITH_OGG
+		else if( boost::iends_with(config::outputFilename, ".ogg") ) {
+			light4cxx::Logger::root()->info( L4CXX_LOCATION, "QuickOGG Output Mode" );
+			if(config::outputFilename.empty()) {
+				config::outputFilename = config::filename + ".ogg";
+			}
+			OggAudioOutput* oggOut = new OggAudioOutput( module, config::outputFilename );
+			output.reset( oggOut );
+			oggOut->setMeta( module->trimmedTitle(), PACKAGE_STRING, std::const_pointer_cast<const ppp::AbstractModule>(module)->metaInfo().trackerInfo );
+			if( 0 == oggOut->init( 44100 ) ) {
+				if( oggOut->errorCode() == AbstractAudioOutput::OutputUnavailable ) {
+					light4cxx::Logger::root()->error( L4CXX_LOCATION, "OGG unavailable: Maybe cannot create OGG File" );
+				}
+				else {
+					light4cxx::Logger::root()->error( L4CXX_LOCATION, "OGG initialization error: '%d'", oggOut->errorCode() );
+				}
+				return EXIT_FAILURE;
+			}
+			if( dosScreen ) {
+				uiMain = new UIMain( dosScreen.get(), module, output );
+			}
+			output->play();
+			int secs = module->length() / module->frequency();
+			boost::progress_display progress(module->length(), std::cout, stringFmt("QuickOGG: %s (%dm%02ds)\n", config::filename, secs/60, secs%60));
+			while( output->playing() ) {
+				boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
+				progress += std::const_pointer_cast<const ppp::AbstractModule>(module)->state().playedFrames-progress.count();
+			}
+			output.reset();
 		}
 #endif
 	}
@@ -347,5 +390,3 @@ int main( int argc, char* argv[] )
 // 	uiMain.reset();
 	return EXIT_SUCCESS;
 }
-
-

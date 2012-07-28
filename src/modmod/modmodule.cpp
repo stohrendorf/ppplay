@@ -5,10 +5,8 @@
 #include "modpattern.h"
 #include "modcell.h"
 
-#include "stream/iarchive.h"
-#include "stream/fbinstream.h"
-
-#include "stuff/moduleregistry.h"
+#include "stream/abstractarchive.h"
+#include "stream/stream.h"
 
 #include <boost/exception/all.hpp>
 #include <boost/format.hpp>
@@ -20,21 +18,21 @@ namespace ppp
 namespace mod
 {
 
-GenModule::Ptr ModModule::factory( const std::string& filename, uint32_t frequency, int maxRpt )
+AbstractModule* ModModule::factory( Stream* stream, uint32_t frequency, int maxRpt )
 {
 	ModModule* result = new ModModule( maxRpt );
-	if( !result->load( filename ) ) {
+	if( !result->load( stream ) ) {
 		delete result;
-		return GenModule::Ptr();
+		return nullptr;
 	}
 	if( !result->initialize( frequency ) ) {
 		delete result;
-		return GenModule::Ptr();
+		return nullptr;
 	}
-	return GenModule::Ptr(result);
+	return result;
 }
 
-ModModule::ModModule( int maxRpt ): GenModule( maxRpt ),
+ModModule::ModModule( int maxRpt ): AbstractModule( maxRpt ),
 	m_samples(), m_patterns(), m_channels(), m_patLoopRow( -1 ),
 	m_patLoopCount( -1 ), m_breakRow( -1 ), m_patDelayCount( -1 ), m_breakOrder( ~0 )
 {
@@ -105,7 +103,7 @@ const std::array<const IdMetaInfo, 31> idMetaData  = {{
 	}
 };
 
-IdMetaInfo findMeta( BinStream* stream )
+IdMetaInfo findMeta( Stream* stream )
 {
 	static const IdMetaInfo none = {"", 0, ""};
 	char id[5];
@@ -123,25 +121,19 @@ IdMetaInfo findMeta( BinStream* stream )
 
 } // anonymous namespace
 
-bool ModModule::load( const std::string& filename )
+bool ModModule::load( Stream* stream )
 {
-	logger()->info( L4CXX_LOCATION, "Opening '%s'", filename );
-	FBinStream stream( filename );
-	if( !stream.isOpen() ) {
-		logger()->warn( L4CXX_LOCATION, "Could not open file" );
-		return false;
-	}
-	metaInfo().filename = filename;
+	metaInfo().filename = stream->name();
 	setTempo( 125 );
 	setSpeed( 6 );
 	state().globalVolume = 0x40;
 	char modName[20];
-	stream.read( modName, 20 );
+	stream->read( modName, 20 );
 	metaInfo().title = stringncpy( modName, 20 );
 	// check 31-sample mod
 	logger()->info( L4CXX_LOCATION, "Probing meta-info for 31-sample mod..." );
-	stream.seek( 1080 );
-	IdMetaInfo meta = findMeta( &stream );
+	stream->seek( 1080 );
+	IdMetaInfo meta = findMeta( stream );
 	if( meta.channels == 0 ) {
 		logger()->warn( L4CXX_LOCATION, "Could not find a valid module ID" );
 		return false;
@@ -151,7 +143,7 @@ bool ModModule::load( const std::string& filename )
 	for( int i = 0; i < meta.channels; i++ ) {
 		m_channels.push_back( new ModChannel( this, ((i+1)&2)==0 ) );
 	}
-	stream.seek( 20 );
+	stream->seek( 20 );
 	for( int i = 0; i < 31; i++ ) {
 		ModSample* smp = new ModSample();
 		m_samples.push_back( smp );
@@ -164,15 +156,15 @@ bool ModModule::load( const std::string& filename )
 	{
 		// load orders
 		uint8_t songLen;
-		stream.read( &songLen );
+		*stream >> songLen;
 		if( songLen > 128 ) {
 			songLen = 128;
 		}
 		logger()->debug( L4CXX_LOCATION, "Song length: %d", int(songLen) );
 		uint8_t tmp;
-		stream.read( &tmp ); // skip the restart pos
+		*stream >> tmp; // skip the restart pos
 		for( uint_fast8_t i = 0; i < songLen; i++ ) {
-			stream.read( &tmp );
+			*stream >> tmp;
 			if( tmp >= 64 ) {
 				continue;
 			}
@@ -182,10 +174,10 @@ bool ModModule::load( const std::string& filename )
 			logger()->trace(L4CXX_LOCATION, "Order %d index: %d", int(i), int(tmp));
 			addOrder( new ModOrder( tmp ) );
 		}
-		stream.seekrel(128-songLen);
+		stream->seekrel(128-songLen);
 	}
-	stream.seekrel( 4 ); // skip the ID
-	logger()->debug( L4CXX_LOCATION, "%d patterns @ %#x", int(maxPatNum), stream.pos() );
+	stream->seekrel( 4 ); // skip the ID
+	logger()->debug( L4CXX_LOCATION, "%d patterns @ %#x", int(maxPatNum), stream->pos() );
 	for( uint_fast8_t i = 0; i <= maxPatNum; i++ ) {
 		ModPattern* pat = new ModPattern();
 		m_patterns.push_back( pat );
@@ -195,14 +187,14 @@ bool ModModule::load( const std::string& filename )
 			return false;
 		}
 	}
-	logger()->debug( L4CXX_LOCATION, "Sample start @ %#x", stream.pos() );
+	logger()->debug( L4CXX_LOCATION, "Sample start @ %#x", stream->pos() );
 	for( auto& smp : m_samples ) {
 		if( !smp->loadData( stream ) ) {
 			logger()->warn( L4CXX_LOCATION, "Could not load sample data" );
 		}
 	}
-	logger()->debug( L4CXX_LOCATION, "pos=%#x size=%#x delta=%#x", stream.pos(), stream.size(), stream.size() - stream.pos() );
-	return stream.good();
+	logger()->debug( L4CXX_LOCATION, "pos=%#x size=%#x delta=%#x", stream->pos(), stream->size(), stream->size() - stream->pos() );
+	return stream->good();
 }
 
 size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
@@ -343,9 +335,9 @@ std::string ModModule::internal_channelStatus( size_t idx ) const
 	return m_channels[ idx ]->statusString();
 }
 
-IArchive& ModModule::serialize( IArchive* data )
+AbstractArchive& ModModule::serialize( AbstractArchive* data )
 {
-	GenModule::serialize( data )
+	AbstractModule::serialize( data )
 	% m_breakRow
 	% m_breakOrder
 	% m_patLoopRow
@@ -389,14 +381,14 @@ void ModModule::checkGlobalFx()
 			uint8_t fx = cell->effect();
 			uint8_t fxVal = cell->effectValue();
 			if( fx != 0x0e ) continue;
-			if( highNibble( fxVal ) != 0x06 ) continue;
-			if( lowNibble( fxVal ) == 0x00 ) {  // loop start
+			if( ( fxVal>>4 ) != 0x06 ) continue;
+			if( ( fxVal&0x0f ) == 0x00 ) {  // loop start
 				m_patLoopRow = state().row;
 			}
 			else { // loop return
 				patLoopCounter++;
 				if( m_patLoopCount == -1 ) {  // first loop return -> set loop count
-					m_patLoopCount = lowNibble( fxVal );
+					m_patLoopCount = fxVal&0x0f;
 					m_breakRow = m_patLoopRow;
 				}
 				else if( m_patLoopCount > 1 ) {  // non-initial return -> decrease loop counter
@@ -425,10 +417,10 @@ void ModModule::checkGlobalFx()
 			uint8_t fx = cell->effect();
 			uint8_t fxVal = cell->effectValue();
 			if( fx != 0x0e ) continue;
-			if( highNibble( fxVal ) != 0x0e ) continue;
-			if( lowNibble( fxVal ) == 0 ) continue;
+			if( ( fxVal>>4 ) != 0x0e ) continue;
+			if( ( fxVal&0x0f ) == 0 ) continue;
 			if( m_patDelayCount != -1 ) continue;
-			m_patDelayCount = lowNibble( fxVal );
+			m_patDelayCount = fxVal&0x0f;
 		}
 		if( m_patDelayCount > 1 )
 			m_patDelayCount--;
@@ -446,7 +438,7 @@ void ModModule::checkGlobalFx()
 				m_breakOrder = fxVal;
 			}
 			else if( fx == 0x0d ) {
-				m_breakRow = highNibble( fxVal ) * 10 + lowNibble( fxVal );
+				m_breakRow = ( fxVal>>4 ) * 10 + ( fxVal&0x0f );
 				logger()->info( L4CXX_LOCATION, "Row %1%: Break pattern to row %2%", state().row , int(m_breakRow) );
 			}
 		}
@@ -469,7 +461,7 @@ ModPattern* ModModule::getPattern( size_t idx ) const
 
 light4cxx::Logger* ModModule::logger()
 {
-	return light4cxx::Logger::get( GenModule::logger()->name() + ".mod" );
+	return light4cxx::Logger::get( AbstractModule::logger()->name() + ".mod" );
 }
 
 

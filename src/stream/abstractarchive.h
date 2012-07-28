@@ -16,11 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef IARCHIVE_H
-#define IARCHIVE_H
+#ifndef PPPLAY_ABSTRACTARCHIVE_H
+#define PPPLAY_ABSTRACTARCHIVE_H
 
-#include "binstream.h"
-#include "stuff/numberutils.h"
+#include "stream.h"
 
 #include <boost/assert.hpp>
 
@@ -29,27 +28,27 @@
 class ISerializable;
 
 /**
- * @interface IArchive
+ * @interface AbstractArchive
  * @ingroup Common
  * @brief Interface for archives used by ISerializable inherited classes
  */
-class IArchive
+class AbstractArchive
 {
-	DISABLE_COPY( IArchive )
-	IArchive() = delete;
+	DISABLE_COPY( AbstractArchive )
+	AbstractArchive() = delete;
 public:
-	typedef std::shared_ptr<IArchive> Ptr; //!< @brief Class pointer
+	typedef std::shared_ptr<AbstractArchive> Ptr; //!< @brief Class pointer
 	typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 private:
 	bool m_loading; //!< @brief @c true for read-only access, @c false for write-only access
-	BinStream::Ptr m_stream; //!< @brief The associated BinStream for storage
+	Stream::Ptr m_stream; //!< @brief The associated BinStream for storage
 public:
 	/**
 	 * @brief Constructor
 	 * @param[in] stream The storage stream
 	 */
-	IArchive( const BinStream::Ptr& stream );
-	virtual ~IArchive() = 0;
+	AbstractArchive( const Stream::Ptr& stream );
+	virtual ~AbstractArchive() = 0;
 	/**
 	 * @brief Whether this archive is read-only
 	 * @return m_loading
@@ -63,7 +62,7 @@ public:
 	 */
 	bool isSaving() const ;
 // the pragma is used to get rid of the following annoying GCC message:
-// warning: ‘IArchive& IArchive::operator%(T&)’ should return by value [-Weffc++]
+// warning: ‘AbstractArchive& AbstractArchive::operator%(T&)’ should return by value [-Weffc++]
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
 	/**
@@ -73,12 +72,12 @@ public:
 	 * @return Reference to *this
 	 * @note Operation depends on m_loading
 	 */
-	template<class T> inline IArchive& operator%( T& data ) {
+	template<class T> inline AbstractArchive& operator%( T& data ) {
 		if( m_loading ) {
-			m_stream->read( &data, 1 );
+			*m_stream >> data;
 		}
 		else {
-			m_stream->write( &data, 1 );
+			*m_stream << data;
 		}
 		return *this;
 	}
@@ -91,7 +90,7 @@ public:
 	 * @return Reference to *this
 	 * @note Operation depends on m_loading
 	 */
-	template<class T> inline IArchive& array( T* data, size_t count ) {
+	template<class T> inline AbstractArchive& array( T* data, size_t count ) {
 		BOOST_ASSERT( data != nullptr );
 		if( m_loading ) {
 			m_stream->read( data, count );
@@ -107,7 +106,7 @@ public:
 	 * @return Reference to *this
 	 * @note Operation depends on m_loading
 	 */
-	IArchive& archive( ISerializable* data ) ;
+	AbstractArchive& archive( ISerializable* data ) ;
 	/**
 	 * @brief Finish saving operation
 	 * @details

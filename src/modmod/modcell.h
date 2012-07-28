@@ -24,7 +24,7 @@
  * @{
  */
 
-#include "stream/binstream.h"
+#include "stream/stream.h"
 #include "genmod/ipatterncell.h"
 
 namespace ppp
@@ -43,7 +43,7 @@ public:
 	 * @retval true on success
 	 * @retval false if an error occured
 	 */
-	bool load( BinStream& str );
+	bool load( Stream* str );
 	virtual void clear();
 	virtual std::string trackerString() const;
 	uint8_t sampleNumber() const;
@@ -51,7 +51,7 @@ public:
 	uint8_t effect() const;
 	uint8_t effectValue() const;
 	void reset();
-	virtual IArchive& serialize( IArchive* data );
+	virtual AbstractArchive& serialize( AbstractArchive* data );
 private:
 	uint8_t m_sampleNumber;
 	uint16_t m_period;

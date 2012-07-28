@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SDLSCREEN_H
-#define SDLSCREEN_H
+#ifndef PPG_SDLSCREEN_H
+#define PPG_SDLSCREEN_H
 
 #include "widget.h"
 

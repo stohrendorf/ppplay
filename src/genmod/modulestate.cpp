@@ -18,7 +18,7 @@
 
 #include "modulestate.h"
 
-#include "stream/iarchive.h"
+#include "stream/abstractarchive.h"
 
 /**
  * @ingroup GenMod
@@ -28,7 +28,7 @@
 namespace ppp
 {
 
-IArchive& ModuleState::serialize(IArchive* data)
+AbstractArchive& ModuleState::serialize(AbstractArchive* data)
 {
 	*data
 	% speed

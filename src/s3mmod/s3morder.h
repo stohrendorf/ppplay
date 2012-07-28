@@ -20,19 +20,19 @@
 #ifndef S3MORDER_H
 #define S3MORDER_H
 
-#include "genmod/genorder.h"
+#include "genmod/abstractorder.h"
 
 namespace ppp
 {
 namespace s3m
 {
 
-class S3mOrder : public GenOrder
+class S3mOrder : public AbstractOrder
 {
 	DISABLE_COPY( S3mOrder )
 	S3mOrder() = delete;
 public:
-	inline S3mOrder( uint8_t idx ) : GenOrder( idx ) {
+	inline S3mOrder( uint8_t idx ) : AbstractOrder( idx ) {
 	}
 	virtual bool isUnplayed() const;
 };

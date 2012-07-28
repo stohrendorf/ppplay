@@ -16,67 +16,65 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef TRACKINGCONTAINER_H
-#define TRACKINGCONTAINER_H
+#ifndef PPPLAY_TRACKINGCONTAINER_H
+#define PPPLAY_TRACKINGCONTAINER_H
 
 #include "utils.h"
 
-#include <boost/type_traits.hpp>
-#include <boost/utility/enable_if.hpp>
-#include <boost/utility/addressof.hpp>
 #include <vector>
 #include <stdexcept>
+#include <type_traits>
 
 template<class Tp>
 class TrackingContainer
 {
 public:
 	typedef Tp Type;
-	typedef typename boost::add_const<Type>::type ConstType;
-	typedef typename boost::add_reference<Type>::type Reference;
-	typedef typename boost::add_reference<ConstType>::type ConstReference;
+	typedef typename std::add_const<Type>::type ConstType;
+	typedef typename std::add_lvalue_reference<Type>::type Reference;
+	typedef typename std::add_lvalue_reference<ConstType>::type ConstReference;
 public:
 	/**
 	 * @name Indirection operators
 	 * @{
 	 */
 	template<class T = Type>
-	typename boost::enable_if_c<boost::is_pointer<T>::value, T>::type
+	typename std::enable_if<std::is_pointer<T>::value, T>::type
 	operator->() {
 		return current();
 	}
 	template<class T = Type>
-	typename boost::enable_if_c<!boost::is_pointer<T>::value, T*>::type
+	typename std::enable_if<!std::is_pointer<T>::value, T*>::type
 	operator->() {
 		return &current();
 	}
 	template<class T = ConstType>
-	typename boost::enable_if_c<boost::is_pointer<T>::value, T>::type
+	typename std::enable_if<std::is_pointer<T>::value, T>::type
 	operator->() const {
 		return current();
 	}
 	template<class T = ConstType>
-	typename boost::enable_if_c<!boost::is_pointer<T>::value, T*>::type
+	typename std::enable_if<!std::is_pointer<T>::value, T*>::type
 	operator->() const {
 		return &current();
 	}
 	template<class T = Type>
-	typename boost::enable_if_c<boost::is_pointer<T>::value, T>::type
+	typename std::enable_if<std::is_pointer<T>::value, T>::type
 	operator*() {
 		return current();
 	}
 	template<class T = Type>
-	typename boost::enable_if_c<!boost::is_pointer<T>::value, T*>::type
+	typename std::enable_if<!std::is_pointer<T>::value, T*>::type
 	operator*() {
 		return &current();
 	}
 	template<class T = ConstType>
-	typename boost::enable_if_c<boost::is_pointer<T>::value, T>::type
+	typename std::enable_if<std::is_pointer<T>::value, T>::type
 	operator*() const {
 		return current();
 	}
 	template<class T = ConstType>
-	typename boost::enable_if_c<!boost::is_pointer<T>::value, T*>::type
+	typename std::enable_if<!std::is_pointer<T>::value, T*>::type
 	operator*() const {
 		return &current();
 	}

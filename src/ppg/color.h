@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PPG_H
-#define PPG_H
+#ifndef PPG_PPG_H
+#define PPG_PPG_H
 
 /**
  * @ingroup Ppg

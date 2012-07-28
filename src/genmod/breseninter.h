@@ -16,12 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BRESENINTER_H
-#define BRESENINTER_H
+#ifndef PPPLAY_BRESENINTER_H
+#define PPPLAY_BRESENINTER_H
 
 #include "stuff/utils.h"
 #include "stream/iserializable.h"
-#include "gensample.h"
+#include "sample.h"
 
 #include <cstdint>
 
@@ -57,7 +57,7 @@ private:
 	int_fast32_t m_err;
 	uint_fast32_t m_position;
 public:
-	static const uint_fast32_t InvalidPosition = std::numeric_limits<uint_fast32_t>::max();
+	static constexpr uint_fast32_t InvalidPosition = std::numeric_limits<uint_fast32_t>::max();
 	
 	/**
 	 * @brief Constructor
@@ -147,7 +147,7 @@ public:
 		return m_position != InvalidPosition;
 	}
 	
-	virtual IArchive& serialize( IArchive* archive );
+	virtual AbstractArchive& serialize( AbstractArchive* archive );
 };
 
 /**

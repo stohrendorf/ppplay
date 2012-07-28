@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LOGGER_H
-#define LOGGER_H
+#ifndef LIGHT4CXX_LOGGER_H
+#define LIGHT4CXX_LOGGER_H
 
 #include "level.h"
 #include "location.h"

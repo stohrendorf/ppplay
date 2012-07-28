@@ -24,7 +24,7 @@
 #include "xminstrument.h"
 #include "xmsample.h"
 
-#include "stream/binstream.h"
+#include "stream/stream.h"
 
 #include <cstdint>
 #include <boost/assert.hpp>
@@ -84,17 +84,17 @@ XmInstrument::~XmInstrument()
 	deleteAll(m_samples);
 }
 
-bool XmInstrument::load( BinStream& str )
+bool XmInstrument::load( Stream* str )
 {
-	size_t startPos = str.pos();
+	size_t startPos = str->pos();
 	InstrumentHeader hdr;
-	str.read( reinterpret_cast<char*>( &hdr ), sizeof( hdr ) );
+	*str >> hdr;
 	/*	if(hdr.type!=0) {
-			LOG_WARNING("Instrument header type error @ 0x%.8x", str.pos()-sizeof(hdr));
+			LOG_WARNING("Instrument header type error @ 0x%.8x", str->pos()-sizeof(hdr));
 			return false;
 		}*/
 	if( hdr.numSamples == 0 ) {
-		str.seek( startPos + hdr.size );
+		str->seek( startPos + hdr.size );
 		return true;
 	}
 	if( hdr.numSamples > 255 ) {
@@ -102,9 +102,9 @@ bool XmInstrument::load( BinStream& str )
 	}
 	m_samples.resize( hdr.numSamples );
 	InstrumentHeader2 hdr2;
-	str.read( reinterpret_cast<char*>( &hdr2 ), sizeof( hdr2 ) );
+	*str >> hdr2;
 	std::copy( hdr2.indices, hdr2.indices + 96, m_map );
-	str.seek( startPos + hdr.size );
+	str->seek( startPos + hdr.size );
 	for( uint_fast16_t i = 0; i < hdr.numSamples; i++ ) {
 		XmSample* smp = new XmSample();
 		m_samples.at( i ) = smp;

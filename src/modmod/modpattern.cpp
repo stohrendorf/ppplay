@@ -46,7 +46,7 @@ ModCell* ModPattern::cellAt( uint16_t chanIdx, int16_t row )
 	return m_channels[ chanIdx ].at( row );
 }
 
-bool ModPattern::load( BinStream& str, uint8_t numChans )
+bool ModPattern::load( Stream* str, uint8_t numChans )
 {
 	m_channels.resize( numChans, std::vector<ModCell*>( 64, nullptr ) );
 	for( int i = 0; i < 64; i++ ) {
@@ -56,7 +56,7 @@ bool ModPattern::load( BinStream& str, uint8_t numChans )
 			}
 		}
 	}
-	return str.good();
+	return *str;
 }
 
 }

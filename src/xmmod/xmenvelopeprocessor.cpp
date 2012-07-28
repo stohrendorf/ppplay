@@ -23,7 +23,8 @@
 
 #include "xmenvelopeprocessor.h"
 
-#include "stream/iarchive.h"
+#include "stream/abstractarchive.h"
+#include "stuff/numberutils.h"
 
 namespace ppp
 {
@@ -191,7 +192,7 @@ void XmEnvelopeProcessor::setPosition( uint8_t pos )
 	}
 }
 
-IArchive& XmEnvelopeProcessor::serialize( IArchive* data )
+AbstractArchive& XmEnvelopeProcessor::serialize( AbstractArchive* data )
 {
 	*data % ( *reinterpret_cast<uint8_t*>( &m_flags ) );
 	for( EnvelopePoint & pt : m_points ) {

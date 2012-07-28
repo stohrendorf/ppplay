@@ -16,50 +16,19 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "memorystream.h"
 
-#ifndef PPPLAY_ITIMER_H
-#define PPPLAY_ITIMER_H
+#include <boost/assert.hpp>
 
-#include "utils.h"
+#include <sstream>
 
-#include <cstdint>
-
-/**
- * @ingroup Common
- * @{
- */
-
-/**
- * @interface ITimer
- * @brief Timer interface
- */
-class ITimer
+MemoryStream::MemoryStream(const std::string& name) : Stream( new std::stringstream( std::ios::in | std::ios::out | std::ios::binary ), name )
 {
-	DISABLE_COPY( ITimer )
-public:
-	/**
-	 * @brief Default constructor
-	 */
-	ITimer() = default;
-	/**
-	 * @brief Virtual default destructor
-	 */
-	inline virtual ~ITimer();
-	/**
-	 * @brief The timer interval in milliseconds
-	 * @return The timer interval in milliseconds
-	 */
-	virtual uint32_t interval() const = 0;
-	/**
-	 * @brief Timer handler, called every interval() milliseconds
-	 */
-	virtual void onTimer() = 0;
-};
+}
 
-inline ITimer::~ITimer() = default;
-
-/**
- * @}
- */
-
-#endif // TIMER_H
+size_t MemoryStream::size() const
+{
+	const std::stringstream* ss = dynamic_cast<const std::stringstream*>(stream());
+	BOOST_ASSERT_MSG( ss!=nullptr, "Stream is not a stringstream" );
+	return ss->str().size();
+}

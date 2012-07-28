@@ -28,7 +28,7 @@
 
 #include "light4cxx/logger.h"
 
-class BinStream;
+class Stream;
 
 namespace ppp
 {
@@ -94,7 +94,7 @@ public:
 	 * @param[in] str The stream to load from
 	 * @return @c true on success
 	 */
-	bool load( BinStream& str );
+	bool load( Stream* str );
 	/**
 	 * @brief Map a note index into its sample index
 	 * @param[in] note Note to map

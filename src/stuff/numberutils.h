@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef NUMBERUTILS_H
-#define NUMBERUTILS_H
+#ifndef PPPLAY_NUMBERUTILS_H
+#define PPPLAY_NUMBERUTILS_H
 
 #include <cstdint>
 #include <algorithm>
@@ -60,28 +60,6 @@ inline constexpr bool inRange( const T v, const T a, const T b )
 }
 
 /**
- * @brief Get low nibble of a byte
- * @param[in] x Value
- * @return Low nibble of @a x
- * @note Time-critical
- */
-inline constexpr uint8_t lowNibble( uint8_t x )
-{
-	return x & 0x0f;
-}
-
-/**
- * @brief Get high nibble of a byte
- * @param[in] x Value
- * @return High nibble of @a x
- * @note Time-critical
- */
-inline constexpr uint8_t highNibble( uint8_t x )
-{
-	return x >> 4;
-}
-
-/**
  * @brief Swap the bytes of @a data
  * @param[in,out] data Data to swap
  * @param[in] size Size of @a data
@@ -100,55 +78,6 @@ template<class T>
 inline void swapEndian( T* data )
 {
 	swapEndian( reinterpret_cast<char*>( data ), sizeof( T ) );
-}
-
-/**
- * @brief If one of the arguments is zero, set both to the other one
- * @param[in,out] oldFx If this is 0, use @a newFx
- * @param[in,out] newFx If this is 0, use @a oldFx
- */
-inline void reuseIfZero( uint8_t& oldFx, uint8_t& newFx )
-{
-	if( newFx == 0 ) {
-		newFx = oldFx;
-	}
-	else {
-		oldFx = newFx;
-	}
-}
-
-/**
- * @brief If @a newFx is not 0, assign it to @a oldFx
- * @param[in,out] oldFx If @a newFx is not 0, assign @a newFx to this
- * @param[in] newFx If this is not 0, assign it to @a oldFx
- */
-inline void reuseIfZeroEx( uint8_t& oldFx, uint8_t newFx )
-{
-	if( newFx != 0 ) {
-		oldFx = newFx;
-	}
-}
-
-/**
- * @brief Works like reuseIfZero(), but uses nibbles instead
- * @param[in,out] oldFx Old data
- * @param[in,out] newFx New data
- */
-inline void reuseNibblesIfZero( uint8_t& oldFx, uint8_t& newFx )
-{
-	if( newFx == 0 ) {
-		newFx = oldFx;
-	}
-	else if( highNibble( newFx ) == 0 ) {
-		oldFx = ( newFx & 0x0f ) | ( oldFx & 0xf0 );
-	}
-	else if( lowNibble( newFx ) == 0 ) {
-		oldFx = ( newFx & 0xf0 ) | ( oldFx & 0x0f );
-	}
-	else {
-		oldFx = newFx;
-	}
-	newFx = oldFx;
 }
 
 /**

@@ -16,17 +16,17 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MEMARCHIVE_H
-#define MEMARCHIVE_H
+#ifndef PPPLAY_MEMARCHIVE_H
+#define PPPLAY_MEMARCHIVE_H
 
-#include "iarchive.h"
+#include "abstractarchive.h"
 
 /**
  * @class MemArchive
  * @ingroup Common
- * @brief Specialization of IArchive for memory storage
+ * @brief Specialization of AbstractArchive for memory storage
  */
-class MemArchive : public IArchive
+class MemArchive : public AbstractArchive
 {
 	DISABLE_COPY( MemArchive )
 public:

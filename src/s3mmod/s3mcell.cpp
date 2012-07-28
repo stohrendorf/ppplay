@@ -26,7 +26,7 @@
 #include "genmod/genbase.h"
 #include "s3mbase.h"
 
-#include "stream/iarchive.h"
+#include "stream/abstractarchive.h"
 
 #include <boost/exception/all.hpp>
 #include <boost/format.hpp>
@@ -45,35 +45,35 @@ S3mCell::~S3mCell()
 {
 }
 
-bool S3mCell::load( BinStream& str )
+bool S3mCell::load( Stream* str )
 {
 	try {
 		clear();
 		uint8_t master = 0;
 		uint8_t buf;
-		str.read( &master );
+		*str >> master;
 		if( master & 0x20 ) {
-			str.read( &buf );
+			*str >> buf;
 			m_note = buf;
 			if( ( m_note >= 0x9b ) && ( m_note != s3mEmptyNote ) && ( m_note != s3mKeyOffNote ) ) {
-				logger()->warn( L4CXX_LOCATION, "File Position %#x: Note out of range: %d", str.pos(), int(m_note) );
+				logger()->warn( L4CXX_LOCATION, "File Position %#x: Note out of range: %d", str->pos(), int(m_note) );
 				m_note = s3mEmptyNote;
 			}
-			str.read( &buf );
+			*str >> buf;
 			m_instr = buf;
 		}
 		if( master & 0x40 ) {
-			str.read( &buf );
+			*str >> buf;
 			m_volume = buf;
 			if( buf > 0x40 ) {
-				logger()->warn( L4CXX_LOCATION, "File Position %#x: Volume out of range: %d", str.pos(), int(m_volume) );
+				logger()->warn( L4CXX_LOCATION, "File Position %#x: Volume out of range: %d", str->pos(), int(m_volume) );
 				m_volume = s3mEmptyVolume;
 			}
 		}
 		if( master & 0x80 ) {
-			str.read( &buf );
+			*str >> buf;
 			m_effect = buf;
-			str.read( &buf );
+			*str >> buf;
 			m_effectValue = buf;
 		}
 	}
@@ -81,7 +81,7 @@ bool S3mCell::load( BinStream& str )
 		BOOST_THROW_EXCEPTION( std::runtime_error( "Exception" ) );
 		return false;
 	}
-	return true;
+	return str->good();
 }
 
 void S3mCell::clear()
@@ -154,7 +154,7 @@ uint8_t S3mCell::effectValue() const
 	return m_effectValue;
 }
 
-IArchive& S3mCell::serialize( IArchive* data )
+AbstractArchive& S3mCell::serialize( AbstractArchive* data )
 {
 	*data
 	% m_note

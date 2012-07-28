@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LOCATION_H
-#define LOCATION_H
+#ifndef LIGHT4CXX_LOCATION_H
+#define LIGHT4CXX_LOCATION_H
 
 #include "level.h"
 

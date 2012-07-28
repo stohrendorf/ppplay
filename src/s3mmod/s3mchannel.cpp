@@ -94,7 +94,7 @@ constexpr std::array<const uint16_t, 16> S3mFinetunes = {
 /**
  * @brief Note periodic table for frequency calculations
  */
-const std::array<const uint16_t, 12> Periods = {{1712 << 4, 1616 << 4, 1524 << 4, 1440 << 4, 1356 << 4, 1280 << 4, 1208 << 4, 1140 << 4, 1076 << 4, 1016 << 4,  960 << 4,  907 << 4}};
+constexpr uint16_t Periods[12] = {1712 << 4, 1616 << 4, 1524 << 4, 1440 << 4, 1356 << 4, 1280 << 4, 1208 << 4, 1140 << 4, 1076 << 4, 1016 << 4,  960 << 4,  907 << 4};
 
 /**
  * @brief Calculate the period for a given note, octave and base frequency
@@ -104,7 +104,7 @@ const std::array<const uint16_t, 12> Periods = {{1712 << 4, 1616 << 4, 1524 << 4
  * @param[in] finetune Optional finetune
  * @return S3M Period for note @a note, base frequency @a c4spd and finetune @a finetune
  */
-inline uint16_t st3PeriodEx( uint8_t note, uint8_t oct, uint16_t c4spd, uint16_t finetune = 8363 )
+inline constexpr uint16_t st3PeriodEx( uint8_t note, uint8_t oct, uint16_t c4spd, uint16_t finetune = 8363 )
 {
 	return ( Periods[note] >> oct ) * finetune / (c4spd==0 ? 8363 : c4spd);
 }
@@ -115,9 +115,9 @@ inline uint16_t st3PeriodEx( uint8_t note, uint8_t oct, uint16_t c4spd, uint16_t
  * @param[in] finetune Optional finetune
  * @return S3M Period for note @a note, base frequency @a c4spd and finetune @a finetune
  */
-inline uint16_t st3Period( uint8_t note, uint16_t c4spd, uint16_t finetune = 8363 )
+inline constexpr uint16_t st3Period( uint8_t note, uint16_t c4spd, uint16_t finetune = 8363 )
 {
-	return st3PeriodEx( lowNibble( note ), highNibble( note ), c4spd, finetune );
+	return st3PeriodEx( note&0x0f, note>>4, c4spd, finetune );
 }
 
 /**
@@ -169,7 +169,7 @@ inline std::string periodToNote( uint16_t per, uint16_t c2spd, uint16_t finetune
  */
 inline uint8_t deltaNote( uint8_t note, int8_t delta )
 {
-	uint16_t x = highNibble( note ) * 12 + lowNibble( note ) + delta;
+	uint16_t x = ( note>>4 ) * 12 + ( note&0x0f ) + delta;
 	return ( ( x / 12 ) << 4 ) | ( x % 12 );
 }
 
@@ -197,7 +197,7 @@ void S3mChannel::setSampleIndex( int32_t idx )
 		setActive( false );
 }
 
-S3mChannel::S3mChannel( S3mModule* const module ) : GenChannel(),
+S3mChannel::S3mChannel( S3mModule* const module ) : AbstractChannel(),
 	m_note( 0xff ),
 	m_lastFxByte( 0 ),
 	m_lastVibratoData( 0 ),
@@ -324,7 +324,8 @@ void S3mChannel::update( const S3mCell* cell, bool patDelay, bool estimateOnly )
 			}
 		}
 
-		reuseIfZeroEx( m_lastFxByte, m_currentCell->effectValue() ); // TODO check if right here...
+		//reuseIfZeroEx( m_lastFxByte, m_currentCell->effectValue() ); // TODO check if right here...
+		m_lastFxByte.noNibbles( m_currentCell->effectValue() );
 		if( m_currentCell->effect() == s3mEmptyCommand ) {
 			if( m_module->hasAmigaLimits() ) {
 				m_countdown = 0;
@@ -595,13 +596,13 @@ void S3mChannel::internal_updateStatus()
 	}
 }
 
-IArchive& S3mChannel::serialize( IArchive* data )
+AbstractArchive& S3mChannel::serialize( AbstractArchive* data )
 {
-	GenChannel::serialize( data )
+	AbstractChannel::serialize( data )
 	% m_note
-	% m_lastFxByte
+	% m_lastFxByte.data()
 	% m_lastVibratoData
-	% m_lastPortaSpeed
+	% m_lastPortaSpeed.data()
 	% m_tremorVolume
 	% m_noteChanged
 	% m_currentVolume
@@ -629,28 +630,30 @@ IArchive& S3mChannel::serialize( IArchive* data )
 
 void S3mChannel::fxPitchSlideUp( uint8_t fxByte )
 {
-	if( m_basePeriod == 0 )
+	if( m_basePeriod == 0 ) {
 		return;
-	reuseIfZero( m_lastFxByte, fxByte );
+	}
+	m_lastFxByte.noNibbles(fxByte);
 	uint16_t delta = 0;
 	if( m_module->state().tick == 0 ) {
-		if( fxByte <= 0xe0 ) {
+		if( m_lastFxByte <= 0xe0 ) {
 			m_currentFxStr = "Ptch\x1e\x1e";
 			return;
 		}
-		if( fxByte <= 0xf0 ) {
+		if( m_lastFxByte <= 0xf0 ) {
 			m_currentFxStr = "Ptch \x18";
-			delta = lowNibble( fxByte );
+			delta = m_lastFxByte.lo();
 		}
 		else {
 			m_currentFxStr = "Ptch \x1e";
-			delta = lowNibble( fxByte ) << 2;
+			delta = m_lastFxByte.lo() << 2;
 		}
 	}
 	else {
-		if( fxByte >= 0xe0 )
+		if( m_lastFxByte >= 0xe0 ) {
 			return;
-		delta = fxByte << 2;
+		}
+		delta = m_lastFxByte << 2;
 	}
 	m_basePeriod = m_realPeriod = std::max( 0, m_basePeriod - delta );
 	recalcFrequency();
@@ -658,28 +661,30 @@ void S3mChannel::fxPitchSlideUp( uint8_t fxByte )
 
 void S3mChannel::fxPitchSlideDown( uint8_t fxByte )
 {
-	if( m_basePeriod == 0 )
+	if( m_basePeriod == 0 ) {
 		return;
-	reuseIfZero( m_lastFxByte, fxByte );
+	}
+	m_lastFxByte.noNibbles(fxByte);
 	uint16_t delta = 0;
 	if( m_module->state().tick == 0 ) {
-		if( fxByte <= 0xe0 ) {
+		if( m_lastFxByte <= 0xe0 ) {
 			m_currentFxStr = "Ptch\x1f\x1f";
 			return;
 		}
-		if( fxByte <= 0xf0 ) {
+		if( m_lastFxByte <= 0xf0 ) {
 			m_currentFxStr = "Ptch \x19";
-			delta = lowNibble( fxByte );
+			delta = m_lastFxByte.lo();
 		}
 		else {
 			m_currentFxStr = "Ptch \x1f";
-			delta = lowNibble( fxByte ) << 2;
+			delta = m_lastFxByte.lo() << 2;
 		}
 	}
 	else {
-		if( fxByte >= 0xe0 )
+		if( m_lastFxByte >= 0xe0 ) {
 			return;
-		delta = fxByte << 2;
+		}
+		delta = m_lastFxByte << 2;
 	}
 	m_basePeriod = m_realPeriod = std::min( 0x7fff, m_basePeriod + delta );
 	recalcFrequency();
@@ -687,42 +692,42 @@ void S3mChannel::fxPitchSlideDown( uint8_t fxByte )
 
 void S3mChannel::fxVolSlide( uint8_t fxByte )
 {
-	reuseIfZero( m_lastFxByte, fxByte );
-	if( lowNibble( fxByte ) == 0x0f ) {
-		if( highNibble( fxByte ) == 0 ) {
+	m_lastFxByte.noNibbles(fxByte);
+	if( m_lastFxByte.lo() == 0x0f ) {
+		if( m_lastFxByte.hi() == 0 ) {
 			m_currentFxStr = "VSld \x1f";
-			m_currentVolume = std::max( 0, m_currentVolume - lowNibble( fxByte ) );
+			m_currentVolume = std::max( 0, m_currentVolume - m_lastFxByte.lo() );
 		}
 		else {
 			m_currentFxStr = "VSld \x18";
 			if( m_module->state().tick == 0 ) {
-				m_currentVolume = std::min( 63, m_currentVolume + highNibble( fxByte ) );
+				m_currentVolume = std::min( 63, m_currentVolume + m_lastFxByte.hi() );
 			}
 		}
 	}
-	else if( highNibble( fxByte ) == 0x0f ) {
-		if( lowNibble( fxByte ) == 0 ) {
+	else if( m_lastFxByte.hi() == 0x0f ) {
+		if( m_lastFxByte.lo() == 0 ) {
 			m_currentFxStr = "VSld \x1e";
-			m_currentVolume = std::min( 63, m_currentVolume + highNibble( fxByte ) );
+			m_currentVolume = std::min( 63, m_currentVolume + m_lastFxByte.hi() );
 		}
 		else {
 			m_currentFxStr = "VSld \x19";
 			if( m_module->state().tick == 0 ) {
-				m_currentVolume = std::max( 0, m_currentVolume - lowNibble( fxByte ) );
+				m_currentVolume = std::max( 0, m_currentVolume - m_lastFxByte.lo() );
 			}
 		}
 	}
 	else {
-		if( lowNibble( fxByte ) == 0 ) {
+		if( m_lastFxByte.lo() == 0 ) {
 			m_currentFxStr = "VSld \x1e";
 			if( m_module->hasFastVolSlides() || m_module->state().tick != 0 ) {
-				m_currentVolume = std::min( 63, m_currentVolume + highNibble( fxByte ) );
+				m_currentVolume = std::min( 63, m_currentVolume + m_lastFxByte.hi() );
 			}
 		}
 		else {
 			m_currentFxStr = "VSld \x1f";
 			if( m_module->hasFastVolSlides() || m_module->state().tick != 0 ) {
-				m_currentVolume = std::max( 0, m_currentVolume - lowNibble( fxByte ) );
+				m_currentVolume = std::max( 0, m_currentVolume - m_lastFxByte.lo() );
 			}
 		}
 	}
@@ -758,8 +763,10 @@ void S3mChannel::fxPorta( uint8_t fxByte, bool noReuse )
 		m_realPeriod = m_basePeriod = m_portaTargetPeriod;
 		fxByte = m_portaTargetPeriod & 0xff;
 	}
-	if( !noReuse )
-		reuseIfZero( m_lastPortaSpeed, fxByte );
+	if( !noReuse ) {
+		m_lastPortaSpeed = fxByte;
+		fxByte = m_lastPortaSpeed;
+	}
 	if( m_basePeriod == m_portaTargetPeriod )
 		return;
 	if( m_basePeriod > m_portaTargetPeriod ) {
@@ -821,16 +828,18 @@ void S3mChannel::fxVibrato( uint8_t fxByte, bool fine, bool noReuse )
 	else {
 		m_currentFxStr = "FnVib\xf7";
 	}
-	if( !noReuse )
-		reuseNibblesIfZero( m_lastVibratoData, fxByte );
-	if( m_basePeriod == 0 )
+	if( !noReuse ) {
+		m_lastFxByte = fxByte;
+	}
+	if( m_basePeriod == 0 ) {
 		return;
+	}
 	int val = waveValue( m_vibratoWaveform, m_vibratoPhase );
 	if( ( m_vibratoWaveform & 3 ) == 3 ) { // random vibrato
 		m_vibratoPhase = ( m_vibratoPhase + ( std::rand() & 0x0f ) ) & 0x3f;
 	}
-	m_vibratoPhase = ( m_vibratoPhase + highNibble( fxByte ) ) & 0x3f;
-	val = ( val * lowNibble( fxByte ) ) >> 4;
+	m_vibratoPhase = ( m_vibratoPhase + m_lastFxByte.hi() ) & 0x3f;
+	val = ( val * m_lastFxByte.lo() ) >> 4;
 	if( m_module->st2Vibrato() )
 		val >>= 1;
 	if( fine )
@@ -842,7 +851,7 @@ void S3mChannel::fxVibrato( uint8_t fxByte, bool fine, bool noReuse )
 void S3mChannel::fxNoteCut( uint8_t fxByte )
 {
 	m_currentFxStr = "NCut \xd4";
-	fxByte = lowNibble( fxByte );
+	fxByte &= 0x0f;
 	if( m_module->state().tick == 0 ) {
 		m_countdown = fxByte;
 		return;
@@ -858,7 +867,7 @@ void S3mChannel::fxNoteCut( uint8_t fxByte )
 void S3mChannel::fxNoteDelay( uint8_t fxByte )
 {
 	m_currentFxStr = "Delay\xc2";
-	fxByte = lowNibble( fxByte );
+	fxByte &= 0x0f;
 	if( m_module->state().tick == 0 ) {
 		m_countdown = fxByte;
 		return;
@@ -884,7 +893,7 @@ void S3mChannel::fxFineTune( uint8_t fxByte )
 	m_currentFxStr = "FTune\xe6";
 	if( m_module->state().tick != 0 )
 		return;
-	fxByte = lowNibble( fxByte );
+	fxByte &= 0x0f;
 	m_c2spd = m_basePeriod = m_realPeriod = S3mFinetunes[fxByte];
 	recalcFrequency();
 }
@@ -892,27 +901,27 @@ void S3mChannel::fxFineTune( uint8_t fxByte )
 void S3mChannel::fxSetVibWaveform( uint8_t fxByte )
 {
 	m_currentFxStr = "VWave\x9f";
-	m_vibratoWaveform = lowNibble( fxByte );
+	m_vibratoWaveform = fxByte&0x0f;
 }
 
 void S3mChannel::fxSetTremWaveform( uint8_t fxByte )
 {
 	m_currentFxStr = "TWave\x9f";
-	m_tremoloWaveform = lowNibble( fxByte );
+	m_tremoloWaveform = fxByte&0x0f;
 }
 
 void S3mChannel::fxRetrigger( uint8_t fxByte )
 {
 	m_currentFxStr = "Retr \xec";
-	reuseIfZero( m_lastFxByte, fxByte );
-	if( lowNibble( fxByte ) == 0 || lowNibble( fxByte ) > m_countdown ) {
+	m_lastFxByte.noNibbles(fxByte);
+	if( m_lastFxByte.lo() == 0 || m_lastFxByte.lo() > m_countdown ) {
 		m_countdown++;
 		return;
 	}
 	m_countdown = 0;
 	m_bresen = 0;
 	int nvol = m_currentVolume;
-	switch( highNibble( fxByte ) ) {
+	switch( m_lastFxByte.hi() ) {
 		case 0x0:
 			break;
 		case 0x1:
@@ -973,7 +982,7 @@ void S3mChannel::fxOffset( uint8_t fxByte )
 void S3mChannel::fxTremor( uint8_t fxByte )
 {
 	m_currentFxStr = "Tremr\xec";
-	reuseIfZero( m_lastFxByte, fxByte );
+	m_lastFxByte.noNibbles(fxByte);
 	if( m_tremorCounter != 0 ) {
 		m_tremorCounter--;
 		return;
@@ -982,21 +991,22 @@ void S3mChannel::fxTremor( uint8_t fxByte )
 		m_tremorMute = false;
 		m_currentVolume = 0;
 		recalcVolume();
-		m_tremorCounter = lowNibble( fxByte );
+		m_tremorCounter = m_lastFxByte.lo();
 	}
 	else {
 		m_tremorMute = true;
 		m_currentVolume = m_baseVolume;
 		recalcVolume();
-		m_tremorCounter = highNibble( fxByte );
+		m_tremorCounter = m_lastFxByte.hi();
 	}
 }
 
 void S3mChannel::fxTempo( uint8_t fxByte )
 {
 	m_currentFxStr = "Tempo\x7f";
-	if( fxByte <= 0x20 )
+	if( fxByte <= 0x20 ) {
 		return;
+	}
 	m_module->setTempo( fxByte );
 }
 
@@ -1011,18 +1021,19 @@ void S3mChannel::fxSpeed( uint8_t fxByte )
 void S3mChannel::fxArpeggio( uint8_t fxByte )
 {
 	m_currentFxStr = "Arp  \xf0";
-	if( !currentSample() )
+	if( !currentSample() ) {
 		return;
-	reuseIfZero( m_lastFxByte, fxByte );
+	}
+	m_lastFxByte.noNibbles(fxByte);
 	switch( m_module->state().tick % 3 ) {
 		case 0: // normal note
 			m_realPeriod = st3Period( m_note, currentSample()->frequency() );
 			break;
 		case 1: // +x half notes...
-			m_realPeriod = st3Period( deltaNote( m_note, highNibble( m_lastFxByte ) ), currentSample()->frequency() );
+			m_realPeriod = st3Period( deltaNote( m_note, m_lastFxByte.hi() ), currentSample()->frequency() );
 			break;
 		case 2: // +y half notes...
-			m_realPeriod = st3Period( deltaNote( m_note, lowNibble( m_lastFxByte ) ), currentSample()->frequency() );
+			m_realPeriod = st3Period( deltaNote( m_note, m_lastFxByte.lo() ), currentSample()->frequency() );
 			break;
 	}
 	recalcFrequency();
@@ -1030,37 +1041,37 @@ void S3mChannel::fxArpeggio( uint8_t fxByte )
 
 void S3mChannel::fxSpecial( uint8_t fxByte )
 {
-	reuseIfZero( m_lastFxByte, fxByte );
-	switch( static_cast<S3mSpecialEffects>( highNibble( fxByte ) ) ) {
+	m_lastFxByte.noNibbles(fxByte);
+	switch( static_cast<S3mSpecialEffects>( m_lastFxByte.hi() ) ) {
 		case s3mSFxNoteDelay:
-			fxNoteDelay( fxByte );
+			fxNoteDelay( m_lastFxByte );
 			break;
 		case s3mSFxNoteCut:
-			fxNoteCut( fxByte );
+			fxNoteCut( m_lastFxByte );
 			break;
 		case s3mSFxSetGlissando:
 			m_currentFxStr = "Gliss\xcd";
-			m_glissando = fxByte != 0;
+			m_glissando = m_lastFxByte != 0;
 			break;
 		case s3mSFxSetFinetune:
-			fxFineTune( fxByte );
+			fxFineTune( m_lastFxByte );
 			break;
 		case s3mSFxSetVibWave:
-			fxSetVibWaveform( fxByte );
+			fxSetVibWaveform( m_lastFxByte );
 			break;
 		case s3mSFxSetTremWave:
-			fxSetTremWaveform( fxByte );
+			fxSetTremWaveform( m_lastFxByte );
 			break;
 		case s3mSFxSetPan:
 			m_currentFxStr = "StPan\x1d";
-			m_panning = lowNibble( fxByte ) * 0x40 / 0x0f;
+			m_panning = m_lastFxByte.lo() * 0x40 / 0x0f;
 			break;
 		case s3mSFxStereoCtrl:
 			m_currentFxStr = "SCtrl\x1d";
-			if( lowNibble( fxByte ) <= 7 )
-				m_panning = ( lowNibble( fxByte ) + 8 ) * 0x40 / 0x0f;
+			if( m_lastFxByte.lo() <= 7 )
+				m_panning = ( m_lastFxByte.lo() + 8 ) * 0x40 / 0x0f;
 			else
-				m_panning = ( lowNibble( fxByte ) - 8 ) * 0x40 / 0x0f;
+				m_panning = ( m_lastFxByte.lo() - 8 ) * 0x40 / 0x0f;
 			break;
 		case s3mSFxPatLoop:
 		case s3mSFxPatDelay:
@@ -1072,10 +1083,10 @@ void S3mChannel::fxSpecial( uint8_t fxByte )
 void S3mChannel::fxTremolo( uint8_t fxByte )
 {
 	m_currentFxStr = "Tremo\xec";
-	reuseNibblesIfZero( m_lastFxByte, fxByte );
+	m_lastFxByte = fxByte;
 	if( m_baseVolume == 0 )
 		return;
-	int val = m_baseVolume + ( ( lowNibble( fxByte ) * waveValue( m_tremoloWaveform, m_tremoloPhase ) ) >> 7 );
+	int val = m_baseVolume + ( ( m_lastFxByte.lo() * waveValue( m_tremoloWaveform, m_tremoloPhase ) ) >> 7 );
 	if( val < 0 )
 		val = 0;
 	else if( val >= 64 )
@@ -1083,7 +1094,7 @@ void S3mChannel::fxTremolo( uint8_t fxByte )
 	if( ( m_tremoloWaveform & 3 ) == 3 ) { // random vibrato
 		m_tremoloPhase = ( m_tremoloPhase + ( std::rand() & 0x0f ) ) & 0x3f;
 	}
-	m_vibratoPhase = ( m_vibratoPhase + highNibble( fxByte ) ) & 0x3f;
+	m_vibratoPhase = ( m_vibratoPhase + m_lastFxByte.hi() ) & 0x3f;
 	recalcVolume();
 }
 
@@ -1095,7 +1106,7 @@ uint16_t S3mChannel::glissando( uint16_t period )
 
 void S3mChannel::triggerNote()
 {
-	if( m_currentCell->effect() == s3mFxSpecial && highNibble( m_currentCell->effectValue() ) == s3mSFxNoteDelay ) {
+	if( m_currentCell->effect() == s3mFxSpecial && (m_currentCell->effectValue()>>4) == s3mSFxNoteDelay ) {
 		return;
 	}
 	playNote();
@@ -1164,7 +1175,7 @@ void S3mChannel::setPanning( uint8_t pan )
 
 light4cxx::Logger* S3mChannel::logger()
 {
-	return light4cxx::Logger::get( GenChannel::logger()->name() + ".s3m" );
+	return light4cxx::Logger::get( AbstractChannel::logger()->name() + ".s3m" );
 }
 
 } // namespace s3m

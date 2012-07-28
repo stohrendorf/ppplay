@@ -25,7 +25,7 @@
 
 #include "s3mpattern.h"
 #include "s3mcell.h"
-#include "stream/binstream.h"
+#include "stream/stream.h"
 
 namespace ppp
 {
@@ -69,24 +69,24 @@ S3mCell* S3mPattern::cellAt( uint16_t chanIdx, int16_t row )
 	return m_channels[ chanIdx ].at( row );
 }
 
-bool S3mPattern::load( BinStream& str, size_t pos )
+bool S3mPattern::load( Stream* str, size_t pos )
 {
 	try {
 		uint16_t patSize;
-		str.seek( pos );
-		str.read( &patSize );
+		str->seek( pos );
+		*str >> patSize;
 		uint16_t currRow = 0, currTrack = 0;
 		while( currRow < 64 ) {
 			uint8_t master;
-			str.read( &master );
+			*str >> master;
 			if( master == 0 ) {
 				currRow++;
 				continue;
 			}
 			currTrack = master & 31;
-			str.seekrel( -1 );
-			if( str.fail() ) {
-				logger()->error( L4CXX_LOCATION, "str.fail()..." );
+			str->seekrel( -1 );
+			if( !str->good() ) {
+				logger()->error( L4CXX_LOCATION, "str->fail()..." );
 				return false;
 			}
 			S3mCell* cell = createCell( currTrack, currRow );
@@ -95,7 +95,7 @@ bool S3mPattern::load( BinStream& str, size_t pos )
 				return false;
 			}
 		}
-		return true;
+		return str->good();
 	}
 	catch( boost::exception& e ) {
 		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );

@@ -23,8 +23,9 @@
  * @ingroup ModMod
  * @{
  */
-#include "genmod/genchannel.h"
+#include "genmod/abstractchannel.h"
 #include "genmod/breseninter.h"
+#include "genmod/genbase.h"
 
 namespace ppp
 {
@@ -35,7 +36,7 @@ class ModModule;
 class ModCell;
 class ModSample;
 
-class ModChannel : public GenChannel
+class ModChannel : public AbstractChannel
 {
 	DISABLE_COPY( ModChannel )
 private:
@@ -52,10 +53,10 @@ private:
 	uint16_t m_period;
 	uint16_t m_physPeriod;
 	uint16_t m_portaTarget;
-	uint8_t m_lastVibratoFx;
-	uint8_t m_lastTremoloFx;
-	uint8_t m_portaSpeed;
-	uint8_t m_lastOffsetFx;
+	RememberByte<true> m_lastVibratoFx;
+	RememberByte<true> m_lastTremoloFx;
+	RememberByte<false> m_portaSpeed;
+	RememberByte<false> m_lastOffsetFx;
 	uint8_t m_sampleIndex;
 	uint8_t m_lowMask;
 	bool m_portaDirUp;
@@ -67,7 +68,7 @@ private:
 public:
 	explicit ModChannel( ModModule* parent, bool isLeftChan );
 	virtual ~ModChannel();
-	virtual IArchive& serialize( IArchive* data );
+	virtual AbstractArchive& serialize( AbstractArchive* data );
 	void update( const ModCell* cell, bool patDelay );
 private:
 	virtual std::string internal_noteName() const;

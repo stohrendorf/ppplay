@@ -26,7 +26,7 @@
 
 #include "light4cxx/logger.h"
 
-class BinStream;
+class Stream;
 
 namespace ppp
 {
@@ -61,7 +61,7 @@ public:
 	 * @param[in] pos Position within @a str
 	 * @return @c true on success
 	 */
-	bool load( BinStream& str, size_t pos );
+	bool load( Stream* str, size_t pos );
 	/**
 	 * @brief Get a cell from the pattern
 	 * @param[in] chanIdx Channel index

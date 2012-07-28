@@ -24,7 +24,7 @@
 #include "xmpattern.h"
 #include "xmcell.h"
 #include "stuff/utils.h"
-#include "stream/binstream.h"
+#include "stream/stream.h"
 
 #include <boost/assert.hpp>
 #include <boost/format.hpp>
@@ -60,20 +60,20 @@ XmPattern::~XmPattern()
 }
 
 
-bool XmPattern::load( BinStream& str )
+bool XmPattern::load( Stream* str )
 {
-	logger()->trace( L4CXX_LOCATION, "Start: %#x", str.pos() );
+	logger()->trace( L4CXX_LOCATION, "Start: %#x", str->pos() );
 	uint32_t hdrLen;
-	str.read( &hdrLen );
+	*str >> hdrLen;
 	logger()->trace( L4CXX_LOCATION, "hdrLen=%d", hdrLen );
 	uint8_t packType;
-	str.read( &packType );
+	*str >> packType;
 	if( packType != 0 ) {
 		logger()->error( L4CXX_LOCATION, "Unsupported Pattern pack type: %d", int(packType) );
 		return false;
 	}
 	uint16_t rows;
-	str.read( &rows );
+	*str >> rows;
 	if( rows == 0 ) {
 		// create a 64-row default pattern
 		logger()->debug( L4CXX_LOCATION, "Number of rows = 0, creating 64-rows default pattern." );
@@ -92,9 +92,9 @@ bool XmPattern::load( BinStream& str )
 		chan.resize( rows, nullptr );
 	}
 	uint16_t packedSize;
-	str.read( &packedSize );
-	logger()->trace( L4CXX_LOCATION, "Header end: %#x", str.pos() );
-	str.seekrel( hdrLen - 9 ); // copied from schismtracker
+	*str >> packedSize;
+	logger()->trace( L4CXX_LOCATION, "Header end: %#x", str->pos() );
+	str->seekrel( hdrLen - 9 ); // copied from schismtracker
 	if( packedSize == 0 ) {
 		return true;
 	}
@@ -107,7 +107,7 @@ bool XmPattern::load( BinStream& str )
 			}
 		}
 	}
-	return !str.fail();
+	return str->good();
 }
 
 XmCell* XmPattern::cellAt( uint16_t column, uint16_t row )

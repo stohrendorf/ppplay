@@ -16,21 +16,21 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "iaudiosource.h"
+#include "abstractaudiosource.h"
 
-IAudioSource::IAudioSource() : m_initialized( false ), m_frequency( 0 ), m_paused( false ), m_mutex()
+AbstractAudioSource::AbstractAudioSource() : m_initialized( false ), m_frequency( 0 ), m_paused( false ), m_mutex()
 {
 }
 
-IAudioSource::~IAudioSource() = default;
+AbstractAudioSource::~AbstractAudioSource() = default;
 
-bool IAudioSource::initialized() const
+bool AbstractAudioSource::initialized() const
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_initialized;
 }
 
-bool IAudioSource::fail()
+bool AbstractAudioSource::fail()
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	m_initialized = false;
@@ -38,13 +38,13 @@ bool IAudioSource::fail()
 	return false;
 }
 
-uint32_t IAudioSource::frequency() const
+uint32_t AbstractAudioSource::frequency() const
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_frequency;
 }
 
-bool IAudioSource::initialize( uint32_t frequency )
+bool AbstractAudioSource::initialize( uint32_t frequency )
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	m_frequency = frequency;
@@ -61,46 +61,46 @@ bool IAudioSource::initialize( uint32_t frequency )
 }
 
 
-uint16_t IAudioSource::internal_volumeLeft() const
+uint16_t AbstractAudioSource::internal_volumeLeft() const
 {
 	return 0;
 }
 
-uint16_t IAudioSource::volumeLeft() const
+uint16_t AbstractAudioSource::volumeLeft() const
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return internal_volumeLeft();
 }
 
-uint16_t IAudioSource::internal_volumeRight() const
+uint16_t AbstractAudioSource::internal_volumeRight() const
 {
 	return 0;
 }
 
-uint16_t IAudioSource::volumeRight() const
+uint16_t AbstractAudioSource::volumeRight() const
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return internal_volumeRight();
 }
 
-size_t IAudioSource::internal_preferredBufferSize() const
+size_t AbstractAudioSource::internal_preferredBufferSize() const
 {
 	return 0;
 }
 
-size_t IAudioSource::preferredBufferSize() const
+size_t AbstractAudioSource::preferredBufferSize() const
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return internal_preferredBufferSize();
 }
 
-size_t IAudioSource::getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames )
+size_t AbstractAudioSource::getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames )
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return internal_getAudioData( buffer, requestedFrames );
 }
 
-light4cxx::Logger* IAudioSource::logger()
+light4cxx::Logger* AbstractAudioSource::logger()
 {
 	return light4cxx::Logger::get( "audio.source" );
 }

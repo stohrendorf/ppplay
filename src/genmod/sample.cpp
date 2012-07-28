@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "gensample.h"
+#include "sample.h"
 #include "breseninter.h"
 
 namespace ppp
@@ -27,85 +27,85 @@ namespace ppp
  * @{
  */
 
-GenSample::GenSample() :
+Sample::Sample() :
 	m_loopStart( 0 ), m_loopEnd( 0 ), m_volume( 0 ),
 	m_frequency( 0 ), m_data(), m_filename(), m_title(), m_looptype( LoopType::None )
 {
 }
 
-GenSample::~GenSample() = default;
+Sample::~Sample() = default;
 
-uint16_t GenSample::frequency() const
+uint16_t Sample::frequency() const
 {
 	return m_frequency;
 }
 
-uint8_t GenSample::volume() const
+uint8_t Sample::volume() const
 {
 	return m_volume;
 }
 
-std::string GenSample::title() const
+std::string Sample::title() const
 {
 	return m_title;
 }
 
-bool GenSample::isLooped() const
+bool Sample::isLooped() const
 {
 	return m_looptype != LoopType::None;
 }
 
-GenSample::PositionType GenSample::length() const
+Sample::PositionType Sample::length() const
 {
 	return m_data.size();
 }
 
-GenSample::LoopType GenSample::loopType() const
+Sample::LoopType Sample::loopType() const
 {
 	return m_looptype;
 }
 
-void GenSample::setFrequency( uint16_t f )
+void Sample::setFrequency( uint16_t f )
 {
 	m_frequency = f;
 }
 
-void GenSample::setLoopType( LoopType l )
+void Sample::setLoopType( LoopType l )
 {
 	m_looptype = l;
 }
 
-void GenSample::setTitle( const std::string& t )
+void Sample::setTitle( const std::string& t )
 {
 	m_title = t;
 }
 
-void GenSample::setFilename( const std::string& f )
+void Sample::setFilename( const std::string& f )
 {
 	m_filename = f;
 }
 
-void GenSample::setLoopStart( PositionType s )
+void Sample::setLoopStart( PositionType s )
 {
 	m_loopStart = s;
 }
 
-void GenSample::setLoopEnd( PositionType e )
+void Sample::setLoopEnd( PositionType e )
 {
 	m_loopEnd = e;
 }
 
-void GenSample::setVolume( uint8_t v )
+void Sample::setVolume( uint8_t v )
 {
 	m_volume = v;
 }
 
-light4cxx::Logger* GenSample::logger()
+light4cxx::Logger* Sample::logger()
 {
 	return light4cxx::Logger::get( "sample" );
 }
 
-bool GenSample::mixNonInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const
+bool Sample::mixNonInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const
 {
 	BOOST_ASSERT( bresen!=nullptr && buffer!=nullptr && rightShift>=0 );
 	for( MixerSampleFrame & frame : **buffer ) {
@@ -121,7 +121,7 @@ bool GenSample::mixNonInterpolated( BresenInterpolation* bresen, MixerFrameBuffe
 	return true;
 }
 
-bool GenSample::mixLinearInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const
+bool Sample::mixLinearInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const
 {
 	BOOST_ASSERT( bresen!=nullptr && buffer!=nullptr && rightShift>=0 );
 	for( MixerSampleFrame & frame : **buffer ) {
@@ -138,7 +138,7 @@ bool GenSample::mixLinearInterpolated( BresenInterpolation* bresen, MixerFrameBu
 	return true;
 }
 
-inline BasicSampleFrame GenSample::sampleAt( PositionType pos ) const
+inline BasicSampleFrame Sample::sampleAt( PositionType pos ) const
 {
 	if( pos == BresenInterpolation::InvalidPosition ) {
 		return BasicSampleFrame();
@@ -146,7 +146,7 @@ inline BasicSampleFrame GenSample::sampleAt( PositionType pos ) const
 	return m_data[makeRealPos( pos )];
 }
 
-inline GenSample::PositionType GenSample::adjustPosition( PositionType pos ) const
+inline Sample::PositionType Sample::adjustPosition( PositionType pos ) const
 {
 	if( pos == BresenInterpolation::InvalidPosition ) {
 		return BresenInterpolation::InvalidPosition;
@@ -169,7 +169,7 @@ inline GenSample::PositionType GenSample::adjustPosition( PositionType pos ) con
 	return pos;
 }
 
-inline GenSample::PositionType GenSample::makeRealPos( PositionType pos ) const
+inline Sample::PositionType Sample::makeRealPos( PositionType pos ) const
 {
 	if( m_looptype == LoopType::Pingpong ) {
 		if( pos >= m_loopEnd ) {

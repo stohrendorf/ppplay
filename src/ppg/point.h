@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef POINT_H
-#define POINT_H
+#ifndef PPG_POINT_H
+#define PPG_POINT_H
 
 /**
  * @ingroup Ppg

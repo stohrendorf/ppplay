@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef STEREOPEAKBAR_H
-#define STEREOPEAKBAR_H
+#ifndef PPG_STEREOPEAKBAR_H
+#define PPG_STEREOPEAKBAR_H
 
 #include "label.h"
 

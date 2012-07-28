@@ -16,23 +16,55 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SBINSTREAM_H
-#define SBINSTREAM_H
+#include "abstractorder.h"
 
-#include "binstream.h"
+#include "stream/abstractarchive.h"
 
 /**
- * @class SBinStream
- * @ingroup Common
- * @brief Class derived from BinStream for a std::stringstream
+ * @ingroup GenMod
+ * @{
  */
-class SBinStream : public BinStream
-{
-	DISABLE_COPY( SBinStream )
-public:
-	explicit SBinStream();
-	virtual ~SBinStream();
-	virtual size_t size() const;
-};
 
-#endif
+namespace ppp
+{
+
+AbstractOrder::AbstractOrder( uint8_t idx ) : m_index( idx ), m_playbackCount( 0 )
+{ }
+
+uint8_t AbstractOrder::index() const
+{
+	return m_index;
+}
+
+void AbstractOrder::setIndex( uint8_t n )
+{
+	m_index = n;
+}
+
+AbstractArchive& AbstractOrder::serialize( AbstractArchive* data )
+{
+	return *data % m_index % m_playbackCount;
+}
+
+int AbstractOrder::playbackCount() const
+{
+	return m_playbackCount;
+}
+
+int AbstractOrder::increasePlaybackCount()
+{
+	return ++m_playbackCount;
+}
+
+light4cxx::Logger* AbstractOrder::logger()
+{
+	return light4cxx::Logger::get( "order" );
+}
+
+}
+
+template class std::vector<ppp::AbstractOrder*>;
+
+/**
+ * @}
+ */

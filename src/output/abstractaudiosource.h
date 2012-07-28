@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef IAUDIOSOURCE_H
-#define IAUDIOSOURCE_H
+#ifndef PPPLAY_ABSTRACTAUDIOSOURCE_H
+#define PPPLAY_ABSTRACTAUDIOSOURCE_H
 
 #include "stuff/utils.h"
 #include "audiotypes.h"
@@ -36,7 +36,7 @@
  * @brief Audio source for IAudioOutput
  */
 
-class IAudioSource
+class AbstractAudioSource
 {
 private:
 	//! @brief @c true when this source was successfully inited
@@ -84,13 +84,13 @@ protected:
 	virtual uint16_t internal_volumeRight() const;
 public:
 	//! @brief Class pointer
-	typedef std::shared_ptr<IAudioSource> Ptr;
+	typedef std::shared_ptr<AbstractAudioSource> Ptr;
 	//! @brief Weak class pointer
-	typedef std::weak_ptr<IAudioSource> WeakPtr;
+	typedef std::weak_ptr<AbstractAudioSource> WeakPtr;
 	//! @brief Constructor
-	IAudioSource();
+	AbstractAudioSource();
 	//! @brief Destructor
-	virtual ~IAudioSource();
+	virtual ~AbstractAudioSource();
 	/**
 	 * @brief Check whether this source was successfully initialized
 	 * @return m_initialized
@@ -121,12 +121,12 @@ protected:
 	static light4cxx::Logger* logger();
 };
 
-bool IAudioSource::paused() const
+bool AbstractAudioSource::paused() const
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_paused;
 }
-void IAudioSource::setPaused( bool p )
+void AbstractAudioSource::setPaused( bool p )
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	m_paused = p;

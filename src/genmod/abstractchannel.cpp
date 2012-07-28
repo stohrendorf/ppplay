@@ -21,107 +21,107 @@
  * @{
  */
 
-#include "genchannel.h"
-#include "stream/iarchive.h"
+#include "abstractchannel.h"
+#include "stream/abstractarchive.h"
 
 namespace ppp
 {
 
-GenChannel::GenChannel() :
+AbstractChannel::AbstractChannel() :
 	m_active( false ), m_disabled( true ),
 	m_statusString(),
 	m_mutex()
 {
 }
 
-GenChannel::~GenChannel() = default;
+AbstractChannel::~AbstractChannel() = default;
 
-IArchive& GenChannel::serialize( IArchive* data )
+AbstractArchive& AbstractChannel::serialize( AbstractArchive* data )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	*data % m_active % m_disabled;
 	return *data;
 }
 
-std::string GenChannel::statusString() const
+std::string AbstractChannel::statusString() const
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_statusString;
 }
 
-void GenChannel::setStatusString( const std::string& s )
+void AbstractChannel::setStatusString( const std::string& s )
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	m_statusString = s;
 }
 
-void GenChannel::setActive( bool a )
+void AbstractChannel::setActive( bool a )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_active = a;
 }
 
-void GenChannel::enable()
+void AbstractChannel::enable()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_disabled = false;
 }
 
-void GenChannel::disable()
+void AbstractChannel::disable()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_disabled = true;
 }
 
-bool GenChannel::isDisabled() const
+bool AbstractChannel::isDisabled() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_disabled;
 }
 
-bool GenChannel::isActive() const
+bool AbstractChannel::isActive() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_active;
 }
 
-std::string GenChannel::cellString() const
+std::string AbstractChannel::cellString() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return internal_cellString();
 }
 
-std::string GenChannel::effectDescription() const
+std::string AbstractChannel::effectDescription() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return internal_effectDescription();
 }
 
-std::string GenChannel::effectName() const
+std::string AbstractChannel::effectName() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return internal_effectName();
 }
 
-void GenChannel::mixTick( MixerFrameBuffer* mixBuffer )
+void AbstractChannel::mixTick( MixerFrameBuffer* mixBuffer )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	internal_mixTick(mixBuffer);
 }
 
-std::string GenChannel::noteName() const
+std::string AbstractChannel::noteName() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return internal_noteName();
 }
 
-void GenChannel::updateStatus()
+void AbstractChannel::updateStatus()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	internal_updateStatus();
 }
 
-light4cxx::Logger* GenChannel::logger()
+light4cxx::Logger* AbstractChannel::logger()
 {
 	return light4cxx::Logger::get( "channel" );
 }

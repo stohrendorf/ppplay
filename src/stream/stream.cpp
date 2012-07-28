@@ -16,41 +16,58 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MODULEMETAINFO_H
-#define MODULEMETAINFO_H
+#include "stream.h"
 
-#include <string>
+#include <iostream>
 
-namespace ppp
+Stream::Stream( std::iostream* stream, const std::string& name ) : m_stream( stream ), m_name(name)
 {
-
-/**
- * @ingroup GenMod
- * @{
- */
-
-/**
- * @class ModuleMetaInfo
- * @brief Meta information about a module
- */
-struct ModuleMetaInfo
-{
-	explicit ModuleMetaInfo() : filename(), title(), trackerInfo()
-	{
-	}
-	
-	//! @brief Filename of the module
-	std::string filename;
-	//! @brief Title of the module
-	std::string title;
-	//! @brief Tracker information (Name and Version)
-	std::string trackerInfo;
-};
-
-/**
- * @}
- */
-
 }
 
-#endif
+Stream::~Stream()
+{
+	delete m_stream;
+}
+
+void Stream::clear()
+{
+	m_stream->clear();
+}
+
+void Stream::seek( uint32_t pos )
+{
+	m_stream->seekg( pos );
+	m_stream->seekp( pos );
+}
+
+void Stream::seekrel( int32_t delta )
+{
+	uint32_t p = pos();
+	m_stream->seekg( p + delta );
+	m_stream->seekp( p + delta );
+}
+
+uint32_t Stream::pos() const
+{
+	return m_stream->tellg();
+}
+
+const std::iostream* Stream::stream() const
+{
+	return m_stream;
+}
+
+std::iostream* Stream::stream()
+{
+	return m_stream;
+}
+
+std::string Stream::name() const
+{
+	return m_name;
+}
+
+void Stream::setName( const std::string& name )
+{
+	m_name = name;
+}

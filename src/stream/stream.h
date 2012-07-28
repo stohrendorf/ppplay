@@ -16,12 +16,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BINSTREAM_H
-#define BINSTREAM_H
+#ifndef PPPLAY_STREAM_H
+#define PPPLAY_STREAM_H
 
 #include "stuff/utils.h"
 
 #include <iostream>
+#include <string>
 #include <memory>
 
 /**
@@ -29,33 +30,25 @@
  * @ingroup Common
  * @brief A binary stream helper
  */
-class BinStream
+class Stream
 {
-	DISABLE_COPY( BinStream )
-	BinStream() = delete;
+	DISABLE_COPY( Stream )
+	Stream() = delete;
 public:
-	typedef std::shared_ptr<std::iostream> SpIoStream; //!< @brief Shared IO Stream Pointer
-	typedef std::shared_ptr<BinStream> Ptr; //!< @brief Class pointer
+	typedef std::shared_ptr<Stream> Ptr; //!< @brief Class pointer
 private:
-	SpIoStream m_stream; //!< @brief The IO Stream associated with this BinStream
+	std::iostream* m_stream; //!< @brief The IO Stream associated with this BinStream
+	std::string m_name;
 public:
 	/**
 	 * @brief Default constructor
 	 * @param[in] stream Shared pointer to the IO Stream to associate with this BinStream
 	 */
-	explicit BinStream( SpIoStream stream ) ;
+	explicit Stream( std::iostream* stream, const std::string& name = "Stream" ) ;
 	/**
 	 * @brief Destructor
 	 */
-	virtual ~BinStream() {}
-	/**
-	 * @brief Constructor with stream destructor
-	 * @tparam D Stream destructor type
-	 * @param[in] stream Shared pointer to the std::iostream to associate with this BinStream
-	 * @param[in] d Destructor
-	 */
-	template<class D>
-	explicit BinStream( SpIoStream stream, D d ) : m_stream( stream, d ) { }
+	virtual ~Stream();
 	/**
 	 * @brief Read data from the stream
 	 * @tparam TR Data type
@@ -63,25 +56,25 @@ public:
 	 * @param[in] count Count of data elements (NOT the byte size)
 	 * @return Reference to *this for pipelining
 	 */
-	template<typename TR> BinStream& read( TR* data, size_t count = 1 );
+	template<typename T>
+	inline Stream& read( T* data, size_t count = 1 )
+	{
+		m_stream->read(reinterpret_cast<char*>(data), count*sizeof(T));
+		return *this;
+	}
 	/**
 	 * @brief Write data to the stream
-	 * @tparam TW Data type
+	 * @tparam T Data type
 	 * @param[in] data Pointer to the data array
 	 * @param[in] count Count of data elements (NOT the byte size)
 	 * @return Reference to *this for pipelining
 	 */
-	template<typename TW> BinStream& write( const TW* data, size_t count = 1 );
-	/**
-	 * @brief Get the failbit of the IO Stream
-	 * @return @c true on error
-	 */
-	bool fail() const;
-	/**
-	 * @brief Get the goodbit of the IO Stream
-	 * @return @c false on error
-	 */
-	bool good() const;
+	template<typename T>
+	inline Stream& write( const T* data, size_t count = 1 )
+	{
+		m_stream->write(reinterpret_cast<const char*>(data), count*sizeof(T));
+		return *this;
+	}
 	/**
 	 * @brief Clear the failbits of the IO Stream
 	 */
@@ -105,37 +98,41 @@ public:
 	 * @brief Const access to the internal stream
 	 * @return BinStream::m_stream
 	 */
-	const SpIoStream& stream() const;
+	const std::iostream* stream() const;
 	/**
 	 * @brief Access to the internal stream
 	 * @return BinStream::m_stream
 	 */
-	SpIoStream& stream();
+	std::iostream* stream();
 	/**
 	 * @brief Returns the size of the underlying stream
 	 * @return The stream size
 	 */
 	virtual size_t size() const = 0;
+	virtual std::string name() const;
+	
+	inline operator bool() const
+	{
+		return m_stream->good();
+	}
+	inline bool good() const
+	{
+		return m_stream->good();
+	}
+protected:
+	void setName(const std::string& name);
 };
 
-// NOTE Templates are (due to explicit instantiation) outsourced ;-)
+template<class T>
+inline Stream& operator>>(Stream& str, T& data)
+{
+	return str.read(&data);
+}
 
-#define BINSTREAM_RW_DECL(tn)\
-	extern template BinStream &BinStream::read<tn>(tn *, size_t); \
-	extern template BinStream &BinStream::write<tn>(const tn*, size_t);
-
-BINSTREAM_RW_DECL( int8_t )
-BINSTREAM_RW_DECL( uint8_t )
-BINSTREAM_RW_DECL( int16_t )
-BINSTREAM_RW_DECL( uint16_t )
-BINSTREAM_RW_DECL( int32_t )
-BINSTREAM_RW_DECL( uint32_t )
-BINSTREAM_RW_DECL( int64_t )
-BINSTREAM_RW_DECL( uint64_t )
-BINSTREAM_RW_DECL( char )
-BINSTREAM_RW_DECL( bool )
-BINSTREAM_RW_DECL( float )
-
-#undef BINSTREAM_RW_DECL
+template<class T>
+inline Stream& operator<<(Stream& str, const T& data)
+{
+	return str.write(&data);
+}
 
 #endif // binstreamH

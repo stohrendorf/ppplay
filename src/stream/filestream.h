@@ -16,55 +16,39 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "genorder.h"
+#ifndef PPPLAY_FILESTREAM_H
+#define PPPLAY_FILESTREAM_H
 
-#include "stream/iarchive.h"
-
-/**
- * @ingroup GenMod
- * @{
- */
-
-namespace ppp
-{
-
-GenOrder::GenOrder( uint8_t idx ) : m_index( idx ), m_playbackCount( 0 )
-{ }
-
-uint8_t GenOrder::index() const
-{
-	return m_index;
-}
-
-void GenOrder::setIndex( uint8_t n )
-{
-	m_index = n;
-}
-
-IArchive& GenOrder::serialize( IArchive* data )
-{
-	return *data % m_index % m_playbackCount;
-}
-
-int GenOrder::playbackCount() const
-{
-	return m_playbackCount;
-}
-
-int GenOrder::increasePlaybackCount()
-{
-	return ++m_playbackCount;
-}
-
-light4cxx::Logger* GenOrder::logger()
-{
-	return light4cxx::Logger::get( "order" );
-}
-
-}
-
-template class std::vector<ppp::GenOrder*>;
+#include "stream.h"
 
 /**
- * @}
+ * @class FBinStream
+ * @ingroup Common
+ * @brief Class derived from BinStream for files
+ * @note This is a read-only stream
  */
+class FileStream : public Stream
+{
+	DISABLE_COPY( FileStream )
+	FileStream() = delete;
+private:
+	size_t m_size; //!< @brief Cached size of the file
+public:
+	enum class Mode
+	{
+		Read, Write
+	};
+	/**
+	 * @brief Default contructor
+	 * @param[in] filename Filename of the file to open
+	 */
+	explicit FileStream( const std::string& filename, Mode mode = Mode::Read );
+	/**
+	 * @brief Check if the file is opened
+	 * @return @c true if the file is opened
+	 */
+	bool isOpen() const;
+	size_t size() const;
+};
+
+#endif

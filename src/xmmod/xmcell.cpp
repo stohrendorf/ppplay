@@ -24,7 +24,7 @@
 #include "xmcell.h"
 
 #include "genmod/genbase.h"
-#include "stream/iarchive.h"
+#include "stream/abstractarchive.h"
 
 namespace ppp
 {
@@ -37,28 +37,30 @@ XmCell::XmCell() : IPatternCell(), m_note( 0 ), m_instr( 0 ), m_volume( 0 ), m_e
 
 XmCell::~XmCell() = default;
 
-bool XmCell::load( BinStream& str )
+bool XmCell::load( Stream* str )
 {
 	uint8_t data;
-	str.read( &data );
+	*str >> data;
 	if( ( data & 0x80 ) == 0 ) {
 		m_note = data;
-		str.read( &m_instr ).read( &m_volume ).read( reinterpret_cast<uint8_t*>( &m_effect ) ).read( &m_effectValue );
-		return !str.fail();
+		*str >> m_instr >> m_volume;
+		str->read( reinterpret_cast<uint8_t*>( &m_effect ) );
+		*str >> m_effectValue;
+		return str->good();
 	}
 	if( data & 0x01 )
-		str.read( &m_note );
+		*str >> m_note;
 	if( data & 0x02 )
-		str.read( &m_instr );
+		*str >> m_instr;
 	if( m_instr > 0x80 )
 		m_instr = 0;
 	if( data & 0x04 )
-		str.read( &m_volume );
+		*str >> m_volume;
 	if( data & 0x08 )
-		str.read( reinterpret_cast<uint8_t*>( &m_effect ) );
+		str->read( reinterpret_cast<uint8_t*>( &m_effect ) );
 	if( data & 0x10 )
-		str.read( &m_effectValue );
-	return !str.fail();
+		*str >> m_effectValue;
+	return str->good();
 }
 
 void XmCell::clear()
@@ -126,7 +128,7 @@ std::string XmCell::trackerString() const
 	VfxPorta = 0xf
 	 */
 	static const char vfxChars[] = "-+DUSVPLRM";
-	switch( highNibble( m_volume ) ) {
+	switch( m_volume>>4 ) {
 		case 0:
 			xmsg += "   ";
 			break;
@@ -138,7 +140,7 @@ std::string XmCell::trackerString() const
 			xmsg += stringFmt( "%2d ", m_volume - 0x10 );
 			break;
 		default:
-			xmsg += stringFmt( "%c%X ", vfxChars[highNibble( m_volume ) - 6], int(lowNibble( m_volume )) );
+			xmsg += stringFmt( "%c%X ", vfxChars[( m_volume>>4 ) - 6], int(m_volume&0x0f) );
 			break;
 	}
 	return xmsg + fxString();
@@ -169,7 +171,7 @@ uint8_t XmCell::effectValue() const
 	return m_effectValue;
 }
 
-IArchive& XmCell::serialize( IArchive* data )
+AbstractArchive& XmCell::serialize( AbstractArchive* data )
 {
 	*data
 	% m_note

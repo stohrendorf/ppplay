@@ -19,9 +19,9 @@
 #ifndef XMSAMPLE_H
 #define XMSAMPLE_H
 
-#include "genmod/gensample.h"
+#include "genmod/sample.h"
 
-class BinStream;
+class Stream;
 
 /**
  * @ingroup XmModule
@@ -37,7 +37,7 @@ namespace xm
  * @class XmSample
  * @brief XM Sample storage class
  */
-class XmSample : public GenSample
+class XmSample : public Sample
 {
 	DISABLE_COPY( XmSample )
 private:
@@ -57,14 +57,14 @@ public:
 	 * @param[in] str The stream to load from
 	 * @return @c true on success
 	 */
-	bool load( BinStream& str );
+	bool load( Stream* str );
 	/**
 	 * @brief Loads the sample data
 	 * @param[in] str The stream to load from
 	 * @return @c true on success
 	 * @pre Make sure you have called load(BinStream&) previously
 	 */
-	bool loadData( BinStream& str );
+	bool loadData( Stream* str );
 	/**
 	 * @brief Get the default finetune
 	 * @return The default finetune

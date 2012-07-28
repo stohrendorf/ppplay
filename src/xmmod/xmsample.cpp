@@ -22,7 +22,7 @@
  */
 
 #include "xmsample.h"
-#include "stream/binstream.h"
+#include "stream/stream.h"
 
 namespace ppp
 {
@@ -32,19 +32,18 @@ namespace xm
 XmSample::XmSample() : m_finetune( 0 ), m_panning( 0x80 ), m_relativeNote( 0 ), m_16bit( false )
 { }
 
-bool XmSample::load( BinStream& str )
+bool XmSample::load( Stream* str )
 {
 	int32_t dataSize;
-	str.read( &dataSize );
+	*str >> dataSize;
 	int32_t loopStart, loopLen;
-	str.read( &loopStart );
-	str.read( &loopLen );
+	*str >> loopStart >> loopLen;
 	uint8_t volume;
-	str.read( &volume );
+	*str >> volume;
 	setVolume( clip<int>(volume,0,64) );
-	str.read( &m_finetune );
+	*str >> m_finetune;
 	uint8_t type;
-	str.read( &type );
+	*str >> type;
 	if(loopStart+loopLen>dataSize) {
 		loopStart = loopLen = 0;
 		setLoopType( LoopType::None );
@@ -74,18 +73,17 @@ bool XmSample::load( BinStream& str )
 		setLoopStart( loopStart );
 		setLoopEnd( loopStart + loopLen );
 	}
-	str.read( &m_panning );
-	str.read( &m_relativeNote );
-	str.seekrel( 1 );
+	*str >> m_panning >> m_relativeNote;
+	str->seekrel( 1 );
 	{
 		char title[22];
-		str.read( title, 22 );
+		str->read( title, 22 );
 		setTitle( stringncpy( title, 22 ) );
 	}
-	return str.good();
+	return str->good();
 }
 
-bool XmSample::loadData( BinStream& str )
+bool XmSample::loadData( Stream* str )
 {
 	if( length() == 0 )
 		return true;
@@ -93,7 +91,7 @@ bool XmSample::loadData( BinStream& str )
 		int16_t smp16 = 0;
 		for( auto it = beginIterator(); it != endIterator(); it++ ) {
 			int16_t delta;
-			str.read( &delta );
+			*str >> delta;
 			smp16 += delta;
 			it->left = it->right = smp16;
 		}
@@ -102,12 +100,12 @@ bool XmSample::loadData( BinStream& str )
 		int8_t smp8 = 0;
 		for( auto it = beginIterator(); it != endIterator(); it++ ) {
 			int8_t delta;
-			str.read( &delta );
+			*str >> delta;
 			smp8 += delta;
 			it->left = it->right = smp8 << 8;
 		}
 	}
-	return str.good();
+	return str->good();
 }
 
 uint8_t XmSample::panning() const

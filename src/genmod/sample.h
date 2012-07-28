@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef GENSAMPLE_H
-#define GENSAMPLE_H
+#ifndef PPPLAY_SAMPLE_H
+#define PPPLAY_SAMPLE_H
 
 #include "output/audiotypes.h"
 #include "light4cxx/logger.h"
@@ -35,9 +35,9 @@ class BresenInterpolation;
  * @class GenSample
  * @brief An abstract sample class
  */
-class GenSample
+class Sample
 {
-	DISABLE_COPY( GenSample )
+	DISABLE_COPY( Sample )
 public:
 	//! @brief Sample position
 	typedef uint_fast32_t PositionType;
@@ -89,11 +89,11 @@ public:
 	/**
 	 * @brief Constructor
 	 */
-	GenSample();
+	Sample();
 	/**
 	 * @brief Destructor
 	 */
-	virtual ~GenSample();
+	virtual ~Sample();
 	/**
 	 * @brief Get the sample's Base Frequency
 	 * @return Base frequency

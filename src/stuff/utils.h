@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef PPPLAY_UTILS_H
+#define PPPLAY_UTILS_H
 
 #include <boost/checked_delete.hpp>
 

@@ -8,7 +8,7 @@ class Plugin : public InputPlugin
 {
 public:
 	virtual int version() const {
-		return 1;
+		return Version;
 	}
 	virtual std::string name() const {
 		return "mod";
@@ -16,8 +16,8 @@ public:
 	virtual std::string description() const {
 		return "Protracker Module Loader";
 	};
-	virtual ModuleRegistry::LoaderFunction loader() const {
-		return &mod::ModModule::factory;
+	virtual AbstractModule* load(Stream* stream, uint32_t frequency, int maxRepeat) const {
+		return mod::ModModule::factory(stream,frequency,maxRepeat);
 	};
 };
 }

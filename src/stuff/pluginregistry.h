@@ -16,50 +16,29 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef PPPLAY_PLUGINREGISTRY_H
+#define PPPLAY_PLUGINREGISTRY_H
 
-#ifndef PPPLAY_ITIMER_H
-#define PPPLAY_ITIMER_H
+#include "genmod/abstractmodule.h"
 
-#include "utils.h"
+#include <list>
 
-#include <cstdint>
-
-/**
- * @ingroup Common
- * @{
- */
-
-/**
- * @interface ITimer
- * @brief Timer interface
- */
-class ITimer
+namespace ppp
 {
-	DISABLE_COPY( ITimer )
+
+class PluginRegistry
+{
+	DISABLE_COPY( PluginRegistry )
+private:
+	PluginRegistry();
+	~PluginRegistry();
+	std::list<void*> m_handles;
+	static void findPlugins();
 public:
-	/**
-	 * @brief Default constructor
-	 */
-	ITimer() = default;
-	/**
-	 * @brief Virtual default destructor
-	 */
-	inline virtual ~ITimer();
-	/**
-	 * @brief The timer interval in milliseconds
-	 * @return The timer interval in milliseconds
-	 */
-	virtual uint32_t interval() const = 0;
-	/**
-	 * @brief Timer handler, called every interval() milliseconds
-	 */
-	virtual void onTimer() = 0;
+	static PluginRegistry& instance();
+	static AbstractModule::Ptr tryLoad( const std::string& filename, uint32_t frq, int maxRpt );
 };
 
-inline ITimer::~ITimer() = default;
+}
 
-/**
- * @}
- */
-
-#endif // TIMER_H
+#endif

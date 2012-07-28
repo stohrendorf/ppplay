@@ -146,9 +146,12 @@ if(MINGW)
 	target_link_libraries(ppplay stdc++ mingw32)
 endif()
 
-target_link_libraries(ppplay rt ppplay_core ppplay_module_base ppplay_ppg ppplay_output_sdl)
+target_link_libraries(ppplay rt ppplay_core ppplay_module_base ppplay_ppg ppplay_output_sdl ppplay_output_wav)
 if(WITH_MP3LAME)
 	target_link_libraries(ppplay ppplay_output_mp3)
+endif()
+if(WITH_OGG)
+	target_link_libraries(ppplay ppplay_output_ogg ${vorbis_LIB} ${vorbisenc_LIB})
 endif()
 # 
 #########
@@ -166,25 +169,28 @@ function(trylinklib LIBNAME ATTRIBS)
 		/opt/csw
 		/opt
 	)
-	if(NOT "${LIBNAME}_LIB")
-		# message(STATUS "${LIBNAME} Library not found")
-	else(NOT "${LIBNAME}_LIB")
-		# message(STATUS "${LIBNAME} Library found: ${${LIBNAME}_LIB}")
+	if("${LIBNAME}_LIB")
 		add_library("${LIBNAME}" ${ATTRIBS} IMPORTED)
-# 		target_link_libraries(ppplay ${${LIBNAME}_LIB})
-	endif(NOT "${LIBNAME}_LIB")
+	endif()
 	mark_as_advanced(FORCE "${LIBNAME}_LIB")
 endfunction(trylinklib)
 trylinklib("mp3lame" SHARED)
 if(NOT mp3lame_LIB)
 	option(WITH_MP3LAME "Whether to include MP3Lame support." OFF)
-	# message(STATUS "MP3Lame _not_ found, Quick-MP3 will not be available")
 else()
 	option(WITH_MP3LAME "Whether to include MP3Lame support." ON)
-	# message(STATUS "MP3Lame found, Quick-MP3 will be available")
 endif()
+add_feature_info("MP3 Export" WITH_MP3LAME "MP3 Export using the MP3Lame library is enabled.")
 
-add_feature_info(MP3Lame WITH_MP3LAME "The MP3Lame library enables MP3 export.")
+trylinklib("vorbis" SHARED)
+trylinklib("vorbisenc" SHARED)
+if(NOT vorbis_LIB OR NOT vorbisenc_LIB)
+	option(WITH_OGG "Whether to include OGG support." OFF)
+else()
+	option(WITH_OGG "Whether to include OGG support." ON)
+endif()
+add_feature_info("OGG Export" WITH_OGG "OGG Export using the Oggz library is enabled.")
+
 
 #########
 # add SDL

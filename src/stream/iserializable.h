@@ -16,10 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef ISERIALIZABLE_H
-#define ISERIALIZABLE_H
+#ifndef PPPLAY_ISERIALIZABLE_H
+#define PPPLAY_ISERIALIZABLE_H
 
-class IArchive;
+class AbstractArchive;
 
 /**
  * @interface ISerializable
@@ -31,10 +31,10 @@ class ISerializable
 public:
 	/**
 	 * @brief Serialise this object
-	 * @param[in,out] archive IArchive to serialize this object to
+	 * @param[in,out] archive AbstractArchive to serialize this object to
 	 * @return Reference to @a archive for pipelining
 	 */
-	virtual IArchive& serialize( IArchive* archive ) = 0;
+	virtual AbstractArchive& serialize( AbstractArchive* archive ) = 0;
 	/**
 	 * @brief Destructor
 	 */

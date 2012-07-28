@@ -16,14 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef GENCHANNEL_H
-#define GENCHANNEL_H
+#ifndef PPPLAY_ABSTRACTCHANNEL_H
+#define PPPLAY_ABSTRACTCHANNEL_H
 
 #include "stream/iserializable.h"
 #include "output/audiotypes.h"
-#include "stuff/utils.h"
-#include "gensample.h"
-
 #include "light4cxx/logger.h"
 
 #include <boost/thread.hpp>
@@ -36,14 +33,14 @@ namespace ppp
  */
 
 /**
- * @class GenChannel
+ * @class AbstractChannel
  * @brief A general channel
  * @details Every module must be compatible with this abstract
  * base class.
  */
-class GenChannel : public ISerializable
+class AbstractChannel : public ISerializable
 {
-	DISABLE_COPY( GenChannel )
+	DISABLE_COPY( AbstractChannel )
 private:
 	//! @brief @c true if channel is active
 	bool m_active;
@@ -56,11 +53,11 @@ public:
 	/**
 	 * @brief The constructor
 	 */
-	GenChannel();
+	explicit AbstractChannel();
 	/**
 	 * @brief The destructor
 	 */
-	virtual ~GenChannel();
+	virtual ~AbstractChannel();
 	/**
 	 * @brief Check if the channel is active
 	 * @return m_active
@@ -84,7 +81,7 @@ public:
 	 * @return m_statusString
 	 */
 	std::string statusString() const;
-	virtual IArchive& serialize( IArchive* data );
+	virtual AbstractArchive& serialize( AbstractArchive* data );
 	//! @copydoc internal_noteName
 	std::string noteName() const;
 	//! @copydoc internal_effectName

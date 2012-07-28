@@ -24,8 +24,9 @@
  * @{
  */
 
-#include "genmod/genchannel.h"
+#include "genmod/abstractchannel.h"
 #include "genmod/breseninter.h"
+#include "genmod/genbase.h"
 
 #include <array>
 
@@ -45,15 +46,15 @@ class S3mSample;
  * @note Please note that even the S3M tech spec allows the cell volume to be
  * 64, it effectively is clipped to a value between 0 and <b>64</b>.
  */
-class S3mChannel : public GenChannel
+class S3mChannel : public AbstractChannel
 {
 	S3mChannel() = delete; //!< @brief No default constructor
 	DISABLE_COPY( S3mChannel )
 private:
 	uint8_t m_note;          //!< @brief Currently playing note
-	uint8_t m_lastFxByte;        //!< @brief Last FX Value
+	RememberByte<true> m_lastFxByte;        //!< @brief Last FX Value
 	uint8_t m_lastVibratoData; //!< @brief Last Vibrato FX
-	uint8_t m_lastPortaSpeed; //!< @brief Last porta speed
+	RememberByte<false> m_lastPortaSpeed; //!< @brief Last porta speed
 	uint8_t m_tremorVolume;  //!< @brief Backup variable for Tremor FX
 	bool m_noteChanged;            //!< @brief @c true when a new note triggered in the current frame
 	uint8_t m_currentVolume; //!< @brief Current volume, range: 0..63
@@ -130,7 +131,7 @@ public:
 	 */
 	S3mChannel( S3mModule* module );
 	virtual ~S3mChannel();
-	virtual IArchive& serialize( IArchive* data );
+	virtual AbstractArchive& serialize( AbstractArchive* data );
 	/**
 	 * @brief Update the channel
 	 * @param[in] cell Pointer to a note cell

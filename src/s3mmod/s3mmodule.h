@@ -24,7 +24,7 @@
  * @{
  */
 
-#include "genmod/genmodule.h"
+#include "genmod/abstractmodule.h"
 
 #include <array>
 
@@ -41,7 +41,7 @@ class S3mChannel;
  * @class S3mModule
  * @brief Module class for S3M Modules
  */
-class S3mModule : public GenModule
+class S3mModule : public AbstractModule
 {
 	DISABLE_COPY( S3mModule )
 	S3mModule() = delete;
@@ -55,7 +55,7 @@ public:
 	 * @param[in] maxRpt Maximum repeat count
 	 * @return Module pointer or nullptr
 	 */
-	static GenModule::Ptr factory( const std::string& filename, uint32_t frequency, int maxRpt = 2 );
+	static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt = 2 );
 private:
 	uint16_t m_breakRow;      //!< @brief Row to break to, ~0 if unused
 	uint16_t m_breakOrder;    //!< @brief Order to break to, ~0 if unused
@@ -78,7 +78,7 @@ private:
 	 */
 	S3mPattern* getPattern( size_t idx ) const;
 protected:
-	virtual IArchive& serialize( IArchive* data );
+	virtual AbstractArchive& serialize( AbstractArchive* data );
 public:
 	virtual ~S3mModule();
 private:
@@ -106,7 +106,7 @@ private:
 	 * @param[in] fn Filename of the module to load
 	 * @return @c true on success
 	 */
-	bool load( const std::string& fn );
+	bool load( Stream* stream );
 	/**
 	 * @brief Check if a sample exists
 	 * @param[in] idx Sample index to check

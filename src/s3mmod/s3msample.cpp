@@ -24,7 +24,7 @@
 #include <boost/exception/all.hpp>
 
 #include "s3msample.h"
-#include "stream/binstream.h"
+#include "stream/stream.h"
 
 #include <algorithm>
 #include <boost/format.hpp>
@@ -65,17 +65,16 @@ struct S3mSampleHeader {
 #pragma pack(pop)
 #endif
 
-S3mSample::S3mSample() : GenSample(), m_highQuality( false )
+S3mSample::S3mSample() : Sample(), m_highQuality( false )
 {
 }
 
-bool S3mSample::load( BinStream& str, const size_t pos, bool imagoLoopEnd )
+bool S3mSample::load( Stream* str, size_t pos, bool imagoLoopEnd )
 {
 	try {
-		str.seek( pos );
+		str->seek( pos );
 		S3mSampleHeader smpHdr;
-		str.read( reinterpret_cast<char*>( &smpHdr ), sizeof( smpHdr ) );
-// 		str.read((char*)&smpHdr, sizeof(s3mSampleHeader));
+		*str >> smpHdr;
 		if( ( smpHdr.length == 0 ) || ( ( smpHdr.memSeg[0] == 0 ) && ( smpHdr.memSeg[1] == 0 ) && ( smpHdr.memSeg[2] == 0 ) ) )
 			return true;
 		if( !std::equal( smpHdr.ID, smpHdr.ID + 4, "SCRS" ) ) {
@@ -103,13 +102,13 @@ bool S3mSample::load( BinStream& str, const size_t pos, bool imagoLoopEnd )
 		setVolume( smpHdr.volume );
 		setFrequency( smpHdr.c2spd );
 		bool loadStereo = ( smpHdr.flags & static_cast<uint8_t>(s3mFlagSmpStereo) ) != 0;
-		setLoopType( ( smpHdr.flags & static_cast<uint8_t>(s3mFlagSmpLooped) ) == 0 ? GenSample::LoopType::None : GenSample::LoopType::Forward );
+		setLoopType( ( smpHdr.flags & static_cast<uint8_t>(s3mFlagSmpLooped) ) == 0 ? Sample::LoopType::None : Sample::LoopType::Forward );
 		setTitle( stringncpy( smpHdr.sampleName, 28 ) );
 		setFilename( stringncpy( smpHdr.filename, 12 ) );
 		// ok, header loaded, now load the sample data
-		str.seek( ( ( smpHdr.memSeg[0] << 16 ) | ( smpHdr.memSeg[2] << 8 ) | smpHdr.memSeg[1] ) * 16 );
+		str->seek( ( ( smpHdr.memSeg[0] << 16 ) | ( smpHdr.memSeg[2] << 8 ) | smpHdr.memSeg[1] ) * 16 );
 		BOOST_ASSERT( length() != 0 );
-		if( str.fail() ) {
+		if( !str->good() ) {
 			setFrequency( 0 );
 			logger()->warn( L4CXX_LOCATION, "Seek failed or length is zero, assuming empty." );
 			return true;
@@ -120,8 +119,7 @@ bool S3mSample::load( BinStream& str, const size_t pos, bool imagoLoopEnd )
 			uint16_t smp16;
 			auto smpPtr = beginIterator();
 			for( PositionType i = 0; i < length(); i++ ) {
-				str.read( &smp16 );
-				if( str.fail() ) {
+				if( !(*str>>smp16) ) {
 					logger()->warn( L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes." );
 					return true;
 				}
@@ -132,8 +130,7 @@ bool S3mSample::load( BinStream& str, const size_t pos, bool imagoLoopEnd )
 				logger()->info( L4CXX_LOCATION, "Loading Stereo..." );
 				smpPtr = beginIterator();
 				for( PositionType i = 0; i < length(); i++ ) {
-					str.read( &smp16 );
-					if( str.fail() ) {
+					if( !(*str>>smp16) ) {
 						logger()->warn( L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes." );
 						return true;
 					}
@@ -147,8 +144,7 @@ bool S3mSample::load( BinStream& str, const size_t pos, bool imagoLoopEnd )
 			uint8_t smp8;
 			auto smpPtr = beginIterator();
 			for( PositionType i = 0; i < length(); i++ ) {
-				str.read( &smp8 );
-				if( str.fail() ) {
+				if( !(*str>>smp8) ) {
 					logger()->warn( L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes." );
 					return true;
 				}
@@ -159,8 +155,7 @@ bool S3mSample::load( BinStream& str, const size_t pos, bool imagoLoopEnd )
 				logger()->info( L4CXX_LOCATION, "Loading Stereo..." );
 				smpPtr = beginIterator();
 				for( PositionType i = 0; i < length(); i++ ) {
-					str.read( &smp8 );
-					if( str.fail() ) {
+					if( !(*str>>smp8) ) {
 						logger()->warn( L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes." );
 						return true;
 					}
@@ -186,7 +181,7 @@ bool S3mSample::isHighQuality() const
 
 light4cxx::Logger* S3mSample::logger()
 {
-	return light4cxx::Logger::get( GenSample::logger()->name() + ".s3m" );
+	return light4cxx::Logger::get( Sample::logger()->name() + ".s3m" );
 }
 
 }

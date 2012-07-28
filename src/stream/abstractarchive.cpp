@@ -16,37 +16,40 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "fbinstream.h"
+#include "abstractarchive.h"
+#include "iserializable.h"
 
-#include <fstream>
+AbstractArchive::AbstractArchive( const Stream::Ptr& stream ) : m_loading( false ), m_stream( stream )
+{ }
 
-FBinStream::FBinStream( const std::string& filename ) :
-	BinStream( SpIoStream( new std::fstream( filename.c_str(), std::ios::in | std::ios::binary ) ) ),
-	m_filename( filename ), m_size( 0 )
+AbstractArchive::~AbstractArchive() = default;
+
+bool AbstractArchive::isLoading() const
 {
-	stream()->seekg( 0, std::ios::end );
-	m_size = stream()->tellg();
-	stream()->seekg( 0 );
+	return m_loading;
 }
 
-FBinStream::~FBinStream()
+bool AbstractArchive::isSaving() const
 {
-	if( stream().unique() ) {
-		std::static_pointer_cast<std::fstream>( stream() )->close();
-	}
+	return !m_loading;
 }
 
-bool FBinStream::isOpen() const
+AbstractArchive& AbstractArchive::archive( ISerializable* data )
 {
-	return std::static_pointer_cast<std::fstream>( stream() )->is_open();
+	BOOST_ASSERT( data != nullptr );
+	return data->serialize( this );
 }
 
-std::string FBinStream::filename() const
+void AbstractArchive::finishSave()
 {
-	return m_filename;
+	BOOST_ASSERT( !m_loading );
+	m_stream->seek( 0 );
+	m_loading = true;
 }
 
-size_t FBinStream::size() const
+void AbstractArchive::finishLoad()
 {
-	return m_size;
+	BOOST_ASSERT( m_loading );
+	m_stream->seek( 0 );
 }
+

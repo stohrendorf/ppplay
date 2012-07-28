@@ -67,7 +67,7 @@ void sumAbsValues( const AudioFrameBuffer& buf, uint64_t& left, uint64_t& right 
 void AudioFifo::requestThread()
 {
 	AudioFrameBuffer buffer;
-	while( IAudioSource::Ptr src = m_source.lock() ) {
+	while( AbstractAudioSource::Ptr src = m_source.lock() ) {
 		if( m_stopping ) {
 			break;
 		}
@@ -96,7 +96,7 @@ void AudioFifo::requestThread()
 	}
 }
 
-AudioFifo::AudioFifo( const IAudioSource::WeakPtr& source, size_t minFrameCount, bool doVolumeCalc ) :
+AudioFifo::AudioFifo( const AbstractAudioSource::WeakPtr& source, size_t minFrameCount, bool doVolumeCalc ) :
 	m_queue(), m_queuedFrames( 0 ), m_minFrameCount( minFrameCount ),
 	m_requestThread(), m_source( source ), m_volLeftSum( 0 ), m_volRightSum( 0 ),
 	m_doVolumeCalc( doVolumeCalc ), m_stopping( false ), m_mutex()

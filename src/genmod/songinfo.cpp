@@ -1,3 +1,3 @@
 #include "songinfo.h"
 
-template class TrackingContainer<IArchive*>;
+template class TrackingContainer<AbstractArchive*>;

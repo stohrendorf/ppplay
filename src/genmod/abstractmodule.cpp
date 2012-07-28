@@ -21,10 +21,10 @@
  * @{
  */
 
-#include "genmodule.h"
+#include "abstractmodule.h"
 
 #include "genbase.h"
-#include "genorder.h"
+#include "abstractorder.h"
 #include "stream/memarchive.h"
 
 #include <boost/filesystem.hpp>
@@ -34,7 +34,7 @@
 namespace ppp
 {
 
-GenModule::GenModule( int maxRpt ) :
+AbstractModule::AbstractModule( int maxRpt ) :
 	m_metaInfo(),
 	m_orders(),
 	m_state(),
@@ -47,22 +47,22 @@ GenModule::GenModule( int maxRpt ) :
 	BOOST_ASSERT_MSG( maxRpt != 0, "Maximum repeat count may not be 0" );
 }
 
-GenModule::~GenModule()
+AbstractModule::~AbstractModule()
 {
 	deleteAll(m_orders);
 }
 
-IArchive& GenModule::serialize( IArchive* data )
+AbstractArchive& AbstractModule::serialize( AbstractArchive* data )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	for( GenOrder* order : m_orders ) {
+	for( AbstractOrder* order : m_orders ) {
 		data->archive( order );
 	}
 	data->archive( &m_state );
 	return *data;
 }
 
-std::string GenModule::filename()
+std::string AbstractModule::filename()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	boost::filesystem::path path( m_metaInfo.filename );
@@ -70,26 +70,26 @@ std::string GenModule::filename()
 	return path.filename().native();
 }
 
-std::string GenModule::trimmedTitle() const
+std::string AbstractModule::trimmedTitle() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return boost::algorithm::trim_copy( m_metaInfo.title );
 }
 
-uint32_t GenModule::timeElapsed() const
+uint32_t AbstractModule::timeElapsed() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return static_cast<uint32_t>( m_state.playedFrames / frequency() );
 }
 
-size_t GenModule::length() const
+size_t AbstractModule::length() const
 {
 // HACK this is dangerous, but avoids a deadlock...
 // boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_songs->length;
 }
 
-size_t GenModule::internal_getAudioData( AudioFrameBuffer& buffer, size_t size )
+size_t AbstractModule::internal_getAudioData( AudioFrameBuffer& buffer, size_t size )
 {
 	if( !buffer ) {
 		buffer.reset( new AudioFrameBuffer::element_type );
@@ -113,18 +113,18 @@ size_t GenModule::internal_getAudioData( AudioFrameBuffer& buffer, size_t size )
 	return buffer->size();
 }
 
-size_t GenModule::internal_preferredBufferSize() const
+size_t AbstractModule::internal_preferredBufferSize() const
 {
 	return tickBufferLength();
 }
 
-void GenModule::addOrder( GenOrder* o )
+void AbstractModule::addOrder( AbstractOrder* o )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_orders.push_back( o );
 }
 
-GenOrder* GenModule::orderAt( size_t idx )
+AbstractOrder* AbstractModule::orderAt( size_t idx )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if(idx >= m_orders.size()) {
@@ -134,19 +134,19 @@ GenOrder* GenModule::orderAt( size_t idx )
 	return m_orders.at( idx );
 }
 
-size_t GenModule::orderCount() const
+size_t AbstractModule::orderCount() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_orders.size();
 }
 
-int GenModule::maxRepeat() const
+int AbstractModule::maxRepeat() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_maxRepeat;
 }
 
-bool GenModule::setOrder( size_t o, bool estimateOnly, bool forceSave )
+bool AbstractModule::setOrder( size_t o, bool estimateOnly, bool forceSave )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	bool orderChanged = (o != m_state.order) || forceSave;
@@ -178,72 +178,72 @@ bool GenModule::setOrder( size_t o, bool estimateOnly, bool forceSave )
 	return m_state.order < orderCount();
 }
 
-void GenModule::setRow( int16_t r )
+void AbstractModule::setRow( int16_t r )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_state.row = r;
 }
 
-void GenModule::nextTick()
+void AbstractModule::nextTick()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	BOOST_ASSERT_MSG( m_state.speed != 0, "Data corruption: speed==0" );
 	m_state.tick = ( m_state.tick + 1 ) % m_state.speed;
 }
 
-void GenModule::setTempo( uint8_t t )
+void AbstractModule::setTempo( uint8_t t )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if( t == 0 ) return;
 	m_state.tempo = t;
 }
 
-void GenModule::setSpeed( uint8_t s )
+void AbstractModule::setSpeed( uint8_t s )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if( s == 0 ) return;
 	m_state.speed = s;
 }
 
-uint16_t GenModule::songCount() const
+uint16_t AbstractModule::songCount() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_songs.size();
 }
 
-int16_t GenModule::currentSongIndex() const
+int16_t AbstractModule::currentSongIndex() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_songs.where();
 }
 
-uint16_t GenModule::tickBufferLength() const
+uint16_t AbstractModule::tickBufferLength() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	BOOST_ASSERT_MSG( m_state.tempo != 0, "Data corruption: tempo==0" );
 	return frequency() * 5 / ( m_state.tempo << 1 );
 }
 
-light4cxx::Logger* GenModule::logger()
+light4cxx::Logger* AbstractModule::logger()
 {
 	return light4cxx::Logger::get( "module" );
 }
 
-void GenModule::loadInitialState()
+void AbstractModule::loadInitialState()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	logger()->info(L4CXX_LOCATION, "Loading initial state");
 	m_initialState->archive( this ).finishLoad();
 }
 
-void GenModule::saveInitialState()
+void AbstractModule::saveInitialState()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	logger()->info(L4CXX_LOCATION, "Storing initial state");
 	m_initialState->archive( this ).finishSave();
 }
 
-bool GenModule::jumpNextOrder()
+bool AbstractModule::jumpNextOrder()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if( !m_songs->states.atEnd() ) {
@@ -281,7 +281,7 @@ bool GenModule::jumpNextOrder()
 	return true;
 }
 
-bool GenModule::jumpPrevOrder()
+bool AbstractModule::jumpPrevOrder()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if( !m_songs->states.atFront() ) {
@@ -291,7 +291,7 @@ bool GenModule::jumpPrevOrder()
 	return false;
 }
 
-bool GenModule::jumpNextSong()
+bool AbstractModule::jumpNextSong()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 // 	bool wasPaused = paused();
@@ -333,7 +333,7 @@ bool GenModule::jumpNextSong()
 	return true;
 }
 
-bool GenModule::jumpPrevSong()
+bool AbstractModule::jumpPrevSong()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if( songCount()<=1 ) {
@@ -351,7 +351,7 @@ bool GenModule::jumpPrevSong()
 	return true;
 }
 
-bool GenModule::internal_initialize( uint32_t )
+bool AbstractModule::internal_initialize( uint32_t )
 {
 	if( initialized() ) {
 		return true;
@@ -373,25 +373,25 @@ bool GenModule::internal_initialize( uint32_t )
 	return true;
 }
 
-size_t GenModule::buildTick( AudioFrameBuffer* buf )
+size_t AbstractModule::buildTick( AudioFrameBuffer* buf )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return internal_buildTick(buf);
 }
 
-std::string GenModule::channelCellString( size_t idx ) const
+std::string AbstractModule::channelCellString( size_t idx ) const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return internal_channelCellString(idx);
 }
 
-int GenModule::channelCount() const
+int AbstractModule::channelCount() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return internal_channelCount();
 }
 
-std::string GenModule::channelStatus( size_t idx ) const
+std::string AbstractModule::channelStatus( size_t idx ) const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return internal_channelStatus(idx);

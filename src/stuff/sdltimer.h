@@ -17,8 +17,8 @@
 */
 
 
-#ifndef SDLTIMER_H
-#define SDLTIMER_H
+#ifndef PPPLAY_SDLTIMER_H
+#define PPPLAY_SDLTIMER_H
 
 #include "itimer.h"
 

@@ -22,22 +22,28 @@ configure_file(
 
 set_source_files_properties(Mainpage.dox PROPERTIES GENERATED TRUE)
 
+include(FindLibArchive)
+find_library(LibArchive REQUIRED)
+include_directories(${LibArchive_INCLUDE_DIR})
+
 add_library(ppplay_stream SHARED
-	stream/binstream.cpp
-	stream/fbinstream.cpp
-	stream/iarchive.cpp
+	stream/stream.cpp
+	stream/filestream.cpp
+	stream/abstractarchive.cpp
 	stream/memarchive.cpp
-	stream/sbinstream.cpp
+	stream/memorystream.cpp
+	stream/archivefilestream.cpp
 )
+target_link_libraries(ppplay_stream ${LibArchive_LIBRARY})
 install(TARGETS ppplay_stream DESTINATION lib)
 
 add_library(ppplay_module_base SHARED
 	genmod/breseninter.cpp
 	genmod/genbase.cpp
-	genmod/genchannel.cpp
-	genmod/genmodule.cpp
-	genmod/genorder.cpp
-	genmod/gensample.cpp
+	genmod/abstractchannel.cpp
+	genmod/abstractmodule.cpp
+	genmod/abstractorder.cpp
+	genmod/sample.cpp
 	genmod/ipatterncell.cpp
 	genmod/modulestate.cpp
 	genmod/songinfo.cpp
@@ -45,14 +51,14 @@ add_library(ppplay_module_base SHARED
 install(TARGETS ppplay_module_base DESTINATION lib)
 
 add_library(ppplay_core SHARED
-	stuff/moduleregistry.cpp
+	stuff/pluginregistry.cpp
 	stuff/numberutils.cpp
 	stuff/sdltimer.cpp
 	stuff/stringutils.cpp
 	output/audiofifo.cpp
 	output/audiotypes.cpp
-	output/iaudiooutput.cpp
-	output/iaudiosource.cpp
+	output/abstractaudiooutput.cpp
+	output/abstractaudiosource.cpp
 	light4cxx/location.cpp
 	light4cxx/logger.cpp
 )

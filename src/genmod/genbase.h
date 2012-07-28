@@ -20,6 +20,8 @@
 #define GENBASE_H
 
 #include <array>
+#include <cstdint>
+#include <type_traits>
 
 namespace ppp
 {
@@ -34,6 +36,116 @@ namespace ppp
  */
 extern const std::array<const char[3], 12> NoteNames;
 
+/**
+ * @class RememberByte
+ * @brief A single byte refusing assigning zero
+ * @tparam TSplitNibbles Set to @c true to handle each nibble separately.
+ */
+template<bool TSplitNibbles>
+class RememberByte
+{
+private:
+	//! @brief Value of the byte
+	uint8_t m_value;
+	
+public:
+	//! @brief Template parameter access
+	static constexpr bool SplitNibbles = TSplitNibbles;
+	
+	/**
+	 * @brief Constructor
+	 * @param[in] val Initial value
+	 */
+	constexpr RememberByte(uint8_t val = 0) : m_value(val)
+	{
+	}
+	
+	/**
+	 * @brief Implicit cast operator, ease usage
+	 * @return m_value
+	 */
+	constexpr operator uint8_t() const
+	{
+		return m_value;
+	}
+	
+	/**
+	 * @brief Assignment operator
+	 * @param[in] val Value to assign, no-op when @c val==0
+	 * @return Reference to @c this
+	 * @see force()
+	 * @see noNibbles()
+	 */
+	inline RememberByte<TSplitNibbles>& operator=(uint8_t val);
+	
+	/**
+	 * @brief Assignment function, forces m_value to be set
+	 * @param[in] val Value to assign
+	 * @see operator=()
+	 * @see noNibbles()
+	 */
+	constexpr void force(uint8_t val)
+	{
+		m_value = val;
+	}
+	
+	/**
+	 * @brief Like operator=(), but always ignores nibble separation
+	 * @tparam T Alias for TSplitNibbles
+	 * @param[in] val Value to assign
+	 * @note Only available when @c TSplitNibbles==true
+	 * @warning Do not manually specify T!
+	 * @see operator=()
+	 * @see force()
+	 */
+	template<bool T = TSplitNibbles>
+	typename std::enable_if<T,void>::type noNibbles(uint8_t val)
+	{
+		if(val != 0) {
+			m_value = val;
+		}
+	}
+	
+	/**
+	 * @brief High nibble of the value
+	 * @return m_value>>4
+	 */
+	constexpr uint8_t hi() const { return m_value>>4; }
+	
+	/**
+	 * @brief Low nibble of the value
+	 * @return m_value&0x0f
+	 */
+	constexpr uint8_t lo() const { return m_value&0x0f; }
+	
+	/**
+	 * @brief Reference to the data
+	 * @return Reference to m_value
+	 * @note Used for serializing
+	 */
+	uint8_t& data() { return m_value; }
+};
+
+template<>
+inline RememberByte<true>& RememberByte<true>::operator=(uint8_t val)
+{
+	if((val&0x0f) != 0) {
+		m_value = (m_value&0xf0) | (val&0x0f);
+	}
+	if((val&0xf0) != 0) {
+		m_value = (m_value&0x0f) | (val&0xf0);
+	}
+	return *this;
+}
+
+template<>
+inline RememberByte<false>& RememberByte<false>::operator=(uint8_t val)
+{
+	if(val != 0) {
+		m_value = val;
+	}
+	return *this;
+}
 
 /**
  * @}

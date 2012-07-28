@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef STRINGUTILS_H
-#define STRINGUTILS_H
+#ifndef PPPLAY_STRINGUTILS_H
+#define PPPLAY_STRINGUTILS_H
 
 #include <string>
 #include <boost/format.hpp>

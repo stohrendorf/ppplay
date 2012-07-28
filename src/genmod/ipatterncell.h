@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef IPATTERNCELL_H
-#define IPATTERNCELL_H
+#ifndef PPPLAY_IPATTERNCELL_H
+#define PPPLAY_IPATTERNCELL_H
 
 #include "stream/iserializable.h"
 
@@ -44,7 +44,7 @@ public:
 	/**
 	 * @brief Destructor
 	 */
-	virtual ~IPatternCell();
+	virtual ~IPatternCell() {}
 	/**
 	 * @brief Clears the cell's data
 	 */

@@ -23,7 +23,7 @@
 
 void MP3AudioOutput::encodeThread()
 {
-	while( IAudioSource::Ptr srcLock = source().lock() ) {
+	while( AbstractAudioSource::Ptr srcLock = source().lock() ) {
 		boost::mutex::scoped_lock lock( m_mutex );
 		if( m_paused || srcLock->paused() ) {
 			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
@@ -64,7 +64,7 @@ void MP3AudioOutput::encodeThread()
 }
 
 
-MP3AudioOutput::MP3AudioOutput( const IAudioSource::WeakPtr& src, const std::string& filename ): IAudioOutput( src ),
+MP3AudioOutput::MP3AudioOutput( const AbstractAudioSource::WeakPtr& src, const std::string& filename ): AbstractAudioOutput( src ),
 	m_lameGlobalFlags( nullptr ), m_file(), m_filename( filename ), m_buffer( nullptr ), m_encoderThread(), m_paused( true ), m_mutex()
 {
 	m_buffer = new uint8_t[BufferSize];
@@ -162,5 +162,5 @@ void MP3AudioOutput::setID3( const std::string& title, const std::string& album,
 
 light4cxx::Logger* MP3AudioOutput::logger()
 {
-	return light4cxx::Logger::get( IAudioOutput::logger()->name() + ".mp3" );
+	return light4cxx::Logger::get( AbstractAudioOutput::logger()->name() + ".mp3" );
 }

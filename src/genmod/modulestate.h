@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MODULESTATE_H
-#define MODULESTATE_H
+#ifndef PPPLAY_MODULESTATE_H
+#define PPPLAY_MODULESTATE_H
 
 #include "stream/iserializable.h"
 
@@ -49,7 +49,7 @@ struct ModuleState : public ISerializable
 		pattern( 0 )
 	{
 	}
-	virtual IArchive& serialize( IArchive* data );
+	virtual AbstractArchive& serialize( AbstractArchive* data );
 
 	//! @brief Speed
 	int16_t speed;

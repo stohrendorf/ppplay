@@ -24,11 +24,11 @@
  * @{
  */
 
-#include "genmod/gensample.h"
+#include "genmod/sample.h"
 
 #include "light4cxx/logger.h"
 
-class BinStream;
+class Stream;
 
 namespace ppp
 {
@@ -39,7 +39,7 @@ namespace s3m
  * @class S3mSample
  * @brief Sample class for S3M Samples
  */
-class S3mSample : public GenSample
+class S3mSample : public Sample
 {
 	DISABLE_COPY( S3mSample )
 private:
@@ -55,7 +55,7 @@ public:
 	 * @param[in] imagoLoopEnd If @c true, the loop end is decreased by 1
 	 * @return @c true on success
 	 */
-	bool load( BinStream& str, size_t pos, bool imagoLoopEnd );
+	bool load( Stream* str, size_t pos, bool imagoLoopEnd );
 	/**
 	 * @brief Whether this is a 16-bit sample
 	 * @return m_highQuality

@@ -16,12 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef GENMODULE_H
-#define GENMODULE_H
+#ifndef PPPLAY_ABSTRACTMODULE_H
+#define PPPLAY_ABSTRACTMODULE_H
 
-#include "modulemetainfo.h"
 #include "modulestate.h"
-#include "output/iaudiosource.h"
+#include "output/abstractaudiosource.h"
 #include "stuff/trackingcontainer.h"
 #include "songinfo.h"
 
@@ -33,28 +32,47 @@ namespace ppp
  * @{
  */
 
-class GenOrder;
+class AbstractOrder;
 /**
  * @class GenModule
  * @brief An abstract class for all module classes
  * @todo Create a function to retrieve only the module's title without loading the whole module
  * @todo Multi-song: Reset module/channels on each new song?
  */
-class GenModule : public ISerializable, public IAudioSource
+class AbstractModule : public ISerializable, public AbstractAudioSource
 {
-	DISABLE_COPY( GenModule )
-	GenModule() = delete;
+	DISABLE_COPY( AbstractModule )
+	AbstractModule() = delete;
 public:
-	typedef std::shared_ptr<GenModule> Ptr;
+	typedef std::shared_ptr<AbstractModule> Ptr;
+
+	/**
+	 * @class MetaInfo
+	 * @brief Meta information about a module
+	 */
+	struct MetaInfo
+	{
+		explicit MetaInfo() : filename(), title(), trackerInfo()
+		{
+		}
+		
+		//! @brief Filename of the module
+		std::string filename;
+		//! @brief Title of the module
+		std::string title;
+		//! @brief Tracker information (Name and Version)
+		std::string trackerInfo;
+	};
+
 private:
-	ModuleMetaInfo m_metaInfo;
+	MetaInfo m_metaInfo;
 	//! @brief Order list @note <b>Not initialized here!</b>
-	std::vector<GenOrder*> m_orders;
+	std::vector<AbstractOrder*> m_orders;
 	ModuleState m_state;
 	TrackingContainer<SongInfo> m_songs;
 	//! @brief Maximum module loops if module patterns are played multiple times
 	int m_maxRepeat;
-	IArchive* m_initialState;
+	AbstractArchive* m_initialState;
 	bool m_isPreprocessing;
 	mutable boost::recursive_mutex m_mutex;
 public:
@@ -68,11 +86,11 @@ public:
 	 * @param[in] maxRpt Maximum repeat count for repeating modules
 	 * @pre @c maxRpt>0
 	 */
-	GenModule( int maxRpt );
+	AbstractModule( int maxRpt );
 	/**
 	 * @brief The destructor
 	 */
-	virtual ~GenModule();
+	virtual ~AbstractModule();
 	/**
 	 * @}
 	 */
@@ -155,7 +173,7 @@ public:
 	 * @}
 	 */
 	//END
-	const ModuleMetaInfo metaInfo() const
+	const MetaInfo metaInfo() const
 	{
 		return m_metaInfo;
 	}
@@ -176,7 +194,7 @@ protected:
 	 * @pre m_playbackInfo.tempo != 0
 	 */
 	uint16_t tickBufferLength() const;
-	ModuleMetaInfo& metaInfo()
+	MetaInfo& metaInfo()
 	{
 		return m_metaInfo;
 	}
@@ -190,18 +208,18 @@ protected:
 	 * Here's the current procedure used when data serialization is needed.
 	 * @image html serialization.png
 	 */
-	virtual IArchive& serialize( IArchive* data );
+	virtual AbstractArchive& serialize( AbstractArchive* data );
 	/**
 	 * @brief Adds an order to m_orders
 	 * @param[in] o The new order
 	 */
-	void addOrder( ppp::GenOrder* o );
+	void addOrder( ppp::AbstractOrder* o );
 	/**
 	 * @brief Get an order pointer
 	 * @param[in] idx Index of requested order
 	 * @return Order pointer
 	 */
-	GenOrder* orderAt( size_t idx );
+	AbstractOrder* orderAt( size_t idx );
 	/**
 	 * @brief Get the number of orders
 	 * @return Number of orders
@@ -269,7 +287,7 @@ private:
 	 * @brief Get the channel cell string
 	 * @param[in] idx Channel index
 	 * @return String representation of the channel's cell
-	 * @see GenChannel::getCellString
+	 * @see AbstractChannel::getCellString
 	 */
 	virtual std::string internal_channelCellString( size_t idx ) const = 0;
 	/**
@@ -282,7 +300,7 @@ private:
 	 * @param[out] buf Pointer to the destination buffer or @c NULL to to only length estimation
 	 * @return Length of the current tick, or 0 when end of song is reached.
 	 * @note Time-critical
-	 * @see GenChannel::mixTick()
+	 * @see AbstractChannel::mixTick()
 	 *
 	 * @details
 	 * When @a buf is @c NULL, the implementation and its callees shall only execute

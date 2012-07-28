@@ -25,7 +25,7 @@ static light4cxx::Logger* logger()
 	return light4cxx::Logger::get( "ui.main" );
 }
 
-UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IAudioOutput::Ptr& output ):
+UIMain::UIMain( ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, const AbstractAudioOutput::Ptr& output ):
 	Widget( parent ), SDLTimer( 1000 / 30 ),
 	m_position( nullptr ),
 	m_screenSep1( nullptr ),
@@ -99,7 +99,7 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::GenModule::Ptr& module, const IA
 	m_modTitle->alignment = ppg::Label::Alignment::Center;
 	m_modTitle->setFgColorRange( 0, ppg::Color::BrightWhite, 0 );
 	m_modTitle->show();
-	m_trackerInfo->setText( stringFmt( "Tracker: %s - Channels: %d", std::const_pointer_cast<const ppp::GenModule>(module)->metaInfo().trackerInfo, int(module->channelCount()) ) );
+	m_trackerInfo->setText( stringFmt( "Tracker: %s - Channels: %d", std::const_pointer_cast<const ppp::AbstractModule>(module)->metaInfo().trackerInfo, int(module->channelCount()) ) );
 	if( module->songCount()>1 ) {
 		m_trackerInfo->setText( m_trackerInfo->text() + " - Multi-song" );
 	}
@@ -160,8 +160,8 @@ ppg::Label* UIMain::modTitle()
 
 void UIMain::onTimer()
 {
-	IAudioOutput::Ptr outLock( m_output.lock() );
-	const std::shared_ptr<const ppp::GenModule> modLock = std::const_pointer_cast<const ppp::GenModule>( m_module.lock() );
+	AbstractAudioOutput::Ptr outLock( m_output.lock() );
+	const std::shared_ptr<const ppp::AbstractModule> modLock = std::const_pointer_cast<const ppp::AbstractModule>( m_module.lock() );
 	if( m_module.expired() || m_output.expired() || !ppg::SDLScreen::instance() ) {
 		logger()->trace( L4CXX_LOCATION, "Module, Output Device or Screen expired" );
 		return;

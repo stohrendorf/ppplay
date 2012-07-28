@@ -20,19 +20,19 @@
 #ifndef MODORDER_H
 #define MODORDER_H
 
-#include "genmod/genorder.h"
+#include "genmod/abstractorder.h"
 
 namespace ppp
 {
 namespace mod
 {
 
-class ModOrder : public GenOrder
+class ModOrder : public AbstractOrder
 {
 	DISABLE_COPY( ModOrder )
 	ModOrder() = delete;
 public:
-	inline ModOrder( uint8_t idx ) : GenOrder( idx ) {
+	inline ModOrder( uint8_t idx ) : AbstractOrder( idx ) {
 	}
 	virtual bool isUnplayed() const;
 };

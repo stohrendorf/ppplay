@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef RECT_H
-#define RECT_H
+#ifndef PPG_RECT_H
+#define PPG_RECT_H
 
 #include "point.h"
 

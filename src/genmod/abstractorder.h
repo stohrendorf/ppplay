@@ -16,12 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef GENORDER_H
-#define GENORDER_H
+#ifndef PPPLAY_ABSTRACTORDER_H
+#define PPPLAY_ABSTRACTORDER_H
 
 #include "stream/iserializable.h"
-#include "stuff/utils.h"
-
 #include "light4cxx/logger.h"
 
 #include <vector>
@@ -35,13 +33,13 @@ namespace ppp
  */
 
 /**
- * @class GenOrder
+ * @class AbstractOrder
  * @brief An order list item
  */
-class GenOrder : public ISerializable
+class AbstractOrder : public ISerializable
 {
-	DISABLE_COPY( GenOrder )
-	GenOrder() = delete;
+	DISABLE_COPY( AbstractOrder )
+	AbstractOrder() = delete;
 private:
 	//! @brief Pattern index of this order
 	uint8_t m_index;
@@ -52,7 +50,7 @@ public:
 	 * @brief Constructor
 	 * @param[in] idx Order index
 	 */
-	GenOrder( uint8_t idx );
+	AbstractOrder( uint8_t idx );
 	/**
 	 * @brief Return the pattern index associated with this order
 	 * @return m_index
@@ -63,7 +61,7 @@ public:
 	 * @param[in] n New index
 	 */
 	void setIndex( uint8_t n );
-	virtual IArchive& serialize( IArchive* data );
+	virtual AbstractArchive& serialize( AbstractArchive* data );
 	/**
 	 * @brief Get the playback count of this order
 	 * @return m_playbackCount
@@ -90,6 +88,6 @@ protected:
 
 }
 
-extern template class std::vector<ppp::GenOrder*>;
+extern template class std::vector<ppp::AbstractOrder*>;
 
 #endif

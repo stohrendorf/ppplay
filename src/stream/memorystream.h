@@ -16,40 +16,22 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "iarchive.h"
-#include "iserializable.h"
+#ifndef PPPLAY_MEMORYSTREAM_H
+#define PPPLAY_MEMORYSTREAM_H
 
-IArchive::IArchive( const BinStream::Ptr& stream ) : m_loading( false ), m_stream( stream )
-{ }
+#include "stream.h"
 
-IArchive::~IArchive() = default;
-
-bool IArchive::isLoading() const
+/**
+ * @class SBinStream
+ * @ingroup Common
+ * @brief Class derived from BinStream for a std::stringstream
+ */
+class MemoryStream : public Stream
 {
-	return m_loading;
-}
+	DISABLE_COPY( MemoryStream )
+public:
+	explicit MemoryStream( const std::string& name ="SBinStream" );
+	virtual size_t size() const;
+};
 
-bool IArchive::isSaving() const
-{
-	return !m_loading;
-}
-
-IArchive& IArchive::archive( ISerializable* data )
-{
-	BOOST_ASSERT( data != nullptr );
-	return data->serialize( this );
-}
-
-void IArchive::finishSave()
-{
-	BOOST_ASSERT( !m_loading );
-	m_stream->seek( 0 );
-	m_loading = true;
-}
-
-void IArchive::finishLoad()
-{
-	BOOST_ASSERT( m_loading );
-	m_stream->seek( 0 );
-}
-
+#endif

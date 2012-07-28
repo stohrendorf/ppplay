@@ -1,6 +1,6 @@
 /*
     PeePeePlayer - an old-fashioned module player
-    Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
+    Copyright (C) 2012  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,18 +16,24 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "sbinstream.h"
+#ifndef PPPLAY_ARCHIVEFILESTREAM_H
+#define PPPLAY_ARCHIVEFILESTREAM_H
 
-#include <sstream>
+#include "memorystream.h"
 
-SBinStream::SBinStream() : BinStream( BinStream::SpIoStream( new std::stringstream( std::ios::in | std::ios::out | std::ios::binary ) ) )
+/**
+ * @class ABinStream
+ * @ingroup Common
+ * @brief Class derived from SBinStream for an archive file
+ */
+class ArchiveFileStream : public MemoryStream
 {
-}
+	DISABLE_COPY( ArchiveFileStream )
+public:
+	explicit ArchiveFileStream( const std::string& filename );
+	bool isOpen() const { return m_isOpen; }
+private:
+	bool m_isOpen;
+};
 
-SBinStream::~SBinStream() = default;
-
-size_t SBinStream::size() const
-{
-	std::shared_ptr<std::stringstream> p = std::static_pointer_cast<std::stringstream>( stream() );
-	return p->str().size();
-}
+#endif

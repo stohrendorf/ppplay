@@ -20,19 +20,19 @@
 #ifndef XMORDER_H
 #define XMORDER_H
 
-#include "genmod/genorder.h"
+#include "genmod/abstractorder.h"
 
 namespace ppp
 {
 namespace xm
 {
 
-class XmOrder : public GenOrder
+class XmOrder : public AbstractOrder
 {
 	DISABLE_COPY( XmOrder )
 	XmOrder() = delete;
 public:
-	inline XmOrder( uint8_t idx ) : GenOrder( idx ) {
+	inline XmOrder( uint8_t idx ) : AbstractOrder( idx ) {
 	}
 	virtual bool isUnplayed() const;
 };
