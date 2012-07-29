@@ -101,7 +101,7 @@ void PluginRegistry::findPlugins()
 	p = p.parent_path();
 	p /= "lib";
 	p /= "ppplay";
-	light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Looking for modules in %s", p.native());
+	light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Looking for plugins in %s", p.native());
 	
 	std::list<boost::filesystem3::path> paths;
 	std::copy(boost::filesystem3::directory_iterator(p), boost::filesystem3::directory_iterator(), std::back_inserter(paths));

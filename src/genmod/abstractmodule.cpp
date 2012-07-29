@@ -294,7 +294,7 @@ bool AbstractModule::jumpNextSong()
 			++m_songs;
 			m_state.playedFrames = 0;
 			m_state.pattern = orderAt( i )->index();
-			setOrder( i, false );
+			setOrder( i, false, true );
 			m_isPreprocessing = false;
 			return true;
 		}
@@ -336,7 +336,6 @@ bool AbstractModule::internal_initialize( uint32_t )
 		return true;
 	}
 	saveInitialState();
-	setOrder(0, true, true); // to allow seeking to the first order
 	
 	logger()->info( L4CXX_LOCATION, "Calculating song lengths and preparing seek operations..." );
 	while( jumpNextSong() ) {
