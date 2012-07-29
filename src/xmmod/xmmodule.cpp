@@ -177,6 +177,7 @@ bool XmModule::load( Stream* stream )
 size_t XmModule::internal_buildTick( AudioFrameBuffer* buffer )
 {
 	if( state().order >= orderCount() ) {
+		logger()->debug(L4CXX_LOCATION, "End of order list reached");
 		if( buffer ) {
 			buffer->reset();
 		}
@@ -216,6 +217,7 @@ size_t XmModule::internal_buildTick( AudioFrameBuffer* buffer )
 	}
 	nextTick();
 	if( !adjustPosition( !buffer ) ) {
+		logger()->debug(L4CXX_LOCATION, "adjustPosition(%s) failed", !buffer);
 		if( buffer ) {
 			buffer->reset();
 		}
@@ -267,6 +269,7 @@ bool XmModule::adjustPosition( bool estimateOnly )
 		m_doPatJump = m_isPatLoop = false;
 	}
 	if( state().order >= orderCount() ) {
+		logger()->debug(L4CXX_LOCATION, "End of order list");
 		return false;
 	}
 	if( orderChanged ) {
@@ -274,6 +277,7 @@ bool XmModule::adjustPosition( bool estimateOnly )
 		setOrder( state().order, estimateOnly );
 	}
 	if( orderAt( state().order )->playbackCount() >= maxRepeat() ) {
+		logger()->debug(L4CXX_LOCATION, "Maximum playback count reached");
 		return false;
 	}
 	return true;
