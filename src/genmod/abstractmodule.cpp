@@ -78,14 +78,12 @@ std::string AbstractModule::trimmedTitle() const
 
 uint32_t AbstractModule::timeElapsed() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return static_cast<uint32_t>( m_state.playedFrames / frequency() );
 }
 
 size_t AbstractModule::length() const
 {
-// HACK this is dangerous, but avoids a deadlock...
-// boost::recursive_mutex::scoped_lock lock(m_mutex);
+	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_songs->length;
 }
 
@@ -142,7 +140,6 @@ size_t AbstractModule::orderCount() const
 
 int AbstractModule::maxRepeat() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_maxRepeat;
 }
 
@@ -219,7 +216,6 @@ int16_t AbstractModule::currentSongIndex() const
 
 uint16_t AbstractModule::tickBufferLength() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	BOOST_ASSERT_MSG( m_state.tempo != 0, "Data corruption: tempo==0" );
 	return frequency() * 5 / ( m_state.tempo << 1 );
 }
@@ -255,28 +251,19 @@ bool AbstractModule::jumpNextOrder()
 	BOOST_ASSERT( !m_isPreprocessing );
 	m_isPreprocessing = true;
 	// maybe not processed yet, so try to jump to the next order...
-// 	const bool wasPaused = paused();
-	try {
-		logger()->debug(L4CXX_LOCATION, "Not preprocessed yet");
-// 		setPaused(true);
-		size_t ord = m_state.order;
-		do {
-			if(m_state.order>=orderCount()) {
-// 				setPaused( wasPaused );
-				m_isPreprocessing = false;
-				return false;
-			}
-			AudioFrameBuffer buf;
-			if(internal_buildTick(&buf)==0 || !buf) {
-// 				setPaused( wasPaused );
-				m_isPreprocessing = false;
-				return false;
-			}
-		} while(ord == m_state.order);
-	}
-	catch(...) {
-	}
-// 	setPaused( wasPaused );
+	logger()->debug(L4CXX_LOCATION, "Not preprocessed yet");
+	size_t ord = m_state.order;
+	do {
+		if(m_state.order>=orderCount()) {
+			m_isPreprocessing = false;
+			return false;
+		}
+		AudioFrameBuffer buf;
+		if(internal_buildTick(&buf)==0 || !buf) {
+			m_isPreprocessing = false;
+			return false;
+		}
+	} while(ord == m_state.order);
 	m_isPreprocessing = false;
 	return true;
 }
@@ -294,8 +281,6 @@ bool AbstractModule::jumpPrevOrder()
 bool AbstractModule::jumpNextSong()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-// 	bool wasPaused = paused();
-// 	setPaused(true);
 	m_isPreprocessing = true;
 	
 	logger()->debug(L4CXX_LOCATION, "Trying to jump to next song");
@@ -310,25 +295,20 @@ bool AbstractModule::jumpNextSong()
 			m_state.playedFrames = 0;
 			m_state.pattern = orderAt( i )->index();
 			setOrder( i, false );
-// 			setPaused( wasPaused );
 			m_isPreprocessing = false;
 			return true;
 		}
-// 		setPaused( wasPaused );
 		m_isPreprocessing = false;
 		return false;
 	}
 	if(m_songs.atEnd()) {
-// 		setPaused( wasPaused );
 		m_isPreprocessing = false;
 		return false;
 	}
 	++m_songs;
 	m_songs->states.revert();
 	m_songs->states.current()->archive( this ).finishLoad();
-	//BOOST_ASSERT_MSG( orderAt( m_state.order ).use_count() > 0, "Current order is a nullptr" );
 	m_state.pattern = orderAt( m_state.order )->index();
-// 	setPaused( wasPaused );
 	m_isPreprocessing = false;
 	return true;
 }
@@ -347,7 +327,6 @@ bool AbstractModule::jumpPrevSong()
 	--m_songs;
 	m_songs->states.revert();
 	m_songs->states.current()->archive( this ).finishLoad();
-	//state().pattern = orderAt( m_state.order ).index();
 	return true;
 }
 
@@ -357,6 +336,7 @@ bool AbstractModule::internal_initialize( uint32_t )
 		return true;
 	}
 	saveInitialState();
+	setOrder(0, true, true); // to allow seeking to the first order
 	
 	logger()->info( L4CXX_LOCATION, "Calculating song lengths and preparing seek operations..." );
 	while( jumpNextSong() ) {
@@ -368,7 +348,6 @@ bool AbstractModule::internal_initialize( uint32_t )
 	}
 	logger()->info( L4CXX_LOCATION, "Lengths calculated, resetting module." );
 	loadInitialState();
-	// FIXME m_songs.removeEmptySongs();
 	m_songs.revert();
 	return true;
 }

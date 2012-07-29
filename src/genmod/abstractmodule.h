@@ -71,7 +71,7 @@ private:
 	ModuleState m_state;
 	TrackingContainer<SongInfo> m_songs;
 	//! @brief Maximum module loops if module patterns are played multiple times
-	int m_maxRepeat;
+	const int m_maxRepeat;
 	AbstractArchive* m_initialState;
 	bool m_isPreprocessing;
 	mutable boost::recursive_mutex m_mutex;

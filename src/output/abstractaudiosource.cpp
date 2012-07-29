@@ -26,7 +26,6 @@ AbstractAudioSource::~AbstractAudioSource() = default;
 
 bool AbstractAudioSource::initialized() const
 {
-	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_initialized;
 }
 
@@ -40,7 +39,6 @@ bool AbstractAudioSource::fail()
 
 uint32_t AbstractAudioSource::frequency() const
 {
-	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_frequency;
 }
 

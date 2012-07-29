@@ -30,7 +30,7 @@ namespace
 {
 	light4cxx::Logger* logger()
 	{
-		return light4cxx::Logger::get("ArchiveStream");
+		return light4cxx::Logger::get("ArchiveFileStream");
 	}
 }
 
