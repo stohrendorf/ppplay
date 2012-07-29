@@ -78,6 +78,7 @@ private:
 	uint8_t m_realNote;
 	//! @brief The current note cell
 	XmCell* m_currentCell;
+	RememberByte<false> m_lastNote;
 	/** @} */
 
 	/** @name Envelopes variables
@@ -398,7 +399,7 @@ private:
 	/**
 	 * @brief Trigger note
 	 */
-	void triggerNote( uint8_t note );
+	void triggerNote(  );
 	/**
 	 * @brief Retrigger note
 	 */

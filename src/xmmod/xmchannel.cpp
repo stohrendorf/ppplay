@@ -40,7 +40,7 @@ XmChannel::XmChannel( ppp::xm::XmModule* module ) :
 	AbstractChannel(),
 	m_baseVolume( 0 ), m_currentVolume( 0 ), m_realVolume( 0 ), m_panning( 0x80 ),
 	m_realPanning( 0x80 ), m_basePeriod( 0 ), m_currentPeriod( 0 ), m_autoVibDeltaPeriod( 0 ),
-	m_finetune( 0 ), m_instrumentIndex( 0 ), m_baseNote( 0 ), m_realNote( 0 ), m_currentCell( new XmCell() ),
+	m_finetune( 0 ), m_instrumentIndex( 0 ), m_baseNote( 0 ), m_realNote( 0 ), m_currentCell( new XmCell() ), m_lastNote(0),
 	m_volumeEnvelope(), m_panningEnvelope(), m_volScale( 0 ), m_volScaleRate( 0 ), m_keyOn( false ),
 	m_lastVolSlideFx( 0 ), m_lastPortaUpFx( 0 ), m_lastPortaDownFx( 0 ), m_lastPanSlideFx( 0 ),
 	m_lastOffsetFx( 0 ), m_lastFinePortaUpFx( 0 ), m_lastFinePortaDownFx( 0 ), m_lastFineVolUpFx( 0 ),
@@ -120,14 +120,14 @@ void XmChannel::fxPanSlide( uint8_t fxByte )
 	m_panning = clip( tmp, 0, 0xff );
 }
 
-void XmChannel::triggerNote(uint8_t note)
+void XmChannel::triggerNote()
 {
 	setActive(true);
-	if( note == KeyOffNote ) {
+	if( m_lastNote == KeyOffNote ) {
 		doKeyOff();
 		return;
 	}
-	m_baseNote = note;
+	m_baseNote = m_lastNote;
 	if( m_baseNote == 0 ) {
 		return;
 	}
@@ -277,6 +277,7 @@ void XmChannel::updateTick0( const XmCell* cell, bool estimateOnly )
 	
 	if( cell ) {
 		*m_currentCell = *cell;
+		m_lastNote = m_currentCell->note();
 	}
 	else {
 		m_currentCell->clear();
@@ -342,11 +343,11 @@ void XmChannel::updateTick0( const XmCell* cell, bool estimateOnly )
 	
 	BOOST_ASSERT( nextCheck != Nothing );
 	if( nextCheck == TriggerCheck ) {
-		if( m_currentCell->note() == KeyOffNote ) {
+		if( m_lastNote == KeyOffNote ) {
 			nextCheck = KeyOffCheck;
 		}
 		else {
-			triggerNote(m_currentCell->note());
+			triggerNote();
 			nextCheck = KeyOnCheck;
 		}
 	}
@@ -542,7 +543,7 @@ void XmChannel::updateTick1( const XmCell* cell, bool estimateOnly )
 	if( m_currentCell->effect() == Effect::Extended ) {
 		if( ( m_currentCell->effectValue()>>4 ) == EfxNoteDelay ) {
 			if( ( m_currentCell->effectValue()&0x0f ) == m_module->state().tick ) {
-				triggerNote(m_currentCell->note());
+				triggerNote();
 				applySampleDefaults();
 				doKeyOn();
 			}
@@ -959,25 +960,12 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 			m_fxString = "NCut \xd4";
 			break;
 		case EfxNoteDelay:
-			if( m_module->state().tick == ( fxByte&0x0f ) ) {
-				triggerNote(m_currentCell->note());
-				if( m_currentCell->note() != 0 ) {
-					applySampleDefaults();
-				}
-				doKeyOn();
-				if( m_currentCell->volume() >= 0x10 && m_currentCell->volume() <= 0x50 ) {
-					m_currentVolume = m_baseVolume = m_currentCell->volume() - 0x10;
-				}
-				else if( ( fxByte>>4 ) == VfxSetPanning ) {
-					vfxSetPan( fxByte );
-				}
-			}
 			m_fxString = "Delay\xc2";
 			break;
 		case EfxRetrigger:
 			if( ( fxByte&0x0f ) != 0 ) {
 				if( m_module->state().tick % ( fxByte&0x0f ) == 0 ) {
-					triggerNote(m_currentCell->note());
+					triggerNote();
 					doKeyOn();
 				}
 			}
@@ -1275,7 +1263,7 @@ void XmChannel::retriggerNote()
 	else if( ( cellVolFx>>4 ) == VfxSetPanning ) {
 		m_panning = (cellVolFx&0x0f)<<4;
 	}
-	triggerNote(m_currentCell->note());
+	triggerNote();
 }
 
 void XmChannel::fxRetrigger( uint8_t fxByte )
@@ -1290,7 +1278,7 @@ void XmChannel::fxRetrigger( uint8_t fxByte )
 	if( ( fxByte>>4 ) != 0 ) {
 		m_retriggerVolumeType = fxByte>>4;
 	}
-	if( m_currentCell->note() != 0 ) {
+	if( m_lastNote != 0 ) {
 		retriggerNote();
 	}
 }
@@ -1375,7 +1363,8 @@ AbstractArchive& XmChannel::serialize( AbstractArchive* data )
 	% m_autoVibSweepRate
 	% m_autoVibDepth
 	% m_autoVibPhase
-	% m_noteChanged;
+	% m_noteChanged
+	% m_lastNote.data();
 	data->archive( &m_bres );
 	return *data;
 }
