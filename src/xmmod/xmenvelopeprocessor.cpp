@@ -32,12 +32,12 @@ namespace xm
 {
 
 XmEnvelopeProcessor::XmEnvelopeProcessor()
-	: m_flags(), m_points(), m_numPoints( 0 ), m_position( 0xffff ), m_nextIndex( 0 ), m_sustainPoint( 0 ), m_loopStart( 0 ), m_loopEnd( 0 ), m_currentRate( 0 ), m_currentValue( 0 )
+	: m_flags(), m_points(), m_numPoints( 0 ), m_position( -1 ), m_nextIndex( 0 ), m_sustainPoint( 0 ), m_loopStart( 0 ), m_loopEnd( 0 ), m_currentRate( 0 ), m_currentValue( 0 )
 {
 }
 
 XmEnvelopeProcessor::XmEnvelopeProcessor( XmEnvelopeProcessor::EnvelopeFlags flags, const std::array<EnvelopePoint, 12>& points, uint8_t numPoints, uint8_t sustainPt, uint8_t loopStart, uint8_t loopEnd )
-	: m_flags( flags ), m_points( points ), m_numPoints( numPoints ), m_position( 0xffff ), m_nextIndex( 0 ), m_sustainPoint( sustainPt ), m_loopStart( loopStart ), m_loopEnd( loopEnd ), m_currentRate( 0 ), m_currentValue( 0 )
+	: m_flags( flags ), m_points( points ), m_numPoints( numPoints ), m_position( -1 ), m_nextIndex( 0 ), m_sustainPoint( sustainPt ), m_loopStart( loopStart ), m_loopEnd( loopEnd ), m_currentRate( 0 ), m_currentValue( 0 )
 {
 }
 
@@ -190,6 +190,19 @@ void XmEnvelopeProcessor::setPosition( uint8_t pos )
 		}
 		m_nextIndex = std::max( 0, foundPoint );
 	}
+}
+
+void XmEnvelopeProcessor::doKeyOff()
+{
+	if(m_position >= m_points.at(m_nextIndex).position) {
+		m_position = m_points.at(m_nextIndex).position-1;
+	}
+}
+
+void XmEnvelopeProcessor::retrigger()
+{
+	m_position = -1;
+	m_nextIndex = 0;
 }
 
 AbstractArchive& XmEnvelopeProcessor::serialize( AbstractArchive* data )

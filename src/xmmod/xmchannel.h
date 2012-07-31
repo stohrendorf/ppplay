@@ -72,8 +72,6 @@ private:
 	int8_t m_finetune;
 	//! @brief Current instrument index (1-based)
 	uint8_t m_instrumentIndex;
-	//! @brief Current base note (0-based)
-	RememberByte<false> m_baseNote;
 	//! @brief Current real note (0-based, including relative note)
 	uint8_t m_realNote;
 	//! @brief The current note cell
@@ -135,7 +133,7 @@ private:
 	//! @brief Target period of porta effect
 	uint16_t m_portaTargetPeriod;
 	//! @brief Vibrato speed
-	uint8_t m_vibratoSpeed;
+	RememberByte<false> m_vibratoSpeed;
 	//! @brief Vibrato amplitude
 	uint8_t m_vibratoDepth;
 	//! @brief Vibrato phase
@@ -157,9 +155,9 @@ private:
 	//! @brief Counter for the Multi Retrigger Effect
 	uint8_t m_retriggerCounter;
 	//! @brief Retrigger delay in ticks
-	uint8_t m_retriggerLength;
+	RememberByte<false> m_retriggerLength;
 	//! @brief Volume change type for the Multi Retrigger Effect
-	uint8_t m_retriggerVolumeType;
+	RememberByte<false> m_retriggerVolumeType;
 	//! @brief Pattern loop counter, 0 when not active
 	uint8_t m_patLoopCounter;
 	//! @brief Pattern loop start row
@@ -399,7 +397,7 @@ private:
 	/**
 	 * @brief Trigger note
 	 */
-	void triggerNote(  );
+	void triggerNote( uint8_t note );
 	/**
 	 * @brief Retrigger note
 	 */

@@ -316,7 +316,7 @@ uint16_t XmModule::noteToPeriod( uint8_t note, int8_t finetune ) const
 	if( tuned >= m_noteToPeriod.size() ) {
 		return 0;
 	}
-	return clip<int>( m_noteToPeriod[ tuned ], 1, 0x7cff );
+	return m_noteToPeriod[ tuned ];
 }
 
 uint32_t XmModule::periodToFrequency( uint16_t period ) const
@@ -349,11 +349,10 @@ uint32_t XmModule::periodToFrequency( uint16_t period ) const
 uint16_t XmModule::periodToFineNoteIndex( uint16_t period, int8_t finetune, uint8_t deltaNote ) const
 {
 	const int tuned = clip(finetune / 8 + 16, 8, 24);
-	int ofsLo = 0;
-	int ofsHi = 1536;
+	uint16_t ofsLo = 0;
+	uint16_t ofsHi = 1536;
 	for( int i = 0; i < 8; i++ ) {
-		int ofsMid = ( ofsLo + ofsHi ) / 2;
-		BOOST_ASSERT( ofsMid >= 0 );
+		uint16_t ofsMid = ( ofsLo + ofsHi ) / 2;
 		ofsMid &= 0xfff0;
 		if( period < m_noteToPeriod.at( ofsMid + tuned - 8 ) ) {
 			ofsLo = ofsMid;

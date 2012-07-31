@@ -62,7 +62,7 @@ private:
 	//! @brief Number of used envelope points
 	uint8_t m_numPoints;
 	//! @brief Current position in the envelope
-	uint16_t m_position;
+	int16_t m_position;
 	//! @brief Index of the next point to process
 	uint8_t m_nextIndex;
 	//! @brief Sustain point index
@@ -133,6 +133,8 @@ public:
 	 */
 	void setPosition( uint8_t pos );
 	virtual AbstractArchive& serialize( AbstractArchive* data );
+	void doKeyOff();
+	void retrigger();
 };
 
 /**
