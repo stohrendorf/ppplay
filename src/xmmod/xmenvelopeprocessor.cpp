@@ -194,7 +194,7 @@ void XmEnvelopeProcessor::setPosition( uint8_t pos )
 
 void XmEnvelopeProcessor::doKeyOff()
 {
-	if(m_position >= m_points.at(m_nextIndex).position) {
+	if(enabled() && m_nextIndex<m_numPoints && m_position >= m_points.at(m_nextIndex).position) {
 		m_position = m_points.at(m_nextIndex).position-1;
 	}
 }
