@@ -20,6 +20,9 @@
 #define MODPATTERN_H
 
 #include "stuff/utils.h"
+#include "stuff/field.h"
+
+#include "modcell.h"
 
 #include <vector>
 #include <cstdint>
@@ -36,39 +39,20 @@ namespace ppp
 namespace mod
 {
 
-class ModCell;
-
-class ModPattern
+class ModPattern : public Field<ModCell>
 {
 	DISABLE_COPY( ModPattern )
-private:
-	std::vector<std::vector<ModCell*>> m_channels; //!< @brief Channels in this pattern
-	/**
-	 * @brief Create a cell
-	 * @param[in] chanIdx Channel index
-	 * @param[in] row Row index
-	 * @return Pointer to the new cell
-	 */
-	ModCell* createCell( uint16_t chanIdx, int16_t row );
 public:
 	/**
 	 * @brief Constructor
 	 */
 	ModPattern();
-	~ModPattern();
 	/**
 	 * @brief Load the pattern from a stream
 	 * @param[in] str The stream to load from
 	 * @return @c true on success
 	 */
 	bool load( Stream* str, uint8_t numChans );
-	/**
-	 * @brief Get a cell from the pattern
-	 * @param[in] chanIdx Channel index
-	 * @param[in] row Row index
-	 * @return Pointer to the cell or nullptr
-	 */
-	ModCell* cellAt( uint16_t chanIdx, int16_t row );
 };
 
 }

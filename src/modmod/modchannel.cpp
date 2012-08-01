@@ -78,16 +78,16 @@ ModChannel::~ModChannel()
 }
 
 // TODO mt_setfinetune
-void ModChannel::update( const ModCell* cell, bool patDelay )
+void ModChannel::update( const ModCell& cell, bool patDelay )
 {
 	uint8_t delayTick = 0;
-	if( cell && cell->effect() == 0x0e && ( cell->effectValue()>>4 ) == 0x0d ) {
-		delayTick = cell->effectValue()&0x0f;
+	if( cell.effect() == 0x0e && ( cell.effectValue()>>4 ) == 0x0d ) {
+		delayTick = cell.effectValue()&0x0f;
 	}
 	if( m_module->state().tick == delayTick ) {
 		m_currentCell->clear();
-		if( cell && !patDelay ) {
-			*m_currentCell = *cell;
+		if( !patDelay ) {
+			*m_currentCell = cell;
 		}
 
 		if( m_currentCell->sampleNumber() != 0 ) {

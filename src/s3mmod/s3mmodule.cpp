@@ -328,15 +328,15 @@ void S3mModule::checkGlobalFx()
 		// check for pattern loops
 		int patLoopCounter = 0;
 		for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			S3mCell* cell = currPat->cellAt( currTrack, state().row );
-			if( !cell || cell->effect() == s3mEmptyCommand ) {
+			const S3mCell& cell = currPat->at( currTrack, state().row );
+			if( cell.effect() == s3mEmptyCommand ) {
 				continue;
 			}
-			uint8_t fx = cell->effect();
+			uint8_t fx = cell.effect();
 			if( fx != s3mFxSpecial ) {
 				continue;
 			}
-			uint8_t fxVal = cell->effectValue();
+			uint8_t fxVal = cell.effectValue();
 			if( ( fxVal>>4 ) != s3mSFxPatLoop ) {
 				continue;
 			}
@@ -370,15 +370,15 @@ void S3mModule::checkGlobalFx()
 		// check for pattern delays
 		uint8_t patDelayCounter = 0;
 		for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			const S3mCell* cell = currPat->cellAt( currTrack, state().row );
-			if( !cell || cell->effect() == s3mEmptyCommand ) {
+			const S3mCell& cell = currPat->at( currTrack, state().row );
+			if( cell.effect() == s3mEmptyCommand ) {
 				continue;
 			}
-			uint8_t fx = cell->effect();
+			uint8_t fx = cell.effect();
 			if( fx != s3mFxSpecial ) {
 				continue;
 			}
-			uint8_t fxVal = cell->effectValue();
+			uint8_t fxVal = cell.effectValue();
 			if( ( fxVal>>4 ) != s3mSFxPatDelay || ( fxVal&0x0f ) == 0 ) {
 				continue;
 			}
@@ -398,12 +398,12 @@ void S3mModule::checkGlobalFx()
 			if( m_patLoopCount != -1 ) {
 				break;
 			}
-			const S3mCell* cell = currPat->cellAt( currTrack, state().row );
-			if( !cell || cell->effect() == s3mEmptyCommand ) {
+			const S3mCell& cell = currPat->at( currTrack, state().row );
+			if( cell.effect() == s3mEmptyCommand ) {
 				continue;
 			}
-			uint8_t fx = cell->effect();
-			uint8_t fxVal = cell->effectValue();
+			uint8_t fx = cell.effect();
+			uint8_t fxVal = cell.effectValue();
 			if( fx == s3mFxJumpOrder ) {
 				m_breakOrder = fxVal;
 			}
@@ -503,7 +503,7 @@ try {
 		for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			S3mChannel* chan = m_channels[ currTrack ];
 			BOOST_ASSERT( chan != nullptr );
-			const S3mCell* cell = currPat->cellAt( currTrack, state().row );
+			const S3mCell& cell = currPat->at( currTrack, state().row );
 			chan->update( cell, m_patDelayCount != -1, false );
 			chan->mixTick( &mixerBuffer );
 		}
@@ -520,7 +520,7 @@ try {
 		for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			S3mChannel* chan = m_channels[ currTrack ];
 			BOOST_ASSERT( chan!=nullptr );
-			const S3mCell* cell = currPat->cellAt( currTrack, state().row );
+			const S3mCell& cell = currPat->at( currTrack, state().row );
 			chan->update( cell, m_patDelayCount != -1, true );
 		}
 	}

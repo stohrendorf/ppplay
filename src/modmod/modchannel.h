@@ -69,7 +69,7 @@ public:
 	explicit ModChannel( ModModule* parent, bool isLeftChan );
 	virtual ~ModChannel();
 	virtual AbstractArchive& serialize( AbstractArchive* data );
-	void update( const ModCell* cell, bool patDelay );
+	void update( const ModCell& cell, bool patDelay );
 private:
 	virtual std::string internal_noteName() const;
 	virtual std::string internal_effectName() const;

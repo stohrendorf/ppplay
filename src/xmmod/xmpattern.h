@@ -20,7 +20,9 @@
 #define XMPATTERN_H
 
 #include "stuff/utils.h"
+#include "stuff/field.h"
 #include "light4cxx/logger.h"
+#include "xmcell.h"
 
 /**
  * @ingroup XmModule
@@ -34,61 +36,25 @@ namespace ppp
 namespace xm
 {
 
-class XmCell;
-
 /**
  * @class XmPattern
  * @brief XM pattern storage class
  */
-class XmPattern
+class XmPattern : public Field<XmCell>
 {
 	DISABLE_COPY( XmPattern )
-	XmPattern() = delete;
-private:
-	//! @brief Columns in the pattern
-	std::vector<std::vector<XmCell*>> m_columns;
-	/**
-	 * @brief Create a cell if necessary
-	 * @param[in] column Column index
-	 * @param[in] row Row index
-	 * @return Pointer to the cell
-	 */
-	XmCell* createCell( uint16_t column, uint16_t row );
 public:
 	/**
 	 * @brief Constructor
 	 * @param[in] chans Number of channels/columns needed
 	 */
-	XmPattern( int16_t chans );
-	~XmPattern();
+	explicit XmPattern( int16_t chans );
 	/**
 	 * @brief Load the pattern from a stream
 	 * @param[in] str Stream to load from
 	 * @return @c true on success
 	 */
 	bool load( Stream* str );
-	/**
-	 * @brief Get a cell
-	 * @param[in] column Column of the cell
-	 * @param[in] row Row of the cell
-	 * @return Pointer to the cell or nullptr
-	 */
-	XmCell* cellAt( uint16_t column, uint16_t row );
-	/**
-	 * @brief Number of rows in this pattern
-	 * @return Number of rows
-	 */
-	size_t numRows() const;
-	/**
-	 * @brief Number of channels/columns in this pattern
-	 * @return Number of channels
-	 */
-	size_t numChannels() const;
-	/**
-	 * @brief Create an empty default pattern with 64 rows
-	 * @param[in] chans Number of channels for the new pattern
-	 * @return Pointer to the new pattern
-	 */
 	static XmPattern* createDefaultPattern( int16_t chans );
 protected:
 	/**

@@ -22,8 +22,6 @@
  */
 
 #include "xmpattern.h"
-#include "xmcell.h"
-#include "stuff/utils.h"
 #include "stream/stream.h"
 
 #include <boost/assert.hpp>
@@ -34,31 +32,9 @@ namespace ppp
 namespace xm
 {
 
-XmCell* XmPattern::createCell( uint16_t trackIndex, uint16_t row )
-{
-	BOOST_ASSERT( row < numRows() );
-	BOOST_ASSERT( trackIndex < numChannels() );
-	std::vector<XmCell*>& track = m_columns[ trackIndex ];
-	XmCell*& cell = track[row];
-	if( cell ) {
-		return cell;
-	}
-	cell = new XmCell();
-	return cell;
-}
-
-XmPattern::XmPattern( int16_t chans ) : m_columns( chans )
+XmPattern::XmPattern( int16_t chans ) : Field<XmCell>(chans,1)
 {
 }
-
-XmPattern::~XmPattern()
-{
-	for( auto& col : m_columns ) {
-		deleteAll(col);
-	}
-	m_columns.clear();
-}
-
 
 bool XmPattern::load( Stream* str )
 {
@@ -77,20 +53,14 @@ bool XmPattern::load( Stream* str )
 	if( rows == 0 ) {
 		// create a 64-row default pattern
 		logger()->debug( L4CXX_LOCATION, "Number of rows = 0, creating 64-rows default pattern." );
-	for( auto& chan : m_columns ) {
-			for( int r = 0; r < 64; r++ ) {
-				chan.push_back( new XmCell() );
-			}
-		}
+		reset( width(), 64 );
 		return true;
 	}
 	else if( rows < 1 || rows > 256 ) {
 		logger()->warn( L4CXX_LOCATION, "Number of rows out of range: %d", rows );
 		return false;
 	}
-	for( auto& chan : m_columns ) {
-		chan.resize( rows, nullptr );
-	}
+	reset(width(), rows);
 	uint16_t packedSize;
 	*str >> packedSize;
 	logger()->trace( L4CXX_LOCATION, "Header end: %#x", str->pos() );
@@ -99,10 +69,8 @@ bool XmPattern::load( Stream* str )
 		return true;
 	}
 	for( uint16_t row = 0; row < rows; row++ ) {
-		for( auto& chan : m_columns ) {
-			XmCell* cell = new XmCell();
-			chan.at( row ) = cell;
-			if( !cell->load( str ) ) {
+		for( uint16_t chan = 0; chan<width(); chan++ ) {
+			if( !at( chan, row ).load( str ) ) {
 				return false;
 			}
 		}
@@ -110,35 +78,10 @@ bool XmPattern::load( Stream* str )
 	return str->good();
 }
 
-XmCell* XmPattern::cellAt( uint16_t column, uint16_t row )
-{
-	if( column >= numChannels() || row >= numRows() ) {
-		return nullptr;
-	}
-	return m_columns[column][row];
-}
-
-size_t XmPattern::numRows() const
-{
-	if( numChannels() == 0 ) {
-		return 0;
-	}
-	return m_columns.front().size();
-}
-
-size_t XmPattern::numChannels() const
-{
-	return m_columns.size();
-}
-
 XmPattern* XmPattern::createDefaultPattern( int16_t chans )
 {
-	XmPattern* result = new XmPattern( chans );
-	for( int i = 0; i < chans; i++ ) {
-		for( int r = 0; r < 64; r++ ) {
-			result->m_columns[i].push_back( new XmCell() );
-		}
-	}
+	XmPattern* result = new XmPattern( 1 );
+	result->reset(chans, 64);
 	return result;
 }
 

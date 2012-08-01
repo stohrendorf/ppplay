@@ -24,7 +24,6 @@
 #include <boost/exception/all.hpp>
 
 #include "s3mpattern.h"
-#include "s3mcell.h"
 #include "stream/stream.h"
 
 namespace ppp
@@ -32,41 +31,8 @@ namespace ppp
 namespace s3m
 {
 
-S3mPattern::S3mPattern() : m_channels(32, std::vector<S3mCell*>( 64, nullptr ))
+S3mPattern::S3mPattern() : Field<S3mCell>(32,64)
 {
-}
-
-S3mPattern::~S3mPattern()
-{
-	for( std::vector<S3mCell*>& chan : m_channels ) {
-		deleteAll(chan);
-	}
-	m_channels.clear();
-}
-
-S3mCell* S3mPattern::createCell( uint16_t chanIdx, int16_t row )
-{
-	if( row < 0 || row > 63 ) {
-		throw std::out_of_range("Invalid row index");
-	}
-	if( chanIdx >= m_channels.size() ) {
-		throw std::out_of_range("Invalid channel index");
-	}
-	auto& chan = m_channels[ chanIdx ];
-	auto& cell = chan.at( row );
-	if( cell != nullptr ) {
-		return cell;
-	}
-	cell = new S3mCell();
-	return cell;
-}
-
-S3mCell* S3mPattern::cellAt( uint16_t chanIdx, int16_t row )
-{
-	if( row < 0 || chanIdx >= m_channels.size() ) {
-		return nullptr;
-	}
-	return m_channels[ chanIdx ].at( row );
 }
 
 bool S3mPattern::load( Stream* str, size_t pos )
@@ -89,8 +55,7 @@ bool S3mPattern::load( Stream* str, size_t pos )
 				logger()->error( L4CXX_LOCATION, "str->fail()..." );
 				return false;
 			}
-			S3mCell* cell = createCell( currTrack, currRow );
-			if( !cell->load( str ) ) {
+			if( !at(currTrack, currRow).load( str ) ) {
 				logger()->error( L4CXX_LOCATION, "Cell loading: ERROR" );
 				return false;
 			}

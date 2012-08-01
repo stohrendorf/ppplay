@@ -25,6 +25,8 @@
  */
 
 #include "light4cxx/logger.h"
+#include "stuff/field.h"
+#include "s3mcell.h"
 
 class Stream;
 
@@ -39,22 +41,12 @@ class S3mCell;
  * @class S3mPattern
  * @brief Pattern class for S3M Patterns
  */
-class S3mPattern
+class S3mPattern : public Field<S3mCell>
 {
 	DISABLE_COPY( S3mPattern )
-private:
-	std::vector<std::vector<S3mCell*>> m_channels; //!< @brief Channels in this pattern
-	/**
-	 * @brief Create a cell
-	 * @param[in] chanIdx Channel index
-	 * @param[in] row Row index
-	 * @return Pointer to the new cell
-	 */
-	S3mCell* createCell( uint16_t chanIdx, int16_t row );
 public:
 	//! @brief Constructor
 	explicit S3mPattern();
-	~S3mPattern();
 	/**
 	 * @brief Load the cell from a stream
 	 * @param[in] str The stream to load from
@@ -62,13 +54,6 @@ public:
 	 * @return @c true on success
 	 */
 	bool load( Stream* str, size_t pos );
-	/**
-	 * @brief Get a cell from the pattern
-	 * @param[in] chanIdx Channel index
-	 * @param[in] row Row index
-	 * @return Pointer to the cell or nullptr
-	 */
-	S3mCell* cellAt( uint16_t chanIdx, int16_t row );
 protected:
 	/**
 	 * @brief Get the logger

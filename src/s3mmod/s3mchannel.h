@@ -138,7 +138,7 @@ public:
 	 * @param[in] patDelay For pattern delays
 	 * @param[in] estimateOnly Used when estimating track length
 	 */
-	void update( const S3mCell* cell, bool patDelay, bool estimateOnly );
+	void update( const S3mCell& cell, bool patDelay, bool estimateOnly );
 	/**
 	 * @brief Recalculates the real output volume
 	 */

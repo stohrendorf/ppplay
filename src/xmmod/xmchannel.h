@@ -193,8 +193,8 @@ private:
 	 */
 	const XmInstrument* currentInstrument() const;
 	
-	void updateTick0( const XmCell* cell, bool estimateOnly );
-	void updateTick1( const XmCell* cell, bool estimateOnly );
+	void updateTick0( const XmCell& cell, bool estimateOnly );
+	void updateTick1( const XmCell& cell, bool estimateOnly );
 public:
 	/**
 	 * @brief Constructor
@@ -207,7 +207,7 @@ public:
 	 * @param[in] cell The new cell
 	 * @param[in] estimateOnly Set to @c true to skip expensive effects
 	 */
-	void update( const XmCell* cell, bool estimateOnly );
+	void update( const XmCell& cell, bool estimateOnly );
 	virtual AbstractArchive& serialize( AbstractArchive* data );
 private:
 	virtual std::string internal_noteName() const;

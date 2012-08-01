@@ -229,7 +229,7 @@ size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
 			MixerFrameBuffer mixerBuffer( new MixerFrameBuffer::element_type( tickBufferLength() ) );
 			for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 				ModChannel* chan = m_channels[ currTrack ];
-				ModCell* cell = currPat->cellAt( currTrack, state().row );
+				const ModCell& cell = currPat->at( currTrack, state().row );
 				chan->update( cell, false ); // m_patDelayCount != -1);
 				chan->mixTick( &mixerBuffer );
 			}
@@ -245,7 +245,7 @@ size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
 		else {
 			for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 				ModChannel* chan = m_channels[ currTrack ];
-				ModCell* cell = currPat->cellAt( currTrack, state().row );
+				const ModCell& cell = currPat->at( currTrack, state().row );
 				chan->update( cell, false ); // m_patDelayCount != -1);
 				chan->mixTick( nullptr );
 			}
@@ -369,17 +369,16 @@ void ModModule::checkGlobalFx()
 {
 	try {
 		state().pattern = orderAt( state().order )->index();
-		ModPattern* currPat = getPattern( state().pattern );
+		const ModPattern* currPat = getPattern( state().pattern );
 		if( !currPat )
 			return;
 		// check for pattern loops
 		int patLoopCounter = 0;
 		for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			ModCell* cell = currPat->cellAt( currTrack, state().row );
-			if( !cell ) continue;
-			if( cell->effect() == 0x0f ) continue;
-			uint8_t fx = cell->effect();
-			uint8_t fxVal = cell->effectValue();
+			const ModCell& cell = currPat->at( currTrack, state().row );
+			if( cell.effect() == 0x0f ) continue;
+			uint8_t fx = cell.effect();
+			uint8_t fxVal = cell.effectValue();
 			if( fx != 0x0e ) continue;
 			if( ( fxVal>>4 ) != 0x06 ) continue;
 			if( ( fxVal&0x0f ) == 0x00 ) {  // loop start
@@ -411,11 +410,10 @@ void ModModule::checkGlobalFx()
 		}
 		// check for pattern delays
 		for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
-			ModCell* cell = currPat->cellAt( currTrack, state().row );
-			if( !cell ) continue;
-			if( cell->effect() == 0x0f ) continue;
-			uint8_t fx = cell->effect();
-			uint8_t fxVal = cell->effectValue();
+			const ModCell& cell = currPat->at( currTrack, state().row );
+			if( cell.effect() == 0x0f ) continue;
+			uint8_t fx = cell.effect();
+			uint8_t fxVal = cell.effectValue();
 			if( fx != 0x0e ) continue;
 			if( ( fxVal>>4 ) != 0x0e ) continue;
 			if( ( fxVal&0x0f ) == 0 ) continue;
@@ -429,11 +427,10 @@ void ModModule::checkGlobalFx()
 		// now check for breaking effects
 		for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			if( m_patLoopCount != -1 ) break;
-			ModCell* cell = currPat->cellAt( currTrack, state().row );
-			if( !cell ) continue;
-			if( cell->effect() == 0x0f ) continue;
-			uint8_t fx = cell->effect();
-			uint8_t fxVal = cell->effectValue();
+			const ModCell& cell = currPat->at( currTrack, state().row );
+			if( cell.effect() == 0x0f ) continue;
+			uint8_t fx = cell.effect();
+			uint8_t fxVal = cell.effectValue();
 			if( fx == 0x0b ) {
 				m_breakOrder = fxVal;
 			}

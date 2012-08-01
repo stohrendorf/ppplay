@@ -274,22 +274,19 @@ std::string S3mChannel::internal_effectDescription() const
 	return m_currentFxStr;
 }
 
-void S3mChannel::update( const S3mCell* cell, bool patDelay, bool estimateOnly )
+void S3mChannel::update( const S3mCell& cell, bool patDelay, bool estimateOnly )
 {
 	if( isDisabled() ) {
 		return;
 	}
 	if( m_module->state().tick == 0 ) {
 		if(estimateOnly) {
-			if(!cell) {
-				return;
-			}
-			switch( static_cast<S3mEffects>( cell->effect() ) ) {
+			switch( static_cast<S3mEffects>( cell.effect() ) ) {
 				case s3mFxSpeed:
-					fxSpeed( cell->effectValue() );
+					fxSpeed( cell.effectValue() );
 					break;
 				case s3mFxTempo:
-					fxTempo( cell->effectValue() );
+					fxTempo( cell.effectValue() );
 					break;
 				default:
 					// silence ;-)
@@ -300,8 +297,8 @@ void S3mChannel::update( const S3mCell* cell, bool patDelay, bool estimateOnly )
 		m_noteChanged = false;
 		m_currentFxStr = "      ";
 		m_currentCell->clear();
-		if( cell && !patDelay ) {
-			*m_currentCell = *cell;
+		if( !patDelay ) {
+			*m_currentCell = cell;
 		}
 
 		if( m_currentCell->note() != s3mEmptyNote || m_currentCell->instrument() != s3mEmptyInstr || m_currentCell->volume() != s3mEmptyVolume || m_currentCell->effect() != s3mEmptyCommand ) {

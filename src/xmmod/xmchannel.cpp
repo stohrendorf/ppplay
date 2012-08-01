@@ -255,18 +255,15 @@ constexpr std::array<const int8_t, 256> g_AutoVibTable = {{
 	}
 };
 
-void XmChannel::updateTick0( const XmCell* cell, bool estimateOnly )
+void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
 {
 	if( estimateOnly ) {
-		if( !cell ) {
-			return;
-		}
-		switch( cell->effect() ) {
+		switch( cell.effect() ) {
 			case Effect::Extended:
-				fxExtended( cell->effectValue(), true );
+				fxExtended( cell.effectValue(), true );
 				break;
 			case Effect::SetTempoBpm:
-				fxSetTempoBpm( cell->effectValue() );
+				fxSetTempoBpm( cell.effectValue() );
 				break;
 			default:
 				// silence "not handled" warnings
@@ -280,18 +277,13 @@ void XmChannel::updateTick0( const XmCell* cell, bool estimateOnly )
 	{
 		bool vibratoContinued = m_currentCell->effectValue() != 0;
 		vibratoContinued &= m_currentCell->effect() == Effect::Vibrato || m_currentCell->effect() == Effect::VibratoVolSlide;
-		vibratoContinued &= cell != nullptr && (cell->effect() == Effect::Vibrato || cell->effect() == Effect::VibratoVolSlide);
+		vibratoContinued &= (cell.effect() == Effect::Vibrato || cell.effect() == Effect::VibratoVolSlide);
 		if( !vibratoContinued ) {
 			m_currentPeriod = m_basePeriod;
 		}
 	}
 	
-	if( cell ) {
-		*m_currentCell = *cell;
-	}
-	else {
-		m_currentCell->clear();
-	}
+	*m_currentCell = cell;
 	
 	if( inRange<uint8_t>( m_currentCell->instrument(), 1, 0x80 ) ) {
 		m_instrumentIndex = m_currentCell->instrument();
@@ -537,21 +529,18 @@ void XmChannel::updateTick0( const XmCell* cell, bool estimateOnly )
 	}
 }
 
-void XmChannel::updateTick1( const XmCell* cell, bool estimateOnly )
+void XmChannel::updateTick1( const XmCell& cell, bool estimateOnly )
 {
 	if( estimateOnly ) {
-		if( !cell ) {
-			return;
-		}
-		switch( cell->effect() ) {
+		switch( cell.effect() ) {
 			case Effect::Extended:
-				fxExtended( cell->effectValue(), true );
+				fxExtended( cell.effectValue(), true );
 				break;
 			case Effect::PatBreak:
-				m_module->doPatternBreak( ( cell->effectValue()>>4 ) * 10 + ( cell->effectValue()&0x0f ) );
+				m_module->doPatternBreak( ( cell.effectValue()>>4 ) * 10 + ( cell.effectValue()&0x0f ) );
 				break;
 			case Effect::PosJump:
-				m_module->doJumpPos( cell->effectValue() );
+				m_module->doJumpPos( cell.effectValue() );
 				break;
 			default:
 				// silence "not handled" warnings
@@ -656,7 +645,7 @@ void XmChannel::updateTick1( const XmCell* cell, bool estimateOnly )
 }
 
 
-void XmChannel::update( const XmCell* cell, bool estimateOnly )
+void XmChannel::update( const XmCell& cell, bool estimateOnly )
 {
 	if( m_module->state().tick == 0 && !m_module->isRunningPatDelay() ) {
 		updateTick0(cell, estimateOnly);

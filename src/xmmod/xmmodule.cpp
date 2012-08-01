@@ -192,7 +192,7 @@ size_t XmModule::internal_buildTick( AudioFrameBuffer* buffer )
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			XmChannel* chan = m_channels[ currTrack ];
 			BOOST_ASSERT( chan!=nullptr );
-			XmCell* cell = currPat->cellAt( currTrack, state().row );
+			const XmCell& cell = currPat->at( currTrack, state().row );
 			chan->update( cell, false );
 			chan->mixTick( &mixerBuffer );
 		}
@@ -210,7 +210,7 @@ size_t XmModule::internal_buildTick( AudioFrameBuffer* buffer )
 		for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			XmChannel* chan = m_channels[ currTrack ];
 			BOOST_ASSERT( chan!=nullptr );
-			XmCell* cell = currPat->cellAt( currTrack, state().row );
+			const XmCell& cell = currPat->at( currTrack, state().row );
 			chan->update( cell, true );
 			chan->mixTick( nullptr );
 		}
@@ -258,7 +258,7 @@ bool XmModule::adjustPosition( bool estimateOnly )
 		else {
 			if( !isRunningPatDelay() ) {
 				XmPattern* currPat = m_patterns.at( state().pattern );
-				setRow( ( state().row + 1 ) % currPat->numRows() );
+				setRow( ( state().row + 1 ) % currPat->height() );
 				if( state().row == 0 ) {
 					setOrder( state().order + 1, estimateOnly );
 					orderChanged = true;

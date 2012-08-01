@@ -127,7 +127,7 @@ std::string XmCell::trackerString() const
 	VfxPanSlideRight = 0xe,
 	VfxPorta = 0xf
 	 */
-	static const char vfxChars[] = "-+DUSVPLRM";
+	static constexpr char vfxChars[] = "-+DUSVPLRM";
 	switch( m_volume>>4 ) {
 		case 0:
 			xmsg += "   ";
