@@ -969,7 +969,7 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 		case EfxNoteDelay:
 			m_fxString = "Delay\xc2";
 			if( ( fxByte&0x0f ) != 0 ) {
-				if( m_module->state().tick % ( fxByte&0x0f ) == 0 ) {
+				if( m_module->state().tick == fxByte&0x0f ) {
 					triggerNote(m_currentCell->note());
 					if(m_currentCell->instrument() != 0) {
 						applySampleDefaults();
