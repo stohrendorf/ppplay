@@ -180,7 +180,7 @@ if(NOT mp3lame_LIB)
 else()
 	option(WITH_MP3LAME "Whether to include MP3Lame support." ON)
 endif()
-add_feature_info("MP3 Export" WITH_MP3LAME "MP3 Export using the MP3Lame library is enabled.")
+add_feature_info("MP3 Export" WITH_MP3LAME "MP3 Export using libmp3lame")
 
 trylinklib("vorbis" SHARED)
 trylinklib("vorbisenc" SHARED)
@@ -189,7 +189,7 @@ if(NOT vorbis_LIB OR NOT vorbisenc_LIB)
 else()
 	option(WITH_OGG "Whether to include OGG support." ON)
 endif()
-add_feature_info("OGG Export" WITH_OGG "OGG Export using the Oggz library is enabled.")
+add_feature_info("OGG Export" WITH_OGG "OGG Export using libvorbis and libvorbisenc")
 
 
 #########

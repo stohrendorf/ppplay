@@ -968,6 +968,21 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 			break;
 		case EfxNoteDelay:
 			m_fxString = "Delay\xc2";
+			if( ( fxByte&0x0f ) != 0 ) {
+				if( m_module->state().tick % ( fxByte&0x0f ) == 0 ) {
+					triggerNote(m_currentCell->note());
+					if(m_currentCell->instrument() != 0) {
+						applySampleDefaults();
+					}
+					doKeyOn();
+					if( m_currentCell->volume()>=0x10 && m_currentCell->volume()<=0x50 ) {
+						m_currentVolume = m_baseVolume = m_currentCell->volume()-0x10;	
+					}
+					else if( (m_currentCell->volume()>>4) == VfxSetPanning) {
+						m_panning = m_currentCell->volume()<<4;
+					}
+				}
+			}
 			break;
 		case EfxRetrigger:
 			if( ( fxByte&0x0f ) != 0 ) {
