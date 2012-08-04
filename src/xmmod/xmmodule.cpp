@@ -230,6 +230,7 @@ size_t XmModule::internal_buildTick( AudioFrameBuffer* buffer )
 bool XmModule::adjustPosition( bool estimateOnly )
 {
 	bool orderChanged = false;
+	bool rowChanged = false;
 	if( state().tick == 0 ) {
 		if( m_requestedPatternDelay != 0 ) {
 			m_currentPatternDelay = m_requestedPatternDelay;
@@ -242,9 +243,11 @@ bool XmModule::adjustPosition( bool estimateOnly )
 			if( m_isPatLoop ) {
 				m_isPatLoop = false;
 				setRow( m_jumpRow );
+				rowChanged = true;
 			}
 			if( m_doPatJump ) {
 				setRow( m_jumpRow );
+				rowChanged = true;
 				m_jumpRow = 0;
 				m_doPatJump = false;
 				m_jumpOrder++;
@@ -259,6 +262,7 @@ bool XmModule::adjustPosition( bool estimateOnly )
 			if( !isRunningPatDelay() ) {
 				XmPattern* currPat = m_patterns.at( state().pattern );
 				setRow( ( state().row + 1 ) % currPat->height() );
+				rowChanged = true;
 				if( state().row == 0 ) {
 					setOrder( state().order + 1, estimateOnly );
 					orderChanged = true;
@@ -279,6 +283,13 @@ bool XmModule::adjustPosition( bool estimateOnly )
 	if( orderAt( state().order )->playbackCount() >= maxRepeat() ) {
 		logger()->debug(L4CXX_LOCATION, "Maximum playback count reached");
 		return false;
+	}
+	if( rowChanged ) {
+		if(!orderAt(state().order)->increaseRowPlayback(state().row)) {
+			logger()->info(L4CXX_LOCATION, "Row playback counter reached limit");
+			setOrder( orderCount(), estimateOnly );
+			return false;
+		}
 	}
 	return true;
 }

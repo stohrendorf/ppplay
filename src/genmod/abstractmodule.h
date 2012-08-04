@@ -233,15 +233,16 @@ protected:
 	int maxRepeat() const;
 	/**
 	 * @brief Set the order index and handle preprocessing states
-	 * @param[in] o The new order index
+	 * @param[in] newOrder The new order index
 	 * @param[in] estimateOnly Decide whether to store or to load states
 	 * @param[in] forceSave Forces to save the state even if the order did not change
 	 * @retval true if the new order index is valid
 	 */
-	bool setOrder( size_t o, bool estimateOnly, bool forceSave = false );
+	bool setOrder( size_t newOrder, bool estimateOnly, bool forceSave = false );
 	/**
 	 * @brief Set the current row index
 	 * @param[in] r The new row index
+	 * @retval false when the new row has been played more than 255 times
 	 */
 	void setRow( int16_t r );
 	/**

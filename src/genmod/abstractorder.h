@@ -45,10 +45,13 @@ private:
 	uint8_t m_index;
 	//! @brief Playback count of this order
 	int m_playbackCount;
+	//! @brief Row playback counter to avoid infinite loops
+	std::vector<uint8_t> m_rowPlaybackCounter;
 public:
 	/**
 	 * @brief Constructor
 	 * @param[in] idx Order index
+	 * @param[in] rowCount Pattern row count
 	 */
 	AbstractOrder( uint8_t idx );
 	/**
@@ -57,10 +60,11 @@ public:
 	 */
 	uint8_t index() const;
 	/**
-	 * @brief Set the pattern index
-	 * @param[in] n New index
+	 * @brief Set the pattern index and pattern row count
+	 * @param[in] index New index
+	 * @param[in] rowCount Pattern row count
 	 */
-	void setIndex( uint8_t n );
+	void setIndex( uint8_t index );
 	virtual AbstractArchive& serialize( AbstractArchive* data );
 	/**
 	 * @brief Get the playback count of this order
@@ -72,6 +76,19 @@ public:
 	 * @return The new value of m_playbackCount
 	 */
 	int increasePlaybackCount();
+	
+	/**
+	 * @brief Resets the row playback counter
+	 * @param[in] row Row for which the playback counter should be increased
+	 * @return The new counter
+	 */
+	uint8_t increaseRowPlayback(std::size_t row);
+	
+	/**
+	 * @brief Sets the row count for the row playback counter and resets the counter to 0
+	 * @param[in] count The row count
+	 */
+	void resetRowPlaybackCounter();
 	
 	virtual bool isUnplayed() const = 0;
 protected:

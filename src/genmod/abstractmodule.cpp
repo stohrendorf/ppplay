@@ -143,15 +143,18 @@ int AbstractModule::maxRepeat() const
 	return m_maxRepeat;
 }
 
-bool AbstractModule::setOrder( size_t o, bool estimateOnly, bool forceSave )
+bool AbstractModule::setOrder( size_t newOrder, bool estimateOnly, bool forceSave )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	bool orderChanged = (o != m_state.order) || forceSave;
+	bool orderChanged = ( newOrder != m_state.order) || forceSave;
 	if( orderChanged && m_state.order<orderCount() ) {
 		orderAt( m_state.order )->increasePlaybackCount();
 	}
-	m_state.order = o;
-	if( o >= orderCount() ) {
+	if( newOrder!=m_state.order && newOrder<orderCount() ) {
+		orderAt( newOrder )->resetRowPlaybackCounter();
+	}
+	m_state.order = newOrder;
+	if( newOrder >= orderCount() ) {
 		return false;
 	}
 	m_state.pattern = orderAt( m_state.order)->index();
@@ -296,7 +299,7 @@ bool AbstractModule::jumpNextSong()
 			if( !orderAt(i)->isUnplayed() ) {
 				continue;
 			}
-			logger()->debug(L4CXX_LOCATION, "Found unplayed order %d pattern %d", i, 0+orderAt(i)->index());
+			logger()->debug(L4CXX_LOCATION, "Found unplayed order %d pattern %d", i, int(orderAt(i)->index()));
 			m_songs.append();
 			++m_songs;
 			m_state.playedFrames = 0;

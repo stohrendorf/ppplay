@@ -325,8 +325,6 @@ void S3mModule::checkGlobalFx()
 		if( !currPat ) {
 			return;
 		}
-		// check for pattern loops
-		int patLoopCounter = 0;
 		for( int currTrack = 0; currTrack < channelCount(); currTrack++ ) {
 			const S3mCell& cell = currPat->at( currTrack, state().row );
 			if( cell.effect() == s3mEmptyCommand ) {
@@ -344,7 +342,6 @@ void S3mModule::checkGlobalFx()
 				m_patLoopRow = state().row;
 			}
 			else { // loop return
-				patLoopCounter++;
 				if( m_patLoopCount == -1 ) {  // first loop return -> set loop count
 					m_patLoopCount = fxVal&0x0f;
 					m_breakRow = m_patLoopRow;
@@ -354,16 +351,9 @@ void S3mModule::checkGlobalFx()
 					m_breakRow = m_patLoopRow;
 				}
 				else { // loops done...
-					if( patLoopCounter == 1 ) {  // one loop, all ok
-						m_patLoopCount = -1;
-						m_breakRow = ~0;
-						m_patLoopRow = state().row + 1;
-					}
-					else { // we got an "infinite" loop...
-						m_patLoopCount = 127;
-						m_breakRow = m_patLoopRow;
-						logger()->info( L4CXX_LOCATION, "Infinite pattern loop detected" );
-					}
+					m_patLoopCount = -1;
+					m_breakRow = ~0;
+					m_patLoopRow = state().row + 1;
 				}
 			}
 		}
@@ -422,6 +412,7 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 {
 	BOOST_ASSERT( orderCount() != 0 );
 	bool orderChanged = false;
+	bool rowChanged = false;
 	if( state().tick == 0 ) {
 		m_patDelayCount = -1;
 		if( m_breakOrder != 0xffff ) {
@@ -430,10 +421,12 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 				orderChanged = true;
 			}
 			setRow( 0 );
+			rowChanged = true;
 		}
 		if( m_breakRow != 0xffff ) {
 			if( m_breakRow <= 63 ) {
 				setRow( m_breakRow );
+				rowChanged = true;
 			}
 			if( m_breakOrder == 0xffff ) {
 				if( m_patLoopCount == -1 ) {
@@ -444,6 +437,7 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 		}
 		if( ( m_breakRow == 0xffff ) && ( m_breakOrder == 0xffff ) && ( m_patDelayCount == -1 ) ) {
 			setRow( ( state().row + 1 ) & 0x3f );
+			rowChanged = true;
 			if( state().row == 0 ) {
 				setOrder( state().order + 1, estimateOnly );
 				orderChanged = true;
@@ -469,6 +463,13 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 	if( orderChanged ) {
 		m_patLoopRow = 0;
 		m_patLoopCount = -1;
+	}
+	if( rowChanged ) {
+		if(!orderAt(state().order)->increaseRowPlayback(state().row)) {
+			logger()->info(L4CXX_LOCATION, "Row playback counter reached limit");
+			setOrder( orderCount(), estimateOnly );
+			return false;
+		}
 	}
 	return true;
 }

@@ -28,7 +28,7 @@
 namespace ppp
 {
 
-AbstractOrder::AbstractOrder( uint8_t idx ) : m_index( idx ), m_playbackCount( 0 )
+AbstractOrder::AbstractOrder( uint8_t idx ) : m_index( idx ), m_playbackCount( 0 ), m_rowPlaybackCounter()
 { }
 
 uint8_t AbstractOrder::index() const
@@ -36,9 +36,10 @@ uint8_t AbstractOrder::index() const
 	return m_index;
 }
 
-void AbstractOrder::setIndex( uint8_t n )
+void AbstractOrder::setIndex( uint8_t index )
 {
-	m_index = n;
+	m_index = index;
+	m_rowPlaybackCounter.clear();
 }
 
 AbstractArchive& AbstractOrder::serialize( AbstractArchive* data )
@@ -55,6 +56,20 @@ int AbstractOrder::increasePlaybackCount()
 {
 	return ++m_playbackCount;
 }
+
+uint8_t AbstractOrder::increaseRowPlayback( std::size_t row )
+{
+	if( row >= m_rowPlaybackCounter.size() ) {
+		m_rowPlaybackCounter.resize(row+1, 0);
+	}
+	return ++m_rowPlaybackCounter[row];
+}
+
+void AbstractOrder::resetRowPlaybackCounter()
+{
+	m_rowPlaybackCounter.clear();
+}
+
 
 light4cxx::Logger* AbstractOrder::logger()
 {

@@ -269,6 +269,7 @@ size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
 bool ModModule::adjustPosition( bool estimateOnly )
 {
 	bool orderChanged = false;
+	bool rowChanged = false;
 	if( m_patDelayCount != -1 ) {
 		m_patDelayCount--;
 	}
@@ -280,10 +281,12 @@ bool ModModule::adjustPosition( bool estimateOnly )
 				orderChanged = true;
 			}
 			setRow( 0 );
+			rowChanged = true;
 		}
 		if( m_breakRow != -1 ) {
 			if( m_breakRow <= 63 ) {
 				setRow( m_breakRow );
+				rowChanged = true;
 			}
 			if( m_breakOrder == 0xffff ) {
 				if( m_patLoopCount == -1 ) {
@@ -291,13 +294,11 @@ bool ModModule::adjustPosition( bool estimateOnly )
 					setOrder( state().order + 1, estimateOnly );
 					orderChanged = true;
 				}
-				//else {
-				//	LOG_MESSAGE(stringf("oO... aPatLoopCount=%d",aPatLoopCount));
-				//}
 			}
 		}
 		if( m_breakRow == -1 && m_breakOrder == 0xffff && m_patDelayCount == -1 ) {
 			setRow( ( state().row + 1 ) & 0x3f );
+			rowChanged = true;
 			if( state().row == 0 ) {
 				setOrder( state().order + 1, estimateOnly );
 				orderChanged = true;
@@ -315,6 +316,13 @@ bool ModModule::adjustPosition( bool estimateOnly )
 		m_patLoopCount = -1;
 		state().pattern = orderAt( state().order )->index();
 		setOrder(state().order, estimateOnly);
+	}
+	if( rowChanged ) {
+		if(!orderAt(state().order)->increaseRowPlayback(state().row)) {
+			logger()->info(L4CXX_LOCATION, "Row playback counter reached limit");
+			setOrder( orderCount(), estimateOnly );
+			return false;
+		}
 	}
 	return true;
 }
