@@ -968,19 +968,17 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 			break;
 		case EfxNoteDelay:
 			m_fxString = "Delay\xc2";
-			if( ( fxByte&0x0f ) != 0 ) {
-				if( m_module->state().tick == fxByte&0x0f ) {
-					triggerNote(m_currentCell->note());
-					if(m_currentCell->instrument() != 0) {
-						applySampleDefaults();
-					}
-					doKeyOn();
-					if( m_currentCell->volume()>=0x10 && m_currentCell->volume()<=0x50 ) {
-						m_currentVolume = m_baseVolume = m_currentCell->volume()-0x10;	
-					}
-					else if( (m_currentCell->volume()>>4) == VfxSetPanning) {
-						m_panning = m_currentCell->volume()<<4;
-					}
+			if( m_module->state().tick == (fxByte&0x0f) ) {
+				triggerNote(m_currentCell->note());
+				if(m_currentCell->instrument() != 0) {
+					applySampleDefaults();
+				}
+				doKeyOn();
+				if( m_currentCell->volume()>=0x10 && m_currentCell->volume()<=0x50 ) {
+					m_currentVolume = m_baseVolume = m_currentCell->volume()-0x10;	
+				}
+				else if( (m_currentCell->volume()>>4) == VfxSetPanning) {
+					m_panning = m_currentCell->volume()<<4;
 				}
 			}
 			break;
@@ -1338,28 +1336,26 @@ AbstractArchive& XmChannel::serialize( AbstractArchive* data )
 	% m_autoVibDeltaPeriod
 	% m_finetune
 	% m_instrumentIndex
-	% m_realNote;
-	( *data )
-	.archive( m_currentCell )
-	.archive( &m_volumeEnvelope )
-	.archive( &m_panningEnvelope );
-	*data
+	% m_realNote
+	% m_currentCell
+	% m_volumeEnvelope
+	% m_panningEnvelope
 	% m_volScale
 	% m_volScaleRate
 	% m_keyOn
-	% m_lastVolSlideFx.data()
-	% m_lastPortaUpFx.data()
-	% m_lastPortaDownFx.data()
-	% m_lastPanSlideFx.data()
-	% m_lastOffsetFx.data()
-	% m_lastFinePortaUpFx.data()
-	% m_lastFinePortaDownFx.data()
-	% m_lastFineVolUpFx.data()
-	% m_lastFineVolDownFx.data()
-	% m_lastXFinePortaUp.data()
-	% m_lastXFinePortaDown.data()
-	% m_lastGlobVolSlideFx.data()
-	% m_lastTremorFx.data()
+	% m_lastVolSlideFx
+	% m_lastPortaUpFx
+	% m_lastPortaDownFx
+	% m_lastPanSlideFx
+	% m_lastOffsetFx
+	% m_lastFinePortaUpFx
+	% m_lastFinePortaDownFx
+	% m_lastFineVolUpFx
+	% m_lastFineVolDownFx
+	% m_lastXFinePortaUp
+	% m_lastXFinePortaDown
+	% m_lastGlobVolSlideFx
+	% m_lastTremorFx
 	% m_portaSpeed
 	% m_portaTargetPeriod
 	% m_vibratoSpeed
@@ -1383,8 +1379,8 @@ AbstractArchive& XmChannel::serialize( AbstractArchive* data )
 	% m_autoVibDepth
 	% m_autoVibPhase
 	% m_noteChanged
-	% m_lastNote.data();
-	data->archive( &m_bres );
+	% m_lastNote
+	% m_bres;
 	return *data;
 }
 

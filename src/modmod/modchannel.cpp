@@ -248,8 +248,8 @@ std::string ModChannel::internal_noteName() const
 
 AbstractArchive& ModChannel::serialize( AbstractArchive* data )
 {
-	AbstractChannel::serialize( data )
-	.archive( m_currentCell )
+	return AbstractChannel::serialize( data )
+	% m_currentCell
 	% m_volume
 	% m_physVolume
 	% m_finetune
@@ -261,12 +261,12 @@ AbstractArchive& ModChannel::serialize( AbstractArchive* data )
 	% m_period
 	% m_physPeriod
 	% m_portaTarget
-	% m_lastVibratoFx.data()
-	% m_lastTremoloFx.data()
-	% m_portaSpeed.data()
-	% m_lastOffsetFx.data()
-	% m_sampleIndex;
-	return data->archive( &m_bresen );
+	% m_lastVibratoFx
+	% m_lastTremoloFx
+	% m_portaSpeed
+	% m_lastOffsetFx
+	% m_sampleIndex
+	% m_bresen;
 }
 
 void ModChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )

@@ -25,6 +25,8 @@
 #include <string>
 #include <memory>
 
+#include <type_traits>
+
 /**
  * @class BinStream
  * @ingroup Common
@@ -59,6 +61,8 @@ public:
 	template<typename T>
 	inline Stream& read( T* data, size_t count = 1 )
 	{
+		static_assert( std::has_trivial_copy_assign<T>::value, "Data to read must be trivially copyable" );
+		static_assert( !std::is_pointer<T>::value, "Data to read must not be a pointer" );
 		m_stream->read(reinterpret_cast<char*>(data), count*sizeof(T));
 		return *this;
 	}
@@ -72,6 +76,8 @@ public:
 	template<typename T>
 	inline Stream& write( const T* data, size_t count = 1 )
 	{
+		static_assert( std::has_trivial_copy_assign<T>::value, "Data to write must be trivially copyable" );
+		static_assert( !std::is_pointer<T>::value, "Data to write must not be a pointer" );
 		m_stream->write(reinterpret_cast<const char*>(data), count*sizeof(T));
 		return *this;
 	}

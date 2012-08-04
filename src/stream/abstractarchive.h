@@ -25,6 +25,8 @@
 
 #include <vector>
 
+#include <type_traits>
+
 class ISerializable;
 
 /**
@@ -65,6 +67,12 @@ public:
 // warning: ‘AbstractArchive& AbstractArchive::operator%(T&)’ should return by value [-Weffc++]
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
+	inline AbstractArchive& operator%( ISerializable* data ) {
+		return archive(data);
+	}
+	inline AbstractArchive& operator%( ISerializable& data ) {
+		return archive(&data);
+	}
 	/**
 	 * @brief Serialization operator
 	 * @tparam T Data type
@@ -72,7 +80,14 @@ public:
 	 * @return Reference to *this
 	 * @note Operation depends on m_loading
 	 */
-	template<class T> inline AbstractArchive& operator%( T& data ) {
+	template<class T>
+	inline
+	// This neat piece of template meta-programming is necessary so that this operator
+	// does not overwrite the above overloads for ISerializable.
+	typename std::enable_if<!std::is_base_of<ISerializable, typename std::remove_pointer<T>::type >::value, AbstractArchive&>::type
+	operator%( T& data ) {
+		static_assert( std::has_trivial_copy_assign<T>::value, "Data to serialize must be trivially copyable" );
+		static_assert( !std::is_pointer<T>::value, "Data to serialize must not be a pointer" );
 		if( m_loading ) {
 			*m_stream >> data;
 		}
@@ -90,7 +105,10 @@ public:
 	 * @return Reference to *this
 	 * @note Operation depends on m_loading
 	 */
-	template<class T> inline AbstractArchive& array( T* data, size_t count ) {
+	template<class T>
+	inline AbstractArchive& array( T* data, size_t count ) {
+		static_assert( std::has_trivial_copy_assign<T>::value, "Array to serialize must be trivially copyable" );
+		static_assert( !std::is_pointer<T>::value, "Array to serialize must not be a pointer" );
 		BOOST_ASSERT( data != nullptr );
 		if( m_loading ) {
 			m_stream->read( data, count );

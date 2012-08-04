@@ -597,9 +597,9 @@ AbstractArchive& S3mChannel::serialize( AbstractArchive* data )
 {
 	AbstractChannel::serialize( data )
 	% m_note
-	% m_lastFxByte.data()
+	% m_lastFxByte
 	% m_lastVibratoData
-	% m_lastPortaSpeed.data()
+	% m_lastPortaSpeed
 	% m_tremorVolume
 	% m_noteChanged
 	% m_currentVolume
@@ -619,10 +619,10 @@ AbstractArchive& S3mChannel::serialize( AbstractArchive* data )
 	% m_tremorCounter
 	% m_c2spd
 	% m_glissando
-	% m_sampleIndex;
-
-	data->archive( &m_bresen );
-	return data->archive( m_currentCell );
+	% m_sampleIndex
+	% m_bresen
+	% m_currentCell;
+	return *data;
 }
 
 void S3mChannel::fxPitchSlideUp( uint8_t fxByte )

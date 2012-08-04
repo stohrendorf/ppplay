@@ -117,13 +117,6 @@ public:
 	 * @return m_value&0x0f
 	 */
 	constexpr uint8_t lo() const { return m_value&0x0f; }
-	
-	/**
-	 * @brief Reference to the data
-	 * @return Reference to m_value
-	 * @note Used for serializing
-	 */
-	uint8_t& data() { return m_value; }
 };
 
 template<>
