@@ -17,13 +17,35 @@ namespace ppp
 {
 namespace mod
 {
+namespace
+{
+struct LoadingMode
+{
+	enum
+	{
+		Smp31,
+		Smp15,
+		Count
+	};
+};
+}
 
 AbstractModule* ModModule::factory( Stream* stream, uint32_t frequency, int maxRpt )
 {
 	ModModule* result = new ModModule( maxRpt );
-	if( !result->load( stream ) ) {
-		delete result;
-		return nullptr;
+	for(int i=0; i<LoadingMode::Count; i++) {
+		stream->seek(0);
+		stream->clear();
+		if( !result->load( stream, i ) ) {
+			delete result;
+			if( i == LoadingMode::Count-1 ) {
+				return nullptr;
+			}
+			result = new ModModule( maxRpt );
+		}
+		else {
+			break;
+		}
 	}
 	if( !result->initialize( frequency ) ) {
 		delete result;
@@ -103,25 +125,30 @@ const std::array<const IdMetaInfo, 31> idMetaData  = {{
 	}
 };
 
-IdMetaInfo findMeta( Stream* stream )
+const IdMetaInfo* findMeta( Stream* stream )
 {
-	static const IdMetaInfo none = {"", 0, ""};
 	char id[5];
 	stream->read( id, 4 );
 	id[4] = '\0';
 	for( const IdMetaInfo & mi : idMetaData ) {
 		if( id == mi.id ) {
-			return mi;
+			return &mi;
 		}
 	}
 	// revert...
 	stream->seekrel( -4 );
-	return none;
+	return nullptr;
 }
+
+const IdMetaInfo smp15MetaInfo = {
+	std::string(),
+	4,
+	"Amiga ProTracker"
+};
 
 } // anonymous namespace
 
-bool ModModule::load( Stream* stream )
+bool ModModule::load( Stream* stream, int loadMode )
 {
 	metaInfo().filename = stream->name();
 	setTempo( 125 );
@@ -130,21 +157,29 @@ bool ModModule::load( Stream* stream )
 	char modName[20];
 	stream->read( modName, 20 );
 	metaInfo().title = stringncpy( modName, 20 );
-	// check 31-sample mod
-	logger()->info( L4CXX_LOCATION, "Probing meta-info for 31-sample mod..." );
-	stream->seek( 1080 );
-	IdMetaInfo meta = findMeta( stream );
-	if( meta.channels == 0 ) {
-		logger()->warn( L4CXX_LOCATION, "Could not find a valid module ID" );
-		return false;
+	const IdMetaInfo* meta = nullptr;
+	if(loadMode != LoadingMode::Smp15 ) {
+		// check 31-sample mod
+		logger()->info( L4CXX_LOCATION, "Probing meta-info for 31-sample mod..." );
+		stream->seek( 1080 );
+		meta = findMeta( stream );
+		if( meta == nullptr ) {
+			logger()->warn( L4CXX_LOCATION, "Could not find a valid module ID" );
+			return false;
+		}
 	}
-	logger()->debug( L4CXX_LOCATION, "%d-channel, ID '%s', Tracker '%s'", int(meta.channels), meta.id, meta.tracker );
-	metaInfo().trackerInfo = meta.tracker;
-	for( int i = 0; i < meta.channels; i++ ) {
+	else {
+		logger()->info( L4CXX_LOCATION, "Trying to load 15-sample mod..." );
+		meta = &smp15MetaInfo;
+	}
+	logger()->debug( L4CXX_LOCATION, "%d-channel, ID '%s', Tracker '%s'", int(meta->channels), meta->id, meta->tracker );
+	metaInfo().trackerInfo = meta->tracker;
+	for( int i = 0; i < meta->channels; i++ ) {
 		m_channels.push_back( new ModChannel( this, ((i+1)&2)==0 ) );
 	}
 	stream->seek( 20 );
-	for( int i = 0; i < 31; i++ ) {
+	const int numSamples = loadMode==LoadingMode::Smp15 ? 15 : 31;
+	for( int i = 0; i < numSamples; i++ ) {
 		ModSample* smp = new ModSample();
 		m_samples.push_back( smp );
 		if( !smp->loadHeader( stream ) ) {
@@ -174,15 +209,22 @@ bool ModModule::load( Stream* stream )
 			logger()->trace(L4CXX_LOCATION, "Order %d index: %d", int(i), int(tmp));
 			addOrder( new ModOrder( tmp ) );
 		}
-		stream->seekrel(128-songLen);
+		while(songLen++ < 128) {
+			*stream >> tmp;
+			if( tmp > maxPatNum ) {
+				maxPatNum = tmp;
+			}
+		}
 	}
-	stream->seekrel( 4 ); // skip the ID
+	if(loadMode == LoadingMode::Smp31) {
+		stream->seekrel( 4 ); // skip the ID
+	}
 	logger()->debug( L4CXX_LOCATION, "%d patterns @ %#x", int(maxPatNum), stream->pos() );
 	for( uint_fast8_t i = 0; i <= maxPatNum; i++ ) {
 		ModPattern* pat = new ModPattern();
 		m_patterns.push_back( pat );
 		logger()->debug(L4CXX_LOCATION, "Loading pattern %u", int(i));
-		if( !pat->load( stream, meta.channels ) ) {
+		if( !pat->load( stream, meta->channels ) ) {
 			logger()->warn( L4CXX_LOCATION, "Could not load pattern" );
 			return false;
 		}
@@ -191,6 +233,7 @@ bool ModModule::load( Stream* stream )
 	for( auto& smp : m_samples ) {
 		if( !smp->loadData( stream ) ) {
 			logger()->warn( L4CXX_LOCATION, "Could not load sample data" );
+			return false;
 		}
 	}
 	logger()->debug( L4CXX_LOCATION, "pos=%#x size=%#x delta=%#x", stream->pos(), stream->size(), stream->size() - stream->pos() );

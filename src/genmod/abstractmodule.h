@@ -19,9 +19,11 @@
 #ifndef PPPLAY_ABSTRACTMODULE_H
 #define PPPLAY_ABSTRACTMODULE_H
 
+#include "ppplay_core_export.h"
+
 #include "modulestate.h"
-#include "output/abstractaudiosource.h"
-#include "stuff/trackingcontainer.h"
+#include <output/abstractaudiosource.h>
+#include <stuff/trackingcontainer.h>
 #include "songinfo.h"
 
 namespace ppp
@@ -39,7 +41,7 @@ class AbstractOrder;
  * @todo Create a function to retrieve only the module's title without loading the whole module
  * @todo Multi-song: Reset module/channels on each new song?
  */
-class AbstractModule : public ISerializable, public AbstractAudioSource
+class PPPLAY_CORE_EXPORT AbstractModule : public ISerializable, public AbstractAudioSource
 {
 	DISABLE_COPY( AbstractModule )
 	AbstractModule() = delete;
@@ -331,4 +333,3 @@ private:
 } // namespace ppp
 
 #endif
-

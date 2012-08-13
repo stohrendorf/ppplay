@@ -1,3 +1,8 @@
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib/ppplay)
+
+if(NOT WIN32)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
+endif()
 add_library(ppplay_input_xm MODULE
 	xmmodule.cpp
 	xmpattern.cpp
@@ -10,4 +15,4 @@ add_library(ppplay_input_xm MODULE
 	plugin.cpp
 )
 target_link_libraries(ppplay_input_xm ppplay_core)
-install(TARGETS ppplay_input_xm LIBRARY DESTINATION lib/ppplay)
+install(TARGETS ppplay_input_xm LIBRARY DESTINATION lib/ppplay COMPONENT Plugins OPTIONAL)

@@ -36,13 +36,13 @@ namespace
 
 ArchiveFileStream::ArchiveFileStream( const std::string& filename ) : MemoryStream(filename), m_isOpen(false)
 {
-	boost::filesystem3::path zipPath(filename);
-	boost::filesystem3::path zipFilePath;
-	while(zipPath.has_parent_path() && !boost::filesystem3::is_regular_file(zipPath)) {
+	boost::filesystem::path zipPath(filename);
+	boost::filesystem::path zipFilePath;
+	while(zipPath.has_parent_path() && !boost::filesystem::is_regular_file(zipPath)) {
 		zipFilePath = zipPath.filename() / zipFilePath;
 		zipPath.remove_filename();
 	}
-	if( !boost::filesystem3::is_regular_file(zipPath) ) {
+	if( !boost::filesystem::is_regular_file(zipPath) ) {
 		logger()->error(L4CXX_LOCATION, "Failed to open '%s'", filename);
 		return;
 	}
@@ -55,7 +55,7 @@ ArchiveFileStream::ArchiveFileStream( const std::string& filename ) : MemoryStre
 		logger()->trace(L4CXX_LOCATION, "Opened '%s'", filename);
 		archive_entry* entry;
 		while(ARCHIVE_OK == archive_read_next_header(arch, &entry)) {
-			boost::filesystem3::path current(archive_entry_pathname(entry));
+			boost::filesystem::path current(archive_entry_pathname(entry));
 			if( zipFilePath=="." || current == zipFilePath ) {
 				setName(current.string());
 				std::stringstream* str = static_cast<std::stringstream*>(stream());

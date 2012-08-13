@@ -19,9 +19,11 @@
 #ifndef PPPLAY_ABSTRACTCHANNEL_H
 #define PPPLAY_ABSTRACTCHANNEL_H
 
-#include "stream/iserializable.h"
-#include "output/audiotypes.h"
-#include "light4cxx/logger.h"
+#include "ppplay_core_export.h"
+
+#include <stream/iserializable.h>
+#include <output/audiotypes.h>
+#include <light4cxx/logger.h>
 
 #include <boost/thread.hpp>
 
@@ -38,7 +40,7 @@ namespace ppp
  * @details Every module must be compatible with this abstract
  * base class.
  */
-class AbstractChannel : public ISerializable
+class PPPLAY_CORE_EXPORT AbstractChannel : public ISerializable
 {
 	DISABLE_COPY( AbstractChannel )
 private:

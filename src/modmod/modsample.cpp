@@ -99,8 +99,8 @@ bool ModSample::loadData( Stream* stream )
 	}
 	logger()->debug(L4CXX_LOCATION, "Loading %d bytes sample data", length());
 	if( stream->pos() + length() > stream->size() ) {
-		logger()->warn( L4CXX_LOCATION, "File truncated: %u bytes requested while only %u bytes left. Truncating sample.", length(), stream->size() - stream->pos() );
-		resizeData( stream->size() - stream->pos() );
+		logger()->warn( L4CXX_LOCATION, "File truncated: %u bytes requested while only %u bytes left.", length(), stream->size() - stream->pos() );
+		return false;
 	}
 	for( auto it = beginIterator(); it != endIterator(); it++ ) {
 		int8_t tmp;

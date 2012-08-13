@@ -26,7 +26,7 @@
  * @ingroup Common
  * @brief Class derived from SBinStream for an archive file
  */
-class ArchiveFileStream : public MemoryStream
+class PPPLAY_STREAM_EXPORT ArchiveFileStream : public MemoryStream
 {
 	DISABLE_COPY( ArchiveFileStream )
 public:

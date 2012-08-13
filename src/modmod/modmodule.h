@@ -66,7 +66,7 @@ protected:
 public:
 	ModModule( int maxRpt = 2 );
 	virtual ~ModModule();
-	bool load( Stream* stream );
+	bool load( Stream* stream, int loadMode );
 private:
 	virtual size_t internal_buildTick( AudioFrameBuffer* buf );
 	virtual std::string internal_channelStatus( size_t idx ) const;

@@ -19,8 +19,10 @@
 #ifndef PPPLAY_BRESENINTER_H
 #define PPPLAY_BRESENINTER_H
 
-#include "stuff/utils.h"
-#include "stream/iserializable.h"
+#include "ppplay_core_export.h"
+
+#include <stuff/utils.h>
+#include <stream/iserializable.h>
 #include "sample.h"
 
 #include <cstdint>
@@ -44,7 +46,7 @@ namespace ppp
  * algorithm that uses only additions and substractions instead of divisions and multiplications, it's a
  * heavy speed-up.
  */
-class BresenInterpolation : public ISerializable
+class PPPLAY_CORE_EXPORT BresenInterpolation : public ISerializable
 {
 	DISABLE_COPY( BresenInterpolation )
 	BresenInterpolation() = delete;

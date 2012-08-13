@@ -73,28 +73,42 @@ inline float_t realTime()
  */
 std::string s_format = "[%T %<5t %p] %L (in %F:%l): %m";
 
+#ifndef L4CXX_NO_ANSI_COLORS
+#define COLOR_RESET  "\033[0m"
+#define COLOR_RED    "\033[1;31m"
+#define COLOR_GREEN  "\033[1;32m"
+#define COLOR_YELLOW "\033[1;33m"
+#define COLOR_CYAN   "\033[1;36m"
+#else
+#define COLOR_RESET
+#define COLOR_RED
+#define COLOR_GREEN
+#define COLOR_YELLOW
+#define COLOR_CYAN
+#endif
+
 /**
  * @brief Converts a Level to a string
  * @param[in] l The level to convert
  * @return String representation of @a l
  */
-std::string levelString( Level l )
+const char* levelString( Level l )
 {
 	switch( l ) {
 		case Level::Off:
-			return std::string();
+			return "";
 		case Level::Trace:
-			return "TRACE";
+			return COLOR_CYAN "TRACE" COLOR_RESET;
 		case Level::Debug:
-			return "DEBUG";
+			return COLOR_GREEN "DEBUG" COLOR_RESET;
 		case Level::Info:
 			return "INFO";
 		case Level::Warn:
-			return "WARN";
+			return COLOR_YELLOW "WARN" COLOR_RESET;
 		case Level::Error:
-			return "ERROR";
+			return COLOR_RED "ERROR" COLOR_RESET;
 		case Level::Fatal:
-			return "FATAL";
+			return COLOR_RED "FATAL" COLOR_RESET;
 		case Level::All:
 			throw std::runtime_error( "Logging level invalid: Level::All should not be passed to levelString()" );
 		default:

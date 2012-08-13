@@ -1,4 +1,4 @@
-#include "stuff/inputplugin.h"
+#include <stuff/inputplugin.h>
 
 #include "xmmodule.h"
 
@@ -22,4 +22,4 @@ public:
 };
 }
 
-ppp::Plugin plugin;
+PPPLAY_PLUGIN_EXPORT ppp::Plugin plugin;

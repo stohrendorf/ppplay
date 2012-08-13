@@ -19,6 +19,8 @@
 #ifndef LIGHT4CXX_LOCATION_H
 #define LIGHT4CXX_LOCATION_H
 
+#include <ppplay_core_export.h>
+
 #include "level.h"
 
 #include <boost/thread.hpp>
@@ -38,7 +40,7 @@ class Logger;
  * @class Location
  * @brief A class containing location information
  */
-class Location
+class PPPLAY_CORE_EXPORT Location
 {
 private:
 	const int m_line; //!< @brief The line withing m_file

@@ -36,7 +36,7 @@ namespace ppg
  * @class Label
  * @brief A colored text label
  */
-class Label : public Widget
+class PPPLAY_PPG_EXPORT Label : public Widget
 {
 	DISABLE_COPY( Label )
 	Label() = delete;

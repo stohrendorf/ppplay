@@ -24,7 +24,6 @@
 #include <boost/assert.hpp>
 
 #include <vector>
-
 #include <type_traits>
 
 class ISerializable;
@@ -34,7 +33,7 @@ class ISerializable;
  * @ingroup Common
  * @brief Interface for archives used by ISerializable inherited classes
  */
-class AbstractArchive
+class PPPLAY_STREAM_EXPORT AbstractArchive
 {
 	DISABLE_COPY( AbstractArchive )
 	AbstractArchive() = delete;

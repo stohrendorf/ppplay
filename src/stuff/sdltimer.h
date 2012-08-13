@@ -20,6 +20,7 @@
 #ifndef PPPLAY_SDLTIMER_H
 #define PPPLAY_SDLTIMER_H
 
+#include "ppplay_core_export.h"
 #include "itimer.h"
 
 #include <boost/thread.hpp>
@@ -33,7 +34,7 @@
  * @class SDLTimer
  * @brief ITimer specialization for SDL
  */
-class SDLTimer : public ITimer
+class PPPLAY_CORE_EXPORT SDLTimer : public ITimer
 {
 	DISABLE_COPY( SDLTimer )
 private:

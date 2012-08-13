@@ -32,7 +32,7 @@ namespace ppg
  * @class SDLScreen
  * @brief The virtual DOS screen (SDL implementation)
  */
-class SDLScreen : public Widget
+class PPPLAY_PPG_EXPORT SDLScreen : public Widget
 {
 	DISABLE_COPY( SDLScreen )
 private:

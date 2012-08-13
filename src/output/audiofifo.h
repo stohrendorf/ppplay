@@ -19,11 +19,13 @@
 #ifndef PPPLAY_AUDIOFIFO_H
 #define PPPLAY_AUDIOFIFO_H
 
-#include "stuff/utils.h"
+#include "ppplay_core_export.h"
+
+#include <stuff/utils.h>
 #include "audiotypes.h"
 #include "abstractaudiosource.h"
 
-#include "light4cxx/logger.h"
+#include <light4cxx/logger.h>
 
 /**
  * @ingroup Output
@@ -38,7 +40,7 @@
  * A simple thread is created that continuously requests data from the connected
  * IAudioSource.
  */
-class AudioFifo
+class PPPLAY_CORE_EXPORT AudioFifo
 {
 	DISABLE_COPY( AudioFifo )
 	AudioFifo() = delete;

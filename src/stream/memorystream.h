@@ -26,7 +26,7 @@
  * @ingroup Common
  * @brief Class derived from BinStream for a std::stringstream
  */
-class MemoryStream : public Stream
+class PPPLAY_STREAM_EXPORT MemoryStream : public Stream
 {
 	DISABLE_COPY( MemoryStream )
 public:

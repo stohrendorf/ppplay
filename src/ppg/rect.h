@@ -32,7 +32,7 @@ namespace ppg
  * @class Rect
  * @brief Represents an area on screen or in a widget
  */
-class Rect
+class PPPLAY_PPG_EXPORT Rect
 {
 private:
 	Point m_topLeft; //!< @brief The top left point

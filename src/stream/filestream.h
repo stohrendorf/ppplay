@@ -27,7 +27,7 @@
  * @brief Class derived from BinStream for files
  * @note This is a read-only stream
  */
-class FileStream : public Stream
+class PPPLAY_STREAM_EXPORT FileStream : public Stream
 {
 	DISABLE_COPY( FileStream )
 	FileStream() = delete;

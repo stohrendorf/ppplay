@@ -19,8 +19,10 @@
 #ifndef PPPLAY_SAMPLE_H
 #define PPPLAY_SAMPLE_H
 
-#include "output/audiotypes.h"
-#include "light4cxx/logger.h"
+#include "ppplay_core_export.h"
+
+#include <output/audiotypes.h>
+#include <light4cxx/logger.h>
 
 namespace ppp
 {
@@ -35,7 +37,7 @@ class BresenInterpolation;
  * @class GenSample
  * @brief An abstract sample class
  */
-class Sample
+class PPPLAY_CORE_EXPORT Sample
 {
 	DISABLE_COPY( Sample )
 public:

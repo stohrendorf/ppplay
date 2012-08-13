@@ -26,7 +26,7 @@
  * @ingroup Common
  * @brief Specialization of AbstractArchive for memory storage
  */
-class MemArchive : public AbstractArchive
+class PPPLAY_STREAM_EXPORT MemArchive : public AbstractArchive
 {
 	DISABLE_COPY( MemArchive )
 public:

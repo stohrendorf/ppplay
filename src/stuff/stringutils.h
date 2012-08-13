@@ -19,6 +19,8 @@
 #ifndef PPPLAY_STRINGUTILS_H
 #define PPPLAY_STRINGUTILS_H
 
+#include "ppplay_core_export.h"
+
 #include <string>
 #include <boost/format.hpp>
 
@@ -34,7 +36,7 @@
  * @return Copied string
  * @note Stops at the NUL character
  */
-std::string stringncpy( const char src[], size_t maxlen );
+extern std::string PPPLAY_CORE_EXPORT stringncpy( const char src[], size_t maxlen );
 
 inline std::string stringFmt( boost::format& fmt )
 {

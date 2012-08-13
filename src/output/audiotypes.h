@@ -19,7 +19,7 @@
 #ifndef PPPLAY_AUDIOTYPES_H
 #define PPPLAY_AUDIOTYPES_H
 
-#include "stuff/numberutils.h"
+#include <stuff/numberutils.h>
 
 #include <queue>
 #include <cstdint>

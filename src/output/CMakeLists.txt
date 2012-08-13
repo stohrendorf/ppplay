@@ -5,6 +5,8 @@
 
 # add_library(audioout STATIC ${audioout_SRCS})
 
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+
 if(${WITH_MP3LAME})
 	add_library(ppplay_output_mp3 SHARED mp3audiooutput.cpp)
 	target_link_libraries(ppplay_output_mp3 ppplay_core)

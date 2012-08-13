@@ -19,6 +19,7 @@
 #ifndef PPPLAY_ABSTRACTAUDIOOUTPUT_H
 #define PPPLAY_ABSTRACTAUDIOOUTPUT_H
 
+#include "ppplay_core_export.h"
 #include "abstractaudiosource.h"
 
 #include <boost/thread.hpp>
@@ -32,7 +33,7 @@
  * @interface IAudioOutput
  * @brief Abstract base class for sound output
  */
-class AbstractAudioOutput
+class PPPLAY_CORE_EXPORT AbstractAudioOutput
 {
 	DISABLE_COPY( AbstractAudioOutput )
 	AbstractAudioOutput() = delete;

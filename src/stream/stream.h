@@ -19,7 +19,8 @@
 #ifndef PPPLAY_STREAM_H
 #define PPPLAY_STREAM_H
 
-#include "stuff/utils.h"
+#include <stuff/utils.h>
+#include <stream/ppplay_stream_export.h>
 
 #include <iostream>
 #include <string>
@@ -32,7 +33,7 @@
  * @ingroup Common
  * @brief A binary stream helper
  */
-class Stream
+class PPPLAY_STREAM_EXPORT Stream
 {
 	DISABLE_COPY( Stream )
 	Stream() = delete;

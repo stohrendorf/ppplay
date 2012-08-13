@@ -19,14 +19,15 @@
 #ifndef PPPLAY_PLUGINREGISTRY_H
 #define PPPLAY_PLUGINREGISTRY_H
 
-#include "genmod/abstractmodule.h"
+#include <genmod/abstractmodule.h>
+#include "ppplay_core_export.h"
 
 #include <list>
 
 namespace ppp
 {
 
-class PluginRegistry
+class PPPLAY_CORE_EXPORT PluginRegistry
 {
 	DISABLE_COPY( PluginRegistry )
 private:

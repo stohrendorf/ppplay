@@ -32,7 +32,7 @@ namespace ppg
  * @class StereoPeakBar
  * @brief A stereo bar with peaks
  */
-class StereoPeakBar : public Label
+class PPPLAY_PPG_EXPORT StereoPeakBar : public Label
 {
 private:
 	std::vector<int> m_interArrL; //!< @brief Left bar interpolation array

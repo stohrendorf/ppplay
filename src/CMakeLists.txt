@@ -1,6 +1,5 @@
-include_directories(.)
+include_directories(. ${CMAKE_CURRENT_BINARY_DIR})
 
-add_subdirectory(stuff)
 add_subdirectory(output)
 
 add_subdirectory(stream)
@@ -12,8 +11,6 @@ add_subdirectory(s3mmod)
 add_subdirectory(xmmod)
 add_subdirectory(modmod)
 
-add_subdirectory(light4cxx)
-
 configure_file(
 	"${CMAKE_CURRENT_SOURCE_DIR}/Mainpage.dox.in"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Mainpage.dox"
@@ -22,33 +19,14 @@ configure_file(
 
 set_source_files_properties(Mainpage.dox PROPERTIES GENERATED TRUE)
 
-include(FindLibArchive)
-find_library(LibArchive REQUIRED)
-include_directories(${LibArchive_INCLUDE_DIR})
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
-add_library(ppplay_stream SHARED
-	stream/stream.cpp
-	stream/filestream.cpp
-	stream/abstractarchive.cpp
-	stream/memarchive.cpp
-	stream/memorystream.cpp
-	stream/archivefilestream.cpp
-)
-target_link_libraries(ppplay_stream ${LibArchive_LIBRARY})
-install(TARGETS ppplay_stream DESTINATION lib)
+if(WIN32)
+	add_definitions(-DL4CXX_NO_ANSI_COLORS)
+endif()
 
-add_library(ppplay_module_base SHARED
-	genmod/breseninter.cpp
-	genmod/genbase.cpp
-	genmod/abstractchannel.cpp
-	genmod/abstractmodule.cpp
-	genmod/abstractorder.cpp
-	genmod/sample.cpp
-	genmod/ipatterncell.cpp
-	genmod/modulestate.cpp
-	genmod/songinfo.cpp
-)
-install(TARGETS ppplay_module_base DESTINATION lib)
+include(GenerateExportHeader)
+add_compiler_export_flags()
 
 add_library(ppplay_core SHARED
 	stuff/pluginregistry.cpp
@@ -62,6 +40,40 @@ add_library(ppplay_core SHARED
 	light4cxx/location.cpp
 	light4cxx/logger.cpp
 )
+generate_export_header(ppplay_core)
 
-target_link_libraries(ppplay_core ppplay_stream ${SDL_LIBRARY} ${Boost_LIBRARIES} ${mp3lame_LIB})
-install(TARGETS ppplay_core DESTINATION lib)
+target_link_libraries(ppplay_core ppplay_stream ${SDL_LIBRARY} ${Boost_LIBRARIES})
+if(WITH_MP3LAME)
+	target_link_libraries(ppplay_core ${mp3lame_LIB})
+endif()
+install(TARGETS ppplay_core DESTINATION lib EXPORT ppplayExports)
+install(FILES
+	stuff/field.h
+	stuff/inputplugin.h
+	stuff/itimer.h
+	stuff/moduleregistry.h
+	stuff/numberutils.h
+	stuff/stringutils.h
+	stuff/trackingcontainer.h
+	stuff/utils.h
+	${CMAKE_CURRENT_BINARY_DIR}/ppplay_core_export.h
+	DESTINATION include/ppplay/stuff
+	COMPONENT Devel
+)
+install(FILES
+	output/abstractaudiooutput.h
+	output/abstractaudiosource.h
+	output/audiofifo.h
+	output/audiotypes.h
+	${CMAKE_CURRENT_BINARY_DIR}/ppplay_core_export.h
+	DESTINATION include/ppplay/output
+	COMPONENT Devel
+)
+install(FILES
+	light4cxx/level.h
+	light4cxx/location.h
+	light4cxx/logger.h
+	${CMAKE_CURRENT_BINARY_DIR}/ppplay_core_export.h
+	DESTINATION include/ppplay/light4cxx
+	COMPONENT Devel
+)

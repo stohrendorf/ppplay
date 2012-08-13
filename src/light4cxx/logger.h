@@ -22,8 +22,8 @@
 #include "level.h"
 #include "location.h"
 
-#include "stuff/utils.h"
-#include "stuff/stringutils.h"
+#include <stuff/utils.h>
+#include <stuff/stringutils.h>
 
 namespace light4cxx
 {
@@ -37,7 +37,7 @@ namespace light4cxx
  * @class Logger
  * @brief The logger class
  */
-class Logger
+class PPPLAY_CORE_EXPORT Logger
 {
 	DISABLE_COPY( Logger )
 	Logger() = delete;
