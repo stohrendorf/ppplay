@@ -23,18 +23,18 @@
 
 void WavAudioOutput::encodeThread()
 {
-	while( AbstractAudioSource::Ptr srcLock = source().lock() ) {
+	while( AbstractAudioSource::Ptr lockedSrc = source() ) {
 		boost::mutex::scoped_lock lock( m_mutex );
 		if(!m_file.is_open() || !m_file) {
 			break;
 		}
-		if( m_paused || srcLock->paused() ) {
+		if( m_paused || lockedSrc->paused() ) {
 			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 			m_encoderThread.yield();
 			continue;
 		}
 		AudioFrameBuffer buffer;
-		size_t size = srcLock->getAudioData( buffer, srcLock->preferredBufferSize() );
+		size_t size = lockedSrc->getAudioData( buffer, lockedSrc->preferredBufferSize() );
 		if( size == 0 || !buffer || buffer->empty() ) {
 			setErrorCode( InputDry );
 			pause();

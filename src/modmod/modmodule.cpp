@@ -23,7 +23,8 @@ struct LoadingMode
 {
 	enum
 	{
-		Smp31,
+		Smp31, //!< @brief Take orders after song length into account for pattern count determination
+		Smp31Malformed, //!< @brief Do NOT take orders after song length into account for pattern count determination (see DRAGNET.MOD)
 		Smp15,
 		Count
 	};
@@ -209,14 +210,22 @@ bool ModModule::load( Stream* stream, int loadMode )
 			logger()->trace(L4CXX_LOCATION, "Order %d index: %d", int(i), int(tmp));
 			addOrder( new ModOrder( tmp ) );
 		}
-		while(songLen++ < 128) {
-			*stream >> tmp;
-			if( tmp > maxPatNum ) {
-				maxPatNum = tmp;
+		if( loadMode != LoadingMode::Smp31Malformed ) {
+			while(songLen++ < 128) {
+				*stream >> tmp;
+				if( tmp >= 64 ) {
+					continue;
+				}
+				if( tmp > maxPatNum ) {
+					maxPatNum = tmp;
+				}
 			}
 		}
+		else {
+			stream->seekrel(128-songLen);
+		}
 	}
-	if(loadMode == LoadingMode::Smp31) {
+	if(loadMode != LoadingMode::Smp15) {
 		stream->seekrel( 4 ); // skip the ID
 	}
 	logger()->debug( L4CXX_LOCATION, "%d patterns @ %#x", int(maxPatNum), stream->pos() );

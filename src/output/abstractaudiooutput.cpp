@@ -37,10 +37,14 @@ void AbstractAudioOutput::setErrorCode( AbstractAudioOutput::ErrorCode ec )
 	m_errorCode = ec;
 }
 
-AbstractAudioSource::WeakPtr AbstractAudioOutput::source() const
+AbstractAudioSource::Ptr AbstractAudioOutput::source() const
 {
 // 	boost::mutex::scoped_lock lock( m_mutex );
-	return m_source;
+	AbstractAudioSource::Ptr lockedSrc = m_source.lock();
+	if(!lockedSrc) {
+		logger()->error(L4CXX_LOCATION, "Requesting non-existing source");
+	}
+	return lockedSrc;
 }
 
 uint16_t AbstractAudioOutput::internal_volumeLeft() const

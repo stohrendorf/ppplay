@@ -26,7 +26,7 @@
 void OggAudioOutput::encodeThread()
 {
 	bool endOfStream = false;
-	while( AbstractAudioSource::Ptr srcLock = source().lock() ) {
+	while( AbstractAudioSource::Ptr lockedSrc = source() ) {
 		if(endOfStream) {
 			vorbis_analysis_wrote(m_ds, 0);
 			setErrorCode( InputDry );
@@ -34,13 +34,13 @@ void OggAudioOutput::encodeThread()
 			break;
 		}
 		boost::mutex::scoped_lock lock( m_mutex );
-		if( m_paused || srcLock->paused() ) {
+		if( m_paused || lockedSrc->paused() ) {
 			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 			m_thread.yield();
 			continue;
 		}
 		AudioFrameBuffer buffer;
-		size_t size = srcLock->getAudioData( buffer, srcLock->preferredBufferSize() );
+		size_t size = lockedSrc->getAudioData( buffer, lockedSrc->preferredBufferSize() );
 		if( size == 0 || !buffer || buffer->empty() ) {
 			vorbis_analysis_wrote(m_ds, 0);
 			setErrorCode( InputDry );
@@ -134,6 +134,7 @@ bool OggAudioOutput::internal_playing() const
 
 int OggAudioOutput::internal_init( int desiredFrq )
 {
+	AbstractAudioSource::Ptr lockedSrc = source();
 	logger()->trace( L4CXX_LOCATION, "Initializing OGG Vorbis" );
 	m_stream = new FileStream(m_filename, FileStream::Mode::Write);
 	if(!static_cast<FileStream*>(m_stream)->isOpen()) {
@@ -143,7 +144,7 @@ int OggAudioOutput::internal_init( int desiredFrq )
 	}
 	m_vi = new vorbis_info;
 	vorbis_info_init(m_vi);
-	if(vorbis_encode_init_vbr(m_vi, 2, desiredFrq, 0.5)) {
+	if(vorbis_encode_init_vbr(m_vi, 2, lockedSrc->frequency(), 0.5)) {
 		logger()->error(L4CXX_LOCATION, "Failed to init encoder");
 		setErrorCode(OutputError);
 		return 0;

@@ -82,7 +82,7 @@ public:
 	 * @brief Get the attached audio source
 	 * @return Pointer to the attached audio source
 	 */
-	AbstractAudioSource::WeakPtr source() const;
+	AbstractAudioSource::Ptr source() const;
 protected:
 	/**
 	 * @brief Set the internal error code

@@ -87,7 +87,7 @@ void AudioFifo::requestThread()
 		}
 		src->getAudioData( buffer, size );
 		if( !src->paused() && ( !buffer || buffer->empty() ) ) {
-// 			logger()->debug( L4CXX_LOCATION, "Audio source dry" );
+			// logger()->debug( L4CXX_LOCATION, "Audio source dry" );
 			continue;
 		}
 		// add the data to the queue...

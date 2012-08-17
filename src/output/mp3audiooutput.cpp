@@ -23,15 +23,15 @@
 
 void MP3AudioOutput::encodeThread()
 {
-	while( AbstractAudioSource::Ptr srcLock = source().lock() ) {
+	while( AbstractAudioSource::Ptr lockedSrc = source() ) {
 		boost::mutex::scoped_lock lock( m_mutex );
-		if( m_paused || srcLock->paused() ) {
+		if( m_paused || lockedSrc->paused() ) {
 			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 			m_encoderThread.yield();
 			continue;
 		}
 		AudioFrameBuffer buffer;
-		size_t size = srcLock->getAudioData( buffer, srcLock->preferredBufferSize() );
+		size_t size = lockedSrc->getAudioData( buffer, lockedSrc->preferredBufferSize() );
 		if( size == 0 || !buffer || buffer->empty() ) {
 			setErrorCode( InputDry );
 			pause();
@@ -118,6 +118,10 @@ bool MP3AudioOutput::internal_playing() const
 
 int MP3AudioOutput::internal_init( int desiredFrq )
 {
+	AbstractAudioSource::Ptr lockedSrc = source();
+	if(!lockedSrc) {
+		return 0;
+	}
 	logger()->trace( L4CXX_LOCATION, "Initializing LAME" );
 	logger()->debug( L4CXX_LOCATION, "Using LAME %s, Bitness %s, PSY version %s", get_lame_version(), get_lame_os_bitness(), get_psy_version() );
 	m_file.open( m_filename, std::ios::in );
@@ -134,7 +138,7 @@ int MP3AudioOutput::internal_init( int desiredFrq )
 		return 0;
 	}
 	lame_set_out_samplerate( m_lameGlobalFlags, desiredFrq );
-	lame_set_in_samplerate( m_lameGlobalFlags, source().lock()->frequency() );
+	lame_set_in_samplerate( m_lameGlobalFlags, lockedSrc->frequency() );
 	lame_set_num_channels( m_lameGlobalFlags, 2 );
 	lame_set_quality( m_lameGlobalFlags, 5 );
 	lame_set_mode( m_lameGlobalFlags, STEREO );

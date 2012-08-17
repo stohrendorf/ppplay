@@ -52,6 +52,7 @@ protected:
 	 * @return @c false
 	 */
 	bool fail();
+private:
 	/**
 	 * @brief Get audio data from the source
 	 * @param[out] buffer The buffer containing the retrieved data

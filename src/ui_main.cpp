@@ -163,7 +163,7 @@ void UIMain::onTimer()
 	AbstractAudioOutput::Ptr outLock( m_output.lock() );
 	const std::shared_ptr<const ppp::AbstractModule> modLock = std::const_pointer_cast<const ppp::AbstractModule>( m_module.lock() );
 	if( m_module.expired() || m_output.expired() || !ppg::SDLScreen::instance() ) {
-		logger()->trace( L4CXX_LOCATION, "Module, Output Device or Screen expired" );
+		logger()->trace( L4CXX_LOCATION, "Module or Output Device expired" );
 		return;
 	}
 	logger()->trace( L4CXX_LOCATION, "Updating" );
