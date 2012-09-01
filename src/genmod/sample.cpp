@@ -55,7 +55,7 @@ bool Sample::isLooped() const
 	return m_looptype != LoopType::None;
 }
 
-Sample::PositionType Sample::length() const
+std::streamsize Sample::length() const
 {
 	return m_data.size();
 }
@@ -85,12 +85,12 @@ void Sample::setFilename( const std::string& f )
 	m_filename = f;
 }
 
-void Sample::setLoopStart( PositionType s )
+void Sample::setLoopStart( std::streamoff s )
 {
 	m_loopStart = s;
 }
 
-void Sample::setLoopEnd( PositionType e )
+void Sample::setLoopEnd( std::streamoff e )
 {
 	m_loopEnd = e;
 }
@@ -138,7 +138,7 @@ bool Sample::mixLinearInterpolated( BresenInterpolation* bresen, MixerFrameBuffe
 	return true;
 }
 
-inline BasicSampleFrame Sample::sampleAt( PositionType pos ) const
+inline BasicSampleFrame Sample::sampleAt( std::streamoff pos ) const
 {
 	if( pos == BresenInterpolation::InvalidPosition ) {
 		return BasicSampleFrame();
@@ -146,19 +146,19 @@ inline BasicSampleFrame Sample::sampleAt( PositionType pos ) const
 	return m_data[makeRealPos( pos )];
 }
 
-inline Sample::PositionType Sample::adjustPosition( PositionType pos ) const
+std::streamoff Sample::adjustPosition( std::streamoff pos ) const
 {
 	if( pos == BresenInterpolation::InvalidPosition ) {
 		return BresenInterpolation::InvalidPosition;
 	}
 	if( m_looptype == LoopType::None ) {
-		if( pos >= m_data.size() ) {
+		if( pos >= length() ) {
 			return BresenInterpolation::InvalidPosition;
 		}
 		return pos;
 	}
-	PositionType vLoopLen = m_loopEnd - m_loopStart;
-	PositionType vLoopEnd = m_loopEnd;
+	std::streamoff vLoopLen = m_loopEnd - m_loopStart;
+	std::streamoff vLoopEnd = m_loopEnd;
 	if( m_looptype == LoopType::Pingpong ) {
 		vLoopLen *= 2;
 		vLoopEnd = m_loopStart + vLoopLen;
@@ -169,7 +169,7 @@ inline Sample::PositionType Sample::adjustPosition( PositionType pos ) const
 	return pos;
 }
 
-inline Sample::PositionType Sample::makeRealPos( PositionType pos ) const
+std::streamoff Sample::makeRealPos( std::streamoff pos ) const
 {
 	if( m_looptype == LoopType::Pingpong ) {
 		if( pos >= m_loopEnd ) {

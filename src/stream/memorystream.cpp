@@ -26,7 +26,7 @@ MemoryStream::MemoryStream(const std::string& name) : Stream( new std::stringstr
 {
 }
 
-size_t MemoryStream::size() const
+std::streamsize MemoryStream::size() const
 {
 	const std::stringstream* ss = dynamic_cast<const std::stringstream*>(stream());
 	BOOST_ASSERT_MSG( ss!=nullptr, "Stream is not a stringstream" );

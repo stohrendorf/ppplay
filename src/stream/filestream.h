@@ -48,7 +48,7 @@ public:
 	 * @return @c true if the file is opened
 	 */
 	bool isOpen() const;
-	size_t size() const;
+	std::streamsize size() const;
 };
 
 #endif

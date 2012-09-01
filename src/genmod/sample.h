@@ -41,8 +41,6 @@ class PPPLAY_CORE_EXPORT Sample
 {
 	DISABLE_COPY( Sample )
 public:
-	//! @brief Sample position
-	typedef uint_fast32_t PositionType;
 	//! @brief Loop type definitions
 	enum class LoopType
 	{
@@ -52,9 +50,9 @@ public:
 	};
 private:
 	//! @brief Loop start sample
-	PositionType m_loopStart;
+	std::streamoff m_loopStart;
 	//! @brief Loop end sample (points to 1 frame @e after the loop end)
-	PositionType m_loopEnd;
+	std::streamoff m_loopEnd;
 	//! @brief Default volume of the sample
 	uint8_t m_volume;
 	//! @brief Base frequency of the sample
@@ -73,20 +71,20 @@ private:
 	 * @return Real position
 	 * @note Time-critical
 	 */
-	PositionType makeRealPos( PositionType pos ) const;
+	std::streamoff makeRealPos( std::streamoff pos ) const;
 	/**
 	 * @brief Adjust the playback position so it doesn't fall out of the sample data. Returns EndOfSample if it does
 	 * @param[in,out] pos Reference to the variable that should be adjusted
 	 * @return Adjusted position
 	 * @note Time-critical
 	 */
-	PositionType adjustPosition( PositionType pos ) const;
+	std::streamoff adjustPosition( std::streamoff pos ) const;
 	/**
 	 * @brief Get a sample
 	 * @param[in,out] pos Position of the requested sample
 	 * @return Sample value, 0 if invalid value for @a pos
 	 */
-	inline BasicSampleFrame sampleAt( PositionType pos ) const;
+	inline BasicSampleFrame sampleAt( std::streamoff pos ) const;
 public:
 	/**
 	 * @brief Constructor
@@ -120,7 +118,7 @@ public:
 	 * @brief Get the sample's length
 	 * @return The sample's length
 	 */
-	PositionType length() const;
+	std::streamsize length() const;
 	/**
 	 * @brief Get the loop type
 	 * @return The loop type
@@ -184,12 +182,12 @@ protected:
 	 * @brief Set the sample's loop start
 	 * @param[in] s The new loop start
 	 */
-	void setLoopStart( PositionType s );
+	void setLoopStart( std::streamoff s );
 	/**
 	 * @brief Set the sample's loop end
 	 * @param[in] e The new loop end
 	 */
-	void setLoopEnd( PositionType e );
+	void setLoopEnd( std::streamoff e );
 	/**
 	 * @brief Set the sample's default volume
 	 * @param[in] v The new volume
@@ -199,7 +197,7 @@ protected:
 	 * @brief Resize the data
 	 * @param[in] size New size
 	 */
-	inline void resizeData( PositionType size ) {
+	inline void resizeData( std::streamsize size ) {
 		m_data.resize( size );
 	}
 	/**

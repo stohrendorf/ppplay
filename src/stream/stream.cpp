@@ -34,20 +34,20 @@ void Stream::clear()
 	m_stream->clear();
 }
 
-void Stream::seek( uint32_t pos )
+void Stream::seek( std::streamoff pos )
 {
 	m_stream->seekg( pos );
 	m_stream->seekp( pos );
 }
 
-void Stream::seekrel( int32_t delta )
+void Stream::seekrel( std::streamoff delta )
 {
 	uint32_t p = pos();
 	m_stream->seekg( p + delta );
 	m_stream->seekp( p + delta );
 }
 
-uint32_t Stream::pos() const
+std::streamoff Stream::pos() const
 {
 	return m_stream->tellg();
 }

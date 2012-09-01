@@ -22,8 +22,6 @@
 AbstractArchive::AbstractArchive( const Stream::Ptr& stream ) : m_loading( false ), m_stream( stream )
 { }
 
-AbstractArchive::~AbstractArchive() = default;
-
 bool AbstractArchive::isLoading() const
 {
 	return m_loading;

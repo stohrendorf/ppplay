@@ -90,17 +90,17 @@ public:
 	 * @brief Seek to a stream position
 	 * @param[in] pos Position to seek to
 	 */
-	void seek( uint32_t pos );
+	void seek( std::streamoff pos );
 	/**
 	 * @brief Seek to a relative stream position
 	 * @param[in] delta Relative seek position
 	 */
-	void seekrel( int32_t delta );
+	void seekrel( std::streamoff delta );
 	/**
 	 * @brief Get the stream position
 	 * @return The IO Stream position
 	 */
-	uint32_t pos() const;
+	std::streamoff pos() const;
 	/**
 	 * @brief Const access to the internal stream
 	 * @return BinStream::m_stream
@@ -115,7 +115,7 @@ public:
 	 * @brief Returns the size of the underlying stream
 	 * @return The stream size
 	 */
-	virtual size_t size() const = 0;
+	virtual std::streamsize size() const = 0;
 	virtual std::string name() const;
 	
 	inline operator bool() const

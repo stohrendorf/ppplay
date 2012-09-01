@@ -40,7 +40,7 @@ bool FileStream::isOpen() const
 	return fs->is_open();
 }
 
-size_t FileStream::size() const
+std::streamsize FileStream::size() const
 {
 	return m_size;
 }

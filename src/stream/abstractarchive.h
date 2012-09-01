@@ -49,7 +49,7 @@ public:
 	 * @param[in] stream The storage stream
 	 */
 	AbstractArchive( const Stream::Ptr& stream );
-	virtual ~AbstractArchive() = 0;
+	virtual ~AbstractArchive() { }
 	/**
 	 * @brief Whether this archive is read-only
 	 * @return m_loading

@@ -57,9 +57,9 @@ private:
 	int_fast32_t m_dy;
 	//! @brief Error variable (or fractional part). Range is [0, m_dx-1]
 	int_fast32_t m_err;
-	uint_fast32_t m_position;
+	std::streamoff m_position;
 public:
-	static constexpr uint_fast32_t InvalidPosition = std::numeric_limits<uint_fast32_t>::max();
+	static constexpr std::streamoff InvalidPosition = std::numeric_limits<std::streamoff>::max();
 	
 	/**
 	 * @brief Constructor
@@ -76,7 +76,7 @@ public:
 	{
 	}
 	
-	inline operator uint_fast32_t() const {
+	inline operator std::streamoff() const {
 		return m_position;
 	}
 	

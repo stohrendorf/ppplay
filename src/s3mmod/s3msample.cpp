@@ -118,7 +118,7 @@ bool S3mSample::load( Stream* str, size_t pos, bool imagoLoopEnd )
 			m_highQuality = true;
 			uint16_t smp16;
 			auto smpPtr = beginIterator();
-			for( PositionType i = 0; i < length(); i++ ) {
+			for( std::streamoff i = 0; i < length(); i++ ) {
 				if( !(*str>>smp16) ) {
 					logger()->warn( L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes." );
 					return true;
@@ -129,7 +129,7 @@ bool S3mSample::load( Stream* str, size_t pos, bool imagoLoopEnd )
 			if( loadStereo ) {
 				logger()->info( L4CXX_LOCATION, "Loading Stereo..." );
 				smpPtr = beginIterator();
-				for( PositionType i = 0; i < length(); i++ ) {
+				for( std::streamoff i = 0; i < length(); i++ ) {
 					if( !(*str>>smp16) ) {
 						logger()->warn( L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes." );
 						return true;
@@ -143,7 +143,7 @@ bool S3mSample::load( Stream* str, size_t pos, bool imagoLoopEnd )
 			logger()->info( L4CXX_LOCATION, "Loading 8-bit sample" );
 			uint8_t smp8;
 			auto smpPtr = beginIterator();
-			for( PositionType i = 0; i < length(); i++ ) {
+			for( std::streamoff i = 0; i < length(); i++ ) {
 				if( !(*str>>smp8) ) {
 					logger()->warn( L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes." );
 					return true;
@@ -154,7 +154,7 @@ bool S3mSample::load( Stream* str, size_t pos, bool imagoLoopEnd )
 			if( loadStereo ) {
 				logger()->info( L4CXX_LOCATION, "Loading Stereo..." );
 				smpPtr = beginIterator();
-				for( PositionType i = 0; i < length(); i++ ) {
+				for( std::streamoff i = 0; i < length(); i++ ) {
 					if( !(*str>>smp8) ) {
 						logger()->warn( L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes." );
 						return true;

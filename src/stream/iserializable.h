@@ -40,9 +40,7 @@ public:
 	/**
 	 * @brief Destructor
 	 */
-	virtual ~ISerializable() = 0;
+	virtual ~ISerializable() { }
 };
-
-inline ISerializable::~ISerializable() = default;
 
 #endif
