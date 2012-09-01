@@ -35,13 +35,14 @@ timespec s_processTime;
 //! @brief The current runtime
 timespec s_realTime;
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-void __attribute__( ( constructor ) ) initializer()
+int initializer()
 {
 	clock_gettime( CLOCK_PROCESS_CPUTIME_ID, &s_processTime );
 	clock_gettime( CLOCK_REALTIME, &s_realTime );
+	return 1;
 }
-#endif
+
+int _s_clock_init_var = initializer();
 
 /**
  * @brief Get the current process CPU time in seconds

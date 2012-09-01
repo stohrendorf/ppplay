@@ -246,7 +246,7 @@ bool ModModule::load( Stream* stream, int loadMode )
 		}
 	}
 	logger()->debug( L4CXX_LOCATION, "pos=%#x size=%#x delta=%#x", stream->pos(), stream->size(), stream->size() - stream->pos() );
-	return stream->good();
+	return stream->good() && stream->size()-stream->pos()<0x100;
 }
 
 size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
