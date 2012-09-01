@@ -36,7 +36,7 @@
  * @return Copied string
  * @note Stops at the NUL character
  */
-extern std::string PPPLAY_CORE_EXPORT stringncpy( const char src[], size_t maxlen );
+std::string PPPLAY_CORE_EXPORT stringncpy( const char src[], size_t maxlen );
 
 inline std::string stringFmt( boost::format& fmt )
 {
