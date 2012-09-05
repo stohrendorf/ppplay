@@ -36,7 +36,7 @@ namespace ppp
 /**
  * @brief General note names
  */
-extern PPPLAY_CORE_EXPORT const std::array<const char[3], 12> NoteNames;
+extern PPPLAY_CORE_EXPORT const std::array<const char*, 12> NoteNames;
 
 /**
  * @class RememberByte

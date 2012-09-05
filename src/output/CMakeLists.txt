@@ -1,10 +1,3 @@
-# set(audioout_SRCS audiofifo.cpp iaudiosource.cpp iaudiooutput.cpp sdlaudiooutput.cpp audiotypes.cpp)
-# if(${WITH_MP3LAME})
-# 	set(audioout_SRCS ${audioout_SRCS} mp3audiooutput.cpp)
-# endif()
-
-# add_library(audioout STATIC ${audioout_SRCS})
-
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 if(${WITH_MP3LAME})

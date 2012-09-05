@@ -34,7 +34,6 @@ add_library(ppplay_core SHARED
 	stuff/sdltimer.cpp
 	stuff/stringutils.cpp
 	output/audiofifo.cpp
-	output/audiotypes.cpp
 	output/abstractaudiooutput.cpp
 	output/abstractaudiosource.cpp
 	light4cxx/location.cpp
