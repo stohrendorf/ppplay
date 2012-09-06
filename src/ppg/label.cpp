@@ -226,7 +226,7 @@ void Label::drawThis()
 		if( m_fgColors[ textPos ] != Color::None ) {
 			setFgColorAt( localX, 0, m_fgColors[ textPos ] );
 		}
-		if( m_bgColors.at( textPos ) != Color::None ) {
+		if( m_bgColors[ textPos ] != Color::None ) {
 			setBgColorAt( localX, 0, m_bgColors[ textPos ] );
 		}
 	}

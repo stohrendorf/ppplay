@@ -91,14 +91,12 @@ struct S3mModuleHeader {
 
 S3mModule::S3mModule( int maxRpt ) : AbstractModule( maxRpt ),
 	m_breakRow( ~0 ), m_breakOrder( ~0 ), m_patLoopRow( -1 ), m_patLoopCount( -1 ), m_patDelayCount( -1 ),
-	m_customData( false ), m_samples(), m_patterns(), m_channels(), m_usedChannels( 0 ),
+	m_customData( false ), m_samples(256, nullptr), m_patterns(256, nullptr), m_channels(), m_usedChannels( 0 ),
 	m_amigaLimits( false ), m_fastVolSlides( false ), m_st2Vibrato( false ), m_zeroVolOpt( false )
 {
 	try {
 		for( int i = 0; i < 256; i++ ) {
 			addOrder( new S3mOrder( s3mOrderEnd ) );
-			m_patterns.push_back( nullptr );
-			m_samples.push_back( nullptr );
 		}
 		for( S3mChannel*& chan : m_channels ) {
 				chan = new S3mChannel( this );
@@ -221,7 +219,7 @@ bool S3mModule::load( Stream* stream )
 			*stream >> pp;
 			if( pp == 0 )
 				continue;
-			m_samples.at( i ) = new S3mSample();
+			m_samples[i] = new S3mSample();
 			if( !( m_samples[i]->load( stream, pp * 16, ( ( s3mHdr.createdWith >> 12 ) & 0x0f ) == s3mTIdImagoOrpheus ) ) ) {
 				return false;
 			}
@@ -242,7 +240,7 @@ bool S3mModule::load( Stream* stream )
 			if( pp == 0 )
 				continue;
 			S3mPattern* pat = new S3mPattern();
-			m_patterns.at( i ) = pat;
+			m_patterns[ i ] = pat;
 			if( !pat->load( stream, pp * 16 ) ) {
 				return false;
 			}
@@ -255,7 +253,7 @@ bool S3mModule::load( Stream* stream )
 		logger()->info( L4CXX_LOCATION, "Preparing channels..." );
 		for( int i = 0; i < 32; i++ ) {
 			S3mChannel* s3mChan = new S3mChannel( this );
-			m_channels.at( i ) = s3mChan;
+			m_channels[i] = s3mChan;
 			if( ( s3mHdr.pannings[i] & 0x80 ) != 0 ) {
 				s3mChan->disable();
 				continue;

@@ -752,7 +752,7 @@ std::string XmChannel::internal_noteName() const
 		return "___";
 	}
 	int ofs = std::lround( fofs );
-	return stringFmt( "%s%d", NoteNames.at( ofs % 12 ), ofs / 12 );
+	return stringFmt( "%s%d", NoteNames[ofs % 12], ofs / 12 );
 }
 
 void XmChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )

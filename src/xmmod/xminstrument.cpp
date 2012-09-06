@@ -107,7 +107,7 @@ bool XmInstrument::load( Stream* str )
 	str->seek( startPos + hdr.size );
 	for( uint_fast16_t i = 0; i < hdr.numSamples; i++ ) {
 		XmSample* smp = new XmSample();
-		m_samples.at( i ) = smp;
+		m_samples[i] = smp;
 		smp->load( str );
 	}
 	for( uint_fast16_t i = 0; i < hdr.numSamples; i++ ) {

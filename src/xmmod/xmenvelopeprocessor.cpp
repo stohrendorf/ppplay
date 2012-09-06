@@ -69,17 +69,17 @@ void XmEnvelopeProcessor::increasePosition( bool keyOn )
 	if( m_position == m_points.at( m_nextIndex ).position ) {
 		if( atLoopEnd( m_nextIndex ) ) {
 			m_position = m_points.at( m_loopStart ).position;
-			m_currentValue = m_points.at( m_loopStart ).value << 8;
+			m_currentValue = m_points[m_loopStart].value << 8;
 			m_nextIndex = m_loopStart;
 		}
 		else {
-			m_currentValue = m_points.at( m_nextIndex ).value << 8;
+			m_currentValue = m_points[m_nextIndex].value << 8;
 		}
 		m_nextIndex++;
 		if( m_nextIndex < m_numPoints ) {
 			int16_t dx = m_points.at( m_nextIndex ).position - m_points.at( m_nextIndex - 1 ).position;
 			if( dx > 0 ) {
-				int16_t dy = ( m_points.at( m_nextIndex ).value << 8 ) - ( m_points.at( m_nextIndex - 1 ).value << 8 );
+				int16_t dy = ( m_points[m_nextIndex].value << 8 ) - ( m_points[m_nextIndex - 1].value << 8 );
 				m_currentRate = dy / dx;
 			}
 			else {
@@ -172,17 +172,17 @@ void XmEnvelopeProcessor::setPosition( uint8_t pos )
 			m_currentValue = m_points.at( foundPoint - 1 ).value;
 		}
 		else if( m_points.at( foundPoint ).position == pos ) {
-			if( m_points.at( foundPoint + 1 ).position < m_points.at( foundPoint ).position ) {
+			if( m_points.at( foundPoint + 1 ).position < m_points[foundPoint].position ) {
 				m_currentRate = 0;
 				m_currentValue = m_points.at( foundPoint - 1 ).value;
 			}
 		}
 		else {
 			int16_t dx = m_points.at( foundPoint + 1 ).position - m_points.at( foundPoint ).position;
-			int16_t dy = m_points.at( foundPoint + 1 ).value - m_points.at( foundPoint ).value;
+			int16_t dy = m_points[foundPoint + 1].value - m_points[foundPoint].value;
 			m_currentRate = ( dy << 8 ) / dx;
-			m_currentValue = m_points.at( foundPoint ).value;
-			m_currentValue += m_currentRate * ( pos - m_points.at( foundPoint ).position );
+			m_currentValue = m_points[foundPoint].value;
+			m_currentValue += m_currentRate * ( pos - m_points[foundPoint].position );
 			foundPoint++;
 		}
 		if( foundPoint >= m_numPoints ) {
@@ -195,7 +195,7 @@ void XmEnvelopeProcessor::setPosition( uint8_t pos )
 void XmEnvelopeProcessor::doKeyOff()
 {
 	if(enabled() && m_nextIndex<m_numPoints && m_position >= m_points.at(m_nextIndex).position) {
-		m_position = m_points.at(m_nextIndex).position-1;
+		m_position = m_points[m_nextIndex].position-1;
 	}
 }
 

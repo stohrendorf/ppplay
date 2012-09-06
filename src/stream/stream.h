@@ -29,7 +29,7 @@
 #include <type_traits>
 
 /**
- * @class BinStream
+ * @class Stream
  * @ingroup Common
  * @brief A binary stream helper
  */

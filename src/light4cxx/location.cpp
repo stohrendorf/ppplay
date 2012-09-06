@@ -105,7 +105,7 @@ const char* levelString( Level l )
 		case Level::Info:
 			return "INFO";
 		case Level::Warn:
-			return COLOR_YELLOW "WARN" COLOR_RESET;
+			return COLOR_YELLOW "WARN " COLOR_RESET;
 		case Level::Error:
 			return COLOR_RED "ERROR" COLOR_RESET;
 		case Level::Fatal:

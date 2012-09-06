@@ -311,7 +311,7 @@ void ModChannel::setCellPeriod()
 	}
 	size_t perIdx = 0;
 	for( perIdx = 0; perIdx < fullPeriods.front().size(); perIdx++ ) {
-		if( m_currentCell->period() >= fullPeriods.front().at( perIdx ) ) {
+		if( m_currentCell->period() >= fullPeriods.front()[perIdx] ) {
 			break;
 		}
 	}
@@ -339,18 +339,18 @@ void ModChannel::setTonePortaTarget()
 	}
 	size_t perIdx = 0;
 	for( perIdx = 0; perIdx < fullPeriods.at( m_finetune ).size(); perIdx++ ) {
-		if( m_currentCell->period() >= fullPeriods.at( m_finetune ).at( perIdx ) ) {
+		if( m_currentCell->period() >= fullPeriods[m_finetune][perIdx] ) {
 			break;
 		}
 	}
 	if( perIdx != 0 && ( m_finetune & 8 ) != 0 ) {
 		perIdx--;
 	}
-	if( perIdx >= fullPeriods.at( m_finetune ).size() ) {
-		m_portaTarget = fullPeriods.at( m_finetune ).back();
+	if( perIdx >= fullPeriods[m_finetune].size() ) {
+		m_portaTarget = fullPeriods[m_finetune].back();
 	}
 	else {
-		m_portaTarget = fullPeriods.at( m_finetune ).at( perIdx );
+		m_portaTarget = fullPeriods[m_finetune].at( perIdx );
 	}
 	m_portaDirUp = false;
 	if( m_portaTarget == m_period ) {
@@ -622,12 +622,12 @@ void ModChannel::fxArpeggio( uint8_t fxByte )
 		delta = fxByte&0x0f;
 	}
 	for( uint_fast8_t i = 0; i < fullPeriods.at( m_finetune ).size() - delta; i++ ) {
-		if( fullPeriods.at( m_finetune )[ i ] <= m_period ) {
-			m_physPeriod = fullPeriods.at( m_finetune )[ i + delta ];
+		if( fullPeriods[m_finetune][i] <= m_period ) {
+			m_physPeriod = fullPeriods[m_finetune][i + delta];
 			return;
 		}
 	}
-	m_physPeriod = fullPeriods.at( m_finetune ).back();
+	m_physPeriod = fullPeriods[m_finetune].back();
 }
 
 void ModChannel::fxPatBreak( uint8_t )
@@ -724,7 +724,7 @@ void ModChannel::applyGlissando()
 			return;
 		}
 	}
-	m_physPeriod = fullPeriods.at( m_finetune ).back();
+	m_physPeriod = fullPeriods[m_finetune].back();
 }
 
 light4cxx::Logger* ModChannel::logger()
