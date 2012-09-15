@@ -826,7 +826,7 @@ void S3mChannel::fxVibrato( uint8_t fxByte, bool fine, bool noReuse )
 		m_currentFxStr = "FnVib\xf7";
 	}
 	if( !noReuse ) {
-		m_lastFxByte = fxByte;
+		m_lastVibratoData = fxByte;
 	}
 	if( m_basePeriod == 0 ) {
 		return;
@@ -835,8 +835,8 @@ void S3mChannel::fxVibrato( uint8_t fxByte, bool fine, bool noReuse )
 	if( ( m_vibratoWaveform & 3 ) == 3 ) { // random vibrato
 		m_vibratoPhase = ( m_vibratoPhase + ( std::rand() & 0x0f ) ) & 0x3f;
 	}
-	m_vibratoPhase = ( m_vibratoPhase + m_lastFxByte.hi() ) & 0x3f;
-	val = ( val * m_lastFxByte.lo() ) >> 4;
+	m_vibratoPhase = ( m_vibratoPhase + m_lastVibratoData.hi() ) & 0x3f;
+	val = ( val * m_lastVibratoData.lo() ) >> 4;
 	if( m_module->st2Vibrato() )
 		val >>= 1;
 	if( fine )

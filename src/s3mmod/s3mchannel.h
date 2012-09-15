@@ -53,7 +53,7 @@ class S3mChannel : public AbstractChannel
 private:
 	uint8_t m_note;          //!< @brief Currently playing note
 	RememberByte<true> m_lastFxByte;        //!< @brief Last FX Value
-	uint8_t m_lastVibratoData; //!< @brief Last Vibrato FX
+	RememberByte<true> m_lastVibratoData; //!< @brief Last Vibrato FX
 	RememberByte<false> m_lastPortaSpeed; //!< @brief Last porta speed
 	uint8_t m_tremorVolume;  //!< @brief Backup variable for Tremor FX
 	bool m_noteChanged;            //!< @brief @c true when a new note triggered in the current frame
