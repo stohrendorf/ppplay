@@ -33,7 +33,7 @@ size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
 {
 	boost::mutex::scoped_try_lock lock( m_mutex );
 	if(!lock) {
-		logger()->trace(L4CXX_LOCATION, "Failed to lock mutex");
+		logger()->warn(L4CXX_LOCATION, "Failed to lock mutex");
 		return 0;
 	}
 	AudioFrameBuffer buffer;

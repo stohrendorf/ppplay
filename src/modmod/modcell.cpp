@@ -52,7 +52,8 @@ bool ModCell::load( Stream* str )
 	*str >> tmp;
 	m_sampleNumber = tmp & 0xf0;
 	if( m_sampleNumber > 32 ) {
-		logger()->warn( L4CXX_LOCATION, "Sample out of range: %d", int(m_sampleNumber) );
+		logger()->error( L4CXX_LOCATION, "Sample out of range: %d", int(m_sampleNumber) );
+		return false;
 	}
 	//m_sampleNumber &= 0x1f;
 	m_period = ( tmp & 0x0f ) << 8;

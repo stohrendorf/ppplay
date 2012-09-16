@@ -26,6 +26,7 @@
 #include "abstractaudiosource.h"
 
 #include <light4cxx/logger.h>
+#include <boost/thread.hpp>
 
 /**
  * @ingroup Output
@@ -57,11 +58,14 @@ private:
 	AbstractAudioSource::WeakPtr m_source;
 	//! @brief Sum of all left absolute sample values
 	uint64_t m_volLeftSum;
+	uint16_t m_volLeftLog;
 	//! @brief Sum of all right absolute sample values
 	uint64_t m_volRightSum;
+	uint16_t m_volRightLog;
 	const bool m_doVolumeCalc;
 	bool m_stopping;
-	mutable boost::recursive_mutex m_mutex;
+	mutable boost::mutex m_queueMutex;
+	boost::condition_variable m_queueChanged;
 	/**
 	 * @brief Audio data pulling thread function
 	 * @param[in] fifo The FIFO that owns the thread
