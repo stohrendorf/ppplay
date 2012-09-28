@@ -79,7 +79,7 @@ public:
 	 * @details
 	 * Loads and initializes the module if possible
 	 */
-	static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt );
+	static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter );
 	virtual ~XmModule();
 	//! @brief Class pointer
 	typedef std::shared_ptr<XmModule> Ptr;
@@ -92,7 +92,7 @@ private:
 	 * @brief Constructor
 	 * @param[in] maxRpt maximum repeat count per order
 	 */
-	XmModule( int maxRpt );
+	XmModule( int maxRpt, Sample::Interpolation inter );
 	/**
 	 * @brief Try to load a XM module
 	 * @param[in] filename Filename of the module to load

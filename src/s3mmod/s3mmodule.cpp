@@ -89,7 +89,7 @@ struct S3mModuleHeader {
 #pragma pack(pop)
 #endif
 
-S3mModule::S3mModule( int maxRpt ) : AbstractModule( maxRpt ),
+S3mModule::S3mModule( int maxRpt, Sample::Interpolation inter ) : AbstractModule( maxRpt, inter ),
 	m_breakRow( ~0 ), m_breakOrder( ~0 ), m_patLoopRow( -1 ), m_patLoopCount( -1 ), m_patDelayCount( -1 ),
 	m_customData( false ), m_samples(256, nullptr), m_patterns(256, nullptr), m_channels(), m_usedChannels( 0 ),
 	m_amigaLimits( false ), m_fastVolSlides( false ), m_st2Vibrato( false ), m_zeroVolOpt( false )
@@ -574,9 +574,9 @@ AbstractArchive& S3mModule::serialize( AbstractArchive* data )
 	return *data;
 }
 
-AbstractModule* S3mModule::factory( Stream* stream, uint32_t frequency, int maxRpt )
+AbstractModule* S3mModule::factory( Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter )
 {
-	S3mModule* result( new S3mModule( maxRpt ) );
+	S3mModule* result( new S3mModule( maxRpt, inter ) );
 	if( !result->load( stream ) ) {
 		delete result;
 		return nullptr;

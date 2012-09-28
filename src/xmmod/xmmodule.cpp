@@ -74,8 +74,8 @@ constexpr std::array<const uint16_t, 12 * 8> g_PeriodTable = {{
 };
 } // anonymous namespace
 
-XmModule::XmModule( int maxRpt ):
-	AbstractModule( maxRpt ),
+XmModule::XmModule( int maxRpt, Sample::Interpolation inter ):
+	AbstractModule( maxRpt, inter ),
 	m_amiga( false ), m_patterns(), m_instruments(), m_channels(),
 	m_noteToPeriod(), m_jumpRow( ~0 ), m_jumpOrder( ~0 ),
 	m_isPatLoop( false ), m_doPatJump( false ), m_restartPos( 0 ),
@@ -430,9 +430,9 @@ AbstractArchive& XmModule::serialize( AbstractArchive* data )
 	return *data;
 }
 
-AbstractModule* XmModule::factory( Stream* stream, uint32_t frequency, int maxRpt )
+AbstractModule* XmModule::factory( Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter )
 {
-	XmModule* result( new XmModule( maxRpt ) );
+	XmModule* result( new XmModule( maxRpt, inter ) );
 	if( !result ) {
 		delete result;
 		return nullptr;

@@ -535,7 +535,7 @@ void S3mChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 	}
 	volL *= currVol;
 	volR *= currVol;
-	setActive( currSmp->mixLinearInterpolated(&m_bresen, mixBuffer, volL, volR, 11) );
+	setActive( currSmp->mix(m_module->interpolation(), &m_bresen, mixBuffer, volL, volR, 11) );
 }
 
 std::string S3mChannel::internal_cellString() const

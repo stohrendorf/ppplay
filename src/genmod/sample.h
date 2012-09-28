@@ -48,6 +48,13 @@ public:
 		Forward, //!< @brief Forward looped
 		Pingpong //!< @brief Ping pong looped
 	};
+	
+	enum class Interpolation
+	{
+		None,
+		Linear,
+		Cubic
+	};
 private:
 	//! @brief Loop start sample
 	std::streamoff m_loopStart;
@@ -85,6 +92,9 @@ private:
 	 * @return Sample value, 0 if invalid value for @a pos
 	 */
 	inline BasicSampleFrame sampleAt( std::streamoff pos ) const;
+	bool mixNonInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
+	bool mixLinearInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
+	bool mixCubicInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
 public:
 	/**
 	 * @brief Constructor
@@ -125,8 +135,7 @@ public:
 	 */
 	LoopType loopType() const;
 	
-	bool mixNonInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
-	bool mixLinearInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
+	bool mix( Interpolation inter, BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
 protected:
 	typedef BasicSampleFrame::Vector::iterator Iterator;
 	typedef BasicSampleFrame::Vector::const_iterator ConstIterator;

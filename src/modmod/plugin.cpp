@@ -16,8 +16,8 @@ public:
 	virtual std::string description() const {
 		return "Protracker Module Loader";
 	};
-	virtual AbstractModule* load(Stream* stream, uint32_t frequency, int maxRepeat) const {
-		return mod::ModModule::factory(stream,frequency,maxRepeat);
+	virtual AbstractModule* load(Stream* stream, uint32_t frequency, int maxRepeat, Sample::Interpolation inter) const {
+		return mod::ModModule::factory(stream,frequency,maxRepeat,inter);
 	};
 };
 }

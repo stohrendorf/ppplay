@@ -34,7 +34,7 @@
 namespace ppp
 {
 
-AbstractModule::AbstractModule( int maxRpt ) :
+AbstractModule::AbstractModule( int maxRpt, Sample::Interpolation inter ) :
 	m_metaInfo(),
 	m_orders(),
 	m_state(),
@@ -42,7 +42,8 @@ AbstractModule::AbstractModule( int maxRpt ) :
 	m_maxRepeat(maxRpt),
 	m_initialState(new MemArchive()),
 	m_isPreprocessing(false),
-	m_mutex()
+	m_mutex(),
+	m_interpolation(inter)
 {
 	BOOST_ASSERT_MSG( maxRpt != 0, "Maximum repeat count may not be 0" );
 }

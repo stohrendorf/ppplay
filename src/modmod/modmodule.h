@@ -48,7 +48,7 @@ public:
 	 * @param[in] maxRpt Maximum repeat count
 	 * @return Module pointer or nullptr
 	 */
-	static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt = 2 );
+	static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter );
 private:
 	std::vector<ModSample*> m_samples; //!< @brief Samples
 	std::vector<ModPattern*> m_patterns; //!< @brief Patterns
@@ -64,7 +64,7 @@ private:
 protected:
 	virtual AbstractArchive& serialize( AbstractArchive* data );
 public:
-	ModModule( int maxRpt = 2 );
+	ModModule( int maxRpt, Sample::Interpolation inter );
 	virtual ~ModModule();
 	bool load( Stream* stream, int loadMode );
 private:

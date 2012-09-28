@@ -75,6 +75,21 @@ struct BasicSampleFrame {
 	}
 	constexpr BasicSampleFrame(int16_t l, int16_t r) : left( l ), right( r ) {
 	}
+	
+	constexpr BasicSampleFrame operator-(const BasicSampleFrame& rhs) {
+		return BasicSampleFrame(left-rhs.left, right-rhs.right);
+	}
+	constexpr BasicSampleFrame operator*(int value) {
+		return BasicSampleFrame(left*value, right*value);
+	}
+	constexpr BasicSampleFrame operator>>(int shift) {
+		return BasicSampleFrame(left>>shift, right>>shift);
+	}
+	inline BasicSampleFrame& operator+=(const BasicSampleFrame& rhs) {
+		left += rhs.left;
+		right += rhs.right;
+		return *this;
+	}
 };
 #pragma pack(pop)
 

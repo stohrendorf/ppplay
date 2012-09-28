@@ -58,6 +58,7 @@ bool noGUI = false;
 uint16_t maxRepeat = 2;
 std::string filename;
 std::string outputFilename;
+ppp::Sample::Interpolation interpolation;
 }
 
 bool parseCmdLine( int argc, char* argv[] )
@@ -78,6 +79,7 @@ bool parseCmdLine( int argc, char* argv[] )
 	( "max-repeat,m", bpo::value<uint16_t>( &config::maxRepeat )->default_value( 2 ), "Maximum repeat count (the number of times an order can be played). Specify a number between 1 and 10,000." )
 	( "file,f", bpo::value<std::string>( &config::filename ), "Module file to play" )
 	( "output,o", bpo::value<std::string>( &config::outputFilename )->default_value(std::string()), "Set mp3/wav filename" )
+	( "interpolation,i", bpo::value<int>()->default_value(2), "Set interpolation mode:\n - 0 No interpolation\n - 1 Linear interpolation\n - 2 Cubic interpolation" )
 	;
 	bpo::positional_options_description p;
 	p.add( "file", -1 );
@@ -181,6 +183,22 @@ bool parseCmdLine( int argc, char* argv[] )
 	if( vm.count( "no-gui" ) != 0 ) {
 		config::noGUI = true;
 	}
+	switch( vm["interpolation"].as<int>() ) {
+		case 0:
+			light4cxx::Logger::root()->info( L4CXX_LOCATION, "Sample interpolation: none" );
+			config::interpolation = ppp::Sample::Interpolation::None;
+			break;
+		case 1:
+			light4cxx::Logger::root()->info( L4CXX_LOCATION, "Sample interpolation: linear" );
+			config::interpolation = ppp::Sample::Interpolation::Linear;
+			break;
+		case 2:
+			light4cxx::Logger::root()->info( L4CXX_LOCATION, "Sample interpolation: adaptive linear" );
+			config::interpolation = ppp::Sample::Interpolation::Cubic;
+			break;
+		default:
+			light4cxx::Logger::root()->warn( L4CXX_LOCATION, "Invalid interpolation mode requested" );
+	}
 	return vm.count( "file" ) != 0;
 }
 
@@ -196,7 +214,7 @@ int main( int argc, char* argv[] )
 		light4cxx::Logger::root()->info( L4CXX_LOCATION, "Trying to load '%s'", config::filename );
 		ppp::AbstractModule::Ptr module;
 		try {
-			module = ppp::PluginRegistry::tryLoad(config::filename, 44100, config::maxRepeat);
+			module = ppp::PluginRegistry::tryLoad(config::filename, 44100, config::maxRepeat, config::interpolation);
 			if( !module ) {
 				light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load '%s'", config::filename );
 				return EXIT_FAILURE;

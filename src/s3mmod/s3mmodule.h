@@ -55,7 +55,7 @@ public:
 	 * @param[in] maxRpt Maximum repeat count
 	 * @return Module pointer or nullptr
 	 */
-	static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt = 2 );
+	static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter );
 private:
 	uint16_t m_breakRow;      //!< @brief Row to break to, ~0 if unused
 	uint16_t m_breakOrder;    //!< @brief Order to break to, ~0 if unused
@@ -89,7 +89,7 @@ private:
 	/**
 	 * @copydoc ppp::GenModule::GenModule(uint8_t)
 	 */
-	S3mModule( int maxRpt = 2 );
+	S3mModule( int maxRpt, Sample::Interpolation inter );
 	/**
 	 * @brief Apply global effects
 	 */

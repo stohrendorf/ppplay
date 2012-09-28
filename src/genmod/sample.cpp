@@ -138,9 +138,65 @@ bool Sample::mixLinearInterpolated( BresenInterpolation* bresen, MixerFrameBuffe
 	return true;
 }
 
+namespace
+{
+	constexpr int interpolateCubicLevel0(int p0, int p1, int p2, int p3, int bias)
+	{
+		return (bias*(3*(p1 - p2) + p3 - p0))>>8;
+	}
+	constexpr int interpolateCubicLevel1(int p0, int p1, int p2, int p3, int bias)
+	{
+		return (bias*((p0<<1) - 5*p1 + (p2<<2) - p3 + interpolateCubicLevel0(p0,p1,p2,p3,bias)))>>8;
+	}
+	constexpr BasicSample interpolateCubic(int p0, int p1, int p2, int p3, int bias)
+	{
+		return clip(p1 + ((bias*(p2 - p0 + interpolateCubicLevel1(p0,p1,p2,p3,bias)))>>9), -32768, 32767);
+	}
+}
+
+bool Sample::mixCubicInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const
+{
+	BOOST_ASSERT( bresen!=nullptr && buffer!=nullptr && rightShift>=0 );
+	for( MixerSampleFrame & frame : **buffer ) {
+		*bresen = adjustPosition( *bresen );
+		if(!bresen->isValid()) {
+			return false;
+		}
+		
+		BasicSampleFrame samples[4];
+		for(int i=0; i<4; i++) {
+			samples[i] = sampleAt(adjustPosition(i+*bresen-1));
+			
+		}
+		BasicSampleFrame res(
+			interpolateCubic(samples[0].left, samples[1].left, samples[2].left, samples[3].left, bresen->bias()),
+			interpolateCubic(samples[0].right, samples[1].right, samples[2].right, samples[3].right, bresen->bias())
+		);
+		res.mulRShift(factorLeft, factorRight, rightShift);
+		frame += res;
+		
+		bresen->next();
+	}
+	return true;
+}
+
+bool Sample::mix( Sample::Interpolation inter, BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const
+{
+	switch(inter) {
+		case Interpolation::None:
+			return mixNonInterpolated(bresen,buffer,factorLeft,factorRight,rightShift);
+		case Interpolation::Linear:
+			return mixLinearInterpolated(bresen,buffer,factorLeft,factorRight,rightShift);
+		case Interpolation::Cubic:
+			return mixCubicInterpolated(bresen,buffer,factorLeft,factorRight,rightShift);
+		default:
+			return false;
+	}
+}
+
 inline BasicSampleFrame Sample::sampleAt( std::streamoff pos ) const
 {
-	if( pos == BresenInterpolation::InvalidPosition ) {
+	if( pos==BresenInterpolation::InvalidPosition || pos<0 ) {
 		return BasicSampleFrame();
 	}
 	return m_data[makeRealPos( pos )];
@@ -148,7 +204,7 @@ inline BasicSampleFrame Sample::sampleAt( std::streamoff pos ) const
 
 std::streamoff Sample::adjustPosition( std::streamoff pos ) const
 {
-	if( pos == BresenInterpolation::InvalidPosition ) {
+	if( pos<0 || pos == BresenInterpolation::InvalidPosition ) {
 		return BresenInterpolation::InvalidPosition;
 	}
 	if( m_looptype == LoopType::None ) {

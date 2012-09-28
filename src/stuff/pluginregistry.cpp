@@ -46,7 +46,7 @@ PluginRegistry& PluginRegistry::instance()
 	return registry;
 }
 
-AbstractModule::Ptr PluginRegistry::tryLoad( const std::string& filename, uint32_t frq, int maxRpt )
+AbstractModule::Ptr PluginRegistry::tryLoad( const std::string& filename, uint32_t frq, int maxRpt, Sample::Interpolation inter )
 {
 	findPlugins();
 	{
@@ -56,7 +56,7 @@ AbstractModule::Ptr PluginRegistry::tryLoad( const std::string& filename, uint32
 				InputPlugin* plugin = static_cast<InputPlugin*>(dlsym(handle, "plugin"));
 				file.clear();
 				file.seek(0);
-				if( AbstractModule* result = plugin->load( &file, frq, maxRpt ) ) {
+				if( AbstractModule* result = plugin->load( &file, frq, maxRpt, inter ) ) {
 					return AbstractModule::Ptr(result);
 				}
 			}
@@ -69,7 +69,7 @@ AbstractModule::Ptr PluginRegistry::tryLoad( const std::string& filename, uint32
 				InputPlugin* plugin = static_cast<InputPlugin*>(dlsym(handle, "plugin"));
 				file.clear();
 				file.seek(0);
-				if( AbstractModule* result = plugin->load( &file, frq, maxRpt ) ) {
+				if( AbstractModule* result = plugin->load( &file, frq, maxRpt, inter ) ) {
 					return AbstractModule::Ptr(result);
 				}
 			}

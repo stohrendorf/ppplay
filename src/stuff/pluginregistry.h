@@ -37,7 +37,7 @@ private:
 	static void findPlugins();
 public:
 	static PluginRegistry& instance();
-	static AbstractModule::Ptr tryLoad( const std::string& filename, uint32_t frq, int maxRpt );
+	static AbstractModule::Ptr tryLoad( const std::string& filename, uint32_t frq, int maxRpt, Sample::Interpolation inter );
 };
 
 }

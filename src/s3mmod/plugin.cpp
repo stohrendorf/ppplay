@@ -16,8 +16,8 @@ public:
 	virtual std::string description() const {
 		return "ScreamTracker 3 Module Loader";
 	};
-	virtual AbstractModule* load(Stream* stream, uint32_t frequency, int maxRepeat) const {
-		return s3m::S3mModule::factory(stream, frequency, maxRepeat);
+	virtual AbstractModule* load(Stream* stream, uint32_t frequency, int maxRepeat, Sample::Interpolation inter) const {
+		return s3m::S3mModule::factory(stream, frequency, maxRepeat, inter);
 	};
 };
 }

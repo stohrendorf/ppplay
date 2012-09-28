@@ -25,6 +25,7 @@
 #include <output/abstractaudiosource.h>
 #include <stuff/trackingcontainer.h>
 #include "songinfo.h"
+#include "sample.h"
 
 namespace ppp
 {
@@ -77,6 +78,7 @@ private:
 	AbstractArchive* m_initialState;
 	bool m_isPreprocessing;
 	mutable boost::recursive_mutex m_mutex;
+	Sample::Interpolation m_interpolation;
 public:
 	//BEGIN Construction/destruction
 	/**
@@ -88,7 +90,7 @@ public:
 	 * @param[in] maxRpt Maximum repeat count for repeating modules
 	 * @pre @c maxRpt>0
 	 */
-	AbstractModule( int maxRpt );
+	AbstractModule( int maxRpt, Sample::Interpolation inter = Sample::Interpolation::None );
 	/**
 	 * @brief The destructor
 	 */
@@ -189,6 +191,9 @@ public:
 	std::string channelCellString( size_t idx ) const;
 	//! @copydoc internal_channelCount
 	int channelCount() const;
+	
+	inline Sample::Interpolation interpolation() const { return m_interpolation; }
+	inline void setInterpolation(Sample::Interpolation inter) { m_interpolation = inter; }
 protected:
 	/**
 	 * @brief Get the frame count of a tick

@@ -31,9 +31,9 @@ struct LoadingMode
 };
 }
 
-AbstractModule* ModModule::factory( Stream* stream, uint32_t frequency, int maxRpt )
+AbstractModule* ModModule::factory( Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter )
 {
-	ModModule* result = new ModModule( maxRpt );
+	ModModule* result = new ModModule( maxRpt, inter );
 	for(int i=0; i<LoadingMode::Count; i++) {
 		stream->seek(0);
 		stream->clear();
@@ -42,7 +42,7 @@ AbstractModule* ModModule::factory( Stream* stream, uint32_t frequency, int maxR
 			if( i == LoadingMode::Count-1 ) {
 				return nullptr;
 			}
-			result = new ModModule( maxRpt );
+			result = new ModModule( maxRpt, inter );
 		}
 		else {
 			break;
@@ -55,7 +55,7 @@ AbstractModule* ModModule::factory( Stream* stream, uint32_t frequency, int maxR
 	return result;
 }
 
-ModModule::ModModule( int maxRpt ): AbstractModule( maxRpt ),
+ModModule::ModModule( int maxRpt, Sample::Interpolation inter ): AbstractModule( maxRpt, inter ),
 	m_samples(), m_patterns(), m_channels(), m_patLoopRow( -1 ),
 	m_patLoopCount( -1 ), m_breakRow( -1 ), m_patDelayCount( -1 ), m_breakOrder( ~0 )
 {

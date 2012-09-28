@@ -776,7 +776,7 @@ void XmChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 	}
 	volLeft *= m_realVolume;
 	volRight *= m_realVolume;
-	setActive( currSmp->mixLinearInterpolated(&m_bres, mixBuffer, volLeft, volRight, 13) );
+	setActive( currSmp->mix(m_module->interpolation(), &m_bres, mixBuffer, volLeft, volRight, 13) );
 }
 
 void XmChannel::internal_updateStatus()
