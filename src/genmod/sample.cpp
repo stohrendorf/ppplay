@@ -148,9 +148,9 @@ namespace
 	{
 		return (bias*((p0<<1) - 5*p1 + (p2<<2) - p3 + interpolateCubicLevel0(p0,p1,p2,p3,bias)))>>8;
 	}
-	constexpr BasicSample interpolateCubic(int p0, int p1, int p2, int p3, int bias)
+	constexpr MixerSample interpolateCubic(int p0, int p1, int p2, int p3, int bias)
 	{
-		return clip(p1 + ((bias*(p2 - p0 + interpolateCubicLevel1(p0,p1,p2,p3,bias)))>>9), -32768, 32767);
+		return p1 + ((bias*(p2 - p0 + interpolateCubicLevel1(p0,p1,p2,p3,bias)))>>9);
 	}
 }
 
@@ -168,12 +168,8 @@ bool Sample::mixCubicInterpolated( BresenInterpolation* bresen, MixerFrameBuffer
 			samples[i] = sampleAt(adjustPosition(i+*bresen-1));
 			
 		}
-		BasicSampleFrame res(
-			interpolateCubic(samples[0].left, samples[1].left, samples[2].left, samples[3].left, bresen->bias()),
-			interpolateCubic(samples[0].right, samples[1].right, samples[2].right, samples[3].right, bresen->bias())
-		);
-		res.mulRShift(factorLeft, factorRight, rightShift);
-		frame += res;
+		frame.left  += (factorLeft* interpolateCubic(samples[0].left,  samples[1].left,  samples[2].left,  samples[3].left,  bresen->bias()))>>rightShift;
+		frame.right += (factorRight*interpolateCubic(samples[0].right, samples[1].right, samples[2].right, samples[3].right, bresen->bias()))>>rightShift;
 		
 		bresen->next();
 	}
