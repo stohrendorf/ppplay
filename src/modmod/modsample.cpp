@@ -65,7 +65,7 @@ bool ModSample::loadHeader( Stream* stream )
 	swapEndian( &hdr.loopStart );
 	swapEndian( &hdr.loopLength );
 	if( hdr.length > 1 ) {
-		resizeData( (hdr.length-1) << 1 );
+		resizeData( hdr.length << 1 );
 	}
 	else {
 		resizeData( 0 );
