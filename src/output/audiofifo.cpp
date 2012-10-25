@@ -100,9 +100,9 @@ void AudioFifo::requestThread()
 			continue;
 		}
 		// add the data to the queue...
-// 		logger()->trace( L4CXX_LOCATION, "Adding %4d frames to a %4d-frame queue, minimum is %4d frames", buffer->size(), m_queuedFrames, m_minFrameCount );
-		mutexLock.unlock();
 		pushBuffer( buffer );
+		mutexLock.unlock();
+		m_queueChanged.notify_one();
 	}
 }
 
@@ -134,12 +134,8 @@ void AudioFifo::pushBuffer( const AudioFrameBuffer& buf )
 	// copy, because AudioFrameBuffer is a shared_ptr that may be modified
 	AudioFrameBuffer cp( new AudioFrameBuffer::element_type );
 	*cp = *buf;
-	{
-		boost::lock_guard<boost::mutex> lock( m_queueMutex );
-		m_queuedFrames += cp->size();
-		m_queue.push( cp );
-	}
-	m_queueChanged.notify_one();
+	m_queuedFrames += cp->size();
+	m_queue.push( cp );
 	if( m_doVolumeCalc ) {
 		uint64_t left, right;
 		sumAbsValues( cp, left, right );
@@ -209,6 +205,7 @@ size_t AudioFifo::pullData( AudioFrameBuffer& data, size_t size )
 		}
 	}
 	logger()->trace( L4CXX_LOCATION, "Pulled %d frames, %d frames left", copied, m_queuedFrames );
+	lock.unlock();
 	m_queueChanged.notify_one();
 	return copied;
 }

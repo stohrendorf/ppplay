@@ -58,10 +58,12 @@ WavAudioOutput::~WavAudioOutput()
 	
 	const uint32_t filesize = m_file.tellp();
 	
+	// RIFF chunk size
 	uint32_t tmp = filesize-8;
 	m_file.seekp(4);
 	m_file.write(reinterpret_cast<const char*>(&tmp), 4);
 	
+	// data chunk size
 	tmp = filesize-44;
 	m_file.seekp(40);
 	m_file.write(reinterpret_cast<const char*>(&tmp), 4);

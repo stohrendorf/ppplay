@@ -28,12 +28,14 @@
 
 /**
  * @def DISABLE_COPY(classname)
- * @brief Disables copy operator and constructor of @a classname
+ * @brief Disables copy/move operators and constructors of @a classname
  * @param[in] classname Class name to disable copy functions of
  */
 #define DISABLE_COPY(classname) \
 	classname(const classname&) = delete; \
-	classname& operator=(const classname&) = delete;
+	classname(classname&&) = delete; \
+	classname& operator=(const classname&) = delete; \
+	classname& operator=(classname&&) = delete;
 
 /**
  * @brief Checked delete for all elements in a container

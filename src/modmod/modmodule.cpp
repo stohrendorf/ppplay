@@ -329,6 +329,9 @@ bool ModModule::adjustPosition( bool estimateOnly )
 		if( m_breakOrder != 0xffff ) {
 			logger()->debug( L4CXX_LOCATION, "Order break" );
 			if( m_breakOrder < orderCount() ) {
+				if(m_breakRow==-1) {
+					orderAt( m_breakOrder )->increasePlaybackCount();
+				}
 				setOrder( m_breakOrder, estimateOnly, m_breakRow == -1 );
 				orderChanged = true;
 			}

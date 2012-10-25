@@ -147,7 +147,7 @@ int AbstractModule::maxRepeat() const
 bool AbstractModule::setOrder( size_t newOrder, bool estimateOnly, bool forceSave )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	bool orderChanged = ( newOrder != m_state.order) || forceSave;
+	bool orderChanged = ( newOrder != m_state.order);
 	if( orderChanged && m_state.order<orderCount() ) {
 		orderAt( m_state.order )->increasePlaybackCount();
 	}
@@ -159,7 +159,7 @@ bool AbstractModule::setOrder( size_t newOrder, bool estimateOnly, bool forceSav
 		return false;
 	}
 	m_state.pattern = orderAt( m_state.order)->index();
-	if( orderChanged ) {
+	if( orderChanged || forceSave ) {
 		logger()->info(L4CXX_LOCATION, "Order change%s to %d (pattern %d, playback count %d)",
 						(forceSave ? " (forced save)" : ""),
 						m_state.order,
@@ -280,12 +280,20 @@ bool AbstractModule::jumpPrevOrder()
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if( !m_songs->states.atFront() && !m_songs->states.empty() ) {
+		logger()->debug(L4CXX_LOCATION, "Jumping to previous order");
 		m_songs->states.prev()->archive( this ).finishLoad();
+		return true;
+	}
+	else if( !m_songs->states.empty() ) {
+		logger()->debug(L4CXX_LOCATION, "Resetting current order");
+		m_songs->states->archive( this ).finishLoad();
+		return true;
 	}
 	else if(m_songs.atFront()) {
 		loadInitialState();
 		return true;
 	}
+	logger()->info(L4CXX_LOCATION, "Failed to jump to previous order");
 	return false;
 }
 
@@ -305,7 +313,7 @@ bool AbstractModule::jumpNextSong()
 			++m_songs;
 			m_state.playedFrames = 0;
 			m_state.pattern = orderAt( i )->index();
-			setOrder( i, false );
+			setOrder( i, false, true );
 			m_isPreprocessing = false;
 			return true;
 		}
