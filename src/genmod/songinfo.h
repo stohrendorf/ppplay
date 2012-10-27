@@ -41,8 +41,25 @@ struct PPPLAY_CORE_EXPORT SongInfo
 	explicit SongInfo() : states(), length(0)
 	{
 	}
+	
+	explicit inline SongInfo(SongInfo&& rhs) : states(std::move(rhs.states)), length(rhs.length)
+	{
+		rhs.states.clear();
+		rhs.length = 0;
+	}
+	
 	~SongInfo() {
 		deleteAll(states);
+	}
+	
+	inline SongInfo& operator=(SongInfo&& rhs)
+	{
+		deleteAll(states);
+		states = std::move(rhs.states);
+		rhs.states.clear();
+		length = rhs.length;
+		rhs.length = 0;
+		return *this;
 	}
 	
 	//! @brief States for seeking

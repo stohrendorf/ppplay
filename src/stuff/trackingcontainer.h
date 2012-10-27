@@ -43,6 +43,7 @@ public:
 	
 	typedef typename std::add_const<Type>::type ConstType;
 	typedef typename std::add_lvalue_reference<Type>::type Reference;
+	typedef typename std::add_rvalue_reference<Type>::type RValReference;
 	typedef typename std::add_lvalue_reference<ConstType>::type ConstReference;
 public:
 	/**
@@ -92,13 +93,34 @@ public:
 	/**
 	 * @}
 	 */
-	inline TrackingContainer() : m_container(), m_index( std::numeric_limits<size_t>::max() ) {
+	inline TrackingContainer() : m_container(), m_index( std::numeric_limits<size_t>::max() )
+	{
+	}
+	TrackingContainer(const TrackingContainer<Type>&) = delete;
+	inline TrackingContainer(TrackingContainer<Type>&& rhs) : m_container(std::move(rhs.m_container)), m_index(rhs.m_index)
+	{
+		rhs.clear();
+	}
+	TrackingContainer<Type>& operator=(const TrackingContainer<Type>&) = delete;
+	TrackingContainer<Type>& operator=(TrackingContainer<Type>&& rhs)
+	{
+		m_container = std::move(rhs.m_container);
+		m_index = rhs.m_index;
+		rhs.clear();
+		return *this;
 	}
 	/**
 	 * @name STL compliant methods
 	 * @{
 	 */
-	inline void push_back( ConstReference value ) {
+	template<class T = Type>
+	typename std::enable_if<!std::is_move_constructible<T>::value, void>::type
+	push_back( ConstReference value ) {
+		m_container.push_back( value );
+	}
+	template<class T = Type>
+	typename std::enable_if<std::is_move_constructible<T>::value, void>::type
+	push_back( RValReference value ) {
 		m_container.push_back( value );
 	}
 	inline size_t size() const {
@@ -106,6 +128,10 @@ public:
 	}
 	inline bool empty() const {
 		return m_container.empty();
+	}
+	inline void clear() {
+		m_container.clear();
+		m_index = std::numeric_limits<size_t>::max();
 	}
 	inline typename std::vector<Type>::iterator begin() {
 		return m_container.begin();

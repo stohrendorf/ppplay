@@ -95,9 +95,10 @@ protected:
 	 */
 	static light4cxx::Logger* logger();
 private:
-	AbstractAudioSource::WeakPtr m_source; //!< @brief The audio source
-	ErrorCode m_errorCode; //!< @brief Internal error code
-	//ReadWriteLockable m_readWriteLock;
+	//! @brief The audio source
+	AbstractAudioSource::WeakPtr m_source;
+	//! @brief Internal error code
+	ErrorCode m_errorCode;
 	mutable boost::mutex m_mutex;
 	/**
 	 * @brief Initialize output device

@@ -83,7 +83,6 @@ void AudioFifo::requestThread()
 		if( src->paused() || m_queuedFrames >= m_minFrameCount ) {
 			logger()->trace( L4CXX_LOCATION, "FIFO filled, waiting..." );
 			m_queueChanged.wait(mutexLock);
-			//boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
 			continue;
 		}
 		int size = src->preferredBufferSize();
@@ -91,7 +90,6 @@ void AudioFifo::requestThread()
 			size = std::max<int>( m_minFrameCount / 2, m_minFrameCount - m_queuedFrames );
 		}
 		if( size <= 0 ) {
-			boost::this_thread::sleep( boost::posix_time::millisec( 1 ) );
 			continue;
 		}
 		src->getAudioData( buffer, size );

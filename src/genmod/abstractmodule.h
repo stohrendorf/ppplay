@@ -69,10 +69,10 @@ public:
 
 private:
 	MetaInfo m_metaInfo;
-	//! @brief Order list @note <b>Not initialized here!</b>
+	//! @brief Order list
 	std::vector<AbstractOrder*> m_orders;
 	ModuleState m_state;
-	TrackingContainer<SongInfo> m_songs;
+	TrackingContainer<SongInfo*> m_songs;
 	//! @brief Maximum module loops if module patterns are played multiple times
 	const int m_maxRepeat;
 	AbstractArchive* m_initialState;

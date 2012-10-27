@@ -51,6 +51,7 @@ AbstractModule::AbstractModule( int maxRpt, Sample::Interpolation inter ) :
 AbstractModule::~AbstractModule()
 {
 	deleteAll(m_orders);
+	deleteAll(m_songs);
 }
 
 AbstractArchive& AbstractModule::serialize( AbstractArchive* data )
@@ -309,7 +310,7 @@ bool AbstractModule::jumpNextSong()
 				continue;
 			}
 			logger()->debug(L4CXX_LOCATION, "Found unplayed order %d pattern %d", i, int(orderAt(i)->index()));
-			m_songs.append();
+			m_songs.append(new SongInfo);
 			++m_songs;
 			m_state.playedFrames = 0;
 			m_state.pattern = orderAt( i )->index();
