@@ -105,9 +105,9 @@ public:
 	uint32_t frequency() const;
 	inline bool paused() const;
 	inline void setPaused( bool p = true );
-	//! @copydoc @internal_getAudioData
+	//! @copydoc internal_getAudioData
 	size_t getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames );
-	//! @copydoc @internal_preferredBufferSize
+	//! @copydoc internal_preferredBufferSize
 	size_t preferredBufferSize() const;
 	//! @copydoc internal_initialize
 	bool initialize( uint32_t frequency );
