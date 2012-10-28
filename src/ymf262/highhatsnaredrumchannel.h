@@ -4,12 +4,14 @@
 
 namespace opl
 {
+
+class Opl3;
 class HighHatSnareDrumChannel : public AbstractRhythmChannel
 {
+public:
 	static constexpr int highHatSnareDrumChannelBaseAddress = 7;
 
-	HighHatSnareDrumChannel() : AbstractRhythmChannel( highHatSnareDrumChannelBaseAddress, OPL3.highHatOperator, OPL3.snareDrumOperator ) {
-	}
+	HighHatSnareDrumChannel(Opl3* opl) ;
 };
 }
 

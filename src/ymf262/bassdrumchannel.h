@@ -5,25 +5,21 @@
 
 namespace opl
 {
+
+class Opl3;
 class BassDrumChannel : public Channel2Op
 {
+public:
 	static constexpr int bassDrumChannelBaseAddress = 6;
 	static constexpr int op1BaseAddress = 0x10;
 	static constexpr int op2BaseAddress = 0x13;
 
-	BassDrumChannel() : Channel2Op( bassDrumChannelBaseAddress, new Operator( op1BaseAddress ), new Operator( op2BaseAddress ) ) {
+	BassDrumChannel(Opl3* opl) : Channel2Op( opl, bassDrumChannelBaseAddress, new Operator( opl, op1BaseAddress ), new Operator( opl, op2BaseAddress ) ) {
 	}
 	
-	~BassDrumChannel() {
-		delete m_op1;
-		delete m_op2;
-	}
+	~BassDrumChannel() ;
 
-	std::vector<double> getChannelOutput() {
-		// Bass Drum ignores first operator, when it is in series.
-		if( m_cnt == 1 ) m_op1->m_ar = 0;
-		return Channel2Op::getChannelOutput();
-	}
+	std::vector<double> getChannelOutput() ;
 
 protected:
 	// Key ON and OFF are unused in rhythm channels.

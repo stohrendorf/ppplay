@@ -4,9 +4,12 @@
 
 namespace opl
 {
+
+class Opl3;
 class DisabledChannel : public AbstractChannel
 {
-	DisabledChannel() : AbstractChannel( 0 ) {
+public:
+	DisabledChannel(Opl3* opl) : AbstractChannel( opl, 0 ) {
 	}
 	std::vector<double> getChannelOutput() {
 		return getInFourChannels( 0 );

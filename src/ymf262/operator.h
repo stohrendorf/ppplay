@@ -1,9 +1,13 @@
 #ifndef PPP_OPL_OPERATOR_H
 #define PPP_OPL_OPERATOR_H
 #include <cmath>
+#include "phasegenerator.h"
+#include "envelopegenerator.h"
 
 namespace opl
 {
+
+class Opl3;
 class Operator
 {
 public:
@@ -48,60 +52,10 @@ public:
 	static double waveforms[8][waveLength];
 
 private:
-	static int _waveform_init = loadWaveforms();
-	static int loadWaveforms() {
-		//OPL3 has eight waveforms:
+	static int loadWaveforms() ;
 
-		int i;
-		// 1st waveform: sinusoid.
-		double theta = 0, thetaIncrement = 2 * M_PI / 1024;
-
-		for( i = 0, theta = 0; i < 1024; i++, theta += thetaIncrement )
-			waveforms[0][i] = std::sin( theta );
-
-		double* sineTable = waveforms[0];
-		// 2nd: first half of a sinusoid.
-		for( i = 0; i < 512; i++ ) {
-			waveforms[1][i] = sineTable[i];
-			waveforms[1][512 + i] = 0;
-		}
-		// 3rd: double positive sinusoid.
-		for( i = 0; i < 512; i++ )
-			waveforms[2][i] = waveforms[2][512 + i] = sineTable[i];
-		// 4th: first and third quarter of double positive sinusoid.
-		for( i = 0; i < 256; i++ ) {
-			waveforms[3][i] = waveforms[3][512 + i] = sineTable[i];
-			waveforms[3][256 + i] = waveforms[3][768 + i] = 0;
-		}
-		// 5th: first half with double frequency sinusoid.
-		for( i = 0; i < 512; i++ ) {
-			waveforms[4][i] = sineTable[i * 2];
-			waveforms[4][512 + i] = 0;
-		}
-		// 6th: first half with double frequency positive sinusoid.
-		for( i = 0; i < 256; i++ ) {
-			waveforms[5][i] = waveforms[5][256 + i] = sineTable[i * 2];
-			waveforms[5][512 + i] = waveforms[5][768 + i] = 0;
-		}
-		// 7th: square wave
-		for( i = 0; i < 512; i++ ) {
-			waveforms[6][i] = 1;
-			waveforms[6][512 + i] = -1;
-		}
-		// 8th: exponential
-		double x;
-		double xIncrement = 1 * 16d / 256d;
-		for( i = 0, x = 0; i < 512; i++, x += xIncrement ) {
-			waveforms[7][i] = std::pow( 2, -x );
-			waveforms[7][1023 - i] = -std::pow( 2, -( x + 1 / 16d ) );
-		}
-		return 1;
-	}
-
-	static double log2( double x ) {
-		return Math.log( x ) / Math.log( 2 );
-	}
-private:
+	Opl3* m_opl;
+	
 	PhaseGenerator m_phaseGenerator;
 	EnvelopeGenerator m_envelopeGenerator;
 
@@ -125,133 +79,46 @@ private:
 	int m_f_number;
 	int m_block;
 
-	static constexpr double noModulator = 0;
-
 public:
-	Operator( int baseAddress )
-		: m_operatorBaseAddress( baseAddress ), m_phaseGenerator(), m_envelopeGenerator(),
-		  m_envelope( 0 ), m_am( 0 ), m_vib( 0 ), m_ksr( 0 ), m_egt( 0 ), m_mult( 0 ), m_ksl( 0 ), m_tl( 0 ),
-		  m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_ws( 0 ),
-		  m_keyScaleNumber( 0 ), m_f_number( 0 ), m_block( 0 ) {
-	}
+	static constexpr double noModulator = 0;
+	
+	void setAr(int val) { m_ar=val; }
+	const EnvelopeGenerator* envelopeGenerator() const { return &m_envelopeGenerator; }
+	const PhaseGenerator* phaseGenerator() const { return &m_phaseGenerator; }
+	PhaseGenerator* phaseGenerator() { return &m_phaseGenerator; }
+	Opl3* opl() const { return m_opl; }
+	double envelope() const { return m_envelope; }
+	void setEnvelope(double e) { m_envelope = e; }
+	int mult() const { return m_mult; }
+	double phase() const { return m_phase; }
+	void setPhase(double p) { m_phase = p; }
+	int egt() const { return m_egt; }
+	int am() const { return m_am; }
+	int ws() const { return m_ws; }
+	int vib() const { return m_vib; }
+	
+	Operator( Opl3* opl, int baseAddress ) ;
+	virtual ~Operator() {}
 
-	void update_AM1_VIB1_EGT1_KSR1_MULT4() {
+	void update_AM1_VIB1_EGT1_KSR1_MULT4() ;
 
-		int am1_vib1_egt1_ksr1_mult4 = OPL3.registers[m_operatorBaseAddress + OperatorData.AM1_VIB1_EGT1_KSR1_MULT4_Offset];
+	void update_KSL2_TL6() ;
 
-		// Amplitude Modulation. This register is used int EnvelopeGenerator.getEnvelope();
-		m_am  = ( am1_vib1_egt1_ksr1_mult4 & 0x80 ) >> 7;
-		// Vibrato. This register is used in PhaseGenerator.getPhase();
-		m_vib = ( am1_vib1_egt1_ksr1_mult4 & 0x40 ) >> 6;
-		// Envelope Generator Type. This register is used in EnvelopeGenerator.getEnvelope();
-		m_egt = ( am1_vib1_egt1_ksr1_mult4 & 0x20 ) >> 5;
-		// Key Scale Rate. Sets the actual envelope rate together with rate and keyScaleNumber.
-		// This register os used in EnvelopeGenerator.setActualAttackRate().
-		m_ksr = ( am1_vib1_egt1_ksr1_mult4 & 0x10 ) >> 4;
-		// Multiple. Multiplies the Channel.baseFrequency to get the Operator.operatorFrequency.
-		// This register is used in PhaseGenerator.setFrequency().
-		m_mult = am1_vib1_egt1_ksr1_mult4 & 0x0F;
+	void update_AR4_DR4() ;
 
-		m_phaseGenerator.setFrequency( m_f_number, m_block, m_mult );
-		m_envelopeGenerator.setActualAttackRate( m_ar, m_ksr, m_keyScaleNumber );
-		m_envelopeGenerator.setActualDecayRate( m_dr, m_ksr, m_keyScaleNumber );
-		m_envelopeGenerator.setActualReleaseRate( m_rr, m_ksr, m_keyScaleNumber );
-	}
+	void update_SL4_RR4() ;
 
-	void update_KSL2_TL6() {
+	void update_5_WS3() ;
 
-		int ksl2_tl6 = OPL3.registers[m_operatorBaseAddress + OperatorData.KSL2_TL6_Offset];
+	double getOperatorOutput( double modulator ) ;
 
-		// Key Scale Level. Sets the attenuation in accordance with the octave.
-		m_ksl = ( ksl2_tl6 & 0xC0 ) >> 6;
-		// Total Level. Sets the overall damping for the envelope.
-		m_tl  =  ksl2_tl6 & 0x3F;
+	double getOutput( double modulator, double outputPhase, const double* waveform ) ;
 
-		m_envelopeGenerator.setAtennuation( m_f_number, m_block, m_ksl );
-		m_envelopeGenerator.setTotalLevel( tl );
-	}
+	void keyOn() ;
 
-	void update_AR4_DR4() {
+	void keyOff() ;
 
-		int ar4_dr4 = OPL3.registers[m_operatorBaseAddress + OperatorData.AR4_DR4_Offset];
-
-		// Attack Rate.
-		ar = ( ar4_dr4 & 0xF0 ) >> 4;
-		// Decay Rate.
-		dr =  ar4_dr4 & 0x0F;
-
-		m_envelopeGenerator.setActualAttackRate( m_ar, m_ksr, m_keyScaleNumber );
-		m_envelopeGenerator.setActualDecayRate( m_dr, m_ksr, m_keyScaleNumber );
-	}
-
-	void update_SL4_RR4() {
-
-		int sl4_rr4 = OPL3.registers[m_operatorBaseAddress + OperatorData.SL4_RR4_Offset];
-
-		// Sustain Level.
-		m_sl = ( sl4_rr4 & 0xF0 ) >> 4;
-		// Release Rate.
-		m_rr =  sl4_rr4 & 0x0F;
-
-		m_envelopeGenerator.setActualSustainLevel( m_sl );
-		m_envelopeGenerator.setActualReleaseRate( m_rr, m_ksr, m_keyScaleNumber );
-	}
-
-	void update_5_WS3() {
-		int _5_ws3 = OPL3.registers[m_operatorBaseAddress + OperatorData._5_WS3_Offset];
-		m_ws =  _5_ws3 & 0x07;
-	}
-
-	double getOperatorOutput( double modulator ) {
-		if( m_envelopeGenerator.stage == EnvelopeGenerator.Stage.OFF ) return 0;
-
-		double envelopeInDB = m_envelopeGenerator.getEnvelope( m_egt, m_am );
-		m_envelope = std::pow( 10, envelopeInDB / 10.0 );
-
-		// If it is in OPL2 mode, use first four waveforms only:
-		m_ws &= ( ( OPL3._new << 2 ) + 3 );
-		const double* waveform = OperatorData.waveforms[m_ws];
-
-		m_phase = m_phaseGenerator.getPhase( m_vib );
-
-		double operatorOutput = getOutput( modulator, m_phase, waveform );
-		return operatorOutput;
-	}
-
-protected:
-	double getOutput( double modulator, double outputPhase, const double* waveform ) {
-		outputPhase = ( outputPhase + modulator ) % 1;
-		if( outputPhase < 0 ) {
-			outputPhase++;
-			// If the double could not afford to be less than 1:
-			outputPhase %= 1;
-		}
-		int sampleIndex = ( int )( outputPhase * OperatorData.waveLength );
-		return waveform[sampleIndex] * m_envelope;
-	}
-
-	void keyOn() {
-		if( m_ar > 0 ) {
-			m_envelopeGenerator.keyOn();
-			m_phaseGenerator.keyOn();
-		}
-		else m_envelopeGenerator.stage = EnvelopeGenerator.Stage.OFF;
-	}
-
-	void keyOff() {
-		m_envelopeGenerator.keyOff();
-	}
-
-	void updateOperator( int ksn, int f_num, int blk ) {
-		m_keyScaleNumber = ksn;
-		m_f_number = f_num;
-		m_block = blk;
-		update_AM1_VIB1_EGT1_KSR1_MULT4();
-		update_KSL2_TL6();
-		update_AR4_DR4();
-		update_SL4_RR4();
-		update_5_WS3();
-	}
+	void updateOperator( int ksn, int f_num, int blk ) ;
 
 //     @Override
 //     public String toString() {

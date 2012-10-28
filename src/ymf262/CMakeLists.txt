@@ -5,6 +5,17 @@ add_compiler_export_flags()
 
 add_library(ppplay_opl SHARED
 	abstractchannel.cpp
+	abstractrhythmchannel.cpp
+	bassdrumchannel.cpp
+	channel2op.cpp
+	highhatoperator.cpp
+	highhatsnaredrumchannel.cpp
+	operator.cpp
+	opl3.cpp
+	phasegenerator.cpp
+	snaredrumoperator.cpp
+	tomtomtopcymbalchannel.cpp
+	topcymbaloperator.cpp
 )
 
 generate_export_header(ppplay_opl)
