@@ -4,12 +4,14 @@
 
 namespace opl
 {
+
+class Opl3;
 class TomTomTopCymbalChannel : public AbstractRhythmChannel
 {
+public:
 	static constexpr int tomTomTopCymbalChannelBaseAddress = 8;
 
-	TomTomTopCymbalChannel() : AbstractRhythmChannel( tomTomTopCymbalChannelBaseAddress, OPL3.tomTomOperator, OPL3.topCymbalOperator ) {
-	}
+	TomTomTopCymbalChannel(Opl3* opl) ;
 };
 }
 

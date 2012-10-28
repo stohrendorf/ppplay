@@ -5,6 +5,10 @@
 
 namespace opl
 {
+
+class Opl3;
+
+class Operator;
 class Channel2Op : public AbstractChannel
 {
 private:
@@ -12,61 +16,20 @@ private:
 	Operator* m_op2;
 
 public:
-	Channel2op( int baseAddress, Operator* o1, Operator* o2 )
-		: AbstractChannel( baseAddress ), m_op1( o1 ), m_op2( o2 ) {
+	Channel2Op( Opl3* opl, int baseAddress, Operator* o1, Operator* o2 )
+		: AbstractChannel( opl, baseAddress ), m_op1( o1 ), m_op2( o2 ) {
 	}
 
-	std::vector<double> getChannelOutput() {
-		double channelOutput = 0, op1Output = 0, op2Output = 0;
-		std::vector<double> output;
-		// The feedback uses the last two outputs from
-		// the first operator, instead of just the last one.
-		double feedbackOutput = ( m_feedback[0] + m_feedback[1] ) / 2;
-
-
-		switch( cnt ) {
-				// CNT = 0, the operators are in series, with the first in feedback.
-			case 0:
-				if( m_op2->envelopeGenerator.stage == EnvelopeGenerator.Stage.OFF )
-					return getInFourChannels( 0 );
-				op1Output = m_op1->getOperatorOutput( feedbackOutput );
-				channelOutput = m_op2->getOperatorOutput( op1Output * toPhase );
-				break;
-				// CNT = 1, the operators are in parallel, with the first in feedback.
-			case 1:
-				if( m_op1->envelopeGenerator.stage == EnvelopeGenerator.Stage.OFF &&
-						m_op2->envelopeGenerator.stage == EnvelopeGenerator.Stage.OFF )
-					return getInFourChannels( 0 );
-				op1Output = m_op1->getOperatorOutput( feedbackOutput );
-				op2Output = m_op2->getOperatorOutput( Operator.noModulator );
-				channelOutput = ( op1Output + op2Output ) / 2;
-		}
-
-		m_feedback[0] = m_feedback[1];
-		m_feedback[1] = ( op1Output * ChannelData.feedback[fb] ) % 1;
-		output = getInFourChannels( channelOutput );
-		return output;
-	}
+	std::vector<double> getChannelOutput();
+	Operator* op1() const { return m_op1; }
+	Operator* op2() const { return m_op2; }
 
 protected:
-	void keyOn() {
-		m_op1->keyOn();
-		m_op2->keyOn();
-		feedback[0] = feedback[1] = 0;
-	}
+	void keyOn() ;
 
-	void keyOff() {
-		m_op1->keyOff();
-		m_op2->keyOff();
-	}
+	void keyOff() ;
 
-	void updateOperators() {
-		// Key Scale Number, used in EnvelopeGenerator.setActualRates().
-		int keyScaleNumber = block * 2 + ( ( m_fnumh >> OPL3.nts ) & 0x01 );
-		int f_number = ( m_fnumh << 8 ) | m_fnuml;
-		m_op1->updateOperator( keyScaleNumber, f_number, block );
-		m_op2->updateOperator( keyScaleNumber, f_number, block );
-	}
+	void updateOperators() ;
 
 //     @Override
 //     public String toString() {

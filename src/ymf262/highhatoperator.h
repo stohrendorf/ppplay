@@ -7,23 +7,17 @@
 
 namespace opl
 {
+
+class Opl3;
 class HighHatOperator : public TopCymbalOperator
 {
+public:
     static constexpr int highHatOperatorBaseAddress = 0x11;     
     
-    HighHatOperator() : TopCymbalOperator(highHatOperatorBaseAddress) {
+    HighHatOperator(Opl3* opl) : TopCymbalOperator(opl, highHatOperatorBaseAddress) {
     }
     
-    double getOperatorOutput(double modulator) {
-        double topCymbalOperatorPhase = 
-            OPL3.topCymbalOperator.phase * OperatorData.multTable[OPL3.topCymbalOperator.mult];
-        // The sound output from the High Hat resembles the one from
-        // Top Cymbal, so we use the parent method and modifies his output
-        // accordingly afterwards.
-        double operatorOutput = TopCymbalOperator::getOperatorOutput(modulator, topCymbalOperatorPhase);
-        if(operatorOutput == 0) operatorOutput = rand()*m_envelope/RAND_MAX;
-        return operatorOutput;
-    }
+    double getOperatorOutput(double modulator) ;
 };
 }
 
