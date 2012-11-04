@@ -10,14 +10,9 @@ double SnareDrumOperator::getOperatorOutput( int modulator )
 	setEnvelope( envelopeGenerator()->getEnvelope( egt(), am() ) );
 
 	setPhase( opl()->highHatOperator()->phase() * 2 );
-
-	double operatorOutput = getOutput( modulator, phase(), ws() );
-
-	if( std::fabs(operatorOutput / envelope()) != 1 ) {
-		double noise = rand() * (511.0-envelope()) / 511 / RAND_MAX;
-		operatorOutput = std::fabs(noise);
-	}
-
-	return operatorOutput * 2;
+	uint8_t phaseBit = (phase()>>8) & 1;
+	uint8_t noiseBit = rand() & 1;
+	setPhase( ((1+phaseBit)^noiseBit) << 8 );
+	return getOutput( modulator, phase(), ws() );
 }
 }
