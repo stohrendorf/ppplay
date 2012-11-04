@@ -4,6 +4,7 @@
 #include "stuff/utils.h"
 #include <vector>
 #include <cstdint>
+#include <memory>
 
 namespace opl
 {
@@ -14,18 +15,18 @@ class AbstractChannel
 {
 	DISABLE_COPY( AbstractChannel )
 public:
+	typedef std::shared_ptr<AbstractChannel> Ptr;
+	
 	static constexpr int _2_KON1_BLOCK3_FNUMH2_Offset = 0xB0;
 	static constexpr int  FNUML8_Offset = 0xA0;
 	static constexpr int  CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset = 0xC0;
-
 	// Feedback rate in fractions of 2*Pi, normalized to (0,1):
 	// 0, Pi/16, Pi/8, Pi/4, Pi/2, Pi, 2*Pi, 4*Pi turns to be:
-	static constexpr double feedback[] = {0, 1 / 32.0, 1 / 16.0, 1 / 8.0, 1 / 4.0, 1 / 2.0, 1, 2};
+	// static constexpr double feedback[] = {0, 1 / 32.0, 1 / 16.0, 1 / 8.0, 1 / 4.0, 1 / 2.0, 1, 2};
+	static constexpr int FeedbackShift[] = {15, 6, 5, 4, 3, 2, 1, 0};
 private:
 	Opl3* m_opl;
 	int m_channelBaseAddress;
-
-	double m_feedback[2];
 
 	//! @brief Frequency Number, low register.
 	int m_fnuml;
@@ -39,13 +40,10 @@ private:
 	bool m_chc;
 	bool m_chd;
 	uint8_t m_fb;
+	int16_t m_feedback[2];
 	bool m_cnt;
 
 public:
-	// Factor to convert between normalized amplitude to normalized
-	// radians. The amplitude maximum is equivalent to 8*Pi radians.
-	static constexpr double toPhase = 4;
-
 	bool cnt() const {
 		return m_cnt;
 	}
@@ -64,13 +62,13 @@ public:
 	uint8_t fb() const {
 		return m_fb;
 	}
-	double avgFeedback() const {
-		return ( m_feedback[0] + m_feedback[1] ) / 2;
+	int16_t avgFeedback() const { // TODO
+		return ( m_feedback[0] + m_feedback[1] ) >> 1;
 	}
 	void clearFeedback() {
 		m_feedback[0] = m_feedback[1] = 0;
 	}
-	void pushFeedback( double fb ) {
+	void pushFeedback( int16_t fb ) {
 		m_feedback[0] = m_feedback[1];
 		m_feedback[1] = fb;
 	}
@@ -78,17 +76,17 @@ public:
 	AbstractChannel( Opl3* opl, int baseAddress );
 	virtual ~AbstractChannel() {}
 
-	void update_2_KON1_BLOCK3_FNUMH2() ;
+	void update_2_KON1_BLOCK3_FNUMH2();
 
-	void update_FNUML8() ;
+	void update_FNUML8();
 
-	void update_CHD1_CHC1_CHB1_CHA1_FB3_CNT1() ;
+	void update_CHD1_CHC1_CHB1_CHA1_FB3_CNT1();
 
-	void updateChannel() ;
+	void updateChannel();
 
-	std::vector<double> getInFourChannels( double channelOutput ) ;
+	std::vector< int16_t > getInFourChannels( int16_t channelOutput );
 
-	virtual std::vector<double> nextSample() = 0;
+	virtual std::vector<int16_t> nextSample() = 0;
 	virtual void keyOn() = 0;
 	virtual void keyOff() = 0;
 	virtual void updateOperators() = 0;

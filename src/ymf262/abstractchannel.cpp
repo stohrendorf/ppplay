@@ -5,7 +5,7 @@ namespace opl
 {
 AbstractChannel::AbstractChannel( Opl3* opl, int baseAddress ) : m_opl( opl ), m_channelBaseAddress( baseAddress ),
 	m_fnuml( 0 ), m_fnumh( 0 ), m_kon( false ), m_block( 0 ), m_cha( false ), m_chb( false ), m_chc( false ), m_chd( false ),
-	m_fb( 0 ), m_cnt( false ), m_feedback {0, 0} {
+	m_fb( 0 ), m_feedback {0, 0}, m_cnt( false ) {
 }
 void AbstractChannel::update_2_KON1_BLOCK3_FNUMH2()
 {
@@ -50,9 +50,9 @@ void AbstractChannel::updateChannel()
 	update_FNUML8();
 	update_CHD1_CHC1_CHB1_CHA1_FB3_CNT1();
 }
-std::vector< double > AbstractChannel::getInFourChannels( double channelOutput )
+std::vector< int16_t > AbstractChannel::getInFourChannels( int16_t channelOutput )
 {
-	std::vector<double> output( 4 );
+	std::vector<int16_t> output( 4 );
 
 	if( !m_opl->isNew() )
 		output[0] = output[1] = output[2] = output[3] = channelOutput;
@@ -66,4 +66,3 @@ std::vector< double > AbstractChannel::getInFourChannels( double channelOutput )
 	return output;
 }
 }
-

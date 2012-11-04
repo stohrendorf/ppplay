@@ -29,34 +29,34 @@ public:
 	_2_CONNECTIONSEL6_Offset = 0x104;
 
 	static constexpr int MasterClock = 14.32e6;
-	static constexpr double sampleRate = MasterClock/288.0;
+	static constexpr int SampleRate = MasterClock/288.0;
 
 	// The OPL3 tremolo repetition rate is 3.7 Hz.
-	static constexpr int tremoloTableLength = 13*1024;
+	static constexpr int TremoloTableLength = 13*1024;
 
 private:
 	uint8_t m_registers[0x200];
 
 	// The YMF262 has 36 operators:
-	Operator* m_operators[2][0x20];
+	Operator::Ptr m_operators[2][0x20];
 	// The YMF262 has 18 2-op channels.
 	// Each 2-op channel can be at a serial or parallel operator configuration:
-	Channel2Op* m_channels2op[2][9];
-	Channel4Op* m_channels4op[2][3];
-	AbstractChannel* m_channels[2][9];
-	DisabledChannel* m_disabledChannel;
+	Channel2Op::Ptr m_channels2op[2][9];
+	Channel4Op::Ptr m_channels4op[2][3];
+	AbstractChannel::Ptr m_channels[2][9];
+	DisabledChannel::Ptr m_disabledChannel;
 
-	BassDrumChannel* m_bassDrumChannel;
-	HighHatSnareDrumChannel* m_highHatSnareDrumChannel;
-	TomTomTopCymbalChannel* m_tomTomTopCymbalChannel;
-	HighHatOperator* m_highHatOperator;
-	SnareDrumOperator* m_snareDrumOperator;
-	TomTomOperator* m_tomTomOperator;
-	TopCymbalOperator* m_topCymbalOperator;
-	Operator* m_highHatOperatorInNonRhythmMode;
-	Operator* m_snareDrumOperatorInNonRhythmMode;
-	Operator* m_tomTomOperatorInNonRhythmMode;
-	Operator* m_topCymbalOperatorInNonRhythmMode;
+	BassDrumChannel::Ptr m_bassDrumChannel;
+	HighHatSnareDrumChannel::Ptr m_highHatSnareDrumChannel;
+	TomTomTopCymbalChannel::Ptr m_tomTomTopCymbalChannel;
+	HighHatOperator::Ptr m_highHatOperator;
+	SnareDrumOperator::Ptr m_snareDrumOperator;
+	TomTomOperator::Ptr m_tomTomOperator;
+	TopCymbalOperator::Ptr m_topCymbalOperator;
+	Operator::Ptr m_highHatOperatorInNonRhythmMode;
+	Operator::Ptr m_snareDrumOperatorInNonRhythmMode;
+	Operator::Ptr m_tomTomOperatorInNonRhythmMode;
+	Operator::Ptr m_topCymbalOperatorInNonRhythmMode;
 
 	bool m_nts;
 	//! @brief Depth of amplitude. This register is used in EnvelopeGenerator.getEnvelope();
@@ -89,17 +89,17 @@ public:
 	bool nts() const {
 		return m_nts;
 	}
-	TopCymbalOperator* topCymbalOperator() const {
-		return m_topCymbalOperator;
+	Operator* topCymbalOperator() const {
+		return m_topCymbalOperator.get();
 	}
-	HighHatOperator* highHatOperator() const {
-		return m_highHatOperator;
+	Operator* highHatOperator() const {
+		return m_highHatOperator.get();
 	}
-	SnareDrumOperator* snareDrumOperator() const {
-		return m_snareDrumOperator;
+	Operator* snareDrumOperator() const {
+		return m_snareDrumOperator.get();
 	}
-	TomTomOperator* tomTomOperator() const {
-		return m_tomTomOperator;
+	Operator* tomTomOperator() const {
+		return m_tomTomOperator.get();
 	}
 	bool dvb() const {
 		return m_dvb;

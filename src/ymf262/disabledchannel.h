@@ -11,7 +11,7 @@ class DisabledChannel : public AbstractChannel
 public:
 	DisabledChannel(Opl3* opl) : AbstractChannel( opl, 0 ) {
 	}
-	std::vector<double> nextSample() {
+	std::vector<int16_t> nextSample() {
 		return getInFourChannels( 0 );
 	}
 

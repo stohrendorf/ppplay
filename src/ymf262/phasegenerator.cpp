@@ -1,23 +1,6 @@
 #include "phasegenerator.h"
 #include "opl3.h"
 
-namespace
-{
-// [mult:0..15][oct:0..7][fnum>>7:0..7]
-int vibDepLookup[16][8][4];
-int initVibDepLookup()
-{
-	for( int mult = 0; mult < 16; mult++ ) {
-		for( int oct = 0; oct < 8; oct++ ) {
-			for( int fnum = 0; fnum < 8; fnum++ ) {
-				vibDepLookup[mult][oct][fnum] = std::pow( 2, oct + fnum + 0.14 / 12 ) * opl::Operator::multTable[mult];
-			}
-		}
-	}
-	return 1;
-}
-}
-
 namespace opl
 {
 // block: 0..7, f_number: 1..1023, mult: 0..15
@@ -47,7 +30,8 @@ int PhaseGenerator::getPhase( bool vib )
 		}
 	}
 
-	m_phase += (inc << m_block) * Operator::multTable[m_mult];
+	static constexpr int multTable[16] = {1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 20, 24, 24, 30, 30};
+	m_phase += ((inc << m_block) * multTable[m_mult]) >> 1;
 	m_phase &= 0x1fffff; // 21 bits
 	return m_phase >> 11;
 }

@@ -2,6 +2,7 @@
 #define PPP_OPL_OPERATOR_H
 
 #include <cmath>
+#include <memory>
 
 #include <stuff/utils.h>
 
@@ -14,8 +15,10 @@ namespace opl
 class Opl3;
 class Operator
 {
-	DISABLE_COPY(Operator)
+	DISABLE_COPY( Operator )
 public:
+	typedef std::shared_ptr<Operator> Ptr;
+	
 	static constexpr int
 	AM1_VIB1_EGT1_KSR1_MULT4_Offset = 0x20,
 	KSL2_TL6_Offset = 0x40,
@@ -30,25 +33,18 @@ public:
 
 	static constexpr int waveLength = 1024;
 
-	static constexpr double multTable[16] = {0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 12, 12, 15, 15};
-
-	// 0..1
-	static double waveforms[8][waveLength];
-
 private:
-	static int loadWaveforms() ;
-
 	Opl3* m_opl;
+	int m_operatorBaseAddress;
 
 	PhaseGenerator m_phaseGenerator;
 	EnvelopeGenerator m_envelopeGenerator;
 
 	//! @brief Envelope, 0..511 for 0..96 dB
-	uint16_t m_envelope;
+	uint8_t m_envelope;
 	// 0..1023
 	uint16_t m_phase;
 
-	int m_operatorBaseAddress;
 	//! @brief Amplitude Modulation. This register is used in EnvelopeGenerator::getEnvelope().
 	bool m_am;
 	//! @brief Vibrato. This register is used in PhaseGenerator::getPhase().
@@ -98,10 +94,7 @@ public:
 	Opl3* opl() const {
 		return m_opl;
 	}
-	uint16_t envelope() const {
-		return m_envelope;
-	}
-	void setEnvelope( uint16_t e ) {
+	void setEnvelope( uint8_t e ) {
 		m_envelope = e;
 	}
 	uint8_t mult() const {
@@ -126,42 +119,29 @@ public:
 		return m_vib;
 	}
 
-	Operator( Opl3* opl, int baseAddress ) ;
+	Operator( Opl3* opl, int baseAddress );
 	virtual ~Operator() {}
 
-	void update_AM1_VIB1_EGT1_KSR1_MULT4() ;
+	void update_AM1_VIB1_EGT1_KSR1_MULT4();
+	void update_KSL2_TL6();
+	void update_AR4_DR4();
+	void update_SL4_RR4();
+	void update_5_WS3();
 
-	void update_KSL2_TL6() ;
+	virtual int16_t nextSample( uint16_t modulator );
 
-	void update_AR4_DR4() ;
+	/**
+	 * @brief Calculate operator output
+	 * @param[in] outputPhase Phase, 0..1023
+	 * @param[in] ws Waveform selector
+	 * @return Waveform sample, amplitude is -4085..4084
+	 * @note @a modulator and @a outputPhase will simply be added together
+	 */
+	int16_t getOutput( uint16_t outputPhase, uint8_t ws );
 
-	void update_SL4_RR4() ;
-
-	void update_5_WS3() ;
-
-	double nextSample( uint16_t modulator ) ;
-
-	double getOutput( uint16_t modulator, uint16_t outputPhase, uint8_t ws );
-
-	void keyOn() ;
-
-	void keyOff() ;
-
-	void updateOperator( uint16_t f_num, uint8_t blk ) ;
-
-//     @Override
-//     public String toString() {
-//         StringBuffer str = new StringBuffer();
-//
-//         double operatorFrequency = f_number * Math.pow(2, block-1) * OPL3Data.sampleRate / Math.pow(2,19)*OperatorData.multTable[mult];
-//
-//         str.append(String.format("operatorBaseAddress: %d\n", operatorBaseAddress));
-//         str.append(String.format("operatorFrequency: %f\n", operatorFrequency));
-//         str.append(String.format("mult: %d, ar: %d, dr: %d, sl: %d, rr: %d, ws: %d\n", mult, ar, dr, sl, rr, ws));
-//         str.append(String.format("am: %d, vib: %d, ksr: %d, egt: %d, ksl: %d, tl: %d\n", am, vib, ksr, egt, ksl, tl));
-//
-//         return str.toString();
-//     }
+	void keyOn();
+	void keyOff();
+	void updateOperator( uint16_t f_num, uint8_t blk );
 };
 }
 

@@ -51,9 +51,9 @@ private:
 	//! @brief Key scale level in Base-2-dB
 	uint8_t m_kslAdd;
 
-public:
 	static constexpr uint16_t Silence = 511;
 	
+public:
 	EnvelopeGenerator( Opl3* opl )
 		: m_opl( opl ), m_stage( Stage::OFF ), /*m_attenuation( 0 ),*/
 		  m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_fnum( 0 ), m_block( 0 ),
@@ -85,8 +85,8 @@ public:
 	}
 
 public:
-	// output is 0..511 for 0..96dB
-	uint16_t getEnvelope( bool egt, bool am );
+	// output is 0..63 for 0..96dB
+	uint8_t getEnvelope( bool egt, bool am );
 	void keyOn();
 	void keyOff();
 

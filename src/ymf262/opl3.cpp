@@ -2,8 +2,12 @@
 
 namespace opl
 {
-Opl3::Opl3() : m_registers(), m_nts( false ), m_dam( false ), m_dvb( false ), m_ryt( false ), m_bd( false ), m_sd( false ), m_tom( false ), m_tc( false ), m_hh( false ),
-	m_new( false ), m_connectionsel( 0 ), m_vibratoIndex( 0 ), m_tremoloIndex( 0 ), m_channels()
+Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m_channels(), m_disabledChannel(),
+	m_bassDrumChannel(), m_highHatSnareDrumChannel(), m_tomTomTopCymbalChannel(), m_highHatOperator(), m_snareDrumOperator(),
+	m_tomTomOperator(), m_topCymbalOperator(), m_highHatOperatorInNonRhythmMode(), m_snareDrumOperatorInNonRhythmMode(),
+	m_tomTomOperatorInNonRhythmMode(), m_topCymbalOperatorInNonRhythmMode(),
+	m_nts( false ), m_dam( false ), m_dvb( false ), m_ryt( false ), m_bd( false ), m_sd( false ), m_tom( false ), m_tc( false ), m_hh( false ),
+	m_new( false ), m_connectionsel( 0 ), m_vibratoIndex( 0 ), m_tremoloIndex( 0 )
 {
 	initOperators();
 	initChannels2op();
@@ -11,11 +15,10 @@ Opl3::Opl3() : m_registers(), m_nts( false ), m_dam( false ), m_dvb( false ), m_
 	initRhythmChannels();
 	initChannels();
 }
+
 std::vector< short int > Opl3::read()
 {
-	std::vector<short> output( 4 );
-	std::vector<double> outputBuffer( 4 );
-	std::vector<double> channelOutput;
+	std::vector<int32_t> outputBuffer( 4 );
 
 	for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ )
 		outputBuffer[outputChannelNumber] = 0;
@@ -24,16 +27,19 @@ std::vector< short int > Opl3::read()
 	for( int array = 0; array < ( m_new + 1 ); array++ )
 		for( int channelNumber = 0; channelNumber < 9; channelNumber++ ) {
 			// Reads output from each OPL3 channel, and accumulates it in the output buffer:
-			channelOutput = m_channels[array][channelNumber]->nextSample();
-			for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ )
+			std::vector<int16_t> channelOutput = m_channels[array][channelNumber]->nextSample();
+			for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
 				outputBuffer[outputChannelNumber] += channelOutput[outputChannelNumber];
+			}
 		}
 
 	// Normalizes the output buffer after all channels have been added,
 	// with a maximum of 18 channels,
 	// and multiplies it to get the 16 bit signed output.
-	for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ )
-		output[outputChannelNumber] = outputBuffer[outputChannelNumber] / 18 * 0x7FFF;
+	std::vector<short> output( 4 );
+	for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
+		output[outputChannelNumber] = outputBuffer[outputChannelNumber] * 0x7FFF / 18;
+	}
 
 	// Advances the OPL3-wide vibrato index, which is used by
 	// PhaseGenerator.getPhase() in each Operator.
@@ -42,10 +48,11 @@ std::vector< short int > Opl3::read()
 	// Advances the OPL3-wide tremolo index, which is used by
 	// EnvelopeGenerator.getEnvelope() in each Operator.
 	m_tremoloIndex++;
-	m_tremoloIndex %= tremoloTableLength;
+	m_tremoloIndex %= TremoloTableLength;
 
 	return output;
 }
+
 void Opl3::write( int array, int address, int data )
 {
 	// The OPL3 has two registers arrays, each with adresses ranging
@@ -138,16 +145,16 @@ void Opl3::initOperators()
 		for( int group = 0; group <= 0x10; group += 8 ) {
 			for( int offset = 0; offset < 6; offset++ ) {
 				int baseAddress = ( array << 8 ) | ( group + offset );
-				m_operators[array][group + offset] = new Operator( this, baseAddress );
+				m_operators[array][group + offset].reset( new Operator( this, baseAddress ) );
 			}
 		}
 	}
 
 	// Create specific operators to switch when in rhythm mode:
-	m_highHatOperator = new HighHatOperator( this );
-	m_snareDrumOperator = new SnareDrumOperator( this );
-	m_tomTomOperator = new TomTomOperator( this );
-	m_topCymbalOperator = new TopCymbalOperator( this );
+	m_highHatOperator.reset( new HighHatOperator( this ) );
+	m_snareDrumOperator.reset( new SnareDrumOperator( this ) );
+	m_tomTomOperator.reset( new TomTomOperator( this ) );
+	m_topCymbalOperator.reset( new TopCymbalOperator( this ) );
 
 	// Save operators when they are in non-rhythm mode:
 	// Channel 7:
@@ -164,11 +171,11 @@ void Opl3::initChannels2op()
 		for( int channelNumber = 0; channelNumber < 3; channelNumber++ ) {
 			int baseAddress = ( array << 8 ) | channelNumber;
 			// Channels 1, 2, 3 -> Operator offsets 0x0,0x3; 0x1,0x4; 0x2,0x5
-			m_channels2op[array][channelNumber]   = new Channel2Op( this, baseAddress, m_operators[array][channelNumber], m_operators[array][channelNumber + 0x3] );
+			m_channels2op[array][channelNumber].reset( new Channel2Op( this, baseAddress, m_operators[array][channelNumber].get(), m_operators[array][channelNumber + 0x3].get() ) );
 			// Channels 4, 5, 6 -> Operator offsets 0x8,0xB; 0x9,0xC; 0xA,0xD
-			m_channels2op[array][channelNumber + 3] = new Channel2Op( this, baseAddress + 3, m_operators[array][channelNumber + 0x8], m_operators[array][channelNumber + 0xB] );
+			m_channels2op[array][channelNumber + 3].reset( new Channel2Op( this, baseAddress + 3, m_operators[array][channelNumber + 0x8].get(), m_operators[array][channelNumber + 0xB].get() ) );
 			// Channels 7, 8, 9 -> Operators 0x10,0x13; 0x11,0x14; 0x12,0x15
-			m_channels2op[array][channelNumber + 6] = new Channel2Op( this, baseAddress + 6, m_operators[array][channelNumber + 0x10], m_operators[array][channelNumber + 0x13] );
+			m_channels2op[array][channelNumber + 6].reset( new Channel2Op( this, baseAddress + 6, m_operators[array][channelNumber + 0x10].get(), m_operators[array][channelNumber + 0x13].get() ) );
 		}
 	}
 }
@@ -178,15 +185,15 @@ void Opl3::initChannels4op()
 		for( int channelNumber = 0; channelNumber < 3; channelNumber++ ) {
 			int baseAddress = ( array << 8 ) | channelNumber;
 			// Channels 1, 2, 3 -> Operators 0x0,0x3,0x8,0xB; 0x1,0x4,0x9,0xC; 0x2,0x5,0xA,0xD;
-			m_channels4op[array][channelNumber]   = new Channel4Op( this, baseAddress, m_operators[array][channelNumber], m_operators[array][channelNumber + 0x3], m_operators[array][channelNumber + 0x8], m_operators[array][channelNumber + 0xB] );
+			m_channels4op[array][channelNumber].reset( new Channel4Op( this, baseAddress, m_operators[array][channelNumber].get(), m_operators[array][channelNumber + 0x3].get(), m_operators[array][channelNumber + 0x8].get(), m_operators[array][channelNumber + 0xB].get() ) );
 		}
 	}
 }
 void Opl3::initRhythmChannels()
 {
-	m_bassDrumChannel = new BassDrumChannel( this );
-	m_highHatSnareDrumChannel = new HighHatSnareDrumChannel( this );
-	m_tomTomTopCymbalChannel = new TomTomTopCymbalChannel( this );
+	m_bassDrumChannel.reset( new BassDrumChannel( this ) );
+	m_highHatSnareDrumChannel.reset( new HighHatSnareDrumChannel( this ) );
+	m_tomTomTopCymbalChannel.reset( new TomTomTopCymbalChannel( this ) );
 }
 void Opl3::initChannels()
 {
@@ -201,7 +208,7 @@ void Opl3::initChannels()
 
 	// Unique instance to fill future gaps in the Channel array,
 	// when there will be switches between 2op and 4op mode.
-	m_disabledChannel = new DisabledChannel( this );
+	m_disabledChannel.reset( new DisabledChannel( this ) );
 }
 void Opl3::update_1_NTS1_6()
 {

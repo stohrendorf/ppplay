@@ -4,15 +4,15 @@
 
 namespace opl
 {
-std::vector< double > Channel4Op::nextSample()
+std::vector< int16_t > Channel4Op::nextSample()
 {
-	double channelOutput = 0, op1Output = 0, op2Output = 0, op3Output = 0, op4Output = 0;
+	int channelOutput = 0, op1Output = 0, op2Output = 0, op3Output = 0, op4Output = 0;
 
 	int secondChannelBaseAddress = baseAddress() + 3;
 	int secondCnt = opl()->readReg( secondChannelBaseAddress + AbstractChannel::CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset ) & 0x1;
 	int cnt4op = ( cnt() << 1 ) | secondCnt;
 
-	const int feedbackOutput = avgFeedback() * 1024;
+	const int feedbackOutput = avgFeedback()>>2;
 
 	/*
 	 * Below: "@" means feedback, "~>" means "modulates"
@@ -26,9 +26,9 @@ std::vector< double > Channel4Op::nextSample()
 				return getInFourChannels( 0 );
 
 			op1Output = m_op1->nextSample( feedbackOutput );
-			op2Output = m_op2->nextSample( op1Output * toPhase * 1024 );
-			op3Output = m_op3->nextSample( op2Output * toPhase * 1024 );
-			channelOutput = m_op4->nextSample( op3Output * toPhase * 1024 );
+			op2Output = m_op2->nextSample( op1Output );
+			op3Output = m_op3->nextSample( op2Output );
+			channelOutput = m_op4->nextSample( op3Output );
 
 			break;
 		case 1:
@@ -39,10 +39,10 @@ std::vector< double > Channel4Op::nextSample()
 				return getInFourChannels( 0 );
 
 			op1Output = m_op1->nextSample( feedbackOutput );
-			op2Output = m_op2->nextSample( op1Output * toPhase * 1024 );
+			op2Output = m_op2->nextSample( op1Output );
 
 			op3Output = m_op3->nextSample( Operator::noModulator );
-			op4Output = m_op4->nextSample( op3Output * toPhase * 1024 );
+			op4Output = m_op4->nextSample( op3Output );
 
 			channelOutput = ( op2Output + op4Output ) / 2;
 			break;
@@ -56,8 +56,8 @@ std::vector< double > Channel4Op::nextSample()
 			op1Output = m_op1->nextSample( feedbackOutput );
 
 			op2Output = m_op2->nextSample( Operator::noModulator );
-			op3Output = m_op3->nextSample( op2Output * toPhase * 1024 );
-			op4Output = m_op4->nextSample( op3Output * toPhase * 1024 );
+			op3Output = m_op3->nextSample( op2Output );
+			op4Output = m_op4->nextSample( op3Output );
 
 			channelOutput = ( op1Output + op4Output ) / 2;
 			break;
@@ -71,14 +71,20 @@ std::vector< double > Channel4Op::nextSample()
 			op1Output = m_op1->nextSample( feedbackOutput );
 
 			op2Output = m_op2->nextSample( Operator::noModulator );
-			op3Output = m_op3->nextSample( op2Output * toPhase * 1024 );
+			op3Output = m_op3->nextSample( op2Output );
 
 			op4Output = m_op4->nextSample( Operator::noModulator );
 
 			channelOutput = ( op1Output + op3Output + op4Output ) / 3;
 	}
 
-	pushFeedback( std::fmod( op1Output * AbstractChannel::feedback[fb()], 1 ) );
+	if( fb() != 0 ) {
+		pushFeedback( (op1Output >> AbstractChannel::FeedbackShift[fb()]) & 0xfff );
+		// pushFeedback( std::fmod( op1Output * feedback[fb()], 1) );
+	}
+	else {
+		pushFeedback(0);
+	}
 
 	return getInFourChannels( channelOutput );
 }
