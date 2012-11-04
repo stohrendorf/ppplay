@@ -52,10 +52,12 @@ private:
 	uint8_t m_kslAdd;
 
 public:
+	static constexpr uint16_t Silence = 511;
+	
 	EnvelopeGenerator( Opl3* opl )
 		: m_opl( opl ), m_stage( Stage::OFF ), /*m_attenuation( 0 ),*/
 		  m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_fnum( 0 ), m_block( 0 ),
-		  m_env( 511 ), m_ksr( false ), m_clock( 0 ), m_tl( 0 ), m_ksl( 0 ),
+		  m_env( Silence ), m_ksr( false ), m_clock( 0 ), m_tl( 0 ), m_ksl( 0 ),
 		  m_kslAdd(0)
 	{
 	}

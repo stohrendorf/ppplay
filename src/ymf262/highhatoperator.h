@@ -3,21 +3,21 @@
 
 #include <cstdlib>
 
-#include "topcymbaloperator.h"
+#include "operator.h"
 
 namespace opl
 {
 
 class Opl3;
-class HighHatOperator : public TopCymbalOperator
+class HighHatOperator : public Operator
 {
 public:
-    static constexpr int highHatOperatorBaseAddress = 0x11;     
-    
-    HighHatOperator(Opl3* opl) : TopCymbalOperator(opl, highHatOperatorBaseAddress) {
-    }
-    
-    double getOperatorOutput(int modulator) ;
+	static constexpr int highHatOperatorBaseAddress = 0x11;
+
+	HighHatOperator( Opl3* opl ) : Operator( opl, highHatOperatorBaseAddress ) {
+	}
+
+	double getOperatorOutput( int modulator ) ;
 };
 }
 
