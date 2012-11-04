@@ -14,6 +14,7 @@
 #include "highhatsnaredrumchannel.h"
 #include "tomtomtopcymbalchannel.h"
 #include "disabledchannel.h"
+#include "topcymbaloperator.h"
 
 namespace opl
 {
@@ -32,9 +33,6 @@ public:
 
 	// The OPL3 tremolo repetition rate is 3.7 Hz.
 	static constexpr int tremoloTableLength = 13*1024;
-	static constexpr double calculateIncrement( double begin, double end, double period ) {
-		return ( end - begin ) / period;
-	}
 
 private:
 	uint8_t m_registers[0x200];
