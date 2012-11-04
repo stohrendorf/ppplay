@@ -17,7 +17,7 @@ public:
     HighHatOperator(Opl3* opl) : TopCymbalOperator(opl, highHatOperatorBaseAddress) {
     }
     
-    double getOperatorOutput(double modulator) ;
+    double getOperatorOutput(int modulator) ;
 };
 }
 

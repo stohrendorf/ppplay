@@ -1,6 +1,10 @@
 #ifndef PPP_OPL_OPERATOR_H
 #define PPP_OPL_OPERATOR_H
+
 #include <cmath>
+
+#include <stuff/utils.h>
+
 #include "phasegenerator.h"
 #include "envelopegenerator.h"
 
@@ -10,6 +14,7 @@ namespace opl
 class Opl3;
 class Operator
 {
+	DISABLE_COPY(Operator)
 public:
 	static constexpr int
 	AM1_VIB1_EGT1_KSR1_MULT4_Offset = 0x20,
@@ -25,78 +30,102 @@ public:
 
 	static constexpr int waveLength = 1024;
 
-	static constexpr double multTable[] = {0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 12, 12, 15, 15};
+	static constexpr double multTable[16] = {0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 12, 12, 15, 15};
 
-	static constexpr double ksl3dBtable[16][8] = {
-		{0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, -3, -6, -9},
-		{0, 0, 0, 0, -3, -6, -9, -12},
-		{0, 0, 0, -1.875, -4.875, -7.875, -10.875, -13.875},
-
-		{0, 0, 0, -3, -6, -9, -12, -15},
-		{0, 0, -1.125, -4.125, -7.125, -10.125, -13.125, -16.125},
-		{0, 0, -1.875, -4.875, -7.875, -10.875, -13.875, -16.875},
-		{0, 0, -2.625, -5.625, -8.625, -11.625, -14.625, -17.625},
-
-		{0, 0, -3, -6, -9, -12, -15, -18},
-		{0, -0.750, -3.750, -6.750, -9.750, -12.750, -15.750, -18.750},
-		{0, -1.125, -4.125, -7.125, -10.125, -13.125, -16.125, -19.125},
-		{0, -1.500, -4.500, -7.500, -10.500, -13.500, -16.500, -19.500},
-
-		{0, -1.875, -4.875, -7.875, -10.875, -13.875, -16.875, -19.875},
-		{0, -2.250, -5.250, -8.250, -11.250, -14.250, -17.250, -20.250},
-		{0, -2.625, -5.625, -8.625, -11.625, -14.625, -17.625, -20.625},
-		{0, -3, -6, -9, -12, -15, -18, -21}
-	};
-
+	// 0..1
 	static double waveforms[8][waveLength];
 
 private:
 	static int loadWaveforms() ;
 
 	Opl3* m_opl;
-	
+
 	PhaseGenerator m_phaseGenerator;
 	EnvelopeGenerator m_envelopeGenerator;
 
-	double m_envelope;
-	double m_phase;
+	//! @brief Envelope, 0..511 for 0..96 dB
+	uint16_t m_envelope;
+	// 0..1023
+	uint16_t m_phase;
 
 	int m_operatorBaseAddress;
-	int m_am;
-	int m_vib;
-	int m_ksr;
-	int m_egt;
-	int m_mult;
-	int m_ksl;
-	int m_tl;
-	int m_ar;
-	int m_dr;
-	int m_sl;
-	int m_rr;
-	int m_ws;
-	int m_keyScaleNumber;
-	int m_f_number;
-	int m_block;
+	//! @brief Amplitude Modulation. This register is used in EnvelopeGenerator::getEnvelope().
+	bool m_am;
+	//! @brief Vibrato. This register is used in PhaseGenerator::getPhase().
+	bool m_vib;
+	//! @brief Key Scale Rate. Sets the actual envelope rate together with rate and keyScaleNumber. This register is used in EnvelopeGenerator::setActualAttackRate().
+	bool m_ksr;
+	//! @brief Envelope Generator Type. This register is used in EnvelopeGenerator::getEnvelope().
+	bool m_egt;
+	//! @brief Multiple. Multiplies the Channel.baseFrequency to get the Operator.operatorFrequency. This register is used in PhaseGenerator::setFrequency().
+	uint8_t m_mult;
+	//! @brief Key Scale Level. Sets the attenuation in accordance with the octave.
+	uint8_t m_ksl;
+	//! @brief Total Level. Sets the overall damping for the envelope.
+	uint8_t m_tl;
+	//! @brief Attack Rate.
+	uint8_t m_ar;
+	//! @brief Decay Rate.
+	uint8_t m_dr;
+	//! @brief Sustain Level.
+	uint8_t m_sl;
+	//! @brief Release Rate.
+	uint8_t m_rr;
+	uint8_t m_ws;
+	// 0..1023
+	uint16_t m_f_number;
+	// 0..7
+	uint8_t m_block;
 
 public:
-	static constexpr double noModulator = 0;
-	
-	void setAr(int val) { m_ar=val; }
-	const EnvelopeGenerator* envelopeGenerator() const { return &m_envelopeGenerator; }
-	const PhaseGenerator* phaseGenerator() const { return &m_phaseGenerator; }
-	PhaseGenerator* phaseGenerator() { return &m_phaseGenerator; }
-	Opl3* opl() const { return m_opl; }
-	double envelope() const { return m_envelope; }
-	void setEnvelope(double e) { m_envelope = e; }
-	int mult() const { return m_mult; }
-	double phase() const { return m_phase; }
-	void setPhase(double p) { m_phase = p; }
-	int egt() const { return m_egt; }
-	int am() const { return m_am; }
-	int ws() const { return m_ws; }
-	int vib() const { return m_vib; }
-	
+	static constexpr int noModulator = 0;
+
+	void setAr( uint8_t val ) {
+		m_ar = val;
+	}
+	const EnvelopeGenerator* envelopeGenerator() const {
+		return &m_envelopeGenerator;
+	}
+	EnvelopeGenerator* envelopeGenerator() {
+		return &m_envelopeGenerator;
+	}
+	const PhaseGenerator* phaseGenerator() const {
+		return &m_phaseGenerator;
+	}
+	PhaseGenerator* phaseGenerator() {
+		return &m_phaseGenerator;
+	}
+	Opl3* opl() const {
+		return m_opl;
+	}
+	uint16_t envelope() const {
+		return m_envelope;
+	}
+	void setEnvelope( uint16_t e ) {
+		m_envelope = e;
+	}
+	uint8_t mult() const {
+		return m_mult;
+	}
+	uint16_t phase() const {
+		return m_phase;
+	}
+	void setPhase( uint16_t p ) {
+		m_phase = p & 0x3ff;
+	}
+	bool egt() const {
+		return m_egt;
+	}
+	bool am() const {
+		return m_am;
+	}
+	uint8_t ws() const {
+		return m_ws;
+	}
+	bool vib() const {
+		return m_vib;
+	}
+
 	Operator( Opl3* opl, int baseAddress ) ;
 	virtual ~Operator() {}
 
@@ -110,15 +139,15 @@ public:
 
 	void update_5_WS3() ;
 
-	double getOperatorOutput( double modulator ) ;
+	double nextSample( uint16_t modulator ) ;
 
-	double getOutput( double modulator, double outputPhase, const double* waveform ) ;
+	double getOutput( uint16_t modulator, uint16_t outputPhase, uint8_t ws );
 
 	void keyOn() ;
 
 	void keyOff() ;
 
-	void updateOperator( int ksn, int f_num, int blk ) ;
+	void updateOperator( uint16_t f_num, uint8_t blk ) ;
 
 //     @Override
 //     public String toString() {

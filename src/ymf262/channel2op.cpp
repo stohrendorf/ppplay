@@ -4,13 +4,13 @@
 
 namespace opl
 {
-std::vector< double > Channel2Op::getChannelOutput()
+std::vector< double > Channel2Op::nextSample()
 {
 	double channelOutput = 0, op1Output = 0, op2Output = 0;
 	std::vector<double> output;
 	// The feedback uses the last two outputs from
 	// the first operator, instead of just the last one.
-	double feedbackOutput = avgFeedback();
+	const int feedbackOutput = avgFeedback()*1024;
 
 
 	switch( cnt() ) {
@@ -18,16 +18,15 @@ std::vector< double > Channel2Op::getChannelOutput()
 		case 0:
 			if( m_op2->envelopeGenerator()->isOff() )
 				return getInFourChannels( 0 );
-			op1Output = m_op1->getOperatorOutput( feedbackOutput );
-			channelOutput = m_op2->getOperatorOutput( op1Output * toPhase );
+			op1Output = m_op1->nextSample( feedbackOutput );
+			channelOutput = m_op2->nextSample( op1Output * toPhase * 1024 );
 			break;
 			// CNT = 1, the operators are in parallel, with the first in feedback.
 		case 1:
-			if( m_op1->envelopeGenerator()->isOff() &&
-					m_op2->envelopeGenerator()->isOff() )
+			if( m_op1->envelopeGenerator()->isOff() && m_op2->envelopeGenerator()->isOff() )
 				return getInFourChannels( 0 );
-			op1Output = m_op1->getOperatorOutput( feedbackOutput );
-			op2Output = m_op2->getOperatorOutput( Operator::noModulator );
+			op1Output = m_op1->nextSample( feedbackOutput );
+			op2Output = m_op2->nextSample( Operator::noModulator );
 			channelOutput = ( op1Output + op2Output ) / 2;
 	}
 
@@ -48,10 +47,8 @@ void Channel2Op::keyOff()
 }
 void Channel2Op::updateOperators()
 {
-	// Key Scale Number, used in EnvelopeGenerator.setActualRates().
-	int keyScaleNumber = block() * 2 + ( ( fnumh() >> opl()->nts() ) & 0x01 );
 	int f_number = ( fnumh() << 8 ) | fnuml();
-	m_op1->updateOperator( keyScaleNumber, f_number, block() );
-	m_op2->updateOperator( keyScaleNumber, f_number, block() );
+	m_op1->updateOperator( f_number, block() );
+	m_op2->updateOperator( f_number, block() );
 }
 }

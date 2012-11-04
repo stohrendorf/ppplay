@@ -11,10 +11,10 @@ class DisabledChannel : public AbstractChannel
 public:
 	DisabledChannel(Opl3* opl) : AbstractChannel( opl, 0 ) {
 	}
-	std::vector<double> getChannelOutput() {
+	std::vector<double> nextSample() {
 		return getInFourChannels( 0 );
 	}
-protected:
+
 	void keyOn() { }
 	void keyOff() { }
 	void updateOperators() { }

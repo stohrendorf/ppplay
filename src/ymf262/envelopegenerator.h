@@ -2,93 +2,93 @@
 #define PPP_OPL_ENVELOPEGENERATOR_H
 
 #include <cmath>
+#include <cstdint>
 
 namespace opl
 {
+
+class Opl3;
+
+/**
+ * @class EnvelopeGenerator
+ * @brief Envelope generator
+ */
 class EnvelopeGenerator
 {
 public:
-	static constexpr double* INFINITYX = nullptr;
 	enum class Stage
 	{
 		ATTACK, DECAY, SUSTAIN, RELEASE, OFF
 	};
 private:
+	Opl3* m_opl;
 	Stage m_stage;
-	int m_actualAttackRate;
-	int m_actualDecayRate;
-	int m_actualReleaseRate;
-	double m_xAttackIncrement;
-	double m_xMinimumInAttack;
-	double m_dBdecayIncrement;
-	double m_dBreleaseIncrement;
-	double m_attenuation;
-	double m_totalLevel;
-	double m_sustainLevel;
-	double m_x;
-	double m_envelope;
+	//! @brief Attack rate (4 bits)
+	uint8_t m_ar;
+	//! @brief Decay rate (4 bits)
+	uint8_t m_dr;
+	/**
+	 * @brief Sustain level (4 bits)
+	 * @note Effective size is 5 bits, to handle the case SL=0x0f
+	 */
+	uint8_t m_sl;
+	//! @brief Release rate (4 bits)
+	uint8_t m_rr;
+	//! @brief F-Number (10 bits)
+	uint16_t m_fnum;
+	//! @brief Block (3 bits)
+	uint8_t m_block;
+	//! @brief Envelope, 511 = max. att.
+	uint16_t m_env;
+	//! @brief Key scale rate
+	bool m_ksr;
+	//! @brief Internal envelope clock counter
+	uint32_t m_clock;
+	//! @brief Total level, 6 bits, att. is 0.75dB * m_tl
+	uint8_t m_tl;
+	//! @brief Key scale level (2 bits)
+	uint8_t m_ksl;
+	//! @brief Key scale level in Base-2-dB
+	uint8_t m_kslAdd;
 
 public:
-	bool isOff() const { return m_stage == Stage::OFF; }
-	void setOff() { m_stage=Stage::OFF; }
-	
-	EnvelopeGenerator()
-	: m_stage(Stage::OFF), m_actualAttackRate(0), m_actualDecayRate(0), m_actualReleaseRate(0),
-	  m_xAttackIncrement(0), m_xMinimumInAttack(0),
-	  m_dBdecayIncrement(0), m_dBreleaseIncrement(0),
-	  m_attenuation(0), m_totalLevel(0), m_sustainLevel(0),
-	  m_x(dBtoX(-96)), m_envelope(-96)
+	EnvelopeGenerator( Opl3* opl )
+		: m_opl( opl ), m_stage( Stage::OFF ), /*m_attenuation( 0 ),*/
+		  m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_fnum( 0 ), m_block( 0 ),
+		  m_env( 511 ), m_ksr( false ), m_clock( 0 ), m_tl( 0 ), m_ksl( 0 ),
+		  m_kslAdd(0)
 	{
 	}
 
-	void setActualSustainLevel( int sl ) ;
+	bool isOff() const {
+		return m_stage == Stage::OFF;
+	}
+	void setOff() {
+		m_stage = Stage::OFF;
+	}
 
-	void setTotalLevel( int tl ) ;
+	void setActualSustainLevel( uint8_t sl );
 
-	void setAtennuation( int f_number, int block, int ksl ) ;
+	/**
+	 * @param[in] tl Total level, 6 bits
+	 */
+	void setTotalLevel( uint8_t tl );
 
-	void setActualAttackRate( int attackRate, int ksr, int keyScaleNumber ) ;
+	void setAttennuation( uint16_t f_number, uint8_t block, uint8_t ksl );
+	void setAttackRate( uint8_t attackRate );
+	void setDecayRate( uint8_t decayRate );
+	void setReleaseRate( uint8_t releaseRate );
+	void setKsr( bool ksr ) {
+		m_ksr = ksr;
+	}
 
-
-	void setActualDecayRate( int decayRate, int ksr, int keyScaleNumber ) ;
-
-	void setActualReleaseRate( int releaseRate, int ksr, int keyScaleNumber ) ;
-
-private:
-	int calculateActualRate( int rate, int ksr, int keyScaleNumber ) ;
 public:
-	double getEnvelope( int egt, int am ) const;
-
-	void keyOn() ;
-
-	void keyOff() ;
+	// output is 0..511 for 0..96dB
+	uint16_t getEnvelope( bool egt, bool am );
+	void keyOn();
+	void keyOff();
 
 private:
-	static double dBtoX( double dB ) ;
-
-	static double percentageToDB( double percentage ) {
-		return std::log10( percentage ) * 10;
-	}
-
-	static double percentageToX( double percentage ) {
-		return dBtoX( percentageToDB( percentage ) );
-	}
-
-//     @Override
-//     public String toString() {
-//         StringBuffer str = new StringBuffer();
-//         str.append("Envelope Generator: \n");
-//         double attackPeriodInSeconds = EnvelopeGeneratorData.attackTimeValuesTable[actualAttackRate][0]/1000d;
-//         str.append(String.format("\tATTACK  %f s, rate %d. \n", attackPeriodInSeconds, actualAttackRate));
-//         double decayPeriodInSeconds = EnvelopeGeneratorData.decayAndReleaseTimeValuesTable[actualDecayRate][0]/1000d;
-//         str.append(String.format("\tDECAY   %f s, rate %d. \n",decayPeriodInSeconds, actualDecayRate));
-//         str.append(String.format("\tSL      %f dB. \n", sustainLevel));
-//         double releasePeriodInSeconds = EnvelopeGeneratorData.decayAndReleaseTimeValuesTable[actualReleaseRate][0]/1000d;
-//         str.append(String.format("\tRELEASE %f s, rate %d. \n", releasePeriodInSeconds,actualReleaseRate));
-//         str.append("\n");
-//
-//         return str.toString();
-//     }
 };
 }
 

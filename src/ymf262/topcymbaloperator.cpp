@@ -3,28 +3,33 @@
 
 namespace opl
 {
-double TopCymbalOperator::getOperatorOutput( double modulator )
+double TopCymbalOperator::getOperatorOutput( int modulator )
 {
-	double highHatOperatorPhase =
+	int highHatOperatorPhase =
 		opl()->highHatOperator()->phase() * Operator::multTable[opl()->highHatOperator()->mult()];
 	// The Top Cymbal operator uses his own phase together with the High Hat phase.
 	return getOperatorOutput( modulator, highHatOperatorPhase );
 }
-double TopCymbalOperator::getOperatorOutput( double modulator, double externalPhase )
+double TopCymbalOperator::getOperatorOutput( int /*modulator*/, int externalPhase )
 {
-	double envelopeInDB = envelopeGenerator()->getEnvelope( egt(), am() );
-	setEnvelope( std::pow( 10, envelopeInDB / 10.0 ) );
+	setEnvelope( envelopeGenerator()->getEnvelope( egt(), am() ) );
 
 	setPhase( phaseGenerator()->getPhase( vib() ) );
 
-	int waveIndex = ws() & ( ( opl()->isNew() << 2 ) + 3 );
-	const double* waveform = Operator::waveforms[waveIndex];
-
 	// Empirically tested multiplied phase for the Top Cymbal:
-	double carrierPhase = std::fmod( 8 * phase(), 1 );
-	double modulatorPhase = externalPhase;
+	int carrierPhase = ( 8 * phase() ) & 0x3ff;
+	int modulatorPhase = externalPhase&0x3ff;
+	
+	uint8_t waveform = ws();
+	if( opl()->isNew() ) {
+		waveform &= 0x07;
+	}
+	else {
+		waveform &= 0x03;
+	}
+	
 	double modulatorOutput = getOutput( Operator::noModulator, modulatorPhase, waveform );
-	double carrierOutput = getOutput( modulatorOutput, carrierPhase, waveform );
+	double carrierOutput = getOutput( modulatorOutput*1024, carrierPhase, waveform );
 
 	int cycles = 4;
 	if( std::fmod( carrierPhase * cycles, cycles ) > 0.1 ) carrierOutput = 0;
@@ -32,4 +37,3 @@ double TopCymbalOperator::getOperatorOutput( double modulator, double externalPh
 	return carrierOutput * 2;
 }
 }
-

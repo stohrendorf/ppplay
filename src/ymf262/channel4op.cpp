@@ -1,78 +1,86 @@
 #include "channel4op.h"
 
+#include "opl3.h"
+
 namespace opl
 {
-std::vector< double > Channel4Op::getChannelOutput()
+std::vector< double > Channel4Op::nextSample()
 {
-	double channelOutput = 0,
-		   op1Output = 0, op2Output = 0, op3Output = 0, op4Output = 0;
+	double channelOutput = 0, op1Output = 0, op2Output = 0, op3Output = 0, op4Output = 0;
 
-	std::vector<double> output;
+	int secondChannelBaseAddress = baseAddress() + 3;
+	int secondCnt = opl()->readReg( secondChannelBaseAddress + AbstractChannel::CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset ) & 0x1;
+	int cnt4op = ( cnt() << 1 ) | secondCnt;
 
-	int secondChannelBaseAddress = m_channelBaseAddress + 3;
-	int secondCnt = OPL3.registers[secondChannelBaseAddress + ChannelData.CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset] & 0x1;
-	int cnt4op = ( cnt << 1 ) | secondCnt;
+	const int feedbackOutput = avgFeedback() * 1024;
 
-	double feedbackOutput = ( m_feedback[0] + m_feedback[1] ) / 2;
-
+	/*
+	 * Below: "@" means feedback, "~>" means "modulates"
+	 */
 	switch( cnt4op ) {
 		case 0:
-			if( m_op4->envelopeGenerator.stage == EnvelopeGenerator.Stage.OFF )
+			/*
+			 * @Op1 ~> Op2 ~> Op3 ~> Op4
+			 */
+			if( m_op4->envelopeGenerator()->isOff() )
 				return getInFourChannels( 0 );
 
-			op1Output = m_op1->getOperatorOutput( feedbackOutput );
-			op2Output = m_op2->getOperatorOutput( op1Output * toPhase );
-			op3Output = m_op3->getOperatorOutput( op2Output * toPhase );
-			channelOutput = m_op4->getOperatorOutput( op3Output * toPhase );
+			op1Output = m_op1->nextSample( feedbackOutput );
+			op2Output = m_op2->nextSample( op1Output * toPhase * 1024 );
+			op3Output = m_op3->nextSample( op2Output * toPhase * 1024 );
+			channelOutput = m_op4->nextSample( op3Output * toPhase * 1024 );
 
 			break;
 		case 1:
-			if( m_op2->envelopeGenerator.stage == EnvelopeGenerator.Stage.OFF &&
-					m_op4->envelopeGenerator.stage == EnvelopeGenerator.Stage.OFF )
+			/*
+			 * (@Op1 ~> Op2) + (Op3 ~> Op4)
+			 */
+			if( m_op2->envelopeGenerator()->isOff() && m_op4->envelopeGenerator()->isOff() )
 				return getInFourChannels( 0 );
 
-			op1Output = m_op1->getOperatorOutput( feedbackOutput );
-			op2Output = m_op2->getOperatorOutput( op1Output * toPhase );
+			op1Output = m_op1->nextSample( feedbackOutput );
+			op2Output = m_op2->nextSample( op1Output * toPhase * 1024 );
 
-			op3Output = m_op3->getOperatorOutput( Operator.noModulator );
-			op4Output = m_op4->getOperatorOutput( op3Output * toPhase );
+			op3Output = m_op3->nextSample( Operator::noModulator );
+			op4Output = m_op4->nextSample( op3Output * toPhase * 1024 );
 
 			channelOutput = ( op2Output + op4Output ) / 2;
 			break;
 		case 2:
-			if( m_op1->envelopeGenerator.stage == EnvelopeGenerator.Stage.OFF &&
-					m_op4->envelopeGenerator.stage == EnvelopeGenerator.Stage.OFF )
+			/*
+			 * @Op1 + (Op2 ~> Op3 ~> Op4)
+			 */
+			if( m_op1->envelopeGenerator()->isOff() && m_op4->envelopeGenerator()->isOff() )
 				return getInFourChannels( 0 );
 
-			op1Output = m_op1->getOperatorOutput( feedbackOutput );
+			op1Output = m_op1->nextSample( feedbackOutput );
 
-			op2Output = m_op2->getOperatorOutput( Operator.noModulator );
-			op3Output = m_op3->getOperatorOutput( op2Output * toPhase );
-			op4Output = m_op4->getOperatorOutput( op3Output * toPhase );
+			op2Output = m_op2->nextSample( Operator::noModulator );
+			op3Output = m_op3->nextSample( op2Output * toPhase * 1024 );
+			op4Output = m_op4->nextSample( op3Output * toPhase * 1024 );
 
 			channelOutput = ( op1Output + op4Output ) / 2;
 			break;
 		case 3:
-			if( m_op1->envelopeGenerator.stage == EnvelopeGenerator.Stage.OFF &&
-					m_op3->envelopeGenerator.stage == EnvelopeGenerator.Stage.OFF &&
-					m_op4->envelopeGenerator.stage == EnvelopeGenerator.Stage.OFF )
+			/*
+			 * (@Op1 ~> Op3) + Op2 + Op4
+			 */
+			if( m_op1->envelopeGenerator()->isOff() && m_op3->envelopeGenerator()->isOff() && m_op4->envelopeGenerator()->isOff() )
 				return getInFourChannels( 0 );
 
-			op1Output = m_op1->getOperatorOutput( feedbackOutput );
+			op1Output = m_op1->nextSample( feedbackOutput );
 
-			op2Output = m_op2->getOperatorOutput( Operator.noModulator );
-			op3Output = m_op3->getOperatorOutput( op2Output * toPhase );
+			op2Output = m_op2->nextSample( Operator::noModulator );
+			op3Output = m_op3->nextSample( op2Output * toPhase * 1024 );
 
-			op4Output = m_op4->getOperatorOutput( Operator.noModulator );
+			op4Output = m_op4->nextSample( Operator::noModulator );
 
 			channelOutput = ( op1Output + op3Output + op4Output ) / 3;
 	}
 
-	feedback[0] = feedback[1];
-	feedback[1] = ( op1Output * ChannelData.feedback[fb] ) % 1;
+	pushFeedback( std::fmod( op1Output * AbstractChannel::feedback[fb()], 1 ) );
 
-	output = getInFourChannels( channelOutput );
-	return output;
+	return getInFourChannels( channelOutput );
 }
 void Channel4Op::keyOn()
 {
@@ -80,7 +88,7 @@ void Channel4Op::keyOn()
 	m_op2->keyOn();
 	m_op3->keyOn();
 	m_op4->keyOn();
-	feedback[0] = feedback[1] = 0;
+	clearFeedback();
 }
 void Channel4Op::keyOff()
 {
@@ -91,13 +99,10 @@ void Channel4Op::keyOff()
 }
 void Channel4Op::updateOperators()
 {
-	// Key Scale Number, used in EnvelopeGenerator.setActualRates().
-	int keyScaleNumber = block * 2 + ( ( fnumh >> OPL3.nts ) & 0x01 );
-	int f_number = ( fnumh << 8 ) | fnuml;
-	m_op1->updateOperator( keyScaleNumber, f_number, block );
-	m_op2->updateOperator( keyScaleNumber, f_number, block );
-	m_op3->updateOperator( keyScaleNumber, f_number, block );
-	m_op4->updateOperator( keyScaleNumber, f_number, block );
+	int f_number = ( fnumh() << 8 ) | fnuml();
+	m_op1->updateOperator( f_number, block() );
+	m_op2->updateOperator( f_number, block() );
+	m_op3->updateOperator( f_number, block() );
+	m_op4->updateOperator( f_number, block() );
 }
 }
-
