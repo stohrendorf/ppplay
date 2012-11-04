@@ -3,12 +3,12 @@
 
 namespace opl
 {
-double HighHatOperator::getOperatorOutput( int modulator )
+int16_t HighHatOperator::nextSample( uint16_t modulator )
 {
 	uint16_t cymbalPhase = opl()->topCymbalOperator()->phase();
-	uint16_t phasebit = (((phase() & 0x88) ^ ((phase()<<5) & 0x80)) | ((cymbalPhase ^ (cymbalPhase<<2)) & 0x20)) ? 0x02 : 0x00;
-	uint16_t noisebit = rand()&1;
-	setPhase((phasebit<<8) | (0x34<<(phasebit ^ (noisebit<<1))));
-	return getOutput(modulator, phase(), ws());
+	uint16_t phasebit = ( ( ( phase() & 0x88 ) ^( ( phase() << 5 ) & 0x80 ) ) | ( ( cymbalPhase ^( cymbalPhase << 2 ) ) & 0x20 ) ) ? 0x02 : 0x00;
+	uint16_t noisebit = rand() & 1;
+	setPhase( ( phasebit << 8 ) | ( 0x34 << ( phasebit ^( noisebit << 1 ) ) ) );
+	return getOutput( modulator + phase(), ws() );
 }
 }

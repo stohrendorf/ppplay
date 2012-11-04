@@ -78,13 +78,13 @@ void EnvelopeGenerator::setReleaseRate( uint8_t releaseRate )
 	m_rr = releaseRate & 0x0f;
 }
 
-uint16_t EnvelopeGenerator::getEnvelope( bool egt, bool am )
+uint8_t EnvelopeGenerator::getEnvelope( bool egt, bool am )
 {
 	// http://forums.submarine.org.uk/phpBB/viewtopic.php?f=9&t=16&start=20
 	static constexpr uint8_t stepTable[16] = {0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1};
 	switch( m_stage ) {
 		case Stage::OFF:
-			return Silence;
+			return 63;
 		case Stage::ATTACK:
 			if( m_env != 0 ) {
 				int rate1 = ( ( ( m_block << 1 ) + ( ( m_fnum >> ( m_opl->nts() ? 8 : 9 ) ) & 0x1 ) ) >> ( m_ksr ? 0 : 2 ) ) + ( m_ar << 2 );
@@ -189,9 +189,9 @@ uint16_t EnvelopeGenerator::getEnvelope( bool egt, bool am )
 	}
 
 	if( total >= Silence ) {
-		return Silence;
+		return 63;
 	}
-	return total;
+	return m_env;
 }
 
 void EnvelopeGenerator::keyOn()

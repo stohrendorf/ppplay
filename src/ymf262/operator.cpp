@@ -3,51 +3,6 @@
 
 namespace opl
 {
-int Operator::loadWaveforms()
-{
-	//OPL3 has eight waveforms:
-
-	int i;
-	// 1st waveform: sinusoid.
-	for( i = 0; i < 1024; i++ )
-		waveforms[0][i] = std::sin( 2 * i * M_PI / 1024 );
-
-	double* sineTable = waveforms[0];
-	// 2nd: first half of a sinusoid.
-	for( i = 0; i < 512; i++ ) {
-		waveforms[1][i] = sineTable[i];
-		waveforms[1][512 + i] = 0;
-	}
-	// 3rd: double positive sinusoid.
-	for( i = 0; i < 512; i++ )
-		waveforms[2][i] = waveforms[2][512 + i] = sineTable[i];
-	// 4th: first and third quarter of double positive sinusoid.
-	for( i = 0; i < 256; i++ ) {
-		waveforms[3][i] = waveforms[3][512 + i] = sineTable[i];
-		waveforms[3][256 + i] = waveforms[3][768 + i] = 0;
-	}
-	// 5th: first half with double frequency sinusoid.
-	for( i = 0; i < 512; i++ ) {
-		waveforms[4][i] = sineTable[i * 2];
-		waveforms[4][512 + i] = 0;
-	}
-	// 6th: first half with double frequency positive sinusoid.
-	for( i = 0; i < 256; i++ ) {
-		waveforms[5][i] = waveforms[5][256 + i] = sineTable[i * 2];
-		waveforms[5][512 + i] = waveforms[5][768 + i] = 0;
-	}
-	// 7th: square wave
-	for( i = 0; i < 512; i++ ) {
-		waveforms[6][i] = 1;
-		waveforms[6][512 + i] = -1;
-	}
-	// 8th: exponential
-	for( i = 0; i < 512; i++ ) {
-		waveforms[7][i] = std::pow( 2, -i / 16.0 );
-		waveforms[7][1023 - i] = -std::pow( 2, -( i + 1 ) / 16.0 );
-	}
-	return 1;
-}
 void Operator::update_AM1_VIB1_EGT1_KSR1_MULT4()
 {
 
@@ -102,7 +57,7 @@ void Operator::update_5_WS3()
 {
 	m_ws = opl()->readReg( m_operatorBaseAddress + Operator::_5_WS3_Offset ) & 0x07;
 }
-double Operator::nextSample( uint16_t modulator )
+int16_t Operator::nextSample( uint16_t modulator )
 {
 	if( m_envelopeGenerator.isOff() ) return 0;
 
@@ -118,8 +73,7 @@ double Operator::nextSample( uint16_t modulator )
 
 	m_phase = m_phaseGenerator.getPhase( m_vib );
 
-	double operatorOutput = getOutput( modulator, m_phase, m_ws );
-	return operatorOutput;
+	return getOutput( modulator + m_phase, m_ws );
 }
 
 void Operator::keyOn()
@@ -145,11 +99,10 @@ void Operator::updateOperator( uint16_t f_num, uint8_t blk )
 	update_5_WS3();
 }
 Operator::Operator( Opl3* opl, int baseAddress ) : m_opl( opl ), m_operatorBaseAddress( baseAddress ), m_phaseGenerator( opl ), m_envelopeGenerator( opl ),
-	m_envelope( 0 ), m_am( false ), m_vib( false ), m_ksr( false ), m_egt( false ), m_mult( 0 ), m_ksl( 0 ), m_tl( 0 ),
+	m_envelope( 0 ), m_phase(0), m_am( false ), m_vib( false ), m_ksr( false ), m_egt( false ), m_mult( 0 ), m_ksl( 0 ), m_tl( 0 ),
 	m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_ws( 0 ),
 	m_f_number( 0 ), m_block( 0 )
 {
-	static const int waveform_init = loadWaveforms();
 }
 
 namespace
@@ -232,7 +185,7 @@ Waveform 8      +  ---  +  IJKL
                       \ |
                        \|
 */
-uint16_t sinLogWs( uint8_t ws, uint16_t phi )
+uint16_t sinLog( uint8_t ws, uint16_t phi )
 {
 	uint8_t index = phi;
 
@@ -305,15 +258,19 @@ uint16_t sinLogWs( uint8_t ws, uint16_t phi )
 Below is code to convert by signed logarithmic wave form lookup to a linear output as a signed short integer.
 The input parameter is the output of the waveform lookup plus any attenuation. Every 256 added to the input, represents a halving of the linear output (-3dB).
 */
-int16_t sinExp( uint16_t expVal, uint8_t att )
+/**
+ * @brief Calculate exponential value from logarithmic value
+ * @param[in] expVal Exponent calculated by sinLogWs
+ */
+int16_t sinExp( uint16_t expVal )
 {
 	bool signBit = expVal & 0x8000;
 
 	expVal &= 0x7FFF;
-	int16_t result = sinExpTable[(~expVal) & 0xFF] << 1;
+	int16_t result = sinExpTable[( ~expVal ) & 0xFF] << 1;
 	result |= 0x0800; // hidden bit
-	result >>= ( expVal >> 8 )+att; // exp
-	
+	result >>= ( expVal >> 8 ); // exp
+
 	if( signBit ) {
 		// -1 because of 1's complement
 		result = -result - 1;
@@ -322,20 +279,19 @@ int16_t sinExp( uint16_t expVal, uint8_t att )
 	return result;
 }
 
-// 
-int16_t oplSin(uint8_t ws, uint16_t phase, uint16_t env)
+int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
 {
-	if( env==511 ) {
+	if( env == 511 ) {
 		return 0;
 	}
-	return sinExp( sinLogWs(ws,phase), env>>3 );
+	return sinExp( sinLog( ws, phase ) + ( env << 4 ) );
 }
 
 }
 
-double Operator::getOutput( uint16_t modulator, uint16_t outputPhase, uint8_t ws )
+int16_t Operator::getOutput( uint16_t outputPhase, uint8_t ws )
 {
-	return oplSin( ws, outputPhase+modulator+1024, m_envelope );
+	return oplSin( ws, outputPhase, m_envelope );
 	//return waveform[int( outputPhase + modulator + 1024 ) % 1024] * m_envelope;
 }
 }

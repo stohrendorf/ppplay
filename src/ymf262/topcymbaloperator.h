@@ -15,7 +15,7 @@ public:
 	TopCymbalOperator( Opl3* opl, int baseAddress = topCymbalOperatorBaseAddress ) : Operator( opl, baseAddress ) {
 	}
 
-	double getOperatorOutput( int modulator ) ;
+	int16_t nextSample( uint16_t );
 };
 }
 

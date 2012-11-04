@@ -3,7 +3,7 @@
 
 namespace opl
 {
-double TopCymbalOperator::getOperatorOutput( int modulator )
+int16_t TopCymbalOperator::nextSample( uint16_t /*modulator*/ )
 {
 	// The Top Cymbal operator uses his own phase together with the High Hat phase.
 	uint16_t highHatPhase = opl()->highHatOperator()->phase();
@@ -21,6 +21,6 @@ double TopCymbalOperator::getOperatorOutput( int modulator )
 		waveform &= 0x03;
 	}
 	
-	return getOutput(0, phase(), waveform);
+	return getOutput(phase(), waveform);
 }
 }
