@@ -8,6 +8,8 @@ add_library(ppplay_opl SHARED
 	abstractrhythmchannel.cpp
 	bassdrumchannel.cpp
 	channel2op.cpp
+	channel4op.cpp
+	envelopegenerator.cpp
 	highhatoperator.cpp
 	highhatsnaredrumchannel.cpp
 	operator.cpp

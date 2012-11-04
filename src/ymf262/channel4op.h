@@ -1,5 +1,8 @@
 #ifndef PPP_OPL_CHANNEL4OP_H
 #define PPP_OPL_CHANNEL4OP_H
+
+#include <stuff/utils.h>
+
 #include "abstractchannel.h"
 
 namespace opl
@@ -10,6 +13,8 @@ class Opl3;
 class Operator;
 class Channel4Op : public AbstractChannel
 {
+	DISABLE_COPY(Channel4Op)
+private:
 	Operator* m_op1;
 	Operator* m_op2;
 	Operator* m_op3;
@@ -20,7 +25,7 @@ public:
 		: AbstractChannel( opl, baseAddress ), m_op1( o1 ), m_op2( o2 ), m_op3( o3 ), m_op4( o4 ) {
 	}
 
-	std::vector<double> getChannelOutput() ;
+	std::vector<double> nextSample() ;
 
 protected:
 	void keyOn() ;

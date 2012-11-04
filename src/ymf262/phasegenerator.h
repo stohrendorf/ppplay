@@ -2,25 +2,39 @@
 #define PPP_OPL_PHASEGENERATOR_H
 
 #include <cmath>
+#include <cstdint>
+
+#include <boost/assert.hpp>
 
 namespace opl
 {
 
 class Opl3;
+
+/**
+ * @class PhaseGenerator
+ * @brief OPL 3 Phase generator
+ */
 class PhaseGenerator
 {
-	double m_phase;
-	double m_phaseIncrement;
+	//! @brief Owning chip
 	Opl3* m_opl;
+	//! @brief Current phase, 21 bits
+	uint32_t m_phase;
+	uint16_t m_fNum;
+	uint8_t m_block;
+	uint8_t m_mult;
 public:
-	constexpr PhaseGenerator(Opl3* opl) : m_opl(opl), m_phase( 0 ), m_phaseIncrement( 0 ) {
+	PhaseGenerator(Opl3* opl) : m_opl(opl), m_phase( 0 ), m_fNum(0), m_block(0), m_mult(0) {
+		BOOST_ASSERT( opl != nullptr );
 	}
 
-	void setFrequency( int f_number, int block, int mult ) ;
+	void setFrequency( uint16_t f_number, uint8_t block, uint8_t mult );
 
-	double getPhase( int vib );
+	// Result: 10 bits
+	int getPhase( bool vib );
 
-	void keyOn() ;
+	void keyOn();
 
 //     @Override
 //     public String toString() {

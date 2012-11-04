@@ -14,7 +14,7 @@ public:
 	SnareDrumOperator(Opl3* opl) : Operator( opl, snareDrumOperatorBaseAddress ) {
 	}
 
-	double getOperatorOutput( double modulator ) ;
+	double getOperatorOutput( int modulator ) ;
 };
 }
 

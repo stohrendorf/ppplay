@@ -7,4 +7,3 @@ TomTomTopCymbalChannel::TomTomTopCymbalChannel( Opl3* opl ) : AbstractRhythmChan
 {
 }
 }
-

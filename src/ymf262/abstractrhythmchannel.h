@@ -14,7 +14,7 @@ public:
 		: Channel2Op( opl, baseAddress, o1, o2 ) {
 	}
 
-	std::vector<double> getChannelOutput();
+	std::vector<double> nextSample();
 
 protected:
 	void keyOn() { }

@@ -1,39 +1,58 @@
 #include "phasegenerator.h"
 #include "opl3.h"
 
+namespace
+{
+// [mult:0..15][oct:0..7][fnum>>7:0..7]
+int vibDepLookup[16][8][4];
+int initVibDepLookup()
+{
+	for( int mult = 0; mult < 16; mult++ ) {
+		for( int oct = 0; oct < 8; oct++ ) {
+			for( int fnum = 0; fnum < 8; fnum++ ) {
+				vibDepLookup[mult][oct][fnum] = std::pow( 2, oct + fnum + 0.14 / 12 ) * opl::Operator::multTable[mult];
+			}
+		}
+	}
+	return 1;
+}
+}
+
 namespace opl
 {
-void PhaseGenerator::setFrequency( int f_number, int block, int mult )
+// block: 0..7, f_number: 1..1023, mult: 0..15
+void PhaseGenerator::setFrequency( uint16_t f_number, uint8_t block, uint8_t mult )
 {
-	// This frequency formula is derived from the following equation:
-	// f_number = baseFrequency * pow(2,19) / sampleRate / pow(2,block-1);
-	double baseFrequency =
-		f_number * std::pow( 2, block - 1 ) * Opl3::sampleRate / std::pow( 2, 19 );
-	double operatorFrequency = baseFrequency * Operator::multTable[mult];
-
-	// phase goes from 0 to 1 at
-	// period = (1/frequency) seconds ->
-	// Samples in each period is (1/frequency)*sampleRate =
-	// = sampleRate/frequency ->
-	// So the increment in each sample, to go from 0 to 1, is:
-	// increment = (1-0) / samples in the period ->
-	// increment = 1 / (OPL3Data.sampleRate/operatorFrequency) ->
-	m_phaseIncrement = operatorFrequency / Opl3::sampleRate;
+	m_fNum = f_number&0x3ff;
+	m_block = block&0x07;
+	m_mult = mult&0x0f;
 }
-double PhaseGenerator::getPhase( int vib )
+int PhaseGenerator::getPhase( bool vib )
 {
-	if( vib == 1 )
-		// phaseIncrement = (operatorFrequency * vibrato) / sampleRate
-		m_phase += m_phaseIncrement * Opl3::vibratoTable[m_opl->dvb()][m_opl->vibratoIndex()];
-	else
-		// phaseIncrement = operatorFrequency / sampleRate
-		m_phase += m_phaseIncrement;
-	m_phase = std::fmod( m_phase, 1 );
-	return m_phase;
+	uint16_t inc = m_fNum;
+	if (vib)
+	{
+		uint16_t delta = m_fNum>>7;
+		if( ((m_opl->vibratoIndex()>>10) & 3) == 3 ) {
+			delta >>= 1;
+		}
+		if( !m_opl->dvb() ) {
+			delta >>= 1;
+		}
+		if( (m_opl->vibratoIndex()>>12)&1 ) {
+			inc -= delta;
+		}
+		else {
+			inc += delta;
+		}
+	}
+
+	m_phase += (inc << m_block) * Operator::multTable[m_mult];
+	m_phase &= 0x1fffff; // 21 bits
+	return m_phase >> 11;
 }
 void PhaseGenerator::keyOn()
 {
 	m_phase = 0;
 }
 }
-

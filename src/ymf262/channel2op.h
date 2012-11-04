@@ -1,6 +1,8 @@
 #ifndef PPP_OPL_CHANNEL2OP_H
 #define PPP_OPL_CHANNEL2OP_H
 
+#include <stuff/utils.h>
+
 #include "abstractchannel.h"
 
 namespace opl
@@ -11,6 +13,7 @@ class Opl3;
 class Operator;
 class Channel2Op : public AbstractChannel
 {
+	DISABLE_COPY(Channel2Op)
 private:
 	Operator* m_op1;
 	Operator* m_op2;
@@ -20,7 +23,7 @@ public:
 		: AbstractChannel( opl, baseAddress ), m_op1( o1 ), m_op2( o2 ) {
 	}
 
-	std::vector<double> getChannelOutput();
+	std::vector<double> nextSample();
 	Operator* op1() const { return m_op1; }
 	Operator* op2() const { return m_op2; }
 

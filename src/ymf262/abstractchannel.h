@@ -3,6 +3,7 @@
 
 #include "stuff/utils.h"
 #include <vector>
+#include <cstdint>
 
 namespace opl
 {
@@ -26,35 +27,54 @@ private:
 
 	double m_feedback[2];
 
+	//! @brief Frequency Number, low register.
 	int m_fnuml;
 	int m_fnumh;
-	int m_kon;
-	int m_block;
-	int m_cha;
-	int m_chb;
-	int m_chc;
-	int m_chd;
-	int m_fb;
-	int m_cnt;
+	//! @brief Key On. If changed, calls Channel.keyOn() / keyOff().
+	bool m_kon;
+	// 0..7
+	uint8_t m_block;
+	bool m_cha;
+	bool m_chb;
+	bool m_chc;
+	bool m_chd;
+	uint8_t m_fb;
+	bool m_cnt;
 
 public:
 	// Factor to convert between normalized amplitude to normalized
 	// radians. The amplitude maximum is equivalent to 8*Pi radians.
 	static constexpr double toPhase = 4;
-	
-	int cnt() const { return m_cnt; }
-	Opl3* opl() const { return m_opl; }
-	int fnuml() const { return m_fnuml; }
-	int fnumh() const { return m_fnumh; }
-	int block() const { return m_block; }
-	int fb() const { return m_fb; }
-	double avgFeedback() const { return (m_feedback[0]+m_feedback[1])/2; }
-	void clearFeedback() { m_feedback[0]=m_feedback[1]=0; }
-	void pushFeedback(double fb) {
-		m_feedback[0]=m_feedback[1];
-		m_feedback[1]=fb;
+
+	bool cnt() const {
+		return m_cnt;
 	}
-	
+	Opl3* opl() const {
+		return m_opl;
+	}
+	int fnuml() const {
+		return m_fnuml;
+	}
+	int fnumh() const {
+		return m_fnumh;
+	}
+	uint8_t block() const {
+		return m_block;
+	}
+	uint8_t fb() const {
+		return m_fb;
+	}
+	double avgFeedback() const {
+		return ( m_feedback[0] + m_feedback[1] ) / 2;
+	}
+	void clearFeedback() {
+		m_feedback[0] = m_feedback[1] = 0;
+	}
+	void pushFeedback( double fb ) {
+		m_feedback[0] = m_feedback[1];
+		m_feedback[1] = fb;
+	}
+
 	AbstractChannel( Opl3* opl, int baseAddress );
 	virtual ~AbstractChannel() {}
 
@@ -68,11 +88,11 @@ public:
 
 	std::vector<double> getInFourChannels( double channelOutput ) ;
 
-	virtual std::vector<double> getChannelOutput() = 0;
+	virtual std::vector<double> nextSample() = 0;
 	virtual void keyOn() = 0;
 	virtual void keyOff() = 0;
 	virtual void updateOperators() = 0;
-	
+
 	int baseAddress() const {
 		return m_channelBaseAddress;
 	}

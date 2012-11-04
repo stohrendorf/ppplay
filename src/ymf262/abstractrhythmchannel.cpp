@@ -3,7 +3,7 @@
 
 namespace opl
 {
-std::vector< double > AbstractRhythmChannel::getChannelOutput()
+std::vector< double > AbstractRhythmChannel::nextSample()
 {
 	double channelOutput = 0, op1Output = 0, op2Output = 0;
 	std::vector<double> output;
@@ -12,8 +12,8 @@ std::vector< double > AbstractRhythmChannel::getChannelOutput()
 	// we do not check to see if the Operator's envelopes are Off.
 	// Instead, we always do the calculations,
 	// to update the publicly available phase.
-	op1Output = op1()->getOperatorOutput( Operator::noModulator );
-	op2Output = op2()->getOperatorOutput( Operator::noModulator );
+	op1Output = op1()->nextSample( Operator::noModulator );
+	op2Output = op2()->nextSample( Operator::noModulator );
 	channelOutput = ( op1Output + op2Output ) / 2;
 
 	output = getInFourChannels( channelOutput );
