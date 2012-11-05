@@ -16,7 +16,7 @@
 #include "disabledchannel.h"
 #include "topcymbaloperator.h"
 
-#include "ppplay_opl_export.h"
+#include <ymf262/ppplay_opl_export.h>
 
 namespace opl
 {

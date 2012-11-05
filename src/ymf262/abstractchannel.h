@@ -23,7 +23,7 @@ public:
 	// Feedback rate in fractions of 2*Pi, normalized to (0,1):
 	// 0, Pi/16, Pi/8, Pi/4, Pi/2, Pi, 2*Pi, 4*Pi turns to be:
 	// static constexpr double feedback[] = {0, 1 / 32.0, 1 / 16.0, 1 / 8.0, 1 / 4.0, 1 / 2.0, 1, 2};
-	static constexpr int FeedbackShift[] = {15, 6, 5, 4, 3, 2, 1, 0};
+	static const int FeedbackShift[8];
 private:
 	Opl3* m_opl;
 	int m_channelBaseAddress;

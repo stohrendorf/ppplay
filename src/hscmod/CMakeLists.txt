@@ -7,5 +7,5 @@ add_library(ppplay_input_hsc MODULE
 	plugin.cpp
 	hscmodule.cpp
 )
-target_link_libraries(ppplay_input_hsc ppplay_core ppplay_hsc)
+target_link_libraries(ppplay_input_hsc ppplay_core ppplay_opl)
 install(TARGETS ppplay_input_hsc LIBRARY DESTINATION lib/ppplay COMPONENT Plugins OPTIONAL)
