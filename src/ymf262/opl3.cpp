@@ -97,7 +97,8 @@ void Opl3::write( int array, int address, int data )
 				else if( address == 0x05 )
 					update_7_NEW1();
 			}
-			else if( address == 0x08 ) update_1_NTS1_6();
+			else if( address == 0x08 )
+				update_1_NTS1_6();
 			break;
 
 		case 0xA0:

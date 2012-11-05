@@ -1,4 +1,5 @@
 #include "hscmodule.h"
+#include <genmod/abstractorder.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -20,34 +21,46 @@ ppp::AbstractModule* Module::factory( Stream* stream, uint32_t frequency, int ma
 		return nullptr;
 	}
 	res->initialize( frequency );
-	res->setTempo(2);
-	res->setSpeed(2);
 	return res;
 }
 
 size_t Module::internal_buildTick( AudioFrameBuffer* buf )
 {
-	if( buf ) {
-		if( !*buf ) {
-			buf->reset( new AudioFrameBuffer::element_type );
+	if( !update(buf == nullptr) ) {
+		if(buf) {
+			buf->reset();
 		}
-		( *buf )->resize( opl::Opl3::SampleRate / 18.2 );
-	}
-	if( !update() ) {
 		return 0;
 	}
+	if( state().order >= orderCount() ) {
+		logger()->info( L4CXX_LOCATION, "Song end reached" );
+		if(buf) {
+			buf->reset();
+		}
+		return 0;
+	}
+	if( orderAt( state().order )->playbackCount() >= maxRepeat() ) {
+		logger()->info( L4CXX_LOCATION, "Song end reached: Maximum repeat count reached" );
+		if(buf) {
+			buf->reset();
+		}
+		return 0;
+	}
+	static constexpr int BufferSize = opl::Opl3::SampleRate/18.2;
 	if( buf ) {
+		if( !buf->get() ) {
+			buf->reset( new AudioFrameBuffer::element_type );
+		}
+		buf->get()->resize( BufferSize );
 		for(size_t i=0; i<(*buf)->size(); i++) {
-			// TODO
+			// TODO panning?
 			std::vector<int16_t> data = m_opl.read();
 			(**buf)[i].left = data[0]+data[1];
 			(**buf)[i].right = data[2]+data[3];
 		}
-		return ( *buf )->size();
+		state().playedFrames += BufferSize;
 	}
-	else {
-		return opl::Opl3::SampleRate / 18.2;
-	}
+	return BufferSize;
 }
 
 std::string Module::internal_channelCellString( size_t /*idx*/ ) const
@@ -65,12 +78,31 @@ std::string Module::internal_channelStatus( size_t /*idx*/ ) const
 	return "blubber"; // FIXME
 }
 
+class Order : public ppp::AbstractOrder
+{
+	DISABLE_COPY( Order )
+	Order() = delete;
+public:
+	inline Order( uint8_t idx ) : AbstractOrder( idx ) {
+	}
+	virtual bool isUnplayed() const
+	{
+		return playbackCount() == 0;
+	}
+};
+
 bool Module::load( Stream* stream )
 {
 	if( !boost::ends_with( boost::to_lower_copy( stream->name() ), ".hsc" ) || stream->size() > 59187 ) {
+		logger()->debug(L4CXX_LOCATION, "Invalid filename or size mismatch (size=%d)", stream->size());
 		return false;
 	}
 	metaInfo().filename = stream->name();
+	metaInfo().title = stream->name();
+	metaInfo().trackerInfo = "HSC Tracker";
+	setTempo(125);
+	setSpeed(2);
+	
 	stream->seek( 0 );
 	stream->read( reinterpret_cast<char*>( m_instr ), 128 * 12 );
 	for( int i = 0; i < 128; i++ ) {
@@ -79,6 +111,9 @@ bool Module::load( Stream* stream )
 		m_instr[i][11] >>= 4;
 	}
 	stream->read( m_orders, 51 );
+	for(int i=0; i<51 && m_orders[i]!=0xff; i++) {
+		addOrder(new Order(m_orders[i]));
+	}
 	stream->read( reinterpret_cast<char*>( m_patterns ), 50 * 64 * 9 );
 	return true;
 }
@@ -136,7 +171,7 @@ void Module::setVolume( uint8_t chan, uint8_t volCarrier, uint8_t volModulator )
 		m_opl.writeReg( 0x40 + op, insData[3] ); // modulator
 }
 
-bool Module::update()
+bool Module::update(bool estimate)
 {
 	m_speedCountdown--;                      // player m_speed handling
 	if( m_speedCountdown )
@@ -145,14 +180,14 @@ bool Module::update()
 	if( m_fadeIn )					// fade-in handling
 		m_fadeIn--;
 
-	uint8_t pattnr = m_orders[state().order];
+	uint8_t pattnr =  m_orders[state().order];
 	if( pattnr == 0xff ) {			// arrangement handling
 		return false;				// set end-flag
 // 		setOrder(0,true);
 		pattnr = m_orders[state().order];
 	}
 	else if( ( pattnr & 128 ) && ( pattnr <= 0xb1 ) ) { // goto pattern "nr"
-		setOrder( m_orders[state().order] & 127, true );
+		setOrder( m_orders[state().order] & 127, estimate );
 		m_row = 0;
 		pattnr = m_orders[state().order];
 		return false;
@@ -238,7 +273,7 @@ bool Module::update()
 			break;
 			case 0xd0:
 				m_patBreak++;
-				setOrder(eff_op,true);
+				setOrder(eff_op, estimate);
 				return false;
 				break;	// position jump
 			case 0xf0: // set m_speed
@@ -293,7 +328,7 @@ bool Module::update()
 	if( m_patBreak ) {		// do post-effect handling
 		m_row = 0;			// pattern break!
 		m_patBreak = 0;
-		setOrder( (state().order+1)%50, true );
+		setOrder( (state().order+1)%50, estimate );
 		if( state().order == 0 )
 			return false;
 	}
@@ -301,12 +336,12 @@ bool Module::update()
 		m_row++;
 		m_row &= 63;		// advance in pattern data
 		if( !m_row ) {
-			setOrder( (state().order+1)%50, true );
+			setOrder( (state().order+1)%50, estimate );
 			if( state().order == 0 )
 				return false;
 		}
 	}
-	return true;		// still playing
+	return state().pattern != 0xff;		// still playing
 }
 
 void Module::setFreq( uint8_t chan, uint16_t frq )
@@ -315,6 +350,11 @@ void Module::setFreq( uint8_t chan, uint16_t frq )
 
 	m_opl.writeReg( 0xa0 + chan, frq & 0xff );
 	m_opl.writeReg( 0xb0 + chan, m_fnum[chan] );
+}
+
+light4cxx::Logger* Module::logger()
+{
+	return light4cxx::Logger::get( AbstractModule::logger()->name() + ".hsc" );
 }
 
 }
