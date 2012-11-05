@@ -21,10 +21,11 @@ void AbstractChannel::update_2_KON1_BLOCK3_FNUMH2()
 	m_fnumh = _2_kon1_block3_fnumh2 & 0x03;
 	updateOperators();
 
-	bool newKon   = ( _2_kon1_block3_fnumh2 & 0x20 ) >> 5;
+	bool newKon = _2_kon1_block3_fnumh2;
 	if( newKon != m_kon ) {
-		if( newKon )
+		if( newKon ) {
 			keyOn();
+		}
 		else
 			keyOff();
 		m_kon = newKon;

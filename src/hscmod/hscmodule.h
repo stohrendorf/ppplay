@@ -50,8 +50,10 @@ private:
 
 	void storeInstr( uint8_t chan, uint8_t instr );
 	void setVolume( uint8_t chan, uint8_t volCarrier, uint8_t volModulator );
-	bool update();
+	bool update( bool estimate );
 	void setFreq( uint8_t chan, uint16_t frq );
+	
+	static light4cxx::Logger* logger();
 };
 }
 

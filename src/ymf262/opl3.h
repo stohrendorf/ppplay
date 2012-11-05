@@ -76,7 +76,7 @@ public:
 		return m_registers[index];
 	}
 	void writeReg( int index, uint8_t val ) {
-		m_registers[index] = val;
+		write(index>>8, index&0xff, val);
 	}
 	bool nts() const {
 		return m_nts;
@@ -108,8 +108,6 @@ public:
 
 	std::vector<short> read() ;
 
-	void write( int array, int address, int data ) ;
-
 	Opl3();
 
 private:
@@ -125,6 +123,7 @@ private:
 	void update_2_CONNECTIONSEL6() ;
 	void set4opConnections() ;
 	void setRhythmMode() ;
+	void write( int array, int address, int data ) ;
 };
 }
 

@@ -33,7 +33,6 @@ void Operator::update_KSL2_TL6()
 }
 void Operator::update_AR4_DR4()
 {
-
 	int ar4_dr4 = opl()->readReg( m_operatorBaseAddress + Operator::AR4_DR4_Offset );
 
 	m_ar = ( ar4_dr4 & 0xF0 ) >> 4;
@@ -59,7 +58,8 @@ void Operator::update_5_WS3()
 }
 int16_t Operator::nextSample( uint16_t modulator )
 {
-	if( m_envelopeGenerator.isOff() ) return 0;
+	if( m_envelopeGenerator.isOff() )
+		return 0;
 
 	m_envelope = m_envelopeGenerator.getEnvelope( m_egt, m_am );
 
