@@ -3,6 +3,9 @@
 
 namespace opl
 {
+
+const int AbstractChannel::FeedbackShift[8] = {15, 6, 5, 4, 3, 2, 1, 0};
+
 AbstractChannel::AbstractChannel( Opl3* opl, int baseAddress ) : m_opl( opl ), m_channelBaseAddress( baseAddress ),
 	m_fnuml( 0 ), m_fnumh( 0 ), m_kon( false ), m_block( 0 ), m_cha( false ), m_chb( false ), m_chc( false ), m_chd( false ),
 	m_fb( 0 ), m_feedback {0, 0}, m_cnt( false ) {
