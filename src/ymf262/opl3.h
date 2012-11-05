@@ -16,23 +16,15 @@
 #include "disabledchannel.h"
 #include "topcymbaloperator.h"
 
+#include "ppplay_opl_export.h"
+
 namespace opl
 {
-class Opl3
+class PPPLAY_OPL_EXPORT Opl3
 {
 public:
-	// OPL3-wide registers offsets:
-	static constexpr int
-	_1_NTS1_6_Offset = 0x08,
-	DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1_Offset = 0xBD,
-	_7_NEW1_Offset = 0x105,
-	_2_CONNECTIONSEL6_Offset = 0x104;
-
 	static constexpr int MasterClock = 14.32e6;
-	static constexpr int SampleRate = MasterClock/288.0;
-
-	// The OPL3 tremolo repetition rate is 3.7 Hz.
-	static constexpr int TremoloTableLength = 13*1024;
+	static constexpr int SampleRate = MasterClock / 288;
 
 private:
 	uint8_t m_registers[0x200];
@@ -118,32 +110,20 @@ public:
 
 	void write( int array, int address, int data ) ;
 
-	Opl3() ;
+	Opl3();
 
 private:
 	void initOperators() ;
-
 	void initChannels2op() ;
-
 	void initChannels4op() ;
-
 	void initRhythmChannels() ;
-
 	void initChannels() ;
-
 	void update_1_NTS1_6() ;
-
 	void update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1() ;
-
 	void update_7_NEW1() ;
-
-public:
 	void setEnabledChannels() ;
-
 	void update_2_CONNECTIONSEL6() ;
-
 	void set4opConnections() ;
-
 	void setRhythmMode() ;
 };
 }

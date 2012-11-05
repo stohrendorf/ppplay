@@ -2,6 +2,20 @@
 
 namespace opl
 {
+
+namespace
+{
+// OPL3-wide registers offsets:
+constexpr int _1_NTS1_6_Offset = 0x08;
+constexpr int DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1_Offset = 0xBD;
+constexpr int _7_NEW1_Offset = 0x105;
+constexpr int _2_CONNECTIONSEL6_Offset = 0x104;
+
+// The OPL3 tremolo repetition rate is 3.7 Hz.
+constexpr int TremoloTableLength = 13 * 1024;
+}
+
+
 Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m_channels(), m_disabledChannel(),
 	m_bassDrumChannel(), m_highHatSnareDrumChannel(), m_tomTomTopCymbalChannel(), m_highHatOperator(), m_snareDrumOperator(),
 	m_tomTomOperator(), m_topCymbalOperator(), m_highHatOperatorInNonRhythmMode(), m_snareDrumOperatorInNonRhythmMode(),
@@ -216,7 +230,7 @@ void Opl3::update_1_NTS1_6()
 	// to calculate the channel´s Key Scale Number.
 	// The value of the actual envelope rate follows the value of
 	// OPL3.nts,Operator.keyScaleNumber and Operator.ksr
-	m_nts = m_registers[Opl3::_1_NTS1_6_Offset] & 0x40;
+	m_nts = m_registers[_1_NTS1_6_Offset] & 0x40;
 }
 void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 {
@@ -266,7 +280,7 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 }
 void Opl3::update_7_NEW1()
 {
-	int _7_new1 = m_registers[Opl3::_7_NEW1_Offset];
+	int _7_new1 = m_registers[_7_NEW1_Offset];
 	m_new = _7_new1 & 0x01;
 	if( m_new )
 		setEnabledChannels();

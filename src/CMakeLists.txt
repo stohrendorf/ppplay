@@ -10,6 +10,7 @@ add_subdirectory(genmod)
 add_subdirectory(s3mmod)
 add_subdirectory(xmmod)
 add_subdirectory(modmod)
+add_subdirectory(hscmod)
 
 add_subdirectory(ymf262)
 
