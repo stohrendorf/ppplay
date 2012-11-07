@@ -110,18 +110,12 @@ bool Module::load( Stream* stream )
 		m_instr[i][3] ^= ( m_instr[i][3] & 0x40 ) << 1;
 		m_instr[i][11] >>= 4;
 	}
-	stream->read( m_orders, 51 );
-	for(int i=0; i<51 && m_orders[i]!=0xff; i++) {
-		addOrder(new Order(m_orders[i]));
+	uint8_t orders[51];
+	stream->read( orders, 51 );
+	for(int i=0; i<51 && orders[i]!=0xff; i++) {
+		addOrder(new Order(orders[i]));
 	}
-	stream->read( reinterpret_cast<char*>( m_patterns ), 50 * 64 * 9 );
-	return true;
-}
-
-Module::Module( int maxRpt, ppp::Sample::Interpolation inter ) : ppp::AbstractModule( maxRpt, inter ), m_opl(),
-	m_instr {{0}}, m_patterns(), m_channels(), m_orders(), m_speed( 2 ), m_speedCountdown( 1 ), m_fnum(),
-m_row( 0 ), m_bd( 0 ), m_mode6( false ), m_patBreak( 0 ), m_fadeIn( 0 )
-{
+	stream->read( reinterpret_cast<char*>( m_patterns ), stream->size()-stream->pos() );
 	m_opl.writeReg( 1, 32 );
 	m_opl.writeReg( 8, 128 );
 	m_opl.writeReg( 0xbd, 0 );
@@ -129,6 +123,13 @@ m_row( 0 ), m_bd( 0 ), m_mode6( false ), m_patBreak( 0 ), m_fadeIn( 0 )
 	for( int i = 0; i < 9; i++ ) {
 		storeInstr( i, i );
 	}
+	return true;
+}
+
+Module::Module( int maxRpt, ppp::Sample::Interpolation inter ) : ppp::AbstractModule( maxRpt, inter ), m_opl(),
+	m_instr {{0}}, m_patterns(), m_channels(), m_speed( 2 ), m_speedCountdown( 1 ), m_fnum(),
+m_row( 0 ), m_bd( 0 ), m_mode6( false ), m_patBreak( 0 ), m_fadeIn( 0 )
+{
 }
 
 Module::~Module()
@@ -142,6 +143,9 @@ AbstractArchive& Module::serialize( AbstractArchive* data )
 
 void Module::storeInstr( uint8_t chan, uint8_t instr )
 {
+#ifndef NDEBUG
+	logger()->debug(L4CXX_LOCATION, "STORE %d:%d", int(chan), int(instr));
+#endif
 	const uint8_t* insData = m_instr[instr];
 	const uint8_t op = op_table[chan];
 	m_channels[chan].instr = instr;
@@ -180,16 +184,14 @@ bool Module::update(bool estimate)
 	if( m_fadeIn )					// fade-in handling
 		m_fadeIn--;
 
-	uint8_t pattnr =  m_orders[state().order];
+	uint8_t pattnr = state().pattern;
 	if( pattnr == 0xff ) {			// arrangement handling
 		return false;				// set end-flag
-// 		setOrder(0,true);
-		pattnr = m_orders[state().order];
 	}
 	else if( ( pattnr & 128 ) && ( pattnr <= 0xb1 ) ) { // goto pattern "nr"
-		setOrder( m_orders[state().order] & 127, estimate );
+		setOrder( pattnr & 127, estimate );
 		m_row = 0;
-		pattnr = m_orders[state().order];
+		pattnr = state().pattern;
 		return false;
 	}
 
@@ -197,6 +199,7 @@ bool Module::update(bool estimate)
 	for( uint_fast8_t chan = 0; chan < 9; chan++ ) {			// handle all channels
 		uint8_t note = m_patterns[pattnr][pattoff].note;
 		uint8_t effect = m_patterns[pattnr][pattoff].effect;
+		logger()->debug(L4CXX_LOCATION, "chan=%d note=%d effect=%d", int(chan), int(note), int(effect));
 		pattoff++;
 
 		if( note & 128 ) {                  // set instrument

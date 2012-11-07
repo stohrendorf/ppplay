@@ -11,7 +11,8 @@ class Module : public ppp::AbstractModule
 	DISABLE_COPY( Module )
 private:
 	opl::Opl3 m_opl;
-	uint8_t m_instr[128][12];
+	typedef uint8_t InsData[12];
+	InsData m_instr[128];
 	struct Note {
 		constexpr Note() : note( 0 ), effect( 0 ) {}
 		uint8_t note;
@@ -25,7 +26,6 @@ private:
 		uint16_t frq;
 	};
 	Channel m_channels[9];
-	uint8_t m_orders[51];
 	uint8_t m_speed;
 	uint8_t m_speedCountdown;
 	uint8_t m_fnum[9];

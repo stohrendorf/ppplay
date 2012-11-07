@@ -20,7 +20,7 @@ void EnvelopeGenerator::setTotalLevel( uint8_t tl )
 	// The datasheet states that the TL formula is
 	// TL = (24*d5 + 12*d4 + 6*d3 + 3*d2 + 1.5*d1 + 0.75*d0),
 	// 10^(0.075*tl) ~= 2^(tl/4)
-	m_tl = tl;
+	m_tl = tl&0x3f;
 }
 
 void EnvelopeGenerator::setAttennuation( uint16_t f_number, uint8_t block, uint8_t ksl )
@@ -78,103 +78,108 @@ void EnvelopeGenerator::setReleaseRate( uint8_t releaseRate )
 	m_rr = releaseRate & 0x0f;
 }
 
-uint8_t EnvelopeGenerator::getEnvelope( bool egt, bool am )
+uint16_t EnvelopeGenerator::getEnvelope( bool egt, bool am )
 {
 	// http://forums.submarine.org.uk/phpBB/viewtopic.php?f=9&t=16&start=20
 	static constexpr uint8_t stepTable[16] = {0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1};
+	uint8_t rateHi = ( m_fnum >> ( m_opl->nts() ? 8 : 9 ) ) & 0x1;
+	rateHi |= m_block<<1;
+	if( m_ksr ) {
+		rateHi >>= 2;
+	}
+	if( m_stage == Stage::ATTACK ) {
+		rateHi += m_ar<<2;
+	}
+	else if( m_stage == Stage::DECAY ) {
+		rateHi += m_dr<<2;
+	}
+	else if( m_stage == Stage::RELEASE ) {
+		rateHi += m_rr<<2;
+	}
+	if( rateHi > 60 ) {
+		rateHi = 60;
+	}
+	const uint8_t rateLo = (rateHi & 0x03) << 2;
+	rateHi >>= 2;
+
 	switch( m_stage ) {
 		case Stage::OFF:
-			return 63;
+			break;
 		case Stage::ATTACK:
-			if( m_env != 0 ) {
-				int rate1 = ( ( ( m_block << 1 ) + ( ( m_fnum >> ( m_opl->nts() ? 8 : 9 ) ) & 0x1 ) ) >> ( m_ksr ? 0 : 2 ) ) + ( m_ar << 2 );
-				if( rate1 > 60 ) {
-					rate1 = 60;
-				}
-				int rate2 = rate1 & 0x03;
-				rate1 >>= 2;
-
-				if( m_ar != 0 ) {
-					if( !( m_clock & ( 0x0FFF >> rate1 ) ) ) {
-						if( rate1 == 15 ) {
-							m_env = 0;
-						}
-						else if( rate1 > 12 ) {
-							int stepState = m_clock & 0x07;
-							m_env -= ( m_env >> ( 16 - rate1 - stepTable[( rate2 << 2 ) + ( stepState >> 1 )] ) ) + 1;
-						}
-						else {
-							int stepState = ( m_clock >> ( 12 - rate1 ) ) & 0x07;
-							if( ( stepState & 0x01 ) || stepTable[( rate2 << 2 ) + ( stepState >> 1 )] )
-								m_env -= ( m_env >> 3 ) + 1;
-						}
-					}
-				}
-			}
-			else {
+			if( m_env==0 ) {
 				m_stage = Stage::DECAY;
+				m_clock = 0;
+				break;
+			}
+			if( m_ar == 0 ) {
+				break;
+			}
+			if( !( m_clock & ( 0x0FFF >> rateHi ) ) ) {
+				if( rateHi == 15 ) {
+					m_env = 0;
+				}
+				else if( rateHi > 12 ) {
+					int stepState = (m_clock & 0x07) >> 1;
+					m_env -= ( m_env >> ( 16 - rateHi - stepTable[rateLo + stepState ] ) ) + 1;
+				}
+				else {
+					int stepState = ( m_clock >> ( 12 - rateHi ) ) & 0x07;
+					if( ( stepState & 0x01 ) || stepTable[ rateLo + ( stepState >> 1 )] )
+						m_env -= ( m_env >> 3 ) + 1;
+				}
 			}
 			break;
 
 		case Stage::DECAY:
-			if( m_env < ( 1 << ( m_sl + 3 ) ) ) {
-				if( m_dr ) {
-					int rate1 = ( ( ( m_block << 1 ) + ( ( m_fnum >> ( m_opl->nts() ? 8 : 9 ) ) & 0x1 ) ) >> ( m_ksr ? 0 : 2 ) ) + ( m_dr << 2 );
-					if( rate1 > 60 )
-						rate1 = 60;
-					int rate2 = rate1 & 0x03;
-					rate1 >>= 2;
+			if( m_env >= ( 1 << ( m_sl + 3 ) ) ) {
+				m_stage = egt ? Stage::SUSTAIN : Stage::RELEASE;
+				m_clock = 0;
+				break;
+			}
+			if(m_dr==0) {
+				break;
+			}
 
-					if( !( m_clock & ( 0x0FFF >> rate1 ) ) ) {
-						if( rate1 > 12 ) {
-							int stepState = m_clock & 0x07;
-							m_env += ( 1 << ( rate1 + stepTable[( rate2 << 2 ) + ( stepState >> 1 )] - 13 ) );
-						}
-						else {
-							int stepState = ( m_clock >> ( 12 - rate1 ) ) & 0x07;
-							if( ( stepState & 0x01 ) || stepTable[( rate2 << 2 ) + ( stepState >> 1 )] )
-								m_env++;
-						}
-					}
+			if( !( m_clock & ( 0x0FFF >> rateHi ) ) ) {
+				if( rateHi > 12 ) {
+					uint8_t stepState = (m_clock & 0x07) >> 1;
+					m_env += ( 1 << ( rateHi + stepTable[ rateLo + stepState ] - 13 ) );
+				}
+				else {
+					int stepState = ( m_clock >> ( 12 - rateHi ) ) & 0x07;
+					if( ( stepState & 0x01 ) || stepTable[ rateLo + ( stepState >> 1 )] )
+						m_env++;
 				}
 			}
-			else
-				m_stage = egt ? Stage::SUSTAIN : Stage::RELEASE;
 			break;
 
 		case Stage::SUSTAIN:
+			m_clock = 0;
 			break;
 
 		case Stage::RELEASE:
-			if( m_rr ) {
-				int rate1 = ( ( ( m_block << 1 ) + ( ( m_fnum >> ( m_opl->nts() ? 8 : 9 ) ) & 0x1 ) ) >> ( m_ksr ? 0 : 2 ) ) + ( m_rr << 2 );
-				if( rate1 > 60 )
-					rate1 = 60;
-				int rate2 = rate1 & 0x03;
-				rate1 >>= 2;
-
-				if( !( m_clock & ( 0x0FFF >> rate1 ) ) ) {
-					if( rate1 > 12 ) {
-						int stepState = m_clock & 0x07;
-						m_env += ( 1 << ( rate1 - stepTable[( rate2 << 2 ) + ( stepState >> 1 )] - 13 ) );
-					}
-					else {
-						int stepState = ( m_clock >> ( 12 - rate1 ) ) & 0x07;
-						if( ( stepState & 0x01 ) || stepTable[( rate2 << 2 ) + ( stepState >> 1 )] )
-							m_env++;
-					}
+			if( m_rr == 0 ) {
+				break;
+			}
+			if( !( m_clock & ( 0x0FFF >> rateHi ) ) ) {
+				if( rateHi > 12 ) {
+					int stepState = (m_clock & 0x07) >> 1;
+					m_env += ( 1 << ( rateHi - stepTable[rateLo + stepState ] - 13 ) );
 				}
-				if( m_env >= Silence ) {
-					m_env = Silence;
-					m_stage = Stage::OFF;
+				else {
+					int stepState = ( m_clock >> ( 12 - rateHi ) ) & 0x07;
+					if( ( stepState & 0x01 ) || stepTable[rateLo + ( stepState >> 1 )] )
+						m_env++;
 				}
 			}
 			break;
 	}
-	if( m_stage != Stage::SUSTAIN && m_stage != Stage::OFF ) {
-		m_clock++;
+	m_clock++;
+	
+	if( m_env>Silence ) {
+		m_env = Silence;
 	}
-
+	
 	int total = m_env + ( m_tl << 2 ) + m_kslAdd;
 
 	if( am ) {
@@ -188,22 +193,29 @@ uint8_t EnvelopeGenerator::getEnvelope( bool egt, bool am )
 		total += amVal;
 	}
 
-	if( total >= Silence ) {
-		return 63;
+	if( total > Silence ) {
+		return Silence;
 	}
-	return m_env;
+	return total;
 }
 
 void EnvelopeGenerator::keyOn()
 {
 	m_stage = Stage::ATTACK;
 	m_clock = 0;
+	m_env = Silence;
 }
 
 void EnvelopeGenerator::keyOff()
 {
-	if( m_stage != Stage::OFF ) {
+	if( m_stage != Stage::OFF && m_stage != Stage::RELEASE ) {
 		m_stage = Stage::RELEASE;
+		m_clock = 0;
 	}
+}
+
+light4cxx::Logger* EnvelopeGenerator::logger()
+{
+	return light4cxx::Logger::get("opl.envelope");
 }
 }

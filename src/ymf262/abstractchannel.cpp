@@ -13,7 +13,7 @@ AbstractChannel::AbstractChannel( Opl3* opl, int baseAddress ) : m_opl( opl ), m
 void AbstractChannel::update_2_KON1_BLOCK3_FNUMH2()
 {
 
-	int _2_kon1_block3_fnumh2 = m_opl->readReg( m_channelBaseAddress + AbstractChannel::_2_KON1_BLOCK3_FNUMH2_Offset );
+	const uint8_t _2_kon1_block3_fnumh2 = m_opl->readReg( m_channelBaseAddress + AbstractChannel::_2_KON1_BLOCK3_FNUMH2_Offset );
 
 	// Frequency Number (hi-register) and Block. These two registers, together with fnuml,
 	// sets the Channel´s base frequency;
@@ -26,20 +26,21 @@ void AbstractChannel::update_2_KON1_BLOCK3_FNUMH2()
 		if( newKon ) {
 			keyOn();
 		}
-		else
+		else {
 			keyOff();
+		}
 		m_kon = newKon;
 	}
 }
 void AbstractChannel::update_FNUML8()
 {
-	int fnuml8 = m_opl->readReg( m_channelBaseAddress + AbstractChannel::FNUML8_Offset );
+	const uint8_t fnuml8 = m_opl->readReg( m_channelBaseAddress + AbstractChannel::FNUML8_Offset );
 	m_fnuml = fnuml8 & 0xFF;
 	updateOperators();
 }
 void AbstractChannel::update_CHD1_CHC1_CHB1_CHA1_FB3_CNT1()
 {
-	int chd1_chc1_chb1_cha1_fb3_cnt1 = m_opl->readReg( m_channelBaseAddress + AbstractChannel::CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset );
+	const uint8_t chd1_chc1_chb1_cha1_fb3_cnt1 = m_opl->readReg( m_channelBaseAddress + AbstractChannel::CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset );
 	m_chd = chd1_chc1_chb1_cha1_fb3_cnt1 & 0x80;
 	m_chc = chd1_chc1_chb1_cha1_fb3_cnt1 & 0x40;
 	m_chb = chd1_chc1_chb1_cha1_fb3_cnt1 & 0x20;
@@ -69,4 +70,10 @@ std::vector< int16_t > AbstractChannel::getInFourChannels( int16_t channelOutput
 
 	return output;
 }
+
+light4cxx::Logger* AbstractChannel::logger()
+{
+	return light4cxx::Logger::get("opl.channel");
+}
+
 }

@@ -19,7 +19,7 @@ class PhaseGenerator
 {
 	//! @brief Owning chip
 	Opl3* m_opl;
-	//! @brief Current phase, 21 bits
+	//! @brief Current phase, 10.11 fractional bits
 	uint32_t m_phase;
 	uint16_t m_fNum;
 	uint8_t m_block;
@@ -29,11 +29,17 @@ public:
 		BOOST_ASSERT( opl != nullptr );
 	}
 
+	/**
+	 * @post m_fNum<1024 && m_block<8 && m_mult<16
+	 */
 	void setFrequency( uint16_t f_number, uint8_t block, uint8_t mult );
 
 	// Result: 10 bits
-	int getPhase( bool vib );
+	uint16_t getPhase( bool vib );
 
+	/**
+	 * @post m_phase==0
+	 */
 	void keyOn();
 
 //     @Override

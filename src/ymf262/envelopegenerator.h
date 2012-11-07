@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <light4cxx/logger.h>
 
 namespace opl
 {
@@ -51,7 +52,9 @@ private:
 	//! @brief Key scale level in Base-2-dB
 	uint8_t m_kslAdd;
 
-	static constexpr uint16_t Silence = 511;
+	static const uint16_t Silence = 511;
+	
+	static light4cxx::Logger* logger();
 	
 public:
 	EnvelopeGenerator( Opl3* opl )
@@ -65,29 +68,63 @@ public:
 	bool isOff() const {
 		return m_stage == Stage::OFF;
 	}
+	/**
+	 * @post m_stage==Stage::OFF
+	 */
 	void setOff() {
 		m_stage = Stage::OFF;
 	}
 
+	/**
+	 * @post m_sl<15 || m_sl==31
+	 */
 	void setActualSustainLevel( uint8_t sl );
 
 	/**
 	 * @param[in] tl Total level, 6 bits
+	 * @post m_tl < 64
 	 */
 	void setTotalLevel( uint8_t tl );
 
+	/**
+	 * @post m_ksl<4 && m_block<8 && m_fnum<1024
+	 */
 	void setAttennuation( uint16_t f_number, uint8_t block, uint8_t ksl );
+	
+	/**
+	 * @post m_ar<=15
+	 */
 	void setAttackRate( uint8_t attackRate );
+	
+	/**
+	 * @post m_dr<=15
+	 */
 	void setDecayRate( uint8_t decayRate );
+	
+	/**
+	 * @post m_rr<=15
+	 */
 	void setReleaseRate( uint8_t releaseRate );
 	void setKsr( bool ksr ) {
 		m_ksr = ksr;
 	}
 
 public:
-	// output is 0..63 for 0..96dB
-	uint8_t getEnvelope( bool egt, bool am );
+	// output is 0..511 for 0..96dB
+	/**
+	 * @return Envelope, 0..511 for 0..96dB
+	 * @post m_env<=511
+	 */
+	uint16_t getEnvelope( bool egt, bool am );
+	
+	/**
+	 * @post m_stage==Stage::ATTACK && m_clock==0
+	 */
 	void keyOn();
+	
+	/**
+	 * @post m_stage==Stage::OFF || m_stage==Stage::RELEASE
+	 */
 	void keyOff();
 
 private:
