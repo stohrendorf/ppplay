@@ -32,13 +32,10 @@ Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m
 
 std::vector< short int > Opl3::read()
 {
-	std::vector<int32_t> outputBuffer( 4 );
-
-	for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ )
-		outputBuffer[outputChannelNumber] = 0;
+	std::vector<int32_t> outputBuffer( 4, 0 );
 
 	// If _new = 0, use OPL2 mode with 9 channels. If _new = 1, use OPL3 18 channels;
-	for( int array = 0; array < ( m_new + 1 ); array++ )
+	for( int array = 0; array < ( m_new + 1 ); array++ ) {
 		for( int channelNumber = 0; channelNumber < 9; channelNumber++ ) {
 			// Reads output from each OPL3 channel, and accumulates it in the output buffer:
 			std::vector<int16_t> channelOutput = m_channels[array][channelNumber]->nextSample();
@@ -46,13 +43,15 @@ std::vector< short int > Opl3::read()
 				outputBuffer[outputChannelNumber] += channelOutput[outputChannelNumber];
 			}
 		}
+		break;
+	}
 
 	// Normalizes the output buffer after all channels have been added,
 	// with a maximum of 18 channels,
 	// and multiplies it to get the 16 bit signed output.
 	std::vector<short> output( 4 );
 	for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
-		output[outputChannelNumber] = outputBuffer[outputChannelNumber] * 0x7FFF / 18;
+		output[outputChannelNumber] = outputBuffer[outputChannelNumber] >> 2;
 	}
 
 	// Advances the OPL3-wide vibrato index, which is used by
@@ -90,6 +89,7 @@ void Opl3::write( int array, int address, int data )
 			// it occupies inside the byte.
 			// Numbers without accompanying names are unused bits.
 		case 0x00:
+			// ARC_CONTROL
 			// Unique registers for the entire OPL3:
 			if( array == 1 ) {
 				if( address == 0x04 )
@@ -102,6 +102,7 @@ void Opl3::write( int array, int address, int data )
 			break;
 
 		case 0xA0:
+			// ARC_FREQ_NUM
 			// 0xBD is a control register for the entire OPL3:
 			if( address == 0xBD ) {
 				if( array == 0 )
@@ -122,6 +123,7 @@ void Opl3::write( int array, int address, int data )
 			break;
 			// 0xC0...0xC8 keeps cha,chb,chc,chd,fb,cnt for each channel:
 		case 0xC0:
+			// ARC_FEEDBACK
 			if( address <= 0xC8 )
 				m_channels[array][address & 0x0F]->update_CHD1_CHC1_CHB1_CHA1_FB3_CNT1();
 			break;
@@ -132,24 +134,29 @@ void Opl3::write( int array, int address, int data )
 			if( m_operators[array][operatorOffset] == nullptr )
 				break;
 			switch( address & 0xE0 ) {
-					// 0x20...0x35 keeps am,vib,egt,ksr,mult for each operator:
 				case 0x20:
+					// ARC_TVS_KSR_MUL
+					// 0x20...0x35 keeps am,vib,egt,ksr,mult for each operator:
 					m_operators[array][operatorOffset]->update_AM1_VIB1_EGT1_KSR1_MULT4();
 					break;
-					// 0x40...0x55 keeps ksl,tl for each operator:
 				case 0x40:
+					// ARC_KSL_OUTLEV
+					// 0x40...0x55 keeps ksl,tl for each operator:
 					m_operators[array][operatorOffset]->update_KSL2_TL6();
 					break;
-					// 0x60...0x75 keeps ar,dr for each operator:
 				case 0x60:
+					// 0x60...0x75 keeps ar,dr for each operator:
+					// ARC_ATTR_DECR
 					m_operators[array][operatorOffset]->update_AR4_DR4();
 					break;
-					// 0x80...0x95 keeps sl,rr for each operator:
 				case 0x80:
+					// 0x80...0x95 keeps sl,rr for each operator:
+					// ARC_SUSL_RELR
 					m_operators[array][operatorOffset]->update_SL4_RR4();
 					break;
-					// 0xE0...0xF5 keeps ws for each operator:
 				case 0xE0:
+					// 0xE0...0xF5 keeps ws for each operator:
+					// ARC_WAVE_SEL
 					m_operators[array][operatorOffset]->update_5_WS3();
 			}
 	}

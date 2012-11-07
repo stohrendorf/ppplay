@@ -19,6 +19,7 @@ private:
 	Operator* m_op1;
 	Operator* m_op2;
 
+	static light4cxx::Logger* logger();
 public:
 	typedef std::shared_ptr<Channel2Op> Ptr;
 	

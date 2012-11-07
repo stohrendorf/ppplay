@@ -11,23 +11,21 @@ std::vector< int16_t > Channel2Op::nextSample()
 	// the first operator, instead of just the last one.
 	const int feedbackOutput = avgFeedback()>>2;
 
-
-	switch( cnt() ) {
-			// CNT = 0, the operators are in series, with the first in feedback.
-		case 0:
-			if( m_op2->envelopeGenerator()->isOff() )
-				return getInFourChannels( 0 );
-			op1Output = m_op1->nextSample( feedbackOutput );
-			channelOutput = m_op2->nextSample( op1Output );
-			break;
-			// CNT = 1, the operators are in parallel, with the first in feedback.
-		case 1:
-			if( m_op1->envelopeGenerator()->isOff() && m_op2->envelopeGenerator()->isOff() ) {
-				return getInFourChannels( 0 );
-			}
-			op1Output = m_op1->nextSample( feedbackOutput );
-			op2Output = m_op2->nextSample( Operator::noModulator );
-			channelOutput = ( op1Output + op2Output ) >> 1;
+	if( !cnt() ) {
+		// CNT = 0, the operators are in series, with the first in feedback.
+		if( m_op2->envelopeGenerator()->isOff() )
+			return getInFourChannels( 0 );
+		op1Output = m_op1->nextSample( feedbackOutput );
+		channelOutput = m_op2->nextSample( op1Output );
+	}
+	else {
+		// CNT = 1, the operators are in parallel, with the first in feedback.
+		if( m_op1->envelopeGenerator()->isOff() && m_op2->envelopeGenerator()->isOff() ) {
+			return getInFourChannels( 0 );
+		}
+		op1Output = m_op1->nextSample( feedbackOutput );
+		op2Output = m_op2->nextSample( Operator::noModulator );
+		channelOutput = ( op1Output + op2Output ) >> 1;
 	}
 
 	if( fb() != 0 ) {
@@ -52,8 +50,12 @@ void Channel2Op::keyOff()
 }
 void Channel2Op::updateOperators()
 {
-	int f_number = ( fnumh() << 8 ) | fnuml();
+	uint16_t f_number = ( fnumh() << 8 ) | fnuml();
 	m_op1->updateOperator( f_number, block() );
 	m_op2->updateOperator( f_number, block() );
+}
+light4cxx::Logger* Channel2Op::logger()
+{
+	return light4cxx::Logger::get("opl.channel2op");
 }
 }

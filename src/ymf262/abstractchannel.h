@@ -2,6 +2,7 @@
 #define PPP_OPL_ABSTRACTCHANNEL_H
 
 #include "stuff/utils.h"
+#include <light4cxx/logger.h>
 #include <vector>
 #include <cstdint>
 #include <memory>
@@ -29,8 +30,8 @@ private:
 	int m_channelBaseAddress;
 
 	//! @brief Frequency Number, low register.
-	int m_fnuml;
-	int m_fnumh;
+	uint8_t m_fnuml;
+	uint8_t m_fnumh;
 	//! @brief Key On. If changed, calls Channel.keyOn() / keyOff().
 	bool m_kon;
 	// 0..7
@@ -42,6 +43,8 @@ private:
 	uint8_t m_fb;
 	int16_t m_feedback[2];
 	bool m_cnt;
+	
+	static light4cxx::Logger* logger();
 
 public:
 	bool cnt() const {
@@ -76,10 +79,16 @@ public:
 	AbstractChannel( Opl3* opl, int baseAddress );
 	virtual ~AbstractChannel() {}
 
+	/**
+	 * @post m_fnumh<8 && m_block<8
+	 */
 	void update_2_KON1_BLOCK3_FNUMH2();
 
 	void update_FNUML8();
 
+	/**
+	 * @post m_fb<8
+	 */
 	void update_CHD1_CHC1_CHB1_CHA1_FB3_CNT1();
 
 	void updateChannel();

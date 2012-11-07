@@ -1,29 +1,32 @@
 #include "operator.h"
 #include "opl3.h"
 
+#include <boost/assert.hpp>
+
 namespace opl
 {
 void Operator::update_AM1_VIB1_EGT1_KSR1_MULT4()
 {
 
-	int am1_vib1_egt1_ksr1_mult4 = opl()->readReg( m_operatorBaseAddress + Operator::AM1_VIB1_EGT1_KSR1_MULT4_Offset );
+	uint8_t am1_vib1_egt1_ksr1_mult4 = opl()->readReg( m_operatorBaseAddress + Operator::AM1_VIB1_EGT1_KSR1_MULT4_Offset );
 
 	m_am  = am1_vib1_egt1_ksr1_mult4 & 0x80;
 	m_vib = am1_vib1_egt1_ksr1_mult4 & 0x40;
 	m_egt = am1_vib1_egt1_ksr1_mult4 & 0x20;
 	m_ksr = am1_vib1_egt1_ksr1_mult4 & 0x10;
 	m_mult = am1_vib1_egt1_ksr1_mult4 & 0x0F;
-
+	
 	m_phaseGenerator.setFrequency( m_f_number, m_block, m_mult );
 	m_envelopeGenerator.setKsr( m_ksr );
 	m_envelopeGenerator.setAttackRate( m_ar );
 	m_envelopeGenerator.setDecayRate( m_dr );
 	m_envelopeGenerator.setReleaseRate( m_rr );
 }
+
 void Operator::update_KSL2_TL6()
 {
 
-	int ksl2_tl6 = opl()->readReg( m_operatorBaseAddress + Operator::KSL2_TL6_Offset );
+	const uint8_t ksl2_tl6 = opl()->readReg( m_operatorBaseAddress + Operator::KSL2_TL6_Offset );
 
 	m_ksl = ( ksl2_tl6 & 0xC0 ) >> 6;
 	m_tl  =  ksl2_tl6 & 0x3F;
@@ -31,9 +34,10 @@ void Operator::update_KSL2_TL6()
 	m_envelopeGenerator.setAttennuation( m_f_number, m_block, m_ksl );
 	m_envelopeGenerator.setTotalLevel( m_tl );
 }
+
 void Operator::update_AR4_DR4()
 {
-	int ar4_dr4 = opl()->readReg( m_operatorBaseAddress + Operator::AR4_DR4_Offset );
+	const uint8_t ar4_dr4 = opl()->readReg( m_operatorBaseAddress + Operator::AR4_DR4_Offset );
 
 	m_ar = ( ar4_dr4 & 0xF0 ) >> 4;
 	m_dr =  ar4_dr4 & 0x0F;
@@ -41,6 +45,7 @@ void Operator::update_AR4_DR4()
 	m_envelopeGenerator.setAttackRate( m_ar );
 	m_envelopeGenerator.setDecayRate( m_dr );
 }
+
 void Operator::update_SL4_RR4()
 {
 
@@ -52,16 +57,20 @@ void Operator::update_SL4_RR4()
 	m_envelopeGenerator.setActualSustainLevel( m_sl );
 	m_envelopeGenerator.setReleaseRate( m_rr );
 }
+
 void Operator::update_5_WS3()
 {
 	m_ws = opl()->readReg( m_operatorBaseAddress + Operator::_5_WS3_Offset ) & 0x07;
 }
+
 int16_t Operator::nextSample( uint16_t modulator )
 {
-	if( m_envelopeGenerator.isOff() )
+	if( m_envelopeGenerator.isOff() ) {
 		return 0;
+	}
 
 	m_envelope = m_envelopeGenerator.getEnvelope( m_egt, m_am );
+	BOOST_ASSERT( m_envelope<=511 );
 
 	// If it is in OPL2 mode, use first four waveforms only:
 	if( opl()->isNew() ) {
@@ -99,7 +108,7 @@ void Operator::updateOperator( uint16_t f_num, uint8_t blk )
 	update_5_WS3();
 }
 Operator::Operator( Opl3* opl, int baseAddress ) : m_opl( opl ), m_operatorBaseAddress( baseAddress ), m_phaseGenerator( opl ), m_envelopeGenerator( opl ),
-	m_envelope( 0 ), m_phase(0), m_am( false ), m_vib( false ), m_ksr( false ), m_egt( false ), m_mult( 0 ), m_ksl( 0 ), m_tl( 0 ),
+	m_envelope( 511 ), m_phase(0), m_am( false ), m_vib( false ), m_ksr( false ), m_egt( false ), m_mult( 0 ), m_ksl( 0 ), m_tl( 0 ),
 	m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_ws( 0 ),
 	m_f_number( 0 ), m_block( 0 )
 {
@@ -185,6 +194,7 @@ Waveform 8      +  ---  +  IJKL
                       \ |
                        \|
 */
+// result: (0..2137) (maybe or'ed with 0x8000)
 uint16_t sinLog( uint8_t ws, uint16_t phi )
 {
 	uint8_t index = phi;
@@ -267,6 +277,7 @@ int16_t sinExp( uint16_t expVal )
 	bool signBit = expVal & 0x8000;
 
 	expVal &= 0x7FFF;
+	// 0..1018*2
 	int16_t result = sinExpTable[( ~expVal ) & 0xFF] << 1;
 	result |= 0x0800; // hidden bit
 	result >>= ( expVal >> 8 ); // exp
@@ -281,17 +292,27 @@ int16_t sinExp( uint16_t expVal )
 
 int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
 {
-	if( env == 511 ) {
-		return 0;
-	}
-	return sinExp( sinLog( ws, phase ) + ( env << 4 ) );
+	int16_t res = sinExp( sinLog( ws, phase ) + env );
+	BOOST_ASSERT( res>=-4096 && res<=4095 );
+	return res;
 }
 
 }
 
 int16_t Operator::getOutput( uint16_t outputPhase, uint8_t ws )
 {
-	return oplSin( ws, outputPhase, m_envelope );
+	BOOST_ASSERT(m_envelope<=511);
+	BOOST_ASSERT(ws<=7);
+	if( m_envelope == 511 ) {
+		return 0;
+	}
+	return oplSin( ws, outputPhase&0x3ff, /*m_envelope*/0 );
 	//return waveform[int( outputPhase + modulator + 1024 ) % 1024] * m_envelope;
 }
+
+light4cxx::Logger* Operator::logger()
+{
+	return light4cxx::Logger::get("opl.operator");
+}
+
 }

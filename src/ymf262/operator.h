@@ -8,6 +8,7 @@
 
 #include "phasegenerator.h"
 #include "envelopegenerator.h"
+#include <light4cxx/logger.h>
 
 namespace opl
 {
@@ -41,7 +42,7 @@ private:
 	EnvelopeGenerator m_envelopeGenerator;
 
 	//! @brief Envelope, 0..511 for 0..96 dB
-	uint8_t m_envelope;
+	uint16_t m_envelope;
 	// 0..1023
 	uint16_t m_phase;
 
@@ -72,12 +73,17 @@ private:
 	uint16_t m_f_number;
 	// 0..7
 	uint8_t m_block;
+	
+	static light4cxx::Logger* logger();
 
 public:
 	static constexpr int noModulator = 0;
 
+	/**
+	 * @post m_ar<16
+	 */
 	void setAr( uint8_t val ) {
-		m_ar = val;
+		m_ar = val&0x0f;
 	}
 	const EnvelopeGenerator* envelopeGenerator() const {
 		return &m_envelopeGenerator;
@@ -94,7 +100,7 @@ public:
 	Opl3* opl() const {
 		return m_opl;
 	}
-	void setEnvelope( uint8_t e ) {
+	void setEnvelope( uint16_t e ) {
 		m_envelope = e;
 	}
 	uint8_t mult() const {
@@ -122,10 +128,29 @@ public:
 	Operator( Opl3* opl, int baseAddress );
 	virtual ~Operator() {}
 
+	/**
+	 * @post m_mult<16
+	 */
 	void update_AM1_VIB1_EGT1_KSR1_MULT4();
+	
+	/**
+	 * @post m_ksl<4 && m_tl<64
+	 */
 	void update_KSL2_TL6();
+
+	/**
+	 * @post m_ar<16 && m_dr<16
+	 */
 	void update_AR4_DR4();
+	
+	/**
+	 * @post m_sl<16 && m_rr<16
+	 */
 	void update_SL4_RR4();
+	
+	/**
+	 * @post m_ws<8
+	 */
 	void update_5_WS3();
 
 	virtual int16_t nextSample( uint16_t modulator );
@@ -135,7 +160,6 @@ public:
 	 * @param[in] outputPhase Phase, 0..1023
 	 * @param[in] ws Waveform selector
 	 * @return Waveform sample, amplitude is -4085..4084
-	 * @note @a modulator and @a outputPhase will simply be added together
 	 */
 	int16_t getOutput( uint16_t outputPhase, uint8_t ws );
 

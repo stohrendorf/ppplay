@@ -8,9 +8,9 @@ std::vector< int16_t > Channel4Op::nextSample()
 {
 	int channelOutput = 0, op1Output = 0, op2Output = 0, op3Output = 0, op4Output = 0;
 
-	int secondChannelBaseAddress = baseAddress() + 3;
-	int secondCnt = opl()->readReg( secondChannelBaseAddress + AbstractChannel::CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset ) & 0x1;
-	int cnt4op = ( cnt() << 1 ) | secondCnt;
+	const int secondChannelBaseAddress = baseAddress() + 3;
+	const int secondCnt = opl()->readReg( secondChannelBaseAddress + AbstractChannel::CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset ) & 0x1;
+	const int cnt4op = ( cnt() << 1 ) | secondCnt;
 
 	const int feedbackOutput = avgFeedback()>>2;
 
@@ -35,8 +35,9 @@ std::vector< int16_t > Channel4Op::nextSample()
 			/*
 			 * (@Op1 ~> Op2) + (Op3 ~> Op4)
 			 */
-			if( m_op2->envelopeGenerator()->isOff() && m_op4->envelopeGenerator()->isOff() )
+			if( m_op2->envelopeGenerator()->isOff() && m_op4->envelopeGenerator()->isOff() ) {
 				return getInFourChannels( 0 );
+			}
 
 			op1Output = m_op1->nextSample( feedbackOutput );
 			op2Output = m_op2->nextSample( op1Output );
@@ -105,10 +106,14 @@ void Channel4Op::keyOff()
 }
 void Channel4Op::updateOperators()
 {
-	int f_number = ( fnumh() << 8 ) | fnuml();
+	uint16_t f_number = ( fnumh() << 8 ) | fnuml();
 	m_op1->updateOperator( f_number, block() );
 	m_op2->updateOperator( f_number, block() );
 	m_op3->updateOperator( f_number, block() );
 	m_op4->updateOperator( f_number, block() );
+}
+light4cxx::Logger* Channel4Op::logger()
+{
+	return light4cxx::Logger::get("opl.channel4op");
 }
 }
