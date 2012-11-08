@@ -3,13 +3,13 @@
 
 namespace opl
 {
-int16_t TopCymbalOperator::nextSample( uint16_t /*modulator*/ )
+int16_t TopCymbalOperator::nextSample( int16_t /*modulator*/ )
 {
 	// The Top Cymbal operator uses his own phase together with the High Hat phase.
 	uint16_t highHatPhase = opl()->highHatOperator()->phase();
 	uint16_t phaseBit = (((phase() & 0x88) ^ ((phase()<<5) & 0x80)) | ((highHatPhase ^ (highHatPhase<<2)) & 0x20)) ? 0x02 : 0x00;
 	
-	setEnvelope( envelopeGenerator()->getEnvelope( egt(), am() ) );
+	envelopeGenerator()->advance( egt(), am() );
 
 	setPhase((1+phaseBit)<<8);
 

@@ -51,22 +51,26 @@ private:
 	uint8_t m_ksl;
 	//! @brief Key scale level in Base-2-dB
 	uint8_t m_kslAdd;
+	uint16_t m_total;
 
 	static const uint16_t Silence = 511;
 	
 	static light4cxx::Logger* logger();
 	
 public:
-	EnvelopeGenerator( Opl3* opl )
+	constexpr EnvelopeGenerator( Opl3* opl )
 		: m_opl( opl ), m_stage( Stage::OFF ), /*m_attenuation( 0 ),*/
 		  m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_fnum( 0 ), m_block( 0 ),
 		  m_env( Silence ), m_ksr( false ), m_clock( 0 ), m_tl( 0 ), m_ksl( 0 ),
-		  m_kslAdd(0)
+		  m_kslAdd(0), m_total(Silence)
 	{
 	}
 
-	bool isOff() const {
+	constexpr bool isOff() {
 		return m_stage == Stage::OFF;
+	}
+	constexpr bool isSilent() {
+		return m_total == Silence;
 	}
 	/**
 	 * @post m_stage==Stage::OFF
@@ -109,13 +113,17 @@ public:
 		m_ksr = ksr;
 	}
 
-public:
 	// output is 0..511 for 0..96dB
 	/**
 	 * @return Envelope, 0..511 for 0..96dB
 	 * @post m_env<=511
 	 */
-	uint16_t getEnvelope( bool egt, bool am );
+	uint16_t advance( bool egt, bool am );
+	
+	constexpr uint16_t envelope() const
+	{
+		return m_total;
+	}
 	
 	/**
 	 * @post m_stage==Stage::ATTACK && m_clock==0

@@ -61,7 +61,9 @@ private:
 	bool m_new;
 	//! @brief 2-op/4-op channel selection. This register is used here to configure the OPL3.channels[] array.
 	uint8_t m_connectionsel;
-	int m_vibratoIndex, m_tremoloIndex;
+	//! @brief 13 bits
+	uint16_t m_vibratoIndex;
+	uint16_t m_tremoloIndex;
 
 	// The methods read() and write() are the only
 	// ones needed by the user to interface with the emulator.
@@ -96,13 +98,13 @@ public:
 	bool dvb() const {
 		return m_dvb;
 	}
-	int vibratoIndex() const {
+	uint16_t vibratoIndex() const {
 		return m_vibratoIndex;
 	}
 	bool dam() const {
 		return m_dam;
 	}
-	int tremoloIndex() const {
+	uint16_t tremoloIndex() const {
 		return m_tremoloIndex;
 	}
 

@@ -63,14 +63,13 @@ void Operator::update_5_WS3()
 	m_ws = opl()->readReg( m_operatorBaseAddress + Operator::_5_WS3_Offset ) & 0x07;
 }
 
-int16_t Operator::nextSample( uint16_t modulator )
+int16_t Operator::nextSample( int16_t modulator )
 {
 	if( m_envelopeGenerator.isOff() ) {
 		return 0;
 	}
 
-	m_envelope = m_envelopeGenerator.getEnvelope( m_egt, m_am );
-	BOOST_ASSERT( m_envelope<=511 );
+	m_envelopeGenerator.advance( m_egt, m_am );
 
 	// If it is in OPL2 mode, use first four waveforms only:
 	if( opl()->isNew() ) {
@@ -80,9 +79,9 @@ int16_t Operator::nextSample( uint16_t modulator )
 		m_ws &= 0x03;
 	}
 
-	m_phase = m_phaseGenerator.getPhase( m_vib );
+	m_phase = m_phaseGenerator.advance( m_vib );
 
-	return getOutput( modulator + m_phase, m_ws );
+	return getOutput( modulator + m_phase + 4096, m_ws );
 }
 
 void Operator::keyOn()
@@ -91,24 +90,29 @@ void Operator::keyOn()
 		m_envelopeGenerator.keyOn();
 		m_phaseGenerator.keyOn();
 	}
-	else m_envelopeGenerator.setOff();
+	else {
+		m_envelopeGenerator.setOff();
+	}
 }
+
 void Operator::keyOff()
 {
 	m_envelopeGenerator.keyOff();
 }
+
 void Operator::updateOperator( uint16_t f_num, uint8_t blk )
 {
-	m_f_number = f_num;
-	m_block = blk;
+	m_f_number = f_num&0x3ff;
+	m_block = blk&0x07;
 	update_AM1_VIB1_EGT1_KSR1_MULT4();
 	update_KSL2_TL6();
 	update_AR4_DR4();
 	update_SL4_RR4();
 	update_5_WS3();
 }
+
 Operator::Operator( Opl3* opl, int baseAddress ) : m_opl( opl ), m_operatorBaseAddress( baseAddress ), m_phaseGenerator( opl ), m_envelopeGenerator( opl ),
-	m_envelope( 511 ), m_phase(0), m_am( false ), m_vib( false ), m_ksr( false ), m_egt( false ), m_mult( 0 ), m_ksl( 0 ), m_tl( 0 ),
+	m_phase(0), m_am( false ), m_vib( false ), m_ksr( false ), m_egt( false ), m_mult( 0 ), m_ksl( 0 ), m_tl( 0 ),
 	m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_ws( 0 ),
 	m_f_number( 0 ), m_block( 0 )
 {
@@ -278,7 +282,7 @@ int16_t sinExp( uint16_t expVal )
 
 	expVal &= 0x7FFF;
 	// 0..1018*2
-	int16_t result = sinExpTable[( ~expVal ) & 0xFF] << 1;
+	int16_t result = sinExpTable[( expVal & 0xff ) ^ 0xFF] << 1;
 	result |= 0x0800; // hidden bit
 	result >>= ( expVal >> 8 ); // exp
 
@@ -301,12 +305,11 @@ int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
 
 int16_t Operator::getOutput( uint16_t outputPhase, uint8_t ws )
 {
-	BOOST_ASSERT(m_envelope<=511);
 	BOOST_ASSERT(ws<=7);
-	if( m_envelope == 511 ) {
+	if( m_envelopeGenerator.isSilent() ) {
 		return 0;
 	}
-	return oplSin( ws, outputPhase&0x3ff, /*m_envelope*/0 );
+	return oplSin( ws, outputPhase&0x3ff, m_envelopeGenerator.envelope() );
 	//return waveform[int( outputPhase + modulator + 1024 ) % 1024] * m_envelope;
 }
 

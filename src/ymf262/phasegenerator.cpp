@@ -3,6 +3,8 @@
 
 namespace opl
 {
+constexpr uint8_t multTable[16] = {1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 20, 24, 24, 30, 30};
+
 void PhaseGenerator::setFrequency( uint16_t f_number, uint8_t block, uint8_t mult )
 {
 	m_fNum = f_number&0x3ff;
@@ -10,8 +12,19 @@ void PhaseGenerator::setFrequency( uint16_t f_number, uint8_t block, uint8_t mul
 	m_mult = mult&0x0f;
 }
 
-uint16_t PhaseGenerator::getPhase( bool vib )
+uint16_t PhaseGenerator::advance( bool vib )
 {
+	/*
+	 * According to the YMF262 manual:
+	 * FNUM = (frq<<(20-BLOCK)) / Opl3::SampleRate
+	 * -> frq = (FNUM*Opl3::SampleRate) >> (20-BLOCK)
+	 * 
+	 * The sine wave length is 1<<10, so if sinFrq is the number of sine samples per second:
+	 * sinFrq = (FNUM*Opl3::SampleRate) >> (10-BLOCK)
+	 * Thus, the number of sine samples per output sample is:
+	 * sinOutFrq = FNUM >> (10-BLOCK)
+	 *           = (FNUM<<BLOCK)>>10
+	 */
 	int inc = m_fNum;
 	if (vib)
 	{
@@ -20,6 +33,7 @@ uint16_t PhaseGenerator::getPhase( bool vib )
 			delta >>= 1;
 		}
 		if( !m_opl->dvb() ) {
+			// 14 -> 7 percent
 			delta >>= 1;
 		}
 		if( (m_opl->vibratoIndex()>>12)&1 ) {
@@ -33,8 +47,8 @@ uint16_t PhaseGenerator::getPhase( bool vib )
 
 	static constexpr int multTable[16] = {1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 20, 24, 24, 30, 30};
 	m_phase += (inc * multTable[m_mult]) >> 1;
-	m_phase &= 0x1fffff; // 21 bits
-	return m_phase >> 11;
+	m_phase &= 0xfffff; // 20 bits
+	return phase();
 }
 
 void PhaseGenerator::keyOn()

@@ -106,7 +106,7 @@ void Channel4Op::keyOff()
 }
 void Channel4Op::updateOperators()
 {
-	uint16_t f_number = ( fnumh() << 8 ) | fnuml();
+	uint16_t f_number = fnum();
 	m_op1->updateOperator( f_number, block() );
 	m_op2->updateOperator( f_number, block() );
 	m_op3->updateOperator( f_number, block() );
