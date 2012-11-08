@@ -16,4 +16,3 @@ std::vector< int16_t > AbstractRhythmChannel::nextSample()
 	return getInFourChannels( channelOutput );
 }
 }
-

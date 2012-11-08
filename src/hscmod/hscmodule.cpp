@@ -138,7 +138,17 @@ Module::~Module()
 
 AbstractArchive& Module::serialize( AbstractArchive* data )
 {
-	return ppp::AbstractModule::serialize( data );
+	return ppp::AbstractModule::serialize( data )
+	.array(m_channels, 9)
+	.array(m_fnum, 9)
+	% m_speed
+	% m_speedCountdown
+	% m_row
+	% m_bd
+	% m_mode6
+	% m_patBreak
+	% m_fadeIn
+	% m_opl;
 }
 
 void Module::storeInstr( uint8_t chan, uint8_t instr )

@@ -104,7 +104,7 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 
 	switch( m_stage ) {
 		case Stage::OFF:
-			break;
+			return Silence;
 		case Stage::ATTACK:
 			if( m_env==0 ) {
 				m_stage = Stage::DECAY;
@@ -175,6 +175,11 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 	
 	if( m_env>Silence ) {
 		m_env = Silence;
+		if( m_stage == Stage::RELEASE ) {
+			m_total = Silence;
+			m_stage = Stage::OFF;
+			return Silence;
+		}
 	}
 	
 	int total = m_env + ( m_tl << 2 ) + m_kslAdd;

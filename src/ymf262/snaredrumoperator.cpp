@@ -4,6 +4,7 @@ namespace opl
 {
 int16_t SnareDrumOperator::nextSample( int16_t modulator )
 {
+	return 0; // FIXME
 	if( envelopeGenerator()->isOff() )
 		return 0;
 

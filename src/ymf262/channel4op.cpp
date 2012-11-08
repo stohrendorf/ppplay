@@ -87,7 +87,7 @@ std::vector< int16_t > Channel4Op::nextSample()
 		pushFeedback(0);
 	}
 
-	return getInFourChannels( channelOutput );
+	return getInFourChannels( /*channelOutput FIXME*/ 0 );
 }
 void Channel4Op::keyOn()
 {
