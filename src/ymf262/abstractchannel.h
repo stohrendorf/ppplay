@@ -29,12 +29,11 @@ private:
 	Opl3* m_opl;
 	int m_channelBaseAddress;
 
-	//! @brief Frequency Number, low register.
-	uint8_t m_fnuml;
-	uint8_t m_fnumh;
+	//! @brief Frequency Number, 0..1023
+	uint16_t m_fnum;
 	//! @brief Key On. If changed, calls Channel.keyOn() / keyOff().
 	bool m_kon;
-	// 0..7
+	//! @brief Block/octave (0..7)
 	uint8_t m_block;
 	bool m_cha;
 	bool m_chb;
@@ -53,11 +52,8 @@ public:
 	Opl3* opl() const {
 		return m_opl;
 	}
-	int fnuml() const {
-		return m_fnuml;
-	}
-	int fnumh() const {
-		return m_fnumh;
+	uint16_t fnum() const {
+		return m_fnum;
 	}
 	uint8_t block() const {
 		return m_block;
@@ -65,7 +61,7 @@ public:
 	uint8_t fb() const {
 		return m_fb;
 	}
-	int16_t avgFeedback() const { // TODO
+	int16_t avgFeedback() const {
 		return ( m_feedback[0] + m_feedback[1] ) >> 1;
 	}
 	void clearFeedback() {

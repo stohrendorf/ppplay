@@ -321,7 +321,6 @@ void S3mChannel::update( const S3mCell& cell, bool patDelay, bool estimateOnly )
 			}
 		}
 
-		//reuseIfZeroEx( m_lastFxByte, m_currentCell->effectValue() ); // TODO check if right here...
 		m_lastFxByte.noNibbles( m_currentCell->effectValue() );
 		if( m_currentCell->effect() == s3mEmptyCommand ) {
 			if( m_module->hasAmigaLimits() ) {

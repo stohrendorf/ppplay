@@ -41,8 +41,6 @@ private:
 	PhaseGenerator m_phaseGenerator;
 	EnvelopeGenerator m_envelopeGenerator;
 
-	//! @brief Envelope, 0..511 for 0..96 dB
-	uint16_t m_envelope;
 	// 0..1023
 	uint16_t m_phase;
 
@@ -100,9 +98,6 @@ public:
 	Opl3* opl() const {
 		return m_opl;
 	}
-	void setEnvelope( uint16_t e ) {
-		m_envelope = e;
-	}
 	uint8_t mult() const {
 		return m_mult;
 	}
@@ -153,7 +148,7 @@ public:
 	 */
 	void update_5_WS3();
 
-	virtual int16_t nextSample( uint16_t modulator );
+	virtual int16_t nextSample( int16_t modulator );
 
 	/**
 	 * @brief Calculate operator output

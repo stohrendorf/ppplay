@@ -17,7 +17,7 @@ public:
 	HighHatOperator( Opl3* opl ) : Operator( opl, highHatOperatorBaseAddress ) {
 	}
 
-	int16_t nextSample( uint16_t modulator );
+	int16_t nextSample( int16_t modulator );
 };
 }
 

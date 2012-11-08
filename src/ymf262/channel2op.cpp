@@ -9,12 +9,13 @@ std::vector< int16_t > Channel2Op::nextSample()
 	int16_t channelOutput = 0, op1Output = 0, op2Output = 0;
 	// The feedback uses the last two outputs from
 	// the first operator, instead of just the last one.
-	const int feedbackOutput = avgFeedback()>>2;
+	const int feedbackOutput = avgFeedback();
 
 	if( !cnt() ) {
 		// CNT = 0, the operators are in series, with the first in feedback.
-		if( m_op2->envelopeGenerator()->isOff() )
+		if( m_op2->envelopeGenerator()->isOff() ) {
 			return getInFourChannels( 0 );
+		}
 		op1Output = m_op1->nextSample( feedbackOutput );
 		channelOutput = m_op2->nextSample( op1Output );
 	}
@@ -50,9 +51,8 @@ void Channel2Op::keyOff()
 }
 void Channel2Op::updateOperators()
 {
-	uint16_t f_number = ( fnumh() << 8 ) | fnuml();
-	m_op1->updateOperator( f_number, block() );
-	m_op2->updateOperator( f_number, block() );
+	m_op1->updateOperator( fnum(), block() );
+	m_op2->updateOperator( fnum(), block() );
 }
 light4cxx::Logger* Channel2Op::logger()
 {
