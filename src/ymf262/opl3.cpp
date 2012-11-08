@@ -1,4 +1,5 @@
 #include "opl3.h"
+#include <stream/abstractarchive.h>
 
 namespace opl
 {
@@ -355,5 +356,18 @@ void Opl3::setRhythmMode()
 	for( int i = 6; i <= 8; i++ )
 		m_channels[0][i]->updateChannel();
 }
+
+AbstractArchive& Opl3::serialize( AbstractArchive* archive )
+{
+	archive->array(m_registers, 512);
+	if( archive->isLoading() ) {
+		for(int i=0; i<512; i++) {
+			// update all operators and channels...
+			//! @todo This is pretty bad, but better than nothing...
+			writeReg(i, m_registers[i]);
+		}
+	}
+	return *archive;
 }
 
+}

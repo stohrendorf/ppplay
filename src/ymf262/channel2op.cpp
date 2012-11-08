@@ -30,7 +30,7 @@ std::vector< int16_t > Channel2Op::nextSample()
 	}
 
 	if( fb() != 0 ) {
-		pushFeedback( (op1Output >> AbstractChannel::FeedbackShift[fb()]) & 0xfff );
+		pushFeedback( (op1Output >> AbstractChannel::FeedbackShift[fb()]) /*& 0xfff*/ );
 		// pushFeedback( std::fmod( op1Output * feedback[fb()], 1) );
 	}
 	else {

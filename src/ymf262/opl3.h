@@ -15,12 +15,13 @@
 #include "tomtomtopcymbalchannel.h"
 #include "disabledchannel.h"
 #include "topcymbaloperator.h"
+#include <stream/iserializable.h>
 
 #include <ymf262/ppplay_opl_export.h>
 
 namespace opl
 {
-class PPPLAY_OPL_EXPORT Opl3
+class PPPLAY_OPL_EXPORT Opl3 : public ISerializable
 {
 public:
 	static constexpr int MasterClock = 14.32e6;
@@ -112,6 +113,7 @@ public:
 
 	Opl3();
 
+	AbstractArchive& serialize( AbstractArchive* archive );
 private:
 	void initOperators() ;
 	void initChannels2op() ;

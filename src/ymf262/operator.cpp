@@ -28,7 +28,7 @@ void Operator::update_KSL2_TL6()
 
 	const uint8_t ksl2_tl6 = opl()->readReg( m_operatorBaseAddress + Operator::KSL2_TL6_Offset );
 
-	m_ksl = ( ksl2_tl6 & 0xC0 ) >> 6;
+	m_ksl = ( ksl2_tl6 >> 6 ) & 3;
 	m_tl  =  ksl2_tl6 & 0x3F;
 
 	m_envelopeGenerator.setAttennuation( m_f_number, m_block, m_ksl );
@@ -39,7 +39,7 @@ void Operator::update_AR4_DR4()
 {
 	const uint8_t ar4_dr4 = opl()->readReg( m_operatorBaseAddress + Operator::AR4_DR4_Offset );
 
-	m_ar = ( ar4_dr4 & 0xF0 ) >> 4;
+	m_ar = ( ar4_dr4 >> 4 ) & 0x0f;
 	m_dr =  ar4_dr4 & 0x0F;
 
 	m_envelopeGenerator.setAttackRate( m_ar );
@@ -49,9 +49,9 @@ void Operator::update_AR4_DR4()
 void Operator::update_SL4_RR4()
 {
 
-	int sl4_rr4 = opl()->readReg( m_operatorBaseAddress + Operator::SL4_RR4_Offset );
+	const uint8_t sl4_rr4 = opl()->readReg( m_operatorBaseAddress + Operator::SL4_RR4_Offset );
 
-	m_sl = ( sl4_rr4 & 0xF0 ) >> 4;
+	m_sl = ( sl4_rr4 >> 4 ) & 0x0f;
 	m_rr =  sl4_rr4 & 0x0F;
 
 	m_envelopeGenerator.setActualSustainLevel( m_sl );
@@ -81,7 +81,7 @@ int16_t Operator::nextSample( int16_t modulator )
 
 	m_phase = m_phaseGenerator.advance( m_vib );
 
-	return getOutput( modulator + m_phase + 4096, m_ws );
+	return getOutput( modulator + m_phase + 8192, m_ws );
 }
 
 void Operator::keyOn()
@@ -296,7 +296,7 @@ int16_t sinExp( uint16_t expVal )
 
 int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
 {
-	int16_t res = sinExp( sinLog( ws, phase ) + env );
+	int16_t res = sinExp( sinLog( ws, phase ) + (env<<2) );
 	BOOST_ASSERT( res>=-4096 && res<=4095 );
 	return res;
 }
