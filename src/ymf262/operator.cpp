@@ -18,9 +18,9 @@ void Operator::update_AM1_VIB1_EGT1_KSR1_MULT4()
 	
 	m_phaseGenerator.setFrequency( m_f_number, m_block, m_mult );
 	m_envelopeGenerator.setKsr( m_ksr );
-	m_envelopeGenerator.setAttackRate( m_ar );
-	m_envelopeGenerator.setDecayRate( m_dr );
-	m_envelopeGenerator.setReleaseRate( m_rr );
+// 	m_envelopeGenerator.setAttackRate( m_ar );
+// 	m_envelopeGenerator.setDecayRate( m_dr );
+// 	m_envelopeGenerator.setReleaseRate( m_rr );
 }
 
 void Operator::update_KSL2_TL6()
@@ -81,7 +81,7 @@ int16_t Operator::nextSample( int16_t modulator )
 
 	m_phase = m_phaseGenerator.advance( m_vib );
 
-	return getOutput( modulator + m_phase + 8192, m_ws );
+	return getOutput( modulator + m_phase, m_ws );
 }
 
 void Operator::keyOn()
@@ -296,7 +296,7 @@ int16_t sinExp( uint16_t expVal )
 
 int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
 {
-	int16_t res = sinExp( sinLog( ws, phase ) + (env<<2) );
+	int16_t res = sinExp( sinLog( ws, phase ) + (env<<3) );
 	BOOST_ASSERT( res>=-4096 && res<=4095 );
 	return res;
 }

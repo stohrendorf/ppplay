@@ -134,8 +134,6 @@ public:
 	 * @post m_stage==Stage::OFF || m_stage==Stage::RELEASE
 	 */
 	void keyOff();
-
-private:
 };
 }
 
