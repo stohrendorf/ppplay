@@ -208,7 +208,6 @@ void EnvelopeGenerator::keyOn()
 {
 	m_stage = Stage::ATTACK;
 	m_clock = 0;
-	m_env = Silence;
 }
 
 void EnvelopeGenerator::keyOff()
