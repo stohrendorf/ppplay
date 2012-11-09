@@ -5,7 +5,7 @@ namespace opl
 std::vector< int16_t > BassDrumChannel::nextSample()
 {
 	// Bass Drum ignores first operator, when it is in series.
-	if( cnt() == 1 ) {
+	if( cnt() ) {
 		op1()->setAr(0);
 	}
 	return Channel2Op::nextSample();

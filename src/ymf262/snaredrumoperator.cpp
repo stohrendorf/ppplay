@@ -4,7 +4,6 @@ namespace opl
 {
 int16_t SnareDrumOperator::nextSample( int16_t modulator )
 {
-	return 0; // FIXME
 	if( envelopeGenerator()->isOff() )
 		return 0;
 
@@ -13,6 +12,6 @@ int16_t SnareDrumOperator::nextSample( int16_t modulator )
 	uint8_t phaseBit = ( phase() >> 9 ) & 1;
 	uint8_t noiseBit = rand() & 1;
 	setPhase( ( ( 1 + phaseBit ) ^ noiseBit ) << 8 );
-	return getOutput( modulator + (phase()<<1) + 1024, ws() );
+	return getOutput( modulator + (phase()<<1), ws() );
 }
 }

@@ -31,24 +31,29 @@ std::vector< int16_t > Channel2Op::nextSample()
 	}
 	return getInFourChannels( channelOutput );
 }
+
 void Channel2Op::keyOn()
 {
 	m_op1->keyOn();
 	m_op2->keyOn();
 	clearFeedback();
 }
+
 void Channel2Op::keyOff()
 {
 	m_op1->keyOff();
 	m_op2->keyOff();
 }
+
 void Channel2Op::updateOperators()
 {
 	m_op1->updateOperator( fnum(), block() );
 	m_op2->updateOperator( fnum(), block() );
 }
+
 light4cxx::Logger* Channel2Op::logger()
 {
 	return light4cxx::Logger::get("opl.channel2op");
 }
+
 }

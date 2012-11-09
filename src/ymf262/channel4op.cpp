@@ -71,7 +71,7 @@ std::vector< int16_t > Channel4Op::nextSample()
 			channelOutput += m_op4->nextSample( Operator::noModulator );
 	}
 
-	return getInFourChannels( /*channelOutput FIXME*/ 0 );
+	return getInFourChannels( channelOutput );
 }
 void Channel4Op::keyOn()
 {

@@ -39,7 +39,7 @@ void EnvelopeGenerator::setAttennuation( uint16_t f_number, uint8_t block, uint8
 	static constexpr int ddArray[] = {
 		0, 24, 32, 37, 40, 43, 45, 47, 48, 50, 51, 52, 53, 54, 55, 56
 	};
-	int tmp = ddArray[m_fnum >> 6] - 16 * m_block;
+	int tmp = ddArray[m_fnum >> 6] - 16 * (7-m_block);
 	if( tmp <= 0 ) {
 		m_kslAdd = 0;
 		return;
@@ -78,6 +78,7 @@ void EnvelopeGenerator::setReleaseRate( uint8_t releaseRate )
 	m_rr = releaseRate & 0x0f;
 }
 
+//! @bug Somehow, egt and am are not really updated in the right way
 uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 {
 	// http://forums.submarine.org.uk/phpBB/viewtopic.php?f=9&t=16&start=20
@@ -131,7 +132,7 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 
 		case Stage::DECAY:
 			if( m_env >= ( 1 << ( m_sl + 3 ) ) ) {
-				m_stage = egt ? Stage::SUSTAIN : Stage::RELEASE;
+				m_stage = Stage::SUSTAIN;
 				break;
 			}
 			if(m_dr==0) {
@@ -152,6 +153,9 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			break;
 
 		case Stage::SUSTAIN:
+			if(egt) {
+				m_stage = Stage::RELEASE;
+			}
 			break;
 
 		case Stage::RELEASE:
@@ -173,13 +177,11 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 	}
 	m_clock++;
 	
-	if( m_env>Silence ) {
+	if( m_env>=Silence ) {
 		m_env = Silence;
-		if( m_stage == Stage::RELEASE ) {
-			m_total = Silence;
-			m_stage = Stage::OFF;
-			return Silence;
-		}
+		m_total = Silence;
+		m_stage = Stage::OFF;
+		return Silence;
 	}
 	
 	int total = m_env + ( m_tl << 2 ) + m_kslAdd;
@@ -206,15 +208,16 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 
 void EnvelopeGenerator::keyOn()
 {
+	if( m_stage == Stage::OFF ) {
+		m_clock = 0;
+	}
 	m_stage = Stage::ATTACK;
-	m_clock = 0;
 }
 
 void EnvelopeGenerator::keyOff()
 {
-	if( m_stage != Stage::OFF && m_stage != Stage::RELEASE ) {
+	if( m_stage != Stage::OFF ) {
 		m_stage = Stage::RELEASE;
-		m_clock = 0;
 	}
 }
 
