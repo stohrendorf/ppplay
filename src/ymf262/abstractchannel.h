@@ -62,7 +62,7 @@ public:
 		return m_fb;
 	}
 	int16_t avgFeedback() const {
-		return ( m_feedback[0] + m_feedback[1] ) >> 1;
+		return ( m_feedback[0] + m_feedback[1] ) >> FeedbackShift[m_fb];
 	}
 	void clearFeedback() {
 		m_feedback[0] = m_feedback[1] = 0;

@@ -6,7 +6,7 @@ namespace opl
 {
 std::vector< int16_t > Channel2Op::nextSample()
 {
-	int16_t channelOutput = 0, op1Output = 0, op2Output = 0;
+	int16_t channelOutput = 0;
 	// The feedback uses the last two outputs from
 	// the first operator, instead of just the last one.
 	const int feedbackOutput = avgFeedback();
@@ -16,25 +16,18 @@ std::vector< int16_t > Channel2Op::nextSample()
 		if( m_op2->envelopeGenerator()->isOff() ) {
 			return getInFourChannels( 0 );
 		}
-		op1Output = m_op1->nextSample( feedbackOutput );
-		channelOutput = m_op2->nextSample( op1Output );
+		channelOutput = m_op1->nextSample( feedbackOutput );
+		pushFeedback(channelOutput);
+		channelOutput = m_op2->nextSample( channelOutput );
 	}
 	else {
 		// CNT = 1, the operators are in parallel, with the first in feedback.
 		if( m_op1->envelopeGenerator()->isOff() && m_op2->envelopeGenerator()->isOff() ) {
 			return getInFourChannels( 0 );
 		}
-		op1Output = m_op1->nextSample( feedbackOutput );
-		op2Output = m_op2->nextSample( Operator::noModulator );
-		channelOutput = ( op1Output + op2Output ) >> 1;
-	}
-
-	if( fb() != 0 ) {
-		pushFeedback( (op1Output >> AbstractChannel::FeedbackShift[fb()]) /*& 0xfff*/ );
-		// pushFeedback( std::fmod( op1Output * feedback[fb()], 1) );
-	}
-	else {
-		pushFeedback(0);
+		channelOutput = m_op1->nextSample( feedbackOutput );
+		pushFeedback(channelOutput);
+		channelOutput += m_op2->nextSample( Operator::noModulator );
 	}
 	return getInFourChannels( channelOutput );
 }

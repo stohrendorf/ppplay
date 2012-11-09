@@ -64,6 +64,7 @@ private:
 	uint8_t m_connectionsel;
 	//! @brief 13 bits
 	uint16_t m_vibratoIndex;
+	//! @brief 14 bits, wraps around after 13*1024
 	uint16_t m_tremoloIndex;
 
 	// The methods read() and write() are the only
