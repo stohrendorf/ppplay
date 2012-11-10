@@ -18,9 +18,9 @@ void Operator::update_AM1_VIB1_EGT1_KSR1_MULT4()
 	
 	m_phaseGenerator.setFrequency( m_f_number, m_block, m_mult );
 	m_envelopeGenerator.setKsr( m_ksr );
-// 	m_envelopeGenerator.setAttackRate( m_ar );
-// 	m_envelopeGenerator.setDecayRate( m_dr );
-// 	m_envelopeGenerator.setReleaseRate( m_rr );
+	m_envelopeGenerator.setAttackRate( m_ar );
+	m_envelopeGenerator.setDecayRate( m_dr );
+	m_envelopeGenerator.setReleaseRate( m_rr );
 }
 
 void Operator::update_KSL2_TL6()
@@ -282,31 +282,29 @@ int16_t sinExp( uint16_t expVal )
 
 	expVal &= 0x7FFF;
 	// 0..1018*2
-	int16_t result = sinExpTable[( expVal & 0xff ) ^ 0xFF] << 1;
+	uint16_t result = sinExpTable[( expVal & 0xff ) ^ 0xFF] << 1;
 	result |= 0x0800; // hidden bit
 	result >>= ( expVal >> 8 ); // exp
 
 	if( signBit ) {
-		// -1 because of 1's complement
-		result = -result - 1;
+		return ~result;
 	}
-
-	return result;
+	else {
+		return result;
+	}
 }
 
+// 32 env units are ~3dB and halve the output
 int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
 {
-	int16_t res = sinExp( sinLog( ws, phase ) + (env<<3) );
-	BOOST_ASSERT( res>=-4096 && res<=4095 );
-	return res;
+	return sinExp( sinLog( ws, phase ) + (env<<2) );
 }
 
 }
 
 int16_t Operator::getOutput( uint16_t outputPhase, uint8_t ws )
 {
-	BOOST_ASSERT(ws<=7);
-	if( m_envelopeGenerator.isSilent() ) {
+	if( m_envelopeGenerator.isSilent() || m_envelopeGenerator.isOff() ) {
 		return 0;
 	}
 	return oplSin( ws, outputPhase&0x3ff, m_envelopeGenerator.envelope() );

@@ -20,7 +20,7 @@ private:
 	};
 	Note m_patterns[50][64 * 9];
 	struct Channel {
-		constexpr Channel() : instr( 0 ), slide( 0 ), frq( 0 ) {}
+		constexpr Channel() : instr( 0xff ), slide( 0 ), frq( 0 ) {}
 		uint8_t instr;
 		int8_t slide;
 		uint16_t frq;
@@ -29,7 +29,6 @@ private:
 	uint8_t m_speed;
 	uint8_t m_speedCountdown;
 	uint8_t m_fnum[9];
-	uint8_t m_row;
 	uint8_t m_bd;
 	bool m_mode6;
 	uint8_t m_patBreak;

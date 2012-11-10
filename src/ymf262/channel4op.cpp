@@ -6,7 +6,6 @@ namespace opl
 {
 std::vector< int16_t > Channel4Op::nextSample()
 {
-
 	const int secondChannelBaseAddress = baseAddress() + 3;
 	const int secondCnt = opl()->readReg( secondChannelBaseAddress + AbstractChannel::CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset ) & 0x1;
 	const int cnt4op = ( cnt() << 1 ) | secondCnt;

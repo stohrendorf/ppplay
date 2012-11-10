@@ -10,7 +10,9 @@ namespace
 {
 constexpr uint16_t note_table[12] = {363, 385, 408, 432, 458, 485, 514, 544, 577, 611, 647, 686};
 
-constexpr uint8_t op_table[9] = {0x00, 0x01, 0x02, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12};
+// carrier, modulator
+constexpr uint8_t ChanToOperator[18] = {3, 0, 4, 1, 5, 2, 11, 8, 12, 9, 13, 10, 19, 16, 20, 17, 21, 18};
+// {0x00, 0x01, 0x02, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12};
 }
 
 ppp::AbstractModule* Module::factory( Stream* stream, uint32_t frequency, int maxRpt, ppp::Sample::Interpolation inter )
@@ -116,8 +118,14 @@ bool Module::load( Stream* stream )
 		addOrder(new Order(orders[i]));
 	}
 	stream->read( reinterpret_cast<char*>( m_patterns ), stream->size()-stream->pos() );
-	m_opl.writeReg( 1, 32 );
-	m_opl.writeReg( 8, 128 );
+	m_opl.writeReg( 1, 0x40 );
+	m_opl.writeReg( 4, 0 );
+	m_opl.writeReg( 8, 0 );
+	for(int i=0; i<0xc0; i++) {
+		m_opl.writeReg(0x20+i, 0);
+	}
+	m_opl.writeReg( 1, 0x20 );
+	m_opl.writeReg( 8, 0x40 );
 	m_opl.writeReg( 0xbd, 0 );
 
 	for( int i = 0; i < 9; i++ ) {
@@ -128,7 +136,7 @@ bool Module::load( Stream* stream )
 
 Module::Module( int maxRpt, ppp::Sample::Interpolation inter ) : ppp::AbstractModule( maxRpt, inter ), m_opl(),
 	m_instr {{0}}, m_patterns(), m_channels(), m_speed( 2 ), m_speedCountdown( 1 ), m_fnum(),
-m_row( 0 ), m_bd( 0 ), m_mode6( false ), m_patBreak( 0 ), m_fadeIn( 0 )
+	m_bd( 0 ), m_mode6( false ), m_patBreak( 0 ), m_fadeIn( 0 )
 {
 }
 
@@ -143,7 +151,6 @@ AbstractArchive& Module::serialize( AbstractArchive* data )
 	.array(m_fnum, 9)
 	% m_speed
 	% m_speedCountdown
-	% m_row
 	% m_bd
 	% m_mode6
 	% m_patBreak
@@ -153,36 +160,43 @@ AbstractArchive& Module::serialize( AbstractArchive* data )
 
 void Module::storeInstr( uint8_t chan, uint8_t instr )
 {
-#ifndef NDEBUG
-	logger()->debug(L4CXX_LOCATION, "STORE %d:%d", int(chan), int(instr));
-#endif
-	const uint8_t* insData = m_instr[instr];
-	const uint8_t op = op_table[chan];
+	if( m_channels[chan].instr == instr ) {
+		return;
+	}
+	
 	m_channels[chan].instr = instr;
-	m_opl.writeReg( 0xb0 + chan, 0 ); // stop old note
-	// set instrument
-	m_opl.writeReg( 0xc0 + chan, insData[8] );
-	m_opl.writeReg( 0x23 + op, insData[0] );      // carrier
-	m_opl.writeReg( 0x20 + op, insData[1] );      // modulator
-	m_opl.writeReg( 0x63 + op, insData[4] );      // bits 0..3 = decay; 4..7 = attack
-	m_opl.writeReg( 0x60 + op, insData[5] );
-	m_opl.writeReg( 0x83 + op, insData[6] );      // 0..3 = release; 4..7 = sustain
-	m_opl.writeReg( 0x80 + op, insData[7] );
-	m_opl.writeReg( 0xe3 + op, insData[9] );      // bits 0..1 = waveform
-	m_opl.writeReg( 0xe0 + op, insData[10] );
+	const uint8_t* insData = m_instr[instr];
+	const uint8_t* opOfs = ChanToOperator + (chan*2);
+	
+	
+	m_opl.writeReg( 0xb0 + chan, 0 ); // stop old note (kon, block, fnumh)
+	m_opl.writeReg( 0xc0 + chan, insData[8] );    // cha-chd, fb, cnt
+	
+	m_opl.writeReg( 0x20 + opOfs[0], insData[0] ); // am, vib, egt, ksr, mult
+	m_opl.writeReg( 0x20 + opOfs[1], insData[1] );
+	m_opl.writeReg( 0x40 + opOfs[0], insData[2] ); // ksl, tl
+	m_opl.writeReg( 0x40 + opOfs[1], insData[3] );
+	m_opl.writeReg( 0x60 + opOfs[0], insData[4] ); // ar, dr
+	m_opl.writeReg( 0x60 + opOfs[1], insData[5] );
+	m_opl.writeReg( 0x80 + opOfs[0], insData[6] ); // sl, rr
+	m_opl.writeReg( 0x80 + opOfs[1], insData[7] );
+	m_opl.writeReg( 0xe0 + opOfs[0], insData[9] ); // ws
+	m_opl.writeReg( 0xe0 + opOfs[1], insData[10] );
+	m_channels[chan].slide = insData[11]>>4;
+	
 	setVolume( chan, insData[2] & 63, insData[3] & 63 );
 }
 
 void Module::setVolume( uint8_t chan, uint8_t volCarrier, uint8_t volModulator )
 {
 	const uint8_t* insData = m_instr[m_channels[chan].instr];
-	const uint8_t op = op_table[chan];
+	const uint8_t* op = ChanToOperator + (chan*2);
 
-	m_opl.writeReg( 0x43 + op, volCarrier | ( insData[2] & ~63 ) );
+	m_opl.writeReg( 0x40 + op[1], volCarrier | ( insData[2] & ~63 ) );
 	if( insData[8] & 1 ) // carrier
-		m_opl.writeReg( 0x40 + op, volModulator | ( insData[3] & ~63 ) );
+		m_opl.writeReg( 0x40 + op[0], volModulator | ( insData[3] & ~63 ) );
 	else
-		m_opl.writeReg( 0x40 + op, insData[3] ); // modulator
+		m_opl.writeReg( 0x40 + op[0], insData[3] ); // modulator
 }
 
 bool Module::update(bool estimate)
@@ -200,26 +214,27 @@ bool Module::update(bool estimate)
 	}
 	else if( ( pattnr & 128 ) && ( pattnr <= 0xb1 ) ) { // goto pattern "nr"
 		setOrder( pattnr & 127, estimate );
-		m_row = 0;
+		state().row = 0;
 		pattnr = state().pattern;
 		return false;
 	}
 
-	uint32_t pattoff = m_row * 9;
+	uint32_t pattoff = state().row * 9;
 	for( uint_fast8_t chan = 0; chan < 9; chan++ ) {			// handle all channels
 		uint8_t note = m_patterns[pattnr][pattoff].note;
 		uint8_t effect = m_patterns[pattnr][pattoff].effect;
 		logger()->debug(L4CXX_LOCATION, "chan=%d note=%d effect=%d", int(chan), int(note), int(effect));
 		pattoff++;
 
-		if( note & 128 ) {                  // set instrument
+		if( note & 0x80 ) {                  // set instrument
 			storeInstr( chan, effect );
 			continue;
 		}
 		uint8_t eff_op = effect & 0x0f;
 		uint8_t inst = m_channels[chan].instr;
-		if( note )
+		if( note != 0 ) {
 			m_channels[chan].slide = 0;
+		}
 
 		switch( effect & 0xf0 ) {			// effect handling
 			case 0:								// global effect
@@ -239,10 +254,10 @@ bool Module::update(bool estimate)
 						m_fadeIn = 31;
 						break;	// fade in (divided by 2)
 					case 5:
-						m_mode6 = 1;
+						m_mode6 = true;
 						break;	// 6 voice mode on
 					case 6:
-						m_mode6 = 0;
+						m_mode6 = false;
 						break;	// 6 voice mode off
 				}
 				break;
@@ -266,28 +281,27 @@ bool Module::update(bool estimate)
 				break;
 			case 0xa0: {	                    // set carrier volume
 				uint8_t vol = eff_op << 2;
-				m_opl.writeReg( 0x43 + op_table[chan], vol | ( m_instr[m_channels[chan].instr][2] & ~63 ) );
+				m_opl.writeReg( 0x40 + ChanToOperator[2*chan + 1], vol | ( m_instr[m_channels[chan].instr][2] & ~63 ) );
 			}
 			break;
 			case 0xb0: {	                    // set modulator volume
 				uint8_t vol = eff_op << 2;
 				if( m_instr[inst][8] & 1 )
-					m_opl.writeReg( 0x40 + op_table[chan], vol | ( m_instr[m_channels[chan].instr][3] & ~63 ) );
+					m_opl.writeReg( 0x40 + ChanToOperator[2*chan + 0], vol | ( m_instr[m_channels[chan].instr][3] & ~63 ) );
 				else
-					m_opl.writeReg( 0x40 + op_table[chan], vol | ( m_instr[inst][3] & ~63 ) );
+					m_opl.writeReg( 0x40 + ChanToOperator[2*chan + 0], vol | ( m_instr[inst][3] & ~63 ) );
 			}
 			break;
 			case 0xc0: {	                    // set instrument volume
 				uint8_t db = eff_op << 2;
-				m_opl.writeReg( 0x43 + op_table[chan], db | ( m_instr[m_channels[chan].instr][2] & ~63 ) );
+				m_opl.writeReg( 0x40 + ChanToOperator[2*chan + 1], db | ( m_instr[m_channels[chan].instr][2] & ~63 ) );
 				if( m_instr[inst][8] & 1 )
-					m_opl.writeReg( 0x40 + op_table[chan], db | ( m_instr[m_channels[chan].instr][3] & ~63 ) );
+					m_opl.writeReg( 0x40 + ChanToOperator[2*chan + 0], db | ( m_instr[m_channels[chan].instr][3] & ~63 ) );
 			}
 			break;
 			case 0xd0:
 				m_patBreak++;
 				setOrder(eff_op, estimate);
-				return false;
 				break;	// position jump
 			case 0xf0: // set m_speed
 				m_speed = eff_op;
@@ -303,7 +317,7 @@ bool Module::update(bool estimate)
 		note--;
 
 		if( ( note == 0x7f - 1 ) || ( ( note / 12 ) & ~7 ) ) { // pause (7fh)
-			m_fnum[chan] &= ~32;
+			m_fnum[chan] &= ~0x20; // key off
 			m_opl.writeReg( 0xb0 + chan, m_fnum[chan] );
 			continue;
 		}
@@ -313,7 +327,7 @@ bool Module::update(bool estimate)
 		uint16_t Fnr = note_table[( note % 12 )] + m_instr[inst][11] + m_channels[chan].slide;
 		m_channels[chan].frq = Fnr;
 		if( !m_mode6 || chan < 6 )
-			m_fnum[chan] = Okt | 32;
+			m_fnum[chan] = Okt | 0x20;
 		else
 			m_fnum[chan] = Okt;		// never set key for drums
 		m_opl.writeReg( 0xb0 + chan, 0 );
@@ -339,16 +353,16 @@ bool Module::update(bool estimate)
 
 	m_speedCountdown = m_speed;		// player m_speed-timing
 	if( m_patBreak ) {		// do post-effect handling
-		m_row = 0;			// pattern break!
+		state().row = 0;			// pattern break!
 		m_patBreak = 0;
 		setOrder( (state().order+1)%50, estimate );
 		if( state().order == 0 )
 			return false;
 	}
 	else {
-		m_row++;
-		m_row &= 63;		// advance in pattern data
-		if( !m_row ) {
+		state().row++;
+		state().row &= 63;		// advance in pattern data
+		if( state().row == 0 ) {
 			setOrder( (state().order+1)%50, estimate );
 			if( state().order == 0 )
 				return false;
