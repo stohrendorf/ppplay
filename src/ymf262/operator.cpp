@@ -63,7 +63,7 @@ void Operator::update_5_WS3()
 	m_ws = opl()->readReg( m_operatorBaseAddress + Operator::_5_WS3_Offset ) & 0x07;
 }
 
-int16_t Operator::nextSample( int16_t modulator )
+int16_t Operator::nextSample( uint32_t modulator )
 {
 	if( m_envelopeGenerator.isOff() ) {
 		return 0;
@@ -297,17 +297,17 @@ int16_t sinExp( uint16_t expVal )
 // 32 env units are ~3dB and halve the output
 int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
 {
-	return sinExp( sinLog( ws, phase ) + (env<<2) );
+	return sinExp( sinLog( ws, phase ) + (env<<3) );
 }
 
 }
 
-int16_t Operator::getOutput( uint16_t outputPhase, uint8_t ws )
+int16_t Operator::getOutput( uint32_t outputPhase, uint8_t ws )
 {
 	if( m_envelopeGenerator.isSilent() || m_envelopeGenerator.isOff() ) {
 		return 0;
 	}
-	return oplSin( ws, outputPhase&0x3ff, m_envelopeGenerator.envelope() );
+	return oplSin( ws, (outputPhase>>10)&0x3ff, m_envelopeGenerator.envelope() );
 	//return waveform[int( outputPhase + modulator + 1024 ) % 1024] * m_envelope;
 }
 

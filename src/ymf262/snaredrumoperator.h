@@ -14,7 +14,7 @@ public:
 	SnareDrumOperator(Opl3* opl) : Operator( opl, snareDrumOperatorBaseAddress ) {
 	}
 
-	int16_t nextSample( int16_t modulator );
+	int16_t nextSample( uint32_t modulator );
 };
 }
 
