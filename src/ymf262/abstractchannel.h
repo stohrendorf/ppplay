@@ -40,7 +40,7 @@ private:
 	bool m_chc;
 	bool m_chd;
 	uint8_t m_fb;
-	int16_t m_feedback[2];
+	uint16_t m_feedback[2];
 	bool m_cnt;
 	
 	static light4cxx::Logger* logger();
@@ -61,15 +61,23 @@ public:
 	uint8_t fb() const {
 		return m_fb;
 	}
-	int16_t avgFeedback() const {
-		return ( m_feedback[0] + m_feedback[1] ) >> FeedbackShift[m_fb];
+	/**
+	 * @brief Calculate adjusted phase feedback
+	 * @return 10.10 bit fractional adjusted phase feedback using m_fb
+	 */
+	uint32_t avgFeedback() const {
+		return (( m_feedback[0] + m_feedback[1] )<<10) >> FeedbackShift[m_fb];
 	}
 	void clearFeedback() {
 		m_feedback[0] = m_feedback[1] = 0;
 	}
-	void pushFeedback( int16_t fb ) {
+	/**
+	 * @brief Push feedback into the queue
+	 * @param[in] fb 10 bit non-fractional feedback
+	 */
+	void pushFeedback( uint16_t fb ) {
 		m_feedback[0] = m_feedback[1];
-		m_feedback[1] = fb;
+		m_feedback[1] = fb<<10;
 	}
 
 	AbstractChannel( Opl3* opl, int baseAddress );
