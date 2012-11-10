@@ -44,7 +44,7 @@ private:
 	//! @brief Key scale rate
 	bool m_ksr;
 	//! @brief Internal envelope clock counter
-	uint32_t m_clock;
+	uint16_t m_clock;
 	//! @brief Total level, 6 bits, att. is 0.75dB * m_tl
 	uint8_t m_tl;
 	//! @brief Key scale level (2 bits)
@@ -56,6 +56,8 @@ private:
 	static const uint16_t Silence = 511;
 	
 	static light4cxx::Logger* logger();
+	
+	uint8_t calculateRate(uint8_t delta) const;
 	
 public:
 	constexpr EnvelopeGenerator( Opl3* opl )

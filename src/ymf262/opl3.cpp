@@ -46,13 +46,14 @@ std::vector< short int > Opl3::read()
 		}
 		break;
 	}
+// 	std::cout << '\n';
 
 	// Normalizes the output buffer after all channels have been added,
 	// with a maximum of 18 channels,
 	// and multiplies it to get the 16 bit signed output.
 	std::vector<short> output( 4 );
 	for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
-		output[outputChannelNumber] = outputBuffer[outputChannelNumber]>>2;
+		output[outputChannelNumber] = outputBuffer[outputChannelNumber]>>1;
 	}
 
 	// Advances the OPL3-wide vibrato index, which is used by
@@ -67,7 +68,7 @@ std::vector< short int > Opl3::read()
 	return output;
 }
 
-void Opl3::write( int array, int address, int data )
+void Opl3::write( int array, int address, uint8_t data )
 {
 	// The OPL3 has two registers arrays, each with adresses ranging
 	// from 0x00 to 0xF5.
@@ -346,7 +347,7 @@ void Opl3::setRhythmMode()
 		m_operators[0][0x15] = m_topCymbalOperator;
 	}
 	else {
-		for( int i = 6; i <= 8; i++ )
+		for( int i = 6; i < 9; i++ )
 			m_channels[0][i] = m_channels2op[0][i];
 		m_operators[0][0x11] = m_highHatOperatorInNonRhythmMode;
 		m_operators[0][0x14] = m_snareDrumOperatorInNonRhythmMode;

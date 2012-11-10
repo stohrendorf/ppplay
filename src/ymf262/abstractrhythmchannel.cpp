@@ -12,7 +12,6 @@ std::vector< int16_t > AbstractRhythmChannel::nextSample()
 	int16_t op1Output = op1()->nextSample( Operator::noModulator );
 	int16_t op2Output = op2()->nextSample( Operator::noModulator );
 	int16_t channelOutput = op1Output + op2Output;
-
 	return getInFourChannels( channelOutput );
 }
 }

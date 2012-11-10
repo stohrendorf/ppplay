@@ -31,7 +31,7 @@ private:
 	uint8_t m_registers[0x200];
 
 	// The YMF262 has 36 operators:
-	Operator::Ptr m_operators[2][0x20];
+	Operator::Ptr m_operators[2][36];
 	// The YMF262 has 18 2-op channels.
 	// Each 2-op channel can be at a serial or parallel operator configuration:
 	Channel2Op::Ptr m_channels2op[2][9];
@@ -76,11 +76,11 @@ public:
 	bool isNew() const {
 		return m_new;
 	}
-	uint8_t readReg( int index ) const {
+	uint8_t readReg( uint16_t index ) const {
 		return m_registers[index];
 	}
-	void writeReg( int index, uint8_t val ) {
-		write(index>>8, index&0xff, val);
+	void writeReg( uint16_t index, uint8_t val ) {
+		write((index>>8) & 1, index&0xff, val);
 	}
 	bool nts() const {
 		return m_nts;
@@ -128,7 +128,7 @@ private:
 	void update_2_CONNECTIONSEL6() ;
 	void set4opConnections() ;
 	void setRhythmMode() ;
-	void write( int array, int address, int data ) ;
+	void write( int array, int address, uint8_t data ) ;
 };
 }
 
