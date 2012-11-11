@@ -72,7 +72,7 @@ public:
 		return m_stage == Stage::OFF;
 	}
 	constexpr bool isSilent() {
-		return m_total == Silence;
+		return m_env == Silence;
 	}
 	/**
 	 * @post m_stage==Stage::OFF

@@ -41,8 +41,7 @@ private:
 	PhaseGenerator m_phaseGenerator;
 	EnvelopeGenerator m_envelopeGenerator;
 
-	// 0..1023<<10
-	uint32_t m_phase;
+	Phase m_phase;
 
 	//! @brief Amplitude Modulation. This register is used in EnvelopeGenerator::getEnvelope().
 	bool m_am;
@@ -101,11 +100,11 @@ public:
 	uint8_t mult() const {
 		return m_mult;
 	}
-	uint32_t phase() const {
+	Phase phase() const {
 		return m_phase;
 	}
-	void setPhase( uint32_t p ) {
-		m_phase = p & 0x3ffffff;
+	void setPhase( Phase p ) {
+		m_phase = p;
 	}
 	bool egt() const {
 		return m_egt;
@@ -152,7 +151,7 @@ public:
 	 * @param[in] modulator 10.10 bit fractional phase modulation
 	 * @return 12 bit sample value
 	 */
-	virtual int16_t nextSample( uint32_t modulator );
+	virtual int16_t nextSample( Phase modulator );
 
 	/**
 	 * @brief Calculate operator output
@@ -160,7 +159,7 @@ public:
 	 * @param[in] ws Waveform selector
 	 * @return Waveform sample, amplitude is -4085..4084
 	 */
-	int16_t getOutput( uint32_t outputPhase, uint8_t ws );
+	int16_t getOutput( Phase outputPhase, uint8_t ws );
 
 	void keyOn();
 	void keyOff();

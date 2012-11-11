@@ -63,7 +63,7 @@ void Operator::update_5_WS3()
 	m_ws = opl()->readReg( m_operatorBaseAddress + Operator::_5_WS3_Offset ) & 0x07;
 }
 
-int16_t Operator::nextSample( uint32_t modulator )
+int16_t Operator::nextSample( Phase modulator )
 {
 	if( m_envelopeGenerator.isOff() ) {
 		return 0;
@@ -281,9 +281,9 @@ int16_t sinExp( uint16_t expVal )
 	bool signBit = expVal & 0x8000;
 
 	expVal &= 0x7FFF;
-	// 0..1018*2
-	uint16_t result = sinExpTable[( expVal & 0xff ) ^ 0xFF] << 1;
-	result |= 0x0800; // hidden bit
+	// 0..1018+1024
+	uint16_t result = 0x0400 | sinExpTable[( expVal & 0xff ) ^ 0xFF];
+	result <<= 1;
 	result >>= ( expVal >> 8 ); // exp
 
 	if( signBit ) {
@@ -302,12 +302,12 @@ int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
 
 }
 
-int16_t Operator::getOutput( uint32_t outputPhase, uint8_t ws )
+int16_t Operator::getOutput( Phase outputPhase, uint8_t ws )
 {
 	if( m_envelopeGenerator.isSilent() || m_envelopeGenerator.isOff() ) {
 		return 0;
 	}
-	return oplSin( ws, (outputPhase>>10)&0x3ff, m_envelopeGenerator.envelope() );
+	return oplSin( ws, outputPhase.pre(), m_envelopeGenerator.envelope() );
 	//return waveform[int( outputPhase + modulator + 1024 ) % 1024] * m_envelope;
 }
 

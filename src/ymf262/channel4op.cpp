@@ -11,7 +11,7 @@ std::vector< int16_t > Channel4Op::nextSample()
 	const int cnt4op = ( cnt() << 1 ) | secondCnt;
 
 	int channelOutput = 0;
-	const int feedbackOutput = avgFeedback();
+	const Phase feedbackOutput = avgFeedback();
 
 	/*
 	 * Below: "@" means feedback, "~>" means "modulates"
@@ -27,7 +27,7 @@ std::vector< int16_t > Channel4Op::nextSample()
 			channelOutput = m_op1->nextSample( feedbackOutput );
 			pushFeedback(channelOutput);
 			
-			channelOutput = m_op4->nextSample( m_op3->nextSample( m_op2->nextSample( channelOutput )<<10 )<<10 );
+			channelOutput = m_op4->nextSample( m_op3->nextSample( m_op2->nextSample( channelOutput ) ) );
 
 			break;
 		case 1:
@@ -41,8 +41,8 @@ std::vector< int16_t > Channel4Op::nextSample()
 			channelOutput = m_op1->nextSample( feedbackOutput );
 			pushFeedback(channelOutput);
 			
-			channelOutput = m_op2->nextSample( channelOutput<<10 );
-			channelOutput += m_op4->nextSample( m_op3->nextSample( Operator::noModulator )<<10 );
+			channelOutput = m_op2->nextSample( channelOutput );
+			channelOutput += m_op4->nextSample( m_op3->nextSample( Operator::noModulator ) );
 			break;
 		case 2:
 			/*
@@ -54,7 +54,7 @@ std::vector< int16_t > Channel4Op::nextSample()
 			channelOutput = m_op1->nextSample( feedbackOutput );
 			pushFeedback(channelOutput);
 			
-			channelOutput += m_op4->nextSample( m_op3->nextSample( m_op2->nextSample( Operator::noModulator )<<10 )<<10 );
+			channelOutput += m_op4->nextSample( m_op3->nextSample( m_op2->nextSample( Operator::noModulator ) ) );
 			break;
 		case 3:
 			/*
@@ -66,7 +66,7 @@ std::vector< int16_t > Channel4Op::nextSample()
 			channelOutput = m_op1->nextSample( feedbackOutput );
 			pushFeedback(channelOutput);
 			
-			channelOutput += m_op3->nextSample( m_op2->nextSample( Operator::noModulator )<<10 );
+			channelOutput += m_op3->nextSample( m_op2->nextSample( Operator::noModulator ) );
 			channelOutput += m_op4->nextSample( Operator::noModulator );
 	}
 
