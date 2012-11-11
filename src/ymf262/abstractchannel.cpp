@@ -4,7 +4,7 @@
 namespace opl
 {
 
-const int AbstractChannel::FeedbackShift[8] = {31, 6, 5, 4, 3, 2, 1, 0};
+const int AbstractChannel::FeedbackShift[8] = {31, 7, 6, 5, 4, 3, 2, 1};
 
 AbstractChannel::AbstractChannel( Opl3* opl, int baseAddress ) : m_opl( opl ), m_channelBaseAddress( baseAddress ),
 	m_fnum( 0 ), m_kon( false ), m_block( 0 ), m_cha( false ), m_chb( false ), m_chc( false ), m_chd( false ),

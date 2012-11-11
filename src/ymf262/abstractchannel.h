@@ -40,7 +40,7 @@ private:
 	bool m_chc;
 	bool m_chd;
 	uint8_t m_fb;
-	uint16_t m_feedback[2];
+	uint32_t m_feedback[2];
 	bool m_cnt;
 	
 	static light4cxx::Logger* logger();
@@ -66,7 +66,7 @@ public:
 	 * @return 10.10 bit fractional adjusted phase feedback using m_fb
 	 */
 	uint32_t avgFeedback() const {
-		return (( m_feedback[0] + m_feedback[1] )<<10) >> FeedbackShift[m_fb];
+		return ( m_feedback[0] + m_feedback[1] ) >> FeedbackShift[m_fb];
 	}
 	void clearFeedback() {
 		m_feedback[0] = m_feedback[1] = 0;
