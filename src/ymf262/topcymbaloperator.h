@@ -15,7 +15,7 @@ public:
 	TopCymbalOperator( Opl3* opl, int baseAddress = topCymbalOperatorBaseAddress ) : Operator( opl, baseAddress ) {
 	}
 
-	int16_t nextSample( uint32_t );
+	int16_t nextSample( Phase );
 };
 }
 

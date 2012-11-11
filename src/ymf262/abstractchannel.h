@@ -3,6 +3,7 @@
 
 #include "stuff/utils.h"
 #include <light4cxx/logger.h>
+#include "phase.h"
 #include <vector>
 #include <cstdint>
 #include <memory>
@@ -65,8 +66,8 @@ public:
 	 * @brief Calculate adjusted phase feedback
 	 * @return 10.10 bit fractional adjusted phase feedback using m_fb
 	 */
-	uint32_t avgFeedback() const {
-		return ( m_feedback[0] + m_feedback[1] ) >> FeedbackShift[m_fb];
+	Phase avgFeedback() const {
+		return Phase::fromFull((( m_feedback[0] + m_feedback[1] )<<10)>>FeedbackShift[m_fb]);
 	}
 	void clearFeedback() {
 		m_feedback[0] = m_feedback[1] = 0;
@@ -77,7 +78,7 @@ public:
 	 */
 	void pushFeedback( uint16_t fb ) {
 		m_feedback[0] = m_feedback[1];
-		m_feedback[1] = fb<<10;
+		m_feedback[1] = fb&0x3ff;
 	}
 
 	AbstractChannel( Opl3* opl, int baseAddress );

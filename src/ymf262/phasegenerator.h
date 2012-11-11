@@ -1,6 +1,8 @@
 #ifndef PPP_OPL_PHASEGENERATOR_H
 #define PPP_OPL_PHASEGENERATOR_H
 
+#include "phase.h"
+
 #include <cmath>
 #include <cstdint>
 
@@ -20,7 +22,7 @@ class PhaseGenerator
 	//! @brief Owning chip
 	Opl3* m_opl;
 	//! @brief Current phase, 10.10 fractional bits
-	uint32_t m_phase;
+	Phase m_phase;
 	uint16_t m_fNum;
 	uint8_t m_block;
 	uint8_t m_mult;
@@ -35,7 +37,7 @@ public:
 	void setFrequency( uint16_t f_number, uint8_t block, uint8_t mult );
 
 	// Result: 10 bits
-	uint32_t advance( bool vib );
+	Phase advance( bool vib );
 
 	/**
 	 * @post m_phase==0

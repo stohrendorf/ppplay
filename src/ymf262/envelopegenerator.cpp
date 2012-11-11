@@ -78,18 +78,22 @@ void EnvelopeGenerator::setReleaseRate( uint8_t releaseRate )
 	m_rr = releaseRate & 0x0f;
 }
 
-uint8_t EnvelopeGenerator::calculateRate( uint8_t delta ) const
+uint8_t EnvelopeGenerator::calculateRate( uint8_t rate ) const
 {
+	if( rate == 0 ) {
+		return 0;
+	}
+	// calculate key scale number
 	uint8_t res = ( m_fnum >> ( m_opl->nts() ? 8 : 9 ) ) & 0x1;
 	res |= m_block<<1;
 	// res: max. 4 bits
-	if( m_ksr ) {
+	if( !m_ksr ) {
 		res >>= 2;
 	}
-	// res: max. 7 bits
-	res += delta<<2;
+	// res: max. 7 bits (15+60=75)
+	res += rate << 2;
 	// res: max. 6 bits
-	return std::min<uint8_t>(60, res);
+	return std::min<uint8_t>(62, res);
 }
 
 uint16_t EnvelopeGenerator::advance( bool egt, bool am )
@@ -113,7 +117,9 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			rateHi = calculateRate(m_rr);
 			break;
 	}
+	// rateHi: 0..60, rateLo: 0..12
 	const uint8_t rateLo = (rateHi & 0x03) << 2;
+	// rateHi: 0..15
 	rateHi >>= 2;
 
 	switch( m_stage ) {
@@ -125,6 +131,8 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			if( m_env==0 || m_env>Silence ) {
 				m_stage = Stage::DECAY;
 				m_clock = 0;
+				// in case of an overflow
+				m_env = 0;
 				break;
 			}
 			if( m_ar == 0 ) {
@@ -163,8 +171,9 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 				}
 				else {
 					uint8_t stepState = ( m_clock >> ( 12 - rateHi ) ) & 0x07;
-					if( ( stepState & 0x01 ) || stepTable[ rateLo + ( stepState >> 1 )] )
+					if( ( stepState & 0x01 ) || stepTable[ rateLo + ( stepState >> 1 )] ) {
 						m_env++;
+					}
 				}
 			}
 			break;
@@ -203,7 +212,7 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 		return Silence;
 	}
 	
-	int total = m_env + ( m_tl << 2 ) + m_kslAdd;
+	int total = m_env + ( m_tl<<2 ) + m_kslAdd;
 
 	if( am ) {
 		int amVal = m_opl->tremoloIndex() >> 8;
@@ -217,12 +226,12 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 		total += amVal;
 	}
 
-	if( total > Silence ) {
-		m_total = Silence;
-	}
-	else {
+// 	if( total > Silence ) {
+// 		m_total = Silence;
+// 	}
+// 	else {
 		m_total = total;
-	}
+// 	}
 	return m_total;
 }
 
