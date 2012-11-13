@@ -47,7 +47,7 @@ Phase PhaseGenerator::advance( bool vib )
 	inc >>= 1;
 
 	static constexpr int multTable[16] = {1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 20, 24, 24, 30, 30};
-	m_phase.fullAdd(inc * multTable[m_mult]);
+	m_phase.fullAdd((inc * multTable[m_mult])>>1);
 	return m_phase;
 }
 

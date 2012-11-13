@@ -24,8 +24,6 @@ public:
 	static constexpr int  CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset = 0xC0;
 	// Feedback rate in fractions of 2*Pi, normalized to (0,1):
 	// 0, Pi/16, Pi/8, Pi/4, Pi/2, Pi, 2*Pi, 4*Pi turns to be:
-	// static constexpr double feedback[] = {0, 1 / 32.0, 1 / 16.0, 1 / 8.0, 1 / 4.0, 1 / 2.0, 1, 2};
-	static const int FeedbackShift[8];
 private:
 	Opl3* m_opl;
 	int m_channelBaseAddress;
@@ -59,15 +57,15 @@ public:
 	uint8_t block() const {
 		return m_block;
 	}
-	uint8_t fb() const {
-		return m_fb;
-	}
 	/**
 	 * @brief Calculate adjusted phase feedback
-	 * @return 10.10 bit fractional adjusted phase feedback using m_fb
+	 * @return 10.9 bit fractional adjusted phase feedback using m_fb
 	 */
 	Phase avgFeedback() const {
-		return Phase::fromFull((( m_feedback[0] + m_feedback[1] )<<10)>>FeedbackShift[m_fb]);
+		if( m_fb == 0) {
+			return Phase(0);
+		}
+		return Phase::fromFull(( m_feedback[0] + m_feedback[1] ) << m_fb);
 	}
 	void clearFeedback() {
 		m_feedback[0] = m_feedback[1] = 0;
@@ -78,7 +76,7 @@ public:
 	 */
 	void pushFeedback( uint16_t fb ) {
 		m_feedback[0] = m_feedback[1];
-		m_feedback[1] = fb&0x3ff;
+		m_feedback[1] = fb&0xfff;
 	}
 
 	AbstractChannel( Opl3* opl, int baseAddress );

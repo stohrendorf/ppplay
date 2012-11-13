@@ -9,37 +9,24 @@ namespace opl
 class Phase
 {
 private:
-	//! @brief 10.10 bits fractional
+	//! @brief 10.9 bits fractional
 	uint32_t m_value;
-	static constexpr uint32_t Mask = (1<<20)-1;
+	static constexpr uint32_t Mask = (1<<19)-1;
 public:
 	static constexpr Phase fromFull(uint32_t val)
 	{
-		return Phase(val>>10, val);
+		return Phase(val>>9, val);
 	}
 	
-	constexpr Phase(uint32_t pre, uint16_t post = 0) : m_value( ((pre&0x3ff)<<10) | (post&0x3ff) )
+	constexpr Phase(uint32_t pre, uint16_t post = 0) : m_value( ((pre&0x3ff)<<9) | (post&0x1ff) )
 	{
 	}
 	
 	constexpr uint16_t pre()
 	{
-		return m_value>>10;
+		return m_value>>9;
 	}
 
-	const Phase& operator+=(uint32_t val)
-	{
-		m_value += val<<10;
-		m_value &= Mask;
-		return *this;
-	}
-	
-	const Phase& operator=(uint16_t val)
-	{
-		m_value = val&0x3ff;
-		return *this;
-	}
-	
 	Phase operator+(Phase rhs) const
 	{
 		Phase res(0);
