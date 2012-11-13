@@ -17,7 +17,7 @@ public:
 	HighHatOperator( Opl3* opl ) : Operator( opl, highHatOperatorBaseAddress ) {
 	}
 
-	int16_t nextSample( Phase modulator );
+	Fractional9 nextSample( Fractional9 modulator );
 };
 }
 

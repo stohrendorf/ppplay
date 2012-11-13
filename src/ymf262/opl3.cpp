@@ -53,7 +53,7 @@ std::vector< short int > Opl3::read()
 	// and multiplies it to get the 16 bit signed output.
 	std::vector<short> output( 4 );
 	for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
-		output[outputChannelNumber] = outputBuffer[outputChannelNumber]>>1;
+		output[outputChannelNumber] = outputBuffer[outputChannelNumber];
 	}
 
 	// Advances the OPL3-wide vibrato index, which is used by

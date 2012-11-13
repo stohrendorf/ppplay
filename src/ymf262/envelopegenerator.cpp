@@ -36,10 +36,10 @@ void EnvelopeGenerator::setAttennuation( uint16_t f_number, uint8_t block, uint8
 
 	// 1.5 dB att. for base 2 of oct. 7
 	// created by: round(8*log2( 10^(dbMax[msb]/10) ));
-	static constexpr int ddArray[] = {
+	static constexpr int ddArray[16] = {
 		0, 24, 32, 37, 40, 43, 45, 47, 48, 50, 51, 52, 53, 54, 55, 56
 	};
-	int tmp = ddArray[m_fnum >> 6] - 16 * (7-m_block);
+	int tmp = ddArray[m_fnum >> 6] - 8*(7-m_block);
 	if( tmp <= 0 ) {
 		m_kslAdd = 0;
 		return;
@@ -212,7 +212,7 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 		return Silence;
 	}
 	
-	int total = m_env + (m_tl<<1) + m_kslAdd;
+	int total = m_env + (m_tl<<2) + m_kslAdd;
 
 	if( am ) {
 		int amVal = m_opl->tremoloIndex() >> 8;
@@ -226,12 +226,12 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 		total += amVal;
 	}
 
-// 	if( total > Silence ) {
-// 		m_total = Silence;
-// 	}
-// 	else {
+	if( total > Silence ) {
+		m_total = Silence;
+	}
+	else {
 		m_total = total;
-// 	}
+	}
 	return m_total;
 }
 
