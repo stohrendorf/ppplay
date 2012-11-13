@@ -93,7 +93,7 @@ uint8_t EnvelopeGenerator::calculateRate( uint8_t rate ) const
 	// res: max. 7 bits (15+60=75)
 	res += rate << 2;
 	// res: max. 6 bits
-	return std::min<uint8_t>(62, res);
+	return std::min<uint8_t>(63, res);
 }
 
 uint16_t EnvelopeGenerator::advance( bool egt, bool am )
@@ -212,7 +212,7 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 		return Silence;
 	}
 	
-	int total = m_env + ( m_tl<<2 ) + m_kslAdd;
+	int total = m_env + (m_tl<<1) + m_kslAdd;
 
 	if( am ) {
 		int amVal = m_opl->tremoloIndex() >> 8;
@@ -220,7 +220,7 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			amVal = ( 2 * 26 ) - amVal;
 		}
 		BOOST_ASSERT( amVal>=0 && amVal<=26 );
-		if( m_opl->dam() ) {
+		if( !m_opl->dam() ) {
 			amVal >>= 2;
 		}
 		total += amVal;
