@@ -63,7 +63,7 @@ void Operator::update_5_WS3()
 	m_ws = opl()->readReg( m_operatorBaseAddress + Operator::_5_WS3_Offset ) & 0x07;
 }
 
-int16_t Operator::nextSample( Phase modulator )
+Fractional9 Operator::nextSample( Fractional9 modulator )
 {
 	if( m_envelopeGenerator.isOff() ) {
 		return 0;
@@ -276,38 +276,39 @@ The input parameter is the output of the waveform lookup plus any attenuation. E
  * @brief Calculate exponential value from logarithmic value
  * @param[in] expVal Exponent calculated by sinLogWs
  */
-int16_t sinExp( uint16_t expVal )
+Fractional9 sinExp( uint16_t expVal )
 {
-	bool signBit = expVal & 0x8000;
+	const bool signBit = expVal & 0x8000;
 
 	expVal &= 0x7FFF;
-	// 0..1018+1024
-	uint16_t result = 0x0400 | sinExpTable[( expVal & 0xff ) ^ 0xFF];
-	result <<= 1;
+	// expVal: 0..10297
+	// result: 0..1018+1024
+	uint32_t result = 0x0400 | sinExpTable[( expVal & 0xff ) ^ 0xFF];
+	result <<= 10;
 	result >>= ( expVal >> 8 ); // exp
 
 	if( signBit ) {
-		return ~result;
+		return Fractional9::fromFull(~result);
 	}
 	else {
-		return result;
+		return Fractional9::fromFull(result);
 	}
 }
 
-// 32 env units are ~3dB and halve the output
-int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
+// 16 env units are ~3dB and halve the output
+Fractional9 oplSin( uint8_t ws, uint16_t phase, uint16_t env )
 {
 	return sinExp( sinLog( ws, phase ) + (env<<3) );
 }
 
 }
 
-int16_t Operator::getOutput( Phase outputPhase, uint8_t ws )
+Fractional9 Operator::getOutput( Fractional9 outputPhase, uint8_t ws )
 {
 	if( m_envelopeGenerator.isSilent() || m_envelopeGenerator.isOff() ) {
 		return 0;
 	}
-	return oplSin( ws, outputPhase.pre(), m_envelopeGenerator.envelope() );
+	return oplSin( ws, outputPhase.trunc(), m_envelopeGenerator.envelope() );
 	//return waveform[int( outputPhase + modulator + 1024 ) % 1024] * m_envelope;
 }
 

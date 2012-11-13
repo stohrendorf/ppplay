@@ -10,9 +10,7 @@ namespace
 {
 constexpr uint16_t note_table[12] = {363, 385, 408, 432, 458, 485, 514, 544, 577, 611, 647, 686};
 
-// carrier, modulator
-constexpr uint8_t ChanToOperator[18] = {3, 0, 4, 1, 5, 2, 11, 8, 12, 9, 13, 10, 19, 16, 20, 17, 21, 18};
-// {0x00, 0x01, 0x02, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12};
+constexpr uint8_t op_table[9] = {0x00, 0x01, 0x02, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12};
 }
 
 ppp::AbstractModule* Module::factory( Stream* stream, uint32_t frequency, int maxRpt, ppp::Sample::Interpolation inter )
@@ -48,25 +46,17 @@ size_t Module::internal_buildTick( AudioFrameBuffer* buf )
 		}
 		return 0;
 	}
-	static constexpr size_t OplBufferSize = opl::Opl3::SampleRate/18.2;
 	const size_t BufferSize = frequency()/18.2;
 	if( buf ) {
 		if( !buf->get() ) {
 			buf->reset( new AudioFrameBuffer::element_type );
 		}
 		buf->get()->resize( BufferSize );
-		int32_t counter = OplBufferSize;
 		for(size_t i=0; i<BufferSize; i++) {
 			// TODO panning?
 			std::vector<int16_t> data = m_opl.read();
 			(**buf)[i].left = data[0]+data[1];
 			(**buf)[i].right = data[2]+data[3];
-			counter -= BufferSize;
-			if(counter < 0) {
-				// skip a sample
-				counter += OplBufferSize*2;
-				m_opl.read();
-			}
 		}
 		state().playedFrames += BufferSize;
 	}
@@ -126,14 +116,8 @@ bool Module::load( Stream* stream )
 		addOrder(new Order(orders[i]));
 	}
 	stream->read( reinterpret_cast<char*>( m_patterns ), stream->size()-stream->pos() );
-	m_opl.writeReg( 1, 0x40 );
-	m_opl.writeReg( 4, 0 );
-	m_opl.writeReg( 8, 0 );
-	for(int i=0; i<0xc0; i++) {
-		m_opl.writeReg(0x20+i, 0);
-	}
-	m_opl.writeReg( 1, 0x20 );
-	m_opl.writeReg( 8, 0x40 );
+	m_opl.writeReg( 1, 32 );
+	m_opl.writeReg( 8, 128 );
 	m_opl.writeReg( 0xbd, 0 );
 
 	for( int i = 0; i < 9; i++ ) {
@@ -171,26 +155,21 @@ void Module::storeInstr( uint8_t chan, uint8_t instr )
 	if( m_channels[chan].instr == instr ) {
 		return;
 	}
+	const uint8_t op = op_table[chan];
 	
-	m_channels[chan].instr = instr;
 	const uint8_t* insData = m_instr[instr];
-	const uint8_t* opOfs = ChanToOperator + (chan*2);
-	
-	
-	m_opl.writeReg( 0xb0 + chan, 0 ); // stop old note (kon, block, fnumh)
-	m_opl.writeReg( 0xc0 + chan, insData[8] );    // cha-chd, fb, cnt
-	
-	m_opl.writeReg( 0x20 + opOfs[0], insData[0] ); // am, vib, egt, ksr, mult
-	m_opl.writeReg( 0x20 + opOfs[1], insData[1] );
-	m_opl.writeReg( 0x40 + opOfs[0], insData[2] ); // ksl, tl
-	m_opl.writeReg( 0x40 + opOfs[1], insData[3] );
-	m_opl.writeReg( 0x60 + opOfs[0], insData[4] ); // ar, dr
-	m_opl.writeReg( 0x60 + opOfs[1], insData[5] );
-	m_opl.writeReg( 0x80 + opOfs[0], insData[6] ); // sl, rr
-	m_opl.writeReg( 0x80 + opOfs[1], insData[7] );
-	m_opl.writeReg( 0xe0 + opOfs[0], insData[9] ); // ws
-	m_opl.writeReg( 0xe0 + opOfs[1], insData[10] );
-	m_channels[chan].slide = insData[11]>>4;
+	m_channels[chan].instr = instr;
+	m_opl.writeReg( 0xb0 + chan, 0 ); // stop old note
+	// set instrument
+	m_opl.writeReg( 0xc0 + chan, insData[8] );
+	m_opl.writeReg( 0x23 + op, insData[0] );      // carrier
+	m_opl.writeReg( 0x20 + op, insData[1] );      // modulator
+	m_opl.writeReg( 0x63 + op, insData[4] );      // bits 0..3 = decay; 4..7 = attack
+	m_opl.writeReg( 0x60 + op, insData[5] );
+	m_opl.writeReg( 0x83 + op, insData[6] );      // 0..3 = release; 4..7 = sustain
+	m_opl.writeReg( 0x80 + op, insData[7] );
+	m_opl.writeReg( 0xe3 + op, insData[9] );      // bits 0..1 = waveform
+	m_opl.writeReg( 0xe0 + op, insData[10] );
 	
 	setVolume( chan, insData[2] & 63, insData[3] & 63 );
 }
@@ -198,13 +177,13 @@ void Module::storeInstr( uint8_t chan, uint8_t instr )
 void Module::setVolume( uint8_t chan, uint8_t volCarrier, uint8_t volModulator )
 {
 	const uint8_t* insData = m_instr[m_channels[chan].instr];
-	const uint8_t* op = ChanToOperator + (chan*2);
+	const uint8_t op = op_table[chan];
 
-	m_opl.writeReg( 0x40 + op[1], volCarrier | ( insData[2] & ~63 ) );
+	m_opl.writeReg( 0x43 + op, volCarrier | ( insData[2] & ~63 ) );
 	if( insData[8] & 1 ) // carrier
-		m_opl.writeReg( 0x40 + op[0], volModulator | ( insData[3] & ~63 ) );
+		m_opl.writeReg( 0x40 + op, volModulator | ( insData[3] & ~63 ) );
 	else
-		m_opl.writeReg( 0x40 + op[0], insData[3] ); // modulator
+		m_opl.writeReg( 0x40 + op, insData[3] ); // modulator
 }
 
 bool Module::update(bool estimate)
@@ -289,22 +268,22 @@ bool Module::update(bool estimate)
 				break;
 			case 0xa0: {	                    // set carrier volume
 				uint8_t vol = eff_op << 2;
-				m_opl.writeReg( 0x40 + ChanToOperator[2*chan + 1], vol | ( m_instr[m_channels[chan].instr][2] & ~63 ) );
+				m_opl.writeReg( 0x43 + op_table[chan], vol | ( m_instr[m_channels[chan].instr][2] & ~63 ) );
 			}
 			break;
 			case 0xb0: {	                    // set modulator volume
 				uint8_t vol = eff_op << 2;
 				if( m_instr[inst][8] & 1 )
-					m_opl.writeReg( 0x40 + ChanToOperator[2*chan + 0], vol | ( m_instr[m_channels[chan].instr][3] & ~63 ) );
+					m_opl.writeReg( 0x40 + op_table[chan], vol | ( m_instr[m_channels[chan].instr][3] & ~63 ) );
 				else
-					m_opl.writeReg( 0x40 + ChanToOperator[2*chan + 0], vol | ( m_instr[inst][3] & ~63 ) );
+					m_opl.writeReg( 0x40 + op_table[chan], vol | ( m_instr[inst][3] & ~63 ) );
 			}
 			break;
 			case 0xc0: {	                    // set instrument volume
 				uint8_t db = eff_op << 2;
-				m_opl.writeReg( 0x40 + ChanToOperator[2*chan + 1], db | ( m_instr[m_channels[chan].instr][2] & ~63 ) );
+				m_opl.writeReg( 0x43 + op_table[chan], db | ( m_instr[m_channels[chan].instr][2] & ~63 ) );
 				if( m_instr[inst][8] & 1 )
-					m_opl.writeReg( 0x40 + ChanToOperator[2*chan + 0], db | ( m_instr[m_channels[chan].instr][3] & ~63 ) );
+					m_opl.writeReg( 0x43 + op_table[chan], db | ( m_instr[m_channels[chan].instr][2] & ~63 ) );
 			}
 			break;
 			case 0xd0:

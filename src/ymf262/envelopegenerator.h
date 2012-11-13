@@ -13,6 +13,10 @@ class Opl3;
 /**
  * @class EnvelopeGenerator
  * @brief Envelope generator
+ * 
+ * @details
+ * This is a 9-bit envelope generator. It has a range of 0 to 96 dB,
+ * which means that 16 units are 3 dB which halves the output.
  */
 class EnvelopeGenerator
 {

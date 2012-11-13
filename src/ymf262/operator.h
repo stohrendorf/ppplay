@@ -1,13 +1,13 @@
 #ifndef PPP_OPL_OPERATOR_H
 #define PPP_OPL_OPERATOR_H
 
-#include <cmath>
 #include <memory>
 
 #include <stuff/utils.h>
 
 #include "phasegenerator.h"
 #include "envelopegenerator.h"
+
 #include <light4cxx/logger.h>
 
 namespace opl
@@ -41,7 +41,7 @@ private:
 	PhaseGenerator m_phaseGenerator;
 	EnvelopeGenerator m_envelopeGenerator;
 
-	Phase m_phase;
+	Fractional9 m_phase;
 
 	//! @brief Amplitude Modulation. This register is used in EnvelopeGenerator::getEnvelope().
 	bool m_am;
@@ -100,10 +100,10 @@ public:
 	uint8_t mult() const {
 		return m_mult;
 	}
-	Phase phase() const {
+	Fractional9 phase() const {
 		return m_phase;
 	}
-	void setPhase( Phase p ) {
+	void setPhase( Fractional9 p ) {
 		m_phase = p;
 	}
 	bool egt() const {
@@ -151,7 +151,7 @@ public:
 	 * @param[in] modulator 10.9 bit fractional phase modulation
 	 * @return 12 bit sample value
 	 */
-	virtual int16_t nextSample( Phase modulator );
+	virtual Fractional9 nextSample( Fractional9 modulator );
 
 	/**
 	 * @brief Calculate operator output
@@ -159,7 +159,7 @@ public:
 	 * @param[in] ws Waveform selector
 	 * @return Waveform sample, amplitude is -4085..4084
 	 */
-	int16_t getOutput( Phase outputPhase, uint8_t ws );
+	Fractional9 getOutput( Fractional9 outputPhase, uint8_t ws );
 
 	void keyOn();
 	void keyOff();

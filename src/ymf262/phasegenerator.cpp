@@ -12,7 +12,7 @@ void PhaseGenerator::setFrequency( uint16_t f_number, uint8_t block, uint8_t mul
 	m_mult = mult&0x0f;
 }
 
-Phase PhaseGenerator::advance( bool vib )
+Fractional9 PhaseGenerator::advance( bool vib )
 {
 	/*
 	 * According to the YMF262 manual:
