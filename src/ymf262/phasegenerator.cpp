@@ -25,7 +25,7 @@ Phase PhaseGenerator::advance( bool vib )
 	 * sinOutFrq = FNUM >> (10-BLOCK)
 	 *           = (FNUM<<BLOCK)>>10
 	 */
-	uint16_t inc = m_fNum;
+	uint32_t inc = m_fNum;
 	if (vib)
 	{
 		uint16_t delta = m_fNum>>7;
