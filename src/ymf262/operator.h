@@ -74,7 +74,7 @@ private:
 	static light4cxx::Logger* logger();
 
 public:
-	static constexpr int noModulator = 0;
+	static constexpr uint noModulator = 0;
 
 	/**
 	 * @post m_ar<16
@@ -148,14 +148,14 @@ public:
 	void update_5_WS3();
 
 	/**
-	 * @param[in] modulator 10.10 bit fractional phase modulation
+	 * @param[in] modulator 10.9 bit fractional phase modulation
 	 * @return 12 bit sample value
 	 */
 	virtual int16_t nextSample( Phase modulator );
 
 	/**
 	 * @brief Calculate operator output
-	 * @param[in] outputPhase Phase, 0..1023<<10 (10.10 fractional)
+	 * @param[in] outputPhase Waveform phase
 	 * @param[in] ws Waveform selector
 	 * @return Waveform sample, amplitude is -4085..4084
 	 */

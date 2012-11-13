@@ -36,7 +36,6 @@ public:
 	 */
 	void setFrequency( uint16_t f_number, uint8_t block, uint8_t mult );
 
-	// Result: 10 bits
 	Phase advance( bool vib );
 
 	/**
