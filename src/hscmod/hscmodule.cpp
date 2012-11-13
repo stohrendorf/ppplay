@@ -48,17 +48,25 @@ size_t Module::internal_buildTick( AudioFrameBuffer* buf )
 		}
 		return 0;
 	}
-	static constexpr int BufferSize = opl::Opl3::SampleRate/18.2;
+	static constexpr size_t OplBufferSize = opl::Opl3::SampleRate/18.2;
+	const size_t BufferSize = frequency()/18.2;
 	if( buf ) {
 		if( !buf->get() ) {
 			buf->reset( new AudioFrameBuffer::element_type );
 		}
 		buf->get()->resize( BufferSize );
-		for(size_t i=0; i<(*buf)->size(); i++) {
+		int32_t counter = OplBufferSize;
+		for(size_t i=0; i<BufferSize; i++) {
 			// TODO panning?
 			std::vector<int16_t> data = m_opl.read();
 			(**buf)[i].left = data[0]+data[1];
 			(**buf)[i].right = data[2]+data[3];
+			counter -= BufferSize;
+			if(counter < 0) {
+				// skip a sample
+				counter += OplBufferSize*2;
+				m_opl.read();
+			}
 		}
 		state().playedFrames += BufferSize;
 	}
