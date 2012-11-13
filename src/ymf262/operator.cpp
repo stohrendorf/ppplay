@@ -297,7 +297,7 @@ int16_t sinExp( uint16_t expVal )
 // 32 env units are ~3dB and halve the output
 int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
 {
-	return sinExp( sinLog( ws, phase ) + (env<<2) );
+	return sinExp( sinLog( ws, phase ) + (env<<3) );
 }
 
 }
