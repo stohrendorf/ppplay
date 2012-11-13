@@ -22,8 +22,6 @@ public:
 	static constexpr int _2_KON1_BLOCK3_FNUMH2_Offset = 0xB0;
 	static constexpr int  FNUML8_Offset = 0xA0;
 	static constexpr int  CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset = 0xC0;
-	// Feedback rate in fractions of 2*Pi, normalized to (0,1):
-	// 0, Pi/16, Pi/8, Pi/4, Pi/2, Pi, 2*Pi, 4*Pi turns to be:
 private:
 	Opl3* m_opl;
 	int m_channelBaseAddress;
@@ -39,7 +37,7 @@ private:
 	bool m_chc;
 	bool m_chd;
 	uint8_t m_fb;
-	uint32_t m_feedback[2];
+	uint16_t m_feedback[2];
 	bool m_cnt;
 	
 	static light4cxx::Logger* logger();
