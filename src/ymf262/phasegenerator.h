@@ -32,7 +32,12 @@ public:
 	 */
 	void setFrequency( uint16_t f_number, uint8_t block, uint8_t mult );
 
-	Fractional9 advance( bool vib );
+	/**
+	 * @brief Advance phase
+	 * @param[in] vib Use vibrato
+	 * @return 10 bit phase
+	 */
+	uint16_t advance( bool vib );
 
 	/**
 	 * @post m_phase==0

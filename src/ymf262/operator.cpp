@@ -63,7 +63,7 @@ void Operator::update_5_WS3()
 	m_ws = opl()->readReg( m_operatorBaseAddress + Operator::_5_WS3_Offset ) & 0x07;
 }
 
-Fractional9 Operator::nextSample( Fractional9 modulator )
+int16_t Operator::nextSample( uint16_t modulator )
 {
 	if( m_envelopeGenerator.isOff() ) {
 		return 0;
@@ -198,7 +198,12 @@ Waveform 8      +  ---  +  IJKL
                       \ |
                        \|
 */
-// result: (0..2137) (maybe or'ed with 0x8000)
+/**
+ * @brief Calculate logarithmic sine value
+ * @param[in] ws Waveform selector (3 bits)
+ * @param[in] phi Phase (10 bits used)
+ * @return Logarithmic value, 0..2137, bit 15 is the sign bit
+ */
 uint16_t sinLog( uint8_t ws, uint16_t phi )
 {
 	uint8_t index = phi;
@@ -276,7 +281,7 @@ The input parameter is the output of the waveform lookup plus any attenuation. E
  * @brief Calculate exponential value from logarithmic value
  * @param[in] expVal Exponent calculated by sinLogWs
  */
-Fractional9 sinExp( uint16_t expVal )
+int16_t sinExp( uint16_t expVal )
 {
 	const bool signBit = expVal & 0x8000;
 
@@ -284,31 +289,31 @@ Fractional9 sinExp( uint16_t expVal )
 	// expVal: 0..10297
 	// result: 0..1018+1024
 	uint32_t result = 0x0400 | sinExpTable[( expVal & 0xff ) ^ 0xFF];
-	result <<= 10;
+	result <<= 1;
 	result >>= ( expVal >> 8 ); // exp
 
 	if( signBit ) {
-		return Fractional9::fromFull(~result);
+		return ~result;
 	}
 	else {
-		return Fractional9::fromFull(result);
+		return result;
 	}
 }
 
 // 16 env units are ~3dB and halve the output
-Fractional9 oplSin( uint8_t ws, uint16_t phase, uint16_t env )
+int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
 {
 	return sinExp( sinLog( ws, phase ) + (env<<3) );
 }
 
 }
 
-Fractional9 Operator::getOutput( Fractional9 outputPhase, uint8_t ws )
+int16_t Operator::getOutput( uint16_t outputPhase, uint8_t ws )
 {
 	if( m_envelopeGenerator.isSilent() || m_envelopeGenerator.isOff() ) {
 		return 0;
 	}
-	return oplSin( ws, outputPhase.trunc(), m_envelopeGenerator.envelope() );
+	return oplSin( ws, outputPhase & 0x3ff, m_envelopeGenerator.envelope() );
 	//return waveform[int( outputPhase + modulator + 1024 ) % 1024] * m_envelope;
 }
 

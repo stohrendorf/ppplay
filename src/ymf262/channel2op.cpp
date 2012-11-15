@@ -6,8 +6,8 @@ namespace opl
 {
 std::vector< int16_t > Channel2Op::nextSample()
 {
-	Fractional9 channelOutput(0);
-	const Fractional9 feedbackOutput = avgFeedback();
+	int16_t channelOutput(0);
+	const uint16_t feedbackOutput = avgFeedback();
 
 	if( !cnt() ) {
 		// CNT = 0, the operators are in series, with the first in feedback.
@@ -27,7 +27,7 @@ std::vector< int16_t > Channel2Op::nextSample()
 		pushFeedback(channelOutput);
 		channelOutput += m_op2->nextSample( Operator::noModulator );
 	}
-	return getInFourChannels( channelOutput.trunc() );
+	return getInFourChannels( channelOutput );
 }
 
 void Channel2Op::keyOn()

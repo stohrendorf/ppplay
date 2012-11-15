@@ -15,7 +15,7 @@ public:
 	TopCymbalOperator( Opl3* opl, int baseAddress = topCymbalOperatorBaseAddress ) : Operator( opl, baseAddress ) {
 	}
 
-	Fractional9 nextSample( Fractional9 );
+	int16_t nextSample( uint16_t );
 };
 }
 

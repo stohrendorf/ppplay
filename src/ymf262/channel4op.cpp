@@ -10,8 +10,8 @@ std::vector< int16_t > Channel4Op::nextSample()
 	const int secondCnt = opl()->readReg( secondChannelBaseAddress + AbstractChannel::CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset ) & 0x1;
 	const int cnt4op = ( cnt() << 1 ) | secondCnt;
 
-	Fractional9 channelOutput(0);
-	const Fractional9 feedbackOutput = avgFeedback();
+	int16_t channelOutput(0);
+	const uint16_t feedbackOutput = avgFeedback();
 
 	/*
 	 * Below: "@" means feedback, "~>" means "modulates"
@@ -70,7 +70,7 @@ std::vector< int16_t > Channel4Op::nextSample()
 			channelOutput += m_op4->nextSample( Operator::noModulator );
 	}
 
-	return getInFourChannels( channelOutput.trunc() );
+	return getInFourChannels( channelOutput );
 }
 void Channel4Op::keyOn()
 {

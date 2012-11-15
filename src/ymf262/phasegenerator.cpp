@@ -12,7 +12,7 @@ void PhaseGenerator::setFrequency( uint16_t f_number, uint8_t block, uint8_t mul
 	m_mult = mult&0x0f;
 }
 
-Fractional9 PhaseGenerator::advance( bool vib )
+uint16_t PhaseGenerator::advance( bool vib )
 {
 	/*
 	 * According to the YMF262 manual:
@@ -48,7 +48,7 @@ Fractional9 PhaseGenerator::advance( bool vib )
 
 	static constexpr int multTable[16] = {1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 20, 24, 24, 30, 30};
 	m_phase.fullAdd((inc * multTable[m_mult])>>1);
-	return m_phase;
+	return m_phase.trunc() & 0x3ff;
 }
 
 void PhaseGenerator::keyOn()
