@@ -41,7 +41,7 @@ private:
 	PhaseGenerator m_phaseGenerator;
 	EnvelopeGenerator m_envelopeGenerator;
 
-	Fractional9 m_phase;
+	uint16_t m_phase;
 
 	//! @brief Amplitude Modulation. This register is used in EnvelopeGenerator::getEnvelope().
 	bool m_am;
@@ -100,11 +100,11 @@ public:
 	uint8_t mult() const {
 		return m_mult;
 	}
-	Fractional9 phase() const {
+	uint16_t phase() const {
 		return m_phase;
 	}
-	void setPhase( Fractional9 p ) {
-		m_phase = p;
+	void setPhase( uint16_t p ) {
+		m_phase = p & 0x3ff;
 	}
 	bool egt() const {
 		return m_egt;
@@ -148,18 +148,19 @@ public:
 	void update_5_WS3();
 
 	/**
-	 * @param[in] modulator 10.9 bit fractional phase modulation
-	 * @return 12 bit sample value
+	 * @param[in] modulator Fractional phase modulation, max. 10.9 bits used
+	 * @return 13.9 bit sample value
+	 * @see AbstractChannel::avgFeedback()
 	 */
-	virtual Fractional9 nextSample( Fractional9 modulator );
+	int16_t nextSample( uint16_t modulator );
 
 	/**
 	 * @brief Calculate operator output
-	 * @param[in] outputPhase Waveform phase
+	 * @param[in] outputPhase Waveform phase, max. 10.9 bit used
 	 * @param[in] ws Waveform selector
 	 * @return Waveform sample, amplitude is -4085..4084
 	 */
-	Fractional9 getOutput( Fractional9 outputPhase, uint8_t ws );
+	int16_t getOutput( uint16_t outputPhase, uint8_t ws );
 
 	void keyOn();
 	void keyOff();

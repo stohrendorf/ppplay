@@ -14,7 +14,7 @@ public:
 	SnareDrumOperator(Opl3* opl) : Operator( opl, snareDrumOperatorBaseAddress ) {
 	}
 
-	Fractional9 nextSample( Fractional9 modulator );
+	int16_t nextSample( uint16_t modulator );
 };
 }
 

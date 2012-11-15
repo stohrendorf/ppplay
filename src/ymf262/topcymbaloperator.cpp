@@ -3,11 +3,11 @@
 
 namespace opl
 {
-Fractional9 TopCymbalOperator::nextSample( Fractional9 /*modulator*/ )
+int16_t TopCymbalOperator::nextSample( uint16_t /*modulator*/ )
 {
 	// The Top Cymbal operator uses his own phase together with the High Hat phase.
-	uint16_t highHatPhase = opl()->highHatOperator()->phase().trunc();
-	uint16_t thisPhase = phase().trunc();
+	uint16_t highHatPhase = opl()->highHatOperator()->phase();
+	uint16_t thisPhase = phase();
 	uint16_t phaseBit = (((thisPhase & 0x88) ^ ((thisPhase<<5) & 0x80)) | ((highHatPhase ^ (highHatPhase<<2)) & 0x20)) ? 0x02 : 0x00;
 	
 	envelopeGenerator()->advance( egt(), am() );

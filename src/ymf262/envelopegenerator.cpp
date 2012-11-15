@@ -128,6 +128,9 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			// compiler about a not handled enum value...
 			return Silence;
 		case Stage::ATTACK:
+			if( rateHi == 15 ) {
+				m_env = 0;
+			}
 			if( m_env==0 || m_env>Silence ) {
 				m_stage = Stage::DECAY;
 				m_clock = 0;
@@ -138,19 +141,14 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			if( m_ar == 0 ) {
 				break;
 			}
-			if( !( m_clock & ( 0x0FFF >> rateHi ) ) ) {
-				if( rateHi == 15 ) {
-					m_env = 0;
-				}
-				else if( rateHi > 12 ) {
-					int stepState = (m_clock & 0x07) >> 1;
-					m_env -= ( m_env >> ( 16 - rateHi - stepTable[rateLo + stepState ] ) ) + 1;
-				}
-				else {
-					int stepState = ( m_clock >> ( 12 - rateHi ) ) & 0x07;
-					if( ( stepState & 0x01 ) || stepTable[ rateLo + ( stepState >> 1 )] ) {
-						m_env -= ( m_env >> 3 ) + 1;
-					}
+			if( rateHi > 12 ) {
+				int stepState = (m_clock & 0x07) >> 1;
+				m_env -= ( m_env >> ( 16 - rateHi - stepTable[rateLo + stepState ] ) ) + 1;
+			}
+			else if( !( m_clock & ( 0x0FFF >> rateHi ) ) ) {
+				int stepState = ( m_clock >> ( 12 - rateHi ) ) & 0x07;
+				if( ( stepState & 0x01 ) || stepTable[ rateLo + ( stepState >> 1 )] ) {
+					m_env -= ( m_env >> 3 ) + 1;
 				}
 			}
 			break;
@@ -164,16 +162,14 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 				break;
 			}
 
-			if( !( m_clock & ( 0x0FFF >> rateHi ) ) ) {
-				if( rateHi > 12 ) {
-					uint8_t stepState = (m_clock & 0x07) >> 1;
-					m_env += ( 1 << ( rateHi + stepTable[ rateLo + stepState ] - 13 ) );
-				}
-				else {
-					uint8_t stepState = ( m_clock >> ( 12 - rateHi ) ) & 0x07;
-					if( ( stepState & 0x01 ) || stepTable[ rateLo + ( stepState >> 1 )] ) {
-						m_env++;
-					}
+			if( rateHi > 12 ) {
+				uint8_t stepState = (m_clock & 0x07) >> 1;
+				m_env += ( 1 << ( rateHi + stepTable[ rateLo + stepState ] - 13 ) );
+			}
+			else if( !( m_clock & ( 0x0FFF >> rateHi ) ) ) {
+				uint8_t stepState = ( m_clock >> ( 12 - rateHi ) ) & 0x07;
+				if( ( stepState & 0x01 ) || stepTable[ rateLo + ( stepState >> 1 )] ) {
+					m_env++;
 				}
 			}
 			break;
@@ -189,16 +185,14 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			if( m_rr == 0 ) {
 				break;
 			}
-			if( !( m_clock & ( 0x0FFF >> rateHi ) ) ) {
-				if( rateHi > 12 ) {
-					uint8_t stepState = (m_clock & 0x07) >> 1;
-					m_env += ( 1 << ( rateHi - stepTable[rateLo + stepState ] - 13 ) );
-				}
-				else {
-					uint8_t stepState = ( m_clock >> ( 12 - rateHi ) ) & 0x07;
-					if( ( stepState & 0x01 ) || stepTable[rateLo + ( stepState >> 1 )] ) {
-						m_env++;
-					}
+			if( rateHi > 12 ) {
+				uint8_t stepState = (m_clock & 0x07) >> 1;
+				m_env += ( 1 << ( rateHi - stepTable[rateLo + stepState ] - 13 ) );
+			}
+			else if( !( m_clock & ( 0x0FFF >> rateHi ) ) ) {
+				uint8_t stepState = ( m_clock >> ( 12 - rateHi ) ) & 0x07;
+				if( ( stepState & 0x01 ) || stepTable[rateLo + ( stepState >> 1 )] ) {
+					m_env++;
 				}
 			}
 			break;
