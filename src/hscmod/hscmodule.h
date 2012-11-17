@@ -19,20 +19,28 @@ private:
 		uint8_t effect;
 	};
 	Note m_patterns[50][64 * 9];
+	
 	struct Channel {
-		constexpr Channel() : instr( 0xff ), slide( 0 ), frq( 0 ) {}
+		constexpr Channel() : instr( 0xff ), fnum(0), updateFnum(true),
+		kslTlCarrier(0x3f), updateKslTlCarrier(true), kslTlModulator(0x3f), updateKslTlModulator(true), slide(0)
+		{
+		}
 		uint8_t instr;
-		int8_t slide;
-		uint16_t frq;
+		uint16_t fnum;
+		bool updateFnum;
+		uint8_t kslTlCarrier;
+		bool updateKslTlCarrier;
+		uint8_t kslTlModulator;
+		bool updateKslTlModulator;
+		uint8_t slide;
 	};
+	
 	Channel m_channels[9];
-	uint8_t m_speed;
 	uint8_t m_speedCountdown;
 	uint8_t m_fnum[9];
 	uint8_t m_bd;
 	bool m_mode6;
 	uint8_t m_patBreak;
-	uint8_t m_fadeIn;
 public:
 	static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt, ppp::Sample::Interpolation inter );
 protected:
@@ -48,9 +56,9 @@ private:
 	virtual int internal_channelCount() const;
 
 	void storeInstr( uint8_t chan, uint8_t instr );
-	void setVolume( uint8_t chan, uint8_t volCarrier, uint8_t volModulator );
 	bool update( bool estimate );
 	void setFreq( uint8_t chan, uint16_t frq );
+	void setNote( uint8_t chan, uint8_t note);
 	
 	static light4cxx::Logger* logger();
 };

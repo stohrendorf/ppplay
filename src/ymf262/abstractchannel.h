@@ -38,7 +38,7 @@ private:
 	bool m_chc;
 	bool m_chd;
 	uint8_t m_fb;
-	uint16_t m_feedback[2];
+	int16_t m_feedback[2];
 	bool m_cnt;
 	
 	static light4cxx::Logger* logger();
@@ -58,13 +58,13 @@ public:
 	}
 	/**
 	 * @brief Calculate adjusted phase feedback
-	 * @return Adjusted phase feedback using m_fb (10 bit)
+	 * @return Adjusted phase feedback using m_fb (11 bit)
 	 */
-	uint16_t avgFeedback() const {
+	int16_t avgFeedback() const {
 		if( m_fb == 0) {
 			return 0;
 		}
-		return ((( m_feedback[0] + m_feedback[1] ) << m_fb)>>9) & 0x3ff;
+		return (( m_feedback[0] + m_feedback[1] ) << m_fb)>>9;
 	}
 	void clearFeedback() {
 		m_feedback[0] = m_feedback[1] = 0;
@@ -73,7 +73,7 @@ public:
 	 * @brief Push feedback into the queue
 	 * @param[in] fb 13 bit feedback from channel output
 	 */
-	void pushFeedback( uint16_t fb ) {
+	void pushFeedback( int16_t fb ) {
 		m_feedback[0] = m_feedback[1];
 		m_feedback[1] = fb;
 	}
