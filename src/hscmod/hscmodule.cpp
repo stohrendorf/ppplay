@@ -221,14 +221,13 @@ bool Module::update(bool estimate)
 			if( effect == 0 ) {
 				continue;
 			}
+			else if( effect == 1 ) {
+				// next pattern
+				state().row = 0x3f;
+				continue;
+			}
 			switch( effect>>4 ) {
 				case 0x01:
-					if( effect == 0x01 ) {
-						// next pattern
-						state().row = 0x3f;
-						continue;
-					}
-					break;
 				case 0x02:
 				case 0x0a:
 				case 0x0b:
@@ -252,15 +251,15 @@ bool Module::update(bool estimate)
 		if( effect == 0 ) {
 			continue;
 		}
+		else if( effect == 1 ) {
+			// next pattern
+			state().row = 0x3f;
+			continue;
+		}
 		
 		switch(effect>>4) {
 			case 0x01:
-				if( effect == 0x01 ) {
-					// next pattern
-					state().row = 0x3f;
-					continue;
-				}
-				else {
+				{
 					// slide up
 					uint8_t val = m_channels[chan].fnum;
 					val += (effect&0x0f) + 1;
