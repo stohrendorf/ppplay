@@ -7,7 +7,7 @@ namespace opl
 std::vector< int16_t > Channel2Op::nextSample()
 {
 	int16_t channelOutput(0);
-	const uint16_t feedbackOutput = avgFeedback();
+	const int16_t feedbackOutput = avgFeedback();
 
 	if( !cnt() ) {
 		// CNT = 0, the operators are in series, with the first in feedback.
