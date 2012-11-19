@@ -333,7 +333,7 @@ uint16_t XmModule::noteToPeriod( uint8_t note, int8_t finetune ) const
 uint32_t XmModule::periodToFrequency( uint16_t period ) const
 {
 	float pbFrq = frequency();
-	constexpr float adjFac = pow( 2, -7.0f / 12 );
+	static const float adjFac = pow( 2, -7.0f / 12 );
 	if( m_amiga ) {
 		/*
    Period = (PeriodTab[((Note%12)*8 + FineTune/16]*(1-Frac(FineTune/16)) +

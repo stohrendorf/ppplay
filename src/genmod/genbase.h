@@ -86,7 +86,7 @@ public:
 	 * @see operator=()
 	 * @see noNibbles()
 	 */
-	constexpr void force(uint8_t val)
+	void force(uint8_t val)
 	{
 		m_value = val;
 	}

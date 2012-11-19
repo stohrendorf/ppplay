@@ -40,7 +40,7 @@ namespace ppp
  */
 struct PPPLAY_CORE_EXPORT ModuleState : public ISerializable
 {
-	explicit constexpr ModuleState() :
+	explicit ModuleState() :
 		speed( 0 ),
 		tempo( 0 ),
 		order( 0 ),

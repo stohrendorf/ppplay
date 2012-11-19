@@ -68,7 +68,7 @@ public:
 	 * @pre dx>1
 	 * @pre dy>0
 	 */
-	constexpr BresenInterpolation( int dx, int dy ) :
+	BresenInterpolation( int dx, int dy ) :
 		m_dx( dx ),
 		m_dy( dy ),
 		m_err( dx-1 ),
