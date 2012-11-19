@@ -204,21 +204,11 @@ bool Module::update(bool estimate)
 		return true;
 	m_speedCountdown = state().speed;
 	
-	uint8_t pattnr = state().pattern;
-	if( pattnr == 0xff ) {
-		return false;
-	}
-	else if( ( pattnr & 128 ) && ( pattnr <= 0xb1 ) ) { // goto pattern "nr"
-		setOrder( pattnr & 127, estimate );
-		state().row = 0;
-		pattnr = state().pattern;
-	}
-
 	//BEGIN handleEffects
 	for( uint_fast8_t chan = 0; chan < 9; chan++ ) {
 		uint32_t pattoff = state().row * 9 + chan;
-		const uint8_t note = m_patterns[pattnr][pattoff].note;
-		const uint8_t effect = m_patterns[pattnr][pattoff].effect;
+		const uint8_t note = m_patterns[state().pattern][pattoff].note;
+		const uint8_t effect = m_patterns[state().pattern][pattoff].effect;
 		
 		if( estimate ) {
 			if( note&0x80 ) {
