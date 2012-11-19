@@ -1,6 +1,7 @@
 #include "hscmodule.h"
 #include <genmod/abstractorder.h>
 #include <genmod/genbase.h>
+#include <genmod/breseninter.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -46,17 +47,22 @@ size_t Module::internal_buildTick( AudioFrameBuffer* buf )
 		}
 		return 0;
 	}
-	const size_t BufferSize = frequency()/18.2;
+	const size_t BufferSize = frequency()/18.20676;
 	if( buf ) {
 		if( !buf->get() ) {
 			buf->reset( new AudioFrameBuffer::element_type );
 		}
 		buf->get()->resize( BufferSize );
+		ppp::BresenInterpolation interp(frequency(), opl::Opl3::SampleRate);
 		for(size_t i=0; i<BufferSize; i++) {
 			// TODO panning?
 			std::vector<int16_t> data = m_opl.read();
 			(**buf)[i].left = data[0]+data[1];
 			(**buf)[i].right = data[2]+data[3];
+			if( interp.next() == 2 ) {
+				m_opl.read(); // skip a sample
+			}
+			interp = 0;
 		}
 		state().playedFrames += BufferSize;
 	}
