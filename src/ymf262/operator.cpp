@@ -286,14 +286,14 @@ int16_t sinExp( uint16_t expVal )
 	const bool signBit = expVal & 0x8000;
 
 	expVal &= 0x7FFF;
-	// expVal: 0..10297
+	// expVal: 0..2137+511*8 = 0..6225
 	// result: 0..1018+1024
-	uint32_t result = 0x0400 | sinExpTable[( expVal & 0xff ) ^ 0xFF];
+	uint32_t result = 0x0400 + sinExpTable[( expVal & 0xff ) ^ 0xFF];
 	result <<= 1;
 	result >>= ( expVal >> 8 ); // exp
 
 	if( signBit ) {
-		return ~result;
+		return -result-1;
 	}
 	else {
 		return result;
@@ -313,7 +313,7 @@ int16_t Operator::getOutput( uint16_t outputPhase, uint8_t ws )
 	if( m_envelopeGenerator.isSilent() || m_envelopeGenerator.isOff() ) {
 		return 0;
 	}
-	return oplSin( ws, outputPhase & 0x3ff, m_envelopeGenerator.envelope() );
+	return oplSin( ws, outputPhase, m_envelopeGenerator.envelope() );
 	//return waveform[int( outputPhase + modulator + 1024 ) % 1024] * m_envelope;
 }
 
