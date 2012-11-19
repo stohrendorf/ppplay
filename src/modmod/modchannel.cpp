@@ -49,7 +49,7 @@ constexpr std::array<const int16_t, 32> WaveSine = {{
 	}
 };
 
-inline constexpr double finetuneMultiplicator( uint8_t finetune )
+inline double finetuneMultiplicator( uint8_t finetune )
 {
 	return pow( 2.0, -( finetune > 7 ? finetune - 16 : finetune ) / ( 12 * 8 ) );
 }

@@ -130,7 +130,7 @@ int WavAudioOutput::internal_init( int desiredFrq )
 		int32_t subsize2;
 	} header = {
 		{'R','I','F','F'}, 0,
-		{'W','A','V','E'}, {'f','m','t',' '}, 16, 1, 2, desiredFrq, uint32_t(desiredFrq*sizeof(BasicSampleFrame)), sizeof(BasicSampleFrame), 16,
+		{'W','A','V','E'}, {'f','m','t',' '}, 16, 1, 2, static_cast<uint32_t>(desiredFrq), uint32_t(desiredFrq*sizeof(BasicSampleFrame)), sizeof(BasicSampleFrame), 16,
 		{'d','a','t','a'}, 0
 	};
 	m_file.write(reinterpret_cast<const char*>(&header),sizeof(header));
