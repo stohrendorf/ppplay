@@ -22,16 +22,20 @@ private:
 	
 	struct Channel {
 		constexpr Channel() : instr( 0xff ), fnum(0), updateFnum(true),
-		kslTlCarrier(0x3f), updateKslTlCarrier(true), kslTlModulator(0x3f), updateKslTlModulator(true), slide(0)
+		tlCarrier(0x3f), updateTlCarrier(true), tlModulator(0x3f), updateTlModulator(true), slide(0)
 		{
 		}
+		//! @brief Currently used instrument
 		uint8_t instr;
 		uint16_t fnum;
 		bool updateFnum;
-		uint8_t kslTlCarrier;
-		bool updateKslTlCarrier;
-		uint8_t kslTlModulator;
-		bool updateKslTlModulator;
+		//! @brief Total level of the carrier
+		uint8_t tlCarrier;
+		bool updateTlCarrier;
+		//! @brief Total level of the modulator
+		uint8_t tlModulator;
+		bool updateTlModulator;
+		//! @todo Find the use
 		uint8_t slide;
 	};
 	

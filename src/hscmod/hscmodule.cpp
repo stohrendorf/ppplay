@@ -175,10 +175,10 @@ void Module::storeInstr( uint8_t chan, uint8_t instr )
 	m_opl.writeReg(0xe0 + slotM, data[10]);
 	m_opl.writeReg(0x40 + slotC, data[2]);
 	m_opl.writeReg(0x40 + slotM, data[3]);
-	m_channels[chan].kslTlCarrier = data[2];
-	m_channels[chan].updateKslTlCarrier = true;
-	m_channels[chan].kslTlModulator = data[3];
-	m_channels[chan].updateKslTlModulator = true;
+	m_channels[chan].tlCarrier = data[2];
+	m_channels[chan].updateTlCarrier = true;
+	m_channels[chan].tlModulator = data[3];
+	m_channels[chan].updateTlModulator = true;
 	m_channels[chan].slide = data[11]>>4;
 }
 
@@ -274,23 +274,23 @@ bool Module::update(bool estimate)
 				break;
 			case 0x0a:
 				// set carrier volume
-				m_channels[chan].kslTlCarrier = (effect&0x0f)<<2;
-				m_channels[chan].updateKslTlCarrier = true;
+				m_channels[chan].tlCarrier = (effect&0x0f)<<2;
+				m_channels[chan].updateTlCarrier = true;
 				break;
 			case 0x0b:
 				// set modulator volume
-				m_channels[chan].kslTlModulator = (effect&0x0f)<<2;
-				m_channels[chan].updateKslTlModulator = true;
+				m_channels[chan].tlModulator = (effect&0x0f)<<2;
+				m_channels[chan].updateTlModulator = true;
 				break;
 			case 0x0c:
 				// set volume
 				{
 					uint8_t val = (effect&0x0f)<<2;
-					m_channels[chan].kslTlCarrier = val;
-					m_channels[chan].updateKslTlCarrier = true;
+					m_channels[chan].tlCarrier = val;
+					m_channels[chan].updateTlCarrier = true;
 					if( m_instr[m_channels[chan].instr][8] & 1 ) {
-						m_channels[chan].kslTlModulator = val;
-						m_channels[chan].updateKslTlModulator = true;
+						m_channels[chan].tlModulator = val;
+						m_channels[chan].updateTlModulator = true;
 					}
 				}
 				break;
@@ -332,13 +332,13 @@ bool Module::update(bool estimate)
 			}
 			const uint8_t carrierSlot = ChanToCarrier[i];
 			const uint8_t modSlot = carrierSlot-3;
-			if( m_channels[i].updateKslTlCarrier ) {
-				m_channels[i].updateKslTlCarrier = false;
-				m_opl.writeReg(0x40 + carrierSlot, m_channels[i].kslTlCarrier);
+			if( m_channels[i].updateTlCarrier ) {
+				m_channels[i].updateTlCarrier = false;
+				m_opl.writeReg(0x40 + carrierSlot, m_channels[i].tlCarrier);
 			}
-			if( m_channels[i].updateKslTlModulator ) {
-				m_channels[i].updateKslTlModulator = false;
-				m_opl.writeReg(0x40 + modSlot, m_channels[i].kslTlModulator);
+			if( m_channels[i].updateTlModulator ) {
+				m_channels[i].updateTlModulator = false;
+				m_opl.writeReg(0x40 + modSlot, m_channels[i].tlModulator);
 			}
 		}
 		//END
