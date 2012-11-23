@@ -22,7 +22,7 @@ Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m
 	m_tomTomOperator(), m_topCymbalOperator(), m_highHatOperatorInNonRhythmMode(), m_snareDrumOperatorInNonRhythmMode(),
 	m_tomTomOperatorInNonRhythmMode(), m_topCymbalOperatorInNonRhythmMode(),
 	m_nts( false ), m_dam( false ), m_dvb( false ), m_ryt( false ), m_bd( false ), m_sd( false ), m_tom( false ), m_tc( false ), m_hh( false ),
-	m_new( false ), m_connectionsel( 0 ), m_counter(0)
+	m_new( false ), m_connectionsel( 0 ), m_vibratoIndex( 0 ), m_tremoloIndex( 0 )
 {
 	initOperators();
 	initChannels2op();
@@ -56,8 +56,14 @@ std::vector< short int > Opl3::read()
 		output[outputChannelNumber] = outputBuffer[outputChannelNumber]>>1;
 	}
 
-	m_counter++;
-	m_counter %= TremoloTableLength;
+	// Advances the OPL3-wide vibrato index, which is used by
+	// PhaseGenerator.getPhase() in each Operator.
+	m_vibratoIndex++;
+	m_vibratoIndex &= 0x1fff;
+	// Advances the OPL3-wide tremolo index, which is used by
+	// EnvelopeGenerator.getEnvelope() in each Operator.
+	m_tremoloIndex++;
+	m_tremoloIndex %= TremoloTableLength;
 
 	return output;
 }

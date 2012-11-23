@@ -47,6 +47,8 @@ private:
 	uint16_t m_env;
 	//! @brief Key scale rate
 	bool m_ksr;
+	//! @brief Internal envelope clock counter
+	uint16_t m_clock;
 	//! @brief Total level, 6 bits, att. is 0.75dB * m_tl
 	uint8_t m_tl;
 	//! @brief Key scale level (2 bits)
@@ -65,7 +67,7 @@ public:
 	constexpr EnvelopeGenerator( Opl3* opl )
 		: m_opl( opl ), m_stage( Stage::OFF ), /*m_attenuation( 0 ),*/
 		  m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_fnum( 0 ), m_block( 0 ),
-		  m_env( Silence ), m_ksr( false ), m_tl( 0 ), m_ksl( 0 ),
+		  m_env( Silence ), m_ksr( false ), m_clock( 0 ), m_tl( 0 ), m_ksl( 0 ),
 		  m_kslAdd(0), m_total(Silence)
 	{
 	}
