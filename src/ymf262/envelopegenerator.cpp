@@ -99,7 +99,18 @@ uint8_t EnvelopeGenerator::calculateRate( uint8_t rate ) const
 uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 {
 	// http://forums.submarine.org.uk/phpBB/viewtopic.php?f=9&t=16&start=20
-	static constexpr uint8_t stepTable[16] = {0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1};
+	// sub-index is (clock&7)>>1
+	static constexpr uint8_t stepTable[16] = {
+		0, 0, 0, 0, // rateLo = 0
+		0, 0, 1, 0, // rateLo = 1
+		0, 1, 0, 1, // rateLo = 2
+		0, 1, 1, 1  // rateLo = 3
+	};
+	/*
+	 * uint8_t row = (rate<<1) | (rate>>1);
+	 * uint8_t subIndex = (clock>>1) & 3;
+	 * uint8_t stepBit = row>>subIndex;
+	 */
 	uint8_t rateHi = 0;
 	switch(m_stage) {
 		case Stage::OFF:
