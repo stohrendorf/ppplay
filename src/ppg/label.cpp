@@ -236,6 +236,7 @@ char& Label::charAt( size_t pos )
 {
 	return m_text.at( pos );
 }
+
 char Label::charAt( size_t pos ) const
 {
 	return m_text.at( pos );
