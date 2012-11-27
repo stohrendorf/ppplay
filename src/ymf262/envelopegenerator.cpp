@@ -98,41 +98,26 @@ uint8_t EnvelopeGenerator::calculateRate( uint8_t rate ) const
 
 uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 {
-	// http://forums.submarine.org.uk/phpBB/viewtopic.php?f=9&t=16&start=20
-	// sub-index is (clock&7)>>1
-	static constexpr uint8_t stepTable[16] = {
-		0, 0, 0, 0, // rateLo = 0
-		0, 0, 1, 0, // rateLo = 1
-		0, 1, 0, 1, // rateLo = 2
-		0, 1, 1, 1  // rateLo = 3
-	};
-	/*
-	 * uint8_t row = (rate<<1) | (rate>>1);
-	 * uint8_t subIndex = (clock>>1) & 3;
-	 * uint8_t stepBit = row>>subIndex;
-	 */
-	uint8_t rateHi = 0;
+	uint8_t rateLo = 0;
 	switch(m_stage) {
 		case Stage::OFF:
-			m_total = m_env = Silence;
+			m_total = Silence;
+			m_env = ExactSilence;
 			return Silence;
 		case Stage::ATTACK:
-			rateHi = calculateRate(m_ar);
+			rateLo = calculateRate(m_ar);
 			break;
 		case Stage::DECAY:
-			rateHi = calculateRate(m_dr);
+			rateLo = calculateRate(m_dr);
 			break;
 		case Stage::SUSTAIN:
 			break;
 		case Stage::RELEASE:
-			rateHi = calculateRate(m_rr);
+			rateLo = calculateRate(m_rr);
 			break;
 	}
-	// rateHi: 0..60, rateLo: 0..12
-	const uint8_t rateLo = (rateHi & 0x03) << 2;
-	// rateHi: 0..15
-	rateHi >>= 2;
-
+	const uint8_t rateHi = rateLo>>2;
+	rateLo &= 3;
 	switch( m_stage ) {
 		case Stage::OFF:
 			// already handled above, but to silence the
@@ -141,54 +126,36 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 		case Stage::ATTACK:
 			if( rateHi == 15 ) {
 				m_env = 0;
-			}
-			if( m_env==0 || m_env>Silence ) {
 				m_stage = Stage::DECAY;
-				m_clock = 0;
-				// in case of an overflow
-				m_env = 0;
 				break;
 			}
 			if( m_ar == 0 ) {
 				break;
 			}
-			if( rateHi > 12 ) {
-				int stepState = (m_clock & 0x07) >> 1;
-				m_env -= ( m_env >> ( 16 - rateHi - stepTable[rateLo + stepState ] ) ) + 1;
-			}
-			else if( !( m_clock & ( 0x0FFF >> rateHi ) ) ) {
-				int stepState = ( m_clock >> ( 12 - rateHi ) ) & 0x07;
-				if( ( stepState & 0x01 ) || stepTable[ rateLo + ( stepState >> 1 )] ) {
-					m_env -= ( m_env >> 3 ) + 1;
-				}
+			m_env -= (m_env>>(16-rateHi)) + ((4+rateLo)<<rateHi);
+			if( m_env==0 || m_env>ExactSilence ) {
+				m_stage = Stage::DECAY;
+				// in case of an overflow
+				m_env = 0;
+				break;
 			}
 			break;
 
 		case Stage::DECAY:
-			if( m_env >= (m_sl<<4) ) {
+			if( (m_env>>EnvelopeShift) >= uint32_t(m_sl)<<4 ) {
 				m_stage = Stage::SUSTAIN;
 				break;
 			}
 			if(m_dr==0) {
 				break;
 			}
-
-			if( rateHi > 12 ) {
-				uint8_t stepState = (m_clock & 0x07) >> 1;
-				m_env += ( 1 << ( rateHi + stepTable[ rateLo + stepState ] - 13 ) );
-			}
-			else if( !( m_clock & ( 0x0FFF >> rateHi ) ) ) {
-				uint8_t stepState = ( m_clock >> ( 12 - rateHi ) ) & 0x07;
-				if( ( stepState & 0x01 ) || stepTable[ rateLo + ( stepState >> 1 )] ) {
-					m_env++;
-				}
-			}
+			
+			m_env += uint32_t(4+rateLo)<<rateHi;
 			break;
 
 		case Stage::SUSTAIN:
 			if(!egt) {
 				m_stage = Stage::RELEASE;
-				m_clock = 0;
 			}
 			break;
 
@@ -196,28 +163,18 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			if( m_rr == 0 ) {
 				break;
 			}
-			if( rateHi > 12 ) {
-				uint8_t stepState = (m_clock & 0x07) >> 1;
-				m_env += ( 1 << ( rateHi - stepTable[rateLo + stepState ] - 13 ) );
-			}
-			else if( !( m_clock & ( 0x0FFF >> rateHi ) ) ) {
-				uint8_t stepState = ( m_clock >> ( 12 - rateHi ) ) & 0x07;
-				if( ( stepState & 0x01 ) || stepTable[rateLo + ( stepState >> 1 )] ) {
-					m_env++;
-				}
-			}
+			m_env += uint32_t(4+rateLo)<<rateHi;
 			break;
 	}
-	m_clock++;
 	
-	if( m_env>=Silence ) {
+	if( m_env >= ExactSilence ) {
 		// too low
-		m_env = Silence;
+		m_env = ExactSilence;
 		m_total = Silence;
 		return Silence;
 	}
 	
-	int total = m_env + (m_tl<<2) + m_kslAdd;
+	int total = (m_env>>EnvelopeShift) + (m_tl<<2) + m_kslAdd;
 
 	if( am ) {
 		int amVal = m_opl->tremoloIndex() >> 8;
@@ -243,14 +200,12 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 void EnvelopeGenerator::keyOn()
 {
 	m_stage = Stage::ATTACK;
-	m_clock = 0;
 }
 
 void EnvelopeGenerator::keyOff()
 {
 	if( m_stage != Stage::OFF ) {
 		m_stage = Stage::RELEASE;
-		m_clock = 0;
 	}
 }
 
