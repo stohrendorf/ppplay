@@ -17,6 +17,7 @@
 */
 
 #include "widget.h"
+#include <light4cxx/logger.h>
 
 #include <algorithm>
 #include <boost/assert.hpp>
@@ -38,14 +39,28 @@ Widget::Widget( Widget* parent ) :
 
 Widget::~Widget()
 {
+	// delete the children
 	List backup = m_children;
 	for( Widget * tmp : backup ) {
-		tmp->m_parent = nullptr;
 		if( tmp->m_autodelete ) {
 			delete tmp;
 		}
+		else {
+			// the child widget doesn't destroy itself here, so we got to
+			// remove it manually here
+			tmp->m_parent = nullptr;
+			m_children.remove(tmp);
+		}
 	}
+	// the children remove themselves
+	BOOST_ASSERT_MSG( m_children.empty(), stringFmt("Widget expected to have no children, but %d are left", m_children.size()).c_str() );
+	// remove this widget from the parent's children list
 	if( m_parent ) {
+#ifndef NDEBUG
+		if( m_parent->m_children.cend() == std::find(m_parent->m_children.cbegin(), m_parent->m_children.cend(), this) ) {
+			light4cxx::Logger::get("ppg.widget")->error(L4CXX_LOCATION, "The parent of the widget does not contain the widget itself");
+		}
+#endif
 		m_parent->m_children.remove( this );
 	}
 }
@@ -239,7 +254,7 @@ void Widget::toTop( Widget* vp )
 
 bool Widget::onMouseMove( int x, int y )
 {
-for( Widget * current : m_children ) {
+	for( Widget * current : m_children ) {
 		if( !current ) {
 			continue;
 		}
@@ -262,3 +277,5 @@ bool Widget::isVisible() const
 }
 
 } // namespace ppg
+
+
