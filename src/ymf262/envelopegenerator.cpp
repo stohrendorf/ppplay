@@ -116,6 +116,9 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			rateLo = calculateRate(m_rr);
 			break;
 	}
+	
+	const uint16_t oldEnv = m_env>>EnvelopeShift;
+	
 	const uint8_t rateHi = rateLo>>2;
 	rateLo &= 3;
 	switch( m_stage ) {
@@ -170,11 +173,9 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 	if( m_env >= ExactSilence ) {
 		// too low
 		m_env = ExactSilence;
-		m_total = Silence;
-		return Silence;
 	}
 	
-	int total = (m_env>>EnvelopeShift) + (m_tl<<2) + m_kslAdd;
+	int total = oldEnv + (m_tl<<2) + m_kslAdd;
 
 	if( am ) {
 		int amVal = m_opl->tremoloIndex() >> 8;
@@ -188,7 +189,7 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 		total += amVal;
 	}
 
-	if( total > Silence ) {
+	if( total >= Silence ) {
 		m_total = Silence;
 	}
 	else {
@@ -199,7 +200,9 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 
 void EnvelopeGenerator::keyOn()
 {
-	m_stage = Stage::ATTACK;
+	if( m_stage != Stage::SUSTAIN ) {
+		m_stage = Stage::ATTACK;
+	}
 }
 
 void EnvelopeGenerator::keyOff()
