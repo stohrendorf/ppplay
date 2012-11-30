@@ -66,13 +66,13 @@ private:
 	uint16_t m_vibratoIndex;
 	//! @brief 14 bits, wraps around after 13*1024
 	uint16_t m_tremoloIndex;
+	//! @brief Random number generator
+	uint32_t m_rand;
 
-	// The methods read() and write() are the only
-	// ones needed by the user to interface with the emulator.
-	// read() returns one frame at a time, to be played at 49700 Hz,
-	// with each frame being four 16-bit samples,
-	// corresponding to the OPL3 four output channels CHA...CHD.
 public:
+	uint32_t randBit() const {
+		return m_rand&1;
+	}
 	bool isNew() const {
 		return m_new;
 	}

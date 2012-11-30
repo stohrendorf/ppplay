@@ -22,7 +22,7 @@ Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m
 	m_tomTomOperator(), m_topCymbalOperator(), m_highHatOperatorInNonRhythmMode(), m_snareDrumOperatorInNonRhythmMode(),
 	m_tomTomOperatorInNonRhythmMode(), m_topCymbalOperatorInNonRhythmMode(),
 	m_nts( false ), m_dam( false ), m_dvb( false ), m_ryt( false ), m_bd( false ), m_sd( false ), m_tom( false ), m_tc( false ), m_hh( false ),
-	m_new( false ), m_connectionsel( 0 ), m_vibratoIndex( 0 ), m_tremoloIndex( 0 )
+	m_new( false ), m_connectionsel( 0 ), m_vibratoIndex( 0 ), m_tremoloIndex( 0 ), m_rand(1)
 {
 	initOperators();
 	initChannels2op();
@@ -65,6 +65,12 @@ std::vector< short int > Opl3::read()
 	m_tremoloIndex++;
 	m_tremoloIndex %= TremoloTableLength;
 
+	// verified on real chip
+	if (m_rand&1) {
+		m_rand ^= 0x800302;
+	}
+	m_rand >>= 1;
+	
 	return output;
 }
 
@@ -347,15 +353,17 @@ void Opl3::setRhythmMode()
 		m_operators[0][0x15] = m_topCymbalOperator;
 	}
 	else {
-		for( int i = 6; i < 9; i++ )
+		for( int i = 6; i < 9; i++ ) {
 			m_channels[0][i] = m_channels2op[0][i];
+		}
 		m_operators[0][0x11] = m_highHatOperatorInNonRhythmMode;
 		m_operators[0][0x14] = m_snareDrumOperatorInNonRhythmMode;
 		m_operators[0][0x12] = m_tomTomOperatorInNonRhythmMode;
 		m_operators[0][0x15] = m_topCymbalOperatorInNonRhythmMode;
 	}
-	for( int i = 6; i <= 8; i++ )
+	for( int i = 6; i <= 8; i++ ) {
 		m_channels[0][i]->updateChannel();
+	}
 }
 
 AbstractArchive& Opl3::serialize( AbstractArchive* archive )

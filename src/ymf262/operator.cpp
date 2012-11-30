@@ -71,17 +71,18 @@ int16_t Operator::nextSample( uint16_t modulator )
 
 	m_envelopeGenerator.advance( m_egt, m_am );
 
+	uint8_t ws = m_ws;
 	// If it is in OPL2 mode, use first four waveforms only:
 	if( opl()->isNew() ) {
-		m_ws &= 0x07;
+		ws &= 0x07;
 	}
 	else {
-		m_ws &= 0x03;
+		ws &= 0x03;
 	}
 
 	m_phase = m_phaseGenerator.advance( m_vib );
 
-	return getOutput( modulator + m_phase, m_ws );
+	return getOutput( modulator + m_phase, ws );
 }
 
 void Operator::keyOn()
