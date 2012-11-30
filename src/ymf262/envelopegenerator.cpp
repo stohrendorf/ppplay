@@ -127,15 +127,10 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			// compiler about a not handled enum value...
 			return Silence;
 		case Stage::ATTACK:
-			if( rateHi == 15 ) {
-				m_env = 0;
-				m_stage = Stage::DECAY;
-				break;
-			}
 			if( m_ar == 0 ) {
 				break;
 			}
-			m_env -= (m_env>>(16-rateHi)) + ((4+rateLo)<<rateHi);
+			m_env -= (m_env>>(15-rateHi)) + ((4+rateLo)<<rateHi);
 			if( m_env==0 || m_env>ExactSilence ) {
 				m_stage = Stage::DECAY;
 				// in case of an overflow
