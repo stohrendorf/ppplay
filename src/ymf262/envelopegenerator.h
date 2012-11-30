@@ -3,7 +3,6 @@
 
 #include <cmath>
 #include <cstdint>
-#include <light4cxx/logger.h>
 
 namespace opl
 {
@@ -60,8 +59,6 @@ private:
 	uint16_t m_total;
 
 	static const uint16_t Silence = 511;
-	
-	static light4cxx::Logger* logger();
 	
 	uint8_t calculateRate(uint8_t delta) const;
 	

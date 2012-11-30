@@ -207,8 +207,4 @@ void EnvelopeGenerator::keyOff()
 	}
 }
 
-light4cxx::Logger* EnvelopeGenerator::logger()
-{
-	return light4cxx::Logger::get("opl.envelope");
-}
 }
