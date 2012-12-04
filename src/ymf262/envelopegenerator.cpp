@@ -86,11 +86,9 @@ uint8_t EnvelopeGenerator::calculateRate( uint8_t rate ) const
 	// calculate key scale number
 	uint8_t res = ( m_fnum >> ( m_opl->nts() ? 8 : 9 ) ) & 0x1;
 	res |= m_block<<1;
-	// res: max. 4 bits
 	if( !m_ksr ) {
 		res >>= 2;
 	}
-	// res: max. 7 bits (15+60=75)
 	res += rate << 2;
 	// res: max. 6 bits
 	return std::min<uint8_t>(63, res);
@@ -130,7 +128,29 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			if( m_ar == 0 ) {
 				break;
 			}
-			m_env -= (m_env>>(15-rateHi)) + ((4+rateLo)<<rateHi);
+			else if( rateHi == 15 ) {
+				m_env = 0;
+			}
+			else {
+				uint32_t counter = m_env & ((1<<15)-1);
+				counter += (4|rateLo)<<rateHi;
+				const uint8_t overflow = (counter>>15);
+				
+				uint16_t env = m_env>>15;
+				if( overflow!=0 ) {
+					counter &= (1<<15)-1;
+					if(overflow&4) {
+						env -= (env>>1) + 1;
+					}
+					else if(overflow&2) {
+						env -= (env>>2) + 1;
+					}
+					else if(overflow&1) {
+						env -= (env>>3) + 1;
+					}
+				}
+				m_env = (env<<15) | counter;
+			}
 			if( m_env==0 || m_env>ExactSilence ) {
 				m_stage = Stage::DECAY;
 				// in case of an overflow
@@ -208,3 +228,4 @@ void EnvelopeGenerator::keyOff()
 }
 
 }
+
