@@ -41,7 +41,7 @@ namespace ppp
  * @note Time-critical
  */
 template<typename T>
-inline constexpr const T& clip( const T& v, const T& a, const T& b )
+inline constexpr const T& clip( const T& v, const T& a, const T& b ) 
 {
 	return std::min( b, std::max( v, a ) );
 }

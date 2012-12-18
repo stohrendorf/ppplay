@@ -35,8 +35,6 @@ XmCell::XmCell() : IPatternCell(), m_note( 0 ), m_instr( 0 ), m_volume( 0 ), m_e
 {
 }
 
-XmCell::~XmCell() = default;
-
 bool XmCell::load( Stream* str )
 {
 	uint8_t data;

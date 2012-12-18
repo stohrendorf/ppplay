@@ -66,7 +66,7 @@ public:
 	 * @pre dx>1
 	 * @pre dy>0
 	 */
-	constexpr BresenInterpolation( int dx, int dy ) :
+	constexpr BresenInterpolation( int dx, int dy ) noexcept :
 		m_dx( dx ),
 		m_dy( dy ),
 		m_err( dx-1 ),
@@ -74,11 +74,11 @@ public:
 	{
 	}
 	
-	inline operator std::streamoff() const {
+	inline operator std::streamoff() const noexcept {
 		return m_position;
 	}
 	
-	inline BresenInterpolation& operator=(uint_fast32_t val) {
+	inline BresenInterpolation& operator=(uint_fast32_t val) noexcept {
 		m_position = val;
 		return *this;
 	}
@@ -127,14 +127,14 @@ public:
 	 * @brief Mix two values using the fractional part m_err
 	 * @return Mixed value
 	 */
-	inline int16_t biased(int16_t v1, int16_t v2) const
+	inline int16_t biased(int16_t v1, int16_t v2) const noexcept
 	{
 		int v1b = v1*m_err;
 		int v2b = v2*(m_dx-m_err);
 		return ppp::clip<int>((v1b+v2b)/m_dx, -32768, 32767);
 	}
 	
-	inline BasicSampleFrame biased(const BasicSampleFrame& a, const BasicSampleFrame& b) const
+	inline BasicSampleFrame biased(const BasicSampleFrame& a, const BasicSampleFrame& b) const noexcept
 	{
 		return BasicSampleFrame(
 			biased(a.left, b.left),
@@ -142,7 +142,7 @@ public:
 		);
 	}
 	
-	inline bool isValid() const
+	inline bool isValid() const noexcept
 	{
 		return m_position != InvalidPosition;
 	}

@@ -43,8 +43,6 @@ void ModCell::reset()
 	m_note = "---";
 }
 
-ModCell::~ModCell() = default;
-
 bool ModCell::load( Stream* str )
 {
 	clear();

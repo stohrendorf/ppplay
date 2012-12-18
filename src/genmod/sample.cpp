@@ -27,20 +27,20 @@ namespace ppp
  * @{
  */
 
-Sample::Sample() :
+Sample::Sample() noexcept :
 	m_loopStart( 0 ), m_loopEnd( 0 ), m_volume( 0 ),
 	m_frequency( 0 ), m_data(), m_filename(), m_title(), m_looptype( LoopType::None )
 {
 }
 
-Sample::~Sample() = default;
+Sample::~Sample() noexcept = default;
 
-uint16_t Sample::frequency() const
+uint16_t Sample::frequency() const noexcept
 {
 	return m_frequency;
 }
 
-uint8_t Sample::volume() const
+uint8_t Sample::volume() const noexcept
 {
 	return m_volume;
 }
@@ -50,27 +50,27 @@ std::string Sample::title() const
 	return m_title;
 }
 
-bool Sample::isLooped() const
+bool Sample::isLooped() const noexcept
 {
 	return m_looptype != LoopType::None;
 }
 
-std::streamsize Sample::length() const
+std::streamsize Sample::length() const noexcept
 {
 	return m_data.size();
 }
 
-Sample::LoopType Sample::loopType() const
+Sample::LoopType Sample::loopType() const noexcept
 {
 	return m_looptype;
 }
 
-void Sample::setFrequency( uint16_t f )
+void Sample::setFrequency( uint16_t f ) noexcept
 {
 	m_frequency = f;
 }
 
-void Sample::setLoopType( LoopType l )
+void Sample::setLoopType( LoopType l ) noexcept
 {
 	m_looptype = l;
 }
@@ -85,17 +85,17 @@ void Sample::setFilename( const std::string& f )
 	m_filename = f;
 }
 
-void Sample::setLoopStart( std::streamoff s )
+void Sample::setLoopStart( std::streamoff s ) noexcept
 {
 	m_loopStart = s;
 }
 
-void Sample::setLoopEnd( std::streamoff e )
+void Sample::setLoopEnd( std::streamoff e ) noexcept
 {
 	m_loopEnd = e;
 }
 
-void Sample::setVolume( uint8_t v )
+void Sample::setVolume( uint8_t v ) noexcept
 {
 	m_volume = v;
 }

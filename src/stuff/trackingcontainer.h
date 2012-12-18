@@ -93,7 +93,7 @@ public:
 	/**
 	 * @}
 	 */
-	inline TrackingContainer() : m_container(), m_index( std::numeric_limits<size_t>::max() )
+	inline TrackingContainer() noexcept : m_container(), m_index( std::numeric_limits<size_t>::max() )
 	{
 	}
 	TrackingContainer(const TrackingContainer<Type>&) = delete;
@@ -123,26 +123,26 @@ public:
 	push_back( RValReference value ) {
 		m_container.push_back( value );
 	}
-	inline size_t size() const {
+	inline size_t size() const noexcept {
 		return m_container.size();
 	}
-	inline bool empty() const {
+	inline bool empty() const noexcept {
 		return m_container.empty();
 	}
 	inline void clear() {
 		m_container.clear();
 		m_index = std::numeric_limits<size_t>::max();
 	}
-	inline typename std::vector<Type>::iterator begin() {
+	inline typename std::vector<Type>::iterator begin() noexcept {
 		return m_container.begin();
 	}
-	inline typename std::vector<Type>::iterator end() {
+	inline typename std::vector<Type>::iterator end() noexcept {
 		return m_container.end();
 	}
-	inline typename std::vector<Type>::const_iterator begin() const {
+	inline typename std::vector<Type>::const_iterator begin()  const noexcept {
 		return m_container.begin();
 	}
-	inline typename std::vector<Type>::const_iterator end() const {
+	inline typename std::vector<Type>::const_iterator end() const noexcept {
 		return m_container.end();
 	}
 	/**
@@ -152,27 +152,27 @@ public:
 	 * @brief Index of the current element
 	 * @retval -1 if the container is empty
 	 */
-	inline size_t where() const {
+	inline size_t where() const noexcept {
 		return m_index;
 	}
 	/**
 	 * @brief Checks if the current index is at the end of the container
 	 * @retval true if @c where() points to the last element
 	 */
-	inline bool atEnd() const {
+	inline bool atEnd() const noexcept {
 		return m_index==std::numeric_limits<size_t>::max() || m_index >= size() - 1;
 	}
 	/**
 	 * @brief Checks if the current index is at the front of the container
 	 * @retval true if @c where() points to the first element
 	 */
-	inline bool atFront() const {
+	inline bool atFront() const noexcept {
 		return m_index==std::numeric_limits<size_t>::max() || m_index == 0;
 	}
 	/**
 	 * @brief Resets the current element to be the first one
 	 */
-	inline void revert() {
+	inline void revert() noexcept {
 		if(m_index!=std::numeric_limits<size_t>::max()) {
 			m_index = 0;
 		}

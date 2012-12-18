@@ -134,13 +134,13 @@ AbstractOrder* AbstractModule::orderAt( size_t idx )
 	return m_orders[idx];
 }
 
-size_t AbstractModule::orderCount() const
+size_t AbstractModule::orderCount() const noexcept
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_orders.size();
 }
 
-int AbstractModule::maxRepeat() const
+int AbstractModule::maxRepeat() const noexcept
 {
 	return m_maxRepeat;
 }
@@ -184,7 +184,7 @@ bool AbstractModule::setOrder( size_t newOrder, bool estimateOnly, bool forceSav
 	return m_state.order < orderCount();
 }
 
-void AbstractModule::setRow( int16_t r )
+void AbstractModule::setRow( int16_t r ) noexcept
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_state.row = r;
@@ -197,21 +197,21 @@ void AbstractModule::nextTick()
 	m_state.tick = ( m_state.tick + 1 ) % m_state.speed;
 }
 
-void AbstractModule::setTempo( uint8_t t )
+void AbstractModule::setTempo( uint8_t t ) noexcept
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if( t == 0 ) return;
 	m_state.tempo = t;
 }
 
-void AbstractModule::setSpeed( uint8_t s )
+void AbstractModule::setSpeed( uint8_t s ) noexcept
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	if( s == 0 ) return;
 	m_state.speed = s;
 }
 
-uint16_t AbstractModule::songCount() const
+uint16_t AbstractModule::songCount() const noexcept
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_songs.size();

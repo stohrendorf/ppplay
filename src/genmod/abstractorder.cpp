@@ -28,10 +28,10 @@
 namespace ppp
 {
 
-AbstractOrder::AbstractOrder( uint8_t idx ) : m_index( idx ), m_playbackCount( 0 ), m_rowPlaybackCounter()
+AbstractOrder::AbstractOrder( uint8_t idx ) noexcept : m_index( idx ), m_playbackCount( 0 ), m_rowPlaybackCounter()
 { }
 
-uint8_t AbstractOrder::index() const
+uint8_t AbstractOrder::index() const noexcept
 {
 	return m_index;
 }
@@ -47,12 +47,12 @@ AbstractArchive& AbstractOrder::serialize( AbstractArchive* data )
 	return *data % m_index % m_playbackCount;
 }
 
-int AbstractOrder::playbackCount() const
+int AbstractOrder::playbackCount() const noexcept
 {
 	return m_playbackCount;
 }
 
-int AbstractOrder::increasePlaybackCount()
+int AbstractOrder::increasePlaybackCount() noexcept
 {
 	return ++m_playbackCount;
 }
@@ -77,8 +77,6 @@ light4cxx::Logger* AbstractOrder::logger()
 }
 
 }
-
-template class std::vector<ppp::AbstractOrder*>;
 
 /**
  * @}

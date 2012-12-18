@@ -48,7 +48,6 @@ private:
 	uint8_t m_effectValue; //!< @brief Effect value
 public:
 	XmCell();
-	virtual ~XmCell();
 	/**
 	 * @brief Load the cell data from a stream
 	 * @param[in] str The stream to load from

@@ -36,7 +36,6 @@ class ModCell : public IPatternCell
 {
 public:
 	ModCell();
-	virtual ~ModCell();
 	/**
 	 * @brief Load this cell from a stream
 	 * @param[in,out] str Reference to the stream to load from

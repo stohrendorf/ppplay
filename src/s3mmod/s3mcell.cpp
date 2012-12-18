@@ -41,10 +41,6 @@ S3mCell::S3mCell() : IPatternCell(), m_note( s3mEmptyNote ), m_instr( s3mEmptyIn
 {
 }
 
-S3mCell::~S3mCell()
-{
-}
-
 bool S3mCell::load( Stream* str )
 {
 	try {

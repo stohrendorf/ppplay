@@ -47,7 +47,6 @@ private:
 	uint8_t m_effectValue; //!< @brief Effect value
 public:
 	S3mCell();
-	virtual ~S3mCell();
 	/**
 	 * @brief Load this cell from a stream
 	 * @param[in,out] str Reference to the stream to load from

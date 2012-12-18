@@ -36,11 +36,11 @@ private:
 	std::size_t m_width;
 	std::vector<T> m_data;
 public:
-	explicit inline Field(std::size_t width, std::size_t height)
+	explicit inline Field(std::size_t width, std::size_t height) noexcept
 	: m_width(width), m_data(width*height)
 	{
 	}
-	explicit inline Field()
+	explicit inline Field() noexcept
 	: m_width(0), m_data()
 	{
 	}
@@ -69,14 +69,14 @@ public:
 		return m_data.at(y*m_width+x);
 	}
 	
-	std::size_t width() const
+	std::size_t width() const noexcept
 	{
 		if( m_data.empty() ) {
 			return 0;
 		}
 		return m_width;
 	}
-	std::size_t height() const
+	std::size_t height() const noexcept
 	{
 		if( m_data.empty() ) {
 			return 0;

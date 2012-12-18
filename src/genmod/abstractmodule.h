@@ -55,7 +55,7 @@ public:
 	 */
 	struct MetaInfo
 	{
-		explicit MetaInfo() : filename(), title(), trackerInfo()
+		explicit MetaInfo() noexcept : filename(), title(), trackerInfo()
 		{
 		}
 		
@@ -136,7 +136,7 @@ public:
 	 * @see isMultiSong()
 	 * @see currentSongIndex()
 	 */
-	uint16_t songCount() const;
+	uint16_t songCount() const noexcept;
 	/**
 	 * @brief Get the currently playing song index
 	 * @return m_currentSongIndex
@@ -231,13 +231,13 @@ protected:
 	 * @brief Get the number of orders
 	 * @return Number of orders
 	 */
-	size_t orderCount() const;
+	size_t orderCount() const noexcept;
 	
 	/**
 	 * @brief Get the maximum repeat count
 	 * @return The maximum repeat count
 	 */
-	int maxRepeat() const;
+	int maxRepeat() const noexcept;
 	/**
 	 * @brief Set the order index and handle preprocessing states
 	 * @param[in] newOrder The new order index
@@ -251,7 +251,7 @@ protected:
 	 * @param[in] r The new row index
 	 * @retval false when the new row has been played more than 255 times
 	 */
-	void setRow( int16_t r );
+	void setRow( int16_t r ) noexcept;
 	/**
 	 * @brief Increase the current tick index
 	 * @pre m_playbackInfo.speed > 0
@@ -262,12 +262,12 @@ protected:
 	 * @brief Sets the current tempo
 	 * @param[in] t The new tempo
 	 */
-	void setTempo( uint8_t t );
+	void setTempo( uint8_t t ) noexcept;
 	/**
 	 * @brief Sets the current speed
 	 * @param[in] s The new speed
 	 */
-	void setSpeed( uint8_t s );
+	void setSpeed( uint8_t s ) noexcept;
 	/**
 	 * @brief Saves the initial state
 	 */

@@ -55,12 +55,12 @@ public:
 	 * @param[in] idx Order index
 	 * @param[in] rowCount Pattern row count
 	 */
-	AbstractOrder( uint8_t idx );
+	AbstractOrder( uint8_t idx ) noexcept;
 	/**
 	 * @brief Return the pattern index associated with this order
 	 * @return m_index
 	 */
-	uint8_t index() const;
+	uint8_t index() const noexcept;
 	/**
 	 * @brief Set the pattern index and pattern row count
 	 * @param[in] index New index
@@ -72,12 +72,12 @@ public:
 	 * @brief Get the playback count of this order
 	 * @return m_playbackCount
 	 */
-	int playbackCount() const;
+	int playbackCount() const noexcept;
 	/**
 	 * @brief Increase the playback count
 	 * @return The new value of m_playbackCount
 	 */
-	int increasePlaybackCount();
+	int increasePlaybackCount() noexcept;
 	
 	/**
 	 * @brief Resets the row playback counter
@@ -106,7 +106,5 @@ protected:
  */
 
 }
-
-extern template class std::vector<ppp::AbstractOrder*>;
 
 #endif

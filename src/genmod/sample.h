@@ -99,21 +99,21 @@ public:
 	/**
 	 * @brief Constructor
 	 */
-	Sample();
+	Sample() noexcept;
 	/**
 	 * @brief Destructor
 	 */
-	virtual ~Sample();
+	virtual ~Sample() noexcept;
 	/**
 	 * @brief Get the sample's Base Frequency
 	 * @return Base frequency
 	 */
-	uint16_t frequency() const;
+	uint16_t frequency() const noexcept;
 	/**
 	 * @brief Get the sample's default volume
 	 * @return Default volume
 	 */
-	uint8_t volume() const;
+	uint8_t volume() const noexcept;
 	/**
 	 * @brief Get the sample's name
 	 * @return Sample's name
@@ -123,17 +123,17 @@ public:
 	 * @brief Is the sample looped?
 	 * @return @c true if the sample is looped
 	 */
-	bool isLooped() const;
+	bool isLooped() const noexcept;
 	/**
 	 * @brief Get the sample's length
 	 * @return The sample's length
 	 */
-	std::streamsize length() const;
+	std::streamsize length() const noexcept;
 	/**
 	 * @brief Get the loop type
 	 * @return The loop type
 	 */
-	LoopType loopType() const;
+	LoopType loopType() const noexcept;
 	
 	bool mix( Interpolation inter, BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
 protected:
@@ -143,38 +143,38 @@ protected:
 	 * @brief Set m_frequency
 	 * @param[in] f The new frequency value
 	 */
-	void setFrequency( uint16_t f );
+	void setFrequency( uint16_t f ) noexcept;
 	/**
 	 * @brief Set m_looptype
 	 * @param[in] l The new loop type value
 	 */
-	void setLoopType( LoopType l );
+	void setLoopType( LoopType l ) noexcept;
 	/**
 	 * @brief Get data start iterator
 	 * @return Data start iterator
 	 */
-	inline Iterator beginIterator() {
+	inline Iterator beginIterator() noexcept {
 		return m_data.begin();
 	}
 	/**
 	 * @brief Get data end iterator
 	 * @return Data end iterator
 	 */
-	inline Iterator endIterator() {
+	inline Iterator endIterator() noexcept {
 		return m_data.end();
 	}
 	/**
 	 * @brief Get data start iterator
 	 * @return Data start iterator
 	 */
-	inline ConstIterator beginIterator() const {
+	inline ConstIterator beginIterator() const noexcept {
 		return m_data.begin();
 	}
 	/**
 	 * @brief Get data end iterator
 	 * @return Data end iterator
 	 */
-	inline ConstIterator endIterator() const {
+	inline ConstIterator endIterator() const noexcept {
 		return m_data.cend();
 	}
 	/**
@@ -191,17 +191,17 @@ protected:
 	 * @brief Set the sample's loop start
 	 * @param[in] s The new loop start
 	 */
-	void setLoopStart( std::streamoff s );
+	void setLoopStart( std::streamoff s ) noexcept;
 	/**
 	 * @brief Set the sample's loop end
 	 * @param[in] e The new loop end
 	 */
-	void setLoopEnd( std::streamoff e );
+	void setLoopEnd( std::streamoff e ) noexcept;
 	/**
 	 * @brief Set the sample's default volume
 	 * @param[in] v The new volume
 	 */
-	void setVolume( uint8_t v );
+	void setVolume( uint8_t v ) noexcept;
 	/**
 	 * @brief Resize the data
 	 * @param[in] size New size

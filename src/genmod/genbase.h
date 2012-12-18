@@ -58,7 +58,7 @@ public:
 	 * @brief Constructor
 	 * @param[in] val Initial value
 	 */
-	constexpr RememberByte(uint8_t val = 0) : m_value(val)
+	constexpr RememberByte(uint8_t val = 0) noexcept : m_value(val)
 	{
 	}
 	
@@ -66,7 +66,7 @@ public:
 	 * @brief Implicit cast operator, ease usage
 	 * @return m_value
 	 */
-	constexpr operator uint8_t() const
+	constexpr operator uint8_t() const noexcept
 	{
 		return m_value;
 	}
@@ -78,7 +78,7 @@ public:
 	 * @see force()
 	 * @see noNibbles()
 	 */
-	inline RememberByte<TSplitNibbles>& operator=(uint8_t val);
+	inline RememberByte<TSplitNibbles>& operator=(uint8_t val) noexcept;
 	
 	/**
 	 * @brief Assignment function, forces m_value to be set
@@ -86,7 +86,7 @@ public:
 	 * @see operator=()
 	 * @see noNibbles()
 	 */
-	constexpr void force(uint8_t val)
+	constexpr void force(uint8_t val) noexcept
 	{
 		m_value = val;
 	}
@@ -101,7 +101,7 @@ public:
 	 * @see force()
 	 */
 	template<bool T = TSplitNibbles>
-	typename std::enable_if<T,void>::type noNibbles(uint8_t val)
+	typename std::enable_if<T,void>::type noNibbles(uint8_t val) noexcept
 	{
 		if(val != 0) {
 			m_value = val;
@@ -112,17 +112,17 @@ public:
 	 * @brief High nibble of the value
 	 * @return m_value>>4
 	 */
-	constexpr uint8_t hi() const { return m_value>>4; }
+	constexpr uint8_t hi() const noexcept { return m_value>>4; }
 	
 	/**
 	 * @brief Low nibble of the value
 	 * @return m_value&0x0f
 	 */
-	constexpr uint8_t lo() const { return m_value&0x0f; }
+	constexpr uint8_t lo() const noexcept { return m_value&0x0f; }
 };
 
 template<>
-inline RememberByte<true>& RememberByte<true>::operator=(uint8_t val)
+inline RememberByte<true>& RememberByte<true>::operator=(uint8_t val) noexcept
 {
 	if((val&0x0f) != 0) {
 		m_value = (m_value&0xf0) | (val&0x0f);
@@ -134,7 +134,7 @@ inline RememberByte<true>& RememberByte<true>::operator=(uint8_t val)
 }
 
 template<>
-inline RememberByte<false>& RememberByte<false>::operator=(uint8_t val)
+inline RememberByte<false>& RememberByte<false>::operator=(uint8_t val) noexcept
 {
 	if(val != 0) {
 		m_value = val;
