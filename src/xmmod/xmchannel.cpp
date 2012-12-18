@@ -452,13 +452,13 @@ void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
 			m_fxString = "Tremo\xec";
 			break;
 		case Effect::VolSlide:
-			if( ( m_currentCell->effectValue()>>4 ) == 0 )
+			if( m_lastVolSlideFx.hi() == 0 )
 				m_fxString = "VSld \x1f";
 			else
 				m_fxString = "VSld \x1e";
 			break;
 		case Effect::GlobalVolSlide:
-			if( ( m_currentCell->effectValue()>>4 ) == 0 )
+			if( m_lastGlobVolSlideFx.hi() == 0 )
 				m_fxString = "GVSld\x1f";
 			else
 				m_fxString = "GVSld\x1e";
@@ -467,7 +467,7 @@ void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
 			m_fxString = "KOff \xd4";
 			break;
 		case Effect::PanSlide:
-			if( ( m_currentCell->effectValue()>>4 ) == 0 )
+			if( m_lastPanSlideFx.hi() == 0 )
 				m_fxString = "PSld \x1b";
 			else
 				m_fxString = "PSld \x1a";

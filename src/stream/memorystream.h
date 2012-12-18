@@ -30,7 +30,7 @@ class PPPLAY_STREAM_EXPORT MemoryStream : public Stream
 {
 	DISABLE_COPY( MemoryStream )
 public:
-	explicit MemoryStream( const std::string& name ="SBinStream" );
+	explicit MemoryStream( const std::string& name = "MemoryStream" );
 	virtual std::streamsize size() const;
 };
 

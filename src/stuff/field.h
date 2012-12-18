@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <cassert>
+#include <type_traits>
 
 /**
  * @class Field
@@ -30,6 +31,7 @@
 template<class T>
 class Field
 {
+	static_assert(std::is_default_constructible<T>::value, "T must be default constructible");
 private:
 	std::size_t m_width;
 	std::vector<T> m_data;
