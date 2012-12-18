@@ -145,7 +145,7 @@ void XmChannel::triggerNote(uint8_t note)
 	}
 	
 	note = m_lastNote + currentSample()->relativeNote();
-	if( !inRange<uint8_t>( note, 0, 119 ) ) {
+	if( !between<uint8_t>( note, 0, 119 ) ) {
 		return;
 	}
 	
@@ -285,7 +285,7 @@ void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
 	
 	*m_currentCell = cell;
 	
-	if( inRange<uint8_t>( m_currentCell->instrument(), 1, 0x80 ) ) {
+	if( between<uint8_t>( m_currentCell->instrument(), 1, 0x80 ) ) {
 		m_instrumentIndex = m_currentCell->instrument();
 	}
 

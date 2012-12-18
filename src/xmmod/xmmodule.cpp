@@ -315,7 +315,7 @@ int XmModule::internal_channelCount() const
 
 const XmInstrument* XmModule::getInstrument( int idx ) const
 {
-	if( !inRange<int>( idx, 1, m_instruments.size() ) ) {
+	if( !between<int>( idx, 1, m_instruments.size() ) ) {
 		return nullptr;
 	}
 	return m_instruments[ idx - 1 ];

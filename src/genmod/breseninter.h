@@ -47,7 +47,6 @@ namespace ppp
  */
 class PPPLAY_CORE_EXPORT BresenInterpolation
 {
-	DISABLE_COPY( BresenInterpolation )
 	BresenInterpolation() = delete;
 private:
 	//! @brief Width of the line

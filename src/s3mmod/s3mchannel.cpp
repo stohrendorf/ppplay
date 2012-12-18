@@ -237,7 +237,7 @@ S3mChannel::~S3mChannel()
 
 const S3mSample* S3mChannel::currentSample() const
 {
-	if( !inRange<int>( m_sampleIndex, 0, m_module->numSamples() - 1 ) ) {
+	if( !between<int>( m_sampleIndex, 0, m_module->numSamples() - 1 ) ) {
 		return nullptr;
 	}
 	return m_module->sampleAt( m_sampleIndex );
@@ -260,7 +260,7 @@ std::string S3mChannel::internal_effectName() const
 		return "...";
 	}
 	uint8_t fx = m_currentCell->effect();
-	if( inRange<int>( fx, 1, 27 ) ) {
+	if( between<int>( fx, 1, 27 ) ) {
 		return stringFmt( "%c%02X", char( fx - 1 + 'A' ), int(m_currentCell->effectValue()) );
 	}
 	else {

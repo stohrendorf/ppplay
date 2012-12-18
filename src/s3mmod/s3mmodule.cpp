@@ -304,7 +304,7 @@ bool S3mModule::load( Stream* stream )
 bool S3mModule::existsSample( int16_t idx )
 {
 	idx--;
-	if( !inRange<int>( idx, 0, m_samples.size() - 1 ) ) {
+	if( !between<int>( idx, 0, m_samples.size() - 1 ) ) {
 		return false;
 	}
 	return m_samples[ idx ] != nullptr;
