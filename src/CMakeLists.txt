@@ -50,7 +50,6 @@ install(FILES
 	stuff/field.h
 	stuff/inputplugin.h
 	stuff/itimer.h
-	stuff/moduleregistry.h
 	stuff/numberutils.h
 	stuff/stringutils.h
 	stuff/trackingcontainer.h
