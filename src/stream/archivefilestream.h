@@ -22,9 +22,9 @@
 #include "memorystream.h"
 
 /**
- * @class ABinStream
+ * @class ArchiveFileStream
  * @ingroup Common
- * @brief Class derived from SBinStream for an archive file
+ * @brief Class derived from MemoryStream for an archive file
  */
 class PPPLAY_STREAM_EXPORT ArchiveFileStream : public MemoryStream
 {

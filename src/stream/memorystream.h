@@ -22,9 +22,9 @@
 #include "stream.h"
 
 /**
- * @class SBinStream
+ * @class MemoryStream
  * @ingroup Common
- * @brief Class derived from BinStream for a std::stringstream
+ * @brief Class derived from Stream for a std::stringstream
  */
 class PPPLAY_STREAM_EXPORT MemoryStream : public Stream
 {

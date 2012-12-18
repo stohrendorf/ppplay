@@ -95,21 +95,24 @@ void PluginRegistry::findPlugins()
 		dlclose(exe);
 		return;
 	}
-	boost::filesystem3::path p(info.dli_fname);
+	// go to "../lib/ppplay"
+	boost::filesystem3::path pluginPath(info.dli_fname);
 	dlclose(exe);
-	p.remove_filename();
-	p = p.parent_path();
-	p /= "lib";
-	p /= "ppplay";
-	light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Looking for plugins in %s", p.native());
+	pluginPath.remove_filename();
+	pluginPath = pluginPath.parent_path();
+	pluginPath /= "lib";
+	pluginPath /= "ppplay";
+	light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Looking for plugins in %s", pluginPath.native());
 	
 	std::list<boost::filesystem3::path> paths;
-	std::copy(boost::filesystem3::directory_iterator(p), boost::filesystem3::directory_iterator(), std::back_inserter(paths));
+	std::copy(boost::filesystem3::directory_iterator( pluginPath ), boost::filesystem3::directory_iterator(), std::back_inserter(paths));
 	for(const auto& entry : paths) {
+		// find every file in "../lib/ppplay" that begins with "libppplay_input_"
 		light4cxx::Logger::root()->info(L4CXX_LOCATION, "Checking: %s", entry.filename().native());
 		if(entry.filename().native().find("libppplay_input_")!=0) {
 			continue;
 		}
+		// try to load the file and look for the exported "plugin" symbol
 		light4cxx::Logger::root()->info(L4CXX_LOCATION, "Trying to load input plugin: %s", entry.native());
 		void* handle = dlopen(entry.c_str(), RTLD_LAZY);
 		if(!handle) {
@@ -122,12 +125,14 @@ void PluginRegistry::findPlugins()
 			dlclose(handle);
 			continue;
 		}
+		// verify that the API version matches
 		int version = plugin->version();
 		if(version != InputPlugin::Version) {
 			light4cxx::Logger::root()->error(L4CXX_LOCATION, "Failed to load plugin '%s': API version mismatch. Expected %d, found %d.", entry.native(), InputPlugin::Version, version);
 			dlclose(handle);
 			continue;
 		}
+		// the plugin is valid, so add it to the list
 		light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Found input plugin '%s', '%s': %s", entry.native(), plugin->name(), plugin->description());
 		instance().m_handles.push_back(handle);
 	}

@@ -39,7 +39,7 @@
  *
  * @details
  * A simple thread is created that continuously requests data from the connected
- * IAudioSource.
+ * AbstractAudioSource.
  */
 class PPPLAY_CORE_EXPORT AudioFifo
 {

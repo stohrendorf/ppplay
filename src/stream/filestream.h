@@ -22,9 +22,9 @@
 #include "stream.h"
 
 /**
- * @class FBinStream
+ * @class FileStream
  * @ingroup Common
- * @brief Class derived from BinStream for files
+ * @brief Class derived from Stream for files
  * @note This is a read-only stream
  */
 class PPPLAY_STREAM_EXPORT FileStream : public Stream

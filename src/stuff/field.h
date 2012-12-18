@@ -24,7 +24,7 @@
 
 /**
  * @class Field
- * A two-dimensional array
+ * @brief A two-dimensional array
  * @tparam T Contained type, must be default-constructable
  */
 template<class T>
