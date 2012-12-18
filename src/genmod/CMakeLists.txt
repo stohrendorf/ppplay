@@ -5,7 +5,6 @@ add_compiler_export_flags()
 
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 add_library(ppplay_module_base SHARED
-	breseninter.cpp
 	genbase.cpp
 	abstractchannel.cpp
 	abstractmodule.cpp

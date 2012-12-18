@@ -56,7 +56,7 @@ inline constexpr const T& clip( const T& v, const T& a, const T& b )
  * @note Time-critical
  */
 template<typename T>
-inline constexpr bool inRange( const T v, const T a, const T b )
+inline constexpr bool between( const T v, const T a, const T b )
 {
 	return ( v >= a ) && ( v <= b );
 }
