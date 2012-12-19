@@ -141,22 +141,22 @@ void Widget::draw()
 	drawThis();
 }
 
-Rect Widget::area() const
+Rect Widget::area() const noexcept
 {
 	return m_area;
 }
 
-Rect& Widget::area()
+Rect& Widget::area() noexcept
 {
 	return m_area;
 }
 
-void Widget::show()
+void Widget::show() noexcept
 {
 	m_visible = true;
 }
 
-void Widget::hide()
+void Widget::hide() noexcept
 {
 	m_visible = false;
 }
@@ -266,12 +266,12 @@ bool Widget::onMouseMove( int x, int y )
 	return false;
 }
 
-void Widget::setAutoDelete( bool value )
+void Widget::setAutoDelete( bool value ) noexcept
 {
 	m_autodelete = value;
 }
 
-bool Widget::isVisible() const
+bool Widget::isVisible() const noexcept
 {
 	return m_visible;
 }

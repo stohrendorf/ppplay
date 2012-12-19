@@ -23,15 +23,13 @@
 
 #include "abstractaudiooutput.h"
 
-AbstractAudioOutput::~AbstractAudioOutput() = default;
-
-AbstractAudioOutput::ErrorCode AbstractAudioOutput::errorCode() const
+AbstractAudioOutput::ErrorCode AbstractAudioOutput::errorCode() const noexcept
 {
 	boost::mutex::scoped_lock lock( m_mutex );
 	return m_errorCode;
 }
 
-void AbstractAudioOutput::setErrorCode( AbstractAudioOutput::ErrorCode ec )
+void AbstractAudioOutput::setErrorCode( AbstractAudioOutput::ErrorCode ec ) noexcept
 {
 // 	boost::mutex::scoped_lock lock( m_mutex );
 	m_errorCode = ec;

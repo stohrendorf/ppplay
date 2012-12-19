@@ -43,7 +43,7 @@ enum class Color
  * @return Inverted color
  * @note This is DOS's default algorithm
  */
-inline constexpr Color operator~( const Color& c )
+inline constexpr Color operator~( const Color& c ) noexcept
 {
 	return static_cast<Color>( ( static_cast<int>( c ) & 7 ) ^ 7 );
 }

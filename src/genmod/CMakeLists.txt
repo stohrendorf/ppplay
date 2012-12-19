@@ -12,7 +12,6 @@ add_library(ppplay_module_base SHARED
 	sample.cpp
 	ipatterncell.cpp
 	modulestate.cpp
-	songinfo.cpp
 )
 generate_export_header(ppplay_module_base)
 install(TARGETS ppplay_module_base DESTINATION lib EXPORT ppplayExports)

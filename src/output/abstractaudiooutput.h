@@ -55,15 +55,17 @@ public:
 	 * @brief Constructor
 	 * @param[in] src Pointer to an audio data source
 	 */
-	inline explicit AbstractAudioOutput( const AbstractAudioSource::WeakPtr& src ) : m_source( src ), m_errorCode( NoError ), m_mutex() {
+	inline explicit AbstractAudioOutput( const AbstractAudioSource::WeakPtr& src )
+	: m_source( src ), m_errorCode( NoError ), m_mutex()
+	{
 	}
 	//! @brief Destructor
-	virtual ~AbstractAudioOutput();
+	virtual ~AbstractAudioOutput() = default;
 	/**
 	 * @brief Get the internal error code
 	 * @return Internal error code
 	 */
-	ErrorCode errorCode() const;
+	ErrorCode errorCode() const noexcept;
 	//! @copydoc internal_init
 	int init( int desiredFrq );
 	//! @copydoc internal_playing
@@ -88,7 +90,7 @@ protected:
 	 * @brief Set the internal error code
 	 * @param[in] ec New error code
 	 */
-	void setErrorCode( ErrorCode ec );
+	void setErrorCode( ErrorCode ec ) noexcept;
 	/**
 	 * @brief Get the logger
 	 * @return Logger with name "audio.output"

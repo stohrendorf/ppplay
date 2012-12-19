@@ -33,8 +33,6 @@ Sample::Sample() noexcept :
 {
 }
 
-Sample::~Sample() noexcept = default;
-
 uint16_t Sample::frequency() const noexcept
 {
 	return m_frequency;

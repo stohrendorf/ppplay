@@ -90,21 +90,21 @@ public:
 	//! @brief Weak class pointer
 	typedef std::weak_ptr<AbstractAudioSource> WeakPtr;
 	//! @brief Constructor
-	AbstractAudioSource();
+	AbstractAudioSource() noexcept;
 	//! @brief Destructor
-	virtual ~AbstractAudioSource();
+	virtual ~AbstractAudioSource() = default;
 	/**
 	 * @brief Check whether this source was successfully initialized
 	 * @return m_initialized
 	 */
-	bool initialized() const;
+	bool initialized() const noexcept;
 	/**
 	 * @brief Get this source's frequency
 	 * @return m_frequency
 	 */
-	uint32_t frequency() const;
-	inline bool paused() const;
-	inline void setPaused( bool p = true );
+	uint32_t frequency() const noexcept;
+	inline bool paused() const noexcept;
+	inline void setPaused( bool p = true ) noexcept;
 	//! @copydoc internal_getAudioData
 	size_t getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames );
 	//! @copydoc internal_preferredBufferSize
@@ -123,12 +123,12 @@ protected:
 	static light4cxx::Logger* logger();
 };
 
-bool AbstractAudioSource::paused() const
+bool AbstractAudioSource::paused() const noexcept
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	return m_paused;
 }
-void AbstractAudioSource::setPaused( bool p )
+void AbstractAudioSource::setPaused( bool p ) noexcept
 {
 	boost::recursive_mutex::scoped_lock lock( m_mutex );
 	m_paused = p;

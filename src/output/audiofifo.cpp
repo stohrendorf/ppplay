@@ -36,7 +36,7 @@ namespace
  * @return A more "natural" feeling value
  * @see AudioFifo::calcVolume()
  */
-uint16_t logify( uint16_t value )
+uint16_t logify( uint16_t value ) noexcept
 {
 	uint32_t tmp = value << 1;
 	if( tmp > 0x8000 )
@@ -208,22 +208,22 @@ size_t AudioFifo::pullData( AudioFrameBuffer& data, size_t size )
 	return copied;
 }
 
-size_t AudioFifo::queuedLength() const
+size_t AudioFifo::queuedLength() const noexcept
 {
 	return m_queuedFrames;
 }
 
-bool AudioFifo::isEmpty() const
+bool AudioFifo::isEmpty() const noexcept
 {
 	return m_queuedFrames == 0;
 }
 
-uint16_t AudioFifo::volumeRight() const
+uint16_t AudioFifo::volumeRight() const noexcept
 {
 	return m_volRightLog;
 }
 
-uint16_t AudioFifo::volumeLeft() const
+uint16_t AudioFifo::volumeLeft() const noexcept
 {
 	return m_volLeftLog;
 }
@@ -241,7 +241,7 @@ size_t AudioFifo::queuedChunkCount() const
 	return m_queue.size();
 }
 
-size_t AudioFifo::minFrameCount() const
+size_t AudioFifo::minFrameCount() const noexcept
 {
 	boost::mutex::scoped_lock lock( m_queueMutex );
 	return m_minFrameCount;

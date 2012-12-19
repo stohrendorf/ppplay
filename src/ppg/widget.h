@@ -77,11 +77,11 @@ public:
 	/**
 	 * @brief Make this widget visible
 	 */
-	void show();
+	void show() noexcept;
 	/**
 	 * @brief Make this widget invisible
 	 */
-	void hide();
+	void hide() noexcept;
 	/**
 	 * @brief Draw a char relative to the widget's position
 	 * @param[in] x Left position
@@ -93,7 +93,7 @@ public:
 	 * @brief Is this widget visible?
 	 * @return m_visible
 	 */
-	bool isVisible() const;
+	bool isVisible() const noexcept;
 	/**
 	 * @brief Sets the foreground color relative to the widget's position
 	 * @param[in] x Left position
@@ -170,12 +170,12 @@ public:
 	 * @brief Get the widget's area
 	 * @return The widget's area
 	 */
-	Rect area() const;
+	Rect area() const noexcept;
 	/**
 	 * @overload
 	 * @return The widget's area
 	 */
-	Rect& area();
+	Rect& area() noexcept;
 	/**
 	 * @brief Get the top parent
 	 * @return Pointer to the top parent
@@ -222,7 +222,7 @@ public:
 	 * @brief Sets the value of m_autoDelete
 	 * @param[in] value The new value
 	 */
-	void setAutoDelete( bool value );
+	void setAutoDelete( bool value ) noexcept;
 };
 
 } // namespace ppg

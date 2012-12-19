@@ -120,11 +120,11 @@ public:
 	
 	inline operator bool() const
 	{
-		return m_stream->good();
+		return good();
 	}
 	inline bool good() const
 	{
-		return m_stream->good();
+		return m_stream && m_stream->good();
 	}
 protected:
 	void setName(const std::string& name);

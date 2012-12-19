@@ -21,14 +21,14 @@
 namespace ppg
 {
 
-const Point& Point::operator+=( const Point& rhs )
+const Point& Point::operator+=( const Point& rhs ) noexcept
 {
 	m_x += rhs.m_x;
 	m_y += rhs.m_y;
 	return *this;
 }
 
-const Point& Point::operator-=( const Point& rhs )
+const Point& Point::operator-=( const Point& rhs ) noexcept
 {
 	m_x -= rhs.m_x;
 	m_y -= rhs.m_y;

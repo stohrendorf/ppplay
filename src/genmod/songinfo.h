@@ -74,6 +74,4 @@ struct PPPLAY_CORE_EXPORT SongInfo
 
 }
 
-extern template class TrackingContainer<AbstractArchive*>;
-
 #endif

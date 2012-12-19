@@ -18,13 +18,11 @@
 
 #include "abstractaudiosource.h"
 
-AbstractAudioSource::AbstractAudioSource() : m_initialized( false ), m_frequency( 0 ), m_paused( false ), m_mutex()
+AbstractAudioSource::AbstractAudioSource() noexcept : m_initialized( false ), m_frequency( 0 ), m_paused( false ), m_mutex()
 {
 }
 
-AbstractAudioSource::~AbstractAudioSource() = default;
-
-bool AbstractAudioSource::initialized() const
+bool AbstractAudioSource::initialized() const noexcept
 {
 	return m_initialized;
 }
@@ -37,7 +35,7 @@ bool AbstractAudioSource::fail()
 	return false;
 }
 
-uint32_t AbstractAudioSource::frequency() const
+uint32_t AbstractAudioSource::frequency() const noexcept
 {
 	return m_frequency;
 }

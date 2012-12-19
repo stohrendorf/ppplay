@@ -56,7 +56,8 @@ struct BasicSampleFrame {
 	 * @param[in] mul Factor
 	 * @param[in] shift Amount to shift right
 	 */
-	inline void mulRShift( int mul, int shift ) {
+	inline void mulRShift( int mul, int shift ) noexcept
+	{
 		mulRShift( mul, mul, shift );
 	}
 	/**
@@ -66,26 +67,27 @@ struct BasicSampleFrame {
 	 * @param[in] mulRight Factor for right data
 	 * @param[in] shift Amount to shift right
 	 */
-	inline void mulRShift( int mulLeft, int mulRight, int shift ) {
+	inline void mulRShift( int mulLeft, int mulRight, int shift ) noexcept
+	{
 		left = ( left * mulLeft ) >> shift;
 		right = ( right * mulRight ) >> shift;
 	}
 
-	constexpr BasicSampleFrame() : left( 0 ), right( 0 ) {
+	constexpr BasicSampleFrame() noexcept : left( 0 ), right( 0 ) {
 	}
-	constexpr BasicSampleFrame(int16_t l, int16_t r) : left( l ), right( r ) {
+	constexpr BasicSampleFrame(int16_t l, int16_t r) noexcept : left( l ), right( r ) {
 	}
 	
-	constexpr BasicSampleFrame operator-(const BasicSampleFrame& rhs) {
+	constexpr BasicSampleFrame operator-(const BasicSampleFrame& rhs) noexcept {
 		return BasicSampleFrame(left-rhs.left, right-rhs.right);
 	}
-	constexpr BasicSampleFrame operator*(int value) {
+	constexpr BasicSampleFrame operator*(int value) noexcept {
 		return BasicSampleFrame(left*value, right*value);
 	}
-	constexpr BasicSampleFrame operator>>(int shift) {
+	constexpr BasicSampleFrame operator>>(int shift) noexcept {
 		return BasicSampleFrame(left>>shift, right>>shift);
 	}
-	inline BasicSampleFrame& operator+=(const BasicSampleFrame& rhs) {
+	inline BasicSampleFrame& operator+=(const BasicSampleFrame& rhs) noexcept {
 		left += rhs.left;
 		right += rhs.right;
 		return *this;
@@ -117,7 +119,7 @@ struct MixerSampleFrame {
 	 * @param[in] rhs BasicSampleFrame to add
 	 * @return Copy of *this
 	 */
-	inline MixerSampleFrame operator+=( const BasicSampleFrame& rhs ) {
+	inline MixerSampleFrame operator+=( const BasicSampleFrame& rhs ) noexcept {
 		left += rhs.left;
 		right += rhs.right;
 		return *this;
@@ -127,14 +129,14 @@ struct MixerSampleFrame {
 	 * @param[in] shift Amount to shift right
 	 * @return Clipped BasicSampleFrame
 	 */
-	inline BasicSampleFrame rightShiftClip( uint8_t shift ) const {
+	inline BasicSampleFrame rightShiftClip( uint8_t shift ) const noexcept {
 		BasicSampleFrame result;
 		result.left = ppp::clip( left >> shift, -32768, 32767 );
 		result.right = ppp::clip( right >> shift, -32768, 32767 );
 		return result;
 	}
 
-	constexpr MixerSampleFrame() : left( 0 ), right( 0 ) {
+	constexpr MixerSampleFrame() noexcept : left( 0 ), right( 0 )  {
 	}
 };
 #pragma pack(pop)

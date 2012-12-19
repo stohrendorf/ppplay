@@ -41,7 +41,7 @@ public:
 	/**
 	 * @brief Default constructor, sets m_x and m_y to 0
 	 */
-	constexpr Point() : m_x( 0 ), m_y( 0 ) {
+	constexpr Point() noexcept : m_x( 0 ), m_y( 0 ) {
 	}
 	/**
 	 * @overload
@@ -49,20 +49,20 @@ public:
 	 * @param[in] x Value for m_x
 	 * @param[in] y Value for m_y
 	 */
-	constexpr Point( int x, int y ) : m_x( x ), m_y( y ) {
+	constexpr Point( int x, int y ) noexcept : m_x( x ), m_y( y ) {
 	}
 	/**
 	 * @brief Adds the coordinates of @a rhs to this
 	 * @param[in] rhs The coordinates to add
 	 * @return Reference to *this
 	 */
-	const Point& operator+=( const Point& rhs );
+	const Point& operator+=( const Point& rhs ) noexcept;
 	/**
 	 * @brief Add two points
 	 * @param[in] rhs The coordinates to add
 	 * @return New Point
 	 */
-	constexpr const Point operator+( const Point& rhs ) const {
+	constexpr const Point operator+( const Point& rhs ) const noexcept {
 		return Point( m_x + rhs.m_x, m_y + rhs.m_y );
 	}
 	/**
@@ -70,41 +70,41 @@ public:
 	 * @param[in] rhs The coordinates to subtract
 	 * @return Reference to *this
 	 */
-	const Point& operator-=( const Point& rhs );
+	const Point& operator-=( const Point& rhs ) noexcept;
 	/**
 	 * @brief Subtract two points
 	 * @param[in] rhs The coordinates to subtract
 	 * @return New Point
 	 */
-	constexpr const Point operator-( const Point& rhs ) const {
+	constexpr const Point operator-( const Point& rhs ) const noexcept {
 		return Point( m_x - rhs.m_x, m_y - rhs.m_y );
 	}
 	/**
 	 * @brief Get the X coordinate
 	 * @return The X coordinate
 	 */
-	constexpr int x() const {
+	constexpr int x() const noexcept {
 		return m_x;
 	}
 	/**
 	 * @brief Get the Y coordinate
 	 * @return The Y coordinate
 	 */
-	constexpr int y() const {
+	constexpr int y() const noexcept {
 		return m_y;
 	}
 	/**
 	 * @brief Set the X coordinate
 	 * @param[in] x The new X coordinate
 	 */
-	inline void setX( int x ) {
+	inline void setX( int x ) noexcept {
 		m_x = x;
 	}
 	/**
 	 * @brief Set the Y coordinate
 	 * @param[in] y The new Y coordinate
 	 */
-	inline void setY( int y ) {
+	inline void setY( int y ) noexcept {
 		m_y = y;
 	}
 };

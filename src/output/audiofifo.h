@@ -90,12 +90,12 @@ public:
 	 * @brief Get the number of buffered frames
 	 * @return Number of buffered frames
 	 */
-	size_t queuedLength() const;
+	size_t queuedLength() const noexcept;
 	/**
 	 * @brief Get the minimum number of frames that should be queued
 	 * @return m_minFrameCount
 	 */
-	size_t minFrameCount() const;
+	size_t minFrameCount() const noexcept;
 	/**
 	 * @brief Get the number of queued chunks
 	 * @return Number of queued chunks
@@ -111,9 +111,9 @@ public:
 	 * @retval true FIFO is empty
 	 * @retval false FIFO is not empty
 	 */
-	bool isEmpty() const;
-	uint16_t volumeLeft() const;
-	uint16_t volumeRight() const;
+	bool isEmpty() const noexcept;
+	uint16_t volumeLeft() const noexcept;
+	uint16_t volumeRight() const noexcept;
 	size_t pullData( AudioFrameBuffer& buffer, size_t requestedFrames );
 protected:
 	/**

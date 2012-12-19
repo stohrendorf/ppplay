@@ -103,7 +103,7 @@ public:
 	/**
 	 * @brief Destructor
 	 */
-	virtual ~Sample() noexcept;
+	virtual ~Sample() noexcept = default;
 	/**
 	 * @brief Get the sample's Base Frequency
 	 * @return Base frequency

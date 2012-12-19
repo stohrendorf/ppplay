@@ -34,8 +34,6 @@ AbstractChannel::AbstractChannel() :
 {
 }
 
-AbstractChannel::~AbstractChannel() = default;
-
 AbstractArchive& AbstractChannel::serialize( AbstractArchive* data )
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
@@ -55,31 +53,31 @@ void AbstractChannel::setStatusString( const std::string& s )
 	m_statusString = s;
 }
 
-void AbstractChannel::setActive( bool a )
+void AbstractChannel::setActive( bool a ) noexcept
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_active = a;
 }
 
-void AbstractChannel::enable()
+void AbstractChannel::enable() noexcept
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_disabled = false;
 }
 
-void AbstractChannel::disable()
+void AbstractChannel::disable() noexcept
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	m_disabled = true;
 }
 
-bool AbstractChannel::isDisabled() const
+bool AbstractChannel::isDisabled() const noexcept
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_disabled;
 }
 
-bool AbstractChannel::isActive() const
+bool AbstractChannel::isActive() const noexcept
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return m_active;

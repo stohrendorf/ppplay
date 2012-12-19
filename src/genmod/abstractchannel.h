@@ -59,25 +59,25 @@ public:
 	/**
 	 * @brief The destructor
 	 */
-	virtual ~AbstractChannel();
+	virtual ~AbstractChannel() = default;
 	/**
 	 * @brief Check if the channel is active
 	 * @return m_active
 	 */
-	bool isActive() const;
+	bool isActive() const noexcept;
 	/**
 	 * @brief Check if the channel is disabled
 	 * @return m_disabled
 	 */
-	bool isDisabled() const;
+	bool isDisabled() const noexcept;
 	/**
 	 * @brief Disables this channel.
 	 */
-	void disable();
+	void disable() noexcept;
 	/**
 	 * @brief Enables this channel.
 	 */
-	void enable();
+	void enable() noexcept;
 	/**
 	 * @brief Returns the status string
 	 * @return m_statusString
@@ -101,7 +101,7 @@ protected:
 	 * @brief Set the m_active value
 	 * @param[in] a The new value
 	 */
-	void setActive( bool a );
+	void setActive( bool a ) noexcept;
 	/**
 	 * @brief Sets m_statusString
 	 * @param[in] s The new string
