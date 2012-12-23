@@ -3,6 +3,7 @@ include_directories(. ${CMAKE_CURRENT_BINARY_DIR})
 add_subdirectory(output)
 
 add_subdirectory(stream)
+add_subdirectory(stuff)
 
 add_subdirectory(ppg)
 
@@ -44,7 +45,7 @@ add_library(ppplay_core SHARED
 )
 generate_export_header(ppplay_core)
 
-target_link_libraries(ppplay_core ppplay_stream ${SDL_LIBRARY} ${Boost_LIBRARIES})
+target_link_libraries(ppplay_core ppplay_stream ${SDL_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY})
 if(WITH_MP3LAME)
 	target_link_libraries(ppplay_core ${mp3lame_LIB})
 endif()

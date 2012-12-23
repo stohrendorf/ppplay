@@ -18,7 +18,7 @@ add_library(ppplay_stream SHARED
 
 generate_export_header(ppplay_stream)
 
-target_link_libraries(ppplay_stream ${LibArchive_LIBRARY})
+target_link_libraries(ppplay_stream ${LibArchive_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
 install(TARGETS ppplay_stream DESTINATION lib EXPORT ppplayExports)
 install(FILES
 	abstractarchive.h

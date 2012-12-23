@@ -20,13 +20,13 @@
 #define FIELD_H
 
 #include <vector>
-#include <cassert>
 #include <type_traits>
+#include <stdexcept>
 
 /**
  * @class Field
  * @brief A two-dimensional array
- * @tparam T Contained type, must be default-constructable
+ * @tparam T Contained type, must be default-constructible
  */
 template<class T>
 class Field
@@ -34,54 +34,53 @@ class Field
 	static_assert(std::is_default_constructible<T>::value, "T must be default constructible");
 private:
 	std::size_t m_width;
+	std::size_t m_height;
 	std::vector<T> m_data;
 public:
-	explicit inline Field(std::size_t width, std::size_t height) noexcept
-	: m_width(width), m_data(width*height)
+	explicit inline Field(std::size_t width, std::size_t height)
+	: m_width(width), m_height(height), m_data(width*height)
 	{
 	}
 	explicit inline Field() noexcept
-	: m_width(0), m_data()
+	: m_width(0), m_height(0), m_data()
 	{
 	}
 	
-	virtual ~Field() {}
+	virtual ~Field() = default;
 	
 	typename std::vector<T>::iterator operator[](std::size_t y)
 	{
-		assert(!m_data.empty());
+		if( y>=m_height )
+			throw std::out_of_range("Y coordinate out of bounds");
 		return m_data.begin() + y*m_width;
 	}
 	typename std::vector<T>::const_iterator operator[](std::size_t y) const
 	{
-		assert(!m_data.empty());
+		if( y>=m_height )
+			throw std::out_of_range("Y coordinate out of bounds");
 		return m_data.cbegin() + y*m_width;
 	}
 	
 	typename std::vector<T>::reference at(std::size_t x, std::size_t y)
 	{
-		assert(!m_data.empty());
+		if( y>=m_height || x>=m_width )
+			throw std::out_of_range("X and/or Y coordinate out of bounds");
 		return m_data.at(y*m_width+x);
 	}
 	typename std::vector<T>::const_reference at(std::size_t x, std::size_t y) const
 	{
-		assert(!m_data.empty());
+		if( y>=m_height || x>=m_width )
+			throw std::out_of_range("X and/or Y coordinate out of bounds");
 		return m_data.at(y*m_width+x);
 	}
 	
 	std::size_t width() const noexcept
 	{
-		if( m_data.empty() ) {
-			return 0;
-		}
 		return m_width;
 	}
 	std::size_t height() const noexcept
 	{
-		if( m_data.empty() ) {
-			return 0;
-		}
-		return m_data.size() / m_width;
+		return m_height;
 	}
 	
 	void reset(std::size_t width, std::size_t height)
@@ -89,6 +88,7 @@ public:
 		m_data.clear();
 		m_data.resize(width*height);
 		m_width = width;
+		m_height = height;
 	}
 };
 
