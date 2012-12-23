@@ -30,6 +30,8 @@
 namespace ppp
 {
 
+class ChannelState;
+
 /**
  * @ingroup GenMod
  * @{
@@ -105,16 +107,6 @@ public:
 	 * @{
 	 */
 	/**
-	 * @brief Returns the filename without the path
-	 * @return Filename, or empty if no module loaded
-	 */
-	std::string filename();
-	/**
-	 * @brief Returns the title without left and right whitespaces
-	 * @return The trimmed title of the module
-	 */
-	std::string trimmedTitle() const;
-	/**
 	 * @brief Get playback time in seconds for the current song
 	 * @return Playback time in seconds
 	 * @see length()
@@ -186,9 +178,7 @@ public:
 		return m_state;
 	}
 	//! @copydoc internal_channelStatus
-	std::string channelStatus( size_t idx ) const;
-	//! @copydoc internal_channelCellString
-	std::string channelCellString( size_t idx ) const;
+	ChannelState channelStatus( size_t idx ) const;
 	//! @copydoc internal_channelCount
 	int channelCount() const;
 	
@@ -201,7 +191,7 @@ protected:
 	 * @pre m_playbackInfo.tempo != 0
 	 */
 	uint16_t tickBufferLength() const;
-	MetaInfo& metaInfo()
+	MetaInfo& noConstMetaInfo()
 	{
 		return m_metaInfo;
 	}
@@ -290,14 +280,7 @@ private:
 	 * @param[in] idx Requested channel
 	 * @return Status string
 	 */
-	virtual std::string internal_channelStatus( size_t idx ) const = 0;
-	/**
-	 * @brief Get the channel cell string
-	 * @param[in] idx Channel index
-	 * @return String representation of the channel's cell
-	 * @see AbstractChannel::getCellString
-	 */
-	virtual std::string internal_channelCellString( size_t idx ) const = 0;
+	virtual ChannelState internal_channelStatus( size_t idx ) const = 0;
 	/**
 	 * @brief Get the number of actually used channels
 	 * @return Number of actually used channels

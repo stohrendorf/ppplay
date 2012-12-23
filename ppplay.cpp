@@ -345,7 +345,7 @@ int main( int argc, char* argv[] )
 			}
 			MP3AudioOutput* mp3out = new MP3AudioOutput( module, config::outputFilename );
 			output.reset( mp3out );
-			mp3out->setID3( module->trimmedTitle(), PACKAGE_STRING, std::const_pointer_cast<const ppp::AbstractModule>(module)->metaInfo().trackerInfo );
+			mp3out->setID3( boost::trim_copy( module->metaInfo().title ), PACKAGE_STRING, std::const_pointer_cast<const ppp::AbstractModule>(module)->metaInfo().trackerInfo );
 			if( 0 == mp3out->init( 44100 ) ) {
 				if( mp3out->errorCode() == AbstractAudioOutput::OutputUnavailable ) {
 					light4cxx::Logger::root()->error( L4CXX_LOCATION, "LAME unavailable: Maybe cannot create MP3 File" );
@@ -376,7 +376,7 @@ int main( int argc, char* argv[] )
 			}
 			OggAudioOutput* oggOut = new OggAudioOutput( module, config::outputFilename );
 			output.reset( oggOut );
-			oggOut->setMeta( module->trimmedTitle(), PACKAGE_STRING, std::const_pointer_cast<const ppp::AbstractModule>(module)->metaInfo().trackerInfo );
+			oggOut->setMeta( boost::trim_copy( module->metaInfo().title ), PACKAGE_STRING, std::const_pointer_cast<const ppp::AbstractModule>(module)->metaInfo().trackerInfo );
 			if( 0 == oggOut->init( 44100 ) ) {
 				if( oggOut->errorCode() == AbstractAudioOutput::OutputUnavailable ) {
 					light4cxx::Logger::root()->error( L4CXX_LOCATION, "OGG unavailable: Maybe cannot create OGG File" );

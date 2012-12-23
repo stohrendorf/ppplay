@@ -7,6 +7,7 @@
 
 #include "stream/abstractarchive.h"
 #include "stream/stream.h"
+#include <genmod/channelstate.h>
 
 #include <boost/exception/all.hpp>
 #include <boost/format.hpp>
@@ -151,13 +152,13 @@ const IdMetaInfo smp15MetaInfo = {
 
 bool ModModule::load( Stream* stream, int loadMode )
 {
-	metaInfo().filename = stream->name();
+	noConstMetaInfo().filename = stream->name();
 	setTempo( 125 );
 	setSpeed( 6 );
 	state().globalVolume = 0x40;
 	char modName[20];
 	stream->read( modName, 20 );
-	metaInfo().title = stringncpy( modName, 20 );
+	noConstMetaInfo().title = stringncpy( modName, 20 );
 	const IdMetaInfo* meta = nullptr;
 	if(loadMode != LoadingMode::Smp15 ) {
 		// check 31-sample mod
@@ -174,7 +175,7 @@ bool ModModule::load( Stream* stream, int loadMode )
 		meta = &smp15MetaInfo;
 	}
 	logger()->debug( L4CXX_LOCATION, "%d-channel, ID '%s', Tracker '%s'", int(meta->channels), meta->id, meta->tracker );
-	metaInfo().trackerInfo = meta->tracker;
+	noConstMetaInfo().trackerInfo = meta->tracker;
 	for( int i = 0; i < meta->channels; i++ ) {
 		m_channels.push_back( new ModChannel( this, ((i+1)&2)==0 ) );
 	}
@@ -382,20 +383,12 @@ bool ModModule::adjustPosition( bool estimateOnly )
 	return true;
 }
 
-std::string ModModule::internal_channelCellString( size_t idx ) const
+ChannelState ModModule::internal_channelStatus( size_t idx ) const
 {
 	if( idx >= m_channels.size() ) {
 		throw std::out_of_range("Requested channel index out of range");
 	}
-	return m_channels[ idx ]->cellString();
-}
-
-std::string ModModule::internal_channelStatus( size_t idx ) const
-{
-	if( idx >= m_channels.size() ) {
-		throw std::out_of_range("Requested channel index out of range");
-	}
-	return m_channels[ idx ]->statusString();
+	return m_channels[ idx ]->status();
 }
 
 AbstractArchive& ModModule::serialize( AbstractArchive* data )

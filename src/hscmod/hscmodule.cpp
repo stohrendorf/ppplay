@@ -28,6 +28,7 @@ ppp::AbstractModule* Module::factory( Stream* stream, uint32_t frequency, int ma
 size_t Module::internal_buildTick( AudioFrameBuffer* buf )
 {
 	if( !update(buf == nullptr) ) {
+		logger()->info( L4CXX_LOCATION, "Update failed, song end reached" );
 		if(buf) {
 			buf->reset();
 		}
@@ -69,19 +70,14 @@ size_t Module::internal_buildTick( AudioFrameBuffer* buf )
 	return BufferSize;
 }
 
-std::string Module::internal_channelCellString( size_t /*idx*/ ) const
-{
-	return "---"; // FIXME
-}
-
 int Module::internal_channelCount() const
 {
 	return 9;
 }
 
-std::string Module::internal_channelStatus( size_t /*idx*/ ) const
+ppp::ChannelState Module::internal_channelStatus( size_t idx ) const
 {
-	return "blubber"; // FIXME
+	return m_channels[idx].state;
 }
 
 class Order : public ppp::AbstractOrder
@@ -103,9 +99,9 @@ bool Module::load( Stream* stream )
 		logger()->debug(L4CXX_LOCATION, "Invalid filename or size mismatch (size=%d)", stream->size());
 		return false;
 	}
-	metaInfo().filename = stream->name();
-	metaInfo().title = stream->name();
-	metaInfo().trackerInfo = "HSC Tracker";
+	noConstMetaInfo().filename = stream->name();
+	noConstMetaInfo().title = stream->name();
+	noConstMetaInfo().trackerInfo = "HSC Tracker";
 	setTempo(125);
 	setSpeed(2);
 	
@@ -142,16 +138,34 @@ Module::~Module()
 {
 }
 
+AbstractArchive& Module::Channel::serialize(AbstractArchive* archive)
+{
+	*archive
+	% instr
+	% fnum
+	% updateFnum
+	% tlCarrier
+	% updateTlCarrier
+	% tlModulator
+	% updateTlModulator
+	% slide
+	% state;
+	return *archive;
+}
+
 AbstractArchive& Module::serialize( AbstractArchive* data )
 {
-	return ppp::AbstractModule::serialize( data )
-	.array(m_channels, 9)
-	.array(m_fnum, 9)
+	ppp::AbstractModule::serialize( data );
+	for(int i=0; i<9; i++) {
+		data->archive(m_channels+i);
+	}
+	data->array(m_fnum, 9)
 	% m_speedCountdown
 	% m_bd
 	% m_mode6
 	% m_patBreak
 	% m_opl;
+	return *data;
 }
 
 void Module::storeInstr( uint8_t chan, uint8_t instr )
@@ -186,6 +200,7 @@ void Module::setNote( uint8_t chan, uint8_t note )
 {
 	BOOST_ASSERT( note != 0 );
 	if( note == 0x7f ) {
+		m_channels[chan].state.note = ppp::ChannelState::KeyOff;
 		// key off
 		m_channels[chan].fnum &= ~0x2000;
 		m_channels[chan].updateFnum = true;
@@ -193,6 +208,9 @@ void Module::setNote( uint8_t chan, uint8_t note )
 	}
 	note--;
 	m_opl.writeReg(0xb0 + chan, 0);
+	m_channels[chan].state.note = note;
+	m_channels[chan].state.active = true;
+	m_channels[chan].state.noteTriggered = true;
 	m_channels[chan].fnum = NoteToFnum[ note%12 ] + ((note/12)<<10);
 	m_channels[chan].updateFnum = true;
 }
@@ -235,19 +253,38 @@ bool Module::update(bool estimate)
 			continue;
 		}
 		
+		if( m_speedCountdown == state().speed ) {
+			m_channels[chan].state.noteTriggered = false;
+			if( m_channels[chan].state.note == ppp::ChannelState::KeyOff ) {
+				m_channels[chan].state.note = ppp::ChannelState::NoNote;
+			}
+		}
+		
 		if(note == 0x80) {
 			storeInstr(chan, effect&0x7f);
+			m_channels[chan].state.cell = stringFmt("III %02X", effect&0x7f + 0);
 			continue;
 		}
 		
 		if(note != 0) {
 			setNote(chan, note&0x7f);
+			if( (note&0x7f) == 0x7f ) {
+				m_channels[chan].state.cell = "Pau ";
+			}
+			else {
+				m_channels[chan].state.cell = stringFmt("%s%d ", ppp::NoteNames[(note-1)%12], (note-1)/12+0);
+			}
 		}
+		else {
+			m_channels[chan].state.cell = "... ";
+		}
+		m_channels[chan].state.cell += stringFmt("%02X", effect+0);
 		
 		if( effect == 0 ) {
 			continue;
 		}
 		else if( effect == 1 ) {
+			m_channels[chan].state.fxDesc = ppp::fxdesc::PatternBreak;
 			// next pattern
 			state().row = 0x3f;
 			continue;
@@ -256,6 +293,7 @@ bool Module::update(bool estimate)
 		switch(effect>>4) {
 			case 0x01:
 				{
+					m_channels[chan].state.fxDesc = ppp::fxdesc::PitchSlideUp;
 					// slide up
 					uint8_t val = m_channels[chan].fnum;
 					val += (effect&0x0f) + 1;
@@ -265,6 +303,7 @@ bool Module::update(bool estimate)
 				break;
 			case 0x02:
 				{
+					m_channels[chan].state.fxDesc = ppp::fxdesc::PitchSlideDown;
 					// slide down
 					uint8_t val = m_channels[chan].fnum;
 					val -= (effect&0x0f) + 1;
@@ -273,11 +312,13 @@ bool Module::update(bool estimate)
 				}
 				break;
 			case 0x0a:
+				m_channels[chan].state.fxDesc = ppp::fxdesc::SetVolume;
 				// set carrier volume
 				m_channels[chan].tlCarrier = (effect&0x0f)<<2;
 				m_channels[chan].updateTlCarrier = true;
 				break;
 			case 0x0b:
+				m_channels[chan].state.fxDesc = ppp::fxdesc::SetVolume;
 				// set modulator volume
 				m_channels[chan].tlModulator = (effect&0x0f)<<2;
 				m_channels[chan].updateTlModulator = true;
@@ -285,6 +326,7 @@ bool Module::update(bool estimate)
 			case 0x0c:
 				// set volume
 				{
+					m_channels[chan].state.fxDesc = ppp::fxdesc::SetVolume;
 					uint8_t val = (effect&0x0f)<<2;
 					m_channels[chan].tlCarrier = val;
 					m_channels[chan].updateTlCarrier = true;
@@ -295,6 +337,7 @@ bool Module::update(bool estimate)
 				}
 				break;
 			default:
+				m_channels[chan].state.fxDesc = ppp::fxdesc::SetSpeed;
 				// set speed
 				setSpeed( m_speedCountdown = (effect&0x0f)+1 );
 		}
@@ -335,6 +378,7 @@ bool Module::update(bool estimate)
 			if( m_channels[i].updateTlCarrier ) {
 				m_channels[i].updateTlCarrier = false;
 				m_opl.writeReg(0x40 + carrierSlot, m_channels[i].tlCarrier);
+				m_channels[i].state.volume = 100 - m_channels[i].tlCarrier * 100 / 63;
 			}
 			if( m_channels[i].updateTlModulator ) {
 				m_channels[i].updateTlModulator = false;

@@ -24,12 +24,14 @@
  * @{
  */
 
-#include "genmod/abstractchannel.h"
 #include "genmod/breseninter.h"
 #include "genmod/genbase.h"
+#include <genmod/channelstate.h>
+#include <stream/iserializable.h>
 
 #include <array>
 
+class AbstractArchive;
 namespace ppp
 {
 namespace s3m
@@ -46,7 +48,7 @@ class S3mSample;
  * @note Please note that even the S3M tech spec allows the cell volume to be
  * 64, it effectively is clipped to a value between 0 and <b>64</b>.
  */
-class S3mChannel : public AbstractChannel
+class S3mChannel : public ISerializable
 {
 	S3mChannel() = delete; //!< @brief No default constructor
 	DISABLE_COPY( S3mChannel )
@@ -56,7 +58,6 @@ private:
 	RememberByte<true> m_lastVibratoData; //!< @brief Last Vibrato FX
 	RememberByte<false> m_lastPortaSpeed; //!< @brief Last porta speed
 	uint8_t m_tremorVolume;  //!< @brief Backup variable for Tremor FX
-	bool m_noteChanged;            //!< @brief @c true when a new note triggered in the current frame
 	uint8_t m_currentVolume; //!< @brief Current volume, range: 0..63
 	uint8_t m_realVolume; //!< @brief Real volume used when mixing, range 0..63
 	uint8_t m_baseVolume; //!< @brief Base volume, range 0..63
@@ -77,9 +78,9 @@ private:
 	bool m_glissando; //!< @brief @c true if Glissando control is enabled
 	S3mCell* m_currentCell; //!< @brief Current note cell
 	BresenInterpolation m_bresen; //!< @brief Output rate controller
-	std::string m_currentFxStr; //!< @brief Current effect string
-	int m_sampleIndex; //!< @brief Current sample index
 	uint8_t m_panning; //!< @brief Current panning (0..64, 0xa4 for surround)
+	bool m_isEnabled;
+	ChannelState m_state;
 
 	/**
 	 * @brief Get the current sample
@@ -117,20 +118,15 @@ private:
 	void playNote();
 	void recalcFrequency();
 	uint16_t glissando( uint16_t period );
-
-	virtual std::string internal_noteName() const;
-	virtual void internal_mixTick( MixerFrameBuffer* mixBuffer );
-	virtual void internal_updateStatus();
-	virtual std::string internal_cellString() const;
-	virtual std::string internal_effectName() const;
-	virtual std::string internal_effectDescription() const;
 public:
 	/**
 	 * @brief Constructor
 	 * @param[in] module Owning module
 	 */
 	S3mChannel( S3mModule* module );
-	virtual ~S3mChannel();
+	~S3mChannel();
+	void mixTick( MixerFrameBuffer* mixBuffer );
+	void updateStatus();
 	virtual AbstractArchive& serialize( AbstractArchive* data );
 	/**
 	 * @brief Update the channel
@@ -149,6 +145,10 @@ public:
 	 * @pre @a pan must be within 0..64 or equal to 0xa4
 	 */
 	void setPanning( uint8_t pan );
+	
+	ChannelState status() const;
+	void disable() { m_isEnabled = false; }
+	void enable() { m_isEnabled = true; }
 protected:
 	/**
 	 * @brief Get the logger

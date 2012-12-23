@@ -31,6 +31,7 @@
 #include "xminstrument.h"
 
 #include "stream/stream.h"
+#include <genmod/channelstate.h>
 
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
@@ -93,7 +94,7 @@ XmModule::~XmModule()
 bool XmModule::load( Stream* stream )
 {
 	XmHeader hdr;
-	metaInfo().filename = stream->name();
+	noConstMetaInfo().filename = stream->name();
 	*stream >> hdr;
 	if( !std::equal( hdr.id, hdr.id + 17, "Extended Module: " ) || hdr.endOfFile != 0x1a /*|| hdr.numChannels > 32*/ ) {
 		logger()->warn( L4CXX_LOCATION, "XM Header invalid" );
@@ -109,15 +110,15 @@ bool XmModule::load( Stream* stream )
 		addOrder( new XmOrder( tmp ) );
 	}
 	stream->seek( hdr.headerSize + offsetof( XmHeader, headerSize ) );
-	metaInfo().title = boost::algorithm::trim_copy( stringncpy( hdr.title, 20 ) );
+	noConstMetaInfo().title = boost::algorithm::trim_copy( stringncpy( hdr.title, 20 ) );
 	m_restartPos = hdr.restartPos;
 	{
 		std::string tmp = boost::algorithm::trim_copy( stringncpy( hdr.trackerName, 20 ) );
 		if( !tmp.empty() ) {
-			metaInfo().trackerInfo = tmp;
+			noConstMetaInfo().trackerInfo = tmp;
 		}
 		else {
-			metaInfo().trackerInfo = "<unknown>";
+			noConstMetaInfo().trackerInfo = "<unknown>";
 		}
 	}
 	setTempo( hdr.defaultTempo & 0xff );
@@ -294,18 +295,9 @@ bool XmModule::adjustPosition( bool estimateOnly )
 	return true;
 }
 
-std::string XmModule::internal_channelStatus( size_t idx ) const
+ChannelState XmModule::internal_channelStatus( size_t idx ) const
 {
-	return m_channels.at( idx )->statusString();
-}
-
-std::string XmModule::internal_channelCellString( size_t idx ) const
-{
-	XmChannel* x = m_channels.at( idx );
-	if( !x ) {
-		return std::string();
-	}
-	return x->cellString();
+	return m_channels.at( idx )->status();
 }
 
 int XmModule::internal_channelCount() const

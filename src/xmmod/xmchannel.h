@@ -19,9 +19,9 @@
 #ifndef XMCHANNEL_H
 #define XMCHANNEL_H
 
-#include "genmod/abstractchannel.h"
 #include "genmod/breseninter.h"
 #include "genmod/genbase.h"
+#include <genmod/channelstate.h>
 
 #include "xmenvelopeprocessor.h"
 
@@ -44,7 +44,7 @@ class XmInstrument;
  * @class XmChannel
  * @brief XM Channel class declaration
  */
-class XmChannel : public AbstractChannel
+class XmChannel : public ISerializable
 {
 	DISABLE_COPY( XmChannel )
 	XmChannel() = delete;
@@ -70,8 +70,6 @@ private:
 	int16_t m_autoVibDeltaPeriod;
 	//! @brief Current finetune
 	int8_t m_finetune;
-	//! @brief Current instrument index (1-based)
-	uint8_t m_instrumentIndex;
 	//! @brief Current real note (0-based, including relative note)
 	uint8_t m_realNote;
 	//! @brief The current note cell
@@ -178,10 +176,8 @@ private:
 	BresenInterpolation m_bres;
 	//! @brief Module this channel belongs to
 	XmModule* m_module;
-	//! @brief Current effect string
-	std::string m_fxString;
-	//! @brief Whether a note was triggered in the current row
-	bool m_noteChanged;
+	
+	ChannelState m_state;
 	/**
 	 * @brief Get the current sample
 	 * @return Pointer to the current sample or nullptr
@@ -209,13 +205,10 @@ public:
 	 */
 	void update( const XmCell& cell, bool estimateOnly );
 	virtual AbstractArchive& serialize( AbstractArchive* data );
+    ChannelState status() const;
+	void mixTick( MixerFrameBuffer* mixBuffer );
+	void updateStatus();
 private:
-	virtual std::string internal_noteName() const;
-	virtual std::string internal_effectName() const;
-	virtual void internal_mixTick( MixerFrameBuffer* mixBuffer );
-	virtual void internal_updateStatus();
-	virtual std::string internal_effectDescription() const;
-	virtual std::string internal_cellString() const;
 	/** @name Effect handlers
 	 * @{
 	 */

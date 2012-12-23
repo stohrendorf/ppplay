@@ -23,9 +23,10 @@
  * @ingroup ModMod
  * @{
  */
-#include "genmod/abstractchannel.h"
 #include "genmod/breseninter.h"
 #include "genmod/genbase.h"
+#include <genmod/channelstate.h>
+#include <stream/iserializable.h>
 
 namespace ppp
 {
@@ -36,7 +37,7 @@ class ModModule;
 class ModCell;
 class ModSample;
 
-class ModChannel : public AbstractChannel
+class ModChannel : public ISerializable
 {
 	DISABLE_COPY( ModChannel )
 private:
@@ -61,22 +62,21 @@ private:
 	uint8_t m_lowMask;
 	bool m_portaDirUp;
 	BresenInterpolation m_bresen;
-	std::string m_effectDescription;
 	uint8_t m_panning;
+	
+	ChannelState m_state;
+	
 	void setCellPeriod();
 	void setTonePortaTarget();
 public:
 	explicit ModChannel( ModModule* parent, bool isLeftChan );
-	virtual ~ModChannel();
+	~ModChannel();
 	virtual AbstractArchive& serialize( AbstractArchive* data );
 	void update( const ModCell& cell, bool patDelay );
+    ChannelState status() const;
+	void mixTick( MixerFrameBuffer* mixBuffer );
+	void updateStatus();
 private:
-	virtual std::string internal_noteName() const;
-	virtual std::string internal_effectName() const;
-	virtual void internal_mixTick( MixerFrameBuffer* mixBuffer );
-	virtual void internal_updateStatus();
-	virtual std::string internal_effectDescription() const;
-	virtual std::string internal_cellString() const;
 	void fxArpeggio( uint8_t fxByte );
 	void fxPortaUp( uint8_t fxByte );
 	void fxPortaDown( uint8_t fxByte );

@@ -2,6 +2,7 @@
 #define HSCMODULE_H
 
 #include "genmod/abstractmodule.h"
+#include <genmod/channelstate.h>
 #include "ymf262/opl3.h"
 
 namespace hsc
@@ -20,9 +21,10 @@ private:
 	};
 	Note m_patterns[50][64 * 9];
 	
-	struct Channel {
-		constexpr Channel() : instr( 0xff ), fnum(0), updateFnum(true),
-		tlCarrier(0x3f), updateTlCarrier(true), tlModulator(0x3f), updateTlModulator(true), slide(0)
+	struct Channel : public ISerializable
+	{
+		Channel() : instr( 0xff ), fnum(0), updateFnum(true),
+		tlCarrier(0x3f), updateTlCarrier(true), tlModulator(0x3f), updateTlModulator(true), slide(0), state()
 		{
 		}
 		//! @brief Currently used instrument
@@ -37,6 +39,9 @@ private:
 		bool updateTlModulator;
 		//! @todo Find the use
 		uint8_t slide;
+		ppp::ChannelState state;
+		
+        virtual AbstractArchive& serialize(AbstractArchive* archive);
 	};
 	
 	Channel m_channels[9];
@@ -55,8 +60,7 @@ public:
 	bool load( Stream* stream );
 private:
 	virtual size_t internal_buildTick( AudioFrameBuffer* buf );
-	virtual std::string internal_channelStatus( size_t idx ) const;
-	virtual std::string internal_channelCellString( size_t idx ) const;
+	virtual ppp::ChannelState internal_channelStatus( size_t idx ) const;
 	virtual int internal_channelCount() const;
 
 	void storeInstr( uint8_t chan, uint8_t instr );

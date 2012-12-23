@@ -85,8 +85,7 @@ public:
 	typedef std::shared_ptr<XmModule> Ptr;
 private:
 	virtual size_t internal_buildTick( AudioFrameBuffer* buffer );
-	virtual std::string internal_channelStatus( size_t ) const;
-	virtual std::string internal_channelCellString( size_t ) const;
+	virtual ChannelState internal_channelStatus( size_t ) const;
 	virtual int internal_channelCount() const;
 	/**
 	 * @brief Constructor

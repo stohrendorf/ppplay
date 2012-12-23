@@ -18,6 +18,7 @@
 
 #include "modchannel.h"
 #include "genmod/genbase.h"
+#include <genmod/standardfxdesc.h>
 
 #include "modmodule.h"
 #include "modbase.h"
@@ -48,11 +49,6 @@ constexpr std::array<const int16_t, 32> WaveSine = {{
 		180, 161, 141, 120, 97, 74, 49, 24
 	}
 };
-
-inline double finetuneMultiplicator( uint8_t finetune )
-{
-	return pow( 2.0, -( finetune > 7 ? finetune - 16 : finetune ) / ( 12 * 8 ) );
-}
 } // anonymouse namespace
 
 /**
@@ -67,7 +63,7 @@ ModChannel::ModChannel( ppp::mod::ModModule* parent, bool isLeftChan ) :
 	m_period( 0 ), m_physPeriod( 0 ), m_portaTarget( 0 ),
 	m_lastVibratoFx( 0 ), m_lastTremoloFx( 0 ), m_portaSpeed( 0 ),
 	m_lastOffsetFx( 0 ), m_sampleIndex( 0 ), m_lowMask(0), m_portaDirUp(false), m_bresen( 1, 1 ),
-	m_effectDescription( "      " ), m_panning(isLeftChan ? 0 : 0xff)
+	m_panning(isLeftChan ? 0 : 0xff), m_state()
 {
 	BOOST_ASSERT_MSG( parent != nullptr, "ModChannel may not have a nullptr as a parent" );
 }
@@ -75,6 +71,11 @@ ModChannel::ModChannel( ppp::mod::ModModule* parent, bool isLeftChan ) :
 ModChannel::~ModChannel()
 {
 	delete m_currentCell;
+}
+
+ChannelState ModChannel::status() const
+{
+	return m_state;
 }
 
 // TODO mt_setfinetune
@@ -101,10 +102,10 @@ void ModChannel::update( const ModCell& cell, bool patDelay )
 			if( m_period == 0 || (m_currentCell->effect() != 3 && m_currentCell->effect() != 5) ) {
 				setCellPeriod();
 				m_bresen = 0;
-				setActive( true );
+				m_state.active = true;
 			}
 			setTonePortaTarget();
-			setActive( m_period != 0 );
+			m_state.active = m_period != 0;
 			if( ( m_vibratoWaveform & 4 ) == 0 ) {
 				// reset phase to 0 on a new note
 				m_vibratoPhase = 0;
@@ -113,7 +114,7 @@ void ModChannel::update( const ModCell& cell, bool patDelay )
 				m_tremoloPhase = 0;
 			}
 		}
-		setActive( isActive() && m_period != 0 && currentSample() );
+		m_state.active &= m_period != 0 && currentSample();
 	} // endif(tick==0)
 	switch( m_currentCell->effect() ) {
 		case 0x00:
@@ -217,38 +218,9 @@ const ModSample* ModChannel::currentSample() const
 	return m_module->sampleAt( m_sampleIndex );
 }
 
-std::string ModChannel::internal_cellString() const
-{
-	return m_currentCell->trackerString();
-}
-
-std::string ModChannel::internal_effectDescription() const
-{
-	return m_effectDescription;
-}
-
-std::string ModChannel::internal_effectName() const
-{
-	if( m_currentCell->effect() == 0 && m_currentCell->effectValue() == 0 ) {
-		return "---";
-	}
-	return stringFmt( "%X%02X", int(m_currentCell->effect()), int(m_currentCell->effectValue()) );
-}
-
-std::string ModChannel::internal_noteName() const
-{
-	uint8_t idx = periodToNoteIndex( m_period );
-	if( idx == 255 ) {
-		return "^^^";
-	}
-	else {
-		return stringFmt( "%s%u", NoteNames[idx % 12], idx / 12 );
-	}
-}
-
 AbstractArchive& ModChannel::serialize( AbstractArchive* data )
 {
-	return AbstractChannel::serialize( data )
+	return *data
 	% m_currentCell
 	% m_volume
 	% m_physVolume
@@ -269,24 +241,25 @@ AbstractArchive& ModChannel::serialize( AbstractArchive* data )
 	% m_bresen;
 }
 
-void ModChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
+void ModChannel::mixTick( MixerFrameBuffer* mixBuffer )
 {
-	if( !isActive() || !currentSample() || m_physPeriod == 0 ) {
-		return setActive( false );
+	if( !m_state.active || !currentSample() || m_physPeriod == 0 ) {
+		m_state.active = false;
+		return;
 	}
 	if( mixBuffer && mixBuffer->get()->empty() ) {
 		logger()->error( L4CXX_LOCATION, "mixBuffer is empty" );
 		return;
 	}
 	if( mixBuffer && m_module->frequency() * mixBuffer->get()->size() == 0 ) {
-		setActive( false );
+		m_state.active = false;
 		return;
 	}
 	m_bresen.reset( m_module->frequency(), FrequencyBase / m_physPeriod );
 	// TODO glissando
 	const ModSample* currSmp = currentSample();
 	if( !m_bresen.isValid() ) {
-		setActive( false );
+		m_state.active = false;
 		return;
 	}
 	if( mixBuffer ) {
@@ -300,7 +273,7 @@ void ModChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 		}
 		volL *= m_physVolume;
 		volR *= m_physVolume;
-		setActive( currSmp->mix(m_module->interpolation(), &m_bresen, mixBuffer, volL, volR, 13) );
+		m_state.active = currSmp->mix(m_module->interpolation(), &m_bresen, mixBuffer, volL, volR, 13);
 	}
 }
 
@@ -363,7 +336,7 @@ void ModChannel::setTonePortaTarget()
 
 void ModChannel::fxSetSpeed( uint8_t fxByte )
 {
-	m_effectDescription = "Tempo\x7f";
+	m_state.fxDesc = fxdesc::SetTempo;
 	if( fxByte == 0 ) {
 		return;
 	}
@@ -377,17 +350,17 @@ void ModChannel::fxSetSpeed( uint8_t fxByte )
 
 void ModChannel::efxNoteCut( uint8_t fxByte )
 {
-	m_effectDescription = "NCut \xd4";
+	m_state.fxDesc = fxdesc::NoteCut;
 	fxByte &= 0x0f;
 	if( fxByte == m_module->state().tick ) {
-		setActive( false );
+		m_state.active = false;
 		m_volume = 0;
 	}
 }
 
 void ModChannel::efxFineVolSlideDown( uint8_t fxByte )
 {
-	m_effectDescription = "VSld \x19";
+	m_state.fxDesc = fxdesc::SlowVolSlideDown;
 	if( m_module->state().tick != 0 ) {
 		return;
 	}
@@ -396,7 +369,7 @@ void ModChannel::efxFineVolSlideDown( uint8_t fxByte )
 
 void ModChannel::efxFineVolSlideUp( uint8_t fxByte )
 {
-	m_effectDescription = "VSld \x18";
+	m_state.fxDesc = fxdesc::SlowVolSlideUp;
 	if( m_module->state().tick != 0 ) {
 		return;
 	}
@@ -405,54 +378,54 @@ void ModChannel::efxFineVolSlideUp( uint8_t fxByte )
 
 void ModChannel::efxSetFinetune( uint8_t fxByte )
 {
-	m_effectDescription = "FTune\xe6";
+	m_state.fxDesc = fxdesc::SetFinetune;
 	m_finetune = ( fxByte&0x0f );
 	setCellPeriod();
 }
 
 void ModChannel::efxSetTremoloWaveform( uint8_t fxByte )
 {
-	m_effectDescription = "TWave\x9f";
+	m_state.fxDesc = fxdesc::SetTremWaveform;
 	m_tremoloWaveform = fxByte & 0x7;
 }
 
 void ModChannel::efxSetVibWaveform( uint8_t fxByte )
 {
-	m_effectDescription = "VWave\x9f";
+	m_state.fxDesc = fxdesc::SetVibWaveform;
 	m_vibratoWaveform = ( fxByte&0x0f );
 }
 
 void ModChannel::efxGlissando( uint8_t fxByte )
 {
-	m_effectDescription = "Gliss\xcd";
+	m_state.fxDesc = fxdesc::Glissando;
 	m_glissando = ( fxByte&0x0f ) != 0;
 }
 
 void ModChannel::efxFineSlideDown( uint8_t fxByte )
 {
-	m_effectDescription = "Ptch \x1f";
+	m_state.fxDesc = fxdesc::SlowPitchSlideDown;
 	if( m_module->state().tick != 0 ) {
 		return;
 	}
 	m_lowMask = 0x0f;
 	fxPortaDown( fxByte );
-	m_effectDescription = "Ptch \x1f";
+	m_state.fxDesc = fxdesc::SlowPitchSlideDown;
 }
 
 void ModChannel::efxFineSlideUp( uint8_t fxByte )
 {
-	m_effectDescription = "Ptch \x1e";
+	m_state.fxDesc = fxdesc::SlowPitchSlideUp;
 	if( m_module->state().tick != 0 ) {
 		return;
 	}
 	m_lowMask = 0x0f;
 	fxPortaUp( fxByte );
-	m_effectDescription = "Ptch \x1e";
+	m_state.fxDesc = fxdesc::SlowPitchSlideUp;
 }
 
 void ModChannel::fxOffset( uint8_t fxByte )
 {
-	m_effectDescription = "Offs \xaa";
+	m_state.fxDesc = fxdesc::Offset;
 	m_lastOffsetFx = fxByte;
 	if( m_module->state().tick != 0 || m_currentCell->period() == 0 ) {
 		return;
@@ -464,7 +437,7 @@ void ModChannel::fxOffset( uint8_t fxByte )
 
 void ModChannel::fxSetVolume( uint8_t fxByte )
 {
-	m_effectDescription = "StVol=";
+	m_state.fxDesc = fxdesc::SetVolume;
 	m_physVolume = m_volume = std::min<uint8_t>( 0x40, fxByte );
 }
 
@@ -472,11 +445,11 @@ void ModChannel::fxVolSlide( uint8_t fxByte )
 {
 	if( ( fxByte>>4 ) == 0 ) {
 		// vol slide down
-		m_effectDescription = "VSld \x1f";
+		m_state.fxDesc = fxdesc::VolSlideDown;
 		m_physVolume = m_volume = std::max<int>( 0x0, m_volume - ( fxByte&0x0f ) );
 	}
 	else {
-		m_effectDescription = "VSld \x1e";
+		m_state.fxDesc = fxdesc::VolSlideUp;
 		m_physVolume = m_volume = std::min( 0x40, m_volume + ( fxByte>>4 ) );
 	}
 }
@@ -485,19 +458,19 @@ void ModChannel::fxVibVolSlide( uint8_t fxByte )
 {
 	fxVibrato( 0 );
 	fxVolSlide( fxByte );
-	m_effectDescription = "VibVo\xf7";
+	m_state.fxDesc = fxdesc::VibVolSlide;
 }
 
 void ModChannel::fxPortaVolSlide( uint8_t fxByte )
 {
 	fxPorta( 0 );
 	fxVolSlide( fxByte );
-	m_effectDescription = "PrtVo\x12";
+	m_state.fxDesc = fxdesc::PortaVolSlide;
 }
 
 void ModChannel::fxPortaDown( uint8_t fxByte )
 {
-	m_effectDescription = "Ptch \x1f";
+	m_state.fxDesc = fxdesc::PitchSlideDown;
 	m_period += fxByte & m_lowMask;
 	m_lowMask = 0xff;
 	if( m_period > 856 ) {
@@ -509,7 +482,7 @@ void ModChannel::fxPortaDown( uint8_t fxByte )
 
 void ModChannel::fxPortaUp( uint8_t fxByte )
 {
-	m_effectDescription = "Ptch \x1e";
+	m_state.fxDesc = fxdesc::PitchSlideUp;
 	m_period -= fxByte & m_lowMask;
 	m_lowMask = 0xff;
 	if( m_period < 113 ) {
@@ -521,7 +494,7 @@ void ModChannel::fxPortaUp( uint8_t fxByte )
 
 void ModChannel::fxVibrato( uint8_t fxByte )
 {
-	m_effectDescription = "Vibr \xf7";
+	m_state.fxDesc = fxdesc::Vibrato;
 	m_lastVibratoFx = fxByte;
 	int16_t vibVal = 0;
 	switch( m_vibratoWaveform & 3 ) {
@@ -551,7 +524,7 @@ void ModChannel::fxVibrato( uint8_t fxByte )
 
 void ModChannel::fxPorta( uint8_t fxByte )
 {
-	m_effectDescription = "Porta\x12";
+	m_state.fxDesc = fxdesc::Porta;
 	m_portaSpeed = fxByte;
 	if( m_portaTarget == 0 ) {
 		setTonePortaTarget();
@@ -569,47 +542,31 @@ void ModChannel::fxPorta( uint8_t fxByte )
 	applyGlissando();
 }
 
-void ModChannel::internal_updateStatus()
+void ModChannel::updateStatus()
 {
-	if( !isActive() ) {
-		setStatusString( "" );
-		return;
+	m_state.cell = m_currentCell->trackerString();
+	m_state.volume = clip<int>( m_volume, 0, 0x40 ) * 100 / 0x40;
+	m_state.panning = ( m_panning - 0x80 ) * 100 / 0x80;
+	m_state.instrument = m_sampleIndex;
+	m_state.note = periodToNoteIndex(m_period);
+	if( m_state.note==255 ) {
+		m_state.note = ChannelState::NoteCut;
 	}
-	std::string volStr = stringFmt( "%3d%%", clip<int>( m_volume, 0, 0x40 ) * 100 / 0x40 );
-	std::string panStr;
-	if( m_panning == 0x00 ) {
-		panStr = "Left ";
-	}
-	else if( m_panning == 0x80 ) {
-		panStr = "Centr";
-	}
-	else if( m_panning == 0xff ) {
-		panStr = "Right";
+	if( currentSample() ) {
+		m_state.instrumentName = currentSample()->title();
 	}
 	else {
-		panStr = stringFmt( "%4d%%", ( m_panning - 0x80 ) * 100 / 0x80 );
+		m_state.instrumentName.clear();
 	}
-	setStatusString( stringFmt(
-		"%02X: %s%s %s %s P:%s V:%s %s",
-		int(m_sampleIndex),
-		" ", //(m_noteChanged ? "*" : " "),
-		noteName(),
-		effectName(),
-		m_effectDescription,
-		panStr,
-		volStr,
-		currentSample() ? currentSample()->title() : ""
-		)
-	);
 }
 
 void ModChannel::fxArpeggio( uint8_t fxByte )
 {
 	if( fxByte == 0 ) {
-		m_effectDescription = "      ";
+		m_state.fxDesc = fxdesc::NullFx;
 		return;
 	}
-	m_effectDescription = "Arp  \xf0";
+	m_state.fxDesc = fxdesc::Arpeggio;
 	if( ( m_module->state().tick % 3 ) == 0 ) {
 		m_physPeriod = m_period;
 		return;
@@ -632,25 +589,25 @@ void ModChannel::fxArpeggio( uint8_t fxByte )
 
 void ModChannel::fxPatBreak( uint8_t )
 {
-	m_effectDescription = "PBrk \xf6";
+	m_state.fxDesc = fxdesc::PatternBreak;
 	// implemented in ModModule
 }
 
 void ModChannel::fxPosJmp( uint8_t )
 {
-	m_effectDescription = "JmOrd\x1a";
+	m_state.fxDesc = fxdesc::JumpOrder;
 	// implemented in ModModule
 }
 
 void ModChannel::fxSetFinePan( uint8_t fxByte )
 {
-	m_effectDescription = "StPan\x1d";
+	m_state.fxDesc = fxdesc::SetPanPos;
 	m_panning = fxByte;
 }
 
 void ModChannel::fxTremolo( uint8_t fxByte )
 {
-	m_effectDescription = "Tremo\xec";
+	m_state.fxDesc = fxdesc::Tremolo;
 	m_lastTremoloFx = fxByte;
 	int16_t vibVal = 0;
 	switch( m_tremoloWaveform & 3 ) {
@@ -680,24 +637,25 @@ void ModChannel::fxTremolo( uint8_t fxByte )
 
 void ModChannel::efxPatLoop( uint8_t fxByte )
 {
-	m_effectDescription = "PLoop\xe8";
+	m_state.fxDesc = fxdesc::PatternLoop;
 	// TODO
 }
 
 void ModChannel::efxNoteDelay( uint8_t /*fxByte*/ )
 {
-	m_effectDescription = "Delay\xc2";
+	m_state.fxDesc = fxdesc::PatternDelay;
 }
 
 void ModChannel::efxSetPanning( uint8_t fxByte )
 {
-	m_effectDescription = "StPan\x1d";
+	m_state.fxDesc = fxdesc::SetPanPos;
 	logger()->warn( L4CXX_LOCATION, "Not implemented: Effect Set Panning" );
 	m_panning = (fxByte&0x0f)*0xff/0x0f;
 }
 
 void ModChannel::efxPatDelay( uint8_t /*fxByte*/ )
 {
+	m_state.fxDesc = fxdesc::PatternDelay;
 	// handled
 }
 
@@ -729,7 +687,7 @@ void ModChannel::applyGlissando()
 
 light4cxx::Logger* ModChannel::logger()
 {
-	return light4cxx::Logger::get( AbstractChannel::logger()->name() + ".mod" );
+	return light4cxx::Logger::get( "channel.mod" );
 }
 
 }
