@@ -19,18 +19,20 @@
 #ifndef FFT_H
 #define FFT_H
 
-#include "output/audiofifo.h"
+#include "output/audiotypes.h"
 
 #include <cstdint>
-#include <memory>
 #include <vector>
+
+#include "ppplay_core_export.h"
 
 namespace ppp {
 	namespace FFT {
-// 		const int FFT_LEN = 512;
-		extern const size_t fftSampleCount;
-		typedef std::shared_ptr< std::vector<uint16_t> > AmpsData;
-		void doFFT( AudioFrameBuffer& samples, AmpsData& L, AmpsData& R );
+		static constexpr uint8_t  InputBits    = 11;
+		static constexpr uint16_t InputLength  = 1 << InputBits;
+
+		static constexpr size_t FftSampleCount = InputLength;
+		void PPPLAY_CORE_EXPORT doFFT( AudioFrameBuffer& samples, std::vector<uint16_t>* L, std::vector<uint16_t>* R );
 	}
 }
 

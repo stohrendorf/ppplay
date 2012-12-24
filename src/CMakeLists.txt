@@ -33,6 +33,7 @@ include(GenerateExportHeader)
 add_compiler_export_flags()
 
 add_library(ppplay_core SHARED
+	stuff/fft.cpp
 	stuff/pluginregistry.cpp
 	stuff/numberutils.cpp
 	stuff/sdltimer.cpp
@@ -51,6 +52,7 @@ if(WITH_MP3LAME)
 endif()
 install(TARGETS ppplay_core DESTINATION lib EXPORT ppplayExports)
 install(FILES
+	stuff/fft.h
 	stuff/field.h
 	stuff/inputplugin.h
 	stuff/itimer.h

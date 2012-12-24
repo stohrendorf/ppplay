@@ -18,26 +18,9 @@
 
 #include "fft.h"
 
-#include "logger/logger.h"
-#include "utils.h"
-
-// #include <cmath>
 #include <complex>
-//#include <cstdint>
+#include <boost/assert.hpp>
 
-// #include <iostream>
-
-using namespace ppp::FFT;
-
-constexpr uint8_t  inputBits    = 11;
-constexpr uint16_t inputLength  = 1 << inputBits;
-constexpr uint16_t inputLength2 = inputLength / 2;
-
-namespace ppp {
-	namespace FFT {
-		const size_t fftSampleCount = inputLength;
-	}
-}
 /*
 copied and modified from: http://local.wasp.uwa.edu.au/~pbourke/miscellaneous/dft/fft_ms.c
 
@@ -55,14 +38,13 @@ namespace
 
 constexpr bool reverseFFT = false;
 
-std::complex<float> cArr[inputLength];
-
-void DFFT() {
-	uint_fast16_t j = 0;
-	for( uint_fast16_t i = 0; i < inputLength - 1; i++ ) {
-		if( i < j )
-			std::swap( cArr[i], cArr[j] );
-		uint_fast16_t k = inputLength2;
+void DFFT(std::vector<std::complex<float>>& data) {
+	BOOST_ASSERT( data.size() == ppp::FFT::InputLength );
+	for( uint_fast16_t i = 0, j = 0; i < ppp::FFT::InputLength - 1; i++ ) {
+		if( i < j ) {
+			std::swap( data[i], data[j] );
+		}
+		uint_fast16_t k = ppp::FFT::InputLength/2;
 		while( k <= j ) {
 			j -= k;
 			k >>= 1;
@@ -70,39 +52,45 @@ void DFFT() {
 		j += k;
 	}
 	std::complex<float> c( -1, 0 );
-	for( uint8_t l = 0; l < inputBits; l++ ) {
+	for( uint_fast8_t l = 0; l < ppp::FFT::InputBits; l++ ) {
 		std::complex<float> u( 1, 0 );
-		for( j = 0; j < ( 1 << l ); j++ ) {
-			for( uint_fast16_t i = j; i < inputLength; i += 2 << l ) {
+		for( uint_fast16_t j = 0; j < uint16_t( 1 << l ); j++ ) {
+			for( uint_fast16_t i = j; i < ppp::FFT::InputLength; i += 2 << l ) {
 				uint_fast16_t i1 = i + ( 1 << l );
-				std::complex<float> t1 = u * cArr[i1];
-				cArr[i1] = cArr[i] - t1;
-				cArr[i] += t1;
+				std::complex<float> t1 = u * data[i1];
+				data[i1] = data[i] - t1;
+				data[i] += t1;
 			}
 			u *= c;
 		}
 		c.imag( sqrt( ( 1.0 - c.real() ) / 2.0 ) );
-		if( !reverseFFT )
+		if( !reverseFFT ) {
 			c.imag( -c.imag() );
+		}
 		c.real( sqrt( ( 1.0 + c.real() ) / 2.0 ) );
 	}
 	/*	if (!reverseFFT)
 		{
 			for (unsigned short i = 0; i < inputLength; i++)
-				cArr[i] /= inputLength;
+				data[i] /= inputLength;
 		}   */
 }
 
-void prepare( BasicSample* smpPtr ) {
-	for( uint_fast16_t i = 0; i < inputLength; i++ )
-		cArr[i] = std::complex<float>( *( smpPtr += 2 ) / 32768.0f, 0 );
+void samplesToComplex( BasicSample* smpPtr, std::vector<std::complex<float>>* dest ) {
+	BOOST_ASSERT( smpPtr != nullptr );
+	BOOST_ASSERT( dest != nullptr );
+	dest->resize(ppp::FFT::InputLength);
+	for( size_t i = 0; i < ppp::FFT::InputLength; i++ ) {
+		(*dest)[i] = std::complex<float>( *smpPtr / 32768.0f, 0 );
+		smpPtr += 2;
+	}
 }
 
-void post( AmpsData& amps ) {
-	amps.reset( new std::vector<uint16_t>( inputLength2 ) );
-	uint_fast16_t* ampsPtr = &amps->front();
-	for( uint_fast16_t i = 0; i < inputLength2; i++ ) {
-		*( ampsPtr++ ) = abs( cArr[i] ) * sqrt( i );
+void fftToAmp( const std::vector<std::complex<float>>& fft, std::vector<uint16_t>* dest ) {
+	dest->resize( ppp::FFT::InputLength/2 );
+	uint16_t* ampsPtr = &dest->front();
+	for( size_t i = 0; i < ppp::FFT::InputLength/2; i++ ) {
+		*( ampsPtr++ ) = abs( fft[i] ) * sqrt( i );
 	}
 }
 
@@ -110,13 +98,20 @@ void post( AmpsData& amps ) {
 
 namespace ppp {
 	namespace FFT {
-		void doFFT( AudioFrameBuffer& samples, AmpsData& L, AmpsData& R ) {
-			prepare( &samples->front().left );
-			DFFT();
-			post( L );
-			prepare( &samples->front().right );
-			DFFT();
-			post( R );
+		void doFFT( AudioFrameBuffer& samples, std::vector< uint16_t >* L, std::vector< uint16_t >* R ) {
+			BOOST_ASSERT( L != nullptr );
+			BOOST_ASSERT( R != nullptr );
+			BOOST_ASSERT( samples );
+			
+			std::vector<std::complex<float>> cArr;
+			
+			samplesToComplex( &samples->front().left, &cArr );
+			DFFT(cArr);
+			fftToAmp( cArr, L );
+			
+			samplesToComplex( &samples->front().right, &cArr );
+			DFFT(cArr);
+			fftToAmp( cArr, R );
 		}
 	}
 }
