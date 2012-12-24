@@ -193,7 +193,7 @@ bool parseCmdLine( int argc, char* argv[] )
 			config::interpolation = ppp::Sample::Interpolation::Linear;
 			break;
 		case 2:
-			light4cxx::Logger::root()->info( L4CXX_LOCATION, "Sample interpolation: adaptive linear" );
+			light4cxx::Logger::root()->info( L4CXX_LOCATION, "Sample interpolation: cubic" );
 			config::interpolation = ppp::Sample::Interpolation::Cubic;
 			break;
 		default:

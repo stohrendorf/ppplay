@@ -255,6 +255,7 @@ bool Module::update(bool estimate)
 		
 		if( m_speedCountdown == state().speed ) {
 			m_channels[chan].state.noteTriggered = false;
+			m_channels[chan].state.fxDesc = ppp::fxdesc::NullFx;
 			if( m_channels[chan].state.note == ppp::ChannelState::KeyOff ) {
 				m_channels[chan].state.note = ppp::ChannelState::NoNote;
 			}
@@ -262,7 +263,7 @@ bool Module::update(bool estimate)
 		
 		if(note == 0x80) {
 			storeInstr(chan, effect&0x7f);
-			m_channels[chan].state.cell = stringFmt("III %02X", effect&0x7f + 0);
+			m_channels[chan].state.cell = stringFmt("III %02X", (effect&0x7f) + 0);
 			continue;
 		}
 		
@@ -318,7 +319,6 @@ bool Module::update(bool estimate)
 				m_channels[chan].updateTlCarrier = true;
 				break;
 			case 0x0b:
-				m_channels[chan].state.fxDesc = ppp::fxdesc::SetVolume;
 				// set modulator volume
 				m_channels[chan].tlModulator = (effect&0x0f)<<2;
 				m_channels[chan].updateTlModulator = true;

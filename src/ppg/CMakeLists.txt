@@ -29,3 +29,5 @@ install(FILES
 	DESTINATION include/ppplay/ppg
 	COMPONENT Devel
 )
+
+add_subdirectory(tests)
