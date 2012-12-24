@@ -90,7 +90,7 @@ void fftToAmp( const std::vector<std::complex<float>>& fft, std::vector<uint16_t
 	dest->resize( ppp::FFT::InputLength/2 );
 	uint16_t* ampsPtr = &dest->front();
 	for( size_t i = 0; i < ppp::FFT::InputLength/2; i++ ) {
-		*( ampsPtr++ ) = abs( fft[i] ) * sqrt( i );
+		*( ampsPtr++ ) = fabs( fft[i] ) * sqrt( i );
 	}
 }
 
