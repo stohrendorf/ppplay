@@ -378,7 +378,7 @@ bool Module::update(bool estimate)
 			if( m_channels[i].updateTlCarrier ) {
 				m_channels[i].updateTlCarrier = false;
 				m_opl.writeReg(0x40 + carrierSlot, m_channels[i].tlCarrier);
-				m_channels[i].state.volume = 100 - m_channels[i].tlCarrier * 100 / 63;
+				m_channels[i].state.volume = 100 - (m_channels[i].tlCarrier&0x3f) * 100 / 0x3f;
 			}
 			if( m_channels[i].updateTlModulator ) {
 				m_channels[i].updateTlModulator = false;
