@@ -129,6 +129,7 @@ void XmChannel::fxPanSlide( uint8_t fxByte )
 void XmChannel::triggerNote(uint8_t note)
 {
 	m_state.active = true;
+	m_state.noteTriggered = true;
 	if( note == KeyOffNote ) {
 		doKeyOff();
 		return;
@@ -188,6 +189,7 @@ void XmChannel::doKeyOff()
 	else {
 		m_volumeEnvelope.doKeyOff();
 	}
+	m_state.note = ChannelState::KeyOff;
 }
 
 void XmChannel::doKeyOn()
