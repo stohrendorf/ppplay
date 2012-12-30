@@ -40,6 +40,7 @@ constexpr bool reverseFFT = false;
 
 void DFFT(std::vector<std::complex<float>>& data) {
 	BOOST_ASSERT( data.size() == ppp::FFT::InputLength );
+	// re-sort values by inverting the index bits
 	for( uint_fast16_t i = 0, j = 0; i < ppp::FFT::InputLength - 1; i++ ) {
 		if( i < j ) {
 			std::swap( data[i], data[j] );
@@ -51,23 +52,24 @@ void DFFT(std::vector<std::complex<float>>& data) {
 		}
 		j += k;
 	}
-	std::complex<float> c( -1, 0 );
-	for( uint_fast8_t l = 0; l < ppp::FFT::InputBits; l++ ) {
-		std::complex<float> u( 1, 0 );
-		for( uint_fast16_t j = 0; j < uint16_t( 1 << l ); j++ ) {
-			for( uint_fast16_t i = j; i < ppp::FFT::InputLength; i += 2 << l ) {
-				uint_fast16_t i1 = i + ( 1 << l );
-				std::complex<float> t1 = u * data[i1];
-				data[i1] = data[i] - t1;
-				data[i] += t1;
+	std::complex<float> expFacMul( -1, 0 );
+	// recursive level loop
+	for( uint_fast8_t level = 0; level < ppp::FFT::InputBits; level++ ) {
+		std::complex<float> expFac( 1, 0 );
+		for( uint_fast16_t section = 0; section < uint16_t( 1 << level ); section++ ) {
+			for( uint_fast16_t left = section; left < ppp::FFT::InputLength; left += 2 << level ) {
+				uint_fast16_t right = left + ( 1 << level );
+				std::complex<float> deltaRight = expFac * data[right];
+				data[right] = data[left] - deltaRight;
+				data[left] += deltaRight;
 			}
-			u *= c;
+			expFac *= expFacMul;
 		}
-		c.imag( sqrt( ( 1.0 - c.real() ) / 2.0 ) );
+		expFacMul.imag( sqrt( ( 1.0 - expFacMul.real() ) / 2.0 ) );
 		if( !reverseFFT ) {
-			c.imag( -c.imag() );
+			expFacMul.imag( -expFacMul.imag() );
 		}
-		c.real( sqrt( ( 1.0 + c.real() ) / 2.0 ) );
+		expFacMul.real( sqrt( ( 1.0 + expFacMul.real() ) / 2.0 ) );
 	}
 	/*	if (!reverseFFT)
 		{
