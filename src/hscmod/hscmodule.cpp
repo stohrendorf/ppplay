@@ -174,6 +174,7 @@ void Module::storeInstr( uint8_t chan, uint8_t instr )
 		return;
 	}
 	m_channels[chan].instr = instr;
+	m_channels[chan].state.instrumentName = stringFmt("Instrument %d", instr+0);
 	const InsData& data = m_instr[instr];
 	m_opl.writeReg(0xb0 + chan, 0);
 	m_opl.writeReg(0xc0 + chan, data[8]);
