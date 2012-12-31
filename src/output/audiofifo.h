@@ -28,6 +28,7 @@
 #include <light4cxx/logger.h>
 #include <boost/thread.hpp>
 #include <boost/circular_buffer.hpp>
+#include <boost/signals2.hpp>
 
 /**
  * @ingroup Output
@@ -56,18 +57,6 @@ private:
 	//! @brief The audio source to pull the data from
 	AbstractAudioSource::WeakPtr m_source;
 	
-	//! @brief Sum of all left absolute sample values
-	uint64_t m_volLeftSum;
-	//! @brief Sum of all left absolute sample values (logarithmic)
-	uint16_t m_volLeftLog;
-	
-	//! @brief Sum of all right absolute sample values
-	uint64_t m_volRightSum;
-	//! @brief Sum of all right absolute sample values (logarithmic)
-	uint16_t m_volRightLog;
-	
-	//! @brief Do the volume calculation
-	const bool m_doVolumeCalc;
 	//! @brief @c true when the destructor is running, stops the thread
 	bool m_stopping;
 	//! @brief Buffer modification mutex
@@ -95,7 +84,7 @@ public:
 	 * @param[in] source The audio source that should be buffered
 	 * @param[in] threshold Initial value for m_threshold (minimum 256)
 	 */
-	AudioFifo( const AbstractAudioSource::WeakPtr& source, size_t threshold, bool doVolumeCalc );
+	AudioFifo( const AbstractAudioSource::WeakPtr& source, size_t threshold );
 	~AudioFifo();
 	
 	/**
@@ -123,9 +112,10 @@ public:
 	 */
 	bool isEmpty() const;
 	
-	uint16_t volumeLeft() const;
-	uint16_t volumeRight() const;
 	size_t pullData( AudioFrameBuffer& buffer, size_t requestedFrames );
+	
+	boost::signals2::signal<void(const AudioFrameBuffer&)> dataPushed;
+	boost::signals2::signal<void(const AudioFrameBuffer&)> dataPulled;
 protected:
 	/**
 	 * @brief Get the logger

@@ -41,6 +41,7 @@ add_library(ppplay_core SHARED
 	output/audiofifo.cpp
 	output/abstractaudiooutput.cpp
 	output/abstractaudiosource.cpp
+	output/volumeobserver.cpp
 	light4cxx/location.cpp
 	light4cxx/logger.cpp
 )

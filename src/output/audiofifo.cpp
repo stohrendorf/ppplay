@@ -28,42 +28,6 @@
 #include <boost/format.hpp>
 #include <boost/thread.hpp>
 
-namespace
-{
-/**
- * @brief Makes volume values logarithmic
- * @param[in] value Volume to make logarithmic
- * @return A more "natural" feeling value
- * @see AudioFifo::calcVolume()
- */
-uint16_t logify( uint16_t value )
-{
-	uint32_t tmp = value << 1;
-	if( tmp > 0x8000 )
-		tmp = ( 0x8000 + tmp ) >> 1;
-	if( tmp > 0xb000 )
-		tmp = ( 0xb000 + tmp ) >> 1;
-	if( tmp > 0xe000 )
-		tmp = ( 0xe000 + tmp ) >> 1;
-	return tmp > 0xffff ? 0xffff : tmp;
-}
-
-/**
- * @brief Sums up the absolute sample values of an AudioFrameBuffer
- * @param[in] buf The buffer with the values to sum up
- * @param[out] left Sum of absolute left sample values
- * @param[out] right Sum of absolute right sample values
- */
-void sumAbsValues( const AudioFrameBuffer& buf, uint64_t& left, uint64_t& right )
-{
-	left = right = 0;
-	for( const BasicSampleFrame & frame : *buf ) {
-		left += std::abs( frame.left );
-		right += std::abs( frame.right );
-	}
-}
-}
-
 void AudioFifo::requestThread()
 {
 	AudioFrameBuffer buffer;
@@ -100,9 +64,10 @@ void AudioFifo::requestThread()
 	}
 }
 
-AudioFifo::AudioFifo( const AbstractAudioSource::WeakPtr& source, size_t threshold, bool doVolumeCalc ) :
-	m_buffer(), m_threshold(threshold), m_requestThread(), m_source( source ), m_volLeftSum( 0 ), m_volLeftLog(0), m_volRightSum( 0 ), m_volRightLog(0),
-	m_doVolumeCalc( doVolumeCalc ), m_stopping( false ), m_bufferMutex(), m_bufferChanged()
+AudioFifo::AudioFifo( const AbstractAudioSource::WeakPtr& source, size_t threshold ) :
+	m_buffer(), m_threshold(threshold), m_requestThread(), m_source( source ),
+	m_stopping( false ), m_bufferMutex(), m_bufferChanged(),
+	dataPushed(), dataPulled()
 {
 	BOOST_ASSERT_MSG( !source.expired(), "Invalid source passed to AudioFifo constructor" );
 	BOOST_ASSERT_MSG( threshold >= 256, "Minimum capacity may not be less than 256" );
@@ -139,20 +104,7 @@ void AudioFifo::pushData( const AudioFrameBuffer& buf )
 	}
 	logger()->trace(L4CXX_LOCATION, "Pushing %d frames into buffer", buf->size());
 	std::copy( buf->begin(), buf->end(), std::back_inserter(m_buffer) );
-	if( m_doVolumeCalc ) {
-		uint64_t left, right;
-		sumAbsValues( buf, left, right );
-		m_volLeftSum += left;
-		m_volRightSum += right;
-		if( m_buffer.size() >= 4 ) {
-			m_volLeftLog = logify( m_volLeftSum / ( m_buffer.size() >> 2 ) );
-			m_volRightLog = logify( m_volRightSum / ( m_buffer.size() >> 2 ) );
-		}
-		else {
-			m_volLeftLog = 0;
-			m_volRightLog = 0;
-		}
-	}
+	dataPushed( buf );
 }
 
 size_t AudioFifo::pullData( AudioFrameBuffer& data, size_t size )
@@ -175,22 +127,9 @@ size_t AudioFifo::pullData( AudioFrameBuffer& data, size_t size )
 	if( data->size() != size ) {
 		logger()->error( L4CXX_LOCATION, "Copied %d frames into a buffer with %d frames", size, data->size() );
 	}
-	if( m_doVolumeCalc ) {
-		uint64_t left, right;
-		sumAbsValues( data, left, right );
-		m_volLeftSum -= left;
-		m_volRightSum -= right;
-		if( m_buffer.size() >= 4 ) {
-			m_volLeftLog = logify( m_volLeftSum / ( m_buffer.size() >> 2 ) );
-			m_volRightLog = logify( m_volRightSum / ( m_buffer.size() >> 2 ) );
-		}
-		else {
-			m_volLeftLog = 0;
-			m_volRightLog = 0;
-		}
-	}
 	lock.unlock();
 	m_bufferChanged.notify_one();
+	dataPulled(data);
 	return size;
 }
 
@@ -202,16 +141,6 @@ size_t AudioFifo::queuedLength() const
 bool AudioFifo::isEmpty() const
 {
 	return m_buffer.empty();
-}
-
-uint16_t AudioFifo::volumeRight() const
-{
-	return m_volRightLog;
-}
-
-uint16_t AudioFifo::volumeLeft() const
-{
-	return m_volLeftLog;
 }
 
 void AudioFifo::setCapacity( size_t len )

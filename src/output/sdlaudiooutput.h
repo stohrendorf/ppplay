@@ -21,6 +21,7 @@
 
 #include "abstractaudiooutput.h"
 #include "audiofifo.h"
+#include "volumeobserver.h"
 
 #include <boost/thread.hpp>
 
@@ -44,6 +45,7 @@ public:
 private:
 	boost::mutex m_mutex;
 	AudioFifo m_fifo;
+	VolumeObserver m_volObserver;
 	/**
 	 * @brief SDL Audio callback handler
 	 * @param[in] userdata Pointer to SDLAudioOutput
