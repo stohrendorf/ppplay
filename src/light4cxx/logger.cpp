@@ -20,7 +20,6 @@
 
 #include <iostream>
 #include <unordered_map>
-#include <boost/exception/all.hpp>
 #include <boost/thread.hpp>
 
 /**
@@ -31,33 +30,12 @@
 namespace light4cxx
 {
 
-namespace
-{
-/**
- * @brief The current logging level filter
- */
-Level s_level = Level::Debug;
-std::ostream* s_output = &std::cout;
-}
-
-Level Logger::level()
-{
-	return s_level;
-}
-
-void Logger::setLevel( Level l )
-{
-	s_level = l;
-}
+Level Logger::s_level = Level::Debug;
+std::ostream* Logger::s_output = &std::cout;
 
 Logger* Logger::root()
 {
 	return get( "root" );
-}
-
-void Logger::setOutput( std::ostream* stream )
-{
-	s_output = stream;
 }
 
 Logger* Logger::get( const std::string& name )
