@@ -27,6 +27,7 @@
 
 #include <light4cxx/logger.h>
 #include <boost/thread.hpp>
+#include <boost/circular_buffer.hpp>
 
 /**
  * @ingroup Output
@@ -46,26 +47,34 @@ class PPPLAY_CORE_EXPORT AudioFifo
 	DISABLE_COPY( AudioFifo )
 	AudioFifo() = delete;
 private:
-	//! @brief Queued audio chunks
-	AudioFrameBufferQueue m_queue;
-	//! @brief Number of frames in the queue
-	size_t m_queuedFrames;
-	//! @brief Minimum number of frames the queue should contain
-	size_t m_minFrameCount;
+	//! @brief Buffered audio frames
+	boost::circular_buffer<BasicSampleFrame> m_buffer;
+	//! @brief Threshold to tell when the buffer needs data
+	typename boost::circular_buffer<BasicSampleFrame>::size_type m_threshold;
 	//! @brief The requester thread that pulls the audio data from the source
 	boost::thread m_requestThread;
 	//! @brief The audio source to pull the data from
 	AbstractAudioSource::WeakPtr m_source;
+	
 	//! @brief Sum of all left absolute sample values
 	uint64_t m_volLeftSum;
+	//! @brief Sum of all left absolute sample values (logarithmic)
 	uint16_t m_volLeftLog;
+	
 	//! @brief Sum of all right absolute sample values
 	uint64_t m_volRightSum;
+	//! @brief Sum of all right absolute sample values (logarithmic)
 	uint16_t m_volRightLog;
+	
+	//! @brief Do the volume calculation
 	const bool m_doVolumeCalc;
+	//! @brief @c true when the destructor is running, stops the thread
 	bool m_stopping;
-	mutable boost::mutex m_queueMutex;
-	boost::condition_variable m_queueChanged;
+	//! @brief Buffer modification mutex
+	mutable boost::mutex m_bufferMutex;
+	//! @brief Buffer modification notifier
+	boost::condition_variable m_bufferChanged;
+	
 	/**
 	 * @brief Audio data pulling thread function
 	 * @param[in] fifo The FIFO that owns the thread
@@ -73,45 +82,47 @@ private:
 	 * @see m_requestThread
 	 */
 	void requestThread();
+	
 	/**
 	 * @brief Adds a buffer to the internal queue by copying its contents
 	 * @param[in] buf The buffer to add
 	 */
-	void pushBuffer( const AudioFrameBuffer& buf );
+	void pushData( const AudioFrameBuffer& buf );
+
 public:
 	/**
 	 * @brief Initialize the buffer
 	 * @param[in] source The audio source that should be buffered
-	 * @param[in] minFrameCount Initial value for m_minFrameCount (minimum 256)
+	 * @param[in] threshold Initial value for m_threshold (minimum 256)
 	 */
-	AudioFifo( const AbstractAudioSource::WeakPtr& source, size_t minFrameCount, bool doVolumeCalc );
+	AudioFifo( const AbstractAudioSource::WeakPtr& source, size_t threshold, bool doVolumeCalc );
 	~AudioFifo();
+	
 	/**
 	 * @brief Get the number of buffered frames
 	 * @return Number of buffered frames
 	 */
 	size_t queuedLength() const;
+	
 	/**
 	 * @brief Get the minimum number of frames that should be queued
 	 * @return m_minFrameCount
 	 */
-	size_t minFrameCount() const;
-	/**
-	 * @brief Get the number of queued chunks
-	 * @return Number of queued chunks
-	 */
-	size_t queuedChunkCount() const;
+	size_t capacity() const;
+		
 	/**
 	 * @brief Set the FIFO buffer length
 	 * @param[in] len The requested buffer length (minimum 256)
 	 */
-	void setMinFrameCount( size_t len );
+	void setCapacity( size_t len );
+	
 	/**
 	 * @brief Check if the FIFO is empty
 	 * @retval true FIFO is empty
 	 * @retval false FIFO is not empty
 	 */
 	bool isEmpty() const;
+	
 	uint16_t volumeLeft() const;
 	uint16_t volumeRight() const;
 	size_t pullData( AudioFrameBuffer& buffer, size_t requestedFrames );

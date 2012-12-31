@@ -158,13 +158,6 @@ typedef std::shared_ptr< std::vector<BasicSampleFrame> > AudioFrameBuffer;
 typedef std::shared_ptr< std::vector<MixerSampleFrame> > MixerFrameBuffer;
 
 /**
- * @brief Double-ended queue of AudioFrameBuffer's
- * @details
- * Used to create FIFO buffers.
- */
-typedef std::queue< AudioFrameBuffer > AudioFrameBufferQueue;
-
-/**
  * @}
  */
 
