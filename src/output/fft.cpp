@@ -78,7 +78,7 @@ void DFFT(std::vector<std::complex<float>>& data) {
 		}   */
 }
 
-void samplesToComplex( BasicSample* smpPtr, std::vector<std::complex<float>>* dest ) {
+void samplesToComplex( const BasicSample* smpPtr, std::vector<std::complex<float>>* dest ) {
 	BOOST_ASSERT( smpPtr != nullptr );
 	BOOST_ASSERT( dest != nullptr );
 	dest->resize(ppp::FFT::InputLength);
@@ -100,7 +100,7 @@ void fftToAmp( const std::vector<std::complex<float>>& fft, std::vector<uint16_t
 
 namespace ppp {
 	namespace FFT {
-		void doFFT( AudioFrameBuffer& samples, std::vector< uint16_t >* L, std::vector< uint16_t >* R ) {
+		void doFFT( const AudioFrameBuffer& samples, std::vector< uint16_t >* L, std::vector< uint16_t >* R ) {
 			BOOST_ASSERT( L != nullptr );
 			BOOST_ASSERT( R != nullptr );
 			BOOST_ASSERT( samples );

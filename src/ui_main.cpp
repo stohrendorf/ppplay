@@ -43,7 +43,9 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, con
 	m_modTitle( nullptr ),
 	m_progress( nullptr ),
 	m_module( module ),
-	m_output( output )
+	m_output( output ),
+	m_fftLeft(),
+	m_fftRight()
 {
 	logger()->trace( L4CXX_LOCATION, "Initializing" );
 	setSize( parent->area().size() );
@@ -256,5 +258,10 @@ void UIMain::onTimer()
 	m_progress->setMax( modLock->length() );
 	m_progress->setValue( modLock->state().playedFrames );
 	logger()->trace( L4CXX_LOCATION, "Drawing" );
+	const float scale = m_fftLeft.size()/(area().width()*8);
+	for(size_t i=0; i<m_fftLeft.size(); i++) {
+		ppg::SDLScreen::instance()->drawPixel(i/scale, m_fftLeft[i], ppg::Color::LightAqua);
+		ppg::SDLScreen::instance()->drawPixel(i/scale, m_fftRight[i], ppg::Color::LightAqua);
+	}
 	ppg::SDLScreen::instance()->draw();
 }

@@ -56,7 +56,8 @@ SDLAudioOutput::SDLAudioOutput( const AbstractAudioSource::WeakPtr& src ) :
 	AbstractAudioOutput( src ),
 	m_mutex(),
 	m_fifo( src, 4096 ),
-	m_volObserver(&m_fifo)
+	m_volObserver(&m_fifo),
+	m_fftObserver(&m_fifo)
 {
 	logger()->trace( L4CXX_LOCATION, "Created" );
 }

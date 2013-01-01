@@ -114,7 +114,7 @@ static inline void g_drawPixel( int x, int y, Uint32 color )
  * @}
  */
 
-SDLScreen::SDLScreen( int w, int h, const std::string& title ) : Widget( nullptr ), m_cursorX( 0 ), m_cursorY( 0 )
+SDLScreen::SDLScreen( int w, int h, const std::string& title ) : Widget( nullptr ), m_cursorX( 0 ), m_cursorY( 0 ), m_pixels(nullptr), m_pixelsVisible(nullptr)
 {
 	if( g_screenSurface != nullptr ) {
 		throw std::runtime_error( "SDL Screen Surface already aquired" );
@@ -144,6 +144,10 @@ SDLScreen::SDLScreen( int w, int h, const std::string& title ) : Widget( nullptr
 	}
 	setPosition( 0, 0 );
 	setSize( g_screenSurface->w / 8, g_screenSurface->h / 16 );
+	m_pixels = new Color[g_screenSurface->w * g_screenSurface->h];
+	m_pixelsVisible = new Color[g_screenSurface->w * g_screenSurface->h];
+	std::fill_n( m_pixels, g_screenSurface->w * g_screenSurface->h, Color::None );
+	std::fill_n( m_pixelsVisible, g_screenSurface->w * g_screenSurface->h, Color::None );
 	SDL_WM_SetCaption( title.c_str(), nullptr );
 	g_dosColors[static_cast<int>( Color::Black )]       = SDL_MapRGB( g_screenSurface->format, 0x00, 0x00, 0x00 ); // black
 	g_dosColors[static_cast<int>( Color::Blue )]        = SDL_MapRGB( g_screenSurface->format, 0x00, 0x00, 0xaa ); // blue
@@ -191,6 +195,8 @@ SDLScreen::~SDLScreen()
 	g_colorsB = nullptr;
 	delete[] g_currentColorsB;
 	g_currentColorsB = nullptr;
+	delete[] m_pixels;
+	delete[] m_pixelsVisible;
 }
 
 void SDLScreen::drawChar8( int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque )
@@ -231,6 +237,7 @@ void SDLScreen::clear( uint8_t c, Color foreground, Color background )
 	std::fill_n( g_chars, size, c );
 	std::fill_n( g_colorsF, size, foreground );
 	std::fill_n( g_colorsB, size, background );
+	clearPixels();
 }
 
 void SDLScreen::drawThis()
@@ -242,6 +249,22 @@ void SDLScreen::drawThis()
 	}
 	int w = area().width();
 	int h = area().height();
+	{
+		Color* c = m_pixels;
+		Color* cv = m_pixelsVisible;
+		for(int y=0; y<h*16; y++) {
+			for(int x=0; x<w*8; x++) {
+				if( *c != *cv ) {
+					if( *c == Color::None ) {
+						*c = Color::Black;
+					}
+					g_drawPixel(x, y, g_dosColors[static_cast<int>( *cv = *c )]);
+				}
+				c++;
+				cv++;
+			}
+		}
+	}
 	for( int y = 0; y < h; y++ ) {
 		for( int x = 0; x < w; x++ ) {
 			int o = x + y * w;

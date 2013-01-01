@@ -261,6 +261,9 @@ int main( int argc, char* argv[] )
 					output.reset();
 					break;
 				}
+				if( output && uiMain ) {
+					uiMain->setFft( reinterpret_cast<SDLAudioOutput*>(output.get())->leftFft(), reinterpret_cast<SDLAudioOutput*>(output.get())->rightFft() );
+				}
 				if( !SDL_PollEvent( &event ) ) {
 					// usleep( 10000 );
 					boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );

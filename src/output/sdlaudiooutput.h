@@ -22,6 +22,7 @@
 #include "abstractaudiooutput.h"
 #include "audiofifo.h"
 #include "volumeobserver.h"
+#include "fftobserver.h"
 
 #include <boost/thread.hpp>
 
@@ -42,10 +43,19 @@ public:
 	//! @copydoc IAudioOutput::IAudioOutput(const IAudioSource::WeakPtr&)
 	explicit SDLAudioOutput( const AbstractAudioSource::WeakPtr& src );
 	virtual ~SDLAudioOutput();
+	const std::vector<uint16_t>& leftFft() const
+	{
+		return m_fftObserver.left();
+	}
+	const std::vector<uint16_t>& rightFft() const
+	{
+		return m_fftObserver.right();
+	}
 private:
 	boost::mutex m_mutex;
 	AudioFifo m_fifo;
 	VolumeObserver m_volObserver;
+	FftObserver m_fftObserver;
 	/**
 	 * @brief SDL Audio callback handler
 	 * @param[in] userdata Pointer to SDLAudioOutput

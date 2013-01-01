@@ -44,6 +44,8 @@ private:
 	ppg::ProgressBar* m_progress;
 	std::weak_ptr<ppp::AbstractModule> m_module;
 	AbstractAudioOutput::WeakPtr m_output;
+	std::vector<uint16_t> m_fftLeft;
+	std::vector<uint16_t> m_fftRight;
 	virtual void drawThis();
 public:
 	UIMain( Widget* parent, const ppp::AbstractModule::Ptr& module, const AbstractAudioOutput::Ptr& output );
@@ -57,6 +59,11 @@ public:
 	ppg::Label* modTitle();
 	ppg::ProgressBar* progressBar();
 	virtual void onTimer();
+	void setFft(const std::vector<uint16_t>& left, const std::vector<uint16_t>& right)
+	{
+		m_fftLeft = left;
+		m_fftRight = right;
+	}
 };
 
 #endif // UI_MAIN_H

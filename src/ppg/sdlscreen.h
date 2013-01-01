@@ -54,6 +54,8 @@ private:
 	virtual void drawThis();
 	int m_cursorX; //!< @brief Cursor X position
 	int m_cursorY; //!< @brief Cursor Y position
+	Color* m_pixels;
+	Color* m_pixelsVisible;
 public:
 	static SDLScreen* instance();
 	/**
@@ -72,6 +74,18 @@ public:
 	 */
 	void clear( uint8_t c, Color foreground, Color background );
 	virtual void drawChar( int x, int y, char c );
+	void drawPixel(int x, int y, Color c)
+	{
+		int idx = y*area().width() + x;
+		if( idx<0 || idx>=area().width()*8*area().height()*16 ) {
+			return;
+		}
+		m_pixels[idx] = c;
+	}
+	void clearPixels()
+	{
+		std::fill_n(m_pixels, area().width()*8*area().height()*16, Color::None);
+	}
 	virtual void setFgColorAt( int x, int y, Color c );
 	virtual void setBgColorAt( int x, int y, Color c );
 	virtual bool onMouseMove( int x, int y );

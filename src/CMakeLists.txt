@@ -33,7 +33,6 @@ include(GenerateExportHeader)
 add_compiler_export_flags()
 
 add_library(ppplay_core SHARED
-	stuff/fft.cpp
 	stuff/pluginregistry.cpp
 	stuff/numberutils.cpp
 	stuff/sdltimer.cpp
@@ -41,6 +40,8 @@ add_library(ppplay_core SHARED
 	output/audiofifo.cpp
 	output/abstractaudiooutput.cpp
 	output/abstractaudiosource.cpp
+	output/fft.cpp
+	output/fftobserver.cpp
 	output/volumeobserver.cpp
 	light4cxx/location.cpp
 	light4cxx/logger.cpp

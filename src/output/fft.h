@@ -30,9 +30,7 @@ namespace ppp {
 	namespace FFT {
 		static constexpr uint8_t  InputBits    = 11;
 		static constexpr uint16_t InputLength  = 1 << InputBits;
-
-		static constexpr size_t FftSampleCount = InputLength;
-		void PPPLAY_CORE_EXPORT doFFT( AudioFrameBuffer& samples, std::vector<uint16_t>* L, std::vector<uint16_t>* R );
+		void PPPLAY_CORE_EXPORT doFFT( const AudioFrameBuffer& samples, std::vector<uint16_t>* L, std::vector<uint16_t>* R );
 	}
 }
 
