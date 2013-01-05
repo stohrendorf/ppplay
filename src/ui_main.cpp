@@ -261,7 +261,7 @@ void UIMain::onTimer()
 	const float scale = m_fftLeft.size()/(area().width()*8);
 	for(size_t i=0; i<m_fftLeft.size(); i++) {
 		ppg::SDLScreen::instance()->drawPixel(i/scale, m_fftLeft[i], ppg::Color::LightAqua);
-		ppg::SDLScreen::instance()->drawPixel(i/scale, m_fftRight[i], ppg::Color::LightAqua);
+		ppg::SDLScreen::instance()->drawPixel(i/scale, m_fftRight[i], ppg::Color::LightRed);
 	}
 	ppg::SDLScreen::instance()->draw();
 }

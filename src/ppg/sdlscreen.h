@@ -36,26 +36,9 @@ class PPPLAY_PPG_EXPORT SDLScreen : public Widget
 {
 	DISABLE_COPY( SDLScreen )
 private:
-	/**
-	 * @brief Draw an 8x8 char
-	 * @param[in] x Left position
-	 * @param[in] y Top position
-	 * @param[in] c Char to draw
-	 * @param[in] foreground Foreground color
-	 * @param[in] background Background color
-	 * @param[in] opaque Set to @c false to draw a transparent char
-	 */
-	void drawChar8( int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque = true );
-	/**
-	 * @copydoc drawChar8()
-	 * @brief Draw an 8x16 char
-	 */
-	void drawChar16( int x, int y, uint8_t c, uint32_t foreground, uint32_t background, bool opaque = true );
 	virtual void drawThis();
 	int m_cursorX; //!< @brief Cursor X position
 	int m_cursorY; //!< @brief Cursor Y position
-	Color* m_pixels;
-	Color* m_pixelsVisible;
 public:
 	static SDLScreen* instance();
 	/**
@@ -74,18 +57,7 @@ public:
 	 */
 	void clear( uint8_t c, Color foreground, Color background );
 	virtual void drawChar( int x, int y, char c );
-	void drawPixel(int x, int y, Color c)
-	{
-		int idx = y*area().width() + x;
-		if( idx<0 || idx>=area().width()*8*area().height()*16 ) {
-			return;
-		}
-		m_pixels[idx] = c;
-	}
-	void clearPixels()
-	{
-		std::fill_n(m_pixels, area().width()*8*area().height()*16, Color::None);
-	}
+	void drawPixel(int x, int y, Color c);
 	virtual void setFgColorAt( int x, int y, Color c );
 	virtual void setBgColorAt( int x, int y, Color c );
 	virtual bool onMouseMove( int x, int y );
@@ -94,6 +66,7 @@ public:
 	 * @retval true if the screen has the mouse focus
 	 */
 	bool hasMouseFocus() const;
+	
 };
 } // namespace ppg
 
