@@ -133,12 +133,12 @@ size_t AudioFifo::pullData( AudioFrameBuffer& data, size_t size )
 	return size;
 }
 
-size_t AudioFifo::queuedLength() const noexcept
+size_t AudioFifo::queuedLength() const
 {
 	return m_buffer.size();
 }
 
-bool AudioFifo::isEmpty() const noexcept
+bool AudioFifo::isEmpty() const
 {
 	return m_buffer.empty();
 }

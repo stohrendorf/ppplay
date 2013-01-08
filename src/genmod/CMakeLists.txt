@@ -12,7 +12,6 @@ add_library(ppplay_module_base SHARED
 	sample.cpp
 	ipatterncell.cpp
 	modulestate.cpp
-	songinfo.cpp
 	standardfxdesc.cpp
 )
 generate_export_header(ppplay_module_base)
