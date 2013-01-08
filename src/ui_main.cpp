@@ -259,9 +259,10 @@ void UIMain::onTimer()
 	m_progress->setValue( modLock->state().playedFrames );
 	logger()->trace( L4CXX_LOCATION, "Drawing" );
 	const float scale = m_fftLeft.size()/(area().width()*8);
+	ppg::SDLScreen::instance()->clearPixels();
 	for(size_t i=0; i<m_fftLeft.size(); i++) {
-		ppg::SDLScreen::instance()->drawPixel(i/scale, m_fftLeft[i], ppg::Color::LightAqua);
-		ppg::SDLScreen::instance()->drawPixel(i/scale, m_fftRight[i], ppg::Color::LightRed);
+		ppg::SDLScreen::instance()->drawPixel(i/scale, ppg::SDLScreen::instance()->area().height()*16 - m_fftLeft[i]/2 - 1, ppg::Color::LightGreen);
+		ppg::SDLScreen::instance()->drawPixel(i/scale, ppg::SDLScreen::instance()->area().height()*16 - m_fftRight[i]/2 - 1, ppg::Color::LightRed);
 	}
 	ppg::SDLScreen::instance()->draw();
 }

@@ -59,7 +59,7 @@ struct InstanceData
 	 * @brief Maps DOS color values to their on-screen representation
 	 * @see ppg::Color
 	 */
-	Uint32 dosColors[16];
+	Uint32 dosColors[17];
 	
 	inline Uint32 mapColor(ppg::Color c) const
 	{
@@ -97,8 +97,9 @@ struct InstanceData
 	 */
 	SDL_Surface* screenSurface;
 	
-	Color* pixels;
-	Color* visiblePixels;
+	SDL_Surface* backgroundLayer;
+	SDL_Surface* pixelLayer;
+	SDL_Surface* foregroundLayer;
 	
 	SDLScreen* screen;
 	
@@ -106,12 +107,12 @@ struct InstanceData
 	size_t charHeight;
 	
 	constexpr InstanceData()
-	: dosColors{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+	: dosColors{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
 	, chars(nullptr), visibleChars(nullptr)
 	, colorsF(nullptr), visibleColorsF(nullptr)
 	, colorsB(nullptr), visibleColorsB(nullptr)
 	, screenSurface(nullptr)
-	, pixels(nullptr), visiblePixels(nullptr)
+	, backgroundLayer(nullptr), pixelLayer(nullptr), foregroundLayer(nullptr)
 	, screen(nullptr)
 	, charWidth(0), charHeight(0)
 	{
@@ -142,47 +143,59 @@ struct InstanceData
 		delete[] visibleColorsB;
 		visibleColorsB = nullptr;
 		
-		delete[] pixels;
-		pixels = nullptr;
+		SDL_FreeSurface( backgroundLayer );
+		backgroundLayer = nullptr;
 		
-		delete[] visiblePixels;
-		visiblePixels = nullptr;
+		SDL_FreeSurface( pixelLayer );
+		pixelLayer = nullptr;
+		
+		SDL_FreeSurface( foregroundLayer );
+		foregroundLayer = nullptr;
 	}
 	
-	bool contains(int x, int y)
+	bool contains(int x, int y) const
 	{
-		return ( x >= 0 ) || ( y >= 0 ) || ( y < screenSurface->h ) || ( x < screenSurface->w );
+		return ( x >= 0 ) && ( y >= 0 ) && ( y < screenSurface->h ) && ( x < screenSurface->w );
 	}
 	
 	/**
 	 * @brief Draw a pixel
+	 * @param[in,out] surface Surface
 	 * @param[in] x X position
 	 * @param[in] y Y position
 	 * @param[in] color %Screen color value
 	 */
-	inline bool setSurfacePixel(int x, int y, Uint32 color)
+	inline bool setPixel(SDL_Surface* surface, int x, int y, Uint32 color) const
 	{
 		if(contains(x,y)) {
-			reinterpret_cast<Uint32*>( screenSurface->pixels )[( ( y * screenSurface->pitch ) >> 2 ) + x] = color;
+			if(SDL_MUSTLOCK(surface))  {
+				SDL_LockSurface( surface );
+			}
+			reinterpret_cast<Uint32*>( surface->pixels )[ y * surface->pitch / sizeof(Uint32) + x] = color;
+			if(SDL_MUSTLOCK(surface))  {
+				SDL_UnlockSurface( surface );
+			}
 			return true;
 		}
 		return false;
 	}
 	
-	inline bool setOverlayPixel(int x, int y, Color c)
+	void clearPixels(Color c = Color::None)
 	{
-		if(!contains(x/8, y/16)) {
-			return false;
+		clearSurface( pixelLayer, c );
+	}
+
+	void clearSurface(SDL_Surface* surface, Color c) const
+	{
+		if(SDL_MUSTLOCK(surface))  {
+			SDL_LockSurface( surface );
 		}
-		pixels[y*charWidth*8 + x] = c;
-		return true;
+		std::fill_n(reinterpret_cast<Uint32*>(surface->pixels), surface->h * surface->pitch / sizeof(Uint32), mapColor(c));
+		if(SDL_MUSTLOCK(surface))  {
+			SDL_UnlockSurface( surface );
+		}
 	}
-
-	void clearPixels()
-	{
-		std::fill_n(pixels, charWidth*charHeight*8*16, Color::None);
-	}
-
+	
 	bool init(int charWidth, int charHeight, const std::string& title);
 	
 	/**
@@ -201,10 +214,13 @@ struct InstanceData
 		for( int py = 0; py < 16; py++ ) {
 			for( int px = 0; px < 8; px++ ) {
 				if( plFont816[uint8_t(c)][py] & ( 0x80 >> px ) ) {
-					setSurfacePixel( x + px, y + py, foreground );
+					setPixel( foregroundLayer, x + px, y + py, foreground );
 				}
-				else if( opaque ) {
-					setSurfacePixel( x + px, y + py, background );
+				else {
+					setPixel( foregroundLayer, x + px, y + py, mapColor(Color::None) );
+				}
+				if( opaque ) {
+					setPixel( backgroundLayer, x + px, y + py, background );
 				}
 			}
 		}
@@ -224,15 +240,7 @@ bool InstanceData::init( int charWidth, int charHeight, const std::string& title
 			BOOST_THROW_EXCEPTION( std::runtime_error( "Initialization of SDL Video surface failed" ) );
 		}
 	}
-	Uint8 bestBpp = 32;
-	Uint32 bestFlags = SDL_DOUBLEBUF;
-	{
-		const SDL_VideoInfo* info = SDL_GetVideoInfo();
-		if( info->vfmt ) {
-			bestBpp = info->vfmt->BitsPerPixel;
-		}
-	}
-	screenSurface = SDL_SetVideoMode( charWidth * 8, charHeight * 16, bestBpp, bestFlags );
+	screenSurface = SDL_SetVideoMode( charWidth * 8, charHeight * 16, 32, SDL_DOUBLEBUF );
 	if( !screenSurface ) {
 		BOOST_THROW_EXCEPTION( std::runtime_error( "Screen Initialization failed" ) );
 	}
@@ -243,22 +251,29 @@ bool InstanceData::init( int charWidth, int charHeight, const std::string& title
 		}
 	}
 	SDL_WM_SetCaption( title.c_str(), nullptr );
-	dosColors[static_cast<int>( Color::Black )]       = SDL_MapRGB( screenSurface->format, 0x00, 0x00, 0x00 ); // black
-	dosColors[static_cast<int>( Color::Blue )]        = SDL_MapRGB( screenSurface->format, 0x00, 0x00, 0xaa ); // blue
-	dosColors[static_cast<int>( Color::Green )]       = SDL_MapRGB( screenSurface->format, 0x00, 0xaa, 0x00 ); // green
-	dosColors[static_cast<int>( Color::Aqua )]        = SDL_MapRGB( screenSurface->format, 0x00, 0xaa, 0xaa ); // aqua
-	dosColors[static_cast<int>( Color::Red )]         = SDL_MapRGB( screenSurface->format, 0xaa, 0x00, 0x00 ); // red
-	dosColors[static_cast<int>( Color::Purple )]      = SDL_MapRGB( screenSurface->format, 0xaa, 0x00, 0xaa ); // purple
-	dosColors[static_cast<int>( Color::Brown )]       = SDL_MapRGB( screenSurface->format, 0xaa, 0x55, 0x00 ); // brown
-	dosColors[static_cast<int>( Color::White )]       = SDL_MapRGB( screenSurface->format, 0xaa, 0xaa, 0xaa ); // white
-	dosColors[static_cast<int>( Color::Gray )]        = SDL_MapRGB( screenSurface->format, 0x55, 0x55, 0x55 ); // gray
-	dosColors[static_cast<int>( Color::LightBlue )]   = SDL_MapRGB( screenSurface->format, 0x55, 0x55, 0xff ); // light blue
-	dosColors[static_cast<int>( Color::LightGreen )]  = SDL_MapRGB( screenSurface->format, 0x55, 0xff, 0x55 ); // light green
-	dosColors[static_cast<int>( Color::LightAqua )]   = SDL_MapRGB( screenSurface->format, 0x55, 0xff, 0xff ); // light aqua
-	dosColors[static_cast<int>( Color::LightRed )]    = SDL_MapRGB( screenSurface->format, 0xff, 0x55, 0x55 ); // light red (orange?)
-	dosColors[static_cast<int>( Color::LightPurple )] = SDL_MapRGB( screenSurface->format, 0xff, 0x55, 0xff ); // light purple
-	dosColors[static_cast<int>( Color::Yellow )]      = SDL_MapRGB( screenSurface->format, 0xff, 0xff, 0x55 ); // yellow
-	dosColors[static_cast<int>( Color::BrightWhite )] = SDL_MapRGB( screenSurface->format, 0xff, 0xff, 0xff ); // bright white
+	
+	backgroundLayer = SDL_CreateRGBSurface(SDL_SWSURFACE,              charWidth*8, charHeight*16, 32, 0xff, 0xff<<8, 0xff<<16, 0       );
+	pixelLayer      = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA, charWidth*8, charHeight*16, 32, 0xff, 0xff<<8, 0xff<<16, 0xff<<24);
+	foregroundLayer = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA, charWidth*8, charHeight*16, 32, 0xff, 0xff<<8, 0xff<<16, 0xff<<24);
+	clearSurface( backgroundLayer, Color::Black );
+	
+	dosColors[static_cast<int>( Color::None )]        = SDL_MapRGBA( pixelLayer->format, 0x00, 0x00, 0x00, 0 ); // transparent
+	dosColors[static_cast<int>( Color::Black )]       = SDL_MapRGB( pixelLayer->format, 0x00, 0x00, 0x00 ); // black
+	dosColors[static_cast<int>( Color::Blue )]        = SDL_MapRGB( pixelLayer->format, 0x00, 0x00, 0xaa ); // blue
+	dosColors[static_cast<int>( Color::Green )]       = SDL_MapRGB( pixelLayer->format, 0x00, 0xaa, 0x00 ); // green
+	dosColors[static_cast<int>( Color::Aqua )]        = SDL_MapRGB( pixelLayer->format, 0x00, 0xaa, 0xaa ); // aqua
+	dosColors[static_cast<int>( Color::Red )]         = SDL_MapRGB( pixelLayer->format, 0xaa, 0x00, 0x00 ); // red
+	dosColors[static_cast<int>( Color::Purple )]      = SDL_MapRGB( pixelLayer->format, 0xaa, 0x00, 0xaa ); // purple
+	dosColors[static_cast<int>( Color::Brown )]       = SDL_MapRGB( pixelLayer->format, 0xaa, 0x55, 0x00 ); // brown
+	dosColors[static_cast<int>( Color::White )]       = SDL_MapRGB( pixelLayer->format, 0xaa, 0xaa, 0xaa ); // white
+	dosColors[static_cast<int>( Color::Gray )]        = SDL_MapRGB( pixelLayer->format, 0x55, 0x55, 0x55 ); // gray
+	dosColors[static_cast<int>( Color::LightBlue )]   = SDL_MapRGB( pixelLayer->format, 0x55, 0x55, 0xff ); // light blue
+	dosColors[static_cast<int>( Color::LightGreen )]  = SDL_MapRGB( pixelLayer->format, 0x55, 0xff, 0x55 ); // light green
+	dosColors[static_cast<int>( Color::LightAqua )]   = SDL_MapRGB( pixelLayer->format, 0x55, 0xff, 0xff ); // light aqua
+	dosColors[static_cast<int>( Color::LightRed )]    = SDL_MapRGB( pixelLayer->format, 0xff, 0x55, 0x55 ); // light red (orange?)
+	dosColors[static_cast<int>( Color::LightPurple )] = SDL_MapRGB( pixelLayer->format, 0xff, 0x55, 0xff ); // light purple
+	dosColors[static_cast<int>( Color::Yellow )]      = SDL_MapRGB( pixelLayer->format, 0xff, 0xff, 0x55 ); // yellow
+	dosColors[static_cast<int>( Color::BrightWhite )] = SDL_MapRGB( pixelLayer->format, 0xff, 0xff, 0xff ); // bright white
 	
 	this->charWidth = charWidth;
 	this->charHeight = charHeight;
@@ -281,12 +296,7 @@ bool InstanceData::init( int charWidth, int charHeight, const std::string& title
 	
 	visibleColorsB = new Color[size];
 	std::fill_n( visibleColorsB, size, Color::Black );
-	
-	pixels = new Color[size * 8 * 16];
-	std::fill_n( pixels, size*8*16, Color::None);
-	
-	visiblePixels = new Color[size * 8 * 16];
-	std::fill_n( visiblePixels, size*8*16, Color::None);
+
 	return true;
 }
 
@@ -304,22 +314,6 @@ void InstanceData::redraw(bool showMouse, int cursorX, int cursorY)
 	if( SDL_MUSTLOCK( screenSurface ) ) {
 		if( SDL_LockSurface( screenSurface ) < 0 ) {
 			return;
-		}
-	}
-	{
-		Color* c = pixels;
-		Color* cv = visiblePixels;
-		for(size_t y=0; y<charHeight*16; y++) {
-			for(size_t x=0; x<charWidth*8; x++) {
-				if( *c != *cv ) {
-					if( *c == Color::None ) {
-						*c = Color::Black;
-					}
-					setSurfacePixel(x, y, mapColor( *cv = *c ));
-				}
-				c++;
-				cv++;
-			}
 		}
 	}
 	for( size_t y = 0; y < charHeight; y++ ) {
@@ -344,6 +338,9 @@ void InstanceData::redraw(bool showMouse, int cursorX, int cursorY)
 		visibleColorsF[ofs] = ~colorsF[ofs];
 		visibleColorsB[ofs] = ~colorsB[ofs];
 	}
+	SDL_BlitSurface( backgroundLayer, nullptr, screenSurface, nullptr );
+	SDL_BlitSurface( pixelLayer,      nullptr, screenSurface, nullptr );
+	SDL_BlitSurface( foregroundLayer, nullptr, screenSurface, nullptr );
 	if( SDL_MUSTLOCK( screenSurface ) ) {
 		SDL_UnlockSurface( screenSurface );
 	}
@@ -428,7 +425,12 @@ bool SDLScreen::hasMouseFocus() const
 
 void SDLScreen::drawPixel( int x, int y, Color c )
 {
-	instanceData.setOverlayPixel(x,y,c);
+	instanceData.setPixel(instanceData.pixelLayer, x, y, instanceData.mapColor(c));
+}
+
+void SDLScreen::clearPixels( Color c )
+{
+	instanceData.clearPixels(c);
 }
 
 } // namespace ppg

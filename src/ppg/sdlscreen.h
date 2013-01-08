@@ -58,6 +58,7 @@ public:
 	void clear( uint8_t c, Color foreground, Color background );
 	virtual void drawChar( int x, int y, char c );
 	void drawPixel(int x, int y, Color c);
+	void clearPixels(Color c = Color::None);
 	virtual void setFgColorAt( int x, int y, Color c );
 	virtual void setBgColorAt( int x, int y, Color c );
 	virtual bool onMouseMove( int x, int y );
