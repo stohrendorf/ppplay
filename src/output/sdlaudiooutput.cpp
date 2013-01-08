@@ -55,7 +55,9 @@ size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
 SDLAudioOutput::SDLAudioOutput( const AbstractAudioSource::WeakPtr& src ) :
 	AbstractAudioOutput( src ),
 	m_mutex(),
-	m_fifo( src, 4096, true )
+	m_fifo( src, 4096 ),
+	m_volObserver(&m_fifo),
+	m_fftObserver(&m_fifo)
 {
 	logger()->trace( L4CXX_LOCATION, "Created" );
 }
@@ -128,12 +130,12 @@ void SDLAudioOutput::internal_pause()
 
 uint16_t SDLAudioOutput::internal_volumeLeft() const
 {
-	return m_fifo.volumeLeft();
+	return m_volObserver.leftVol();
 }
 
 uint16_t SDLAudioOutput::internal_volumeRight() const
 {
-	return m_fifo.volumeRight();
+	return m_volObserver.rightVol();
 }
 
 light4cxx::Logger* SDLAudioOutput::logger()

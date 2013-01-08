@@ -140,4 +140,23 @@ public:
 	void finishLoad();
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Weffc++"
+template<>
+inline AbstractArchive& AbstractArchive::operator%(std::string& str) {
+	if( !m_loading ) {
+		size_t len = str.length();
+		m_stream->write(&len);
+		m_stream->write(str.data(), len);
+	}
+	else {
+		size_t len = 0;
+		m_stream->read(&len);
+		str.resize(len);
+		m_stream->read( &str.front(), len );
+	}
+	return *this;
+}
+#pragma GCC diagnostic pop
+
 #endif

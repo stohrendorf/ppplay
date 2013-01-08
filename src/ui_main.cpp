@@ -19,6 +19,11 @@
 #include "ui_main.h"
 
 #include "ppg/sdlscreen.h"
+#include "genmod/channelstate.h"
+#include "genmod/genbase.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 static light4cxx::Logger* logger()
 {
@@ -38,7 +43,9 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, con
 	m_modTitle( nullptr ),
 	m_progress( nullptr ),
 	m_module( module ),
-	m_output( output )
+	m_output( output ),
+	m_fftLeft(),
+	m_fftRight()
 {
 	logger()->trace( L4CXX_LOCATION, "Initializing" );
 	setSize( parent->area().size() );
@@ -71,12 +78,13 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, con
 		m_chanInfos.at( i ) = new ppg::Label( this );
 		m_chanInfos.at( i )->setWidth( area().width() - 4 );
 		m_chanInfos.at( i )->setPosition( 2, 5 + i );
-		m_chanInfos.at( i )->setFgColorRange( 4, ppg::Color::LightRed );
-		m_chanInfos.at( i )->setFgColorRange( 5, ppg::Color::BrightWhite, 3 );
-		m_chanInfos.at( i )->setFgColorRange( 9, ppg::Color::LightBlue );
-		m_chanInfos.at( i )->setFgColorRange( 10, ppg::Color::Aqua, 2 );
-		m_chanInfos.at( i )->setFgColorRange( 13, ppg::Color::LightGreen, 6 );
-		m_chanInfos.at( i )->setFgColorRange( 35, ppg::Color::BrightWhite, 0 );
+		// note triggered
+		m_chanInfos.at( i )->setFgColorRange( 3, ppg::Color::LightRed );
+		// note
+		m_chanInfos.at( i )->setFgColorRange( 4, ppg::Color::BrightWhite, 3 );
+		// effect
+		m_chanInfos.at( i )->setFgColorRange( 8, ppg::Color::LightGreen, 6 );
+		m_chanInfos.at( i )->setFgColorRange( 15, ppg::Color::BrightWhite, 0 );
 		m_chanInfos.at( i )->show();
 	}
 	for( size_t i = 0; i < m_chanCells.size(); i++ ) {
@@ -103,11 +111,11 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, con
 	if( module->songCount()>1 ) {
 		m_trackerInfo->setText( m_trackerInfo->text() + " - Multi-song" );
 	}
-	if( module->trimmedTitle().length() > 0 ) {
-		m_modTitle->setText( std::string( " -=\xf0[ " ) + module->filename() + " : " + module->trimmedTitle() + " ]\xf0=- " );
+	if( !boost::trim_copy( module->metaInfo().title ).empty() ) {
+		m_modTitle->setText( std::string( " -=\xf0[ " ) + boost::filesystem::basename(module->metaInfo().filename) + " : " + boost::trim_copy( module->metaInfo().title ) + " ]\xf0=- " );
 	}
 	else {
-		m_modTitle->setText( std::string( " -=\xf0[ " ) + module->filename() + " ]\xf0=- " );
+		m_modTitle->setText( std::string( " -=\xf0[ " ) + boost::filesystem::basename(module->metaInfo().filename) + " ]\xf0=- " );
 	}
 	m_progress = new ppg::ProgressBar( this, 0, 40 );
 	m_progress->setPosition( ( area().width() - 40 ) / 2, 3 );
@@ -158,6 +166,58 @@ ppg::Label* UIMain::modTitle()
 	return m_modTitle;
 }
 
+namespace
+{
+	std::string stateToString(size_t idx, const ppp::ChannelState& state)
+	{
+		std::string res = stringFmt("%02d ", idx+1);
+		if( !state.active ) {
+			return res;
+		}
+		res += state.noteTriggered ? '*' : ' ';
+		if( state.note == ppp::ChannelState::NoNote ) {
+			res += "... ";
+		}
+		else if( state.note == ppp::ChannelState::NoteCut ) {
+			res += "^^^ ";
+		}
+		else if( state.note == ppp::ChannelState::KeyOff ) {
+			res += "=== ";
+		}
+		else if( state.note == ppp::ChannelState::TooLow ) {
+			res += "___ ";
+		}
+		else if( state.note == ppp::ChannelState::TooHigh ) {
+			res += "+++ ";
+		}
+		else {
+			res += ppp::NoteNames[state.note % 12];
+			res += char('0' + state.note/12);
+			res += ' ';
+		}
+		
+		res += state.fxDesc;
+		res += stringFmt(" V:%3d%%", int(state.volume));
+		if( state.panning == -100 ) {
+			res += " P:Left  ";
+		}
+		else if( state.panning == 0 ) {
+			res += " P:Centr ";
+		}
+		else if( state.panning == 100 ) {
+			res += " P:Right ";
+		}
+		else if( state.panning == ppp::ChannelState::Surround ) {
+			res += " P:Srnd  ";
+		}
+		else {
+			res += stringFmt(" P:%4d%% ", int(state.panning));
+		}
+		res += state.instrumentName;
+		return res;
+	}
+}
+
 void UIMain::onTimer()
 {
 	AbstractAudioOutput::Ptr outLock( m_output.lock() );
@@ -191,11 +251,17 @@ void UIMain::onTimer()
 		if( i >= 16 ) {
 			break;
 		}
-		m_chanInfos.at( i )->setText( modLock->channelStatus( i ) );
-		m_chanCells.at( i )->setText( modLock->channelCellString( i ) );
+		const ppp::ChannelState chanState = modLock->channelStatus(i);
+		m_chanCells.at( i )->setText( chanState.cell );
+		m_chanInfos.at( i )->setText( stateToString(i, chanState) );
 	}
 	m_progress->setMax( modLock->length() );
 	m_progress->setValue( modLock->state().playedFrames );
 	logger()->trace( L4CXX_LOCATION, "Drawing" );
+	const float scale = m_fftLeft.size()/(area().width()*8);
+	for(size_t i=0; i<m_fftLeft.size(); i++) {
+		ppg::SDLScreen::instance()->drawPixel(i/scale, m_fftLeft[i], ppg::Color::LightAqua);
+		ppg::SDLScreen::instance()->drawPixel(i/scale, m_fftRight[i], ppg::Color::LightRed);
+	}
 	ppg::SDLScreen::instance()->draw();
 }

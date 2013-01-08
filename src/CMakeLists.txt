@@ -3,6 +3,7 @@ include_directories(. ${CMAKE_CURRENT_BINARY_DIR})
 add_subdirectory(output)
 
 add_subdirectory(stream)
+add_subdirectory(stuff)
 
 add_subdirectory(ppg)
 
@@ -10,6 +11,9 @@ add_subdirectory(genmod)
 add_subdirectory(s3mmod)
 add_subdirectory(xmmod)
 add_subdirectory(modmod)
+add_subdirectory(hscmod)
+
+add_subdirectory(ymf262)
 
 configure_file(
 	"${CMAKE_CURRENT_SOURCE_DIR}/Mainpage.dox.in"
@@ -36,17 +40,21 @@ add_library(ppplay_core SHARED
 	output/audiofifo.cpp
 	output/abstractaudiooutput.cpp
 	output/abstractaudiosource.cpp
+	output/fft.cpp
+	output/fftobserver.cpp
+	output/volumeobserver.cpp
 	light4cxx/location.cpp
 	light4cxx/logger.cpp
 )
 generate_export_header(ppplay_core)
 
-target_link_libraries(ppplay_core ppplay_stream ${SDL_LIBRARY} ${Boost_LIBRARIES})
+target_link_libraries(ppplay_core ppplay_stream ${SDL_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY})
 if(WITH_MP3LAME)
 	target_link_libraries(ppplay_core ${mp3lame_LIB})
 endif()
 install(TARGETS ppplay_core DESTINATION lib EXPORT ppplayExports)
 install(FILES
+	stuff/fft.h
 	stuff/field.h
 	stuff/inputplugin.h
 	stuff/itimer.h

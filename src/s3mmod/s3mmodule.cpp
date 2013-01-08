@@ -120,7 +120,7 @@ S3mModule::~S3mModule()
 bool S3mModule::load( Stream* stream )
 {
 	try {
-		metaInfo().filename = stream->name();
+		noConstMetaInfo().filename = stream->name();
 		S3mModuleHeader s3mHdr;
 		*stream >> s3mHdr;
 		if( !stream->good() ) {  // header read completely?
@@ -153,26 +153,26 @@ bool S3mModule::load( Stream* stream )
 		unsigned char schismTest = 0;
 		switch( ( s3mHdr.createdWith >> 12 ) & 0x0f ) {
 			case s3mTIdScreamTracker:
-				metaInfo().trackerInfo = "ScreamTracker v";
+				noConstMetaInfo().trackerInfo = "ScreamTracker v";
 				break;
 			case s3mTIdImagoOrpheus:
-				metaInfo().trackerInfo = "Imago Orpheus v";
+				noConstMetaInfo().trackerInfo = "Imago Orpheus v";
 				break;
 			case s3mTIdImpulseTracker:
-				metaInfo().trackerInfo = "Impulse Tracker v";
+				noConstMetaInfo().trackerInfo = "Impulse Tracker v";
 				break;
 				// the following IDs were found in the Schism Tracker sources
 			case s3mTIdSchismTracker:
-				metaInfo().trackerInfo = "Schism Tracker v";
+				noConstMetaInfo().trackerInfo = "Schism Tracker v";
 				schismTest = 1;
 				break;  // some versions of Schism Tracker use ID 1
 			case s3mTIdOpenMPT:
-				metaInfo().trackerInfo = "OpenMPT v";
+				noConstMetaInfo().trackerInfo = "OpenMPT v";
 				break;
 			default:
-				metaInfo().trackerInfo = stringFmt( "Unknown Tracker (%x) v", s3mHdr.createdWith >> 12 );
+				noConstMetaInfo().trackerInfo = stringFmt( "Unknown Tracker (%x) v", s3mHdr.createdWith >> 12 );
 		}
-		metaInfo().trackerInfo += stringFmt( "%x.%02x", ( s3mHdr.createdWith >> 8 ) & 0x0f, s3mHdr.createdWith & 0xff );
+		noConstMetaInfo().trackerInfo += stringFmt( "%x.%02x", ( s3mHdr.createdWith >> 8 ) & 0x0f, s3mHdr.createdWith & 0xff );
 		setTempo( s3mHdr.initialTempo );
 		//m_playbackInfo.speed = s3mHdr.initialSpeed;
 		setSpeed( s3mHdr.initialSpeed );
@@ -290,7 +290,7 @@ bool S3mModule::load( Stream* stream )
 				}
 			}
 		}
-		metaInfo().title = stringncpy( s3mHdr.title, 28 );
+		noConstMetaInfo().title = stringncpy( s3mHdr.title, 28 );
 		return stream->good();
 	}
 	catch( boost::exception& e ) {
@@ -538,22 +538,13 @@ catch( ... ) {
 	BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
 }
 
-std::string S3mModule::internal_channelStatus( size_t idx ) const
+ChannelState S3mModule::internal_channelStatus( size_t idx ) const
 {
 	const S3mChannel* x = m_channels.at( idx );
 	if( !x ) {
-		return std::string();
+		return ChannelState();
 	}
-	return x->statusString();
-}
-
-std::string S3mModule::internal_channelCellString( size_t idx ) const
-{
-	const S3mChannel* x = m_channels.at( idx );
-	if( !x ) {
-		return std::string();
-	}
-	return x->cellString();
+	return x->status();
 }
 
 AbstractArchive& S3mModule::serialize( AbstractArchive* data )

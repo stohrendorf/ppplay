@@ -23,6 +23,7 @@
 
 #include "xmchannel.h"
 #include "genmod/genbase.h"
+#include <genmod/standardfxdesc.h>
 #include "xmmodule.h"
 #include "xmcell.h"
 #include "xmsample.h"
@@ -37,10 +38,9 @@ namespace xm
 {
 
 XmChannel::XmChannel( ppp::xm::XmModule* module ) :
-	AbstractChannel(),
 	m_baseVolume( 0 ), m_currentVolume( 0 ), m_realVolume( 0 ), m_panning( 0x80 ),
 	m_realPanning( 0x80 ), m_basePeriod( 0 ), m_currentPeriod( 0 ), m_autoVibDeltaPeriod( 0 ),
-	m_finetune( 0 ), m_instrumentIndex( 0 ), m_realNote( 0 ), m_currentCell( new XmCell() ), m_lastNote(0),
+	m_finetune( 0 ), m_realNote( 0 ), m_currentCell( new XmCell() ), m_lastNote(0),
 	m_volumeEnvelope(), m_panningEnvelope(), m_volScale( 0 ), m_volScaleRate( 0 ), m_keyOn( false ),
 	m_lastVolSlideFx( 0 ), m_lastPortaUpFx( 0 ), m_lastPortaDownFx( 0 ), m_lastPanSlideFx( 0 ),
 	m_lastOffsetFx( 0 ), m_lastFinePortaUpFx( 0 ), m_lastFinePortaDownFx( 0 ), m_lastFineVolUpFx( 0 ),
@@ -50,13 +50,19 @@ XmChannel::XmChannel( ppp::xm::XmModule* module ) :
 	m_tremoloSpeed( 0 ), m_tremoloPhase( 0 ), m_tremoloCtrl( 0 ), m_tremorCountdown( 0 ),
 	m_retriggerCounter( 0 ), m_retriggerLength( 0 ), m_retriggerVolumeType( 0 ), m_patLoopCounter( 0 ),
 	m_patLoopRow( 0 ), m_autoVibType( 0 ), m_autoVibSweep( 0 ), m_autoVibSweepRate( 0 ),
-	m_autoVibDepth( 0 ), m_autoVibPhase( 0 ), m_bres( 1, 1 ), m_module( module ), m_fxString(), m_noteChanged( false )
+	m_autoVibDepth( 0 ), m_autoVibPhase( 0 ), m_bres( 1, 1 ), m_module( module ), m_state()
 {
+	m_state.instrument = 0;
 }
 
 XmChannel::~XmChannel()
 {
 	delete m_currentCell;
+}
+
+ChannelState XmChannel::status() const
+{
+	return m_state;
 }
 
 const XmSample* XmChannel::currentSample() const
@@ -70,7 +76,7 @@ const XmSample* XmChannel::currentSample() const
 
 const XmInstrument* XmChannel::currentInstrument() const
 {
-	return m_module->getInstrument( m_instrumentIndex );
+	return m_module->getInstrument( m_state.instrument );
 }
 
 
@@ -122,7 +128,8 @@ void XmChannel::fxPanSlide( uint8_t fxByte )
 
 void XmChannel::triggerNote(uint8_t note)
 {
-	setActive(true);
+	m_state.active = true;
+	m_state.noteTriggered = true;
 	if( note == KeyOffNote ) {
 		doKeyOff();
 		return;
@@ -182,6 +189,7 @@ void XmChannel::doKeyOff()
 	else {
 		m_volumeEnvelope.doKeyOff();
 	}
+	m_state.note = ChannelState::KeyOff;
 }
 
 void XmChannel::doKeyOn()
@@ -191,11 +199,11 @@ void XmChannel::doKeyOn()
 	}
 	
 	m_keyOn = true;
-	m_noteChanged = true;
+	m_state.noteTriggered = true;
 	m_tremoloPhase = 0;
 	m_retriggerCounter = 0;
 	m_tremorCountdown = 0;
-	setActive( true );
+	m_state.active = true;
 	
 	if( ( m_vibratoCtrl & 4 ) == 0 ) {
 		m_vibratoPhase = 0;
@@ -272,7 +280,7 @@ void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
 		return;
 	}
 	
-	m_noteChanged = false;
+	m_state.noteTriggered = false;
 
 	{
 		bool vibratoContinued = m_currentCell->effectValue() != 0;
@@ -286,7 +294,7 @@ void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
 	*m_currentCell = cell;
 	
 	if( between<uint8_t>( m_currentCell->instrument(), 1, 0x80 ) ) {
-		m_instrumentIndex = m_currentCell->instrument();
+		m_state.instrument = m_currentCell->instrument();
 	}
 
 	if( m_currentCell->effect() == Effect::Extended && ( m_currentCell->effectValue()>>4 ) == EfxNoteDelay && ( m_currentCell->effectValue()&0x0f ) != 0 ) {
@@ -380,7 +388,7 @@ void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
 	}
 	BOOST_ASSERT( nextCheck == Nothing );
 
-	m_fxString = "      ";
+	m_state.fxDesc = fxdesc::NullFx;
 	switch( m_currentCell->volume()>>4 ) {
 		case 0x01:
 		case 0x02:
@@ -391,140 +399,140 @@ void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
 			break;
 		case VfxFineVolSlideDown:
 			vfxFineVolSlideDown( m_currentCell->volume() );
-			m_fxString = "VSld \x19";
+			m_state.fxDesc = fxdesc::SlowVolSlideDown;
 			break;
 		case VfxFineVolSlideUp:
 			vfxFineVolSlideUp( m_currentCell->volume() );
-			m_fxString = "VSld \x18";
+			m_state.fxDesc = fxdesc::SlowVolSlideUp;
 			break;
 		case VfxSetVibSpeed:
 			vfxSetVibratoSpeed( m_currentCell->volume() );
-			m_fxString = "Vibr \xf7";
+			m_state.fxDesc = fxdesc::Vibrato;
 			break;
 		case VfxSetPanning:
 			vfxSetPan( m_currentCell->volume() );
-			m_fxString = "StPan\x1d";
+			m_state.fxDesc = fxdesc::SetPanPos;
 			break;
 		case VfxVolSlideDown:
-			m_fxString = "VSld \x1f";
+			m_state.fxDesc = fxdesc::VolSlideDown;
 			break;
 		case VfxVolSlideUp:
-			m_fxString = "VSld \x1e";
+			m_state.fxDesc = fxdesc::VolSlideUp;
 			break;
 		case VfxPanSlideLeft:
-			m_fxString = "PSld \x1b";
+			m_state.fxDesc = fxdesc::PanSlideLeft;
 			break;
 		case VfxPanSlideRight:
-			m_fxString = "PSld \x1a";
+			m_state.fxDesc = fxdesc::PanSlideRight;
 			break;
 		case VfxPorta:
-			m_fxString = "Porta\x12";
+			m_state.fxDesc = fxdesc::Porta;
 			break;
 		case VfxVibrato:
-			m_fxString = "Vibr \xf7";
+			m_state.fxDesc = fxdesc::Vibrato;
 			break;
 	}
 	switch( m_currentCell->effect() ) {
 		case Effect::None:
 			break;
 		case Effect::Arpeggio:
-			m_fxString = "Arp  \xf0";
+			m_state.fxDesc = fxdesc::Arpeggio;
 			break;
 		case Effect::PortaUp:
-			m_fxString = "Ptch\x1e\x1e";
+			m_state.fxDesc = fxdesc::FastPitchSlideUp;
 			break;
 		case Effect::PortaDown:
-			m_fxString = "Ptch\x1f\x1f";
+			m_state.fxDesc = fxdesc::FastPitchSlideDown;
 			break;
 		case Effect::Porta:
-			m_fxString = "Porta\x12";
+			m_state.fxDesc = fxdesc::Porta;
 			break;
 		case Effect::Vibrato:
-			m_fxString = "Vibr \xf7";
+			m_state.fxDesc = fxdesc::Vibrato;
 			break;
 		case Effect::PortaVolSlide:
-			m_fxString = "PrtVo\x12";
+			m_state.fxDesc = fxdesc::PortaVolSlide;
 			break;
 		case Effect::VibratoVolSlide:
-			m_fxString = "VibVo\xf7";
+			m_state.fxDesc = fxdesc::VibVolSlide;
 			break;
 		case Effect::Tremolo:
-			m_fxString = "Tremo\xec";
+			m_state.fxDesc = fxdesc::Tremolo;
 			break;
 		case Effect::VolSlide:
 			if( m_lastVolSlideFx.hi() == 0 )
-				m_fxString = "VSld \x1f";
+				m_state.fxDesc = fxdesc::VolSlideDown;
 			else
-				m_fxString = "VSld \x1e";
+				m_state.fxDesc = fxdesc::VolSlideUp;
 			break;
 		case Effect::GlobalVolSlide:
 			if( m_lastGlobVolSlideFx.hi() == 0 )
-				m_fxString = "GVSld\x1f";
+				m_state.fxDesc = fxdesc::GlobalVolSlideDown;
 			else
-				m_fxString = "GVSld\x1e";
+				m_state.fxDesc = fxdesc::GlobalVolSlideUp;
 			break;
 		case Effect::KeyOff:
-			m_fxString = "KOff \xd4";
+			m_state.fxDesc = fxdesc::KeyOff;
 			break;
 		case Effect::PanSlide:
 			if( m_lastPanSlideFx.hi() == 0 )
-				m_fxString = "PSld \x1b";
+				m_state.fxDesc = fxdesc::PanSlideLeft;
 			else
-				m_fxString = "PSld \x1a";
+				m_state.fxDesc = fxdesc::PanSlideRight;
 			break;
 		case Effect::Tremor:
-			m_fxString = "Tremr\xec";
+			m_state.fxDesc = fxdesc::Tremor;
 			break;
 		case Effect::PosJump:
-			m_fxString = "JmOrd\x1a";
+			m_state.fxDesc = fxdesc::JumpOrder;
 			break;
 		case Effect::PatBreak:
 			// All the above effects are handled in tick 1+
-			m_fxString = "PBrk \xf6";
+			m_state.fxDesc = fxdesc::PatternBreak;
 			break;
 		case Effect::Offset:
 			// this effect is handled in triggerNote()
-			m_fxString = "Offs \xaa";
+			m_state.fxDesc = fxdesc::Offset;
 			break;
 		case Effect::SetPanning:
 			fxSetPan( m_currentCell->effectValue() );
-			m_fxString = "StPan\x1d";
+			m_state.fxDesc = fxdesc::SetPanPos;
 			break;
 		case Effect::SetVolume:
 			fxSetVolume( m_currentCell->effectValue() );
-			m_fxString = "StVol=";
+			m_state.fxDesc = fxdesc::SetVolume;
 			break;
 		case Effect::Extended:
 			fxExtended( m_currentCell->effectValue(), false );
 			break;
 		case Effect::SetTempoBpm:
 			fxSetTempoBpm( m_currentCell->effectValue() );
-			m_fxString = "Tempo\x7f";
+			m_state.fxDesc = fxdesc::SetTempo;
 			break;
 		case Effect::SetGlobalVol:
 			fxSetGlobalVolume( m_currentCell->effectValue() );
-			m_fxString = "GloVol";
+			m_state.fxDesc = fxdesc::GlobalVolume;
 			break;
 		case Effect::ExtraFinePorta:
 			fxExtraFinePorta( m_currentCell->effectValue() );
 			if( ( m_currentCell->effectValue()>>4 ) == 1 ) {
-				m_fxString = "Ptch \x18";
+				m_state.fxDesc = fxdesc::SlowPitchSlideUp;
 			}
 			else if( ( m_currentCell->effectValue()>>4 ) == 2 ) {
-				m_fxString = "Ptch \x19";
+				m_state.fxDesc = fxdesc::SlowPitchSlideDown;
 			}
 			else {
-				m_fxString = "      ";
+				m_state.fxDesc = fxdesc::NullFx;
 			}
 			break;
 		case Effect::Retrigger:
 			fxRetrigger( m_currentCell->effectValue() );
-			m_fxString = "Retr \xec";
+			m_state.fxDesc = fxdesc::Retrigger;
 			break;
 		case Effect::SetEnvPos:
 			m_volumeEnvelope.setPosition( m_currentCell->effectValue() );
 			m_panningEnvelope.setPosition( m_currentCell->effectValue() );
-			m_fxString = "EnvP \x1d";
+			m_state.fxDesc = fxdesc::SetEnvelopePos;
 			break;
 	}
 }
@@ -647,6 +655,20 @@ void XmChannel::updateTick1( const XmCell& cell, bool estimateOnly )
 
 void XmChannel::update( const XmCell& cell, bool estimateOnly )
 {
+	m_state.cell = cell.trackerString();
+	if( cell.effect() == Effect::None ) {
+		m_state.fx = 0;
+	}
+	else {
+		if( uint8_t(cell.effect()) <= 9 ) {
+			m_state.fx = '0' + uint8_t(cell.effect());
+		}
+		else {
+			m_state.fx = 'A' + uint8_t(cell.effect()) - 0x0a;
+		}
+	}
+	m_state.fxParam = cell.effectValue();
+	
 	if( m_module->state().tick == 0 && !m_module->isRunningPatDelay() ) {
 		updateTick0(cell, estimateOnly);
 	}
@@ -717,53 +739,19 @@ void XmChannel::update( const XmCell& cell, bool estimateOnly )
 	updateStatus();
 
 	if( m_currentVolume == 0 && m_realVolume == 0 && m_volScale == 0 ) {
-		setActive( false );
+		m_state.active = false;
 	}
 }
 
-std::string XmChannel::internal_cellString() const
+void XmChannel::mixTick( MixerFrameBuffer* mixBuffer )
 {
-	return m_currentCell->trackerString();
-}
-
-std::string XmChannel::internal_effectDescription() const
-{
-	return m_fxString;
-}
-
-std::string XmChannel::internal_effectName() const
-{
-	return m_currentCell->fxString();
-}
-
-std::string XmChannel::internal_noteName() const
-{
-	if( m_lastNote == 0 || !currentSample() ) {
-		return "...";
-	}
-	else if( m_lastNote == KeyOffNote ) {
-		return "===";
-	}
-	float fofs = m_module->periodToFineNoteIndex( m_currentPeriod + m_autoVibDeltaPeriod, m_finetune );
-	fofs -= m_finetune / 8.0 + 16;
-	fofs /= 16;
-	fofs -= currentSample()->relativeNote();
-	if( fofs < 0 ) {
-		return "___";
-	}
-	int ofs = std::lround( fofs );
-	return stringFmt( "%s%d", NoteNames[ofs % 12], ofs / 12 );
-}
-
-void XmChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
-{
-	if( !isActive() || !mixBuffer ) {
+	if( !m_state.active || !mixBuffer ) {
 		return;
 	}
 	m_bres.reset( m_module->frequency(), m_module->periodToFrequency( m_currentPeriod + m_autoVibDeltaPeriod ) );
 	const XmSample* currSmp = currentSample();
 	if(!currSmp) {
-		setActive(false);
+		m_state.active = false;
 		return;
 	}
 	int volLeft = 0x80;
@@ -776,37 +764,42 @@ void XmChannel::internal_mixTick( MixerFrameBuffer* mixBuffer )
 	}
 	volLeft *= m_realVolume;
 	volRight *= m_realVolume;
-	setActive( currSmp->mix(m_module->interpolation(), &m_bres, mixBuffer, volLeft, volRight, 13) );
+	m_state.active = currSmp->mix(m_module->interpolation(), &m_bres, mixBuffer, volLeft, volRight, 13);
 }
 
-void XmChannel::internal_updateStatus()
+void XmChannel::updateStatus()
 {
-	if( !isActive() ) {
-		setStatusString( stringFmt( "         %s %s", effectName(), effectDescription() ) );
-		return;
+	m_state.panning = ( m_realPanning - 0x80 ) * 100 / 0x80;
+	m_state.volume = clip<int>( m_realVolume , 0, 0x40 ) * 100 / 0x40;
+	
+	if( m_currentCell->note() == KeyOffNote ) {
+		m_state.note = ChannelState::KeyOff;
 	}
-	std::string panStr;
-	if( m_realPanning == 0x00 )
-		panStr = "Left ";
-	else if( m_realPanning == 0x80 )
-		panStr = "Centr";
-	else if( m_realPanning == 0xff )
-		panStr = "Right";
-	else
-		panStr = stringFmt( "%4d%%", ( m_realPanning - 0x80 ) * 100 / 0x80 );
-	std::string volStr = stringFmt( "%3d%%", clip<int>( m_realVolume , 0, 0x40 ) * 100 / 0x40 );
-	setStatusString( stringFmt(
-						 "%02X: %s%s %s %s P:%s V:%s %s",
-						 int( m_instrumentIndex ),
-						 m_noteChanged ? "*" : " ",
-						 noteName(),
-						 effectName(),
-						 effectDescription(),
-						 panStr,
-						 volStr,
-						 currentInstrument() ? currentInstrument()->title() : ""
-					 )
-				   );
+	else if( !currentSample() ) {
+		m_state.note = ChannelState::NoNote;
+	}
+	else {
+		float fofs = m_module->periodToFineNoteIndex( m_currentPeriod + m_autoVibDeltaPeriod, m_finetune );
+		fofs -= m_finetune / 8.0 + 16;
+		fofs /= 16;
+		fofs -= currentSample()->relativeNote();
+		if( fofs < 0 ) {
+			m_state.note = ChannelState::TooLow;
+		}
+		else if( fofs > ChannelState::MaxNote ) {
+			m_state.note = ChannelState::TooHigh;
+		}
+		else {
+			m_state.note = std::lround(fofs);
+		}
+	}
+	
+	if( const XmInstrument* ins = currentInstrument() ) {
+		m_state.instrumentName = ins->title();
+	}
+	else {
+		m_state.instrumentName.clear();
+	}
 }
 
 void XmChannel::fxSetVolume( uint8_t fxByte )
@@ -851,7 +844,7 @@ void XmChannel::fxOffset( uint8_t fxByte )
 	m_lastOffsetFx = fxByte;
 	m_bres = m_lastOffsetFx<<8;
 	if( !currentSample() || (currentSample() && m_bres>=currentSample()->length()) ) {
-		setActive(false);
+		m_state.active = false;
 	}
 }
 
@@ -934,40 +927,40 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 	switch( fxByte>>4 ) {
 		case EfxFinePortaUp:
 			efxFinePortaUp( fxByte );
-			m_fxString = "Ptch \x18";
+			m_state.fxDesc = fxdesc::SlowPitchSlideUp;
 			break;
 		case EfxFinePortaDown:
 			efxFinePortaDown( fxByte );
-			m_fxString = "Ptch \x19";
+			m_state.fxDesc = fxdesc::SlowPitchSlideDown;
 			break;
 		case EfxFineVolSlideUp:
 			efxFineVolUp( fxByte );
-			m_fxString = "VSld \x18";
+			m_state.fxDesc = fxdesc::SlowVolSlideUp;
 			break;
 		case EfxFineVolSlideDown:
 			efxFineVolDown( fxByte );
-			m_fxString = "VSld \x19";
+			m_state.fxDesc = fxdesc::SlowVolSlideDown;
 			break;
 		case EfxSetGlissCtrl:
 			m_glissandoCtrl = ( fxByte&0x0f ) != 0;
-			m_fxString = "Gliss\xcd";
+			m_state.fxDesc = fxdesc::Glissando;
 			break;
 		case EfxSetVibratoCtrl:
 			m_vibratoCtrl = fxByte&0x0f;
-			m_fxString = "VWave\x9f";
+			m_state.fxDesc = fxdesc::SetVibWaveform;
 			break;
 		case EfxSetTremoloCtrl:
 			m_tremoloCtrl = fxByte&0x0f;
-			m_fxString = "TWave\x9f";
+			m_state.fxDesc = fxdesc::SetTremWaveform;
 			break;
 		case EfxNoteCut:
 			if( m_module->state().tick == (fxByte&0x0f) ) {
 				m_baseVolume = m_currentVolume = 0;
 			}
-			m_fxString = "NCut \xd4";
+			m_state.fxDesc = fxdesc::NoteCut;
 			break;
 		case EfxNoteDelay:
-			m_fxString = "Delay\xc2";
+			m_state.fxDesc = fxdesc::NoteDelay;
 			if( m_module->state().tick == (fxByte&0x0f) ) {
 				triggerNote(m_currentCell->note());
 				if(m_currentCell->instrument() != 0) {
@@ -989,25 +982,25 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 					doKeyOn();
 				}
 			}
-			m_fxString = "Retr \xec";
+			m_state.fxDesc = fxdesc::Retrigger;
 			break;
 		case EfxPatLoop:
 			if( m_module->state().tick == 0 ) {
 				efxPatLoop( fxByte );
 			}
-			m_fxString = "PLoop\xe8";
+			m_state.fxDesc = fxdesc::PatternLoop;
 			break;
 		case EfxPatDelay:
 			if( m_module->state().tick == 0 ) {
 				m_module->doPatDelay( fxByte&0x0f );
 			}
-			m_fxString = "PDlay\xc2";
+			m_state.fxDesc = fxdesc::PatternDelay;
 			break;
 		case EfxSetPan:
 			if( m_module->state().tick == 0 ) {
 				m_panning = 0xff * ( fxByte&0x0f ) / 0x0f;
 			}
-			m_fxString = "StPan\x1d";
+			m_state.fxDesc = fxdesc::SetPanPos;
 			break;
 	}
 }
@@ -1325,7 +1318,7 @@ void XmChannel::efxPatLoop( uint8_t fxByte )
 
 AbstractArchive& XmChannel::serialize( AbstractArchive* data )
 {
-	AbstractChannel::serialize( data )
+	*data
 	% m_baseVolume
 	% m_currentVolume
 	% m_realVolume
@@ -1335,7 +1328,6 @@ AbstractArchive& XmChannel::serialize( AbstractArchive* data )
 	% m_currentPeriod
 	% m_autoVibDeltaPeriod
 	% m_finetune
-	% m_instrumentIndex
 	% m_realNote
 	% m_currentCell
 	% m_volumeEnvelope
@@ -1378,9 +1370,9 @@ AbstractArchive& XmChannel::serialize( AbstractArchive* data )
 	% m_autoVibSweepRate
 	% m_autoVibDepth
 	% m_autoVibPhase
-	% m_noteChanged
 	% m_lastNote
-	% m_bres;
+	% m_bres
+	% m_state;
 	return *data;
 }
 

@@ -26,7 +26,7 @@ class InputPlugin
 {
 public:
 	//! @brief API version
-	enum { Version = 3 };
+	enum { Version = 4 };
 	/**
 	 * @brief Virtual empty base destructor
 	 */

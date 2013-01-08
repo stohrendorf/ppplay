@@ -25,6 +25,7 @@
 
 #include "genbase.h"
 #include "abstractorder.h"
+#include "channelstate.h"
 #include "stream/memarchive.h"
 
 #include <boost/filesystem.hpp>
@@ -62,20 +63,6 @@ AbstractArchive& AbstractModule::serialize( AbstractArchive* data )
 	}
 	data->archive( &m_state );
 	return *data;
-}
-
-std::string AbstractModule::filename()
-{
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	boost::filesystem::path path( m_metaInfo.filename );
-	BOOST_ASSERT_MSG( path.has_filename(), "File path does not contain a file name" );
-	return path.filename().native();
-}
-
-std::string AbstractModule::trimmedTitle() const
-{
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	return boost::algorithm::trim_copy( m_metaInfo.title );
 }
 
 uint32_t AbstractModule::timeElapsed() const
@@ -377,19 +364,13 @@ size_t AbstractModule::buildTick( AudioFrameBuffer* buf )
 	return internal_buildTick(buf);
 }
 
-std::string AbstractModule::channelCellString( size_t idx ) const
-{
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
-	return internal_channelCellString(idx);
-}
-
 int AbstractModule::channelCount() const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return internal_channelCount();
 }
 
-std::string AbstractModule::channelStatus( size_t idx ) const
+ChannelState AbstractModule::channelStatus( size_t idx ) const
 {
 	boost::recursive_mutex::scoped_lock lock(m_mutex);
 	return internal_channelStatus(idx);
