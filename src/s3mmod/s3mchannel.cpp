@@ -544,12 +544,12 @@ void S3mChannel::updateStatus()
 		m_state.note = ChannelState::NoteCut;
 	}
 	else if( !currentSample() ) {
-		m_note = ChannelState::NoNote;
+		m_state.note = ChannelState::NoNote;
 		m_state.instrumentName.clear();
 	}
 	else {
 		const S3mSample* smp = currentSample();
-		m_note = periodToNoteOffset( m_realPeriod, smp->frequency() );
+		m_state.note = periodToNoteOffset( m_realPeriod, smp->frequency() );
 		m_state.instrumentName = smp->title();
 	}
 }
