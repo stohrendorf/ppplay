@@ -125,6 +125,10 @@ struct InstanceData
 	
 	inline void reset()
 	{
+		if(chars == nullptr) {
+			return;
+		}
+		
 		delete[] chars;
 		chars = nullptr;
 		
@@ -143,12 +147,21 @@ struct InstanceData
 		delete[] visibleColorsB;
 		visibleColorsB = nullptr;
 		
+		if(SDL_MUSTLOCK(backgroundLayer))  {
+			SDL_UnlockSurface( backgroundLayer );
+		}
 		SDL_FreeSurface( backgroundLayer );
 		backgroundLayer = nullptr;
 		
+		if(SDL_MUSTLOCK(pixelLayer))  {
+			SDL_UnlockSurface( pixelLayer );
+		}
 		SDL_FreeSurface( pixelLayer );
 		pixelLayer = nullptr;
 		
+		if(SDL_MUSTLOCK(foregroundLayer))  {
+			SDL_UnlockSurface( foregroundLayer );
+		}
 		SDL_FreeSurface( foregroundLayer );
 		foregroundLayer = nullptr;
 	}
@@ -168,13 +181,7 @@ struct InstanceData
 	inline bool setPixel(SDL_Surface* surface, int x, int y, Uint32 color) const
 	{
 		if(contains(x,y)) {
-			if(SDL_MUSTLOCK(surface))  {
-				SDL_LockSurface( surface );
-			}
 			reinterpret_cast<Uint32*>( surface->pixels )[ y * surface->pitch / sizeof(Uint32) + x] = color;
-			if(SDL_MUSTLOCK(surface))  {
-				SDL_UnlockSurface( surface );
-			}
 			return true;
 		}
 		return false;
@@ -187,13 +194,7 @@ struct InstanceData
 
 	void clearSurface(SDL_Surface* surface, Color c) const
 	{
-		if(SDL_MUSTLOCK(surface))  {
-			SDL_LockSurface( surface );
-		}
 		std::fill_n(reinterpret_cast<Uint32*>(surface->pixels), surface->h * surface->pitch / sizeof(Uint32), mapColor(c));
-		if(SDL_MUSTLOCK(surface))  {
-			SDL_UnlockSurface( surface );
-		}
 	}
 	
 	bool init(int charWidth, int charHeight, const std::string& title);
@@ -253,8 +254,17 @@ bool InstanceData::init( int charWidth, int charHeight, const std::string& title
 	SDL_WM_SetCaption( title.c_str(), nullptr );
 	
 	backgroundLayer = SDL_CreateRGBSurface(SDL_SWSURFACE,              charWidth*8, charHeight*16, 32, 0xff, 0xff<<8, 0xff<<16, 0       );
-	pixelLayer      = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA, charWidth*8, charHeight*16, 32, 0xff, 0xff<<8, 0xff<<16, 0xff<<24);
+	if(SDL_MUSTLOCK(backgroundLayer))  {
+		SDL_LockSurface( backgroundLayer );
+	}
+	pixelLayer = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA, charWidth*8, charHeight*16, 32, 0xff, 0xff<<8, 0xff<<16, 0xff<<24);
+	if(SDL_MUSTLOCK(pixelLayer))  {
+		SDL_LockSurface( pixelLayer );
+	}
 	foregroundLayer = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA, charWidth*8, charHeight*16, 32, 0xff, 0xff<<8, 0xff<<16, 0xff<<24);
+	if(SDL_MUSTLOCK(foregroundLayer))  {
+		SDL_LockSurface( foregroundLayer );
+	}
 	clearSurface( backgroundLayer, Color::Black );
 	
 	dosColors[static_cast<int>( Color::None )]        = SDL_MapRGBA( pixelLayer->format, 0x00, 0x00, 0x00, 0 ); // transparent
@@ -311,11 +321,6 @@ void InstanceData::clear(char c, ppg::Color foreground, ppg::Color background)
 
 void InstanceData::redraw(bool showMouse, int cursorX, int cursorY)
 {
-	if( SDL_MUSTLOCK( screenSurface ) ) {
-		if( SDL_LockSurface( screenSurface ) < 0 ) {
-			return;
-		}
-	}
 	for( size_t y = 0; y < charHeight; y++ ) {
 		for( size_t x = 0; x < charWidth; x++ ) {
 			int o = x + y * charWidth;
@@ -338,12 +343,39 @@ void InstanceData::redraw(bool showMouse, int cursorX, int cursorY)
 		visibleColorsF[ofs] = ~colorsF[ofs];
 		visibleColorsB[ofs] = ~colorsB[ofs];
 	}
+	
+	if( SDL_MUSTLOCK( screenSurface ) ) {
+		SDL_LockSurface( screenSurface );
+	}
+	
+	if(SDL_MUSTLOCK(backgroundLayer)) {
+		SDL_UnlockSurface(backgroundLayer);
+	}
 	SDL_BlitSurface( backgroundLayer, nullptr, screenSurface, nullptr );
-	SDL_BlitSurface( pixelLayer,      nullptr, screenSurface, nullptr );
+	if(SDL_MUSTLOCK(backgroundLayer)) {
+		SDL_LockSurface(backgroundLayer);
+	}
+	
+	if(SDL_MUSTLOCK(pixelLayer)) {
+		SDL_UnlockSurface(pixelLayer);
+	}
+	SDL_BlitSurface( pixelLayer, nullptr, screenSurface, nullptr );
+	if(SDL_MUSTLOCK(pixelLayer)) {
+		SDL_LockSurface(pixelLayer);
+	}
+	
+	if(SDL_MUSTLOCK(foregroundLayer)) {
+		SDL_UnlockSurface(foregroundLayer);
+	}
 	SDL_BlitSurface( foregroundLayer, nullptr, screenSurface, nullptr );
+	if(SDL_MUSTLOCK(foregroundLayer)) {
+		SDL_LockSurface(foregroundLayer);
+	}
+	
 	if( SDL_MUSTLOCK( screenSurface ) ) {
 		SDL_UnlockSurface( screenSurface );
 	}
+	
 	if( SDL_Flip( screenSurface ) == -1 ) {
 		BOOST_THROW_EXCEPTION( std::runtime_error( "Flip failed" ) );
 	}
