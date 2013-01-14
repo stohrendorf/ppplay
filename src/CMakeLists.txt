@@ -54,7 +54,6 @@ if(WITH_MP3LAME)
 endif()
 install(TARGETS ppplay_core DESTINATION lib EXPORT ppplayExports)
 install(FILES
-	stuff/fft.h
 	stuff/field.h
 	stuff/inputplugin.h
 	stuff/itimer.h
