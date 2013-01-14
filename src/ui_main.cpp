@@ -258,11 +258,21 @@ void UIMain::onTimer()
 	m_progress->setMax( modLock->length() );
 	m_progress->setValue( modLock->state().playedFrames );
 	logger()->trace( L4CXX_LOCATION, "Drawing" );
-	const float scale = m_fftLeft.size()/(area().width()*8);
+	
+	const int width2 = ppg::SDLScreen::instance()->area().width()*4;
+	const int height = ppg::SDLScreen::instance()->area().height()*16;
+	const float scale = m_fftLeft.size()*1.0f/width2;
+	
 	ppg::SDLScreen::instance()->clearPixels();
+	
 	for(size_t i=0; i<m_fftLeft.size(); i++) {
-		ppg::SDLScreen::instance()->drawPixel(i/scale, ppg::SDLScreen::instance()->area().height()*16 - m_fftLeft[i]/2 - 1, ppg::Color::LightGreen);
-		ppg::SDLScreen::instance()->drawPixel(i/scale, ppg::SDLScreen::instance()->area().height()*16 - m_fftRight[i]/2 - 1, ppg::Color::LightRed);
+		for(size_t y = 1; y<=m_fftLeft[i]/4; y++) {
+			ppg::SDLScreen::instance()->drawPixel(i/scale, height - y - 1, ppg::Color::LightGreen);
+		}
+		for(size_t y = 1; y<=m_fftRight[i]/4; y++) {
+			ppg::SDLScreen::instance()->drawPixel(i/scale + width2, height - y - 1, ppg::Color::LightRed);
+		}
 	}
+	
 	ppg::SDLScreen::instance()->draw();
 }
