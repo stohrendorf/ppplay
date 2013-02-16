@@ -96,29 +96,30 @@ uint8_t EnvelopeGenerator::calculateRate( uint8_t rate ) const
 
 uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 {
-	uint8_t rateLo = 0;
+	uint32_t delta = 0;
 	switch(m_stage) {
 		case Stage::OFF:
 			m_total = Silence;
 			m_env = ExactSilence;
 			return Silence;
 		case Stage::ATTACK:
-			rateLo = calculateRate(m_ar);
+			delta = calculateRate(m_ar);
 			break;
 		case Stage::DECAY:
-			rateLo = calculateRate(m_dr);
+			delta = calculateRate(m_dr);
 			break;
 		case Stage::SUSTAIN:
 			break;
 		case Stage::RELEASE:
-			rateLo = calculateRate(m_rr);
+			delta = calculateRate(m_rr);
 			break;
 	}
 	
 	const uint16_t oldEnv = m_env>>EnvelopeShift;
 	
-	const uint8_t rateHi = rateLo>>2;
-	rateLo &= 3;
+	const uint8_t rateHi = delta >>2;
+	delta &= 3;
+	delta = uint32_t(4|delta)<<rateHi;
 	switch( m_stage ) {
 		case Stage::OFF:
 			// already handled above, but to silence the
@@ -133,21 +134,12 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			}
 			else {
 				uint32_t counter = m_env & ((1<<15)-1);
-				counter += (4|rateLo)<<rateHi;
+				counter += delta;
 				const uint8_t overflow = (counter>>15);
-				
 				uint16_t env = m_env>>15;
 				if( overflow!=0 ) {
+					env -= (env>>3)*overflow + 1;
 					counter &= (1<<15)-1;
-					if(overflow&4) {
-						env -= (env>>1) + 1;
-					}
-					else if(overflow&2) {
-						env -= (env>>2) + 1;
-					}
-					else if(overflow&1) {
-						env -= (env>>3) + 1;
-					}
 				}
 				m_env = (env<<15) | counter;
 			}
@@ -168,7 +160,7 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 				break;
 			}
 			
-			m_env += uint32_t(4+rateLo)<<rateHi;
+			m_env += delta;
 			break;
 
 		case Stage::SUSTAIN:
@@ -181,7 +173,7 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			if( m_rr == 0 ) {
 				break;
 			}
-			m_env += uint32_t(4+rateLo)<<rateHi;
+			m_env += delta;
 			break;
 	}
 	
