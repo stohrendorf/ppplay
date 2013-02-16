@@ -25,9 +25,6 @@ public:
 		ATTACK, DECAY, SUSTAIN, RELEASE, OFF
 	};
 private:
-	static constexpr uint8_t EnvelopeShift = 15;
-	static constexpr uint32_t ExactSilence = (1<<(9+EnvelopeShift))-1;
-	
 	Opl3* m_opl;
 	Stage m_stage;
 	//! @brief Attack rate (4 bits)
@@ -45,8 +42,8 @@ private:
 	uint16_t m_fnum;
 	//! @brief Block (3 bits)
 	uint8_t m_block;
-	//! @brief Envelope, 9.15 fractional bits
-	uint32_t m_env;
+	//! @brief Envelope, 9 bits
+	uint16_t m_env;
 	//! @brief Key scale rate
 	bool m_ksr;
 	//! @brief Total level, 6 bits, att. is 0.75dB * m_tl
@@ -57,17 +54,34 @@ private:
 	uint8_t m_kslAdd;
 	//! @brief Total envelope level, 0..511
 	uint16_t m_total;
+	//! @brief Clock counter, 15 bits
+	uint32_t m_counter;
 
 	static const uint16_t Silence = 511;
 	
 	uint8_t calculateRate(uint8_t delta) const;
+	/**
+	 * @brief Advances the counter and returns the overflow
+	 * @param[in] rate Decay/release rate
+	 * @return Counter overflow
+	 */
+	uint8_t advanceCounter(uint8_t rate);
+	/**
+	 * @brief Handles decay/release phases
+	 * @param[in] rate Decay/release rate register value
+	 */
+	void attenuate(uint8_t rate);
+	/**
+	 * @brief Handles attack phase
+	 */
+	void attack();
 	
 public:
 	constexpr EnvelopeGenerator( Opl3* opl )
 		: m_opl( opl ), m_stage( Stage::OFF ), /*m_attenuation( 0 ),*/
 		  m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_fnum( 0 ), m_block( 0 ),
-		  m_env( ExactSilence ), m_ksr( false ), m_tl( 0 ), m_ksl( 0 ),
-		  m_kslAdd(0), m_total(Silence)
+		  m_env( Silence ), m_ksr( false ), m_tl( 0 ), m_ksl( 0 ),
+		  m_kslAdd(0), m_total(Silence), m_counter(0)
 	{
 	}
 

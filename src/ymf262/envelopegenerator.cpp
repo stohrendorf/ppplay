@@ -94,73 +94,52 @@ uint8_t EnvelopeGenerator::calculateRate( uint8_t rate ) const
 	return std::min<uint8_t>(63, res);
 }
 
+uint8_t EnvelopeGenerator::advanceCounter(uint8_t rate)
+{
+	if(rate == 0) {
+		return 0;
+	}
+	const uint8_t effectiveRate = calculateRate(rate);
+	const uint8_t rateHi = effectiveRate>>2;
+	const uint8_t rateLo = effectiveRate&3;
+	m_counter += uint32_t(4|rateLo)<<rateHi;
+	uint8_t res = m_counter>>15;
+	m_counter &= (1<<15)-1;
+	return res;
+}
+
+void EnvelopeGenerator::attenuate( uint8_t rate )
+{
+	m_env += advanceCounter(rate);
+}
+
+void EnvelopeGenerator::attack()
+{
+	uint8_t overflow = advanceCounter(m_ar);
+	if( overflow!=0 ) {
+		m_env -= (m_env>>3)*overflow + 1;
+	}
+}
+
 uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 {
-	uint32_t delta = 0;
-	switch(m_stage) {
-		case Stage::OFF:
-			m_total = Silence;
-			m_env = ExactSilence;
-			return Silence;
-		case Stage::ATTACK:
-			delta = calculateRate(m_ar);
-			break;
-		case Stage::DECAY:
-			delta = calculateRate(m_dr);
-			break;
-		case Stage::SUSTAIN:
-			break;
-		case Stage::RELEASE:
-			delta = calculateRate(m_rr);
-			break;
-	}
-	
-	const uint16_t oldEnv = m_env>>EnvelopeShift;
-	
-	const uint8_t rateHi = delta >>2;
-	delta &= 3;
-	delta = uint32_t(4|delta)<<rateHi;
+	const uint16_t oldEnv = m_env;
 	switch( m_stage ) {
 		case Stage::OFF:
-			// already handled above, but to silence the
-			// compiler about a not handled enum value...
 			return Silence;
 		case Stage::ATTACK:
-			if( m_ar == 0 ) {
-				break;
-			}
-			else if( rateHi == 15 ) {
-				m_env = 0;
-			}
-			else {
-				uint32_t counter = m_env & ((1<<15)-1);
-				counter += delta;
-				const uint8_t overflow = (counter>>15);
-				uint16_t env = m_env>>15;
-				if( overflow!=0 ) {
-					env -= (env>>3)*overflow + 1;
-					counter &= (1<<15)-1;
-				}
-				m_env = (env<<15) | counter;
-			}
-			if( m_env==0 || m_env>ExactSilence ) {
+			attack();
+			if( m_env==0 ) {
 				m_stage = Stage::DECAY;
-				// in case of an overflow
-				m_env = 0;
-				break;
 			}
 			break;
 
 		case Stage::DECAY:
-			if( (m_env>>EnvelopeShift) >= uint32_t(m_sl)<<4 ) {
+			if( m_env >= uint32_t(m_sl)<<4 ) {
 				m_stage = Stage::SUSTAIN;
 				break;
 			}
-			if(m_dr==0) {
-				break;
-			}
-			
-			m_env += delta;
+			attenuate(m_dr);
 			break;
 
 		case Stage::SUSTAIN:
@@ -170,16 +149,12 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			break;
 
 		case Stage::RELEASE:
-			if( m_rr == 0 ) {
-				break;
-			}
-			m_env += delta;
+			attenuate(m_rr);
 			break;
 	}
 	
-	if( m_env >= ExactSilence ) {
-		// too low
-		m_env = ExactSilence;
+	if( m_env >= Silence ) {
+		m_env = Silence;
 	}
 	
 	int total = oldEnv + (m_tl<<2) + m_kslAdd;
