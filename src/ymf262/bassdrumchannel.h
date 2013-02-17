@@ -19,7 +19,7 @@ public:
 
 	~BassDrumChannel();
 
-	std::vector<int16_t> nextSample();
+	void nextSample(std::array<int16_t,4>* dest);
 
 protected:
 	// Key ON and OFF are unused in rhythm channels.

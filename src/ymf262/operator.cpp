@@ -8,7 +8,7 @@ namespace opl
 void Operator::update_AM1_VIB1_EGT1_KSR1_MULT4()
 {
 
-	uint8_t am1_vib1_egt1_ksr1_mult4 = opl()->readReg( m_operatorBaseAddress + Operator::AM1_VIB1_EGT1_KSR1_MULT4_Offset );
+	uint8_t am1_vib1_egt1_ksr1_mult4 = m_opl->readReg( m_operatorBaseAddress + Operator::AM1_VIB1_EGT1_KSR1_MULT4_Offset );
 
 	m_am  = am1_vib1_egt1_ksr1_mult4 & 0x80;
 	m_vib = am1_vib1_egt1_ksr1_mult4 & 0x40;
@@ -26,7 +26,7 @@ void Operator::update_AM1_VIB1_EGT1_KSR1_MULT4()
 void Operator::update_KSL2_TL6()
 {
 
-	const uint8_t ksl2_tl6 = opl()->readReg( m_operatorBaseAddress + Operator::KSL2_TL6_Offset );
+	const uint8_t ksl2_tl6 = m_opl->readReg( m_operatorBaseAddress + Operator::KSL2_TL6_Offset );
 
 	m_ksl = ( ksl2_tl6 >> 6 ) & 3;
 	m_tl  =  ksl2_tl6 & 0x3F;
@@ -37,7 +37,7 @@ void Operator::update_KSL2_TL6()
 
 void Operator::update_AR4_DR4()
 {
-	const uint8_t ar4_dr4 = opl()->readReg( m_operatorBaseAddress + Operator::AR4_DR4_Offset );
+	const uint8_t ar4_dr4 = m_opl->readReg( m_operatorBaseAddress + Operator::AR4_DR4_Offset );
 
 	m_ar = ( ar4_dr4 >> 4 ) & 0x0f;
 	m_dr =  ar4_dr4 & 0x0F;
@@ -49,7 +49,7 @@ void Operator::update_AR4_DR4()
 void Operator::update_SL4_RR4()
 {
 
-	const uint8_t sl4_rr4 = opl()->readReg( m_operatorBaseAddress + Operator::SL4_RR4_Offset );
+	const uint8_t sl4_rr4 = m_opl->readReg( m_operatorBaseAddress + Operator::SL4_RR4_Offset );
 
 	m_sl = ( sl4_rr4 >> 4 ) & 0x0f;
 	m_rr =  sl4_rr4 & 0x0F;
@@ -60,11 +60,72 @@ void Operator::update_SL4_RR4()
 
 void Operator::update_5_WS3()
 {
-	m_ws = opl()->readReg( m_operatorBaseAddress + Operator::_5_WS3_Offset ) & 0x07;
+	m_ws = m_opl->readReg( m_operatorBaseAddress + Operator::_5_WS3_Offset ) & 0x07;
+}
+
+int16_t Operator::handleTopCymbal()
+{
+	// The Top Cymbal operator uses his own phase together with the High Hat phase.
+	const uint16_t highHatPhase = m_opl->highHatOperator()->m_phase;
+	const uint16_t phaseBit = (((m_phase & 0x88) ^ ((m_phase<<5) & 0x80)) | ((highHatPhase ^ (highHatPhase<<2)) & 0x20)) ? 0x02 : 0x00;
+	
+	m_envelopeGenerator.advance( m_egt, m_am );
+
+	m_phase = (1+phaseBit)<<8;
+
+	uint8_t waveform = m_ws;
+	if( m_opl->isNew() ) {
+		waveform &= 0x07;
+	}
+	else {
+		waveform &= 0x03;
+	}
+	
+	return getOutput(m_phase, waveform);
+}
+
+int16_t Operator::handleHighHat(uint16_t modulator)
+{
+	const uint16_t cymbalPhase = m_opl->topCymbalOperator()->m_phase;
+	const uint16_t phasebit = ( ( ( m_phase & 0x88 ) ^( ( m_phase << 5 ) & 0x80 ) ) | ( ( cymbalPhase ^( cymbalPhase << 2 ) ) & 0x20 ) ) ? 0x02 : 0x00;
+	const uint16_t noisebit = m_opl->randBit();
+	m_phase = (( phasebit << 8 ) | ( 0x34 << ( phasebit ^( noisebit << 1 ) ) ));
+	m_envelopeGenerator.advance( m_egt, m_am );
+	return getOutput( modulator + m_phase, m_ws );
+}
+
+int16_t Operator::handleSnareDrum( uint16_t modulator )
+{
+	if( m_envelopeGenerator.isOff() ) {
+		return 0;
+	}
+
+	m_envelopeGenerator.advance( m_egt, m_am );
+
+	uint8_t phaseBit = ( m_phase >> 9 ) & 1;
+	uint8_t noiseBit = m_opl->randBit();
+	m_phase = ( ( 1 + phaseBit ) ^ noiseBit ) << 1;
+	return getOutput( modulator + (m_phase<<1), m_ws );
 }
 
 int16_t Operator::nextSample( uint16_t modulator )
 {
+	if( m_opl->ryt() ) {
+		// here the rythm mode is handled
+		static constexpr int HighHatOperatorBaseAddress = 0x11;
+		static constexpr int TopCymbalOperatorBaseAddress = 0x15;
+		static constexpr int SnareDrumOperatorBaseAddress = 0x14;
+		
+		switch(m_operatorBaseAddress) {
+			case TopCymbalOperatorBaseAddress:
+				return handleTopCymbal();
+			case HighHatOperatorBaseAddress:
+				return handleHighHat(modulator);
+			case SnareDrumOperatorBaseAddress:
+				return handleSnareDrum(modulator);
+		}
+	}
+	
 	if( m_envelopeGenerator.isOff() ) {
 		return 0;
 	}
@@ -73,7 +134,7 @@ int16_t Operator::nextSample( uint16_t modulator )
 
 	uint8_t ws = m_ws;
 	// If it is in OPL2 mode, use first four waveforms only:
-	if( opl()->isNew() ) {
+	if( m_opl->isNew() ) {
 		ws &= 0x07;
 	}
 	else {

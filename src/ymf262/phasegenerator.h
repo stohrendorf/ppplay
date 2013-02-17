@@ -1,8 +1,6 @@
 #ifndef PPP_OPL_PHASEGENERATOR_H
 #define PPP_OPL_PHASEGENERATOR_H
 
-#include "fractional9.h"
-
 #include <boost/assert.hpp>
 
 namespace opl
@@ -18,7 +16,7 @@ class PhaseGenerator
 {
 	//! @brief Owning chip
 	Opl3* m_opl;
-	Fractional9 m_phase;
+	uint32_t m_phase;
 	uint16_t m_fNum;
 	uint8_t m_block;
 	uint8_t m_mult;

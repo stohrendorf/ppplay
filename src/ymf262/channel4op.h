@@ -29,7 +29,7 @@ public:
 		: AbstractChannel( opl, baseAddress ), m_op1( o1 ), m_op2( o2 ), m_op3( o3 ), m_op4( o4 ) {
 	}
 
-	std::vector<int16_t> nextSample() ;
+	void nextSample(std::array<int16_t,4>* dest);
 
 protected:
 	void keyOn();

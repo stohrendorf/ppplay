@@ -14,7 +14,7 @@ public:
 		: Channel2Op( opl, baseAddress, o1, o2 ) {
 	}
 
-	std::vector<int16_t> nextSample();
+	void nextSample(std::array<int16_t,4>* dest);
 
 protected:
 	void keyOn() { }

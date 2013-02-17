@@ -18,10 +18,8 @@ constexpr int TremoloTableLength = 13 * 1024;
 
 
 Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m_channels(), m_disabledChannel(),
-	m_bassDrumChannel(), m_highHatSnareDrumChannel(), m_tomTomTopCymbalChannel(), m_highHatOperator(), m_snareDrumOperator(),
-	m_tomTomOperator(), m_topCymbalOperator(), m_highHatOperatorInNonRhythmMode(), m_snareDrumOperatorInNonRhythmMode(),
-	m_tomTomOperatorInNonRhythmMode(), m_topCymbalOperatorInNonRhythmMode(),
-	m_nts( false ), m_dam( false ), m_dvb( false ), m_ryt( false ), m_bd( false ), m_sd( false ), m_tom( false ), m_tc( false ), m_hh( false ),
+	m_bassDrumChannel(), m_highHatSnareDrumChannel(), m_tomTomTopCymbalChannel(),
+	m_nts( false ), m_dam( false ), m_dvb( false ), m_ryt( false ), m_bd( false ), m_sd( false ), m_tc( false ), m_hh( false ),
 	m_new( false ), m_connectionsel( 0 ), m_vibratoIndex( 0 ), m_tremoloIndex( 0 ), m_rand(1)
 {
 	initOperators();
@@ -31,17 +29,19 @@ Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m
 	initChannels();
 }
 
-std::vector< short int > Opl3::read()
+void Opl3::read(std::array<int16_t,4>* dest)
 {
-	std::vector<int32_t> outputBuffer( 4, 0 );
+	std::array<int32_t, 4> outputBuffer;
+	std::fill_n(outputBuffer.begin(), 4, 0);
 
 	// If _new = 0, use OPL2 mode with 9 channels. If _new = 1, use OPL3 18 channels;
 	for( int array = 0; array < ( m_new + 1 ); array++ ) {
 		for( int channelNumber = 0; channelNumber < 9; channelNumber++ ) {
 			// Reads output from each OPL3 channel, and accumulates it in the output buffer:
-			std::vector<int16_t> channelOutput = m_channels[array][channelNumber]->nextSample();
+			std::array<int16_t,4> chanOutput;
+			m_channels[array][channelNumber]->nextSample(&chanOutput);
 			for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
-				outputBuffer[outputChannelNumber] += channelOutput[outputChannelNumber];
+				outputBuffer[outputChannelNumber] += chanOutput[outputChannelNumber];
 			}
 		}
 		break;
@@ -51,9 +51,10 @@ std::vector< short int > Opl3::read()
 	// Normalizes the output buffer after all channels have been added,
 	// with a maximum of 18 channels,
 	// and multiplies it to get the 16 bit signed output.
-	std::vector<short> output( 4 );
-	for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
-		output[outputChannelNumber] = outputBuffer[outputChannelNumber]>>1;
+	if(dest) {
+		for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
+			(*dest)[outputChannelNumber] = outputBuffer[outputChannelNumber]>>1;
+		}
 	}
 
 	// Advances the OPL3-wide vibrato index, which is used by
@@ -70,8 +71,6 @@ std::vector< short int > Opl3::read()
 		m_rand ^= 0x800302;
 	}
 	m_rand >>= 1;
-	
-	return output;
 }
 
 void Opl3::write( int array, int address, uint8_t data )
@@ -179,21 +178,6 @@ void Opl3::initOperators()
 			}
 		}
 	}
-
-	// Create specific operators to switch when in rhythm mode:
-	m_highHatOperator.reset( new HighHatOperator( this ) );
-	m_snareDrumOperator.reset( new SnareDrumOperator( this ) );
-	m_tomTomOperator.reset( new TomTomOperator( this ) );
-	m_topCymbalOperator.reset( new TopCymbalOperator( this ) );
-
-	// Save operators when they are in non-rhythm mode:
-	// Channel 7:
-	m_highHatOperatorInNonRhythmMode = m_operators[0][0x11];
-	m_snareDrumOperatorInNonRhythmMode = m_operators[0][0x14];
-	// Channel 8:
-	m_tomTomOperatorInNonRhythmMode = m_operators[0][0x12];
-	m_topCymbalOperatorInNonRhythmMode = m_operators[0][0x15];
-
 }
 void Opl3::initChannels2op()
 {
@@ -250,7 +234,7 @@ void Opl3::update_1_NTS1_6()
 }
 void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 {
-	int dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 = m_registers[DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1_Offset];
+	const uint8_t dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 = m_registers[DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1_Offset];
 	m_dam = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x80;
 	m_dvb = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x40;
 
@@ -272,25 +256,27 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 	bool new_sd  = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x08;
 	if( new_sd != m_sd ) {
 		m_sd = new_sd;
-		if( m_sd ) m_snareDrumOperator->keyOn();
+		if( m_sd ) {
+			snareDrumOperator()->keyOn();
+		}
 	}
-
-	bool new_tom = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x04;
-	if( new_tom != m_tom ) {
-		m_tom = new_tom;
-		if( m_tom ) m_tomTomOperator->keyOn();
+	
+	if( dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x04 ) {
+		tomTomOperator()->keyOn();
 	}
 
 	bool new_tc  = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x02;
 	if( new_tc != m_tc ) {
 		m_tc = new_tc;
-		if( m_tc ) m_topCymbalOperator->keyOn();
+		if( m_tc )
+			topCymbalOperator()->keyOn();
 	}
 
 	bool new_hh  = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x01;
 	if( new_hh != m_hh ) {
 		m_hh = new_hh;
-		if( m_hh ) m_highHatOperator->keyOn();
+		if( m_hh )
+			highHatOperator()->keyOn();
 	}
 
 }
@@ -347,19 +333,11 @@ void Opl3::setRhythmMode()
 		m_channels[0][6] = m_bassDrumChannel;
 		m_channels[0][7] = m_highHatSnareDrumChannel;
 		m_channels[0][8] = m_tomTomTopCymbalChannel;
-		m_operators[0][0x11] = m_highHatOperator;
-		m_operators[0][0x14] = m_snareDrumOperator;
-		m_operators[0][0x12] = m_tomTomOperator;
-		m_operators[0][0x15] = m_topCymbalOperator;
 	}
 	else {
 		for( int i = 6; i < 9; i++ ) {
 			m_channels[0][i] = m_channels2op[0][i];
 		}
-		m_operators[0][0x11] = m_highHatOperatorInNonRhythmMode;
-		m_operators[0][0x14] = m_snareDrumOperatorInNonRhythmMode;
-		m_operators[0][0x12] = m_tomTomOperatorInNonRhythmMode;
-		m_operators[0][0x15] = m_topCymbalOperatorInNonRhythmMode;
 	}
 	for( int i = 6; i <= 8; i++ ) {
 		m_channels[0][i]->updateChannel();

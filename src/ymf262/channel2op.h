@@ -27,7 +27,7 @@ public:
 		: AbstractChannel( opl, baseAddress ), m_op1( o1 ), m_op2( o2 ) {
 	}
 
-	std::vector<int16_t> nextSample();
+	void nextSample(std::array<int16_t,4>* dest);
 	Operator* op1() const { return m_op1; }
 	Operator* op2() const { return m_op2; }
 

@@ -57,11 +57,12 @@ size_t Module::internal_buildTick( AudioFrameBuffer* buf )
 		ppp::BresenInterpolation interp(frequency(), opl::Opl3::SampleRate);
 		for(size_t i=0; i<BufferSize; i++) {
 			// TODO panning?
-			std::vector<int16_t> data = m_opl.read();
+			std::array<int16_t,4> data;
+			m_opl.read(&data);
 			(**buf)[i].left = data[0]+data[1];
 			(**buf)[i].right = data[2]+data[3];
 			if( interp.next() == 2 ) {
-				m_opl.read(); // skip a sample
+				m_opl.read(nullptr); // skip a sample
 			}
 			interp = 0;
 		}

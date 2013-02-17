@@ -5,16 +5,12 @@
 #include <array>
 
 #include "operator.h"
-#include "highhatoperator.h"
-#include "snaredrumoperator.h"
-#include "tomtomoperator.h"
 #include "channel2op.h"
 #include "channel4op.h"
 #include "bassdrumchannel.h"
 #include "highhatsnaredrumchannel.h"
 #include "tomtomtopcymbalchannel.h"
 #include "disabledchannel.h"
-#include "topcymbaloperator.h"
 #include <stream/iserializable.h>
 
 #include <ymf262/ppplay_opl_export.h>
@@ -42,14 +38,6 @@ private:
 	BassDrumChannel::Ptr m_bassDrumChannel;
 	HighHatSnareDrumChannel::Ptr m_highHatSnareDrumChannel;
 	TomTomTopCymbalChannel::Ptr m_tomTomTopCymbalChannel;
-	HighHatOperator::Ptr m_highHatOperator;
-	SnareDrumOperator::Ptr m_snareDrumOperator;
-	TomTomOperator::Ptr m_tomTomOperator;
-	TopCymbalOperator::Ptr m_topCymbalOperator;
-	Operator::Ptr m_highHatOperatorInNonRhythmMode;
-	Operator::Ptr m_snareDrumOperatorInNonRhythmMode;
-	Operator::Ptr m_tomTomOperatorInNonRhythmMode;
-	Operator::Ptr m_topCymbalOperatorInNonRhythmMode;
 
 	bool m_nts;
 	//! @brief Depth of amplitude. This register is used in EnvelopeGenerator.getEnvelope();
@@ -57,7 +45,7 @@ private:
 	//! @brief Depth of vibrato. This register is used in PhaseGenerator.getPhase();
 	bool m_dvb;
 	bool m_ryt;
-	bool m_bd, m_sd, m_tom, m_tc, m_hh;
+	bool m_bd, m_sd, m_tc, m_hh;
 	//! @brief OPL2/OPL3 mode selection. This register is used in OPL3.read(), OPL3.write() and Operator.getOperatorOutput();
 	bool m_new;
 	//! @brief 2-op/4-op channel selection. This register is used here to configure the OPL3.channels[] array.
@@ -86,16 +74,16 @@ public:
 		return m_nts;
 	}
 	Operator* topCymbalOperator() const {
-		return m_topCymbalOperator.get();
+		return m_operators[0][0x15].get();
 	}
 	Operator* highHatOperator() const {
-		return m_highHatOperator.get();
+		return m_operators[0][0x11].get();
 	}
 	Operator* snareDrumOperator() const {
-		return m_snareDrumOperator.get();
+		return m_operators[0][0x14].get();
 	}
 	Operator* tomTomOperator() const {
-		return m_tomTomOperator.get();
+		return m_operators[0][0x12].get();
 	}
 	bool dvb() const {
 		return m_dvb;
@@ -106,11 +94,14 @@ public:
 	bool dam() const {
 		return m_dam;
 	}
+	bool ryt() const {
+		return m_ryt;
+	}
 	uint16_t tremoloIndex() const {
 		return m_tremoloIndex;
 	}
 
-	std::vector<short> read() ;
+	void read( std::array< int16_t, 4 >* dest ) ;
 
 	Opl3();
 

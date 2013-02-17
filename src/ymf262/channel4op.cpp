@@ -4,7 +4,7 @@
 
 namespace opl
 {
-std::vector< int16_t > Channel4Op::nextSample()
+void Channel4Op::nextSample( std::array< int16_t, 4 >* dest )
 {
 	const int secondChannelBaseAddress = baseAddress() + 3;
 	const int secondCnt = opl()->readReg( secondChannelBaseAddress + AbstractChannel::CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset ) & 0x1;
@@ -21,8 +21,10 @@ std::vector< int16_t > Channel4Op::nextSample()
 			/*
 			 * @Op1 ~> Op2 ~> Op3 ~> Op4
 			 */
-			if( m_op4->envelopeGenerator()->isOff() )
-				return getInFourChannels( 0 );
+			if( m_op4->envelopeGenerator()->isOff() ) {
+				getInFourChannels( dest, 0 );
+				return;
+			}
 
 			channelOutput = m_op1->nextSample( feedbackOutput );
 			pushFeedback(channelOutput);
@@ -35,7 +37,8 @@ std::vector< int16_t > Channel4Op::nextSample()
 			 * (@Op1 ~> Op2) + (Op3 ~> Op4)
 			 */
 			if( m_op2->envelopeGenerator()->isOff() && m_op4->envelopeGenerator()->isOff() ) {
-				return getInFourChannels( 0 );
+				getInFourChannels( dest, 0 );
+				return;
 			}
 
 			channelOutput = m_op1->nextSample( feedbackOutput );
@@ -48,8 +51,10 @@ std::vector< int16_t > Channel4Op::nextSample()
 			/*
 			 * @Op1 + (Op2 ~> Op3 ~> Op4)
 			 */
-			if( m_op1->envelopeGenerator()->isOff() && m_op4->envelopeGenerator()->isOff() )
-				return getInFourChannels( 0 );
+			if( m_op1->envelopeGenerator()->isOff() && m_op4->envelopeGenerator()->isOff() ) {
+				getInFourChannels( dest, 0 );
+				return;
+			}
 
 			channelOutput = m_op1->nextSample( feedbackOutput );
 			pushFeedback(channelOutput);
@@ -60,8 +65,10 @@ std::vector< int16_t > Channel4Op::nextSample()
 			/*
 			 * (@Op1 ~> Op3) + Op2 + Op4
 			 */
-			if( m_op1->envelopeGenerator()->isOff() && m_op3->envelopeGenerator()->isOff() && m_op4->envelopeGenerator()->isOff() )
-				return getInFourChannels( 0 );
+			if( m_op1->envelopeGenerator()->isOff() && m_op3->envelopeGenerator()->isOff() && m_op4->envelopeGenerator()->isOff() ) {
+				getInFourChannels( dest, 0 );
+				return;
+			}
 
 			channelOutput = m_op1->nextSample( feedbackOutput );
 			pushFeedback(channelOutput);
@@ -70,7 +77,7 @@ std::vector< int16_t > Channel4Op::nextSample()
 			channelOutput += m_op4->nextSample( Operator::noModulator );
 	}
 
-	return getInFourChannels( channelOutput );
+	getInFourChannels( dest, channelOutput );
 }
 void Channel4Op::keyOn()
 {

@@ -27,13 +27,6 @@ public:
 	SL4_RR4_Offset = 0x80,
 	_5_WS3_Offset = 0xE0;
 
-	enum class Type
-	{
-		NO_MODULATION, CARRIER, FEEDBACK
-	};
-
-	static constexpr int waveLength = 1024;
-
 private:
 	Opl3* m_opl;
 	int m_operatorBaseAddress;
@@ -73,6 +66,10 @@ private:
 	
 	static light4cxx::Logger* logger();
 
+	int16_t handleTopCymbal();
+	int16_t handleHighHat( uint16_t modulator );
+	int16_t handleSnareDrum( uint16_t modulator );
+
 public:
 	static constexpr uint noModulator = 0;
 
@@ -93,30 +90,6 @@ public:
 	}
 	PhaseGenerator* phaseGenerator() {
 		return &m_phaseGenerator;
-	}
-	Opl3* opl() const {
-		return m_opl;
-	}
-	uint8_t mult() const {
-		return m_mult;
-	}
-	uint16_t phase() const {
-		return m_phase;
-	}
-	void setPhase( uint16_t p ) {
-		m_phase = p & 0x3ff;
-	}
-	bool egt() const {
-		return m_egt;
-	}
-	bool am() const {
-		return m_am;
-	}
-	uint8_t ws() const {
-		return m_ws;
-	}
-	bool vib() const {
-		return m_vib;
 	}
 
 	Operator( Opl3* opl, int baseAddress );

@@ -4,7 +4,7 @@
 
 namespace opl
 {
-std::vector< int16_t > Channel2Op::nextSample()
+void Channel2Op::nextSample( std::array< int16_t, 4 >* dest )
 {
 	int16_t channelOutput(0);
 	const uint16_t feedbackOutput = avgFeedback();
@@ -12,7 +12,8 @@ std::vector< int16_t > Channel2Op::nextSample()
 	if( !cnt() ) {
 		// CNT = 0, the operators are in series, with the first in feedback.
 		if( m_op2->envelopeGenerator()->isOff() ) {
-			return getInFourChannels( 0 );
+			getInFourChannels( dest, 0 );
+			return;
 		}
 		channelOutput = m_op1->nextSample( feedbackOutput );
 		pushFeedback(channelOutput);
@@ -21,13 +22,14 @@ std::vector< int16_t > Channel2Op::nextSample()
 	else {
 		// CNT = 1, the operators are in parallel, with the first in feedback.
 		if( m_op1->envelopeGenerator()->isOff() && m_op2->envelopeGenerator()->isOff() ) {
-			return getInFourChannels( 0 );
+			getInFourChannels( dest, 0 );
+			return;
 		}
 		channelOutput = m_op1->nextSample( feedbackOutput );
 		pushFeedback(channelOutput);
 		channelOutput += m_op2->nextSample( Operator::noModulator );
 	}
-	return getInFourChannels( channelOutput );
+	getInFourChannels( dest, channelOutput );
 }
 
 void Channel2Op::keyOn()

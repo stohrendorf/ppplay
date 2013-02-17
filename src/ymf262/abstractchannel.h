@@ -2,12 +2,12 @@
 #define PPP_OPL_ABSTRACTCHANNEL_H
 
 #include "stuff/utils.h"
-#include "fractional9.h"
 
 #include <light4cxx/logger.h>
 #include <vector>
 #include <cstdint>
 #include <memory>
+#include <array>
 
 namespace opl
 {
@@ -95,9 +95,9 @@ public:
 
 	void updateChannel();
 
-	std::vector< int16_t > getInFourChannels( int16_t channelOutput );
+	void getInFourChannels(std::array<int16_t,4>* dest, int16_t channelOutput );
 
-	virtual std::vector<int16_t> nextSample() = 0;
+	virtual void nextSample(std::array<int16_t,4>* dest) = 0;
 	virtual void keyOn() = 0;
 	virtual void keyOff() = 0;
 	virtual void updateOperators() = 0;

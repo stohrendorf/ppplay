@@ -127,6 +127,7 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 	switch( m_stage ) {
 		case Stage::OFF:
 			return Silence;
+
 		case Stage::ATTACK:
 			attack();
 			if( m_env==0 ) {

@@ -57,21 +57,20 @@ void AbstractChannel::updateChannel()
 	update_CHD1_CHC1_CHB1_CHA1_FB3_CNT1();
 }
 
-std::vector< int16_t > AbstractChannel::getInFourChannels( int16_t channelOutput )
+void AbstractChannel::getInFourChannels( std::array<int16_t, 4>* dest, int16_t channelOutput )
 {
-	std::vector<int16_t> output( 4 );
-
+	if(!dest) {
+		return;
+	}
 	if( !m_opl->isNew() ) {
-		output[0] = output[1] = output[2] = output[3] = channelOutput;
+		std::fill_n(dest->begin(), 4, channelOutput);
 	}
 	else {
-		output[0] = m_cha ? channelOutput : 0;
-		output[1] = m_chb ? channelOutput : 0;
-		output[2] = m_chc ? channelOutput : 0;
-		output[3] = m_chd ? channelOutput : 0;
+		(*dest)[0] = m_cha ? channelOutput : 0;
+		(*dest)[1] = m_chb ? channelOutput : 0;
+		(*dest)[2] = m_chc ? channelOutput : 0;
+		(*dest)[3] = m_chd ? channelOutput : 0;
 	}
-
-	return output;
 }
 
 light4cxx::Logger* AbstractChannel::logger()

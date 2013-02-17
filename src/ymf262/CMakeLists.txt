@@ -12,14 +12,11 @@ add_library(ppplay_opl SHARED
 	channel2op.cpp
 	channel4op.cpp
 	envelopegenerator.cpp
-	highhatoperator.cpp
 	highhatsnaredrumchannel.cpp
 	operator.cpp
 	opl3.cpp
 	phasegenerator.cpp
-	snaredrumoperator.cpp
 	tomtomtopcymbalchannel.cpp
-	topcymbaloperator.cpp
 )
 
 generate_export_header(ppplay_opl)
