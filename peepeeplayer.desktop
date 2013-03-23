@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=PeePeePlayer
+GenericName=Tracker Module Player
+Comment=Plays old Music Tracker Modules
+Categories=AudioVideo;Audio;Player;
+Exec=ppplay %f
+MimeType=audio/x-s3m;audio/x-xm;audio/x-mod;
+NoDisplay=true
+StartupNotify=false
