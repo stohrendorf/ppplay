@@ -6,6 +6,6 @@ GenericName=Tracker Module Player
 Comment=Plays old Music Tracker Modules
 Categories=AudioVideo;Audio;Player;
 Exec=ppplay %f
-MimeType=audio/x-s3m;audio/x-xm;audio/x-mod;
+MimeType=audio/x-s3m;audio/x-xm;audio/x-mod;audio/x-hsc;
 NoDisplay=true
 StartupNotify=false
