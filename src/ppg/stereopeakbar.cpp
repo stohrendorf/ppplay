@@ -74,6 +74,7 @@ StereoPeakBar::~StereoPeakBar() = default;
 
 void StereoPeakBar::shift( int lval, int rval )
 {
+	LockGuard guard(this);
 	BOOST_ASSERT( !m_interArrL.empty() && m_interArrR.size() == m_interArrL.size() );
 	m_interArrL.erase( m_interArrL.begin() );
 	m_interArrR.erase( m_interArrR.begin() );
@@ -122,11 +123,13 @@ void StereoPeakBar::shift( int lval, int rval )
 
 void StereoPeakBar::shiftFrac( float lval, float rval )
 {
+	LockGuard guard(this);
 	shift( static_cast<int>( lval * m_max ), static_cast<int>( rval * m_max ) );
 }
 
 int StereoPeakBar::valueLeft() const
 {
+	LockGuard guard(this);
 	int res = 0;
 	int div = 0;
 	int i = 1;
@@ -139,6 +142,7 @@ int StereoPeakBar::valueLeft() const
 
 int StereoPeakBar::valueRight() const
 {
+	LockGuard guard(this);
 	int res = 0;
 	int div = 0;
 	int i = 1;

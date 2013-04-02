@@ -403,22 +403,26 @@ SDLScreen::SDLScreen( int w, int h, const std::string& title ) : Widget( nullptr
 
 SDLScreen::~SDLScreen()
 {
+	LockGuard guard(this);
 	instanceData.screen = nullptr;
 	instanceData.reset();
 }
 
 void SDLScreen::clear( uint8_t c, Color foreground, Color background )
 {
+	LockGuard guard(this);
 	instanceData.clear(c, foreground, background);
 }
 
 void SDLScreen::drawThis()
 {
+	LockGuard guard(this);
 	instanceData.redraw(hasMouseFocus(), m_cursorX, m_cursorY);
 }
 
 void SDLScreen::drawChar( int x, int y, char c )
 {
+	LockGuard guard(this);
 	if( !instanceData.contains( x, y ) ) {
 		logger->error( L4CXX_LOCATION, "Out of range: %d, %d", x, y );
 		return;
@@ -428,6 +432,7 @@ void SDLScreen::drawChar( int x, int y, char c )
 
 void SDLScreen::setFgColorAt( int x, int y, Color c )
 {
+	LockGuard guard(this);
 	if( !instanceData.contains( x, y ) ) {
 		return;
 	}
@@ -436,6 +441,7 @@ void SDLScreen::setFgColorAt( int x, int y, Color c )
 
 void SDLScreen::setBgColorAt( int x, int y, Color c )
 {
+	LockGuard guard(this);
 	if( !instanceData.contains( x, y ) ) {
 		return;
 	}
@@ -444,6 +450,7 @@ void SDLScreen::setBgColorAt( int x, int y, Color c )
 
 bool SDLScreen::onMouseMove( int x, int y )
 {
+	LockGuard guard(this);
 	m_cursorX = x;
 	m_cursorY = y;
 	Widget::onMouseMove( x, y );
@@ -452,16 +459,19 @@ bool SDLScreen::onMouseMove( int x, int y )
 
 bool SDLScreen::hasMouseFocus() const
 {
+	LockGuard guard(this);
 	return ( SDL_GetAppState()&SDL_APPMOUSEFOCUS ) != 0;
 }
 
 void SDLScreen::drawPixel( int x, int y, Color c )
 {
+	LockGuard guard(this);
 	instanceData.setPixel(instanceData.pixelLayer, x, y, instanceData.mapColor(c));
 }
 
 void SDLScreen::clearPixels( Color c )
 {
+	LockGuard guard(this);
 	instanceData.clearPixels(c);
 }
 

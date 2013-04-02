@@ -26,6 +26,7 @@ namespace ppg
 {
 
 Widget::Widget( Widget* parent ) :
+	m_mutex(),
 	m_visible( false ),
 	m_parent( parent ),
 	m_area( 0, 0, 0, 0 ),
@@ -39,6 +40,7 @@ Widget::Widget( Widget* parent ) :
 
 Widget::~Widget()
 {
+	LockGuard guard(this);
 	// delete the children
 	List backup = m_children;
 	for( Widget * tmp : backup ) {
@@ -67,6 +69,7 @@ Widget::~Widget()
 
 int Widget::setLeft( int x, bool absolute )
 {
+	LockGuard guard(this);
 	if( absolute ) {
 		mapToAbsolute( &x, nullptr );
 	}
@@ -78,6 +81,7 @@ int Widget::setLeft( int x, bool absolute )
 
 int Widget::setTop( int y, bool absolute )
 {
+	LockGuard guard(this);
 	if( absolute ) {
 		mapToAbsolute( nullptr, &y );
 	}
@@ -89,6 +93,7 @@ int Widget::setTop( int y, bool absolute )
 
 bool Widget::setPosition( int x, int y, bool absolute )
 {
+	LockGuard guard(this);
 	setLeft( x, absolute );
 	setTop( y, absolute );
 	return ( m_area.left() != x ) || ( m_area.top() != y );
@@ -96,11 +101,13 @@ bool Widget::setPosition( int x, int y, bool absolute )
 
 bool Widget::setPosition( const Point& pos, bool absolute )
 {
+	LockGuard guard(this);
 	return setPosition( pos.x(), pos.y(), absolute );
 }
 
 int Widget::setWidth( int w )
 {
+	LockGuard guard(this);
 	if( w > 0 ) {
 		m_area.setWidth( w );
 	}
@@ -109,6 +116,7 @@ int Widget::setWidth( int w )
 
 int Widget::setHeight( int h )
 {
+	LockGuard guard(this);
 	if( h > 0 ) {
 		m_area.setHeight( h );
 	}
@@ -117,17 +125,20 @@ int Widget::setHeight( int h )
 
 bool Widget::setSize( int w, int h )
 {
+	LockGuard guard(this);
 	setWidth( w );
 	setHeight( h );
 	return ( m_area.width() != w ) || ( m_area.height() != h );
 }
 bool Widget::setSize( const Point& pt )
 {
+	LockGuard guard(this);
 	return setSize( pt.x(), pt.y() );
 }
 
 void Widget::draw()
 {
+	LockGuard guard(this);
 	if( !isVisible() )
 		return;
 	// draw from bottom to top so that top elements are drawn over bottom ones
@@ -143,26 +154,31 @@ void Widget::draw()
 
 Rect Widget::area() const noexcept
 {
+	LockGuard guard(this);
 	return m_area;
 }
 
 Rect& Widget::area() noexcept
 {
+	LockGuard guard(this);
 	return m_area;
 }
 
 void Widget::show() noexcept
 {
+	LockGuard guard(this);
 	m_visible = true;
 }
 
 void Widget::hide() noexcept
 {
+	LockGuard guard(this);
 	m_visible = false;
 }
 
 void Widget::drawChar( int x, int y, char c )
 {
+	LockGuard guard(this);
 	if( !m_parent ) {
 		return;
 	}
@@ -175,6 +191,7 @@ void Widget::drawChar( int x, int y, char c )
 
 void Widget::setFgColorAt( int x, int y, Color c )
 {
+	LockGuard guard(this);
 	if( !m_parent ) {
 		return;
 	}
@@ -187,6 +204,7 @@ void Widget::setFgColorAt( int x, int y, Color c )
 
 void Widget::setBgColorAt( int x, int y, Color c )
 {
+	LockGuard guard(this);
 	if( !m_parent ) {
 		return;
 	}
@@ -199,6 +217,7 @@ void Widget::setBgColorAt( int x, int y, Color c )
 
 void Widget::mapToParent( int* x, int* y ) const
 {
+	LockGuard guard(this);
 	if( !m_parent ) {
 		return;
 	}
@@ -211,6 +230,7 @@ void Widget::mapToParent( int* x, int* y ) const
 }
 void Widget::mapToParent( ppg::Point* pt ) const
 {
+	LockGuard guard(this);
 	if( !m_parent || !pt ) {
 		return;
 	}
@@ -219,6 +239,7 @@ void Widget::mapToParent( ppg::Point* pt ) const
 
 void Widget::mapToAbsolute( int* x, int* y ) const
 {
+	LockGuard guard(this);
 	if( !m_parent ) {
 		return;
 	}
@@ -226,6 +247,7 @@ void Widget::mapToAbsolute( int* x, int* y ) const
 }
 void Widget::mapToAbsolute( ppg::Point* pt ) const
 {
+	LockGuard guard(this);
 	if( !m_parent || !pt ) {
 		return;
 	}
@@ -238,6 +260,7 @@ void Widget::mapToAbsolute( ppg::Point* pt ) const
 
 Widget* Widget::getTopParent() const
 {
+	LockGuard guard(this);
 	if( !m_parent ) {
 		return nullptr;
 	}
@@ -246,6 +269,7 @@ Widget* Widget::getTopParent() const
 
 void Widget::toTop( Widget* vp )
 {
+	LockGuard guard(this);
 	if( std::find( m_children.begin(), m_children.end(), vp ) == m_children.end() )
 		return;
 	m_children.remove( vp );
@@ -254,6 +278,7 @@ void Widget::toTop( Widget* vp )
 
 bool Widget::onMouseMove( int x, int y )
 {
+	LockGuard guard(this);
 	for( Widget * current : m_children ) {
 		if( !current ) {
 			continue;
@@ -268,11 +293,13 @@ bool Widget::onMouseMove( int x, int y )
 
 void Widget::setAutoDelete( bool value ) noexcept
 {
+	LockGuard guard(this);
 	m_autodelete = value;
 }
 
 bool Widget::isVisible() const noexcept
 {
+	LockGuard guard(this);
 	return m_visible;
 }
 

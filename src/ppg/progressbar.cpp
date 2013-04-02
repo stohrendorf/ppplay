@@ -38,11 +38,13 @@ ProgressBar::~ProgressBar() = default;
 
 size_t ProgressBar::max() const
 {
+	LockGuard guard(this);
 	return m_maxVal;
 }
 
 void ProgressBar::setMax( size_t maxVal )
 {
+	LockGuard guard(this);
 	m_maxVal = maxVal;
 	if( m_value > m_maxVal ) {
 		m_value = m_maxVal;
@@ -51,11 +53,13 @@ void ProgressBar::setMax( size_t maxVal )
 
 size_t ProgressBar::value() const
 {
+	LockGuard guard(this);
 	return m_value;
 }
 
 void ProgressBar::setValue( size_t val )
 {
+	LockGuard guard(this);
 	if( val <= m_maxVal ) {
 		m_value = val;
 	}
@@ -63,6 +67,7 @@ void ProgressBar::setValue( size_t val )
 
 void ProgressBar::drawThis()
 {
+	LockGuard guard(this);
 	int w = area().width();
 	const int pos = m_maxVal == 0 ? 0 : ( w - 2 ) * m_value / m_maxVal;
 	for( int i = 0; i < w; i++ ) {
@@ -94,11 +99,13 @@ int ProgressBar::setHeight( int )
 
 void ProgressBar::setBgColor( Color c )
 {
+	LockGuard guard(this);
 	m_bgColor = c;
 }
 
 void ProgressBar::setFgColor( Color c )
 {
+	LockGuard guard(this);
 	m_fgColor = c;
 }
 

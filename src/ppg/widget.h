@@ -32,6 +32,7 @@
 
 #include <list>
 #include <memory>
+#include <mutex>
 
 namespace ppg
 {
@@ -54,6 +55,7 @@ class PPPLAY_PPG_EXPORT Widget
 public:
 	typedef std::list<Widget*> List; //!< @brief List of widgets
 private:
+	mutable std::recursive_mutex m_mutex; //!< @brief Widget mutex
 	bool m_visible; //!< @brief @c false if this widget and it's children should not be drawn
 	Widget* m_parent; //!< @brief Pointer to the parent widget, or @c nullptr if it's the top widget
 	Rect m_area; //!< @brief Area of this widget within the parent's space
@@ -61,6 +63,7 @@ private:
 	bool m_autodelete; //!< @brief If @c true, the parent widget should delete this when destroyed. Default is @c true
 	virtual void drawThis() = 0; //!< @brief Internal drawing method, called by PppWidet::draw() @see draw()
 public:
+	class LockGuard;
 	/**
 	 * @brief Constructor
 	 * @param[in] parent Parent widget
@@ -223,6 +226,34 @@ public:
 	 * @param[in] value The new value
 	 */
 	void setAutoDelete( bool value ) noexcept;
+};
+
+class Widget::LockGuard
+{
+private:
+	DISABLE_COPY(LockGuard)
+	const Widget* const m_widget;
+public:
+	explicit LockGuard(const Widget* const widget) : m_widget(widget) {
+		if(widget != nullptr) {
+			widget->m_mutex.lock();
+		}
+	}
+	~LockGuard() {
+		if(m_widget!=nullptr) {
+			m_widget->m_mutex.unlock();
+		}
+	}
+	void lock() {
+		if(m_widget!=nullptr) {
+			m_widget->m_mutex.lock();
+		}
+	}
+	void unlock() {
+		if(m_widget!=nullptr) {
+			m_widget->m_mutex.unlock();
+		}
+	}
 };
 
 } // namespace ppg

@@ -45,6 +45,7 @@ Label::~Label() = default;
 
 void Label::sizeColorsToMax()
 {
+	LockGuard guard(this);
 	int w = area().width();
 	m_fgColors.resize( std::max<size_t>( m_text.length(), w ), Color::None );
 	m_bgColors.resize( std::max<size_t>( m_text.length(), w ), Color::None );
@@ -52,6 +53,7 @@ void Label::sizeColorsToMax()
 
 void Label::setText( const std::string& txt )
 {
+	LockGuard guard(this);
 	m_text = txt;
 	sizeColorsToMax();
 }
@@ -138,6 +140,7 @@ Color extractBgColor( const std::string& str )
 
 void Label::setEscapedText( const std::string& txt )
 {
+	LockGuard guard(this);
 	Color currentFg = Color::None;
 	Color currentBg = Color::None;
 	std::string stripped;
@@ -169,6 +172,7 @@ int Label::setHeight( int /*h*/ )
 
 int Label::setWidth( int w )
 {
+	LockGuard guard(this);
 	Widget::setWidth( w );
 	sizeColorsToMax();
 	return area().width();
@@ -176,11 +180,13 @@ int Label::setWidth( int w )
 
 size_t Label::length() const
 {
+	LockGuard guard(this);
 	return m_text.length();
 }
 
 void Label::setFgColorRange( size_t pos, Color color, size_t len )
 {
+	LockGuard guard(this);
 	if( pos >= m_bgColors.size() )
 		return;
 	if( ( len == 0 ) || ( len + pos > m_bgColors.size() ) )
@@ -190,6 +196,7 @@ void Label::setFgColorRange( size_t pos, Color color, size_t len )
 
 void Label::setBgColorRange( size_t pos, Color color, size_t len )
 {
+	LockGuard guard(this);
 	if( pos >= m_bgColors.size() )
 		return;
 	if( ( len == 0 ) || ( len + pos > m_bgColors.size() ) )
@@ -199,6 +206,7 @@ void Label::setBgColorRange( size_t pos, Color color, size_t len )
 
 void Label::drawThis()
 {
+	LockGuard guard(this);
 	if( length() == 0 ) {
 		return;
 	}
@@ -234,16 +242,19 @@ void Label::drawThis()
 
 char& Label::charAt( size_t pos )
 {
+	LockGuard guard(this);
 	return m_text.at( pos );
 }
 
 char Label::charAt( size_t pos ) const
 {
+	LockGuard guard(this);
 	return m_text.at( pos );
 }
 
 std::string Label::text() const
 {
+	LockGuard guard(this);
 	return m_text;
 }
 
