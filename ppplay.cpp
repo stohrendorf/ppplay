@@ -38,6 +38,9 @@
 #include <boost/format.hpp>
 #include <boost/progress.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
+#include <boost/filesystem.hpp>
 
 #include "light4cxx/logger.h"
 
@@ -58,38 +61,60 @@ bool noGUI = false;
 uint16_t maxRepeat = 2;
 std::string filename;
 std::string outputFilename;
-ppp::Sample::Interpolation interpolation;
+ppp::Sample::Interpolation interpolation = ppp::Sample::Interpolation::Cubic;
+int loglevel = 1;
+}
+
+void loadUserConfig()
+{
+	std::string cfgFilename = getenv("HOME");
+	cfgFilename += "/.ppplayrc";
+	boost::property_tree::ptree pt;
+	try {
+		boost::property_tree::read_ini(cfgFilename, pt);
+	}
+	catch(boost::property_tree::ini_parser_error& ex) {
+		// Populate the defaults
+		pt.put( "config.no_gui", false );
+		pt.put( "playback.max_repeat", 2 );
+		pt.put( "debug.log_level", 1 );
+		pt.put( "playback.interpolation", 2 );
+	}
+	config::noGUI = pt.get<bool>("config.no_gui", false);
+	config::maxRepeat = pt.get<uint16_t>("playback.max_repeat", 2);
+	config::loglevel = pt.get<int>("debug.log_level", 1);
+	config::interpolation = ppp::Sample::Interpolation(pt.get<int>("playback.interpolation", 2));
+	boost::property_tree::write_ini(cfgFilename, pt);
 }
 
 bool parseCmdLine( int argc, char* argv[] )
 {
-	int loglevel = 0;
-	namespace bpo = boost::program_options;
-	bpo::options_description genOpts( "General Options" );
+	loadUserConfig();
+	boost::program_options::options_description genOpts( "General Options" );
 	genOpts.add_options()
 	( "help,h", "Shows this help and exits" )
 	( "version", "Shows version information and exits" )
 	( "warranty", "Shows warranty information and exits" )
 	( "copyright", "Shows copyright information and exits" )
-	( "log-level,l", bpo::value<int>( &loglevel )->default_value( 1 ), "Sets the log level. Possible values:\n - 0 No logging\n - 1 Errors\n - 2 Warnings\n - 3 Informational\n - 4 Debug\n - 5 Trace\nWhen an invalid level is passed, it will automatically be set to 'Trace'. Levels 4 and 5 will also produce a more verbose output." )
+	( "log-level,l", boost::program_options::value<int>( &config::loglevel )->default_value( config::loglevel ), "Sets the log level. Possible values:\n - 0 No logging\n - 1 Errors\n - 2 Warnings\n - 3 Informational\n - 4 Debug\n - 5 Trace\nWhen an invalid level is passed, it will automatically be set to 'Trace'. Levels 4 and 5 will also produce a more verbose output." )
 	( "no-gui,n", "No GUI" )
 	;
-	bpo::options_description ioOpts( "Input/Output Options" );
+	boost::program_options::options_description ioOpts( "Input/Output Options" );
 	ioOpts.add_options()
-	( "max-repeat,m", bpo::value<uint16_t>( &config::maxRepeat )->default_value( 2 ), "Maximum repeat count (the number of times an order can be played). Specify a number between 1 and 10,000." )
-	( "file,f", bpo::value<std::string>( &config::filename ), "Module file to play" )
-	( "output,o", bpo::value<std::string>( &config::outputFilename )->default_value(std::string()), "Set mp3/wav filename" )
-	( "interpolation,i", bpo::value<int>()->default_value(2), "Set interpolation mode:\n - 0 No interpolation\n - 1 Linear interpolation\n - 2 Cubic interpolation" )
+	( "max-repeat,m", boost::program_options::value<uint16_t>( &config::maxRepeat )->default_value( config::maxRepeat ), "Maximum repeat count (the number of times an order can be played). Specify a number between 1 and 10,000." )
+	( "file,f", boost::program_options::value<std::string>( &config::filename ), "Module file to play" )
+	( "output,o", boost::program_options::value<std::string>( &config::outputFilename )->default_value(std::string()), "Set mp3/wav filename" )
+	( "interpolation,i", boost::program_options::value<int>()->default_value(int(config::interpolation)), "Set interpolation mode:\n - 0 No interpolation\n - 1 Linear interpolation\n - 2 Cubic interpolation" )
 	;
-	bpo::positional_options_description p;
+	boost::program_options::positional_options_description p;
 	p.add( "file", -1 );
 
-	bpo::options_description allOpts( "All options" );
+	boost::program_options::options_description allOpts( "All options" );
 	allOpts.add( genOpts ).add( ioOpts );
 
-	bpo::variables_map vm;
-	bpo::store( bpo::command_line_parser( argc, argv ).options( allOpts ).positional( p ).run(), vm );
-	bpo::notify( vm );
+	boost::program_options::variables_map vm;
+	boost::program_options::store( boost::program_options::command_line_parser( argc, argv ).options( allOpts ).positional( p ).run(), vm );
+	boost::program_options::notify( vm );
 
 	if( config::maxRepeat < 1 || config::maxRepeat > 10000 ) {
 		std::cout << "Error: Maximum repeat count not within 1 to 10,000" << std::endl;
@@ -97,7 +122,7 @@ bool parseCmdLine( int argc, char* argv[] )
 	}
 
 	light4cxx::Location::setFormat( "[%T %<5t %>=7.3r] <%L> %m" );
-	switch( loglevel ) {
+	switch( config::loglevel ) {
 		case 0:
 			light4cxx::Logger::setLevel( light4cxx::Level::Off );
 			break;

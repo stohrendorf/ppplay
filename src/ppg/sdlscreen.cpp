@@ -253,15 +253,15 @@ bool InstanceData::init( int charWidth, int charHeight, const std::string& title
 	}
 	SDL_WM_SetCaption( title.c_str(), nullptr );
 	
-	backgroundLayer = SDL_CreateRGBSurface(SDL_SWSURFACE,              charWidth*8, charHeight*16, 32, 0xff, 0xff<<8, 0xff<<16, 0       );
+	backgroundLayer = SDL_CreateRGBSurface(SDL_HWSURFACE, charWidth*8, charHeight*16, 32, 0xff, 0xff<<8, 0xff<<16, 0       );
 	if(SDL_MUSTLOCK(backgroundLayer))  {
 		SDL_LockSurface( backgroundLayer );
 	}
-	pixelLayer = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA, charWidth*8, charHeight*16, 32, 0xff, 0xff<<8, 0xff<<16, 0xff<<24);
+	pixelLayer = SDL_CreateRGBSurface(SDL_HWSURFACE|SDL_SRCALPHA, charWidth*8, charHeight*16, 32, 0xff, 0xff<<8, 0xff<<16, 0xff<<24);
 	if(SDL_MUSTLOCK(pixelLayer))  {
 		SDL_LockSurface( pixelLayer );
 	}
-	foregroundLayer = SDL_CreateRGBSurface(SDL_SWSURFACE|SDL_SRCALPHA, charWidth*8, charHeight*16, 32, 0xff, 0xff<<8, 0xff<<16, 0xff<<24);
+	foregroundLayer = SDL_CreateRGBSurface(SDL_HWSURFACE|SDL_SRCALPHA, charWidth*8, charHeight*16, 32, 0xff, 0xff<<8, 0xff<<16, 0xff<<24);
 	if(SDL_MUSTLOCK(foregroundLayer))  {
 		SDL_LockSurface( foregroundLayer );
 	}
