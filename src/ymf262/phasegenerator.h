@@ -26,6 +26,7 @@
 #define PPP_OPL_PHASEGENERATOR_H
 
 #include <boost/assert.hpp>
+#include <cstdint>
 
 namespace opl
 {
