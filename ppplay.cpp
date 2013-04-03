@@ -68,6 +68,9 @@ int loglevel = 1;
 void loadUserConfig()
 {
 	std::string cfgFilename = getenv("HOME");
+	if(cfgFilename.empty()) {
+		return;
+	}
 	cfgFilename += "/.ppplayrc";
 	boost::property_tree::ptree pt;
 	try {
