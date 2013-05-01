@@ -55,6 +55,9 @@ public:
 
 	void nextSample(std::array<int16_t,4>* dest);
 
+    virtual AbstractArchive& serialize(AbstractArchive* archive) {
+		return AbstractChannel::serialize(archive);
+	}
 protected:
 	void keyOn();
 	void keyOff();

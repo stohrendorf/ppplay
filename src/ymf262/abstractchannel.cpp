@@ -24,6 +24,7 @@
 
 #include "abstractchannel.h"
 #include "opl3.h"
+#include <stream/abstractarchive.h>
 
 namespace opl
 {
@@ -100,6 +101,14 @@ void AbstractChannel::getInFourChannels( std::array<int16_t, 4>* dest, int16_t c
 light4cxx::Logger* AbstractChannel::logger()
 {
 	return light4cxx::Logger::get("opl.channel");
+}
+
+AbstractArchive& AbstractChannel::serialize(AbstractArchive* archive)
+{
+	*archive % m_fnum % m_kon % m_block
+	% m_cha % m_chb % m_chc % m_chd
+	% m_fb % m_feedback[0] % m_feedback[1] % m_cnt;
+	return *archive;
 }
 
 }

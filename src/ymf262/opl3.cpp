@@ -268,7 +268,7 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 		setRhythmMode();
 	}
 
-	bool new_bd  = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x10;
+	bool new_bd = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x10;
 	if( new_bd != m_bd ) {
 		m_bd = new_bd;
 		if( m_bd ) {
@@ -277,7 +277,7 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 		}
 	}
 
-	bool new_sd  = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x08;
+	bool new_sd = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x08;
 	if( new_sd != m_sd ) {
 		m_sd = new_sd;
 		if( m_sd ) {
@@ -289,14 +289,14 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 		tomTomOperator()->keyOn();
 	}
 
-	bool new_tc  = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x02;
+	bool new_tc = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x02;
 	if( new_tc != m_tc ) {
 		m_tc = new_tc;
 		if( m_tc )
 			topCymbalOperator()->keyOn();
 	}
 
-	bool new_hh  = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x01;
+	bool new_hh = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x01;
 	if( new_hh != m_hh ) {
 		m_hh = new_hh;
 		if( m_hh )
@@ -370,13 +370,30 @@ void Opl3::setRhythmMode()
 
 AbstractArchive& Opl3::serialize( AbstractArchive* archive )
 {
-	archive->array(m_registers, 512);
-	if( archive->isLoading() ) {
-		for(int i=0; i<512; i++) {
-			// update all operators and channels...
-			//! @todo This is pretty bad, but better than nothing...
-			writeReg(i, m_registers[i]);
+	// reset channel pointers to not mix different channel data
+	for( int i = 6; i < 9; i++ ) {
+		m_channels[0][i] = m_channels2op[0][i];
+	}
+	archive->array(m_registers, sizeof(m_registers)/sizeof(m_registers[0]))
+	% m_nts % m_dam % m_dvb % m_ryt % m_bd % m_sd % m_tc % m_hh
+	% m_new % m_connectionsel % m_vibratoIndex % m_tremoloIndex % m_rand;
+	for(int i=0; i<2; i++) {
+		for(int j=0; j<36; j++) {
+			if(m_operators[i][j])
+				*archive % *m_operators[i][j];
 		}
+	}
+	for(int i=0; i<2; i++) {
+		for(int j=0; j<9; j++) {
+			if(m_channels[i][j])
+				archive->archive(m_channels[i][j].get());
+		}
+	}
+	archive->archive(m_bassDrumChannel.get()).archive(m_highHatSnareDrumChannel.get()).archive(m_tomTomTopCymbalChannel.get());
+	if( m_ryt ) {
+		m_channels[0][6] = m_bassDrumChannel;
+		m_channels[0][7] = m_highHatSnareDrumChannel;
+		m_channels[0][8] = m_tomTomTopCymbalChannel;
 	}
 	return *archive;
 }

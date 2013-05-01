@@ -51,48 +51,94 @@ public:
 private:
 	Opl3* m_opl;
 	Stage m_stage;
-	//! @brief Attack rate (4 bits)
+	/**
+	 * @brief Attack rate
+	 * @invariant m_ar<16
+	 */
 	uint8_t m_ar;
-	//! @brief Decay rate (4 bits)
+	/**
+	 * @brief Decay rate
+	 * @invariant m_dr<16
+	 */
 	uint8_t m_dr;
 	/**
-	 * @brief Sustain level (4 bits)
-	 * @note Effective size is 5 bits, to handle the case SL=0x0f
+	 * @brief Sustain level
+	 * @invariant m_sl<16 || m_sl==31
+	 * @note Effective size is 5 bits, to handle the case SL=0x0f.
 	 */
 	uint8_t m_sl;
-	//! @brief Release rate (4 bits)
+	/**
+	 * @brief Release rate
+	 * @invariant m_rr<16
+	 */
 	uint8_t m_rr;
-	//! @brief F-Number (10 bits)
+	/**
+	 * @brief F-Number
+	 * @invariant m_fnum<1024
+	 */
 	uint16_t m_fnum;
-	//! @brief Block (3 bits)
+	/**
+	 * @brief Block
+	 * @invariant m_block<8
+	 */
 	uint8_t m_block;
-	//! @brief Envelope, 9 bits
+	/**
+	 * @brief Envelope value
+	 * @invariant m_env<512
+	 */
 	uint16_t m_env;
 	//! @brief Key scale rate
 	bool m_ksr;
-	//! @brief Total level, 6 bits, att. is 0.75dB * m_tl
+	/**
+	 * @brief Total level
+	 * @invariant m_tl<64
+	 * @remark The attenuation is 0.75dB * m_tl.
+	 */
 	uint8_t m_tl;
-	//! @brief Key scale level (2 bits)
+	/**
+	 * @brief Key scale level
+	 * @invariant m_ksl<4
+	 */
 	uint8_t m_ksl;
-	//! @brief Key scale level in Base-2-dB
+	/**
+	 * @brief Key scale level (adjusted)
+	 * @invariant m_kslAdd<4*56
+	 * @remark This is the combined value of m_ksl, m_fnum and m_block.
+	 */
 	uint8_t m_kslAdd;
-	//! @brief Total envelope level, 0..511
+	/**
+	 * @brief Final envelope value
+	 * @invariant m_total<512
+	 * @remark This combines m_env, m_tl, m_kslAdd, the OPL DAM flag
+	 *         and the AM and EGT flags passed to advance().
+	 */
 	uint16_t m_total;
-	//! @brief Clock counter, 15 bits
+	/**
+	 * @brief Clock counter
+	 * @invariant m_counter<(1<<15)
+	 */
 	uint32_t m_counter;
 
 	static const uint16_t Silence = 511;
 	
+	/**
+	 * @brief Calculates the effectively used rates
+	 * @return Effectively used rate for envelope calculation
+	 * @invariant rate<64
+	 */
 	uint8_t calculateRate(uint8_t delta) const;
 	/**
 	 * @brief Advances the counter and returns the overflow
-	 * @param[in] rate Decay/release rate
+	 * @param[in] rate Attack/decay/release rate
 	 * @return Counter overflow
+	 * @pre rate<64
+	 * @post Result<8
 	 */
 	uint8_t advanceCounter(uint8_t rate);
 	/**
 	 * @brief Handles decay/release phases
 	 * @param[in] rate Decay/release rate register value
+	 * @pre rate<64
 	 */
 	void attenuate(uint8_t rate);
 	/**
@@ -102,7 +148,7 @@ private:
 	
 public:
 	constexpr EnvelopeGenerator( Opl3* opl )
-		: m_opl( opl ), m_stage( Stage::OFF ), /*m_attenuation( 0 ),*/
+		: m_opl( opl ), m_stage( Stage::OFF ),
 		  m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_fnum( 0 ), m_block( 0 ),
 		  m_env( Silence ), m_ksr( false ), m_tl( 0 ), m_ksl( 0 ),
 		  m_kslAdd(0), m_total(Silence), m_counter(0)
@@ -123,59 +169,99 @@ public:
 	}
 
 	/**
-	 * @post m_sl<15 || m_sl==31
+	 * @brief Sets the sustain level
+	 * @param[in] sl Sustain level
+	 * @note @a sl will be bit-masked.
+	 * @remark m_sl will be 0x1f if sl==15, so that m_sl will not trigger.
 	 */
-	void setActualSustainLevel( uint8_t sl );
+	void setSustainLevel( uint8_t sl ) {
+		sl &= 0x0f;
+		if( sl == 0x0F ) {
+			m_sl = 0x1f;
+		}
+		else {
+			m_sl = sl;
+		}
+	}
 
 	/**
+	 * @brief Sets the total level (not m_total)
 	 * @param[in] tl Total level, 6 bits
-	 * @post m_tl < 64
+	 * @note @a tl will be bit-masked.
 	 */
-	void setTotalLevel( uint8_t tl );
+	void setTotalLevel( uint8_t tl ) {
+		// The datasheet states that the TL formula is:
+		// TL = (24*d5 + 12*d4 + 6*d3 + 3*d2 + 1.5*d1 + 0.75*d0),
+		// 10^(0.075*tl) ~= 2^(tl/4)
+		m_tl = tl&0x3f;
+	}
 
 	/**
-	 * @post m_ksl<4 && m_block<8 && m_fnum<1024
+	 * @brief Sets m_fnum, m_block, m_ksl and calculates m_kslAdd
+	 * @note No pre-conditions for the parameters, as they will be
+	 *       bit-masked to match the invariants.
 	 */
 	void setAttennuation( uint16_t f_number, uint8_t block, uint8_t ksl );
 	
 	/**
-	 * @post m_ar<=15
+	 * @brief Sets the attack rate
+	 * @param[in] attackRate New attack rate
+	 * @note @a attackRate will be bit-masked.
 	 */
-	void setAttackRate( uint8_t attackRate );
+	void setAttackRate( uint8_t attackRate ) {
+		m_ar = attackRate & 0x0f;
+	}
+
 	
 	/**
-	 * @post m_dr<=15
+	 * @brief Sets the decay rate
+	 * @param[in] decayRate New decay rate
+	 * @note @a decayRate will be bit-masked.
 	 */
-	void setDecayRate( uint8_t decayRate );
+	void setDecayRate( uint8_t decayRate ) {
+		m_dr = decayRate & 0x0f;
+	}
 	
 	/**
-	 * @post m_rr<=15
+	 * @brief Sets the release rate
+	 * @param[in] releaseRate New release rate
+	 * @note @a releaseRate will be bit-masked.
 	 */
-	void setReleaseRate( uint8_t releaseRate );
+	void setReleaseRate( uint8_t releaseRate ) {
+		m_rr = releaseRate & 0x0f;
+	}
+	
 	void setKsr( bool ksr ) {
 		m_ksr = ksr;
 	}
 
 	/**
 	 * @return Envelope, 0..511 for 0..96dB
-	 * @post m_env<=ExactSilence
+	 * @post m_total<=Silence
 	 */
 	uint16_t advance( bool egt, bool am );
 	
-	constexpr uint16_t envelope() const
-	{
+	constexpr uint16_t value() const {
 		return m_total;
 	}
 	
 	/**
 	 * @post m_stage==Stage::ATTACK && m_clock==0
 	 */
-	void keyOn();
+	void keyOn() {
+		if( m_stage != Stage::SUSTAIN ) {
+			m_stage = Stage::ATTACK;
+		}
+	}
 	
 	/**
 	 * @post m_stage==Stage::OFF || m_stage==Stage::RELEASE
 	 */
-	void keyOff();
+	void keyOff() {
+		if( m_stage != Stage::OFF ) {
+			m_stage = Stage::RELEASE;
+		}
+	}
 };
 }
 

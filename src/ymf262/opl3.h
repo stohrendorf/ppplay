@@ -64,15 +64,15 @@ private:
 	TomTomTopCymbalChannel::Ptr m_tomTomTopCymbalChannel;
 
 	bool m_nts;
-	//! @brief Depth of amplitude. This register is used in EnvelopeGenerator.getEnvelope();
+	//! @brief Depth of amplitude
 	bool m_dam;
-	//! @brief Depth of vibrato. This register is used in PhaseGenerator.getPhase();
+	//! @brief Depth of vibrato
 	bool m_dvb;
 	bool m_ryt;
 	bool m_bd, m_sd, m_tc, m_hh;
-	//! @brief OPL2/OPL3 mode selection. This register is used in OPL3.read(), OPL3.write() and Operator.getOperatorOutput();
+	//! @brief OPL2/OPL3 mode selection
 	bool m_new;
-	//! @brief 2-op/4-op channel selection. This register is used here to configure the OPL3.channels[] array.
+	//! @brief 2-op/4-op channel selection
 	uint8_t m_connectionsel;
 	//! @brief 13 bits
 	uint16_t m_vibratoIndex;

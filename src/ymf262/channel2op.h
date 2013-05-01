@@ -55,6 +55,9 @@ public:
 	Operator* op1() const { return m_op1; }
 	Operator* op2() const { return m_op2; }
 
+    virtual AbstractArchive& serialize(AbstractArchive* archive) {
+		return AbstractChannel::serialize(archive);
+	}
 protected:
 	void keyOn();
 	void keyOff();

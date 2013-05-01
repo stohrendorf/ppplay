@@ -28,6 +28,7 @@
 #include "stuff/utils.h"
 
 #include <light4cxx/logger.h>
+#include <stream/iserializable.h>
 #include <vector>
 #include <cstdint>
 #include <memory>
@@ -38,7 +39,7 @@ namespace opl
 
 class Opl3;
 
-class AbstractChannel
+class AbstractChannel : public ISerializable
 {
 	DISABLE_COPY( AbstractChannel )
 public:
@@ -129,6 +130,8 @@ public:
 	int baseAddress() const {
 		return m_channelBaseAddress;
 	}
+	
+    virtual AbstractArchive& serialize(AbstractArchive* archive) = 0;
 };
 }
 

@@ -42,6 +42,10 @@ public:
 	void keyOn() { }
 	void keyOff() { }
 	void updateOperators() { }
+
+    virtual AbstractArchive& serialize(AbstractArchive* archive) {
+		return AbstractChannel::serialize(archive);
+	}
 };
 }
 

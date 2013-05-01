@@ -28,24 +28,6 @@
 
 namespace opl
 {
-void EnvelopeGenerator::setActualSustainLevel( uint8_t sl )
-{
-	sl &= 0x0f;
-	if( sl == 0x0F ) {
-		m_sl = 0x1f;
-	}
-	else {
-		m_sl = sl;
-	}
-}
-
-void EnvelopeGenerator::setTotalLevel( uint8_t tl )
-{
-	// The datasheet states that the TL formula is
-	// TL = (24*d5 + 12*d4 + 6*d3 + 3*d2 + 1.5*d1 + 0.75*d0),
-	// 10^(0.075*tl) ~= 2^(tl/4)
-	m_tl = tl&0x3f;
-}
 
 void EnvelopeGenerator::setAttennuation( uint16_t f_number, uint8_t block, uint8_t ksl )
 {
@@ -87,21 +69,6 @@ void EnvelopeGenerator::setAttennuation( uint16_t f_number, uint8_t block, uint8
 	}
 }
 
-void EnvelopeGenerator::setAttackRate( uint8_t attackRate )
-{
-	m_ar = attackRate & 0x0f;
-}
-
-void EnvelopeGenerator::setDecayRate( uint8_t decayRate )
-{
-	m_dr = decayRate & 0x0f;
-}
-
-void EnvelopeGenerator::setReleaseRate( uint8_t releaseRate )
-{
-	m_rr = releaseRate & 0x0f;
-}
-
 uint8_t EnvelopeGenerator::calculateRate( uint8_t rate ) const
 {
 	if( rate == 0 ) {
@@ -114,7 +81,6 @@ uint8_t EnvelopeGenerator::calculateRate( uint8_t rate ) const
 		res >>= 2;
 	}
 	res += rate << 2;
-	// res: max. 6 bits
 	return std::min<uint8_t>(63, res);
 }
 
@@ -124,9 +90,13 @@ uint8_t EnvelopeGenerator::advanceCounter(uint8_t rate)
 		return 0;
 	}
 	const uint8_t effectiveRate = calculateRate(rate);
+	// rateHi <= 15
 	const uint8_t rateHi = effectiveRate>>2;
+	// rateLo <= 3
 	const uint8_t rateLo = effectiveRate&3;
+	// 4 <= Delta <= (7<<15)
 	m_counter += uint32_t(4|rateLo)<<rateHi;
+	// res <= 7
 	uint8_t res = m_counter>>15;
 	m_counter &= (1<<15)-1;
 	return res;
@@ -140,8 +110,12 @@ void EnvelopeGenerator::attenuate( uint8_t rate )
 void EnvelopeGenerator::attack()
 {
 	uint8_t overflow = advanceCounter(m_ar);
-	if( overflow!=0 ) {
-		m_env -= (m_env>>3)*overflow + 1;
+	if( overflow==0 ) {
+		return;
+	}
+	m_env -= (m_env>>3)*overflow + 1;
+	if(m_env>Silence) { // overflow is possible
+		m_env = 0;
 	}
 }
 
@@ -187,7 +161,7 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 	if( am ) {
 		int amVal = m_opl->tremoloIndex() >> 8;
 		if( amVal > 26 ) {
-			amVal = ( 2 * 26 ) - amVal;
+			amVal = ( 2 * 26 ) + ~amVal;
 		}
 		BOOST_ASSERT( amVal>=0 && amVal<=26 );
 		if( !m_opl->dam() ) {
@@ -205,19 +179,4 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 	return m_total;
 }
 
-void EnvelopeGenerator::keyOn()
-{
-	if( m_stage != Stage::SUSTAIN ) {
-		m_stage = Stage::ATTACK;
-	}
 }
-
-void EnvelopeGenerator::keyOff()
-{
-	if( m_stage != Stage::OFF ) {
-		m_stage = Stage::RELEASE;
-	}
-}
-
-}
-

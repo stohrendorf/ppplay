@@ -33,12 +33,13 @@
 #include "envelopegenerator.h"
 
 #include <light4cxx/logger.h>
+#include <stream/iserializable.h>
 
 namespace opl
 {
 
 class Opl3;
-class Operator
+class Operator : public ISerializable
 {
 	DISABLE_COPY( Operator )
 public:
@@ -117,7 +118,6 @@ public:
 	}
 
 	Operator( Opl3* opl, int baseAddress );
-	virtual ~Operator() {}
 
 	/**
 	 * @post m_mult<16
@@ -162,6 +162,8 @@ public:
 	void keyOn();
 	void keyOff();
 	void updateOperator( uint16_t f_num, uint8_t blk );
+	
+    virtual AbstractArchive& serialize(AbstractArchive* archive);
 };
 }
 
