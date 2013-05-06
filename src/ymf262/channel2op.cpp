@@ -35,20 +35,12 @@ void Channel2Op::nextSample( std::array< int16_t, 4 >* dest )
 
 	if( !cnt() ) {
 		// CNT = 0, the operators are in series, with the first in feedback.
-		if( m_op2->envelopeGenerator()->isOff() ) {
-			getInFourChannels( dest, 0 );
-			return;
-		}
 		channelOutput = m_op1->nextSample( feedbackOutput );
 		pushFeedback(channelOutput);
 		channelOutput = m_op2->nextSample( channelOutput );
 	}
 	else {
 		// CNT = 1, the operators are in parallel, with the first in feedback.
-		if( m_op1->envelopeGenerator()->isOff() && m_op2->envelopeGenerator()->isOff() ) {
-			getInFourChannels( dest, 0 );
-			return;
-		}
 		channelOutput = m_op1->nextSample( feedbackOutput );
 		pushFeedback(channelOutput);
 		channelOutput += m_op2->nextSample( Operator::noModulator );
@@ -60,7 +52,6 @@ void Channel2Op::keyOn()
 {
 	m_op1->keyOn();
 	m_op2->keyOn();
-	clearFeedback();
 }
 
 void Channel2Op::keyOff()

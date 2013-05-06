@@ -50,8 +50,7 @@ uint16_t PhaseGenerator::advance( bool vib )
 	 *           = (FNUM<<BLOCK)>>10
 	 */
 	uint32_t inc = m_fNum;
-	if (vib)
-	{
+	if (vib) {
 		uint16_t delta = m_fNum>>7;
 		if( ((m_opl->vibratoIndex()>>10) & 3) == 3 ) {
 			delta >>= 1;

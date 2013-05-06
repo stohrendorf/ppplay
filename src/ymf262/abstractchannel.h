@@ -52,16 +52,27 @@ private:
 	Opl3* m_opl;
 	int m_channelBaseAddress;
 
-	//! @brief Frequency Number, 0..1023
+	/**
+	 * @brief Frequency Number
+	 * @invariant m_fnum < 1024
+	 */
 	uint16_t m_fnum;
-	//! @brief Key On. If changed, calls Channel.keyOn() / keyOff().
+	
+	//! @brief Key On. If changed, calls Channel::keyOn() / keyOff().
 	bool m_kon;
-	//! @brief Block/octave (0..7)
+	
+	/**
+	 * @brief Block/octave
+	 * @invariant m_block<8
+	 */
 	uint8_t m_block;
-	bool m_cha;
-	bool m_chb;
-	bool m_chc;
-	bool m_chd;
+	
+	uint8_t m_ch;
+	
+	/**
+	 * @brief Feedback amount
+	 * @invariant m_fb<8
+	 */
 	uint8_t m_fb;
 	int16_t m_feedback[2];
 	bool m_cnt;
@@ -90,9 +101,6 @@ public:
 			return 0;
 		}
 		return (( m_feedback[0] + m_feedback[1] ) << m_fb)>>9;
-	}
-	void clearFeedback() {
-		m_feedback[0] = m_feedback[1] = 0;
 	}
 	/**
 	 * @brief Push feedback into the queue

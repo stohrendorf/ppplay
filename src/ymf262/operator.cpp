@@ -121,10 +121,6 @@ int16_t Operator::handleHighHat(uint16_t modulator)
 
 int16_t Operator::handleSnareDrum( uint16_t modulator )
 {
-	if( m_envelopeGenerator.isOff() ) {
-		return 0;
-	}
-
 	m_envelopeGenerator.advance( m_egt, m_am );
 
 	uint8_t phaseBit = ( m_phase >> 9 ) & 1;
@@ -151,10 +147,6 @@ int16_t Operator::nextSample( uint16_t modulator )
 		}
 	}
 	
-	if( m_envelopeGenerator.isOff() ) {
-		return 0;
-	}
-
 	m_envelopeGenerator.advance( m_egt, m_am );
 
 	uint8_t ws = m_ws;
@@ -173,13 +165,8 @@ int16_t Operator::nextSample( uint16_t modulator )
 
 void Operator::keyOn()
 {
-	if( m_ar > 0 ) {
-		m_envelopeGenerator.keyOn();
-		m_phaseGenerator.keyOn();
-	}
-	else {
-		m_envelopeGenerator.setOff();
-	}
+	m_envelopeGenerator.keyOn();
+	m_phaseGenerator.keyOn();
 }
 
 void Operator::keyOff()
@@ -397,11 +384,10 @@ int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
 
 int16_t Operator::getOutput( uint16_t outputPhase, uint8_t ws )
 {
-	if( m_envelopeGenerator.isSilent() || m_envelopeGenerator.isOff() ) {
+	if( m_envelopeGenerator.isSilent() ) {
 		return 0;
 	}
 	return oplSin( ws, outputPhase, m_envelopeGenerator.value() );
-	//return waveform[int( outputPhase + modulator + 1024 ) % 1024] * m_envelope;
 }
 
 light4cxx::Logger* Operator::logger()

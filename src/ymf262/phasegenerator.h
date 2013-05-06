@@ -41,9 +41,25 @@ class PhaseGenerator
 {
 	//! @brief Owning chip
 	Opl3* m_opl;
+	/**
+	 * @brief Wave phase
+	 * @invariant m_phase < 1024
+	 */
 	uint32_t m_phase;
+	/**
+	 * @brief F-Number
+	 * @invariant m_fNum < 1024
+	 */
 	uint16_t m_fNum;
+	/**
+	 * @brief Block/octave
+	 * @invariant m_block < 8
+	 */
 	uint8_t m_block;
+	/**
+	 * @brief Speed multiplier
+	 * @invariant m_mult < 16
+	 */
 	uint8_t m_mult;
 public:
 	PhaseGenerator(Opl3* opl) : m_opl(opl), m_phase( 0 ), m_fNum(0), m_block(0), m_mult(0) {

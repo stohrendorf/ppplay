@@ -45,11 +45,6 @@ void Channel4Op::nextSample( std::array< int16_t, 4 >* dest )
 			/*
 			 * @Op1 ~> Op2 ~> Op3 ~> Op4
 			 */
-			if( m_op4->envelopeGenerator()->isOff() ) {
-				getInFourChannels( dest, 0 );
-				return;
-			}
-
 			channelOutput = m_op1->nextSample( feedbackOutput );
 			pushFeedback(channelOutput);
 			
@@ -60,11 +55,6 @@ void Channel4Op::nextSample( std::array< int16_t, 4 >* dest )
 			/*
 			 * (@Op1 ~> Op2) + (Op3 ~> Op4)
 			 */
-			if( m_op2->envelopeGenerator()->isOff() && m_op4->envelopeGenerator()->isOff() ) {
-				getInFourChannels( dest, 0 );
-				return;
-			}
-
 			channelOutput = m_op1->nextSample( feedbackOutput );
 			pushFeedback(channelOutput);
 			
@@ -75,11 +65,6 @@ void Channel4Op::nextSample( std::array< int16_t, 4 >* dest )
 			/*
 			 * @Op1 + (Op2 ~> Op3 ~> Op4)
 			 */
-			if( m_op1->envelopeGenerator()->isOff() && m_op4->envelopeGenerator()->isOff() ) {
-				getInFourChannels( dest, 0 );
-				return;
-			}
-
 			channelOutput = m_op1->nextSample( feedbackOutput );
 			pushFeedback(channelOutput);
 			
@@ -89,11 +74,6 @@ void Channel4Op::nextSample( std::array< int16_t, 4 >* dest )
 			/*
 			 * (@Op1 ~> Op3) + Op2 + Op4
 			 */
-			if( m_op1->envelopeGenerator()->isOff() && m_op3->envelopeGenerator()->isOff() && m_op4->envelopeGenerator()->isOff() ) {
-				getInFourChannels( dest, 0 );
-				return;
-			}
-
 			channelOutput = m_op1->nextSample( feedbackOutput );
 			pushFeedback(channelOutput);
 			
@@ -109,7 +89,6 @@ void Channel4Op::keyOn()
 	m_op2->keyOn();
 	m_op3->keyOn();
 	m_op4->keyOn();
-	clearFeedback();
 }
 void Channel4Op::keyOff()
 {

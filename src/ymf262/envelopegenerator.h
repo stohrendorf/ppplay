@@ -46,7 +46,7 @@ class EnvelopeGenerator
 public:
 	enum class Stage
 	{
-		ATTACK, DECAY, SUSTAIN, RELEASE, OFF
+		ATTACK, DECAY, SUSTAIN, RELEASE
 	};
 private:
 	Opl3* m_opl;
@@ -148,26 +148,16 @@ private:
 	
 public:
 	constexpr EnvelopeGenerator( Opl3* opl )
-		: m_opl( opl ), m_stage( Stage::OFF ),
+		: m_opl( opl ), m_stage( Stage::RELEASE ),
 		  m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_fnum( 0 ), m_block( 0 ),
 		  m_env( Silence ), m_ksr( false ), m_tl( 0 ), m_ksl( 0 ),
 		  m_kslAdd(0), m_total(Silence), m_counter(0)
 	{
 	}
 
-	constexpr bool isOff() {
-		return m_stage == Stage::OFF;
-	}
 	constexpr bool isSilent() {
 		return m_total == Silence;
 	}
-	/**
-	 * @post m_stage==Stage::OFF
-	 */
-	void setOff() {
-		m_stage = Stage::OFF;
-	}
-
 	/**
 	 * @brief Sets the sustain level
 	 * @param[in] sl Sustain level
@@ -236,8 +226,10 @@ public:
 	}
 
 	/**
-	 * @return Envelope, 0..511 for 0..96dB
-	 * @post m_total<=Silence
+	 * @brief Calculate the next envelope step
+	 * @param[in] egt Envelope generator type
+	 * @param[in] am Amplitude modulation
+	 * @return Envelope, 0..511 for 0..96dB attenuation
 	 */
 	uint16_t advance( bool egt, bool am );
 	
@@ -246,21 +238,17 @@ public:
 	}
 	
 	/**
-	 * @post m_stage==Stage::ATTACK && m_clock==0
+	 * @post m_stage==Stage::ATTACK
 	 */
 	void keyOn() {
-		if( m_stage != Stage::SUSTAIN ) {
-			m_stage = Stage::ATTACK;
-		}
+		m_stage = Stage::ATTACK;
 	}
 	
 	/**
-	 * @post m_stage==Stage::OFF || m_stage==Stage::RELEASE
+	 * @post m_stage==Stage::RELEASE
 	 */
 	void keyOff() {
-		if( m_stage != Stage::OFF ) {
-			m_stage = Stage::RELEASE;
-		}
+		m_stage = Stage::RELEASE;
 	}
 };
 }

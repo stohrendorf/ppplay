@@ -61,15 +61,15 @@ private:
 
 	uint16_t m_phase;
 
-	//! @brief Amplitude Modulation. This register is used in EnvelopeGenerator::getEnvelope().
+	//! @brief Amplitude Modulation a.k.a. Tremolo
 	bool m_am;
-	//! @brief Vibrato. This register is used in PhaseGenerator::getPhase().
+	//! @brief Vibrato
 	bool m_vib;
-	//! @brief Key Scale Rate. Sets the actual envelope rate together with rate and keyScaleNumber. This register is used in EnvelopeGenerator::setActualAttackRate().
+	//! @brief Key Scale Rate. Sets the actual envelope rate together with rate and keyScaleNumber
 	bool m_ksr;
-	//! @brief Envelope Generator Type. This register is used in EnvelopeGenerator::getEnvelope().
+	//! @brief Envelope Generator Type
 	bool m_egt;
-	//! @brief Multiple. Multiplies the Channel.baseFrequency to get the Operator.operatorFrequency. This register is used in PhaseGenerator::setFrequency().
+	//! @brief Multiple. Multiplies the Channel.baseFrequency to get the Operator.operatorFrequency
 	uint8_t m_mult;
 	//! @brief Key Scale Level. Sets the attenuation in accordance with the octave.
 	uint8_t m_ksl;
@@ -83,6 +83,7 @@ private:
 	uint8_t m_sl;
 	//! @brief Release Rate.
 	uint8_t m_rr;
+	//! @brief Waveform selector
 	uint8_t m_ws;
 	// 0..1023
 	uint16_t m_f_number;
@@ -145,15 +146,15 @@ public:
 	void update_5_WS3();
 
 	/**
-	 * @param[in] modulator Fractional phase modulation, max. 10.9 bits used
-	 * @return 13.9 bit sample value
+	 * @param[in] modulator Fractional phase modulation, max. 10 bits used
+	 * @return 13 bit sample value
 	 * @see AbstractChannel::avgFeedback()
 	 */
 	int16_t nextSample( uint16_t modulator );
 
 	/**
 	 * @brief Calculate operator output
-	 * @param[in] outputPhase Waveform phase, max. 10.9 bit used
+	 * @param[in] outputPhase Waveform phase, max. 10 bit used
 	 * @param[in] ws Waveform selector
 	 * @return Waveform sample, amplitude is -4085..4084
 	 */
