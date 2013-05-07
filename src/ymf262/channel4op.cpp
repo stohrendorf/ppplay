@@ -31,11 +31,12 @@ namespace opl
 void Channel4Op::nextSample( std::array< int16_t, 4 >* dest )
 {
 	const int secondChannelBaseAddress = baseAddress() + 3;
-	const int secondCnt = opl()->readReg( secondChannelBaseAddress + AbstractChannel::CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset ) & 0x1;
+	const int secondCnt = opl()->readReg( secondChannelBaseAddress + AbstractChannel::CH4_FB3_CNT1_Offset ) & 0x1;
 	const int cnt4op = ( cnt() << 1 ) | secondCnt;
 
-	int16_t channelOutput(0);
 	const uint16_t feedbackOutput = avgFeedback();
+	int16_t channelOutput = op(1)->nextSample( feedbackOutput );
+	pushFeedback(channelOutput);
 
 	/*
 	 * Below: "@" means feedback, "~>" means "modulates"
@@ -45,65 +46,30 @@ void Channel4Op::nextSample( std::array< int16_t, 4 >* dest )
 			/*
 			 * @Op1 ~> Op2 ~> Op3 ~> Op4
 			 */
-			channelOutput = m_op1->nextSample( feedbackOutput );
-			pushFeedback(channelOutput);
-			
-			channelOutput = m_op4->nextSample( m_op3->nextSample( m_op2->nextSample( channelOutput ) ) );
-
+			channelOutput = op(4)->nextSample( op(3)->nextSample( op(2)->nextSample( channelOutput ) ) );
 			break;
 		case 1:
 			/*
 			 * (@Op1 ~> Op2) + (Op3 ~> Op4)
 			 */
-			channelOutput = m_op1->nextSample( feedbackOutput );
-			pushFeedback(channelOutput);
-			
-			channelOutput = m_op2->nextSample( channelOutput );
-			channelOutput += m_op4->nextSample( m_op3->nextSample( Operator::noModulator ) );
+			channelOutput = op(2)->nextSample( channelOutput );
+			channelOutput += op(4)->nextSample( op(3)->nextSample() );
 			break;
 		case 2:
 			/*
 			 * @Op1 + (Op2 ~> Op3 ~> Op4)
 			 */
-			channelOutput = m_op1->nextSample( feedbackOutput );
-			pushFeedback(channelOutput);
-			
-			channelOutput += m_op4->nextSample( m_op3->nextSample( m_op2->nextSample( Operator::noModulator ) ) );
+			channelOutput += op(4)->nextSample( op(3)->nextSample( op(2)->nextSample() ) );
 			break;
 		case 3:
 			/*
 			 * (@Op1 ~> Op3) + Op2 + Op4
 			 */
-			channelOutput = m_op1->nextSample( feedbackOutput );
-			pushFeedback(channelOutput);
-			
-			channelOutput += m_op3->nextSample( m_op2->nextSample( Operator::noModulator ) );
-			channelOutput += m_op4->nextSample( Operator::noModulator );
+			channelOutput += op(3)->nextSample( op(2)->nextSample() );
+			channelOutput += op(4)->nextSample();
 	}
 
 	getInFourChannels( dest, channelOutput );
-}
-void Channel4Op::keyOn()
-{
-	m_op1->keyOn();
-	m_op2->keyOn();
-	m_op3->keyOn();
-	m_op4->keyOn();
-}
-void Channel4Op::keyOff()
-{
-	m_op1->keyOff();
-	m_op2->keyOff();
-	m_op3->keyOff();
-	m_op4->keyOff();
-}
-void Channel4Op::updateOperators()
-{
-	uint16_t f_number = fnum();
-	m_op1->updateOperator( f_number, block() );
-	m_op2->updateOperator( f_number, block() );
-	m_op3->updateOperator( f_number, block() );
-	m_op4->updateOperator( f_number, block() );
 }
 light4cxx::Logger* Channel4Op::logger()
 {

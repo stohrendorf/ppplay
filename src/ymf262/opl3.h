@@ -97,17 +97,23 @@ public:
 	bool nts() const {
 		return m_nts;
 	}
-	Operator* topCymbalOperator() const {
-		return m_operators[0][0x15].get();
+	Operator* bassDrumOp1() const {
+		return m_operators[0][0x10].get();
 	}
 	Operator* highHatOperator() const {
 		return m_operators[0][0x11].get();
 	}
+	Operator* tomTomOperator() const {
+		return m_operators[0][0x12].get();
+	}
+	Operator* bassDrumOp2() const {
+		return m_operators[0][0x13].get();
+	}
 	Operator* snareDrumOperator() const {
 		return m_operators[0][0x14].get();
 	}
-	Operator* tomTomOperator() const {
-		return m_operators[0][0x12].get();
+	Operator* topCymbalOperator() const {
+		return m_operators[0][0x15].get();
 	}
 	bool dvb() const {
 		return m_dvb;

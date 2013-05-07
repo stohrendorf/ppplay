@@ -40,27 +40,22 @@ class Channel2Op : public AbstractChannel
 {
 	DISABLE_COPY(Channel2Op)
 private:
-	Operator* m_op1;
-	Operator* m_op2;
 
 	static light4cxx::Logger* logger();
 public:
 	typedef std::shared_ptr<Channel2Op> Ptr;
 	
 	Channel2Op( Opl3* opl, int baseAddress, Operator* o1, Operator* o2 )
-		: AbstractChannel( opl, baseAddress ), m_op1( o1 ), m_op2( o2 ) {
+		: AbstractChannel( opl, baseAddress, {o1,o2} )
+	{
 	}
 
 	void nextSample(std::array<int16_t,4>* dest);
-	Operator* op1() const { return m_op1; }
-	Operator* op2() const { return m_op2; }
 
     virtual AbstractArchive& serialize(AbstractArchive* archive) {
 		return AbstractChannel::serialize(archive);
 	}
 protected:
-	void keyOn();
-	void keyOff();
 	void updateOperators();
 };
 }

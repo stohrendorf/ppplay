@@ -97,8 +97,6 @@ private:
 	int16_t handleSnareDrum( uint16_t modulator );
 
 public:
-	static constexpr uint noModulator = 0;
-
 	/**
 	 * @post m_ar<16
 	 */
@@ -150,7 +148,7 @@ public:
 	 * @return 13 bit sample value
 	 * @see AbstractChannel::avgFeedback()
 	 */
-	int16_t nextSample( uint16_t modulator );
+	int16_t nextSample( uint16_t modulator = 0 );
 
 	/**
 	 * @brief Calculate operator output

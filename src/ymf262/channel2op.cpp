@@ -30,40 +30,19 @@ namespace opl
 {
 void Channel2Op::nextSample( std::array< int16_t, 4 >* dest )
 {
-	int16_t channelOutput(0);
 	const uint16_t feedbackOutput = avgFeedback();
+	int16_t channelOutput = op(1)->nextSample( feedbackOutput );
+	pushFeedback(channelOutput);
 
 	if( !cnt() ) {
 		// CNT = 0, the operators are in series, with the first in feedback.
-		channelOutput = m_op1->nextSample( feedbackOutput );
-		pushFeedback(channelOutput);
-		channelOutput = m_op2->nextSample( channelOutput );
+		channelOutput = op(2)->nextSample( channelOutput );
 	}
 	else {
 		// CNT = 1, the operators are in parallel, with the first in feedback.
-		channelOutput = m_op1->nextSample( feedbackOutput );
-		pushFeedback(channelOutput);
-		channelOutput += m_op2->nextSample( Operator::noModulator );
+		channelOutput += op(2)->nextSample();
 	}
 	getInFourChannels( dest, channelOutput );
-}
-
-void Channel2Op::keyOn()
-{
-	m_op1->keyOn();
-	m_op2->keyOn();
-}
-
-void Channel2Op::keyOff()
-{
-	m_op1->keyOff();
-	m_op2->keyOff();
-}
-
-void Channel2Op::updateOperators()
-{
-	m_op1->updateOperator( fnum(), block() );
-	m_op2->updateOperator( fnum(), block() );
 }
 
 light4cxx::Logger* Channel2Op::logger()

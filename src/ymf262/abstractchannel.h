@@ -37,6 +37,8 @@
 namespace opl
 {
 
+class Operator;
+
 class Opl3;
 
 class AbstractChannel : public ISerializable
@@ -47,7 +49,7 @@ public:
 	
 	static constexpr int _2_KON1_BLOCK3_FNUMH2_Offset = 0xB0;
 	static constexpr int  FNUML8_Offset = 0xA0;
-	static constexpr int  CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset = 0xC0;
+	static constexpr int  CH4_FB3_CNT1_Offset = 0xC0;
 private:
 	Opl3* m_opl;
 	int m_channelBaseAddress;
@@ -76,6 +78,8 @@ private:
 	uint8_t m_fb;
 	int16_t m_feedback[2];
 	bool m_cnt;
+	
+	std::vector<Operator*> m_operators;
 	
 	static light4cxx::Logger* logger();
 
@@ -111,7 +115,7 @@ public:
 		m_feedback[1] = fb;
 	}
 
-	AbstractChannel( Opl3* opl, int baseAddress );
+	AbstractChannel( Opl3* opl, int baseAddress, const std::initializer_list<Operator*>& ops );
 	virtual ~AbstractChannel() {}
 
 	/**
@@ -124,22 +128,25 @@ public:
 	/**
 	 * @post m_fb<8
 	 */
-	void update_CHD1_CHC1_CHB1_CHA1_FB3_CNT1();
+	void update_CH4_FB3_CNT1();
 
 	void updateChannel();
 
 	void getInFourChannels(std::array<int16_t,4>* dest, int16_t channelOutput );
 
 	virtual void nextSample(std::array<int16_t,4>* dest) = 0;
-	virtual void keyOn() = 0;
-	virtual void keyOff() = 0;
-	virtual void updateOperators() = 0;
+	void keyOn();
+	void keyOff();
+	void updateOperators();
 
 	int baseAddress() const {
 		return m_channelBaseAddress;
 	}
 	
     virtual AbstractArchive& serialize(AbstractArchive* archive) = 0;
+	
+protected:
+	Operator* op(size_t idx) noexcept;
 };
 }
 

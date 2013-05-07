@@ -156,7 +156,7 @@ void Opl3::write( int array, int address, uint8_t data )
 		case 0xC0:
 			// ARC_FEEDBACK
 			if( address <= 0xC8 )
-				m_channels[array][address & 0x0F]->update_CHD1_CHC1_CHB1_CHA1_FB3_CNT1();
+				m_channels[array][address & 0x0F]->update_CH4_FB3_CNT1();
 			break;
 
 			// Registers for each of the 36 Operators:
@@ -272,8 +272,7 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 	if( new_bd != m_bd ) {
 		m_bd = new_bd;
 		if( m_bd ) {
-			m_bassDrumChannel->op1()->keyOn();
-			m_bassDrumChannel->op2()->keyOn();
+			m_bassDrumChannel->keyOn();
 		}
 	}
 
@@ -306,8 +305,7 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 }
 void Opl3::update_7_NEW1()
 {
-	int _7_new1 = m_registers[_7_NEW1_Offset];
-	m_new = _7_new1 & 0x01;
+	m_new = m_registers[_7_NEW1_Offset] & 1;
 	if( m_new )
 		setEnabledChannels();
 	set4opConnections();
@@ -317,8 +315,8 @@ void Opl3::setEnabledChannels()
 	for( int array = 0; array < 2; array++ )
 		for( int i = 0; i < 9; i++ ) {
 			int baseAddress = m_channels[array][i]->baseAddress();
-			m_registers[baseAddress + AbstractChannel::CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset] |= 0xF0;
-			m_channels[array][i]->update_CHD1_CHC1_CHB1_CHA1_FB3_CNT1();
+			m_registers[baseAddress + AbstractChannel::CH4_FB3_CNT1_Offset] |= 0xF0;
+			m_channels[array][i]->update_CH4_FB3_CNT1();
 		}
 }
 void Opl3::update_2_CONNECTIONSEL6()
@@ -337,8 +335,8 @@ void Opl3::set4opConnections()
 		for( int i = 0; i < 3; i++ ) {
 			if( m_new ) {
 				int shift = array * 3 + i;
-				int connectionBit = ( m_connectionsel >> shift ) & 0x01;
-				if( connectionBit == 1 ) {
+				bool connectionBit = ( m_connectionsel >> shift ) & 0x01;
+				if( connectionBit ) {
 					m_channels[array][i] = m_channels4op[array][i];
 					m_channels[array][i + 3] = m_disabledChannel;
 					m_channels[array][i]->updateChannel();

@@ -23,20 +23,22 @@
  */
 
 #include "bassdrumchannel.h"
+#include "opl3.h"
 
 namespace opl
 {
+BassDrumChannel::BassDrumChannel(Opl3* opl): Channel2Op(opl, bassDrumChannelBaseAddress, opl->bassDrumOp1(), opl->bassDrumOp2())
+{
+
+}
+
 void BassDrumChannel::nextSample( std::array< int16_t, 4 >* dest )
 {
 	// Bass Drum ignores first operator, when it is in series.
 	if( cnt() ) {
-		op1()->setAr(0);
+		op(1)->setAr(0);
 	}
 	Channel2Op::nextSample(dest);
 }
-BassDrumChannel::~BassDrumChannel()
-{
-	delete op1();
-	delete op2();
-}
+
 }

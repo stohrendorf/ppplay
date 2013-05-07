@@ -35,20 +35,15 @@ class BassDrumChannel : public Channel2Op
 {
 public:
 	static constexpr int bassDrumChannelBaseAddress = 6;
-	static constexpr int op1BaseAddress = 0x10;
-	static constexpr int op2BaseAddress = 0x13;
 
-	BassDrumChannel( Opl3* opl ) : Channel2Op( opl, bassDrumChannelBaseAddress, new Operator( opl, op1BaseAddress ), new Operator( opl, op2BaseAddress ) ) {
-	}
-
-	~BassDrumChannel();
+	BassDrumChannel( Opl3* opl );
 
 	void nextSample(std::array<int16_t,4>* dest);
 
 protected:
-	// Key ON and OFF are unused in rhythm channels.
-	void keyOn() {}
-	void keyOff() {}
+	// FIXME Key ON and OFF are unused in rhythm channels.
+// 	void keyOn() {}
+// 	void keyOff() {}
 };
 }
 

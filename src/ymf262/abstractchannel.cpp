@@ -29,9 +29,12 @@
 namespace opl
 {
 
-AbstractChannel::AbstractChannel( Opl3* opl, int baseAddress ) : m_opl( opl ), m_channelBaseAddress( baseAddress ),
+AbstractChannel::AbstractChannel( Opl3* opl, int baseAddress, const std::initializer_list<Operator*>& ops ) :
+	m_opl( opl ), m_channelBaseAddress( baseAddress ),
 	m_fnum( 0 ), m_kon( false ), m_block( 0 ), m_ch( 0 ),
-	m_fb( 0 ), m_feedback {0, 0}, m_cnt( false ) {
+	m_fb( 0 ), m_feedback {0, 0}, m_cnt( false ),
+	m_operators(ops)
+{
 }
 
 void AbstractChannel::update_2_KON1_BLOCK3_FNUMH2()
@@ -63,12 +66,12 @@ void AbstractChannel::update_FNUML8()
 	updateOperators();
 }
 
-void AbstractChannel::update_CHD1_CHC1_CHB1_CHA1_FB3_CNT1()
+void AbstractChannel::update_CH4_FB3_CNT1()
 {
-	const uint8_t chd1_chc1_chb1_cha1_fb3_cnt1 = m_opl->readReg( m_channelBaseAddress + AbstractChannel::CHD1_CHC1_CHB1_CHA1_FB3_CNT1_Offset );
-	m_ch = chd1_chc1_chb1_cha1_fb3_cnt1>>4;
-	m_fb  = ( chd1_chc1_chb1_cha1_fb3_cnt1>>1 ) & 7;
-	m_cnt = chd1_chc1_chb1_cha1_fb3_cnt1 & 0x01;
+	const uint8_t ch4_fb3_cnt1 = m_opl->readReg( m_channelBaseAddress + AbstractChannel::CH4_FB3_CNT1_Offset );
+	m_ch = ch4_fb3_cnt1>>4;
+	m_fb  = ( ch4_fb3_cnt1>>1 ) & 7;
+	m_cnt = ch4_fb3_cnt1 & 0x01;
 	updateOperators();
 }
 
@@ -76,7 +79,7 @@ void AbstractChannel::updateChannel()
 {
 	update_2_KON1_BLOCK3_FNUMH2();
 	update_FNUML8();
-	update_CHD1_CHC1_CHB1_CHA1_FB3_CNT1();
+	update_CH4_FB3_CNT1();
 }
 
 void AbstractChannel::getInFourChannels( std::array<int16_t, 4>* dest, int16_t channelOutput )
@@ -104,6 +107,31 @@ AbstractArchive& AbstractChannel::serialize(AbstractArchive* archive)
 	*archive % m_fnum % m_kon % m_block
 	% m_ch % m_fb % m_feedback[0] % m_feedback[1] % m_cnt;
 	return *archive;
+}
+
+Operator* AbstractChannel::op(size_t idx) noexcept
+{
+	if(idx<=0 || idx>=m_operators.size()+1)
+		return nullptr;
+	return m_operators[idx-1];
+}
+
+void AbstractChannel::keyOff()
+{
+	for(Operator* op : m_operators)
+		op->keyOff();
+}
+
+void AbstractChannel::keyOn()
+{
+	for(Operator* op : m_operators)
+		op->keyOn();
+}
+
+void AbstractChannel::updateOperators()
+{
+	for(Operator* op : m_operators)
+		op->updateOperator(fnum(), block());
 }
 
 }

@@ -41,8 +41,9 @@ public:
 	void nextSample(std::array<int16_t,4>* dest);
 
 protected:
-	void keyOn() { }
-	void keyOff() { }
+	// FIXME
+// 	void keyOn() { }
+// 	void keyOff() { }
 };
 }
 

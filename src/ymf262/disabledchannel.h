@@ -33,15 +33,11 @@ class Opl3;
 class DisabledChannel : public AbstractChannel
 {
 public:
-	DisabledChannel(Opl3* opl) : AbstractChannel( opl, 0 ) {
+	DisabledChannel(Opl3* opl) : AbstractChannel( opl, 0, {} ) {
 	}
 	void nextSample(std::array<int16_t,4>* dest) {
 		getInFourChannels( dest, 0 );
 	}
-
-	void keyOn() { }
-	void keyOff() { }
-	void updateOperators() { }
 
     virtual AbstractArchive& serialize(AbstractArchive* archive) {
 		return AbstractChannel::serialize(archive);
