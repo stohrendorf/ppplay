@@ -40,8 +40,8 @@ class Channel2Op : public AbstractChannel
 {
 	DISABLE_COPY(Channel2Op)
 private:
-
 	static light4cxx::Logger* logger();
+
 public:
 	typedef std::shared_ptr<Channel2Op> Ptr;
 	
@@ -55,6 +55,7 @@ public:
     virtual AbstractArchive& serialize(AbstractArchive* archive) {
 		return AbstractChannel::serialize(archive);
 	}
+
 protected:
 	void updateOperators();
 };

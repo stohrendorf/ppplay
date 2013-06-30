@@ -31,42 +31,38 @@ namespace opl
 void Channel4Op::nextSample( std::array< int16_t, 4 >* dest )
 {
 	const int secondChannelBaseAddress = baseAddress() + 3;
-	const int secondCnt = opl()->readReg( secondChannelBaseAddress + AbstractChannel::CH4_FB3_CNT1_Offset ) & 0x1;
-	const int cnt4op = ( cnt() << 1 ) | secondCnt;
+	const bool secondCnt = opl()->readReg( secondChannelBaseAddress + AbstractChannel::CH4_FB3_CNT1_Offset ) & 0x1;
 
 	const uint16_t feedbackOutput = avgFeedback();
 	int16_t channelOutput = op(1)->nextSample( feedbackOutput );
 	pushFeedback(channelOutput);
 
 	/*
-	 * Below: "@" means feedback, "~>" means "modulates"
+	 * Below: "~" means "modulates",
+	 * F is first connection, S is second connection
+	 * FS
+	 * 00  Op1 ~ Op2  ~  Op3 ~ Op4
+	 * 01 (Op1 ~ Op2) + (Op3 ~ Op4)
+	 * 10  Op1 +(Op2  ~  Op3 ~ Op4)
+	 * 11  Op1 +(Op2  ~  Op3)+ Op4
 	 */
-	switch( cnt4op ) {
-		case 0:
-			/*
-			 * @Op1 ~> Op2 ~> Op3 ~> Op4
-			 */
-			channelOutput = op(4)->nextSample( op(3)->nextSample( op(2)->nextSample( channelOutput ) ) );
-			break;
-		case 1:
-			/*
-			 * (@Op1 ~> Op2) + (Op3 ~> Op4)
-			 */
-			channelOutput = op(2)->nextSample( channelOutput );
+	if(cnt()) {
+		int16_t tmp = op(3)->nextSample( op(2)->nextSample() );
+		if(secondCnt) {
+			channelOutput += op(4)->nextSample() + tmp;
+		}
+		else {
+			channelOutput += op(4)->nextSample( tmp );
+		}
+	}
+	else {
+		channelOutput = op(2)->nextSample( channelOutput );
+		if(secondCnt) {
 			channelOutput += op(4)->nextSample( op(3)->nextSample() );
-			break;
-		case 2:
-			/*
-			 * @Op1 + (Op2 ~> Op3 ~> Op4)
-			 */
-			channelOutput += op(4)->nextSample( op(3)->nextSample( op(2)->nextSample() ) );
-			break;
-		case 3:
-			/*
-			 * (@Op1 ~> Op3) + Op2 + Op4
-			 */
-			channelOutput += op(3)->nextSample( op(2)->nextSample() );
-			channelOutput += op(4)->nextSample();
+		}
+		else {
+			channelOutput = op(4)->nextSample( op(3)->nextSample( channelOutput ) );
+		}
 	}
 
 	getInFourChannels( dest, channelOutput );

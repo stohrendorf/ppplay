@@ -147,6 +147,7 @@ public:
 	
 protected:
 	Operator* op(size_t idx) noexcept;
+	bool isRhythmChannel() const;
 };
 }
 

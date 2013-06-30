@@ -42,14 +42,12 @@ constexpr int TremoloTableLength = 13 * 1024;
 
 
 Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m_channels(), m_disabledChannel(),
-	m_bassDrumChannel(), m_highHatSnareDrumChannel(), m_tomTomTopCymbalChannel(),
 	m_nts( false ), m_dam( false ), m_dvb( false ), m_ryt( false ), m_bd( false ), m_sd( false ), m_tc( false ), m_hh( false ),
 	m_new( false ), m_connectionsel( 0 ), m_vibratoIndex( 0 ), m_tremoloIndex( 0 ), m_rand(1)
 {
 	initOperators();
 	initChannels2op();
 	initChannels4op();
-	initRhythmChannels();
 	initChannels();
 }
 
@@ -227,12 +225,6 @@ void Opl3::initChannels4op()
 		}
 	}
 }
-void Opl3::initRhythmChannels()
-{
-	m_bassDrumChannel.reset( new BassDrumChannel( this ) );
-	m_highHatSnareDrumChannel.reset( new HighHatSnareDrumChannel( this ) );
-	m_tomTomTopCymbalChannel.reset( new TomTomTopCymbalChannel( this ) );
-}
 void Opl3::initChannels()
 {
 	// Channel is an abstract class that can be a 2-op, 4-op, rhythm or disabled channel,
@@ -272,7 +264,7 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 	if( new_bd != m_bd ) {
 		m_bd = new_bd;
 		if( m_bd ) {
-			m_bassDrumChannel->keyOn();
+			m_channels2op[0][6]->keyOn();
 		}
 	}
 
@@ -351,16 +343,6 @@ void Opl3::set4opConnections()
 }
 void Opl3::setRhythmMode()
 {
-	if( m_ryt ) {
-		m_channels[0][6] = m_bassDrumChannel;
-		m_channels[0][7] = m_highHatSnareDrumChannel;
-		m_channels[0][8] = m_tomTomTopCymbalChannel;
-	}
-	else {
-		for( int i = 6; i < 9; i++ ) {
-			m_channels[0][i] = m_channels2op[0][i];
-		}
-	}
 	for( int i = 6; i <= 8; i++ ) {
 		m_channels[0][i]->updateChannel();
 	}
@@ -386,12 +368,6 @@ AbstractArchive& Opl3::serialize( AbstractArchive* archive )
 			if(m_channels[i][j])
 				archive->archive(m_channels[i][j].get());
 		}
-	}
-	archive->archive(m_bassDrumChannel.get()).archive(m_highHatSnareDrumChannel.get()).archive(m_tomTomTopCymbalChannel.get());
-	if( m_ryt ) {
-		m_channels[0][6] = m_bassDrumChannel;
-		m_channels[0][7] = m_highHatSnareDrumChannel;
-		m_channels[0][8] = m_tomTomTopCymbalChannel;
 	}
 	return *archive;
 }

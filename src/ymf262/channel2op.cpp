@@ -30,6 +30,11 @@ namespace opl
 {
 void Channel2Op::nextSample( std::array< int16_t, 4 >* dest )
 {
+	if(isRhythmChannel()) {
+		getInFourChannels( dest, op(1)->nextSample() + op(2)->nextSample() );
+		return;
+	}
+	
 	const uint16_t feedbackOutput = avgFeedback();
 	int16_t channelOutput = op(1)->nextSample( feedbackOutput );
 	pushFeedback(channelOutput);

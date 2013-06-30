@@ -31,9 +31,6 @@
 #include "operator.h"
 #include "channel2op.h"
 #include "channel4op.h"
-#include "bassdrumchannel.h"
-#include "highhatsnaredrumchannel.h"
-#include "tomtomtopcymbalchannel.h"
 #include "disabledchannel.h"
 #include <stream/iserializable.h>
 
@@ -58,10 +55,6 @@ private:
 	Channel4Op::Ptr m_channels4op[2][3];
 	AbstractChannel::Ptr m_channels[2][9];
 	DisabledChannel::Ptr m_disabledChannel;
-
-	BassDrumChannel::Ptr m_bassDrumChannel;
-	HighHatSnareDrumChannel::Ptr m_highHatSnareDrumChannel;
-	TomTomTopCymbalChannel::Ptr m_tomTomTopCymbalChannel;
 
 	bool m_nts;
 	//! @brief Depth of amplitude
@@ -140,7 +133,6 @@ private:
 	void initOperators() ;
 	void initChannels2op() ;
 	void initChannels4op() ;
-	void initRhythmChannels() ;
 	void initChannels() ;
 	void update_1_NTS1_6() ;
 	void update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1() ;

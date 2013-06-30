@@ -118,6 +118,8 @@ Operator* AbstractChannel::op(size_t idx) noexcept
 
 void AbstractChannel::keyOff()
 {
+	if(isRhythmChannel())
+		return;
 	for(Operator* op : m_operators)
 		op->keyOff();
 }
@@ -132,6 +134,10 @@ void AbstractChannel::updateOperators()
 {
 	for(Operator* op : m_operators)
 		op->updateOperator(fnum(), block());
+}
+
+bool AbstractChannel::isRhythmChannel() const {
+    return m_operators.size()==2 && opl()->ryt() && baseAddress()>=6 && baseAddress()<=8;
 }
 
 }
