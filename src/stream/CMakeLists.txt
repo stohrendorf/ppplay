@@ -19,7 +19,7 @@ add_library(ppplay_stream SHARED
 generate_export_header(ppplay_stream)
 
 target_link_libraries(ppplay_stream ${LibArchive_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
-install(TARGETS ppplay_stream DESTINATION lib EXPORT ppplayExports)
+install(TARGETS ppplay_stream DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ppplayExports)
 install(FILES
 	abstractarchive.h
 	archivefilestream.h
@@ -29,5 +29,5 @@ install(FILES
 	memorystream.h
 	stream.h
 	${CMAKE_CURRENT_BINARY_DIR}/ppplay_stream_export.h
-	DESTINATION include/ppplay/stream
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/stream
 )

@@ -15,4 +15,4 @@ add_library(ppplay_input_xm MODULE
 	plugin.cpp
 )
 target_link_libraries(ppplay_input_xm ppplay_core)
-install(TARGETS ppplay_input_xm LIBRARY DESTINATION lib/ppplay COMPONENT Plugins OPTIONAL)
+install(TARGETS ppplay_input_xm LIBRARY DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} COMPONENT Plugins OPTIONAL)

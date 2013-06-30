@@ -21,9 +21,9 @@ add_library(ppplay_opl SHARED
 
 generate_export_header(ppplay_opl)
 
-install(TARGETS ppplay_opl DESTINATION lib EXPORT ppplayExports)
+install(TARGETS ppplay_opl DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ppplayExports)
 install(FILES
 	opl3.h
 	${CMAKE_CURRENT_BINARY_DIR}/ppplay_opl_export.h
-	DESTINATION include/ppplay/opl
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/opl
 )

@@ -83,25 +83,7 @@ void PluginRegistry::findPlugins()
 	if(!instance().m_handles.empty()) {
 		return;
 	}
-	// get current exe path
-	void* exe = dlopen(nullptr, RTLD_NOW);
-	if(!exe) {
-		light4cxx::Logger::root()->fatal(L4CXX_LOCATION, "Failed to get own executable handle: '%s'", dlerror());
-		return;
-	}
-	Dl_info info;
-	if(!dladdr("main", &info)) {
-		light4cxx::Logger::root()->fatal(L4CXX_LOCATION, "Failed to get own executable info: '%s'", dlerror());
-		dlclose(exe);
-		return;
-	}
-	// go to "../lib/ppplay"
-	boost::filesystem3::path pluginPath(info.dli_fname);
-	dlclose(exe);
-	pluginPath.remove_filename();
-	pluginPath = pluginPath.parent_path();
-	pluginPath /= "lib";
-	pluginPath /= "ppplay";
+	boost::filesystem3::path pluginPath(LIBEXECDIR);
 	light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Looking for plugins in %s", pluginPath.native());
 	
 	std::list<boost::filesystem3::path> paths;

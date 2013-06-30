@@ -14,7 +14,7 @@ add_library(ppplay_ppg SHARED
 )
 generate_export_header(ppplay_ppg)
 target_link_libraries(ppplay_ppg ppplay_core)
-install(TARGETS ppplay_ppg DESTINATION lib EXPORT ppplayExports)
+install(TARGETS ppplay_ppg DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ppplayExports)
 
 install(FILES
 	color.h
@@ -26,7 +26,7 @@ install(FILES
 	stereopeakbar.h
 	widget.h
 	${CMAKE_CURRENT_BINARY_DIR}/ppplay_ppg_export.h
-	DESTINATION include/ppplay/ppg
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/ppg
 	COMPONENT Devel
 )
 

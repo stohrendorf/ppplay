@@ -15,7 +15,7 @@ add_library(ppplay_module_base SHARED
 	standardfxdesc.cpp
 )
 generate_export_header(ppplay_module_base)
-install(TARGETS ppplay_module_base DESTINATION lib EXPORT ppplayExports)
+install(TARGETS ppplay_module_base DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ppplayExports)
 install(FILES
 	abstractmodule.h
 	abstractorder.h
@@ -28,6 +28,6 @@ install(FILES
 	songinfo.h
 	standardfxdesc.h
 	${CMAKE_CURRENT_BINARY_DIR}/ppplay_module_base_export.h
-	DESTINATION include/ppplay/genmod
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/genmod
 	COMPONENT Devel
 )

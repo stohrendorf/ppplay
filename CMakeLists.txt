@@ -31,6 +31,18 @@ elseif(CMAKE_COMPILER_IS_GNUCXX)
 	message(STATUS "Your GCC Version is ${_gcc_version}, required is 4.7.0")
 	if(${_gcc_version} VERSION_LESS "4.7.0")
 		message(FATAL_ERROR "Please update your GCC to at least version 4.7.0")
+	elseif(${_gcc_version} VERSION_EQUAL "4.8.0" OR ${_gcc_version} VERSION_GREATER "4.8.0")
+		option(SANITIZE_ADDRESS "Use address sanitization" OFF)
+		option(SANITIZE_THREAD "Use thread sanitization" OFF)
+		if(SANITIZE_ADDRESS AND SANITIZE_THREAD)
+			message(WARNING "You cannot use SANITIZE_ADDRESS and SANITIZE_THREAD at the same time. SANITIZE_ADDRESS will be used only.")
+		endif()
+		if(SANITIZE_ADDRESS)
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+			set(SANITIZE_THREAD OFF)
+		elseif(SANITIZE_THREAD)
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
+		endif()
 	endif()
 else()
 	message(FATAL_ERROR "Sorry, you need at least GCC 4.7.0")
@@ -43,6 +55,7 @@ if(NOT __COMPILER_GNU)
 endif()
 
 INCLUDE(InstallRequiredSystemLibraries)
+INCLUDE(GNUInstallDirs)
 #########
 # configure CPACK
 #########
@@ -84,17 +97,17 @@ INCLUDE(CPack)
 #########
 # setting compiler flags
 #########
-set(CMAKE_CXX_FLAGS "-Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtual -pedantic -std=c++0x")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtual -pedantic -std=c++0x")
 
-SET(CMAKE_SKIP_BUILD_RPATH FALSE)
-SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
-IF("${isSystemDir}" STREQUAL "-1")
-   SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-ENDIF()
-unset(isSystemDir)
+# SET(CMAKE_SKIP_BUILD_RPATH FALSE)
+# SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+# SET(CMAKE_INSTALL_RPATH ${LIBEXECDIR})
+# SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+# LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES ${CMAKE_INSTALL_FULL_LIBEXECDIR} isSystemDir)
+# IF("${isSystemDir}" STREQUAL "-1")
+#    SET(CMAKE_INSTALL_RPATH ${LIBEXECDIR})
+# ENDIF()
+# unset(isSystemDir)
 
 if(COMPILER_IS_CLANG)
 	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
@@ -133,6 +146,11 @@ message(STATUS "CXX Flags (Rel. w. Dbg.): ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 message(STATUS "CXX Flags (Additional)  : ${CMAKE_CXX_FLAGS}")
 
 include(FeatureSummary)
+if(DEFINED SANITIZE_ADDRESS)
+	add_feature_info("AddressSanitizer" SANITIZE_ADDRESS "Address Sanitization")
+	add_feature_info("ThreadSanitizer" SANITIZE_THREAD "Thread Sanitization")
+endif()
+
 #########
 # init main application target settings
 #########
@@ -230,7 +248,7 @@ add_subdirectory(src)
 #########
 # set install command
 #########
-install(TARGETS ppplay DESTINATION bin COMPONENT application)
+install(TARGETS ppplay DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT application)
 cpack_add_component(application DISPLAY_NAME PeePeePlayer REQUIRED)
 if(LINUX OR UNIX)
 	install(CODE "
@@ -238,7 +256,7 @@ if(LINUX OR UNIX)
 		execute_process( COMMAND xdg-desktop-menu install --novendor peepeeplayer.desktop WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} )
 	")
 endif()
-install(EXPORT ppplayExports DESTINATION lib/ppplay FILE peepeeplayer.cmake COMPONENT Devel)
+install(EXPORT ppplayExports DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} FILE peepeeplayer.cmake COMPONENT Devel)
 cpack_add_component(Devel DISPLAY_NAME "Development files" OPTIONAL)
 
 #########

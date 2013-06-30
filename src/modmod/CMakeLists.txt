@@ -19,4 +19,4 @@ add_library(ppplay_input_mod MODULE
 	plugin.cpp
 )
 target_link_libraries(ppplay_input_mod ppplay_core)
-install(TARGETS ppplay_input_mod LIBRARY DESTINATION lib/ppplay COMPONENT Plugins OPTIONAL)
+install(TARGETS ppplay_input_mod LIBRARY DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} COMPONENT Plugins OPTIONAL)

@@ -23,14 +23,14 @@ configure_file(
 
 set_source_files_properties(Mainpage.dox PROPERTIES GENERATED TRUE)
 
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
-
 if(WIN32)
 	add_definitions(-DL4CXX_NO_ANSI_COLORS)
 endif()
 
 include(GenerateExportHeader)
 add_compiler_export_flags()
+
+set_source_files_properties(stuff/pluginregistry.cpp PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS};LIBEXECDIR=\"${CMAKE_INSTALL_FULL_LIBEXECDIR}\"")
 
 add_library(ppplay_core SHARED
 	stuff/pluginregistry.cpp
@@ -52,7 +52,7 @@ target_link_libraries(ppplay_core ppplay_stream ${SDL_LIBRARY} ${Boost_SYSTEM_LI
 if(WITH_MP3LAME)
 	target_link_libraries(ppplay_core ${mp3lame_LIB})
 endif()
-install(TARGETS ppplay_core DESTINATION lib EXPORT ppplayExports)
+install(TARGETS ppplay_core DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ppplayExports)
 install(FILES
 	stuff/field.h
 	stuff/inputplugin.h
@@ -62,7 +62,7 @@ install(FILES
 	stuff/trackingcontainer.h
 	stuff/utils.h
 	${CMAKE_CURRENT_BINARY_DIR}/ppplay_core_export.h
-	DESTINATION include/ppplay/stuff
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/stuff
 	COMPONENT Devel
 )
 install(FILES
@@ -71,7 +71,7 @@ install(FILES
 	output/audiofifo.h
 	output/audiotypes.h
 	${CMAKE_CURRENT_BINARY_DIR}/ppplay_core_export.h
-	DESTINATION include/ppplay/output
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/output
 	COMPONENT Devel
 )
 install(FILES
@@ -79,6 +79,6 @@ install(FILES
 	light4cxx/location.h
 	light4cxx/logger.h
 	${CMAKE_CURRENT_BINARY_DIR}/ppplay_core_export.h
-	DESTINATION include/ppplay/light4cxx
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/light4cxx
 	COMPONENT Devel
 )
