@@ -45,8 +45,8 @@ SDLTimer::SDLTimer( uint32_t interval ) : ITimer(), m_interval( interval ), m_id
 
 SDLTimer::~SDLTimer()
 {
-	boost::mutex::scoped_lock lock( m_callbackMutex );
 	SDL_RemoveTimer( m_id );
+	boost::mutex::scoped_lock lock( m_callbackMutex );
 }
 
 uint32_t SDLTimer::interval() const

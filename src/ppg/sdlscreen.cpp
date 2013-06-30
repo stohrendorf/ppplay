@@ -47,10 +47,13 @@ namespace
  * @struct InstanceData
  * @brief Internal data and functions
  * @details
- * The ABC and visibleABC arrays are compared everytime the screen needs to be redrawn.@n
- * If at least one of the foreground colors, background colors or characters differ, it is redrawn,
- * otherwise it is skipped. See ppg::SDLScreen::drawThis().@n
+ * The ABC and visibleABC arrays are compared element-wise everytime the screen needs to be redrawn
+ * to determine which parts have to be updated. If at least one of the foreground colors, background
+ * colors or characters differ, it is redrawn, otherwise it is skipped. See ppg::SDLScreen::drawThis().
+ * 
  * This reduces the graphical overhead significantly.
+ * 
+ * Please note that the layers are constantly locked.
  */
 struct InstanceData
 {
@@ -321,20 +324,22 @@ void InstanceData::clear(char c, ppg::Color foreground, ppg::Color background)
 
 void InstanceData::redraw(bool showMouse, int cursorX, int cursorY)
 {
-	for( size_t y = 0; y < charHeight; y++ ) {
-		for( size_t x = 0; x < charWidth; x++ ) {
-			int o = x + y * charWidth;
-			if( chars[o] != visibleChars[o] || colorsF[o] != visibleColorsF[o] || colorsB[o] != visibleColorsB[o] ) {
-				drawChar( x, y, chars[o], mapColor( colorsF[o] ), mapColor( colorsB[o] ), true );
+	{
+		// redraw the screen characters if changed
+		size_t ofs = 0;
+		for( size_t y = 0; y < charHeight; y++ ) {
+			for( size_t x = 0; x < charWidth; x++, ofs++ ) {
+				if( chars[ofs] != visibleChars[ofs] || colorsF[ofs] != visibleColorsF[ofs] || colorsB[ofs] != visibleColorsB[ofs] ) {
+					drawChar( x, y, chars[ofs], mapColor( colorsF[ofs] ), mapColor( colorsB[ofs] ), true );
+					visibleChars[ofs] = chars[ofs];
+					visibleColorsF[ofs] = colorsF[ofs];
+					visibleColorsB[ofs] = colorsB[ofs];
+				}
 			}
 		}
 	}
-	{
-		size_t size = charWidth*charHeight;
-		std::copy_n( chars, size, visibleChars );
-		std::copy_n( colorsF, size, visibleColorsF );
-		std::copy_n( colorsB, size, visibleColorsB );
-	}
+
+	// show the mouse cursor if applicable
 	if( showMouse && contains( cursorX, cursorY ) ) {
 		size_t ofs = cursorX + cursorY * charWidth;
 		Uint32 c1 = mapColor( ~colorsF[ofs] );
@@ -343,11 +348,12 @@ void InstanceData::redraw(bool showMouse, int cursorX, int cursorY)
 		visibleColorsF[ofs] = ~colorsF[ofs];
 		visibleColorsB[ofs] = ~colorsB[ofs];
 	}
-	
+
+	// now blit the background, pixels, and foreground (in that order) to the screen
 	if( SDL_MUSTLOCK( screenSurface ) ) {
 		SDL_LockSurface( screenSurface );
 	}
-	
+
 	if(SDL_MUSTLOCK(backgroundLayer)) {
 		SDL_UnlockSurface(backgroundLayer);
 	}
@@ -450,9 +456,10 @@ void SDLScreen::setBgColorAt( int x, int y, Color c )
 
 bool SDLScreen::onMouseMove( int x, int y )
 {
-	LockGuard guard(this);
+// 	LockGuard guard(this);
 	m_cursorX = x;
 	m_cursorY = y;
+// 	guard.unlock();
 	Widget::onMouseMove( x, y );
 	return true;
 }

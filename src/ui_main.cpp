@@ -125,7 +125,10 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, con
 	logger()->trace( L4CXX_LOCATION, "Initialized" );
 }
 
-UIMain::~UIMain() = default;
+UIMain::~UIMain()
+{
+	LockGuard guard(this);
+}
 
 void UIMain::drawThis()
 {
@@ -220,6 +223,7 @@ namespace
 
 void UIMain::onTimer()
 {
+	LockGuard guard(this);
 	AbstractAudioOutput::Ptr outLock( m_output.lock() );
 	const std::shared_ptr<const ppp::AbstractModule> modLock = std::const_pointer_cast<const ppp::AbstractModule>( m_module.lock() );
 	if( m_module.expired() || m_output.expired() || !ppg::SDLScreen::instance() ) {

@@ -154,25 +154,25 @@ void Widget::draw()
 
 Rect Widget::area() const noexcept
 {
-	LockGuard guard(this);
+// 	LockGuard guard(this);
 	return m_area;
 }
 
 Rect& Widget::area() noexcept
 {
-	LockGuard guard(this);
+// 	LockGuard guard(this);
 	return m_area;
 }
 
 void Widget::show() noexcept
 {
-	LockGuard guard(this);
+// 	LockGuard guard(this);
 	m_visible = true;
 }
 
 void Widget::hide() noexcept
 {
-	LockGuard guard(this);
+// 	LockGuard guard(this);
 	m_visible = false;
 }
 
@@ -278,7 +278,7 @@ void Widget::toTop( Widget* vp )
 
 bool Widget::onMouseMove( int x, int y )
 {
-	LockGuard guard(this);
+// 	LockGuard guard(this);
 	for( Widget * current : m_children ) {
 		if( !current ) {
 			continue;
@@ -293,13 +293,13 @@ bool Widget::onMouseMove( int x, int y )
 
 void Widget::setAutoDelete( bool value ) noexcept
 {
-	LockGuard guard(this);
+// 	LockGuard guard(this);
 	m_autodelete = value;
 }
 
 bool Widget::isVisible() const noexcept
 {
-	LockGuard guard(this);
+// 	LockGuard guard(this);
 	return m_visible;
 }
 
