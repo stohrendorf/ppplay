@@ -29,9 +29,7 @@
 #include <array>
 
 #include "operator.h"
-#include "channel2op.h"
-#include "channel4op.h"
-#include "disabledchannel.h"
+#include "channel.h"
 #include <stream/iserializable.h>
 
 #include <ymf262/ppplay_opl_export.h>
@@ -51,10 +49,10 @@ private:
 	Operator::Ptr m_operators[2][36];
 	// The YMF262 has 18 2-op channels.
 	// Each 2-op channel can be at a serial or parallel operator configuration:
-	Channel2Op::Ptr m_channels2op[2][9];
-	Channel4Op::Ptr m_channels4op[2][3];
-	AbstractChannel::Ptr m_channels[2][9];
-	DisabledChannel::Ptr m_disabledChannel;
+	Channel::Ptr m_channels2op[2][9];
+	Channel::Ptr m_channels4op[2][3];
+	Channel::Ptr m_channels[2][9];
+	Channel::Ptr m_disabledChannel;
 
 	bool m_nts;
 	//! @brief Depth of amplitude

@@ -58,8 +58,8 @@ void AudioFifo::requestThread()
 			continue;
 		}
 		// add the data to the queue...
-		pushData( buffer );
 		bufferLock.unlock();
+		pushData( buffer );
 		m_bufferChanged.notify_one();
 	}
 }
@@ -91,11 +91,10 @@ AudioFifo::~AudioFifo()
 
 void AudioFifo::pushData( const AudioFrameBuffer& buf )
 {
-	// DO NOT LOCK THE MUTEX HERE! This is already done
-	// in the requestThread() function.
 	if(!buf) {
 		return;
 	}
+	boost::mutex::scoped_lock lock( m_bufferMutex );
 	if( buf->size() > m_buffer.capacity() - m_buffer.size() ) {
 		// resize to next bigger exponent of 2
 		size_t nsize = 1 << std::lround(std::log2(buf->size() + m_buffer.capacity()) + 0.5);

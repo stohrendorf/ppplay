@@ -6,9 +6,7 @@ include(GenerateExportHeader)
 add_compiler_export_flags()
 
 add_library(ppplay_opl SHARED
-	abstractchannel.cpp
-	channel2op.cpp
-	channel4op.cpp
+	channel.cpp
 	envelopegenerator.cpp
 	operator.cpp
 	opl3.cpp

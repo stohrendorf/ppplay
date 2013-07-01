@@ -207,11 +207,11 @@ void Opl3::initChannels2op()
 		for( int channelNumber = 0; channelNumber < 3; channelNumber++ ) {
 			int baseAddress = ( array << 8 ) | channelNumber;
 			// Channels 1, 2, 3 -> Operator offsets 0x0,0x3; 0x1,0x4; 0x2,0x5
-			m_channels2op[array][channelNumber].reset( new Channel2Op( this, baseAddress, m_operators[array][channelNumber].get(), m_operators[array][channelNumber + 0x3].get() ) );
+			m_channels2op[array][channelNumber].reset( new Channel( this, baseAddress, m_operators[array][channelNumber].get(), m_operators[array][channelNumber + 0x3].get() ) );
 			// Channels 4, 5, 6 -> Operator offsets 0x8,0xB; 0x9,0xC; 0xA,0xD
-			m_channels2op[array][channelNumber + 3].reset( new Channel2Op( this, baseAddress + 3, m_operators[array][channelNumber + 0x8].get(), m_operators[array][channelNumber + 0xB].get() ) );
+			m_channels2op[array][channelNumber + 3].reset( new Channel( this, baseAddress + 3, m_operators[array][channelNumber + 0x8].get(), m_operators[array][channelNumber + 0xB].get() ) );
 			// Channels 7, 8, 9 -> Operators 0x10,0x13; 0x11,0x14; 0x12,0x15
-			m_channels2op[array][channelNumber + 6].reset( new Channel2Op( this, baseAddress + 6, m_operators[array][channelNumber + 0x10].get(), m_operators[array][channelNumber + 0x13].get() ) );
+			m_channels2op[array][channelNumber + 6].reset( new Channel( this, baseAddress + 6, m_operators[array][channelNumber + 0x10].get(), m_operators[array][channelNumber + 0x13].get() ) );
 		}
 	}
 }
@@ -221,7 +221,7 @@ void Opl3::initChannels4op()
 		for( int channelNumber = 0; channelNumber < 3; channelNumber++ ) {
 			int baseAddress = ( array << 8 ) | channelNumber;
 			// Channels 1, 2, 3 -> Operators 0x0,0x3,0x8,0xB; 0x1,0x4,0x9,0xC; 0x2,0x5,0xA,0xD;
-			m_channels4op[array][channelNumber].reset( new Channel4Op( this, baseAddress, m_operators[array][channelNumber].get(), m_operators[array][channelNumber + 0x3].get(), m_operators[array][channelNumber + 0x8].get(), m_operators[array][channelNumber + 0xB].get() ) );
+			m_channels4op[array][channelNumber].reset( new Channel( this, baseAddress, m_operators[array][channelNumber].get(), m_operators[array][channelNumber + 0x3].get(), m_operators[array][channelNumber + 0x8].get(), m_operators[array][channelNumber + 0xB].get() ) );
 		}
 	}
 }
@@ -238,7 +238,7 @@ void Opl3::initChannels()
 
 	// Unique instance to fill future gaps in the Channel array,
 	// when there will be switches between 2op and 4op mode.
-	m_disabledChannel.reset( new DisabledChannel( this ) );
+	m_disabledChannel.reset( new Channel( this, 0 ) );
 }
 void Opl3::update_1_NTS1_6()
 {
@@ -307,7 +307,7 @@ void Opl3::setEnabledChannels()
 	for( int array = 0; array < 2; array++ )
 		for( int i = 0; i < 9; i++ ) {
 			int baseAddress = m_channels[array][i]->baseAddress();
-			m_registers[baseAddress + AbstractChannel::CH4_FB3_CNT1_Offset] |= 0xF0;
+			m_registers[baseAddress + Channel::CH4_FB3_CNT1_Offset] |= 0xF0;
 			m_channels[array][i]->update_CH4_FB3_CNT1();
 		}
 }

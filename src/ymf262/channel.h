@@ -22,8 +22,8 @@
  * Copyright (C) 2010-2013 by carbon14 and opl3
  */
 
-#ifndef PPP_OPL_ABSTRACTCHANNEL_H
-#define PPP_OPL_ABSTRACTCHANNEL_H
+#ifndef PPP_OPL_CHANNEL_H
+#define PPP_OPL_CHANNEL_H
 
 #include "stuff/utils.h"
 
@@ -41,11 +41,11 @@ class Operator;
 
 class Opl3;
 
-class AbstractChannel : public ISerializable
+class Channel : public ISerializable
 {
-	DISABLE_COPY( AbstractChannel )
+	DISABLE_COPY( Channel )
 public:
-	typedef std::shared_ptr<AbstractChannel> Ptr;
+	typedef std::shared_ptr<Channel> Ptr;
 	
 	static constexpr int _2_KON1_BLOCK3_FNUMH2_Offset = 0xB0;
 	static constexpr int  FNUML8_Offset = 0xA0;
@@ -79,23 +79,15 @@ private:
 	int16_t m_feedback[2];
 	bool m_cnt;
 	
+	/**
+	 * @brief The channels within this operator
+	 * @invariant m_operator.empty() || m_operators.size()==2 || m_operators.size()==4
+	 */
 	std::vector<Operator*> m_operators;
 	
 	static light4cxx::Logger* logger();
 
 public:
-	bool cnt() const {
-		return m_cnt;
-	}
-	Opl3* opl() const {
-		return m_opl;
-	}
-	uint16_t fnum() const {
-		return m_fnum;
-	}
-	uint8_t block() const {
-		return m_block;
-	}
 	/**
 	 * @brief Calculate adjusted phase feedback
 	 * @return Adjusted phase feedback using m_fb (11 bit)
@@ -115,11 +107,12 @@ public:
 		m_feedback[1] = fb;
 	}
 
-	AbstractChannel( Opl3* opl, int baseAddress, const std::initializer_list<Operator*>& ops );
-	virtual ~AbstractChannel() {}
+	Channel( Opl3* opl, int baseAddress );
+	Channel( Opl3* opl, int baseAddress, Operator* op1, Operator* op2 );
+	Channel( Opl3* opl, int baseAddress, Operator* op1, Operator* op2, Operator* op3, Operator* op4 );
 
 	/**
-	 * @post m_fnumh<8 && m_block<8
+	 * @post m_fnumh<1024 && m_block<8
 	 */
 	void update_2_KON1_BLOCK3_FNUMH2();
 
@@ -134,7 +127,7 @@ public:
 
 	void getInFourChannels(std::array<int16_t,4>* dest, int16_t channelOutput );
 
-	virtual void nextSample(std::array<int16_t,4>* dest) = 0;
+	void nextSample(std::array<int16_t,4>* dest);
 	void keyOn();
 	void keyOff();
 	void updateOperators();
@@ -143,10 +136,11 @@ public:
 		return m_channelBaseAddress;
 	}
 	
-    virtual AbstractArchive& serialize(AbstractArchive* archive) = 0;
+    virtual AbstractArchive& serialize(AbstractArchive* archive);
 	
-protected:
-	Operator* op(size_t idx) noexcept;
+private:
+	void nextSample2Op(std::array<int16_t,4>* dest);
+	void nextSample4Op(std::array<int16_t,4>* dest);
 	bool isRhythmChannel() const;
 };
 }
