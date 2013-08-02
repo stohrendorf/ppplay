@@ -69,7 +69,7 @@ SET(CPACK_PACKAGE_VERSION_MINOR "1")
 SET(CPACK_PACKAGE_VERSION_PATCH "3-wip")
 SET(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 SET(CPACK_PACKAGE_INSTALL_DIRECTORY "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}")
-SET(CPACK_STRIP_FILES "bin/ppplay")
+SET(CPACK_STRIP_FILES TRUE)
 SET(CPACK_SOURCE_STRIP_FILES "")
 SET(CPACK_SOURCE_IGNORE_FILES "/\\\\..;/build/;.~$;.\\\\.kdev4;Doxyfile$;config\\\\.h$")
 SET(CPACK_PACKAGE_EXECUTABLES "ppplay" "PeePeePlayer")
@@ -182,7 +182,7 @@ function(trylinklib LIBNAME ATTRIBS)
 		"${LIBNAME}_LIB"
 		NAMES "${LIBNAME}"
 		HINTS
-		PATH_SUFFIXES lib64 lib
+		PATH_SUFFIXES lib64 lib32 lib
 		PATHS
 		/sw
 		/opt/local
@@ -195,18 +195,14 @@ function(trylinklib LIBNAME ATTRIBS)
 	mark_as_advanced(FORCE "${LIBNAME}_LIB")
 endfunction(trylinklib)
 trylinklib("mp3lame" SHARED)
-if(NOT mp3lame_LIB)
-	option(WITH_MP3LAME "Whether to include MP3Lame support." OFF)
-else()
+if(mp3lame_LIB)
 	option(WITH_MP3LAME "Whether to include MP3Lame support." ON)
 endif()
 add_feature_info("MP3 Export" WITH_MP3LAME "MP3 Export using libmp3lame")
 
 trylinklib("vorbis" SHARED)
 trylinklib("vorbisenc" SHARED)
-if(NOT vorbis_LIB OR NOT vorbisenc_LIB)
-	option(WITH_OGG "Whether to include OGG support." OFF)
-else()
+if(vorbis_LIB AND vorbisenc_LIB)
 	option(WITH_OGG "Whether to include OGG support." ON)
 endif()
 add_feature_info("OGG Export" WITH_OGG "OGG Export using libvorbis and libvorbisenc")
@@ -228,8 +224,6 @@ set(Boost_USE_MULTITHREADED TRUE)
 include(FindBoost)
 find_package(Boost COMPONENTS program_options filesystem thread system unit_test_framework REQUIRED)
 if(Boost_FOUND)
-	#message(STATUS "Boost Include Dirs: ${Boost_INCLUDE_DIRS}")
-	#message(STATUS "Boost Libraries: ${Boost_LIBRARIES}")
 	include_directories(${Boost_INCLUDE_DIRS})
 	target_link_libraries(ppplay ${Boost_PROGRAM_OPTIONS_LIBRARY})
 else()
@@ -252,7 +246,9 @@ install(TARGETS ppplay DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT application
 cpack_add_component(application DISPLAY_NAME PeePeePlayer REQUIRED)
 if(LINUX OR UNIX)
 	install(CODE "
+		message(STATUS \"Installing: HSC XDG Mime Handler\")
 		execute_process( COMMAND xdg-mime install peepeeplayer-hsc.xml WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data )
+		message(STATUS \"Installing: PeePeePlayer XDG Desktop file\")
 		execute_process( COMMAND xdg-desktop-menu install --novendor peepeeplayer.desktop WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} )
 	")
 endif()
