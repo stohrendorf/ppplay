@@ -119,7 +119,7 @@ private:
 	 */
 	uint32_t m_counter;
 
-	static const uint16_t Silence = 511;
+	static constexpr uint16_t Silence = 511;
 	
 	/**
 	 * @brief Calculates the effectively used rates

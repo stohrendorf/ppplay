@@ -105,6 +105,9 @@ uint8_t EnvelopeGenerator::advanceCounter(uint8_t rate)
 void EnvelopeGenerator::attenuate( uint8_t rate )
 {
 	m_env += advanceCounter(rate);
+	if( m_env > Silence ) {
+		m_env = Silence;
+	}
 }
 
 void EnvelopeGenerator::attack()
@@ -113,20 +116,26 @@ void EnvelopeGenerator::attack()
 	if( overflow==0 ) {
 		return;
 	}
+	
+	// The maximum value of overflow is 7. An overflow can only occur
+	// if m_env < floor(m_env/8)*7 + 1. Let's substitute m_env by 8*x:
+	// 8*x < 1 + x*7
+	// <=> 8*x - 7*x < 1
+	// <=> x < 1
+	// But the attack only occurs if m_env>0, so an overflow cannot occur
+	// here.
 	m_env -= (m_env>>3)*overflow + 1;
-	if(m_env>Silence) { // overflow is possible
-		m_env = 0;
-	}
 }
 
 uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 {
-	const uint16_t oldEnv = m_env;
 	switch( m_stage ) {
 		case Stage::ATTACK:
-			attack();
 			if( m_env==0 ) {
 				m_stage = Stage::DECAY;
+			}
+			else {
+				attack();
 			}
 			break;
 
@@ -149,11 +158,7 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			break;
 	}
 	
-	if( m_env >= Silence ) {
-		m_env = Silence;
-	}
-	
-	int total = oldEnv + (m_tl<<2) + m_kslAdd;
+	int total = m_env + (m_tl<<2) + m_kslAdd;
 
 	if( am ) {
 		int amVal = m_opl->tremoloIndex() >> 8;
