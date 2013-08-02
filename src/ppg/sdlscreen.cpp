@@ -244,7 +244,7 @@ bool InstanceData::init( int charWidth, int charHeight, const std::string& title
 			BOOST_THROW_EXCEPTION( std::runtime_error( "Initialization of SDL Video surface failed" ) );
 		}
 	}
-	screenSurface = SDL_SetVideoMode( charWidth * 8, charHeight * 16, 32, SDL_DOUBLEBUF );
+	screenSurface = SDL_SetVideoMode( charWidth * 8, charHeight * 16, 32, SDL_DOUBLEBUF|SDL_HWSURFACE );
 	if( !screenSurface ) {
 		BOOST_THROW_EXCEPTION( std::runtime_error( "Screen Initialization failed" ) );
 	}

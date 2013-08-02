@@ -1,5 +1,7 @@
 include(FindLibArchive)
-find_library(LibArchive REQUIRED)
+find_package(LibArchive REQUIRED)
+set_package_info(LibArchive "LibArchive" "http://www.libarchive.org" "LibArchive enables loading modules from archives.")
+
 include_directories(${LibArchive_INCLUDE_DIR})
 
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
