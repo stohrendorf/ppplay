@@ -1,9 +1,7 @@
 /**
  * @defgroup S3mMod ScreamTracker 3 module definitions
- * @brief This module contains the ScreamTracker 3 Module Classes
+ * @brief ScreamTracker 3 Module Classes
  * @since 0.1.1
- * @remarks I am very proud that this should be the @b most @b compatible playing
- * routine ever.
  */
 
 /**

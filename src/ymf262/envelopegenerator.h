@@ -130,7 +130,7 @@ private:
 	/**
 	 * @brief Advances the counter and returns the overflow
 	 * @param[in] rate Attack/decay/release rate
-	 * @return Counter overflow
+	 * @return Counter overflow (0..7)
 	 * @pre rate<64
 	 * @post Result<8
 	 */
@@ -162,7 +162,8 @@ public:
 	 * @brief Sets the sustain level
 	 * @param[in] sl Sustain level
 	 * @note @a sl will be bit-masked.
-	 * @remark m_sl will be 0x1f if sl==15, so that m_sl will not trigger.
+	 * @remark m_sl will be 0x1f if sl==15, so that m_sl will not trigger
+	 *         the sustain phase in #advance().
 	 */
 	void setSustainLevel( uint8_t sl ) {
 		sl &= 0x0f;

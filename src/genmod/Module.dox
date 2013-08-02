@@ -1,7 +1,6 @@
 /**
  * @defgroup GenMod Common module definitions
- * @brief This module contains abstract base classes for the PeePeePlayer Module Interface
+ * @brief Base classes for the PeePeePlayer Module Interface
  * @details
  * If you want to create your own Module Class, be sure to use these classes to create it.
  */
-

@@ -1,6 +1,6 @@
 /**
  * @defgroup ModMod ProTracker (and compatible) module definitions
- * @brief This module contains the ProTracker Module Classes
+ * @brief ProTracker Module Classes
  * @since 0.1.3
  */
 
