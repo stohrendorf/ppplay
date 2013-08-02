@@ -57,7 +57,7 @@ inline int yac512(int smp)
 Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m_channels(), m_disabledChannel(),
 	m_nts( false ), m_dam( false ), m_dvb( false ), m_ryt( false ), m_bd( false ), m_sd( false ), m_tc( false ), m_hh( false ),
 	m_new( false ), m_connectionsel( 0 ), m_vibratoIndex( 0 ), m_tremoloIndex( 0 ), m_rand(1),
-	m_lastOutput{0,0,0,0}, m_lastInput{0,0,0,0}
+	m_lastOutputHi{0,0,0,0}, m_lastInputHi{0,0,0,0}, m_lastOutputLo{0,0,0,0}
 {
 	initOperators();
 	initChannels2op();
@@ -86,24 +86,33 @@ void Opl3::read(std::array<int16_t,4>* dest)
 	// Normalizes the output buffer after all channels have been added,
 	// with a maximum of 18 channels, and multiplies it to get the 16 bit signed output.
 	// Additionally, the output is simulated to be put through the YAC512 DAC, which
-	// has a 10 bit mantissa and a 3 bit exponent.
+	// has a 10 bit mantissa and a 3 bit exponent; it has an output amplitude of 2.5V.
+	
+	// The NJM4560 op-amp has a slew rate of 4V/µs and a gain-bandwidth product of 10MHz
+	// and works as a high-pass filter.
+	// The following TL074 (see http://www.ucapps.de/mbhp_opl3.html) has a SR of 13V/µs
+	// and a GBWP of 3MHz and works as a low-pass filter.
 	
 	// According to http://soundshock.se/phpBB2/viewtopic.php?p=1906#1906, there's probably
 	// a 1-pole RC highpass with a damping of around 50% per 10ms, or approx. every 500 samples.
 	// Thus:
 	//    e^-(500*alpha) = 0.5
 	// => alpha = -ln(0.5)/500
-	static constexpr float alpha = 1.0-1.38629436111989e-3;
+	static constexpr float alpha1 = 1.0 - 1.38629436111989e-3;
+	// this value is guessed, but seems to match the commonly used average feedback value.
+	static constexpr float alpha2 = 0.5;
 	
 	if(dest) {
 		for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
 			float smp = yac512(outputBuffer[outputChannelNumber]>>1);
 			
 			// now do the high-pass...
-			m_lastOutput[outputChannelNumber] = alpha*(m_lastOutput[outputChannelNumber] + smp-m_lastInput[outputChannelNumber]);
-			m_lastInput[outputChannelNumber] = smp;
+			m_lastOutputHi[outputChannelNumber] = alpha1 * (m_lastOutputHi[outputChannelNumber] + smp-m_lastInputHi[outputChannelNumber]);
+			m_lastInputHi[outputChannelNumber] = smp;
+			// ... and the low-pass
+			m_lastOutputLo[outputChannelNumber] += alpha2 * (smp - m_lastOutputLo[outputChannelNumber]);
 			
-			(*dest)[outputChannelNumber] = m_lastOutput[outputChannelNumber];
+			(*dest)[outputChannelNumber] = m_lastOutputLo[outputChannelNumber];
 		}
 	}
 
