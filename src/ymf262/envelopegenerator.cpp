@@ -84,8 +84,9 @@ uint8_t EnvelopeGenerator::calculateRate( uint8_t rate ) const
 	return std::min<uint8_t>(63, res);
 }
 
-uint8_t EnvelopeGenerator::advanceCounter(uint8_t rate)
+inline uint8_t EnvelopeGenerator::advanceCounter(uint8_t rate)
 {
+	BOOST_ASSERT(rate < 64);
 	if(rate == 0) {
 		return 0;
 	}
@@ -104,6 +105,7 @@ uint8_t EnvelopeGenerator::advanceCounter(uint8_t rate)
 
 void EnvelopeGenerator::attenuate( uint8_t rate )
 {
+	BOOST_ASSERT(rate < 64);
 	m_env += advanceCounter(rate);
 	if( m_env > Silence ) {
 		m_env = Silence;
@@ -112,6 +114,7 @@ void EnvelopeGenerator::attenuate( uint8_t rate )
 
 void EnvelopeGenerator::attack()
 {
+	BOOST_ASSERT(m_env > 0);
 	uint8_t overflow = advanceCounter(m_ar);
 	if( overflow==0 ) {
 		return;
@@ -130,30 +133,30 @@ void EnvelopeGenerator::attack()
 uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 {
 	switch( m_stage ) {
-		case Stage::ATTACK:
+		case Stage::Attack:
 			if( m_env==0 ) {
-				m_stage = Stage::DECAY;
+				m_stage = Stage::Decay;
 			}
 			else {
 				attack();
 			}
 			break;
 
-		case Stage::DECAY:
+		case Stage::Decay:
 			if( m_env >= uint32_t(m_sl)<<4 ) {
-				m_stage = Stage::SUSTAIN;
+				m_stage = Stage::Sustain;
 				break;
 			}
 			attenuate(m_dr);
 			break;
 
-		case Stage::SUSTAIN:
+		case Stage::Sustain:
 			if(!egt) {
-				m_stage = Stage::RELEASE;
+				m_stage = Stage::Release;
 			}
 			break;
 
-		case Stage::RELEASE:
+		case Stage::Release:
 			attenuate(m_rr);
 			break;
 	}
@@ -172,12 +175,12 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 		total += amVal;
 	}
 
-	if( total >= Silence ) {
+	if(total<0)
+		m_total = 0;
+	else if(total>Silence)
 		m_total = Silence;
-	}
-	else {
+	else
 		m_total = total;
-	}
 	return m_total;
 }
 

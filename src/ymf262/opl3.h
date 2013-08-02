@@ -71,6 +71,10 @@ private:
 	uint16_t m_tremoloIndex;
 	//! @brief Random number generator
 	uint32_t m_rand;
+	//! @brief RC-Highpass output sample value
+	float m_lastOutput[4];
+	//! @brief RC-Highpass input sample value
+	float m_lastInput[4];
 
 public:
 	uint32_t randBit() const {

@@ -91,12 +91,16 @@ public:
 	/**
 	 * @brief Calculate adjusted phase feedback
 	 * @return Adjusted phase feedback using m_fb (11 bit)
+	 * 
+	 * @details
+	 * The OPL3 seems not to use the average value of the last 2 samples, but the 2nd-last
+	 * one only. See http://soundshock.se/phpBB2/viewtopic.php?p=1906&sid=d5b406e1c4f6a743b2c24b32f4df2bec#1906.
 	 */
-	int16_t avgFeedback() const {
+	int16_t feedback() const {
 		if( m_fb == 0) {
 			return 0;
 		}
-		return (( m_feedback[0] + m_feedback[1] ) << m_fb)>>9;
+		return (m_feedback[0]<<m_fb)>>8;
 	}
 	/**
 	 * @brief Push feedback into the queue

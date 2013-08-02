@@ -169,8 +169,7 @@ void Channel::nextSample2Op(std::array< int16_t, 4 >* dest)
 		return;
 	}
 	
-	const uint16_t feedbackOutput = avgFeedback();
-	int16_t channelOutput = m_operators[0]->nextSample( feedbackOutput );
+	int16_t channelOutput = m_operators[0]->nextSample( feedback() );
 	pushFeedback(channelOutput);
 
 	if( !m_cnt ) {
@@ -189,8 +188,7 @@ void Channel::nextSample4Op(std::array< int16_t, 4 >* dest)
 	const int secondChannelBaseAddress = baseAddress() + 3;
 	const bool secondCnt = m_opl->readReg( secondChannelBaseAddress + Channel::CH4_FB3_CNT1_Offset ) & 0x1;
 
-	const uint16_t feedbackOutput = avgFeedback();
-	int16_t channelOutput = m_operators[0]->nextSample( feedbackOutput );
+	int16_t channelOutput = m_operators[0]->nextSample( feedback() );
 	pushFeedback(channelOutput);
 
 	/*

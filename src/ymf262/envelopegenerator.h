@@ -43,12 +43,12 @@ class Opl3;
  */
 class EnvelopeGenerator
 {
-public:
+private:
 	enum class Stage
 	{
-		ATTACK, DECAY, SUSTAIN, RELEASE
+		Attack, Decay, Sustain, Release
 	};
-private:
+	
 	Opl3* m_opl;
 	Stage m_stage;
 	/**
@@ -134,7 +134,7 @@ private:
 	 * @pre rate<64
 	 * @post Result<8
 	 */
-	uint8_t advanceCounter(uint8_t rate);
+	inline uint8_t advanceCounter(uint8_t rate);
 	/**
 	 * @brief Handles decay/release phases
 	 * @param[in] rate Decay/release rate register value
@@ -143,12 +143,13 @@ private:
 	void attenuate(uint8_t rate);
 	/**
 	 * @brief Handles attack phase
+	 * @pre m_env>0
 	 */
 	void attack();
 	
 public:
 	constexpr EnvelopeGenerator( Opl3* opl )
-		: m_opl( opl ), m_stage( Stage::RELEASE ),
+		: m_opl( opl ), m_stage( Stage::Release ),
 		  m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_fnum( 0 ), m_block( 0 ),
 		  m_env( Silence ), m_ksr( false ), m_tl( 0 ), m_ksl( 0 ),
 		  m_kslAdd(0), m_total(Silence), m_counter(0)
@@ -242,14 +243,14 @@ public:
 	 * @post m_stage==Stage::ATTACK
 	 */
 	void keyOn() {
-		m_stage = Stage::ATTACK;
+		m_stage = Stage::Attack;
 	}
 	
 	/**
 	 * @post m_stage==Stage::RELEASE
 	 */
 	void keyOff() {
-		m_stage = Stage::RELEASE;
+		m_stage = Stage::Release;
 	}
 };
 }
