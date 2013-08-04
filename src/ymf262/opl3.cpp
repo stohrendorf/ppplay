@@ -86,31 +86,26 @@ void Opl3::read(std::array<int16_t,4>* dest)
 	// Normalizes the output buffer after all channels have been added,
 	// with a maximum of 18 channels, and multiplies it to get the 16 bit signed output.
 	// Additionally, the output is simulated to be put through the YAC512 DAC, which
-	// has a 10 bit mantissa and a 3 bit exponent; it has an output amplitude of 2.5V.
-	// Then, we simulate an op-amp used as a high-pass filter and another op-amp
-	// used as a low-pass filter.
+	// has a 10 bit mantissa and a 3 bit exponent. Also, a low-pass and high-pass filtering
+	// is added with cut-off-frequencies of 50Hz and 18kHz; these values have been found
+	// using Audacity with the one-pole-filter effects and the audio from a youtube video.
 	
-	// The NJM4560 op-amp has a slew rate of 4V/µs and works as a high-pass filter,
-	// having an amplification factor of 100dB, producing a maximum output voltage of 25V.
-	// 4V/µs / 25V = 0.16/µs - a damping of 16% per µs.
-	// We have approx. 49,722.2 Samples/s, or approx. 20.1µs/Sample.
-	// pow(1-0.16, 20.1) is 0.03, or a damping of 97% per sample.
-	static constexpr float alpha1 = 0.97;
-	
-	// The following TL074 (see http://www.ucapps.de/mbhp_opl3.html) has a SR of 13V/µs
-	// and works as a low-pass filter, having an amplification of 70dB. But we don't
-	// know the input voltage, so we cannot safely calculate a good alpha value. Thus,
-	// we need to guess...
-	static constexpr float alpha2 = 0.8;
+	static constexpr float samplingTimeConstant = SampleRate / (2*M_PI);
+	// 50Hz cutoff
+	static constexpr float highPassAlpha = samplingTimeConstant / (50+samplingTimeConstant);
+	static_assert(0<=highPassAlpha && highPassAlpha<=1, "Error: High Pass constant invalid");
+	// 18kHz cutoff
+	static constexpr float lowPassAlpha = samplingTimeConstant / (18e3+samplingTimeConstant);
+	static_assert(0<=lowPassAlpha && lowPassAlpha<=1, "Error: Low Pass constant invalid");
 	
 	if(dest) {
 		for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
 			float smp = yac512(outputBuffer[outputChannelNumber]>>1);
 			
 			// now do the high-pass...
-			m_lastOutputHi[outputChannelNumber] = alpha1 * (m_lastOutputHi[outputChannelNumber] + smp-m_lastInputHi[outputChannelNumber]);
+			m_lastOutputHi[outputChannelNumber] = highPassAlpha * (m_lastOutputHi[outputChannelNumber] + smp-m_lastInputHi[outputChannelNumber]);
 			// ... and the low-pass
-			m_lastOutputLo[outputChannelNumber] += alpha2 * (m_lastOutputHi[outputChannelNumber] - m_lastOutputLo[outputChannelNumber]);
+			m_lastOutputLo[outputChannelNumber] += lowPassAlpha * (m_lastOutputHi[outputChannelNumber] - m_lastOutputLo[outputChannelNumber]);
 			
 			m_lastInputHi[outputChannelNumber] = smp;
 			(*dest)[outputChannelNumber] = m_lastOutputLo[outputChannelNumber];

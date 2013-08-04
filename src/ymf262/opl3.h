@@ -71,7 +71,7 @@ private:
 	uint16_t m_tremoloIndex;
 	//! @brief Random number generator
 	uint32_t m_rand;
-	//! @brief RC-Highpass output sample value
+	//! @brief RC-Highpass output sample value and RC-Lowpass input
 	float m_lastOutputHi[4];
 	//! @brief RC-Highpass input sample value
 	float m_lastInputHi[4];
