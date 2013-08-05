@@ -390,11 +390,6 @@ int16_t Operator::getOutput( uint16_t outputPhase, uint8_t ws )
 	return oplSin( ws, outputPhase, m_envelopeGenerator.value() );
 }
 
-light4cxx::Logger* Operator::logger()
-{
-	return light4cxx::Logger::get("opl.operator");
-}
-
 AbstractArchive& Operator::serialize(AbstractArchive* archive)
 {
 	*archive % m_operatorBaseAddress % m_phaseGenerator % m_envelopeGenerator

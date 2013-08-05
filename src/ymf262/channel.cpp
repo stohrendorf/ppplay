@@ -113,11 +113,6 @@ void Channel::getInFourChannels( std::array<int16_t, 4>* dest, int16_t channelOu
 	}
 }
 
-light4cxx::Logger* Channel::logger()
-{
-	return light4cxx::Logger::get("opl.channel");
-}
-
 AbstractArchive& Channel::serialize(AbstractArchive* archive)
 {
 	*archive % m_fnum % m_kon % m_block

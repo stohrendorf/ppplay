@@ -32,7 +32,6 @@
 #include "phasegenerator.h"
 #include "envelopegenerator.h"
 
-#include <light4cxx/logger.h>
 #include <stream/iserializable.h>
 
 namespace opl
@@ -90,8 +89,6 @@ private:
 	// 0..7
 	uint8_t m_block;
 	
-	static light4cxx::Logger* logger();
-
 	int16_t handleTopCymbal();
 	int16_t handleHighHat( uint16_t modulator );
 	int16_t handleSnareDrum( uint16_t modulator );

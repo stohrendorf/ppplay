@@ -60,7 +60,7 @@ uint16_t PhaseGenerator::advance( bool vib )
 			delta >>= 1;
 		}
 		if( (m_opl->vibratoIndex()>>12)&1 ) {
-			inc -= delta;
+			inc += ~delta;
 		}
 		else {
 			inc += delta;

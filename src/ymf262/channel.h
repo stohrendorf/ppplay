@@ -27,7 +27,6 @@
 
 #include "stuff/utils.h"
 
-#include <light4cxx/logger.h>
 #include <stream/iserializable.h>
 #include <vector>
 #include <cstdint>
@@ -60,7 +59,7 @@ private:
 	 */
 	uint16_t m_fnum;
 	
-	//! @brief Key On. If changed, calls Channel::keyOn() / keyOff().
+	//! @brief Key On. If changed, calls keyOn() or keyOff(), depending on the new value.
 	bool m_kon;
 	
 	/**
@@ -76,7 +75,11 @@ private:
 	 * @invariant m_fb<8
 	 */
 	uint8_t m_fb;
+	
+	//! @brief Feedback sample values
 	int16_t m_feedback[2];
+	
+	//! @brief Connection
 	bool m_cnt;
 	
 	/**
@@ -85,8 +88,6 @@ private:
 	 */
 	std::vector<Operator*> m_operators;
 	
-	static light4cxx::Logger* logger();
-
 public:
 	/**
 	 * @brief Calculate adjusted phase feedback
