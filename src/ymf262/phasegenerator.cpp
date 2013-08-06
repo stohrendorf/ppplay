@@ -27,8 +27,6 @@
 
 namespace opl
 {
-constexpr uint8_t multTable[16] = {1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 20, 24, 24, 30, 30};
-
 void PhaseGenerator::setFrequency( uint16_t f_number, uint8_t block, uint8_t mult )
 {
 	m_fNum = f_number&0x3ff;
