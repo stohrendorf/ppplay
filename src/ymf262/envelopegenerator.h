@@ -63,8 +63,7 @@ private:
 	uint8_t m_dr;
 	/**
 	 * @brief Sustain level
-	 * @invariant m_sl<16 || m_sl==31
-	 * @note Effective size is 5 bits, to handle the case SL=0x0f.
+	 * @invariant m_sl<16
 	 */
 	uint8_t m_sl;
 	/**
@@ -163,17 +162,9 @@ public:
 	 * @brief Sets the sustain level
 	 * @param[in] sl Sustain level
 	 * @note @a sl will be bit-masked.
-	 * @remark m_sl will be 0x1f if sl==15, so that m_sl will not trigger
-	 *         the sustain phase in #advance().
 	 */
 	void setSustainLevel( uint8_t sl ) {
-		sl &= 0x0f;
-		if( sl == 0x0F ) {
-			m_sl = 0x1f;
-		}
-		else {
-			m_sl = sl;
-		}
+		m_sl = sl&0x0f;
 	}
 
 	/**
