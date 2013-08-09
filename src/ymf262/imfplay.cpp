@@ -13,6 +13,7 @@
 
 constexpr int SampleRate = 44100;
 std::ifstream imfFile;
+std::ofstream rawOut;
 int songLength = 0;
 int delayCounter = 0;
 int imfFreq = 560; // Hz [280|560|700]
@@ -53,13 +54,16 @@ void sdlAudioCallback( void* userdata, uint8_t* stream, int len_bytes )
 		}
 		interp = 0;
 	}
+	if(rawOut.is_open())
+		rawOut.write((char*)stream, len_bytes);
 }
 
 int main(int argc, char** argv)
 {
-	std::string filename;
+	std::string filename, outName;
 	boost::program_options::options_description options( "General Options" );
 	options.add_options()
+	( "raw,r", boost::program_options::value<std::string>( &outName ), "Save raw sound output into file (44.1kHz interleaved, 16-bit signed)" )
 	( "file,f", boost::program_options::value<std::string>( &filename ), "File to play" )
 	( "speed,s", boost::program_options::value<int>( &imfFreq )->default_value(560), "Playback speed (280, 560, 700 recommended)" )
 	;
@@ -95,6 +99,9 @@ int main(int argc, char** argv)
 		imfFile.seekg(0);
 	}
 	imfFile.clear();
+	
+	if(!outName.empty())
+		rawOut.open(outName, std::ios::out|std::ios::trunc|std::ios::binary);
 	
 	if(SDL_Init(SDL_INIT_AUDIO)) {
 		std::cout << "Cannot init SDL: " << SDL_GetError() << "\n";
