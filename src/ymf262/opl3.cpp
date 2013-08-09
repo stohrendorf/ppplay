@@ -56,8 +56,7 @@ inline int yac512(int smp)
 
 Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m_channels(), m_disabledChannel(),
 	m_nts( false ), m_dam( false ), m_dvb( false ), m_ryt( false ), m_bd( false ), m_sd( false ), m_tc( false ), m_hh( false ),
-	m_new( false ), m_connectionsel( 0 ), m_vibratoIndex( 0 ), m_tremoloIndex( 0 ), m_rand(1),
-	m_lastOutputHi{0,0,0,0}, m_lastInputHi{0,0,0,0}, m_lastOutputLo{0,0,0,0}
+	m_new( false ), m_connectionsel( 0 ), m_vibratoIndex( 0 ), m_tremoloIndex( 0 ), m_rand(1)
 {
 	initOperators();
 	initChannels2op();
@@ -100,15 +99,7 @@ void Opl3::read(std::array<int16_t,4>* dest)
 	
 	if(dest) {
 		for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
-			float smp = yac512(outputBuffer[outputChannelNumber]>>1);
-			
-			// now do the high-pass...
-			m_lastOutputHi[outputChannelNumber] = highPassAlpha * (m_lastOutputHi[outputChannelNumber] + smp-m_lastInputHi[outputChannelNumber]);
-			// ... and the low-pass
-			m_lastOutputLo[outputChannelNumber] += lowPassAlpha * (m_lastOutputHi[outputChannelNumber] - m_lastOutputLo[outputChannelNumber]);
-			
-			m_lastInputHi[outputChannelNumber] = smp;
-			(*dest)[outputChannelNumber] = m_lastOutputLo[outputChannelNumber];
+			(*dest)[outputChannelNumber] = yac512(outputBuffer[outputChannelNumber]);
 		}
 	}
 

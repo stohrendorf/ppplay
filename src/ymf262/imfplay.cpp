@@ -1,0 +1,127 @@
+#include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/progress.hpp>
+
+#include <iostream>
+#include <fstream>
+
+#include <SDL.h>
+
+#include "opl3.h"
+#include <genmod/breseninter.h>
+
+constexpr int SampleRate = 44100;
+std::ifstream imfFile;
+int songLength = 0;
+int delayCounter = 0;
+int imfFreq = 560; // Hz [280|560|700]
+bool stopped = false;
+std::shared_ptr<boost::progress_display> progress;
+
+void sdlAudioCallback( void* userdata, uint8_t* stream, int len_bytes )
+{
+	std::fill_n(stream, len_bytes, 0);
+	int16_t* dest = reinterpret_cast<int16_t*>(stream);
+	opl::Opl3* chip = reinterpret_cast<opl::Opl3*>(userdata);
+	int numSamples = len_bytes/sizeof(int16_t)/2;
+	ppp::BresenInterpolation interp(SampleRate, opl::Opl3::SampleRate);
+	while(numSamples-- > 0) {
+		if(delayCounter-- <= 0) {
+			do {
+				uint8_t reg, val;
+				uint16_t delay;
+				++*progress;
+				imfFile.read((char*)&reg, 1).read((char*)&val, 1).read((char*)&delay, 2);
+				if(!imfFile || imfFile.tellg()>=songLength+2) {
+					stopped = true;
+					return;
+				}
+				chip->writeReg(reg, val);
+				delayCounter = delay * SampleRate/imfFreq;
+			} while(delayCounter == 0);
+		}
+		
+		std::array<int16_t, 4> sample;
+		chip->read(&sample);
+		*dest = 0;
+		dest[0] = (sample[0] + sample[1]);
+		dest[1] = (sample[2] + sample[3]);
+		dest += 2;
+		if( interp.next() == 2 ) {
+			chip->read(nullptr); // skip a sample
+		}
+		interp = 0;
+	}
+}
+
+int main(int argc, char** argv)
+{
+	std::string filename;
+	boost::program_options::options_description options( "General Options" );
+	options.add_options()
+	( "file,f", boost::program_options::value<std::string>( &filename ), "File to play" )
+	( "speed,s", boost::program_options::value<int>( &imfFreq )->default_value(560), "Playback speed (280, 560, 700 recommended)" )
+	;
+	boost::program_options::positional_options_description p;
+	p.add( "file", -1 );
+
+	boost::program_options::variables_map vm;
+	boost::program_options::store( boost::program_options::command_line_parser( argc, argv ).options( options ).positional( p ).run(), vm );
+	boost::program_options::notify( vm );
+
+	if(!boost::filesystem::is_regular_file(filename)) {
+		std::cout << "Cannot open " << filename << "\n";
+		return 1;
+	}
+
+	boost::filesystem::path filePath(filename);
+	opl::Opl3 emulator;
+	if( boost::to_lower_copy(filePath.extension().string()) != ".imf" ) {
+		std::cout << "Not an IMF: " << boost::to_lower_copy(filePath.extension().string()) << "\n";
+		return 1;
+	}
+	
+	imfFile.open(filename, std::ios::in|std::ios::binary);
+	if(!imfFile.is_open()) {
+		std::cout << "Cannot read " << filename << "\n";
+		return 1;
+	}
+	imfFile.read((char*)&songLength,2);
+	if(songLength==0) {
+		imfFile.seekg(0, std::ios::end);
+		songLength = imfFile.tellg();
+		songLength -= 2;
+		imfFile.seekg(0);
+	}
+	imfFile.clear();
+	
+	if(SDL_Init(SDL_INIT_AUDIO)) {
+		std::cout << "Cannot init SDL: " << SDL_GetError() << "\n";
+		return 1;
+	}
+
+	opl::Opl3 chip;
+	SDL_AudioSpec desiredAudio;
+	SDL_AudioSpec obtainedAudio;
+	desiredAudio.freq = SampleRate;
+	desiredAudio.channels = 2;
+	desiredAudio.format = AUDIO_S16LSB;
+	desiredAudio.samples = 2048;
+	desiredAudio.callback = sdlAudioCallback;
+	desiredAudio.userdata = &chip;
+	if( SDL_OpenAudio( &desiredAudio, &obtainedAudio ) < 0 ) {
+		std::cout << "Couldn't open audio: " << SDL_GetError() << "\n";
+		return 1;
+	}
+
+	progress.reset( new boost::progress_display(songLength/4) );
+	SDL_PauseAudio( 0 );
+	
+	while(!stopped) {
+		SDL_Delay(10);
+	}
+	
+	std::cout << "End of music.\n";
+	return 0;
+}
