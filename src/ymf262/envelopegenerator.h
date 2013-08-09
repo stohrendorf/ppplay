@@ -165,6 +165,8 @@ public:
 	 */
 	void setSustainLevel( uint8_t sl ) {
 		m_sl = sl&0x0f;
+		if(m_sl==0x0f)
+			m_sl = 0x1f;
 	}
 
 	/**

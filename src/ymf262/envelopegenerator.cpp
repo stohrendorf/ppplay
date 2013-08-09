@@ -143,7 +143,7 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			break;
 
 		case Stage::Decay:
-			if( m_sl != 15 && (m_env>>4) > m_sl ) {
+			if( (m_env>>4) >= m_sl ) {
 				m_stage = Stage::Sustain;
 				break;
 			}
