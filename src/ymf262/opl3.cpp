@@ -24,6 +24,7 @@
 
 #include "opl3.h"
 #include <stream/abstractarchive.h>
+#include <stuff/numberutils.h>
 
 namespace opl
 {
@@ -99,7 +100,7 @@ void Opl3::read(std::array<int16_t,4>* dest)
 	
 	if(dest) {
 		for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
-			(*dest)[outputChannelNumber] = yac512(outputBuffer[outputChannelNumber]);
+			(*dest)[outputChannelNumber] = ppp::clip(yac512(outputBuffer[outputChannelNumber]), -32768, 32767);
 		}
 	}
 

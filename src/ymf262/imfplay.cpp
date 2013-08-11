@@ -46,8 +46,8 @@ void sdlAudioCallback( void* userdata, uint8_t* stream, int len_bytes )
 		std::array<int16_t, 4> sample;
 		chip->read(&sample);
 		*dest = 0;
-		dest[0] = (sample[0] + sample[1]);
-		dest[1] = (sample[2] + sample[3]);
+		dest[0] = ppp::clip(sample[0] + sample[1], -32768, 32767);
+		dest[1] = ppp::clip(sample[2] + sample[3], -32768, 32767);
 		dest += 2;
 		if( interp.next() == 2 ) {
 			chip->read(nullptr); // skip a sample
