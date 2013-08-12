@@ -103,32 +103,63 @@ int main(int argc, char** argv)
 	if(!outName.empty())
 		rawOut.open(outName, std::ios::out|std::ios::trunc|std::ios::binary);
 	
-	if(SDL_Init(SDL_INIT_AUDIO)) {
-		std::cout << "Cannot init SDL: " << SDL_GetError() << "\n";
-		return 1;
-	}
-
 	opl::Opl3 chip;
-	SDL_AudioSpec desiredAudio;
+
 	SDL_AudioSpec obtainedAudio;
-	desiredAudio.freq = SampleRate;
-	desiredAudio.channels = 2;
-	desiredAudio.format = AUDIO_S16LSB;
-	desiredAudio.samples = 2048;
-	desiredAudio.callback = sdlAudioCallback;
-	desiredAudio.userdata = &chip;
-	if( SDL_OpenAudio( &desiredAudio, &obtainedAudio ) < 0 ) {
-		std::cout << "Couldn't open audio: " << SDL_GetError() << "\n";
-		return 1;
+	if(!rawOut.is_open()) {
+		if(SDL_Init(SDL_INIT_AUDIO)) {
+			std::cout << "Cannot init SDL: " << SDL_GetError() << "\n";
+			return 1;
+		}
+		SDL_AudioSpec desiredAudio;
+		desiredAudio.freq = SampleRate;
+		desiredAudio.channels = 2;
+		desiredAudio.format = AUDIO_S16LSB;
+		desiredAudio.samples = 2048;
+		desiredAudio.callback = sdlAudioCallback;
+		desiredAudio.userdata = &chip;
+		if( SDL_OpenAudio( &desiredAudio, &obtainedAudio ) < 0 ) {
+			std::cout << "Couldn't open audio: " << SDL_GetError() << "\n";
+			return 1;
+		}
+		progress.reset( new boost::progress_display(songLength/4) );
+		SDL_PauseAudio( 0 );
+		while(!stopped) {
+			SDL_Delay(10);
+		}
+	}
+	else {
+		progress.reset( new boost::progress_display(songLength/4) );
+		ppp::BresenInterpolation interp(SampleRate, opl::Opl3::SampleRate);
+		while(!stopped) {
+			if(delayCounter-- <= 0) {
+				do {
+					uint8_t reg, val;
+					uint16_t delay;
+					++*progress;
+					imfFile.read((char*)&reg, 1).read((char*)&val, 1).read((char*)&delay, 2);
+					if(!imfFile || imfFile.tellg()>=songLength+2) {
+						stopped = true;
+						break;
+					}
+					chip.writeReg(reg, val);
+					delayCounter = delay * SampleRate/imfFreq;
+				} while(delayCounter == 0);
+			}
+			
+			std::array<int16_t, 4> sample;
+			chip.read(&sample);
+			int16_t out[2];
+			out[0] = ppp::clip(sample[0] + sample[1], -32768, 32767);
+			out[1] = ppp::clip(sample[2] + sample[3], -32768, 32767);
+			if( interp.next() == 2 ) {
+				chip.read(nullptr); // skip a sample
+			}
+			interp = 0;
+			rawOut.write((char*)out, 2*sizeof(int16_t));
+		}
 	}
 
-	progress.reset( new boost::progress_display(songLength/4) );
-	SDL_PauseAudio( 0 );
-	
-	while(!stopped) {
-		SDL_Delay(10);
-	}
-	
 	std::cout << "End of music.\n";
 	return 0;
 }
