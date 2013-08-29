@@ -77,11 +77,6 @@ public:
 	 * @return 10 bit phase
 	 */
 	uint16_t advance( bool vib );
-
-	/**
-	 * @post m_phase==0
-	 */
-	void keyOn();
 };
 }
 

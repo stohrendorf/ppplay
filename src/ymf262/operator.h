@@ -90,8 +90,8 @@ private:
 	uint8_t m_block;
 	
 	int16_t handleTopCymbal();
-	int16_t handleHighHat( uint16_t modulator );
-	int16_t handleSnareDrum( uint16_t modulator );
+	int16_t handleHighHat(  );
+	int16_t handleSnareDrum(  );
 
 public:
 	/**

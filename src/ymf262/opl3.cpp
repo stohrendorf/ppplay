@@ -308,15 +308,17 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 	bool new_tc = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x02;
 	if( new_tc != m_tc ) {
 		m_tc = new_tc;
-		if( m_tc )
+		if( m_tc ) {
 			topCymbalOperator()->keyOn();
+		}
 	}
 
 	bool new_hh = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x01;
 	if( new_hh != m_hh ) {
 		m_hh = new_hh;
-		if( m_hh )
+		if( m_hh ) {
 			highHatOperator()->keyOn();
+		}
 	}
 
 }

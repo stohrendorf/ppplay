@@ -94,9 +94,7 @@ int16_t Operator::handleTopCymbal()
 	const uint16_t highHatPhase = m_opl->highHatOperator()->m_phase;
 	const uint16_t phaseBit = (((m_phase & 0x88) ^ ((m_phase<<5) & 0x80)) | ((highHatPhase ^ (highHatPhase<<2)) & 0x20)) ? 0x02 : 0x00;
 	
-	m_envelopeGenerator.advance( m_egt, m_am );
-
-	m_phase = (1+phaseBit)<<8;
+	m_phase = (1 + phaseBit) << 8;
 
 	uint8_t waveform = m_ws;
 	if( m_opl->isNew() ) {
@@ -109,46 +107,53 @@ int16_t Operator::handleTopCymbal()
 	return getOutput(m_phase, waveform);
 }
 
-int16_t Operator::handleHighHat(uint16_t modulator)
+int16_t Operator::handleHighHat()
 {
 	const uint16_t cymbalPhase = m_opl->topCymbalOperator()->m_phase;
-	const uint16_t phasebit = ( ( ( m_phase & 0x88 ) ^( ( m_phase << 5 ) & 0x80 ) ) | ( ( cymbalPhase ^( cymbalPhase << 2 ) ) & 0x20 ) ) ? 0x02 : 0x00;
-	const uint16_t noisebit = m_opl->randBit();
-	m_phase = (( phasebit << 8 ) | ( 0x34 << ( phasebit ^( noisebit << 1 ) ) ));
-	m_envelopeGenerator.advance( m_egt, m_am );
-	return getOutput( modulator + m_phase, m_ws );
+	const uint16_t phaseBit = ( ( ( m_phase & 0x88 ) ^( ( m_phase << 5 ) & 0x80 ) ) | ( ( cymbalPhase ^( cymbalPhase << 2 ) ) & 0x20 ) ) ? 0x02 : 0x00;
+	const uint16_t noiseBit = m_opl->randBit()<<1;
+	m_phase = (phaseBit<<8) | (0x34 << ( phaseBit ^ noiseBit ));
+	return getOutput( m_phase, m_ws );
 }
 
-int16_t Operator::handleSnareDrum( uint16_t modulator )
+int16_t Operator::handleSnareDrum()
 {
-	m_envelopeGenerator.advance( m_egt, m_am );
-
-	uint8_t phaseBit = ( m_phase >> 9 ) & 1;
-	uint8_t noiseBit = m_opl->randBit();
-	m_phase = ( ( 1 + phaseBit ) ^ noiseBit ) << 1;
-	return getOutput( modulator + (m_phase<<1), m_ws );
+	const uint16_t noiseBit = m_opl->randBit()<<8;
+	const uint16_t phase = m_opl->snareDrumOperator()->m_phase;
+	m_phase = ( 0x100 + (phase & 0x100) ) ^ noiseBit;
+	return getOutput( m_phase, m_ws );
 }
 
 int16_t Operator::nextSample( uint16_t modulator )
 {
+	m_envelopeGenerator.advance( m_egt, m_am );
+
 	if( m_opl->ryt() ) {
-		// here the rythm mode is handled
-		static constexpr int HighHatOperatorBaseAddress = 0x11;
-		static constexpr int TopCymbalOperatorBaseAddress = 0x15;
-		static constexpr int SnareDrumOperatorBaseAddress = 0x14;
+		static constexpr int BassDrumOperator1 = 0x10; // Channel 6, operator 1
+		static constexpr int HighHatOperator   = 0x11; // Channel 6, operator 2
+		static constexpr int TomTomOperator    = 0x12; // Channel 7, operator 1
+		static constexpr int BassDrumOperator2 = 0x13; // Channel 7, operator 2
+		static constexpr int SnareDrumOperator = 0x14; // Channel 8, operator 1
+		static constexpr int TopCymbalOperator = 0x15; // Channel 8, operator 2
 		
 		switch(m_operatorBaseAddress) {
-			case TopCymbalOperatorBaseAddress:
-				return handleTopCymbal();
-			case HighHatOperatorBaseAddress:
-				return handleHighHat(modulator);
-			case SnareDrumOperatorBaseAddress:
-				return handleSnareDrum(modulator);
+			case BassDrumOperator1:
+				if(m_opl->readReg(0xc0)&1)
+					return 0;
+				// fall-through
+			case TomTomOperator:
+			case BassDrumOperator2:
+				return getOutput(m_phase, m_ws)<<1;
+			case HighHatOperator:
+				return handleHighHat()<<1;
+			case SnareDrumOperator:
+				return handleSnareDrum()<<1;
+			case TopCymbalOperator:
+				return handleTopCymbal()<<1;
 		}
 	}
 	
-	m_envelopeGenerator.advance( m_egt, m_am );
-
+	m_phase = m_phaseGenerator.advance( m_vib );
 	uint8_t ws = m_ws;
 	// If it is in OPL2 mode, use first four waveforms only:
 	if( m_opl->isNew() ) {
@@ -158,15 +163,12 @@ int16_t Operator::nextSample( uint16_t modulator )
 		ws &= 0x03;
 	}
 
-	m_phase = m_phaseGenerator.advance( m_vib );
-
 	return getOutput( modulator + m_phase, ws );
 }
 
 void Operator::keyOn()
 {
 	m_envelopeGenerator.keyOn();
-	m_phaseGenerator.keyOn();
 }
 
 void Operator::keyOff()

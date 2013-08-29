@@ -101,7 +101,11 @@ public:
 		if( m_fb == 0) {
 			return 0;
 		}
+#if 0
 		return (m_feedback[0]<<m_fb)>>8;
+#else
+		return ((m_feedback[0]+m_feedback[1])<<m_fb)>>9;
+#endif
 	}
 	/**
 	 * @brief Push feedback into the queue

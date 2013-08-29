@@ -43,9 +43,9 @@ void EnvelopeGenerator::setAttennuation( uint16_t f_number, uint8_t block, uint8
 	// 1.5 dB att. for base 2 of oct. 7
 	// created by: round(8*log2( 10^(dbMax[msb]/10) ));
 	static constexpr int ddArray[16] = {
-		0, 24, 32, 37, 40, 43, 45, 47, 48, 50, 51, 52, 53, 54, 55, 56
+		16, 24, 32, 37, 40, 43, 45, 47, 49, 50, 51, 52, 53, 54, 55, 56
 	};
-	int tmp = ddArray[m_fnum >> 6] - 8*(7-m_block);
+	int tmp = ddArray[m_fnum >> 6] - 8*(7-m_block) - 1;
 	if( tmp <= 0 ) {
 		m_kslAdd = 0;
 		return;

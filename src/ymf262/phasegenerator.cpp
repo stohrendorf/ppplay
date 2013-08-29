@@ -71,9 +71,4 @@ uint16_t PhaseGenerator::advance( bool vib )
 	m_phase += (inc * multTable[m_mult])>>1;
 	return (m_phase>>9) & 0x3ff;
 }
-
-void PhaseGenerator::keyOn()
-{
-	m_phase = 0;
-}
 }
