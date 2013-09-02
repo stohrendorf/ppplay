@@ -43,13 +43,20 @@ constexpr int TremoloTableLength = 13 * 1024;
 inline int yac512(int smp)
 {
 	int numShifts = 0;
+	const bool negative = smp<0;
+	if(negative) {
+		smp = -smp-1;
+	}
 	// shift right unless only 10 bits are set, then unshift again
-	const int test = smp>=0 ? 0 : -1;
-	while((smp>>10) != test) {
+	while(smp>>10) {
 		++numShifts;
 		smp >>= 1;
 	}
-	return smp << numShifts;
+	smp <<= numShifts;
+	if(negative)
+		return -smp-1;
+	else
+		return smp;
 }
 
 }
@@ -59,10 +66,46 @@ Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m
 	m_nts( false ), m_dam( false ), m_dvb( false ), m_ryt( false ), m_bd( false ), m_sd( false ), m_tc( false ), m_hh( false ),
 	m_new( false ), m_connectionsel( 0 ), m_vibratoIndex( 0 ), m_tremoloIndex( 0 ), m_rand(1)
 {
-	initOperators();
-	initChannels2op();
-	initChannels4op();
-	initChannels();
+	for( int array = 0; array < 2; array++ ) {
+		for( int group = 0; group <= 0x10; group += 8 ) {
+			for( int offset = 0; offset < 6; offset++ ) {
+				int baseAddress = ( array << 8 ) | ( group + offset );
+				m_operators[array][group + offset].reset( new Operator( this, baseAddress ) );
+			}
+		}
+	}
+	
+	for( int array = 0; array < 2; array++ ) {
+		for( int channelNumber = 0; channelNumber < 3; channelNumber++ ) {
+			int baseAddress = ( array << 8 ) | channelNumber;
+			// Channels 1, 2, 3 -> Operator offsets 0x0,0x3; 0x1,0x4; 0x2,0x5
+			m_channels2op[array][channelNumber].reset( new Channel( this, baseAddress, m_operators[array][channelNumber].get(), m_operators[array][channelNumber + 0x3].get() ) );
+			// Channels 4, 5, 6 -> Operator offsets 0x8,0xB; 0x9,0xC; 0xA,0xD
+			m_channels2op[array][channelNumber + 3].reset( new Channel( this, baseAddress + 3, m_operators[array][channelNumber + 0x8].get(), m_operators[array][channelNumber + 0xB].get() ) );
+			// Channels 7, 8, 9 -> Operators 0x10,0x13; 0x11,0x14; 0x12,0x15
+			m_channels2op[array][channelNumber + 6].reset( new Channel( this, baseAddress + 6, m_operators[array][channelNumber + 0x10].get(), m_operators[array][channelNumber + 0x13].get() ) );
+		}
+	}
+	for( int array = 0; array < 2; array++ ) {
+		for( int channelNumber = 0; channelNumber < 3; channelNumber++ ) {
+			int baseAddress = ( array << 8 ) | channelNumber;
+			// Channels 1, 2, 3 -> Operators 0x0,0x3,0x8,0xB; 0x1,0x4,0x9,0xC; 0x2,0x5,0xA,0xD;
+			m_channels4op[array][channelNumber].reset( new Channel( this, baseAddress, m_operators[array][channelNumber].get(), m_operators[array][channelNumber + 0x3].get(), m_operators[array][channelNumber + 0x8].get(), m_operators[array][channelNumber + 0xB].get() ) );
+		}
+	}
+
+	// Channel is an abstract class that can be a 2-op, 4-op, rhythm or disabled channel,
+	// depending on the OPL3 configuration at the time.
+	// channels[] inits as a 2-op serial channel array:
+	for( int array = 0; array < 2; array++ ) {
+		for( int i = 0; i < 9; i++ ) {
+			m_channels[array][i] = m_channels2op[array][i];
+		}
+	}
+
+	// Unique instance to fill future gaps in the Channel array,
+	// when there will be switches between 2op and 4op mode.
+	m_disabledChannel.reset( new Channel( this, 0 ) );
 }
 
 void Opl3::read(std::array<int16_t,4>* dest)
@@ -70,7 +113,7 @@ void Opl3::read(std::array<int16_t,4>* dest)
 	std::array<int32_t, 4> outputBuffer;
 	std::fill_n(outputBuffer.begin(), 4, 0);
 
-	// If _new = 0, use OPL2 mode with 9 channels. If _new = 1, use OPL3 18 channels;
+	// If !m_new, use OPL2 mode with 9 channels, else use OPL3 18 channels.
 	for( int array = 0; array < ( m_new + 1 ); array++ ) {
 		for( int channelNumber = 0; channelNumber < 9; channelNumber++ ) {
 			// Reads output from each OPL3 channel, and accumulates it in the output buffer:
@@ -80,36 +123,16 @@ void Opl3::read(std::array<int16_t,4>* dest)
 				outputBuffer[outputChannelNumber] += chanOutput[outputChannelNumber];
 			}
 		}
-		break;
 	}
 
-	// Normalizes the output buffer after all channels have been added,
-	// with a maximum of 18 channels, and multiplies it to get the 16 bit signed output.
-	// Additionally, the output is simulated to be put through the YAC512 DAC, which
-	// has a 10 bit mantissa and a 3 bit exponent. Also, a low-pass and high-pass filtering
-	// is added with cut-off-frequencies of 50Hz and 18kHz; these values have been found
-	// using Audacity with the one-pole-filter effects and the audio from a youtube video.
-	
-	static constexpr float samplingTimeConstant = SampleRate / (2*M_PI);
-	// 50Hz cutoff
-	static constexpr float highPassAlpha = samplingTimeConstant / (50+samplingTimeConstant);
-	static_assert(0<=highPassAlpha && highPassAlpha<=1, "Error: High Pass constant invalid");
-	// 18kHz cutoff
-	static constexpr float lowPassAlpha = samplingTimeConstant / (18e3+samplingTimeConstant);
-	static_assert(0<=lowPassAlpha && lowPassAlpha<=1, "Error: Low Pass constant invalid");
-	
 	if(dest) {
 		for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
-			(*dest)[outputChannelNumber] = ppp::clip(yac512(outputBuffer[outputChannelNumber]), -32768, 32767);
+			(*dest)[outputChannelNumber] = ppp::clip(yac512(outputBuffer[outputChannelNumber])/2, -32768, 32767);
 		}
 	}
 
-	// Advances the OPL3-wide vibrato index, which is used by
-	// PhaseGenerator.getPhase() in each Operator.
 	m_vibratoIndex++;
 	m_vibratoIndex &= 0x1fff;
-	// Advances the OPL3-wide tremolo index, which is used by
-	// EnvelopeGenerator.getEnvelope() in each Operator.
 	m_tremoloIndex++;
 	m_tremoloIndex %= TremoloTableLength;
 
@@ -126,9 +149,11 @@ void Opl3::write( int array, int address, uint8_t data )
 	// from 0x00 to 0xF5.
 	// This emulator uses one array, with the two original register arrays
 	// starting at 0x00 and at 0x100.
-	int registerAddress = ( array << 8 ) | address;
+	const int registerAddress = ( array << 8 ) | address;
 	// If the address is out of the OPL3 memory map, returns.
-	if( registerAddress < 0 || registerAddress >= 0x200 ) return;
+	if( registerAddress < 0 || registerAddress >= 0x200 ) {
+		return;
+	}
 
 	m_registers[registerAddress] = data;
 	switch( address & 0xE0 ) {
@@ -143,16 +168,21 @@ void Opl3::write( int array, int address, uint8_t data )
 			// it occupies inside the byte.
 			// Numbers without accompanying names are unused bits.
 		case 0x00:
-			// ARC_CONTROL
-			// Unique registers for the entire OPL3:
 			if( array == 1 ) {
-				if( address == 0x04 )
-					update_2_CONNECTIONSEL6();
-				else if( address == 0x05 )
-					update_7_NEW1();
+				if( address == 0x04 ) {
+					m_connectionsel = ( m_registers[_2_CONNECTIONSEL6_Offset] & 0x3F );
+				}
+				else if( address == 0x05 ) {
+					m_new = m_registers[_7_NEW1_Offset] & 1;
+					if( m_new ) {
+						setEnabledChannels();
+					}
+				}
+				set4opConnections();
 			}
-			else if( address == 0x08 )
-				update_1_NTS1_6();
+			else if( address == 0x08 ) {
+				m_nts = m_registers[_1_NTS1_6_Offset] & 0x40;
+			}
 			break;
 
 		case 0xA0:
@@ -215,64 +245,6 @@ void Opl3::write( int array, int address, uint8_t data )
 			}
 	}
 }
-void Opl3::initOperators()
-{
-	for( int array = 0; array < 2; array++ ) {
-		for( int group = 0; group <= 0x10; group += 8 ) {
-			for( int offset = 0; offset < 6; offset++ ) {
-				int baseAddress = ( array << 8 ) | ( group + offset );
-				m_operators[array][group + offset].reset( new Operator( this, baseAddress ) );
-			}
-		}
-	}
-}
-void Opl3::initChannels2op()
-{
-	for( int array = 0; array < 2; array++ ) {
-		for( int channelNumber = 0; channelNumber < 3; channelNumber++ ) {
-			int baseAddress = ( array << 8 ) | channelNumber;
-			// Channels 1, 2, 3 -> Operator offsets 0x0,0x3; 0x1,0x4; 0x2,0x5
-			m_channels2op[array][channelNumber].reset( new Channel( this, baseAddress, m_operators[array][channelNumber].get(), m_operators[array][channelNumber + 0x3].get() ) );
-			// Channels 4, 5, 6 -> Operator offsets 0x8,0xB; 0x9,0xC; 0xA,0xD
-			m_channels2op[array][channelNumber + 3].reset( new Channel( this, baseAddress + 3, m_operators[array][channelNumber + 0x8].get(), m_operators[array][channelNumber + 0xB].get() ) );
-			// Channels 7, 8, 9 -> Operators 0x10,0x13; 0x11,0x14; 0x12,0x15
-			m_channels2op[array][channelNumber + 6].reset( new Channel( this, baseAddress + 6, m_operators[array][channelNumber + 0x10].get(), m_operators[array][channelNumber + 0x13].get() ) );
-		}
-	}
-}
-void Opl3::initChannels4op()
-{
-	for( int array = 0; array < 2; array++ ) {
-		for( int channelNumber = 0; channelNumber < 3; channelNumber++ ) {
-			int baseAddress = ( array << 8 ) | channelNumber;
-			// Channels 1, 2, 3 -> Operators 0x0,0x3,0x8,0xB; 0x1,0x4,0x9,0xC; 0x2,0x5,0xA,0xD;
-			m_channels4op[array][channelNumber].reset( new Channel( this, baseAddress, m_operators[array][channelNumber].get(), m_operators[array][channelNumber + 0x3].get(), m_operators[array][channelNumber + 0x8].get(), m_operators[array][channelNumber + 0xB].get() ) );
-		}
-	}
-}
-void Opl3::initChannels()
-{
-	// Channel is an abstract class that can be a 2-op, 4-op, rhythm or disabled channel,
-	// depending on the OPL3 configuration at the time.
-	// channels[] inits as a 2-op serial channel array:
-	for( int array = 0; array < 2; array++ ) {
-		for( int i = 0; i < 9; i++ ) {
-			m_channels[array][i] = m_channels2op[array][i];
-		}
-	}
-
-	// Unique instance to fill future gaps in the Channel array,
-	// when there will be switches between 2op and 4op mode.
-	m_disabledChannel.reset( new Channel( this, 0 ) );
-}
-void Opl3::update_1_NTS1_6()
-{
-	// Note Selection. This register is used in Channel.updateOperators() implementations,
-	// to calculate the channel´s Key Scale Number.
-	// The value of the actual envelope rate follows the value of
-	// OPL3.nts,Operator.keyScaleNumber and Operator.ksr
-	m_nts = m_registers[_1_NTS1_6_Offset] & 0x40;
-}
 void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 {
 	const uint8_t dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 = m_registers[DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1_Offset];
@@ -282,7 +254,9 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 	bool new_ryt = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x20;
 	if( new_ryt != m_ryt ) {
 		m_ryt = new_ryt;
-		setRhythmMode();
+		for( int i = 6; i < 9; i++ ) {
+			m_channels[0][i]->updateChannel();
+		}
 	}
 
 	bool new_bd = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x10;
@@ -322,35 +296,22 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 	}
 
 }
-void Opl3::update_7_NEW1()
-{
-	m_new = m_registers[_7_NEW1_Offset] & 1;
-	if( m_new )
-		setEnabledChannels();
-	set4opConnections();
-}
 void Opl3::setEnabledChannels()
 {
-	for( int array = 0; array < 2; array++ )
+	for( int array = 0; array < 2; array++ ) {
 		for( int i = 0; i < 9; i++ ) {
 			int baseAddress = m_channels[array][i]->baseAddress();
 			m_registers[baseAddress + Channel::CH4_FB3_CNT1_Offset] |= 0xF0;
 			m_channels[array][i]->update_CH4_FB3_CNT1();
 		}
-}
-void Opl3::update_2_CONNECTIONSEL6()
-{
-	// This method is called only if _new is set.
-	int _2_connectionsel6 = m_registers[_2_CONNECTIONSEL6_Offset];
-	m_connectionsel = ( _2_connectionsel6 & 0x3F );
-	set4opConnections();
+	}
 }
 void Opl3::set4opConnections()
 {
 
 	// bits 0, 1, 2 sets respectively 2-op channels (1,4), (2,5), (3,6) to 4-op operation.
 	// bits 3, 4, 5 sets respectively 2-op channels (10,13), (11,14), (12,15) to 4-op operation.
-	for( int array = 0; array < 2; array++ )
+	for( int array = 0; array < 2; array++ ) {
 		for( int i = 0; i < 3; i++ ) {
 			if( m_new ) {
 				int shift = array * 3 + i;
@@ -367,11 +328,6 @@ void Opl3::set4opConnections()
 			m_channels[array][i]->updateChannel();
 			m_channels[array][i + 3]->updateChannel();
 		}
-}
-void Opl3::setRhythmMode()
-{
-	for( int i = 6; i <= 8; i++ ) {
-		m_channels[0][i]->updateChannel();
 	}
 }
 

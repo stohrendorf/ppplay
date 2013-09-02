@@ -33,7 +33,7 @@ void sdlAudioCallback( void* userdata, uint8_t* stream, int len_bytes )
 				uint8_t reg, val;
 				uint16_t delay;
 				++*progress;
-				imfFile.read((char*)&reg, 1).read((char*)&val, 1).read((char*)&delay, 2);
+				imfFile.read(reinterpret_cast<char*>(&reg), 1).read(reinterpret_cast<char*>(&val), 1).read(reinterpret_cast<char*>(&delay), 2);
 				if(!imfFile || imfFile.tellg()>=songLength+2) {
 					stopped = true;
 					return;
@@ -55,7 +55,7 @@ void sdlAudioCallback( void* userdata, uint8_t* stream, int len_bytes )
 		interp = 0;
 	}
 	if(rawOut.is_open())
-		rawOut.write((char*)stream, len_bytes);
+		rawOut.write(reinterpret_cast<char*>(stream), len_bytes);
 }
 
 int main(int argc, char** argv)
@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 		std::cout << "Cannot read " << filename << "\n";
 		return 1;
 	}
-	imfFile.read((char*)&songLength,2);
+	imfFile.read(reinterpret_cast<char*>(&songLength),2);
 	if(songLength==0) {
 		imfFile.seekg(0, std::ios::end);
 		songLength = imfFile.tellg();
@@ -137,7 +137,7 @@ int main(int argc, char** argv)
 					uint8_t reg, val;
 					uint16_t delay;
 					++*progress;
-					imfFile.read((char*)&reg, 1).read((char*)&val, 1).read((char*)&delay, 2);
+					imfFile.read(reinterpret_cast<char*>(&reg), 1).read(reinterpret_cast<char*>(&val), 1).read(reinterpret_cast<char*>(&delay), 2);
 					if(!imfFile || imfFile.tellg()>=songLength+2) {
 						stopped = true;
 						break;
@@ -149,14 +149,15 @@ int main(int argc, char** argv)
 			
 			std::array<int16_t, 4> sample;
 			chip.read(&sample);
-			int16_t out[2];
-			out[0] = ppp::clip(sample[0] + sample[1], -32768, 32767);
-			out[1] = ppp::clip(sample[2] + sample[3], -32768, 32767);
+			int16_t out[2] = {
+				int16_t(ppp::clip(sample[0] + sample[1], -32768, 32767)),
+				int16_t(ppp::clip(sample[2] + sample[3], -32768, 32767))
+			};
 			if( interp.next() == 2 ) {
 				chip.read(nullptr); // skip a sample
 			}
 			interp = 0;
-			rawOut.write((char*)out, 2*sizeof(int16_t));
+			rawOut.write(reinterpret_cast<char*>(out), 2*sizeof(int16_t));
 		}
 	}
 

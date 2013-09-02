@@ -128,18 +128,10 @@ public:
 
 	AbstractArchive& serialize( AbstractArchive* archive );
 private:
-	void initOperators() ;
-	void initChannels2op() ;
-	void initChannels4op() ;
-	void initChannels() ;
-	void update_1_NTS1_6() ;
-	void update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1() ;
-	void update_7_NEW1() ;
-	void setEnabledChannels() ;
-	void update_2_CONNECTIONSEL6() ;
-	void set4opConnections() ;
-	void setRhythmMode() ;
-	void write( int array, int address, uint8_t data ) ;
+	void update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1();
+	void setEnabledChannels();
+	void set4opConnections();
+	void write( int array, int address, uint8_t data );
 };
 }
 
