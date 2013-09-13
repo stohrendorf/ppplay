@@ -126,7 +126,8 @@ void EnvelopeGenerator::attack()
 	// <=> x < 1
 	// But the attack only occurs if m_env>0, so an overflow cannot occur
 	// here.
-	m_env -= (m_env>>3)*overflow + 1;
+	// +1 for one's complement.
+	m_env -= ((m_env*overflow)>>3) + 1;
 }
 
 uint16_t EnvelopeGenerator::advance( bool egt, bool am )

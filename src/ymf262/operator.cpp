@@ -279,12 +279,13 @@ Waveform 8      +  ---  +  IJKL
  * @param[in] ws Waveform selector (3 bits)
  * @param[in] phi Phase (10 bits used)
  * @return Logarithmic value, 0..2137, bit 15 is the sign bit
+ * @note @a ws and @a phi will be bit-masked.
  */
 uint16_t sinLog( uint8_t ws, uint16_t phi )
 {
-	uint8_t index = phi;
+	uint8_t index = phi & 0xff;
 
-	switch( ws | ( phi & 0x0300 ) ) {
+	switch( (ws&7) | ( phi & 0x0300 ) ) {
 			// rising quarter wave  Shape A
 		case 0x0000:
 		case 0x0001:
@@ -349,13 +350,10 @@ uint16_t sinLog( uint8_t ws, uint16_t phi )
 	return 0x0C00;
 }
 
-/*
-Below is code to convert by signed logarithmic wave form lookup to a linear output as a signed short integer.
-The input parameter is the output of the waveform lookup plus any attenuation. Every 256 added to the input, represents a halving of the linear output (-3dB).
-*/
 /**
  * @brief Calculate exponential value from logarithmic value
- * @param[in] expVal Exponent calculated by sinLogWs
+ * @param[in] expVal Exponent calculated by sinLog, including the envelope value
+ * @warning @a expVal will not be checked for correct values.
  */
 int16_t sinExp( uint16_t expVal )
 {
@@ -369,6 +367,7 @@ int16_t sinExp( uint16_t expVal )
 	result >>= ( expVal >> 8 ); // exp
 
 	if( signBit ) {
+		// -1 for one's complement
 		return -result-1;
 	}
 	else {
@@ -377,6 +376,14 @@ int16_t sinExp( uint16_t expVal )
 }
 
 // 16 env units are ~3dB and halve the output
+/**
+ * @brief OPL Sine Wave calculation
+ * @param[in] ws Waveform selector (0..7), see reference manual
+ * @param[in] phase Wave phase (0..1023)
+ * @param[in] env Envelope value (0..511)
+ * @note @a ws and @a phase will be bit-masked in sinLog().
+ * @warning @a env will not be checked for correct values.
+ */
 int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
 {
 	return sinExp( sinLog( ws, phase ) + (env<<3) );
