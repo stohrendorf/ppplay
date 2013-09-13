@@ -23,7 +23,6 @@
  */
 
 #include "envelopegenerator.h"
-#include "operator.h"
 #include "opl3.h"
 
 namespace opl
@@ -41,20 +40,20 @@ void EnvelopeGenerator::setAttennuation( uint16_t f_number, uint8_t block, uint8
 	}
 
 	// 1.5 dB att. for base 2 of oct. 7
-	// created by: round(8*log2( 10^(dbMax[msb]/10) ));
-	static constexpr int ddArray[16] = {
-		16, 24, 32, 37, 40, 43, 45, 47, 49, 50, 51, 52, 53, 54, 55, 56
+	// created by: round(8*log2( 10^(dbMax[msb]/10) ))+8;
+	// verified from real chip ROM
+	static constexpr int kslRom[16] = {
+		0, 32, 40, 45, 48, 51, 53, 55, 56, 58, 59, 60, 61, 62, 63, 64
 	};
-	int tmp = ddArray[m_fnum >> 6] - 8*(7-m_block) - 1;
+	// 7 negated is, by one's complement, effectively -8. To compensate this,
+	// the ROM's values have an offset of 8.
+	int tmp = kslRom[m_fnum >> 6] + 8*(m_block - 8);
 	if( tmp <= 0 ) {
 		m_kslAdd = 0;
 		return;
 	}
 	m_kslAdd = tmp;
 	switch( m_ksl ) {
-		case 0:
-			// done
-			break;
 		case 1:
 			// 3 db
 			m_kslAdd <<= 1;
