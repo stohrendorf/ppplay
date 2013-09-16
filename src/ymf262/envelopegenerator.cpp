@@ -132,11 +132,13 @@ void EnvelopeGenerator::attack()
 
 uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 {
-	const auto oldEnv = m_env;
 	switch( m_stage ) {
 		case Stage::Attack:
 			if( m_env==0 ) {
 				m_stage = Stage::Decay;
+			}
+			else if(m_ar==15) {
+				m_env = 0;
 			}
 			else {
 				attack();
@@ -162,7 +164,7 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
 			break;
 	}
 	
-	int total = oldEnv + (m_tl<<2) + m_kslAdd;
+	int total = m_env + (m_tl<<2) + m_kslAdd;
 
 	if( am ) {
 		int amVal = m_opl->tremoloIndex() >> 8;

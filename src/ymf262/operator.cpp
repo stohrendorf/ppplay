@@ -169,6 +169,7 @@ int16_t Operator::nextSample( uint16_t modulator )
 void Operator::keyOn()
 {
 	m_envelopeGenerator.keyOn();
+	m_phaseGenerator.keyOn();
 }
 
 void Operator::keyOff()

@@ -54,6 +54,7 @@ private:
 	/**
 	 * @brief Attack rate
 	 * @invariant m_ar<16
+	 * @note m_ar==0 disables the attack, m_ar==15 sets m_env=0.
 	 */
 	uint8_t m_ar;
 	/**
@@ -124,6 +125,7 @@ private:
 	 * @brief Calculates the effectively used rates
 	 * @return Effectively used rate for envelope calculation
 	 * @invariant rate<64
+	 * @note This method is nearly frozen.
 	 */
 	uint8_t calculateRate(uint8_t delta) const;
 	/**
@@ -132,17 +134,20 @@ private:
 	 * @return Counter overflow (0..7)
 	 * @pre rate<64
 	 * @post Result<8
+	 * @note This method is nearly frozen.
 	 */
 	inline uint8_t advanceCounter(uint8_t rate);
 	/**
 	 * @brief Handles decay/release phases
 	 * @param[in] rate Decay/release rate register value
 	 * @pre rate<64
+	 * @note This method is nearly frozen.
 	 */
 	void attenuate(uint8_t rate);
 	/**
 	 * @brief Handles attack phase
 	 * @pre m_env>0
+	 * @note This method is nearly frozen.
 	 */
 	void attack();
 	
@@ -185,6 +190,8 @@ public:
 	 * @brief Sets m_fnum, m_block, m_ksl and calculates m_kslAdd
 	 * @note No pre-conditions for the parameters, as they will be
 	 *       bit-masked to match the invariants.
+	 * @note This method is frozen; it has been verified from real
+	 *       chip output.
 	 */
 	void setAttennuation( uint16_t f_number, uint8_t block, uint8_t ksl );
 	
