@@ -127,23 +127,24 @@ int16_t Operator::handleSnareDrum()
 int16_t Operator::nextSample( uint16_t modulator )
 {
 	m_envelopeGenerator.advance( m_egt, m_am );
+	m_phase = m_phaseGenerator.advance( m_vib );
 
 	if( m_opl->ryt() ) {
-		static constexpr int BassDrumOperator1 = 0x10; // Channel 6, operator 1
-		static constexpr int HighHatOperator   = 0x11; // Channel 6, operator 2
-		static constexpr int TomTomOperator    = 0x12; // Channel 7, operator 1
-		static constexpr int BassDrumOperator2 = 0x13; // Channel 7, operator 2
-		static constexpr int SnareDrumOperator = 0x14; // Channel 8, operator 1
-		static constexpr int TopCymbalOperator = 0x15; // Channel 8, operator 2
+		static constexpr int BassDrumOperator1 = 0x10; // Channel 7, operator 13
+		static constexpr int HighHatOperator   = 0x11; // Channel 8, operator 14
+		static constexpr int TomTomOperator    = 0x12; // Channel 9, operator 15
+		static constexpr int BassDrumOperator2 = 0x13; // Channel 7, operator 16
+		static constexpr int SnareDrumOperator = 0x14; // Channel 8, operator 17
+		static constexpr int TopCymbalOperator = 0x15; // Channel 9, operator 18
 		
 		switch(m_operatorBaseAddress) {
 			case BassDrumOperator1:
-				if(m_opl->readReg(0xc0)&1)
+				if(m_opl->readReg(0xc6)&1) // Channel 7 CNT
 					return 0;
 				// fall-through
 			case TomTomOperator:
 			case BassDrumOperator2:
-				return getOutput(m_phase, m_ws)<<1;
+				return getOutput(m_phase, m_ws);
 			case HighHatOperator:
 				return handleHighHat()<<1;
 			case SnareDrumOperator:
@@ -153,7 +154,6 @@ int16_t Operator::nextSample( uint16_t modulator )
 		}
 	}
 	
-	m_phase = m_phaseGenerator.advance( m_vib );
 	uint8_t ws = m_ws;
 	// If it is in OPL2 mode, use first four waveforms only:
 	if( m_opl->isNew() ) {
