@@ -64,7 +64,7 @@ inline int yac512(int smp)
 
 Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m_channels(), m_disabledChannel(),
 	m_nts( false ), m_dam( false ), m_dvb( false ), m_ryt( false ), m_bd( false ), m_sd( false ), m_tc( false ), m_hh( false ),
-	m_new( false ), m_connectionsel( 0 ), m_vibratoIndex( 0 ), m_tremoloIndex( 0 ), m_rand(1)
+	m_new( false ), m_vibratoIndex( 0 ), m_tremoloIndex( 0 ), m_rand(1)
 {
 	for( int array = 0; array < 2; array++ ) {
 		for( int group = 0; group <= 0x10; group += 8 ) {
@@ -169,10 +169,7 @@ void Opl3::write( int array, int address, uint8_t data )
 			// Numbers without accompanying names are unused bits.
 		case 0x00:
 			if( array == 1 ) {
-				if( address == 0x04 ) {
-					m_connectionsel = ( m_registers[_2_CONNECTIONSEL6_Offset] & 0x3F );
-				}
-				else if( address == 0x05 ) {
+				if( address == 0x05 ) {
 					m_new = m_registers[_7_NEW1_Offset] & 1;
 					if( m_new ) {
 						setEnabledChannels();
@@ -242,6 +239,7 @@ void Opl3::write( int array, int address, uint8_t data )
 					// 0xE0...0xF5 keeps ws for each operator:
 					// ARC_WAVE_SEL
 					m_operators[array][operatorOffset]->update_5_WS3();
+					break;
 			}
 	}
 }
@@ -263,7 +261,8 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 	if( new_bd != m_bd ) {
 		m_bd = new_bd;
 		if( m_bd ) {
-			m_channels2op[0][6]->keyOn();
+			bassDrumOp1()->keyOn();
+			bassDrumOp2()->keyOn();
 		}
 	}
 
@@ -311,11 +310,12 @@ void Opl3::set4opConnections()
 
 	// bits 0, 1, 2 sets respectively 2-op channels (1,4), (2,5), (3,6) to 4-op operation.
 	// bits 3, 4, 5 sets respectively 2-op channels (10,13), (11,14), (12,15) to 4-op operation.
+	const uint8_t connSel = m_registers[_2_CONNECTIONSEL6_Offset] & 0x3F;
 	for( int array = 0; array < 2; array++ ) {
 		for( int i = 0; i < 3; i++ ) {
 			if( m_new ) {
 				int shift = array * 3 + i;
-				bool connectionBit = ( m_connectionsel >> shift ) & 0x01;
+				bool connectionBit = ( connSel >> shift ) & 0x01;
 				if( connectionBit ) {
 					m_channels[array][i] = m_channels4op[array][i];
 					m_channels[array][i + 3] = m_disabledChannel;
@@ -339,9 +339,9 @@ AbstractArchive& Opl3::serialize( AbstractArchive* archive )
 	}
 	archive->array(m_registers, sizeof(m_registers)/sizeof(m_registers[0]))
 	% m_nts % m_dam % m_dvb % m_ryt % m_bd % m_sd % m_tc % m_hh
-	% m_new % m_connectionsel % m_vibratoIndex % m_tremoloIndex % m_rand;
+	% m_new % m_vibratoIndex % m_tremoloIndex % m_rand;
 	for(int i=0; i<2; i++) {
-		for(int j=0; j<36; j++) {
+		for(int j=0; j<0x16; j++) {
 			if(m_operators[i][j])
 				*archive % *m_operators[i][j];
 		}

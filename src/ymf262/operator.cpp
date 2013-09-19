@@ -88,7 +88,7 @@ void Operator::update_5_WS3()
 	m_ws = m_opl->readReg( m_operatorBaseAddress + Operator::_5_WS3_Offset ) & 0x07;
 }
 
-int16_t Operator::handleTopCymbal()
+int16_t Operator::handleTopCymbal(uint8_t ws)
 {
 	// The Top Cymbal operator uses his own phase together with the High Hat phase.
 	const uint16_t highHatPhase = m_opl->highHatOperator()->m_phase;
@@ -96,38 +96,33 @@ int16_t Operator::handleTopCymbal()
 	
 	m_phase = (1 + phaseBit) << 8;
 
-	uint8_t waveform = m_ws;
-	if( m_opl->isNew() ) {
-		waveform &= 0x07;
-	}
-	else {
-		waveform &= 0x03;
-	}
-	
-	return getOutput(m_phase, waveform);
+	return getOutput(m_phase, ws);
 }
 
-int16_t Operator::handleHighHat()
+int16_t Operator::handleHighHat(uint8_t ws)
 {
 	const uint16_t cymbalPhase = m_opl->topCymbalOperator()->m_phase;
 	const uint16_t phaseBit = ( ( ( m_phase & 0x88 ) ^( ( m_phase << 5 ) & 0x80 ) ) | ( ( cymbalPhase ^( cymbalPhase << 2 ) ) & 0x20 ) ) ? 0x02 : 0x00;
 	const uint16_t noiseBit = m_opl->randBit()<<1;
 	m_phase = (phaseBit<<8) | (0x34 << ( phaseBit ^ noiseBit ));
-	return getOutput( m_phase, m_ws );
+	return getOutput( m_phase, ws );
 }
 
-int16_t Operator::handleSnareDrum()
+int16_t Operator::handleSnareDrum(uint8_t ws)
 {
 	const uint16_t noiseBit = m_opl->randBit()<<8;
 	const uint16_t phase = m_opl->snareDrumOperator()->m_phase;
 	m_phase = ( 0x100 + (phase & 0x100) ) ^ noiseBit;
-	return getOutput( m_phase, m_ws );
+	return getOutput( m_phase, ws );
 }
 
 int16_t Operator::nextSample( uint16_t modulator )
 {
 	m_envelopeGenerator.advance( m_egt, m_am );
 	m_phase = m_phaseGenerator.advance( m_vib );
+
+	// If it is in OPL2 mode, use first four waveforms only:
+	const uint8_t ws = m_opl->isNew() ? m_ws : (m_ws&0x03);
 
 	if( m_opl->ryt() ) {
 		static constexpr int BassDrumOperator1 = 0x10; // Channel 7, operator 13
@@ -144,25 +139,16 @@ int16_t Operator::nextSample( uint16_t modulator )
 				// fall-through
 			case TomTomOperator:
 			case BassDrumOperator2:
-				return getOutput(m_phase, m_ws);
+				return getOutput(m_phase, ws)<<1;
 			case HighHatOperator:
-				return handleHighHat()<<1;
+				return handleHighHat(ws)<<1;
 			case SnareDrumOperator:
-				return handleSnareDrum()<<1;
+				return handleSnareDrum(ws)<<1;
 			case TopCymbalOperator:
-				return handleTopCymbal()<<1;
+				return handleTopCymbal(ws)<<1;
 		}
 	}
 	
-	uint8_t ws = m_ws;
-	// If it is in OPL2 mode, use first four waveforms only:
-	if( m_opl->isNew() ) {
-		ws &= 0x07;
-	}
-	else {
-		ws &= 0x03;
-	}
-
 	return getOutput( modulator + m_phase, ws );
 }
 

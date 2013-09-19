@@ -46,10 +46,31 @@ private:
 	uint8_t m_registers[0x200];
 
 	// The YMF262 has 36 operators:
-	Operator::Ptr m_operators[2][36];
-	// The YMF262 has 18 2-op channels.
-	// Each 2-op channel can be at a serial or parallel operator configuration:
+	/**
+	 * @brief The operators.
+	 * 
+	 * @details
+	 * Operators 1 to 18 are in m_operators[0], and
+	 * operators 19 to 36 are in m_operators[1]. Within each
+	 * sub-array, the 18 operators are subdivided into groups
+	 * of 6 operators, starting at offsets 0, 8, and 16.
+	 */
+	Operator::Ptr m_operators[2][0x16];
+	/**
+	 * @brief The 2-operator channels
+	 * 
+	 * @details
+	 * Channels 1 to 9 are in m_channels2op[0], and
+	 * channels 10 to 18 are in m_channels2op[1].
+	 */
 	Channel::Ptr m_channels2op[2][9];
+	/**
+	 * @brief The 4-operator channels
+	 * 
+	 * @details
+	 * Channels 1 to 3 are in m_channels4op[0], and
+	 * channels 4 to 6 are in m_channels4op[1].
+	 */
 	Channel::Ptr m_channels4op[2][3];
 	Channel::Ptr m_channels[2][9];
 	Channel::Ptr m_disabledChannel;
@@ -63,8 +84,6 @@ private:
 	bool m_bd, m_sd, m_tc, m_hh;
 	//! @brief OPL2/OPL3 mode selection
 	bool m_new;
-	//! @brief 2-op/4-op channel selection
-	uint8_t m_connectionsel;
 	//! @brief 13 bits
 	uint16_t m_vibratoIndex;
 	//! @brief 14 bits, wraps around after 13*1024
