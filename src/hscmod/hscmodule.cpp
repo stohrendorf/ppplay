@@ -101,7 +101,6 @@ bool Module::load( Stream* stream )
 		return false;
 	}
 	noConstMetaInfo().filename = stream->name();
-	noConstMetaInfo().title = stream->name();
 	noConstMetaInfo().trackerInfo = "HSC Tracker";
 	setTempo(125);
 	setSpeed(2);
@@ -130,8 +129,7 @@ bool Module::load( Stream* stream )
 }
 
 Module::Module( int maxRpt, ppp::Sample::Interpolation inter ) : ppp::AbstractModule( maxRpt, inter ), m_opl(),
-	m_instr {{0}}, m_patterns(), m_channels(), m_speedCountdown( 1 ), m_fnum(),
-	m_bd( 0 ), m_mode6( false ), m_patBreak( 0 )
+    m_instr {{0}}, m_patterns(), m_channels(), m_speedCountdown( 1 ), m_fnum()
 {
 }
 
@@ -162,9 +160,6 @@ AbstractArchive& Module::serialize( AbstractArchive* data )
 	}
 	data->array(m_fnum, 9)
 	% m_speedCountdown
-	% m_bd
-	% m_mode6
-	% m_patBreak
 	% m_opl;
 	return *data;
 }

@@ -47,9 +47,6 @@ private:
 	Channel m_channels[9];
 	uint8_t m_speedCountdown;
 	uint8_t m_fnum[9];
-	uint8_t m_bd;
-	bool m_mode6;
-	uint8_t m_patBreak;
 public:
 	static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt, ppp::Sample::Interpolation inter );
 protected:
