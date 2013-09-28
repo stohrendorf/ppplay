@@ -40,24 +40,24 @@ std::string PPPLAY_CORE_EXPORT stringncpy( const char src[], size_t maxlen );
 
 inline std::string stringFmt( boost::format& fmt )
 {
-	return fmt.str();
+    return fmt.str();
 }
 
 inline std::string stringFmt( const std::string& fmt )
 {
-	return fmt;
+    return fmt;
 }
 
 template<class T, class ...Args>
 inline std::string stringFmt( boost::format& fmt, const T& val, const Args& ...args )
 {
-	return stringFmt( fmt % val, args... );
+    return stringFmt( fmt % val, args... );
 }
 
 template<class T, class ...Args>
 inline std::string stringFmt( const std::string& fmt, const T& val, const Args& ...args )
 {
-	return stringFmt( boost::format( fmt ) % val, args... );
+    return stringFmt( boost::format( fmt ) % val, args... );
 }
 
 /**

@@ -3,7 +3,7 @@
  * @author Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
  * @version @CPACK_PACKAGE_VERSION@
  * @date 2011
- * 
+ *
  * @section prereqs_sec Prerequisites
  * OK, you have found the docs... Well done, less work for me *g* @n
  * To be able to compile PeePeePlayer, make sure you have the SDL sources installed.

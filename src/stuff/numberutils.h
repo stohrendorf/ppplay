@@ -41,9 +41,9 @@ namespace ppp
  * @note Time-critical
  */
 template<typename T>
-inline constexpr const T& clip( const T& v, const T& a, const T& b ) 
+inline constexpr const T& clip( const T& v, const T& a, const T& b )
 {
-	return std::min( b, std::max( v, a ) );
+    return std::min( b, std::max( v, a ) );
 }
 
 /**
@@ -58,7 +58,7 @@ inline constexpr const T& clip( const T& v, const T& a, const T& b )
 template<typename T>
 inline constexpr bool between( const T v, const T a, const T b )
 {
-	return ( v >= a ) && ( v <= b );
+    return ( v >= a ) && ( v <= b );
 }
 
 /**
@@ -79,7 +79,7 @@ extern PPPLAY_CORE_EXPORT void swapEndian( char data[], size_t size );
 template<class T>
 inline void swapEndian( T* data )
 {
-	swapEndian( reinterpret_cast<char*>( data ), sizeof( T ) );
+    swapEndian( reinterpret_cast<char*>( data ), sizeof( T ) );
 }
 
 /**

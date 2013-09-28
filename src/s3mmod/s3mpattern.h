@@ -43,23 +43,23 @@ class S3mCell;
  */
 class S3mPattern : public Field<S3mCell>
 {
-	DISABLE_COPY( S3mPattern )
+    DISABLE_COPY( S3mPattern )
 public:
-	//! @brief Constructor
-	explicit S3mPattern();
-	/**
-	 * @brief Load the cell from a stream
-	 * @param[in] str The stream to load from
-	 * @param[in] pos Position within @a str
-	 * @return @c true on success
-	 */
-	bool load( Stream* str, size_t pos );
+    //! @brief Constructor
+    explicit S3mPattern();
+    /**
+     * @brief Load the cell from a stream
+     * @param[in] str The stream to load from
+     * @param[in] pos Position within @a str
+     * @return @c true on success
+     */
+    bool load( Stream* str, size_t pos );
 protected:
-	/**
-	 * @brief Get the logger
-	 * @return Child logger with attached ".s3m"
-	 */
-	static light4cxx::Logger* logger();
+    /**
+     * @brief Get the logger
+     * @return Child logger with attached ".s3m"
+     */
+    static light4cxx::Logger* logger();
 };
 
 } // namespace s3m

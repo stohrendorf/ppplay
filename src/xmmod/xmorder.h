@@ -29,12 +29,12 @@ namespace xm
 
 class XmOrder : public AbstractOrder
 {
-	DISABLE_COPY( XmOrder )
-	XmOrder() = delete;
+    DISABLE_COPY( XmOrder )
+    XmOrder() = delete;
 public:
-	inline XmOrder( uint8_t idx ) : AbstractOrder( idx ) {
-	}
-	virtual bool isUnplayed() const;
+    inline XmOrder( uint8_t idx ) : AbstractOrder( idx ) {
+    }
+    virtual bool isUnplayed() const;
 };
 
 }

@@ -36,36 +36,34 @@ class AudioFifo;
  */
 class PPPLAY_CORE_EXPORT VolumeObserver
 {
-	DISABLE_COPY(VolumeObserver)
+    DISABLE_COPY( VolumeObserver )
 private:
-	//! @brief Sum of all left absolute sample values
-	uint64_t m_volLeftSum;
-	//! @brief Sum of all left absolute sample values (logarithmic)
-	uint16_t m_volLeftLog;
-	
-	//! @brief Sum of all right absolute sample values
-	uint64_t m_volRightSum;
-	//! @brief Sum of all right absolute sample values (logarithmic)
-	uint16_t m_volRightLog;
-	
-	//! @brief Observed FIFO
-	AudioFifo* m_fifo;
+    //! @brief Sum of all left absolute sample values
+    uint64_t m_volLeftSum;
+    //! @brief Sum of all left absolute sample values (logarithmic)
+    uint16_t m_volLeftLog;
+
+    //! @brief Sum of all right absolute sample values
+    uint64_t m_volRightSum;
+    //! @brief Sum of all right absolute sample values (logarithmic)
+    uint16_t m_volRightLog;
+
+    //! @brief Observed FIFO
+    AudioFifo* m_fifo;
 public:
-	explicit VolumeObserver(AudioFifo* fifo);
-	~VolumeObserver();
-	
-	inline uint16_t leftVol() const
-	{
-		return m_volLeftLog;
-	}
-	inline uint16_t rightVol() const
-	{
-		return m_volRightLog;
-	}
-	
+    explicit VolumeObserver( AudioFifo* fifo );
+    ~VolumeObserver();
+
+    inline uint16_t leftVol() const {
+        return m_volLeftLog;
+    }
+    inline uint16_t rightVol() const {
+        return m_volRightLog;
+    }
+
 private:
-	void dataPulled(const AudioFrameBuffer& buffer);
-	void dataPushed(const AudioFrameBuffer& buffer);
+    void dataPulled( const AudioFrameBuffer& buffer );
+    void dataPushed( const AudioFrameBuffer& buffer );
 };
 
 /**

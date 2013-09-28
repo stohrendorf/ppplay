@@ -31,15 +31,15 @@ class AbstractArchive;
 class PPPLAY_STREAM_EXPORT ISerializable
 {
 public:
-	/**
-	 * @brief Serialise this object
-	 * @param[in,out] archive AbstractArchive to serialize this object to
-	 * @return Reference to @a archive for pipelining
-	 */
-	virtual AbstractArchive& serialize( AbstractArchive* archive ) = 0;
-	/**
-	 * @brief Destructor
-	 */
+    /**
+     * @brief Serialise this object
+     * @param[in,out] archive AbstractArchive to serialize this object to
+     * @return Reference to @a archive for pipelining
+     */
+    virtual AbstractArchive& serialize( AbstractArchive* archive ) = 0;
+    /**
+     * @brief Destructor
+     */
     virtual ~ISerializable() = default;
 };
 

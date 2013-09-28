@@ -40,65 +40,65 @@ namespace ppp
  */
 class PPPLAY_MODULE_BASE_EXPORT AbstractOrder : public ISerializable
 {
-	DISABLE_COPY( AbstractOrder )
-	AbstractOrder() = delete;
+    DISABLE_COPY( AbstractOrder )
+    AbstractOrder() = delete;
 private:
-	//! @brief Pattern index of this order
-	uint8_t m_index;
-	//! @brief Playback count of this order
-	int m_playbackCount;
-	//! @brief Row playback counter to avoid infinite loops
-	std::vector<uint8_t> m_rowPlaybackCounter;
+    //! @brief Pattern index of this order
+    uint8_t m_index;
+    //! @brief Playback count of this order
+    int m_playbackCount;
+    //! @brief Row playback counter to avoid infinite loops
+    std::vector<uint8_t> m_rowPlaybackCounter;
 public:
-	/**
-	 * @brief Constructor
-	 * @param[in] idx Order index
-	 * @param[in] rowCount Pattern row count
-	 */
-	AbstractOrder( uint8_t idx ) noexcept;
-	/**
-	 * @brief Return the pattern index associated with this order
-	 * @return m_index
-	 */
-	uint8_t index() const noexcept;
-	/**
-	 * @brief Set the pattern index and pattern row count
-	 * @param[in] index New index
-	 * @param[in] rowCount Pattern row count
-	 */
-	void setIndex( uint8_t index );
-	virtual AbstractArchive& serialize( AbstractArchive* data );
-	/**
-	 * @brief Get the playback count of this order
-	 * @return m_playbackCount
-	 */
-	int playbackCount() const noexcept;
-	/**
-	 * @brief Increase the playback count
-	 * @return The new value of m_playbackCount
-	 */
-	int increasePlaybackCount() noexcept;
-	
-	/**
-	 * @brief Resets the row playback counter
-	 * @param[in] row Row for which the playback counter should be increased
-	 * @return The new counter
-	 */
-	uint8_t increaseRowPlayback(std::size_t row);
-	
-	/**
-	 * @brief Sets the row count for the row playback counter and resets the counter to 0
-	 * @param[in] count The row count
-	 */
-	void resetRowPlaybackCounter();
-	
-	virtual bool isUnplayed() const = 0;
+    /**
+     * @brief Constructor
+     * @param[in] idx Order index
+     * @param[in] rowCount Pattern row count
+     */
+    AbstractOrder( uint8_t idx ) noexcept;
+    /**
+     * @brief Return the pattern index associated with this order
+     * @return m_index
+     */
+    uint8_t index() const noexcept;
+    /**
+     * @brief Set the pattern index and pattern row count
+     * @param[in] index New index
+     * @param[in] rowCount Pattern row count
+     */
+    void setIndex( uint8_t index );
+    virtual AbstractArchive& serialize( AbstractArchive* data );
+    /**
+     * @brief Get the playback count of this order
+     * @return m_playbackCount
+     */
+    int playbackCount() const noexcept;
+    /**
+     * @brief Increase the playback count
+     * @return The new value of m_playbackCount
+     */
+    int increasePlaybackCount() noexcept;
+
+    /**
+     * @brief Resets the row playback counter
+     * @param[in] row Row for which the playback counter should be increased
+     * @return The new counter
+     */
+    uint8_t increaseRowPlayback( std::size_t row );
+
+    /**
+     * @brief Sets the row count for the row playback counter and resets the counter to 0
+     * @param[in] count The row count
+     */
+    void resetRowPlaybackCounter();
+
+    virtual bool isUnplayed() const = 0;
 protected:
-	/**
-	 * @brief Get the logger
-	 * @return Logger with name "order"
-	 */
-	static light4cxx::Logger* logger();
+    /**
+     * @brief Get the logger
+     * @return Logger with name "order"
+     */
+    static light4cxx::Logger* logger();
 };
 
 /**

@@ -27,7 +27,7 @@ namespace xm
 
 bool XmOrder::isUnplayed() const
 {
-	return playbackCount() == 0;
+    return playbackCount() == 0;
 }
 
 }

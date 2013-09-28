@@ -34,98 +34,98 @@ XmSample::XmSample() : m_finetune( 0 ), m_panning( 0x80 ), m_relativeNote( 0 ), 
 
 bool XmSample::load( Stream* str )
 {
-	int32_t dataSize;
-	*str >> dataSize;
-	int32_t loopStart, loopLen;
-	*str >> loopStart >> loopLen;
-	uint8_t volume;
-	*str >> volume;
-	setVolume( clip<int>(volume,0,64) );
-	*str >> m_finetune;
-	uint8_t type;
-	*str >> type;
-	if(loopStart+loopLen>dataSize) {
-		loopStart = loopLen = 0;
-		setLoopType( LoopType::None );
-	}
-	else {
-		switch( type & 3 ) {
-			case 0:
-				setLoopType( LoopType::None );
-				break;
-			case 1:
-				setLoopType( LoopType::Forward );
-				break;
-			case 2:
-			case 3:
-				setLoopType( LoopType::Pingpong );
-				break;
-		}
-	}
-	m_16bit = ( type & 0x10 ) != 0;
-	if( m_16bit ) {
-		resizeData( dataSize / 2 );
-		setLoopStart( loopStart / 2 );
-		setLoopEnd( ( loopStart + loopLen ) / 2 );
-	}
-	else {
-		resizeData( dataSize );
-		setLoopStart( loopStart );
-		setLoopEnd( loopStart + loopLen );
-	}
-	*str >> m_panning >> m_relativeNote;
-	str->seekrel( 1 );
-	{
-		char title[22];
-		str->read( title, 22 );
-		setTitle( stringncpy( title, 22 ) );
-	}
-	return str->good();
+    int32_t dataSize;
+    *str >> dataSize;
+    int32_t loopStart, loopLen;
+    *str >> loopStart >> loopLen;
+    uint8_t volume;
+    *str >> volume;
+    setVolume( clip<int>( volume, 0, 64 ) );
+    *str >> m_finetune;
+    uint8_t type;
+    *str >> type;
+    if( loopStart + loopLen > dataSize ) {
+        loopStart = loopLen = 0;
+        setLoopType( LoopType::None );
+    }
+    else {
+        switch( type & 3 ) {
+            case 0:
+                setLoopType( LoopType::None );
+                break;
+            case 1:
+                setLoopType( LoopType::Forward );
+                break;
+            case 2:
+            case 3:
+                setLoopType( LoopType::Pingpong );
+                break;
+        }
+    }
+    m_16bit = ( type & 0x10 ) != 0;
+    if( m_16bit ) {
+        resizeData( dataSize / 2 );
+        setLoopStart( loopStart / 2 );
+        setLoopEnd( ( loopStart + loopLen ) / 2 );
+    }
+    else {
+        resizeData( dataSize );
+        setLoopStart( loopStart );
+        setLoopEnd( loopStart + loopLen );
+    }
+    *str >> m_panning >> m_relativeNote;
+    str->seekrel( 1 );
+    {
+        char title[22];
+        str->read( title, 22 );
+        setTitle( stringncpy( title, 22 ) );
+    }
+    return str->good();
 }
 
 bool XmSample::loadData( Stream* str )
 {
-	if( length() == 0 )
-		return true;
-	if( m_16bit ) { // 16 bit
-		int16_t smp16 = 0;
-		for( auto it = beginIterator(); it != endIterator(); it++ ) {
-			int16_t delta;
-			*str >> delta;
-			smp16 += delta;
-			it->left = it->right = smp16;
-		}
-	}
-	else { // 8 bit
-		int8_t smp8 = 0;
-		for( auto it = beginIterator(); it != endIterator(); it++ ) {
-			int8_t delta;
-			*str >> delta;
-			smp8 += delta;
-			it->left = it->right = smp8 << 8;
-		}
-	}
-	return str->good();
+    if( length() == 0 )
+        return true;
+    if( m_16bit ) { // 16 bit
+        int16_t smp16 = 0;
+        for( auto it = beginIterator(); it != endIterator(); it++ ) {
+            int16_t delta;
+            *str >> delta;
+            smp16 += delta;
+            it->left = it->right = smp16;
+        }
+    }
+    else { // 8 bit
+        int8_t smp8 = 0;
+        for( auto it = beginIterator(); it != endIterator(); it++ ) {
+            int8_t delta;
+            *str >> delta;
+            smp8 += delta;
+            it->left = it->right = smp8 << 8;
+        }
+    }
+    return str->good();
 }
 
 uint8_t XmSample::panning() const
 {
-	return m_panning;
+    return m_panning;
 }
 
 bool XmSample::is16bit() const
 {
-	return m_16bit;
+    return m_16bit;
 }
 
 int8_t XmSample::relativeNote() const
 {
-	return m_relativeNote;
+    return m_relativeNote;
 }
 
 int8_t XmSample::finetune() const
 {
-	return m_finetune;
+    return m_finetune;
 }
 
 }

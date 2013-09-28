@@ -24,30 +24,30 @@ AbstractArchive::AbstractArchive( const Stream::Ptr& stream ) : m_loading( false
 
 bool AbstractArchive::isLoading() const
 {
-	return m_loading;
+    return m_loading;
 }
 
 bool AbstractArchive::isSaving() const
 {
-	return !m_loading;
+    return !m_loading;
 }
 
 AbstractArchive& AbstractArchive::archive( ISerializable* data )
 {
-	BOOST_ASSERT( data != nullptr );
-	return data->serialize( this );
+    BOOST_ASSERT( data != nullptr );
+    return data->serialize( this );
 }
 
 void AbstractArchive::finishSave()
 {
-	BOOST_ASSERT( !m_loading );
-	m_stream->seek( 0 );
-	m_loading = true;
+    BOOST_ASSERT( !m_loading );
+    m_stream->seek( 0 );
+    m_loading = true;
 }
 
 void AbstractArchive::finishLoad()
 {
-	BOOST_ASSERT( m_loading );
-	m_stream->seek( 0 );
+    BOOST_ASSERT( m_loading );
+    m_stream->seek( 0 );
 }
 

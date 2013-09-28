@@ -29,26 +29,26 @@
  */
 class PPPLAY_STREAM_EXPORT FileStream : public Stream
 {
-	DISABLE_COPY( FileStream )
-	FileStream() = delete;
+    DISABLE_COPY( FileStream )
+    FileStream() = delete;
 private:
-	size_t m_size; //!< @brief Cached size of the file
+    size_t m_size; //!< @brief Cached size of the file
 public:
-	enum class Mode
-	{
-		Read, Write
-	};
-	/**
-	 * @brief Default contructor
-	 * @param[in] filename Filename of the file to open
-	 */
-	explicit FileStream( const std::string& filename, Mode mode = Mode::Read );
-	/**
-	 * @brief Check if the file is opened
-	 * @return @c true if the file is opened
-	 */
-	bool isOpen() const;
-	std::streamsize size() const;
+    enum class Mode
+    {
+        Read, Write
+    };
+    /**
+     * @brief Default contructor
+     * @param[in] filename Filename of the file to open
+     */
+    explicit FileStream( const std::string& filename, Mode mode = Mode::Read );
+    /**
+     * @brief Check if the file is opened
+     * @return @c true if the file is opened
+     */
+    bool isOpen() const;
+    std::streamsize size() const;
 };
 
 #endif

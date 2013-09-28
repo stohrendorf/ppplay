@@ -36,28 +36,26 @@ class AudioFifo;
  */
 class PPPLAY_CORE_EXPORT FftObserver
 {
-	DISABLE_COPY(FftObserver)
+    DISABLE_COPY( FftObserver )
 private:
-	//! @brief Observed FIFO
-	AudioFifo* m_fifo;
-	AudioFrameBuffer m_buffer;
-	size_t m_filled;
-	std::vector<uint16_t> m_left;
-	std::vector<uint16_t> m_right;
+    //! @brief Observed FIFO
+    AudioFifo* m_fifo;
+    AudioFrameBuffer m_buffer;
+    size_t m_filled;
+    std::vector<uint16_t> m_left;
+    std::vector<uint16_t> m_right;
 public:
-	FftObserver(AudioFifo* fifo);
-	~FftObserver();
-	
-	const std::vector<uint16_t>& left() const
-	{
-		return m_left;
-	}
-	const std::vector<uint16_t>& right() const
-	{
-		return m_right;
-	}
+    FftObserver( AudioFifo* fifo );
+    ~FftObserver();
+
+    const std::vector<uint16_t>& left() const {
+        return m_left;
+    }
+    const std::vector<uint16_t>& right() const {
+        return m_right;
+    }
 private:
-	void dataPushed(const AudioFrameBuffer& buffer);
+    void dataPushed( const AudioFrameBuffer& buffer );
 };
 
 /**

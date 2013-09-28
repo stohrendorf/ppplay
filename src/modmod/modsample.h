@@ -35,21 +35,21 @@ namespace mod
 
 class ModSample : public Sample
 {
-	DISABLE_COPY( ModSample )
+    DISABLE_COPY( ModSample )
 public:
-	ModSample();
-	bool loadHeader( Stream* stream );
-	bool loadData( Stream* stream );
-	bool loadAdpcmData( Stream* stream );
-	uint8_t finetune() const;
+    ModSample();
+    bool loadHeader( Stream* stream );
+    bool loadData( Stream* stream );
+    bool loadAdpcmData( Stream* stream );
+    uint8_t finetune() const;
 private:
-	uint8_t m_finetune;
+    uint8_t m_finetune;
 protected:
-	/**
-	 * @brief Get the logger
-	 * @return Child logger with attached ".mod"
-	 */
-	static light4cxx::Logger* logger();
+    /**
+     * @brief Get the logger
+     * @return Child logger with attached ".mod"
+     */
+    static light4cxx::Logger* logger();
 };
 
 }

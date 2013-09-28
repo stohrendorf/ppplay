@@ -32,9 +32,9 @@ namespace ppg
  */
 enum class Color
 {
-	Black, Blue, Green, Aqua, Red, Purple, Brown, White,
-	Gray, LightBlue, LightGreen, LightAqua, LightRed, LightPurple, Yellow, BrightWhite,
-	None
+    Black, Blue, Green, Aqua, Red, Purple, Brown, White,
+    Gray, LightBlue, LightGreen, LightAqua, LightRed, LightPurple, Yellow, BrightWhite,
+    None
 };
 
 /**
@@ -43,9 +43,8 @@ enum class Color
  * @return Inverted color
  * @note This is DOS's default algorithm
  */
-inline constexpr Color operator~( const Color& c ) noexcept
-{
-	return static_cast<Color>( ( static_cast<int>( c ) & 7 ) ^ 7 );
+inline constexpr Color operator~( const Color& c ) noexcept {
+    return static_cast<Color>( ( static_cast<int>( c ) & 7 ) ^ 7 );
 }
 } // namespace ppg
 

@@ -38,139 +38,139 @@ PluginRegistry::PluginRegistry() : m_handles()
 
 PluginRegistry::~PluginRegistry()
 {
-    for(auto handle : m_handles) {
+    for( auto handle : m_handles ) {
 #ifdef WIN32
-        FreeLibrary(handle);
+        FreeLibrary( handle );
 #else
-        dlclose(handle);
+        dlclose( handle );
 #endif
     }
 }
 
 PluginRegistry& PluginRegistry::instance()
 {
-	static PluginRegistry registry;
-	return registry;
+    static PluginRegistry registry;
+    return registry;
 }
 
 AbstractModule::Ptr PluginRegistry::tryLoad( const std::string& filename, uint32_t frq, int maxRpt, Sample::Interpolation inter )
 {
-	findPlugins();
-	{
-		FileStream file(filename);
-		if( file.isOpen() ) {
-            for(auto handle : instance().m_handles) {
+    findPlugins();
+    {
+        FileStream file( filename );
+        if( file.isOpen() ) {
+            for( auto handle : instance().m_handles ) {
 #ifdef WIN32
-                InputPlugin* plugin = reinterpret_cast<InputPlugin*>(GetProcAddress(handle, "plugin"));
+                InputPlugin* plugin = reinterpret_cast<InputPlugin*>( GetProcAddress( handle, "plugin" ) );
 #else
-                InputPlugin* plugin = static_cast<InputPlugin*>(dlsym(handle, "plugin"));
+                InputPlugin* plugin = static_cast<InputPlugin*>( dlsym( handle, "plugin" ) );
 #endif
-				file.clear();
-				file.seek(0);
-				if( AbstractModule* result = plugin->load( &file, frq, maxRpt, inter ) ) {
-					return AbstractModule::Ptr(result);
-				}
-			}
-		}
-	}
-	{
-		ArchiveFileStream file(filename);
-		if( file.isOpen() ) {
-            for(auto handle : instance().m_handles) {
+                file.clear();
+                file.seek( 0 );
+                if( AbstractModule* result = plugin->load( &file, frq, maxRpt, inter ) ) {
+                    return AbstractModule::Ptr( result );
+                }
+            }
+        }
+    }
+    {
+        ArchiveFileStream file( filename );
+        if( file.isOpen() ) {
+            for( auto handle : instance().m_handles ) {
 #ifdef WIN32
-                InputPlugin* plugin = reinterpret_cast<InputPlugin*>(GetProcAddress(handle, "plugin"));
+                InputPlugin* plugin = reinterpret_cast<InputPlugin*>( GetProcAddress( handle, "plugin" ) );
 #else
-                InputPlugin* plugin = static_cast<InputPlugin*>(dlsym(handle, "plugin"));
+                InputPlugin* plugin = static_cast<InputPlugin*>( dlsym( handle, "plugin" ) );
 #endif
-				file.clear();
-				file.seek(0);
-				if( AbstractModule* result = plugin->load( &file, frq, maxRpt, inter ) ) {
-					return AbstractModule::Ptr(result);
-				}
-			}
-		}
-	}
-	return AbstractModule::Ptr();
+                file.clear();
+                file.seek( 0 );
+                if( AbstractModule* result = plugin->load( &file, frq, maxRpt, inter ) ) {
+                    return AbstractModule::Ptr( result );
+                }
+            }
+        }
+    }
+    return AbstractModule::Ptr();
 }
 
 void PluginRegistry::findPlugins()
 {
-	if(!instance().m_handles.empty()) {
-		return;
-	}
-    boost::filesystem::path pluginPath(LIBEXECDIR);
-    light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Looking for plugins in %s", LIBEXECDIR);
-	
+    if( !instance().m_handles.empty() ) {
+        return;
+    }
+    boost::filesystem::path pluginPath( LIBEXECDIR );
+    light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Looking for plugins in %s", LIBEXECDIR );
+
     std::list<boost::filesystem::path> paths;
-    std::copy(boost::filesystem::directory_iterator( pluginPath ), boost::filesystem::directory_iterator(), std::back_inserter(paths));
-	for(const auto& entry : paths) {
+    std::copy( boost::filesystem::directory_iterator( pluginPath ), boost::filesystem::directory_iterator(), std::back_inserter( paths ) );
+    for( const auto & entry : paths ) {
 #ifdef WIN32
         char nativeStr[260];
-        wcstombs(nativeStr, entry.native().c_str(), 259);
+        wcstombs( nativeStr, entry.native().c_str(), 259 );
         char nativeFnStr[260];
-        wcstombs(nativeFnStr, entry.filename().native().c_str(), 259);
+        wcstombs( nativeFnStr, entry.filename().native().c_str(), 259 );
 #endif
-		// find every file in "../lib/ppplay" that begins with "libppplay_input_"
+        // find every file in "../lib/ppplay" that begins with "libppplay_input_"
 #ifdef WIN32
-        light4cxx::Logger::root()->info(L4CXX_LOCATION, "Checking: %s", nativeFnStr);
-        if(entry.filename().native().find(L"libppplay_input_")!=0)
+        light4cxx::Logger::root()->info( L4CXX_LOCATION, "Checking: %s", nativeFnStr );
+        if( entry.filename().native().find( L"libppplay_input_" ) != 0 )
             continue;
 #else
-        light4cxx::Logger::root()->info(L4CXX_LOCATION, "Checking: %s", entry.filename().native());
-        if(entry.filename().native().find("libppplay_input_")!=0)
+        light4cxx::Logger::root()->info( L4CXX_LOCATION, "Checking: %s", entry.filename().native() );
+        if( entry.filename().native().find( "libppplay_input_" ) != 0 )
             continue;
 #endif
-		// try to load the file and look for the exported "plugin" symbol
+        // try to load the file and look for the exported "plugin" symbol
 #ifdef WIN32
-        light4cxx::Logger::root()->info(L4CXX_LOCATION, "Trying to load input plugin: %s", nativeStr);
-        HMODULE handle = LoadLibraryW(entry.c_str());
+        light4cxx::Logger::root()->info( L4CXX_LOCATION, "Trying to load input plugin: %s", nativeStr );
+        HMODULE handle = LoadLibraryW( entry.c_str() );
 #else
-        light4cxx::Logger::root()->info(L4CXX_LOCATION, "Trying to load input plugin: %s", entry.native());
-        void* handle = dlopen(entry.c_str(), RTLD_LAZY);
+        light4cxx::Logger::root()->info( L4CXX_LOCATION, "Trying to load input plugin: %s", entry.native() );
+        void* handle = dlopen( entry.c_str(), RTLD_LAZY );
 #endif
-		if(!handle) {
+        if( !handle ) {
 #ifdef WIN32
-            light4cxx::Logger::root()->error(L4CXX_LOCATION, "Failed to load plugin '%s'", nativeStr);
+            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s'", nativeStr );
 #else
-			light4cxx::Logger::root()->error(L4CXX_LOCATION, "Failed to load plugin '%s': %s", entry.native(), dlerror());
+            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s': %s", entry.native(), dlerror() );
 #endif
-			continue;
-		}
+            continue;
+        }
 #ifdef WIN32
-        InputPlugin* plugin = reinterpret_cast<InputPlugin*>(GetProcAddress(handle, "plugin"));
+        InputPlugin* plugin = reinterpret_cast<InputPlugin*>( GetProcAddress( handle, "plugin" ) );
 #else
-		InputPlugin* plugin = static_cast<InputPlugin*>(dlsym(handle, "plugin"));
+        InputPlugin* plugin = static_cast<InputPlugin*>( dlsym( handle, "plugin" ) );
 #endif
-		if(!plugin) {
+        if( !plugin ) {
 #ifdef WIN32
-            light4cxx::Logger::root()->error(L4CXX_LOCATION, "Failed to load plugin '%s'", nativeStr);
-            FreeLibrary(handle);
+            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s'", nativeStr );
+            FreeLibrary( handle );
 #else
-			light4cxx::Logger::root()->error(L4CXX_LOCATION, "Failed to load plugin '%s': %s", entry.native(), dlerror());
-            dlclose(handle);
+            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s': %s", entry.native(), dlerror() );
+            dlclose( handle );
 #endif
-			continue;
-		}
-		// verify that the API version matches
-		int version = plugin->version();
-		if(version != InputPlugin::Version) {
+            continue;
+        }
+        // verify that the API version matches
+        int version = plugin->version();
+        if( version != InputPlugin::Version ) {
 #ifdef WIN32
-            light4cxx::Logger::root()->error(L4CXX_LOCATION, "Failed to load plugin '%s': API version mismatch. Expected %d, found %d.", nativeStr, InputPlugin::Version, version);
-            FreeLibrary(handle);
+            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s': API version mismatch. Expected %d, found %d.", nativeStr, InputPlugin::Version, version );
+            FreeLibrary( handle );
 #else
-            light4cxx::Logger::root()->error(L4CXX_LOCATION, "Failed to load plugin '%s': API version mismatch. Expected %d, found %d.", entry.native(), InputPlugin::Version, version);
-            dlclose(handle);
+            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s': API version mismatch. Expected %d, found %d.", entry.native(), InputPlugin::Version, version );
+            dlclose( handle );
 #endif
-			continue;
-		}
-		// the plugin is valid, so add it to the list
+            continue;
+        }
+        // the plugin is valid, so add it to the list
 #ifdef WIN32
-        light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Found input plugin '%s', '%s': %s", nativeStr, plugin->name(), plugin->description());
+        light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Found input plugin '%s', '%s': %s", nativeStr, plugin->name(), plugin->description() );
 #else
-        light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Found input plugin '%s', '%s': %s", entry.native(), plugin->name(), plugin->description());
+        light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Found input plugin '%s', '%s': %s", entry.native(), plugin->name(), plugin->description() );
 #endif
-		instance().m_handles.push_back(handle);
-	}
+        instance().m_handles.push_back( handle );
+    }
 }
 
 }

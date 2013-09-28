@@ -41,18 +41,18 @@ namespace mod
 
 class ModPattern : public Field<ModCell>
 {
-	DISABLE_COPY( ModPattern )
+    DISABLE_COPY( ModPattern )
 public:
-	/**
-	 * @brief Constructor
-	 */
-	ModPattern();
-	/**
-	 * @brief Load the pattern from a stream
-	 * @param[in] str The stream to load from
-	 * @return @c true on success
-	 */
-	bool load( Stream* str, uint8_t numChans );
+    /**
+     * @brief Constructor
+     */
+    ModPattern();
+    /**
+     * @brief Load the pattern from a stream
+     * @param[in] str The stream to load from
+     * @return @c true on success
+     */
+    bool load( Stream* str, uint8_t numChans );
 };
 
 }

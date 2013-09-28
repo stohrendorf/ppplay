@@ -37,47 +37,45 @@
  */
 class SDLAudioOutput : public AbstractAudioOutput
 {
-	DISABLE_COPY( SDLAudioOutput )
-	SDLAudioOutput() = delete;
+    DISABLE_COPY( SDLAudioOutput )
+    SDLAudioOutput() = delete;
 public:
-	//! @copydoc IAudioOutput::IAudioOutput(const IAudioSource::WeakPtr&)
-	explicit SDLAudioOutput( const AbstractAudioSource::WeakPtr& src );
-	virtual ~SDLAudioOutput();
-	const std::vector<uint16_t>& leftFft() const
-	{
-		return m_fftObserver.left();
-	}
-	const std::vector<uint16_t>& rightFft() const
-	{
-		return m_fftObserver.right();
-	}
+    //! @copydoc IAudioOutput::IAudioOutput(const IAudioSource::WeakPtr&)
+    explicit SDLAudioOutput( const AbstractAudioSource::WeakPtr& src );
+    virtual ~SDLAudioOutput();
+    const std::vector<uint16_t>& leftFft() const {
+        return m_fftObserver.left();
+    }
+    const std::vector<uint16_t>& rightFft() const {
+        return m_fftObserver.right();
+    }
 private:
     std::mutex m_mutex;
-	AudioFifo m_fifo;
-	VolumeObserver m_volObserver;
-	FftObserver m_fftObserver;
-	/**
-	 * @brief SDL Audio callback handler
-	 * @param[in] userdata Pointer to SDLAudioOutput
-	 * @param[out] stream Audio buffer pointer
-	 * @param[in] len_bytes Byte length of @a stream
-	 * @note Declared here to get access to m_fifo
-	 */
-	static void sdlAudioCallback( void* userdata, uint8_t* stream, int len_bytes );
-	size_t getSdlData( BasicSampleFrame* data, size_t numFrames );
-	virtual int internal_init( int desiredFrq );
-	virtual bool internal_playing() const;
-	virtual bool internal_paused() const;
-	virtual void internal_play();
-	virtual void internal_pause();
-	virtual uint16_t internal_volumeLeft() const;
-	virtual uint16_t internal_volumeRight() const;
+    AudioFifo m_fifo;
+    VolumeObserver m_volObserver;
+    FftObserver m_fftObserver;
+    /**
+     * @brief SDL Audio callback handler
+     * @param[in] userdata Pointer to SDLAudioOutput
+     * @param[out] stream Audio buffer pointer
+     * @param[in] len_bytes Byte length of @a stream
+     * @note Declared here to get access to m_fifo
+     */
+    static void sdlAudioCallback( void* userdata, uint8_t* stream, int len_bytes );
+    size_t getSdlData( BasicSampleFrame* data, size_t numFrames );
+    virtual int internal_init( int desiredFrq );
+    virtual bool internal_playing() const;
+    virtual bool internal_paused() const;
+    virtual void internal_play();
+    virtual void internal_pause();
+    virtual uint16_t internal_volumeLeft() const;
+    virtual uint16_t internal_volumeRight() const;
 protected:
-	/**
-	 * @brief Get the logger
-	 * @return Child logger with attached ".sdl"
-	 */
-	static light4cxx::Logger* logger();
+    /**
+     * @brief Get the logger
+     * @return Child logger with attached ".sdl"
+     */
+    static light4cxx::Logger* logger();
 };
 
 /**

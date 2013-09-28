@@ -32,10 +32,10 @@
  * @param[in] classname Class name to disable copy functions of
  */
 #define DISABLE_COPY(classname) \
-	classname(const classname&) = delete; \
-	classname(classname&&) = delete; \
-	classname& operator=(const classname&) = delete; \
-	classname& operator=(classname&&) = delete;
+    classname(const classname&) = delete; \
+    classname(classname&&) = delete; \
+    classname& operator=(const classname&) = delete; \
+    classname& operator=(classname&&) = delete;
 
 /**
  * @brief Checked delete for all elements in a container
@@ -46,10 +46,10 @@
 template<class T>
 inline void deleteAll( T& container )
 {
-	for( auto & val : container ) {
-		boost::checked_delete(val);
-		val = nullptr;
-	}
+    for( auto & val : container ) {
+        boost::checked_delete( val );
+        val = nullptr;
+    }
 }
 
 /**

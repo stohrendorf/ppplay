@@ -29,12 +29,12 @@ namespace mod
 
 class ModOrder : public AbstractOrder
 {
-	DISABLE_COPY( ModOrder )
-	ModOrder() = delete;
+    DISABLE_COPY( ModOrder )
+    ModOrder() = delete;
 public:
-	inline ModOrder( uint8_t idx ) : AbstractOrder( idx ) {
-	}
-	virtual bool isUnplayed() const;
+    inline ModOrder( uint8_t idx ) : AbstractOrder( idx ) {
+    }
+    virtual bool isUnplayed() const;
 };
 
 }

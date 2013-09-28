@@ -36,34 +36,34 @@
  */
 class PPPLAY_CORE_EXPORT SDLTimer : public ITimer
 {
-	DISABLE_COPY( SDLTimer )
+    DISABLE_COPY( SDLTimer )
 private:
-	/**
-	 * @brief Timer interval for this timer
-	 */
-	uint32_t m_interval;
-	/**
-	 * @brief The internal SDL Timer ID
-	 */
-	struct _SDL_TimerID* m_id;
+    /**
+     * @brief Timer interval for this timer
+     */
+    uint32_t m_interval;
+    /**
+     * @brief The internal SDL Timer ID
+     */
+    struct _SDL_TimerID* m_id;
     std::mutex m_callbackMutex;
-	/**
-	 * @brief SDL Timer callback handler
-	 * @param[in] interval Timer interval
-	 * @param[in] userdata Pointer to the owning SDLTimer
-	 * @return @a interval
-	 * @details
-	 * Calls ITimer::onTimer()
-	 */
-	static uint32_t callback( uint32_t interval, void* userdata );
+    /**
+     * @brief SDL Timer callback handler
+     * @param[in] interval Timer interval
+     * @param[in] userdata Pointer to the owning SDLTimer
+     * @return @a interval
+     * @details
+     * Calls ITimer::onTimer()
+     */
+    static uint32_t callback( uint32_t interval, void* userdata );
 public:
-	/**
-	 * @brief Constructor
-	 * @param[in] interval Desired timer interval in milliseconds
-	 */
-	SDLTimer( uint32_t interval );
-	virtual ~SDLTimer();
-	virtual uint32_t interval() const;
+    /**
+     * @brief Constructor
+     * @param[in] interval Desired timer interval in milliseconds
+     */
+    SDLTimer( uint32_t interval );
+    virtual ~SDLTimer();
+    virtual uint32_t interval() const;
 };
 
 /**

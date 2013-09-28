@@ -37,47 +37,47 @@ class ModChannel;
 
 class ModModule : public AbstractModule
 {
-	DISABLE_COPY( ModModule )
-	ModModule() = delete;
-	friend class ModChannel;
+    DISABLE_COPY( ModModule )
+    ModModule() = delete;
+    friend class ModChannel;
 public:
-	/**
-	 * @brief Factory method
-	 * @param[in] filename Module filename
-	 * @param[in] frequency Rendering frequency
-	 * @param[in] maxRpt Maximum repeat count
-	 * @return Module pointer or nullptr
-	 */
-	static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter );
+    /**
+     * @brief Factory method
+     * @param[in] filename Module filename
+     * @param[in] frequency Rendering frequency
+     * @param[in] maxRpt Maximum repeat count
+     * @return Module pointer or nullptr
+     */
+    static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter );
 private:
-	std::vector<ModSample*> m_samples; //!< @brief Samples
-	std::vector<ModPattern*> m_patterns; //!< @brief Patterns
-	std::vector<ModChannel*> m_channels; //!< @brief Channels
-	int8_t m_patLoopRow;
-	int m_patLoopCount;
-	int8_t m_breakRow;
-	int m_patDelayCount;
-	uint16_t m_breakOrder;
-	bool adjustPosition( bool estimateOnly );
-	void checkGlobalFx();
-	ModPattern* getPattern( size_t idx ) const;
+    std::vector<ModSample*> m_samples; //!< @brief Samples
+    std::vector<ModPattern*> m_patterns; //!< @brief Patterns
+    std::vector<ModChannel*> m_channels; //!< @brief Channels
+    int8_t m_patLoopRow;
+    int m_patLoopCount;
+    int8_t m_breakRow;
+    int m_patDelayCount;
+    uint16_t m_breakOrder;
+    bool adjustPosition( bool estimateOnly );
+    void checkGlobalFx();
+    ModPattern* getPattern( size_t idx ) const;
 protected:
-	virtual AbstractArchive& serialize( AbstractArchive* data );
+    virtual AbstractArchive& serialize( AbstractArchive* data );
 public:
-	ModModule( int maxRpt, Sample::Interpolation inter );
-	virtual ~ModModule();
-	bool load( Stream* stream, int loadMode );
+    ModModule( int maxRpt, Sample::Interpolation inter );
+    virtual ~ModModule();
+    bool load( Stream* stream, int loadMode );
 private:
-	virtual size_t internal_buildTick( AudioFrameBuffer* buf );
-	virtual ChannelState internal_channelStatus( size_t idx ) const;
-	virtual int internal_channelCount() const;
-	ModSample* sampleAt( size_t idx ) const;
-	bool existsSample( size_t idx ) const;
-	/**
-	 * @brief Get the logger
-	 * @return Child logger with attached ".mod"
-	 */
-	static light4cxx::Logger* logger();
+    virtual size_t internal_buildTick( AudioFrameBuffer* buf );
+    virtual ChannelState internal_channelStatus( size_t idx ) const;
+    virtual int internal_channelCount() const;
+    ModSample* sampleAt( size_t idx ) const;
+    bool existsSample( size_t idx ) const;
+    /**
+     * @brief Get the logger
+     * @return Child logger with attached ".mod"
+     */
+    static light4cxx::Logger* logger();
 };
 
 }

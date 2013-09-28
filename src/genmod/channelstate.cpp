@@ -1,8 +1,10 @@
 #include "channelstate.h"
 #include <stream/abstractarchive.h>
 
-namespace ppp {
-AbstractArchive& ChannelState::serialize(AbstractArchive* archive) {
+namespace ppp
+{
+AbstractArchive& ChannelState::serialize( AbstractArchive* archive )
+{
     *archive
     % active
     % noteTriggered

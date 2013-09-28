@@ -35,108 +35,107 @@
  */
 class PPPLAY_CORE_EXPORT AbstractAudioOutput
 {
-	DISABLE_COPY( AbstractAudioOutput )
-	AbstractAudioOutput() = delete;
+    DISABLE_COPY( AbstractAudioOutput )
+    AbstractAudioOutput() = delete;
 public:
-	//! @brief Audio output device error codes
-	enum ErrorCode {
-		NoError, //!< @brief No error
-		InputError, //!< @brief General input error
-		InputDry, //!< @brief Audio source can't provide data
-		OutputError, //!< @brief General output error
-		OutputDry, //!< @brief Output device needs more data than available
-		OutputUnavailable //!< @brief Output device is unavailable
-	};
-	//! @brief Class pointer
-	typedef std::shared_ptr<AbstractAudioOutput> Ptr;
-	//! @brief Weak class pointer
-	typedef std::weak_ptr<AbstractAudioOutput> WeakPtr;
-	/**
-	 * @brief Constructor
-	 * @param[in] src Pointer to an audio data source
-	 */
-	inline explicit AbstractAudioOutput( const AbstractAudioSource::WeakPtr& src )
-	: m_source( src ), m_errorCode( NoError ), m_mutex()
-	{
-	}
-	//! @brief Destructor
-	virtual ~AbstractAudioOutput() = default;
-	/**
-	 * @brief Get the internal error code
-	 * @return Internal error code
-	 */
-	ErrorCode errorCode() const noexcept;
-	//! @copydoc internal_init
-	int init( int desiredFrq );
-	//! @copydoc internal_playing
-	bool playing() const;
-	//! @copydoc internal_paused
-	bool paused() const;
-	//! @copydoc internal_play
-	void play();
-	//! @copydoc internal_pause
-	void pause();
-	//! @copydoc internal_volumeLeft
-	uint16_t volumeLeft() const;
-	//! @copydoc internal_volumeRight
-	uint16_t volumeRight() const;
-	/**
-	 * @brief Get the attached audio source
-	 * @return Pointer to the attached audio source
-	 */
-	AbstractAudioSource::Ptr source() const;
+    //! @brief Audio output device error codes
+    enum ErrorCode {
+        NoError, //!< @brief No error
+        InputError, //!< @brief General input error
+        InputDry, //!< @brief Audio source can't provide data
+        OutputError, //!< @brief General output error
+        OutputDry, //!< @brief Output device needs more data than available
+        OutputUnavailable //!< @brief Output device is unavailable
+    };
+    //! @brief Class pointer
+    typedef std::shared_ptr<AbstractAudioOutput> Ptr;
+    //! @brief Weak class pointer
+    typedef std::weak_ptr<AbstractAudioOutput> WeakPtr;
+    /**
+     * @brief Constructor
+     * @param[in] src Pointer to an audio data source
+     */
+    inline explicit AbstractAudioOutput( const AbstractAudioSource::WeakPtr& src )
+        : m_source( src ), m_errorCode( NoError ), m_mutex() {
+    }
+    //! @brief Destructor
+    virtual ~AbstractAudioOutput() = default;
+    /**
+     * @brief Get the internal error code
+     * @return Internal error code
+     */
+    ErrorCode errorCode() const noexcept;
+    //! @copydoc internal_init
+    int init( int desiredFrq );
+    //! @copydoc internal_playing
+    bool playing() const;
+    //! @copydoc internal_paused
+    bool paused() const;
+    //! @copydoc internal_play
+    void play();
+    //! @copydoc internal_pause
+    void pause();
+    //! @copydoc internal_volumeLeft
+    uint16_t volumeLeft() const;
+    //! @copydoc internal_volumeRight
+    uint16_t volumeRight() const;
+    /**
+     * @brief Get the attached audio source
+     * @return Pointer to the attached audio source
+     */
+    AbstractAudioSource::Ptr source() const;
 protected:
-	/**
-	 * @brief Set the internal error code
-	 * @param[in] ec New error code
-	 */
-	void setErrorCode( ErrorCode ec ) noexcept;
-	/**
-	 * @brief Get the logger
-	 * @return Logger with name "audio.output"
-	 */
-	static light4cxx::Logger* logger();
+    /**
+     * @brief Set the internal error code
+     * @param[in] ec New error code
+     */
+    void setErrorCode( ErrorCode ec ) noexcept;
+    /**
+     * @brief Get the logger
+     * @return Logger with name "audio.output"
+     */
+    static light4cxx::Logger* logger();
 private:
-	//! @brief The audio source
-	AbstractAudioSource::WeakPtr m_source;
-	//! @brief Internal error code
-	ErrorCode m_errorCode;
+    //! @brief The audio source
+    AbstractAudioSource::WeakPtr m_source;
+    //! @brief Internal error code
+    ErrorCode m_errorCode;
     mutable std::mutex m_mutex;
-	/**
-	 * @brief Initialize output device
-	 * @param[in] desiredFrq Desired output frequency
-	 * @retval 0 Initialization failed
-	 * @retval other Real output frequency
-	 */
-	virtual int internal_init( int desiredFrq ) = 0;
-	/**
-	 * @brief Check if the output is in playing state
-	 * @return @c true if the output is in playing state
-	 */
-	virtual bool internal_playing() const = 0;
-	/**
-	 * @brief Check if the output is in paused state
-	 * @return @c true if the output is in paused state
-	 */
-	virtual bool internal_paused() const = 0;
-	/**
-	 * @brief Start playback
-	 */
-	virtual void internal_play() = 0;
-	/**
-	 * @brief Pause playback
-	 */
-	virtual void internal_pause() = 0;
-	/**
-	 * @brief Get the left channel's volume
-	 * @return Left channel's volume, defaults to the source's volume
-	 */
-	virtual uint16_t internal_volumeLeft() const;
-	/**
-	 * @brief Get the right channel's volume
-	 * @return Right channel's volume, defaults to the source's volume
-	 */
-	virtual uint16_t internal_volumeRight() const;
+    /**
+     * @brief Initialize output device
+     * @param[in] desiredFrq Desired output frequency
+     * @retval 0 Initialization failed
+     * @retval other Real output frequency
+     */
+    virtual int internal_init( int desiredFrq ) = 0;
+    /**
+     * @brief Check if the output is in playing state
+     * @return @c true if the output is in playing state
+     */
+    virtual bool internal_playing() const = 0;
+    /**
+     * @brief Check if the output is in paused state
+     * @return @c true if the output is in paused state
+     */
+    virtual bool internal_paused() const = 0;
+    /**
+     * @brief Start playback
+     */
+    virtual void internal_play() = 0;
+    /**
+     * @brief Pause playback
+     */
+    virtual void internal_pause() = 0;
+    /**
+     * @brief Get the left channel's volume
+     * @return Left channel's volume, defaults to the source's volume
+     */
+    virtual uint16_t internal_volumeLeft() const;
+    /**
+     * @brief Get the right channel's volume
+     * @return Right channel's volume, defaults to the source's volume
+     */
+    virtual uint16_t internal_volumeRight() const;
 };
 
 /**

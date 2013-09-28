@@ -20,13 +20,13 @@
 
 std::string stringncpy( const char src[], size_t maxlen )
 {
-	std::string res;
-	for( size_t i = 0; i < maxlen; i++ ) {
-		if( src[i] == 0x00 ) {
-			break;
-		}
-		res += src[i];
-	}
-	return res;
+    std::string res;
+    for( size_t i = 0; i < maxlen; i++ ) {
+        if( src[i] == 0x00 ) {
+            break;
+        }
+        res += src[i];
+    }
+    return res;
 }
 

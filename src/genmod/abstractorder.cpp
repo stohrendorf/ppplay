@@ -28,52 +28,52 @@
 namespace ppp
 {
 
-AbstractOrder::AbstractOrder( uint8_t idx ) noexcept : m_index( idx ), m_playbackCount( 0 ), m_rowPlaybackCounter()
+AbstractOrder::AbstractOrder( uint8_t idx ) noexcept :
+m_index( idx ), m_playbackCount( 0 ), m_rowPlaybackCounter()
 { }
 
 uint8_t AbstractOrder::index() const noexcept
 {
-	return m_index;
+    return m_index;
 }
 
 void AbstractOrder::setIndex( uint8_t index )
 {
-	m_index = index;
-	m_rowPlaybackCounter.clear();
+    m_index = index;
+    m_rowPlaybackCounter.clear();
 }
 
 AbstractArchive& AbstractOrder::serialize( AbstractArchive* data )
 {
-	return *data % m_index % m_playbackCount;
+    return *data % m_index % m_playbackCount;
 }
 
 int AbstractOrder::playbackCount() const noexcept
 {
-	return m_playbackCount;
+    return m_playbackCount;
 }
 
-int AbstractOrder::increasePlaybackCount() noexcept
-{
-	return ++m_playbackCount;
+int AbstractOrder::increasePlaybackCount() noexcept {
+    return ++m_playbackCount;
 }
 
 uint8_t AbstractOrder::increaseRowPlayback( std::size_t row )
 {
-	if( row >= m_rowPlaybackCounter.size() ) {
-		m_rowPlaybackCounter.resize(row+1, 0);
-	}
-	return ++m_rowPlaybackCounter[row];
+    if( row >= m_rowPlaybackCounter.size() ) {
+        m_rowPlaybackCounter.resize( row + 1, 0 );
+    }
+    return ++m_rowPlaybackCounter[row];
 }
 
 void AbstractOrder::resetRowPlaybackCounter()
 {
-	m_rowPlaybackCounter.clear();
+    m_rowPlaybackCounter.clear();
 }
 
 
 light4cxx::Logger* AbstractOrder::logger()
 {
-	return light4cxx::Logger::get( "order" );
+    return light4cxx::Logger::get( "order" );
 }
 
 }

@@ -42,27 +42,26 @@ namespace ppp
 class PPPLAY_MODULE_BASE_EXPORT IPatternCell : public ISerializable
 {
 public:
-	/**
-	 * @brief Destructor
-	 */
-	virtual ~IPatternCell() noexcept
-	{
-	}
-	/**
-	 * @brief Clears the cell's data
-	 */
-	virtual void clear() = 0;
-	/**
-	 * @brief Get the tracker-like string representation of this cell
-	 * @return Tracker-like string
-	 */
-	virtual std::string trackerString() const = 0;
+    /**
+     * @brief Destructor
+     */
+    virtual ~IPatternCell() noexcept {
+    }
+    /**
+     * @brief Clears the cell's data
+     */
+    virtual void clear() = 0;
+    /**
+     * @brief Get the tracker-like string representation of this cell
+     * @return Tracker-like string
+     */
+    virtual std::string trackerString() const = 0;
 protected:
-	/**
-	 * @brief Get the logger
-	 * @return Logger with name "cell"
-	 */
-	static light4cxx::Logger* logger();
+    /**
+     * @brief Get the logger
+     * @return Logger with name "cell"
+     */
+    static light4cxx::Logger* logger();
 };
 
 /**

@@ -29,29 +29,29 @@
 
 uint32_t SDLTimer::callback( uint32_t interval, void* userdata )
 {
-	SDLTimer* timer = static_cast<SDLTimer*>( userdata );
+    SDLTimer* timer = static_cast<SDLTimer*>( userdata );
     std::lock_guard<std::mutex> lock( timer->m_callbackMutex );
-	timer->onTimer();
-	return interval;
+    timer->onTimer();
+    return interval;
 }
 
 SDLTimer::SDLTimer( uint32_t interval ) : ITimer(), m_interval( interval ), m_id( nullptr ), m_callbackMutex()
 {
-	if( !SDL_WasInit( SDL_INIT_TIMER ) ) {
-		BOOST_ASSERT( SDL_InitSubSystem( SDL_INIT_TIMER ) == 0 );
-	}
-	m_id = SDL_AddTimer( m_interval, callback, this );
+    if( !SDL_WasInit( SDL_INIT_TIMER ) ) {
+        BOOST_ASSERT( SDL_InitSubSystem( SDL_INIT_TIMER ) == 0 );
+    }
+    m_id = SDL_AddTimer( m_interval, callback, this );
 }
 
 SDLTimer::~SDLTimer()
 {
-	SDL_RemoveTimer( m_id );
+    SDL_RemoveTimer( m_id );
     std::lock_guard<std::mutex> lock( m_callbackMutex );
 }
 
 uint32_t SDLTimer::interval() const
 {
-	return m_interval;
+    return m_interval;
 }
 
 /**

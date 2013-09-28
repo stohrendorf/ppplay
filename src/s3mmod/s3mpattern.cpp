@@ -31,48 +31,48 @@ namespace ppp
 namespace s3m
 {
 
-S3mPattern::S3mPattern() : Field<S3mCell>(32,64)
+S3mPattern::S3mPattern() : Field<S3mCell>( 32, 64 )
 {
 }
 
 bool S3mPattern::load( Stream* str, size_t pos )
 {
-	try {
-		uint16_t patSize;
-		str->seek( pos );
-		*str >> patSize;
-		uint16_t currRow = 0, currTrack = 0;
-		while( currRow < 64 ) {
-			uint8_t master;
-			*str >> master;
-			if( master == 0 ) {
-				currRow++;
-				continue;
-			}
-			currTrack = master & 31;
-			str->seekrel( -1 );
-			if( !str->good() ) {
-				logger()->error( L4CXX_LOCATION, "str->fail()..." );
-				return false;
-			}
-			if( !at(currTrack, currRow).load( str ) ) {
-				logger()->error( L4CXX_LOCATION, "Cell loading: ERROR" );
-				return false;
-			}
-		}
-		return str->good();
-	}
-	catch( boost::exception& e ) {
-		BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
-	}
-	catch( ... ) {
-		BOOST_THROW_EXCEPTION( std::runtime_error( "Unknown exception" ) );
-	}
+    try {
+        uint16_t patSize;
+        str->seek( pos );
+        *str >> patSize;
+        uint16_t currRow = 0, currTrack = 0;
+        while( currRow < 64 ) {
+            uint8_t master;
+            *str >> master;
+            if( master == 0 ) {
+                currRow++;
+                continue;
+            }
+            currTrack = master & 31;
+            str->seekrel( -1 );
+            if( !str->good() ) {
+                logger()->error( L4CXX_LOCATION, "str->fail()..." );
+                return false;
+            }
+            if( !at( currTrack, currRow ).load( str ) ) {
+                logger()->error( L4CXX_LOCATION, "Cell loading: ERROR" );
+                return false;
+            }
+        }
+        return str->good();
+    }
+    catch( boost::exception& e ) {
+        BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+    }
+    catch( ... ) {
+        BOOST_THROW_EXCEPTION( std::runtime_error( "Unknown exception" ) );
+    }
 }
 
 light4cxx::Logger* S3mPattern::logger()
 {
-	return light4cxx::Logger::get( "pattern.s3m" );
+    return light4cxx::Logger::get( "pattern.s3m" );
 }
 
 }

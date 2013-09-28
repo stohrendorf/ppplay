@@ -29,12 +29,12 @@ namespace s3m
 
 class S3mOrder : public AbstractOrder
 {
-	DISABLE_COPY( S3mOrder )
-	S3mOrder() = delete;
+    DISABLE_COPY( S3mOrder )
+    S3mOrder() = delete;
 public:
-	inline S3mOrder( uint8_t idx ) : AbstractOrder( idx ) {
-	}
-	virtual bool isUnplayed() const;
+    inline S3mOrder( uint8_t idx ) : AbstractOrder( idx ) {
+    }
+    virtual bool isUnplayed() const;
 };
 
 }

@@ -28,13 +28,13 @@
  */
 class PPPLAY_STREAM_EXPORT MemArchive : public AbstractArchive
 {
-	DISABLE_COPY( MemArchive )
+    DISABLE_COPY( MemArchive )
 public:
-	/**
-	 * @brief Constructs this archive using a SBinStream
-	 */
-	MemArchive();
-	virtual ~MemArchive();
+    /**
+     * @brief Constructs this archive using a SBinStream
+     */
+    MemArchive();
+    virtual ~MemArchive();
 };
 
 #endif

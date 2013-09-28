@@ -38,37 +38,35 @@ namespace ppp
  * @struct ModuleState
  * @brief Contains information about the a playback state
  */
-struct PPPLAY_MODULE_BASE_EXPORT ModuleState : public ISerializable
-{
-	explicit constexpr ModuleState() noexcept :
-		speed( 0 ),
-		tempo( 0 ),
-		order( 0 ),
-		row( 0 ),
-		tick( 0 ),
-		globalVolume( 0x40 ),
-		playedFrames( 0 ),
-		pattern( 0 )
-	{
-	}
-	virtual AbstractArchive& serialize( AbstractArchive* data );
+struct PPPLAY_MODULE_BASE_EXPORT ModuleState : public ISerializable {
+explicit constexpr ModuleState() noexcept :
+    speed( 0 ),
+           tempo( 0 ),
+           order( 0 ),
+           row( 0 ),
+           tick( 0 ),
+           globalVolume( 0x40 ),
+           playedFrames( 0 ),
+    pattern( 0 ) {
+    }
+    virtual AbstractArchive& serialize( AbstractArchive* data );
 
-	//! @brief Speed
-	int16_t speed;
-	//! @brief Tempo
-	int16_t tempo;
-	//! @brief Order
-	size_t order;
-	//! @brief Row
-	int16_t row;
-	//! @brief Tick index
-	int16_t tick;
-	//! @brief Global volume
-	int16_t globalVolume;
-	//! @brief Played Sample frames
-	size_t playedFrames;
-	//! @brief Pattern index of order
-	size_t pattern;
+    //! @brief Speed
+    int16_t speed;
+    //! @brief Tempo
+    int16_t tempo;
+    //! @brief Order
+    size_t order;
+    //! @brief Row
+    int16_t row;
+    //! @brief Tick index
+    int16_t tick;
+    //! @brief Global volume
+    int16_t globalVolume;
+    //! @brief Played Sample frames
+    size_t playedFrames;
+    //! @brief Pattern index of order
+    size_t pattern;
 };
 
 /**

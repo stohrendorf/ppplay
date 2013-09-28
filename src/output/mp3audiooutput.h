@@ -34,57 +34,57 @@
  */
 class MP3AudioOutput : public AbstractAudioOutput
 {
-	DISABLE_COPY( MP3AudioOutput )
-	MP3AudioOutput() = delete;
+    DISABLE_COPY( MP3AudioOutput )
+    MP3AudioOutput() = delete;
 private:
-	//! @brief Internal lame flags struct
-	struct lame_global_struct* m_lameGlobalFlags;
-	//! @brief Output file stream for the MP3 data
-	std::ofstream m_file;
-	//! @brief MP3 filename
-	std::string m_filename;
-	//! @brief Internally used buffer for encoding
-	uint8_t* m_buffer;
-	//! @brief Encoder thread holder
-	std::thread m_encoderThread;
-	//! @brief Whether the output is paused
-	bool m_paused;
-	mutable std::mutex m_mutex;
-	//! @brief Default size of m_buffer
-	static constexpr size_t BufferSize = 32768;
-	/**
-	 * @brief Encoder thread handler
-	 */
-	void encodeThread();
-	virtual uint16_t internal_volumeRight() const;
-	virtual uint16_t internal_volumeLeft() const;
-	virtual void internal_pause();
-	virtual void internal_play();
-	virtual bool internal_paused() const;
-	virtual bool internal_playing() const;
-	virtual int internal_init( int desiredFrq );
+    //! @brief Internal lame flags struct
+    struct lame_global_struct* m_lameGlobalFlags;
+    //! @brief Output file stream for the MP3 data
+    std::ofstream m_file;
+    //! @brief MP3 filename
+    std::string m_filename;
+    //! @brief Internally used buffer for encoding
+    uint8_t* m_buffer;
+    //! @brief Encoder thread holder
+    std::thread m_encoderThread;
+    //! @brief Whether the output is paused
+    bool m_paused;
+    mutable std::mutex m_mutex;
+    //! @brief Default size of m_buffer
+    static constexpr size_t BufferSize = 32768;
+    /**
+     * @brief Encoder thread handler
+     */
+    void encodeThread();
+    virtual uint16_t internal_volumeRight() const;
+    virtual uint16_t internal_volumeLeft() const;
+    virtual void internal_pause();
+    virtual void internal_play();
+    virtual bool internal_paused() const;
+    virtual bool internal_playing() const;
+    virtual int internal_init( int desiredFrq );
 public:
-	/**
-	 * @brief Constructor
-	 * @param[in] src Source of audio data
-	 * @param[in] filename Output filename of the MP3 data
-	 */
-	explicit MP3AudioOutput( const AbstractAudioSource::WeakPtr& src, const std::string& filename );
-	virtual ~MP3AudioOutput();
-	/**
-	 * @brief Set the ID3 tags of the output file
-	 * @param[in] title Title tag
-	 * @param[in] album Album tag
-	 * @param[in] artist Artist tag
-	 * @pre Should be called before init(int).
-	 */
-	void setID3( const std::string& title, const std::string& album, const std::string& artist );
+    /**
+     * @brief Constructor
+     * @param[in] src Source of audio data
+     * @param[in] filename Output filename of the MP3 data
+     */
+    explicit MP3AudioOutput( const AbstractAudioSource::WeakPtr& src, const std::string& filename );
+    virtual ~MP3AudioOutput();
+    /**
+     * @brief Set the ID3 tags of the output file
+     * @param[in] title Title tag
+     * @param[in] album Album tag
+     * @param[in] artist Artist tag
+     * @pre Should be called before init(int).
+     */
+    void setID3( const std::string& title, const std::string& album, const std::string& artist );
 protected:
-	/**
-	 * @brief Get the logger
-	 * @return Child logger with attached ".mp3"
-	 */
-	static light4cxx::Logger* logger();
+    /**
+     * @brief Get the logger
+     * @return Child logger with attached ".mp3"
+     */
+    static light4cxx::Logger* logger();
 };
 
 /**

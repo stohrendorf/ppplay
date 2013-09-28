@@ -37,133 +37,133 @@ namespace s3m
 {
 
 S3mCell::S3mCell() : IPatternCell(), m_note( s3mEmptyNote ), m_instr( s3mEmptyInstr ), m_volume( s3mEmptyVolume ),
-	m_effect( s3mEmptyCommand ), m_effectValue( 0x00 )
+    m_effect( s3mEmptyCommand ), m_effectValue( 0x00 )
 {
 }
 
 bool S3mCell::load( Stream* str )
 {
-	try {
-		clear();
-		uint8_t master = 0;
-		uint8_t buf;
-		*str >> master;
-		if( master & 0x20 ) {
-			*str >> buf;
-			m_note = buf;
-			if( ( m_note >= 0x9b ) && ( m_note != s3mEmptyNote ) && ( m_note != s3mKeyOffNote ) ) {
-				logger()->warn( L4CXX_LOCATION, "File Position %#x: Note out of range: %d", str->pos(), int(m_note) );
-				m_note = s3mEmptyNote;
-			}
-			*str >> buf;
-			m_instr = buf;
-		}
-		if( master & 0x40 ) {
-			*str >> buf;
-			m_volume = buf;
-			if( buf > 0x40 ) {
-				logger()->warn( L4CXX_LOCATION, "File Position %#x: Volume out of range: %d", str->pos(), int(m_volume) );
-				m_volume = s3mEmptyVolume;
-			}
-		}
-		if( master & 0x80 ) {
-			*str >> buf;
-			m_effect = buf;
-			*str >> buf;
-			m_effectValue = buf;
-		}
-	}
-	catch( ... ) {
-		BOOST_THROW_EXCEPTION( std::runtime_error( "Exception" ) );
-		return false;
-	}
-	return str->good();
+    try {
+        clear();
+        uint8_t master = 0;
+        uint8_t buf;
+        *str >> master;
+        if( master & 0x20 ) {
+            *str >> buf;
+            m_note = buf;
+            if( ( m_note >= 0x9b ) && ( m_note != s3mEmptyNote ) && ( m_note != s3mKeyOffNote ) ) {
+                logger()->warn( L4CXX_LOCATION, "File Position %#x: Note out of range: %d", str->pos(), int( m_note ) );
+                m_note = s3mEmptyNote;
+            }
+            *str >> buf;
+            m_instr = buf;
+        }
+        if( master & 0x40 ) {
+            *str >> buf;
+            m_volume = buf;
+            if( buf > 0x40 ) {
+                logger()->warn( L4CXX_LOCATION, "File Position %#x: Volume out of range: %d", str->pos(), int( m_volume ) );
+                m_volume = s3mEmptyVolume;
+            }
+        }
+        if( master & 0x80 ) {
+            *str >> buf;
+            m_effect = buf;
+            *str >> buf;
+            m_effectValue = buf;
+        }
+    }
+    catch( ... ) {
+        BOOST_THROW_EXCEPTION( std::runtime_error( "Exception" ) );
+        return false;
+    }
+    return str->good();
 }
 
 void S3mCell::clear()
 {
-	m_note = s3mEmptyNote;
-	m_instr = s3mEmptyInstr;
-	m_volume = s3mEmptyVolume;
-	m_effect = s3mEmptyCommand;
-	m_effectValue = 0x00;
+    m_note = s3mEmptyNote;
+    m_instr = s3mEmptyInstr;
+    m_volume = s3mEmptyVolume;
+    m_effect = s3mEmptyCommand;
+    m_effectValue = 0x00;
 }
 
 std::string S3mCell::trackerString() const
 {
-	std::string xmsg = "";
-	if( m_note == s3mEmptyNote ) {
-		xmsg += "... ";
-	}
-	else if( m_note == s3mKeyOffNote ) {
-		xmsg += "^^  ";
-	}
-	else {
-		xmsg += stringFmt( "%s%d ", NoteNames.at( m_note & 0x0f ), int(m_note >> 4) );
-	}
-	
-	if( m_instr != s3mEmptyInstr ) {
-		xmsg += stringFmt( "%02d ", int(m_instr) );
-	}
-	else {
-		xmsg += ".. ";
-	}
-	
-	if( m_volume != s3mEmptyVolume ) {
-		xmsg += stringFmt( "%02d ", int(m_volume) );
-	}
-	else {
-		xmsg += ".. ";
-	}
-	
-	if( m_effect != s3mEmptyCommand ) {
-		xmsg += stringFmt( "%c%02x", char( 'A' - 1 + m_effect ), int(m_effectValue) );
-	}
-	else {
-		xmsg += "...";
-	}
-	return xmsg;
+    std::string xmsg = "";
+    if( m_note == s3mEmptyNote ) {
+        xmsg += "... ";
+    }
+    else if( m_note == s3mKeyOffNote ) {
+        xmsg += "^^  ";
+    }
+    else {
+        xmsg += stringFmt( "%s%d ", NoteNames.at( m_note & 0x0f ), int( m_note >> 4 ) );
+    }
+
+    if( m_instr != s3mEmptyInstr ) {
+        xmsg += stringFmt( "%02d ", int( m_instr ) );
+    }
+    else {
+        xmsg += ".. ";
+    }
+
+    if( m_volume != s3mEmptyVolume ) {
+        xmsg += stringFmt( "%02d ", int( m_volume ) );
+    }
+    else {
+        xmsg += ".. ";
+    }
+
+    if( m_effect != s3mEmptyCommand ) {
+        xmsg += stringFmt( "%c%02x", char( 'A' - 1 + m_effect ), int( m_effectValue ) );
+    }
+    else {
+        xmsg += "...";
+    }
+    return xmsg;
 }
 
 uint8_t S3mCell::note() const
 {
-	return m_note;
+    return m_note;
 }
 
 uint8_t S3mCell::instrument() const
 {
-	return m_instr;
+    return m_instr;
 }
 
 uint8_t S3mCell::volume() const
 {
-	return m_volume;
+    return m_volume;
 }
 
 uint8_t S3mCell::effect() const
 {
-	return m_effect;
+    return m_effect;
 }
 
 uint8_t S3mCell::effectValue() const
 {
-	return m_effectValue;
+    return m_effectValue;
 }
 
 AbstractArchive& S3mCell::serialize( AbstractArchive* data )
 {
-	*data
-	% m_note
-	% m_instr
-	% m_volume
-	% m_effect
-	% m_effectValue;
-	return *data;
+    *data
+    % m_note
+    % m_instr
+    % m_volume
+    % m_effect
+    % m_effectValue;
+    return *data;
 }
 
 light4cxx::Logger* S3mCell::logger()
 {
-	return light4cxx::Logger::get( IPatternCell::logger()->name() + ".s3m" );
+    return light4cxx::Logger::get( IPatternCell::logger()->name() + ".s3m" );
 }
 
 }

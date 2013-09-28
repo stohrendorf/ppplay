@@ -33,43 +33,43 @@ namespace ppp
 
 class PPPLAY_CORE_EXPORT PluginRegistry
 {
-	DISABLE_COPY( PluginRegistry )
+    DISABLE_COPY( PluginRegistry )
 private:
-	/**
-	 * @brief Default constructor
-	 */
-	PluginRegistry();
-	/**
-	 * @brief Frees the plugin handles
-	 */
-	~PluginRegistry();
-	/**
-	 * @brief The plugins found by findPlugins()
-	 */
+    /**
+     * @brief Default constructor
+     */
+    PluginRegistry();
+    /**
+     * @brief Frees the plugin handles
+     */
+    ~PluginRegistry();
+    /**
+     * @brief The plugins found by findPlugins()
+     */
 #ifdef WIN32
     std::list<HMODULE> m_handles;
 #else
     std::list<void*> m_handles;
 #endif
     /**
-	 * @brief Looks for plugins in "../lib/ppplay" that start with "libppplay_input_"
-	 */
-	static void findPlugins();
+     * @brief Looks for plugins in "../lib/ppplay" that start with "libppplay_input_"
+     */
+    static void findPlugins();
 public:
-	/**
-	 * @brief Singleton design pattern
-	 * @return Single registry instance
-	 */
-	static PluginRegistry& instance();
-	/**
-	 * @brief Try to load a module file
-	 * @param[in] filename Filename of the module file to load
-	 * @param[in] frq Desired rendering frequency
-	 * @param[in] maxRpt Maximum repeat count (for length calculation)
-	 * @param[in] inter Sample interpolation type
-	 * @return The loaded file or a NULL pointer if an error occured
-	 */
-	static AbstractModule::Ptr tryLoad( const std::string& filename, uint32_t frq, int maxRpt, Sample::Interpolation inter );
+    /**
+     * @brief Singleton design pattern
+     * @return Single registry instance
+     */
+    static PluginRegistry& instance();
+    /**
+     * @brief Try to load a module file
+     * @param[in] filename Filename of the module file to load
+     * @param[in] frq Desired rendering frequency
+     * @param[in] maxRpt Maximum repeat count (for length calculation)
+     * @param[in] inter Sample interpolation type
+     * @return The loaded file or a NULL pointer if an error occured
+     */
+    static AbstractModule::Ptr tryLoad( const std::string& filename, uint32_t frq, int maxRpt, Sample::Interpolation inter );
 };
 
 }
