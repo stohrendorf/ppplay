@@ -183,7 +183,7 @@ struct InstanceData
 	 */
 	inline bool setPixel(SDL_Surface* surface, int x, int y, Uint32 color) const
 	{
-		if(contains(x,y)) {
+        if(surface!=nullptr && contains(x,y)) {
 			reinterpret_cast<Uint32*>( surface->pixels )[ y * surface->pitch / sizeof(Uint32) + x] = color;
 			return true;
 		}
@@ -254,7 +254,7 @@ bool InstanceData::init( int charWidth, int charHeight, const std::string& title
 			logger->info( L4CXX_LOCATION, "Using video driver '%s'", videoDrv );
 		}
 	}
-	SDL_WM_SetCaption( title.c_str(), nullptr );
+    SDL_WM_SetCaption( title.c_str(), title.c_str() );
 	
 	backgroundLayer = SDL_CreateRGBSurface(SDL_HWSURFACE, charWidth*8, charHeight*16, 32, 0xff, 0xff<<8, 0xff<<16, 0       );
 	if(SDL_MUSTLOCK(backgroundLayer))  {
