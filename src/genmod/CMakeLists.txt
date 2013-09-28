@@ -15,6 +15,7 @@ add_library(ppplay_module_base SHARED
 	standardfxdesc.cpp
 )
 generate_export_header(ppplay_module_base)
+target_link_libraries(ppplay_module_base ppplay_core)
 install(TARGETS ppplay_module_base DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ppplayExports)
 install(FILES
 	abstractmodule.h

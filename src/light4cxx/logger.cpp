@@ -20,7 +20,7 @@
 
 #include <iostream>
 #include <unordered_map>
-#include <boost/thread.hpp>
+#include <mutex>
 
 /**
  * @ingroup light4cxx
@@ -30,8 +30,8 @@
 namespace light4cxx
 {
 
-Level Logger::s_level = Level::Debug;
-std::ostream* Logger::s_output = &std::cout;
+PPPLAY_LIGHT4CXX_EXPORT Level Logger::s_level = Level::Debug;
+PPPLAY_LIGHT4CXX_EXPORT std::ostream* Logger::s_output = &std::cout;
 
 Logger* Logger::root()
 {
@@ -42,8 +42,8 @@ Logger* Logger::get( const std::string& name )
 {
 	typedef std::unordered_map<std::string, std::shared_ptr<Logger>> RepoMap; //!< @brief Maps logger names to their instances
 	static RepoMap s_repository; //!< @brief The logger repository
-	static boost::mutex lockMutex; //!< @brief Mutex for locking the repository
-	boost::mutex::scoped_lock lockGuard( lockMutex );
+    static std::mutex lockMutex; //!< @brief Mutex for locking the repository
+    std::lock_guard<std::mutex> lockGuard( lockMutex );
 
 	RepoMap::const_iterator elem = s_repository.find( name );
 	if( elem != s_repository.end() ) {
@@ -63,8 +63,8 @@ void Logger::log( light4cxx::Level l, const light4cxx::Location& loc, const std:
 	if( l < s_level || s_level == Level::Off ) {
 		return;
 	}
-	static boost::mutex outMutex;
-	boost::mutex::scoped_lock outLock( outMutex );
+    static std::mutex outMutex;
+    std::lock_guard<std::mutex> outLock( outMutex );
 	*s_output << loc.toString( l, *this, str ) << std::endl;
 }
 

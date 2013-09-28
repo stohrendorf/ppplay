@@ -22,7 +22,6 @@
 #include "abstractaudiooutput.h"
 
 #include <fstream>
-#include <boost/thread.hpp>
 
 /**
  * @ingroup Output
@@ -47,10 +46,10 @@ private:
 	//! @brief Internally used buffer for encoding
 	uint8_t* m_buffer;
 	//! @brief Encoder thread holder
-	boost::thread m_encoderThread;
+	std::thread m_encoderThread;
 	//! @brief Whether the output is paused
 	bool m_paused;
-	mutable boost::mutex m_mutex;
+	mutable std::mutex m_mutex;
 	//! @brief Default size of m_buffer
 	static constexpr size_t BufferSize = 32768;
 	/**

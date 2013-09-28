@@ -21,6 +21,7 @@
 #include <archive.h>
 #include <archive_entry.h>
 #include <fstream>
+#include <sstream>
 
 #include <boost/filesystem.hpp>
 
@@ -51,14 +52,20 @@ ArchiveFileStream::ArchiveFileStream( const std::string& filename ) : MemoryStre
 	archive* arch = archive_read_new();
 	archive_read_support_format_all(arch);
 	archive_read_support_compression_all(arch);
+#ifdef BOOST_WINDOWS_API
+    char arcPath[260];
+    wcstombs(arcPath, zipPath.c_str(), 260);
+    if(ARCHIVE_OK == archive_read_open_filename(arch, arcPath, 1<<16)) {
+#else
 	if(ARCHIVE_OK == archive_read_open_filename(arch, zipPath.c_str(), 1<<16)) {
+#endif
 		logger()->trace(L4CXX_LOCATION, "Opened '%s'", filename);
 		archive_entry* entry;
 		while(ARCHIVE_OK == archive_read_next_header(arch, &entry)) {
 			boost::filesystem::path current(archive_entry_pathname(entry));
 			if( zipFilePath=="." || current == zipFilePath ) {
 				setName(current.string());
-				std::stringstream* str = static_cast<std::stringstream*>(stream());
+                std::stringstream* str = static_cast<std::stringstream*>(stream());
 				int size = archive_entry_size(entry);
 				char* data = new char[size];
 				archive_read_data(arch, data, size);

@@ -22,7 +22,7 @@
 #include "ppplay_core_export.h"
 #include "abstractaudiosource.h"
 
-#include <boost/thread.hpp>
+#include <mutex>
 
 /**
  * @ingroup Output
@@ -101,7 +101,7 @@ private:
 	AbstractAudioSource::WeakPtr m_source;
 	//! @brief Internal error code
 	ErrorCode m_errorCode;
-	mutable boost::mutex m_mutex;
+    mutable std::mutex m_mutex;
 	/**
 	 * @brief Initialize output device
 	 * @param[in] desiredFrq Desired output frequency

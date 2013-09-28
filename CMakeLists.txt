@@ -7,9 +7,16 @@ if(MINGW)
 	ENABLE_LANGUAGE(RC)
 	SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <FLAGS> <DEFINES> -O coff -o <OBJECT> <SOURCE>")
 	PROJECT(PeePeePlayer CXX C RC)
+        if(CMAKE_SIZEOF_VOID_P MATCHES "8")
+                add_definitions(-DBOOST_USE_WINDOWS_H)
+        endif()
 else()
 	PROJECT(PeePeePlayer CXX C)
 endif(MINGW)
+
+if(WIN32)
+        add_definitions(-DWIN32)
+endif()
 
 INCLUDE(TestBigEndian)
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
@@ -97,7 +104,12 @@ INCLUDE(CPack)
 #########
 # setting compiler flags
 #########
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtual -pedantic -std=c++0x")
+if(NOT WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtual -pedantic -std=c++0x")
+else()
+    # Boost produces massive amounts of warnings on Windows, as it's most likely not within the compiler's system path.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -std=c++0x")
+endif()
 
 # SET(CMAKE_SKIP_BUILD_RPATH FALSE)
 # SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
@@ -166,7 +178,7 @@ if(MINGW)
 	target_link_libraries(ppplay stdc++ mingw32)
 endif()
 
-target_link_libraries(ppplay rt ppplay_core ppplay_module_base ppplay_ppg ppplay_output_sdl ppplay_output_wav)
+target_link_libraries(ppplay ppplay_core ppplay_module_base ppplay_ppg ppplay_output_sdl ppplay_output_wav)
 if(WITH_MP3LAME)
 	target_link_libraries(ppplay ppplay_output_mp3)
 endif()
@@ -211,6 +223,10 @@ add_feature_info("OGG Export" WITH_OGG "OGG Export using libvorbis and libvorbis
 #########
 # add SDL
 #########
+set(SDL_ROOT "" CACHE PATH "The location of the SDL install prefix (only used if the SDL is not yet found)")
+if(SDL_ROOT)
+   list(APPEND CMAKE_PREFIX_PATH ${SDL_ROOT})
+endif()
 find_package(SDL REQUIRED)
 if(NOT SDL_FOUND)
 	message(FATAL_ERROR "SDL not found")
@@ -222,7 +238,7 @@ target_link_libraries(ppplay ${SDL_LIBRARY})
 set(Boost_USE_STATIC_LIBS FALSE)
 set(Boost_USE_MULTITHREADED TRUE)
 include(FindBoost)
-find_package(Boost COMPONENTS program_options filesystem thread system unit_test_framework REQUIRED)
+find_package(Boost COMPONENTS program_options filesystem system unit_test_framework REQUIRED)
 if(Boost_FOUND)
 	include_directories(${Boost_INCLUDE_DIRS})
 	target_link_libraries(ppplay ${Boost_PROGRAM_OPTIONS_LIBRARY})
@@ -232,7 +248,6 @@ endif()
 set_package_info(Boost "Boost libraries" "http://www.boost.org")
 set_package_info(program_options "Boost program_options library" "http://www.boost.org" "The Boost program_options library is used to parse command line arguments.")
 set_package_info(filesystem "Boost filesystem library" "http://www.boost.org" "The Boost filesystem library is used to handle file paths and information.")
-set_package_info(thread "Boost thread library" "http://www.boost.org" "The Boost thread library handles threads.")
 set_package_info(system "Boost system library" "http://www.boost.org" "The Boost system library handles system dependent things.")
 
 include_directories(src)

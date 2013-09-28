@@ -25,19 +25,19 @@
 
 AbstractAudioOutput::ErrorCode AbstractAudioOutput::errorCode() const noexcept
 {
-	boost::mutex::scoped_lock lock( m_mutex );
+    std::lock_guard<std::mutex> lock( m_mutex );
 	return m_errorCode;
 }
 
 void AbstractAudioOutput::setErrorCode( AbstractAudioOutput::ErrorCode ec ) noexcept
 {
-// 	boost::mutex::scoped_lock lock( m_mutex );
+// 	std::lock_guard<std::mutex> lock( m_mutex );
 	m_errorCode = ec;
 }
 
 AbstractAudioSource::Ptr AbstractAudioOutput::source() const
 {
-// 	boost::mutex::scoped_lock lock( m_mutex );
+// 	std::lock_guard<std::mutex> lock( m_mutex );
 	AbstractAudioSource::Ptr lockedSrc = m_source.lock();
 	if(!lockedSrc) {
 		logger()->error(L4CXX_LOCATION, "Requesting non-existing source");
@@ -64,43 +64,43 @@ uint16_t AbstractAudioOutput::internal_volumeRight() const
 
 int AbstractAudioOutput::init( int desiredFrq )
 {
-	boost::mutex::scoped_lock lock( m_mutex );
+    std::lock_guard<std::mutex> lock( m_mutex );
 	return internal_init( desiredFrq );
 }
 
 void AbstractAudioOutput::pause()
 {
-	boost::mutex::scoped_lock lock( m_mutex );
+    std::lock_guard<std::mutex> lock( m_mutex );
 	internal_pause();
 }
 
 bool AbstractAudioOutput::paused() const
 {
-	boost::mutex::scoped_lock lock( m_mutex );
+    std::lock_guard<std::mutex> lock( m_mutex );
 	return internal_paused();
 }
 
 void AbstractAudioOutput::play()
 {
-	boost::mutex::scoped_lock lock( m_mutex );
+    std::lock_guard<std::mutex> lock( m_mutex );
 	internal_play();
 }
 
 bool AbstractAudioOutput::playing() const
 {
-	boost::mutex::scoped_lock lock( m_mutex );
+    std::lock_guard<std::mutex> lock( m_mutex );
 	return internal_playing();
 }
 
 uint16_t AbstractAudioOutput::volumeLeft() const
 {
-	boost::mutex::scoped_lock lock( m_mutex );
+    std::lock_guard<std::mutex> lock( m_mutex );
 	return internal_volumeLeft();
 }
 
 uint16_t AbstractAudioOutput::volumeRight() const
 {
-	boost::mutex::scoped_lock lock( m_mutex );
+    std::lock_guard<std::mutex> lock( m_mutex );
 	return internal_volumeRight();
 }
 

@@ -23,7 +23,7 @@
 #include "ppplay_core_export.h"
 #include "itimer.h"
 
-#include <boost/thread.hpp>
+#include <mutex>
 
 /**
  * @ingroup common
@@ -46,7 +46,7 @@ private:
 	 * @brief The internal SDL Timer ID
 	 */
 	struct _SDL_TimerID* m_id;
-	boost::mutex m_callbackMutex;
+    std::mutex m_callbackMutex;
 	/**
 	 * @brief SDL Timer callback handler
 	 * @param[in] interval Timer interval

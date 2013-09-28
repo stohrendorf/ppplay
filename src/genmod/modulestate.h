@@ -19,7 +19,7 @@
 #ifndef PPPLAY_MODULESTATE_H
 #define PPPLAY_MODULESTATE_H
 
-#include "ppplay_core_export.h"
+#include <genmod/ppplay_module_base_export.h>
 
 #include <stream/iserializable.h>
 
@@ -38,7 +38,7 @@ namespace ppp
  * @struct ModuleState
  * @brief Contains information about the a playback state
  */
-struct PPPLAY_CORE_EXPORT ModuleState : public ISerializable
+struct PPPLAY_MODULE_BASE_EXPORT ModuleState : public ISerializable
 {
 	explicit constexpr ModuleState() noexcept :
 		speed( 0 ),

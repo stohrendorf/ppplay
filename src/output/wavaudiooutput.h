@@ -22,7 +22,6 @@
 #include "abstractaudiooutput.h"
 
 #include <fstream>
-#include <boost/thread.hpp>
 
 /**
  * @ingroup Output
@@ -36,10 +35,10 @@ class WavAudioOutput : public AbstractAudioOutput
 private:
 	std::ofstream m_file;
 	std::string m_filename;
-	boost::thread m_encoderThread;
+    std::thread m_encoderThread;
 	//! @brief Whether the output is paused
 	bool m_paused;
-	mutable boost::mutex m_mutex;
+    mutable std::mutex m_mutex;
 	void encodeThread();
 	virtual uint16_t internal_volumeRight() const;
 	virtual uint16_t internal_volumeLeft() const;

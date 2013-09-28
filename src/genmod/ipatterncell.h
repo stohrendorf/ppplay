@@ -19,7 +19,7 @@
 #ifndef PPPLAY_IPATTERNCELL_H
 #define PPPLAY_IPATTERNCELL_H
 
-#include "ppplay_core_export.h"
+#include <genmod/ppplay_module_base_export.h>
 
 #include <stream/iserializable.h>
 #include <light4cxx/logger.h>
@@ -39,7 +39,7 @@ namespace ppp
  * @ingroup GenMod
  * @brief General interface for pattern note cells
  */
-class PPPLAY_CORE_EXPORT IPatternCell : public ISerializable
+class PPPLAY_MODULE_BASE_EXPORT IPatternCell : public ISerializable
 {
 public:
 	/**

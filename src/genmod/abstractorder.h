@@ -19,7 +19,7 @@
 #ifndef PPPLAY_ABSTRACTORDER_H
 #define PPPLAY_ABSTRACTORDER_H
 
-#include "ppplay_core_export.h"
+#include <genmod/ppplay_module_base_export.h>
 
 #include <stream/iserializable.h>
 #include <light4cxx/logger.h>
@@ -38,7 +38,7 @@ namespace ppp
  * @class AbstractOrder
  * @brief An order list item
  */
-class PPPLAY_CORE_EXPORT AbstractOrder : public ISerializable
+class PPPLAY_MODULE_BASE_EXPORT AbstractOrder : public ISerializable
 {
 	DISABLE_COPY( AbstractOrder )
 	AbstractOrder() = delete;

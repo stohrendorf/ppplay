@@ -19,7 +19,7 @@
 #ifndef GENBASE_H
 #define GENBASE_H
 
-#include "ppplay_core_export.h"
+#include <genmod/ppplay_module_base_export.h>
 
 #include <array>
 #include <cstdint>
@@ -36,7 +36,7 @@ namespace ppp
 /**
  * @brief General note names
  */
-extern PPPLAY_CORE_EXPORT const std::array<const char*, 12> NoteNames;
+extern PPPLAY_MODULE_BASE_EXPORT const std::array<const char*, 12> NoteNames;
 
 /**
  * @class RememberByte
@@ -44,7 +44,7 @@ extern PPPLAY_CORE_EXPORT const std::array<const char*, 12> NoteNames;
  * @tparam TSplitNibbles Set to @c true to handle each nibble separately.
  */
 template<bool TSplitNibbles>
-class PPPLAY_CORE_EXPORT RememberByte
+class PPPLAY_MODULE_BASE_EXPORT RememberByte
 {
 private:
 	//! @brief Value of the byte

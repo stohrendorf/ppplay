@@ -25,7 +25,7 @@
 
 #include <light4cxx/logger.h>
 
-#include <boost/thread.hpp>
+#include <mutex>
 
 /**
  * @ingroup Output
@@ -45,7 +45,7 @@ private:
 	//! @brief Frequency of this source
 	uint32_t m_frequency;
 	bool m_paused;
-	mutable boost::recursive_mutex m_mutex;
+    mutable std::recursive_mutex m_mutex;
 protected:
 	/**
 	 * @brief Sets m_initialized to @c false and m_frequency to @c 0
@@ -125,12 +125,12 @@ protected:
 
 bool AbstractAudioSource::paused() const noexcept
 {
-	boost::recursive_mutex::scoped_lock lock( m_mutex );
+    std::lock_guard<std::recursive_mutex> lock( m_mutex );
 	return m_paused;
 }
 void AbstractAudioSource::setPaused( bool p ) noexcept
 {
-	boost::recursive_mutex::scoped_lock lock( m_mutex );
+    std::lock_guard<std::recursive_mutex> lock( m_mutex );
 	m_paused = p;
 }
 

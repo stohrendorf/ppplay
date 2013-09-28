@@ -12,5 +12,5 @@ add_library(ppplay_input_s3m MODULE
 	s3morder.cpp
 	plugin.cpp
 )
-target_link_libraries(ppplay_input_s3m ppplay_core)
+target_link_libraries(ppplay_input_s3m ppplay_module_base ppplay_core)
 install(TARGETS ppplay_input_s3m LIBRARY DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} COMPONENT Plugins OPTIONAL)

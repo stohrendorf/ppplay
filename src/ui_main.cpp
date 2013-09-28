@@ -111,11 +111,17 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, con
 	if( module->songCount()>1 ) {
 		m_trackerInfo->setText( m_trackerInfo->text() + " - Multi-song" );
 	}
+#ifdef WIN32
+    char fname[260];
+    wcstombs(fname, boost::filesystem::path(module->metaInfo().filename).filename().native().c_str(), 259);
+#else
+    auto fname = boost::filesystem::path(module->metaInfo().filename).filename().native();
+#endif
 	if( !boost::trim_copy( module->metaInfo().title ).empty() ) {
-		m_modTitle->setText( std::string( " -=\xf0[ " ) + boost::filesystem::basename(module->metaInfo().filename) + " : " + boost::trim_copy( module->metaInfo().title ) + " ]\xf0=- " );
+        m_modTitle->setText( std::string( " -=\xf0[ " ) + fname + " : " + boost::trim_copy( module->metaInfo().title ) + " ]\xf0=- " );
 	}
 	else {
-		m_modTitle->setText( std::string( " -=\xf0[ " ) + boost::filesystem::basename(module->metaInfo().filename) + " ]\xf0=- " );
+        m_modTitle->setText( std::string( " -=\xf0[ " ) + fname + " ]\xf0=- " );
 	}
 	m_progress = new ppg::ProgressBar( this, 0, 40 );
 	m_progress->setPosition( ( area().width() - 40 ) / 2, 3 );

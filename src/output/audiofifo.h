@@ -26,9 +26,12 @@
 #include "abstractaudiosource.h"
 
 #include <light4cxx/logger.h>
-#include <boost/thread.hpp>
 #include <boost/circular_buffer.hpp>
 #include <boost/signals2.hpp>
+
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 /**
  * @ingroup Output
@@ -53,16 +56,16 @@ private:
 	//! @brief Threshold to tell when the buffer needs data
 	typename boost::circular_buffer<BasicSampleFrame>::size_type m_threshold;
 	//! @brief The requester thread that pulls the audio data from the source
-	boost::thread m_requestThread;
+    std::thread m_requestThread;
 	//! @brief The audio source to pull the data from
 	AbstractAudioSource::WeakPtr m_source;
 	
 	//! @brief @c true when the destructor is running, stops the thread
 	bool m_stopping;
 	//! @brief Buffer modification mutex
-	mutable boost::mutex m_bufferMutex;
+    mutable std::mutex m_bufferMutex;
 	//! @brief Buffer modification notifier
-	boost::condition_variable m_bufferChanged;
+    std::condition_variable m_bufferChanged;
 	
 	/**
 	 * @brief Audio data pulling thread function
@@ -114,8 +117,18 @@ public:
 	
 	size_t pullData( AudioFrameBuffer& buffer, size_t requestedFrames );
 	
-	boost::signals2::signal<void(const AudioFrameBuffer&)> dataPushed;
-	boost::signals2::signal<void(const AudioFrameBuffer&)> dataPulled;
+    typedef boost::signals2::signal<
+        void(const AudioFrameBuffer&),
+        boost::signals2::optional_last_value<typename boost::function_traits<void(const AudioFrameBuffer&)>::result_type>,
+        int,
+        std::less<int>,
+        boost::function<void(const AudioFrameBuffer&)>,
+        typename boost::signals2::detail::extended_signature<boost::function_traits<void(const AudioFrameBuffer&)>::arity, void(const AudioFrameBuffer&)>::function_type,
+        std::mutex
+    > DataSignal;
+
+    DataSignal dataPushed;
+    DataSignal dataPulled;
 protected:
 	/**
 	 * @brief Get the logger

@@ -20,17 +20,18 @@
 
 #include <boost/format.hpp>
 #include <cstdint>
+#include <chrono>
 
 void WavAudioOutput::encodeThread()
 {
 	while( AbstractAudioSource::Ptr lockedSrc = source() ) {
-		boost::mutex::scoped_lock lock( m_mutex );
+        std::lock_guard<std::mutex> lock( m_mutex );
 		if(!m_file.is_open() || !m_file) {
 			break;
 		}
 		if( m_paused || lockedSrc->paused() ) {
-			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
-			m_encoderThread.yield();
+            std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+            std::this_thread::yield();
 			continue;
 		}
 		AudioFrameBuffer buffer;
@@ -54,7 +55,7 @@ WavAudioOutput::WavAudioOutput( const AbstractAudioSource::WeakPtr& src, const s
 WavAudioOutput::~WavAudioOutput()
 {
 	m_encoderThread.join();
-	boost::mutex::scoped_lock lock( m_mutex );
+    std::lock_guard<std::mutex> lock( m_mutex );
 	
 	const uint32_t filesize = m_file.tellp();
 	
@@ -154,7 +155,7 @@ int WavAudioOutput::internal_init( int desiredFrq )
 	m_file << int32_t(0); // SubChunk size (placeholder)
 	*/
 	
-	m_encoderThread = boost::thread( boost::bind( &WavAudioOutput::encodeThread, this ) );
+    m_encoderThread = std::thread( &WavAudioOutput::encodeThread, this );
 	return desiredFrq;
 }
 

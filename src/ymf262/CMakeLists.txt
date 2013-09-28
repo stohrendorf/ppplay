@@ -12,8 +12,9 @@ add_library(ppplay_opl SHARED
 	opl3.cpp
 	phasegenerator.cpp
 )
-
 generate_export_header(ppplay_opl)
+
+target_link_libraries(ppplay_opl ppplay_stream)
 
 install(TARGETS ppplay_opl DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ppplayExports)
 install(FILES
@@ -25,5 +26,5 @@ option(BUILD_IMFPLAY "Build the OPL-only IMF-Play program" ON)
 if(BUILD_IMFPLAY)
 	add_executable(imfplay imfplay.cpp)
 	install(TARGETS imfplay DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT application)
-	target_link_libraries(imfplay ppplay_opl ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${SDL_LIBRARY} ppplay_stream ppplay_core)
+	target_link_libraries(imfplay ppplay_opl ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${SDL_LIBRARY} ppplay_stream ppplay_core)
 endif()

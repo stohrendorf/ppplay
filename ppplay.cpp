@@ -67,7 +67,14 @@ int loglevel = 1;
 
 void loadUserConfig()
 {
-	std::string cfgFilename = getenv("HOME");
+    const char* env = getenv("HOME");
+#ifdef WIN32
+    if(!env)
+        env = getenv("APPDATA");
+#endif
+    if(!env)
+        return;
+    std::string cfgFilename = env;
 	if(cfgFilename.empty()) {
 		return;
 	}
@@ -294,7 +301,7 @@ int main( int argc, char* argv[] )
 				}
 				if( !SDL_PollEvent( &event ) ) {
 					// usleep( 10000 );
-					boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
+                    std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
 					continue;
 				}
 				if( event.type == SDL_KEYDOWN ) {
@@ -363,7 +370,7 @@ int main( int argc, char* argv[] )
 			int secs = module->length() / module->frequency();
 			boost::progress_display progress(module->length(), std::cout, stringFmt("QuickWAV: %s (%dm%02ds)\n", config::filename, secs/60, secs%60));
 			while( output->playing() ) {
-				boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
+                std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
 				progress += std::const_pointer_cast<const ppp::AbstractModule>(module)->state().playedFrames-progress.count();
 			}
 			output.reset();
@@ -393,7 +400,7 @@ int main( int argc, char* argv[] )
 			int secs = module->length() / module->frequency();
 			boost::progress_display progress(module->length(), std::cout, stringFmt("QuickMP3: %s (%dm%02ds)\n", config::filename, secs/60, secs%60));
 			while( output->playing() ) {
-				boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
+				std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
 				progress += std::const_pointer_cast<const ppp::AbstractModule>(module)->state().playedFrames-progress.count();
 			}
 			output.reset();
@@ -424,7 +431,7 @@ int main( int argc, char* argv[] )
 			int secs = module->length() / module->frequency();
 			boost::progress_display progress(module->length(), std::cout, stringFmt("QuickOGG: %s (%dm%02ds)\n", config::filename, secs/60, secs%60));
 			while( output->playing() ) {
-				boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
+				std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
 				progress += std::const_pointer_cast<const ppp::AbstractModule>(module)->state().playedFrames-progress.count();
 			}
 			output.reset();

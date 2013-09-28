@@ -7,7 +7,7 @@
 #include <stream/iserializable.h>
 #include "standardfxdesc.h"
 
-#include "ppplay_core_export.h"
+#include <genmod/ppplay_module_base_export.h>
 
 namespace ppp
 {
@@ -16,7 +16,7 @@ namespace ppp
 	 * @ingroup GenMod
 	 * @brief Contains data to display to the user
 	 */
-	struct PPPLAY_CORE_EXPORT ChannelState : public ISerializable
+    struct PPPLAY_MODULE_BASE_EXPORT ChannelState : public ISerializable
 	{
 		//! @brief Indicates that the channel is active
 		bool active;

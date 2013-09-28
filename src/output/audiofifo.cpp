@@ -25,8 +25,6 @@
 
 #include <algorithm>
 #include <boost/assert.hpp>
-#include <boost/format.hpp>
-#include <boost/thread.hpp>
 
 void AudioFifo::requestThread()
 {
@@ -37,11 +35,11 @@ void AudioFifo::requestThread()
 			break;
 		}
 
-		boost::mutex::scoped_lock bufferLock(m_bufferMutex);
+        std::unique_lock<std::mutex> bufferLock(m_bufferMutex);
 		// continue if no data is available
 		if( src->paused() || m_buffer.size()>=m_threshold ) {
 			logger()->trace( L4CXX_LOCATION, "FIFO filled, waiting..." );
-			m_bufferChanged.wait(bufferLock);
+            m_bufferChanged.wait(bufferLock);
 			continue;
 		}
 		
@@ -58,7 +56,7 @@ void AudioFifo::requestThread()
 			continue;
 		}
 		// add the data to the queue...
-		bufferLock.unlock();
+        bufferLock.unlock();
 		pushData( buffer );
 		m_bufferChanged.notify_one();
 	}
@@ -72,7 +70,7 @@ AudioFifo::AudioFifo( const AbstractAudioSource::WeakPtr& source, size_t thresho
 	BOOST_ASSERT_MSG( !source.expired(), "Invalid source passed to AudioFifo constructor" );
 	BOOST_ASSERT_MSG( threshold >= 256, "Minimum capacity may not be less than 256" );
 	logger()->debug( L4CXX_LOCATION, "Created with %d frames threshold", threshold );
-	m_requestThread = boost::thread( boost::bind( &AudioFifo::requestThread, this ) );
+    m_requestThread = std::thread( &AudioFifo::requestThread, this );
 	// next bigger 2^x
 	threshold = 1 << std::lround( std::log2(threshold) + 0.5 );
 	m_buffer.set_capacity( threshold );
@@ -94,7 +92,7 @@ void AudioFifo::pushData( const AudioFrameBuffer& buf )
 	if(!buf) {
 		return;
 	}
-	boost::mutex::scoped_lock lock( m_bufferMutex );
+    std::unique_lock<std::mutex> lock( m_bufferMutex );
 	if( buf->size() > m_buffer.capacity() - m_buffer.size() ) {
 		// resize to next bigger exponent of 2
 		size_t nsize = 1 << std::lround(std::log2(buf->size() + m_buffer.capacity()) + 0.5);
@@ -108,7 +106,7 @@ void AudioFifo::pushData( const AudioFrameBuffer& buf )
 
 size_t AudioFifo::pullData( AudioFrameBuffer& data, size_t size )
 {
-	boost::mutex::scoped_lock lock( m_bufferMutex );
+    std::unique_lock<std::mutex> lock( m_bufferMutex );
 	if( size > m_buffer.size() ) {
 		logger()->trace( L4CXX_LOCATION, "Buffer underrun: Requested %d frames while only %d frames in queue", size, m_buffer.size() );
 		size = m_buffer.size();
@@ -126,7 +124,7 @@ size_t AudioFifo::pullData( AudioFrameBuffer& data, size_t size )
 	if( data->size() != size ) {
 		logger()->error( L4CXX_LOCATION, "Copied %d frames into a buffer with %d frames", size, data->size() );
 	}
-	lock.unlock();
+    lock.unlock();
 	m_bufferChanged.notify_one();
 	dataPulled(data);
 	return size;
@@ -144,14 +142,14 @@ bool AudioFifo::isEmpty() const
 
 void AudioFifo::setCapacity( size_t len )
 {
-	boost::mutex::scoped_lock lock( m_bufferMutex );
+    std::unique_lock<std::mutex> lock( m_bufferMutex );
 	BOOST_ASSERT_MSG( len >= 256, "Capacity too low (minimum 256)" );
 	m_buffer.set_capacity(len);
 }
 
 size_t AudioFifo::capacity() const
 {
-	boost::mutex::scoped_lock lock( m_bufferMutex );
+    std::unique_lock<std::mutex> lock( m_bufferMutex );
 	return m_buffer.capacity();
 }
 

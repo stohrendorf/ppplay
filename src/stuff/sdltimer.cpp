@@ -30,7 +30,7 @@
 uint32_t SDLTimer::callback( uint32_t interval, void* userdata )
 {
 	SDLTimer* timer = static_cast<SDLTimer*>( userdata );
-	boost::mutex::scoped_lock lock( timer->m_callbackMutex );
+    std::lock_guard<std::mutex> lock( timer->m_callbackMutex );
 	timer->onTimer();
 	return interval;
 }
@@ -46,7 +46,7 @@ SDLTimer::SDLTimer( uint32_t interval ) : ITimer(), m_interval( interval ), m_id
 SDLTimer::~SDLTimer()
 {
 	SDL_RemoveTimer( m_id );
-	boost::mutex::scoped_lock lock( m_callbackMutex );
+    std::lock_guard<std::mutex> lock( m_callbackMutex );
 }
 
 uint32_t SDLTimer::interval() const

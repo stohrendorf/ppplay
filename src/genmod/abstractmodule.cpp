@@ -31,6 +31,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 
 namespace ppp
 {
@@ -57,7 +58,7 @@ AbstractModule::~AbstractModule()
 
 AbstractArchive& AbstractModule::serialize( AbstractArchive* data )
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	for( AbstractOrder* order : m_orders ) {
 		data->archive( order );
 	}
@@ -72,7 +73,7 @@ uint32_t AbstractModule::timeElapsed() const
 
 size_t AbstractModule::length() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	return m_songs->length;
 }
 
@@ -107,13 +108,13 @@ size_t AbstractModule::internal_preferredBufferSize() const
 
 void AbstractModule::addOrder( AbstractOrder* o )
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	m_orders.push_back( o );
 }
 
 AbstractOrder* AbstractModule::orderAt( size_t idx )
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	if(idx >= m_orders.size()) {
 		logger()->error(L4CXX_LOCATION, "Requested order index out of range: %d >= %d", idx, m_orders.size());
 		throw std::out_of_range("Requested order index out of range");
@@ -123,7 +124,7 @@ AbstractOrder* AbstractModule::orderAt( size_t idx )
 
 size_t AbstractModule::orderCount() const noexcept
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	return m_orders.size();
 }
 
@@ -134,7 +135,7 @@ int AbstractModule::maxRepeat() const noexcept
 
 bool AbstractModule::setOrder( size_t newOrder, bool estimateOnly, bool forceSave )
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	bool orderChanged = ( newOrder != m_state.order);
 	if( orderChanged && m_state.order<orderCount() ) {
 		orderAt( m_state.order )->increasePlaybackCount();
@@ -173,40 +174,40 @@ bool AbstractModule::setOrder( size_t newOrder, bool estimateOnly, bool forceSav
 
 void AbstractModule::setRow( int16_t r ) noexcept
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	m_state.row = r;
 }
 
 void AbstractModule::nextTick()
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	BOOST_ASSERT_MSG( m_state.speed != 0, "Data corruption: speed==0" );
 	m_state.tick = ( m_state.tick + 1 ) % m_state.speed;
 }
 
 void AbstractModule::setTempo( uint8_t t ) noexcept
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	if( t == 0 ) return;
 	m_state.tempo = t;
 }
 
 void AbstractModule::setSpeed( uint8_t s ) noexcept
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	if( s == 0 ) return;
 	m_state.speed = s;
 }
 
 uint16_t AbstractModule::songCount() const noexcept
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	return m_songs.size();
 }
 
 int16_t AbstractModule::currentSongIndex() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	return m_songs.where();
 }
 
@@ -223,21 +224,21 @@ light4cxx::Logger* AbstractModule::logger()
 
 void AbstractModule::loadInitialState()
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	logger()->info(L4CXX_LOCATION, "Loading initial state");
 	m_initialState->archive( this ).finishLoad();
 }
 
 void AbstractModule::saveInitialState()
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	logger()->info(L4CXX_LOCATION, "Storing initial state");
 	m_initialState->archive( this ).finishSave();
 }
 
 bool AbstractModule::jumpNextOrder()
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::unique_lock<std::recursive_mutex> lock(m_mutex);
 	if( !m_songs->states.atEnd() ) {
 		logger()->debug(L4CXX_LOCATION, "Already preprocessed - loading");
 		m_songs->states.next()->archive( this ).finishLoad();
@@ -266,7 +267,7 @@ bool AbstractModule::jumpNextOrder()
 
 bool AbstractModule::jumpPrevOrder()
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	if( !m_songs->states.atFront() && !m_songs->states.empty() ) {
 		logger()->debug(L4CXX_LOCATION, "Jumping to previous order");
 		m_songs->states.prev()->archive( this ).finishLoad();
@@ -287,7 +288,7 @@ bool AbstractModule::jumpPrevOrder()
 
 bool AbstractModule::jumpNextSong()
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	m_isPreprocessing = true;
 	
 	logger()->debug(L4CXX_LOCATION, "Trying to jump to next song");
@@ -322,7 +323,7 @@ bool AbstractModule::jumpNextSong()
 
 bool AbstractModule::jumpPrevSong()
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	if( songCount()<=1 ) {
 		logger()->info( L4CXX_LOCATION, "This is not a multi-song" );
 		return false;
@@ -360,19 +361,19 @@ bool AbstractModule::internal_initialize( uint32_t )
 
 size_t AbstractModule::buildTick( AudioFrameBuffer* buf )
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	return internal_buildTick(buf);
 }
 
 int AbstractModule::channelCount() const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	return internal_channelCount();
 }
 
 ChannelState AbstractModule::channelStatus( size_t idx ) const
 {
-	boost::recursive_mutex::scoped_lock lock(m_mutex);
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	return internal_channelStatus(idx);
 }
 

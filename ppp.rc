@@ -9,13 +9,13 @@ BEGIN
     BLOCK "040904E4"
     BEGIN
       VALUE "CompanyName", "Open Source"
-      VALUE "FileDescription", "S3M Module Player"
+      VALUE "FileDescription", "PeePeePlayer"
       VALUE "FileVersion", "1.0"
       VALUE "InternalName", "peepeeplayer"
       VALUE "LegalCopyright", "Steffen Ohrendorf"
       VALUE "OriginalFilename", "ppp.exe"
       VALUE "ProductName", "PeePeePlayer"
-      VALUE "ProductVersion", "0.1.1"
+      VALUE "ProductVersion", "0.1.3"
     END
   END
 

@@ -37,7 +37,7 @@ private:
 	std::string m_filename;
 	//! @brief Whether the output is paused
 	bool m_paused;
-	mutable boost::mutex m_mutex;
+	mutable std::mutex m_mutex;
 
 	vorbis_info* m_vi;
 	vorbis_dsp_state* m_ds;
@@ -49,7 +49,7 @@ private:
 	std::string m_title;
 	std::string m_artist;
 	std::string m_album;
-	boost::thread m_thread;
+	std::thread m_thread;
 	
 	void encodeThread();
 	

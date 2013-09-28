@@ -19,15 +19,14 @@
 #include "mp3audiooutput.h"
 
 #include <lame/lame.h>
-#include <boost/format.hpp>
 
 void MP3AudioOutput::encodeThread()
 {
 	while( AbstractAudioSource::Ptr lockedSrc = source() ) {
-		boost::mutex::scoped_lock lock( m_mutex );
+		std::lock_guard<std::mutex> lock( m_mutex );
 		if( m_paused || lockedSrc->paused() ) {
-			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
-			m_encoderThread.yield();
+			std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+			std::this_thread::yield();
 			continue;
 		}
 		AudioFrameBuffer buffer;
@@ -75,7 +74,7 @@ MP3AudioOutput::MP3AudioOutput( const AbstractAudioSource::WeakPtr& src, const s
 MP3AudioOutput::~MP3AudioOutput()
 {
 	m_encoderThread.join();
-	boost::mutex::scoped_lock lock( m_mutex );
+	std::lock_guard<std::mutex> lock( m_mutex );
 	if( m_lameGlobalFlags != nullptr ) {
 		int size = lame_encode_flush(m_lameGlobalFlags, m_buffer, BufferSize);
 		m_file.write( reinterpret_cast<char*>(m_buffer), size );
@@ -147,7 +146,7 @@ int MP3AudioOutput::internal_init( int desiredFrq )
 		logger()->error( L4CXX_LOCATION, "LAME parameter initialization failed" );
 		return 0;
 	}
-	m_encoderThread = boost::thread( boost::bind( &MP3AudioOutput::encodeThread, this ) );
+	m_encoderThread = std::thread( &MP3AudioOutput::encodeThread, this );
 	logger()->trace( L4CXX_LOCATION, "LAME initialized" );
 	return desiredFrq;
 }

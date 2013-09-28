@@ -20,8 +20,6 @@
 #include "stream/filestream.h"
 
 #include <vorbis/vorbisenc.h>
-#include <boost/format.hpp>
-
 
 void OggAudioOutput::encodeThread()
 {
@@ -33,10 +31,10 @@ void OggAudioOutput::encodeThread()
 			pause();
 			break;
 		}
-		boost::mutex::scoped_lock lock( m_mutex );
+		std::lock_guard<std::mutex> lock( m_mutex );
 		if( m_paused || lockedSrc->paused() ) {
-			boost::this_thread::sleep( boost::posix_time::millisec( 10 ) );
-			m_thread.yield();
+			std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+			std::this_thread::yield();
 			continue;
 		}
 		AudioFrameBuffer buffer;
@@ -80,7 +78,7 @@ OggAudioOutput::OggAudioOutput( const AbstractAudioSource::WeakPtr& src, const s
 
 OggAudioOutput::~OggAudioOutput()
 {
-	boost::mutex::scoped_lock lock( m_mutex );
+	std::lock_guard<std::mutex> lock( m_mutex );
 	if(m_os) {
 		ogg_stream_clear(m_os);
 		delete m_os;
@@ -176,7 +174,7 @@ int OggAudioOutput::internal_init( int desiredFrq )
 		vorbis_comment_clear(&comments);
 	}
 	
-	m_thread = boost::thread(&OggAudioOutput::encodeThread, this);
+	m_thread = std::thread(&OggAudioOutput::encodeThread, this);
 	
 	logger()->trace( L4CXX_LOCATION, "OGG initialized" );
 	return desiredFrq;

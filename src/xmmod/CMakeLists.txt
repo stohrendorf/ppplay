@@ -14,5 +14,5 @@ add_library(ppplay_input_xm MODULE
 	xmorder.cpp
 	plugin.cpp
 )
-target_link_libraries(ppplay_input_xm ppplay_core)
+target_link_libraries(ppplay_input_xm ppplay_module_base ppplay_core)
 install(TARGETS ppplay_input_xm LIBRARY DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} COMPONENT Plugins OPTIONAL)

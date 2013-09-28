@@ -24,6 +24,10 @@
 
 #include <list>
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 namespace ppp
 {
 
@@ -42,8 +46,12 @@ private:
 	/**
 	 * @brief The plugins found by findPlugins()
 	 */
-	std::list<void*> m_handles;
-	/**
+#ifdef WIN32
+    std::list<HMODULE> m_handles;
+#else
+    std::list<void*> m_handles;
+#endif
+    /**
 	 * @brief Looks for plugins in "../lib/ppplay" that start with "libppplay_input_"
 	 */
 	static void findPlugins();

@@ -1,5 +1,6 @@
-include_directories(. ${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
+add_subdirectory(light4cxx)
 add_subdirectory(output)
 
 add_subdirectory(stream)
@@ -23,10 +24,6 @@ configure_file(
 
 set_source_files_properties(Mainpage.dox PROPERTIES GENERATED TRUE)
 
-if(WIN32)
-	add_definitions(-DL4CXX_NO_ANSI_COLORS)
-endif()
-
 include(GenerateExportHeader)
 add_compiler_export_flags()
 
@@ -43,12 +40,10 @@ add_library(ppplay_core SHARED
 	output/fft.cpp
 	output/fftobserver.cpp
 	output/volumeobserver.cpp
-	light4cxx/location.cpp
-	light4cxx/logger.cpp
 )
 generate_export_header(ppplay_core)
 
-target_link_libraries(ppplay_core ppplay_stream ${SDL_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY})
+target_link_libraries(ppplay_core ppplay_stream ${SDL_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 if(WITH_MP3LAME)
 	target_link_libraries(ppplay_core ${mp3lame_LIB})
 endif()
@@ -72,13 +67,5 @@ install(FILES
 	output/audiotypes.h
 	${CMAKE_CURRENT_BINARY_DIR}/ppplay_core_export.h
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/output
-	COMPONENT Devel
-)
-install(FILES
-	light4cxx/level.h
-	light4cxx/location.h
-	light4cxx/logger.h
-	${CMAKE_CURRENT_BINARY_DIR}/ppplay_core_export.h
-	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/light4cxx
 	COMPONENT Devel
 )

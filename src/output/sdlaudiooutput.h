@@ -24,7 +24,7 @@
 #include "volumeobserver.h"
 #include "fftobserver.h"
 
-#include <boost/thread.hpp>
+#include <mutex>
 
 /**
  * @ingroup Output
@@ -52,7 +52,7 @@ public:
 		return m_fftObserver.right();
 	}
 private:
-	boost::mutex m_mutex;
+    std::mutex m_mutex;
 	AudioFifo m_fifo;
 	VolumeObserver m_volObserver;
 	FftObserver m_fftObserver;

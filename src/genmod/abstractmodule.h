@@ -19,13 +19,15 @@
 #ifndef PPPLAY_ABSTRACTMODULE_H
 #define PPPLAY_ABSTRACTMODULE_H
 
-#include "ppplay_core_export.h"
+#include <genmod/ppplay_module_base_export.h>
 
 #include "modulestate.h"
 #include <output/abstractaudiosource.h>
 #include <stuff/trackingcontainer.h>
 #include "songinfo.h"
 #include "sample.h"
+
+#include <mutex>
 
 namespace ppp
 {
@@ -44,7 +46,7 @@ class AbstractOrder;
  * @todo Create a function to retrieve only the module's title without loading the whole module
  * @todo Multi-song: Reset module/channels on each new song?
  */
-class PPPLAY_CORE_EXPORT AbstractModule : public ISerializable, public AbstractAudioSource
+class PPPLAY_MODULE_BASE_EXPORT AbstractModule : public ISerializable, public AbstractAudioSource
 {
 	DISABLE_COPY( AbstractModule )
 	AbstractModule() = delete;
@@ -79,7 +81,7 @@ private:
 	const int m_maxRepeat;
 	AbstractArchive* m_initialState;
 	bool m_isPreprocessing;
-	mutable boost::recursive_mutex m_mutex;
+    mutable std::recursive_mutex m_mutex;
 	Sample::Interpolation m_interpolation;
 public:
 	//BEGIN Construction/destruction

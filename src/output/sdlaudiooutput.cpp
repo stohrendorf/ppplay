@@ -31,8 +31,8 @@ void SDLAudioOutput::sdlAudioCallback( void* userdata, uint8_t* stream, int len_
 
 size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
 {
-	boost::mutex::scoped_try_lock lock( m_mutex );
-	if(!lock) {
+    std::unique_lock<std::mutex> lock( m_mutex, std::try_to_lock );
+    if(!lock.owns_lock()) {
 		logger()->warn(L4CXX_LOCATION, "Failed to lock mutex");
 		return 0;
 	}
@@ -64,7 +64,7 @@ SDLAudioOutput::SDLAudioOutput( const AbstractAudioSource::WeakPtr& src ) :
 
 SDLAudioOutput::~SDLAudioOutput()
 {
-	boost::mutex::scoped_lock lock( m_mutex );
+    std::unique_lock<std::mutex> lock( m_mutex );
 	SDL_CloseAudio();
 // 	SDL_QuitSubSystem( SDL_INIT_AUDIO );
 	logger()->trace( L4CXX_LOCATION, "Destroyed" );
