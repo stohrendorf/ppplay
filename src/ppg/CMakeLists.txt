@@ -7,7 +7,6 @@ add_library(ppplay_ppg SHARED
 	widget.cpp
 	label.cpp
 	sdlscreen.cpp
-	point.cpp
 	stereopeakbar.cpp
 	progressbar.cpp
 	fonts.cpp

@@ -56,7 +56,12 @@ public:
 	 * @param[in] rhs The coordinates to add
 	 * @return Reference to *this
 	 */
-	const Point& operator+=( const Point& rhs ) noexcept;
+    const Point& operator+=( const Point& rhs ) noexcept
+    {
+        m_x += rhs.m_x;
+        m_y += rhs.m_y;
+        return *this;
+    }
 	/**
 	 * @brief Add two points
 	 * @param[in] rhs The coordinates to add
@@ -70,8 +75,13 @@ public:
 	 * @param[in] rhs The coordinates to subtract
 	 * @return Reference to *this
 	 */
-	const Point& operator-=( const Point& rhs ) noexcept;
-	/**
+    const Point& operator-=( const Point& rhs ) noexcept
+    {
+        m_x -= rhs.m_x;
+        m_y -= rhs.m_y;
+        return *this;
+    }
+    /**
 	 * @brief Subtract two points
 	 * @param[in] rhs The coordinates to subtract
 	 * @return New Point
