@@ -22,6 +22,7 @@
 #include "ppplay_core_export.h"
 #include "audiotypes.h"
 #include <stuff/utils.h>
+#include <boost/signals2/connection.hpp>
 
 class AudioFifo;
 
@@ -44,13 +45,15 @@ private:
     size_t m_filled;
     std::vector<uint16_t> m_left;
     std::vector<uint16_t> m_right;
+    boost::signals2::scoped_connection m_dataPushedConnection;
 public:
     FftObserver( AudioFifo* fifo );
-    ~FftObserver();
+    ~FftObserver() = default;
 
     const std::vector<uint16_t>& left() const {
         return m_left;
     }
+    
     const std::vector<uint16_t>& right() const {
         return m_right;
     }

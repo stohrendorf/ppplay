@@ -117,15 +117,18 @@ public:
 
     size_t pullData( AudioFrameBuffer& buffer, size_t requestedFrames );
 
+    // These are needed to replace boost::mutex (or boost::signals2::mutex) with std::mutex,
+    // otherwise boost::thread would become a dependency.
+    typedef void DataSignalSignature( const AudioFrameBuffer& );
     typedef boost::signals2::signal <
-    void( const AudioFrameBuffer& ),
-          boost::signals2::optional_last_value<typename boost::function_traits<void( const AudioFrameBuffer& )>::result_type>,
-          int,
-          std::less<int>,
-          boost::function<void( const AudioFrameBuffer& )>,
-          typename boost::signals2::detail::extended_signature<boost::function_traits<void( const AudioFrameBuffer& )>::arity, void( const AudioFrameBuffer& )>::function_type,
-          std::mutex
-          > DataSignal;
+        DataSignalSignature,
+        boost::signals2::optional_last_value<void>,
+        int,
+        std::less<int>,
+        boost::function<DataSignalSignature>,
+        typename boost::signals2::detail::extended_signature<0, DataSignalSignature>::function_type,
+        std::mutex
+        > DataSignal;
 
     DataSignal dataPushed;
     DataSignal dataPulled;

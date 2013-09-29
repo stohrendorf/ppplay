@@ -22,6 +22,7 @@
 #include "ppplay_core_export.h"
 #include "audiotypes.h"
 #include <stuff/utils.h>
+#include <boost/signals2/connection.hpp>
 
 class AudioFifo;
 
@@ -50,9 +51,11 @@ private:
 
     //! @brief Observed FIFO
     AudioFifo* m_fifo;
+    boost::signals2::scoped_connection m_dataPushedConnection;
+    boost::signals2::scoped_connection m_dataPulledConnection;
 public:
     explicit VolumeObserver( AudioFifo* fifo );
-    ~VolumeObserver();
+    ~VolumeObserver() = default;
 
     inline uint16_t leftVol() const {
         return m_volLeftLog;

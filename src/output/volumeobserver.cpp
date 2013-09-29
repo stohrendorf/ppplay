@@ -1,7 +1,9 @@
 #include "volumeobserver.h"
 
-#include <boost/assert.hpp>
 #include "audiofifo.h"
+
+#include <boost/assert.hpp>
+#include <functional>
 
 namespace
 {
@@ -41,16 +43,11 @@ void sumAbsValues( const AudioFrameBuffer& buf, uint64_t& left, uint64_t& right 
 
 VolumeObserver::VolumeObserver( AudioFifo* fifo )
     : m_volLeftSum( 0 ), m_volLeftLog( 0 ), m_volRightSum( 0 ), m_volRightLog( 0 ), m_fifo( fifo )
+    , m_dataPushedConnection(), m_dataPulledConnection()
 {
     BOOST_ASSERT( fifo != nullptr );
-    m_fifo->dataPulled.connect( boost::bind( &VolumeObserver::dataPulled, this, _1 ) );
-    m_fifo->dataPushed.connect( boost::bind( &VolumeObserver::dataPushed, this, _1 ) );
-}
-
-VolumeObserver::~VolumeObserver()
-{
-    m_fifo->dataPulled.disconnect( boost::bind( &VolumeObserver::dataPulled, this, _1 ) );
-    m_fifo->dataPushed.disconnect( boost::bind( &VolumeObserver::dataPushed, this, _1 ) );
+    m_dataPushedConnection = m_fifo->dataPushed.connect( boost::bind( &VolumeObserver::dataPushed, this, _1 ) );
+    m_dataPulledConnection = m_fifo->dataPulled.connect( boost::bind( &VolumeObserver::dataPulled, this, _1 ) );
 }
 
 void VolumeObserver::dataPulled( const AudioFrameBuffer& buffer )
