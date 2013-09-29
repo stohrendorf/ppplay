@@ -384,7 +384,7 @@ bool ModModule::adjustPosition( bool estimateOnly )
 ChannelState ModModule::internal_channelStatus( size_t idx ) const
 {
     if( idx >= m_channels.size() ) {
-        throw std::out_of_range( "Requested channel index out of range" );
+        BOOST_THROW_EXCEPTION( std::out_of_range( "Requested channel index out of range" ) );
     }
     return m_channels[ idx ]->status();
 }

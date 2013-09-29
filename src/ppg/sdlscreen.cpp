@@ -389,7 +389,7 @@ SDLScreen* SDLScreen::instance()
 SDLScreen::SDLScreen( int w, int h, const std::string& title ) : Widget( nullptr ), m_cursorX( 0 ), m_cursorY( 0 )
 {
     if( !instanceData.init( w, h, title ) ) {
-        throw std::runtime_error( "SDL Screen Surface already aquired" );
+        BOOST_THROW_EXCEPTION( std::runtime_error( "SDL Screen Surface already aquired" ) );
     }
     setPosition( 0, 0 );
     setSize( instanceData.screenSurface->w / 8, instanceData.screenSurface->h / 16 );

@@ -234,9 +234,9 @@ inline TrackingContainer() noexcept :
      */
     inline Reference prev() {
         if( isDangling() )
-            throw std::out_of_range( "Container has dangling position" );
+            BOOST_THROW_EXCEPTION( std::out_of_range( "Container has dangling position" ) );
         if( m_cursor == 0 )
-            throw std::out_of_range( "No more items at front" );
+            BOOST_THROW_EXCEPTION( std::out_of_range( "No more items at front" ) );
         m_cursor--;
         return current();
     }

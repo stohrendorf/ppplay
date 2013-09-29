@@ -52,21 +52,16 @@ bool S3mPattern::load( Stream* str, size_t pos )
             currTrack = master & 31;
             str->seekrel( -1 );
             if( !str->good() ) {
-                logger()->error( L4CXX_LOCATION, "str->fail()..." );
                 return false;
             }
             if( !at( currTrack, currRow ).load( str ) ) {
-                logger()->error( L4CXX_LOCATION, "Cell loading: ERROR" );
                 return false;
             }
         }
         return str->good();
     }
-    catch( boost::exception& e ) {
-        BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
-    }
     catch( ... ) {
-        BOOST_THROW_EXCEPTION( std::runtime_error( "Unknown exception" ) );
+        BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
     }
 }
 

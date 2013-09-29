@@ -257,6 +257,13 @@ int main( int argc, char* argv[] )
         }
         catch( ... ) {
             light4cxx::Logger::root()->fatal( L4CXX_LOCATION, "Exception on module loading: %s", boost::current_exception_diagnostic_information() );
+            std::cout << std::flush;
+            std::cerr << "The message above means that PeePeePlayer encountered a severe problem it\n"
+                      << "could not handle gracefully. Please report this problem to the developers at:\n"
+                      << "    http://sourceforge.net/p/peepeeplayer/tickets/\n"
+                      << "If possible, please add the file you tried to play, as this seems to be the\n"
+                      << "root of all evil, as well as the message above. Thank you!"
+                      << std::endl;
             return EXIT_FAILURE;
         }
         if( !config::noGUI ) {
@@ -440,9 +447,17 @@ int main( int argc, char* argv[] )
     }
     catch( ... ) {
         light4cxx::Logger::root()->fatal( L4CXX_LOCATION, stringFmt( "Main (end): %s", boost::current_exception_diagnostic_information() ) );
+        std::cout << std::flush;
+        std::cerr << "The message above means that PeePeePlayer encountered a problem which\n"
+                  << "was so terrible that, despite all taken care, caused it to die.\n"
+                  << "To help PeePeePlayer learn to handle this problem, please submit\n"
+                  << "a bug report to:"
+                  << "    http://sourceforge.net/p/peepeeplayer/tickets/\n"
+                  << "If possible, please add the file you tried to play and the message above,\n"
+                  << "so the authors can examine and hopefully solve the mystery. Thank you!"
+                  << std::endl;
         return EXIT_FAILURE;
     }
     dosScreen.reset();
-// 	uiMain.reset();
     return EXIT_SUCCESS;
 }

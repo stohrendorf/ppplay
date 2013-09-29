@@ -117,7 +117,7 @@ AbstractOrder* AbstractModule::orderAt( size_t idx )
     std::lock_guard<std::recursive_mutex> lock( m_mutex );
     if( idx >= m_orders.size() ) {
         logger()->error( L4CXX_LOCATION, "Requested order index out of range: %d >= %d", idx, m_orders.size() );
-        throw std::out_of_range( "Requested order index out of range" );
+        BOOST_THROW_EXCEPTION( std::out_of_range( "Requested order index out of range" ) );
     }
     return m_orders[idx];
 }

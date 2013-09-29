@@ -111,9 +111,9 @@ const char* levelString( Level l )
         case Level::Fatal:
             return COLOR_RED "FATAL" COLOR_RESET;
         case Level::All:
-            throw std::runtime_error( "Logging level invalid: Level::All should not be passed to levelString()" );
+            BOOST_THROW_EXCEPTION( std::runtime_error( "Logging level invalid: Level::All should not be passed to levelString()" ) );
         default:
-            throw std::runtime_error( "Logging level invalid: Unknown Level passed to levelString()" );
+            BOOST_THROW_EXCEPTION( std::runtime_error( "Logging level invalid: Unknown Level passed to levelString()" ) );
     }
 }
 
@@ -251,7 +251,7 @@ std::string Location::toString( light4cxx::Level l, const light4cxx::Logger& log
                         oss << std::hex << m_threadId;
                         break;
                     default:
-                        throw std::runtime_error( std::string( "Unknown format specifier at: " ) + s_format.substr( i ) );
+                        BOOST_THROW_EXCEPTION( std::runtime_error( std::string( "Unknown format specifier at: " ) + s_format.substr( i ) ) );
                 }
                 state = 0;
                 oss.copyfmt( std::ostringstream() );
@@ -260,7 +260,7 @@ std::string Location::toString( light4cxx::Level l, const light4cxx::Logger& log
                 				oss.width(0);*/
                 break;
             default:
-                throw std::runtime_error( "Invalid format parsing state" );
+                BOOST_THROW_EXCEPTION( std::runtime_error( "Invalid format parsing state" ) );
         }
     }
     return oss.str();

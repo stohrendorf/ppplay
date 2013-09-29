@@ -23,6 +23,8 @@
 #include <type_traits>
 #include <stdexcept>
 
+#include <boost/throw_exception.hpp>
+
 /**
  * @class Field
  * @brief A two-dimensional array
@@ -49,23 +51,23 @@ public:
 
     typename std::vector<T>::iterator operator[]( std::size_t y ) {
         if( y >= m_height )
-            throw std::out_of_range( "Y coordinate out of bounds" );
+            BOOST_THROW_EXCEPTION( std::out_of_range( "Y coordinate out of bounds" ) );
         return m_data.begin() + y * m_width;
     }
     typename std::vector<T>::const_iterator operator[]( std::size_t y ) const {
         if( y >= m_height )
-            throw std::out_of_range( "Y coordinate out of bounds" );
+            BOOST_THROW_EXCEPTION( std::out_of_range( "Y coordinate out of bounds" ) );
         return m_data.cbegin() + y * m_width;
     }
 
     typename std::vector<T>::reference at( std::size_t x, std::size_t y ) {
         if( y >= m_height || x >= m_width )
-            throw std::out_of_range( "X and/or Y coordinate out of bounds" );
+            BOOST_THROW_EXCEPTION( std::out_of_range( "X and/or Y coordinate out of bounds" ) );
         return m_data.at( y * m_width + x );
     }
     typename std::vector<T>::const_reference at( std::size_t x, std::size_t y ) const {
         if( y >= m_height || x >= m_width )
-            throw std::out_of_range( "X and/or Y coordinate out of bounds" );
+            BOOST_THROW_EXCEPTION( std::out_of_range( "X and/or Y coordinate out of bounds" ) );
         return m_data.at( y * m_width + x );
     }
 

@@ -166,11 +166,8 @@ bool S3mSample::load( Stream* str, size_t pos, bool imagoLoopEnd )
         }
         return true;
     }
-    catch( boost::exception& e ) {
-        BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
-    }
     catch( ... ) {
-        BOOST_THROW_EXCEPTION( std::runtime_error( "Unknown exception" ) );
+        BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
     }
 }
 

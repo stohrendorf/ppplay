@@ -44,7 +44,7 @@ ArchiveFileStream::ArchiveFileStream( const std::string& filename ) : MemoryStre
         zipPath.remove_filename();
     }
     if( !boost::filesystem::is_regular_file( zipPath ) ) {
-        logger()->error( L4CXX_LOCATION, "Failed to open '%s'", filename );
+        logger()->warn( L4CXX_LOCATION, "Failed to open '%s'", filename );
         return;
     }
     logger()->trace( L4CXX_LOCATION, "Decomposed '%s': ZIP '%s', File '%s', using %s", filename, zipPath.string(), zipFilePath.string(), archive_version_string() );
