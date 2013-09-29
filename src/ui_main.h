@@ -22,13 +22,12 @@
 #include "ppg/label.h"
 #include "ppg/stereopeakbar.h"
 #include "ppg/progressbar.h"
-#include "stuff/sdltimer.h"
 #include "genmod/abstractmodule.h"
 #include "output/abstractaudiooutput.h"
 
 #include <array>
 
-class UIMain : public ppg::Widget, public SDLTimer
+class UIMain : public ppg::Widget
 {
 	DISABLE_COPY( UIMain )
 private:
@@ -49,7 +48,7 @@ private:
 	virtual void drawThis();
 public:
 	UIMain( Widget* parent, const ppp::AbstractModule::Ptr& module, const AbstractAudioOutput::Ptr& output );
-	virtual ~UIMain();
+	virtual ~UIMain() = default;
 	ppg::Label* posLabel();
 	ppg::Label* playbackInfo();
 	ppg::StereoPeakBar* volBar();
@@ -58,7 +57,6 @@ public:
 	ppg::Label* trackerInfo();
 	ppg::Label* modTitle();
 	ppg::ProgressBar* progressBar();
-	virtual void onTimer();
 	void setFft(const std::vector<uint16_t>& left, const std::vector<uint16_t>& right)
 	{
 		m_fftLeft = left;

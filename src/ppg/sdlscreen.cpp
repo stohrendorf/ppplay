@@ -386,7 +386,7 @@ SDLScreen* SDLScreen::instance()
     return instanceData.screen;
 }
 
-SDLScreen::SDLScreen( int w, int h, const std::string& title ) : Widget( nullptr ), m_cursorX( 0 ), m_cursorY( 0 )
+SDLScreen::SDLScreen( int w, int h, const std::string& title ) : Widget( nullptr ), SDLTimer(1000/30), m_cursorX( 0 ), m_cursorY( 0 )
 {
     if( !instanceData.init( w, h, title ) ) {
         BOOST_THROW_EXCEPTION( std::runtime_error( "SDL Screen Surface already aquired" ) );
@@ -446,10 +446,8 @@ void SDLScreen::setBgColorAt( int x, int y, Color c )
 
 bool SDLScreen::onMouseMove( int x, int y )
 {
-// 	LockGuard guard(this);
     m_cursorX = x;
     m_cursorY = y;
-// 	guard.unlock();
     Widget::onMouseMove( x, y );
     return true;
 }
@@ -470,6 +468,16 @@ void SDLScreen::clearPixels( Color c )
 {
     LockGuard guard( this );
     instanceData.clearPixels( c );
+}
+
+void SDLScreen::onTimer()
+{
+    LockGuard guard( this );
+    if(!instanceData.chars)
+        return;
+    clear( ' ', ppg::Color::White, ppg::Color::Black );
+    clearPixels();
+    draw();
 }
 
 } // namespace ppg

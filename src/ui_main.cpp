@@ -25,13 +25,64 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
-static light4cxx::Logger* logger()
+namespace
+{
+light4cxx::Logger* logger()
 {
     return light4cxx::Logger::get( "ui.main" );
 }
+std::string stateToString( size_t idx, const ppp::ChannelState& state )
+{
+    std::string res = stringFmt( "%02d ", idx + 1 );
+    if( !state.active ) {
+        return res;
+    }
+    res += state.noteTriggered ? '*' : ' ';
+    if( state.note == ppp::ChannelState::NoNote ) {
+        res += "... ";
+    }
+    else if( state.note == ppp::ChannelState::NoteCut ) {
+        res += "^^^ ";
+    }
+    else if( state.note == ppp::ChannelState::KeyOff ) {
+        res += "=== ";
+    }
+    else if( state.note == ppp::ChannelState::TooLow ) {
+        res += "___ ";
+    }
+    else if( state.note == ppp::ChannelState::TooHigh ) {
+        res += "+++ ";
+    }
+    else {
+        res += ppp::NoteNames[state.note % 12];
+        res += char( '0' + state.note / 12 );
+        res += ' ';
+    }
+
+    res += state.fxDesc;
+    res += stringFmt( " V:%3d%%", int( state.volume ) );
+    if( state.panning == -100 ) {
+        res += " P:Left  ";
+    }
+    else if( state.panning == 0 ) {
+        res += " P:Centr ";
+    }
+    else if( state.panning == 100 ) {
+        res += " P:Right ";
+    }
+    else if( state.panning == ppp::ChannelState::Surround ) {
+        res += " P:Srnd  ";
+    }
+    else {
+        res += stringFmt( " P:%4d%% ", int( state.panning ) );
+    }
+    res += state.instrumentName;
+    return res;
+}
+}
 
 UIMain::UIMain( ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, const AbstractAudioOutput::Ptr& output ):
-    Widget( parent ), SDLTimer( 1000 / 30 ),
+    Widget( parent ),
     m_position( nullptr ),
     m_screenSep1( nullptr ),
     m_screenSep2( nullptr ),
@@ -131,113 +182,15 @@ UIMain::UIMain( ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, con
     logger()->trace( L4CXX_LOCATION, "Initialized" );
 }
 
-UIMain::~UIMain()
-{
-    LockGuard guard( this );
-}
-
 void UIMain::drawThis()
 {
-}
-
-ppg::Label* UIMain::posLabel()
-{
-    return m_position;
-}
-
-ppg::Label* UIMain::playbackInfo()
-{
-    return m_playbackInfo;
-}
-
-ppg::StereoPeakBar* UIMain::volBar()
-{
-    return m_volBar;
-}
-
-ppg::Label* UIMain::chanInfo( size_t idx )
-{
-    return m_chanInfos.at( idx );
-}
-
-ppg::Label* UIMain::chanCell( size_t idx )
-{
-    return m_chanCells.at( idx );
-}
-
-ppg::Label* UIMain::trackerInfo()
-{
-    return m_trackerInfo;
-}
-
-ppg::Label* UIMain::modTitle()
-{
-    return m_modTitle;
-}
-
-namespace
-{
-std::string stateToString( size_t idx, const ppp::ChannelState& state )
-{
-    std::string res = stringFmt( "%02d ", idx + 1 );
-    if( !state.active ) {
-        return res;
-    }
-    res += state.noteTriggered ? '*' : ' ';
-    if( state.note == ppp::ChannelState::NoNote ) {
-        res += "... ";
-    }
-    else if( state.note == ppp::ChannelState::NoteCut ) {
-        res += "^^^ ";
-    }
-    else if( state.note == ppp::ChannelState::KeyOff ) {
-        res += "=== ";
-    }
-    else if( state.note == ppp::ChannelState::TooLow ) {
-        res += "___ ";
-    }
-    else if( state.note == ppp::ChannelState::TooHigh ) {
-        res += "+++ ";
-    }
-    else {
-        res += ppp::NoteNames[state.note % 12];
-        res += char( '0' + state.note / 12 );
-        res += ' ';
-    }
-
-    res += state.fxDesc;
-    res += stringFmt( " V:%3d%%", int( state.volume ) );
-    if( state.panning == -100 ) {
-        res += " P:Left  ";
-    }
-    else if( state.panning == 0 ) {
-        res += " P:Centr ";
-    }
-    else if( state.panning == 100 ) {
-        res += " P:Right ";
-    }
-    else if( state.panning == ppp::ChannelState::Surround ) {
-        res += " P:Srnd  ";
-    }
-    else {
-        res += stringFmt( " P:%4d%% ", int( state.panning ) );
-    }
-    res += state.instrumentName;
-    return res;
-}
-}
-
-void UIMain::onTimer()
-{
-    LockGuard guard( this );
     AbstractAudioOutput::Ptr outLock( m_output.lock() );
     const std::shared_ptr<const ppp::AbstractModule> modLock = std::const_pointer_cast<const ppp::AbstractModule>( m_module.lock() );
-    if( m_module.expired() || m_output.expired() || !ppg::SDLScreen::instance() ) {
+    if( m_module.expired() || m_output.expired() ) {
         logger()->trace( L4CXX_LOCATION, "Module or Output Device expired" );
         return;
     }
     logger()->trace( L4CXX_LOCATION, "Updating" );
-    ppg::SDLScreen::instance()->clear( ' ', ppg::Color::White, ppg::Color::Black );
     m_volBar->shift( outLock->volumeLeft() >> 8, outLock->volumeRight() >> 8 );
     size_t msecs = modLock->state().playedFrames / 441;
     size_t msecslen = modLock->length() / 441;
@@ -273,8 +226,6 @@ void UIMain::onTimer()
     const int height = ppg::SDLScreen::instance()->area().height() * 16;
     const float scale = m_fftLeft.size() * 1.0f / width2;
 
-    ppg::SDLScreen::instance()->clearPixels();
-
     for( size_t i = 0; i < m_fftLeft.size(); i++ ) {
         for( size_t y = 1; y <= m_fftLeft[i] / 4; y++ ) {
             ppg::SDLScreen::instance()->drawPixel( i / scale, height - y - 1, ppg::Color::LightGreen );
@@ -283,6 +234,39 @@ void UIMain::onTimer()
             ppg::SDLScreen::instance()->drawPixel( i / scale + width2, height - y - 1, ppg::Color::LightRed );
         }
     }
+}
 
-    ppg::SDLScreen::instance()->draw();
+ppg::Label* UIMain::posLabel()
+{
+    return m_position;
+}
+
+ppg::Label* UIMain::playbackInfo()
+{
+    return m_playbackInfo;
+}
+
+ppg::StereoPeakBar* UIMain::volBar()
+{
+    return m_volBar;
+}
+
+ppg::Label* UIMain::chanInfo( size_t idx )
+{
+    return m_chanInfos.at( idx );
+}
+
+ppg::Label* UIMain::chanCell( size_t idx )
+{
+    return m_chanCells.at( idx );
+}
+
+ppg::Label* UIMain::trackerInfo()
+{
+    return m_trackerInfo;
+}
+
+ppg::Label* UIMain::modTitle()
+{
+    return m_modTitle;
 }

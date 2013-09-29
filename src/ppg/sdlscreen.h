@@ -20,6 +20,7 @@
 #define PPG_SDLSCREEN_H
 
 #include "widget.h"
+#include <stuff/sdltimer.h>
 
 /**
  * @ingroup Ppg
@@ -32,13 +33,15 @@ namespace ppg
  * @class SDLScreen
  * @brief The virtual DOS screen (SDL implementation)
  */
-class PPPLAY_PPG_EXPORT SDLScreen : public Widget
+class PPPLAY_PPG_EXPORT SDLScreen : public Widget, public SDLTimer
 {
     DISABLE_COPY( SDLScreen )
 private:
     virtual void drawThis();
     int m_cursorX; //!< @brief Cursor X position
     int m_cursorY; //!< @brief Cursor Y position
+    
+    virtual void onTimer();
 public:
     static SDLScreen* instance();
     /**
@@ -67,7 +70,6 @@ public:
      * @retval true if the screen has the mouse focus
      */
     bool hasMouseFocus() const;
-
 };
 } // namespace ppg
 
