@@ -41,15 +41,14 @@ bool S3mPattern::load( Stream* str, size_t pos )
         uint16_t patSize;
         str->seek( pos );
         *str >> patSize;
-        uint16_t currRow = 0, currTrack = 0;
-        while( currRow < 64 ) {
+        for( uint16_t currRow = 0; currRow < 64; /*nothing*/ ) {
             uint8_t master;
             *str >> master;
             if( master == 0 ) {
                 currRow++;
                 continue;
             }
-            currTrack = master & 31;
+            uint16_t currTrack = master & 31;
             str->seekrel( -1 );
             if( !str->good() ) {
                 return false;

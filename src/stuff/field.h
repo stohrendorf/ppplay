@@ -43,8 +43,7 @@ public:
         : m_width( width ), m_height( height ), m_data( width* height ) {
     }
     explicit inline Field() noexcept
-:
-    m_width( 0 ), m_height( 0 ), m_data() {
+        : m_width( 0 ), m_height( 0 ), m_data() {
     }
 
     virtual ~Field() = default;

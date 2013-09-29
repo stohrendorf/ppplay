@@ -19,8 +19,6 @@
 #ifndef PPPLAY_UTILS_H
 #define PPPLAY_UTILS_H
 
-#include <boost/checked_delete.hpp>
-
 /**
  * @ingroup Common
  * @{
@@ -46,8 +44,8 @@
 template<class T>
 inline void deleteAll( T& container )
 {
+    static_assert(sizeof(**container.begin())>0, "Cannot delete an incomplete type");
     for( auto & val : container ) {
-        boost::checked_delete( val );
         val = nullptr;
     }
 }
