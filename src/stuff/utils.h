@@ -46,6 +46,7 @@ inline void deleteAll( T& container )
 {
     static_assert(sizeof(**container.begin())>0, "Cannot delete an incomplete type");
     for( auto & val : container ) {
+        delete val;
         val = nullptr;
     }
 }
