@@ -473,7 +473,8 @@ void SDLScreen::clearPixels( Color c )
 void SDLScreen::onTimer()
 {
     LockGuard guard( this );
-    if(!instanceData.chars)
+    // chars will be the first deleted, visibleColorsB will be last initialized
+    if(!instanceData.chars || !instanceData.visibleColorsB)
         return;
     clear( ' ', ppg::Color::White, ppg::Color::Black );
     clearPixels();
