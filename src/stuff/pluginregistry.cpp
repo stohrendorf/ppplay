@@ -31,9 +31,9 @@
 namespace ppp
 {
 
-#ifdef WIN32
 namespace
 {
+#ifdef WIN32
 std::string wideToMultibyte(const std::wstring& ws)
 {
     char tmp[1024];
@@ -46,8 +46,14 @@ std::string wideToMultibyte(const std::wstring& ws)
         return std::string();
     return tmp;
 }
-}
 #endif
+
+light4cxx::Logger* logger()
+{
+    static light4cxx::Logger* l = light4cxx::Logger::get("pluginregistry");
+    return l;
+}
+}
 
 PluginRegistry::PluginRegistry() : m_handles(), m_searchPath(LIBEXECDIR)
 {
@@ -73,9 +79,9 @@ PluginRegistry& PluginRegistry::instance()
 void PluginRegistry::setSearchPath( const boost::filesystem::path& path )
 {
 #ifdef WIN32
-    light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Setting plugin search path to: %s", wideToMultibyte(path.native()));
+    logger()->debug(L4CXX_LOCATION, "Setting plugin search path to: %s", wideToMultibyte(path.native()));
 #else
-    light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Setting plugin search path to: %s", path);
+    logger()->debug(L4CXX_LOCATION, "Setting plugin search path to: %s", path);
 #endif
     m_searchPath = path;
 }
@@ -126,9 +132,9 @@ void PluginRegistry::findPlugins()
         return;
     }
 #ifdef WIN32
-    light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Looking for plugins in %s", wideToMultibyte(instance().m_searchPath.native()) );
+    logger()->debug( L4CXX_LOCATION, "Looking for plugins in %s", wideToMultibyte(instance().m_searchPath.native()) );
 #else
-    light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Looking for plugins in %s", instance().m_searchPath );
+    logger()->debug( L4CXX_LOCATION, "Looking for plugins in %s", instance().m_searchPath );
 #endif
 
     std::list<boost::filesystem::path> paths;
@@ -136,27 +142,27 @@ void PluginRegistry::findPlugins()
     for( const auto & entry : paths ) {
         // find every file in m_searchPath that begins with "libppplay_input_"
 #ifdef WIN32
-        light4cxx::Logger::root()->info( L4CXX_LOCATION, "Checking: %s", wideToMultibyte(entry.filename().native()) );
+        logger()->info( L4CXX_LOCATION, "Checking: %s", wideToMultibyte(entry.filename().native()) );
         if( entry.filename().native().find( L"libppplay_input_" ) != 0 )
             continue;
 #else
-        light4cxx::Logger::root()->info( L4CXX_LOCATION, "Checking: %s", entry.filename().native() );
+        logger()->info( L4CXX_LOCATION, "Checking: %s", entry.filename().native() );
         if( entry.filename().native().find( "libppplay_input_" ) != 0 )
             continue;
 #endif
         // try to load the file and look for the exported "plugin" symbol
 #ifdef WIN32
-        light4cxx::Logger::root()->info( L4CXX_LOCATION, "Trying to load input plugin: %s", wideToMultibyte(entry.native()) );
+        logger()->info( L4CXX_LOCATION, "Trying to load input plugin: %s", wideToMultibyte(entry.native()) );
         HMODULE handle = LoadLibraryW( entry.c_str() );
 #else
-        light4cxx::Logger::root()->info( L4CXX_LOCATION, "Trying to load input plugin: %s", entry.native() );
+        logger()->info( L4CXX_LOCATION, "Trying to load input plugin: %s", entry.native() );
         void* handle = dlopen( entry.c_str(), RTLD_LAZY );
 #endif
         if( !handle ) {
 #ifdef WIN32
-            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s'", wideToMultibyte(entry.native()) );
+            logger()->error( L4CXX_LOCATION, "Failed to load plugin '%s'", wideToMultibyte(entry.native()) );
 #else
-            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s': %s", entry.native(), dlerror() );
+            logger()->error( L4CXX_LOCATION, "Failed to load plugin '%s': %s", entry.native(), dlerror() );
 #endif
             continue;
         }
@@ -167,10 +173,10 @@ void PluginRegistry::findPlugins()
 #endif
         if( !plugin ) {
 #ifdef WIN32
-            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s'", wideToMultibyte(entry.native()) );
+            logger()->error( L4CXX_LOCATION, "Failed to load plugin '%s'", wideToMultibyte(entry.native()) );
             FreeLibrary( handle );
 #else
-            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s': %s", entry.native(), dlerror() );
+            logger()->error( L4CXX_LOCATION, "Failed to load plugin '%s': %s", entry.native(), dlerror() );
             dlclose( handle );
 #endif
             continue;
@@ -179,19 +185,19 @@ void PluginRegistry::findPlugins()
         int version = plugin->version();
         if( version != InputPlugin::Version ) {
 #ifdef WIN32
-            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s': API version mismatch. Expected %d, found %d.", wideToMultibyte(entry.native()), InputPlugin::Version, version );
+            logger()->error( L4CXX_LOCATION, "Failed to load plugin '%s': API version mismatch. Expected %d, found %d.", wideToMultibyte(entry.native()), InputPlugin::Version, version );
             FreeLibrary( handle );
 #else
-            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s': API version mismatch. Expected %d, found %d.", entry.native(), InputPlugin::Version, version );
+            logger()->error( L4CXX_LOCATION, "Failed to load plugin '%s': API version mismatch. Expected %d, found %d.", entry.native(), InputPlugin::Version, version );
             dlclose( handle );
 #endif
             continue;
         }
         // the plugin is valid, so add it to the list
 #ifdef WIN32
-        light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Found input plugin '%s', '%s': %s", wideToMultibyte(entry.native()), plugin->name(), plugin->description() );
+        logger()->debug( L4CXX_LOCATION, "Found input plugin '%s', '%s': %s", wideToMultibyte(entry.native()), plugin->name(), plugin->description() );
 #else
-        light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Found input plugin '%s', '%s': %s", entry.native(), plugin->name(), plugin->description() );
+        logger()->debug( L4CXX_LOCATION, "Found input plugin '%s', '%s': %s", entry.native(), plugin->name(), plugin->description() );
 #endif
         instance().m_handles.push_back( handle );
     }
