@@ -8,8 +8,6 @@ set_package_info(LibArchive "LibArchive" "http://www.libarchive.org" "LibArchive
 
 include_directories(${LibArchive_INCLUDE_DIR})
 
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
-
 include(GenerateExportHeader)
 add_compiler_export_flags()
 

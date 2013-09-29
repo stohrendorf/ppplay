@@ -23,16 +23,33 @@
 
 #ifdef WIN32
 #include <windows.h>
+#include <cwchar>
 #else
 #include <dlfcn.h>
 #endif
 
-#include <boost/filesystem.hpp>
-
 namespace ppp
 {
 
-PluginRegistry::PluginRegistry() : m_handles()
+#ifdef WIN32
+namespace
+{
+std::string wideToMultibyte(const std::wstring& ws)
+{
+    char tmp[1024];
+    mbstate_t state;
+    mbrlen(nullptr, 0, &state);
+    auto ptr = ws.c_str();
+    auto len = wcsrtombs( tmp, &ptr, sizeof(tmp)-1, &state );
+    tmp[sizeof(tmp)-1] = '\0';
+    if(len == size_t(-1))
+        return std::string();
+    return tmp;
+}
+}
+#endif
+
+PluginRegistry::PluginRegistry() : m_handles(), m_searchPath(LIBEXECDIR)
 {
 }
 
@@ -51,6 +68,16 @@ PluginRegistry& PluginRegistry::instance()
 {
     static PluginRegistry registry;
     return registry;
+}
+
+void PluginRegistry::setSearchPath( const boost::filesystem::path& path )
+{
+#ifdef WIN32
+    light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Setting plugin search path to: %s", wideToMultibyte(path.native()));
+#else
+    light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Setting plugin search path to: %s", path);
+#endif
+    m_searchPath = path;
 }
 
 AbstractModule::Ptr PluginRegistry::tryLoad( const std::string& filename, uint32_t frq, int maxRpt, Sample::Interpolation inter )
@@ -98,21 +125,18 @@ void PluginRegistry::findPlugins()
     if( !instance().m_handles.empty() ) {
         return;
     }
-    boost::filesystem::path pluginPath( LIBEXECDIR );
-    light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Looking for plugins in %s", LIBEXECDIR );
+#ifdef WIN32
+    light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Looking for plugins in %s", wideToMultibyte(instance().m_searchPath.native()) );
+#else
+    light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Looking for plugins in %s", instance().m_searchPath );
+#endif
 
     std::list<boost::filesystem::path> paths;
-    std::copy( boost::filesystem::directory_iterator( pluginPath ), boost::filesystem::directory_iterator(), std::back_inserter( paths ) );
+    std::copy( boost::filesystem::directory_iterator( instance().m_searchPath ), boost::filesystem::directory_iterator(), std::back_inserter( paths ) );
     for( const auto & entry : paths ) {
+        // find every file in m_searchPath that begins with "libppplay_input_"
 #ifdef WIN32
-        char nativeStr[260];
-        wcstombs( nativeStr, entry.native().c_str(), 259 );
-        char nativeFnStr[260];
-        wcstombs( nativeFnStr, entry.filename().native().c_str(), 259 );
-#endif
-        // find every file in "../lib/ppplay" that begins with "libppplay_input_"
-#ifdef WIN32
-        light4cxx::Logger::root()->info( L4CXX_LOCATION, "Checking: %s", nativeFnStr );
+        light4cxx::Logger::root()->info( L4CXX_LOCATION, "Checking: %s", wideToMultibyte(entry.filename().native()) );
         if( entry.filename().native().find( L"libppplay_input_" ) != 0 )
             continue;
 #else
@@ -122,7 +146,7 @@ void PluginRegistry::findPlugins()
 #endif
         // try to load the file and look for the exported "plugin" symbol
 #ifdef WIN32
-        light4cxx::Logger::root()->info( L4CXX_LOCATION, "Trying to load input plugin: %s", nativeStr );
+        light4cxx::Logger::root()->info( L4CXX_LOCATION, "Trying to load input plugin: %s", wideToMultibyte(entry.native()) );
         HMODULE handle = LoadLibraryW( entry.c_str() );
 #else
         light4cxx::Logger::root()->info( L4CXX_LOCATION, "Trying to load input plugin: %s", entry.native() );
@@ -130,7 +154,7 @@ void PluginRegistry::findPlugins()
 #endif
         if( !handle ) {
 #ifdef WIN32
-            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s'", nativeStr );
+            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s'", wideToMultibyte(entry.native()) );
 #else
             light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s': %s", entry.native(), dlerror() );
 #endif
@@ -143,7 +167,7 @@ void PluginRegistry::findPlugins()
 #endif
         if( !plugin ) {
 #ifdef WIN32
-            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s'", nativeStr );
+            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s'", wideToMultibyte(entry.native()) );
             FreeLibrary( handle );
 #else
             light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s': %s", entry.native(), dlerror() );
@@ -155,7 +179,7 @@ void PluginRegistry::findPlugins()
         int version = plugin->version();
         if( version != InputPlugin::Version ) {
 #ifdef WIN32
-            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s': API version mismatch. Expected %d, found %d.", nativeStr, InputPlugin::Version, version );
+            light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s': API version mismatch. Expected %d, found %d.", wideToMultibyte(entry.native()), InputPlugin::Version, version );
             FreeLibrary( handle );
 #else
             light4cxx::Logger::root()->error( L4CXX_LOCATION, "Failed to load plugin '%s': API version mismatch. Expected %d, found %d.", entry.native(), InputPlugin::Version, version );
@@ -165,7 +189,7 @@ void PluginRegistry::findPlugins()
         }
         // the plugin is valid, so add it to the list
 #ifdef WIN32
-        light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Found input plugin '%s', '%s': %s", nativeStr, plugin->name(), plugin->description() );
+        light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Found input plugin '%s', '%s': %s", wideToMultibyte(entry.native()), plugin->name(), plugin->description() );
 #else
         light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Found input plugin '%s', '%s': %s", entry.native(), plugin->name(), plugin->description() );
 #endif

@@ -1,5 +1,3 @@
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib/ppplay)
-
 if(NOT WIN32)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
 endif()
@@ -14,5 +12,6 @@ add_library(ppplay_input_xm MODULE
 	xmorder.cpp
 	plugin.cpp
 )
+set_target_properties(ppplay_input_xm PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LOCAL_LIBEXEC})
 target_link_libraries(ppplay_input_xm ppplay_module_base ppplay_core)
 install(TARGETS ppplay_input_xm LIBRARY DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} COMPONENT Plugins OPTIONAL)

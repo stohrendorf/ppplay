@@ -63,6 +63,17 @@ endif()
 
 INCLUDE(InstallRequiredSystemLibraries)
 INCLUDE(GNUInstallDirs)
+if(WIN32)
+    # DLLs that are not runtime-linked must be in the same
+    # directory as the binary to be found. Plugins/modules
+    # will use the symbols provided by the main binary.
+    set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_BINDIR})
+    set(CMAKE_INSTALL_FULL_LIBDIR ${CMAKE_INSTALL_FULL_BINDIR})
+endif()
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
+set(LOCAL_LIBEXEC ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBEXECDIR})
+
 #########
 # configure CPACK
 #########
@@ -111,20 +122,6 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -std=c++0x")
 endif()
 
-# SET(CMAKE_SKIP_BUILD_RPATH FALSE)
-# SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-# SET(CMAKE_INSTALL_RPATH ${LIBEXECDIR})
-# SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-# LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES ${CMAKE_INSTALL_FULL_LIBEXECDIR} isSystemDir)
-# IF("${isSystemDir}" STREQUAL "-1")
-#    SET(CMAKE_INSTALL_RPATH ${LIBEXECDIR})
-# ENDIF()
-# unset(isSystemDir)
-
-if(COMPILER_IS_CLANG)
-	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-endif()
-
 option(WITH_PROFILING "Whether to enable profiling (-pg)" OFF)
 if(WITH_PROFILING)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
@@ -142,8 +139,6 @@ if(WITH_LTO)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
 	message(STATUS "Link-time optimization (-flto) enabled")
 endif()
-
-add_definitions(-DBOOST_FILESYSTEM_VERSION=3)
 
 if(MINGW)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
@@ -167,6 +162,7 @@ endif()
 # init main application target settings
 #########
 set(ppp_SRCS ppplay.cpp src/ui_main.cpp)
+set_source_files_properties(ppplay.cpp PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS};LIBEXECDIR=\"${CMAKE_INSTALL_LIBEXECDIR}\"")
 if(WIN32 OR MINGW)
 	set(ppp_SRCS ${ppp_SRCS} ppp.rc)
 endif()

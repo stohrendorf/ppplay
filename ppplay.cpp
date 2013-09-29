@@ -147,16 +147,28 @@ bool parseCmdLine( int argc, char* argv[] )
             break;
         case 4:
             light4cxx::Logger::setLevel( light4cxx::Level::Debug );
-// 			light4cxx::Location::setFormat("[%T %-5t %9p] %L (in %f:%l): %m%n");
             break;
         case 5:
             light4cxx::Logger::setLevel( light4cxx::Level::Trace );
-// 			light4cxx::Location::setFormat("[%T %-5t %9p] %L (in %f:%l): %m%n");
             break;
         default:
             light4cxx::Logger::setLevel( light4cxx::Level::All );
-// 			light4cxx::Location::setFormat("[%T %-5t %9p] %L (in %f:%l): %m%n");
     }
+
+    char selfPath[1024];
+#ifdef WIN32
+    auto selfPathLen = GetModuleFileNameA(nullptr, selfPath, sizeof(selfPath));
+    if(selfPathLen != sizeof(selfPath)) {
+        ppp::PluginRegistry::instance().setSearchPath( boost::filesystem::path(selfPath).parent_path() / ".." / LIBEXECDIR );
+    }
+#else
+    // this is not NUL-terminated.
+    auto selfPathLen = readlink("/proc/self/exe", selfPath, sizeof(selfPath)-1);
+    if(selfPathLen != -1) {
+        selfPath[selfPathLen] = '\0';
+        ppp::PluginRegistry::instance().setSearchPath( boost::filesystem::path(selfPath).parent_path() / ".." / LIBEXECDIR );
+    }
+#endif
 
     using std::cout;
     using std::endl;

@@ -3,7 +3,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include(GenerateExportHeader)
 add_compiler_export_flags()
 
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 add_library(ppplay_module_base SHARED
 	genbase.cpp
 	abstractmodule.cpp

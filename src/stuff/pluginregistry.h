@@ -28,6 +28,8 @@
 #include <windows.h>
 #endif
 
+#include <boost/filesystem.hpp>
+
 namespace ppp
 {
 
@@ -51,8 +53,9 @@ private:
 #else
     std::list<void*> m_handles;
 #endif
+    boost::filesystem::path m_searchPath;
     /**
-     * @brief Looks for plugins in "../lib/ppplay" that start with "libppplay_input_"
+     * @brief Looks for plugins in @c m_searchPath that start with "libppplay_input_"
      */
     static void findPlugins();
 public:
@@ -67,9 +70,10 @@ public:
      * @param[in] frq Desired rendering frequency
      * @param[in] maxRpt Maximum repeat count (for length calculation)
      * @param[in] inter Sample interpolation type
-     * @return The loaded file or a NULL pointer if an error occured
+     * @return The loaded file or a nullptr if an error occured
      */
     static AbstractModule::Ptr tryLoad( const std::string& filename, uint32_t frq, int maxRpt, Sample::Interpolation inter );
+    void setSearchPath(const boost::filesystem::path& path);
 };
 
 }
