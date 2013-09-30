@@ -546,7 +546,10 @@ void ModChannel::updateStatus()
 {
     m_state.cell = m_currentCell->trackerString();
     m_state.volume = clip<int>( m_volume, 0, 0x40 ) * 100 / 0x40;
-    m_state.panning = ( m_panning - 0x80 ) * 100 / 0x80;
+    if(m_panning == 0xff)
+        m_state.panning = 100;
+    else
+        m_state.panning = ( m_panning - 0x80 ) * 100 / 0x80;
     m_state.instrument = m_sampleIndex;
     m_state.note = periodToNoteIndex( m_period );
     if( m_state.note == 255 ) {
@@ -635,10 +638,10 @@ void ModChannel::fxTremolo( uint8_t fxByte )
     m_tremoloPhase &= 0x3f;
 }
 
-void ModChannel::efxPatLoop( uint8_t fxByte )
+void ModChannel::efxPatLoop( uint8_t /*fxByte*/ )
 {
     m_state.fxDesc = fxdesc::PatternLoop;
-    // TODO
+    // TODO check if the implementation is adequate
 }
 
 void ModChannel::efxNoteDelay( uint8_t /*fxByte*/ )
@@ -649,7 +652,6 @@ void ModChannel::efxNoteDelay( uint8_t /*fxByte*/ )
 void ModChannel::efxSetPanning( uint8_t fxByte )
 {
     m_state.fxDesc = fxdesc::SetPanPos;
-    logger()->warn( L4CXX_LOCATION, "Not implemented: Effect Set Panning" );
     m_panning = ( fxByte & 0x0f ) * 0xff / 0x0f;
 }
 
