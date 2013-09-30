@@ -5,4 +5,4 @@ add_executable(
 )
 target_link_libraries(ppg_test_exe ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_test(PpgTest ${CMAKE_CURRENT_BINARY_DIR}/ppg_test_exe)
+add_test(NAME PpgTest COMMAND ppg_test_exe)

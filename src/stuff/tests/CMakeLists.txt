@@ -5,4 +5,4 @@ add_executable(
 )
 target_link_libraries(field_test_exe ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_test(FieldTest ${CMAKE_CURRENT_BINARY_DIR}/field_test_exe)
+add_test(NAME FieldTest COMMAND field_test_exe)

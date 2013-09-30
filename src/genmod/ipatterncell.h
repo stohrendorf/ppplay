@@ -45,8 +45,7 @@ public:
     /**
      * @brief Destructor
      */
-    virtual ~IPatternCell() noexcept {
-    }
+    virtual ~IPatternCell() noexcept = default;
     /**
      * @brief Clears the cell's data
      */
