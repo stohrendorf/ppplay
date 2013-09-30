@@ -23,7 +23,6 @@
 
 #include <array>
 #include <cstdint>
-#include <type_traits>
 
 namespace ppp
 {
@@ -58,8 +57,7 @@ public:
      * @brief Constructor
      * @param[in] val Initial value
      */
-constexpr RememberByte( uint8_t val = 0 ) noexcept :
-    m_value( val ) {
+    constexpr RememberByte( uint8_t val = 0 ) noexcept : m_value( val ) {
     }
 
     /**
@@ -91,15 +89,11 @@ constexpr RememberByte( uint8_t val = 0 ) noexcept :
 
     /**
      * @brief Like operator=(), but always ignores nibble separation
-     * @tparam T Alias for TSplitNibbles
      * @param[in] val Value to assign
-     * @note Only available when @c TSplitNibbles==true
-     * @warning Do not manually specify T!
      * @see operator=()
      * @see force()
      */
-    template<bool T = TSplitNibbles>
-    typename std::enable_if<T, void>::type noNibbles( uint8_t val ) noexcept {
+    void noNibbles( uint8_t val ) noexcept {
         if( val != 0 ) {
             m_value = val;
         }

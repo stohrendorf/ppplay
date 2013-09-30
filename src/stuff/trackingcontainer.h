@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include <limits>
+#include <boost/throw_exception.hpp>
 
 /**
  * @class TrackingContainer
@@ -105,15 +106,7 @@ inline TrackingContainer() noexcept :
      * @name STL compliant methods
      * @{
      */
-    template<class T = Type>
-    typename std::enable_if < !std::is_move_constructible<T>::value, void >::type
-    push_back( ConstReference value ) {
-        m_container.push_back( value );
-    }
-
-    template<class T = Type>
-    typename std::enable_if<std::is_move_constructible<T>::value, void>::type
-    push_back( RValReference value ) {
+    void push_back( typename std::conditional<std::is_move_constructible<Type>::value, RValReference, ConstReference>::type value ) {
         m_container.push_back( value );
     }
 
