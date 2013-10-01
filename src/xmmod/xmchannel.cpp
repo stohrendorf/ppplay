@@ -769,7 +769,10 @@ void XmChannel::mixTick( MixerFrameBuffer* mixBuffer )
 
 void XmChannel::updateStatus()
 {
-    m_state.panning = ( m_realPanning - 0x80 ) * 100 / 0x80;
+    if(m_realPanning == 0xff)
+        m_state.panning = 100;
+    else
+        m_state.panning = ( m_realPanning - 0x80 ) * 100 / 0x80;
     m_state.volume = clip<int>( m_realVolume , 0, 0x40 ) * 100 / 0x40;
 
     if( m_currentCell->note() == KeyOffNote ) {
