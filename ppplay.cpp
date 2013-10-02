@@ -249,10 +249,24 @@ bool parseCmdLine( int argc, char* argv[] )
     return vm.count( "file" ) != 0;
 }
 
+void terminateHandler()
+{
+    std::cerr << "Unexpected exception: " << boost::current_exception_diagnostic_information() << std::endl;
+    std::cerr << "The message above means that PeePeePlayer encountered a problem which was so\n"
+              << "unexpected that, despite all taken care, caused it to die a sudden death.\n"
+              << "To help PeePeePlayer learn to handle this problem, please submit a bug report to:\n"
+              << "    http://sourceforge.net/p/peepeeplayer/tickets/\n"
+              << "If possible, please add the file you tried to play and the message above,\n"
+              << "so the authors can examine and hopefully solve the mystery. Thank you!"
+              << std::endl;
+    std::abort();
+}
+
 } // anonymous namespace
 
 int main( int argc, char* argv[] )
 {
+    std::set_terminate(&terminateHandler);
     try {
         if( !parseCmdLine( argc, argv ) ) {
             return EXIT_SUCCESS;
@@ -463,7 +477,7 @@ int main( int argc, char* argv[] )
         std::cerr << "The message above means that PeePeePlayer encountered a problem which\n"
                   << "was so terrible that, despite all taken care, caused it to die.\n"
                   << "To help PeePeePlayer learn to handle this problem, please submit\n"
-                  << "a bug report to:"
+                  << "a bug report to:\n"
                   << "    http://sourceforge.net/p/peepeeplayer/tickets/\n"
                   << "If possible, please add the file you tried to play and the message above,\n"
                   << "so the authors can examine and hopefully solve the mystery. Thank you!"

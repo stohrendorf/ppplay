@@ -475,11 +475,13 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 size_t S3mModule::internal_buildTick( AudioFrameBuffer* buf )
 try
 {
-    if( buf && !buf->get() ) {
-        buf->reset( new AudioFrameBuffer::element_type );
-    }
     if( state().tick == 0 ) {
         checkGlobalFx();
+    }
+    if( state().order >= orderCount() ) {
+        if( buf )
+            buf->reset();
+        return 0;
     }
     if( orderAt( state().order )->playbackCount() >= maxRepeat() ) {
         logger()->info( L4CXX_LOCATION, "Song end reached: Maximum repeat count reached" );
@@ -487,6 +489,9 @@ try
             buf->reset();
         }
         return 0;
+    }
+    if( buf && !buf->get() ) {
+        buf->reset( new AudioFrameBuffer::element_type );
     }
     // update channels...
     state().pattern = orderAt( state().order )->index();
