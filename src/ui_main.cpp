@@ -235,38 +235,3 @@ void UIMain::drawThis()
         }
     }
 }
-
-ppg::Label* UIMain::posLabel()
-{
-    return m_position;
-}
-
-ppg::Label* UIMain::playbackInfo()
-{
-    return m_playbackInfo;
-}
-
-ppg::StereoPeakBar* UIMain::volBar()
-{
-    return m_volBar;
-}
-
-ppg::Label* UIMain::chanInfo( size_t idx )
-{
-    return m_chanInfos.at( idx );
-}
-
-ppg::Label* UIMain::chanCell( size_t idx )
-{
-    return m_chanCells.at( idx );
-}
-
-ppg::Label* UIMain::trackerInfo()
-{
-    return m_trackerInfo;
-}
-
-ppg::Label* UIMain::modTitle()
-{
-    return m_modTitle;
-}

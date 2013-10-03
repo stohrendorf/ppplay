@@ -29,39 +29,30 @@
 
 class UIMain : public ppg::Widget
 {
-	DISABLE_COPY( UIMain )
+    DISABLE_COPY( UIMain )
 private:
-	ppg::Label* m_position;
-	ppg::Label* m_screenSep1;
-	ppg::Label* m_screenSep2;
-	ppg::Label* m_playbackInfo;
-	ppg::StereoPeakBar* m_volBar;
-	std::array<ppg::Label*, 16> m_chanInfos;
-	std::array<ppg::Label*, 16> m_chanCells;
-	ppg::Label* m_trackerInfo;
-	ppg::Label* m_modTitle;
-	ppg::ProgressBar* m_progress;
-	std::weak_ptr<ppp::AbstractModule> m_module;
-	AbstractAudioOutput::WeakPtr m_output;
-	std::vector<uint16_t> m_fftLeft;
-	std::vector<uint16_t> m_fftRight;
-	virtual void drawThis();
+    ppg::Label* m_position;
+    ppg::Label* m_screenSep1;
+    ppg::Label* m_screenSep2;
+    ppg::Label* m_playbackInfo;
+    ppg::StereoPeakBar* m_volBar;
+    std::array<ppg::Label*, 16> m_chanInfos;
+    std::array<ppg::Label*, 16> m_chanCells;
+    ppg::Label* m_trackerInfo;
+    ppg::Label* m_modTitle;
+    ppg::ProgressBar* m_progress;
+    std::weak_ptr<ppp::AbstractModule> m_module;
+    AbstractAudioOutput::WeakPtr m_output;
+    std::vector<uint16_t> m_fftLeft;
+    std::vector<uint16_t> m_fftRight;
+    virtual void drawThis();
 public:
-	UIMain( Widget* parent, const ppp::AbstractModule::Ptr& module, const AbstractAudioOutput::Ptr& output );
-	virtual ~UIMain() = default;
-	ppg::Label* posLabel();
-	ppg::Label* playbackInfo();
-	ppg::StereoPeakBar* volBar();
-	ppg::Label* chanInfo( size_t idx );
-	ppg::Label* chanCell( size_t idx );
-	ppg::Label* trackerInfo();
-	ppg::Label* modTitle();
-	ppg::ProgressBar* progressBar();
-	void setFft(const std::vector<uint16_t>& left, const std::vector<uint16_t>& right)
-	{
-		m_fftLeft = left;
-		m_fftRight = right;
-	}
+    UIMain( Widget* parent, const ppp::AbstractModule::Ptr& module, const AbstractAudioOutput::Ptr& output );
+    virtual ~UIMain() = default;
+    void setFft( const std::vector<uint16_t>& left, const std::vector<uint16_t>& right ) {
+        m_fftLeft = left;
+        m_fftRight = right;
+    }
 };
 
 #endif // UI_MAIN_H
