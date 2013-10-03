@@ -443,6 +443,8 @@ bool S3mModule::adjustPosition( bool estimateOnly )
         }
         m_breakRow = m_breakOrder = ~0;
     }
+    if( state().order >= orderCount() )
+        return false;
     state().pattern = orderAt( state().order )->index();
     // skip "--" and "++" marks
     while( state().pattern >= 254 ) {
@@ -475,13 +477,13 @@ bool S3mModule::adjustPosition( bool estimateOnly )
 size_t S3mModule::internal_buildTick( AudioFrameBuffer* buf )
 try
 {
-    if( state().tick == 0 ) {
-        checkGlobalFx();
-    }
     if( state().order >= orderCount() ) {
         if( buf )
             buf->reset();
         return 0;
+    }
+    if( state().tick == 0 ) {
+        checkGlobalFx();
     }
     if( orderAt( state().order )->playbackCount() >= maxRepeat() ) {
         logger()->info( L4CXX_LOCATION, "Song end reached: Maximum repeat count reached" );

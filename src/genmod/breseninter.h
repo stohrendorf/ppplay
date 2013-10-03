@@ -66,11 +66,12 @@ public:
      * @pre dx>1
      * @pre dy>0
      */
-constexpr BresenInterpolation( int dx, int dy ) noexcept :
-    m_dx( dx ),
-          m_dy( dy ),
-          m_err( dx - 1 ),
-    m_position( 0 ) {
+    constexpr BresenInterpolation( int dx, int dy ) noexcept :
+        m_dx( dx ),
+        m_dy( dy ),
+        m_err( dx - 1 ),
+        m_position( 0 )
+    {
     }
 
     inline operator std::streamoff() const noexcept {

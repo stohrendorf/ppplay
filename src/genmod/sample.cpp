@@ -160,7 +160,7 @@ bool Sample::mixCubicInterpolated( BresenInterpolation* bresen, MixerFrameBuffer
         for( int i = 0; i < 4; i++ ) {
             samples[i] = sampleAt( adjustPosition( i + *bresen - 1 ) );
         }
-        frame.left  += ( factorLeft * interpolateCubic( samples[0].left,  samples[1].left,  samples[2].left,  samples[3].left,  bresen->bias() ) ) >> rightShift;
+        frame.left  += ( factorLeft  * interpolateCubic( samples[0].left,  samples[1].left,  samples[2].left,  samples[3].left,  bresen->bias() ) ) >> rightShift;
         frame.right += ( factorRight * interpolateCubic( samples[0].right, samples[1].right, samples[2].right, samples[3].right, bresen->bias() ) ) >> rightShift;
 
         bresen->next();

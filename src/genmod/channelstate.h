@@ -27,7 +27,7 @@ struct PPPLAY_MODULE_BASE_EXPORT ChannelState : public ISerializable {
     std::string instrumentName;
     /**
      * @brief Currently played note index
-     * @see KeyOff NoteCut TooLow TooHigh
+     * @see KeyOff NoteCut TooLow TooHigh NoNote MaxNote
      */
     uint8_t note;
     //! @brief Current effect display character
@@ -46,6 +46,10 @@ struct PPPLAY_MODULE_BASE_EXPORT ChannelState : public ISerializable {
     //! @brief Current pattern cell string
     std::string cell;
 
+    /**
+     * @brief Special note values
+     * @{
+     */
     //! @brief Key Off note
     static constexpr uint8_t KeyOff = 255;
     //! @brief Note Cut note
@@ -57,6 +61,9 @@ struct PPPLAY_MODULE_BASE_EXPORT ChannelState : public ISerializable {
     static constexpr uint8_t NoNote = 251;
     //! @brief Highest possible note (B-9)
     static constexpr uint8_t MaxNote = 9 * 12 + 11;
+    /**
+     * @}
+     */
 
     //! @brief Panning is virtual surround
     static constexpr int8_t Surround = -128;
