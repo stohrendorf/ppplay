@@ -6,12 +6,12 @@ if(MINGW)
 	set(CMAKE_RC_COMPILER_INIT windres)
 	ENABLE_LANGUAGE(RC)
 	SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <FLAGS> <DEFINES> -O coff -o <OBJECT> <SOURCE>")
-	PROJECT(PeePeePlayer CXX C RC)
+	PROJECT(PPPlay CXX C RC)
         if(CMAKE_SIZEOF_VOID_P MATCHES "8")
                 add_definitions(-DBOOST_USE_WINDOWS_H)
         endif()
 else()
-	PROJECT(PeePeePlayer CXX C)
+	PROJECT(PPPlay CXX C)
 endif(MINGW)
 
 if(WIN32)
@@ -77,7 +77,7 @@ set(LOCAL_LIBEXEC ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBEXECDIR})
 #########
 # configure CPACK
 #########
-SET(CPACK_PACKAGE_NAME "PeePeePlayer")
+SET(CPACK_PACKAGE_NAME "PPPlay")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Retro-style module player")
 SET(CPACK_PACKAGE_VENDOR "Steffen Ohrendorf <steffen.ohrendorf@gmx.de>")
 # SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ReadMe.txt")
@@ -90,7 +90,7 @@ SET(CPACK_PACKAGE_INSTALL_DIRECTORY "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSI
 SET(CPACK_STRIP_FILES TRUE)
 SET(CPACK_SOURCE_STRIP_FILES "")
 SET(CPACK_SOURCE_IGNORE_FILES "/\\\\..;/build/;.~$;.\\\\.kdev4;Doxyfile$;config\\\\.h$")
-SET(CPACK_PACKAGE_EXECUTABLES "ppplay" "PeePeePlayer")
+SET(CPACK_PACKAGE_EXECUTABLES "ppplay" "PPPlay")
 SET(CPACK_MONOLITHIC_INSTALL TRUE)
 # SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_PROCESSOR}")
 # SET(CPACK_PACKAGE_SOURCE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-src")
@@ -102,7 +102,7 @@ if(LINUX OR UNIX)
 	SET(CPACK_RPM_PACKAGE_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR})
 	SET(CPACK_RPM_PACKAGE_GROUP "Productivity/Multimedia/Sound/Players")
 	SET(CPACK_RPM_PACKAGE_DESCRIPTION
-"PeePeePlayer aims to be an \\\"original\\\" sounding, DOS-like looking Music Tracker Modules player.
+"PPPlay aims to be an \\\"original\\\" sounding, DOS-like looking Music Tracker Modules player.
 
 Authors:
 --------
@@ -254,16 +254,16 @@ add_subdirectory(src)
 # set install command
 #########
 install(TARGETS ppplay DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT application)
-cpack_add_component(application DISPLAY_NAME PeePeePlayer REQUIRED)
+cpack_add_component(application DISPLAY_NAME PPPlay REQUIRED)
 if(LINUX OR UNIX)
 	install(CODE "
 		message(STATUS \"Installing: HSC XDG Mime Handler\")
-		execute_process( COMMAND xdg-mime install peepeeplayer-hsc.xml WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data )
-		message(STATUS \"Installing: PeePeePlayer XDG Desktop file\")
-		execute_process( COMMAND xdg-desktop-menu install --novendor peepeeplayer.desktop WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} )
+		execute_process( COMMAND xdg-mime install ppplay-hsc.xml WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data )
+		message(STATUS \"Installing: PPPlay XDG Desktop file\")
+		execute_process( COMMAND xdg-desktop-menu install --novendor ppplay.desktop WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} )
 	")
 endif()
-install(EXPORT ppplayExports DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} FILE peepeeplayer.cmake COMPONENT Devel)
+install(EXPORT ppplayExports DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} FILE ppplay.cmake COMPONENT Devel)
 cpack_add_component(Devel DISPLAY_NAME "Development files" OPTIONAL)
 
 #########

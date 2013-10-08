@@ -1,5 +1,5 @@
 /*
-    PeePeePlayer - an old-fashioned module player
+    PPPlay - an old-fashioned module player
     Copyright (C) 2012  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
@@ -160,7 +160,7 @@ int OggAudioOutput::internal_init( int desiredFrq )
         vorbis_comment_add_tag( &comments, "title", m_title.c_str() );
         vorbis_comment_add_tag( &comments, "artist", m_artist.c_str() );
         vorbis_comment_add_tag( &comments, "album", m_album.c_str() );
-        vorbis_comment_add_tag( &comments, "encoder", "PeePeePlayer" );
+        vorbis_comment_add_tag( &comments, "encoder", "PPPlay" );
 
         ogg_packet hdrMain, hdrComments, hdrCodebooks;
         vorbis_analysis_headerout( m_ds, &comments, &hdrMain, &hdrComments, &hdrCodebooks );

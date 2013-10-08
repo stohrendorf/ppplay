@@ -3,15 +3,14 @@ and some things can be wrong. So if you consider a problem,
 please contact me via e-mail: <steffen.ohrendorf@gmx.de>
 
 == PREREQUISITES ==
- - boost libraries and headers (system, thread, format, exception)
+ - boost libraries and headers (system, format, exception)
  - cmake 2.8+
  - SDL libraries and headers
- - libmp3lame
- - gcc/g++ 4.6+
+ - gcc/g++ 4.8+
  - doxygen and graphviz if you want to build the docs
 
 == CMAKE BUILD ==
- - 'cd' to the source root where ppp.cpp is located
+ - 'cd' to the source root where ppplay.cpp is located
  - 'mkdir build'
  - 'cd build'
  - 'cmake -G "Unix Makefiles" ..'

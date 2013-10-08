@@ -1,5 +1,5 @@
 /*
- * PeePeePlayer - an old-fashioned module player
+ * PPPlay - an old-fashioned module player
  * Copyright (C) 2012  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
  *
  * This library is free software; you can redistribute it and/or
