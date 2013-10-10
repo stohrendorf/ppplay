@@ -175,13 +175,7 @@ if(MINGW)
 endif()
 
 target_link_libraries(ppplay ppplay_core ppplay_module_base ppplay_ppg ppplay_output_sdl ppplay_output_wav)
-if(WITH_MP3LAME)
-	target_link_libraries(ppplay ppplay_output_mp3)
-endif()
-if(WITH_OGG)
-	target_link_libraries(ppplay ppplay_output_ogg ${vorbis_LIB} ${vorbisenc_LIB})
-endif()
-# 
+
 #########
 # link libraries
 #########
@@ -202,11 +196,15 @@ function(trylinklib LIBNAME ATTRIBS)
 	endif()
 	mark_as_advanced(FORCE "${LIBNAME}_LIB")
 endfunction(trylinklib)
+
 trylinklib("mp3lame" SHARED)
 if(mp3lame_LIB)
 	option(WITH_MP3LAME "Whether to include MP3Lame support." ON)
 endif()
 add_feature_info("MP3 Export" WITH_MP3LAME "MP3 Export using libmp3lame")
+if(WITH_MP3LAME)
+        target_link_libraries(ppplay ppplay_output_mp3)
+endif()
 
 trylinklib("vorbis" SHARED)
 trylinklib("vorbisenc" SHARED)
@@ -214,6 +212,9 @@ if(vorbis_LIB AND vorbisenc_LIB)
 	option(WITH_OGG "Whether to include OGG support." ON)
 endif()
 add_feature_info("OGG Export" WITH_OGG "OGG Export using libvorbis and libvorbisenc")
+if(WITH_OGG)
+        target_link_libraries(ppplay ppplay_output_ogg ${vorbis_LIB} ${vorbisenc_LIB})
+endif()
 
 
 #########
@@ -256,12 +257,10 @@ add_subdirectory(src)
 install(TARGETS ppplay DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT application)
 cpack_add_component(application DISPLAY_NAME PPPlay REQUIRED)
 if(LINUX OR UNIX)
-	install(CODE "
-		message(STATUS \"Installing: HSC XDG Mime Handler\")
-		execute_process( COMMAND xdg-mime install ppplay-hsc.xml WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data )
-		message(STATUS \"Installing: PPPlay XDG Desktop file\")
-		execute_process( COMMAND xdg-desktop-menu install --novendor ppplay.desktop WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} )
-	")
+    install(FILES data/ppplay-hsc.xml DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/mime/packages)
+    install(CODE "execute_process( COMMAND update-mime-database ${CMAKE_INSTALL_DATAROOTDIR}/mime )")
+    install(FILES ppplay.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+    install(CODE "execute_process( COMMAND update-desktop-database -q )")
 endif()
 install(EXPORT ppplayExports DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} FILE ppplay.cmake COMPONENT Devel)
 cpack_add_component(Devel DISPLAY_NAME "Development files" OPTIONAL)
