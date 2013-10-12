@@ -312,7 +312,6 @@ int main( int argc, char* argv[] )
             SDL_Event event;
             while( output ) {
                 if( output->errorCode() == AbstractAudioOutput::InputDry ) {
-                    break;
                     light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Input is dry, trying to jump to the next song" );
                     module->setPaused( true );
                     output->pause();
@@ -333,7 +332,6 @@ int main( int argc, char* argv[] )
                     uiMain->setFft( reinterpret_cast<SDLAudioOutput*>( output.get() )->leftFft(), reinterpret_cast<SDLAudioOutput*>( output.get() )->rightFft() );
                 }
                 if( !SDL_PollEvent( &event ) ) {
-                    // usleep( 10000 );
                     std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
                     continue;
                 }

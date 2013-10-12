@@ -120,6 +120,7 @@ bool SDLAudioOutput::internal_paused() const
 
 void SDLAudioOutput::internal_play()
 {
+    setErrorCode(NoError);
     SDL_PauseAudio( 0 );
 }
 

@@ -17,6 +17,10 @@ target_link_libraries(ppplay_opl ppplay_stream)
 install(TARGETS ppplay_opl DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ppplayExports)
 install(FILES
 	opl3.h
+	channel.h
+	envelopegenerator.h
+	operator.h
+	phasegenerator.h
 	${CMAKE_CURRENT_BINARY_DIR}/ppplay_opl_export.h
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/opl
 )

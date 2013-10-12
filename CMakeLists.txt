@@ -258,7 +258,7 @@ install(TARGETS ppplay DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT application
 cpack_add_component(application DISPLAY_NAME PPPlay REQUIRED)
 if(LINUX OR UNIX)
     install(FILES data/ppplay-hsc.xml DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/mime/packages)
-    install(CODE "execute_process( COMMAND update-mime-database ${CMAKE_INSTALL_DATAROOTDIR}/mime )")
+    install(CODE "execute_process( COMMAND update-mime-database ${CMAKE_INSTALL_FULL_DATAROOTDIR}/mime )")
     install(FILES ppplay.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
     install(CODE "execute_process( COMMAND update-desktop-database -q )")
 endif()
