@@ -81,8 +81,6 @@ public:
      */
     static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter );
     virtual ~XmModule();
-    //! @brief Class pointer
-    typedef std::shared_ptr<XmModule> Ptr;
 private:
     virtual size_t internal_buildTick( AudioFrameBuffer* buffer );
     virtual ChannelState internal_channelStatus( size_t ) const;

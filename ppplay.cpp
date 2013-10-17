@@ -50,7 +50,7 @@
 
 namespace
 {
-std::shared_ptr<ppg::SDLScreen> dosScreen;
+std::unique_ptr<ppg::SDLScreen> dosScreen;
 UIMain* uiMain;
 
 AbstractAudioOutput::Ptr output;

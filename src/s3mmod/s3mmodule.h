@@ -47,7 +47,6 @@ class S3mModule : public AbstractModule
     S3mModule() = delete;
     friend class S3mChannel;
 public:
-    typedef std::shared_ptr<S3mModule> Ptr; //!< @brief Class pointer
     /**
      * @brief Factory method
      * @param[in] filename Module filename

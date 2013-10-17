@@ -621,7 +621,7 @@ bool S3mModule::hasAmigaLimits() const
 S3mPattern* S3mModule::getPattern( size_t idx ) const
 {
     if( idx >= m_patterns.size() || m_patterns[idx] == nullptr ) {
-        static std::shared_ptr<S3mPattern> emptyPattern( new S3mPattern() );
+        static std::unique_ptr<S3mPattern> emptyPattern( new S3mPattern() );
         return emptyPattern.get();
     }
     return m_patterns[ idx ];

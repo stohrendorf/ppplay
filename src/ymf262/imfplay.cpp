@@ -18,7 +18,7 @@ int songLength = 0;
 int delayCounter = 0;
 int imfFreq = 560; // Hz [280|560|700]
 bool stopped = false;
-std::shared_ptr<boost::progress_display> progress;
+std::unique_ptr<boost::progress_display> progress;
 
 void sdlAudioCallback( void* userdata, uint8_t* stream, int len_bytes )
 {

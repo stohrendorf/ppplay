@@ -40,7 +40,7 @@ Logger* Logger::root()
 
 Logger* Logger::get( const std::string& name )
 {
-    typedef std::unordered_map<std::string, std::shared_ptr<Logger>> RepoMap; //!< @brief Maps logger names to their instances
+    typedef std::unordered_map<std::string, std::unique_ptr<Logger>> RepoMap; //!< @brief Maps logger names to their instances
     static RepoMap s_repository; //!< @brief The logger repository
     static std::mutex lockMutex; //!< @brief Mutex for locking the repository
     std::lock_guard<std::mutex> lockGuard( lockMutex );
@@ -50,7 +50,7 @@ Logger* Logger::get( const std::string& name )
         return elem->second.get();
     }
     Logger* res = new Logger( name );
-    s_repository.insert( std::make_pair( name, std::shared_ptr<Logger>( res ) ) );
+    s_repository.insert( std::make_pair( name, std::unique_ptr<Logger>( res ) ) );
     return res;
 }
 

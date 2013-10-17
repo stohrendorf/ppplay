@@ -85,8 +85,8 @@ int SDLAudioOutput::internal_init( int desiredFrq )
         // in case audio was already inited, shut down the callbacks
         SDL_CloseAudio();
     }
-    std::shared_ptr<SDL_AudioSpec> desired( new SDL_AudioSpec );
-    std::shared_ptr<SDL_AudioSpec> obtained( new SDL_AudioSpec );
+    std::unique_ptr<SDL_AudioSpec> desired( new SDL_AudioSpec );
+    std::unique_ptr<SDL_AudioSpec> obtained( new SDL_AudioSpec );
     desired->freq = desiredFrq;
     desired->channels = 2;
     desired->format = AUDIO_S16LSB;
