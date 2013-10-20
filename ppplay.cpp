@@ -313,8 +313,6 @@ int main( int argc, char* argv[] )
             while( output ) {
                 if( output->errorCode() == AbstractAudioOutput::InputDry ) {
                     light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Input is dry, trying to jump to the next song" );
-                    module->setPaused( true );
-                    output->pause();
                     if( !module->jumpNextSong() ) {
                         light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Jump failed, quitting" );
                         output.reset();
@@ -322,6 +320,7 @@ int main( int argc, char* argv[] )
                     }
                     module->setPaused( false );
                     output->play();
+                    continue;
                 }
                 else if( output->errorCode() != AbstractAudioOutput::NoError ) {
                     light4cxx::Logger::root()->debug( L4CXX_LOCATION, "Input has error, quitting" );

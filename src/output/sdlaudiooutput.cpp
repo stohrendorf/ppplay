@@ -36,6 +36,8 @@ size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
         logger()->warn( L4CXX_LOCATION, "Failed to lock mutex" );
         return 0;
     }
+    if(paused() || m_fifo.isSourcePaused())
+        return 0;
     AudioFrameBuffer buffer;
     size_t copied = m_fifo.pullData( buffer, numFrames );
     if( copied == 0 ) {
@@ -44,6 +46,7 @@ size_t SDLAudioOutput::getSdlData( BasicSampleFrame* data, size_t numFrames )
         pause();
         return 0;
     }
+    setErrorCode(NoError);
     numFrames -= copied;
     if( numFrames != 0 ) {
         logger()->trace( L4CXX_LOCATION, "Source provided not enough data: %d frames missing", numFrames );
@@ -120,13 +123,23 @@ bool SDLAudioOutput::internal_paused() const
 
 void SDLAudioOutput::internal_play()
 {
-    setErrorCode(NoError);
     SDL_PauseAudio( 0 );
+    // only wait at most 1 sec until playing
+    for( int n=0; n<100 && SDL_GetAudioStatus() != SDL_AUDIO_PLAYING; ++n ) {
+        std::this_thread::yield();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    setErrorCode(NoError);
 }
 
 void SDLAudioOutput::internal_pause()
 {
     SDL_PauseAudio( 1 );
+    // only wait at most 1 sec until not playing anymore
+    for( int n=0; n<100 && SDL_GetAudioStatus() == SDL_AUDIO_PLAYING; ++n ) {
+        std::this_thread::yield();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 }
 
 uint16_t SDLAudioOutput::internal_volumeLeft() const

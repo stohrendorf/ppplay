@@ -321,6 +321,8 @@ bool ModModule::adjustPosition( bool estimateOnly )
 {
     bool orderChanged = false;
     bool rowChanged = false;
+    bool forceSave = false;
+    size_t newOrder = state().order;
     if( m_patDelayCount != -1 ) {
         m_patDelayCount--;
     }
@@ -331,8 +333,9 @@ bool ModModule::adjustPosition( bool estimateOnly )
                 if( m_breakRow == -1 ) {
                     orderAt( m_breakOrder )->increasePlaybackCount();
                 }
-                setOrder( m_breakOrder, estimateOnly, m_breakRow == -1 );
                 orderChanged = true;
+                newOrder = m_breakOrder;
+                forceSave = true;
             }
             setRow( 0 );
             rowChanged = true;
@@ -345,7 +348,7 @@ bool ModModule::adjustPosition( bool estimateOnly )
             if( m_breakOrder == 0xffff ) {
                 if( m_patLoopCount == -1 ) {
                     logger()->debug( L4CXX_LOCATION, "Row break" );
-                    setOrder( state().order + 1, estimateOnly );
+                    ++newOrder;
                     orderChanged = true;
                 }
             }
@@ -354,25 +357,26 @@ bool ModModule::adjustPosition( bool estimateOnly )
             setRow( ( state().row + 1 ) & 0x3f );
             rowChanged = true;
             if( state().row == 0 ) {
-                setOrder( state().order + 1, estimateOnly );
+                newOrder = state().order+1;
                 orderChanged = true;
             }
         }
         m_breakRow = -1;
         m_breakOrder = ~0;
     }
-    if( state().order >= orderCount() ) {
+    if( newOrder >= orderCount() ) {
         logger()->debug( L4CXX_LOCATION, "state().order>=orderCount()" );
+        setOrder(newOrder, estimateOnly);
         return false;
     }
     if( orderChanged ) {
         m_patLoopRow = 0;
         m_patLoopCount = -1;
-        state().pattern = orderAt( state().order )->index();
-        setOrder( state().order, estimateOnly );
+        state().pattern = orderAt( newOrder )->index();
+        setOrder( newOrder, estimateOnly, forceSave );
     }
     if( rowChanged ) {
-        if( !orderAt( state().order )->increaseRowPlayback( state().row ) ) {
+        if( !orderAt( newOrder )->increaseRowPlayback( state().row ) ) {
             logger()->info( L4CXX_LOCATION, "Row playback counter reached limit" );
             setOrder( orderCount(), estimateOnly );
             return false;

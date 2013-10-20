@@ -117,6 +117,12 @@ public:
 
     size_t pullData( AudioFrameBuffer& buffer, size_t requestedFrames );
 
+    bool isSourcePaused() const
+    {
+        auto src = m_source.lock();
+        return !src || src->paused();
+    }
+
     // These are needed to replace boost::mutex (or boost::signals2::mutex) with std::mutex,
     // otherwise boost::thread would become a dependency.
     typedef void DataSignalSignature( const AudioFrameBuffer& );
