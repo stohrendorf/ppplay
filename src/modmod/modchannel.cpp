@@ -337,10 +337,14 @@ void ModChannel::setTonePortaTarget()
 void ModChannel::fxSetSpeed( uint8_t fxByte )
 {
     m_state.fxDesc = fxdesc::SetTempo;
-    fxByte &= 0x0f;
-    if( fxByte != 0 ) {
+	if(fxByte==0)
+		return;
+    if( fxByte <= 0x20 ) {
         m_module->setSpeed( fxByte );
     }
+	else {
+		m_module->setTempo( fxByte );
+	}
 }
 
 void ModChannel::efxNoteCut( uint8_t fxByte )
