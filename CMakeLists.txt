@@ -62,14 +62,28 @@ if(NOT __COMPILER_GNU)
 endif()
 
 INCLUDE(InstallRequiredSystemLibraries)
-INCLUDE(GNUInstallDirs)
+
+set(CMAKE_INSTALL_BINDIR bin)
 if(WIN32)
-    # DLLs that are not runtime-linked must be in the same
+    # DLLs that are not dynamically loaded must be in the same
     # directory as the binary to be found. Plugins/modules
     # will use the symbols provided by the main binary.
-    set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_BINDIR})
-    set(CMAKE_INSTALL_FULL_LIBDIR ${CMAKE_INSTALL_FULL_BINDIR})
+    set(CMAKE_INSTALL_LIBDIR bin CACHE PATH "Install destination for shared libraries")
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(CMAKE_INSTALL_LIBDIR lib CACHE PATH "Install destination for shared libraries")
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(CMAKE_INSTALL_LIBDIR lib64 CACHE PATH "Install destination for shared libraries")
+else()
+    message(FATAL "Cannot determine libdir for target system.")
 endif()
+set(CMAKE_INSTALL_LIBEXECDIR ${CMAKE_INSTALL_LIBDIR}/ppplay CACHE PATH "Install destination for shared modules")
+set(CMAKE_INSTALL_INCLUDEDIR include CACHE PATH "Install destination for include files")
+set(CMAKE_INSTALL_DATAROOTDIR share CACHE PATH "Install destination for shared data")
+
+foreach(_INST_TYPE BIN LIB LIBEXEC INCLUDE DATAROOT)
+    set(CMAKE_INSTALL_FULL_${_INST_TYPE}DIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_${_INST_TYPE}DIR})
+endforeach()
+
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 set(LOCAL_LIBEXEC ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBEXECDIR})

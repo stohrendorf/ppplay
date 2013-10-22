@@ -13,6 +13,7 @@ add_library(ppplay_module_base SHARED
 	modulestate.cpp
 	standardfxdesc.cpp
 )
+set_target_properties(ppplay_module_base PROPERTIES SOVERSION 1)
 generate_export_header(ppplay_module_base)
 target_link_libraries(ppplay_module_base ppplay_core)
 install(TARGETS ppplay_module_base DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ppplayExports)

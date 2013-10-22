@@ -10,6 +10,7 @@ add_library(ppplay_light4cxx SHARED
         location.cpp
         logger.cpp
 )
+set_target_properties(ppplay_light4cxx PROPERTIES SOVERSION 1)
 generate_export_header(ppplay_light4cxx)
 
 target_link_libraries(ppplay_light4cxx ${Boost_SYSTEM_LIBRARY})

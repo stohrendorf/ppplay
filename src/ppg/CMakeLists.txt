@@ -9,6 +9,7 @@ add_library(ppplay_ppg SHARED
 	progressbar.cpp
 	fonts.cpp
 )
+set_target_properties(ppplay_ppg PROPERTIES SOVERSION 1)
 generate_export_header(ppplay_ppg)
 target_link_libraries(ppplay_ppg ppplay_core)
 install(TARGETS ppplay_ppg DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ppplayExports)

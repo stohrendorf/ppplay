@@ -11,6 +11,7 @@ add_library(ppplay_opl SHARED
 	phasegenerator.cpp
 )
 generate_export_header(ppplay_opl)
+set_target_properties(ppplay_opl PROPERTIES SOVERSION 1)
 
 target_link_libraries(ppplay_opl ppplay_stream)
 

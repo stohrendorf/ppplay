@@ -19,6 +19,7 @@ add_library(ppplay_stream SHARED
 	memorystream.cpp
 	archivefilestream.cpp
 )
+set_target_properties(ppplay_stream PROPERTIES SOVERSION 1)
 
 generate_export_header(ppplay_stream)
 
