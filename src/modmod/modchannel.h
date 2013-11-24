@@ -28,6 +28,11 @@
 #include <genmod/channelstate.h>
 #include <stream/iserializable.h>
 
+namespace light4cxx
+{
+class Logger;
+}
+
 namespace ppp
 {
 namespace mod

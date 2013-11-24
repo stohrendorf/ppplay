@@ -17,7 +17,6 @@
 */
 
 #include "sample.h"
-#include "breseninter.h"
 
 namespace ppp
 {
@@ -33,42 +32,9 @@ m_loopStart( 0 ), m_loopEnd( 0 ), m_volume( 0 ),
 {
 }
 
-uint16_t Sample::frequency() const noexcept
-{
-    return m_frequency;
-}
-
-uint8_t Sample::volume() const noexcept
-{
-    return m_volume;
-}
-
 std::string Sample::title() const
 {
     return m_title;
-}
-
-bool Sample::isLooped() const noexcept
-{
-    return m_looptype != LoopType::None;
-}
-
-std::streamsize Sample::length() const noexcept
-{
-    return m_data.size();
-}
-
-Sample::LoopType Sample::loopType() const noexcept
-{
-    return m_looptype;
-}
-
-void Sample::setFrequency( uint16_t f ) noexcept {
-    m_frequency = f;
-}
-
-void Sample::setLoopType( LoopType l ) noexcept {
-    m_looptype = l;
 }
 
 void Sample::setTitle( const std::string& t )
@@ -133,15 +99,15 @@ bool Sample::mixLinearInterpolated( BresenInterpolation* bresen, MixerFrameBuffe
 
 namespace
 {
-constexpr int interpolateCubicLevel0( int p0, int p1, int p2, int p3, int bias )
+constexpr inline int interpolateCubicLevel0( int p0, int p1, int p2, int p3, int bias )
 {
     return ( bias * ( 3 * ( p1 - p2 ) + p3 - p0 ) ) >> 8;
 }
-constexpr int interpolateCubicLevel1( int p0, int p1, int p2, int p3, int bias )
+constexpr inline int interpolateCubicLevel1( int p0, int p1, int p2, int p3, int bias )
 {
     return ( bias * ( ( p0 << 1 ) - 5 * p1 + ( p2 << 2 ) - p3 + interpolateCubicLevel0( p0, p1, p2, p3, bias ) ) ) >> 8;
 }
-constexpr MixerSample interpolateCubic( int p0, int p1, int p2, int p3, int bias )
+constexpr inline MixerSample interpolateCubic( int p0, int p1, int p2, int p3, int bias )
 {
     return p1 + ( ( bias * ( p2 - p0 + interpolateCubicLevel1( p0, p1, p2, p3, bias ) ) ) >> 9 );
 }
@@ -182,7 +148,7 @@ bool Sample::mix( Sample::Interpolation inter, BresenInterpolation* bresen, Mixe
     }
 }
 
-inline BasicSampleFrame Sample::sampleAt( std::streamoff pos ) const
+inline BasicSampleFrame Sample::sampleAt( std::streamoff pos ) const noexcept
 {
     if( pos == BresenInterpolation::InvalidPosition || pos < 0 ) {
         return BasicSampleFrame();
@@ -190,30 +156,7 @@ inline BasicSampleFrame Sample::sampleAt( std::streamoff pos ) const
     return m_data[makeRealPos( pos )];
 }
 
-std::streamoff Sample::adjustPosition( std::streamoff pos ) const
-{
-    if( pos < 0 || pos == BresenInterpolation::InvalidPosition ) {
-        return BresenInterpolation::InvalidPosition;
-    }
-    if( m_looptype == LoopType::None ) {
-        if( pos >= length() ) {
-            return BresenInterpolation::InvalidPosition;
-        }
-        return pos;
-    }
-    std::streamoff vLoopLen = m_loopEnd - m_loopStart;
-    std::streamoff vLoopEnd = m_loopEnd;
-    if( m_looptype == LoopType::Pingpong ) {
-        vLoopLen *= 2;
-        vLoopEnd = m_loopStart + vLoopLen;
-    }
-    while( pos >= vLoopEnd ) {
-        pos -= vLoopLen;
-    }
-    return pos;
-}
-
-std::streamoff Sample::makeRealPos( std::streamoff pos ) const
+inline std::streamoff Sample::makeRealPos( std::streamoff pos ) const noexcept
 {
     if( m_looptype == LoopType::Pingpong ) {
         if( pos >= m_loopEnd ) {

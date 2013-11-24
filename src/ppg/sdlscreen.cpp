@@ -188,7 +188,18 @@ struct InstanceData {
     }
 
     void clearSurface( SDL_Surface* surface, Color c ) const {
-        std::fill_n( reinterpret_cast<Uint32*>( surface->pixels ), surface->h * surface->pitch / sizeof( Uint32 ), mapColor( c ) );
+        size_t count = surface->h * surface->pitch / sizeof( Uint32 );
+        Uint32 color = mapColor( c );
+        Uint32* ptr = reinterpret_cast<Uint32*>( surface->pixels );
+#ifdef __GNUC__
+        asm( "cld\n\t"
+             "rep stosl\n"
+             : "=c"(count), "=D"(ptr) // to tell GCC that they are clobbered
+             : "c"(count), "a"(color), "D"(ptr)
+             : "memory" );
+#else
+        std::fill_n( ptr, count, color );
+#endif
     }
 
     bool init( int charWidth, int charHeight, const std::string& title );

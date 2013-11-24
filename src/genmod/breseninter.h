@@ -22,9 +22,10 @@
 #include "ppplay_core_export.h"
 
 #include <stuff/utils.h>
-#include "sample.h"
+#include <output/audiotypes.h>
 
 #include <cstdint>
+#include <boost/assert.hpp>
 
 namespace ppp
 {

@@ -31,7 +31,13 @@
 
 #include <array>
 
+namespace light4cxx
+{
+class Logger;
+}
+
 class AbstractArchive;
+
 namespace ppp
 {
 namespace s3m

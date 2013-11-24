@@ -30,7 +30,7 @@ namespace ppg
 /**
  * @brief Enumeration values for Dos Color Mappings
  */
-enum class Color
+enum class Color : unsigned char
 {
     Black, Blue, Green, Aqua, Red, Purple, Brown, White,
     Gray, LightBlue, LightGreen, LightAqua, LightRed, LightPurple, Yellow, BrightWhite,

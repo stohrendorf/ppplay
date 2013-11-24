@@ -23,6 +23,7 @@
 
 #include <output/audiotypes.h>
 #include <light4cxx/logger.h>
+#include "breseninter.h"
 
 namespace ppp
 {
@@ -78,20 +79,20 @@ private:
      * @return Real position
      * @note Time-critical
      */
-    std::streamoff makeRealPos( std::streamoff pos ) const;
+    inline std::streamoff makeRealPos( std::streamoff pos ) const noexcept;
     /**
      * @brief Adjust the playback position so it doesn't fall out of the sample data. Returns EndOfSample if it does
      * @param[in,out] pos Reference to the variable that should be adjusted
      * @return Adjusted position
      * @note Time-critical
      */
-    std::streamoff adjustPosition( std::streamoff pos ) const;
+    inline std::streamoff adjustPosition( std::streamoff pos ) const noexcept;
     /**
      * @brief Get a sample
      * @param[in,out] pos Position of the requested sample
      * @return Sample value, 0 if invalid value for @a pos
      */
-    inline BasicSampleFrame sampleAt( std::streamoff pos ) const;
+    inline BasicSampleFrame sampleAt( std::streamoff pos ) const noexcept;
     bool mixNonInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
     bool mixLinearInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
     bool mixCubicInterpolated( BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
@@ -108,12 +109,18 @@ public:
      * @brief Get the sample's Base Frequency
      * @return Base frequency
      */
-    uint16_t frequency() const noexcept;
+    uint16_t frequency() const noexcept
+    {
+        return m_frequency;
+    }
     /**
      * @brief Get the sample's default volume
      * @return Default volume
      */
-    uint8_t volume() const noexcept;
+    uint8_t volume() const noexcept
+    {
+        return m_volume;
+    }
     /**
      * @brief Get the sample's name
      * @return Sample's name
@@ -123,17 +130,26 @@ public:
      * @brief Is the sample looped?
      * @return @c true if the sample is looped
      */
-    bool isLooped() const noexcept;
+    bool isLooped() const noexcept
+    {
+        return m_looptype != LoopType::None;
+    }
     /**
      * @brief Get the sample's length
      * @return The sample's length
      */
-    std::streamsize length() const noexcept;
+    std::streamsize length() const noexcept
+    {
+        return m_data.size();
+    }
     /**
      * @brief Get the loop type
      * @return The loop type
      */
-    LoopType loopType() const noexcept;
+    LoopType loopType() const noexcept
+    {
+        return m_looptype;
+    }
 
     bool mix( Interpolation inter, BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift ) const;
 protected:
@@ -143,38 +159,48 @@ protected:
      * @brief Set m_frequency
      * @param[in] f The new frequency value
      */
-    void setFrequency( uint16_t f ) noexcept;
+    void setFrequency( uint16_t f ) noexcept
+    {
+        m_frequency = f;
+    }
     /**
      * @brief Set m_looptype
      * @param[in] l The new loop type value
      */
-    void setLoopType( LoopType l ) noexcept;
+    void setLoopType( LoopType l ) noexcept
+    {
+        m_looptype = l;
+    }
     /**
      * @brief Get data start iterator
      * @return Data start iterator
      */
-    inline Iterator beginIterator() noexcept {
+    inline Iterator beginIterator() noexcept
+    {
         return m_data.begin();
     }
     /**
      * @brief Get data end iterator
      * @return Data end iterator
      */
-    inline Iterator endIterator() noexcept {
+    inline Iterator endIterator() noexcept
+    {
         return m_data.end();
     }
     /**
      * @brief Get data start iterator
      * @return Data start iterator
      */
-    inline ConstIterator beginIterator() const noexcept {
+    inline ConstIterator beginIterator() const noexcept
+    {
         return m_data.begin();
     }
     /**
      * @brief Get data end iterator
      * @return Data end iterator
      */
-    inline ConstIterator endIterator() const noexcept {
+    inline ConstIterator endIterator() const noexcept
+    {
         return m_data.cend();
     }
     /**
@@ -206,7 +232,8 @@ protected:
      * @brief Resize the data
      * @param[in] size New size
      */
-    inline void resizeData( std::streamsize size ) {
+    inline void resizeData( std::streamsize size )
+    {
         m_data.resize( size );
     }
     /**
@@ -215,6 +242,29 @@ protected:
      */
     static light4cxx::Logger* logger();
 };
+
+inline std::streamoff Sample::adjustPosition( std::streamoff pos ) const noexcept
+{
+    if( pos < 0 || pos == BresenInterpolation::InvalidPosition ) {
+        return BresenInterpolation::InvalidPosition;
+    }
+    if( m_looptype == LoopType::None ) {
+        if( pos >= length() ) {
+            return BresenInterpolation::InvalidPosition;
+        }
+        return pos;
+    }
+    std::streamoff vLoopLen = m_loopEnd - m_loopStart;
+    std::streamoff vLoopEnd = m_loopEnd;
+    if( m_looptype == LoopType::Pingpong ) {
+        vLoopLen *= 2;
+        vLoopEnd = m_loopStart + vLoopLen;
+    }
+    while( pos >= vLoopEnd ) {
+        pos -= vLoopLen;
+    }
+    return pos;
+}
 
 /**
  * @}
