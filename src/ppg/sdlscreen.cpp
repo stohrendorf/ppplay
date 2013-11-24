@@ -194,7 +194,7 @@ struct InstanceData {
 #ifdef __GNUC__
         asm( "cld\n\t"
              "rep stosl\n"
-             : "=c"(count), "=D"(ptr) // to tell GCC that they are clobbered
+             : // no output
              : "c"(count), "a"(color), "D"(ptr)
              : "memory" );
 #else
