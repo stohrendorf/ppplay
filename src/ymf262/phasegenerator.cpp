@@ -48,27 +48,32 @@ uint16_t PhaseGenerator::advance( bool vib )
      *           = (FNUM<<BLOCK)>>10
      */
     uint32_t inc = m_fNum;
+    inc <<= m_block;
+    inc >>= 1;
+
+	static constexpr int multTable[16] = {1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 20, 24, 24, 30, 30};
+	inc = ( inc * multTable[m_mult] ) >> 1;
+
     if( vib ) {
         uint16_t delta = m_fNum >> 7;
-        if( ( ( m_opl->vibratoIndex() >> 10 ) & 3 ) == 3 ) {
+        const auto vib = m_opl->vibratoIndex()>>10;
+        if( ( vib & 3 ) == 3 ) {
             delta >>= 1;
         }
         if( !m_opl->dvb() ) {
             // 14 -> 7 percent
             delta >>= 1;
         }
-        if( ( m_opl->vibratoIndex() >> 12 ) & 1 ) {
+        if( vib & 4 ) {
             inc += ~delta;
         }
         else {
             inc += delta;
         }
     }
-    inc <<= m_block;
-    inc >>= 1;
 
-    static constexpr int multTable[16] = {1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 20, 24, 24, 30, 30};
-    m_phase += ( inc * multTable[m_mult] ) >> 1;
+    m_phase += inc;
+
     return ( m_phase >> 9 ) & 0x3ff;
 }
 }

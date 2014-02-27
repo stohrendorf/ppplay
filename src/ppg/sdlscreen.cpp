@@ -205,7 +205,7 @@ struct InstanceData {
     bool init( int charWidth, int charHeight, const std::string& title );
 
     /**
-     * @brief Draw an 8x8 char
+     * @brief Draw an 8x16 char
      * @param[in] x Left position
      * @param[in] y Top position
      * @param[in] c Char to draw

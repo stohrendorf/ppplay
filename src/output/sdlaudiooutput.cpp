@@ -69,7 +69,6 @@ SDLAudioOutput::~SDLAudioOutput()
 {
     std::unique_lock<std::mutex> lock( m_mutex );
     SDL_CloseAudio();
-// 	SDL_QuitSubSystem( SDL_INIT_AUDIO );
     logger()->trace( L4CXX_LOCATION, "Destroyed" );
 }
 

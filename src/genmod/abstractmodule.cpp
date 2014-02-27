@@ -93,7 +93,7 @@ size_t AbstractModule::internal_getAudioData( AudioFrameBuffer& buffer, size_t s
     while( buffer->size() < size ) {
         size_t size = buildTick( &tmpBuf );
         if( !tmpBuf || tmpBuf->empty() || size == 0 ) {
-            logger()->debug( L4CXX_LOCATION, "buildTick() returned 0" );
+            // logger()->debug( L4CXX_LOCATION, "buildTick() returned 0" );
             return 0;
         }
         buffer->insert( buffer->end(), tmpBuf->begin(), tmpBuf->end() );

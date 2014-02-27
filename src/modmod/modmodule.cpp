@@ -161,7 +161,7 @@ bool ModModule::load( Stream* stream, int loadMode )
     if( loadMode != LoadingMode::Smp15 ) {
         // check 31-sample mod
         logger()->info( L4CXX_LOCATION, "Probing meta-info for 31-sample mod..." );
-        stream->seek( 1080 );
+        stream->seek( 0x438 );
         meta = findMeta( stream );
         if( meta == nullptr ) {
             logger()->warn( L4CXX_LOCATION, "Could not find a valid module ID" );
@@ -264,7 +264,7 @@ size_t ModModule::internal_buildTick( AudioFrameBuffer* buf )
             checkGlobalFx();
         }
         if( orderAt( state().order )->playbackCount() >= maxRepeat() ) {
-            logger()->info( L4CXX_LOCATION, "Song end reached: Maximum repeat count reached" );
+            //logger()->info( L4CXX_LOCATION, "Song end reached: Maximum repeat count reached" );
             if( buf ) {
                 buf->reset();
             }

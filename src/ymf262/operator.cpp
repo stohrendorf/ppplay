@@ -270,7 +270,7 @@ Waveform 8      +  ---  +  IJKL
  */
 uint16_t sinLog( uint8_t ws, uint16_t phi )
 {
-    uint8_t index = phi & 0xff;
+    uint8_t index = (phi & 0xff);
 
     switch( ( ws & 7 ) | ( phi & 0x0300 ) ) {
             // rising quarter wave  Shape A
