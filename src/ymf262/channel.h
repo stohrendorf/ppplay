@@ -57,36 +57,36 @@ private:
      * @brief Frequency Number
      * @invariant m_fnum < 1024
      */
-    uint16_t m_fnum;
+    uint16_t m_fnum = 0;
 
     //! @brief Key On. If changed, calls keyOn() or keyOff(), depending on the new value.
-    bool m_kon;
+    bool m_kon = false;
 
     /**
      * @brief Block/octave
      * @invariant m_block<8
      */
-    uint8_t m_block;
+    uint8_t m_block = 0;
 
-    uint8_t m_ch;
+    uint8_t m_ch = 0;
 
     /**
      * @brief Feedback amount
      * @invariant m_fb<8
      */
-    uint8_t m_fb;
+    uint8_t m_fb = 0;
 
     //! @brief Feedback sample values
-    int16_t m_feedback[2];
+    int16_t m_feedback[2] = {0, 0};
 
     //! @brief Connection
-    bool m_cnt;
+    bool m_cnt = false;
 
     /**
      * @brief The channels within this operator
      * @invariant m_operator.empty() || m_operators.size()==2 || m_operators.size()==4
      */
-    std::vector<Operator*> m_operators;
+    std::vector<Operator*> m_operators = {};
 
 public:
     /**
@@ -94,18 +94,13 @@ public:
      * @return Adjusted phase feedback using m_fb (11 bit)
      *
      * @details
-     * The OPL3 seems not to use the average value of the last 2 samples, but the 2nd-last
-     * one only. See http://soundshock.se/phpBB2/viewtopic.php?p=1906&sid=d5b406e1c4f6a743b2c24b32f4df2bec#1906.
+     * The OPL stores the last 2 samples independent of feedback.
      */
     int16_t feedback() const {
         if( m_fb == 0 ) {
             return 0;
         }
-#if 0
-        return ( m_feedback[0] << m_fb ) >> 8;
-#else
         return ( ( m_feedback[0] + m_feedback[1] ) << m_fb ) >> 9;
-#endif
     }
     /**
      * @brief Push feedback into the queue

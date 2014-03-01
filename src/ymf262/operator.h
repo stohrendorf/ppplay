@@ -58,36 +58,36 @@ private:
     PhaseGenerator m_phaseGenerator;
     EnvelopeGenerator m_envelopeGenerator;
 
-    uint16_t m_phase;
+    uint16_t m_phase = 0;
 
     //! @brief Amplitude Modulation a.k.a. Tremolo
-    bool m_am;
+    bool m_am = false;
     //! @brief Vibrato
-    bool m_vib;
+    bool m_vib = false;
     //! @brief Key Scale Rate. Sets the actual envelope rate together with rate and keyScaleNumber
-    bool m_ksr;
+    bool m_ksr = false;
     //! @brief Envelope Generator Type
-    bool m_egt;
+    bool m_egt = false;
     //! @brief Multiple. Multiplies the Channel.baseFrequency to get the Operator.operatorFrequency
-    uint8_t m_mult;
+    uint8_t m_mult = 0;
     //! @brief Key Scale Level. Sets the attenuation in accordance with the octave.
-    uint8_t m_ksl;
+    uint8_t m_ksl = 0;
     //! @brief Total Level. Sets the overall damping for the envelope.
-    uint8_t m_tl;
+    uint8_t m_tl = 0;
     //! @brief Attack Rate.
-    uint8_t m_ar;
+    uint8_t m_ar = 0;
     //! @brief Decay Rate.
-    uint8_t m_dr;
+    uint8_t m_dr = 0;
     //! @brief Sustain Level.
-    uint8_t m_sl;
+    uint8_t m_sl = 0;
     //! @brief Release Rate.
-    uint8_t m_rr;
+    uint8_t m_rr = 0;
     //! @brief Waveform selector
-    uint8_t m_ws;
+    uint8_t m_ws = 0;
     // 0..1023
-    uint16_t m_f_number;
+    uint16_t m_f_number = 0;
     // 0..7
-    uint8_t m_block;
+    uint8_t m_block = 0;
 
     int16_t handleTopCymbal( uint8_t ws );
     int16_t handleHighHat( uint8_t ws );

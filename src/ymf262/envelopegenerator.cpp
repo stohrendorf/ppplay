@@ -68,38 +68,39 @@ void EnvelopeGenerator::setAttennuation( uint16_t f_number, uint8_t block, uint8
     }
 }
 
-uint8_t EnvelopeGenerator::calculateRate( uint8_t rate ) const
+uint8_t EnvelopeGenerator::calculateRate( uint8_t rateValue ) const
 {
-    if( rate == 0 ) {
+    if( rateValue == 0 ) {
         return 0;
     }
-    // calculate key scale number
-    uint8_t res = ( m_fnum >> ( m_opl->nts() ? 8 : 9 ) ) & 0x1;
-    res |= m_block << 1;
+    // calculate key scale number (see NTS in the YMF262 manual)
+    uint8_t rof = ( m_fnum >> ( m_opl->nts() ? 8 : 9 ) ) & 0x1;
+    // ...and KSR (see manual, again)
+    rof |= m_block << 1;
     if( !m_ksr ) {
-        res >>= 2;
+        rof >>= 2;
     }
-    res += rate << 2;
-    return std::min<uint8_t>( 63, res );
+    // here, rof<=15
+    return std::min<uint8_t>( 63, rof + (rateValue << 2) );
 }
 
 inline uint8_t EnvelopeGenerator::advanceCounter( uint8_t rate )
 {
-    BOOST_ASSERT( rate < 64 );
+    BOOST_ASSERT( rate < 16 );
     if( rate == 0 ) {
         return 0;
     }
     const uint8_t effectiveRate = calculateRate( rate );
-    // rateHi <= 15
-    const uint8_t rateHi = effectiveRate >> 2;
-    // rateLo <= 3
-    const uint8_t rateLo = effectiveRate & 3;
+    // rateValue <= 15
+    const uint8_t rateValue = effectiveRate >> 2;
+    // rof <= 3
+    const uint8_t rof = effectiveRate & 3;
     // 4 <= Delta <= (7<<15)
-    m_counter += uint32_t( 4 | rateLo ) << rateHi;
-    // res <= 7
-    uint8_t res = m_counter >> 15;
+    m_counter += uint32_t( 4 | rof ) << rateValue;
+    // overflow <= 7
+    uint8_t overflow = m_counter >> 15;
     m_counter &= ( 1 << 15 ) - 1;
-    return res;
+    return overflow;
 }
 
 void EnvelopeGenerator::attenuate( uint8_t rate )

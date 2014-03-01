@@ -30,26 +30,17 @@ namespace opl
 {
 
 Channel::Channel( opl::Opl3* opl, int baseAddress ) :
-    m_opl( opl ), m_channelBaseAddress( baseAddress ),
-    m_fnum( 0 ), m_kon( false ), m_block( 0 ), m_ch( 0 ),
-    m_fb( 0 ), m_feedback {0, 0}, m_cnt( false ),
-      m_operators()
+    m_opl( opl ), m_channelBaseAddress( baseAddress ), m_operators()
 {
 }
 
 Channel::Channel( opl::Opl3* opl, int baseAddress, Operator* op1, Operator* op2 ) :
-    m_opl( opl ), m_channelBaseAddress( baseAddress ),
-    m_fnum( 0 ), m_kon( false ), m_block( 0 ), m_ch( 0 ),
-    m_fb( 0 ), m_feedback {0, 0}, m_cnt( false ),
-      m_operators( {op1, op2} )
+    m_opl( opl ), m_channelBaseAddress( baseAddress ), m_operators( {op1, op2} )
 {
 }
 
 Channel::Channel( opl::Opl3* opl, int baseAddress, Operator* op1, Operator* op2, Operator* op3, Operator* op4 ) :
-    m_opl( opl ), m_channelBaseAddress( baseAddress ),
-    m_fnum( 0 ), m_kon( false ), m_block( 0 ), m_ch( 0 ),
-    m_fb( 0 ), m_feedback {0, 0}, m_cnt( false ),
-      m_operators( {op1, op2, op3, op4} )
+    m_opl( opl ), m_channelBaseAddress( baseAddress ), m_operators( {op1, op2, op3, op4} )
 {
 }
 

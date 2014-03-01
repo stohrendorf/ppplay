@@ -62,9 +62,7 @@ inline int yac512( int smp )
 }
 
 
-Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m_channels(), m_disabledChannel(),
-    m_nts( false ), m_dam( false ), m_dvb( false ), m_ryt( false ), m_bd( false ), m_sd( false ), m_tc( false ), m_hh( false ),
-    m_new( false ), m_vibratoIndex( 0 ), m_tremoloIndex( 0 ), m_rand( 1 )
+Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m_channels(), m_disabledChannel()
 {
     for( int array = 0; array < 2; array++ ) {
         for( int group = 0; group <= 0x10; group += 8 ) {
@@ -145,28 +143,17 @@ void Opl3::read( std::array<int16_t, 4>* dest )
 
 void Opl3::write( int array, int address, uint8_t data )
 {
-    // The OPL3 has two registers arrays, each with adresses ranging
-    // from 0x00 to 0xF5.
-    // This emulator uses one array, with the two original register arrays
-    // starting at 0x00 and at 0x100.
+    // The OPL3 has two registers arrays, each with adresses ranging from 0x00 to 0xF5.
     const int registerAddress = ( array << 8 ) | address;
-    // If the address is out of the OPL3 memory map, returns.
+    // If the address is out of the OPL3 memory map, return.
     if( registerAddress < 0 || registerAddress >= 0x200 ) {
         return;
     }
 
     m_registers[registerAddress] = data;
     switch( address & 0xE0 ) {
-            // The first 3 bits masking gives the type of the register by using its base address:
-            // 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0
-            // When it is needed, we further separate the register type inside each base address,
-            // which is the case of 0x00 and 0xA0.
-
-            // Through out this emulator we will use the same name convention to
-            // reference a byte with several bit registers.
-            // The name of each bit register will be followed by the number of bits
-            // it occupies inside the byte.
-            // Numbers without accompanying names are unused bits.
+            // The first 3 bits masking gives the type of the register by using its base address: 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0.
+            // When it is needed, we further separate the register type inside each base address, which is the case of 0x00 and 0xA0.
         case 0x00:
             if( array == 1 ) {
                 if( address == 0x05 ) {

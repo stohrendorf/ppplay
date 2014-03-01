@@ -45,24 +45,24 @@ class PhaseGenerator
      * @brief Wave phase
      * @invariant m_phase < 1024
      */
-    uint32_t m_phase;
+    uint32_t m_phase = 0;
     /**
      * @brief F-Number
      * @invariant m_fNum < 1024
      */
-    uint16_t m_fNum;
+    uint16_t m_fNum = 0;
     /**
      * @brief Block/octave
      * @invariant m_block < 8
      */
-    uint8_t m_block;
+    uint8_t m_block = 0;
     /**
      * @brief Speed multiplier
      * @invariant m_mult < 16
      */
-    uint8_t m_mult;
+    uint8_t m_mult = 0;
 public:
-    PhaseGenerator( Opl3* opl ) : m_opl( opl ), m_phase( 0 ), m_fNum( 0 ), m_block( 0 ), m_mult( 0 ) {
+    PhaseGenerator( Opl3* opl ) : m_opl( opl ) {
         BOOST_ASSERT( opl != nullptr );
     }
 

@@ -50,81 +50,81 @@ private:
     };
 
     Opl3* m_opl;
-    Stage m_stage;
+    Stage m_stage = Stage::Release;
     /**
      * @brief Attack rate
      * @invariant m_ar<16
      * @note m_ar==0 disables the attack, m_ar==15 sets m_env=0.
      */
-    uint8_t m_ar;
+    uint8_t m_ar = 0;
     /**
      * @brief Decay rate
      * @invariant m_dr<16
      */
-    uint8_t m_dr;
+    uint8_t m_dr = 0;
     /**
      * @brief Sustain level
      * @invariant m_sl<16
      */
-    uint8_t m_sl;
+    uint8_t m_sl = 0;
     /**
      * @brief Release rate
      * @invariant m_rr<16
      */
-    uint8_t m_rr;
+    uint8_t m_rr = 0;
     /**
      * @brief F-Number
      * @invariant m_fnum<1024
      */
-    uint16_t m_fnum;
+    uint16_t m_fnum = 0;
     /**
      * @brief Block
      * @invariant m_block<8
      */
-    uint8_t m_block;
+    uint8_t m_block = 0;
     /**
      * @brief Envelope value
      * @invariant m_env<512
      */
-    uint16_t m_env;
+    uint16_t m_env = 0;
     //! @brief Key scale rate
-    bool m_ksr;
+    bool m_ksr = false;
     /**
      * @brief Total level
      * @invariant m_tl<64
      * @remark The attenuation is 0.75dB * m_tl.
      */
-    uint8_t m_tl;
+    uint8_t m_tl = 0;
     /**
      * @brief Key scale level
      * @invariant m_ksl<4
      */
-    uint8_t m_ksl;
+    uint8_t m_ksl = 0;
     /**
      * @brief Key scale level (adjusted)
      * @invariant m_kslAdd<4*56
      * @remark This is the combined value of m_ksl, m_fnum and m_block.
      */
-    uint8_t m_kslAdd;
+    uint8_t m_kslAdd = 0;
     /**
      * @brief Final envelope value
      * @invariant m_total<512
      * @remark This combines m_env, m_tl, m_kslAdd, the OPL DAM flag
      *         and the AM and EGT flags passed to advance().
      */
-    uint16_t m_total;
+    uint16_t m_total = Silence;
     /**
      * @brief Clock counter
      * @invariant m_counter<(1<<15)
      */
-    uint32_t m_counter;
+    uint32_t m_counter = 0;
 
     static constexpr uint16_t Silence = 511;
 
     /**
      * @brief Calculates the effectively used rates
      * @return Effectively used rate for envelope calculation
-     * @invariant rate<64
+     * @invariant rate<16
      * @note This method is nearly frozen.
      */
     uint8_t calculateRate( uint8_t delta ) const;
@@ -132,7 +132,7 @@ private:
      * @brief Advances the counter and returns the overflow
      * @param[in] rate Attack/decay/release rate
      * @return Counter overflow (0..7)
-     * @pre rate<64
+     * @pre rate<16
      * @post Result<8
      * @note This method is nearly frozen.
      */
@@ -153,10 +153,7 @@ private:
 
 public:
     constexpr EnvelopeGenerator( Opl3* opl )
-        : m_opl( opl ), m_stage( Stage::Release ),
-          m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_fnum( 0 ), m_block( 0 ),
-          m_env( Silence ), m_ksr( false ), m_tl( 0 ), m_ksl( 0 ),
-          m_kslAdd( 0 ), m_total( Silence ), m_counter( 0 ) {
+        : m_opl( opl ) {
     }
 
     constexpr bool isSilent() {

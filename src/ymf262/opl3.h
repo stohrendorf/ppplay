@@ -75,21 +75,21 @@ private:
     Channel::Ptr m_channels[2][9];
     Channel::Ptr m_disabledChannel;
 
-    bool m_nts;
+    bool m_nts = false;
     //! @brief Depth of amplitude
-    bool m_dam;
+    bool m_dam = false;
     //! @brief Depth of vibrato
-    bool m_dvb;
-    bool m_ryt;
-    bool m_bd, m_sd, m_tc, m_hh;
+    bool m_dvb = false;
+    bool m_ryt = false;
+    bool m_bd=false, m_sd=false, m_tc=false, m_hh=false;
     //! @brief OPL2/OPL3 mode selection
-    bool m_new;
+    bool m_new = false;
     //! @brief 13 bits
-    uint16_t m_vibratoIndex;
+    uint16_t m_vibratoIndex = 0;
     //! @brief 14 bits, wraps around after 13*1024
-    uint16_t m_tremoloIndex;
+    uint16_t m_tremoloIndex = 0;
     //! @brief Random number generator
-    uint32_t m_rand;
+    uint32_t m_rand = 1;
 
 public:
     uint32_t randBit() const {

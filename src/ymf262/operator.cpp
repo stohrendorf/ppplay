@@ -174,10 +174,7 @@ void Operator::updateOperator( uint16_t f_num, uint8_t blk )
     update_5_WS3();
 }
 
-Operator::Operator( Opl3* opl, int baseAddress ) : m_opl( opl ), m_operatorBaseAddress( baseAddress ), m_phaseGenerator( opl ), m_envelopeGenerator( opl ),
-    m_phase( 0 ), m_am( false ), m_vib( false ), m_ksr( false ), m_egt( false ), m_mult( 0 ), m_ksl( 0 ), m_tl( 0 ),
-    m_ar( 0 ), m_dr( 0 ), m_sl( 0 ), m_rr( 0 ), m_ws( 0 ),
-    m_f_number( 0 ), m_block( 0 )
+Operator::Operator( Opl3* opl, int baseAddress ) : m_opl( opl ), m_operatorBaseAddress( baseAddress ), m_phaseGenerator( opl ), m_envelopeGenerator( opl )
 {
 }
 
@@ -223,44 +220,48 @@ constexpr uint16_t sinExpTable[256] = {
 /*
                  /-\
                 |   |
-Waveform 1      +   +   +  ABCD
+Waveform 0      +   +   +  ABCD
                     |   |
                      \-/
 
                  /-\
                 |   |
-Waveform 2      +   +---+  ABCX
+Waveform 1      +   +---+  ABCX
 
                  /-\ /-\
                 |   |   |
-Waveform 3      +   +   +  ABAB
+Waveform 2      +   +   +  ABAB
 
                  /+  /+
                 | | | |
-Waveform 4      + +-+ +--  AXAX
+Waveform 3      + +-+ +--  AXAX
+
+                 ^
+                | |
+Waveform 4      +-+-+----  EFXX
+                  | |
+                   v
 
                  ^ ^
                 | | |
 Waveform 5      +-+-+----  EEXX
 
-                 ^
-                | |
-Waveform 6      +-+-+----  EFXX
-                  | |
-                   v
-
                 +---+
                 |   |
-Waveform 7      +   +   +  GGHH
+Waveform 6      +   +   +  GGHH
                     |   |
                     +---+
 
                 |\
                 | \
-Waveform 8      +  ---  +  IJKL
+Waveform 7      +  ---  +  IJKL
                       \ |
                        \|
 */
+
+//! @brief The sign bit used in sinLog
+constexpr uint16_t SignBit = 0x8000;
+
 /**
  * @brief Calculate logarithmic sine value
  * @param[in] ws Waveform selector (3 bits)
@@ -270,68 +271,68 @@ Waveform 8      +  ---  +  IJKL
  */
 uint16_t sinLog( uint8_t ws, uint16_t phi )
 {
-    uint8_t index = (phi & 0xff);
+    const uint8_t index = (phi & 0xff);
 
     switch( ( ws & 7 ) | ( phi & 0x0300 ) ) {
-            // rising quarter wave  Shape A
         case 0x0000:
         case 0x0001:
         case 0x0002:
         case 0x0202:
         case 0x0003:
         case 0x0203:
+            // rising quarter wave  Shape A
             return sinLogTable[index];
 
-            // falling quarter wave  Shape B
         case 0x0100:
         case 0x0101:
         case 0x0102:
         case 0x0302:
+            // falling quarter wave  Shape B
             return sinLogTable[index ^ 0xFF];
 
-            // rising quarter wave -ve  Shape C
         case 0x0200:
-            return sinLogTable[index] | 0x8000;
+            // rising quarter wave -ve  Shape C
+            return sinLogTable[index] | SignBit;
 
-            // falling quarter wave -ve  Shape D
         case 0x0300:
-            return sinLogTable[index ^ 0xFF] | 0x8000;
+            // falling quarter wave -ve  Shape D
+            return sinLogTable[index ^ 0xFF] | SignBit;
 
-            // fast wave +ve  Shape E
         case 0x0004:
         case 0x0005:
         case 0x0105:
+            // fast wave +ve  Shape E
             return sinLogTable[( ( index << 1 ) ^ ( ( index & 0x80 ) ? 0x1FF : 0x00 ) )];
 
-            // fast wave -ve  Shape F
         case 0x0104:
-            return sinLogTable[( ( index << 1 ) ^ ( ( index & 0x80 ) ? 0x1FF : 0x00 ) )] | 0x8000;
+            // fast wave -ve  Shape F
+            return sinLogTable[( ( index << 1 ) ^ ( ( index & 0x80 ) ? 0x1FF : 0x00 ) )] | SignBit;
 
-            // square wave +ve  Shape G
         case 0x0006:
         case 0x0106:
+            // square wave +ve  Shape G
             return 0;
 
-            // square wave -ve  Shape H
         case 0x0206:
         case 0x0306:
-            return 0x8000;
+            // square wave -ve  Shape H
+            return SignBit;
 
-            // Shape I
         case 0x0007:
+            // Shape I
             return index << 3;
 
-            // Shape J
         case 0x0107:
+            // Shape J
             return index << 3 | 0x800;
 
-            // Shape K
         case 0x0207:
-            return ( index ^ 0xFF ) << 3 | 0x8800;
+            // Shape K
+            return (( index ^ 0xFF ) << 3) | 0x800 | SignBit;
 
-            // Shape L
         case 0x0307:
-            return ( index ^ 0xFF ) << 3 | 0x8000;
+            // Shape L
+            return (( index ^ 0xFF ) << 3) | SignBit;
     }
     // Shape X
     return 0x0C00;
@@ -344,16 +345,16 @@ uint16_t sinLog( uint8_t ws, uint16_t phi )
  */
 int16_t sinExp( uint16_t expVal )
 {
-    const bool signBit = expVal & 0x8000;
+    const bool isSigned = expVal & SignBit;
 
-    expVal &= 0x7FFF;
+    expVal &= ~SignBit;
     // expVal: 0..2137+511*8 = 0..6225
     // result: 0..1018+1024
     uint32_t result = 0x0400 + sinExpTable[( expVal & 0xff ) ^ 0xFF];
     result <<= 1;
     result >>= ( expVal >> 8 ); // exp
 
-    if( signBit ) {
+    if( isSigned ) {
         // -1 for one's complement
         return -result - 1;
     }
