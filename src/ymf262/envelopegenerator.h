@@ -86,7 +86,7 @@ private:
      * @brief Envelope value
      * @invariant m_env<512
      */
-    uint16_t m_env = 0;
+    uint16_t m_env = Silence;
     //! @brief Key scale rate
     bool m_ksr = false;
     /**
