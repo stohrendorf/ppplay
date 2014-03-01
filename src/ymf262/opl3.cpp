@@ -53,6 +53,7 @@ inline int yac512( int smp )
         smp >>= 1;
     }
     smp <<= numShifts;
+    smp >>= 1;
     if( negative )
         return -smp - 1;
     else
