@@ -83,7 +83,7 @@ public:
      * @see operator=()
      * @see noNibbles()
      */
-    constexpr void force( uint8_t val ) noexcept {
+    void force( uint8_t val ) const noexcept {
         m_value = val;
     }
 

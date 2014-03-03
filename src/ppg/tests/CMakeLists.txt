@@ -4,5 +4,8 @@ add_executable(
 	ppg_test.cpp
 )
 target_link_libraries(ppg_test_exe ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+if(COMPILER_IS_CLANG)
+	target_link_libraries(ppg_test_exe stdc++)
+endif()
 
 add_test(NAME PpgTest COMMAND ppg_test_exe)

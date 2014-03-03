@@ -39,7 +39,7 @@ namespace ppp
  * @brief Contains information about the a playback state
  */
 struct PPPLAY_MODULE_BASE_EXPORT ModuleState : public ISerializable {
-explicit constexpr ModuleState() noexcept :
+explicit ModuleState() noexcept :
     speed( 0 ),
            tempo( 0 ),
            order( 0 ),

@@ -48,7 +48,7 @@ struct SimpleComplex
     { }
     
     template<typename U>
-    constexpr SimpleComplex<Type> operator*(const SimpleComplex<U>& rhs) noexcept
+    constexpr SimpleComplex<Type> operator*(const SimpleComplex<U>& rhs) const noexcept
     {
         return SimpleComplex<Type>( real*rhs.real - imag*rhs.imag, real*rhs.imag + imag*rhs.real );
     }
@@ -62,7 +62,7 @@ struct SimpleComplex
     }
     
     template<typename U>
-    constexpr SimpleComplex<Type> operator+(const SimpleComplex<U>& rhs) noexcept
+    constexpr SimpleComplex<Type> operator+(const SimpleComplex<U>& rhs) const noexcept
     {
         return SimpleComplex<Type>( real+rhs.real, imag+rhs.imag );
     }
@@ -75,7 +75,7 @@ struct SimpleComplex
     }
     
     template<typename U>
-    constexpr SimpleComplex<Type> operator-(const SimpleComplex<U>& rhs) noexcept
+    constexpr SimpleComplex<Type> operator-(const SimpleComplex<U>& rhs) const noexcept
     {
         return SimpleComplex<Type>( real-rhs.real, imag-rhs.imag );
     }
@@ -87,7 +87,7 @@ struct SimpleComplex
         return *this;
     }
     
-    constexpr Type length() noexcept
+    constexpr Type length() const noexcept
     {
         return sqrt( real*real + imag*imag );
     }

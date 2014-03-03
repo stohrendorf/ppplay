@@ -32,7 +32,7 @@
 namespace ppp
 {
 
-class ChannelState;
+struct ChannelState;
 
 /**
  * @ingroup GenMod

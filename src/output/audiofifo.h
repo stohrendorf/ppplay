@@ -27,6 +27,8 @@
 
 #include <light4cxx/logger.h>
 #include <boost/circular_buffer.hpp>
+
+#undef  BOOST_NO_CXX11_HDR_TUPLE
 #include <boost/signals2.hpp>
 
 #include <thread>

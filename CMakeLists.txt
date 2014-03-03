@@ -52,7 +52,7 @@ elseif(CMAKE_COMPILER_IS_GNUCXX)
 		endif()
 	endif()
 else()
-	message(FATAL_ERROR "Sorry, you need at least GCC 4.7.0")
+	message(FATAL_ERROR "Sorry, you need at least GCC 4.8.2")
 endif()
 
 if(NOT __COMPILER_GNU)
@@ -186,6 +186,8 @@ set_property(TARGET ppplay PROPERTY RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DI
 
 if(MINGW)
 	target_link_libraries(ppplay stdc++ mingw32)
+elseif(COMPILER_IS_CLANG)
+	target_link_libraries(ppplay stdc++)
 endif()
 
 target_link_libraries(ppplay ppplay_core ppplay_module_base ppplay_ppg ppplay_output_sdl ppplay_output_wav)

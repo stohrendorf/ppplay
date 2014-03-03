@@ -340,7 +340,7 @@ uint16_t sinLog( uint8_t ws, uint16_t phi )
 
 /**
  * @brief Calculate exponential value from logarithmic value
- * @param[in] expVal Exponent calculated by sinLog, including the envelope value
+ * @param[in] expVal Exponent calculated by sinLog, including the envelope value and the @c SignBit.
  * @warning @a expVal will not be checked for correct values.
  */
 int16_t sinExp( uint16_t expVal )

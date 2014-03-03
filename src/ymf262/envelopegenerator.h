@@ -156,7 +156,7 @@ public:
         : m_opl( opl ) {
     }
 
-    constexpr bool isSilent() {
+    constexpr bool isSilent() const {
         return m_total == Silence;
     }
     /**

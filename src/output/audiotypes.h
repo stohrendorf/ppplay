@@ -78,13 +78,13 @@ constexpr BasicSampleFrame( int16_t l, int16_t r ) noexcept :
     left( l ), right( r ) {
     }
 
-    constexpr BasicSampleFrame operator-( const BasicSampleFrame& rhs ) noexcept {
+    constexpr BasicSampleFrame operator-( const BasicSampleFrame& rhs ) const noexcept {
         return BasicSampleFrame( left - rhs.left, right - rhs.right );
     }
-    constexpr BasicSampleFrame operator*( int value ) noexcept {
+    constexpr BasicSampleFrame operator*( int value ) const noexcept {
         return BasicSampleFrame( left * value, right * value );
     }
-    constexpr BasicSampleFrame operator>>( int shift ) noexcept {
+    constexpr BasicSampleFrame operator>>( int shift ) const noexcept {
         return BasicSampleFrame( left >> shift, right >> shift );
     }
     inline BasicSampleFrame& operator+=( const BasicSampleFrame& rhs ) noexcept {
