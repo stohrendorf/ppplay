@@ -51,7 +51,7 @@ ArchiveFileStream::ArchiveFileStream( const std::string& filename ) : MemoryStre
 
     archive* arch = archive_read_new();
     archive_read_support_format_all( arch );
-    archive_read_support_compression_all( arch );
+    archive_read_support_filter_all( arch );
 #ifdef BOOST_WINDOWS_API
     char arcPath[260];
     wcstombs( arcPath, zipPath.c_str(), 260 );
@@ -78,7 +78,7 @@ ArchiveFileStream::ArchiveFileStream( const std::string& filename ) : MemoryStre
     else {
         logger()->error( L4CXX_LOCATION, "Failed to open '%s'", filename );
     }
-    archive_read_finish( arch );
+    archive_read_free( arch );
 
     m_isOpen = true;
 }
