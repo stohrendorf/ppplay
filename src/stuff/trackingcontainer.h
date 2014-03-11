@@ -106,7 +106,7 @@ inline TrackingContainer() noexcept :
      * @name STL compliant methods
      * @{
      */
-    void push_back( typename std::conditional<std::is_move_constructible<Type>::value, RValReference, ConstReference>::type value ) {
+    void push_back( Type&& value ) {
         m_container.push_back( value );
     }
 
@@ -205,8 +205,8 @@ inline TrackingContainer() noexcept :
      * @return Reference to the newly created element
      */
     template<class ...Args>
-    inline Reference append( const Args& ...args ) {
-        push_back( Type( args... ) );
+    inline Reference append( Args&& ...args ) {
+        push_back( Type( std::forward<Args>(args)... ) );
         return m_container.back();
     }
 

@@ -78,11 +78,11 @@ public:
      * @param[in] fmt The message format string
      */
     template<class ...Args>
-    void trace( const Location& loc, const std::string& fmt, const Args& ...args ) {
+    void trace( Location&& loc, std::string&& fmt, Args&& ...args ) {
         if( Level::Trace < s_level || s_level == Level::Off ) {
             return;
         }
-        log( Level::Trace, loc, stringFmt( fmt, args... ) );
+        log( Level::Trace, loc, stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
     }
     /**
      * @brief Log a message with Level::Debug
@@ -90,11 +90,11 @@ public:
      * @param[in] str The message itself
      */
     template<class ...Args>
-    void debug( const Location& loc, const std::string& fmt, const Args& ...args ) {
+    void debug( Location&& loc, std::string&& fmt, Args&& ...args ) {
         if( Level::Debug < s_level || s_level == Level::Off ) {
             return;
         }
-        log( Level::Debug, loc, stringFmt( fmt, args... ) );
+        log( Level::Debug, loc, stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
     }
     /**
      * @brief Log a message with Level::Info
@@ -102,11 +102,11 @@ public:
      * @param[in] str The message itself
      */
     template<class ...Args>
-    void info( const Location& loc, const std::string& fmt, const Args& ...args ) {
+    void info( Location&& loc, std::string&& fmt, Args&& ...args ) {
         if( Level::Info < s_level || s_level == Level::Off ) {
             return;
         }
-        log( Level::Info, loc, stringFmt( fmt, args... ) );
+        log( Level::Info, loc, stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
     }
     /**
      * @brief Log a message with Level::Warn
@@ -114,11 +114,11 @@ public:
      * @param[in] str The message itself
      */
     template<class ...Args>
-    void warn( const Location& loc, const std::string& fmt, const Args& ...args ) {
+    void warn( Location&& loc, std::string&& fmt, Args&& ...args ) {
         if( Level::Warn < s_level || s_level == Level::Off ) {
             return;
         }
-        log( Level::Warn, loc, stringFmt( fmt, args... ) );
+        log( Level::Warn, loc, stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
     }
     /**
      * @brief Log a message with Level::Error
@@ -126,11 +126,11 @@ public:
      * @param[in] str The message itself
      */
     template<class ...Args>
-    void error( const Location& loc, const std::string& fmt, const Args& ...args ) {
+    void error( Location&& loc, std::string&& fmt, Args&& ...args ) {
         if( Level::Error < s_level || s_level == Level::Off ) {
             return;
         }
-        log( Level::Error, loc, stringFmt( fmt, args... ) );
+        log( Level::Error, loc, stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
     }
     /**
      * @brief Log a message with Level::Fatal
@@ -138,11 +138,11 @@ public:
      * @param[in] str The message itself
      */
     template<class ...Args>
-    void fatal( const Location& loc, const std::string& fmt, const Args& ...args ) {
+    void fatal( Location&& loc, std::string&& fmt, Args&& ...args ) {
         if( Level::Fatal < s_level || s_level == Level::Off ) {
             return;
         }
-        log( Level::Fatal, loc, stringFmt( fmt, args... ) );
+        log( Level::Fatal, loc, stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
     }
     /**
      * @brief Get the current log level filter

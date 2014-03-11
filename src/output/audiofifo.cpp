@@ -108,7 +108,7 @@ size_t AudioFifo::pullData( AudioFrameBuffer& data, size_t size )
 {
     std::unique_lock<std::mutex> lock( m_bufferMutex );
     if( size > m_buffer.size() ) {
-        logger()->trace( L4CXX_LOCATION, "Buffer underrun: Requested %d frames while only %d frames in queue", size, m_buffer.size() );
+        logger()->debug( L4CXX_LOCATION, "Buffer underrun: Requested %d frames while only %d frames in queue", size, m_buffer.size() );
         size = m_buffer.size();
     }
     if( !data ) {

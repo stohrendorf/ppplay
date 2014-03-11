@@ -41,7 +41,7 @@ namespace ppp
  * @note Time-critical
  */
 template<typename T>
-inline constexpr const T& clip( const T& v, const T& a, const T& b )
+inline constexpr T clip( T v, T a, T b )
 {
     return std::min( b, std::max( v, a ) );
 }
@@ -56,7 +56,7 @@ inline constexpr const T& clip( const T& v, const T& a, const T& b )
  * @note Time-critical
  */
 template<typename T>
-inline constexpr bool between( const T v, const T a, const T b )
+inline constexpr bool between( T v, T a, T b )
 {
     return ( v >= a ) && ( v <= b );
 }
