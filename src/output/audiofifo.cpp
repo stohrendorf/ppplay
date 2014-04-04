@@ -50,9 +50,9 @@ void AudioFifo::requestThread()
         if( size <= 0 ) {
             continue;
         }
-        src->getAudioData( buffer, size );
-        if( !src->paused() && ( !buffer || buffer->empty() ) ) {
-            // logger()->debug( L4CXX_LOCATION, "Audio source dry" );
+        size_t n = src->getAudioData( buffer, size );
+        if( !src->paused() && ( n==0 || !buffer || buffer->empty() ) ) {
+            logger()->debug( L4CXX_LOCATION, "Audio source dry" );
             continue;
         }
         // add the data to the queue...
@@ -112,9 +112,9 @@ size_t AudioFifo::pullData( AudioFrameBuffer& data, size_t size )
         size = m_buffer.size();
     }
     if( !data ) {
-        data.reset( new AudioFrameBuffer::element_type( size ) );
+        data = std::make_shared<AudioFrameBuffer::element_type>(size);
     }
-    if( size > data->size() ) {
+    else if( size > data->size() ) {
         data->resize( size );
     }
     std::copy_n( m_buffer.begin(), size, data->begin() );

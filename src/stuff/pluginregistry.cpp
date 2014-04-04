@@ -199,7 +199,7 @@ void PluginRegistry::findPlugins()
 #else
         logger()->debug( L4CXX_LOCATION, "Found input plugin '%s', '%s': %s", entry.native(), plugin->name(), plugin->description() );
 #endif
-        instance().m_handles.push_back( handle );
+        instance().m_handles.emplace_back( handle );
     }
 }
 

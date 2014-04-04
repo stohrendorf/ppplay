@@ -127,7 +127,7 @@ bool XmModule::load( Stream* stream )
     m_amiga = ( hdr.flags & 1 ) == 0;
     m_channels.clear();
     for( int i = 0; i < hdr.numChannels; i++ ) {
-        m_channels.push_back( new XmChannel( this ) );
+        m_channels.emplace_back( new XmChannel( this ) );
     }
     for( uint_fast16_t i = 0; i < hdr.numPatterns; i++ ) {
         XmPattern* pat = new XmPattern( hdr.numChannels );
@@ -138,7 +138,7 @@ bool XmModule::load( Stream* stream )
         }
     }
     while( m_patterns.size() < 256 ) {
-        m_patterns.push_back( XmPattern::createDefaultPattern( hdr.numChannels ) );
+        m_patterns.emplace_back( XmPattern::createDefaultPattern( hdr.numChannels ) );
     }
     for( uint_fast16_t i = 0; i < hdr.numInstruments; i++ ) {
         XmInstrument* ins = new XmInstrument();

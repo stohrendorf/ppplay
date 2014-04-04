@@ -160,7 +160,7 @@ bool AbstractModule::setOrder( size_t newOrder, bool estimateOnly, bool forceSav
                     m_songs->states.next()->archive( this ).finishLoad();
                 }
                 else {
-                    m_songs->states.append( new MemArchive() )->archive( this ).finishSave();
+                    m_songs->states.emplace_back( new MemArchive() )->archive( this ).finishSave();
                     m_songs->states.next();
                 }
             }
@@ -296,7 +296,7 @@ bool AbstractModule::jumpNextSong()
                 continue;
             }
             logger()->debug( L4CXX_LOCATION, "Found unplayed order %d pattern %d", i, int( orderAt( i )->index() ) );
-            m_songs.append( new SongInfo );
+            m_songs.emplace_back( new SongInfo );
             ++m_songs;
             m_state.playedFrames = 0;
             m_state.pattern = orderAt( i )->index();

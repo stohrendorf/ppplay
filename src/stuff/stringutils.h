@@ -43,21 +43,21 @@ inline std::string stringFmt( boost::format& fmt )
     return fmt.str();
 }
 
-inline std::string&& stringFmt( std::string&& fmt )
+inline std::string stringFmt( std::string&& fmt )
 {
-    return std::forward<std::string>(fmt);
+    return fmt;
 }
 
 template<class T, class ...Args>
 inline std::string stringFmt( boost::format& fmt, T&& val, Args&& ...args )
 {
-    return stringFmt( fmt % val, std::forward<Args>(args)... );
+    return stringFmt( fmt % std::forward<T>(val), std::forward<Args>(args)... );
 }
 
 template<class T, class ...Args>
-inline std::string stringFmt( const std::string& fmt, T&& val, Args&& ...args )
+inline std::string stringFmt( std::string&& fmt, T&& val, Args&& ...args )
 {
-    return stringFmt( boost::format( fmt ) % val, std::forward<Args>(args)... );
+    return stringFmt( boost::format( std::forward<std::string>(fmt) ) % std::forward<T>(val), std::forward<Args>(args)... );
 }
 
 /**

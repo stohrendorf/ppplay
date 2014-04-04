@@ -175,7 +175,7 @@ bool ModModule::load( Stream* stream, int loadMode )
     logger()->debug( L4CXX_LOCATION, "%d-channel, ID '%s', Tracker '%s'", int( meta->channels ), meta->id, meta->tracker );
     noConstMetaInfo().trackerInfo = meta->tracker;
     for( int i = 0; i < meta->channels; i++ ) {
-        m_channels.push_back( new ModChannel( this, ( ( i + 1 ) & 2 ) == 0 ) );
+        m_channels.emplace_back( new ModChannel( this, ( ( i + 1 ) & 2 ) == 0 ) );
     }
     stream->seek( 20 );
     const int numSamples = loadMode == LoadingMode::Smp15 ? 15 : 31;

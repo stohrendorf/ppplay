@@ -35,23 +35,20 @@ namespace ppg
 class PPPLAY_PPG_EXPORT Point
 {
 private:
-    int m_x; //!< @brief X position
-    int m_y; //!< @brief Y position
+    int m_x = 0; //!< @brief X position
+    int m_y = 0; //!< @brief Y position
 public:
     /**
      * @brief Default constructor, sets m_x and m_y to 0
      */
-constexpr Point() noexcept :
-    m_x( 0 ), m_y( 0 ) {
-    }
+    constexpr Point() noexcept = default;
     /**
      * @overload
      * @brief Initializing constructor
      * @param[in] x Value for m_x
      * @param[in] y Value for m_y
      */
-constexpr Point( int x, int y ) noexcept :
-    m_x( x ), m_y( y ) {
+    constexpr Point( int x, int y ) noexcept : m_x( x ), m_y( y ) {
     }
     /**
      * @brief Adds the coordinates of @a rhs to this

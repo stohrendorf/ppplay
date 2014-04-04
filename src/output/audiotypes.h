@@ -48,9 +48,9 @@ struct BasicSampleFrame {
     //! @brief Vector of BasicSampleFrame's
     typedef std::vector<BasicSampleFrame> Vector;
     //! @brief Left sample value
-    BasicSample left;
+    BasicSample left = 0;
     //! @brief Right sample value
-    BasicSample right;
+    BasicSample right = 0;
     /**
      * @brief Multiply and shift right
      * @param[in] mul Factor
@@ -71,11 +71,8 @@ struct BasicSampleFrame {
         right = ( right * mulRight ) >> shift;
     }
 
-constexpr BasicSampleFrame() noexcept :
-    left( 0 ), right( 0 ) {
-    }
-constexpr BasicSampleFrame( int16_t l, int16_t r ) noexcept :
-    left( l ), right( r ) {
+    constexpr BasicSampleFrame() noexcept = default;
+    constexpr BasicSampleFrame( int16_t l, int16_t r ) noexcept : left( l ), right( r ) {
     }
 
     constexpr BasicSampleFrame operator-( const BasicSampleFrame& rhs ) const noexcept {
@@ -111,9 +108,9 @@ typedef int32_t MixerSample;
 #pragma pack(push,1)
 struct MixerSampleFrame {
     //! @brief Left sample value
-    MixerSample left;
+    MixerSample left = 0;
     //! @brief Right sample value
-    MixerSample right;
+    MixerSample right = 0;
     /**
      * @brief Add a BasicSampleFrame
      * @param[in] rhs BasicSampleFrame to add
@@ -136,9 +133,7 @@ struct MixerSampleFrame {
         return result;
     }
 
-constexpr MixerSampleFrame() noexcept :
-    left( 0 ), right( 0 )  {
-    }
+    constexpr MixerSampleFrame() noexcept = default;
 };
 #pragma pack(pop)
 

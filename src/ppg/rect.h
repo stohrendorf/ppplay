@@ -45,7 +45,7 @@ public:
      * @param[in] width The width of the area
      * @param[in] height The height of the area
      */
-constexpr Rect( int x, int y, int width, int height ) noexcept :
+    constexpr Rect( int x, int y, int width, int height ) noexcept :
     m_topLeft( x, y ), m_bottomRight( x + width - 1, y + height - 1 ) {
     }
     /**
@@ -172,7 +172,7 @@ constexpr Rect( int x, int y, int width, int height ) noexcept :
      * @param[in] pt Point to check
      * @return @c true if the area contains the point
      */
-    constexpr bool contains( const Point& pt ) const noexcept {
+    constexpr bool contains( Point pt ) const noexcept {
         return contains( pt.x(), pt.y() );
     }
     /**

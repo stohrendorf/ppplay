@@ -43,7 +43,7 @@ enum class Color : unsigned char
  * @return Inverted color
  * @note This is DOS's default algorithm
  */
-inline constexpr Color operator~( const Color& c ) noexcept {
+inline constexpr Color operator~( Color c ) noexcept {
     return static_cast<Color>( ( static_cast<int>( c ) & 7 ) ^ 7 );
 }
 } // namespace ppg

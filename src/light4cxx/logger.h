@@ -82,7 +82,7 @@ public:
         if( Level::Trace < s_level || s_level == Level::Off ) {
             return;
         }
-        log( Level::Trace, loc, stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
+        log( Level::Trace, std::forward<Location>(loc), stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
     }
     /**
      * @brief Log a message with Level::Debug
@@ -94,7 +94,7 @@ public:
         if( Level::Debug < s_level || s_level == Level::Off ) {
             return;
         }
-        log( Level::Debug, loc, stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
+        log( Level::Debug, std::forward<Location>(loc), stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
     }
     /**
      * @brief Log a message with Level::Info
@@ -106,7 +106,7 @@ public:
         if( Level::Info < s_level || s_level == Level::Off ) {
             return;
         }
-        log( Level::Info, loc, stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
+        log( Level::Info, std::forward<Location>(loc), stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
     }
     /**
      * @brief Log a message with Level::Warn
@@ -118,7 +118,7 @@ public:
         if( Level::Warn < s_level || s_level == Level::Off ) {
             return;
         }
-        log( Level::Warn, loc, stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
+        log( Level::Warn, std::forward<Location>(loc), stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
     }
     /**
      * @brief Log a message with Level::Error
@@ -130,7 +130,7 @@ public:
         if( Level::Error < s_level || s_level == Level::Off ) {
             return;
         }
-        log( Level::Error, loc, stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
+        log( Level::Error, std::forward<Location>(loc), stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
     }
     /**
      * @brief Log a message with Level::Fatal
@@ -142,7 +142,7 @@ public:
         if( Level::Fatal < s_level || s_level == Level::Off ) {
             return;
         }
-        log( Level::Fatal, loc, stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
+        log( Level::Fatal, std::forward<Location>(loc), stringFmt( std::forward<std::string>(fmt), std::forward<Args>(args)... ) );
     }
     /**
      * @brief Get the current log level filter

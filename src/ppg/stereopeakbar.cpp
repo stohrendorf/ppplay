@@ -78,8 +78,8 @@ void StereoPeakBar::shift( int lval, int rval )
     BOOST_ASSERT( !m_interArrL.empty() && m_interArrR.size() == m_interArrL.size() );
     m_interArrL.erase( m_interArrL.begin() );
     m_interArrR.erase( m_interArrR.begin() );
-    m_interArrL.push_back( lval );
-    m_interArrR.push_back( rval );
+    m_interArrL.emplace_back( lval );
+    m_interArrR.emplace_back( rval );
     if( !m_showPeak )
         return;
     if( valueLeft() > m_peakPosL ) {

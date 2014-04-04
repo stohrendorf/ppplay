@@ -37,8 +37,7 @@ namespace ppp
  * @brief Information about a sub-song within a module
  */
 struct PPPLAY_CORE_EXPORT SongInfo {
-    explicit SongInfo() : states(), length( 0 ) {
-    }
+    explicit SongInfo() = default;
 
     explicit inline SongInfo( SongInfo && rhs ) : states( std::move( rhs.states ) ), length( rhs.length ) {
         rhs.states.clear();
@@ -49,19 +48,20 @@ struct PPPLAY_CORE_EXPORT SongInfo {
         deleteAll( states );
     }
 
-    inline SongInfo& operator=( SongInfo && rhs ) {
-        deleteAll( states );
-        states = std::move( rhs.states );
-        rhs.states.clear();
-        length = rhs.length;
-        rhs.length = 0;
+    inline SongInfo& operator=( SongInfo rhs ) {
+        rhs.swap(*this);
         return *this;
+    }
+    
+    void swap(SongInfo& rhs) {
+        std::swap(states, rhs.states);
+        std::swap(length, rhs.length);
     }
 
     //! @brief States for seeking
-    TrackingContainer<AbstractArchive*> states;
+    TrackingContainer<AbstractArchive*> states{};
     //! @brief Length in sample frames
-    size_t length;
+    size_t length = 0;
 };
 
 /**
