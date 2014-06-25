@@ -317,10 +317,8 @@ void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
         if( m_currentCell->note() == KeyOffNote ) {
             nextCheck = KeyOffCheck;
         }
-        else {
-            if( m_currentCell->note() != 0 ) {
-                calculatePortaTarget( m_currentCell->note() );
-            }
+        else if( m_currentCell->note() != 0 ) {
+            calculatePortaTarget( m_currentCell->note() );
             nextCheck = KeyOnCheck;
         }
     }

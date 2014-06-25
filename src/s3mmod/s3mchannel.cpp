@@ -1047,15 +1047,12 @@ void S3mChannel::fxTremolo( uint8_t fxByte )
     m_lastFxByte = fxByte;
     if( m_baseVolume == 0 )
         return;
-    int val = m_baseVolume + ( ( m_lastFxByte.lo() * waveValue( m_tremoloWaveform, m_tremoloPhase ) ) >> 7 );
-    if( val < 0 )
-        val = 0;
-    else if( val >= 64 )
-        val = 63;
+    const int vol = m_baseVolume + ( ( m_lastFxByte.lo() * waveValue( m_tremoloWaveform, m_tremoloPhase ) ) >> 7 );
     if( ( m_tremoloWaveform & 3 ) == 3 ) { // random vibrato
         m_tremoloPhase = ( m_tremoloPhase + ( std::rand() & 0x0f ) ) & 0x3f;
     }
-    m_vibratoPhase = ( m_vibratoPhase + m_lastFxByte.hi() ) & 0x3f;
+    m_tremoloPhase = ( m_tremoloPhase + m_lastFxByte.hi() ) & 0x3f;
+    m_currentVolume = clip( vol, 0, 63);
     recalcVolume();
 }
 
