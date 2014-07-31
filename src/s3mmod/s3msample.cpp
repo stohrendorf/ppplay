@@ -102,7 +102,12 @@ bool S3mSample::load( Stream* str, size_t pos, bool imagoLoopEnd )
         setVolume( smpHdr.volume );
         setFrequency( smpHdr.c2spd );
         bool loadStereo = ( smpHdr.flags & static_cast<uint8_t>( s3mFlagSmpStereo ) ) != 0;
-        setLoopType( ( smpHdr.flags & static_cast<uint8_t>( s3mFlagSmpLooped ) ) == 0 ? Sample::LoopType::None : Sample::LoopType::Forward );
+        if( smpHdr.hiLoopStart==smpHdr.hiLoopEnd && smpHdr.loopStart==smpHdr.loopEnd ) {
+            setLoopType( Sample::LoopType::None );
+        }
+        else {
+            setLoopType( ( smpHdr.flags & static_cast<uint8_t>( s3mFlagSmpLooped ) ) == 0 ? Sample::LoopType::None : Sample::LoopType::Forward );
+        }
         setTitle( stringncpy( smpHdr.sampleName, 28 ) );
         setFilename( stringncpy( smpHdr.filename, 12 ) );
         // ok, header loaded, now load the sample data
