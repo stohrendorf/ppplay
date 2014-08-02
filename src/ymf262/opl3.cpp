@@ -283,6 +283,7 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
     }
 
 }
+
 void Opl3::setEnabledChannels()
 {
     for( int array = 0; array < 2; array++ ) {
@@ -293,9 +294,9 @@ void Opl3::setEnabledChannels()
         }
     }
 }
+
 void Opl3::set4opConnections()
 {
-
     // bits 0, 1, 2 sets respectively 2-op channels (1,4), (2,5), (3,6) to 4-op operation.
     // bits 3, 4, 5 sets respectively 2-op channels (10,13), (11,14), (12,15) to 4-op operation.
     const uint8_t connSel = m_registers[_2_CONNECTIONSEL6_Offset] & 0x3F;

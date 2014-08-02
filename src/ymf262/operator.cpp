@@ -134,12 +134,12 @@ int16_t Operator::nextSample( uint16_t modulator )
 
         switch( m_operatorBaseAddress ) {
             case BassDrumOperator1:
-                if( m_opl->readReg( 0xc6 ) & 1 ) // Channel 7 CNT
-                    return 0;
+                return getOutput( modulator + m_phase, ws ); // this is for feedback only; see Channel::nextSample2Op
                 // fall-through
-            case TomTomOperator:
             case BassDrumOperator2:
-                return getOutput( m_phase, ws ) << 1;
+                break;
+            case TomTomOperator:
+                return getOutput( modulator + m_phase, ws ) << 1;
             case HighHatOperator:
                 return handleHighHat( ws ) << 1;
             case SnareDrumOperator:

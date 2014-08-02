@@ -152,6 +152,14 @@ void Channel::nextSample( std::array< int16_t, 4 >* dest )
 void Channel::nextSample2Op( std::array< int16_t, 4 >* dest )
 {
     if( isRhythmChannel() ) {
+        if( m_operators[0] == m_opl->bassDrumOp1() ) {
+            int16_t output = feedback();
+            if( !m_cnt )
+                output = m_operators[0]->nextSample( output );
+            output = m_operators[1]->nextSample( output );
+            getInFourChannels( dest, output );
+            return;
+        }
         getInFourChannels( dest, m_operators[0]->nextSample() + m_operators[1]->nextSample() );
         return;
     }

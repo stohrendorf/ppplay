@@ -25,6 +25,7 @@ install(FILES
 	${CMAKE_CURRENT_BINARY_DIR}/ppplay_opl_export.h
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/opl
 )
+
 option(BUILD_IMFPLAY "Build the OPL-only IMF-Play program" ON)
 if(BUILD_IMFPLAY)
 	add_executable(imfplay imfplay.cpp)
