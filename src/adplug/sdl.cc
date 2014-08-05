@@ -24,9 +24,8 @@
 
 #include "genmod/breseninter.h"
 
-SDLPlayer::SDLPlayer(opl::Opl3 *nopl, int freq,
-		     unsigned long bufsize)
-  : oplChip(nopl)
+SDLPlayer::SDLPlayer(opl::Opl3 *nopl, int freq, unsigned long bufsize)
+  : oplChip(nopl), interp(freq, opl::Opl3::SampleRate), filters{ppp::OplFilter{freq},ppp::OplFilter{freq}}
 {
    memset(&spec, 0x00, sizeof(SDL_AudioSpec));
 
@@ -71,8 +70,6 @@ void SDLPlayer::callback(void *userdata, Uint8 *audiobuf, int len)
   long		i, towrite = len / 4;
   int16_t *pos = reinterpret_cast<int16_t*>(audiobuf);
 
-  ppp::BresenInterpolation interp( self->spec.freq, opl::Opl3::SampleRate );
-
   // Prepare audiobuf with emulator output
   while(towrite > 0) {
     while(minicnt < 0) {
@@ -83,15 +80,14 @@ void SDLPlayer::callback(void *userdata, Uint8 *audiobuf, int len)
     for(int j=0; j<i; ++j) {
         std::array<int16_t,4> samples;
         self->oplChip->read(&samples);
-        if( interp.next() == 2 ) {
+        pos[0] = self->filters[0].filter(samples[0] + samples[2]);
+        pos[1] = self->filters[1].filter(samples[1] + samples[3]);
+        pos += 2;
+        
+        if( self->interp.next() == 2 ) {
             self->oplChip->read( nullptr ); // skip a sample
         }
-        interp = 0;
-        pos[0] = samples[0];
-        pos[1] = samples[1];
-        pos[0] += samples[2];
-        pos[1] += samples[3];
-        pos += 2;
+        self->interp = 0;
     }
     towrite -= i;
     minicnt -= (long)(self->p->getrefresh() * i);

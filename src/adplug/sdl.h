@@ -31,6 +31,8 @@ private:
   SDL_AudioSpec	spec;
 
   static void callback(void *, Uint8 *, int);
+  ppp::BresenInterpolation interp;
+  ppp::OplFilter filters[2];
 
 public:
   SDLPlayer(opl::Opl3 *nopl, int freq, unsigned long bufsize);

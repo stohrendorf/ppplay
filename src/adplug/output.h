@@ -20,7 +20,9 @@
 #ifndef H_OUTPUT
 #define H_OUTPUT
 
-#include <adplug/player.h>
+#include "adplug/player.h"
+#include "genmod/breseninter.h"
+#include "ymf262/oplfilter.h"
 
 class Player
 {
@@ -41,6 +43,8 @@ private:
   opl::Opl3		*opl;
   char		*audiobuf;
   unsigned long	buf_size, freq;
+  ppp::BresenInterpolation interp;
+  ppp::OplFilter filters[2];
 
 public:
   EmuPlayer(opl::Opl3 *nopl, unsigned long nfreq, unsigned long nbufsize);
