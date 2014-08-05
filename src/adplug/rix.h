@@ -25,9 +25,9 @@
 class CrixPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-  CrixPlayer(Copl *newopl);
+  CrixPlayer(opl::Opl3 *newopl);
   ~CrixPlayer();
 
   bool load(const std::string &filename, const CFileProvider &fp);

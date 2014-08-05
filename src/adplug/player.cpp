@@ -21,7 +21,6 @@
 
 #include "player.h"
 #include "adplug.h"
-#include "silentopl.h"
 
 /***** CPlayer *****/
 
@@ -31,7 +30,7 @@ const unsigned short CPlayer::note_table[12] =
 const unsigned char CPlayer::op_table[9] =
   {0x00, 0x01, 0x02, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12};
 
-CPlayer::CPlayer(Copl *newopl)
+CPlayer::CPlayer(opl::Opl3 *newopl)
   : opl(newopl), db(CAdPlug::database)
 {
 }
@@ -42,8 +41,8 @@ CPlayer::~CPlayer()
 
 unsigned long CPlayer::songlength(int subsong)
 {
-  CSilentopl	tempopl;
-  Copl		*saveopl = opl;
+  opl::Opl3	tempopl;
+  opl::Opl3	*saveopl = opl;
   float		slength = 0.0f;
 
   // save original OPL from being overwritten

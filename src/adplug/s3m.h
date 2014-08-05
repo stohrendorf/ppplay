@@ -27,9 +27,9 @@
 class Cs3mPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-  Cs3mPlayer(Copl *newopl);
+  Cs3mPlayer(opl::Opl3 *newopl);
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();

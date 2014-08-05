@@ -44,7 +44,7 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CPlayer *CdmoLoader::factory(Copl *newopl)
+CPlayer *CdmoLoader::factory(opl::Opl3 *newopl)
 {
   return new CdmoLoader(newopl);
 }

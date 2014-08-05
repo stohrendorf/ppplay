@@ -25,13 +25,13 @@
 #include <string>
 #include <list>
 
-#include "opl.h"
+#include <ymf262/opl3.h>
 #include "player.h"
 
 class CPlayerDesc
 {
 public:
-  typedef CPlayer *(*Factory)(Copl *);
+  typedef CPlayer *(*Factory)(opl::Opl3 *);
 
   Factory	factory;
   std::string	filetype;

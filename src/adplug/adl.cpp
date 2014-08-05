@@ -104,7 +104,7 @@ static inline uint16 READ_BE_UINT16(const void *ptr) {
 
 class AdlibDriver {
 public:
-  AdlibDriver(Copl *opl);
+  AdlibDriver(opl::Opl3 *opl);
   ~AdlibDriver();
 
   int callback(int opcode, ...);
@@ -441,10 +441,10 @@ public:
   static const uint8 _unkTable2_3[];
   static const uint8 _unkTables[][32];
 
-  Copl *opl;
+  opl::Opl3 *opl;
 };
 
-AdlibDriver::AdlibDriver(Copl *newopl)
+AdlibDriver::AdlibDriver(opl::Opl3 *newopl)
   : opl(newopl)
 {
   setupOpcodeList();
@@ -832,7 +832,7 @@ void AdlibDriver::resetAdlibState() {
 // New calling style: writeOPL(0xAB, 0xCD)
 
 void AdlibDriver::writeOPL(byte reg, byte val) {
-  opl->write(reg, val);
+  opl->writeReg(reg, val);
 }
 
 void AdlibDriver::initChannel(Channel &channel) {
@@ -2205,7 +2205,7 @@ const int CadlPlayer::_kyra1SoundTriggers[] = {
 
 const int CadlPlayer::_kyra1NumSoundTriggers = ARRAYSIZE(CadlPlayer::_kyra1SoundTriggers);
 
-CadlPlayer::CadlPlayer(Copl *newopl)
+CadlPlayer::CadlPlayer(opl::Opl3 *newopl)
   : CPlayer(newopl), numsubsongs(0), _trackEntries(), _soundDataPtr(0)
 {
   memset(_trackEntries, 0, sizeof(_trackEntries));
@@ -2394,8 +2394,7 @@ bool CadlPlayer::load(const std::string &filename, const CFileProvider &fp)
 void CadlPlayer::rewind(int subsong)
 {
   if(subsong == -1) subsong = cursubsong;
-  opl->init();
-  opl->write(1,32);
+  opl->writeReg(1,32);
   playSoundEffect(subsong);
   cursubsong = subsong;
   update();
@@ -2431,7 +2430,7 @@ void CadlPlayer::unk2() {
   playSoundEffect(0);
 }
 
-CPlayer *CadlPlayer::factory(Copl *newopl)
+CPlayer *CadlPlayer::factory(opl::Opl3 *newopl)
 {
   return new CadlPlayer(newopl);
 }

@@ -27,9 +27,9 @@
 class CjbmPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-  CjbmPlayer(Copl *newopl) : CPlayer(newopl), m(0)
+  CjbmPlayer(opl::Opl3 *newopl) : CPlayer(newopl), m(0)
     { }
   ~CjbmPlayer()
     { if(m != NULL) delete [] m; }

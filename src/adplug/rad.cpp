@@ -25,7 +25,7 @@
 #include <cstring>
 #include "rad.h"
 
-CPlayer *CradLoader::factory(Copl *newopl)
+CPlayer *CradLoader::factory(opl::Opl3 *newopl)
 {
   return new CradLoader(newopl);
 }

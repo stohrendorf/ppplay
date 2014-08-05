@@ -27,9 +27,9 @@
 class Cd00Player: public CPlayer
 {
  public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-  Cd00Player(Copl *newopl)
+  Cd00Player(opl::Opl3 *newopl)
     : CPlayer(newopl), filedata(0)
     { };
   ~Cd00Player()

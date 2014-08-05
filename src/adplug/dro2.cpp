@@ -24,12 +24,12 @@
 
 #include "dro2.h"
 
-CPlayer *Cdro2Player::factory(Copl *newopl)
+CPlayer *Cdro2Player::factory(opl::Opl3 *newopl)
 {
   return new Cdro2Player(newopl);
 }
 
-Cdro2Player::Cdro2Player(Copl *newopl) :
+Cdro2Player::Cdro2Player(opl::Opl3 *newopl) :
 	CPlayer(newopl),
 	piConvTable(NULL),
 	data(0)
@@ -108,17 +108,19 @@ bool Cdro2Player::update()
 		} else {
 			if (iIndex & 0x80) {
 				// High bit means use second chip in dual-OPL2 config
-				this->opl->setchip(1);
+				//FIXME sto this->opl->setchip(1);
+                            xchip = 0x100;
 			  iIndex &= 0x7F;
 			} else {
-			  this->opl->setchip(0);
+			  //FIXME sto this->opl->setchip(0);
+                            xchip = 0;
 			}
 			if (iIndex > this->iConvTableLen) {
 				printf("DRO2: Error - index beyond end of codemap table!  Corrupted .dro?\n");
 				return false; // EOF
 			}
 			int iReg = this->piConvTable[iIndex];
-			this->opl->write(iReg, iValue);
+			this->opl->writeReg(xchip + iReg, iValue);
 		}
 
 	}
@@ -132,7 +134,6 @@ void Cdro2Player::rewind(int subsong)
 {
 	this->iDelay = 0;
 	this->iPos = 0;
-  opl->init(); 
 }
 
 float Cdro2Player::getrefresh()

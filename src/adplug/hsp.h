@@ -27,9 +27,9 @@
 class ChspLoader: public ChscPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-	ChspLoader(Copl *newopl)
+	ChspLoader(opl::Opl3 *newopl)
 		: ChscPlayer(newopl)
 	{};
 

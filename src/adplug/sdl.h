@@ -27,20 +27,17 @@
 class SDLPlayer: public Player
 {
 private:
-  Copl		*opl;
+  opl::Opl3		*oplChip;
   SDL_AudioSpec	spec;
 
   static void callback(void *, Uint8 *, int);
-  unsigned char getsampsize()
-    { return spec.channels * (spec.format == AUDIO_U8 ? 1 : 2); }
 
 public:
-  SDLPlayer(Copl *nopl, unsigned char bits, int channels, int freq,
-	    unsigned long bufsize);
+  SDLPlayer(opl::Opl3 *nopl, int freq, unsigned long bufsize);
   virtual ~SDLPlayer();
 
   virtual void frame();
-  virtual Copl *get_opl() { return opl; }
+  virtual opl::Opl3 *get_opl() { return oplChip; }
 };
 
 #endif

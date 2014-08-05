@@ -24,9 +24,9 @@
 class CmtkLoader: public ChscPlayer
 {
  public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-  CmtkLoader(Copl *newopl)
+  CmtkLoader(opl::Opl3 *newopl)
     : ChscPlayer(newopl)
     {
       mtkmode = 1;

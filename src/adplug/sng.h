@@ -27,9 +27,9 @@
 class CsngPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-	CsngPlayer(Copl *newopl)
+	CsngPlayer(opl::Opl3 *newopl)
 		: CPlayer(newopl), data(0)
 	{ };
 	~CsngPlayer()

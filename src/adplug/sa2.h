@@ -25,9 +25,9 @@
 class Csa2Loader: public CmodPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-	Csa2Loader(Copl *newopl)
+	Csa2Loader(opl::Opl3 *newopl)
 		: CmodPlayer(newopl)
 	{ }
 

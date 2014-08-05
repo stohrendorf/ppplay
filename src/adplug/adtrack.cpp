@@ -37,7 +37,7 @@
 
 /*** Public methods ***/
 
-CPlayer *CadtrackLoader::factory(Copl *newopl)
+CPlayer *CadtrackLoader::factory(opl::Opl3 *newopl)
 {
   return new CadtrackLoader(newopl);
 }

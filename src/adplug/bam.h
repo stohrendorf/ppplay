@@ -24,9 +24,9 @@
 class CbamPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-	CbamPlayer(Copl *newopl)
+	CbamPlayer(opl::Opl3 *newopl)
 		: CPlayer(newopl), song(0)
 	{ };
 	~CbamPlayer()

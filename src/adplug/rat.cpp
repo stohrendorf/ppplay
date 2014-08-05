@@ -45,7 +45,7 @@ const unsigned short CxadratPlayer::rat_notes[16] =
   0x000, 0x000, 0x000, 0x000 // by riven
 };
 
-CPlayer *CxadratPlayer::factory(Copl *newopl)
+CPlayer *CxadratPlayer::factory(opl::Opl3 *newopl)
 {
   return new CxadratPlayer(newopl);
 }

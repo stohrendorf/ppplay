@@ -58,7 +58,7 @@ const unsigned short CxadpsiPlayer::psi_notes[16] =
   0x0000, 0x0000, 0x0000, 0x0000 // by riven
 };
 
-CPlayer *CxadpsiPlayer::factory(Copl *newopl)
+CPlayer *CxadpsiPlayer::factory(opl::Opl3 *newopl)
 {
   return new CxadpsiPlayer(newopl);
 }

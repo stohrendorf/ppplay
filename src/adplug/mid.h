@@ -24,9 +24,9 @@
 class CmidPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-  CmidPlayer(Copl *newopl);
+  CmidPlayer(opl::Opl3 *newopl);
   ~CmidPlayer()
     { if(data) delete [] data; }
 

@@ -24,7 +24,7 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CPlayer *CfmcLoader::factory(Copl *newopl)
+CPlayer *CfmcLoader::factory(opl::Opl3 *newopl)
 {
   return new CfmcLoader(newopl);
 }

@@ -27,7 +27,7 @@
 class CmodPlayer: public CPlayer
 {
 public:
-  CmodPlayer(Copl *newopl);
+  CmodPlayer(opl::Opl3 *newopl);
   virtual ~CmodPlayer();
 
   bool update();
@@ -71,7 +71,7 @@ public:
   unsigned char *order, *arplist, *arpcmd, initspeed;
   unsigned short tempo, **trackord, bpm, nop;
   unsigned long length, restartpos, activechan;
-  int flags, curchip;
+  int flags;
 
   struct Channel {
     unsigned short freq,nextfreq;

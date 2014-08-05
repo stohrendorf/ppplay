@@ -24,7 +24,7 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CPlayer *CmadLoader::factory(Copl *newopl)
+CPlayer *CmadLoader::factory(opl::Opl3 *newopl)
 {
   return new CmadLoader(newopl);
 }

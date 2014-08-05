@@ -54,7 +54,7 @@ const signed short Ca2mLoader::copybits[COPYRANGES] =
 const signed short Ca2mLoader::copymin[COPYRANGES] =
   {0, 16, 80, 336, 1360, 5456};
 
-CPlayer *Ca2mLoader::factory(Copl *newopl)
+CPlayer *Ca2mLoader::factory(opl::Opl3 *newopl)
 {
   return new Ca2mLoader(newopl);
 }

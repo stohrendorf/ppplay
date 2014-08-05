@@ -24,9 +24,9 @@
 class CfmcLoader: public CmodPlayer
 {
 	public:
-		static CPlayer *factory(Copl *newopl);
+		static CPlayer *factory(opl::Opl3 *newopl);
 
-		CfmcLoader(Copl *newopl) : CmodPlayer(newopl) { };
+		CfmcLoader(opl::Opl3 *newopl) : CmodPlayer(newopl) { };
 
 		bool	load(const std::string &filename, const CFileProvider &fp);
 		float	getrefresh();

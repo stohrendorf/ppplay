@@ -25,13 +25,13 @@
 #include <string>
 
 #include "fprovide.h"
-#include "opl.h"
+#include <ymf262/opl3.h>
 #include "database.h"
 
 class CPlayer
 {
 public:
-        CPlayer(Copl *newopl);
+        CPlayer(opl::Opl3 *newopl);
 	virtual ~CPlayer();
 
 /***** Operational methods *****/
@@ -75,7 +75,7 @@ public:
 	  { return std::string(); }
 
 protected:
-	Copl		*opl;	// our OPL chip
+	opl::Opl3		*opl;	// our OPL chip
 	CAdPlugDatabase	*db;	// AdPlug Database
 
 	static const unsigned short	note_table[12];	// standard adlib note table

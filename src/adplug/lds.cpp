@@ -71,7 +71,7 @@ const unsigned short CldsPlayer::maxsound = 0x3f, CldsPlayer::maxpos = 0xff;
 
 /*** public methods *************************************/
 
-CldsPlayer::CldsPlayer(Copl *newopl)
+CldsPlayer::CldsPlayer(opl::Opl3 *newopl)
   : CPlayer(newopl), soundbank(0), positions(0), patterns(0)
 {
 }
@@ -522,25 +522,24 @@ void CldsPlayer::rewind(int subsong)
   memset(fmchip, 0, sizeof(fmchip));
 
   // OPL2 init
-  opl->init();				// Reset OPL chip
-  opl->write(1, 0x20);
-  opl->write(8, 0);
-  opl->write(0xbd, regbd);
+  opl->writeReg(1, 0x20);
+  opl->writeReg(8, 0);
+  opl->writeReg(0xbd, regbd);
 
   for(i = 0; i < 9; i++) {
-    opl->write(0x20 + op_table[i], 0);
-    opl->write(0x23 + op_table[i], 0);
-    opl->write(0x40 + op_table[i], 0x3f);
-    opl->write(0x43 + op_table[i], 0x3f);
-    opl->write(0x60 + op_table[i], 0xff);
-    opl->write(0x63 + op_table[i], 0xff);
-    opl->write(0x80 + op_table[i], 0xff);
-    opl->write(0x83 + op_table[i], 0xff);
-    opl->write(0xe0 + op_table[i], 0);
-    opl->write(0xe3 + op_table[i], 0);
-    opl->write(0xa0 + i, 0);
-    opl->write(0xb0 + i, 0);
-    opl->write(0xc0 + i, 0);
+    opl->writeReg(0x20 + op_table[i], 0);
+    opl->writeReg(0x23 + op_table[i], 0);
+    opl->writeReg(0x40 + op_table[i], 0x3f);
+    opl->writeReg(0x43 + op_table[i], 0x3f);
+    opl->writeReg(0x60 + op_table[i], 0xff);
+    opl->writeReg(0x63 + op_table[i], 0xff);
+    opl->writeReg(0x80 + op_table[i], 0xff);
+    opl->writeReg(0x83 + op_table[i], 0xff);
+    opl->writeReg(0xe0 + op_table[i], 0);
+    opl->writeReg(0xe3 + op_table[i], 0);
+    opl->writeReg(0xa0 + i, 0);
+    opl->writeReg(0xb0 + i, 0);
+    opl->writeReg(0xc0 + i, 0);
   }
 }
 
@@ -666,7 +665,7 @@ inline void CldsPlayer::setregs(unsigned char reg, unsigned char val)
   if(fmchip[reg] == val) return;
 
   fmchip[reg] = val;
-  opl->write(reg, val);
+  opl->writeReg(reg, val);
 }
 
 inline void CldsPlayer::setregs_adv(unsigned char reg, unsigned char mask,

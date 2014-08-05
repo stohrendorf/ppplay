@@ -25,7 +25,7 @@
 #include "dfm.h"
 #include "debug.h"
 
-CPlayer *CdfmLoader::factory(Copl *newopl)
+CPlayer *CdfmLoader::factory(opl::Opl3 *newopl)
 {
   return new CdfmLoader(newopl);
 }

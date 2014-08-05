@@ -25,7 +25,7 @@
 #include "mkj.h"
 #include "debug.h"
 
-CPlayer *CmkjPlayer::factory(Copl *newopl)
+CPlayer *CmkjPlayer::factory(opl::Opl3 *newopl)
 {
   return new CmkjPlayer(newopl);
 }
@@ -46,17 +46,17 @@ bool CmkjPlayer::load(const std::string &filename, const CFileProvider &fp)
 
   // load
   maxchannel = f->readInt(2);
-  opl->init(); opl->write(1, 32);
+  opl->writeReg(1, 32);
   for(i = 0; i < maxchannel; i++) {
     for(j = 0; j < 8; j++) inst[j] = f->readInt(2);
-    opl->write(0x20+op_table[i],inst[4]);
-    opl->write(0x23+op_table[i],inst[0]);
-    opl->write(0x40+op_table[i],inst[5]);
-    opl->write(0x43+op_table[i],inst[1]);
-    opl->write(0x60+op_table[i],inst[6]);
-    opl->write(0x63+op_table[i],inst[2]);
-    opl->write(0x80+op_table[i],inst[7]);
-    opl->write(0x83+op_table[i],inst[3]);
+    opl->writeReg(0x20+op_table[i],inst[4]);
+    opl->writeReg(0x23+op_table[i],inst[0]);
+    opl->writeReg(0x40+op_table[i],inst[5]);
+    opl->writeReg(0x43+op_table[i],inst[1]);
+    opl->writeReg(0x60+op_table[i],inst[6]);
+    opl->writeReg(0x63+op_table[i],inst[2]);
+    opl->writeReg(0x80+op_table[i],inst[7]);
+    opl->writeReg(0x83+op_table[i],inst[3]);
   }
   maxnotes = f->readInt(2);
   songbuf = new short [(maxchannel+1)*maxnotes];
@@ -86,7 +86,7 @@ bool CmkjPlayer::update()
       continue;
     }
 
-    opl->write(0xb0 + c, 0);	// key off
+    opl->writeReg(0xb0 + c, 0);	// key off
     do {
       assert(channel[c].songptr < (maxchannel + 1) * maxnotes);
       note = songbuf[channel[c].songptr];
@@ -95,18 +95,18 @@ bool CmkjPlayer::update()
 	  channel[c].pstat = channel[c].speed;
       switch(note) {
 	// normal notes
-      case 68: opl->write(0xa0 + c,0x81); opl->write(0xb0 + c,0x21 + 4 * channel[c].octave); break;
-      case 69: opl->write(0xa0 + c,0xb0); opl->write(0xb0 + c,0x21 + 4 * channel[c].octave); break;
-      case 70: opl->write(0xa0 + c,0xca); opl->write(0xb0 + c,0x21 + 4 * channel[c].octave); break;
-      case 71: opl->write(0xa0 + c,0x2); opl->write(0xb0 + c,0x22 + 4 * channel[c].octave); break;
-      case 65: opl->write(0xa0 + c,0x41); opl->write(0xb0 + c,0x22 + 4 * channel[c].octave); break;
-      case 66: opl->write(0xa0 + c,0x87); opl->write(0xb0 + c,0x22 + 4 * channel[c].octave); break;
-      case 67: opl->write(0xa0 + c,0xae); opl->write(0xb0 + c,0x22 + 4 * channel[c].octave); break;
-      case 17: opl->write(0xa0 + c,0x6b); opl->write(0xb0 + c,0x21 + 4 * channel[c].octave); break;
-      case 18: opl->write(0xa0 + c,0x98); opl->write(0xb0 + c,0x21 + 4 * channel[c].octave); break;
-      case 20: opl->write(0xa0 + c,0xe5); opl->write(0xb0 + c,0x21 + 4 * channel[c].octave); break;
-      case 21: opl->write(0xa0 + c,0x20); opl->write(0xb0 + c,0x22 + 4 * channel[c].octave); break;
-      case 15: opl->write(0xa0 + c,0x63); opl->write(0xb0 + c,0x22 + 4 * channel[c].octave); break;
+      case 68: opl->writeReg(0xa0 + c,0x81); opl->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
+      case 69: opl->writeReg(0xa0 + c,0xb0); opl->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
+      case 70: opl->writeReg(0xa0 + c,0xca); opl->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
+      case 71: opl->writeReg(0xa0 + c,0x2); opl->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
+      case 65: opl->writeReg(0xa0 + c,0x41); opl->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
+      case 66: opl->writeReg(0xa0 + c,0x87); opl->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
+      case 67: opl->writeReg(0xa0 + c,0xae); opl->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
+      case 17: opl->writeReg(0xa0 + c,0x6b); opl->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
+      case 18: opl->writeReg(0xa0 + c,0x98); opl->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
+      case 20: opl->writeReg(0xa0 + c,0xe5); opl->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
+      case 21: opl->writeReg(0xa0 + c,0x20); opl->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
+      case 15: opl->writeReg(0xa0 + c,0x63); opl->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
       case 255:	// delay
 	channel[c].songptr += maxchannel;
 	channel[c].pstat = songbuf[channel[c].songptr];
@@ -123,9 +123,9 @@ bool CmkjPlayer::update()
 	channel[c].songptr += maxchannel;
 	channel[c].waveform = songbuf[channel[c].songptr] - 300;
 	if(c > 2)
-	  opl->write(0xe0 + c + (c+6),channel[c].waveform);
+	  opl->writeReg(0xe0 + c + (c+6),channel[c].waveform);
 	else
-	  opl->write(0xe0 + c,channel[c].waveform);
+	  opl->writeReg(0xe0 + c,channel[c].waveform);
 	break;
       case 251:	// song end
 	for(i = 0; i < maxchannel; i++) channel[i].songptr = i;

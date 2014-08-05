@@ -121,12 +121,12 @@ const int CmidPlayer::fnums[] = { 0x16b,0x181,0x198,0x1b0,0x1ca,0x1e5,0x202,0x22
 // Map CMF drum channels 11 - 15 to corresponding AdLib drum channels
 const int CmidPlayer::percussion_map[] = { 6, 7, 8, 8, 7 };
 
-CPlayer *CmidPlayer::factory(Copl *newopl)
+CPlayer *CmidPlayer::factory(opl::Opl3 *newopl)
 {
   return new CmidPlayer(newopl);
 }
 
-CmidPlayer::CmidPlayer(Copl *newopl)
+CmidPlayer::CmidPlayer(opl::Opl3 *newopl)
   : CPlayer(newopl), author(&emptystr), title(&emptystr), remarks(&emptystr),
     emptystr('\0'), flen(0), data(0)
 {
@@ -334,7 +334,7 @@ bool CmidPlayer::load(const std::string &filename, const CFileProvider &fp)
 
 void CmidPlayer::midi_write_adlib(unsigned int r, unsigned char v)
 {
-  opl->write(r,v);
+  opl->writeReg(r,v);
   adlib_data[r]=v;
 }
 
@@ -442,8 +442,6 @@ void CmidPlayer::midi_fm_endnote(int voice)
 void CmidPlayer::midi_fm_reset()
 {
     int i;
-
-    opl->init();
 
     for (i=0; i<256; i++)
         midi_write_adlib(i,0);

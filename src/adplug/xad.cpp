@@ -24,7 +24,7 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CxadPlayer::CxadPlayer(Copl * newopl) : CPlayer(newopl)
+CxadPlayer::CxadPlayer(opl::Opl3 * newopl) : CPlayer(newopl)
 {
   tune = 0;
 }
@@ -69,8 +69,6 @@ bool CxadPlayer::load(const std::string &filename, const CFileProvider &fp)
 
 void CxadPlayer::rewind(int subsong)
 {
-  opl->init();
-
   plr.speed = xad.speed;
   plr.speed_counter = 1;
   plr.playing = 1;
@@ -136,5 +134,5 @@ void CxadPlayer::opl_write(int reg, int val)
 #ifdef DEBUG
   AdPlug_LogWrite("[ %02X ] = %02X\n",reg,val);
 #endif
-  opl->write(reg,val);
+  opl->writeReg(reg,val);
 }

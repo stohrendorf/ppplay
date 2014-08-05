@@ -60,7 +60,7 @@ const unsigned short CbamPlayer::freq[] = {172,182,193,205,217,230,243,258,274,
 7657,7685,7715,7748,7782,7819,7858,7898,7942,7988,8037,8089,8143,8191,8191,
 8191,8191,8191,8191,8191,8191,8191,8191,8191,8191};
 
-CPlayer *CbamPlayer::factory(Copl *newopl)
+CPlayer *CbamPlayer::factory(opl::Opl3 *newopl)
 {
   return new CbamPlayer(newopl);
 }
@@ -107,30 +107,30 @@ bool CbamPlayer::update()
 			break;
 		case 16:	// start note
 			if(c < 9) {
-				opl->write(0xa0 + c, freq[song[++pos]] & 255);
-				opl->write(0xb0 + c, (freq[song[pos]] >> 8) + 32);
+				opl->writeReg(0xa0 + c, freq[song[++pos]] & 255);
+				opl->writeReg(0xb0 + c, (freq[song[pos]] >> 8) + 32);
 			} else
 				pos++;
 			pos++;
 			break;
 		case 32:	// stop note
 			if(c < 9)
-				opl->write(0xb0 + c, 0);
+				opl->writeReg(0xb0 + c, 0);
 			pos++;
 			break;
 		case 48:	// define instrument
 			if(c < 9) {
-				opl->write(0x20 + op_table[c],song[pos+1]);
-				opl->write(0x23 + op_table[c],song[pos+2]);
-				opl->write(0x40 + op_table[c],song[pos+3]);
-				opl->write(0x43 + op_table[c],song[pos+4]);
-				opl->write(0x60 + op_table[c],song[pos+5]);
-				opl->write(0x63 + op_table[c],song[pos+6]);
-				opl->write(0x80 + op_table[c],song[pos+7]);
-				opl->write(0x83 + op_table[c],song[pos+8]);
-				opl->write(0xe0 + op_table[c],song[pos+9]);
-				opl->write(0xe3 + op_table[c],song[pos+10]);
-				opl->write(0xc0 + c,song[pos+11]);
+				opl->writeReg(0x20 + op_table[c],song[pos+1]);
+				opl->writeReg(0x23 + op_table[c],song[pos+2]);
+				opl->writeReg(0x40 + op_table[c],song[pos+3]);
+				opl->writeReg(0x43 + op_table[c],song[pos+4]);
+				opl->writeReg(0x60 + op_table[c],song[pos+5]);
+				opl->writeReg(0x63 + op_table[c],song[pos+6]);
+				opl->writeReg(0x80 + op_table[c],song[pos+7]);
+				opl->writeReg(0x83 + op_table[c],song[pos+8]);
+				opl->writeReg(0xe0 + op_table[c],song[pos+9]);
+				opl->writeReg(0xe3 + op_table[c],song[pos+10]);
+				opl->writeReg(0xc0 + c,song[pos+11]);
 			}
 			pos += 12;
 			break;
@@ -199,5 +199,5 @@ void CbamPlayer::rewind(int subsong)
 	pos = 0; songend = false; del = 0; gosub = 0; chorus = false;
 	memset(label, 0, sizeof(label)); label[0].defined = true;
 	for(i = 0; i < 16; i++) label[i].count = 255;	// 255 = undefined
-	opl->init(); opl->write(1,32);
+	opl->writeReg(1,32);
 }

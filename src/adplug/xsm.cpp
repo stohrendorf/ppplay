@@ -23,7 +23,7 @@
 
 #include "xsm.h"
 
-CxsmPlayer::CxsmPlayer(Copl *newopl)
+CxsmPlayer::CxsmPlayer(opl::Opl3 *newopl)
   : CPlayer(newopl), music(0)
 {
 }
@@ -45,17 +45,17 @@ bool CxsmPlayer::load(const std::string &filename, const CFileProvider &fp)
 
   // read and set instruments
   for(i = 0; i < 9; i++) {
-    opl->write(0x20 + op_table[i], f->readInt(1));
-    opl->write(0x23 + op_table[i], f->readInt(1));
-    opl->write(0x40 + op_table[i], f->readInt(1));
-    opl->write(0x43 + op_table[i], f->readInt(1));
-    opl->write(0x60 + op_table[i], f->readInt(1));
-    opl->write(0x63 + op_table[i], f->readInt(1));
-    opl->write(0x80 + op_table[i], f->readInt(1));
-    opl->write(0x83 + op_table[i], f->readInt(1));
-    opl->write(0xe0 + op_table[i], f->readInt(1));
-    opl->write(0xe3 + op_table[i], f->readInt(1));
-    opl->write(0xc0 + op_table[i], f->readInt(1));
+    opl->writeReg(0x20 + op_table[i], f->readInt(1));
+    opl->writeReg(0x23 + op_table[i], f->readInt(1));
+    opl->writeReg(0x40 + op_table[i], f->readInt(1));
+    opl->writeReg(0x43 + op_table[i], f->readInt(1));
+    opl->writeReg(0x60 + op_table[i], f->readInt(1));
+    opl->writeReg(0x63 + op_table[i], f->readInt(1));
+    opl->writeReg(0x80 + op_table[i], f->readInt(1));
+    opl->writeReg(0x83 + op_table[i], f->readInt(1));
+    opl->writeReg(0xe0 + op_table[i], f->readInt(1));
+    opl->writeReg(0xe3 + op_table[i], f->readInt(1));
+    opl->writeReg(0xc0 + op_table[i], f->readInt(1));
     f->ignore(5);
   }
 
@@ -82,7 +82,7 @@ bool CxsmPlayer::update()
 
   for(c = 0; c < 9; c++)
     if(music[notenum * 9 + c] != music[last * 9 + c])
-      opl->write(0xb0 + c, 0);
+      opl->writeReg(0xb0 + c, 0);
 
   for(c = 0; c < 9; c++) {
     if(music[notenum * 9 + c])
@@ -112,6 +112,6 @@ void CxsmPlayer::play_note(int c, int note, int octv)
   int freq = note_table[note];
 
   if(!note && !octv) freq = 0;
-  opl->write(0xa0 + c, freq & 0xff);
-  opl->write(0xb0 + c, (freq / 0xff) | 32 | (octv * 4));
+  opl->writeReg(0xa0 + c, freq & 0xff);
+  opl->writeReg(0xb0 + c, (freq / 0xff) | 32 | (octv * 4));
 }

@@ -36,12 +36,12 @@ const unsigned char Cs3mPlayer::vibratotab[32] =		// vibrato rate table
 
 /*** public methods *************************************/
 
-CPlayer *Cs3mPlayer::factory(Copl *newopl)
+CPlayer *Cs3mPlayer::factory(opl::Opl3 *newopl)
 {
   return new Cs3mPlayer(newopl);
 }
 
-Cs3mPlayer::Cs3mPlayer(Copl *newopl): CPlayer(newopl)
+Cs3mPlayer::Cs3mPlayer(opl::Opl3 *newopl): CPlayer(newopl)
 {
   int i,j,k;
 
@@ -400,8 +400,7 @@ void Cs3mPlayer::rewind(int subsong)
 
   memset(channel,0,sizeof(channel));
 
-  opl->init();				// reset OPL chip
-  opl->write(1,32);			// Go to ym3812 mode
+  opl->writeReg(1,32);			// Go to ym3812 mode
 }
 
 std::string Cs3mPlayer::gettype()
@@ -448,38 +447,38 @@ void Cs3mPlayer::setvolume(unsigned char chan)
 {
   unsigned char op = op_table[chan], insnr = channel[chan].inst;
 
-  opl->write(0x43 + op,(int)(63-((63-(inst[insnr].d03 & 63))/63.0)*channel[chan].vol) + (inst[insnr].d03 & 192));
+  opl->writeReg(0x43 + op,(int)(63-((63-(inst[insnr].d03 & 63))/63.0)*channel[chan].vol) + (inst[insnr].d03 & 192));
   if(inst[insnr].d0a & 1)
-    opl->write(0x40 + op,(int)(63-((63-(inst[insnr].d02 & 63))/63.0)*channel[chan].vol) + (inst[insnr].d02 & 192));
+    opl->writeReg(0x40 + op,(int)(63-((63-(inst[insnr].d02 & 63))/63.0)*channel[chan].vol) + (inst[insnr].d02 & 192));
 }
 
 void Cs3mPlayer::setfreq(unsigned char chan)
 {
-  opl->write(0xa0 + chan, channel[chan].freq & 255);
+  opl->writeReg(0xa0 + chan, channel[chan].freq & 255);
   if(channel[chan].key)
-    opl->write(0xb0 + chan, (((channel[chan].freq & 768) >> 8) + (channel[chan].oct << 2)) | 32);
+    opl->writeReg(0xb0 + chan, (((channel[chan].freq & 768) >> 8) + (channel[chan].oct << 2)) | 32);
   else
-    opl->write(0xb0 + chan, ((channel[chan].freq & 768) >> 8) + (channel[chan].oct << 2));
+    opl->writeReg(0xb0 + chan, ((channel[chan].freq & 768) >> 8) + (channel[chan].oct << 2));
 }
 
 void Cs3mPlayer::playnote(unsigned char chan)
 {
   unsigned char op = op_table[chan], insnr = channel[chan].inst;
 
-  opl->write(0xb0 + chan, 0);	// stop old note
+  opl->writeReg(0xb0 + chan, 0);	// stop old note
 
   // set instrument data
-  opl->write(0x20 + op, inst[insnr].d00);
-  opl->write(0x23 + op, inst[insnr].d01);
-  opl->write(0x40 + op, inst[insnr].d02);
-  opl->write(0x43 + op, inst[insnr].d03);
-  opl->write(0x60 + op, inst[insnr].d04);
-  opl->write(0x63 + op, inst[insnr].d05);
-  opl->write(0x80 + op, inst[insnr].d06);
-  opl->write(0x83 + op, inst[insnr].d07);
-  opl->write(0xe0 + op, inst[insnr].d08);
-  opl->write(0xe3 + op, inst[insnr].d09);
-  opl->write(0xc0 + chan, inst[insnr].d0a);
+  opl->writeReg(0x20 + op, inst[insnr].d00);
+  opl->writeReg(0x23 + op, inst[insnr].d01);
+  opl->writeReg(0x40 + op, inst[insnr].d02);
+  opl->writeReg(0x43 + op, inst[insnr].d03);
+  opl->writeReg(0x60 + op, inst[insnr].d04);
+  opl->writeReg(0x63 + op, inst[insnr].d05);
+  opl->writeReg(0x80 + op, inst[insnr].d06);
+  opl->writeReg(0x83 + op, inst[insnr].d07);
+  opl->writeReg(0xe0 + op, inst[insnr].d08);
+  opl->writeReg(0xe3 + op, inst[insnr].d09);
+  opl->writeReg(0xc0 + chan, inst[insnr].d0a);
 
   // set frequency & play
   channel[chan].key = 1;

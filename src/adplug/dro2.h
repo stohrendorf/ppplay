@@ -33,12 +33,13 @@ class Cdro2Player: public CPlayer
 		int iLength;
 		int iPos;
 		int iDelay;
+                int xchip = 0;
 
 
 	public:
-		static CPlayer *factory(Copl *newopl);
+		static CPlayer *factory(opl::Opl3 *newopl);
 
-		Cdro2Player(Copl *newopl);
+		Cdro2Player(opl::Opl3 *newopl);
 		~Cdro2Player();
 
 		bool load(const std::string &filename, const CFileProvider &fp);

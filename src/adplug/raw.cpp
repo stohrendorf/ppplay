@@ -24,7 +24,7 @@
 
 /*** public methods *************************************/
 
-CPlayer *CrawPlayer::factory(Copl *newopl)
+CPlayer *CrawPlayer::factory(opl::Opl3 *newopl)
 {
   return new CrawPlayer(newopl);
 }
@@ -74,7 +74,7 @@ bool CrawPlayer::update()
 	speed = data[pos].param + (data[pos].command << 8);
 	setspeed = true;
       } else
-	opl->setchip(data[pos].param - 1);
+	;//FIXME sto opl->setchip(data[pos].param - 1);
       break;
     case 0xff:
       if(data[pos].param == 0xff) {
@@ -84,7 +84,7 @@ bool CrawPlayer::update()
       }
       break;
     default:
-      opl->write(data[pos].command,data[pos].param);
+      opl->writeReg(data[pos].command,data[pos].param);
       break;
     }
   } while(data[pos++].command || setspeed);
@@ -95,7 +95,7 @@ bool CrawPlayer::update()
 void CrawPlayer::rewind(int subsong)
 {
   pos = del = 0; speed = clock; songend = false;
-  opl->init(); opl->write(1, 32);	// go to 9 channel mode
+  opl->writeReg(1, 32);	// go to 9 channel mode
 }
 
 float CrawPlayer::getrefresh()

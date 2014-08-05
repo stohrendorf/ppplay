@@ -24,9 +24,9 @@
 class CmadLoader: public CmodPlayer
 {
 public:
-	static CPlayer *factory(Copl *newopl);
+	static CPlayer *factory(opl::Opl3 *newopl);
 
-	CmadLoader(Copl *newopl) : CmodPlayer(newopl) { };
+	CmadLoader(opl::Opl3 *newopl) : CmodPlayer(newopl) { };
 
 	bool	load(const std::string &filename, const CFileProvider &fp);
 	void	rewind(int subsong);

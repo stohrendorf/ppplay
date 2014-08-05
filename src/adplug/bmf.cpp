@@ -73,7 +73,7 @@ const unsigned char CxadbmfPlayer::bmf_default_instrument[13] =
   0x01, 0x01, 0x3F, 0x3F, 0x00, 0x00, 0xF0, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-CPlayer *CxadbmfPlayer::factory(Copl *newopl)
+CPlayer *CxadbmfPlayer::factory(opl::Opl3 *newopl)
 {
   return new CxadbmfPlayer(newopl);
 }

@@ -27,9 +27,9 @@
 class ChscPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-  ChscPlayer(Copl *newopl): CPlayer(newopl), mtkmode(0) {}
+  ChscPlayer(opl::Opl3 *newopl): CPlayer(newopl), mtkmode(0) {}
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();

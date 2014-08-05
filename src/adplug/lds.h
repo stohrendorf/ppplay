@@ -24,9 +24,9 @@
 class CldsPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(Copl *newopl) { return new CldsPlayer(newopl); }
+  static CPlayer *factory(opl::Opl3 *newopl) { return new CldsPlayer(newopl); }
 
-  CldsPlayer(Copl *newopl);
+  CldsPlayer(opl::Opl3 *newopl);
   virtual ~CldsPlayer();
 
   bool load(const std::string &filename, const CFileProvider &fp);

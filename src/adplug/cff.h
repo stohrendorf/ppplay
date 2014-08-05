@@ -24,9 +24,9 @@
 class CcffLoader: public CmodPlayer
 {
  public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-  CcffLoader(Copl *newopl) : CmodPlayer(newopl) { };
+  CcffLoader(opl::Opl3 *newopl) : CmodPlayer(newopl) { };
 
   bool	load(const std::string &filename, const CFileProvider &fp);
   void	rewind(int subsong);

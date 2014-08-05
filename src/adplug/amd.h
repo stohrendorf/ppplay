@@ -24,9 +24,9 @@
 class CamdLoader: public CmodPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-	CamdLoader(Copl *newopl)
+	CamdLoader(opl::Opl3 *newopl)
 		: CmodPlayer(newopl)
 	{ };
 

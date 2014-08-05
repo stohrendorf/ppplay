@@ -24,7 +24,7 @@
 
 /*** public methods **************************************/
 
-CPlayer *CmtkLoader::factory(Copl *newopl)
+CPlayer *CmtkLoader::factory(opl::Opl3 *newopl)
 {
   return new CmtkLoader(newopl);
 }

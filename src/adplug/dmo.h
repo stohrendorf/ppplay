@@ -24,9 +24,9 @@
 class CdmoLoader: public Cs3mPlayer
 {
  public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-  CdmoLoader(Copl *newopl) : Cs3mPlayer(newopl) { };
+  CdmoLoader(opl::Opl3 *newopl) : Cs3mPlayer(newopl) { };
 
   bool	load(const std::string &filename, const CFileProvider &fp);
 

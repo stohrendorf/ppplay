@@ -24,9 +24,9 @@
 class CdfmLoader: public CmodPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-	CdfmLoader(Copl *newopl)
+	CdfmLoader(opl::Opl3 *newopl)
 		: CmodPlayer(newopl)
 	{ };
 

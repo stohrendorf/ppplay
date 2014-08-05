@@ -29,7 +29,7 @@ if(p < d.size) \
 else \
   return false;
 
-CPlayer *Cu6mPlayer::factory(Copl *newopl)
+CPlayer *Cu6mPlayer::factory(opl::Opl3 *newopl)
 {
   return new Cu6mPlayer(newopl);
 }
@@ -181,7 +181,6 @@ void Cu6mPlayer::rewind(int subsong)
   while (!subsong_stack.empty())		// empty subsong stack
     subsong_stack.pop();
 
-  opl->init();
   out_adlib(1,32);	// go to OPL2 mode
 }
 
@@ -851,7 +850,7 @@ void Cu6mPlayer::mf_slide(int channel)
 
 void Cu6mPlayer::out_adlib(unsigned char adlib_register, unsigned char adlib_data)
 {
-  opl->write(adlib_register,adlib_data);
+  opl->writeReg(adlib_register,adlib_data);
 }
 
 
