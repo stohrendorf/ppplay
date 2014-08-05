@@ -16,6 +16,11 @@ add_subdirectory(hscmod)
 
 add_subdirectory(ymf262)
 
+option(BUILD_BADPLAY "Build the BAdPlay player" ON)
+if(BUILD_BADPLAY)
+    add_subdirectory(adplug)
+endif()
+
 configure_file(
 	"${CMAKE_CURRENT_SOURCE_DIR}/Mainpage.dox.in"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Mainpage.dox"
