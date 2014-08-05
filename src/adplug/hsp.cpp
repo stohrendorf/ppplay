@@ -23,7 +23,7 @@
 
 #include "hsp.h"
 
-CPlayer *ChspLoader::factory(Copl *newopl)
+CPlayer *ChspLoader::factory(opl::Opl3 *newopl)
 {
   return new ChspLoader(newopl);
 }

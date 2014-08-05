@@ -24,9 +24,9 @@
 class CmkjPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-	CmkjPlayer(Copl *newopl)
+	CmkjPlayer(opl::Opl3 *newopl)
 		: CPlayer(newopl), songbuf(0)
 	{ }
 	~CmkjPlayer()

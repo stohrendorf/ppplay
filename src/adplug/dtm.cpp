@@ -27,7 +27,7 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CPlayer *CdtmLoader::factory(Copl *newopl)
+CPlayer *CdtmLoader::factory(opl::Opl3 *newopl)
 {
   return new CdtmLoader(newopl);
 }

@@ -24,9 +24,9 @@
 class CadtrackLoader: public CmodPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-	CadtrackLoader(Copl *newopl)
+	CadtrackLoader(opl::Opl3 *newopl)
 		: CmodPlayer(newopl)
 	{ };
 

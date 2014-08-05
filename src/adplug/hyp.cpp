@@ -57,7 +57,7 @@ const unsigned short CxadhypPlayer::hyp_notes[73] =
   0x1D98, 0x1DB1, 0x1DC9, 0x1DE5, 0x1E03, 0x1E21, 0x1E41, 0x1E63, 0x1E86
 };
 
-CPlayer *CxadhypPlayer::factory(Copl *newopl)
+CPlayer *CxadhypPlayer::factory(opl::Opl3 *newopl)
 {
   return new CxadhypPlayer(newopl);
 }

@@ -24,9 +24,9 @@
 class CxadflashPlayer: public CxadPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-  CxadflashPlayer(Copl *newopl): CxadPlayer(newopl)
+  CxadflashPlayer(opl::Opl3 *newopl): CxadPlayer(newopl)
     { };
 
 protected:

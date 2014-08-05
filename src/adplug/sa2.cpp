@@ -27,7 +27,7 @@
 #include "sa2.h"
 #include "debug.h"
 
-CPlayer *Csa2Loader::factory(Copl *newopl)
+CPlayer *Csa2Loader::factory(opl::Opl3 *newopl)
 {
   return new Csa2Loader(newopl);
 }

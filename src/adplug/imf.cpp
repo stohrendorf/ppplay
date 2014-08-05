@@ -48,7 +48,7 @@
 
 /*** public methods *************************************/
 
-CPlayer *CimfPlayer::factory(Copl *newopl)
+CPlayer *CimfPlayer::factory(opl::Opl3 *newopl)
 {
   return new CimfPlayer(newopl);
 }
@@ -130,7 +130,7 @@ bool CimfPlayer::load(const std::string &filename, const CFileProvider &fp)
 bool CimfPlayer::update()
 {
 	do {
-		opl->write(data[pos].reg,data[pos].val);
+		opl->writeReg(data[pos].reg,data[pos].val);
 		del = data[pos].time;
 		pos++;
 	} while(!del && pos < size);
@@ -147,7 +147,7 @@ bool CimfPlayer::update()
 void CimfPlayer::rewind(int subsong)
 {
 	pos = 0; del = 0; timer = rate; songend = false;
-	opl->init(); opl->write(1,32);	// go to OPL2 mode
+	opl->writeReg(1,32);	// go to OPL2 mode
 }
 
 std::string CimfPlayer::gettitle()

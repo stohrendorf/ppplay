@@ -83,12 +83,12 @@ uint8_t cDefaultPatches[] =
 "\x32\x21\x16\x80\x73\x75\x24\x57\x00\x00\x0E";
 
 
-CPlayer *CcmfPlayer::factory(Copl *newopl)
+CPlayer *CcmfPlayer::factory(opl::Opl3 *newopl)
 {
   return new CcmfPlayer(newopl);
 }
 
-CcmfPlayer::CcmfPlayer(Copl *newopl) :
+CcmfPlayer::CcmfPlayer(opl::Opl3 *newopl) :
 	CPlayer(newopl),
 	data(NULL),
 	pInstruments(NULL),
@@ -356,7 +356,6 @@ bool CcmfPlayer::update()
 
 void CcmfPlayer::rewind(int subsong)
 {
-  this->opl->init();
 
 	// Initialise
 
@@ -489,7 +488,7 @@ void CcmfPlayer::writeInstrumentSettings(uint8_t iChannel, uint8_t iOperatorSour
 // Write a byte to the OPL "chip" and update the current record of register states
 void CcmfPlayer::writeOPL(uint8_t iRegister, uint8_t iValue)
 {
-	this->opl->write(iRegister, iValue);
+	this->opl->writeReg(iRegister, iValue);
 	this->iCurrentRegs[iRegister] = iValue;
 	return;
 }

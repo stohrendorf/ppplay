@@ -27,9 +27,9 @@
 class CimfPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-	CimfPlayer(Copl *newopl)
+	CimfPlayer(opl::Opl3 *newopl)
 	  : CPlayer(newopl), footer(0), data(0)
 	  { }
 	~CimfPlayer()

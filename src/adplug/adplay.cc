@@ -23,7 +23,6 @@
 #include <string.h>
 #include <signal.h>
 #include "adplug.h"
-#include "emuopl.h"
 
 #include <getopt.h>
 
@@ -46,36 +45,29 @@
 #  define ADPLUGDB_PATH		ADPLUGDB_FILE
 #endif
 
-/***** Typedefs *****/
-
-typedef enum { Emu_Satoh, Emu_Ken } EmuType;
-
 /***** Global variables *****/
 
 static const char	*program_name;
 static Player		*player = 0;		// global player object
 static CAdPlugDatabase	mydb;
-static Copl		*opl = 0;
+static opl::Opl3		*oplChip = 0;
 
 /***** Configuration (and defaults) *****/
 
 static struct {
-  int			buf_size, freq, channels, bits, harmonic, message_level;
+  int			buf_size, message_level;
   unsigned int		subsong;
   const char		*device;
   char			*userdb;
   bool			endless, showinsts, songinfo, songmessage;
-  EmuType		emutype;
   Outputs		output;
 } cfg = {
-  2048, 44100,
-  1, 16, 0,  // Else default to mono (until stereo w/ single OPL is fixed)
+  2048,
   MSG_NOTE,
   -1,
   NULL,
   NULL,
   true, false, false, false,
-  Emu_Satoh,
   DEFAULT_DRIVER
 };
 
@@ -101,27 +93,11 @@ static void usage()
 {
   printf("Usage: %s [OPTION]... FILE...\n\n"
 	 "Output selection:\n"
-	 "  -e, --emulator=EMULATOR    specify emulator to use\n"
-	 "  -O, --output=OUTPUT        specify output mechanism\n\n"
-	 "OSS driver (oss) specific:\n"
-	 "  -d, --device=FILE          set sound device file to FILE\n"
-	 "  -b, --buffer=SIZE          set output buffer size to SIZE\n\n"
+	 "  -O, --output=OUTPUT        specify output mechanism (disk/sdl)\n\n"
 	 "Disk writer (disk) specific:\n"
 	 "  -d, --device=FILE          output to FILE ('-' is stdout)\n\n"
-	 "EsounD driver (esound) specific:\n"
-	 "  -d, --device=URL           URL to EsounD server host (hostname:port)\n\n"
 	 "SDL driver (sdl) specific:\n"
 	 "  -b, --buffer=SIZE          set output buffer size to SIZE\n\n"
-	 "ALSA driver (alsa) specific:\n"
-	 "  -d, --device=DEVICE        set sound device to DEVICE\n"
-	 "  -b, --buffer=SIZE          set output buffer size to SIZE\n\n"
-	 "Playback quality:\n"
-	 "  -8, --8bit                 8-bit sample quality\n"
-	 "      --16bit                16-bit sample quality\n"
-	 "  -f, --freq=FREQ            set sample frequency to FREQ\n"
- 	 "      --surround             stereo/surround stream\n"
-	 "      --stereo               stereo stream\n"
-	 "      --mono                 mono stream\n\n"
 	 "Informative output:\n"
 	 "  -i, --instruments          display instrument names\n"
 	 "  -r, --realtime             display realtime song info\n"
@@ -136,35 +112,6 @@ static void usage()
 	 "  -h, --help                 display this help and exit\n"
 	 "  -V, --version              output version information and exit\n\n",
 	 program_name);
-
-  // Print list of available output mechanisms
-  printf("Available emulators: satoh ken\n");
-  printf("Available output mechanisms: "
-#ifdef DRIVER_OSS
-	 "oss "
-#endif
-#ifdef DRIVER_NULL
-	 "null "
-#endif
-#ifdef DRIVER_DISK
-	 "disk "
-#endif
-#ifdef DRIVER_ESOUND
-	 "esound "
-#endif
-#ifdef DRIVER_QSA
-	 "qsa "
-#endif
-#ifdef DRIVER_SDL
-	 "sdl "
-#endif
-#ifdef DRIVER_AO
-	 "ao "
-#endif
-#ifdef DRIVER_ALSA
-	 "alsa "
-#endif
-	 "\n");
 }
 
 static int decode_switches(int argc, char **argv)
@@ -175,12 +122,6 @@ static int decode_switches(int argc, char **argv)
 {
   int c;
   struct option const long_options[] = {
-    {"8bit", no_argument, NULL, '8'},		// 8-bit replay
-    {"16bit", no_argument, NULL, '1'},		// 16-bit replay
-    {"freq", required_argument, NULL, 'f'},	// set frequency
-    {"surround", no_argument, NULL, '4'},		// stereo/harmonic replay
-    {"stereo", no_argument, NULL, '3'},		// stereo replay
-    {"mono", no_argument, NULL, '2'},		// mono replay
     {"buffer", required_argument, NULL, 'b'},	// buffer size
     {"device", required_argument, NULL, 'd'},	// device file
     {"instruments", no_argument, NULL, 'i'},	// show instruments
@@ -190,7 +131,6 @@ static int decode_switches(int argc, char **argv)
     {"once", no_argument, NULL, 'o'},		// don't loop
     {"help", no_argument, NULL, 'h'},		// display help
     {"version", no_argument, NULL, 'V'},	// version information
-    {"emulator", required_argument, NULL, 'e'},	// emulator to use
     {"output", required_argument, NULL, 'O'},	// output mechanism
     {"database", required_argument, NULL, 'D'},	// different database
     {"quiet", no_argument, NULL, 'q'},		// be more quiet
@@ -201,12 +141,6 @@ static int decode_switches(int argc, char **argv)
   while ((c = getopt_long(argc, argv, "8f:b:d:irms:ohVe:O:D:qv",
 			  long_options, (int *)0)) != EOF) {
       switch (c) {
-      case '8': cfg.bits = 8; break;
-      case '1': cfg.bits = 16; break;
-      case 'f': cfg.freq = atoi(optarg); break;
-      case '4': cfg.channels = 2; cfg.harmonic = 1; break;
-      case '3': cfg.channels = 2; cfg.harmonic = 0; break;
-      case '2': cfg.channels = 1; cfg.harmonic = 0; break;
       case 'b': cfg.buf_size = atoi(optarg); break;
       case 'd': cfg.device = optarg; break;
       case 'i': cfg.showinsts = true; break;
@@ -225,19 +159,13 @@ static int decode_switches(int argc, char **argv)
 	  cfg.output = disk;
 	  cfg.endless = false; // endless output is almost never desired here
         }
-	else if(!strcmp(optarg,"sdl")) cfg.output = sdl;
+	else if(!strcmp(optarg,"sdl"))
+            cfg.output = sdl;
 	else {
 	  message(MSG_ERROR, "unknown output method -- %s", optarg);
 	  exit(EXIT_FAILURE);
 	}
 	break;
-      case 'e':
-	if(!strcmp(optarg, "satoh")) cfg.emutype = Emu_Satoh;
-	else if(!strcmp(optarg, "ken")) cfg.emutype = Emu_Ken;
-	else {
-	  message(MSG_ERROR, "unknown emulator -- %s", optarg);
-	  exit(EXIT_FAILURE);
-	}
       case 'q': if(cfg.message_level) cfg.message_level--; break;
       case 'v': cfg.message_level++; break;
       }
@@ -256,7 +184,6 @@ static void play(const char *fn, Player *pl, int subsong = -1)
   unsigned long i;
 
   // initialize output & player
-  pl->get_opl()->init();
   pl->p = CAdPlug::factory(fn,pl->get_opl());
 
   if(!pl->p) {
@@ -266,10 +193,8 @@ static void play(const char *fn, Player *pl, int subsong = -1)
 
   if(subsong != -1)
     pl->p->rewind(subsong);
-#ifdef HAVE_ADPLUG_GETSUBSONG
   else
     subsong = pl->p->getsubsong();
-#endif
 
   fprintf(stderr, "Playing '%s'...\n"
 	  "Type  : %s\n"
@@ -304,7 +229,7 @@ static void shutdown(void)
 /* General deinitialization handler. */
 {
   if(player) delete player;
-  if(opl) delete opl;
+  if(oplChip) delete oplChip;
 }
 
 static void sighandler(int signal)
@@ -350,7 +275,7 @@ int main(int argc, char **argv)
   if(argc - optind > 1) cfg.endless = false;	// more than 1 file given
 
   // init emulator
-  opl = new CEmuopl(cfg.freq, cfg.bits == 16, cfg.channels == 2);
+  oplChip = new opl::Opl3();
 
   // init player
   switch(cfg.output) {
@@ -358,10 +283,10 @@ int main(int argc, char **argv)
     message(MSG_PANIC, "no output methods compiled in");
     exit(EXIT_FAILURE);
   case disk:
-    player = new DiskWriter(opl, cfg.device, cfg.bits, cfg.channels, cfg.freq);
+    player = new DiskWriter(oplChip, cfg.device, 44100);
     break;
   case sdl:
-    player = new SDLPlayer(opl, cfg.bits, cfg.channels, cfg.freq, cfg.buf_size);
+    player = new SDLPlayer(oplChip, 44100, cfg.buf_size);
     break;
   default:
     message(MSG_ERROR, "output method not available");

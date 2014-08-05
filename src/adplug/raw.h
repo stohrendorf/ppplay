@@ -24,9 +24,9 @@
 class CrawPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-	CrawPlayer(Copl *newopl)
+	CrawPlayer(opl::Opl3 *newopl)
 		: CPlayer(newopl), data(0)
 	{ };
 	~CrawPlayer()

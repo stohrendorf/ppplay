@@ -24,9 +24,9 @@
 class CxadhypPlayer: public CxadPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-  CxadhypPlayer(Copl *newopl): CxadPlayer(newopl)
+  CxadhypPlayer(opl::Opl3 *newopl): CxadPlayer(newopl)
     { }
 
 protected:

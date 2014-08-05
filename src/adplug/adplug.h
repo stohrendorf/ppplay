@@ -26,19 +26,19 @@
 
 #include "player.h"
 #include "players.h"
-#include "opl.h"
+#include <ymf262/opl3.h>
 #include "fprovide.h"
 #include "players.h"
 #include "database.h"
 
 class CAdPlug
 {
-  friend CPlayer::CPlayer(Copl *newopl);
+  friend CPlayer::CPlayer(opl::Opl3 *newopl);
 
 public:
   static const CPlayers players;
 
-  static CPlayer *factory(const std::string &fn, Copl *opl,
+  static CPlayer *factory(const std::string &fn, opl::Opl3 *opl,
 			  const CPlayers &pl = players,
 			  const CFileProvider &fp = CProvider_Filesystem());
 

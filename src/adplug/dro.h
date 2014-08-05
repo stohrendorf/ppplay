@@ -24,9 +24,9 @@
 class CdroPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-  CdroPlayer(Copl *newopl);
+  CdroPlayer(opl::Opl3 *newopl);
   ~CdroPlayer()
     {
       if(data)
@@ -48,5 +48,5 @@ class CdroPlayer: public CPlayer
   unsigned long pos,length;
   unsigned long msdone,mstotal;
   unsigned short delay;
-  unsigned char index, opl3_mode;
+  unsigned char index;
 };

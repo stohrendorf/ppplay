@@ -35,7 +35,7 @@ const unsigned int CksmPlayer::adlibfreq[63] = {
 
 /*** public methods **************************************/
 
-CPlayer *CksmPlayer::factory(Copl *newopl)
+CPlayer *CksmPlayer::factory(opl::Opl3 *newopl)
 {
   return new CksmPlayer(newopl);
 }
@@ -222,7 +222,7 @@ bool CksmPlayer::update()
 	  countstop = (((templong>>12)+(quanter>>1)) / quanter) * quanter;
 	}
       for(i=0;i<bufnum;i+=3)
-	opl->write(databuf[i+1],databuf[i+2]);
+	opl->writeReg(databuf[i+1],databuf[i+2]);
     }
   return !songend;
 }
@@ -234,7 +234,7 @@ void CksmPlayer::rewind(int subsong)
   unsigned long templong;
 
   songend = false;
-  opl->init(); opl->write(1,32); opl->write(4,0); opl->write(8,0); opl->write(0xbd,drumstat);
+  opl->writeReg(1,32); opl->writeReg(4,0); opl->writeReg(8,0); opl->writeReg(0xbd,drumstat);
 
   if (trchan[11] == 1) {
     for(i=0;i<11;i++)
@@ -318,19 +318,19 @@ void CksmPlayer::setinst(int chan,
 {
   int offs;
 
-  opl->write(0xa0+chan,0);
-  opl->write(0xb0+chan,0);
-  opl->write(0xc0+chan,v10);
+  opl->writeReg(0xa0+chan,0);
+  opl->writeReg(0xb0+chan,0);
+  opl->writeReg(0xc0+chan,v10);
   offs = op_table[chan];
-  opl->write(0x20+offs,v5);
-  opl->write(0x40+offs,v6);
-  opl->write(0x60+offs,v7);
-  opl->write(0x80+offs,v8);
-  opl->write(0xe0+offs,v9);
+  opl->writeReg(0x20+offs,v5);
+  opl->writeReg(0x40+offs,v6);
+  opl->writeReg(0x60+offs,v7);
+  opl->writeReg(0x80+offs,v8);
+  opl->writeReg(0xe0+offs,v9);
   offs+=3;
-  opl->write(0x20+offs,v0);
-  opl->write(0x40+offs,v1);
-  opl->write(0x60+offs,v2);
-  opl->write(0x80+offs,v3);
-  opl->write(0xe0+offs,v4);
+  opl->writeReg(0x20+offs,v0);
+  opl->writeReg(0x40+offs,v1);
+  opl->writeReg(0x60+offs,v2);
+  opl->writeReg(0x80+offs,v3);
+  opl->writeReg(0xe0+offs,v4);
 }

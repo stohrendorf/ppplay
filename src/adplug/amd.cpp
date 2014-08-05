@@ -24,7 +24,7 @@
 #include "amd.h"
 #include "debug.h"
 
-CPlayer *CamdLoader::factory(Copl *newopl)
+CPlayer *CamdLoader::factory(opl::Opl3 *newopl)
 {
   return new CamdLoader(newopl);
 }

@@ -31,12 +31,12 @@ const unsigned char CmscPlayer::msc_signature [MSC_SIGN_LEN] = {
 
 /*** public methods *************************************/
 
-CPlayer *CmscPlayer::factory (Copl * newopl)
+CPlayer *CmscPlayer::factory (opl::Opl3 * newopl)
 {
   return new CmscPlayer (newopl);
 }
 
-CmscPlayer::CmscPlayer(Copl * newopl) : CPlayer (newopl)
+CmscPlayer::CmscPlayer(opl::Opl3 * newopl) : CPlayer (newopl)
 {
   desc = NULL;
   msc_data = NULL;
@@ -136,7 +136,7 @@ bool CmscPlayer::update()
 		
       // play command & data
     default:
-      opl->write (cmnd, data);
+      opl->writeReg(cmnd, data);
 			
     } // command switch
   } // play pass
@@ -162,8 +162,7 @@ void CmscPlayer::rewind(int subsong)
   delay = 0;
 	
   // init the OPL chip and go to OPL2 mode
-  opl->init();
-  opl->write(1, 32);
+  opl->writeReg(1, 32);
 }
 
 float CmscPlayer::getrefresh()

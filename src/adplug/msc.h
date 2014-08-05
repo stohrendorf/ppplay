@@ -27,9 +27,9 @@
 class CmscPlayer: public CPlayer
 {
  public:
-  static CPlayer * factory(Copl * newopl);
+  static CPlayer * factory(opl::Opl3 * newopl);
 
-  CmscPlayer(Copl * newopl);
+  CmscPlayer(opl::Opl3 * newopl);
   ~CmscPlayer();
 	
   bool load(const std::string &filename, const CFileProvider &fp);

@@ -32,32 +32,28 @@ public:
   virtual ~Player();
 
   virtual void frame() = 0;
-  virtual Copl *get_opl() = 0;
+  virtual opl::Opl3 *get_opl() = 0;
 };
 
 class EmuPlayer: public Player
 {
 private:
-  Copl		*opl;
+  opl::Opl3		*opl;
   char		*audiobuf;
   unsigned long	buf_size, freq;
-  unsigned char	bits, channels;
 
 public:
-  EmuPlayer(Copl *nopl, unsigned char nbits, unsigned char nchannels,
-	    unsigned long nfreq, unsigned long nbufsize);
+  EmuPlayer(opl::Opl3 *nopl, unsigned long nfreq, unsigned long nbufsize);
   virtual ~EmuPlayer();
 
   virtual void setbufsize(unsigned long nbufsize);
   virtual void frame();
-  virtual Copl *get_opl() { return opl; }
+  virtual opl::Opl3 *get_opl() { return opl; }
 
 protected:
   virtual void output(const void *buf, unsigned long size) = 0;
   // The output buffer is always of the size requested through the constructor.
   // This time, size is measured in bytes, not samples!
-
-  unsigned char getsampsize() { return (channels * (bits / 8)); }
 };
 
 #endif

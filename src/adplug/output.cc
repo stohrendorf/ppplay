@@ -18,11 +18,10 @@
  */
 
 #include <stdio.h>
-#include <adplug/emuopl.h>
-#include <adplug/kemuopl.h>
 
 #include "output.h"
 #include "defines.h"
+#include "genmod/breseninter.h"
 
 /***** Player *****/
 
@@ -38,11 +37,10 @@ Player::~Player()
 
 /***** EmuPlayer *****/
 
-EmuPlayer::EmuPlayer(Copl *nopl, unsigned char nbits, unsigned char nchannels,
-		     unsigned long nfreq, unsigned long nbufsize)
-  : opl(nopl), buf_size(nbufsize), freq(nfreq), bits(nbits), channels(nchannels)
+EmuPlayer::EmuPlayer(opl::Opl3 *nopl, unsigned long nfreq, unsigned long nbufsize)
+  : opl(nopl), buf_size(nbufsize), freq(nfreq)
 {
-  audiobuf = new char [buf_size * getsampsize()];
+  audiobuf = new char [buf_size * 4];
 }
 
 EmuPlayer::~EmuPlayer()
@@ -55,14 +53,16 @@ void EmuPlayer::setbufsize(unsigned long nbufsize)
 {
   delete [] audiobuf;
   buf_size = nbufsize;
-  audiobuf = new char [buf_size * getsampsize()];
+  audiobuf = new char [buf_size * 4];
 }
 
 void EmuPlayer::frame()
 {
   static long minicnt = 0;
   long i, towrite = buf_size;
-  char *pos = audiobuf;
+  int16_t *pos = reinterpret_cast<int16_t*>(audiobuf);
+
+  ppp::BresenInterpolation interp( freq, opl::Opl3::SampleRate );
 
   // Prepare audiobuf with emulator output
   while(towrite > 0) {
@@ -71,11 +71,23 @@ void EmuPlayer::frame()
       playing = p->update();
     }
     i = std::min(towrite, (long)(minicnt / p->getrefresh() + 4) & ~3);
-    opl->update((short *)pos, i);
-    pos += i * getsampsize(); towrite -= i;
+    for(int j=0; j<i; ++j) {
+        std::array<int16_t,4> samples;
+        opl->read(&samples);
+        if( interp.next() == 2 ) {
+            opl->read( nullptr ); // skip a sample
+        }
+        interp = 0;
+        pos[0] = samples[0];
+        pos[1] = samples[1];
+        pos[0] += samples[2];
+        pos[1] += samples[3];
+        pos += 2;
+    }
+    towrite -= i;
     minicnt -= (long)(p->getrefresh() * i);
   }
 
   // call output driver
-  output(audiobuf, buf_size * getsampsize());
+  output(audiobuf, buf_size * 4);
 }

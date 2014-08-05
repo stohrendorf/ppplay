@@ -27,9 +27,9 @@
 class CxadPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-        CxadPlayer(Copl * newopl);
+        CxadPlayer(opl::Opl3 * newopl);
         ~CxadPlayer();
 
         bool	load(const std::string &filename, const CFileProvider &fp);

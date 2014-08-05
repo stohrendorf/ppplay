@@ -31,9 +31,9 @@ class AdlibDriver;
 class CadlPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-  CadlPlayer(Copl *newopl);
+  CadlPlayer(opl::Opl3 *newopl);
   ~CadlPlayer();
 
   bool load(const std::string &filename, const CFileProvider &fp);

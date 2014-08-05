@@ -83,9 +83,9 @@ class CcmfPlayer: public CPlayer
 		std::string strTitle, strComposer, strRemarks;
 
 	public:
-		static CPlayer *factory(Copl *newopl);
+		static CPlayer *factory(opl::Opl3 *newopl);
 
-		CcmfPlayer(Copl *newopl);
+		CcmfPlayer(opl::Opl3 *newopl);
 		~CcmfPlayer();
 
 		bool load(const std::string &filename, const CFileProvider &fp);

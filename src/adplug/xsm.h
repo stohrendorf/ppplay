@@ -24,9 +24,9 @@
 class CxsmPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl) { return new CxsmPlayer(newopl); }
+  static CPlayer *factory(opl::Opl3 *newopl) { return new CxsmPlayer(newopl); }
 
-  CxsmPlayer(Copl *newopl);
+  CxsmPlayer(opl::Opl3 *newopl);
   ~CxsmPlayer();
 
   bool load(const std::string &filename, const CFileProvider &fp);

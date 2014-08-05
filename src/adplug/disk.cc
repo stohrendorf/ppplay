@@ -29,9 +29,8 @@
 
 #define BUFSIZE		512
 
-DiskWriter::DiskWriter(Copl *nopl, const char *filename, unsigned char nbits,
-		       unsigned char nchannels, unsigned long nfreq)
-  : EmuPlayer(nopl, nbits, nchannels, nfreq, BUFSIZE), f(0), samplesize(0)
+DiskWriter::DiskWriter(opl::Opl3 *nopl, const char *filename, unsigned long nfreq)
+  : EmuPlayer(nopl, nfreq, BUFSIZE), f(0), samplesize(0)
 {
   if(!filename) {
     message(MSG_ERROR, "no output filename specified");
@@ -54,9 +53,9 @@ DiskWriter::DiskWriter(Copl *nopl, const char *filename, unsigned char nbits,
 
   // Write Microsoft RIFF WAVE header
   f->writeString("RIFF", 4); f->writeInt(36, 4); f->writeString("WAVEfmt ", 8);
-  f->writeInt(16, 4); f->writeInt(1, 2); f->writeInt(nchannels, 2);
-  f->writeInt(nfreq, 4); f->writeInt(nfreq * getsampsize(), 4);
-  f->writeInt(getsampsize(), 2); f->writeInt(nbits, 2);
+  f->writeInt(16, 4); f->writeInt(1, 2); f->writeInt(2, 2);
+  f->writeInt(nfreq, 4); f->writeInt(nfreq * 4, 4);
+  f->writeInt(4, 2); f->writeInt(16, 2);
   f->writeString("data", 4); f->writeInt(0, 4);
 }
 
@@ -81,14 +80,10 @@ DiskWriter::~DiskWriter()
 void DiskWriter::output(const void *buf, unsigned long size)
 {
   char		*b = (char *)buf;
-  unsigned long	i, ssize = getsampsize();
+  unsigned long	i;
 
-  for(i = 0; i < size; i += ssize)
-    switch(ssize) {
-    case 1: f->writeInt(*(b + i), 1); break;
-    case 2: f->writeInt(*(short *)(b + i), 2); break;
-    case 4: f->writeInt(*(long *)(b + i), 4); break;
-    }
+  for(i = 0; i < size; i += 4)
+    f->writeInt(*(long *)(b + i), 4);
 
   samplesize += size;
 }

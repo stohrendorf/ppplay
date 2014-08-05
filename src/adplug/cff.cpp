@@ -32,7 +32,7 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CPlayer *CcffLoader::factory(Copl *newopl)
+CPlayer *CcffLoader::factory(opl::Opl3 *newopl)
 {
   return new CcffLoader(newopl);
 }

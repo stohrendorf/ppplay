@@ -30,9 +30,9 @@
 class Cu6mPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-  Cu6mPlayer(Copl *newopl) : CPlayer(newopl), song_data(0)
+  Cu6mPlayer(opl::Opl3 *newopl) : CPlayer(newopl), song_data(0)
     {
     };
 

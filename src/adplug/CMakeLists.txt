@@ -6,7 +6,6 @@ add_executable(badplay
   adplug.cpp
   adtrack.cpp
   amd.cpp
-  analopl.cpp
   bam.cpp
   bmf.cpp
   cff.cpp
@@ -16,12 +15,10 @@ add_executable(badplay
   debug.c
   dfm.cpp
   disk.cc
-  diskopl.cpp
   dmo.cpp
   dro.cpp
   dro2.cpp
   dtm.cpp
-  emuopl.cpp
   flash.cpp
   fmc.cpp
   fmopl.c
@@ -41,7 +38,6 @@ add_executable(badplay
   mkj.cpp
   msc.cpp
   mtk.cpp
-  oss.cc
   output.cc
   player.cpp
   players.cpp
@@ -50,17 +46,15 @@ add_executable(badplay
   rad.cpp
   rat.cpp
   raw.cpp
-  realopl.cpp
   rix.cpp
   rol.cpp
   s3m.cpp
   sa2.cpp
   sdl.cc
   sng.cpp
-  surroundopl.cpp
-  temuopl.cpp
   u6m.cpp
   xad.cpp
   xsm.cpp
 )
-target_link_libraries(badplay -lbinio ${SDL_LIBRARY})
+target_link_libraries(badplay -lbinio ${SDL_LIBRARY} ppplay_opl)
+install(TARGETS badplay DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT application)

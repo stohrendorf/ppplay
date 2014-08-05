@@ -30,18 +30,14 @@
 
 /*** public methods *************************************/
 
-CPlayer *CdroPlayer::factory(Copl *newopl)
+CPlayer *CdroPlayer::factory(opl::Opl3 *newopl)
 {
   return new CdroPlayer(newopl);
 }
 
-CdroPlayer::CdroPlayer(Copl *newopl)
+CdroPlayer::CdroPlayer(opl::Opl3 *newopl)
   : CPlayer(newopl), data(0)
 {
-  if(opl->gettype() == Copl::TYPE_OPL2)
-    opl3_mode = 0;
-  else
-    opl3_mode = 1;
 }
 
 bool CdroPlayer::load(const std::string &filename, const CFileProvider &fp)
@@ -99,16 +95,13 @@ bool CdroPlayer::update()
       return true;
     case 2:
       index = 0;
-      opl->setchip(0);
       break;
     case 3:
       index = 1;
-      opl->setchip(1);
       break;
     default:
       if(cmd==4) cmd = data[pos++]; //data override
-      if(index == 0 || opl3_mode)
-	opl->write(cmd,data[pos++]);
+        opl->writeReg(cmd,data[pos++]);
       break;
     }
   }
@@ -120,18 +113,12 @@ void CdroPlayer::rewind(int subsong)
 {
   delay=1; 
   pos = index = 0; 
-  opl->init(); 
 
   //dro assumes all registers are initialized to 0
   //registers not initialized to 0 will be corrected
   //in the data stream
   for(int i=0;i<256;i++)
-    opl->write(i,0);
-	
-  opl->setchip(1);
-  for(int i=0;i<256;i++)
-    opl->write(i,0);
-  opl->setchip(0);
+    opl->writeReg(i,0);
 }
 
 float CdroPlayer::getrefresh()

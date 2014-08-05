@@ -24,9 +24,9 @@
 class CksmPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(Copl *newopl);
+  static CPlayer *factory(opl::Opl3 *newopl);
 
-	CksmPlayer(Copl *newopl)
+	CksmPlayer(opl::Opl3 *newopl)
 		: CPlayer(newopl), note(0)
 	{ };
 	~CksmPlayer()

@@ -22,9 +22,11 @@
 #include "sdl.h"
 #include "defines.h"
 
-SDLPlayer::SDLPlayer(Copl *nopl, unsigned char bits, int channels, int freq,
+#include "genmod/breseninter.h"
+
+SDLPlayer::SDLPlayer(opl::Opl3 *nopl, int freq,
 		     unsigned long bufsize)
-  : opl(nopl)
+  : oplChip(nopl)
 {
    memset(&spec, 0x00, sizeof(SDL_AudioSpec));
 
@@ -34,8 +36,8 @@ SDLPlayer::SDLPlayer(Copl *nopl, unsigned char bits, int channels, int freq,
    }
 
    spec.freq = freq;
-   if(bits == 16) spec.format = AUDIO_S16SYS; else spec.format = AUDIO_U8;
-   spec.channels = channels;
+   spec.format = AUDIO_S16SYS;
+   spec.channels = 2;
    spec.samples = bufsize;
    spec.callback = SDLPlayer::callback;
    spec.userdata = this;
@@ -59,15 +61,17 @@ SDLPlayer::~SDLPlayer()
 void SDLPlayer::frame()
 {
   SDL_PauseAudio(0);
-  SDL_Delay(1000 * spec.freq / (spec.size / getsampsize()));
+  SDL_Delay(1000 * spec.freq / (spec.size / 4));
 }
 
 void SDLPlayer::callback(void *userdata, Uint8 *audiobuf, int len)
 {
   SDLPlayer	*self = (SDLPlayer *)userdata;
   static long	minicnt = 0;
-  long		i, towrite = len / self->getsampsize();
-  char		*pos = (char *)audiobuf;
+  long		i, towrite = len / 4;
+  int16_t *pos = reinterpret_cast<int16_t*>(audiobuf);
+
+  ppp::BresenInterpolation interp( self->spec.freq, opl::Opl3::SampleRate );
 
   // Prepare audiobuf with emulator output
   while(towrite > 0) {
@@ -76,8 +80,20 @@ void SDLPlayer::callback(void *userdata, Uint8 *audiobuf, int len)
       self->playing = self->p->update();
     }
     i = std::min(towrite, (long)(minicnt / self->p->getrefresh() + 4) & ~3);
-    self->opl->update((short *)pos, i);
-    pos += i * self->getsampsize(); towrite -= i;
+    for(int j=0; j<i; ++j) {
+        std::array<int16_t,4> samples;
+        self->oplChip->read(&samples);
+        if( interp.next() == 2 ) {
+            self->oplChip->read( nullptr ); // skip a sample
+        }
+        interp = 0;
+        pos[0] = samples[0];
+        pos[1] = samples[1];
+        pos[0] += samples[2];
+        pos[1] += samples[3];
+        pos += 2;
+    }
+    towrite -= i;
     minicnt -= (long)(self->p->getrefresh() * i);
   }
 }
