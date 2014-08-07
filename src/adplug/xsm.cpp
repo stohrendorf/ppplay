@@ -45,17 +45,17 @@ bool CxsmPlayer::load(const std::string &filename, const CFileProvider &fp)
 
   // read and set instruments
   for(i = 0; i < 9; i++) {
-    opl->writeReg(0x20 + op_table[i], f->readInt(1));
-    opl->writeReg(0x23 + op_table[i], f->readInt(1));
-    opl->writeReg(0x40 + op_table[i], f->readInt(1));
-    opl->writeReg(0x43 + op_table[i], f->readInt(1));
-    opl->writeReg(0x60 + op_table[i], f->readInt(1));
-    opl->writeReg(0x63 + op_table[i], f->readInt(1));
-    opl->writeReg(0x80 + op_table[i], f->readInt(1));
-    opl->writeReg(0x83 + op_table[i], f->readInt(1));
-    opl->writeReg(0xe0 + op_table[i], f->readInt(1));
-    opl->writeReg(0xe3 + op_table[i], f->readInt(1));
-    opl->writeReg(0xc0 + op_table[i], f->readInt(1));
+    m_opl->writeReg(0x20 + m_opTable[i], f->readInt(1));
+    m_opl->writeReg(0x23 + m_opTable[i], f->readInt(1));
+    m_opl->writeReg(0x40 + m_opTable[i], f->readInt(1));
+    m_opl->writeReg(0x43 + m_opTable[i], f->readInt(1));
+    m_opl->writeReg(0x60 + m_opTable[i], f->readInt(1));
+    m_opl->writeReg(0x63 + m_opTable[i], f->readInt(1));
+    m_opl->writeReg(0x80 + m_opTable[i], f->readInt(1));
+    m_opl->writeReg(0x83 + m_opTable[i], f->readInt(1));
+    m_opl->writeReg(0xe0 + m_opTable[i], f->readInt(1));
+    m_opl->writeReg(0xe3 + m_opTable[i], f->readInt(1));
+    m_opl->writeReg(0xc0 + m_opTable[i], f->readInt(1));
     f->ignore(5);
   }
 
@@ -82,7 +82,7 @@ bool CxsmPlayer::update()
 
   for(c = 0; c < 9; c++)
     if(music[notenum * 9 + c] != music[last * 9 + c])
-      opl->writeReg(0xb0 + c, 0);
+      m_opl->writeReg(0xb0 + c, 0);
 
   for(c = 0; c < 9; c++) {
     if(music[notenum * 9 + c])
@@ -96,7 +96,7 @@ bool CxsmPlayer::update()
   return !songend;
 }
 
-void CxsmPlayer::rewind(int subsong)
+void CxsmPlayer::rewind(int)
 {
   notenum = last = 0;
   songend = false;
@@ -109,9 +109,9 @@ float CxsmPlayer::getrefresh()
 
 void CxsmPlayer::play_note(int c, int note, int octv)
 {
-  int freq = note_table[note];
+  int freq = m_noteTable[note];
 
   if(!note && !octv) freq = 0;
-  opl->writeReg(0xa0 + c, freq & 0xff);
-  opl->writeReg(0xb0 + c, (freq / 0xff) | 32 | (octv * 4));
+  m_opl->writeReg(0xa0 + c, freq & 0xff);
+  m_opl->writeReg(0xb0 + c, (freq / 0xff) | 32 | (octv * 4));
 }

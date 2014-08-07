@@ -209,11 +209,11 @@ void CrolPlayer::rewind( int subsong )
 
     bdRegister = 0;
 
-    opl->writeReg(1,0x20); // Enable waveform select (bit 5)
+    m_opl->writeReg(1,0x20); // Enable waveform select (bit 5)
 
     if( rol_header->mode == 0 )
     {
-        opl->writeReg( 0xbd, 0x20 ); // select rhythm mode (bit 5)
+        m_opl->writeReg( 0xbd, 0x20 ); // select rhythm mode (bit 5)
         bdRegister = 0x20;
 
         SetFreq( kTomtomChannel,    24 );
@@ -347,7 +347,7 @@ void CrolPlayer::SetNotePercussive( int const voice, int const note )
     int const bit_pos = 4-voice+kBassDrumChannel;
 
     bdRegister &= ~( 1<<bit_pos );
-    opl->writeReg( 0xbd, bdRegister );
+    m_opl->writeReg( 0xbd, bdRegister );
 
     if( note != kSilenceNote )
     {
@@ -361,13 +361,13 @@ void CrolPlayer::SetNotePercussive( int const voice, int const note )
         }
 
         bdRegister |= 1<<bit_pos;
-        opl->writeReg( 0xbd, bdRegister );
+        m_opl->writeReg( 0xbd, bdRegister );
     }
 }
 //---------------------------------------------------------
 void CrolPlayer::SetNoteMelodic( int const voice, int const note )
 {
-    opl->writeReg( 0xb0+voice, bxRegister[voice] & ~0x20 );
+    m_opl->writeReg( 0xb0+voice, bxRegister[voice] & ~0x20 );
 
     if( note != kSilenceNote )
     {
@@ -380,7 +380,7 @@ void CrolPlayer::SetPitch(int const voice, real32 const variation)
   pitchCache[voice] = variation;
   freqCache[voice] += (uint16)((((float)freqCache[voice])*(variation-1.0f)) / kPitchFactor);
 
-  opl->writeReg(0xa0+voice,freqCache[voice] & 0xff);
+  m_opl->writeReg(0xa0+voice,freqCache[voice] & 0xff);
 }
 //---------------------------------------------------------
 void CrolPlayer::SetFreq( int const voice, int const note, bool const keyOn )
@@ -391,8 +391,8 @@ void CrolPlayer::SetFreq( int const voice, int const note, bool const keyOn )
     freqCache[voice] = freq;
     bxRegister[voice] = ((freq >> 8) & 0x1f);
 
-    opl->writeReg( 0xa0+voice, freq & 0xff );
-    opl->writeReg( 0xb0+voice, bxRegister[voice] | (keyOn ? 0x20 : 0x0) );
+    m_opl->writeReg( 0xa0+voice, freq & 0xff );
+    m_opl->writeReg( 0xb0+voice, bxRegister[voice] | (keyOn ? 0x20 : 0x0) );
 }
 //---------------------------------------------------------
 void CrolPlayer::SetVolume( int const voice, int const volume )
@@ -400,9 +400,9 @@ void CrolPlayer::SetVolume( int const voice, int const volume )
     volumeCache[voice] = (volumeCache[voice] &0xc0) | volume;
 
     int const op_offset = ( voice < kSnareDrumChannel || rol_header->mode ) ? 
-                          op_table[voice]+3 : drum_table[voice-kSnareDrumChannel];
+                          m_opTable[voice]+3 : drum_table[voice-kSnareDrumChannel];
 
-    opl->writeReg( 0x40+op_offset, volumeCache[voice] );
+    m_opl->writeReg( 0x40+op_offset, volumeCache[voice] );
 }
 //---------------------------------------------------------
 void CrolPlayer::send_ins_data_to_chip( int const voice, int const ins_index )
@@ -416,23 +416,23 @@ void CrolPlayer::send_operator( int const voice, SOPL2Op const &modulator,  SOPL
 {
     if( voice < kSnareDrumChannel || rol_header->mode )
     {
-        int const op_offset = op_table[voice];
+        int const op_offset = m_opTable[voice];
 
-        opl->writeReg( 0x20+op_offset, modulator.ammulti  );
-        opl->writeReg( 0x40+op_offset, modulator.ksltl    );
-        opl->writeReg( 0x60+op_offset, modulator.ardr     );
-        opl->writeReg( 0x80+op_offset, modulator.slrr     );
-        opl->writeReg( 0xc0+voice    , modulator.fbc      );
-        opl->writeReg( 0xe0+op_offset, modulator.waveform );
+        m_opl->writeReg( 0x20+op_offset, modulator.ammulti  );
+        m_opl->writeReg( 0x40+op_offset, modulator.ksltl    );
+        m_opl->writeReg( 0x60+op_offset, modulator.ardr     );
+        m_opl->writeReg( 0x80+op_offset, modulator.slrr     );
+        m_opl->writeReg( 0xc0+voice    , modulator.fbc      );
+        m_opl->writeReg( 0xe0+op_offset, modulator.waveform );
 
         volumeCache[voice] = (carrier.ksltl & 0xc0) | volumeCache[voice] & 0x3f;
 
-        opl->writeReg( 0x23+op_offset, carrier.ammulti  );
-        opl->writeReg( 0x43+op_offset, volumeCache[voice]    );
-        opl->writeReg( 0x63+op_offset, carrier.ardr     );
-        opl->writeReg( 0x83+op_offset, carrier.slrr     );
+        m_opl->writeReg( 0x23+op_offset, carrier.ammulti  );
+        m_opl->writeReg( 0x43+op_offset, volumeCache[voice]    );
+        m_opl->writeReg( 0x63+op_offset, carrier.ardr     );
+        m_opl->writeReg( 0x83+op_offset, carrier.slrr     );
 //        opl->writeReg( 0xc3+voice    , carrier.fbc      ); <- don't bother writing this.
-        opl->writeReg( 0xe3+op_offset, carrier.waveform );
+        m_opl->writeReg( 0xe3+op_offset, carrier.waveform );
     }
     else
     {
@@ -440,12 +440,12 @@ void CrolPlayer::send_operator( int const voice, SOPL2Op const &modulator,  SOPL
 
         volumeCache[voice] = (modulator.ksltl & 0xc0) | volumeCache[voice] & 0x3f;
 
-        opl->writeReg( 0x20+op_offset, modulator.ammulti  );
-        opl->writeReg( 0x40+op_offset, volumeCache[voice]      );
-        opl->writeReg( 0x60+op_offset, modulator.ardr     );
-        opl->writeReg( 0x80+op_offset, modulator.slrr     );
-        opl->writeReg( 0xc0+voice    , modulator.fbc      );
-        opl->writeReg( 0xe0+op_offset, modulator.waveform );
+        m_opl->writeReg( 0x20+op_offset, modulator.ammulti  );
+        m_opl->writeReg( 0x40+op_offset, volumeCache[voice]      );
+        m_opl->writeReg( 0x60+op_offset, modulator.ardr     );
+        m_opl->writeReg( 0x80+op_offset, modulator.slrr     );
+        m_opl->writeReg( 0xc0+voice    , modulator.fbc      );
+        m_opl->writeReg( 0xe0+op_offset, modulator.waveform );
     }
 }
 //---------------------------------------------------------

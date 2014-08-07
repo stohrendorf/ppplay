@@ -334,7 +334,7 @@ bool CmidPlayer::load(const std::string &filename, const CFileProvider &fp)
 
 void CmidPlayer::midi_write_adlib(unsigned int r, unsigned char v)
 {
-  opl->writeReg(r,v);
+  m_opl->writeReg(r,v);
   adlib_data[r]=v;
 }
 

@@ -850,7 +850,7 @@ void Cu6mPlayer::mf_slide(int channel)
 
 void Cu6mPlayer::out_adlib(unsigned char adlib_register, unsigned char adlib_data)
 {
-  opl->writeReg(adlib_register,adlib_data);
+  m_opl->writeReg(adlib_register,adlib_data);
 }
 
 

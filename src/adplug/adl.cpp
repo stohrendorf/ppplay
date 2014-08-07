@@ -2394,7 +2394,7 @@ bool CadlPlayer::load(const std::string &filename, const CFileProvider &fp)
 void CadlPlayer::rewind(int subsong)
 {
   if(subsong == -1) subsong = cursubsong;
-  opl->writeReg(1,32);
+  m_opl->writeReg(1,32);
   playSoundEffect(subsong);
   cursubsong = subsong;
   update();

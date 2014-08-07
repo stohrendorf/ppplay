@@ -76,8 +76,8 @@ bool CimfPlayer::load(const std::string &filename, const CFileProvider &fp)
 	f->seek(0);	// It's a normal IMF file
     } else {
       // It's a IMF file with header
-      track_name = f->readString('\0');
-      game_name = f->readString('\0');
+      m_trackName = f->readString('\0');
+      m_gameName = f->readString('\0');
       f->ignore(1);
       mfsize = f->pos() + 2;
     }
@@ -94,34 +94,34 @@ bool CimfPlayer::load(const std::string &filename, const CFileProvider &fp)
       f->seek(-4, binio::Add);
     else
       f->seek(-2, binio::Add);
-    size = (flsize - mfsize) / 4;
+    m_size = (flsize - mfsize) / 4;
   } else		// file has got a footer
-    size = fsize / 4;
+    m_size = fsize / 4;
 
-  data = new Sdata[size];
-  for(i = 0; i < size; i++) {
-    data[i].reg = f->readInt(1); data[i].val = f->readInt(1);
-    data[i].time = f->readInt(2);
+  m_data = new Sdata[m_size];
+  for(i = 0; i < m_size; i++) {
+    m_data[i].reg = f->readInt(1); m_data[i].val = f->readInt(1);
+    m_data[i].time = f->readInt(2);
   }
 
   // read footer, if any
   if(fsize && (fsize < flsize - 2 - mfsize)) {
     if(f->readInt(1) == 0x1a) {
       // Adam Nielsen's footer format
-      track_name = f->readString();
-      author_name = f->readString();
-      remarks = f->readString();
+      m_trackName = f->readString();
+      m_authorName = f->readString();
+      m_remarks = f->readString();
     } else {
       // Generic footer
       unsigned long footerlen = flsize - fsize - 2 - mfsize;
 
-      footer = new char[footerlen + 1];
-      f->readString(footer, footerlen);
-      footer[footerlen] = '\0';	// Make ASCIIZ string
+      m_footer = new char[footerlen + 1];
+      f->readString(m_footer, footerlen);
+      m_footer[footerlen] = '\0';	// Make ASCIIZ string
     }
   }
 
-  rate = getrate(filename, fp, f);
+  m_rate = getrate(filename, fp, f);
   fp.close(f);
   rewind(0);
   return true;
@@ -130,36 +130,36 @@ bool CimfPlayer::load(const std::string &filename, const CFileProvider &fp)
 bool CimfPlayer::update()
 {
 	do {
-		opl->writeReg(data[pos].reg,data[pos].val);
-		del = data[pos].time;
-		pos++;
-	} while(!del && pos < size);
+		m_opl->writeReg(m_data[m_pos].reg,m_data[m_pos].val);
+		m_del = m_data[m_pos].time;
+		m_pos++;
+	} while(!m_del && m_pos < m_size);
 
-	if(pos >= size) {
-		pos = 0;
-		songend = true;
+	if(m_pos >= m_size) {
+		m_pos = 0;
+		m_songend = true;
 	}
-	else timer = rate / (float)del;
+	else m_timer = m_rate / (float)m_del;
 
-	return !songend;
+	return !m_songend;
 }
 
 void CimfPlayer::rewind(int subsong)
 {
-	pos = 0; del = 0; timer = rate; songend = false;
-	opl->writeReg(1,32);	// go to OPL2 mode
+	m_pos = 0; m_del = 0; m_timer = m_rate; m_songend = false;
+	m_opl->writeReg(1,32);	// go to OPL2 mode
 }
 
 std::string CimfPlayer::gettitle()
 {
   std::string	title;
 
-  title = track_name;
+  title = m_trackName;
 
-  if(!track_name.empty() && !game_name.empty())
+  if(!m_trackName.empty() && !m_gameName.empty())
     title += " - ";
 
-  title += game_name;
+  title += m_gameName;
 
   return title;
 }
@@ -168,13 +168,13 @@ std::string CimfPlayer::getdesc()
 {
   std::string	desc;
 
-  if(footer)
-    desc = std::string(footer);
+  if(m_footer)
+    desc = std::string(m_footer);
 
-  if(!remarks.empty() && footer)
+  if(!m_remarks.empty() && m_footer)
     desc += "\n\n";
 
-  desc += remarks;
+  desc += m_remarks;
 
   return desc;
 }
@@ -183,11 +183,11 @@ std::string CimfPlayer::getdesc()
 
 float CimfPlayer::getrate(const std::string &filename, const CFileProvider &fp, binistream *f)
 {
-  if(db) {	// Database available
+  if(m_db) {	// Database available
     f->seek(0, binio::Set);
-    CClockRecord *record = (CClockRecord *)db->search(CAdPlugDatabase::CKey(*f));
-    if (record && record->type == CAdPlugDatabase::CRecord::ClockSpeed)
-      return record->clock;
+    CClockRecord *record = (CClockRecord *)m_db->search(CAdPlugDatabase::CKey(*f));
+    if (record && record->m_type == CAdPlugDatabase::CRecord::ClockSpeed)
+      return record->m_clock;
   }
 
   // Otherwise the database is either unavailable, or there's no entry for this file

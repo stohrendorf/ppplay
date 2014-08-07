@@ -29,42 +29,42 @@ class ChscPlayer: public CPlayer
  public:
   static CPlayer *factory(opl::Opl3 *newopl);
 
-  ChscPlayer(opl::Opl3 *newopl): CPlayer(newopl), mtkmode(0) {}
+  ChscPlayer(opl::Opl3 *newopl): CPlayer(newopl), m_mtkmode(0) {}
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int subsong);
-  float getrefresh() { return 18.2f; };	// refresh rate is fixed at 18.2Hz
+  float getrefresh() { return 18.2f; }	// refresh rate is fixed at 18.2Hz
 
   std::string gettype() { return std::string("HSC Adlib Composer / HSC-Tracker"); }
   unsigned int getpatterns();
-  unsigned int getpattern() { return song[songpos]; }
+  unsigned int getpattern() { return m_song[m_songpos]; }
   unsigned int getorders();
-  unsigned int getorder() { return songpos; }
-  unsigned int getrow() { return pattpos; }
-  unsigned int getspeed() { return speed; }
+  unsigned int getorder() { return m_songpos; }
+  unsigned int getrow() { return m_pattpos; }
+  unsigned int getspeed() { return m_speed; }
   unsigned int getinstruments();
 
  protected:
-  struct hscnote {
-    unsigned char note, effect;
+  struct HscNote {
+    unsigned char note=0, effect=0;
   };	// note type in HSC pattern
 
-  struct hscchan {
-    unsigned char inst;			// current instrument
-    signed char slide;			// used for manual slide-effects
-    unsigned short freq;		// actual replaying frequency
+  struct HscChan {
+    unsigned char inst=0;			// current instrument
+    signed char slide=0;			// used for manual slide-effects
+    unsigned short freq=0;		// actual replaying frequency
   };	// HSC channel data
 
-  hscchan channel[9];			// player channel-info
-  unsigned char instr[128][12];		// instrument data
-  unsigned char song[0x80];		// song-arrangement (MPU-401 Trakker enhanced)
-  hscnote patterns[50][64*9];		// pattern data
-  unsigned char pattpos,songpos,	// various bytes & flags
-    pattbreak,songend,mode6,bd,fadein;
-  unsigned int speed,del;
-  unsigned char adl_freq[9];		// adlib frequency registers
-  int mtkmode;				// flag: MPU-401 Trakker mode on/off
+  HscChan m_channel[9];			// player channel-info
+  unsigned char m_instr[128][12];		// instrument data
+  unsigned char m_song[0x80];		// song-arrangement (MPU-401 Trakker enhanced)
+  HscNote m_patterns[50][64*9];		// pattern data
+  unsigned char m_pattpos=0,m_songpos=0,	// various bytes & flags
+    m_pattbreak=0,m_songend=0,m_mode6=0,m_bd=0,m_fadein=0;
+  unsigned int m_speed=0,m_del=0;
+  unsigned char m_adlFreq[9];		// adlib frequency registers
+  int m_mtkmode=0;				// flag: MPU-401 Trakker mode on/off
 
  private:
   void setfreq(unsigned char chan, unsigned short freq);

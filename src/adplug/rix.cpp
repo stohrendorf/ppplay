@@ -129,7 +129,7 @@ void CrixPlayer::rewind(int subsong)
 	  length=offset2-offset1+1;
 	  buf_addr=file_buffer+offset1;
   }
-  opl->writeReg(1,32);	// go to OPL2 mode
+  m_opl->writeReg(1,32);	// go to OPL2 mode
   set_new_int();
   data_initial();
 }
@@ -223,7 +223,7 @@ inline void CrixPlayer::ad_bop(unsigned short reg,unsigned short value)
 {
   if(reg == 2 || reg == 3)
     AdPlug_LogWrite("switch OPL2/3 mode!\n");
-  opl->writeReg(reg & 0xff, value & 0xff);
+  m_opl->writeReg(reg & 0xff, value & 0xff);
 }
 /*--------------------------------------------------------------*/
 inline void CrixPlayer::int_08h_entry()   

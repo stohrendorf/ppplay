@@ -71,15 +71,15 @@ public:
 	  { return 0; }
 	virtual unsigned int getinstruments()	// returns number of instruments
 	  { return 0; }
-	virtual std::string getinstrument(unsigned int n)	// returns n-th instrument name
+    virtual std::string getinstrument(unsigned int)	// returns n-th instrument name
 	  { return std::string(); }
 
 protected:
-	opl::Opl3		*opl;	// our OPL chip
-	CAdPlugDatabase	*db;	// AdPlug Database
+    opl::Opl3		*m_opl;	// our OPL chip
+    CAdPlugDatabase	*m_db;	// AdPlug Database
 
-	static const unsigned short	note_table[12];	// standard adlib note table
-	static const unsigned char	op_table[9];	// the 9 operators as expected by the OPL
+    static const unsigned short	m_noteTable[12];	// standard adlib note table
+    static const unsigned char	m_opTable[9];	// the 9 operators as expected by the OPL
 };
 
 #endif

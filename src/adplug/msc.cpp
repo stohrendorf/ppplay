@@ -136,7 +136,7 @@ bool CmscPlayer::update()
 		
       // play command & data
     default:
-      opl->writeReg(cmnd, data);
+      m_opl->writeReg(cmnd, data);
 			
     } // command switch
   } // play pass
@@ -162,7 +162,7 @@ void CmscPlayer::rewind(int subsong)
   delay = 0;
 	
   // init the OPL chip and go to OPL2 mode
-  opl->writeReg(1, 32);
+  m_opl->writeReg(1, 32);
 }
 
 float CmscPlayer::getrefresh()
