@@ -158,7 +158,7 @@ bool CksmPlayer::update()
 		      databuf[bufnum] = (unsigned char)0; bufnum++;
 		      volval = (inst[trinst[track]][1]&192)+(volevel^63);
 		      databuf[bufnum] = (char)0, bufnum++;
-		      databuf[bufnum] = (unsigned char)(0x40+op_table[i]+3); bufnum++;
+		      databuf[bufnum] = (unsigned char)(0x40+m_opTable[i]+3); bufnum++;
 		      databuf[bufnum] = (unsigned char)volval; bufnum++;
 		      databuf[bufnum] = (char)0, bufnum++;
 		      databuf[bufnum] = (unsigned char)(0xa0+i); bufnum++;
@@ -195,14 +195,14 @@ bool CksmPlayer::update()
 		    {
 		      volval = (inst[trinst[track]][1]&192)+(volevel^63);
 		      databuf[bufnum] = (char)0, bufnum++;
-		      databuf[bufnum] = (unsigned char)(0x40+op_table[chan]+3); bufnum++;
+		      databuf[bufnum] = (unsigned char)(0x40+m_opTable[chan]+3); bufnum++;
 		      databuf[bufnum] = (unsigned char)(volval); bufnum++;
 		    }
 		  else
 		    {
 		      volval = (inst[trinst[track]][6]&192)+(volevel^63);
 		      databuf[bufnum] = (char)0, bufnum++;
-		      databuf[bufnum] = (unsigned char)(0x40+op_table[chan]); bufnum++;
+		      databuf[bufnum] = (unsigned char)(0x40+m_opTable[chan]); bufnum++;
 		      databuf[bufnum] = (unsigned char)(volval); bufnum++;
 		    }
 		  databuf[bufnum] = (char)0, bufnum++;
@@ -222,7 +222,7 @@ bool CksmPlayer::update()
 	  countstop = (((templong>>12)+(quanter>>1)) / quanter) * quanter;
 	}
       for(i=0;i<bufnum;i+=3)
-	opl->writeReg(databuf[i+1],databuf[i+2]);
+	m_opl->writeReg(databuf[i+1],databuf[i+2]);
     }
   return !songend;
 }
@@ -234,7 +234,7 @@ void CksmPlayer::rewind(int subsong)
   unsigned long templong;
 
   songend = false;
-  opl->writeReg(1,32); opl->writeReg(4,0); opl->writeReg(8,0); opl->writeReg(0xbd,drumstat);
+  m_opl->writeReg(1,32); m_opl->writeReg(4,0); m_opl->writeReg(8,0); m_opl->writeReg(0xbd,drumstat);
 
   if (trchan[11] == 1) {
     for(i=0;i<11;i++)
@@ -318,19 +318,19 @@ void CksmPlayer::setinst(int chan,
 {
   int offs;
 
-  opl->writeReg(0xa0+chan,0);
-  opl->writeReg(0xb0+chan,0);
-  opl->writeReg(0xc0+chan,v10);
-  offs = op_table[chan];
-  opl->writeReg(0x20+offs,v5);
-  opl->writeReg(0x40+offs,v6);
-  opl->writeReg(0x60+offs,v7);
-  opl->writeReg(0x80+offs,v8);
-  opl->writeReg(0xe0+offs,v9);
+  m_opl->writeReg(0xa0+chan,0);
+  m_opl->writeReg(0xb0+chan,0);
+  m_opl->writeReg(0xc0+chan,v10);
+  offs = m_opTable[chan];
+  m_opl->writeReg(0x20+offs,v5);
+  m_opl->writeReg(0x40+offs,v6);
+  m_opl->writeReg(0x60+offs,v7);
+  m_opl->writeReg(0x80+offs,v8);
+  m_opl->writeReg(0xe0+offs,v9);
   offs+=3;
-  opl->writeReg(0x20+offs,v0);
-  opl->writeReg(0x40+offs,v1);
-  opl->writeReg(0x60+offs,v2);
-  opl->writeReg(0x80+offs,v3);
-  opl->writeReg(0xe0+offs,v4);
+  m_opl->writeReg(0x20+offs,v0);
+  m_opl->writeReg(0x40+offs,v1);
+  m_opl->writeReg(0x60+offs,v2);
+  m_opl->writeReg(0x80+offs,v3);
+  m_opl->writeReg(0xe0+offs,v4);
 }

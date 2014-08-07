@@ -60,7 +60,7 @@ SDLPlayer::~SDLPlayer()
 void SDLPlayer::frame()
 {
   SDL_PauseAudio(0);
-  SDL_Delay(1000 * spec.freq / (spec.size / 4));
+  SDL_Delay(spec.freq / (spec.size / 4));
 }
 
 void SDLPlayer::callback(void *userdata, Uint8 *audiobuf, int len)

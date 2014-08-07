@@ -134,5 +134,5 @@ void CxadPlayer::opl_write(int reg, int val)
 #ifdef DEBUG
   AdPlug_LogWrite("[ %02X ] = %02X\n",reg,val);
 #endif
-  opl->writeReg(reg,val);
+  m_opl->writeReg(reg,val);
 }

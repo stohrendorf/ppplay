@@ -36,10 +36,10 @@ const unsigned short CAdPlugDatabase::hash_radix = 0xfff1;	// should be prime
 CAdPlugDatabase::CAdPlugDatabase()
   : linear_index(0), linear_logic_length(0), linear_length(0)
 {
-  db_linear = new DB_Bucket * [hash_radix];
-  db_hashed = new DB_Bucket * [hash_radix];
-  memset(db_linear, 0, sizeof(DB_Bucket *) * hash_radix);
-  memset(db_hashed, 0, sizeof(DB_Bucket *) * hash_radix);
+  m_dbLinear = new DB_Bucket * [hash_radix];
+  m_dbHashed = new DB_Bucket * [hash_radix];
+  memset(m_dbLinear, 0, sizeof(DB_Bucket *) * hash_radix);
+  memset(m_dbHashed, 0, sizeof(DB_Bucket *) * hash_radix);
 }
 
 CAdPlugDatabase::~CAdPlugDatabase()
@@ -47,10 +47,10 @@ CAdPlugDatabase::~CAdPlugDatabase()
   unsigned long i;
 
   for(i = 0; i < linear_length; i++)
-    delete db_linear[i];
+    delete m_dbLinear[i];
 
-  delete [] db_linear;
-  delete [] db_hashed;
+  delete [] m_dbLinear;
+  delete [] m_dbHashed;
 }
 
 bool CAdPlugDatabase::load(std::string db_name)
@@ -103,8 +103,8 @@ bool CAdPlugDatabase::save(binostream &f)
 
   // write records
   for(i = 0; i < linear_length; i++)
-    if(!db_linear[i]->deleted)
-      db_linear[i]->record->write(f);
+    if(!m_dbLinear[i]->deleted)
+      m_dbLinear[i]->record->write(f);
 
   return true;
 }
@@ -117,21 +117,21 @@ CAdPlugDatabase::CRecord *CAdPlugDatabase::search(CKey const &key)
 bool CAdPlugDatabase::lookup(CKey const &key)
 {
   unsigned long index = make_hash(key);
-  if(!db_hashed[index]) return false;
+  if(!m_dbHashed[index]) return false;
 
   // immediate hit ?
-  DB_Bucket *bucket = db_hashed[index];
+  DB_Bucket *bucket = m_dbHashed[index];
 
-  if(!bucket->deleted && bucket->record->key == key) {
+  if(!bucket->deleted && bucket->record->m_key == key) {
     linear_index = bucket->index;
     return true;
   }
 
   // in-chain hit ?
-  bucket = db_hashed[index]->chain;
+  bucket = m_dbHashed[index]->chain;
 
   while(bucket) {
-    if(!bucket->deleted && bucket->record->key == key) {
+    if(!bucket->deleted && bucket->record->m_key == key) {
       linear_index = bucket->index;
       return true;
     }
@@ -149,23 +149,23 @@ bool CAdPlugDatabase::insert(CRecord *record)
   // sanity checks
   if(!record) return false;			// null-pointer given
   if(linear_length == hash_radix) return false;	// max. db size exceeded
-  if(lookup(record->key)) return false;		// record already in db
+  if(lookup(record->m_key)) return false;		// record already in db
 
   // make bucket
   DB_Bucket *bucket = new DB_Bucket(linear_length, record);
   if(!bucket) return false;
 
   // add to linear list
-  db_linear[linear_length] = bucket;
+  m_dbLinear[linear_length] = bucket;
   linear_logic_length++; linear_length++;
 
   // add to hashed list
-  index = make_hash(record->key);
+  index = make_hash(record->m_key);
 
-  if(!db_hashed[index])	// First entry in hashtable
-    db_hashed[index] = bucket;
+  if(!m_dbHashed[index])	// First entry in hashtable
+    m_dbHashed[index] = bucket;
   else {		// Add entry in chained list
-    DB_Bucket *chain = db_hashed[index];
+    DB_Bucket *chain = m_dbHashed[index];
 
     while(chain->chain) chain = chain->chain;
     chain->chain = bucket;
@@ -176,7 +176,7 @@ bool CAdPlugDatabase::insert(CRecord *record)
 
 void CAdPlugDatabase::wipe(CRecord *record)
 {
-  if(!lookup(record->key)) return;
+  if(!lookup(record->m_key)) return;
   wipe();
 }
 
@@ -184,7 +184,7 @@ void CAdPlugDatabase::wipe()
 {
   if(!linear_length) return;
 
-  DB_Bucket *bucket = db_linear[linear_index];
+  DB_Bucket *bucket = m_dbLinear[linear_index];
 
   if(!bucket->deleted) {
     delete bucket->record;
@@ -196,7 +196,7 @@ void CAdPlugDatabase::wipe()
 CAdPlugDatabase::CRecord *CAdPlugDatabase::get_record()
 {
   if(!linear_length) return 0;
-  return db_linear[linear_index]->record;
+  return m_dbLinear[linear_index]->record;
 }
 
 bool CAdPlugDatabase::go_forward()
@@ -264,8 +264,8 @@ CAdPlugDatabase::CRecord *CAdPlugDatabase::CRecord::factory(binistream &in)
   rec = factory(type);
 
   if(rec) {
-    rec->key.crc16 = in.readInt(2); rec->key.crc32 = in.readInt(4);
-    rec->filetype = in.readString('\0'); rec->comment = in.readString('\0');
+    rec->m_key.crc16 = in.readInt(2); rec->m_key.crc32 = in.readInt(4);
+    rec->m_filetype = in.readString('\0'); rec->m_comment = in.readString('\0');
     rec->read_own(in);
     return rec;
   } else {
@@ -277,11 +277,11 @@ CAdPlugDatabase::CRecord *CAdPlugDatabase::CRecord::factory(binistream &in)
 
 void CAdPlugDatabase::CRecord::write(binostream &out)
 {
-  out.writeInt(type, 1);
-  out.writeInt(get_size() + filetype.length() + comment.length() + 8, 4);
-  out.writeInt(key.crc16, 2); out.writeInt(key.crc32, 4);
-  out.writeString(filetype); out.writeInt('\0', 1);
-  out.writeString(comment); out.writeInt('\0', 1);
+  out.writeInt(m_type, 1);
+  out.writeInt(get_size() + m_filetype.length() + m_comment.length() + 8, 4);
+  out.writeInt(m_key.crc16, 2); out.writeInt(m_key.crc32, 4);
+  out.writeString(m_filetype); out.writeInt('\0', 1);
+  out.writeString(m_comment); out.writeInt('\0', 1);
 
   write_own(out);
 }
@@ -294,16 +294,16 @@ bool CAdPlugDatabase::CRecord::user_read(std::istream &in, std::ostream &out)
 bool CAdPlugDatabase::CRecord::user_write(std::ostream &out)
 {
   out << "Record type: ";
-  switch(type) {
+  switch(m_type) {
   case Plain: out << "Plain"; break;
   case SongInfo: out << "SongInfo"; break;
   case ClockSpeed: out << "ClockSpeed"; break;
   default: out << "*** Unknown ***"; break;
   }
   out << std::endl;
-  out << "Key: " << std::hex << key.crc16 << ":" << key.crc32 << std::dec << std::endl;
-  out << "File type: " << filetype << std::endl;
-  out << "Comment: " << comment << std::endl;
+  out << "Key: " << std::hex << m_key.crc16 << ":" << m_key.crc32 << std::dec << std::endl;
+  out << "File type: " << m_filetype << std::endl;
+  out << "Comment: " << m_comment << std::endl;
 
   return user_write_own(out);
 }
@@ -356,56 +356,56 @@ void CAdPlugDatabase::CKey::make(binistream &buf)
 
 CInfoRecord::CInfoRecord()
 {
-  type = SongInfo;
+  m_type = SongInfo;
 }
 
 void CInfoRecord::read_own(binistream &in)
 {
-  title = in.readString('\0');
-  author = in.readString('\0');
+  m_title = in.readString('\0');
+  m_author = in.readString('\0');
 }
 
 void CInfoRecord::write_own(binostream &out)
 {
-  out.writeString(title); out.writeInt('\0', 1);
-  out.writeString(author); out.writeInt('\0', 1);
+  out.writeString(m_title); out.writeInt('\0', 1);
+  out.writeString(m_author); out.writeInt('\0', 1);
 }
 
 unsigned long CInfoRecord::get_size()
 {
-  return title.length() + author.length() + 2;
+  return m_title.length() + m_author.length() + 2;
 }
 
 bool CInfoRecord::user_read_own(std::istream &in, std::ostream &out)
 {
-  out << "Title: "; in >> title;
-  out << "Author: "; in >> author;
+  out << "Title: "; in >> m_title;
+  out << "Author: "; in >> m_author;
   return true;
 }
 
 bool CInfoRecord::user_write_own(std::ostream &out)
 {
-  out << "Title: " << title << std::endl;
-  out << "Author: " << author << std::endl;
+  out << "Title: " << m_title << std::endl;
+  out << "Author: " << m_author << std::endl;
   return true;
 }
 
 /***** CClockRecord *****/
 
 CClockRecord::CClockRecord()
-  : clock(0.0f)
+  : m_clock(0.0f)
 {
-  type = ClockSpeed;
+  m_type = ClockSpeed;
 }
 
 void CClockRecord::read_own(binistream &in)
 {
-  clock = in.readFloat(binio::Single);
+  m_clock = in.readFloat(binio::Single);
 }
 
 void CClockRecord::write_own(binostream &out)
 {
-  out.writeFloat(clock, binio::Single);
+  out.writeFloat(m_clock, binio::Single);
 }
 
 unsigned long CClockRecord::get_size()
@@ -415,12 +415,12 @@ unsigned long CClockRecord::get_size()
 
 bool CClockRecord::user_read_own(std::istream &in, std::ostream &out)
 {
-  out << "Clockspeed: "; in >> clock;
+  out << "Clockspeed: "; in >> m_clock;
   return true;
 }
 
 bool CClockRecord::user_write_own(std::ostream &out)
 {
-  out << "Clock speed: " << clock << " Hz" << std::endl;
+  out << "Clock speed: " << m_clock << " Hz" << std::endl;
   return true;
 }

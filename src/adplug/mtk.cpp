@@ -121,13 +121,13 @@ bool CmtkLoader::load(const std::string &filename, const CFileProvider &fp)
   memset(instname,0,0x80*34);
   for(i=0;i<0x80;i++)
     strncpy(instname[i],data->instname[i]+1,33);
-  memcpy(instr,data->insts,0x80 * 12);
-  memcpy(song,data->order,0x80);
-  memcpy(patterns,data->patterns,header.size-6084);
+  memcpy(m_instr,data->insts,0x80 * 12);
+  memcpy(m_song,data->order,0x80);
+  memcpy(m_patterns,data->patterns,header.size-6084);
   for (i=0;i<128;i++) {				// correct instruments
-    instr[i][2] ^= (instr[i][2] & 0x40) << 1;
-    instr[i][3] ^= (instr[i][3] & 0x40) << 1;
-    instr[i][11] >>= 4;		// make unsigned
+    m_instr[i][2] ^= (m_instr[i][2] & 0x40) << 1;
+    m_instr[i][3] ^= (m_instr[i][3] & 0x40) << 1;
+    m_instr[i][11] >>= 4;		// make unsigned
   }
 
   delete [] org;

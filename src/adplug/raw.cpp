@@ -84,7 +84,7 @@ bool CrawPlayer::update()
       }
       break;
     default:
-      opl->writeReg(data[pos].command,data[pos].param);
+      m_opl->writeReg(data[pos].command,data[pos].param);
       break;
     }
   } while(data[pos++].command || setspeed);
@@ -95,7 +95,7 @@ bool CrawPlayer::update()
 void CrawPlayer::rewind(int subsong)
 {
   pos = del = 0; speed = clock; songend = false;
-  opl->writeReg(1, 32);	// go to 9 channel mode
+  m_opl->writeReg(1, 32);	// go to 9 channel mode
 }
 
 float CrawPlayer::getrefresh()

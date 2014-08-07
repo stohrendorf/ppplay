@@ -24,14 +24,14 @@
 
 /***** CPlayer *****/
 
-const unsigned short CPlayer::note_table[12] =
+const unsigned short CPlayer::m_noteTable[12] =
   {363, 385, 408, 432, 458, 485, 514, 544, 577, 611, 647, 686};
 
-const unsigned char CPlayer::op_table[9] =
+const unsigned char CPlayer::m_opTable[9] =
   {0x00, 0x01, 0x02, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12};
 
 CPlayer::CPlayer(opl::Opl3 *newopl)
-  : opl(newopl), db(CAdPlug::database)
+  : m_opl(newopl), m_db(CAdPlug::database)
 {
 }
 
@@ -42,11 +42,11 @@ CPlayer::~CPlayer()
 unsigned long CPlayer::songlength(int subsong)
 {
   opl::Opl3	tempopl;
-  opl::Opl3	*saveopl = opl;
+  opl::Opl3	*saveopl = m_opl;
   float		slength = 0.0f;
 
   // save original OPL from being overwritten
-  opl = &tempopl;
+  m_opl = &tempopl;
 
   // get song length
   rewind(subsong);
@@ -55,7 +55,7 @@ unsigned long CPlayer::songlength(int subsong)
   rewind(subsong);
 
   // restore original OPL and return
-  opl = saveopl;
+  m_opl = saveopl;
   return (unsigned long)slength;
 }
 

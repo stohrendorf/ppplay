@@ -29,7 +29,7 @@ class CmtkLoader: public ChscPlayer
   CmtkLoader(opl::Opl3 *newopl)
     : ChscPlayer(newopl)
     {
-      mtkmode = 1;
+      m_mtkmode = 1;
     };
 
   bool load(const std::string &filename, const CFileProvider &fp);

@@ -32,26 +32,13 @@
 #include <cstring>
 #include "a2m.h"
 
-const unsigned int Ca2mLoader::MAXFREQ = 2000,
-Ca2mLoader::MINCOPY = ADPLUG_A2M_MINCOPY,
-Ca2mLoader::MAXCOPY = ADPLUG_A2M_MAXCOPY,
-Ca2mLoader::COPYRANGES = ADPLUG_A2M_COPYRANGES,
-Ca2mLoader::CODESPERRANGE = ADPLUG_A2M_CODESPERRANGE,
-Ca2mLoader::TERMINATE = 256,
-Ca2mLoader::FIRSTCODE = ADPLUG_A2M_FIRSTCODE,
-Ca2mLoader::MAXCHAR = FIRSTCODE + COPYRANGES * CODESPERRANGE - 1,
-Ca2mLoader::SUCCMAX = MAXCHAR + 1,
-Ca2mLoader::TWICEMAX = ADPLUG_A2M_TWICEMAX,
-Ca2mLoader::ROOT = 1, Ca2mLoader::MAXBUF = 42 * 1024,
-Ca2mLoader::MAXDISTANCE = 21389, Ca2mLoader::MAXSIZE = 21389 + MAXCOPY;
-
-const unsigned short Ca2mLoader::bitvalue[14] =
+const unsigned short Ca2mLoader::m_bitvalue[14] =
   {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192};
 
-const signed short Ca2mLoader::copybits[COPYRANGES] =
+const signed short Ca2mLoader::m_copybits[COPYRANGES] =
   {4, 6, 8, 10, 12, 14};
 
-const signed short Ca2mLoader::copymin[COPYRANGES] =
+const signed short Ca2mLoader::m_copymin[COPYRANGES] =
   {0, 16, 80, 336, 1360, 5456};
 
 CPlayer *Ca2mLoader::factory(opl::Opl3 *newopl)
@@ -105,9 +92,9 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp)
     orgptr = (unsigned char *)secdata;
     for(i=0;i<len[0];i++) orgptr[i] = f->readInt(1);
   }
-  memcpy(songname,orgptr,43); orgptr += 43;
-  memcpy(author,orgptr,43); orgptr += 43;
-  memcpy(instname,orgptr,250*33); orgptr += 250*33;
+  memcpy(m_songname,orgptr,43); orgptr += 43;
+  memcpy(m_author,orgptr,43); orgptr += 43;
+  memcpy(m_instname,orgptr,250*33); orgptr += 250*33;
 
   for(i=0;i<250;i++) {	// instruments
     inst[i].data[0] = *(orgptr+i*13+10);
@@ -291,74 +278,74 @@ void Ca2mLoader::inittree()
 	unsigned short i;
 
 	for(i=2;i<=TWICEMAX;i++) {
-		dad[i] = i / 2;
-		freq[i] = 1;
+        m_dad[i] = i / 2;
+        m_freq[i] = 1;
 	}
 
 	for(i=1;i<=MAXCHAR;i++) {
-		leftc[i] = 2 * i;
-		rghtc[i] = 2 * i + 1;
+        m_leftc[i] = 2 * i;
+        m_rightc[i] = 2 * i + 1;
 	}
 }
 
 void Ca2mLoader::updatefreq(unsigned short a,unsigned short b)
 {
 	do {
-		freq[dad[a]] = freq[a] + freq[b];
-		a = dad[a];
+        m_freq[m_dad[a]] = m_freq[a] + m_freq[b];
+        a = m_dad[a];
 		if(a != ROOT)
-			if(leftc[dad[a]] == a)
-				b = rghtc[dad[a]];
+            if(m_leftc[m_dad[a]] == a)
+                b = m_rightc[m_dad[a]];
 			else
-				b = leftc[dad[a]];
+                b = m_leftc[m_dad[a]];
 	} while(a != ROOT);
 
-	if(freq[ROOT] == MAXFREQ)
+    if(m_freq[ROOT] == MAXFREQ)
 		for(a=1;a<=TWICEMAX;a++)
-			freq[a] >>= 1;
+            m_freq[a] >>= 1;
 }
 
 void Ca2mLoader::updatemodel(unsigned short code)
 {
 	unsigned short a=code+SUCCMAX,b,c,code1,code2;
 
-	freq[a]++;
-	if(dad[a] != ROOT) {
-		code1 = dad[a];
-		if(leftc[code1] == a)
-			updatefreq(a,rghtc[code1]);
+    m_freq[a]++;
+    if(m_dad[a] != ROOT) {
+        code1 = m_dad[a];
+        if(m_leftc[code1] == a)
+            updatefreq(a,m_rightc[code1]);
 		else
-			updatefreq(a,leftc[code1]);
+            updatefreq(a,m_leftc[code1]);
 
 		do {
-			code2 = dad[code1];
-			if(leftc[code2] == code1)
-				b = rghtc[code2];
+            code2 = m_dad[code1];
+            if(m_leftc[code2] == code1)
+                b = m_rightc[code2];
 			else
-				b = leftc[code2];
+                b = m_leftc[code2];
 
-			if(freq[a] > freq[b]) {
-				if(leftc[code2] == code1)
-					rghtc[code2] = a;
+            if(m_freq[a] > m_freq[b]) {
+                if(m_leftc[code2] == code1)
+                    m_rightc[code2] = a;
 				else
-					leftc[code2] = a;
+                    m_leftc[code2] = a;
 
-				if(leftc[code1] == a) {
-					leftc[code1] = b;
-					c = rghtc[code1];
+                if(m_leftc[code1] == a) {
+                    m_leftc[code1] = b;
+                    c = m_rightc[code1];
 				} else {
-					rghtc[code1] = b;
-					c = leftc[code1];
+                    m_rightc[code1] = b;
+                    c = m_leftc[code1];
 				}
 
-				dad[b] = code1;
-				dad[a] = code2;
+                m_dad[b] = code1;
+                m_dad[a] = code2;
 				updatefreq(b,c);
 				a = b;
 			}
 
-			a = dad[a];
-			code1 = dad[a];
+            a = m_dad[a];
+            code1 = m_dad[a];
 		} while(code1 != ROOT);
 	}
 }
@@ -368,18 +355,18 @@ unsigned short Ca2mLoader::inputcode(unsigned short bits)
 	unsigned short i,code=0;
 
 	for(i=1;i<=bits;i++) {
-		if(!ibitcount) {
-			if(ibitcount == MAXBUF)
-				ibufcount = 0;
-			ibitbuffer = wdbuf[ibufcount];
-			ibufcount++;
-			ibitcount = 15;
+        if(!m_bitcount) {
+            if(m_bitcount == MAXBUF)
+                m_bufcount = 0;
+            m_bitbuffer = m_wdbuf[m_bufcount];
+            m_bufcount++;
+            m_bitcount = 15;
 		} else
-			ibitcount--;
+            m_bitcount--;
 
-		if(ibitbuffer > 0x7fff)
-			code |= bitvalue[i-1];
-		ibitbuffer <<= 1;
+        if(m_bitbuffer > 0x7fff)
+            code |= m_bitvalue[i-1];
+        m_bitbuffer <<= 1;
 	}
 
 	return code;
@@ -390,20 +377,20 @@ unsigned short Ca2mLoader::uncompress()
 	unsigned short a=1;
 
 	do {
-		if(!ibitcount) {
-			if(ibufcount == MAXBUF)
-				ibufcount = 0;
-			ibitbuffer = wdbuf[ibufcount];
-			ibufcount++;
-			ibitcount = 15;
+        if(!m_bitcount) {
+            if(m_bufcount == MAXBUF)
+                m_bufcount = 0;
+            m_bitbuffer = m_wdbuf[m_bufcount];
+            m_bufcount++;
+            m_bitcount = 15;
 		} else
-			ibitcount--;
+            m_bitcount--;
 
-		if(ibitbuffer > 0x7fff)
-			a = rghtc[a];
+        if(m_bitbuffer > 0x7fff)
+            a = m_rightc[a];
 		else
-			a = leftc[a];
-		ibitbuffer <<= 1;
+            a = m_leftc[a];
+        m_bitbuffer <<= 1;
 	} while(a <= MAXCHAR);
 
 	a -= SUCCMAX;
@@ -420,14 +407,14 @@ void Ca2mLoader::decode()
 
 	while(c != TERMINATE) {
 		if(c < 256) {
-			obuf[obufcount] = (unsigned char)c;
-			obufcount++;
-			if(obufcount == MAXBUF) {
-				output_size = MAXBUF;
-				obufcount = 0;
+            m_obuf[m_obufcount] = (unsigned char)c;
+            m_obufcount++;
+            if(m_obufcount == MAXBUF) {
+                m_outputSize = MAXBUF;
+                m_obufcount = 0;
 			}
 
-			buf[count] = (unsigned char)c;
+            m_buf[count] = (unsigned char)c;
 			count++;
 			if(count == MAXSIZE)
 				count = 0;
@@ -435,7 +422,7 @@ void Ca2mLoader::decode()
 			t = c - FIRSTCODE;
 			index = t / CODESPERRANGE;
 			len = t + MINCOPY - index * CODESPERRANGE;
-			dist = inputcode(copybits[index]) + len + copymin[index];
+            dist = inputcode(m_copybits[index]) + len + m_copymin[index];
 
 			j = count;
 			k = count - dist;
@@ -443,14 +430,14 @@ void Ca2mLoader::decode()
 				k += MAXSIZE;
 
 			for(i=0;i<=len-1;i++) {
-				obuf[obufcount] = buf[k];
-				obufcount++;
-				if(obufcount == MAXBUF) {
-					output_size = MAXBUF;
-					obufcount = 0;
+                m_obuf[m_obufcount] = m_buf[k];
+                m_obufcount++;
+                if(m_obufcount == MAXBUF) {
+                    m_outputSize = MAXBUF;
+                    m_obufcount = 0;
 				}
 
-				buf[j] = buf[k];
+                m_buf[j] = m_buf[k];
 				j++; k++;
 				if(j == MAXSIZE) j = 0;
 				if(k == MAXSIZE) k = 0;
@@ -462,7 +449,7 @@ void Ca2mLoader::decode()
 		}
 		c = uncompress();
 	}
-	output_size = obufcount;
+    m_outputSize = m_obufcount;
 }
 
 unsigned short Ca2mLoader::sixdepak(unsigned short *source, unsigned char *dest,
@@ -471,13 +458,13 @@ unsigned short Ca2mLoader::sixdepak(unsigned short *source, unsigned char *dest,
 	if((unsigned int)size + 4096 > MAXBUF)
 		return 0;
 
-	buf = new unsigned char [MAXSIZE];
-	input_size = size;
-	ibitcount = 0; ibitbuffer = 0;
-	obufcount = 0; ibufcount = 0;
-	wdbuf = source; obuf = dest;
+    m_buf = new unsigned char [MAXSIZE];
+    m_inputSize = size;
+    m_bitcount = 0; m_bitbuffer = 0;
+    m_obufcount = 0; m_bufcount = 0;
+    m_wdbuf = source; m_obuf = dest;
 
 	decode();
-	delete [] buf;
-	return output_size;
+    delete [] m_buf;
+    return m_outputSize;
 }

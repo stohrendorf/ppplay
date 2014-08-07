@@ -101,7 +101,7 @@ bool CdroPlayer::update()
       break;
     default:
       if(cmd==4) cmd = data[pos++]; //data override
-        opl->writeReg(cmd,data[pos++]);
+        m_opl->writeReg(cmd,data[pos++]);
       break;
     }
   }
@@ -118,7 +118,7 @@ void CdroPlayer::rewind(int subsong)
   //registers not initialized to 0 will be corrected
   //in the data stream
   for(int i=0;i<256;i++)
-    opl->writeReg(i,0);
+    m_opl->writeReg(i,0);
 }
 
 float CdroPlayer::getrefresh()

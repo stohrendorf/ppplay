@@ -202,7 +202,7 @@ bool Cd00Player::update()
       if(version == 4)	// v4: hard restart SR
 	if(channel[c].del == inst[channel[c].inst].timer)
 	  if(channel[c].nextnote)
-	    opl->writeReg(0x83 + op_table[c], inst[channel[c].inst].sr);
+	    m_opl->writeReg(0x83 + m_opTable[c], inst[channel[c].inst].sr);
       if(version < 3)
 	channel[c].del--;
       else
@@ -444,7 +444,7 @@ void Cd00Player::rewind(int subsong)
     channel[i].vol = channel[i].cvol;			// initialize volume
   }
   songend = 0;
-  opl->writeReg(1,32);	// reset OPL chip
+  m_opl->writeReg(1,32);	// reset OPL chip
   cursubsong = subsong;
 }
 
@@ -476,16 +476,16 @@ unsigned int Cd00Player::getsubsongs()
 
 void Cd00Player::setvolume(unsigned char chan)
 {
-  unsigned char	op = op_table[chan];
+  unsigned char	op = m_opTable[chan];
   unsigned short	insnr = channel[chan].inst;
 
-  opl->writeReg(0x43 + op,(int)(63-((63-(inst[insnr].data[2] & 63))/63.0)*(63-channel[chan].vol)) +
+  m_opl->writeReg(0x43 + op,(int)(63-((63-(inst[insnr].data[2] & 63))/63.0)*(63-channel[chan].vol)) +
 	     (inst[insnr].data[2] & 192));
   if(inst[insnr].data[10] & 1)
-    opl->writeReg(0x40 + op,(int)(63-((63-channel[chan].modvol)/63.0)*(63-channel[chan].vol)) +
+    m_opl->writeReg(0x40 + op,(int)(63-((63-channel[chan].modvol)/63.0)*(63-channel[chan].vol)) +
 	       (inst[insnr].data[7] & 192));
   else
-    opl->writeReg(0x40 + op,channel[chan].modvol + (inst[insnr].data[7] & 192));
+    m_opl->writeReg(0x40 + op,channel[chan].modvol + (inst[insnr].data[7] & 192));
 }
 
 void Cd00Player::setfreq(unsigned char chan)
@@ -496,37 +496,37 @@ void Cd00Player::setfreq(unsigned char chan)
     freq += inst[channel[chan].inst].tunelev;
 
   freq += channel[chan].slideval;
-  opl->writeReg(0xa0 + chan, freq & 255);
+  m_opl->writeReg(0xa0 + chan, freq & 255);
   if(channel[chan].key)
-    opl->writeReg(0xb0 + chan, ((freq >> 8) & 31) | 32);
+    m_opl->writeReg(0xb0 + chan, ((freq >> 8) & 31) | 32);
   else
-    opl->writeReg(0xb0 + chan, (freq >> 8) & 31);
+    m_opl->writeReg(0xb0 + chan, (freq >> 8) & 31);
 }
 
 void Cd00Player::setinst(unsigned char chan)
 {
-  unsigned char	op = op_table[chan];
+  unsigned char	op = m_opTable[chan];
   unsigned short	insnr = channel[chan].inst;
 
   // set instrument data
-  opl->writeReg(0x63 + op, inst[insnr].data[0]);
-  opl->writeReg(0x83 + op, inst[insnr].data[1]);
-  opl->writeReg(0x23 + op, inst[insnr].data[3]);
-  opl->writeReg(0xe3 + op, inst[insnr].data[4]);
-  opl->writeReg(0x60 + op, inst[insnr].data[5]);
-  opl->writeReg(0x80 + op, inst[insnr].data[6]);
-  opl->writeReg(0x20 + op, inst[insnr].data[8]);
-  opl->writeReg(0xe0 + op, inst[insnr].data[9]);
+  m_opl->writeReg(0x63 + op, inst[insnr].data[0]);
+  m_opl->writeReg(0x83 + op, inst[insnr].data[1]);
+  m_opl->writeReg(0x23 + op, inst[insnr].data[3]);
+  m_opl->writeReg(0xe3 + op, inst[insnr].data[4]);
+  m_opl->writeReg(0x60 + op, inst[insnr].data[5]);
+  m_opl->writeReg(0x80 + op, inst[insnr].data[6]);
+  m_opl->writeReg(0x20 + op, inst[insnr].data[8]);
+  m_opl->writeReg(0xe0 + op, inst[insnr].data[9]);
   if(version)
-    opl->writeReg(0xc0 + chan, inst[insnr].data[10]);
+    m_opl->writeReg(0xc0 + chan, inst[insnr].data[10]);
   else
-    opl->writeReg(0xc0 + chan, (inst[insnr].data[10] << 1) + (inst[insnr].tunelev & 1));
+    m_opl->writeReg(0xc0 + chan, (inst[insnr].data[10] << 1) + (inst[insnr].tunelev & 1));
 }
 
 void Cd00Player::playnote(unsigned char chan)
 {
   // set misc vars & play
-  opl->writeReg(0xb0 + chan, 0);	// stop old note
+  m_opl->writeReg(0xb0 + chan, 0);	// stop old note
   setinst(chan);
   channel[chan].key = 1;
   setfreq(chan);

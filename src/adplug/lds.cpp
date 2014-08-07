@@ -356,7 +356,7 @@ bool CldsPlayer::update()
   // make effects
   for(chan = 0; chan < 9; chan++) {
     c = &channel[chan];
-    regnum = op_table[chan];
+    regnum = m_opTable[chan];
     if(c->keycount > 0) {
       if(c->keycount == 1)
 	setregs_adv(0xb0 + chan, 0xdf, 0);
@@ -522,24 +522,24 @@ void CldsPlayer::rewind(int subsong)
   memset(fmchip, 0, sizeof(fmchip));
 
   // OPL2 init
-  opl->writeReg(1, 0x20);
-  opl->writeReg(8, 0);
-  opl->writeReg(0xbd, regbd);
+  m_opl->writeReg(1, 0x20);
+  m_opl->writeReg(8, 0);
+  m_opl->writeReg(0xbd, regbd);
 
   for(i = 0; i < 9; i++) {
-    opl->writeReg(0x20 + op_table[i], 0);
-    opl->writeReg(0x23 + op_table[i], 0);
-    opl->writeReg(0x40 + op_table[i], 0x3f);
-    opl->writeReg(0x43 + op_table[i], 0x3f);
-    opl->writeReg(0x60 + op_table[i], 0xff);
-    opl->writeReg(0x63 + op_table[i], 0xff);
-    opl->writeReg(0x80 + op_table[i], 0xff);
-    opl->writeReg(0x83 + op_table[i], 0xff);
-    opl->writeReg(0xe0 + op_table[i], 0);
-    opl->writeReg(0xe3 + op_table[i], 0);
-    opl->writeReg(0xa0 + i, 0);
-    opl->writeReg(0xb0 + i, 0);
-    opl->writeReg(0xc0 + i, 0);
+    m_opl->writeReg(0x20 + m_opTable[i], 0);
+    m_opl->writeReg(0x23 + m_opTable[i], 0);
+    m_opl->writeReg(0x40 + m_opTable[i], 0x3f);
+    m_opl->writeReg(0x43 + m_opTable[i], 0x3f);
+    m_opl->writeReg(0x60 + m_opTable[i], 0xff);
+    m_opl->writeReg(0x63 + m_opTable[i], 0xff);
+    m_opl->writeReg(0x80 + m_opTable[i], 0xff);
+    m_opl->writeReg(0x83 + m_opTable[i], 0xff);
+    m_opl->writeReg(0xe0 + m_opTable[i], 0);
+    m_opl->writeReg(0xe3 + m_opTable[i], 0);
+    m_opl->writeReg(0xa0 + i, 0);
+    m_opl->writeReg(0xb0 + i, 0);
+    m_opl->writeReg(0xc0 + i, 0);
   }
 }
 
@@ -549,7 +549,7 @@ void CldsPlayer::playsound(int inst_number, int channel_number, int tunehigh)
 {
   Channel		*c = &channel[channel_number];		// current channel
   SoundBank		*i = &soundbank[inst_number];		// current instrument
-  unsigned int		regnum = op_table[channel_number];	// channel's OPL2 register
+  unsigned int		regnum = m_opTable[channel_number];	// channel's OPL2 register
   unsigned char		volcalc, octave;
   unsigned short	freq;
 
@@ -665,7 +665,7 @@ inline void CldsPlayer::setregs(unsigned char reg, unsigned char val)
   if(fmchip[reg] == val) return;
 
   fmchip[reg] = val;
-  opl->writeReg(reg, val);
+  m_opl->writeReg(reg, val);
 }
 
 inline void CldsPlayer::setregs_adv(unsigned char reg, unsigned char mask,

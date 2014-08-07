@@ -120,7 +120,7 @@ bool Cdro2Player::update()
 				return false; // EOF
 			}
 			int iReg = this->piConvTable[iIndex];
-			this->opl->writeReg(xchip + iReg, iValue);
+			this->m_opl->writeReg(xchip + iReg, iValue);
 		}
 
 	}

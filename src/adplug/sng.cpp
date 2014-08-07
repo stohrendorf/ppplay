@@ -62,7 +62,7 @@ bool CsngPlayer::update()
   }
 
   while(data[pos].reg) {
-    opl->writeReg(data[pos].reg, data[pos].val);
+    m_opl->writeReg(data[pos].reg, data[pos].val);
     pos++;
     if(pos >= header.length) {
       songend = true;
@@ -71,7 +71,7 @@ bool CsngPlayer::update()
   }
 
   if(!header.compressed)
-    opl->writeReg(data[pos].reg, data[pos].val);
+    m_opl->writeReg(data[pos].reg, data[pos].val);
 
   if(data[pos].val) del = data[pos].val - 1; pos++;
   if(pos >= header.length) { songend = true; pos = header.loop; }
@@ -81,5 +81,5 @@ bool CsngPlayer::update()
 void CsngPlayer::rewind(int subsong)
 {
   pos = header.start; del = header.delay; songend = false;
-  opl->writeReg(1,32);	// go to OPL2 mode
+  m_opl->writeReg(1,32);	// go to OPL2 mode
 }

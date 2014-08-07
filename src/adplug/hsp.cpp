@@ -53,14 +53,14 @@ bool ChspLoader::load(const std::string &filename, const CFileProvider &fp)
   }
   delete [] cmp;
 
-  memcpy(instr, org, 128 * 12);		// instruments
+  memcpy(m_instr, org, 128 * 12);		// instruments
   for(i = 0; i < 128; i++) {		// correct instruments
-    instr[i][2] ^= (instr[i][2] & 0x40) << 1;
-    instr[i][3] ^= (instr[i][3] & 0x40) << 1;
-    instr[i][11] >>= 4;		// slide
+    m_instr[i][2] ^= (m_instr[i][2] & 0x40) << 1;
+    m_instr[i][3] ^= (m_instr[i][3] & 0x40) << 1;
+    m_instr[i][11] >>= 4;		// slide
   }
-  memcpy(song, org + 128 * 12, 51);	// tracklist
-  memcpy(patterns, org + 128 * 12 + 51, orgsize - 128 * 12 - 51);	// patterns
+  memcpy(m_song, org + 128 * 12, 51);	// tracklist
+  memcpy(m_patterns, org + 128 * 12 + 51, orgsize - 128 * 12 - 51);	// patterns
   delete [] org;
 
   rewind(0);

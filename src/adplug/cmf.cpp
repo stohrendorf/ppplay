@@ -488,7 +488,7 @@ void CcmfPlayer::writeInstrumentSettings(uint8_t iChannel, uint8_t iOperatorSour
 // Write a byte to the OPL "chip" and update the current record of register states
 void CcmfPlayer::writeOPL(uint8_t iRegister, uint8_t iValue)
 {
-	this->opl->writeReg(iRegister, iValue);
+	this->m_opl->writeReg(iRegister, iValue);
 	this->iCurrentRegs[iRegister] = iValue;
 	return;
 }
