@@ -31,12 +31,12 @@ const unsigned char CmscPlayer::msc_signature [MSC_SIGN_LEN] = {
 
 /*** public methods *************************************/
 
-CPlayer *CmscPlayer::factory (opl::Opl3 * newopl)
+CPlayer *CmscPlayer::factory ()
 {
-  return new CmscPlayer (newopl);
+  return new CmscPlayer ();
 }
 
-CmscPlayer::CmscPlayer(opl::Opl3 * newopl) : CPlayer (newopl)
+CmscPlayer::CmscPlayer() : CPlayer ()
 {
   desc = NULL;
   msc_data = NULL;
@@ -136,7 +136,7 @@ bool CmscPlayer::update()
 		
       // play command & data
     default:
-      m_opl->writeReg(cmnd, data);
+      getOpl()->writeReg(cmnd, data);
 			
     } // command switch
   } // play pass
@@ -162,13 +162,13 @@ void CmscPlayer::rewind(int subsong)
   delay = 0;
 	
   // init the OPL chip and go to OPL2 mode
-  m_opl->writeReg(1, 32);
+  getOpl()->writeReg(1, 32);
 }
 
-float CmscPlayer::getrefresh()
+size_t CmscPlayer::framesUntilUpdate()
 {
   // PC timer oscillator frequency / wait register
-  return 1193180 / (float) (timer_div ? timer_div : 0xffff);
+  return SampleRate * (timer_div ? timer_div : 0xffff) / 1193180;
 }
 
 std::string CmscPlayer::gettype()

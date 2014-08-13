@@ -33,16 +33,16 @@
 class CrolPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-    CrolPlayer(opl::Opl3 *newopl);
+    CrolPlayer();
 
     ~CrolPlayer();
 
     bool  load      (const std::string &filename, const CFileProvider &fp);
     bool  update    ();
     void  rewind    (int subsong);	// rewinds to specified subsong
-    float getrefresh();			// returns needed timer refresh rate
+    size_t framesUntilUpdate();			// returns needed timer refresh rate
 
     std::string gettype() { return std::string("Adlib Visual Composer"); }
 

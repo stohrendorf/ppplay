@@ -27,19 +27,18 @@
 class CjbmPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-  CjbmPlayer(opl::Opl3 *newopl) : CPlayer(newopl), m(0)
+  CjbmPlayer() : CPlayer()
     { }
-  ~CjbmPlayer()
-    { if(m != NULL) delete [] m; }
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int subsong);
 
-  float getrefresh()
-    { return timer; }
+  size_t framesUntilUpdate() override {
+      return SampleRate/timer;
+  }
 
   std::string gettype()
     {
@@ -51,7 +50,7 @@ class CjbmPlayer: public CPlayer
 
  protected:
 
-  unsigned char *m;
+  std::vector<uint8_t> m;
   float timer;
   unsigned short flags, voicemask;
   unsigned short seqtable, seqcount;

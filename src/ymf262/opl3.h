@@ -30,6 +30,7 @@
 
 #include "operator.h"
 #include "channel.h"
+#include "oplfilter.h"
 #include <stream/iserializable.h>
 
 #include <ymf262/ppplay_opl_export.h>
@@ -74,6 +75,7 @@ private:
     Channel::Ptr m_channels4op[2][3];
     Channel::Ptr m_channels[2][9];
     Channel::Ptr m_disabledChannel;
+    OplFilter<int32_t,4,SampleRate> m_filters;
 
     bool m_nts = false;
     //! @brief Depth of amplitude
@@ -99,6 +101,7 @@ public:
         return m_new;
     }
     uint8_t readReg( uint16_t index ) const {
+        BOOST_ASSERT( index < 0x200 );
         return m_registers[index];
     }
     void writeReg( uint16_t index, uint8_t val ) {

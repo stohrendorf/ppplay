@@ -27,14 +27,14 @@
 class ChscPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-  ChscPlayer(opl::Opl3 *newopl): CPlayer(newopl), m_mtkmode(0) {}
+  ChscPlayer(): CPlayer(), m_mtkmode(0) {}
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int subsong);
-  float getrefresh() { return 18.2f; }	// refresh rate is fixed at 18.2Hz
+  size_t framesUntilUpdate() override { return SampleRate/18.2; }	// refresh rate is fixed at 18.2Hz
 
   std::string gettype() { return std::string("HSC Adlib Composer / HSC-Tracker"); }
   unsigned int getpatterns();

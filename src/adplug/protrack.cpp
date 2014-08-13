@@ -42,8 +42,8 @@ const unsigned char CmodPlayer::vibratotab[32] =
 
 /*** public methods *************************************/
 
-CmodPlayer::CmodPlayer(opl::Opl3 *newopl)
-  : CPlayer(newopl), inst(0), order(0), arplist(0), arpcmd(0), initspeed(6),
+CmodPlayer::CmodPlayer()
+  : CPlayer(), inst(0), order(0), arplist(0), arpcmd(0), initspeed(6),
     nop(0), activechan(0xffffffff), flags(Standard),
     nrows(0), npats(0), nchans(0)
 {
@@ -88,11 +88,11 @@ bool CmodPlayer::update()
 	  case 254: channel[chan].arppos = arplist[channel[chan].arppos]; break; // arpeggio loop
 	  default: if(arpcmd[channel[chan].arppos]) {
 	    if(arpcmd[channel[chan].arppos] / 10)
-	      m_opl->writeReg(0xe3 + m_opTable[oplchan], arpcmd[channel[chan].arppos] / 10 - 1);
+	      getOpl()->writeReg(0xe3 + m_opTable[oplchan], arpcmd[channel[chan].arppos] / 10 - 1);
 	    if(arpcmd[channel[chan].arppos] % 10)
-	      m_opl->writeReg(0xe0 + m_opTable[oplchan], (arpcmd[channel[chan].arppos] % 10) - 1);
+	      getOpl()->writeReg(0xe0 + m_opTable[oplchan], (arpcmd[channel[chan].arppos] % 10) - 1);
 	    if(arpcmd[channel[chan].arppos] < 10)	// ?????
-	      m_opl->writeReg(0xe0 + m_opTable[oplchan], arpcmd[channel[chan].arppos] - 1);
+	      getOpl()->writeReg(0xe0 + m_opTable[oplchan], arpcmd[channel[chan].arppos] - 1);
 	  }
 	  }
 	  if(arpcmd[channel[chan].arppos] != 252) {
@@ -312,7 +312,7 @@ bool CmodPlayer::update()
 	  regbd |= 128;
 	else
 	  regbd &= 127;
-	m_opl->writeReg(0xbd,regbd);
+	getOpl()->writeReg(0xbd,regbd);
 	break;
 
       case 1: // define cell-vibrato
@@ -320,7 +320,7 @@ bool CmodPlayer::update()
 	  regbd |= 64;
 	else
 	  regbd &= 191;
-	m_opl->writeReg(0xbd,regbd);
+	getOpl()->writeReg(0xbd,regbd);
 	break;
 
       case 4: // increase volume fine
@@ -410,9 +410,9 @@ bool CmodPlayer::update()
 
     case 25: // set carrier/modulator waveform
       if(info1 != 0x0f)
-	m_opl->writeReg(0xe3 + m_opTable[oplchan],info1);
+	getOpl()->writeReg(0xe3 + m_opTable[oplchan],info1);
       if(info2 != 0x0f)
-	m_opl->writeReg(0xe0 + m_opTable[oplchan],info2);
+	getOpl()->writeReg(0xe0 + m_opTable[oplchan],info2);
       break;
 
     case 27: // set chip tremolo/vibrato
@@ -424,7 +424,7 @@ bool CmodPlayer::update()
 	regbd |= 64;
       else
 	regbd &= 191;
-      m_opl->writeReg(0xbd,regbd);
+      getOpl()->writeReg(0xbd,regbd);
       break;
 
     case 29: // pattern delay (frames)
@@ -506,7 +506,7 @@ void CmodPlayer::rewind(int subsong)
     for(i=0;i<length;i++)
       nop = (order[i] > nop ? order[i] : nop);
 
-  m_opl->writeReg(1, 32);	// Go to ym3812 mode
+  getOpl()->writeReg(1, 32);	// Go to ym3812 mode
 
   // Enable OPL3 extensions if flagged
   if(flags & Opl3) {
@@ -519,12 +519,12 @@ void CmodPlayer::rewind(int subsong)
   // Enable tremolo/vibrato depth if flagged
   if(flags & Tremolo) regbd |= 128;
   if(flags & Vibrato) regbd |= 64;
-  if(regbd) m_opl->writeReg(0xbd, regbd);
+  if(regbd) getOpl()->writeReg(0xbd, regbd);
 }
 
-float CmodPlayer::getrefresh()
+size_t CmodPlayer::framesUntilUpdate()
 {
-  return (float) (tempo / 2.5);
+  return SampleRate*2.5/tempo;
 }
 
 void CmodPlayer::init_trackord()
@@ -620,8 +620,8 @@ void CmodPlayer::setvolume(unsigned char chan)
   if(flags & Faust)
     setvolume_alt(chan);
   else {
-    m_opl->writeReg(0x40 + m_opTable[oplchan], 63-channel[chan].vol2 + (inst[channel[chan].inst].data[9] & 192));
-    m_opl->writeReg(0x43 + m_opTable[oplchan], 63-channel[chan].vol1 + (inst[channel[chan].inst].data[10] & 192));
+    getOpl()->writeReg(0x40 + m_opTable[oplchan], 63-channel[chan].vol2 + (inst[channel[chan].inst].data[9] & 192));
+    getOpl()->writeReg(0x43 + m_opTable[oplchan], 63-channel[chan].vol1 + (inst[channel[chan].inst].data[10] & 192));
   }
 }
 
@@ -631,19 +631,19 @@ void CmodPlayer::setvolume_alt(unsigned char chan)
   unsigned char ivol2 = inst[channel[chan].inst].data[9] & 63;
   unsigned char ivol1 = inst[channel[chan].inst].data[10] & 63;
 
-  m_opl->writeReg(0x40 + m_opTable[oplchan], (((63 - (channel[chan].vol2 & 63)) + ivol2) >> 1) + (inst[channel[chan].inst].data[9] & 192));
-  m_opl->writeReg(0x43 + m_opTable[oplchan], (((63 - (channel[chan].vol1 & 63)) + ivol1) >> 1) + (inst[channel[chan].inst].data[10] & 192));
+  getOpl()->writeReg(0x40 + m_opTable[oplchan], (((63 - (channel[chan].vol2 & 63)) + ivol2) >> 1) + (inst[channel[chan].inst].data[9] & 192));
+  getOpl()->writeReg(0x43 + m_opTable[oplchan], (((63 - (channel[chan].vol1 & 63)) + ivol1) >> 1) + (inst[channel[chan].inst].data[10] & 192));
 }
 
 void CmodPlayer::setfreq(unsigned char chan)
 {
   unsigned char oplchan = set_opl_chip(chan);
 
-  m_opl->writeReg(0xa0 + oplchan, channel[chan].freq & 255);
+  getOpl()->writeReg(0xa0 + oplchan, channel[chan].freq & 255);
   if(channel[chan].key)
-    m_opl->writeReg(0xb0 + oplchan, ((channel[chan].freq & 768) >> 8) + (channel[chan].oct << 2) | 32);
+    getOpl()->writeReg(0xb0 + oplchan, ((channel[chan].freq & 768) >> 8) + (channel[chan].oct << 2) | 32);
   else
-    m_opl->writeReg(0xb0 + oplchan, ((channel[chan].freq & 768) >> 8) + (channel[chan].oct << 2));
+    getOpl()->writeReg(0xb0 + oplchan, ((channel[chan].freq & 768) >> 8) + (channel[chan].oct << 2));
 }
 
 void CmodPlayer::playnote(unsigned char chan)
@@ -652,19 +652,19 @@ void CmodPlayer::playnote(unsigned char chan)
   unsigned char op = m_opTable[oplchan], insnr = channel[chan].inst;
 
   if(!(flags & NoKeyOn))
-    m_opl->writeReg(0xb0 + oplchan, 0);	// stop old note
+    getOpl()->writeReg(0xb0 + oplchan, 0);	// stop old note
 
   // set instrument data
-  m_opl->writeReg(0x20 + op, inst[insnr].data[1]);
-  m_opl->writeReg(0x23 + op, inst[insnr].data[2]);
-  m_opl->writeReg(0x60 + op, inst[insnr].data[3]);
-  m_opl->writeReg(0x63 + op, inst[insnr].data[4]);
-  m_opl->writeReg(0x80 + op, inst[insnr].data[5]);
-  m_opl->writeReg(0x83 + op, inst[insnr].data[6]);
-  m_opl->writeReg(0xe0 + op, inst[insnr].data[7]);
-  m_opl->writeReg(0xe3 + op, inst[insnr].data[8]);
-  m_opl->writeReg(0xc0 + oplchan, inst[insnr].data[0]);
-  m_opl->writeReg(0xbd, inst[insnr].misc);	// set misc. register
+  getOpl()->writeReg(0x20 + op, inst[insnr].data[1]);
+  getOpl()->writeReg(0x23 + op, inst[insnr].data[2]);
+  getOpl()->writeReg(0x60 + op, inst[insnr].data[3]);
+  getOpl()->writeReg(0x63 + op, inst[insnr].data[4]);
+  getOpl()->writeReg(0x80 + op, inst[insnr].data[5]);
+  getOpl()->writeReg(0x83 + op, inst[insnr].data[6]);
+  getOpl()->writeReg(0xe0 + op, inst[insnr].data[7]);
+  getOpl()->writeReg(0xe3 + op, inst[insnr].data[8]);
+  getOpl()->writeReg(0xc0 + oplchan, inst[insnr].data[0]);
+  getOpl()->writeReg(0xbd, inst[insnr].misc);	// set misc. register
 
   // set frequency, volume & play
   channel[chan].key = 1;

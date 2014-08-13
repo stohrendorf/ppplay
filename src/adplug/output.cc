@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software Foundation,
- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #include <stdio.h>
@@ -22,68 +22,51 @@
 #include "output.h"
 #include "defines.h"
 
-/***** Player *****/
-
-Player::Player()
-  : p(0), playing(false)
-{
-}
-
-Player::~Player()
-{
-  if(p) delete p;
-}
-
 /***** EmuPlayer *****/
 
-EmuPlayer::EmuPlayer(opl::Opl3 *nopl, unsigned long nfreq, unsigned long nbufsize)
-  : opl(nopl), buf_size(nbufsize), freq(nfreq), interp(freq, opl::Opl3::SampleRate), filters{ppp::OplFilter{freq},ppp::OplFilter{freq}}
+EmuPlayer::EmuPlayer(unsigned long nfreq, size_t nbufsize)
+    : Player()
+    , m_audioBuf(nbufsize*2, 0)
+    , m_freq(nfreq)
+    , m_oplInterp(m_freq, opl::Opl3::SampleRate)
 {
-  audiobuf = new char [buf_size * 4];
-}
-
-EmuPlayer::~EmuPlayer()
-{
-  delete [] audiobuf;
 }
 
 // Some output plugins (ALSA) need to change the buffer size mid-init
-void EmuPlayer::setbufsize(unsigned long nbufsize)
+void EmuPlayer::setBufferSize(size_t nbufsize)
 {
-  delete [] audiobuf;
-  buf_size = nbufsize;
-  audiobuf = new char [buf_size * 4];
+    m_audioBuf.clear();
+    m_audioBuf.resize(nbufsize*2, 0);
 }
 
 void EmuPlayer::frame()
 {
-  static long minicnt = 0;
-  long i, towrite = buf_size;
-  int16_t *pos = reinterpret_cast<int16_t*>(audiobuf);
+    static long framesUntilUpdate = 0;
+    size_t towrite = m_audioBuf.size()/2;
+    int16_t *pos = m_audioBuf.data();
 
-  // Prepare audiobuf with emulator output
-  while(towrite > 0) {
-    while(minicnt < 0) {
-      minicnt += freq;
-      playing = p->update();
-    }
-    i = std::min(towrite, (long)(minicnt / p->getrefresh() + 4) & ~3);
-    for(int j=0; j<i; ++j) {
+    // Prepare audiobuf with emulator output
+    while(towrite > 0) {
+        while(framesUntilUpdate < 0) {
+            setIsPlaying(getPlayer()->update());
+            framesUntilUpdate += getPlayer()->framesUntilUpdate();
+        }
+
         std::array<int16_t,4> samples;
-        opl->read(&samples);
-        pos[0] = filters[0].filter(samples[0] + samples[2]);
-        pos[1] = filters[1].filter(samples[1] + samples[3]);
+        getPlayer()->read(&samples);
+        pos[0] = samples[0] + samples[2];
+        pos[1] = samples[1] + samples[3];
         pos += 2;
         
-        if( interp.next() == 2 ) {
-            opl->read( nullptr ); // skip a sample
+        if( m_oplInterp.next() == 2 ) {
+            getPlayer()->read( nullptr ); // skip a sample
+            --framesUntilUpdate;
         }
-        interp = 0;
+        m_oplInterp = 0;
+        --framesUntilUpdate;
+        --towrite;
     }
-    towrite -= i;
-    minicnt -= (long)(p->getrefresh() * i);
-  }
 
-  // call output driver
-  output(audiobuf, buf_size * 4);
+    // call output driver
+    output(m_audioBuf);
 }

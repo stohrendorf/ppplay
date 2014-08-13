@@ -20,36 +20,36 @@
  */
 
 #include "player.h"
+#include "mid/almidi.h"
+#include "stuff/numberutils.h"
 
 class CmidPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-  CmidPlayer(opl::Opl3 *newopl);
-  ~CmidPlayer()
-    { if(data) delete [] data; }
+  CmidPlayer();
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int subsong);
-  float getrefresh();
+  size_t framesUntilUpdate();
 
   std::string gettype();
   std::string gettitle()
-    { return std::string(title); }
+    { return std::string(m_title); }
   std::string getauthor()
-    { return std::string(author); }
+    { return std::string(m_author); }
   std::string getdesc()
-    { return std::string(remarks); }
+    { return std::string(m_remarks); }
   unsigned int getinstruments()
-    { return tins; }
+    { return m_tins; }
   unsigned int getsubsongs()
-    { return subsongs; }
+    { return m_subsongs; }
 
  protected:
   static const unsigned char adlib_opadd[];
-  static const int ops[], map_chan[], fnums[], percussion_map[];
+  static const int percussion_map[];
 
   struct midi_channel {
     int inum;
@@ -60,53 +60,97 @@ public:
   };
 
   struct midi_track {
-    unsigned long tend;
-    unsigned long spos;
-    unsigned long pos;
+    size_t tend;
+    size_t spos;
+    size_t pos;
     unsigned long iwait;
     int on;
     unsigned char pv;
   };
 
-  char *author,*title,*remarks,emptystr;
-  long flen;
-  unsigned long pos;
-  unsigned long sierra_pos; //sierras gotta be special.. :>
-  int subsongs;
-  unsigned char *data;
+  char *m_author,*m_title,*m_remarks,m_emptystr;
+  size_t m_dataPos;
+  unsigned long m_sierraPos; //sierras gotta be special.. :>
+  int m_subsongs;
+  std::vector<uint8_t> m_data;
 
-  unsigned char adlib_data[256];
-  int adlib_style;
-  int adlib_mode;
-  unsigned char myinsbank[128][16], smyinsbank[128][16];
-  midi_channel ch[16];
-  int chp[18][3];
+  int m_adlibStyle;
+  bool m_melodicMode;
+  unsigned char m_myInsBank[128][14], m_sMyInsBank[128][14];
+  midi_channel m_ch[16];
+  int m_chp[18][3];
 
-  long deltas;
-  long msqtr;
+  long m_deltas;
+  long m_msqtr;
 
-  midi_track track[16];
-  unsigned int curtrack;
+  midi_track m_tracks[16];
+  unsigned int m_currentTrack;
 
-  float fwait;
-  unsigned long iwait;
-  int doing;
+  float m_fwait;
+  unsigned long m_iwait;
+  bool m_doing;
 
-  int type,tins,stins;
+  enum class FileType {
+      Unknown,
+      Lucas,
+      Midi,
+      Cmf,
+      Sierra,
+      AdvSierra,
+      OldLucas
+  };
+
+  FileType m_type = FileType::Unknown;
+  int m_tins,m_stins;
 
  private:
   bool load_sierra_ins(const std::string &fname, const CFileProvider &fp);
   void midiprintf(const char *format, ...);
-  unsigned char datalook(long pos);
-  unsigned long getnexti(unsigned long num);
-  unsigned long getnext(unsigned long num);
+  unsigned char datalook(long m_dataPos);
+  unsigned long getnexti(size_t num);
+  unsigned long getnext(size_t num);
   unsigned long getval();
   void sierra_next_section();
-  void midi_write_adlib(unsigned int r, unsigned char v);
   void midi_fm_instrument(int voice, unsigned char *inst);
-  void midi_fm_percussion(int ch, unsigned char *inst);
+  void midi_fm_percussion(int m_ch, unsigned char *inst);
   void midi_fm_volume(int voice, int volume);
   void midi_fm_playnote(int voice, int note, int volume);
   void midi_fm_endnote(int voice);
   void midi_fm_reset();
+};
+
+class CDukePlayer : CPlayer {
+private:
+    std::unique_ptr<ppp::EMidi> m_emidi;
+public:
+    static CPlayer* factory() {
+        return new CDukePlayer();
+    }
+
+    bool load(const std::string &filename, const CFileProvider &fp);
+    bool update() {
+        return m_emidi->serviceRoutine();
+    }
+
+    void rewind(int){}
+    size_t framesUntilUpdate() {
+        return SampleRate / m_emidi->ticksPerSecond();
+    }
+
+    std::string gettype()
+      { return "Duke MIDI"; }
+    std::string gettitle()
+      { return std::string(); }
+    std::string getauthor()
+      { return std::string(); }
+    std::string getdesc()
+      { return std::string(); }
+    unsigned int getinstruments()
+      { return 0; }
+    unsigned int getsubsongs()
+      { return 1; }
+
+    virtual void read(std::array<int16_t, 4> *data) override {
+        m_emidi->read(data);
+    }
 };

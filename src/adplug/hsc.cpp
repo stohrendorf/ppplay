@@ -26,9 +26,9 @@
 
 /*** public methods **************************************/
 
-CPlayer *ChscPlayer::factory(opl::Opl3 *newopl)
+CPlayer *ChscPlayer::factory()
 {
-  return new ChscPlayer(newopl);
+  return new ChscPlayer();
 }
 
 bool ChscPlayer::load(const std::string &filename, const CFileProvider &fp)
@@ -134,24 +134,24 @@ bool ChscPlayer::update()
     case 0x50:							// set percussion instrument (unimplemented)
       break;
     case 0x60:							// set feedback
-      m_opl->writeReg(0xc0 + chan, (m_instr[m_channel[chan].inst][8] & 1) + (eff_op << 1));
+      getOpl()->writeReg(0xc0 + chan, (m_instr[m_channel[chan].inst][8] & 1) + (eff_op << 1));
       break;
     case 0xa0:		                    // set carrier volume
       vol = eff_op << 2;
-      m_opl->writeReg(0x43 + m_opTable[chan], vol | (m_instr[m_channel[chan].inst][2] & ~63));
+      getOpl()->writeReg(0x43 + m_opTable[chan], vol | (m_instr[m_channel[chan].inst][2] & ~63));
       break;
     case 0xb0:		                    // set modulator volume
       vol = eff_op << 2;
       if (m_instr[inst][8] & 1)
-	m_opl->writeReg(0x40 + m_opTable[chan], vol | (m_instr[m_channel[chan].inst][3] & ~63));
+	getOpl()->writeReg(0x40 + m_opTable[chan], vol | (m_instr[m_channel[chan].inst][3] & ~63));
       else
-	m_opl->writeReg(0x40 + m_opTable[chan],vol | (m_instr[inst][3] & ~63));
+	getOpl()->writeReg(0x40 + m_opTable[chan],vol | (m_instr[inst][3] & ~63));
       break;
     case 0xc0:		                    // set instrument volume
       db = eff_op << 2;
-      m_opl->writeReg(0x43 + m_opTable[chan], db | (m_instr[m_channel[chan].inst][2] & ~63));
+      getOpl()->writeReg(0x43 + m_opTable[chan], db | (m_instr[m_channel[chan].inst][2] & ~63));
       if (m_instr[inst][8] & 1)
-	m_opl->writeReg(0x40 + m_opTable[chan], db | (m_instr[m_channel[chan].inst][3] & ~63));
+	getOpl()->writeReg(0x40 + m_opTable[chan], db | (m_instr[m_channel[chan].inst][3] & ~63));
       break;
     case 0xd0: m_pattbreak++; m_songpos = eff_op; m_songend = 1; break;	// position jump
     case 0xf0:							// set speed
@@ -169,7 +169,7 @@ bool ChscPlayer::update()
 
     if ((note == 0x7f-1) || ((note/12) & ~7)) {    // pause (7fh)
       m_adlFreq[chan] &= ~32;
-      m_opl->writeReg(0xb0 + chan,m_adlFreq[chan]);
+      getOpl()->writeReg(0xb0 + chan,m_adlFreq[chan]);
       continue;
     }
 
@@ -183,15 +183,15 @@ bool ChscPlayer::update()
       m_adlFreq[chan] = Okt | 32;
     else
       m_adlFreq[chan] = Okt;		// never set key for drums
-    m_opl->writeReg(0xb0 + chan, 0);
+    getOpl()->writeReg(0xb0 + chan, 0);
     setfreq(chan,Fnr);
     if(m_mode6) {
       switch(chan) {		// play drums
-      case 6: m_opl->writeReg(0xbd,m_bd & ~16); m_bd |= 48; break;	// bass drum
-      case 7: m_opl->writeReg(0xbd,m_bd & ~1); m_bd |= 33; break;	// hihat
-      case 8: m_opl->writeReg(0xbd,m_bd & ~2); m_bd |= 34; break;	// cymbal
+      case 6: getOpl()->writeReg(0xbd,m_bd & ~16); m_bd |= 48; break;	// bass drum
+      case 7: getOpl()->writeReg(0xbd,m_bd & ~1); m_bd |= 33; break;	// hihat
+      case 8: getOpl()->writeReg(0xbd,m_bd & ~2); m_bd |= 34; break;	// cymbal
       }
-      m_opl->writeReg(0xbd,m_bd);
+      getOpl()->writeReg(0xbd,m_bd);
     }
   }
 
@@ -224,7 +224,7 @@ void ChscPlayer::rewind(int subsong)
   m_pattpos = 0; m_songpos = 0; m_pattbreak = 0; m_speed = 2;
   m_del = 1; m_songend = 0; m_mode6 = 0; m_bd = 0; m_fadein = 0;
 
-  m_opl->writeReg(1,32); m_opl->writeReg(8,128); m_opl->writeReg(0xbd,0);
+  getOpl()->writeReg(1,32); getOpl()->writeReg(8,128); getOpl()->writeReg(0xbd,0);
 
   for(i=0;i<9;i++)
     setinstr((char) i,(char) i);	// init channels
@@ -278,8 +278,8 @@ void ChscPlayer::setfreq(unsigned char chan, unsigned short freq)
 {
   m_adlFreq[chan] = (m_adlFreq[chan] & ~3) | (freq >> 8);
 
-  m_opl->writeReg(0xa0 + chan, freq & 0xff);
-  m_opl->writeReg(0xb0 + chan, m_adlFreq[chan]);
+  getOpl()->writeReg(0xa0 + chan, freq & 0xff);
+  getOpl()->writeReg(0xb0 + chan, m_adlFreq[chan]);
 }
 
 void ChscPlayer::setvolume(unsigned char chan, int volc, int volm)
@@ -287,11 +287,11 @@ void ChscPlayer::setvolume(unsigned char chan, int volc, int volm)
   unsigned char	*ins = m_instr[m_channel[chan].inst];
   char		op = m_opTable[chan];
 
-  m_opl->writeReg(0x43 + op,volc | (ins[2] & ~63));
+  getOpl()->writeReg(0x43 + op,volc | (ins[2] & ~63));
   if (ins[8] & 1)							// carrier
-    m_opl->writeReg(0x40 + op,volm | (ins[3] & ~63));
+    getOpl()->writeReg(0x40 + op,volm | (ins[3] & ~63));
   else
-    m_opl->writeReg(0x40 + op, ins[3]);		// modulator
+    getOpl()->writeReg(0x40 + op, ins[3]);		// modulator
 }
 
 void ChscPlayer::setinstr(unsigned char chan, unsigned char insnr)
@@ -300,17 +300,17 @@ void ChscPlayer::setinstr(unsigned char chan, unsigned char insnr)
   char		op = m_opTable[chan];
 
   m_channel[chan].inst = insnr;		// set internal instrument
-  m_opl->writeReg(0xb0 + chan,0);			// stop old note
+  getOpl()->writeReg(0xb0 + chan,0);			// stop old note
 
   // set instrument
-  m_opl->writeReg(0xc0 + chan, ins[8]);
-  m_opl->writeReg(0x23 + op, ins[0]);        // carrier
-  m_opl->writeReg(0x20 + op, ins[1]);        // modulator
-  m_opl->writeReg(0x63 + op, ins[4]);        // bits 0..3 = decay; 4..7 = attack
-  m_opl->writeReg(0x60 + op, ins[5]);
-  m_opl->writeReg(0x83 + op, ins[6]);        // 0..3 = release; 4..7 = sustain
-  m_opl->writeReg(0x80 + op, ins[7]);
-  m_opl->writeReg(0xe3 + op, ins[9]);        // bits 0..1 = Wellenform
-  m_opl->writeReg(0xe0 + op, ins[10]);
+  getOpl()->writeReg(0xc0 + chan, ins[8]);
+  getOpl()->writeReg(0x23 + op, ins[0]);        // carrier
+  getOpl()->writeReg(0x20 + op, ins[1]);        // modulator
+  getOpl()->writeReg(0x63 + op, ins[4]);        // bits 0..3 = decay; 4..7 = attack
+  getOpl()->writeReg(0x60 + op, ins[5]);
+  getOpl()->writeReg(0x83 + op, ins[6]);        // 0..3 = release; 4..7 = sustain
+  getOpl()->writeReg(0x80 + op, ins[7]);
+  getOpl()->writeReg(0xe3 + op, ins[9]);        // bits 0..1 = Wellenform
+  getOpl()->writeReg(0xe0 + op, ins[10]);
   setvolume(chan, ins[2] & 63, ins[3] & 63);
 }

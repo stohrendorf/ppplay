@@ -62,9 +62,9 @@ const unsigned char CxadhybridPlayer::hyb_default_instrument[11] =
   0x00, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0x00
 };
 
-CPlayer *CxadhybridPlayer::factory(opl::Opl3 *newopl)
+CPlayer *CxadhybridPlayer::factory()
 {
-  return new CxadhybridPlayer(newopl);
+  return new CxadhybridPlayer();
 }
 
 bool CxadhybridPlayer::xadplayer_load()

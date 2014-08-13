@@ -29,8 +29,8 @@
 
 #define BUFSIZE		512
 
-DiskWriter::DiskWriter(opl::Opl3 *nopl, const char *filename, unsigned long nfreq)
-  : EmuPlayer(nopl, nfreq, BUFSIZE), f(0), samplesize(0)
+DiskWriter::DiskWriter(const char *filename, unsigned long nfreq)
+  : EmuPlayer(nfreq, BUFSIZE), f(0), samplesize(0)
 {
   if(!filename) {
     message(MSG_ERROR, "no output filename specified");
@@ -77,13 +77,10 @@ DiskWriter::~DiskWriter()
   delete f;
 }
 
-void DiskWriter::output(const void *buf, unsigned long size)
+void DiskWriter::output(const std::vector<int16_t> &buf)
 {
-  char		*b = (char *)buf;
-  unsigned long	i;
+  for(int16_t sample : buf)
+      f->writeInt(sample, 2);
 
-  for(i = 0; i < size; i += 4)
-    f->writeInt(*(long *)(b + i), 4);
-
-  samplesize += size;
+  samplesize += buf.size();
 }

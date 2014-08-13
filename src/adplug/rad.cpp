@@ -25,9 +25,9 @@
 #include <cstring>
 #include "rad.h"
 
-CPlayer *CradLoader::factory(opl::Opl3 *newopl)
+CPlayer *CradLoader::factory()
 {
-  return new CradLoader(newopl);
+  return new CradLoader();
 }
 
 bool CradLoader::load(const std::string &filename, const CFileProvider &fp)
@@ -116,10 +116,10 @@ bool CradLoader::load(const std::string &filename, const CFileProvider &fp)
   return true;
 }
 
-float CradLoader::getrefresh()
+size_t CradLoader::framesUntilUpdate()
 {
   if(tempo)
-    return (float) (tempo);
+    return SampleRate/tempo;
   else
-    return 18.2f;
+    return SampleRate/18.2;
 }

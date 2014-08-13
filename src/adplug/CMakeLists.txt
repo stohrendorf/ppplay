@@ -55,6 +55,9 @@ add_executable(badplay
   u6m.cpp
   xad.cpp
   xsm.cpp
+  mid/almidi.cpp
+  mid/timbre.cpp
+  mid/dualchips.cpp
 )
-target_link_libraries(badplay -lbinio ${SDL_LIBRARY} ppplay_opl)
+target_link_libraries(badplay -lbinio ${SDL_LIBRARY} ppplay_core ppplay_opl)
 install(TARGETS badplay DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT application)

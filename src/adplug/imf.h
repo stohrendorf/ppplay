@@ -27,19 +27,18 @@
 class CimfPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-	CimfPlayer(opl::Opl3 *newopl)
-      : CPlayer(newopl), m_footer(0), m_data(0)
+	CimfPlayer()
+      : CPlayer()
 	  { }
-	~CimfPlayer()
-      { if(m_data) delete [] m_data; if(m_footer) delete [] m_footer; }
 
 	bool load(const std::string &filename, const CFileProvider &fp);
 	bool update();
 	void rewind(int subsong);
-	float getrefresh()
-      { return m_timer; }
+    size_t framesUntilUpdate() override {
+        return SampleRate/m_timer;
+    }
 
 	std::string gettype()
 	  { return std::string("IMF File Format"); }
@@ -49,17 +48,18 @@ public:
 	std::string getdesc();
 
 protected:
-    unsigned long	m_pos=0, m_size=0;
+    unsigned long	m_pos=0;
     unsigned short	m_del=0;
     bool		m_songend=false;
     float		m_rate=0, m_timer=0;
-    char		*m_footer=nullptr;
+    std::string m_footer;
     std::string	m_trackName{}, m_gameName{}, m_authorName{}, m_remarks{};
 
 	struct Sdata {
         unsigned char	reg=0, val=0;
         unsigned short	time=0;
-    } *m_data = nullptr;
+    };
+    std::vector<Sdata> m_data;
 
 private:
 	float getrate(const std::string &filename, const CFileProvider &fp, binistream *f);

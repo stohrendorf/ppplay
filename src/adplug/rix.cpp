@@ -48,13 +48,13 @@ unsigned short CrixPlayer::mus_time = 0x4268;
 
 /*** public methods *************************************/
 
-CPlayer *CrixPlayer::factory(opl::Opl3 *newopl)
+CPlayer *CrixPlayer::factory()
 {
-  return new CrixPlayer(newopl);
+  return new CrixPlayer();
 }
 
-CrixPlayer::CrixPlayer(opl::Opl3 *newopl)
-  : CPlayer(newopl), flag_mkf(0), file_buffer(0), buf_addr(0)
+CrixPlayer::CrixPlayer()
+  : CPlayer(), flag_mkf(0), file_buffer(0), buf_addr(0)
 {
 }
 
@@ -129,7 +129,7 @@ void CrixPlayer::rewind(int subsong)
 	  length=offset2-offset1+1;
 	  buf_addr=file_buffer+offset1;
   }
-  m_opl->writeReg(1,32);	// go to OPL2 mode
+  getOpl()->writeReg(1,32);	// go to OPL2 mode
   set_new_int();
   data_initial();
 }
@@ -149,9 +149,9 @@ unsigned int CrixPlayer::getsubsongs()
 		return 1;
 }
 
-float CrixPlayer::getrefresh()
+size_t CrixPlayer::framesUntilUpdate()
 {
-	return 70.0f;
+    return SampleRate/70;
 }
 
 /*------------------Implemention----------------------------*/
@@ -223,7 +223,7 @@ inline void CrixPlayer::ad_bop(unsigned short reg,unsigned short value)
 {
   if(reg == 2 || reg == 3)
     AdPlug_LogWrite("switch OPL2/3 mode!\n");
-  m_opl->writeReg(reg & 0xff, value & 0xff);
+  getOpl()->writeReg(reg & 0xff, value & 0xff);
 }
 /*--------------------------------------------------------------*/
 inline void CrixPlayer::int_08h_entry()   

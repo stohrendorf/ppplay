@@ -26,12 +26,13 @@
 
 class DiskWriter: public EmuPlayer
 {
+    DISABLE_COPY(DiskWriter)
 public:
-  DiskWriter(opl::Opl3 *nopl, const char *filename, unsigned long nfreq);
+  DiskWriter(const char *filename, unsigned long nfreq);
   virtual ~DiskWriter();
 
 protected:
-  virtual void output(const void *buf, unsigned long size);
+  virtual void output(const std::vector<int16_t>& buf) override;
 
 private:
   binostream	*f;

@@ -27,9 +27,9 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CPlayer *CdtmLoader::factory(opl::Opl3 *newopl)
+CPlayer *CdtmLoader::factory()
 {
-  return new CdtmLoader(newopl);
+  return new CdtmLoader();
 }
 
 bool CdtmLoader::load(const std::string &filename, const CFileProvider &fp)
@@ -246,9 +246,9 @@ void CdtmLoader::rewind(int subsong)
     }
 }
 
-float CdtmLoader::getrefresh()
+size_t CdtmLoader::framesUntilUpdate()
 {
-  return 18.2f;
+  return SampleRate/18.2;
 }
 
 std::string CdtmLoader::gettype()

@@ -37,15 +37,15 @@ class Cdro2Player: public CPlayer
 
 
 	public:
-		static CPlayer *factory(opl::Opl3 *newopl);
+		static CPlayer *factory();
 
-		Cdro2Player(opl::Opl3 *newopl);
+		Cdro2Player();
 		~Cdro2Player();
 
 		bool load(const std::string &filename, const CFileProvider &fp);
 		bool update();
 		void rewind(int subsong);
-		float getrefresh();
+		size_t framesUntilUpdate();
 
 		std::string gettype()
 		{

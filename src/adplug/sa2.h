@@ -25,10 +25,10 @@
 class Csa2Loader: public CmodPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-	Csa2Loader(opl::Opl3 *newopl)
-		: CmodPlayer(newopl)
+	Csa2Loader()
+		: CmodPlayer()
 	{ }
 
 	bool load(const std::string &filename, const CFileProvider &fp);

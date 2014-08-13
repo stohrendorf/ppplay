@@ -27,10 +27,10 @@
 class ChspLoader: public ChscPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-	ChspLoader(opl::Opl3 *newopl)
-		: ChscPlayer(newopl)
+	ChspLoader()
+		: ChscPlayer()
 	{};
 
 	bool load(const std::string &filename, const CFileProvider &fp);

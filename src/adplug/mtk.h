@@ -24,10 +24,10 @@
 class CmtkLoader: public ChscPlayer
 {
  public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-  CmtkLoader(opl::Opl3 *newopl)
-    : ChscPlayer(newopl)
+  CmtkLoader()
+    : ChscPlayer()
     {
       m_mtkmode = 1;
     };

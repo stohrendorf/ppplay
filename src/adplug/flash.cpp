@@ -81,9 +81,9 @@ const unsigned char CxadflashPlayer::flash_default_instrument[8] =
   0x00, 0x00, 0x3F, 0x3F, 0xFF, 0xFF, 0xFF, 0xFF
 };
 
-CPlayer *CxadflashPlayer::factory(opl::Opl3 *newopl)
+CPlayer *CxadflashPlayer::factory()
 {
-  return new CxadflashPlayer(newopl);
+  return new CxadflashPlayer();
 }
 
 void CxadflashPlayer::xadplayer_rewind(int subsong)

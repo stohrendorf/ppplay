@@ -24,7 +24,7 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CxadPlayer::CxadPlayer(opl::Opl3 * newopl) : CPlayer(newopl)
+CxadPlayer::CxadPlayer() : CPlayer()
 {
   tune = 0;
 }
@@ -96,9 +96,9 @@ update_end:
   return (plr.playing && (!plr.looping));
 }
 
-float CxadPlayer::getrefresh()
+size_t CxadPlayer::framesUntilUpdate()
 {
-  return xadplayer_getrefresh();
+  return SampleRate/xadplayer_getrefresh();
 }
 
 std::string CxadPlayer::gettype()
@@ -134,5 +134,5 @@ void CxadPlayer::opl_write(int reg, int val)
 #ifdef DEBUG
   AdPlug_LogWrite("[ %02X ] = %02X\n",reg,val);
 #endif
-  m_opl->writeReg(reg,val);
+  getOpl()->writeReg(reg,val);
 }

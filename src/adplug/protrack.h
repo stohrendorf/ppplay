@@ -27,12 +27,12 @@
 class CmodPlayer: public CPlayer
 {
 public:
-  CmodPlayer(opl::Opl3 *newopl);
+  CmodPlayer();
   virtual ~CmodPlayer();
 
   bool update();
   void rewind(int subsong);
-  float getrefresh();
+  size_t framesUntilUpdate();
 
   unsigned int getpatterns()
     { return nop; }

@@ -24,28 +24,27 @@
 class CbamPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-	CbamPlayer(opl::Opl3 *newopl)
-		: CPlayer(newopl), song(0)
-	{ };
-	~CbamPlayer()
-	{ if(song) delete [] song; };
+	CbamPlayer()
+        : CPlayer()
+    { }
 
 	bool load(const std::string &filename, const CFileProvider &fp);
 	bool update();
 	void rewind(int subsong);
-	float getrefresh()
-	{ return 25.0f; };
+    size_t framesUntilUpdate() override
+    { return SampleRate/25; }
 
 	std::string gettype()
-	{ return std::string("Bob's Adlib Music"); };
+    { return "Bob's Adlib Music"; }
 
 private:
 	static const unsigned short freq[];
 
-	unsigned char	*song, del;
-	unsigned long	pos, size, gosub;
+    std::vector<uint8_t> m_song;
+    unsigned char  del;
+    unsigned long	pos, gosub;
 	bool		songend, chorus;
 
 	struct {

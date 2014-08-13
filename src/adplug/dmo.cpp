@@ -44,9 +44,9 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CPlayer *CdmoLoader::factory(opl::Opl3 *newopl)
+CPlayer *CdmoLoader::factory()
 {
-    return new CdmoLoader(newopl);
+    return new CdmoLoader();
 }
 
 bool CdmoLoader::load(const std::string &filename, const CFileProvider &fp)

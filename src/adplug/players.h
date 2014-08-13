@@ -31,7 +31,7 @@
 class CPlayerDesc
 {
 public:
-  typedef CPlayer *(*Factory)(opl::Opl3 *);
+  typedef CPlayer *(*Factory)();
 
   Factory	factory;
   std::string	filetype;

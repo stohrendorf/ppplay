@@ -58,9 +58,9 @@ const unsigned short CxadpsiPlayer::psi_notes[16] =
   0x0000, 0x0000, 0x0000, 0x0000 // by riven
 };
 
-CPlayer *CxadpsiPlayer::factory(opl::Opl3 *newopl)
+CPlayer *CxadpsiPlayer::factory()
 {
-  return new CxadpsiPlayer(newopl);
+  return new CxadpsiPlayer();
 }
 
 void CxadpsiPlayer::xadplayer_rewind(int subsong)

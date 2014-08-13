@@ -25,9 +25,9 @@
 #include "dfm.h"
 #include "debug.h"
 
-CPlayer *CdfmLoader::factory(opl::Opl3 *newopl)
+CPlayer *CdfmLoader::factory()
 {
-  return new CdfmLoader(newopl);
+  return new CdfmLoader();
 }
 
 bool CdfmLoader::load(const std::string &filename, const CFileProvider &fp)
@@ -109,7 +109,7 @@ std::string CdfmLoader::gettype()
 	return std::string(tmpstr);
 }
 
-float CdfmLoader::getrefresh()
+size_t CdfmLoader::framesUntilUpdate()
 {
-	return 125.0f;
+    return SampleRate/125;
 }

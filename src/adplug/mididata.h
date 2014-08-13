@@ -1,3 +1,5 @@
+#ifndef MIDIDATA_H
+#define MIDIDATA_H
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999, 2000, 2001 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -172,3 +174,4 @@ static int my_midi_fm_vol_table[128] = {
    123, 123, 124, 124, 125, 125, 126, 126, 127
 };
 
+#endif

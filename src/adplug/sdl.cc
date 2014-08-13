@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software Foundation,
- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #include <unistd.h>
@@ -24,72 +24,71 @@
 
 #include "genmod/breseninter.h"
 
-SDLPlayer::SDLPlayer(opl::Opl3 *nopl, int freq, unsigned long bufsize)
-  : oplChip(nopl), interp(freq, opl::Opl3::SampleRate), filters{ppp::OplFilter{freq},ppp::OplFilter{freq}}
+SDLPlayer::SDLPlayer(int freq, size_t bufsize)
+    : m_interp(freq, opl::Opl3::SampleRate)
 {
-   memset(&spec, 0x00, sizeof(SDL_AudioSpec));
+    memset(&m_spec, 0x00, sizeof(SDL_AudioSpec));
 
-   if(SDL_Init(SDL_INIT_AUDIO) < 0) {
-      message(MSG_ERROR, "unable to initialize SDL -- %s", SDL_GetError());
-      exit(EXIT_FAILURE);
-   }
+    if(SDL_Init(SDL_INIT_AUDIO) < 0) {
+        message(MSG_ERROR, "unable to initialize SDL -- %s", SDL_GetError());
+        exit(EXIT_FAILURE);
+    }
 
-   spec.freq = freq;
-   spec.format = AUDIO_S16SYS;
-   spec.channels = 2;
-   spec.samples = bufsize;
-   spec.callback = SDLPlayer::callback;
-   spec.userdata = this;
+    m_spec.freq = freq;
+    m_spec.format = AUDIO_S16SYS;
+    m_spec.channels = 2;
+    m_spec.samples = bufsize;
+    m_spec.callback = SDLPlayer::callback;
+    m_spec.userdata = this;
 
-   if(SDL_OpenAudio(&spec, NULL) < 0) {
-      message(MSG_ERROR, "unable to open audio -- %s", SDL_GetError());
-      exit(EXIT_FAILURE);
-   }
+    if(SDL_OpenAudio(&m_spec, NULL) < 0) {
+        message(MSG_ERROR, "unable to open audio -- %s", SDL_GetError());
+        exit(EXIT_FAILURE);
+    }
 
-   message(MSG_DEBUG, "got audio buffer size -- %d", spec.size);
+    message(MSG_DEBUG, "got audio buffer size -- %d", m_spec.size);
 }
 
 SDLPlayer::~SDLPlayer()
 {
-  if(!SDL_WasInit(SDL_INIT_AUDIO)) return;
+    if(!SDL_WasInit(SDL_INIT_AUDIO))
+        return;
 
-  SDL_CloseAudio();
-  SDL_Quit();
+    SDL_CloseAudio();
+    SDL_Quit();
 }
 
 void SDLPlayer::frame()
 {
-  SDL_PauseAudio(0);
-  SDL_Delay(spec.freq / (spec.size / 4));
+    SDL_PauseAudio(0);
+    SDL_Delay(m_spec.freq / (m_spec.size / 4));
 }
 
-void SDLPlayer::callback(void *userdata, Uint8 *audiobuf, int len)
+void SDLPlayer::callback(void *userdata, Uint8 *audiobuf, int byteLen)
 {
-  SDLPlayer	*self = (SDLPlayer *)userdata;
-  static long	minicnt = 0;
-  long		i, towrite = len / 4;
-  int16_t *pos = reinterpret_cast<int16_t*>(audiobuf);
-
-  // Prepare audiobuf with emulator output
-  while(towrite > 0) {
-    while(minicnt < 0) {
-      minicnt += self->spec.freq;
-      self->playing = self->p->update();
-    }
-    i = std::min(towrite, (long)(minicnt / self->p->getrefresh() + 4) & ~3);
-    for(int j=0; j<i; ++j) {
-        std::array<int16_t,4> samples;
-        self->oplChip->read(&samples);
-        pos[0] = self->filters[0].filter(samples[0] + samples[2]);
-        pos[1] = self->filters[1].filter(samples[1] + samples[3]);
-        pos += 2;
-        
-        if( self->interp.next() == 2 ) {
-            self->oplChip->read( nullptr ); // skip a sample
+    SDLPlayer* self = reinterpret_cast<SDLPlayer*>(userdata);
+    static long framesUntilUpdate = 0;
+    size_t framesToWrite = byteLen / 4;
+    int16_t *bufPtr = reinterpret_cast<int16_t*>(audiobuf);
+    // Prepare audiobuf with emulator output
+    while(framesToWrite > 0) {
+        while(framesUntilUpdate <= 0) {
+            self->setIsPlaying( self->getPlayer()->update() );
+            framesUntilUpdate += self->getPlayer()->framesUntilUpdate();
         }
-        self->interp = 0;
+
+        std::array<int16_t,4> samples;
+        self->getPlayer()->read(&samples);
+        bufPtr[0] = ppp::clip(samples[0] + samples[2],-32768,32767);
+        bufPtr[1] = ppp::clip(samples[1] + samples[3],-32768,32767);
+        bufPtr += 2;
+
+        if( self->m_interp.next() == 2 ) {
+            self->getPlayer()->read( nullptr ); // skip a sample
+            --framesUntilUpdate;
+        }
+        self->m_interp = 0;
+        --framesUntilUpdate;
+        --framesToWrite;
     }
-    towrite -= i;
-    minicnt -= (long)(self->p->getrefresh() * i);
-  }
 }

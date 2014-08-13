@@ -27,14 +27,14 @@
 class Cs3mPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-  Cs3mPlayer(opl::Opl3 *newopl);
+  Cs3mPlayer();
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int subsong);
-  float getrefresh();
+  size_t framesUntilUpdate();
 
   std::string gettype();
   std::string gettitle()

@@ -83,15 +83,15 @@ class CcmfPlayer: public CPlayer
 		std::string strTitle, strComposer, strRemarks;
 
 	public:
-		static CPlayer *factory(opl::Opl3 *newopl);
+		static CPlayer *factory();
 
-		CcmfPlayer(opl::Opl3 *newopl);
+		CcmfPlayer();
 		~CcmfPlayer();
 
 		bool load(const std::string &filename, const CFileProvider &fp);
 		bool update();
 		void rewind(int subsong);
-		float getrefresh();
+		size_t framesUntilUpdate();
 
 		std::string gettype()
 			{ return std::string("Creative Music File (CMF)"); };

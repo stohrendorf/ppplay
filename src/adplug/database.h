@@ -31,6 +31,7 @@
 
 class CAdPlugDatabase
 {
+    DISABLE_COPY(CAdPlugDatabase)
 public:
     struct CKey
     {

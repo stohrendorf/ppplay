@@ -24,10 +24,10 @@
 class CmkjPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-	CmkjPlayer(opl::Opl3 *newopl)
-		: CPlayer(newopl), songbuf(0)
+	CmkjPlayer()
+		: CPlayer(), songbuf(0)
 	{ }
 	~CmkjPlayer()
 	{ if(songbuf) delete [] songbuf; }
@@ -35,7 +35,7 @@ public:
 	bool load(const std::string &filename, const CFileProvider &fp);
 	bool update();
 	void rewind(int subsong);
-	float getrefresh();
+	size_t framesUntilUpdate();
 
 	std::string gettype()
 	{ return std::string("MKJamz Audio File"); }

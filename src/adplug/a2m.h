@@ -27,24 +27,27 @@
 class Ca2mLoader: public CmodPlayer
 {
 public:
-    static CPlayer *factory(opl::Opl3 *newopl);
+    static CPlayer *factory();
 
-    Ca2mLoader(opl::Opl3 *newopl): CmodPlayer(newopl)
+    Ca2mLoader(): CmodPlayer()
     { }
 
     bool load(const std::string &filename, const CFileProvider &fp);
-    float getrefresh();
+    size_t framesUntilUpdate();
 
     std::string gettype()
     { return std::string("AdLib Tracker 2"); }
-    std::string gettitle()
-    { if(*m_songname) return std::string(m_songname,1,*m_songname); else return std::string(); }
-    std::string getauthor()
-    { if(*m_author) return std::string(m_author,1,*m_author); else return std::string(); }
+    std::string gettitle() {
+        m_songname;
+    }
+    std::string getauthor() {
+        m_author;
+    }
     unsigned int getinstruments()
     { return 250; }
-    std::string getinstrument(unsigned int n)
-    { return std::string(m_instname[n],1,*m_instname[n]); }
+    std::string getinstrument(unsigned int n) {
+        return m_instname[n];
+    }
 
 private:
 
@@ -83,12 +86,13 @@ private:
     void decode();
     unsigned short sixdepak(unsigned short *source,unsigned char *dest,unsigned short size);
 
-    char m_songname[43], m_author[43], m_instname[250][33];
+    std::string m_songname, m_author, m_instname[250];
 
     unsigned short m_bitcount=0, m_bitbuffer=0, m_bufcount=0, m_obufcount=0, m_inputSize=0,
     m_outputSize=0, m_leftc[ADPLUG_A2M_MAXCHAR+1], m_rightc[ADPLUG_A2M_MAXCHAR+1],
     m_dad[ADPLUG_A2M_TWICEMAX+1], m_freq[ADPLUG_A2M_TWICEMAX+1], *m_wdbuf=nullptr;
-    unsigned char *m_obuf=nullptr, *m_buf=nullptr;
+    unsigned char *m_obuf=nullptr;
+    std::vector<uint8_t> m_buf;
 };
 
 #endif

@@ -71,16 +71,9 @@ const unsigned short CldsPlayer::maxsound = 0x3f, CldsPlayer::maxpos = 0xff;
 
 /*** public methods *************************************/
 
-CldsPlayer::CldsPlayer(opl::Opl3 *newopl)
-  : CPlayer(newopl), soundbank(0), positions(0), patterns(0)
+CldsPlayer::CldsPlayer()
+  : CPlayer()
 {
-}
-
-CldsPlayer::~CldsPlayer()
-{
-  if(soundbank) delete [] soundbank;
-  if(positions) delete [] positions;
-  if(patterns) delete [] patterns;
 }
 
 bool CldsPlayer::load(const std::string &filename, const CFileProvider &fp)
@@ -103,8 +96,8 @@ bool CldsPlayer::load(const std::string &filename, const CFileProvider &fp)
   regbd = f->readInt(1);
 
   // load patches
-  numpatch = f->readInt(2);
-  soundbank = new SoundBank[numpatch];
+  auto numpatch = f->readInt(2);
+  soundbank.resize(numpatch);
   for(i = 0; i < numpatch; i++) {
     sb = &soundbank[i];
     sb->mod_misc = f->readInt(1); sb->mod_vol = f->readInt(1);
@@ -128,7 +121,7 @@ bool CldsPlayer::load(const std::string &filename, const CFileProvider &fp)
 
   // load positions
   numposi = f->readInt(2);
-  positions = new Position[9 * numposi];
+  positions.resize(9 * numposi);
   for(i = 0; i < numposi; i++)
     for(j = 0; j < 9; j++) {
       /*
@@ -146,7 +139,7 @@ bool CldsPlayer::load(const std::string &filename, const CFileProvider &fp)
 
   // load patterns
   f->ignore(2);		// ignore # of digital sounds (not played by this player)
-  patterns = new unsigned short[(fp.filesize(f) - f->pos()) / 2 + 1];
+  patterns.resize((fp.filesize(f) - f->pos()) / 2 + 1);
   for(i = 0; !f->eof(); i++)
     patterns[i] = f->readInt(2);
 
@@ -522,24 +515,24 @@ void CldsPlayer::rewind(int subsong)
   memset(fmchip, 0, sizeof(fmchip));
 
   // OPL2 init
-  m_opl->writeReg(1, 0x20);
-  m_opl->writeReg(8, 0);
-  m_opl->writeReg(0xbd, regbd);
+  getOpl()->writeReg(1, 0x20);
+  getOpl()->writeReg(8, 0);
+  getOpl()->writeReg(0xbd, regbd);
 
   for(i = 0; i < 9; i++) {
-    m_opl->writeReg(0x20 + m_opTable[i], 0);
-    m_opl->writeReg(0x23 + m_opTable[i], 0);
-    m_opl->writeReg(0x40 + m_opTable[i], 0x3f);
-    m_opl->writeReg(0x43 + m_opTable[i], 0x3f);
-    m_opl->writeReg(0x60 + m_opTable[i], 0xff);
-    m_opl->writeReg(0x63 + m_opTable[i], 0xff);
-    m_opl->writeReg(0x80 + m_opTable[i], 0xff);
-    m_opl->writeReg(0x83 + m_opTable[i], 0xff);
-    m_opl->writeReg(0xe0 + m_opTable[i], 0);
-    m_opl->writeReg(0xe3 + m_opTable[i], 0);
-    m_opl->writeReg(0xa0 + i, 0);
-    m_opl->writeReg(0xb0 + i, 0);
-    m_opl->writeReg(0xc0 + i, 0);
+    getOpl()->writeReg(0x20 + m_opTable[i], 0);
+    getOpl()->writeReg(0x23 + m_opTable[i], 0);
+    getOpl()->writeReg(0x40 + m_opTable[i], 0x3f);
+    getOpl()->writeReg(0x43 + m_opTable[i], 0x3f);
+    getOpl()->writeReg(0x60 + m_opTable[i], 0xff);
+    getOpl()->writeReg(0x63 + m_opTable[i], 0xff);
+    getOpl()->writeReg(0x80 + m_opTable[i], 0xff);
+    getOpl()->writeReg(0x83 + m_opTable[i], 0xff);
+    getOpl()->writeReg(0xe0 + m_opTable[i], 0);
+    getOpl()->writeReg(0xe3 + m_opTable[i], 0);
+    getOpl()->writeReg(0xa0 + i, 0);
+    getOpl()->writeReg(0xb0 + i, 0);
+    getOpl()->writeReg(0xc0 + i, 0);
   }
 }
 
@@ -665,7 +658,7 @@ inline void CldsPlayer::setregs(unsigned char reg, unsigned char val)
   if(fmchip[reg] == val) return;
 
   fmchip[reg] = val;
-  m_opl->writeReg(reg, val);
+  getOpl()->writeReg(reg, val);
 }
 
 inline void CldsPlayer::setregs_adv(unsigned char reg, unsigned char mask,

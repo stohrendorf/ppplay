@@ -32,9 +32,9 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CPlayer *CcffLoader::factory(opl::Opl3 *newopl)
+CPlayer *CcffLoader::factory()
 {
-  return new CcffLoader(newopl);
+  return new CcffLoader();
 }
 
 bool CcffLoader::load(const std::string &filename, const CFileProvider &fp)

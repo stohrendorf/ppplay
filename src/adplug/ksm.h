@@ -24,31 +24,30 @@
 class CksmPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-	CksmPlayer(opl::Opl3 *newopl)
-		: CPlayer(newopl), note(0)
-	{ };
-	~CksmPlayer()
-	{ if(note) delete [] note; };
+	CksmPlayer()
+        : CPlayer()
+    { }
 
 	bool load(const std::string &filename, const CFileProvider &fp);
 	bool update();
 	void rewind(int subsong);
-	float getrefresh()
-	{ return 240.0f; };
+    size_t framesUntilUpdate() override {
+        return SampleRate/240;
+    }
 
 	std::string gettype()
-	{ return std::string("Ken Silverman's Music Format"); };
+    { return "Ken Silverman's Music Format"; }
 	unsigned int getinstruments()
-	{ return 16; };
+    { return 16; }
 	std::string getinstrument(unsigned int n);
 
 private:
 	static const unsigned int adlibfreq[63];
 
-	unsigned long count,countstop,chanage[18],*note;
-	unsigned short numnotes;
+    std::vector<uint32_t> note;
+    unsigned long count,countstop,chanage[18];
 	unsigned int nownote,numchans,drumstat;
 	unsigned char trinst[16],trquant[16],trchan[16],trvol[16],inst[256][11],databuf[2048],chanfreq[18],chantrack[18];
 	char instname[256][20];

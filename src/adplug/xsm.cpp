@@ -23,8 +23,8 @@
 
 #include "xsm.h"
 
-CxsmPlayer::CxsmPlayer(opl::Opl3 *newopl)
-  : CPlayer(newopl), music(0)
+CxsmPlayer::CxsmPlayer()
+  : CPlayer(), music(0)
 {
 }
 
@@ -45,17 +45,17 @@ bool CxsmPlayer::load(const std::string &filename, const CFileProvider &fp)
 
   // read and set instruments
   for(i = 0; i < 9; i++) {
-    m_opl->writeReg(0x20 + m_opTable[i], f->readInt(1));
-    m_opl->writeReg(0x23 + m_opTable[i], f->readInt(1));
-    m_opl->writeReg(0x40 + m_opTable[i], f->readInt(1));
-    m_opl->writeReg(0x43 + m_opTable[i], f->readInt(1));
-    m_opl->writeReg(0x60 + m_opTable[i], f->readInt(1));
-    m_opl->writeReg(0x63 + m_opTable[i], f->readInt(1));
-    m_opl->writeReg(0x80 + m_opTable[i], f->readInt(1));
-    m_opl->writeReg(0x83 + m_opTable[i], f->readInt(1));
-    m_opl->writeReg(0xe0 + m_opTable[i], f->readInt(1));
-    m_opl->writeReg(0xe3 + m_opTable[i], f->readInt(1));
-    m_opl->writeReg(0xc0 + m_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x20 + m_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x23 + m_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x40 + m_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x43 + m_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x60 + m_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x63 + m_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x80 + m_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x83 + m_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0xe0 + m_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0xe3 + m_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0xc0 + m_opTable[i], f->readInt(1));
     f->ignore(5);
   }
 
@@ -82,7 +82,7 @@ bool CxsmPlayer::update()
 
   for(c = 0; c < 9; c++)
     if(music[notenum * 9 + c] != music[last * 9 + c])
-      m_opl->writeReg(0xb0 + c, 0);
+      getOpl()->writeReg(0xb0 + c, 0);
 
   for(c = 0; c < 9; c++) {
     if(music[notenum * 9 + c])
@@ -102,9 +102,9 @@ void CxsmPlayer::rewind(int)
   songend = false;
 }
 
-float CxsmPlayer::getrefresh()
+size_t CxsmPlayer::framesUntilUpdate()
 {
-  return 5.0f;
+  return SampleRate/5;
 }
 
 void CxsmPlayer::play_note(int c, int note, int octv)
@@ -112,6 +112,6 @@ void CxsmPlayer::play_note(int c, int note, int octv)
   int freq = m_noteTable[note];
 
   if(!note && !octv) freq = 0;
-  m_opl->writeReg(0xa0 + c, freq & 0xff);
-  m_opl->writeReg(0xb0 + c, (freq / 0xff) | 32 | (octv * 4));
+  getOpl()->writeReg(0xa0 + c, freq & 0xff);
+  getOpl()->writeReg(0xb0 + c, (freq / 0xff) | 32 | (octv * 4));
 }

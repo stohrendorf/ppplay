@@ -24,19 +24,19 @@
 class CradLoader: public CmodPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-	CradLoader(opl::Opl3 *newopl)
-		: CmodPlayer(newopl)
-	{ *desc = '\0'; };
+	CradLoader()
+		: CmodPlayer()
+    { *desc = '\0'; }
 
 	bool load(const std::string &filename, const CFileProvider &fp);
-	float getrefresh();
+    size_t framesUntilUpdate();
 
 	std::string gettype()
-	{ return std::string("Reality ADlib Tracker"); };
+    { return "Reality ADlib Tracker"; }
 	std::string getdesc()
-	{ return std::string(desc); };
+    { return desc; }
 
 private:
 	unsigned char version,radflags;

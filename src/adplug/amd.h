@@ -24,14 +24,14 @@
 class CamdLoader: public CmodPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-	CamdLoader(opl::Opl3 *newopl)
-		: CmodPlayer(newopl)
+	CamdLoader()
+		: CmodPlayer()
 	{ };
 
 	bool load(const std::string &filename, const CFileProvider &fp);
-	float getrefresh();
+	size_t framesUntilUpdate();
 
 	std::string gettype()
 	{ return std::string("AMUSIC Adlib Tracker"); };

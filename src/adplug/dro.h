@@ -24,9 +24,9 @@
 class CdroPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-  CdroPlayer(opl::Opl3 *newopl);
+  CdroPlayer();
   ~CdroPlayer()
     {
       if(data)
@@ -36,7 +36,7 @@ class CdroPlayer: public CPlayer
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int subsong);
-  float getrefresh();
+  size_t framesUntilUpdate();
 
   std::string gettype()
     {
