@@ -51,16 +51,16 @@ static const unsigned char perchn_tab[5] = { 6, 7, 8, 8, 7 };
 static unsigned char percmaskoff[5] = { 0xef, 0xf7, 0xfb, 0xfd, 0xfe };
 static unsigned char percmaskon[5] =  { 0x10, 0x08, 0x04, 0x02, 0x01 };
 
-static inline unsigned short GET_WORD(unsigned char *b, int x)
+static inline unsigned short GET_WORD(const std::vector<uint8_t>& b, int x)
 {
     return ((unsigned short)(b[x+1] << 8) | b[x]);
 }
 
 /*** public methods *************************************/
 
-CPlayer *CjbmPlayer::factory(opl::Opl3 *newopl)
+CPlayer *CjbmPlayer::factory()
 {
-    return new CjbmPlayer(newopl);
+    return new CjbmPlayer();
 }
 
 bool CjbmPlayer::load(const std::string &filename, const CFileProvider &fp)
@@ -73,8 +73,8 @@ bool CjbmPlayer::load(const std::string &filename, const CFileProvider &fp)
 
     // Allocate memory buffer m[] and read entire file into it
 
-    m = new unsigned char[filelen];
-    if (f->readString((char *)m, filelen) != filelen) { fp.close(f); return false; }
+    m.resize(filelen);
+    if (f->readString((char*)m.data(), filelen) != filelen) { fp.close(f); return false; }
 
     fp.close(f);
 
@@ -173,9 +173,9 @@ bool CjbmPlayer::update()
         // Write new volume to the carrier operator, or percussion
 
         if (flags&1 && c > 6)
-            m_opl->writeReg(0x40 + percmx_tab[c-7], voice[c].vol ^ 0x3f);
+            getOpl()->writeReg(0x40 + percmx_tab[c-7], voice[c].vol ^ 0x3f);
         else
-            m_opl->writeReg(0x43 + m_opTable[c], voice[c].vol ^ 0x3f);
+            getOpl()->writeReg(0x43 + m_opTable[c], voice[c].vol ^ 0x3f);
 
         // Write new frequencies and Gate bit
 
@@ -204,13 +204,13 @@ void CjbmPlayer::rewind(int subsong)
         voice[c].delay = 1;
     }
 
-    m_opl->writeReg(0x01, 32);
+    getOpl()->writeReg(0x01, 32);
 
     // Set rhythm mode if flags bit #0 is set
     // AM and Vibrato are full depths (taken from DosBox RAW output)
     bdreg = 0xC0 | (flags&1)<<5;
 
-    m_opl->writeReg(0xbd, bdreg);
+    getOpl()->writeReg(0xbd, bdreg);
 
 #if 0
     if (flags&1) {
@@ -230,15 +230,15 @@ void CjbmPlayer::opl_noteonoff(int channel, JBMVoice *v, bool state)
 {
     if (flags&1 && channel > 5) {
         // Percussion
-        m_opl->writeReg(0xa0 + perchn_tab[channel-6], voice[channel].frq[0]);
-        m_opl->writeReg(0xb0 + perchn_tab[channel-6], voice[channel].frq[1]);
-        m_opl->writeReg(0xbd,
+        getOpl()->writeReg(0xa0 + perchn_tab[channel-6], voice[channel].frq[0]);
+        getOpl()->writeReg(0xb0 + perchn_tab[channel-6], voice[channel].frq[1]);
+        getOpl()->writeReg(0xbd,
                         state ? bdreg | percmaskon[channel-6] :
                         bdreg & percmaskoff[channel-6]);
     } else {
         // Melodic mode or Rhythm mode melodic channels
-        m_opl->writeReg(0xa0 + channel, voice[channel].frq[0]);
-        m_opl->writeReg(0xb0 + channel,
+        getOpl()->writeReg(0xa0 + channel, voice[channel].frq[0]);
+        getOpl()->writeReg(0xb0 + channel,
                         state ? voice[channel].frq[1] | 0x20 :
                         voice[channel].frq[1] & 0x1f);
     }
@@ -257,33 +257,33 @@ void CjbmPlayer::set_opl_instrument(int channel, JBMVoice *v)
 
     // For rhythm mode, multiplexed drums. I don't care about waveforms!
     if ((flags&1) & (channel > 6)) {
-        m_opl->writeReg(0x20 + percmx_tab[channel-7], m[i+0]);
-        m_opl->writeReg(0x40 + percmx_tab[channel-7], m[i+1] ^ 0x3f);
-        m_opl->writeReg(0x60 + percmx_tab[channel-7], m[i+2]);
-        m_opl->writeReg(0x80 + percmx_tab[channel-7], m[i+3]);
+        getOpl()->writeReg(0x20 + percmx_tab[channel-7], m[i+0]);
+        getOpl()->writeReg(0x40 + percmx_tab[channel-7], m[i+1] ^ 0x3f);
+        getOpl()->writeReg(0x60 + percmx_tab[channel-7], m[i+2]);
+        getOpl()->writeReg(0x80 + percmx_tab[channel-7], m[i+3]);
 
-        m_opl->writeReg(0xc0 + perchn_tab[channel-6], m[i+8]&15);
+        getOpl()->writeReg(0xc0 + perchn_tab[channel-6], m[i+8]&15);
         return;
     }
 
     // AM/VIB/EG/KSR/FRQMUL, KSL/OUTPUT, ADSR for 1st operator
-    m_opl->writeReg(0x20 + m_opTable[channel], m[i+0]);
-    m_opl->writeReg(0x40 + m_opTable[channel], m[i+1] ^ 0x3f);
-    m_opl->writeReg(0x60 + m_opTable[channel], m[i+2]);
-    m_opl->writeReg(0x80 + m_opTable[channel], m[i+3]);
+    getOpl()->writeReg(0x20 + m_opTable[channel], m[i+0]);
+    getOpl()->writeReg(0x40 + m_opTable[channel], m[i+1] ^ 0x3f);
+    getOpl()->writeReg(0x60 + m_opTable[channel], m[i+2]);
+    getOpl()->writeReg(0x80 + m_opTable[channel], m[i+3]);
 
     // AM/VIB/EG/KSR/FRQMUL, KSL/OUTPUT, ADSR for 2nd operator
-    m_opl->writeReg(0x23 + m_opTable[channel], m[i+4]);
-    m_opl->writeReg(0x43 + m_opTable[channel], m[i+5] ^ 0x3f);
-    m_opl->writeReg(0x63 + m_opTable[channel], m[i+6]);
-    m_opl->writeReg(0x83 + m_opTable[channel], m[i+7]);
+    getOpl()->writeReg(0x23 + m_opTable[channel], m[i+4]);
+    getOpl()->writeReg(0x43 + m_opTable[channel], m[i+5] ^ 0x3f);
+    getOpl()->writeReg(0x63 + m_opTable[channel], m[i+6]);
+    getOpl()->writeReg(0x83 + m_opTable[channel], m[i+7]);
 
     // WAVEFORM for operators
-    m_opl->writeReg(0xe0 + m_opTable[channel], (m[i+8]>>4)&3);
-    m_opl->writeReg(0xe3 + m_opTable[channel], (m[i+8]>>6)&3);
+    getOpl()->writeReg(0xe0 + m_opTable[channel], (m[i+8]>>4)&3);
+    getOpl()->writeReg(0xe3 + m_opTable[channel], (m[i+8]>>6)&3);
 
     // FEEDBACK/FM mode
-    m_opl->writeReg(0xc0 + channel, m[i+8]&15);
+    getOpl()->writeReg(0xc0 + channel, m[i+8]&15);
 
     return;
 }

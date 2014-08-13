@@ -83,13 +83,13 @@ uint8_t cDefaultPatches[] =
 "\x32\x21\x16\x80\x73\x75\x24\x57\x00\x00\x0E";
 
 
-CPlayer *CcmfPlayer::factory(opl::Opl3 *newopl)
+CPlayer *CcmfPlayer::factory()
 {
-  return new CcmfPlayer(newopl);
+  return new CcmfPlayer();
 }
 
-CcmfPlayer::CcmfPlayer(opl::Opl3 *newopl) :
-	CPlayer(newopl),
+CcmfPlayer::CcmfPlayer() :
+    CPlayer(),
 	data(NULL),
 	pInstruments(NULL),
 	bPercussive(false),
@@ -421,13 +421,13 @@ void CcmfPlayer::rewind(int subsong)
 }
 
 // Return value: 1 == 1 second, 2 == 0.5 seconds
-float CcmfPlayer::getrefresh()
+size_t CcmfPlayer::framesUntilUpdate()
 {
 	if (this->iDelayRemaining) {
-		return (float)this->cmfHeader.iTicksPerSecond / (float)this->iDelayRemaining;
+        return SampleRate * iDelayRemaining / cmfHeader.iTicksPerSecond;
 	} else {
 		// Delay-remaining is zero (e.g. start of song) so use a tiny delay
-		return this->cmfHeader.iTicksPerSecond; // wait for one tick
+        return SampleRate/cmfHeader.iTicksPerSecond; // wait for one tick
 	}
 }
 
@@ -488,7 +488,7 @@ void CcmfPlayer::writeInstrumentSettings(uint8_t iChannel, uint8_t iOperatorSour
 // Write a byte to the OPL "chip" and update the current record of register states
 void CcmfPlayer::writeOPL(uint8_t iRegister, uint8_t iValue)
 {
-	this->m_opl->writeReg(iRegister, iValue);
+    this->getOpl()->writeReg(iRegister, iValue);
 	this->iCurrentRegs[iRegister] = iValue;
 	return;
 }

@@ -22,9 +22,9 @@
 #include <cstring>
 #include "sng.h"
 
-CPlayer *CsngPlayer::factory(opl::Opl3 *newopl)
+CPlayer *CsngPlayer::factory()
 {
-  return new CsngPlayer(newopl);
+  return new CsngPlayer();
 }
 
 bool CsngPlayer::load(const std::string &filename, const CFileProvider &fp)
@@ -43,7 +43,7 @@ bool CsngPlayer::load(const std::string &filename, const CFileProvider &fp)
 
   // load section
   header.length /= 2; header.start /= 2; header.loop /= 2;
-  data = new Sdata [header.length];
+  data.resize(header.length);
   for(i = 0; i < header.length; i++) {
     data[i].val = f->readInt(1);
     data[i].reg = f->readInt(1);
@@ -62,7 +62,7 @@ bool CsngPlayer::update()
   }
 
   while(data[pos].reg) {
-    m_opl->writeReg(data[pos].reg, data[pos].val);
+    getOpl()->writeReg(data[pos].reg, data[pos].val);
     pos++;
     if(pos >= header.length) {
       songend = true;
@@ -71,7 +71,7 @@ bool CsngPlayer::update()
   }
 
   if(!header.compressed)
-    m_opl->writeReg(data[pos].reg, data[pos].val);
+    getOpl()->writeReg(data[pos].reg, data[pos].val);
 
   if(data[pos].val) del = data[pos].val - 1; pos++;
   if(pos >= header.length) { songend = true; pos = header.loop; }
@@ -81,5 +81,5 @@ bool CsngPlayer::update()
 void CsngPlayer::rewind(int subsong)
 {
   pos = header.start; del = header.delay; songend = false;
-  m_opl->writeReg(1,32);	// go to OPL2 mode
+  getOpl()->writeReg(1,32);	// go to OPL2 mode
 }

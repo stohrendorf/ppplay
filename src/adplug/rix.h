@@ -25,15 +25,15 @@
 class CrixPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-  CrixPlayer(opl::Opl3 *newopl);
+  CrixPlayer();
   ~CrixPlayer();
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int subsong);
-  float getrefresh();
+  size_t framesUntilUpdate();
   unsigned int getsubsongs();
 
   std::string gettype()

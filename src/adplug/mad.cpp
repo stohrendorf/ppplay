@@ -24,9 +24,9 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CPlayer *CmadLoader::factory(opl::Opl3 *newopl)
+CPlayer *CmadLoader::factory()
 {
-  return new CmadLoader(newopl);
+  return new CmadLoader();
 }
 
 bool CmadLoader::load(const std::string &filename, const CFileProvider &fp)
@@ -106,9 +106,9 @@ void CmadLoader::rewind(int subsong)
 	}
 }
 
-float CmadLoader::getrefresh()
+size_t CmadLoader::framesUntilUpdate()
 {
-	return (float)timer;
+    return SampleRate/timer;
 }
 
 std::string CmadLoader::gettype()

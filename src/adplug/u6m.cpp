@@ -29,9 +29,9 @@ if(p < d.size) \
 else \
   return false;
 
-CPlayer *Cu6mPlayer::factory(opl::Opl3 *newopl)
+CPlayer *Cu6mPlayer::factory()
 {
-  return new Cu6mPlayer(newopl);
+  return new Cu6mPlayer();
 }
 
 bool Cu6mPlayer::load(const std::string &filename, const CFileProvider &fp)
@@ -185,9 +185,9 @@ void Cu6mPlayer::rewind(int subsong)
 }
 
 
-float Cu6mPlayer::getrefresh()
+size_t Cu6mPlayer::framesUntilUpdate()
 {
-  return ((float)60);   // the Ultima 6 music driver expects to be called at 60 Hz
+  return SampleRate/60;   // the Ultima 6 music driver expects to be called at 60 Hz
 }
 
 
@@ -850,7 +850,7 @@ void Cu6mPlayer::mf_slide(int channel)
 
 void Cu6mPlayer::out_adlib(unsigned char adlib_register, unsigned char adlib_data)
 {
-  m_opl->writeReg(adlib_register,adlib_data);
+  getOpl()->writeReg(adlib_register,adlib_data);
 }
 
 

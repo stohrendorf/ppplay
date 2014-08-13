@@ -24,9 +24,9 @@
 
 /*** public methods *************************************/
 
-CPlayer *CrawPlayer::factory(opl::Opl3 *newopl)
+CPlayer *CrawPlayer::factory()
 {
-  return new CrawPlayer(newopl);
+  return new CrawPlayer();
 }
 
 bool CrawPlayer::load(const std::string &filename, const CFileProvider &fp)
@@ -84,7 +84,7 @@ bool CrawPlayer::update()
       }
       break;
     default:
-      m_opl->writeReg(data[pos].command,data[pos].param);
+      getOpl()->writeReg(data[pos].command,data[pos].param);
       break;
     }
   } while(data[pos++].command || setspeed);
@@ -95,10 +95,10 @@ bool CrawPlayer::update()
 void CrawPlayer::rewind(int subsong)
 {
   pos = del = 0; speed = clock; songend = false;
-  m_opl->writeReg(1, 32);	// go to 9 channel mode
+  getOpl()->writeReg(1, 32);	// go to 9 channel mode
 }
 
-float CrawPlayer::getrefresh()
+size_t CrawPlayer::framesUntilUpdate()
 {
-  return 1193180.0 / (speed ? speed : 0xffff);	// timer oscillator speed / wait register = clock frequency
+  return SampleRate * (speed ? speed : 0xffff) / 1193180.0;	// timer oscillator speed / wait register = clock frequency
 }

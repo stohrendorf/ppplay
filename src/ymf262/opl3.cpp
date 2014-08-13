@@ -110,7 +110,7 @@ Opl3::Opl3() : m_registers(), m_operators(), m_channels2op(), m_channels4op(), m
 void Opl3::read( std::array<int16_t, 4>* dest )
 {
     std::array<int32_t, 4> outputBuffer;
-    std::fill_n( outputBuffer.begin(), 4, 0 );
+    outputBuffer.fill(0);
 
     // If !m_new, use OPL2 mode with 9 channels, else use OPL3 18 channels.
     for( int array = 0; array < ( m_new + 1 ); array++ ) {
@@ -126,7 +126,11 @@ void Opl3::read( std::array<int16_t, 4>* dest )
 
     if( dest ) {
         for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
-            ( *dest )[outputChannelNumber] = ppp::clip( yac512( outputBuffer[outputChannelNumber] ), -32768, 32767 );
+            outputBuffer[outputChannelNumber] = yac512( outputBuffer[outputChannelNumber] );
+        }
+        m_filters.filter(outputBuffer);
+        for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ ) {
+            (*dest)[outputChannelNumber] = ppp::clip( outputBuffer[outputChannelNumber], -32768, 32767 );
         }
     }
 
@@ -144,6 +148,8 @@ void Opl3::read( std::array<int16_t, 4>* dest )
 
 void Opl3::write( int array, int address, uint8_t data )
 {
+    BOOST_ASSERT( address>=0 && address<0x100 );
+    BOOST_ASSERT( array==0 || array==1 );
     // The OPL3 has two registers arrays, each with adresses ranging from 0x00 to 0xF5.
     const int registerAddress = ( array << 8 ) | address;
     // If the address is out of the OPL3 memory map, return.
@@ -178,6 +184,7 @@ void Opl3::write( int array, int address, uint8_t data )
                     update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1();
                 break;
             }
+            BOOST_ASSERT( (address & 0x0F)<9 );
             // Registers for each channel are in A0-A8, B0-B8, C0-C8, in both register arrays.
             // 0xB0...0xB8 keeps kon,block,fnum(h) for each channel.
             if( ( address & 0xF0 ) == 0xB0 && address <= 0xB8 ) {
@@ -193,6 +200,7 @@ void Opl3::write( int array, int address, uint8_t data )
             // 0xC0...0xC8 keeps cha,chb,chc,chd,fb,cnt for each channel:
         case 0xC0:
             // ARC_FEEDBACK
+            BOOST_ASSERT( (address & 0x0F)<9 );
             if( address <= 0xC8 )
                 m_channels[array][address & 0x0F]->update_CH4_FB3_CNT1();
             break;
@@ -200,6 +208,7 @@ void Opl3::write( int array, int address, uint8_t data )
             // Registers for each of the 36 Operators:
         default:
             int operatorOffset = address & 0x1F;
+            BOOST_ASSERT(operatorOffset>=0 && operatorOffset<0x16);
             if( m_operators[array][operatorOffset] == nullptr )
                 break;
             switch( address & 0xE0 ) {

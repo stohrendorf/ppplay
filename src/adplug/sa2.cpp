@@ -27,9 +27,9 @@
 #include "sa2.h"
 #include "debug.h"
 
-CPlayer *Csa2Loader::factory(opl::Opl3 *newopl)
+CPlayer *Csa2Loader::factory()
 {
-  return new Csa2Loader(newopl);
+  return new Csa2Loader();
 }
 
 bool Csa2Loader::load(const std::string &filename, const CFileProvider &fp)

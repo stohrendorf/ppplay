@@ -30,13 +30,13 @@
 
 /*** public methods *************************************/
 
-CPlayer *CdroPlayer::factory(opl::Opl3 *newopl)
+CPlayer *CdroPlayer::factory()
 {
-  return new CdroPlayer(newopl);
+  return new CdroPlayer();
 }
 
-CdroPlayer::CdroPlayer(opl::Opl3 *newopl)
-  : CPlayer(newopl), data(0)
+CdroPlayer::CdroPlayer()
+  : CPlayer(), data(0)
 {
 }
 
@@ -101,7 +101,7 @@ bool CdroPlayer::update()
       break;
     default:
       if(cmd==4) cmd = data[pos++]; //data override
-        m_opl->writeReg(cmd,data[pos++]);
+        getOpl()->writeReg(cmd,data[pos++]);
       break;
     }
   }
@@ -118,11 +118,13 @@ void CdroPlayer::rewind(int subsong)
   //registers not initialized to 0 will be corrected
   //in the data stream
   for(int i=0;i<256;i++)
-    m_opl->writeReg(i,0);
+    getOpl()->writeReg(i,0);
 }
 
-float CdroPlayer::getrefresh()
+size_t CdroPlayer::framesUntilUpdate()
 {
-  if (delay > 500) return 1000 / 500;
-  else return 1000 / (double)delay;
+  if (delay > 500)
+      return SampleRate / 2;
+  else
+      return SampleRate * delay / 1000;
 }

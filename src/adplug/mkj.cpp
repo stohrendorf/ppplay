@@ -25,9 +25,9 @@
 #include "mkj.h"
 #include "debug.h"
 
-CPlayer *CmkjPlayer::factory(opl::Opl3 *newopl)
+CPlayer *CmkjPlayer::factory()
 {
-  return new CmkjPlayer(newopl);
+  return new CmkjPlayer();
 }
 
 bool CmkjPlayer::load(const std::string &filename, const CFileProvider &fp)
@@ -46,17 +46,17 @@ bool CmkjPlayer::load(const std::string &filename, const CFileProvider &fp)
 
   // load
   maxchannel = f->readInt(2);
-  m_opl->writeReg(1, 32);
+  getOpl()->writeReg(1, 32);
   for(i = 0; i < maxchannel; i++) {
     for(j = 0; j < 8; j++) inst[j] = f->readInt(2);
-    m_opl->writeReg(0x20+m_opTable[i],inst[4]);
-    m_opl->writeReg(0x23+m_opTable[i],inst[0]);
-    m_opl->writeReg(0x40+m_opTable[i],inst[5]);
-    m_opl->writeReg(0x43+m_opTable[i],inst[1]);
-    m_opl->writeReg(0x60+m_opTable[i],inst[6]);
-    m_opl->writeReg(0x63+m_opTable[i],inst[2]);
-    m_opl->writeReg(0x80+m_opTable[i],inst[7]);
-    m_opl->writeReg(0x83+m_opTable[i],inst[3]);
+    getOpl()->writeReg(0x20+m_opTable[i],inst[4]);
+    getOpl()->writeReg(0x23+m_opTable[i],inst[0]);
+    getOpl()->writeReg(0x40+m_opTable[i],inst[5]);
+    getOpl()->writeReg(0x43+m_opTable[i],inst[1]);
+    getOpl()->writeReg(0x60+m_opTable[i],inst[6]);
+    getOpl()->writeReg(0x63+m_opTable[i],inst[2]);
+    getOpl()->writeReg(0x80+m_opTable[i],inst[7]);
+    getOpl()->writeReg(0x83+m_opTable[i],inst[3]);
   }
   maxnotes = f->readInt(2);
   songbuf = new short [(maxchannel+1)*maxnotes];
@@ -86,7 +86,7 @@ bool CmkjPlayer::update()
       continue;
     }
 
-    m_opl->writeReg(0xb0 + c, 0);	// key off
+    getOpl()->writeReg(0xb0 + c, 0);	// key off
     do {
       assert(channel[c].songptr < (maxchannel + 1) * maxnotes);
       note = songbuf[channel[c].songptr];
@@ -95,18 +95,18 @@ bool CmkjPlayer::update()
 	  channel[c].pstat = channel[c].speed;
       switch(note) {
 	// normal notes
-      case 68: m_opl->writeReg(0xa0 + c,0x81); m_opl->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
-      case 69: m_opl->writeReg(0xa0 + c,0xb0); m_opl->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
-      case 70: m_opl->writeReg(0xa0 + c,0xca); m_opl->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
-      case 71: m_opl->writeReg(0xa0 + c,0x2); m_opl->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
-      case 65: m_opl->writeReg(0xa0 + c,0x41); m_opl->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
-      case 66: m_opl->writeReg(0xa0 + c,0x87); m_opl->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
-      case 67: m_opl->writeReg(0xa0 + c,0xae); m_opl->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
-      case 17: m_opl->writeReg(0xa0 + c,0x6b); m_opl->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
-      case 18: m_opl->writeReg(0xa0 + c,0x98); m_opl->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
-      case 20: m_opl->writeReg(0xa0 + c,0xe5); m_opl->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
-      case 21: m_opl->writeReg(0xa0 + c,0x20); m_opl->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
-      case 15: m_opl->writeReg(0xa0 + c,0x63); m_opl->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
+      case 68: getOpl()->writeReg(0xa0 + c,0x81); getOpl()->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
+      case 69: getOpl()->writeReg(0xa0 + c,0xb0); getOpl()->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
+      case 70: getOpl()->writeReg(0xa0 + c,0xca); getOpl()->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
+      case 71: getOpl()->writeReg(0xa0 + c,0x2); getOpl()->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
+      case 65: getOpl()->writeReg(0xa0 + c,0x41); getOpl()->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
+      case 66: getOpl()->writeReg(0xa0 + c,0x87); getOpl()->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
+      case 67: getOpl()->writeReg(0xa0 + c,0xae); getOpl()->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
+      case 17: getOpl()->writeReg(0xa0 + c,0x6b); getOpl()->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
+      case 18: getOpl()->writeReg(0xa0 + c,0x98); getOpl()->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
+      case 20: getOpl()->writeReg(0xa0 + c,0xe5); getOpl()->writeReg(0xb0 + c,0x21 + 4 * channel[c].octave); break;
+      case 21: getOpl()->writeReg(0xa0 + c,0x20); getOpl()->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
+      case 15: getOpl()->writeReg(0xa0 + c,0x63); getOpl()->writeReg(0xb0 + c,0x22 + 4 * channel[c].octave); break;
       case 255:	// delay
 	channel[c].songptr += maxchannel;
 	channel[c].pstat = songbuf[channel[c].songptr];
@@ -123,9 +123,9 @@ bool CmkjPlayer::update()
 	channel[c].songptr += maxchannel;
 	channel[c].waveform = songbuf[channel[c].songptr] - 300;
 	if(c > 2)
-	  m_opl->writeReg(0xe0 + c + (c+6),channel[c].waveform);
+	  getOpl()->writeReg(0xe0 + c + (c+6),channel[c].waveform);
 	else
-	  m_opl->writeReg(0xe0 + c,channel[c].waveform);
+	  getOpl()->writeReg(0xe0 + c,channel[c].waveform);
 	break;
       case 251:	// song end
 	for(i = 0; i < maxchannel; i++) channel[i].songptr = i;
@@ -158,7 +158,7 @@ void CmkjPlayer::rewind(int subsong)
   songend = false;
 }
 
-float CmkjPlayer::getrefresh()
+size_t CmkjPlayer::framesUntilUpdate()
 {
-  return 100.0f;
+  return SampleRate/100;
 }

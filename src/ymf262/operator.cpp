@@ -118,7 +118,8 @@ int16_t Operator::handleSnareDrum( uint8_t ws )
 
 int16_t Operator::nextSample( uint16_t modulator )
 {
-    m_envelopeGenerator.advance( m_egt, m_am );
+    const bool isRhythm = m_opl->ryt() && m_operatorBaseAddress>=0x10 && m_operatorBaseAddress<=0x15;
+    m_envelopeGenerator.advance( m_egt && !isRhythm, m_am );
     m_phase = m_phaseGenerator.advance( m_vib );
 
     // If it is in OPL2 mode, use first four waveforms only:
@@ -356,7 +357,7 @@ int16_t sinExp( uint16_t expVal )
 
     if( isSigned ) {
         // -1 for one's complement
-        return -result - 1;
+        return ~result;
     }
     else {
         return result;
@@ -374,6 +375,7 @@ int16_t sinExp( uint16_t expVal )
  */
 int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
 {
+    BOOST_ASSERT(env < 512);
     return sinExp( sinLog( ws, phase ) + ( env << 3 ) );
 }
 

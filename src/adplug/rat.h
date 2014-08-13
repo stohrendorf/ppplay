@@ -24,9 +24,9 @@
 class CxadratPlayer: public CxadPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-  CxadratPlayer(opl::Opl3 *newopl): CxadPlayer(newopl)
+  CxadratPlayer(): CxadPlayer()
     { }
 
 protected:

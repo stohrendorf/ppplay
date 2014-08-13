@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software Foundation,
- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #ifndef H_SDL
@@ -26,20 +26,18 @@
 
 class SDLPlayer: public Player
 {
-private:
-  opl::Opl3		*oplChip;
-  SDL_AudioSpec	spec;
+    DISABLE_COPY(SDLPlayer)
+    private:
+    SDL_AudioSpec	m_spec;
+    ppp::BresenInterpolation m_interp;
 
-  static void callback(void *, Uint8 *, int);
-  ppp::BresenInterpolation interp;
-  ppp::OplFilter filters[2];
+    static void callback(void *, Uint8 *, int byteLen);
 
 public:
-  SDLPlayer(opl::Opl3 *nopl, int freq, unsigned long bufsize);
-  virtual ~SDLPlayer();
+    SDLPlayer(int freq, size_t bufsize);
+    virtual ~SDLPlayer();
 
-  virtual void frame();
-  virtual opl::Opl3 *get_opl() { return oplChip; }
+    virtual void frame();
 };
 
 #endif

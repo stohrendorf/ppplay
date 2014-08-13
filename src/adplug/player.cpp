@@ -30,40 +30,7 @@ const unsigned short CPlayer::m_noteTable[12] =
 const unsigned char CPlayer::m_opTable[9] =
   {0x00, 0x01, 0x02, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12};
 
-CPlayer::CPlayer(opl::Opl3 *newopl)
-  : m_opl(newopl), m_db(CAdPlug::database)
+CPlayer::CPlayer()
+  : m_oplChip(), m_db(CAdPlug::database)
 {
-}
-
-CPlayer::~CPlayer()
-{
-}
-
-unsigned long CPlayer::songlength(int subsong)
-{
-  opl::Opl3	tempopl;
-  opl::Opl3	*saveopl = m_opl;
-  float		slength = 0.0f;
-
-  // save original OPL from being overwritten
-  m_opl = &tempopl;
-
-  // get song length
-  rewind(subsong);
-  while(update() && slength < 600000)	// song length limit: 10 minutes
-    slength += 1000.0f / getrefresh();
-  rewind(subsong);
-
-  // restore original OPL and return
-  m_opl = saveopl;
-  return (unsigned long)slength;
-}
-
-void CPlayer::seek(unsigned long ms)
-{
-  float pos = 0.0f;
-
-  rewind();
-  while(pos < ms && update())		// seek to new position
-    pos += 1000/getrefresh();
 }

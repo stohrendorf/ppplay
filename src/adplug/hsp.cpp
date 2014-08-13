@@ -23,9 +23,9 @@
 
 #include "hsp.h"
 
-CPlayer *ChspLoader::factory(opl::Opl3 *newopl)
+CPlayer *ChspLoader::factory()
 {
-  return new ChspLoader(newopl);
+  return new ChspLoader();
 }
 
 bool ChspLoader::load(const std::string &filename, const CFileProvider &fp)

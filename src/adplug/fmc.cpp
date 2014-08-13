@@ -24,9 +24,9 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CPlayer *CfmcLoader::factory(opl::Opl3 *newopl)
+CPlayer *CfmcLoader::factory()
 {
-  return new CfmcLoader(newopl);
+  return new CfmcLoader();
 }
 
 bool CfmcLoader::load(const std::string &filename, const CFileProvider &fp)
@@ -163,9 +163,9 @@ bool CfmcLoader::load(const std::string &filename, const CFileProvider &fp)
   return true;
 }
 
-float CfmcLoader::getrefresh()
+size_t CfmcLoader::framesUntilUpdate()
 {
-  return 50.0f;
+  return SampleRate/50;
 }
 
 std::string CfmcLoader::gettype()

@@ -24,13 +24,13 @@
 class CmadLoader: public CmodPlayer
 {
 public:
-	static CPlayer *factory(opl::Opl3 *newopl);
+	static CPlayer *factory();
 
-	CmadLoader(opl::Opl3 *newopl) : CmodPlayer(newopl) { };
+    CmadLoader() : CmodPlayer() { }
 
 	bool	load(const std::string &filename, const CFileProvider &fp);
 	void	rewind(int subsong);
-	float	getrefresh();
+    size_t	framesUntilUpdate();
 
 	std::string	gettype();
 	std::string	getinstrument(unsigned int n);

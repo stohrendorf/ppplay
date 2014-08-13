@@ -24,14 +24,14 @@
 class CdfmLoader: public CmodPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-	CdfmLoader(opl::Opl3 *newopl)
-		: CmodPlayer(newopl)
+	CdfmLoader()
+		: CmodPlayer()
 	{ };
 
 	bool load(const std::string &filename, const CFileProvider &fp);
-	float getrefresh();
+	size_t framesUntilUpdate();
 
 	std::string gettype();
 	unsigned int getinstruments()

@@ -24,12 +24,12 @@
 class CfmcLoader: public CmodPlayer
 {
 	public:
-		static CPlayer *factory(opl::Opl3 *newopl);
+		static CPlayer *factory();
 
-		CfmcLoader(opl::Opl3 *newopl) : CmodPlayer(newopl) { };
+		CfmcLoader() : CmodPlayer() { };
 
 		bool	load(const std::string &filename, const CFileProvider &fp);
-		float	getrefresh();
+		size_t framesUntilUpdate();
 
 		std::string	gettype();
 		std::string	gettitle();

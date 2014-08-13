@@ -48,9 +48,9 @@
 
 /*** public methods *************************************/
 
-CPlayer *CimfPlayer::factory(opl::Opl3 *newopl)
+CPlayer *CimfPlayer::factory()
 {
-  return new CimfPlayer(newopl);
+  return new CimfPlayer();
 }
 
 bool CimfPlayer::load(const std::string &filename, const CFileProvider &fp)
@@ -89,17 +89,18 @@ bool CimfPlayer::load(const std::string &filename, const CFileProvider &fp)
   else
     fsize = f->readInt(2);
   flsize = fp.filesize(f);
+  size_t size;
   if(!fsize) {		// footerless file (raw music data)
     if(mfsize)
       f->seek(-4, binio::Add);
     else
       f->seek(-2, binio::Add);
-    m_size = (flsize - mfsize) / 4;
+    size = (flsize - mfsize) / 4;
   } else		// file has got a footer
-    m_size = fsize / 4;
+    size = fsize / 4;
 
-  m_data = new Sdata[m_size];
-  for(i = 0; i < m_size; i++) {
+  m_data.resize(size);
+  for(i = 0; i < size; i++) {
     m_data[i].reg = f->readInt(1); m_data[i].val = f->readInt(1);
     m_data[i].time = f->readInt(2);
   }
@@ -115,9 +116,10 @@ bool CimfPlayer::load(const std::string &filename, const CFileProvider &fp)
       // Generic footer
       unsigned long footerlen = flsize - fsize - 2 - mfsize;
 
-      m_footer = new char[footerlen + 1];
-      f->readString(m_footer, footerlen);
-      m_footer[footerlen] = '\0';	// Make ASCIIZ string
+      m_footer.resize(footerlen);
+
+      for(size_t i=0; i<footerlen; ++i)
+          m_footer += char(f->readInt(1));
     }
   }
 
@@ -130,16 +132,16 @@ bool CimfPlayer::load(const std::string &filename, const CFileProvider &fp)
 bool CimfPlayer::update()
 {
 	do {
-		m_opl->writeReg(m_data[m_pos].reg,m_data[m_pos].val);
+		getOpl()->writeReg(m_data[m_pos].reg,m_data[m_pos].val);
 		m_del = m_data[m_pos].time;
 		m_pos++;
-	} while(!m_del && m_pos < m_size);
+    } while(!m_del && m_pos < m_data.size());
 
-	if(m_pos >= m_size) {
+    if(m_pos >= m_data.size()) {
 		m_pos = 0;
 		m_songend = true;
 	}
-	else m_timer = m_rate / (float)m_del;
+    else m_timer = m_rate / (float)m_del;
 
 	return !m_songend;
 }
@@ -147,7 +149,7 @@ bool CimfPlayer::update()
 void CimfPlayer::rewind(int subsong)
 {
 	m_pos = 0; m_del = 0; m_timer = m_rate; m_songend = false;
-	m_opl->writeReg(1,32);	// go to OPL2 mode
+	getOpl()->writeReg(1,32);	// go to OPL2 mode
 }
 
 std::string CimfPlayer::gettitle()
@@ -166,12 +168,9 @@ std::string CimfPlayer::gettitle()
 
 std::string CimfPlayer::getdesc()
 {
-  std::string	desc;
+  std::string desc = m_footer;
 
-  if(m_footer)
-    desc = std::string(m_footer);
-
-  if(!m_remarks.empty() && m_footer)
+  if(!m_remarks.empty() && !m_footer.empty())
     desc += "\n\n";
 
   desc += m_remarks;

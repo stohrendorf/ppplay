@@ -24,15 +24,15 @@
 class CxsmPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl) { return new CxsmPlayer(newopl); }
+  static CPlayer *factory() { return new CxsmPlayer(); }
 
-  CxsmPlayer(opl::Opl3 *newopl);
+  CxsmPlayer();
   ~CxsmPlayer();
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int subsong);
-  float getrefresh();
+  size_t framesUntilUpdate();
 
   std::string gettype() { return std::string("eXtra Simple Music"); }
 

@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software Foundation,
- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #ifndef H_OUTPUT
@@ -22,42 +22,56 @@
 
 #include "adplug/player.h"
 #include "genmod/breseninter.h"
-#include "ymf262/oplfilter.h"
 
 class Player
 {
-public:
-  CPlayer	*p;
-  bool		playing;
+    DISABLE_COPY(Player)
+    public:
 
-  Player();
-  virtual ~Player();
+    Player() = default;
+    virtual ~Player() = default;
 
-  virtual void frame() = 0;
-  virtual opl::Opl3 *get_opl() = 0;
+    virtual void frame() = 0;
+
+    void setPlayer(std::unique_ptr<CPlayer>&& player) {
+        m_player = std::move(player);
+    }
+
+    bool isPlaying() const noexcept {
+        return m_playing;
+    }
+
+protected:
+    void setIsPlaying(bool value) noexcept {
+        m_playing = value;
+    }
+    CPlayer* getPlayer() {
+        return m_player.get();
+    }
+
+private:
+    bool m_playing = false;
+    std::unique_ptr<CPlayer> m_player{};
 };
 
 class EmuPlayer: public Player
 {
-private:
-  opl::Opl3		*opl;
-  char		*audiobuf;
-  unsigned long	buf_size, freq;
-  ppp::BresenInterpolation interp;
-  ppp::OplFilter filters[2];
+    DISABLE_COPY(EmuPlayer)
+    private:
+        std::vector<int16_t> m_audioBuf;
+    unsigned long	m_freq;
+    ppp::BresenInterpolation m_oplInterp;
 
 public:
-  EmuPlayer(opl::Opl3 *nopl, unsigned long nfreq, unsigned long nbufsize);
-  virtual ~EmuPlayer();
+    EmuPlayer(unsigned long nfreq, size_t nbufsize);
 
-  virtual void setbufsize(unsigned long nbufsize);
-  virtual void frame();
-  virtual opl::Opl3 *get_opl() { return opl; }
+    virtual void setBufferSize(size_t nbufsize);
+    virtual void frame();
 
 protected:
-  virtual void output(const void *buf, unsigned long size) = 0;
-  // The output buffer is always of the size requested through the constructor.
-  // This time, size is measured in bytes, not samples!
+    virtual void output(const std::vector<int16_t>& buf) = 0;
+    // The output buffer is always of the size requested through the constructor.
+    // This time, size is measured in bytes, not samples!
 };
 
 #endif

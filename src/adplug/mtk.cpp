@@ -24,9 +24,9 @@
 
 /*** public methods **************************************/
 
-CPlayer *CmtkLoader::factory(opl::Opl3 *newopl)
+CPlayer *CmtkLoader::factory()
 {
-  return new CmtkLoader(newopl);
+  return new CmtkLoader();
 }
 
 bool CmtkLoader::load(const std::string &filename, const CFileProvider &fp)

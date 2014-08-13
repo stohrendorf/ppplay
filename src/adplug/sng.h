@@ -27,22 +27,21 @@
 class CsngPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-	CsngPlayer(opl::Opl3 *newopl)
-		: CPlayer(newopl), data(0)
-	{ };
-	~CsngPlayer()
-	{ if(data) delete [] data; };
+	CsngPlayer()
+        : CPlayer()
+    { }
 
 	bool load(const std::string &filename, const CFileProvider &fp);
 	bool update();
 	void rewind(int subsong);
-	float getrefresh()
-	{ return 70.0f; };
+    size_t framesUntilUpdate() override {
+        return SampleRate/70;
+    }
 
 	std::string gettype()
-	{ return std::string("SNG File Format"); };
+    { return "SNG File Format"; }
 
 protected:
 	struct {
@@ -54,7 +53,8 @@ protected:
 
 	struct Sdata {
 		unsigned char val,reg;
-	} *data;
+    };
+    std::vector<Sdata> data;
 
 	unsigned char del;
 	unsigned short pos;

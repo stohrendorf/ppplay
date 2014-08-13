@@ -24,10 +24,10 @@
 class CrawPlayer: public CPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-	CrawPlayer(opl::Opl3 *newopl)
-		: CPlayer(newopl), data(0)
+	CrawPlayer()
+		: CPlayer(), data(0)
 	{ };
 	~CrawPlayer()
 	{ if(data) delete [] data; };
@@ -35,7 +35,7 @@ public:
 	bool load(const std::string &filename, const CFileProvider &fp);
 	bool update();
 	void rewind(int subsong);
-	float getrefresh();
+	size_t framesUntilUpdate();
 
 	std::string gettype()
 	{ return std::string("RdosPlay RAW"); };

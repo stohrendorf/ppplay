@@ -24,22 +24,23 @@
 class CldsPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(opl::Opl3 *newopl) { return new CldsPlayer(newopl); }
+  static CPlayer *factory() { return new CldsPlayer(); }
 
-  CldsPlayer(opl::Opl3 *newopl);
-  virtual ~CldsPlayer();
+  CldsPlayer();
 
   bool load(const std::string &filename, const CFileProvider &fp);
   virtual bool update();
   virtual void rewind(int subsong = -1);
-  float getrefresh() { return 70.0f; }
+  size_t framesUntilUpdate() override {
+      return SampleRate/70;
+  }
 
   std::string gettype() { return std::string("LOUDNESS Sound System"); }
   unsigned int getorders() { return numposi; }
   unsigned int getorder() { return posplay; }
   unsigned int getrow() { return pattplay; }
   unsigned int getspeed() { return speed; }
-  unsigned int getinstruments() { return numpatch; }
+  unsigned int getinstruments() { return soundbank.size(); }
 
  private:
   typedef struct {
@@ -75,14 +76,15 @@ class CldsPlayer: public CPlayer
   static const unsigned char	vibtab[], tremtab[];
   static const unsigned short	maxsound, maxpos;
 
-  SoundBank		*soundbank;
+  std::vector<SoundBank> soundbank;
   Channel		channel[9];
-  Position		*positions;
+  std::vector<Position> positions;
   unsigned char		fmchip[0xff], jumping, fadeonoff, allvolume, hardfade,
     tempo_now, pattplay, tempo, regbd, chandelay[9], mode, pattlen;
-  unsigned short	posplay, jumppos, *patterns, speed;
+  std::vector<uint16_t> patterns;
+  unsigned short	posplay, jumppos, speed;
   bool			playing, songlooped;
-  unsigned int		numpatch, numposi, patterns_size, mainvolume;
+  unsigned int		numposi, patterns_size, mainvolume;
 
   void		playsound(int inst_number, int channel_number, int tunehigh);
   inline void	setregs(unsigned char reg, unsigned char val);

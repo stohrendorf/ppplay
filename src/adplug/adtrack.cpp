@@ -37,9 +37,9 @@
 
 /*** Public methods ***/
 
-CPlayer *CadtrackLoader::factory(opl::Opl3 *newopl)
+CPlayer *CadtrackLoader::factory()
 {
-  return new CadtrackLoader(newopl);
+  return new CadtrackLoader();
 }
 
 bool CadtrackLoader::load(const std::string &filename, const CFileProvider &fp)
@@ -124,9 +124,9 @@ bool CadtrackLoader::load(const std::string &filename, const CFileProvider &fp)
   return true;
 }
 
-float CadtrackLoader::getrefresh()
+size_t CadtrackLoader::framesUntilUpdate()
 {
-  return 18.2f;
+  return SampleRate/18.2;
 }
 
 /*** Private methods ***/

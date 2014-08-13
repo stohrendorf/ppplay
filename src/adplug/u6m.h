@@ -30,9 +30,9 @@
 class Cu6mPlayer: public CPlayer
 {
  public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-  Cu6mPlayer(opl::Opl3 *newopl) : CPlayer(newopl), song_data(0)
+  Cu6mPlayer() : CPlayer(), song_data(0)
     {
     };
 
@@ -45,7 +45,7 @@ class Cu6mPlayer: public CPlayer
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int subsong);
-  float getrefresh();
+  size_t framesUntilUpdate();
 
   std::string gettype()
     {

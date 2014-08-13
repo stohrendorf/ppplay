@@ -24,9 +24,9 @@
 #include "amd.h"
 #include "debug.h"
 
-CPlayer *CamdLoader::factory(opl::Opl3 *newopl)
+CPlayer *CamdLoader::factory()
 {
-  return new CamdLoader(newopl);
+  return new CamdLoader();
 }
 
 bool CamdLoader::load(const std::string &filename, const CFileProvider &fp)
@@ -184,10 +184,10 @@ bool CamdLoader::load(const std::string &filename, const CFileProvider &fp)
   return true;
 }
 
-float CamdLoader::getrefresh()
+size_t CamdLoader::framesUntilUpdate()
 {
   if(tempo)
-    return (float) (tempo);
+    return SampleRate/tempo;
   else
-    return 18.2f;
+    return SampleRate/18.2;
 }

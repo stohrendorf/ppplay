@@ -113,8 +113,6 @@ AbstractArchive& Channel::serialize( AbstractArchive* archive )
 
 void Channel::keyOff()
 {
-    if( isRhythmChannel() )
-        return;
     for( Operator * op : m_operators )
         op->keyOff();
 }
@@ -127,7 +125,7 @@ void Channel::keyOn()
 
 void Channel::updateOperators()
 {
-    for( Operator * op : m_operators )
+    for( Operator* op : m_operators )
         op->updateOperator( m_fnum, m_block );
 }
 

@@ -24,14 +24,14 @@
 class CadtrackLoader: public CmodPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-	CadtrackLoader(opl::Opl3 *newopl)
-		: CmodPlayer(newopl)
+	CadtrackLoader()
+		: CmodPlayer()
 	{ };
 
 	bool load(const std::string &filename, const CFileProvider &fp);
-	float getrefresh();
+	size_t framesUntilUpdate();
 
 	std::string gettype()
 	{ return std::string("Adlib Tracker 1.0"); };

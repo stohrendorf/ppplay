@@ -33,14 +33,12 @@
 
 class CAdPlug
 {
-  friend CPlayer::CPlayer(opl::Opl3 *newopl);
+  friend CPlayer::CPlayer();
 
 public:
   static const CPlayers players;
 
-  static CPlayer *factory(const std::string &fn, opl::Opl3 *opl,
-			  const CPlayers &pl = players,
-			  const CFileProvider &fp = CProvider_Filesystem());
+  static std::unique_ptr<CPlayer> factory(const std::string &fn, const CPlayers &pl = players, const CFileProvider &fp = CProvider_Filesystem());
 
   static void set_database(CAdPlugDatabase *db);
   static std::string get_version();

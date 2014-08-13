@@ -27,10 +27,10 @@
 class Cd00Player: public CPlayer
 {
  public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-  Cd00Player(opl::Opl3 *newopl)
-    : CPlayer(newopl), filedata(0)
+  Cd00Player()
+    : CPlayer(), filedata(0)
     { };
   ~Cd00Player()
     { if(filedata) delete [] filedata; };
@@ -38,7 +38,7 @@ class Cd00Player: public CPlayer
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int subsong);
-  float getrefresh();
+  size_t framesUntilUpdate();
 
   std::string gettype();
   std::string gettitle()

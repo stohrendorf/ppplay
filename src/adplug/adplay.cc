@@ -48,9 +48,8 @@
 /***** Global variables *****/
 
 static const char	*program_name;
-static Player		*player = 0;		// global player object
+static std::unique_ptr<Player> player; // global player object
 static CAdPlugDatabase	mydb;
-static opl::Opl3		*oplChip = 0;
 
 /***** Configuration (and defaults) *****/
 
@@ -184,52 +183,47 @@ static void play(const char *fn, Player *pl, int subsong = -1)
   unsigned long i;
 
   // initialize output & player
-  pl->p = CAdPlug::factory(fn,pl->get_opl());
+  auto player = CAdPlug::factory(fn);
 
-  if(!pl->p) {
+  if(!player) {
     message(MSG_WARN, "unknown filetype -- %s", fn);
     return;
   }
 
   if(subsong != -1)
-    pl->p->rewind(subsong);
+    player->rewind(subsong);
   else
-    subsong = pl->p->getsubsong();
+    subsong = player->getsubsong();
 
   fprintf(stderr, "Playing '%s'...\n"
 	  "Type  : %s\n"
 	  "Title : %s\n"
-	  "Author: %s\n\n", fn, pl->p->gettype().c_str(),
-	  pl->p->gettitle().c_str(), pl->p->getauthor().c_str());
+      "Author: %s\n\n", fn, player->gettype().c_str(),
+      player->gettitle().c_str(), player->getauthor().c_str());
 
   if(cfg.showinsts) {		// display instruments
     fprintf(stderr, "Instrument names:\n");
-    for(i = 0;i < pl->p->getinstruments(); i++)
-      fprintf(stderr, "%2lu: %s\n", i, pl->p->getinstrument(i).c_str());
+    for(i = 0;i < player->getinstruments(); i++)
+      fprintf(stderr, "%2lu: %s\n", i, player->getinstrument(i).c_str());
     fprintf(stderr, "\n");
   }
 
   if(cfg.songmessage)	// display song message
-    fprintf(stderr, "Song message:\n%s\n\n", pl->p->getdesc().c_str());
+    fprintf(stderr, "Song message:\n%s\n\n", player->getdesc().c_str());
+
+  pl->setPlayer( std::move(player) );
 
   // play loop
   do {
     if(cfg.songinfo)	// display song info
       fprintf(stderr, "Subsong: %d/%d, Order: %d/%d, Pattern: %d/%d, Row: %d, "
 	      "Speed: %d, Timer: %.2fHz     \r",
-	      subsong, pl->p->getsubsongs()-1, pl->p->getorder(),
-	      pl->p->getorders(), pl->p->getpattern(), pl->p->getpatterns(),
-	      pl->p->getrow(), pl->p->getspeed(), pl->p->getrefresh());
+          subsong, player->getsubsongs()-1, player->getorder(),
+          player->getorders(), player->getpattern(), player->getpatterns(),
+          player->getrow(), player->getspeed(), float(player->framesUntilUpdate())/CPlayer::SampleRate);
 
     pl->frame();
-  } while(pl->playing || cfg.endless);
-}
-
-static void shutdown(void)
-/* General deinitialization handler. */
-{
-  if(player) delete player;
-  if(oplChip) delete oplChip;
+  } while(pl->isPlaying() || cfg.endless);
 }
 
 static void sighandler(int signal)
@@ -252,7 +246,6 @@ int main(int argc, char **argv)
 
   // init
   program_name = argv[0];
-  atexit(shutdown);
   signal(SIGINT, sighandler); signal(SIGTERM, sighandler);
 
   // Try user's home directory first, before trying the default location.
@@ -274,19 +267,16 @@ int main(int argc, char **argv)
   }
   if(argc - optind > 1) cfg.endless = false;	// more than 1 file given
 
-  // init emulator
-  oplChip = new opl::Opl3();
-
   // init player
   switch(cfg.output) {
   case none:
     message(MSG_PANIC, "no output methods compiled in");
     exit(EXIT_FAILURE);
   case disk:
-    player = new DiskWriter(oplChip, cfg.device, 44100);
+    player.reset( new DiskWriter(cfg.device, 44100) );
     break;
   case sdl:
-    player = new SDLPlayer(oplChip, 44100, cfg.buf_size);
+    player.reset( new SDLPlayer(44100, cfg.buf_size) );
     break;
   default:
     message(MSG_ERROR, "output method not available");
@@ -300,7 +290,7 @@ int main(int argc, char **argv)
 
   // play all files from commandline
   for(i=optind;i<argc;i++)
-    play(argv[i],player,cfg.subsong);
+    play(argv[i],player.get(),cfg.subsong);
 
   // deinit
   exit(EXIT_SUCCESS);

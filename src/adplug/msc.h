@@ -27,15 +27,15 @@
 class CmscPlayer: public CPlayer
 {
  public:
-  static CPlayer * factory(opl::Opl3 * newopl);
+  static CPlayer * factory();
 
-  CmscPlayer(opl::Opl3 * newopl);
+  CmscPlayer();
   ~CmscPlayer();
 	
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int subsong);
-  float getrefresh();
+  size_t framesUntilUpdate();
 
   std::string gettype ();
 

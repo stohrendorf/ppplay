@@ -24,9 +24,9 @@
 class CxadbmfPlayer: public CxadPlayer
 {
 public:
-  static CPlayer *factory(opl::Opl3 *newopl);
+  static CPlayer *factory();
 
-  CxadbmfPlayer(opl::Opl3 *newopl): CxadPlayer(newopl)
+  CxadbmfPlayer(): CxadPlayer()
     { };
   ~CxadbmfPlayer()
     { };

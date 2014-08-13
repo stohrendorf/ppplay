@@ -36,12 +36,12 @@ const unsigned char Cs3mPlayer::vibratotab[32] =		// vibrato rate table
 
 /*** public methods *************************************/
 
-CPlayer *Cs3mPlayer::factory(opl::Opl3 *newopl)
+CPlayer *Cs3mPlayer::factory()
 {
-  return new Cs3mPlayer(newopl);
+  return new Cs3mPlayer();
 }
 
-Cs3mPlayer::Cs3mPlayer(opl::Opl3 *newopl): CPlayer(newopl)
+Cs3mPlayer::Cs3mPlayer(): CPlayer()
 {
   int i,j,k;
 
@@ -400,7 +400,7 @@ void Cs3mPlayer::rewind(int subsong)
 
   memset(channel,0,sizeof(channel));
 
-  m_opl->writeReg(1,32);			// Go to ym3812 mode
+  getOpl()->writeReg(1,32);			// Go to ym3812 mode
 }
 
 std::string Cs3mPlayer::gettype()
@@ -418,9 +418,9 @@ std::string Cs3mPlayer::gettype()
   return (std::string("Scream Tracker ") + filever);
 }
 
-float Cs3mPlayer::getrefresh()
+size_t Cs3mPlayer::framesUntilUpdate()
 {
-  return (float) (tempo / 2.5);
+  return SampleRate*2.5/tempo;
 }
 
 /*** private methods *************************************/
@@ -447,38 +447,38 @@ void Cs3mPlayer::setvolume(unsigned char chan)
 {
   unsigned char op = m_opTable[chan], insnr = channel[chan].inst;
 
-  m_opl->writeReg(0x43 + op,(int)(63-((63-(inst[insnr].d03 & 63))/63.0)*channel[chan].vol) + (inst[insnr].d03 & 192));
+  getOpl()->writeReg(0x43 + op,(int)(63-((63-(inst[insnr].d03 & 63))/63.0)*channel[chan].vol) + (inst[insnr].d03 & 192));
   if(inst[insnr].d0a & 1)
-    m_opl->writeReg(0x40 + op,(int)(63-((63-(inst[insnr].d02 & 63))/63.0)*channel[chan].vol) + (inst[insnr].d02 & 192));
+    getOpl()->writeReg(0x40 + op,(int)(63-((63-(inst[insnr].d02 & 63))/63.0)*channel[chan].vol) + (inst[insnr].d02 & 192));
 }
 
 void Cs3mPlayer::setfreq(unsigned char chan)
 {
-  m_opl->writeReg(0xa0 + chan, channel[chan].freq & 255);
+  getOpl()->writeReg(0xa0 + chan, channel[chan].freq & 255);
   if(channel[chan].key)
-    m_opl->writeReg(0xb0 + chan, (((channel[chan].freq & 768) >> 8) + (channel[chan].oct << 2)) | 32);
+    getOpl()->writeReg(0xb0 + chan, (((channel[chan].freq & 768) >> 8) + (channel[chan].oct << 2)) | 32);
   else
-    m_opl->writeReg(0xb0 + chan, ((channel[chan].freq & 768) >> 8) + (channel[chan].oct << 2));
+    getOpl()->writeReg(0xb0 + chan, ((channel[chan].freq & 768) >> 8) + (channel[chan].oct << 2));
 }
 
 void Cs3mPlayer::playnote(unsigned char chan)
 {
   unsigned char op = m_opTable[chan], insnr = channel[chan].inst;
 
-  m_opl->writeReg(0xb0 + chan, 0);	// stop old note
+  getOpl()->writeReg(0xb0 + chan, 0);	// stop old note
 
   // set instrument data
-  m_opl->writeReg(0x20 + op, inst[insnr].d00);
-  m_opl->writeReg(0x23 + op, inst[insnr].d01);
-  m_opl->writeReg(0x40 + op, inst[insnr].d02);
-  m_opl->writeReg(0x43 + op, inst[insnr].d03);
-  m_opl->writeReg(0x60 + op, inst[insnr].d04);
-  m_opl->writeReg(0x63 + op, inst[insnr].d05);
-  m_opl->writeReg(0x80 + op, inst[insnr].d06);
-  m_opl->writeReg(0x83 + op, inst[insnr].d07);
-  m_opl->writeReg(0xe0 + op, inst[insnr].d08);
-  m_opl->writeReg(0xe3 + op, inst[insnr].d09);
-  m_opl->writeReg(0xc0 + chan, inst[insnr].d0a);
+  getOpl()->writeReg(0x20 + op, inst[insnr].d00);
+  getOpl()->writeReg(0x23 + op, inst[insnr].d01);
+  getOpl()->writeReg(0x40 + op, inst[insnr].d02);
+  getOpl()->writeReg(0x43 + op, inst[insnr].d03);
+  getOpl()->writeReg(0x60 + op, inst[insnr].d04);
+  getOpl()->writeReg(0x63 + op, inst[insnr].d05);
+  getOpl()->writeReg(0x80 + op, inst[insnr].d06);
+  getOpl()->writeReg(0x83 + op, inst[insnr].d07);
+  getOpl()->writeReg(0xe0 + op, inst[insnr].d08);
+  getOpl()->writeReg(0xe3 + op, inst[insnr].d09);
+  getOpl()->writeReg(0xc0 + chan, inst[insnr].d0a);
 
   // set frequency & play
   channel[chan].key = 1;

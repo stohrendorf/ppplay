@@ -24,13 +24,13 @@
 
 #include "dro2.h"
 
-CPlayer *Cdro2Player::factory(opl::Opl3 *newopl)
+CPlayer *Cdro2Player::factory()
 {
-  return new Cdro2Player(newopl);
+  return new Cdro2Player();
 }
 
-Cdro2Player::Cdro2Player(opl::Opl3 *newopl) :
-	CPlayer(newopl),
+Cdro2Player::Cdro2Player() :
+	CPlayer(),
 	piConvTable(NULL),
 	data(0)
 {
@@ -120,7 +120,7 @@ bool Cdro2Player::update()
 				return false; // EOF
 			}
 			int iReg = this->piConvTable[iIndex];
-			this->m_opl->writeReg(xchip + iReg, iValue);
+			this->getOpl()->writeReg(xchip + iReg, iValue);
 		}
 
 	}
@@ -136,8 +136,10 @@ void Cdro2Player::rewind(int subsong)
 	this->iPos = 0;
 }
 
-float Cdro2Player::getrefresh()
+size_t Cdro2Player::framesUntilUpdate()
 {
-	if (this->iDelay > 0) return 1000.0 / this->iDelay;
-	else return 1000.0;
+    if (iDelay > 0)
+        return SampleRate * iDelay / 1000;
+    else
+        return SampleRate/1000;
 }
