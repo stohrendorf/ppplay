@@ -38,6 +38,13 @@ private:
 
     std::array<int,16> m_channelVolume{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
 
+    enum class Format {
+        PlainMidi,
+        IdMus
+    };
+
+    Format m_format = Format::PlainMidi;
+
     void resetTracks();
     void advanceTick();
     void metaEvent(Track* Track);
@@ -49,6 +56,10 @@ private:
     void setVolume(int volume);
     void setTempo(int tempo);
     void initEmidi();
+    bool tryLoadMidi(Stream &stream);
+    bool tryLoadMus(Stream &stream);
+    bool serviceRoutineMidi();
+    bool serviceRoutineMus();
 
 public:
     EMidi(Stream& stream);

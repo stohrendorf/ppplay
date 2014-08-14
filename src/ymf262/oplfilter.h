@@ -6,7 +6,7 @@
 
 namespace opl
 {
-template<typename T, int N, int SampleFrq, int LowPass=22050, int HiPass=150>
+template<typename T, int N, int SampleFrq, int LowPass=44100, int HiPass=100>
 class OplFilter
 {
 private:
