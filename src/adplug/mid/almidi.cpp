@@ -389,7 +389,17 @@ bool EMidi::interpretControllerInfo ( EMidi::Track *track, bool TimeSet, int cha
     return TimeSet;
 }
 
-bool EMidi::serviceRoutine ()
+bool EMidi::serviceRoutine()
+{
+    switch(m_format) {
+    case Format::PlainMidi:
+        return serviceRoutineMidi();
+    case Format::IdMus:
+        return serviceRoutineMus();
+    }
+}
+
+bool EMidi::serviceRoutineMidi()
 {
     bool   TimeSet = false;
 
@@ -493,6 +503,93 @@ bool EMidi::serviceRoutine ()
     return true;
 }
 
+bool EMidi::serviceRoutineMus()
+{
+    // This loop isn't endless; it's only used as a "goto-less goto"
+    // if looping is enabled, as there's a "break" at the very end.
+    while( true ) {
+        while( m_trackPtr[0].active && m_trackPtr[0].delay == 0 ) {
+            if( m_trackPtr[0].dataPos >= m_trackPtr[0].data.size()) {
+                m_trackPtr[0].active = false;
+                break;
+            }
+
+            auto event = m_trackPtr[0].nextByte();
+
+            auto channel = event & 0x0f;
+            // swap channels 9 and 15 to use MIDI's percussion channel handling
+            if( channel==9 )
+                channel = 15;
+            else if( channel==15 )
+                channel = 9;
+
+            const auto eventType = (event>>4)&7;
+            const bool isLast = (event & 0x80) != 0;
+
+            switch ( eventType ) {
+            case 0: // note off
+                m_chips.noteOff( channel, m_trackPtr[0].nextByte() & 0x7f );
+                break;
+
+            case 1: { // note on
+                auto tmp = m_trackPtr[0].nextByte();
+                auto vol = m_channelVolume[channel];
+                if( tmp&0x80 ) {
+                    vol = m_channelVolume[channel] = (m_trackPtr[0].nextByte() & 0x7f);
+                }
+                m_chips.noteOn( channel, tmp & 0x7f, vol );
+                break;
+            }
+
+            case 2: { // pitch wheel
+                m_chips.pitchBend(channel, 0, m_trackPtr[0].nextByte() ); // TODO
+                break;
+            }
+
+            case 3: // TODO sysevent
+                break;
+
+            case 4: { // control change
+                auto c1 = m_trackPtr[0].nextByte();
+                auto c2 = m_trackPtr[0].nextByte();
+                switch(c1 & 0x7f) {
+                case 0: // patch change:
+                    m_chips.programChange( channel, c2 & 0x7f );
+                    break;
+                case 3: // volume
+                    interpretControllerInfo( m_trackPtr, true, channel, 7, c2 & 0x7f );
+                    break;
+                }
+
+                break;
+            }
+            }
+
+            if( isLast ) {
+                // read timing information...
+                m_trackPtr[0].delay = m_trackPtr[0].readDelta();
+            }
+        }
+
+        m_trackPtr[0].delay--;
+
+        if ( m_activeTracks == 0 ) {
+            resetTracks();
+            if ( m_loop ) {
+                continue;
+            }
+            else {
+                return false;
+            }
+        }
+
+        break; // if not looped, only once for our only track
+    }
+
+    advanceTick();
+    return true;
+}
+
 void EMidi::allNotesOff()
 {
     for( size_t channel = 0; channel < NUM_MIDI_CHANNELS; channel++ )
@@ -544,6 +641,17 @@ void EMidi::setVolume ( int volume )
 
 EMidi::EMidi(Stream &stream)
 {
+    if(!tryLoadMidi(stream) && !tryLoadMus(stream))
+        throw std::runtime_error("xxx"); // TODO
+}
+
+EMidi::~EMidi() {
+    delete[] m_trackPtr;
+}
+
+
+bool EMidi::tryLoadMidi(Stream &stream)
+{
     stream.seek(0);
 
     m_loop = false;
@@ -551,7 +659,7 @@ EMidi::EMidi(Stream &stream)
     char signature[4];
     stream.read(signature, 4);
     if ( std::strncmp(signature, "MThd", 4) != 0 ) {
-        throw 123; // TODO
+        return false;
     }
 
     uint32_t headersize;
@@ -576,13 +684,13 @@ EMidi::EMidi(Stream &stream)
     }
 
     if ( format > 1 ) {
-        throw 123; // TODO
+        return false;
     }
 
     stream.seek( headerPos + headersize );
 
     if ( m_numTracks == 0 ) {
-        throw 123; // TODO
+        return false;
     }
 
     m_trackPtr = new Track[m_numTracks];
@@ -594,7 +702,7 @@ EMidi::EMidi(Stream &stream)
             delete[] m_trackPtr;
             m_trackPtr = nullptr;
 
-            throw 123; // TODO
+            return false;
         }
 
         uint32_t tracklength;
@@ -613,12 +721,57 @@ EMidi::EMidi(Stream &stream)
     reset();
 
     setTempo( 120 );
+
+    m_format = Format::PlainMidi;
+    return true;
 }
 
-EMidi::~EMidi() {
-    delete[] m_trackPtr;
-}
+#pragma pack(push,1)
+struct MusHeader {
+    char id[4];
+    uint16_t scoreLen;
+    //! @brief Absolute file position
+    uint16_t scoreStart;
+    uint16_t primaryChannels;
+    uint16_t secondaryChannels;
+    uint16_t instrumentCount;
+    uint16_t dummy;
+};
+#pragma pack(pop)
 
+bool EMidi::tryLoadMus(Stream &stream)
+{
+    stream.seek(0);
+
+    m_loop = false;
+
+    MusHeader header;
+    stream.read(&header);
+
+    if ( std::strncmp(header.id, "MUS\x1a", 4) != 0 ) {
+        return false;
+    }
+
+    m_division = 60; // TODO check
+    m_numTracks = 1;
+    m_trackPtr = new Track[m_numTracks];
+
+    stream.seek(header.scoreStart);
+    m_trackPtr[0].data.resize(header.scoreLen);
+    stream.read(m_trackPtr[0].data.data(), m_trackPtr[0].data.size());
+
+    //initEmidi();
+
+    m_trackPtr[0].EMIDI_IncludeTrack = true;
+    resetTracks();
+
+    reset();
+
+    setTempo( 140 );
+
+    m_format = Format::IdMus;
+    return true;
+}
 
 void EMidi::setTempo ( int tempo )
 {

@@ -1,7 +1,6 @@
 add_executable(badplay
   a2m.cpp
   adl.cpp
-  adlibemu.c
   adplay.cc
   adplug.cpp
   adtrack.cpp

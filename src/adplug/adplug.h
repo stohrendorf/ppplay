@@ -28,7 +28,6 @@
 #include "players.h"
 #include <ymf262/opl3.h>
 #include "fprovide.h"
-#include "players.h"
 #include "database.h"
 
 class CAdPlug

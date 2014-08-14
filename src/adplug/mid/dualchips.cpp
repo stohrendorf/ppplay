@@ -451,7 +451,7 @@ void DualChips::pitchBend(uint8_t channel, uint8_t lsb, uint8_t msb)
     if(channel >= m_channels.size())
         return;
 
-    auto pitchbend = lsb + ( uint16_t(msb) << 8 );
+    auto pitchbend = lsb | ( uint16_t(msb) << 8 );
     m_channels[ channel ].Pitchbend = pitchbend;
 
 #define PITCHBEND_CENTER 1638400
