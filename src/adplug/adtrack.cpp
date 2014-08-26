@@ -66,8 +66,8 @@ bool CadtrackLoader::load(const std::string &filename, const CFileProvider &fp)
 
   // give CmodPlayer a hint on what we're up to
   realloc_patterns(1,1000,9); realloc_instruments(9); realloc_order(1);
-  init_trackord(); flags = NoKeyOn;
-  (*order) = 0; length = 1; restartpos = 0; bpm = 120; initspeed = 3;
+  init_trackord(); m_flags = NoKeyOn;
+  (*m_order) = 0; m_length = 1; m_restartpos = 0; m_bpm = 120; m_initspeed = 3;
 
   // load instruments from instruments file
   for(i=0;i<9;i++) {
@@ -105,7 +105,7 @@ bool CadtrackLoader::load(const std::string &filename, const CFileProvider &fp)
       case 'B': pnote = 12; break;
       case '\0':
 	if(note[1] == '\0')
-	  tracks[chp][rwp].note = 127;
+	  m_tracks[chp][rwp].note = 127;
 	else {
 	  fp.close(f);
 	  return false;
@@ -114,8 +114,8 @@ bool CadtrackLoader::load(const std::string &filename, const CFileProvider &fp)
       default: fp.close(f); return false;
       }
       if((*note) != '\0') {
-	tracks[chp][rwp].note = pnote + (octave * 12);
-	tracks[chp][rwp].inst = chp + 1;
+	m_tracks[chp][rwp].note = pnote + (octave * 12);
+	m_tracks[chp][rwp].inst = chp + 1;
       }
     }
 

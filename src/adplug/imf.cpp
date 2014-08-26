@@ -1,17 +1,17 @@
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2008 Simon Peter <dn.tlp@gmx.net>, et al.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -50,147 +50,151 @@
 
 CPlayer *CimfPlayer::factory()
 {
-  return new CimfPlayer();
+    return new CimfPlayer();
 }
 
 bool CimfPlayer::load(const std::string &filename, const CFileProvider &fp)
 {
-  binistream *f = fp.open(filename); if(!f) return false;
-  unsigned long fsize, flsize, mfsize = 0;
-  unsigned int i;
+    binistream *f = fp.open(filename); if(!f) return false;
+    unsigned long fsize, flsize, mfsize = 0;
+    unsigned int i;
 
-  // file validation section
-  {
-    char	header[5];
-    int		version;
+    // file validation section
+    {
+        char	header[5];
+        int		version;
 
-    f->readString(header, 5);
-    version = f->readInt(1);
+        f->readString(header, 5);
+        version = f->readInt(1);
 
-    if(strncmp(header, "ADLIB", 5) || version != 1) {
-      if(!fp.extension(filename, ".imf") && !fp.extension(filename, ".wlf")) {
-	// It's no IMF file at all
-	fp.close(f);
-	return false;
-      } else
-	f->seek(0);	// It's a normal IMF file
-    } else {
-      // It's a IMF file with header
-      m_trackName = f->readString('\0');
-      m_gameName = f->readString('\0');
-      f->ignore(1);
-      mfsize = f->pos() + 2;
+        if(strncmp(header, "ADLIB", 5) || version != 1) {
+            if(!fp.extension(filename, ".imf") && !fp.extension(filename, ".wlf")) {
+                // It's no IMF file at all
+                fp.close(f);
+                return false;
+            } else
+                f->seek(0);	// It's a normal IMF file
+        } else {
+            // It's a IMF file with header
+            m_trackName = f->readString('\0');
+            m_gameName = f->readString('\0');
+            f->ignore(1);
+            mfsize = f->pos() + 2;
+        }
     }
-  }
 
-  // load section
-  if(mfsize)
-    fsize = f->readInt(4);
-  else
-    fsize = f->readInt(2);
-  flsize = fp.filesize(f);
-  size_t size;
-  if(!fsize) {		// footerless file (raw music data)
+    // load section
     if(mfsize)
-      f->seek(-4, binio::Add);
+        fsize = f->readInt(4);
     else
-      f->seek(-2, binio::Add);
-    size = (flsize - mfsize) / 4;
-  } else		// file has got a footer
-    size = fsize / 4;
+        fsize = f->readInt(2);
+    flsize = fp.filesize(f);
+    size_t size;
+    if(!fsize) {		// footerless file (raw music data)
+        if(mfsize)
+            f->seek(-4, binio::Add);
+        else
+            f->seek(-2, binio::Add);
+        size = (flsize - mfsize) / 4;
+    } else		// file has got a footer
+        size = fsize / 4;
 
-  m_data.resize(size);
-  for(i = 0; i < size; i++) {
-    m_data[i].reg = f->readInt(1); m_data[i].val = f->readInt(1);
-    m_data[i].time = f->readInt(2);
-  }
-
-  // read footer, if any
-  if(fsize && (fsize < flsize - 2 - mfsize)) {
-    if(f->readInt(1) == 0x1a) {
-      // Adam Nielsen's footer format
-      m_trackName = f->readString();
-      m_authorName = f->readString();
-      m_remarks = f->readString();
-    } else {
-      // Generic footer
-      unsigned long footerlen = flsize - fsize - 2 - mfsize;
-
-      m_footer.resize(footerlen);
-
-      for(size_t i=0; i<footerlen; ++i)
-          m_footer += char(f->readInt(1));
+    m_data.resize(size);
+    for(i = 0; i < size; i++) {
+        m_data[i].reg = f->readInt(1); m_data[i].val = f->readInt(1);
+        m_data[i].time = f->readInt(2);
     }
-  }
 
-  m_rate = getrate(filename, fp, f);
-  fp.close(f);
-  rewind(0);
-  return true;
+    // read footer, if any
+    if(fsize && (fsize < flsize - 2 - mfsize)) {
+        if(f->readInt(1) == 0x1a) {
+            // Adam Nielsen's footer format
+            m_trackName = f->readString();
+            m_authorName = f->readString();
+            m_remarks = f->readString();
+        } else {
+            // Generic footer
+            unsigned long footerlen = flsize - fsize - 2 - mfsize;
+
+            m_footer.resize(footerlen);
+
+            for(size_t i=0; i<footerlen; ++i)
+                m_footer += char(f->readInt(1));
+        }
+    }
+
+    m_rate = getrate(filename, fp, f);
+    fp.close(f);
+    rewind(0);
+    return true;
 }
 
 bool CimfPlayer::update()
 {
-	do {
-		getOpl()->writeReg(m_data[m_pos].reg,m_data[m_pos].val);
-		m_del = m_data[m_pos].time;
-		m_pos++;
+    do {
+        getOpl()->writeReg(m_data[m_pos].reg,m_data[m_pos].val);
+        m_del = m_data[m_pos].time;
+        m_pos++;
     } while(!m_del && m_pos < m_data.size());
 
     if(m_pos >= m_data.size()) {
-		m_pos = 0;
-		m_songend = true;
-	}
-    else m_timer = m_rate / (float)m_del;
+        m_pos = 0;
+        m_songend = true;
+    }
+    else
+        m_timer = float(m_rate) / m_del;
 
-	return !m_songend;
+    return !m_songend;
 }
 
-void CimfPlayer::rewind(int subsong)
+void CimfPlayer::rewind(int)
 {
-	m_pos = 0; m_del = 0; m_timer = m_rate; m_songend = false;
-	getOpl()->writeReg(1,32);	// go to OPL2 mode
+    m_pos = 0;
+    m_del = 0;
+    m_timer = m_rate;
+    m_songend = false;
+    getOpl()->writeReg(1,32);	// go to OPL2 mode
 }
 
 std::string CimfPlayer::gettitle()
 {
-  std::string	title;
+    std::string	title;
 
-  title = m_trackName;
+    title = m_trackName;
 
-  if(!m_trackName.empty() && !m_gameName.empty())
-    title += " - ";
+    if(!m_trackName.empty() && !m_gameName.empty())
+        title += " - ";
 
-  title += m_gameName;
+    title += m_gameName;
 
-  return title;
+    return title;
 }
 
 std::string CimfPlayer::getdesc()
 {
-  std::string desc = m_footer;
+    std::string desc = m_footer;
 
-  if(!m_remarks.empty() && !m_footer.empty())
-    desc += "\n\n";
+    if(!m_remarks.empty() && !m_footer.empty())
+        desc += "\n\n";
 
-  desc += m_remarks;
+    desc += m_remarks;
 
-  return desc;
+    return desc;
 }
 
 /*** private methods *************************************/
 
 float CimfPlayer::getrate(const std::string &filename, const CFileProvider &fp, binistream *f)
 {
-  if(m_db) {	// Database available
-    f->seek(0, binio::Set);
-    CClockRecord *record = (CClockRecord *)m_db->search(CAdPlugDatabase::CKey(*f));
-    if (record && record->m_type == CAdPlugDatabase::CRecord::ClockSpeed)
-      return record->m_clock;
-  }
+    if(m_db) {	// Database available
+        f->seek(0, binio::Set);
+        CClockRecord *record = static_cast<CClockRecord *>(m_db->search(CAdPlugDatabase::CKey(*f)));
+        if (record && record->m_type == CAdPlugDatabase::CRecord::ClockSpeed)
+            return record->m_clock;
+    }
 
-  // Otherwise the database is either unavailable, or there's no entry for this file
-  if (fp.extension(filename, ".imf")) return 560.0f;
-  if (fp.extension(filename, ".wlf")) return 700.0f;
-  return 700.0f; // default speed for unknown files that aren't .IMF or .WLF
+    // Otherwise the database is either unavailable, or there's no entry for this file
+    if (fp.extension(filename, ".imf")) return 560.0f;
+    if (fp.extension(filename, ".wlf")) return 700.0f;
+    return 700.0f; // default speed for unknown files that aren't .IMF or .WLF
 }

@@ -29,22 +29,21 @@ class Ca2mLoader: public CmodPlayer
 public:
     static CPlayer *factory();
 
-    Ca2mLoader(): CmodPlayer()
-    { }
-
     bool load(const std::string &filename, const CFileProvider &fp);
     size_t framesUntilUpdate();
 
-    std::string gettype()
-    { return std::string("AdLib Tracker 2"); }
+    std::string gettype() {
+        return "AdLib Tracker 2";
+    }
     std::string gettitle() {
-        m_songname;
+        return m_songname;
     }
     std::string getauthor() {
-        m_author;
+        return m_author;
     }
-    unsigned int getinstruments()
-    { return 250; }
+    unsigned int getinstruments() {
+        return 250;
+    }
     std::string getinstrument(unsigned int n) {
         return m_instname[n];
     }

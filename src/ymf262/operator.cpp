@@ -38,14 +38,9 @@ void Operator::update_AM1_VIB1_EGT1_KSR1_MULT4()
     m_am  = am1_vib1_egt1_ksr1_mult4 & 0x80;
     m_vib = am1_vib1_egt1_ksr1_mult4 & 0x40;
     m_egt = am1_vib1_egt1_ksr1_mult4 & 0x20;
-    m_ksr = am1_vib1_egt1_ksr1_mult4 & 0x10;
-    m_mult = am1_vib1_egt1_ksr1_mult4 & 0x0F;
 
-    m_phaseGenerator.setFrequency( m_f_number, m_block, m_mult );
-    m_envelopeGenerator.setKsr( m_ksr );
-    m_envelopeGenerator.setAttackRate( m_ar );
-    m_envelopeGenerator.setDecayRate( m_dr );
-    m_envelopeGenerator.setReleaseRate( m_rr );
+    m_phaseGenerator.setFrequency( m_f_number, m_block, am1_vib1_egt1_ksr1_mult4 & 0x0F );
+    m_envelopeGenerator.setKsr( am1_vib1_egt1_ksr1_mult4 & 0x10 );
 }
 
 void Operator::update_KSL2_TL6()
@@ -53,22 +48,16 @@ void Operator::update_KSL2_TL6()
 
     const uint8_t ksl2_tl6 = m_opl->readReg( m_operatorBaseAddress + Operator::KSL2_TL6_Offset );
 
-    m_ksl = ( ksl2_tl6 >> 6 ) & 3;
-    m_tl  =  ksl2_tl6 & 0x3F;
-
-    m_envelopeGenerator.setAttennuation( m_f_number, m_block, m_ksl );
-    m_envelopeGenerator.setTotalLevel( m_tl );
+    m_envelopeGenerator.setAttennuation( m_f_number, m_block, ( ksl2_tl6 >> 6 ) & 3 );
+    m_envelopeGenerator.setTotalLevel( ksl2_tl6 & 0x3F );
 }
 
 void Operator::update_AR4_DR4()
 {
     const uint8_t ar4_dr4 = m_opl->readReg( m_operatorBaseAddress + Operator::AR4_DR4_Offset );
 
-    m_ar = ( ar4_dr4 >> 4 ) & 0x0f;
-    m_dr =  ar4_dr4 & 0x0F;
-
-    m_envelopeGenerator.setAttackRate( m_ar );
-    m_envelopeGenerator.setDecayRate( m_dr );
+    m_envelopeGenerator.setAttackRate( ( ar4_dr4 >> 4 ) & 0x0f );
+    m_envelopeGenerator.setDecayRate( ar4_dr4 & 0x0F );
 }
 
 void Operator::update_SL4_RR4()
@@ -76,11 +65,8 @@ void Operator::update_SL4_RR4()
 
     const uint8_t sl4_rr4 = m_opl->readReg( m_operatorBaseAddress + Operator::SL4_RR4_Offset );
 
-    m_sl = ( sl4_rr4 >> 4 ) & 0x0f;
-    m_rr =  sl4_rr4 & 0x0F;
-
-    m_envelopeGenerator.setSustainLevel( m_sl );
-    m_envelopeGenerator.setReleaseRate( m_rr );
+    m_envelopeGenerator.setSustainLevel( ( sl4_rr4 >> 4 ) & 0x0f );
+    m_envelopeGenerator.setReleaseRate( sl4_rr4 & 0x0F );
 }
 
 void Operator::update_5_WS3()
@@ -392,8 +378,8 @@ int16_t Operator::getOutput( uint16_t outputPhase, uint8_t ws )
 AbstractArchive& Operator::serialize( AbstractArchive* archive )
 {
     *archive % m_operatorBaseAddress % m_phaseGenerator % m_envelopeGenerator
-    % m_phase % m_am % m_vib % m_ksr % m_egt % m_mult % m_ksl % m_tl
-    % m_ar % m_dr % m_sl % m_rr % m_ws % m_f_number % m_block;
+    % m_phase % m_am % m_vib % m_egt
+    % m_ws % m_f_number % m_block;
     return *archive;
 }
 

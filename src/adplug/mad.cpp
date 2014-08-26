@@ -48,11 +48,11 @@ bool CmadLoader::load(const std::string &filename, const CFileProvider &fp)
   f->ignore(1);
 
   // data for Protracker
-  length = f->readInt(1); nop = f->readInt(1); timer = f->readInt(1);
+  m_length = f->readInt(1); nop = f->readInt(1); timer = f->readInt(1);
 
   // init CmodPlayer
   realloc_instruments(9);
-  realloc_order(length);
+  realloc_order(m_length);
   realloc_patterns(nop,32,9);
   init_trackord();
 
@@ -67,15 +67,15 @@ bool CmadLoader::load(const std::string &filename, const CFileProvider &fp)
 
 	// convert event
 	if (event < 0x61)
-	  tracks[t][k].note = event;
+	  m_tracks[t][k].note = event;
 	if (event == 0xFF) // 0xFF: Release note
-	  tracks[t][k].command = 8;
+	  m_tracks[t][k].command = 8;
 	if (event == 0xFE) // 0xFE: Pattern Break
-	  tracks[t][k].command = 13;
+	  m_tracks[t][k].command = 13;
       }
 
   // load order
-  for(i = 0; i < length; i++) order[i] = f->readInt(1) - 1;
+  for(i = 0; i < m_length; i++) m_order[i] = f->readInt(1) - 1;
 
   fp.close(f);
 
@@ -85,8 +85,8 @@ bool CmadLoader::load(const std::string &filename, const CFileProvider &fp)
       inst[i].data[conv_inst[j]] = instruments[i].data[j];
 
   // data for Protracker
-  restartpos = 0;
-  initspeed = 1;
+  m_restartpos = 0;
+  m_initspeed = 1;
 
   rewind(0);
   return true;

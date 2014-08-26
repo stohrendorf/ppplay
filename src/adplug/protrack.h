@@ -37,9 +37,9 @@ public:
   unsigned int getpatterns()
     { return nop; }
   unsigned int getpattern()
-    { return order[ord]; }
+    { return m_order[ord]; }
   unsigned int getorders()
-    { return length; }
+    { return m_length; }
   unsigned int getorder()
     { return ord; }
   unsigned int getrow()
@@ -66,12 +66,12 @@ public:
 
   struct Tracks {
     unsigned char note,command,inst,param2,param1;
-  } **tracks;
+  } **m_tracks;
 
-  unsigned char *order, *arplist, *arpcmd, initspeed;
-  unsigned short tempo, **trackord, bpm, nop;
-  unsigned long length, restartpos, activechan;
-  int flags;
+  unsigned char *m_order, *arplist, *arpcmd, m_initspeed;
+  unsigned short m_tempo, **trackord, m_bpm, nop;
+  unsigned long m_length, m_restartpos, activechan;
+  int m_flags;
 
   struct Channel {
     unsigned short freq,nextfreq;

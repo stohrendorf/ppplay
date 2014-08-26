@@ -93,12 +93,15 @@ inline uint8_t EnvelopeGenerator::advanceCounter( uint8_t rate )
     const uint8_t effectiveRate = calculateRate( rate );
     // rateValue <= 15
     const uint8_t rateValue = effectiveRate >> 2;
+    BOOST_ASSERT( rateValue<=15 );
     // rof <= 3
     const uint8_t rof = effectiveRate & 3;
+    BOOST_ASSERT( rof<=3 );
     // 4 <= Delta <= (7<<15)
     m_counter += uint32_t( 4 | rof ) << rateValue;
     // overflow <= 7
     uint8_t overflow = m_counter >> 15;
+    BOOST_ASSERT( overflow<=7 );
     m_counter &= ( 1 << 15 ) - 1;
     return overflow;
 }
@@ -137,9 +140,6 @@ uint16_t EnvelopeGenerator::advance( bool egt, bool am )
         case Stage::Attack:
             if( m_env == 0 ) {
                 m_stage = Stage::Decay;
-            }
-            else if( m_ar == 15 ) {
-                m_env = 0;
             }
             else {
                 attack();

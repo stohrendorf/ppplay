@@ -31,7 +31,9 @@
 
 #include "jbm.h"
 
-static const unsigned short notetable[96] = {
+namespace
+{
+constexpr uint16_t notetable[96] = {
     0x0158, 0x016d, 0x0183, 0x019a, 0x01b2, 0x01cc, 0x01e7, 0x0204,
     0x0223, 0x0244, 0x0266, 0x028b, 0x0558, 0x056d, 0x0583, 0x059a,
     0x05b2, 0x05cc, 0x05e7, 0x0604, 0x0623, 0x0644, 0x0666, 0x068b,
@@ -46,14 +48,15 @@ static const unsigned short notetable[96] = {
     0x1db2, 0x1dcc, 0x1de7, 0x1e04, 0x1e23, 0x1e44, 0x1e66, 0x1e8b
 };
 
-static const unsigned char percmx_tab[4] = { 0x14, 0x12, 0x15, 0x11 };
-static const unsigned char perchn_tab[5] = { 6, 7, 8, 8, 7 };
-static unsigned char percmaskoff[5] = { 0xef, 0xf7, 0xfb, 0xfd, 0xfe };
-static unsigned char percmaskon[5] =  { 0x10, 0x08, 0x04, 0x02, 0x01 };
+constexpr uint8_t percmx_tab[4] = { 0x14, 0x12, 0x15, 0x11 };
+constexpr uint8_t perchn_tab[5] = { 6, 7, 8, 8, 7 };
+constexpr uint8_t percmaskoff[5] = { 0xef, 0xf7, 0xfb, 0xfd, 0xfe };
+constexpr uint8_t percmaskon[5] =  { 0x10, 0x08, 0x04, 0x02, 0x01 };
 
-static inline unsigned short GET_WORD(const std::vector<uint8_t>& b, int x)
+inline uint16_t getWord(const std::vector<uint8_t>& data, int pos)
 {
-    return ((unsigned short)(b[x+1] << 8) | b[x]);
+    return uint16_t(data[pos+1] << 8) | data[pos];
+}
 }
 
 /*** public methods *************************************/
@@ -65,53 +68,60 @@ CPlayer *CjbmPlayer::factory()
 
 bool CjbmPlayer::load(const std::string &filename, const CFileProvider &fp)
 {
-    binistream	*f = fp.open(filename); if(!f) return false;
-    int		filelen = fp.filesize(f);
-    int		i;
+    binistream	*f = fp.open(filename);
+    if(!f)
+        return false;
+    auto filelen = fp.filesize(f);
 
-    if (!filelen || !fp.extension(filename, ".jbm")) { fp.close(f); return false; }
+    if (!filelen || !fp.extension(filename, ".jbm")) {
+        fp.close(f);
+        return false;
+    }
 
     // Allocate memory buffer m[] and read entire file into it
 
-    m.resize(filelen);
-    if (f->readString((char*)m.data(), filelen) != filelen) { fp.close(f); return false; }
+    m_fileData.resize(filelen);
+    if(f->readString(reinterpret_cast<char*>(m_fileData.data()), filelen) != filelen) {
+        fp.close(f);
+        return false;
+    }
 
     fp.close(f);
 
     // The known .jbm files always seem to start with the number 0x0002
 
-    if (GET_WORD(m, 0) != 0x0002)
+    if (getWord(m_fileData, 0) != 0x0002)
         return false;
 
     // Song tempo
 
-    i = GET_WORD(m, 2);
-    timer = 1193810.0 / (i ? i : 0xffff);
+    auto i = getWord(m_fileData, 2);
+    m_timer = 1193810.0 / (i ? i : 0xffff);
 
-    seqtable = GET_WORD(m, 4);
-    instable = GET_WORD(m, 6);
+    m_seqTable = getWord(m_fileData, 4);
+    m_insTable = getWord(m_fileData, 6);
 
     // The flags word has atleast 1 bit, the Adlib's rhythm mode, but
     // currently we don't support that :(
 
-    flags = GET_WORD(m, 8);
+    m_flags = getWord(m_fileData, 8);
 
     // Instrument datas are directly addressed with m[]
 
-    inscount = (filelen - instable) >> 4;
+    m_insCount = (filelen - m_insTable) >> 4;
 
     // Voice' and sequence pointers
 
-    seqcount = 0xffff;
-    for (i = 0; i < 11; i++) {
-        voice[i].trkpos = voice[i].trkstart = GET_WORD(m, 10 + (i<<1));
-        if (voice[i].trkpos && voice[i].trkpos < seqcount)
-            seqcount = voice[i].trkpos;
+    m_seqCount = 0xffff;
+    for (int i = 0; i < 11; i++) {
+        m_voices[i].trkpos = m_voices[i].trkstart = getWord(m_fileData, 10 + (i<<1));
+        if (m_voices[i].trkpos && m_voices[i].trkpos < m_seqCount)
+            m_seqCount = m_voices[i].trkpos;
     }
-    seqcount = (seqcount - seqtable) >> 1;
-    sequences = new unsigned short[seqcount];
-    for (i = 0; i < seqcount; i++)
-        sequences[i] = GET_WORD(m, seqtable + (i<<1));
+    m_seqCount = (m_seqCount - m_seqTable) >> 1;
+    m_sequences.resize(m_seqCount);
+    for (int i = 0; i < m_seqCount; i++)
+        m_sequences[i] = getWord(m_fileData, m_seqTable + (i<<1));
 
     rewind(0);
     return true;
@@ -122,95 +132,93 @@ bool CjbmPlayer::update()
     short c, spos, frq;
 
     for (c = 0; c < 11; c++) {
-        if (!voice[c].trkpos)		// Unused channel
+        if (!m_voices[c].trkpos)		// Unused channel
             continue;
 
-        if (--voice[c].delay)
+        if (--m_voices[c].delay)
             continue;
 
         // Turn current note/percussion off
 
-        if (voice[c].note&0x7f)
-            opl_noteonoff(c, &voice[c], 0);
+        if (m_voices[c].note&0x7f)
+            opl_noteonoff(c, 0);
 
         // Process events until we have a note
 
-        spos = voice[c].seqpos;
-        while(!voice[c].delay) {
-            switch(m[spos]) {
+        spos = m_voices[c].seqpos;
+        while(!m_voices[c].delay) {
+            switch(m_fileData[spos]) {
             case 0xFD:	// Set Instrument
-                voice[c].instr = m[spos+1];
-                set_opl_instrument(c, &voice[c]);
+                m_voices[c].instr = m_fileData[spos+1];
+                set_opl_instrument(c, &m_voices[c]);
                 spos+=2;
                 break;
             case 0xFF:	// End of Sequence
-                voice[c].seqno = m[++voice[c].trkpos];
-                if (voice[c].seqno == 0xff) {
-                    voice[c].trkpos = voice[c].trkstart;
-                    voice[c].seqno = m[voice[c].trkpos];
+                m_voices[c].seqno = m_fileData[++m_voices[c].trkpos];
+                if (m_voices[c].seqno == 0xff) {
+                    m_voices[c].trkpos = m_voices[c].trkstart;
+                    m_voices[c].seqno = m_fileData[m_voices[c].trkpos];
                     //voicemask &= 0x7ff-(1<<c);
-                    voicemask &= ~(1<<c);
+                    m_voicemask &= ~(1<<c);
                 }
-                spos = voice[c].seqpos = sequences[voice[c].seqno];
+                spos = m_voices[c].seqpos = m_sequences[m_voices[c].seqno];
                 break;
             default:	// Note Event
-                if ((m[spos] & 127) > 95)
+                if ((m_fileData[spos] & 127) > 95)
                     return 0;
 
-                voice[c].note = m[spos];
-                voice[c].vol = m[spos+1];
-                voice[c].delay =
-                        (m[spos+2] + (m[spos+3]<<8)) + 1;
+                m_voices[c].note = m_fileData[spos];
+                m_voices[c].vol = m_fileData[spos+1];
+                m_voices[c].delay =
+                        (m_fileData[spos+2] + (m_fileData[spos+3]<<8)) + 1;
 
-                frq = notetable[voice[c].note&127];
-                voice[c].frq[0] = (unsigned char)frq;
-                voice[c].frq[1] = frq >> 8;
+                frq = notetable[m_voices[c].note&127];
+                m_voices[c].frq[0] = uint8_t(frq);
+                m_voices[c].frq[1] = frq >> 8;
                 spos+=4;
             }
         }
-        voice[c].seqpos = spos;
+        m_voices[c].seqpos = spos;
 
         // Write new volume to the carrier operator, or percussion
 
-        if (flags&1 && c > 6)
-            getOpl()->writeReg(0x40 + percmx_tab[c-7], voice[c].vol ^ 0x3f);
+        if (m_flags&1 && c > 6)
+            getOpl()->writeReg(0x40 + percmx_tab[c-7], m_voices[c].vol ^ 0x3f);
         else
-            getOpl()->writeReg(0x43 + m_opTable[c], voice[c].vol ^ 0x3f);
+            getOpl()->writeReg(0x43 + m_opTable[c], m_voices[c].vol ^ 0x3f);
 
         // Write new frequencies and Gate bit
 
-        opl_noteonoff(c, &voice[c], !(voice[c].note & 0x80));
+        opl_noteonoff(c, !(m_voices[c].note & 0x80));
     }
-    return (voicemask);
+    return (m_voicemask);
 }
 
-void CjbmPlayer::rewind(int subsong)
+void CjbmPlayer::rewind(int)
 {
     int c;
 
-    voicemask = 0;
+    m_voicemask = 0;
 
     for (c = 0; c < 11; c++) {
-        voice[c].trkpos = voice[c].trkstart;
+        m_voices[c].trkpos = m_voices[c].trkstart;
 
-        if (!voice[c].trkpos) continue;
+        if (!m_voices[c].trkpos) continue;
 
-        voicemask |= (1<<c);
+        m_voicemask |= (1<<c);
 
-        voice[c].seqno = m[voice[c].trkpos];
-        voice[c].seqpos = sequences[voice[c].seqno];
+        m_voices[c].seqno = m_fileData[m_voices[c].trkpos];
+        m_voices[c].seqpos = m_sequences[m_voices[c].seqno];
 
-        voice[c].note = 0;
-        voice[c].delay = 1;
+        m_voices[c].note = 0;
+        m_voices[c].delay = 1;
     }
 
     getOpl()->writeReg(0x01, 32);
 
     // Set rhythm mode if flags bit #0 is set
     // AM and Vibrato are full depths (taken from DosBox RAW output)
-    bdreg = 0xC0 | (flags&1)<<5;
-
-    getOpl()->writeReg(0xbd, bdreg);
+    getOpl()->writeReg(0xbd, 0xC0 | (m_flags&1)<<5);
 
 #if 0
     if (flags&1) {
@@ -226,64 +234,65 @@ void CjbmPlayer::rewind(int subsong)
 
 /*** private methods ************************************/
 
-void CjbmPlayer::opl_noteonoff(int channel, JBMVoice *v, bool state)
+void CjbmPlayer::opl_noteonoff(int channel, bool state)
 {
-    if (flags&1 && channel > 5) {
+    if (m_flags&1 && channel > 5) {
         // Percussion
-        getOpl()->writeReg(0xa0 + perchn_tab[channel-6], voice[channel].frq[0]);
-        getOpl()->writeReg(0xb0 + perchn_tab[channel-6], voice[channel].frq[1]);
+        getOpl()->writeReg(0xa0 + perchn_tab[channel-6], m_voices[channel].frq[0]);
+        getOpl()->writeReg(0xb0 + perchn_tab[channel-6], m_voices[channel].frq[1]);
         getOpl()->writeReg(0xbd,
-                        state ? bdreg | percmaskon[channel-6] :
-                        bdreg & percmaskoff[channel-6]);
-    } else {
+                           state ? getOpl()->readReg(0xbd) | percmaskon[channel-6]
+                                 : getOpl()->readReg(0xbd) & percmaskoff[channel-6]);
+    }
+    else {
         // Melodic mode or Rhythm mode melodic channels
-        getOpl()->writeReg(0xa0 + channel, voice[channel].frq[0]);
+        getOpl()->writeReg(0xa0 + channel, m_voices[channel].frq[0]);
         getOpl()->writeReg(0xb0 + channel,
-                        state ? voice[channel].frq[1] | 0x20 :
-                        voice[channel].frq[1] & 0x1f);
+                           state ? m_voices[channel].frq[1] | 0x20
+                                 : m_voices[channel].frq[1] & 0x1f);
     }
     return;
 }
 
 
-void CjbmPlayer::set_opl_instrument(int channel, JBMVoice *v)
+void CjbmPlayer::set_opl_instrument(int channel, JBMVoice *voice)
 {
-    short i = instable + (v->instr << 4);
+    const auto filePos = m_insTable + (voice->instr << 4);
 
     // Sanity check on instr number - or we'll be reading outside m[] !
 
-    if (v->instr >= inscount)
+    if (voice->instr >= m_insCount)
         return;
 
     // For rhythm mode, multiplexed drums. I don't care about waveforms!
-    if ((flags&1) & (channel > 6)) {
-        getOpl()->writeReg(0x20 + percmx_tab[channel-7], m[i+0]);
-        getOpl()->writeReg(0x40 + percmx_tab[channel-7], m[i+1] ^ 0x3f);
-        getOpl()->writeReg(0x60 + percmx_tab[channel-7], m[i+2]);
-        getOpl()->writeReg(0x80 + percmx_tab[channel-7], m[i+3]);
+    if ((m_flags&1) && (channel > 6)) {
+        getOpl()->writeReg(0x20 + percmx_tab[channel-7], m_fileData[filePos+0]);
+        getOpl()->writeReg(0x40 + percmx_tab[channel-7], m_fileData[filePos+1] ^ 0x3f);
+        getOpl()->writeReg(0x60 + percmx_tab[channel-7], m_fileData[filePos+2]);
+        getOpl()->writeReg(0x80 + percmx_tab[channel-7], m_fileData[filePos+3]);
 
-        getOpl()->writeReg(0xc0 + perchn_tab[channel-6], m[i+8]&15);
+        getOpl()->writeReg(0xc0 + perchn_tab[channel-6], m_fileData[filePos+8]&15);
         return;
     }
 
     // AM/VIB/EG/KSR/FRQMUL, KSL/OUTPUT, ADSR for 1st operator
-    getOpl()->writeReg(0x20 + m_opTable[channel], m[i+0]);
-    getOpl()->writeReg(0x40 + m_opTable[channel], m[i+1] ^ 0x3f);
-    getOpl()->writeReg(0x60 + m_opTable[channel], m[i+2]);
-    getOpl()->writeReg(0x80 + m_opTable[channel], m[i+3]);
+    getOpl()->writeReg(0x20 + m_opTable[channel], m_fileData[filePos+0]);
+    getOpl()->writeReg(0x40 + m_opTable[channel], m_fileData[filePos+1] ^ 0x3f);
+    getOpl()->writeReg(0x60 + m_opTable[channel], m_fileData[filePos+2]);
+    getOpl()->writeReg(0x80 + m_opTable[channel], m_fileData[filePos+3]);
 
     // AM/VIB/EG/KSR/FRQMUL, KSL/OUTPUT, ADSR for 2nd operator
-    getOpl()->writeReg(0x23 + m_opTable[channel], m[i+4]);
-    getOpl()->writeReg(0x43 + m_opTable[channel], m[i+5] ^ 0x3f);
-    getOpl()->writeReg(0x63 + m_opTable[channel], m[i+6]);
-    getOpl()->writeReg(0x83 + m_opTable[channel], m[i+7]);
+    getOpl()->writeReg(0x23 + m_opTable[channel], m_fileData[filePos+4]);
+    getOpl()->writeReg(0x43 + m_opTable[channel], m_fileData[filePos+5] ^ 0x3f);
+    getOpl()->writeReg(0x63 + m_opTable[channel], m_fileData[filePos+6]);
+    getOpl()->writeReg(0x83 + m_opTable[channel], m_fileData[filePos+7]);
 
     // WAVEFORM for operators
-    getOpl()->writeReg(0xe0 + m_opTable[channel], (m[i+8]>>4)&3);
-    getOpl()->writeReg(0xe3 + m_opTable[channel], (m[i+8]>>6)&3);
+    getOpl()->writeReg(0xe0 + m_opTable[channel], (m_fileData[filePos+8]>>4)&3);
+    getOpl()->writeReg(0xe3 + m_opTable[channel], (m_fileData[filePos+8]>>6)&3);
 
     // FEEDBACK/FM mode
-    getOpl()->writeReg(0xc0 + channel, m[i+8]&15);
+    getOpl()->writeReg(0xc0 + channel, m_fileData[filePos+8]&15);
 
     return;
 }

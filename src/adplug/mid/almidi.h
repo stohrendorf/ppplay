@@ -8,6 +8,7 @@ namespace ppp {
 
 class EMidi
 {
+    DISABLE_COPY(EMidi)
 private:
     struct Track;
 
@@ -18,12 +19,19 @@ private:
     bool m_loop = false;
 
     int16_t m_division = 96;
-    int  m_tick    = 0;
-    int  m_beat    = 1;
-    int  m_measure = 1;
-    int  m_beatsPerMeasure = 0;
-    int  m_ticksPerBeat = 0;
-    int  m_timeBase = 0;
+
+    struct SongContext;
+
+    struct Timing {
+        int  tick    = 0;
+        int  beat    = 1;
+        int  measure = 1;
+        int  beatsPerMeasure = 4;
+        int  ticksPerBeat = 0;
+        int  timeBase = 4;
+    };
+
+    Timing m_timing{};
 
     unsigned long m_positionInTicks = 0;
 
@@ -48,7 +56,7 @@ private:
     void resetTracks();
     void advanceTick();
     void metaEvent(Track* Track);
-    bool interpretControllerInfo(Track *Track, bool TimeSet, int channel, int c1, int c2);
+    bool interpretControllerInfo(Track *Track, bool TimeSet, int channel, uint8_t c1, uint8_t c2);
     void setChannelVolume(int channel, int volume);
     void allNotesOff();
     void sendChannelVolumes();
@@ -66,8 +74,7 @@ public:
     ~EMidi();
 
     bool serviceRoutine();
-    size_t ticksPerSecond() const noexcept
-    {
+    size_t ticksPerSecond() const noexcept {
         return m_ticksPerSecond;
     }
     void read(std::array<int16_t,4>* data) {

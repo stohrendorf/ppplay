@@ -83,13 +83,11 @@
 #include "mididata.h"
 #include "stream/filestream.h"
 
-#define TESTING
+//#define TESTING
 #ifdef TESTING
 #define midiprintf printf
 #else
-void CmidPlayer::midiprintf(const char *format, ...)
-{
-}
+#define midiprintf(...)
 #endif
 
 #define LUCAS_STYLE   1
@@ -108,37 +106,28 @@ CPlayer *CmidPlayer::factory()
     return new CmidPlayer();
 }
 
-CmidPlayer::CmidPlayer()
-    : CPlayer(), m_author(&m_emptystr), m_title(&m_emptystr), m_remarks(&m_emptystr),
-      m_emptystr('\0'), m_data()
+uint8_t CmidPlayer::datalook(size_t pos) const
 {
-}
-
-unsigned char CmidPlayer::datalook(long pos)
-{
-    if (pos<0 || pos >= m_data.size())
-        return(0);
+    if(pos >= m_data.size())
+        return 0;
     return m_data[pos];
 }
 
-unsigned long CmidPlayer::getnexti(size_t num)
+uint32_t CmidPlayer::getnexti(size_t num)
 {
-    unsigned long v = 0;
-
-    for (size_t i=0; i<num; i++)
-    {
+    uint32_t v = 0;
+    for (size_t i=0; i<num; i++) {
         v += (datalook(m_dataPos)<<(8*i));
         m_dataPos++;
     }
     return v;
 }
 
-unsigned long CmidPlayer::getnext(size_t num)
+uint32_t CmidPlayer::getnext(size_t num)
 {
-    unsigned long v=0;
+    uint32_t v=0;
 
-    for (size_t i=0; i<num; i++)
-    {
+    for (size_t i=0; i<num; i++) {
         v<<=8;
         v += datalook(m_dataPos);
         m_dataPos++;
@@ -146,7 +135,7 @@ unsigned long CmidPlayer::getnext(size_t num)
     return v;
 }
 
-unsigned long CmidPlayer::getval()
+uint32_t CmidPlayer::getval()
 {
     auto b = getnext(1);
     auto v = b&0x7f;
@@ -220,7 +209,7 @@ bool CmidPlayer::load_sierra_ins(const std::string &fname, const CFileProvider &
     }
 
     fp.close(f);
-    memcpy(m_sMyInsBank, m_myInsBank, 128 * 14);
+    m_sMyInsBank = m_myInsBank;
     return true;
 }
 
@@ -371,22 +360,23 @@ void CmidPlayer::midi_fm_percussion(int ch, unsigned char *inst)
 
 void CmidPlayer::midi_fm_volume(int voice, int volume)
 {
+    auto vol = volume;
     if ((m_adlibStyle&SIERRA_STYLE)==0)  //sierra likes it loud!
     {
-        auto vol=volume>>2;
+        vol >>= 2;
+    }
 
-        if ((m_adlibStyle&LUCAS_STYLE)!=0) {
-            if ((getOpl()->readReg(0xc0+voice)&1)==1)
-                getOpl()->writeReg(0x40+adlib_opadd[voice], (unsigned char)((63-vol) |
-                                                                            (getOpl()->readReg(0x40+adlib_opadd[voice])&0xc0)));
-            getOpl()->writeReg(0x43+adlib_opadd[voice], (unsigned char)((63-vol) |
-                                                                        (getOpl()->readReg(0x43+adlib_opadd[voice])&0xc0)));
-        }
-        else {
-            if ((getOpl()->readReg(0xc0+voice)&1)==1)
-                getOpl()->writeReg(0x40+adlib_opadd[voice], (unsigned char)((63-vol) | (getOpl()->readReg(0x40+adlib_opadd[voice])&0xc0)));
-            getOpl()->writeReg(0x43+adlib_opadd[voice], (unsigned char)((63-vol) | (getOpl()->readReg(0x43+adlib_opadd[voice])&0xc0)));
-        }
+    if ((m_adlibStyle&LUCAS_STYLE)!=0) {
+        if ((getOpl()->readReg(0xc0+voice)&1)==1)
+            getOpl()->writeReg(0x40+adlib_opadd[voice], (unsigned char)((63-vol) |
+                                                                        (getOpl()->readReg(0x40+adlib_opadd[voice])&0xc0)));
+        getOpl()->writeReg(0x43+adlib_opadd[voice], (unsigned char)((63-vol) |
+                                                                    (getOpl()->readReg(0x43+adlib_opadd[voice])&0xc0)));
+    }
+    else {
+        if ((getOpl()->readReg(0xc0+voice)&1)==1)
+            getOpl()->writeReg(0x40+adlib_opadd[voice], (unsigned char)((63-vol) | (getOpl()->readReg(0x40+adlib_opadd[voice])&0xc0)));
+        getOpl()->writeReg(0x43+adlib_opadd[voice], (unsigned char)((63-vol) | (getOpl()->readReg(0x43+adlib_opadd[voice])&0xc0)));
     }
 }
 
@@ -525,9 +515,11 @@ bool CmidPlayer::update()
 
                             if (m_adlibStyle & MIDI_STYLE) {
                                 nv=((m_ch[c].vol*vel)/128);
-                                if ((m_adlibStyle&LUCAS_STYLE)!=0) nv*=2;
-                                if (nv>127) nv=127;
-                                nv=my_midi_fm_vol_table[nv];
+                                if ((m_adlibStyle&LUCAS_STYLE)!=0)
+                                    nv*=2;
+                                if (nv>127)
+                                    nv=127;
+                                nv = my_midi_fm_vol_table.at(nv);
                                 if ((m_adlibStyle&LUCAS_STYLE)!=0)
                                     nv=(int)((float)sqrt((float)nv)*11);
                             } else if (m_adlibStyle & CMF_STYLE) {
@@ -579,12 +571,6 @@ bool CmidPlayer::update()
                     break;
                 case 0xa0: /*key after touch */
                     note=getnext(1); vel=getnext(1);
-                    /*  //this might all be good
-                for (i=0; i<9; i++)
-                    if (chp[i][0]==c & chp[i][1]==note)
-
-midi_fm_playnote(i,note+cnote[c],my_midi_fm_vol_table[(cvols[c]*vel)/128]*2);
-                */
                     break;
                 case 0xb0: /*control change .. pitch bend? */
                     ctrl=getnext(1); vel=getnext(1);
@@ -677,7 +663,8 @@ midi_fm_playnote(i,note+cnote[c],my_midi_fm_vol_table[(cvols[c]*vel)/128]*2);
                             m_ch[c].ins[7]=(unsigned char)(0xff-((getnext(1)<<4)+getnext(1)));
                             m_ch[c].ins[9]=(unsigned char)((getnext(1)<<4)+getnext(1));
 
-                            i=(getnext(1)<<4)+getnext(1);
+                            i = (getnext(1)<<4);
+                            i += getnext(1);
                             m_ch[c].ins[10]=i;
 
                             //if ((i&1)==1) ch[c].ins[10]=1;
@@ -801,25 +788,6 @@ midi_fm_playnote(i,note+cnote[c],my_midi_fm_vol_table[(cvols[c]*vel)/128]*2);
     else
         m_fwait=50;  // 1/50th of a second
 
-    midiprintf ("\n");
-    for (i=0; i<16; i++)
-        if (m_tracks[i].on) {
-            if (m_tracks[i].pos < m_tracks[i].tend)
-                midiprintf ("<%d>",m_tracks[i].iwait);
-            else
-                midiprintf("stop");
-        }
-
-    /*
-    if (ret==0 && type==FILE_ADVSIERRA)
-        if (datalook(sierra_pos-2)!=0xff)
-            {
-            midiprintf ("next sectoin!");
-            sierra_next_section(p);
-            fwait=50;
-            ret=1;
-            }
-    */
     midiprintf("end update\n");
 
     if(ret)
@@ -842,9 +810,7 @@ void CmidPlayer::rewind(int subsong)
     m_tins=0;
     m_adlibStyle = MIDI_STYLE|CMF_STYLE;
     m_melodicMode = true;
-    for (int i=0; i<128; i++)
-        for (int j=0; j<14; j++)
-            m_myInsBank[i][j]=midi_fm_instruments[i][j];
+    m_myInsBank = midi_fm_instruments;
     for (int i=0; i<16; i++)
     {
         m_ch[i].inum=0;
@@ -1001,7 +967,7 @@ void CmidPlayer::rewind(int subsong)
         break;
     }
     case FileType::AdvSierra:
-        memcpy(m_myInsBank, m_sMyInsBank, 128 * 14);
+        m_myInsBank = m_sMyInsBank;
         m_tins = m_stins;
         m_deltas=0x20;
         getnext(11); //worthless empty space and "stuff" :)
@@ -1028,7 +994,7 @@ void CmidPlayer::rewind(int subsong)
         m_adlibStyle=SIERRA_STYLE|MIDI_STYLE;  //advanced sierra tunes use volume
         break;
     case FileType::Sierra:
-        memcpy(m_myInsBank, m_sMyInsBank, 128 * 14);
+        m_myInsBank = m_sMyInsBank;
         m_tins = m_stins;
         getnext(2);
         m_deltas=0x20;
@@ -1071,19 +1037,19 @@ std::string CmidPlayer::gettype()
 {
     switch(m_type) {
     case FileType::Lucas:
-        return std::string("LucasArts AdLib MIDI");
+        return "LucasArts AdLib MIDI";
     case FileType::Midi:
-        return std::string("General MIDI");
+        return "General MIDI";
     case FileType::Cmf:
-        return std::string("Creative Music Format (CMF MIDI)");
+        return "Creative Music Format (CMF MIDI)";
     case FileType::OldLucas:
-        return std::string("Lucasfilm Adlib MIDI");
+        return "Lucasfilm Adlib MIDI";
     case FileType::AdvSierra:
-        return std::string("Sierra On-Line VGA MIDI");
+        return "Sierra On-Line VGA MIDI";
     case FileType::Sierra:
-        return std::string("Sierra On-Line EGA MIDI");
+        return "Sierra On-Line EGA MIDI";
     default:
-        return std::string("MIDI unknown");
+        return "MIDI unknown";
     }
 }
 
