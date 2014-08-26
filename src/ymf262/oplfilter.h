@@ -2,40 +2,144 @@
 #define PPPLAY_OPL_FILTER_H
 
 #include <cmath>
-#include <boost/assert.hpp>
+#include <array>
+#include <algorithm>
 
 namespace opl
 {
-template<typename T, int N, int SampleFrq, int LowPass=44100, int HiPass=100>
-class OplFilter
-{
-private:
-    static constexpr float SamplingTimeConstant = SampleFrq / (2*M_PI);
-    // 10Hz cutoff
-    static constexpr float HighPassAlpha = SamplingTimeConstant / (HiPass+SamplingTimeConstant);
-    static_assert(0<=HighPassAlpha && HighPassAlpha<=1, "Error: High Pass constant invalid");
-    // 8kHz cutoff
-    static constexpr float LowPassAlpha = SamplingTimeConstant / (LowPass+SamplingTimeConstant);
-    static_assert(0<=LowPassAlpha && LowPassAlpha<=1, "Error: Low Pass constant invalid");
-    std::array<float,N> m_lastOutputHi;
-    std::array<float,N> m_lastOutputLo;
-    std::array<float,N> m_lastInputHi;
-public:
-    OplFilter() {
-        m_lastOutputHi.fill(0);
-        m_lastOutputLo.fill(0);
-        m_lastInputHi.fill(0);
-    }
 
-    void filter(std::array<T,N>& smp) noexcept {
-        for(int i=0; i<N; ++i) {
-            m_lastOutputHi[i] = HighPassAlpha * (m_lastOutputHi[i] + smp[i]-m_lastInputHi[i]);
-            m_lastOutputLo[i] += LowPassAlpha * (m_lastOutputHi[i] - m_lastOutputLo[i]);
-            m_lastInputHi[i] = smp[i];
-            smp[i] = m_lastOutputLo[i];
+namespace detail
+{
+template<typename T, int N>
+inline std::array<T,N> createZeroArray()
+{
+    std::array<T,N> result;
+    result.fill(0);
+    return result;
+}
+}
+
+template<int InputRate, int Cutoff, int NTaps>
+class LowPassFilter
+{
+    static_assert( NTaps>0 && NTaps<=100, "Taps out of range" );
+    static_assert( InputRate>0, "Invalid input sample rate" );
+    static_assert( Cutoff>0 && Cutoff < InputRate/2, "Invalid cutoff frequency" );
+private:
+    std::array<float_t,NTaps> m_taps;
+    std::array<float_t,NTaps> m_sr;
+
+public:
+    LowPassFilter() : m_taps(detail::createZeroArray<float_t,NTaps>()), m_sr(detail::createZeroArray<float_t,NTaps>()) {
+        const float_t lambda = 2 * M_PI * Cutoff / InputRate;
+
+        for(int n = 0; n < NTaps; n++){
+            float_t mm = n - (NTaps - 1.0) / 2.0;
+            if( mm == 0 )
+                m_taps[n] = lambda / M_PI;
+            else
+                m_taps[n] = std::sin( mm * lambda ) / (mm * M_PI);
         }
     }
+
+    float_t filter(float_t sample)
+    {
+        // push the sample to the front
+        for(int i = NTaps-1; i>=1; --i) {
+            m_sr[i] = m_sr[i-1];
+        }
+        m_sr[0] = sample;
+
+        return std::inner_product(m_sr.begin(), m_sr.end(), m_taps.begin(), 0.0);
+    }
 };
+
+template<int InputRate, int Cutoff, int NTaps>
+class HighPassFilter
+{
+    static_assert( NTaps>0 && NTaps<=100, "Taps out of range" );
+    static_assert( InputRate>0, "Invalid input sample rate" );
+    static_assert( Cutoff>0 && Cutoff < InputRate/2, "Invalid cutoff frequency" );
+private:
+    std::array<float_t,NTaps> m_taps;
+    std::array<float_t,NTaps> m_sr;
+
+public:
+    HighPassFilter() : m_taps(detail::createZeroArray<float_t,NTaps>()), m_sr(detail::createZeroArray<float_t,NTaps>()) {
+        const float_t lambda = 2 * M_PI * Cutoff / InputRate;
+
+        for(int n = 0; n < NTaps; n++) {
+            float_t mm = n - (NTaps - 1.0) / 2.0;
+            if( mm == 0.0 )
+                m_taps[n] = 1.0 - lambda / M_PI;
+            else
+                m_taps[n] = -std::sin( mm * lambda ) / (mm * M_PI);
+        }
+    }
+
+    float_t filter(float_t sample) {
+        // push the sample to the front
+        for(int i = NTaps-1; i>=1; --i) {
+            m_sr[i] = m_sr[i-1];
+        }
+        m_sr[0] = sample;
+
+        return std::inner_product(m_sr.begin(), m_sr.end(), m_taps.begin(), 0.0);
+    }
+};
+
+template<int InputRate, int CutoffLow, int CutoffHigh, int NTaps>
+class BandPassFilter
+{
+    static_assert( NTaps>0 && NTaps<=100, "Taps out of range" );
+    static_assert( InputRate>0, "Invalid input sample rate" );
+    static_assert( CutoffLow>0 && CutoffLow < InputRate/2, "Invalid lowpass cutoff frequency" );
+    static_assert( CutoffHigh>0 && CutoffHigh < InputRate/2, "Invalid highpass cutoff frequency" );
+private:
+    std::array<float_t,NTaps> m_taps;
+    std::array<float_t,NTaps> m_sr;
+
+public:
+    BandPassFilter() : m_taps(detail::createZeroArray<float_t,NTaps>()), m_sr(detail::createZeroArray<float_t,NTaps>()) {
+        const float_t lambda = 2 * M_PI * CutoffLow / InputRate;
+        const float_t phi = 2 * M_PI * CutoffHigh / InputRate;
+
+        for(int n = 0; n < NTaps; n++){
+            float_t mm = n - (NTaps - 1.0) / 2.0;
+            if( mm == 0.0 )
+                m_taps[n] = (phi - lambda) / M_PI;
+            else
+                m_taps[n] = (std::sin( mm * phi ) - std::sin( mm * lambda )) / (mm * M_PI);
+        }
+    }
+
+    float_t filter(float_t sample)
+    {
+        // push the sample to the front
+        for(int i = NTaps-1; i>=1; --i) {
+            m_sr[i] = m_sr[i-1];
+        }
+        m_sr[0] = sample;
+
+        return std::inner_product(m_sr.begin(), m_sr.end(), m_taps.begin(), 0.0);
+    }
+};
+
+template<int N, class Filter>
+class MultiplexFilter
+{
+private:
+    std::array<Filter,N> m_filters;
+public:
+    MultiplexFilter() : m_filters(){}
+
+    template<class T>
+    void filter(std::array<T,N>& samples) {
+        for(int i=0; i<N; ++i)
+            samples[i] = m_filters[i].filter(samples[i]);
+    }
+};
+
 }
 
 #endif

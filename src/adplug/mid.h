@@ -28,8 +28,6 @@ class CmidPlayer: public CPlayer
 public:
   static CPlayer *factory();
 
-  CmidPlayer();
-
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int subsong);
@@ -37,11 +35,11 @@ public:
 
   std::string gettype();
   std::string gettitle()
-    { return std::string(m_title); }
+    { return m_title; }
   std::string getauthor()
-    { return std::string(m_author); }
+    { return m_author; }
   std::string getdesc()
-    { return std::string(m_remarks); }
+    { return m_remarks; }
   unsigned int getinstruments()
     { return m_tins; }
   unsigned int getsubsongs()
@@ -68,15 +66,18 @@ public:
     unsigned char pv;
   };
 
-  char *m_author,*m_title,*m_remarks,m_emptystr;
+  std::string m_author;
+  std::string m_title;
+  std::string m_remarks;
   size_t m_dataPos;
   unsigned long m_sierraPos; //sierras gotta be special.. :>
   int m_subsongs;
-  std::vector<uint8_t> m_data;
+  std::vector<uint8_t> m_data{};
 
   int m_adlibStyle;
   bool m_melodicMode;
-  unsigned char m_myInsBank[128][14], m_sMyInsBank[128][14];
+  using InsBank = std::array<std::array<uint8_t,14>,128>;
+  InsBank m_myInsBank, m_sMyInsBank;
   midi_channel m_ch[16];
   int m_chp[18][3];
 
@@ -105,11 +106,10 @@ public:
 
  private:
   bool load_sierra_ins(const std::string &fname, const CFileProvider &fp);
-  void midiprintf(const char *format, ...);
-  unsigned char datalook(long m_dataPos);
-  unsigned long getnexti(size_t num);
-  unsigned long getnext(size_t num);
-  unsigned long getval();
+  uint8_t datalook(size_t m_dataPos) const;
+  uint32_t getnexti(size_t num);
+  uint32_t getnext(size_t num);
+  uint32_t getval();
   void sierra_next_section();
   void midi_fm_instrument(int voice, unsigned char *inst);
   void midi_fm_percussion(int m_ch, unsigned char *inst);
@@ -121,7 +121,7 @@ public:
 
 class CDukePlayer : CPlayer {
 private:
-    std::unique_ptr<ppp::EMidi> m_emidi;
+    std::unique_ptr<ppp::EMidi> m_emidi = nullptr;
 public:
     static CPlayer* factory() {
         return new CDukePlayer();

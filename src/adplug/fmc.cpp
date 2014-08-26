@@ -51,7 +51,7 @@ bool CfmcLoader::load(const std::string &filename, const CFileProvider &fp)
   init_trackord();
 
   // load order
-  for(i = 0; i < 256; i++) order[i] = f->readInt(1);
+  for(i = 0; i < 256; i++) m_order[i] = f->readInt(1);
 
   f->ignore(2);
 
@@ -108,25 +108,25 @@ bool CfmcLoader::load(const std::string &filename, const CFileProvider &fp)
 	      event.byte2 = f->readInt(1);
 
 	      // convert event
-	      tracks[t][k].note = event.byte0 & 0x7F;
-	      tracks[t][k].inst = ((event.byte0 & 0x80) >> 3) + (event.byte1 >> 4) + 1;
-	      tracks[t][k].command = conv_fx[event.byte1 & 0x0F];
-	      tracks[t][k].param1 = event.byte2 >> 4;
-	      tracks[t][k].param2 = event.byte2 & 0x0F;
+	      m_tracks[t][k].note = event.byte0 & 0x7F;
+	      m_tracks[t][k].inst = ((event.byte0 & 0x80) >> 3) + (event.byte1 >> 4) + 1;
+	      m_tracks[t][k].command = conv_fx[event.byte1 & 0x0F];
+	      m_tracks[t][k].param1 = event.byte2 >> 4;
+	      m_tracks[t][k].param2 = event.byte2 & 0x0F;
 
 	      // fix effects
-	      if (tracks[t][k].command == 0x0E)   // 0x0E (14): Retrig
-		tracks[t][k].param1 = 3;
-	      if (tracks[t][k].command == 0x1A) { // 0x1A (26): Volume Slide
-		if (tracks[t][k].param1 > tracks[t][k].param2)
+	      if (m_tracks[t][k].command == 0x0E)   // 0x0E (14): Retrig
+		m_tracks[t][k].param1 = 3;
+	      if (m_tracks[t][k].command == 0x1A) { // 0x1A (26): Volume Slide
+		if (m_tracks[t][k].param1 > m_tracks[t][k].param2)
 		  {
-		    tracks[t][k].param1 -= tracks[t][k].param2;
-		    tracks[t][k].param2 = 0;
+		    m_tracks[t][k].param1 -= m_tracks[t][k].param2;
+		    m_tracks[t][k].param2 = 0;
 		  }
 		else
 		  {
-		    tracks[t][k].param2 -= tracks[t][k].param1;
-		    tracks[t][k].param1 = 0;
+		    m_tracks[t][k].param2 -= m_tracks[t][k].param1;
+		    m_tracks[t][k].param1 = 0;
 		  }
 	      }
 	    }
@@ -143,9 +143,9 @@ bool CfmcLoader::load(const std::string &filename, const CFileProvider &fp)
   // order length
   for (i=0;i<256;i++)
     {
-      if (order[i] >= 0xFE)
+      if (m_order[i] >= 0xFE)
 	{
-	  length = i;
+	  m_length = i;
 	  break;
 	}
     }
@@ -153,10 +153,10 @@ bool CfmcLoader::load(const std::string &filename, const CFileProvider &fp)
   // data for Protracker
   activechan = (0xffffffff >> (32 - header.numchan)) << (32 - header.numchan);
   nop = t / header.numchan;
-  restartpos = 0;
+  m_restartpos = 0;
 
   // flags
-  flags = Faust;
+  m_flags = Faust;
 
   rewind(0);
 

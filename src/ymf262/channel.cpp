@@ -47,7 +47,7 @@ Channel::Channel( opl::Opl3* opl, int baseAddress, Operator* op1, Operator* op2,
 void Channel::update_2_KON1_BLOCK3_FNUMH2()
 {
 
-    const uint8_t _2_kon1_block3_fnumh2 = m_opl->readReg( m_channelBaseAddress + Channel::_2_KON1_BLOCK3_FNUMH2_Offset );
+    const uint16_t _2_kon1_block3_fnumh2 = m_opl->readReg( m_channelBaseAddress + Channel::_2_KON1_BLOCK3_FNUMH2_Offset );
 
     // Frequency Number (hi-register) and Block. These two registers, together with fnuml,
     // sets the Channel's base frequency;

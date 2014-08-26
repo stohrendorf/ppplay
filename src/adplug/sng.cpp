@@ -33,20 +33,20 @@ bool CsngPlayer::load(const std::string &filename, const CFileProvider &fp)
   int i;
 
   // load header
-  f->readString(header.id, 4);
-  header.length = f->readInt(2); header.start = f->readInt(2);
-  header.loop = f->readInt(2); header.delay = f->readInt(1);
-  header.compressed = f->readInt(1) ? true : false;
+  f->readString(m_header.id, 4);
+  m_header.length = f->readInt(2); m_header.start = f->readInt(2);
+  m_header.loop = f->readInt(2); m_header.delay = f->readInt(1);
+  m_header.compressed = f->readInt(1) ? true : false;
 
   // file validation section
-  if(strncmp(header.id,"ObsM",4)) { fp.close(f); return false; }
+  if(strncmp(m_header.id,"ObsM",4)) { fp.close(f); return false; }
 
   // load section
-  header.length /= 2; header.start /= 2; header.loop /= 2;
-  data.resize(header.length);
-  for(i = 0; i < header.length; i++) {
-    data[i].val = f->readInt(1);
-    data[i].reg = f->readInt(1);
+  m_header.length /= 2; m_header.start /= 2; m_header.loop /= 2;
+  m_data.resize(m_header.length);
+  for(i = 0; i < m_header.length; i++) {
+    m_data[i].val = f->readInt(1);
+    m_data[i].reg = f->readInt(1);
   }
 
   rewind(0);
@@ -56,30 +56,30 @@ bool CsngPlayer::load(const std::string &filename, const CFileProvider &fp)
 
 bool CsngPlayer::update()
 {
-  if(header.compressed && del) {
-    del--;
-    return !songend;
+  if(m_header.compressed && m_del) {
+    m_del--;
+    return !m_songEnd;
   }
 
-  while(data[pos].reg) {
-    getOpl()->writeReg(data[pos].reg, data[pos].val);
-    pos++;
-    if(pos >= header.length) {
-      songend = true;
-      pos = header.loop;
+  while(m_data[m_pos].reg) {
+    getOpl()->writeReg(m_data[m_pos].reg, m_data[m_pos].val);
+    m_pos++;
+    if(m_pos >= m_header.length) {
+      m_songEnd = true;
+      m_pos = m_header.loop;
     }
   }
 
-  if(!header.compressed)
-    getOpl()->writeReg(data[pos].reg, data[pos].val);
+  if(!m_header.compressed)
+    getOpl()->writeReg(m_data[m_pos].reg, m_data[m_pos].val);
 
-  if(data[pos].val) del = data[pos].val - 1; pos++;
-  if(pos >= header.length) { songend = true; pos = header.loop; }
-  return !songend;
+  if(m_data[m_pos].val) m_del = m_data[m_pos].val - 1; m_pos++;
+  if(m_pos >= m_header.length) { m_songEnd = true; m_pos = m_header.loop; }
+  return !m_songEnd;
 }
 
-void CsngPlayer::rewind(int subsong)
+void CsngPlayer::rewind(int)
 {
-  pos = header.start; del = header.delay; songend = false;
+  m_pos = m_header.start; m_del = m_header.delay; m_songEnd = false;
   getOpl()->writeReg(1,32);	// go to OPL2 mode
 }

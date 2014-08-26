@@ -10,33 +10,37 @@ namespace ppp
 class DualChips
 {
 public:
-    enum Array {
-        First,
-        Second,
-        NumArrays
-    };
-
     struct Timbre
     {
-        uint8_t SAVEK[ 2 ];
-        uint8_t Level[ 2 ];
-        uint8_t Env1[ 2 ];
-        uint8_t Env2[ 2 ];
-        uint8_t Wave[ 2 ];
-        uint8_t Feedback;
+        struct OperatorData {
+            uint8_t modulator;
+            uint8_t carrier;
+        };
+        using SlotData = uint8_t;
+
+        OperatorData amVibEgtKsrMult;
+        OperatorData kslLevel;
+        OperatorData attackDecay;
+        OperatorData sustainRelease;
+        OperatorData wave;
+        SlotData feedback;
         int8_t Transpose;
-        //int8_t Velocity;
     };
 
     struct Voice
     {
+        //! @brief This voice's index; used to calculate the slot.
         uint num = 0;
+        //! @brief The active MIDI key.
         uint key = 0;
-        uint velocity = 0;
-        uint channel = -1;
-        uint pitch = 0;
+        //! @brief Key velocity (0..127).
+        uint8_t velocity = 0;
+        //! @brief The channel this voice belongs to.
+        int channel = -1;
+        //! @brief The current frequency.
+        uint32_t pitch = 0;
+        //! @brief The active MIDI patch/instrument.
         int timbre = -1;
-        Array arraySelector = Array::First;
         bool isNoteOn = false;
     };
 
@@ -53,9 +57,8 @@ public:
         int KeyOffset = 0;
         uint KeyDetune = 0;
         uint Volume = DefaultChannelVolume;
-        uint EffectiveVolume = 0;
         int Detune = 0;
-        uint RPN;
+        uint RPN = 0;
         short PitchBendRange = DefaultPitchBendRange;
         short PitchBendSemiTones = DefaultPitchBendRange/100;
         short PitchBendHundreds = DefaultPitchBendRange%100;
@@ -74,15 +77,11 @@ public:
         ResetAllControllers, RpnMsb, RpnLsb, DataentryMsb, DataentryLsb
     };
 
-    DualChips() : m_voices(), m_channels(), m_timbreBank(), m_voiceLevel(), m_voiceKsl()
+    DualChips() : m_voices(), m_channels(), m_timbreBank()
     {
         extern std::array<DualChips::Timbre,256> ADLIB_TimbreBank;
         m_timbreBank = ADLIB_TimbreBank;
 
-        for(auto& x : m_voiceLevel)
-            x.fill(0);
-        for(auto& x : m_voiceKsl)
-            x.fill(0);
         reset();
         resetVoices();
     }
@@ -100,36 +99,24 @@ public:
         m_chip.read(data);
     }
 
+    void useAdlibVolumes(bool value) noexcept {
+        m_adlibVolumes = value;
+    }
 
 private:
     opl::Opl3 m_chip{};
     std::array<Voice, 18> m_voices;
     std::array<OplChannel, 16> m_channels;
     std::array<Timbre,256> m_timbreBank;
-    std::array<std::array<int,Array::NumArrays>,18> m_voiceLevel;
-    std::array<std::array<int,Array::NumArrays>,18> m_voiceKsl;
     std::set<Voice*> m_voicePool{};
-
-    void send(Array which, uint16_t reg, uint8_t val) {
-        switch (which) {
-        case First:
-            m_chip.writeReg(reg, val);
-            break;
-        case Second:
-            m_chip.writeReg(reg + 0x100, val);
-            break;
-        default:
-            break;
-        }
-    }
+    bool m_adlibVolumes = true;
 
     void applyTimbre(Voice *voice);
     void applyVolume(Voice *voice);
     void applyPitch(Voice *voice);
     Voice* allocVoice();
-    Voice *getVoice(OplChannel *channel, uint8_t key) const;
     void resetVoices();
-    void flushCard(Array port);
+    void flushCard();
     void reset();
 };
 }

@@ -76,7 +76,7 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp)
     }
 
     // load, depack & convert section
-    nop = numpats; length = 128; restartpos = 0;
+    nop = numpats; m_length = 128; m_restartpos = 0;
     if(version < 5) {
         for(i=0;i<5;i++) len[i] = f->readInt(2);
         t = 9;
@@ -136,10 +136,10 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp)
         m_orgPos += 13;
     }
 
-    memcpy(order,&m_org[m_orgPos],128);
+    memcpy(m_order,&m_org[m_orgPos],128);
     m_orgPos += 128;
-    bpm = m_org[m_orgPos++];
-    initspeed = m_org[m_orgPos++];
+    m_bpm = m_org[m_orgPos++];
+    m_initspeed = m_org[m_orgPos++];
     if(version >= 5)
         flags = m_org[m_orgPos];
     if(version == 1 || version == 5)
@@ -201,7 +201,7 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp)
         for(i=0;i<numpats;i++)
             for(j=0;j<64;j++)
                 for(k=0;k<9;k++) {
-                    struct Tracks	*track = &tracks[i * 9 + k][j];
+                    struct Tracks	*track = &m_tracks[i * 9 + k][j];
                     unsigned char	*o = &m_org[i*64*t*4+j*t*4+k*4];
 
                     track->note = o[0] == 255 ? 127 : o[0];
@@ -243,7 +243,7 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp)
         for(i=0;i<numpats;i++)
             for(j=0;j<18;j++)
                 for(k=0;k<64;k++) {
-                    struct Tracks	*track = &tracks[i * 18 + j][k];
+                    struct Tracks	*track = &m_tracks[i * 18 + j][k];
                     unsigned char	*o = &m_org[i*64*t*4+j*64*4+k*4];
 
                     track->note = o[0] == 255 ? 127 : o[0];
@@ -279,9 +279,9 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp)
 
     // Process flags
     if(version >= 5) {
-        CmodPlayer::flags |= Opl3;				// All versions >= 5 are OPL3
-        if(flags & 8) CmodPlayer::flags |= Tremolo;		// Tremolo depth
-        if(flags & 16) CmodPlayer::flags |= Vibrato;	// Vibrato depth
+        CmodPlayer::m_flags |= Opl3;				// All versions >= 5 are OPL3
+        if(flags & 8) CmodPlayer::m_flags |= Tremolo;		// Tremolo depth
+        if(flags & 16) CmodPlayer::m_flags |= Vibrato;	// Vibrato depth
     }
 
     fp.close(f);
@@ -291,8 +291,8 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp)
 
 size_t Ca2mLoader::framesUntilUpdate()
 {
-    if(tempo != 18)
-        return SampleRate/tempo;
+    if(m_tempo != 18)
+        return SampleRate/m_tempo;
     else
         return SampleRate/18.2;
 }

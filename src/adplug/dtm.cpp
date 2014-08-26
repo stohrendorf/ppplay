@@ -108,7 +108,7 @@ bool CdtmLoader::load(const std::string &filename, const CFileProvider &fp)
     }
 
   // load order
-  for(i = 0; i < 100; i++) order[i] = f->readInt(1);
+  for(i = 0; i < 100; i++) m_order[i] = f->readInt(1);
 
   nop = header.numpat;
 
@@ -148,54 +148,54 @@ bool CdtmLoader::load(const std::string &filename, const CFileProvider &fp)
 	      if (event->byte0 == 0x80)
 		{
 		  if (event->byte1 <= 0x80)
-		    tracks[t][k].inst = event->byte1 + 1;
+		    m_tracks[t][k].inst = event->byte1 + 1;
 		}
 
 	      // note + effect
 	      else
 		{
-		  tracks[t][k].note = event->byte0;
+		  m_tracks[t][k].note = event->byte0;
 
 		  if ((event->byte0 != 0) && (event->byte0 != 127))
-		    tracks[t][k].note++;
+		    m_tracks[t][k].note++;
 
 		  // convert effects
 		  switch (event->byte1 >> 4)
 		    {
 		    case 0x0: // pattern break
 		      if ((event->byte1 & 15) == 1)
-			tracks[t][k].command = 13;
+			m_tracks[t][k].command = 13;
 		      break;
 
 		    case 0x1: // freq. slide up
-		      tracks[t][k].command = 28;
-		      tracks[t][k].param1 = event->byte1 & 15;
+		      m_tracks[t][k].command = 28;
+		      m_tracks[t][k].param1 = event->byte1 & 15;
 		      break;
 
 		    case 0x2: // freq. slide down
-		      tracks[t][k].command = 28;
-		      tracks[t][k].param2 = event->byte1 & 15;
+		      m_tracks[t][k].command = 28;
+		      m_tracks[t][k].param2 = event->byte1 & 15;
 		      break;
 
 		    case 0xA: // set carrier volume
 		    case 0xC: // set instrument volume
-		      tracks[t][k].command = 22;
-		      tracks[t][k].param1 = (0x3F - (event->byte1 & 15)) >> 4;
-		      tracks[t][k].param2 = (0x3F - (event->byte1 & 15)) & 15;
+		      m_tracks[t][k].command = 22;
+		      m_tracks[t][k].param1 = (0x3F - (event->byte1 & 15)) >> 4;
+		      m_tracks[t][k].param2 = (0x3F - (event->byte1 & 15)) & 15;
 		      break;
 
 		    case 0xB: // set modulator volume
-		      tracks[t][k].command = 21;
-		      tracks[t][k].param1 = (0x3F - (event->byte1 & 15)) >> 4;
-		      tracks[t][k].param2 = (0x3F - (event->byte1 & 15)) & 15;
+		      m_tracks[t][k].command = 21;
+		      m_tracks[t][k].param1 = (0x3F - (event->byte1 & 15)) >> 4;
+		      m_tracks[t][k].param2 = (0x3F - (event->byte1 & 15)) & 15;
 		      break;
 
 		    case 0xE: // set panning
 		      break;
 
 		    case 0xF: // set speed
-		      tracks[t][k].command = 13;
-		      tracks[t][k].param2 = event->byte1 & 15;
+		      m_tracks[t][k].command = 13;
+		      m_tracks[t][k].param2 = event->byte1 & 15;
 		      break;
 		    }
 		}
@@ -211,21 +211,21 @@ bool CdtmLoader::load(const std::string &filename, const CFileProvider &fp)
   // order length
   for (i=0;i<100;i++)
     {
-      if (order[i] >= 0x80)
+      if (m_order[i] >= 0x80)
 	{
-	  length = i;
+	  m_length = i;
 
-	  if (order[i] == 0xFF)
-	    restartpos = 0;
+	  if (m_order[i] == 0xFF)
+	    m_restartpos = 0;
 	  else
-	    restartpos = order[i] - 0x80;
+	    m_restartpos = m_order[i] - 0x80;
 
 	  break;
 	}
     }
 
   // initial speed
-  initspeed = 2;
+  m_initspeed = 2;
 
   rewind(0);
 

@@ -43,8 +43,8 @@ const unsigned char CmodPlayer::vibratotab[32] =
 /*** public methods *************************************/
 
 CmodPlayer::CmodPlayer()
-  : CPlayer(), inst(0), order(0), arplist(0), arpcmd(0), initspeed(6),
-    nop(0), activechan(0xffffffff), flags(Standard),
+  : CPlayer(), inst(0), m_order(0), arplist(0), arpcmd(0), m_initspeed(6),
+    nop(0), activechan(0xffffffff), m_flags(Standard),
     nrows(0), npats(0), nchans(0)
 {
   realloc_order(128);
@@ -111,7 +111,7 @@ bool CmodPlayer::update()
 
     info1 = channel[chan].info1;
     info2 = channel[chan].info2;
-    if(flags & Decimal)
+    if(m_flags & Decimal)
       info = channel[chan].info1 * 10 + channel[chan].info2;
     else
       info = (channel[chan].info1 << 4) + channel[chan].info2;
@@ -191,7 +191,7 @@ bool CmodPlayer::update()
 
   // arrangement handling
   if(!resolve_order()) return !songend;
-  pattnr = order[ord];
+  pattnr = m_order[ord];
 
   if(!rw) AdPlug_LogWrite("\nCmodPlayer::update(): Pattern: %d, Order: %d\n", pattnr, ord);
   AdPlug_LogWrite("CmodPlayer::update():%3d|", rw);
@@ -212,33 +212,33 @@ bool CmodPlayer::update()
     } else
       track--;
 
-    AdPlug_LogWrite("%3d%3d%2X%2X%2X|", tracks[track][row].note,
-		    tracks[track][row].inst, tracks[track][row].command,
-		    tracks[track][row].param1, tracks[track][row].param2);
+    AdPlug_LogWrite("%3d%3d%2X%2X%2X|", m_tracks[track][row].note,
+		    m_tracks[track][row].inst, m_tracks[track][row].command,
+		    m_tracks[track][row].param1, m_tracks[track][row].param2);
 
     donote = 0;
-    if(tracks[track][row].inst) {
-      channel[chan].inst = tracks[track][row].inst - 1;
-      if (!(flags & Faust)) {
+    if(m_tracks[track][row].inst) {
+      channel[chan].inst = m_tracks[track][row].inst - 1;
+      if (!(m_flags & Faust)) {
 	channel[chan].vol1 = 63 - (inst[channel[chan].inst].data[10] & 63);
 	channel[chan].vol2 = 63 - (inst[channel[chan].inst].data[9] & 63);
 	setvolume(chan);
       }
     }
 
-    if(tracks[track][row].note && tracks[track][row].command != 3) {	// no tone portamento
-      channel[chan].note = tracks[track][row].note;
-      setnote(chan,tracks[track][row].note);
+    if(m_tracks[track][row].note && m_tracks[track][row].command != 3) {	// no tone portamento
+      channel[chan].note = m_tracks[track][row].note;
+      setnote(chan,m_tracks[track][row].note);
       channel[chan].nextfreq = channel[chan].freq;
       channel[chan].nextoct = channel[chan].oct;
       channel[chan].arppos = inst[channel[chan].inst].arpstart;
       channel[chan].arpspdcnt = 0;
-      if(tracks[track][row].note != 127)	// handle key off
+      if(m_tracks[track][row].note != 127)	// handle key off
 	donote = 1;
     }
-    channel[chan].fx = tracks[track][row].command;
-    channel[chan].info1 = tracks[track][row].param1;
-    channel[chan].info2 = tracks[track][row].param2;
+    channel[chan].fx = m_tracks[track][row].command;
+    channel[chan].info1 = m_tracks[track][row].param1;
+    channel[chan].info2 = m_tracks[track][row].param2;
 
     if(donote)
       playnote(chan);
@@ -246,22 +246,22 @@ bool CmodPlayer::update()
     // command handling (row dependant)
     info1 = channel[chan].info1;
     info2 = channel[chan].info2;
-    if(flags & Decimal)
+    if(m_flags & Decimal)
       info = channel[chan].info1 * 10 + channel[chan].info2;
     else
       info = (channel[chan].info1 << 4) + channel[chan].info2;
     switch(channel[chan].fx) {
     case 3: // tone portamento
-      if(tracks[track][row].note) {
-	if(tracks[track][row].note < 13)
-	  channel[chan].nextfreq = notetable[tracks[track][row].note - 1];
+      if(m_tracks[track][row].note) {
+	if(m_tracks[track][row].note < 13)
+	  channel[chan].nextfreq = notetable[m_tracks[track][row].note - 1];
 	else
-	  if(tracks[track][row].note % 12 > 0)
-	    channel[chan].nextfreq = notetable[(tracks[track][row].note % 12) - 1];
+	  if(m_tracks[track][row].note % 12 > 0)
+	    channel[chan].nextfreq = notetable[(m_tracks[track][row].note % 12) - 1];
 	  else
 	    channel[chan].nextfreq = notetable[11];
-	channel[chan].nextoct = (tracks[track][row].note - 1) / 12;
-	if(tracks[track][row].note == 127) {	// handle key off
+	channel[chan].nextoct = (m_tracks[track][row].note - 1) / 12;
+	if(m_tracks[track][row].note == 127) {	// handle key off
 	  channel[chan].nextfreq = channel[chan].freq;
 	  channel[chan].nextoct = channel[chan].oct;
 	}
@@ -277,7 +277,7 @@ bool CmodPlayer::update()
       }
       break;
 
-    case 7: tempo = info; break;	// set tempo
+    case 7: m_tempo = info; break;	// set tempo
 
     case 8: channel[chan].key = 0; setfreq(chan); break;	// release sustaining note
 
@@ -353,7 +353,7 @@ bool CmodPlayer::update()
       if(info <= 0x1f)
 	speed = info;
       if(info >= 0x32)
-	tempo = info;
+	m_tempo = info;
       if(!info)
 	songend = 1;
       break;
@@ -375,7 +375,7 @@ bool CmodPlayer::update()
       if(info <= 31 && info > 0)
 	speed = info;
       if(info > 31 || !info)
-	tempo = info;
+	m_tempo = info;
       break;
 
     case 19: // RAD/A2M set speed
@@ -474,9 +474,9 @@ bool CmodPlayer::resolve_order()
    * has been detected.
    */
 {
-  if(ord < length) {
-    while(order[ord] >= JUMPMARKER) {	// jump to order
-      unsigned long neword = order[ord] - JUMPMARKER;
+  if(ord < m_length) {
+    while(m_order[ord] >= JUMPMARKER) {	// jump to order
+      unsigned long neword = m_order[ord] - JUMPMARKER;
 
       if(neword <= ord) songend = 1;
       if(neword == ord) return false;
@@ -484,7 +484,7 @@ bool CmodPlayer::resolve_order()
     }
   } else {
     songend = 1;
-    ord = restartpos;
+    ord = m_restartpos;
   }
 
   return true;
@@ -496,20 +496,20 @@ void CmodPlayer::rewind(int subsong)
 
   // Reset playing variables
   songend = del = ord = rw = regbd = 0;
-  tempo = bpm; speed = initspeed;
+  m_tempo = m_bpm; speed = m_initspeed;
 
   // Reset channel data
   memset(channel,0,sizeof(Channel)*nchans);
 
   // Compute number of patterns, if needed
   if(!nop)
-    for(i=0;i<length;i++)
-      nop = (order[i] > nop ? order[i] : nop);
+    for(i=0;i<m_length;i++)
+      nop = (m_order[i] > nop ? m_order[i] : nop);
 
   getOpl()->writeReg(1, 32);	// Go to ym3812 mode
 
   // Enable OPL3 extensions if flagged
-  if(flags & Opl3) {
+  if(m_flags & Opl3) {
     //FIXME sto opl->setchip(1);
     //FIXME sto opl->writeReg(1, 32);
     //FIXME sto opl->writeReg(5, 1);
@@ -517,14 +517,14 @@ void CmodPlayer::rewind(int subsong)
   }
 
   // Enable tremolo/vibrato depth if flagged
-  if(flags & Tremolo) regbd |= 128;
-  if(flags & Vibrato) regbd |= 64;
+  if(m_flags & Tremolo) regbd |= 128;
+  if(m_flags & Vibrato) regbd |= 64;
   if(regbd) getOpl()->writeReg(0xbd, regbd);
 }
 
 size_t CmodPlayer::framesUntilUpdate()
 {
-  return SampleRate*2.5/tempo;
+  return SampleRate*2.5/m_tempo;
 }
 
 void CmodPlayer::init_trackord()
@@ -550,8 +550,8 @@ void CmodPlayer::init_notetable(const unsigned short *newnotetable)
 
 bool CmodPlayer::realloc_order(unsigned long len)
 {
-  if(order) delete [] order;
-  order = new unsigned char[len];
+  if(m_order) delete [] m_order;
+  m_order = new unsigned char[len];
   return true;
 }
 
@@ -565,14 +565,14 @@ bool CmodPlayer::realloc_patterns(unsigned long pats, unsigned long rows, unsign
   npats = pats; nrows = rows; nchans = chans;
 
   // alloc new patterns
-  tracks = new Tracks *[pats * chans];
-  for(i=0;i<pats*chans;i++) tracks[i] = new Tracks[rows];
+  m_tracks = new Tracks *[pats * chans];
+  for(i=0;i<pats*chans;i++) m_tracks[i] = new Tracks[rows];
   trackord = new unsigned short *[pats];
   for(i=0;i<pats;i++) trackord[i] = new unsigned short[chans];
   channel = new Channel[chans];
 
   // initialize new patterns
-  for(i=0;i<pats*chans;i++) memset(tracks[i],0,sizeof(Tracks)*rows);
+  for(i=0;i<pats*chans;i++) memset(m_tracks[i],0,sizeof(Tracks)*rows);
   for(i=0;i<pats;i++) memset(trackord[i],0,chans*2);
 
   return true;
@@ -584,8 +584,8 @@ void CmodPlayer::dealloc_patterns()
 
   // dealloc everything previously allocated
   if(npats && nrows && nchans) {
-    for(i=0;i<npats*nchans;i++) delete [] tracks[i];
-    delete [] tracks;
+    for(i=0;i<npats*nchans;i++) delete [] m_tracks[i];
+    delete [] m_tracks;
     for(i=0;i<npats;i++) delete [] trackord[i];
     delete [] trackord;
     delete [] channel;
@@ -605,7 +605,7 @@ bool CmodPlayer::realloc_instruments(unsigned long len)
 void CmodPlayer::dealloc()
 {
   if(inst) delete [] inst;
-  if(order) delete [] order;
+  if(m_order) delete [] m_order;
   if(arplist) delete [] arplist;
   if(arpcmd) delete [] arpcmd;
   dealloc_patterns();
@@ -617,7 +617,7 @@ void CmodPlayer::setvolume(unsigned char chan)
 {
   unsigned char oplchan = set_opl_chip(chan);
 
-  if(flags & Faust)
+  if(m_flags & Faust)
     setvolume_alt(chan);
   else {
     getOpl()->writeReg(0x40 + m_opTable[oplchan], 63-channel[chan].vol2 + (inst[channel[chan].inst].data[9] & 192));
@@ -651,7 +651,7 @@ void CmodPlayer::playnote(unsigned char chan)
   unsigned char oplchan = set_opl_chip(chan);
   unsigned char op = m_opTable[oplchan], insnr = channel[chan].inst;
 
-  if(!(flags & NoKeyOn))
+  if(!(m_flags & NoKeyOn))
     getOpl()->writeReg(0xb0 + oplchan, 0);	// stop old note
 
   // set instrument data
@@ -670,7 +670,7 @@ void CmodPlayer::playnote(unsigned char chan)
   channel[chan].key = 1;
   setfreq(chan);
 
-  if (flags & Faust) {
+  if (m_flags & Faust) {
     channel[chan].vol2 = 63;
     channel[chan].vol1 = 63;
   }

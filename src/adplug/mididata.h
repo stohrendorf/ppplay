@@ -24,11 +24,13 @@
  * for further acknowledgements.
  */
  
-unsigned char midi_fm_instruments[128][14] =
-{
+#include <array>
+#include <cstdint>
 
-   /* This set of GM instrument patches was provided by Jorrit Rouwe...
-    */
+const std::array<std::array<uint8_t,14>,128> midi_fm_instruments =
+{{
+
+   /* This set of GM instrument patches was provided by Jorrit Rouwe... */
 
    { 0x21, 0x21, 0x8f, 0x0c, 0xf2, 0xf2, 0x45, 0x76, 0x00, 0x00, 0x08, 0, 0, 0 }, /* Acoustic Grand */
    { 0x31, 0x21, 0x4b, 0x09, 0xf2, 0xf2, 0x54, 0x56, 0x00, 0x00, 0x08, 0, 0, 0 }, /* Bright Acoustic */
@@ -159,10 +161,10 @@ unsigned char midi_fm_instruments[128][14] =
    { 0x26, 0xe4, 0x00, 0x09, 0xff, 0x12, 0x01, 0x16, 0x00, 0x01, 0x0e, 0, 0, 0 }, /* Applause */
    { 0x00, 0x00, 0x00, 0x09, 0xf3, 0xf6, 0xf0, 0xc9, 0x00, 0x02, 0x0e, 0, 0, 0 }  /* Gunshot */
 
-};
+}};
 
 /* logarithmic relationship between midi and FM volumes */
-static int my_midi_fm_vol_table[128] = {
+const std::array<uint8_t,128> my_midi_fm_vol_table = {{
    0,  11, 16, 19, 22, 25, 27, 29, 32, 33, 35, 37, 39, 40, 42, 43,
    45, 46, 48, 49, 50, 51, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62,
    64, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 75, 76, 77,
@@ -172,6 +174,6 @@ static int my_midi_fm_vol_table[128] = {
    109, 109, 110, 110, 111, 112, 112, 113, 113, 114, 114, 115, 115,
    116, 117, 117, 118, 118, 119, 119, 120, 120, 121, 121, 122, 122,
    123, 123, 124, 124, 125, 125, 126, 126, 127
-};
+}};
 
 #endif

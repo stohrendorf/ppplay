@@ -44,10 +44,10 @@ bool CdfmLoader::load(const std::string &filename, const CFileProvider &fp)
     { fp.close(f); return false; }
 
   // load
-  restartpos = 0; flags = Standard; bpm = 0;
+  m_restartpos = 0; m_flags = Standard; m_bpm = 0;
   init_trackord();
   f->readString(songinfo, 33);
-  initspeed = f->readInt(1);
+  m_initspeed = f->readInt(1);
   for(i = 0; i < 32; i++)
     f->readString(instname[i], 12);
   for(i = 0; i < 32; i++) {
@@ -63,8 +63,8 @@ bool CdfmLoader::load(const std::string &filename, const CFileProvider &fp)
     inst[i].data[8] = f->readInt(1);
     inst[i].data[0] = f->readInt(1);
   }
-  for(i = 0; i < 128; i++) order[i] = f->readInt(1);
-  for(i = 0; i < 128 && order[i] != 128; i++) ; length = i;
+  for(i = 0; i < 128; i++) m_order[i] = f->readInt(1);
+  for(i = 0; i < 128 && m_order[i] != 128; i++) ; m_length = i;
   npats = f->readInt(1);
   for(i = 0; i < npats; i++) {
     n = f->readInt(1);
@@ -72,23 +72,23 @@ bool CdfmLoader::load(const std::string &filename, const CFileProvider &fp)
       for(c = 0; c < 9; c++) {
 	note = f->readInt(1);
 	if((note & 15) == 15)
-	  tracks[n*9+c][r].note = 127;	// key off
+	  m_tracks[n*9+c][r].note = 127;	// key off
 	else
-	  tracks[n*9+c][r].note = ((note & 127) >> 4) * 12 + (note & 15);
+	  m_tracks[n*9+c][r].note = ((note & 127) >> 4) * 12 + (note & 15);
 	if(note & 128) {	// additional effect byte
 	  fx = f->readInt(1);
 	  if(fx >> 5 == 1)
-	    tracks[n*9+c][r].inst = (fx & 31) + 1;
+	    m_tracks[n*9+c][r].inst = (fx & 31) + 1;
 	  else {
-	    tracks[n*9+c][r].command = convfx[fx >> 5];
-	    if(tracks[n*9+c][r].command == 17) {	// set volume
+	    m_tracks[n*9+c][r].command = convfx[fx >> 5];
+	    if(m_tracks[n*9+c][r].command == 17) {	// set volume
 	      param = fx & 31;
 	      param = 63 - param * 2;
-	      tracks[n*9+c][r].param1 = param >> 4;
-	      tracks[n*9+c][r].param2 = param & 15;
+	      m_tracks[n*9+c][r].param1 = param >> 4;
+	      m_tracks[n*9+c][r].param2 = param & 15;
 	    } else {
-	      tracks[n*9+c][r].param1 = (fx & 31) >> 4;
-	      tracks[n*9+c][r].param2 = fx & 15;
+	      m_tracks[n*9+c][r].param1 = (fx & 31) >> 4;
+	      m_tracks[n*9+c][r].param2 = fx & 15;
 	    }
 	  }
 	}

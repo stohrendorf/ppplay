@@ -184,31 +184,27 @@ void Opl3::write( int array, int address, uint8_t data )
                     update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1();
                 break;
             }
-            BOOST_ASSERT( (address & 0x0F)<9 );
-            // Registers for each channel are in A0-A8, B0-B8, C0-C8, in both register arrays.
-            // 0xB0...0xB8 keeps kon,block,fnum(h) for each channel.
-            if( ( address & 0xF0 ) == 0xB0 && address <= 0xB8 ) {
-                // If the address is in the second register array, adds 9 to the channel number.
-                // The channel number is given by the last four bits, like in A0,...,A8.
+            if( (address & 0x0F)>9 )
+                break;
+            if( ( address & 0xF0 ) == 0xB0 ) {
                 m_channels[array][address & 0x0F]->update_2_KON1_BLOCK3_FNUMH2();
                 break;
             }
-            // 0xA0...0xA8 keeps fnum(l) for each channel.
-            if( ( address & 0xF0 ) == 0xA0 && address <= 0xA8 )
+            if( ( address & 0xF0 ) == 0xA0 )
                 m_channels[array][address & 0x0F]->update_FNUML8();
             break;
-            // 0xC0...0xC8 keeps cha,chb,chc,chd,fb,cnt for each channel:
         case 0xC0:
             // ARC_FEEDBACK
-            BOOST_ASSERT( (address & 0x0F)<9 );
-            if( address <= 0xC8 )
-                m_channels[array][address & 0x0F]->update_CH4_FB3_CNT1();
+            if( (address & 0x0F)>9 )
+                break;
+            m_channels[array][address & 0x0F]->update_CH4_FB3_CNT1();
             break;
 
             // Registers for each of the 36 Operators:
         default:
             int operatorOffset = address & 0x1F;
-            BOOST_ASSERT(operatorOffset>=0 && operatorOffset<0x16);
+            if( operatorOffset>=0x16 )
+                break;
             if( m_operators[array][operatorOffset] == nullptr )
                 break;
             switch( address & 0xE0 ) {

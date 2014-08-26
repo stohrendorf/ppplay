@@ -77,7 +77,7 @@ private:
     uint8_t m_fb = 0;
 
     //! @brief Feedback sample values
-    int16_t m_feedback[2] = {0, 0};
+    int32_t m_feedback[2] = {0, 0};
 
     //! @brief Connection
     bool m_cnt = false;

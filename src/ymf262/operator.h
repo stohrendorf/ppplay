@@ -64,24 +64,8 @@ private:
     bool m_am = false;
     //! @brief Vibrato
     bool m_vib = false;
-    //! @brief Key Scale Rate. Sets the actual envelope rate together with rate and keyScaleNumber
-    bool m_ksr = false;
     //! @brief Envelope Generator Type
     bool m_egt = false;
-    //! @brief Multiple. Multiplies the Channel.baseFrequency to get the Operator.operatorFrequency
-    uint8_t m_mult = 0;
-    //! @brief Key Scale Level. Sets the attenuation in accordance with the octave.
-    uint8_t m_ksl = 0;
-    //! @brief Total Level. Sets the overall damping for the envelope.
-    uint8_t m_tl = 0;
-    //! @brief Attack Rate.
-    uint8_t m_ar = 0;
-    //! @brief Decay Rate.
-    uint8_t m_dr = 0;
-    //! @brief Sustain Level.
-    uint8_t m_sl = 0;
-    //! @brief Release Rate.
-    uint8_t m_rr = 0;
     //! @brief Waveform selector
     uint8_t m_ws = 0;
     // 0..1023
@@ -94,12 +78,6 @@ private:
     int16_t handleSnareDrum( uint8_t ws );
 
 public:
-    /**
-     * @post m_ar<16
-     */
-    void setAr( uint8_t val ) {
-        m_ar = val & 0x0f;
-    }
     const EnvelopeGenerator* envelopeGenerator() const {
         return &m_envelopeGenerator;
     }
