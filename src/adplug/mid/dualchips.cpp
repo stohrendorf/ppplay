@@ -208,7 +208,9 @@ void DualChips::applyPitch(Voice* voice, bool rightChan)
                 --note;
                 detune -= 5;
             }
-            detune -= NotePitch.size();
+            else {
+                detune -= NotePitch.size();
+            }
         }
     }
 
