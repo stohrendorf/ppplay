@@ -54,8 +54,8 @@ void EmuPlayer::frame()
 
         std::array<int16_t,4> samples;
         getPlayer()->read(&samples);
-        pos[0] = samples[0] + samples[2];
-        pos[1] = samples[1] + samples[3];
+        pos[0] = samples[0] + samples[1];
+        pos[1] = samples[2] + samples[3];
         pos += 2;
         
         if( m_oplInterp.next() == 2 ) {

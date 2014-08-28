@@ -12,7 +12,7 @@ class EMidi
 private:
     struct Track;
 
-    DualChips m_chips{};
+    DualChips m_chips;
     Track *m_trackPtr = nullptr;
     uint16_t m_numTracks = 0;
 
@@ -70,7 +70,7 @@ private:
     bool serviceRoutineMus();
 
 public:
-    EMidi(Stream& stream);
+    EMidi(Stream& stream, bool stereo);
     ~EMidi();
 
     bool serviceRoutine();
