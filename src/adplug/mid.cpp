@@ -1057,7 +1057,7 @@ bool CDukePlayer::load(const std::string &filename, const CFileProvider &)
 {
     FileStream fs(filename);
     try {
-        m_emidi.reset( new ppp::EMidi(fs) );
+        m_emidi.reset( new ppp::EMidi(fs, true) );
     }
     catch(...) {
         return false;

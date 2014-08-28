@@ -24,11 +24,12 @@ public:
         OperatorData sustainRelease;
         OperatorData wave;
         SlotData feedback;
-        int8_t Transpose;
+        int8_t transpose;
     };
 
     struct Voice
     {
+        static constexpr auto StereoOffset = 9;
         //! @brief This voice's index; used to calculate the slot.
         uint num = 0;
         //! @brief The active MIDI key.
@@ -42,30 +43,32 @@ public:
         //! @brief The active MIDI patch/instrument.
         int timbre = -1;
         bool isNoteOn = false;
+        uint8_t pan = 64;
     };
 
     typedef std::vector<Voice*> VoiceList;
 
-    struct OplChannel
+    struct Channel
     {
         static constexpr auto DefaultChannelVolume = 90;
         static constexpr auto DefaultPitchBendRange = 200;
 
-        std::set<Voice*> Voices{};
-        int Timbre = 0;
-        int Pitchbend = 0;
-        int KeyOffset = 0;
-        uint KeyDetune = 0;
-        uint Volume = DefaultChannelVolume;
-        int Detune = 0;
-        uint RPN = 0;
-        short PitchBendRange = DefaultPitchBendRange;
-        short PitchBendSemiTones = DefaultPitchBendRange/100;
-        short PitchBendHundreds = DefaultPitchBendRange%100;
+        std::set<Voice*> voices{};
+        int timbre = 0;
+        int pitchbend = 0;
+        int keyOffset = 0;
+        uint keyDetune = 0;
+        uint volume = DefaultChannelVolume;
+        int detune = 0;
+        uint rpn = 0;
+        uint8_t pan = 64;
+        short pitchBendRange = DefaultPitchBendRange;
+        short pitchBendSemiTones = DefaultPitchBendRange/100;
+        short pitchBendHundreds = DefaultPitchBendRange%100;
 
         Voice* getVoice(uint8_t key) const
         {
-            for(auto voice : Voices)
+            for(auto voice : voices)
                 if(voice->key == key)
                     return voice;
 
@@ -74,10 +77,10 @@ public:
     };
 
     enum class ControlData {
-        ResetAllControllers, RpnMsb, RpnLsb, DataentryMsb, DataentryLsb
+        ResetAllControllers, RpnMsb, RpnLsb, DataentryMsb, DataentryLsb, Pan
     };
 
-    DualChips() : m_voices(), m_channels(), m_timbreBank()
+    DualChips(bool stereo) : m_voices(), m_channels(), m_timbreBank(), m_stereo(stereo)
     {
         extern std::array<DualChips::Timbre,256> ADLIB_TimbreBank;
         m_timbreBank = ADLIB_TimbreBank;
@@ -106,14 +109,15 @@ public:
 private:
     opl::Opl3 m_chip{};
     std::array<Voice, 18> m_voices;
-    std::array<OplChannel, 16> m_channels;
+    std::array<Channel, 16> m_channels;
     std::array<Timbre,256> m_timbreBank;
     std::set<Voice*> m_voicePool{};
     bool m_adlibVolumes = true;
+    bool m_stereo;
 
-    void applyTimbre(Voice *voice);
-    void applyVolume(Voice *voice);
-    void applyPitch(Voice *voice);
+    void applyTimbre(Voice *voice, bool rightChan);
+    void applyVolume(Voice *voice, bool rightChan);
+    void applyPitch(Voice *voice, bool rightChan);
     Voice* allocVoice();
     void resetVoices();
     void flushCard();

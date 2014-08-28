@@ -45,24 +45,30 @@ constexpr std::array<std::array<uint16_t,12>, 32> NotePitch
 
 } // anonymous namespace
 
-void DualChips::applyTimbre(Voice* voice)
+void DualChips::applyTimbre(Voice* voice, bool rightChan)
 {
     int patch = (voice->channel==9)
             ? voice->key + 128
-            : m_channels.at(voice->channel).Timbre;
+            : m_channels.at(voice->channel).timbre;
 
-    if ( voice->timbre == patch )
-        return;
+    if(m_stereo && !rightChan) {
+        if( voice->timbre == patch )
+            return;
+    }
 
     const Timbre* timbre = &m_timbreBank.at(patch);
     voice->timbre = patch;
 
-    opl::SlotView slot = m_chip.getSlotView(voice->num);
+    opl::SlotView slot = m_chip.getSlotView(voice->num + (m_stereo&&rightChan ? Voice::StereoOffset : 0));
 
     slot.setKeyOn(false);
     slot.setFnum(0);
     slot.setBlock(0);
-    slot.setOutput(true, true, true, true);
+    if(m_stereo) {
+        slot.setOutput(!rightChan, !rightChan, rightChan, rightChan);
+    }
+    else
+        slot.setOutput(true, true, true, true);
     slot.setFeedback((timbre->feedback>>1)&7);
     slot.setCnt(timbre->feedback&1);
 
@@ -100,7 +106,7 @@ void DualChips::applyTimbre(Voice* voice)
 
 namespace
 {
-inline uint8_t calculateVolume(uint8_t insLevel, uint8_t velocity, uint8_t channelVolume, bool adlibMode)
+inline uint8_t calculateTotalLevel(uint8_t insLevel, uint8_t velocity, uint8_t channelVolume, bool adlibMode, uint8_t pan)
 {
     BOOST_ASSERT(insLevel<64);
     uint volume = insLevel^63;
@@ -108,7 +114,6 @@ inline uint8_t calculateVolume(uint8_t insLevel, uint8_t velocity, uint8_t chann
     if(adlibMode) {
         volume  = ( channelVolume * volume ) >> 15;
         BOOST_ASSERT( volume < 64 );
-        return volume ^ 63;
     }
     else {
         volume  = ( channelVolume * volume ) >> 14;
@@ -133,23 +138,33 @@ inline uint8_t calculateVolume(uint8_t insLevel, uint8_t velocity, uint8_t chann
         };
 
         BOOST_ASSERT( volume < 128 );
-        return (volTable[volume]>>1)^0x3f;
+        volume = (volTable[volume]>>1);
     }
+
+    if( pan<64 ) {
+        volume = (volume*pan)>>6;
+    }
+
+    return volume^0x3f;
 }
 }
 
-void DualChips::applyVolume(Voice* voice)
+void DualChips::applyVolume(Voice* voice, bool rightChan)
 {
-    opl::SlotView slot = m_chip.getSlotView(voice->num);
+    opl::SlotView slot = m_chip.getSlotView(voice->num + (m_stereo&&rightChan ? Voice::StereoOffset : 0));
 
     const Timbre& timbre = m_timbreBank.at(voice->timbre);
 
-    uint volume = calculateVolume( timbre.kslLevel.carrier & 0x3f, voice->velocity, m_channels.at(voice->channel).Volume, m_adlibVolumes);
-    slot.carrier().setTotalLevel(volume);
+    const Channel& chan = m_channels.at(voice->channel);
+    uint8_t pan = 64;
+    if(m_stereo)
+        pan = rightChan ? chan.pan : 127-chan.pan;
+    uint level = calculateTotalLevel( timbre.kslLevel.carrier & 0x3f, voice->velocity, chan.volume, m_adlibVolumes, pan);
+    slot.carrier().setTotalLevel(level);
 
     if ( timbre.feedback & 0x01 ) {
-        volume = calculateVolume( timbre.kslLevel.modulator & 0x3f, voice->velocity, m_channels.at(voice->channel).Volume, m_adlibVolumes);
-        slot.modulator().setTotalLevel(volume);
+        level = calculateTotalLevel( timbre.kslLevel.modulator & 0x3f, voice->velocity, chan.volume, m_adlibVolumes, pan);
+        slot.modulator().setTotalLevel(level);
     }
 }
 
@@ -165,30 +180,41 @@ DualChips::Voice *DualChips::allocVoice()
     return nullptr;
 }
 
-void DualChips::applyPitch(Voice* voice)
+void DualChips::applyPitch(Voice* voice, bool rightChan)
 {
     int note;
     uint32_t patch;
     if ( voice->channel == 9 ) {
         patch = voice->key + 128;
-        note  = m_timbreBank.at(patch).Transpose;
+        note  = m_timbreBank.at(patch).transpose;
     }
     else {
-        patch = m_channels.at(voice->channel).Timbre;
-        note  = voice->key + m_timbreBank.at(patch).Transpose;
+        patch = m_channels.at(voice->channel).timbre;
+        note  = voice->key + m_timbreBank.at(patch).transpose;
     }
 
-    note += m_channels.at(voice->channel).KeyOffset - 12;
+    note += m_channels.at(voice->channel).keyOffset - 12;
     if ( note >= 8*12 )
         note = 8*12 - 1;
     else if ( note < 0 )
         note = 0;
 
-    auto detune = m_channels.at(voice->channel).KeyDetune;
+    auto detune = m_channels.at(voice->channel).keyDetune;
+    if(m_stereo && rightChan) {
+        detune += 5;
+        if( detune >= NotePitch.size() ) {
+            ++note;
+            if(note >= 8*12) {
+                --note;
+                detune -= 5;
+            }
+            detune -= NotePitch.size();
+        }
+    }
 
     voice->pitch = ((note/12)<<10) | NotePitch.at(detune).at(note%12);
 
-    opl::SlotView slot = m_chip.getSlotView(voice->num);
+    opl::SlotView slot = m_chip.getSlotView(voice->num + (m_stereo&&rightChan ? Voice::StereoOffset : 0));
     slot.setFnum(NotePitch[ detune ][ note%12 ]);
     slot.setBlock(note/12);
     slot.setKeyOn(voice->isNoteOn);
@@ -198,10 +224,13 @@ void DualChips::setChannelVolume(uint8_t channel, uint8_t volume)
 {
     volume = std::max<uint8_t>( 0, volume );
     volume = std::min<uint8_t>( volume, 127 );
-    m_channels.at(channel).Volume = volume;
+    m_channels.at(channel).volume = volume;
 
-    for(auto voice : m_channels.at(channel).Voices)
-        applyVolume( voice );
+    for(auto voice : m_channels.at(channel).voices) {
+        applyVolume( voice, false );
+        if(m_stereo)
+            applyVolume( voice, true );
+    }
 }
 
 void DualChips::noteOff(uint8_t channel, uint8_t key)
@@ -216,7 +245,12 @@ void DualChips::noteOff(uint8_t channel, uint8_t key)
     opl::SlotView slot = m_chip.getSlotView(voice->num);
     slot.setKeyOn(false);
 
-    m_channels.at(channel).Voices.erase( m_channels.at(channel).Voices.find(voice) );
+    if(m_stereo) {
+        slot = m_chip.getSlotView(voice->num + Voice::StereoOffset);
+        slot.setKeyOn(false);
+    }
+
+    m_channels.at(channel).voices.erase( m_channels.at(channel).voices.find(voice) );
     m_voicePool.insert( voice );
 }
 
@@ -230,8 +264,8 @@ void DualChips::noteOn(uint8_t channel, uint8_t key, int velocity)
     auto voice = allocVoice();
 
     if ( !voice ) {
-        if ( !m_channels.at(9).Voices.empty() ) {
-            noteOff( 9, (*m_channels.at(9).Voices.begin())->key );
+        if ( !m_channels.at(9).voices.empty() ) {
+            noteOff( 9, (*m_channels.at(9).voices.begin())->key );
             voice = allocVoice();
         }
         if ( !voice ) {
@@ -244,17 +278,23 @@ void DualChips::noteOn(uint8_t channel, uint8_t key, int velocity)
     voice->velocity = velocity;
     voice->isNoteOn = true;
 
-    m_channels.at(channel).Voices.insert( voice );
+    m_channels.at(channel).voices.insert( voice );
 
-    applyTimbre( voice );
-    applyVolume( voice );
-    applyPitch( voice );
+    applyTimbre( voice, false );
+    applyVolume( voice, false );
+    applyPitch( voice, false );
+    if(m_stereo) {
+        applyTimbre( voice, true );
+        applyVolume( voice, true );
+        applyPitch( voice, true );
+    }
 }
 
 void DualChips::allNotesOff(uint8_t channel)
 {
-    while( !m_channels.at(channel).Voices.empty() )
-        noteOff( channel, (*m_channels.at(channel).Voices.begin())->key );
+    while( !m_channels.at(channel).voices.empty() ) {
+        noteOff( channel, (*m_channels.at(channel).voices.begin())->key );
+    }
 }
 
 void DualChips::controlChange(uint8_t channel, ControlData type, uint8_t data)
@@ -263,35 +303,42 @@ void DualChips::controlChange(uint8_t channel, ControlData type, uint8_t data)
     {
     case ControlData::ResetAllControllers :
         resetVoices();
-        setChannelVolume( channel, OplChannel::DefaultChannelVolume );
+        setChannelVolume( channel, Channel::DefaultChannelVolume );
         setChannelDetune( channel, 0 );
+        m_channels.at(channel).pan = 64;
         break;
 
     case ControlData::RpnMsb :
-        m_channels.at(channel).RPN &= 0x00FF;
-        m_channels.at(channel).RPN |= uint16_t( data ) << 8;
+        m_channels.at(channel).rpn &= 0x00FF;
+        m_channels.at(channel).rpn |= uint16_t( data ) << 8;
         break;
 
     case ControlData::RpnLsb :
-        m_channels.at(channel).RPN &= 0xFF00;
-        m_channels.at(channel).RPN |= data;
+        m_channels.at(channel).rpn &= 0xFF00;
+        m_channels.at(channel).rpn |= data;
         break;
 
     case ControlData::DataentryMsb :
-        if ( m_channels.at(channel).RPN == 0 ) {
-            m_channels.at(channel).PitchBendSemiTones = data;
-            m_channels.at(channel).PitchBendRange     =
-                    m_channels.at(channel).PitchBendSemiTones * 100 +
-                    m_channels.at(channel).PitchBendHundreds;
+        if ( m_channels.at(channel).rpn == 0 ) {
+            m_channels.at(channel).pitchBendSemiTones = data;
+            m_channels.at(channel).pitchBendRange     =
+                    m_channels.at(channel).pitchBendSemiTones * 100 +
+                    m_channels.at(channel).pitchBendHundreds;
         }
         break;
 
     case ControlData::DataentryLsb :
-        if ( m_channels.at(channel).RPN == 0 ) {
-            m_channels.at(channel).PitchBendHundreds = data;
-            m_channels.at(channel).PitchBendRange =
-                    m_channels.at(channel).PitchBendSemiTones * 100 +
-                    m_channels.at(channel).PitchBendHundreds;
+        if ( m_channels.at(channel).rpn == 0 ) {
+            m_channels.at(channel).pitchBendHundreds = data;
+            m_channels.at(channel).pitchBendRange =
+                    m_channels.at(channel).pitchBendSemiTones * 100 +
+                    m_channels.at(channel).pitchBendHundreds;
+        }
+        break;
+
+    case ControlData::Pan:
+        if( channel != 9 ) {
+            m_channels.at(channel).pan = data&0x7f;
         }
         break;
     }
@@ -299,19 +346,20 @@ void DualChips::controlChange(uint8_t channel, ControlData type, uint8_t data)
 
 void DualChips::programChange(uint8_t channel, uint8_t patch)
 {
-    m_channels.at(channel).Timbre  = patch;
+    m_channels.at(channel).timbre  = patch;
 }
 
 void DualChips::setChannelDetune(uint8_t channel, int detune)
 {
-    m_channels.at(channel).Detune = detune;
+    m_channels.at(channel).detune = detune;
 }
 
 void DualChips::resetVoices()
 {
     m_voicePool.clear();
 
-    for( size_t index = 0; index < m_voices.size(); index++ ) {
+    const uint voiceDiv = m_stereo ? 2 : 1;
+    for( size_t index = 0; index < m_voices.size()/voiceDiv; index++ ) {
         m_voices.at(index).num = index;
         m_voicePool.insert(&m_voices.at(index));
     }
@@ -352,21 +400,23 @@ void DualChips::reset()
 void DualChips::pitchBend(uint8_t channel, uint8_t lsb, uint8_t msb)
 {
     auto pitchbend = lsb | ( uint16_t(msb) << 8 );
-    m_channels.at(channel).Pitchbend = pitchbend;
+    m_channels.at(channel).pitchbend = pitchbend;
 
     static constexpr auto PITCHBEND_CENTER = 1638400;
     static constexpr auto FINETUNE_RANGE = 32;
 
-    auto TotalBend  = pitchbend * m_channels[ channel ].PitchBendRange;
+    auto TotalBend  = pitchbend * m_channels[ channel ].pitchBendRange;
     TotalBend /= ( PITCHBEND_CENTER / FINETUNE_RANGE );
 
-    m_channels.at(channel).KeyOffset  = TotalBend / FINETUNE_RANGE;
-    m_channels.at(channel).KeyOffset -= m_channels[ channel ].PitchBendSemiTones;
+    m_channels.at(channel).keyOffset  = TotalBend / FINETUNE_RANGE;
+    m_channels.at(channel).keyOffset -= m_channels[ channel ].pitchBendSemiTones;
 
-    m_channels.at(channel).KeyDetune = TotalBend % FINETUNE_RANGE;
+    m_channels.at(channel).keyDetune = TotalBend % FINETUNE_RANGE;
 
-    for( auto voice : m_channels.at(channel).Voices ) {
-        applyPitch( voice );
+    for( auto voice : m_channels.at(channel).voices ) {
+        applyPitch( voice, false );
+        if(m_stereo)
+            applyPitch( voice, true );
     }
 }
 }

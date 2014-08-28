@@ -327,9 +327,6 @@ bool EMidi::interpretControllerInfo ( EMidi::Track *track, bool timeSet, int cha
             tracknum--;
         }
         break;
-    case MIDI_PAN:
-        // not implemented m_chips.setChannelPan( channel, c2 );
-        break;
     case MIDI_DETUNE:
         m_chips.setChannelDetune( channel, c2 );
         break;
@@ -350,6 +347,9 @@ bool EMidi::interpretControllerInfo ( EMidi::Track *track, bool timeSet, int cha
         break;
     case 38:
         m_chips.controlChange( channel, DualChips::ControlData::DataentryLsb, c2 );
+        break;
+    case 10:
+        m_chips.controlChange( channel, DualChips::ControlData::Pan, c2 );
         break;
     }
 
@@ -614,6 +614,7 @@ void EMidi::reset()
         m_chips.controlChange( channel, DualChips::ControlData::RpnLsb, 0 );
         m_chips.controlChange( channel, DualChips::ControlData::DataentryMsb, 2 );
         m_chips.controlChange( channel, DualChips::ControlData::DataentryLsb, 0 );
+        m_chips.controlChange( channel, DualChips::ControlData::Pan, 64 );
         static constexpr auto GenMidiDefaultVolume = 90;
         m_channelVolume[ channel ] = GenMidiDefaultVolume;
     }
@@ -631,7 +632,7 @@ void EMidi::setVolume ( int volume )
     sendChannelVolumes();
 }
 
-EMidi::EMidi(Stream &stream)
+EMidi::EMidi(Stream &stream, bool stereo) : m_chips(stereo)
 {
     if(!tryLoadMidi(stream) && !tryLoadMus(stream))
         throw std::runtime_error("xxx"); // TODO

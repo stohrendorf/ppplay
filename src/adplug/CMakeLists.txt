@@ -20,7 +20,6 @@ add_executable(badplay
   dtm.cpp
   flash.cpp
   fmc.cpp
-  fmopl.c
   fprovide.cpp
   getopt.c
   getopt1.c
