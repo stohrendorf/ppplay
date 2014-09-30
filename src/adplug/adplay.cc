@@ -48,26 +48,27 @@
 /***** Global variables *****/
 
 static const char	*program_name;
-static std::unique_ptr<Player> player; // global player object
+static std::unique_ptr<Player> output; // global player object
 static CAdPlugDatabase	mydb;
 
 /***** Configuration (and defaults) *****/
 
 static struct {
-  int			buf_size, message_level;
-  unsigned int		subsong;
-  const char		*device;
-  char			*userdb;
-  bool			endless, showinsts, songinfo, songmessage;
-  Outputs		output;
+  int buf_size, message_level;
+  int subsong;
+  const char *device;
+  const char *userdb;
+  bool endless, showinsts, songinfo, songmessage;
+  Outputs output;
+  int repeats;
 } cfg = {
-  2048,
-  MSG_NOTE,
+  2048, MSG_NOTE,
   -1,
-  NULL,
-  NULL,
+  nullptr,
+  nullptr,
   true, false, false, false,
-  DEFAULT_DRIVER
+  DEFAULT_DRIVER,
+  1
 };
 
 /***** Global functions *****/
@@ -134,10 +135,11 @@ static int decode_switches(int argc, char **argv)
     {"database", required_argument, NULL, 'D'},	// different database
     {"quiet", no_argument, NULL, 'q'},		// be more quiet
     {"verbose", no_argument, NULL, 'v'},	// be more verbose
+    {"repeats", required_argument, NULL, 'R'},
     {NULL, 0, NULL, 0}				// end of options
   };
 
-  while ((c = getopt_long(argc, argv, "8f:b:d:irms:ohVe:O:D:qv",
+  while ((c = getopt_long(argc, argv, "8f:b:d:irms:ohVe:O:D:qvR:",
 			  long_options, (int *)0)) != EOF) {
       switch (c) {
       case 'b': cfg.buf_size = atoi(optarg); break;
@@ -149,6 +151,7 @@ static int decode_switches(int argc, char **argv)
       case 'o': cfg.endless = false; break;
       case 'V': puts(BADPLAY_VERSION); exit(EXIT_SUCCESS);
       case 'h':	usage(); exit(EXIT_SUCCESS); break;
+      case 'R': cfg.repeats = atoi(optarg); break;
       case 'D':
 	if(!mydb.load(optarg))
 	  message(MSG_WARN, "could not open database -- %s", optarg);
@@ -173,7 +176,7 @@ static int decode_switches(int argc, char **argv)
   return optind;
 }
 
-static void play(const char *fn, Player *pl, int subsong = -1)
+static void play(const char *fn, Player *output, int subsong = -1)
 /*
  * Start playback of subsong 'subsong' of file 'fn', using player
  * 'player'. If 'subsong' is not given or -1, start playback of
@@ -211,7 +214,7 @@ static void play(const char *fn, Player *pl, int subsong = -1)
   if(cfg.songmessage)	// display song message
     fprintf(stderr, "Song message:\n%s\n\n", player->getdesc().c_str());
 
-  pl->setPlayer( std::move(player) );
+  output->setPlayer( player );
 
   // play loop
   do {
@@ -222,8 +225,8 @@ static void play(const char *fn, Player *pl, int subsong = -1)
           player->getorders(), player->getpattern(), player->getpatterns(),
           player->getrow(), player->getspeed(), float(player->framesUntilUpdate())/CPlayer::SampleRate);
 
-    pl->frame();
-  } while(pl->isPlaying() || cfg.endless);
+    output->frame();
+  } while(output->isPlaying() || cfg.endless);
 }
 
 static void sighandler(int signal)
@@ -273,10 +276,10 @@ int main(int argc, char **argv)
     message(MSG_PANIC, "no output methods compiled in");
     exit(EXIT_FAILURE);
   case disk:
-    player.reset( new DiskWriter(cfg.device, 44100) );
+    output.reset( new DiskWriter(cfg.device, 44100) );
     break;
   case sdl:
-    player.reset( new SDLPlayer(44100, cfg.buf_size) );
+    output.reset( new SDLPlayer(44100, cfg.buf_size) );
     break;
   default:
     message(MSG_ERROR, "output method not available");
@@ -290,7 +293,9 @@ int main(int argc, char **argv)
 
   // play all files from commandline
   for(i=optind;i<argc;i++)
-    play(argv[i],player.get(),cfg.subsong);
+      for(int r=0; r<cfg.repeats; ++r) {
+        play(argv[i],output.get(),cfg.subsong);
+      }
 
   // deinit
   exit(EXIT_SUCCESS);

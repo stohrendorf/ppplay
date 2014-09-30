@@ -37,7 +37,7 @@ class CAdPlug
 public:
   static const CPlayers players;
 
-  static std::unique_ptr<CPlayer> factory(const std::string &fn, const CPlayers &pl = players, const CFileProvider &fp = CProvider_Filesystem());
+  static std::shared_ptr<CPlayer> factory(const std::string &fn, const CPlayers &pl = players, const CFileProvider &fp = CProvider_Filesystem());
 
   static void set_database(CAdPlugDatabase *db);
   static std::string get_version();

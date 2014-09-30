@@ -1,17 +1,17 @@
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2004 Simon Peter, <dn.tlp@gmx.net>, et al.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -23,71 +23,93 @@
 
 class CldsPlayer: public CPlayer
 {
- public:
-  static CPlayer *factory() { return new CldsPlayer(); }
+public:
+    static CPlayer *factory() { return new CldsPlayer(); }
 
-  CldsPlayer();
+    CldsPlayer();
 
-  bool load(const std::string &filename, const CFileProvider &fp);
-  virtual bool update();
-  virtual void rewind(int subsong = -1);
-  size_t framesUntilUpdate() override {
-      return SampleRate/70;
-  }
+    bool load(const std::string &filename, const CFileProvider &fp);
+    virtual bool update();
+    virtual void rewind(int subsong = -1);
+    size_t framesUntilUpdate() override {
+        return SampleRate/70;
+    }
 
-  std::string gettype() { return std::string("LOUDNESS Sound System"); }
-  unsigned int getorders() { return numposi; }
-  unsigned int getorder() { return posplay; }
-  unsigned int getrow() { return pattplay; }
-  unsigned int getspeed() { return speed; }
-  unsigned int getinstruments() { return soundbank.size(); }
+    std::string gettype() { return std::string("LOUDNESS Sound System"); }
+    unsigned int getorders() { return m_numposi; }
+    unsigned int getorder() { return m_posplay; }
+    unsigned int getrow() { return m_pattplay; }
+    unsigned int getspeed() { return m_speed; }
+    unsigned int getinstruments() { return m_soundbank.size(); }
 
- private:
-  typedef struct {
-    unsigned char	mod_misc, mod_vol, mod_ad, mod_sr, mod_wave,
-      car_misc, car_vol, car_ad, car_sr, car_wave, feedback, keyoff,
-      portamento, glide, finetune, vibrato, vibdelay, mod_trem, car_trem,
-      tremwait, arpeggio, arp_tab[12];
-    unsigned short	start, size;
-    unsigned char	fms;
-    unsigned short	transp;
-    unsigned char	midinst, midvelo, midkey, midtrans, middum1, middum2;
-  } SoundBank;
+private:
+#pragma pack(push,1)
+    struct SoundBank {
+        uint8_t mod_misc;
+        uint8_t mod_vol;
+        uint8_t mod_ad;
+        uint8_t mod_sr;
+        uint8_t mod_wave;
+        uint8_t car_misc;
+        uint8_t car_vol;
+        uint8_t car_ad;
+        uint8_t car_sr;
+        uint8_t car_wave;
+        uint8_t feedback;
+        uint8_t keyoff;
+        uint8_t portamento;
+        uint8_t glide;
+        uint8_t finetune;
+        uint8_t vibrato;
+        uint8_t vibdelay;
+        uint8_t mod_trem;
+        uint8_t car_trem;
+        uint8_t tremwait;
+        uint8_t arpeggio;
+        std::array<uint8_t,12> arp_tab;
+        uint16_t start;
+        uint16_t size;
+        uint8_t fms;
+        uint16_t transp;
+        uint8_t midinst;
+        uint8_t midvelo;
+        uint8_t midkey;
+        uint8_t midtrans;
+        uint8_t middum1;
+        uint8_t middum2;
+    };
+#pragma pack(pop)
 
-  typedef struct {
-    unsigned short	gototune, lasttune, packpos;
-    unsigned char	finetune, glideto, portspeed, nextvol, volmod, volcar,
-      vibwait, vibspeed, vibrate, trmstay, trmwait, trmspeed, trmrate, trmcount,
-      trcwait, trcspeed, trcrate, trccount, arp_size, arp_speed, keycount,
-      vibcount, arp_pos, arp_count, packwait, arp_tab[12];
+    struct Channel {
+        uint16_t gototune, lasttune, packpos;
+        uint8_t finetune, glideto, portspeed, nextvol, volmod, volcar,
+        vibwait, vibspeed, vibrate, trmstay, trmwait, trmspeed, trmrate, trmcount,
+        trcwait, trcspeed, trcrate, trccount, arp_size, arp_speed, keycount,
+        vibcount, arp_pos, arp_count, packwait;
+        std::array<uint8_t,12> arp_tab;
 
-    struct {
-      unsigned char	chandelay, sound;
-      unsigned short	high;
-    } chancheat;
-  } Channel;
+        struct {
+            uint8_t chandelay, sound;
+            uint16_t high;
+        } chancheat;
+    };
 
-  typedef struct {
-    unsigned short	patnum;
-    unsigned char	transpose;
-  } Position;
+#pragma pack(push,1)
+    struct Position {
+        uint16_t patnum;
+        uint8_t transpose;
+    };
+#pragma pack(pop)
 
-  static const unsigned short	frequency[];
-  static const unsigned char	vibtab[], tremtab[];
-  static const unsigned short	maxsound, maxpos;
+    std::vector<SoundBank> m_soundbank;
+    Channel m_channels[9];
+    std::vector<Position> m_positions;
+    uint8_t m_jumping, m_fadeonoff, m_allvolume, m_hardfade, m_tempoNow, m_pattplay, m_tempo, m_regbd, m_chandelay[9], m_mode, m_pattlen;
+    std::vector<uint16_t> m_patterns;
+    uint16_t m_posplay, m_jumppos, m_speed;
+    bool m_playing, m_songlooped;
+    uint16_t m_numposi;
+    size_t m_patternsSize, m_mainvolume;
 
-  std::vector<SoundBank> soundbank;
-  Channel		channel[9];
-  std::vector<Position> positions;
-  unsigned char		fmchip[0xff], jumping, fadeonoff, allvolume, hardfade,
-    tempo_now, pattplay, tempo, regbd, chandelay[9], mode, pattlen;
-  std::vector<uint16_t> patterns;
-  unsigned short	posplay, jumppos, speed;
-  bool			playing, songlooped;
-  unsigned int		numposi, patterns_size, mainvolume;
-
-  void		playsound(int inst_number, int channel_number, int tunehigh);
-  inline void	setregs(unsigned char reg, unsigned char val);
-  inline void	setregs_adv(unsigned char reg, unsigned char mask,
-			    unsigned char val);
+    void playsound(int inst_number, int channel_number, int tunehigh);
 };

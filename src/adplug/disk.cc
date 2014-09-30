@@ -82,5 +82,5 @@ void DiskWriter::output(const std::vector<int16_t> &buf)
   for(int16_t sample : buf)
       f->writeInt(sample, 2);
 
-  samplesize += buf.size();
+  samplesize += buf.size()*2;
 }

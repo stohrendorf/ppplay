@@ -131,7 +131,7 @@ const CPlayers &CAdPlug::init_players(const CPlayerDesc pd[])
 const CPlayers CAdPlug::players = CAdPlug::init_players(CAdPlug::allplayers);
 CAdPlugDatabase *CAdPlug::database = 0;
 
-std::unique_ptr<CPlayer> CAdPlug::factory(const std::string &fn, const CPlayers &pl, const CFileProvider &fp)
+std::shared_ptr<CPlayer> CAdPlug::factory(const std::string &fn, const CPlayers &pl, const CFileProvider &fp)
 {
     CPlayers::const_iterator	i;
     unsigned int			j;
@@ -143,7 +143,7 @@ std::unique_ptr<CPlayer> CAdPlug::factory(const std::string &fn, const CPlayers 
         for(j = 0; (*i)->get_extension(j); j++)
             if(fp.extension(fn, (*i)->get_extension(j))) {
                 AdPlug_LogWrite("Trying direct hit: %s\n", (*i)->filetype.c_str());
-                std::unique_ptr<CPlayer> p{ (*i)->factory() };
+                std::shared_ptr<CPlayer> p{ (*i)->factory() };
                 if(p && p->load(fn, fp)) {
                     AdPlug_LogWrite("got it!\n");
                     AdPlug_LogWrite("--- CAdPlug::factory ---\n");
@@ -154,7 +154,7 @@ std::unique_ptr<CPlayer> CAdPlug::factory(const std::string &fn, const CPlayers 
     // Try all players, one by one
     for(i = pl.begin(); i != pl.end(); i++) {
         AdPlug_LogWrite("Trying: %s\n", (*i)->filetype.c_str());
-        std::unique_ptr<CPlayer> p{ (*i)->factory() };
+        std::shared_ptr<CPlayer> p{ (*i)->factory() };
         if(p && p->load(fn, fp)) {
             AdPlug_LogWrite("got it!\n");
             AdPlug_LogWrite("--- CAdPlug::factory ---\n");

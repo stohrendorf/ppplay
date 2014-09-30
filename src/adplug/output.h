@@ -33,8 +33,8 @@ class Player
 
     virtual void frame() = 0;
 
-    void setPlayer(std::unique_ptr<CPlayer>&& player) {
-        m_player = std::move(player);
+    void setPlayer(std::shared_ptr<CPlayer>& player) {
+        m_player = player;
     }
 
     bool isPlaying() const noexcept {
@@ -51,7 +51,7 @@ protected:
 
 private:
     bool m_playing = false;
-    std::unique_ptr<CPlayer> m_player{};
+    std::shared_ptr<CPlayer> m_player{};
 };
 
 class EmuPlayer: public Player

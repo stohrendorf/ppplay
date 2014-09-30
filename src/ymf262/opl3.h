@@ -81,7 +81,7 @@ private:
     Channel::Ptr m_channels4op[2][3];
     Channel::Ptr m_channels[2][9];
     Channel::Ptr m_disabledChannel;
-    MultiplexFilter<4,HighPassFilter<SampleRate,50,25>> m_filters{};
+    MultiplexFilter<4,HighPassFilter<SampleRate,2,5>> m_filters{};
 
     bool m_nts = false;
     //! @brief Depth of amplitude
@@ -282,11 +282,11 @@ public:
 inline OperatorView Opl3::getOperatorView(size_t index, bool second)
 {
     BOOST_ASSERT( index<18 );
-    static constexpr std::array<uint8_t,18> slotRegisterOffsets = {
+    static constexpr std::array<uint8_t,18> slotRegisterOffsets = {{
         0,  1,  2,  3,  4,  5,
         8,  9, 10, 11, 12, 13,
         16, 17, 18, 19, 20, 21
-    };
+    }};
     return OperatorView(this, slotRegisterOffsets.at(index) | (second?0x100:0));
 }
 
@@ -294,7 +294,7 @@ inline SlotView Opl3::getSlotView(size_t index)
 {
     BOOST_ASSERT( index<18 );
     static constexpr std::array<std::array<uint8_t,2>,9> voiceSlotOffsets = {{
-        { 0, 3 }, { 1, 4 }, { 2, 5 }, { 6, 9 }, { 7, 10 }, { 8, 11 }, { 12, 15 }, { 13, 16 }, { 14, 17 }
+        {{ 0, 3 }}, {{ 1, 4 }}, {{ 2, 5 }}, {{ 6, 9 }}, {{ 7, 10 }}, {{ 8, 11 }}, {{ 12, 15 }}, {{ 13, 16 }}, {{ 14, 17 }}
     }};
     return SlotView(this,
                     (index%9) | ((index/9)<<8),
