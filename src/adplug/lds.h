@@ -109,7 +109,7 @@ private:
     uint16_t m_posplay, m_jumppos, m_speed;
     bool m_playing, m_songlooped;
     uint16_t m_numposi;
-    size_t m_patternsSize, m_mainvolume;
+    size_t m_mainvolume;
 
     void playsound(int inst_number, int channel_number, int tunehigh);
 };

@@ -64,7 +64,9 @@ bool CdfmLoader::load(const std::string &filename, const CFileProvider &fp)
     inst[i].data[0] = f->readInt(1);
   }
   for(i = 0; i < 128; i++) m_order[i] = f->readInt(1);
-  for(i = 0; i < 128 && m_order[i] != 128; i++) ; m_length = i;
+  for(i = 0; i < 128 && m_order[i] != 128; i++)
+      /* nothing */;
+  m_length = i;
   npats = f->readInt(1);
   for(i = 0; i < npats; i++) {
     n = f->readInt(1);

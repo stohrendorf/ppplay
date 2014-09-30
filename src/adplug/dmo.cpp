@@ -338,8 +338,10 @@ short CdmoLoader::dmo_unpacker::unpack_block(unsigned char *ibuf, long ilen, uns
             if(opos + bx + cx >= oend)
                 return -1;
 
-            for(i=0;i<cx;i++)
-                *opos++ = *(opos - ax);
+            for(i=0;i<cx;i++) {
+                *opos = *(opos - ax);
+                ++opos;
+            }
 
             for (i=0;i<bx;i++)
                 *opos++ = *ipos++;

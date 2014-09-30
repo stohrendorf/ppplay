@@ -456,13 +456,6 @@ unsigned char CmodPlayer::set_opl_chip(unsigned char chan)
    * number.
    */
 {
-  int newchip = chan < 9 ? 0 : 1;
-
-  //FIXME sto if(newchip != curchip) {
-  //FIXME sto   opl->setchip(newchip);
-  //FIXME sto   curchip = newchip;
-  //FIXME sto }
-
   return chan % 9;
 }
 

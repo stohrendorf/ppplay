@@ -134,35 +134,6 @@ inline uint8_t periodToNoteOffset( uint16_t per, uint16_t c4spd, uint16_t finetu
 }
 
 /**
- * @brief Reverse-calculate the Note from the given period
- * @param[in] per Period
- * @param[in] c2spd Base frequency of the sample
- * @param[in] finetune Optional finetune
- * @return Note string
- * @note Time-critical
- */
-inline std::string periodToNote( uint16_t per, uint16_t c2spd, uint16_t finetune = 8363 )
-{
-    if( per == 0 ) {
-        return "p??";
-    }
-    if( c2spd == 0 ) {
-        return "c??";
-    }
-    // per = (8363<<4)*( Periods[S3M_NOTE( note )] >> S3M_OCTAVE( note ) ) / c4spd;
-    // per*c4spd/(8363<<4) == Periods[note] * (2^-octave)
-    //                     ~= Periods[0] * (2^-(octave+note/12))
-    // log2( per*c4spd/(8363<<4 * Periods[0]) ) == -(octave+note/12)
-    uint8_t totalnote = periodToNoteOffset( per, c2spd, finetune );
-    uint8_t minnote = totalnote % 12;
-    uint8_t minoct = totalnote / 12;
-    if( ( minoct > 9 ) || ( minnote > 11 ) ) {
-        return "???";
-    }
-    return stringFmt( "%s%d", NoteNames[minnote], int( minoct ) );
-}
-
-/**
  * @brief Add/subtract semitones to/from a note
  * @param[in] note Base note
  * @param[in] delta Delta value

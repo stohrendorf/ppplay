@@ -29,9 +29,9 @@ constexpr auto NUM_MIDI_CHANNELS = 16;
 
 
 namespace {
-static constexpr std::array<int,16> commandLengths = {
+static constexpr std::array<int,16> commandLengths = {{
     0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0
-};
+}};
 }
 
 struct EMidi::SongContext
