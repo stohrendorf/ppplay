@@ -57,9 +57,9 @@ protected:
 	  {
 	    return std::string(xad.author);
 	  }
-	virtual std::string xadplayer_getinstrument(unsigned int i)
+    virtual std::string xadplayer_getinstrument(unsigned int)
 	  {
-	    return std::string("");
+        return std::string();
 	  }
 	virtual unsigned int xadplayer_getinstruments()
 	  {

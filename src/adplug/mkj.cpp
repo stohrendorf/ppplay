@@ -143,7 +143,7 @@ bool CmkjPlayer::update()
   return !songend;
 }
 
-void CmkjPlayer::rewind(int subsong)
+void CmkjPlayer::rewind(int)
 {
   int i;
 

@@ -75,7 +75,7 @@ bool CradLoader::load(const std::string &filename, const CFileProvider &fp)
         inst[buf].data[7] = f->readInt(1);
     }
     m_length = f->readInt(1);
-    for(int i = 0; i < m_length; i++)
+    for(unsigned long i = 0; i < m_length; i++)
         m_order[i] = f->readInt(1); // orderlist
     uint16_t patofs[32];
     for(int i = 0; i < 32; i++)

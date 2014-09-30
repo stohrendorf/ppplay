@@ -33,7 +33,7 @@ class ChscPlayer: public CPlayer
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
-  void rewind(int subsong);
+  void rewind(int);
   size_t framesUntilUpdate() override { return SampleRate/18.2; }	// refresh rate is fixed at 18.2Hz
 
   std::string gettype() { return std::string("HSC Adlib Composer / HSC-Tracker"); }

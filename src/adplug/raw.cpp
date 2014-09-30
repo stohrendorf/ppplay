@@ -92,7 +92,7 @@ bool CrawPlayer::update()
   return !songend;
 }
 
-void CrawPlayer::rewind(int subsong)
+void CrawPlayer::rewind(int)
 {
   pos = del = 0; speed = clock; songend = false;
   getOpl()->writeReg(1, 32);	// go to 9 channel mode

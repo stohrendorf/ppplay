@@ -33,7 +33,7 @@ class Cs3mPlayer: public CPlayer
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
-  void rewind(int subsong);
+  void rewind(int);
   size_t framesUntilUpdate();
 
   std::string gettype();

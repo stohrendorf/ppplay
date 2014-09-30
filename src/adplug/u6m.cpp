@@ -146,7 +146,7 @@ bool Cu6mPlayer::update()
 }
 
 
-void Cu6mPlayer::rewind(int subsong)
+void Cu6mPlayer::rewind(int)
 {
   played_ticks = 0;
   songend = false;

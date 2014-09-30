@@ -896,7 +896,7 @@ void CmidPlayer::rewind(int subsong)
         midiprintf("\nioff:%d\nmoff%d\ndeltas:%ld\nmsqtr:%ld\nnumi:%d\n", n,m,m_deltas,m_msqtr,i);
         m_dataPos=n;  // jump to instruments
         m_tins=i;
-        for (int j=0; j<i; j++)
+        for (uint32_t j=0; j<i; j++)
         {
             midiprintf ("\n%d: ",j);
             for (int l=0; l<14; l++)
@@ -926,7 +926,7 @@ void CmidPlayer::rewind(int subsong)
         i=8;
         m_dataPos=0x19;  // jump to instruments
         m_tins=i;
-        for (int j=0; j<i; j++)
+        for (uint32_t j=0; j<i; j++)
         {
             midiprintf ("\n%d: ",j);
             for (int l=0; l<16; l++)
@@ -985,7 +985,7 @@ void CmidPlayer::rewind(int subsong)
         m_sierraPos=o_sierra_pos;
         sierra_next_section();
         i=0;
-        while (i != subsong)
+        while (static_cast<int>(i) != subsong)
         {
             sierra_next_section();
             i++;

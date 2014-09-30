@@ -483,7 +483,7 @@ bool CmodPlayer::resolve_order()
   return true;
 }
 
-void CmodPlayer::rewind(int subsong)
+void CmodPlayer::rewind(int)
 {
   unsigned long i;
 

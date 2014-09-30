@@ -90,7 +90,7 @@ class CcmfPlayer: public CPlayer
 
 		bool load(const std::string &filename, const CFileProvider &fp);
 		bool update();
-		void rewind(int subsong);
+		void rewind(int);
 		size_t framesUntilUpdate();
 
 		std::string gettype()
@@ -104,9 +104,9 @@ class CcmfPlayer: public CPlayer
 		void writeInstrumentSettings(uint8_t iChannel, uint8_t iOperatorSource, uint8_t iOperatorDest, uint8_t iInstrument);
 		void writeOPL(uint8_t iRegister, uint8_t iValue);
 		void cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity);
-		void cmfNoteOff(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity);
+		void cmfNoteOff(uint8_t iChannel, uint8_t iNote, uint8_t);
 		uint8_t getPercChannel(uint8_t iChannel);
 		void MIDIchangeInstrument(uint8_t iOPLChannel, uint8_t iMIDIChannel, uint8_t iNewInstrument);
-		void MIDIcontroller(uint8_t iChannel, uint8_t iController, uint8_t iValue);
+		void MIDIcontroller(uint8_t, uint8_t iController, uint8_t iValue);
 
 };

@@ -63,7 +63,7 @@ CPlayer *CxadpsiPlayer::factory()
   return new CxadpsiPlayer();
 }
 
-void CxadpsiPlayer::xadplayer_rewind(int subsong)
+void CxadpsiPlayer::xadplayer_rewind(int)
 {
   opl_write(0x01, 0x20);
   opl_write(0x08, 0x00);

@@ -191,7 +191,7 @@ bool CrolPlayer::update()
     //return ( mCurrTick > mTimeOfLastNote ) ? false : true;
 }
 //---------------------------------------------------------
-void CrolPlayer::rewind( int subsong )
+void CrolPlayer::rewind( int )
 {
     TVoiceData::iterator curr = voice_data.begin();
     TVoiceData::iterator end  = voice_data.end();

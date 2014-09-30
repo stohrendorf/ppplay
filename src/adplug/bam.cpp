@@ -192,7 +192,7 @@ bool CbamPlayer::update()
 	return !songend;
 }
 
-void CbamPlayer::rewind(int subsong)
+void CbamPlayer::rewind(int)
 {
         int i;
 

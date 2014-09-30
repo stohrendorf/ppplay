@@ -227,7 +227,7 @@ bool CksmPlayer::update()
   return !songend;
 }
 
-void CksmPlayer::rewind(int subsong)
+void CksmPlayer::rewind(int)
 {
   unsigned int i,j,k;
   unsigned char instbuf[11];

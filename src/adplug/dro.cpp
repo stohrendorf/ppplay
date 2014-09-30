@@ -109,7 +109,7 @@ bool CdroPlayer::update()
   return pos<length;
 }
 
-void CdroPlayer::rewind(int subsong)
+void CdroPlayer::rewind(int)
 {
   delay=1; 
   pos = index = 0; 

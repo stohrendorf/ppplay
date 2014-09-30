@@ -81,7 +81,7 @@ bool CxadhybridPlayer::xadplayer_load()
   return true;
 }
 
-void CxadhybridPlayer::xadplayer_rewind(int subsong)
+void CxadhybridPlayer::xadplayer_rewind(int)
 {
   int i;
 

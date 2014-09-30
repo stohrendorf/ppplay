@@ -216,7 +216,7 @@ bool ChscPlayer::update()
   return !m_songend;		// still playing
 }
 
-void ChscPlayer::rewind(int subsong)
+void ChscPlayer::rewind(int)
 {
   int i;								// counter
 

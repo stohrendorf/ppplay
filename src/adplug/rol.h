@@ -41,7 +41,7 @@ public:
 
     bool  load      (const std::string &filename, const CFileProvider &fp);
     bool  update    ();
-    void  rewind    (int subsong);	// rewinds to specified subsong
+    void  rewind    (int);	// rewinds to specified subsong
     size_t framesUntilUpdate();			// returns needed timer refresh rate
 
     std::string gettype() { return std::string("Adlib Visual Composer"); }

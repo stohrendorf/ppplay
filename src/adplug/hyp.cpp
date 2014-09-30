@@ -62,7 +62,7 @@ CPlayer *CxadhypPlayer::factory()
   return new CxadhypPlayer();
 }
 
-void CxadhypPlayer::xadplayer_rewind(int subsong)
+void CxadhypPlayer::xadplayer_rewind(int)
 {
   int i;
 

@@ -151,7 +151,7 @@ bool CmscPlayer::update()
     return true;
 }
 
-void CmscPlayer::rewind(int subsong)
+void CmscPlayer::rewind(int)
 {
     // reset state
     dec_prefix = 0;

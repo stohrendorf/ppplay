@@ -289,14 +289,13 @@ bool CcmfPlayer::update()
 						break;
 					}
 					case 0xF1: // MIDI Time Code Quarter Frame
-						this->data[this->iPlayPointer++]; // message data (ignored)
+                        this->iPlayPointer++; // message data (ignored)
 						break;
 					case 0xF2: // Song position pointer
-						this->data[this->iPlayPointer++]; // message data (ignored)
-						this->data[this->iPlayPointer++];
+                        this->iPlayPointer += 2; // message data (ignored)
 						break;
 					case 0xF3: // Song select
-						this->data[this->iPlayPointer++]; // message data (ignored)
+                        this->iPlayPointer++; // message data (ignored)
 						AdPlug_LogWrite("CMF: MIDI Song Select is not implemented.\n");
 						break;
 					case 0xF6: // Tune request
@@ -354,7 +353,7 @@ bool CcmfPlayer::update()
 	return !this->bSongEnd;
 }
 
-void CcmfPlayer::rewind(int subsong)
+void CcmfPlayer::rewind(int)
 {
 
 	// Initialise
@@ -652,7 +651,7 @@ void CcmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity)
 	return;
 }
 
-void CcmfPlayer::cmfNoteOff(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity)
+void CcmfPlayer::cmfNoteOff(uint8_t iChannel, uint8_t iNote, uint8_t)
 {
 	if ((iChannel > 10) && (this->bPercussive)) {
 		int iOPLChannel = this->getPercChannel(iChannel);
@@ -737,7 +736,7 @@ void CcmfPlayer::MIDIchangeInstrument(uint8_t iOPLChannel, uint8_t iMIDIChannel,
 	return;
 }
 
-void CcmfPlayer::MIDIcontroller(uint8_t iChannel, uint8_t iController, uint8_t iValue)
+void CcmfPlayer::MIDIcontroller(uint8_t, uint8_t iController, uint8_t iValue)
 {
 	switch (iController) {
 		case 0x63:

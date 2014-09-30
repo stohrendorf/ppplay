@@ -86,7 +86,7 @@ CPlayer *CxadflashPlayer::factory()
   return new CxadflashPlayer();
 }
 
-void CxadflashPlayer::xadplayer_rewind(int subsong)
+void CxadflashPlayer::xadplayer_rewind(int)
 {
   int i;
 

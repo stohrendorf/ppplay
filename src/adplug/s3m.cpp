@@ -392,7 +392,7 @@ bool Cs3mPlayer::update()
   return !songend;		// still playing
 }
 
-void Cs3mPlayer::rewind(int subsong)
+void Cs3mPlayer::rewind(int)
 {
   // set basic variables
   songend = 0; ord = 0; crow = 0; tempo = header.it;

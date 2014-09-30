@@ -130,7 +130,7 @@ bool Cdro2Player::update()
   return this->iPos < this->iLength;
 }
 
-void Cdro2Player::rewind(int subsong)
+void Cdro2Player::rewind(int)
 {
 	this->iDelay = 0;
 	this->iPos = 0;
