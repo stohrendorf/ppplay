@@ -850,7 +850,7 @@ void CmidPlayer::rewind(int subsong) {
   /* specific to file-type init */
 
   m_dataPos = 0;
-  auto i = getnext(1);
+  getnext(1);
   switch (m_type) {
   case FileType::Unknown:
     throw std::runtime_error("Unexpected");
@@ -881,7 +881,7 @@ void CmidPlayer::rewind(int subsong) {
     m_msqtr = 1000000 / getnexti(2) * m_deltas;
     //the stuff in the cmf is click ticks per second..
 
-    i = getnexti(2);
+    auto i = getnexti(2);
     if (i)
       m_title = (char *)m_data.data() + i;
     i = getnexti(2);
@@ -927,7 +927,7 @@ void CmidPlayer::rewind(int subsong) {
     m_dataPos = 9;
     m_deltas = getnext(1);
 
-    i = 8;
+    auto i = 8;
     m_dataPos = 0x19; // jump to instruments
     m_tins = i;
     for (uint32_t j = 0; j < i; j++) {
@@ -968,7 +968,7 @@ void CmidPlayer::rewind(int subsong) {
     m_tracks[m_currentTrack].spos = 0x98; //jump to midi music
     break;
   }
-  case FileType::AdvSierra:
+  case FileType::AdvSierra: {
     m_myInsBank = m_sMyInsBank;
     m_tins = m_stins;
     m_deltas = 0x20;
@@ -986,7 +986,7 @@ void CmidPlayer::rewind(int subsong) {
 
     m_sierraPos = o_sierra_pos;
     sierra_next_section();
-    i = 0;
+    auto i = 0;
     while (static_cast<int>(i) != subsong) {
       sierra_next_section();
       i++;
@@ -994,6 +994,7 @@ void CmidPlayer::rewind(int subsong) {
 
     m_adlibStyle = SIERRA_STYLE | MIDI_STYLE; //advanced sierra tunes use volume
     break;
+  }
   case FileType::Sierra:
     m_myInsBank = m_sMyInsBank;
     m_tins = m_stins;
@@ -1005,7 +1006,7 @@ void CmidPlayer::rewind(int subsong) {
     m_tracks[m_currentTrack].tend =
         m_data.size(); // music until the end of the file
 
-    for (i = 0; i < 16; i++) {
+    for (auto i = 0; i < 16; i++) {
       m_ch[i].nshift = 0;
       m_ch[i].on = getnext(1);
       m_ch[i].inum = getnext(1);
@@ -1021,7 +1022,7 @@ void CmidPlayer::rewind(int subsong) {
   /*        sprintf(info,"%s\r\nTicks/Quarter Note: %ld\r\n",info,deltas);
       sprintf(info,"%sms/Quarter Note: %ld",info,msqtr); */
 
-  for (i = 0; i < 16; i++)
+  for (auto i = 0; i < 16; i++)
     if (m_tracks[i].on) {
       m_tracks[i].pos = m_tracks[i].spos;
       m_tracks[i].pv = 0;
