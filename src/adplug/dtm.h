@@ -22,6 +22,7 @@
 #include "protrack.h"
 
 class CdtmLoader : public CmodPlayer {
+  DISABLE_COPY(CdtmLoader)
 public:
   static CPlayer *factory();
 

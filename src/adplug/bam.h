@@ -22,6 +22,7 @@
 #include "player.h"
 
 class CbamPlayer : public CPlayer {
+  DISABLE_COPY(CbamPlayer)
 public:
   static CPlayer *factory();
 

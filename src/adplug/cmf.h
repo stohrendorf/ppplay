@@ -62,6 +62,7 @@ typedef struct {
 } OPLCHANNEL;
 
 class CcmfPlayer : public CPlayer {
+  DISABLE_COPY(CcmfPlayer)
 private:
   uint8_t *data;    // song data (CMF music block)
   int iPlayPointer; // Current location of playback pointer

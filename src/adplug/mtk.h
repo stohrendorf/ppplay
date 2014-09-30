@@ -22,11 +22,11 @@
 #include "hsc.h"
 
 class CmtkLoader : public ChscPlayer {
+  DISABLE_COPY(CmtkLoader)
 public:
   static CPlayer *factory();
 
   CmtkLoader() : ChscPlayer() { m_mtkmode = 1; }
-  ;
 
   bool load(const std::string &filename, const CFileProvider &fp);
 

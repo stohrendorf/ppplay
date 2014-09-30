@@ -25,6 +25,7 @@
 #define MSC_DESC_LEN 64
 
 class CmscPlayer : public CPlayer {
+  DISABLE_COPY(CmscPlayer)
 public:
   static CPlayer *factory();
 

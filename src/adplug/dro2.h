@@ -23,6 +23,7 @@
 #include "player.h"
 
 class Cdro2Player : public CPlayer {
+  DISABLE_COPY(Cdro2Player)
 protected:
   uint8_t iCmdDelayS, iCmdDelayL;
   int iConvTableLen;

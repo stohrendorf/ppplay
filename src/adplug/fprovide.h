@@ -25,6 +25,8 @@
 #include <string>
 #include <libbinio/binio.h>
 
+#include "stuff/utils.h"
+
 class CFileProvider {
 public:
   virtual ~CFileProvider() = default;

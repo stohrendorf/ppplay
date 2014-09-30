@@ -25,7 +25,9 @@
 #include "player.h"
 
 class CimfPlayer : public CPlayer {
+  DISABLE_COPY(CimfPlayer)
 public:
+  CimfPlayer() = default;
   static CPlayer *factory();
 
   bool load(const std::string &filename, const CFileProvider &fp);

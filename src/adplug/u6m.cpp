@@ -186,7 +186,7 @@ bool Cu6mPlayer::lzw_decompress(Cu6mPlayer::data_block source,
   long bits_read = 0;
   int next_free_codeword = 0x102;
   int dictionary_size = 0x200;
-  MyDict dictionary = MyDict();
+  MyDict dictionary;
   std::stack<unsigned char> root_stack;
 
   long bytes_written = 0;

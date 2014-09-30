@@ -25,6 +25,7 @@
 #include "player.h"
 
 class Cs3mPlayer : public CPlayer {
+  DISABLE_COPY(Cs3mPlayer)
 public:
   static CPlayer *factory();
 

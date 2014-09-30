@@ -31,6 +31,7 @@
 #include "database.h"
 
 class CAdPlug {
+  DISABLE_COPY(CAdPlug)
   friend CPlayer::CPlayer();
 
 public:

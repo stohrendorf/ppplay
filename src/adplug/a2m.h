@@ -25,7 +25,9 @@
 #include "protrack.h"
 
 class Ca2mLoader : public CmodPlayer {
+  DISABLE_COPY(Ca2mLoader)
 public:
+  Ca2mLoader() = default;
   static CPlayer *factory();
 
   bool load(const std::string &filename, const CFileProvider &fp);

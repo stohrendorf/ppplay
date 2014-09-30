@@ -28,6 +28,7 @@
 #define max_codeword_length 12 // maximum codeword length in bits
 
 class Cu6mPlayer : public CPlayer {
+  DISABLE_COPY(Cu6mPlayer)
 public:
   static CPlayer *factory();
 
@@ -75,6 +76,7 @@ protected:
   };
 
   class MyDict {
+    DISABLE_COPY(MyDict)
   private:
     // The actual number of dictionary entries allocated
     // is (dictionary_size-256), because there are 256 roots

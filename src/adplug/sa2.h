@@ -23,6 +23,7 @@
 #include "protrack.h"
 
 class Csa2Loader : public CmodPlayer {
+  DISABLE_COPY(Csa2Loader)
 public:
   static CPlayer *factory();
 

@@ -25,7 +25,9 @@
 #include "player.h"
 
 class CsngPlayer : public CPlayer {
+  DISABLE_COPY(CsngPlayer)
 public:
+  CsngPlayer() = default;
   static CPlayer *factory();
 
   bool load(const std::string &filename, const CFileProvider &fp);

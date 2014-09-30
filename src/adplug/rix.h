@@ -23,6 +23,7 @@
 #include "player.h"
 
 class CrixPlayer : public CPlayer {
+  DISABLE_COPY(CrixPlayer)
 public:
   static CPlayer *factory();
 

@@ -25,6 +25,7 @@
 #include "hsc.h"
 
 class ChspLoader : public ChscPlayer {
+  DISABLE_COPY(ChspLoader)
 public:
   static CPlayer *factory();
 

@@ -27,6 +27,7 @@
 class AdlibDriver;
 
 class CadlPlayer : public CPlayer {
+    DISABLE_COPY(CadlPlayer)
 public:
   static CPlayer *factory();
 

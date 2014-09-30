@@ -22,6 +22,7 @@
 #include "player.h"
 
 class CdroPlayer : public CPlayer {
+  DISABLE_COPY(CdroPlayer)
 public:
   static CPlayer *factory();
 

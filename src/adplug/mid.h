@@ -24,7 +24,9 @@
 #include "stuff/numberutils.h"
 
 class CmidPlayer : public CPlayer {
+  DISABLE_COPY(CmidPlayer)
 public:
+  CmidPlayer() = default;
   static CPlayer *factory();
 
   bool load(const std::string &filename, const CFileProvider &fp);

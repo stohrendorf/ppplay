@@ -22,6 +22,7 @@
 #include "player.h"
 
 class CrawPlayer : public CPlayer {
+  DISABLE_COPY(CrawPlayer)
 public:
   static CPlayer *factory();
 

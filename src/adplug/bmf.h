@@ -22,13 +22,12 @@
 #include "xad.h"
 
 class CxadbmfPlayer : public CxadPlayer {
+  DISABLE_COPY(CxadbmfPlayer)
 public:
   static CPlayer *factory();
 
   CxadbmfPlayer() : CxadPlayer() {}
-  ;
   ~CxadbmfPlayer() {}
-  ;
 
 protected:
   enum {

@@ -31,6 +31,7 @@
 #include "player.h"
 
 class CrolPlayer : public CPlayer {
+  DISABLE_COPY(CrolPlayer)
 public:
   static CPlayer *factory();
 

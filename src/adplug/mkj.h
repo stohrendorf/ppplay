@@ -22,6 +22,7 @@
 #include "player.h"
 
 class CmkjPlayer : public CPlayer {
+  DISABLE_COPY(CmkjPlayer)
 public:
   static CPlayer *factory();
 

@@ -22,6 +22,7 @@
 #include "player.h"
 
 class CxsmPlayer : public CPlayer {
+  DISABLE_COPY(CxsmPlayer)
 public:
   static CPlayer *factory() { return new CxsmPlayer(); }
 

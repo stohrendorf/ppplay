@@ -25,7 +25,9 @@
 #include "player.h"
 
 class CjbmPlayer : public CPlayer {
+  DISABLE_COPY(CjbmPlayer)
 public:
+  CjbmPlayer() = default;
   static CPlayer *factory();
 
   bool load(const std::string &filename, const CFileProvider &fp);

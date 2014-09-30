@@ -22,6 +22,7 @@
 #include "s3m.h"
 
 class CdmoLoader : public Cs3mPlayer {
+  DISABLE_COPY(CdmoLoader)
 public:
   static CPlayer *factory();
 

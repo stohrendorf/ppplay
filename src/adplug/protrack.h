@@ -25,6 +25,7 @@
 #include "player.h"
 
 class CmodPlayer : public CPlayer {
+  DISABLE_COPY(CmodPlayer)
 public:
   CmodPlayer();
   virtual ~CmodPlayer();

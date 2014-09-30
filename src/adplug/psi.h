@@ -22,6 +22,7 @@
 #include "xad.h"
 
 class CxadpsiPlayer : public CxadPlayer {
+  DISABLE_COPY(CxadpsiPlayer)
 public:
   static CPlayer *factory();
 
