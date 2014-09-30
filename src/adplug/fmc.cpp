@@ -192,34 +192,34 @@ unsigned int CfmcLoader::getinstruments()
 
 void CfmcLoader::buildinst(unsigned char i)
 {
-  inst[i].data[0]   = ((instruments[i].synthesis & 1) ^ 1);
-  inst[i].data[0]  |= ((instruments[i].feedback & 7) << 1);
+  m_instruments[i].data[0]   = ((instruments[i].synthesis & 1) ^ 1);
+  m_instruments[i].data[0]  |= ((instruments[i].feedback & 7) << 1);
 
-  inst[i].data[3]   = ((instruments[i].mod_attack & 15) << 4);
-  inst[i].data[3]  |=  (instruments[i].mod_decay & 15);
-  inst[i].data[5]   = ((15 - (instruments[i].mod_sustain & 15)) << 4);
-  inst[i].data[5]  |=  (instruments[i].mod_release & 15);
-  inst[i].data[9]   =  (63 - (instruments[i].mod_volume & 63));
-  inst[i].data[9]  |= ((instruments[i].mod_ksl & 3) << 6);
-  inst[i].data[1]   =  (instruments[i].mod_freq_multi & 15);
-  inst[i].data[7]   =  (instruments[i].mod_waveform & 3);
-  inst[i].data[1]  |= ((instruments[i].mod_sustain_sound & 1) << 5);
-  inst[i].data[1]  |= ((instruments[i].mod_ksr & 1) << 4);
-  inst[i].data[1]  |= ((instruments[i].mod_vibrato & 1) << 6);
-  inst[i].data[1]  |= ((instruments[i].mod_tremolo & 1) << 7);
+  m_instruments[i].data[3]   = ((instruments[i].mod_attack & 15) << 4);
+  m_instruments[i].data[3]  |=  (instruments[i].mod_decay & 15);
+  m_instruments[i].data[5]   = ((15 - (instruments[i].mod_sustain & 15)) << 4);
+  m_instruments[i].data[5]  |=  (instruments[i].mod_release & 15);
+  m_instruments[i].data[9]   =  (63 - (instruments[i].mod_volume & 63));
+  m_instruments[i].data[9]  |= ((instruments[i].mod_ksl & 3) << 6);
+  m_instruments[i].data[1]   =  (instruments[i].mod_freq_multi & 15);
+  m_instruments[i].data[7]   =  (instruments[i].mod_waveform & 3);
+  m_instruments[i].data[1]  |= ((instruments[i].mod_sustain_sound & 1) << 5);
+  m_instruments[i].data[1]  |= ((instruments[i].mod_ksr & 1) << 4);
+  m_instruments[i].data[1]  |= ((instruments[i].mod_vibrato & 1) << 6);
+  m_instruments[i].data[1]  |= ((instruments[i].mod_tremolo & 1) << 7);
 
-  inst[i].data[4]   = ((instruments[i].car_attack & 15) << 4);
-  inst[i].data[4]  |=  (instruments[i].car_decay & 15);
-  inst[i].data[6]   = ((15 - (instruments[i].car_sustain & 15)) << 4);
-  inst[i].data[6]  |=  (instruments[i].car_release & 15);
-  inst[i].data[10]  =  (63 - (instruments[i].car_volume & 63));
-  inst[i].data[10] |= ((instruments[i].car_ksl & 3) << 6);
-  inst[i].data[2]   =  (instruments[i].car_freq_multi & 15);
-  inst[i].data[8]   =  (instruments[i].car_waveform & 3);
-  inst[i].data[2]  |= ((instruments[i].car_sustain_sound & 1) << 5);
-  inst[i].data[2]  |= ((instruments[i].car_ksr & 1) << 4);
-  inst[i].data[2]  |= ((instruments[i].car_vibrato & 1) << 6);
-  inst[i].data[2]  |= ((instruments[i].car_tremolo & 1) << 7);
+  m_instruments[i].data[4]   = ((instruments[i].car_attack & 15) << 4);
+  m_instruments[i].data[4]  |=  (instruments[i].car_decay & 15);
+  m_instruments[i].data[6]   = ((15 - (instruments[i].car_sustain & 15)) << 4);
+  m_instruments[i].data[6]  |=  (instruments[i].car_release & 15);
+  m_instruments[i].data[10]  =  (63 - (instruments[i].car_volume & 63));
+  m_instruments[i].data[10] |= ((instruments[i].car_ksl & 3) << 6);
+  m_instruments[i].data[2]   =  (instruments[i].car_freq_multi & 15);
+  m_instruments[i].data[8]   =  (instruments[i].car_waveform & 3);
+  m_instruments[i].data[2]  |= ((instruments[i].car_sustain_sound & 1) << 5);
+  m_instruments[i].data[2]  |= ((instruments[i].car_ksr & 1) << 4);
+  m_instruments[i].data[2]  |= ((instruments[i].car_vibrato & 1) << 6);
+  m_instruments[i].data[2]  |= ((instruments[i].car_tremolo & 1) << 7);
 
-  inst[i].slide     =   instruments[i].pitch_shift;
+  m_instruments[i].slide     =   instruments[i].pitch_shift;
 }

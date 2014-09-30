@@ -55,13 +55,14 @@ bool CamdLoader::load(const std::string &filename, const CFileProvider &fp)
      strncmp(header.id, "MaDoKaN96", 9)) { fp.close(f); return false; }
 
   // load section
-  memset(inst, 0, sizeof(inst));
+  memset(m_instruments, 0, 26*sizeof(Instrument));
   f->seek(0);
   f->readString(songname, sizeof(songname));
   f->readString(author, sizeof(author));
   for(i = 0; i < 26; i++) {
-    f->readString(instname[i], 23);
-    for(j = 0; j < 11; j++) inst[i].data[j] = f->readInt(1);
+    f->readString(m_instrumentNames[i], 23);
+    for(j = 0; j < 11; j++)
+        m_instruments[i].data[j] = f->readInt(1);
   }
   m_length = f->readInt(1); nop = f->readInt(1) + 1;
   for(i=0;i<128;i++) m_order[i] = f->readInt(1);
@@ -132,26 +133,26 @@ bool CamdLoader::load(const std::string &filename, const CFileProvider &fp)
   // convert to protracker replay data
   m_bpm = 50; m_restartpos = 0; m_flags = Decimal;
   for(i=0;i<26;i++) {	// convert instruments
-    buf = inst[i].data[0];
-    buf2 = inst[i].data[1];
-    inst[i].data[0] = inst[i].data[10];
-    inst[i].data[1] = buf;
-    buf = inst[i].data[2];
-    inst[i].data[2] = inst[i].data[5];
-    buf3 = inst[i].data[3];
-    inst[i].data[3] = buf;
-    buf = inst[i].data[4];
-    inst[i].data[4] = inst[i].data[7];
-    inst[i].data[5] = buf3;
-    buf3 = inst[i].data[6];
-    inst[i].data[6] = inst[i].data[8];
-    inst[i].data[7] = buf;
-    inst[i].data[8] = inst[i].data[9];
-    inst[i].data[9] = buf2;
-    inst[i].data[10] = buf3;
+    buf = m_instruments[i].data[0];
+    buf2 = m_instruments[i].data[1];
+    m_instruments[i].data[0] = m_instruments[i].data[10];
+    m_instruments[i].data[1] = buf;
+    buf = m_instruments[i].data[2];
+    m_instruments[i].data[2] = m_instruments[i].data[5];
+    buf3 = m_instruments[i].data[3];
+    m_instruments[i].data[3] = buf;
+    buf = m_instruments[i].data[4];
+    m_instruments[i].data[4] = m_instruments[i].data[7];
+    m_instruments[i].data[5] = buf3;
+    buf3 = m_instruments[i].data[6];
+    m_instruments[i].data[6] = m_instruments[i].data[8];
+    m_instruments[i].data[7] = buf;
+    m_instruments[i].data[8] = m_instruments[i].data[9];
+    m_instruments[i].data[9] = buf2;
+    m_instruments[i].data[10] = buf3;
     for(j=0;j<23;j++)	// convert names
-      if(instname[i][j] == '\xff')
-	instname[i][j] = '\x20';
+      if(m_instrumentNames[i][j] == '\xff')
+    m_instrumentNames[i][j] = '\x20';
   }
   for(i=0;i<maxi;i++)	// convert patterns
     for(j=0;j<64;j++) {

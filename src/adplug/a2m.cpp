@@ -53,7 +53,7 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp)
     int i,j,k,t;
     unsigned int l;
     unsigned char flags = 0, numpats, version;
-    unsigned long crc, alength;
+    unsigned long alength;
     unsigned short len[9];
     std::vector<uint16_t> m_secData;
     std::vector<uint8_t> m_org;
@@ -65,7 +65,7 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp)
                                        255,255,255,255,255,255,255,255,14,255};
 
     // read header
-    f->readString(id, 10); crc = f->readInt(4);
+    f->readString(id, 10); f->readInt(4);
     version = f->readInt(1); numpats = f->readInt(1);
 
     // file validation section
@@ -109,30 +109,30 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp)
     }
 
     for(i=0;i<250;i++) {	// instruments
-        inst[i].data[0] = m_org[m_orgPos + 10];
-        inst[i].data[1] = m_org[m_orgPos + 0];
-        inst[i].data[2] = m_org[m_orgPos + 1];
-        inst[i].data[3] = m_org[m_orgPos + 4];
-        inst[i].data[4] = m_org[m_orgPos + 5];
-        inst[i].data[5] = m_org[m_orgPos + 6];
-        inst[i].data[6] = m_org[m_orgPos + 7];
-        inst[i].data[7] = m_org[m_orgPos + 8];
-        inst[i].data[8] = m_org[m_orgPos + 9];
-        inst[i].data[9] = m_org[m_orgPos + 2];
-        inst[i].data[10] = m_org[m_orgPos + 3];
+        m_instruments[i].data[0] = m_org[m_orgPos + 10];
+        m_instruments[i].data[1] = m_org[m_orgPos + 0];
+        m_instruments[i].data[2] = m_org[m_orgPos + 1];
+        m_instruments[i].data[3] = m_org[m_orgPos + 4];
+        m_instruments[i].data[4] = m_org[m_orgPos + 5];
+        m_instruments[i].data[5] = m_org[m_orgPos + 6];
+        m_instruments[i].data[6] = m_org[m_orgPos + 7];
+        m_instruments[i].data[7] = m_org[m_orgPos + 8];
+        m_instruments[i].data[8] = m_org[m_orgPos + 9];
+        m_instruments[i].data[9] = m_org[m_orgPos + 2];
+        m_instruments[i].data[10] = m_org[m_orgPos + 3];
 
         if(version < 5)
-            inst[i].misc = m_org[m_orgPos + 11];
+            m_instruments[i].misc = m_org[m_orgPos + 11];
         else {	// version >= 5 -> OPL3 format
             int pan = m_org[m_orgPos + 11];
 
             if(pan)
-                inst[i].data[0] |= (pan & 3) << 4;	// set pan
+                m_instruments[i].data[0] |= (pan & 3) << 4;	// set pan
             else
-                inst[i].data[0] |= 48;			// enable both speakers
+                m_instruments[i].data[0] |= 48;			// enable both speakers
         }
 
-        inst[i].slide = m_org[m_orgPos + 12];
+        m_instruments[i].slide = m_org[m_orgPos + 12];
         m_orgPos += 13;
     }
 

@@ -104,7 +104,7 @@ bool CdtmLoader::load(const std::string &filename, const CFileProvider &fp)
 	instruments[i].data[j] = f->readInt(1);
 
       for (j=0;j<11;j++)
-	inst[i].data[conv_inst[j]] = instruments[i].data[j];
+	m_instruments[i].data[conv_inst[j]] = instruments[i].data[j];
     }
 
   // load order
@@ -241,8 +241,8 @@ void CdtmLoader::rewind(int subsong)
     {
       channel[i].inst = i;
 
-      channel[i].vol1 = 63 - (inst[i].data[10] & 63);
-      channel[i].vol2 = 63 - (inst[i].data[9] & 63);
+      channel[i].vol1 = 63 - (m_instruments[i].data[10] & 63);
+      channel[i].vol2 = 63 - (m_instruments[i].data[9] & 63);
     }
 }
 

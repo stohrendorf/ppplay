@@ -26,12 +26,11 @@
 #define H_PLAYERS
 
 // Enumerate ALL outputs (regardless of availability)
-enum Outputs {none, disk, sdl};
-
-#define DEFAULT_DRIVER none
+enum class Outputs {none, disk, sdl};
 
 #include "disk.h"
 #include "sdl.h"
-#define DEFAULT_DRIVER sdl
+
+#define DEFAULT_DRIVER Outputs::sdl
 
 #endif

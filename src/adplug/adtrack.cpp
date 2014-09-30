@@ -134,43 +134,43 @@ size_t CadtrackLoader::framesUntilUpdate()
 void CadtrackLoader::convert_instrument(unsigned int n, AdTrackInst *i)
 {
   // Carrier "Amp Mod / Vib / Env Type / KSR / Multiple" register
-  inst[n].data[2] = i->op[Carrier].appampmod ? 1 << 7 : 0;
-  inst[n].data[2] += i->op[Carrier].appvib ? 1 << 6 : 0;
-  inst[n].data[2] += i->op[Carrier].maintsuslvl ? 1 << 5 : 0;
-  inst[n].data[2] += i->op[Carrier].keybscale ? 1 << 4 : 0;
-  inst[n].data[2] += (i->op[Carrier].octave + 1) & 0xffff; // Bug in original tracker
+  m_instruments[n].data[2] = i->op[Carrier].appampmod ? 1 << 7 : 0;
+  m_instruments[n].data[2] += i->op[Carrier].appvib ? 1 << 6 : 0;
+  m_instruments[n].data[2] += i->op[Carrier].maintsuslvl ? 1 << 5 : 0;
+  m_instruments[n].data[2] += i->op[Carrier].keybscale ? 1 << 4 : 0;
+  m_instruments[n].data[2] += (i->op[Carrier].octave + 1) & 0xffff; // Bug in original tracker
   // Modulator...
-  inst[n].data[1] = i->op[Modulator].appampmod ? 1 << 7 : 0;
-  inst[n].data[1] += i->op[Modulator].appvib ? 1 << 6 : 0;
-  inst[n].data[1] += i->op[Modulator].maintsuslvl ? 1 << 5 : 0;
-  inst[n].data[1] += i->op[Modulator].keybscale ? 1 << 4 : 0;
-  inst[n].data[1] += (i->op[Modulator].octave + 1) & 0xffff; // Bug in original tracker
+  m_instruments[n].data[1] = i->op[Modulator].appampmod ? 1 << 7 : 0;
+  m_instruments[n].data[1] += i->op[Modulator].appvib ? 1 << 6 : 0;
+  m_instruments[n].data[1] += i->op[Modulator].maintsuslvl ? 1 << 5 : 0;
+  m_instruments[n].data[1] += i->op[Modulator].keybscale ? 1 << 4 : 0;
+  m_instruments[n].data[1] += (i->op[Modulator].octave + 1) & 0xffff; // Bug in original tracker
 
   // Carrier "Key Scaling / Level" register
-  inst[n].data[10] = (i->op[Carrier].freqrisevollvldn & 3) << 6;
-  inst[n].data[10] += i->op[Carrier].softness & 63;
+  m_instruments[n].data[10] = (i->op[Carrier].freqrisevollvldn & 3) << 6;
+  m_instruments[n].data[10] += i->op[Carrier].softness & 63;
   // Modulator...
-  inst[n].data[9] = (i->op[Modulator].freqrisevollvldn & 3) << 6;
-  inst[n].data[9] += i->op[Modulator].softness & 63;
+  m_instruments[n].data[9] = (i->op[Modulator].freqrisevollvldn & 3) << 6;
+  m_instruments[n].data[9] += i->op[Modulator].softness & 63;
 
   // Carrier "Attack / Decay" register
-  inst[n].data[4] = (i->op[Carrier].attack & 0x0f) << 4;
-  inst[n].data[4] += i->op[Carrier].decay & 0x0f;
+  m_instruments[n].data[4] = (i->op[Carrier].attack & 0x0f) << 4;
+  m_instruments[n].data[4] += i->op[Carrier].decay & 0x0f;
   // Modulator...
-  inst[n].data[3] = (i->op[Modulator].attack & 0x0f) << 4;
-  inst[n].data[3] += i->op[Modulator].decay & 0x0f;
+  m_instruments[n].data[3] = (i->op[Modulator].attack & 0x0f) << 4;
+  m_instruments[n].data[3] += i->op[Modulator].decay & 0x0f;
 
   // Carrier "Release / Sustain" register
-  inst[n].data[6] = (i->op[Carrier].release & 0x0f) << 4;
-  inst[n].data[6] += i->op[Carrier].sustain & 0x0f;
+  m_instruments[n].data[6] = (i->op[Carrier].release & 0x0f) << 4;
+  m_instruments[n].data[6] += i->op[Carrier].sustain & 0x0f;
   // Modulator...
-  inst[n].data[5] = (i->op[Modulator].release & 0x0f) << 4;
-  inst[n].data[5] += i->op[Modulator].sustain & 0x0f;
+  m_instruments[n].data[5] = (i->op[Modulator].release & 0x0f) << 4;
+  m_instruments[n].data[5] += i->op[Modulator].sustain & 0x0f;
 
   // Channel "Feedback / Connection" register
-  inst[n].data[0] = (i->op[Carrier].feedback & 7) << 1;
+  m_instruments[n].data[0] = (i->op[Carrier].feedback & 7) << 1;
 
   // Carrier/Modulator "Wave Select" registers
-  inst[n].data[8] = i->op[Carrier].waveform & 3;
-  inst[n].data[7] = i->op[Modulator].waveform & 3;
+  m_instruments[n].data[8] = i->op[Carrier].waveform & 3;
+  m_instruments[n].data[7] = i->op[Modulator].waveform & 3;
 }

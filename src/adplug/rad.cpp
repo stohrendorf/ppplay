@@ -62,17 +62,17 @@ bool CradLoader::load(const std::string &filename, const CFileProvider &fp)
     }
     for(uint8_t buf = f->readInt(1); buf!=0; buf = f->readInt(1)) { // instruments
         buf--;
-        inst[buf].data[2] = f->readInt(1);
-        inst[buf].data[1] = f->readInt(1);
-        inst[buf].data[10] = f->readInt(1);
-        inst[buf].data[9] = f->readInt(1);
-        inst[buf].data[4] = f->readInt(1);
-        inst[buf].data[3] = f->readInt(1);
-        inst[buf].data[6] = f->readInt(1);
-        inst[buf].data[5] = f->readInt(1);
-        inst[buf].data[0] = f->readInt(1);
-        inst[buf].data[8] = f->readInt(1);
-        inst[buf].data[7] = f->readInt(1);
+        m_instruments[buf].data[2] = f->readInt(1);
+        m_instruments[buf].data[1] = f->readInt(1);
+        m_instruments[buf].data[10] = f->readInt(1);
+        m_instruments[buf].data[9] = f->readInt(1);
+        m_instruments[buf].data[4] = f->readInt(1);
+        m_instruments[buf].data[3] = f->readInt(1);
+        m_instruments[buf].data[6] = f->readInt(1);
+        m_instruments[buf].data[5] = f->readInt(1);
+        m_instruments[buf].data[0] = f->readInt(1);
+        m_instruments[buf].data[8] = f->readInt(1);
+        m_instruments[buf].data[7] = f->readInt(1);
     }
     m_length = f->readInt(1);
     for(unsigned long i = 0; i < m_length; i++)

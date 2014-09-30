@@ -106,21 +106,21 @@ bool Csa2Loader::load(const std::string &filename, const CFileProvider &fp)
       insts.arpspeed = f->readInt(1);
       insts.arppos = f->readInt(1);
       insts.arpspdcnt = f->readInt(1);
-      inst[i].arpstart = insts.arpstart;
-      inst[i].arpspeed = insts.arpspeed;
-      inst[i].arppos = insts.arppos;
-      inst[i].arpspdcnt = insts.arpspdcnt;
+      m_instruments[i].arpstart = insts.arpstart;
+      m_instruments[i].arpspeed = insts.arpspeed;
+      m_instruments[i].arppos = insts.arppos;
+      m_instruments[i].arpspdcnt = insts.arpspdcnt;
     } else {
       for(j = 0; j < 11; j++) insts.data[j] = f->readInt(1);
-      inst[i].arpstart = 0;
-      inst[i].arpspeed = 0;
-      inst[i].arppos = 0;
-      inst[i].arpspdcnt = 0;
+      m_instruments[i].arpstart = 0;
+      m_instruments[i].arpspeed = 0;
+      m_instruments[i].arppos = 0;
+      m_instruments[i].arpspdcnt = 0;
     }
     for(j=0;j<11;j++)
-      inst[i].data[j] = insts.data[j];
-    inst[i].misc = 0;
-    inst[i].slide = 0;
+      m_instruments[i].data[j] = insts.data[j];
+    m_instruments[i].misc = 0;
+    m_instruments[i].slide = 0;
   }
 
   // instrument names

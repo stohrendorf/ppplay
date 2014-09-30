@@ -72,7 +72,7 @@ protected:
   } bmf;
   //
   bool            xadplayer_load();
-  void            xadplayer_rewind(int subsong);
+  void            xadplayer_rewind(int);
   void            xadplayer_update();
   float           xadplayer_getrefresh();
   std::string     xadplayer_gettype();

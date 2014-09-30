@@ -51,17 +51,17 @@ bool CdfmLoader::load(const std::string &filename, const CFileProvider &fp)
   for(i = 0; i < 32; i++)
     f->readString(instname[i], 12);
   for(i = 0; i < 32; i++) {
-    inst[i].data[1] = f->readInt(1);
-    inst[i].data[2] = f->readInt(1);
-    inst[i].data[9] = f->readInt(1);
-    inst[i].data[10] = f->readInt(1);
-    inst[i].data[3] = f->readInt(1);
-    inst[i].data[4] = f->readInt(1);
-    inst[i].data[5] = f->readInt(1);
-    inst[i].data[6] = f->readInt(1);
-    inst[i].data[7] = f->readInt(1);
-    inst[i].data[8] = f->readInt(1);
-    inst[i].data[0] = f->readInt(1);
+    m_instruments[i].data[1] = f->readInt(1);
+    m_instruments[i].data[2] = f->readInt(1);
+    m_instruments[i].data[9] = f->readInt(1);
+    m_instruments[i].data[10] = f->readInt(1);
+    m_instruments[i].data[3] = f->readInt(1);
+    m_instruments[i].data[4] = f->readInt(1);
+    m_instruments[i].data[5] = f->readInt(1);
+    m_instruments[i].data[6] = f->readInt(1);
+    m_instruments[i].data[7] = f->readInt(1);
+    m_instruments[i].data[8] = f->readInt(1);
+    m_instruments[i].data[0] = f->readInt(1);
   }
   for(i = 0; i < 128; i++) m_order[i] = f->readInt(1);
   for(i = 0; i < 128 && m_order[i] != 128; i++)

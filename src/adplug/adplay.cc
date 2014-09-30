@@ -158,11 +158,11 @@ static int decode_switches(int argc, char **argv)
 	break;
       case 'O':
 	if(!strcmp(optarg,"disk")) {
-	  cfg.output = disk;
+      cfg.output = Outputs::disk;
 	  cfg.endless = false; // endless output is almost never desired here
         }
 	else if(!strcmp(optarg,"sdl"))
-            cfg.output = sdl;
+            cfg.output = Outputs::sdl;
 	else {
 	  message(MSG_ERROR, "unknown output method -- %s", optarg);
 	  exit(EXIT_FAILURE);
@@ -272,13 +272,13 @@ int main(int argc, char **argv)
 
   // init player
   switch(cfg.output) {
-  case none:
+  case Outputs::none:
     message(MSG_PANIC, "no output methods compiled in");
     exit(EXIT_FAILURE);
-  case disk:
+  case Outputs::disk:
     output.reset( new DiskWriter(cfg.device, 44100) );
     break;
-  case sdl:
+  case Outputs::sdl:
     output.reset( new SDLPlayer(44100, cfg.buf_size) );
     break;
   default:

@@ -82,7 +82,7 @@ bool CmadLoader::load(const std::string &filename, const CFileProvider &fp)
   // convert instruments
   for(i = 0; i < 9; i++)
     for(j = 0; j < 10; j++)
-      inst[i].data[conv_inst[j]] = instruments[i].data[j];
+      m_instruments[i].data[conv_inst[j]] = instruments[i].data[j];
 
   // data for Protracker
   m_restartpos = 0;
@@ -101,8 +101,8 @@ void CmadLoader::rewind(int subsong)
 	{
 		channel[i].inst = i;
 
-		channel[i].vol1 = 63 - (inst[i].data[10] & 63);
-		channel[i].vol2 = 63 - (inst[i].data[9] & 63);
+		channel[i].vol1 = 63 - (m_instruments[i].data[10] & 63);
+		channel[i].vol2 = 63 - (m_instruments[i].data[9] & 63);
 	}
 }
 

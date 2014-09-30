@@ -62,7 +62,8 @@ public:
   struct Instrument {
     unsigned char data[11],arpstart,arpspeed,arppos,arpspdcnt,misc;
     signed char slide;
-  } *inst;
+  };
+  Instrument *m_instruments;
 
   struct Tracks {
     unsigned char note,command,inst,param2,param1;

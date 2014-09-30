@@ -42,8 +42,8 @@ public:
 	unsigned int getinstruments()
 	{ return 26; };
 	std::string getinstrument(unsigned int n)
-	{ return std::string(instname[n],0,23); };
+	{ return std::string(m_instrumentNames[n],0,23); };
 
 private:
-	char songname[24],author[24],instname[26][23];
+	char songname[24],author[24],m_instrumentNames[26][23];
 };

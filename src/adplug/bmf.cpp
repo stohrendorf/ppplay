@@ -193,7 +193,7 @@ bool CxadbmfPlayer::xadplayer_load()
     return true;
 }
 
-void CxadbmfPlayer::xadplayer_rewind(int subsong)
+void CxadbmfPlayer::xadplayer_rewind(int)
 {
     int i,j;
 

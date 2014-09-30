@@ -102,7 +102,7 @@ bool CcffLoader::load(const std::string &filename, const CFileProvider &fp)
       memcpy(&instruments[i],&module[i*32],sizeof(cff_instrument));
 
       for (j=0;j<11;j++)
-	inst[i].data[conv_inst[j]] = instruments[i].data[j];
+	m_instruments[i].data[conv_inst[j]] = instruments[i].data[j];
 
       instruments[i].name[20] = 0;
     }
@@ -270,8 +270,8 @@ void CcffLoader::rewind(int subsong)
     {
       channel[i].inst = i;
 
-      channel[i].vol1 = 63 - (inst[i].data[10] & 63);
-      channel[i].vol2 = 63 - (inst[i].data[9] & 63);
+      channel[i].vol1 = 63 - (m_instruments[i].data[10] & 63);
+      channel[i].vol2 = 63 - (m_instruments[i].data[9] & 63);
     }
 }
 

@@ -43,7 +43,7 @@ const unsigned char CmodPlayer::vibratotab[32] =
 /*** public methods *************************************/
 
 CmodPlayer::CmodPlayer()
-  : CPlayer(), inst(0), m_order(0), arplist(0), arpcmd(0), m_initspeed(6),
+  : CPlayer(), m_instruments(0), m_order(0), arplist(0), arpcmd(0), m_initspeed(6),
     nop(0), activechan(0xffffffff), m_flags(Standard),
     nrows(0), npats(0), nchans(0)
 {
@@ -72,7 +72,7 @@ bool CmodPlayer::update()
   for(chan = 0; chan < nchans; chan++) {
     oplchan = set_opl_chip(chan);
 
-    if(arplist && arpcmd && inst[channel[chan].inst].arpstart) {	// special arpeggio
+    if(arplist && arpcmd && m_instruments[channel[chan].inst].arpstart) {	// special arpeggio
       if(channel[chan].arpspdcnt)
 	channel[chan].arpspdcnt--;
       else
@@ -105,7 +105,7 @@ bool CmodPlayer::update()
 	  setfreq(chan);
 	  if(arpcmd[channel[chan].arppos] != 255)
 	    channel[chan].arppos++;
-	  channel[chan].arpspdcnt = inst[channel[chan].inst].arpspeed - 1;
+	  channel[chan].arpspdcnt = m_instruments[channel[chan].inst].arpspeed - 1;
 	}
     }
 
@@ -220,8 +220,8 @@ bool CmodPlayer::update()
     if(m_tracks[track][row].inst) {
       channel[chan].inst = m_tracks[track][row].inst - 1;
       if (!(m_flags & Faust)) {
-	channel[chan].vol1 = 63 - (inst[channel[chan].inst].data[10] & 63);
-	channel[chan].vol2 = 63 - (inst[channel[chan].inst].data[9] & 63);
+	channel[chan].vol1 = 63 - (m_instruments[channel[chan].inst].data[10] & 63);
+	channel[chan].vol2 = 63 - (m_instruments[channel[chan].inst].data[9] & 63);
 	setvolume(chan);
       }
     }
@@ -231,7 +231,7 @@ bool CmodPlayer::update()
       setnote(chan,m_tracks[track][row].note);
       channel[chan].nextfreq = channel[chan].freq;
       channel[chan].nextoct = channel[chan].oct;
-      channel[chan].arppos = inst[channel[chan].inst].arpstart;
+      channel[chan].arppos = m_instruments[channel[chan].inst].arpstart;
       channel[chan].arpspdcnt = 0;
       if(m_tracks[track][row].note != 127)	// handle key off
 	donote = 1;
@@ -362,7 +362,7 @@ bool CmodPlayer::update()
       channel[chan].vol1 = info;
       if(channel[chan].vol1 > 63)
 	channel[chan].vol1 = 63;
-      if(inst[channel[chan].inst].data[0] & 1) {
+      if(m_instruments[channel[chan].inst].data[0] & 1) {
 	channel[chan].vol2 = info;
 	if(channel[chan].vol2 > 63)
 	  channel[chan].vol2 = 63;
@@ -588,16 +588,16 @@ void CmodPlayer::dealloc_patterns()
 bool CmodPlayer::realloc_instruments(unsigned long len)
 {
   // dealloc previous instance, if any
-  if(inst) delete [] inst;
+  if(m_instruments) delete [] m_instruments;
 
-  inst = new Instrument[len];
-  memset(inst,0,sizeof(Instrument)*len);	// reset instruments
+  m_instruments = new Instrument[len];
+  memset(m_instruments,0,sizeof(Instrument)*len);	// reset instruments
   return true;
 }
 
 void CmodPlayer::dealloc()
 {
-  if(inst) delete [] inst;
+  if(m_instruments) delete [] m_instruments;
   if(m_order) delete [] m_order;
   if(arplist) delete [] arplist;
   if(arpcmd) delete [] arpcmd;
@@ -613,19 +613,19 @@ void CmodPlayer::setvolume(unsigned char chan)
   if(m_flags & Faust)
     setvolume_alt(chan);
   else {
-    getOpl()->writeReg(0x40 + m_opTable[oplchan], 63-channel[chan].vol2 + (inst[channel[chan].inst].data[9] & 192));
-    getOpl()->writeReg(0x43 + m_opTable[oplchan], 63-channel[chan].vol1 + (inst[channel[chan].inst].data[10] & 192));
+    getOpl()->writeReg(0x40 + m_opTable[oplchan], 63-channel[chan].vol2 + (m_instruments[channel[chan].inst].data[9] & 192));
+    getOpl()->writeReg(0x43 + m_opTable[oplchan], 63-channel[chan].vol1 + (m_instruments[channel[chan].inst].data[10] & 192));
   }
 }
 
 void CmodPlayer::setvolume_alt(unsigned char chan)
 {
   unsigned char oplchan = set_opl_chip(chan);
-  unsigned char ivol2 = inst[channel[chan].inst].data[9] & 63;
-  unsigned char ivol1 = inst[channel[chan].inst].data[10] & 63;
+  unsigned char ivol2 = m_instruments[channel[chan].inst].data[9] & 63;
+  unsigned char ivol1 = m_instruments[channel[chan].inst].data[10] & 63;
 
-  getOpl()->writeReg(0x40 + m_opTable[oplchan], (((63 - (channel[chan].vol2 & 63)) + ivol2) >> 1) + (inst[channel[chan].inst].data[9] & 192));
-  getOpl()->writeReg(0x43 + m_opTable[oplchan], (((63 - (channel[chan].vol1 & 63)) + ivol1) >> 1) + (inst[channel[chan].inst].data[10] & 192));
+  getOpl()->writeReg(0x40 + m_opTable[oplchan], (((63 - (channel[chan].vol2 & 63)) + ivol2) >> 1) + (m_instruments[channel[chan].inst].data[9] & 192));
+  getOpl()->writeReg(0x43 + m_opTable[oplchan], (((63 - (channel[chan].vol1 & 63)) + ivol1) >> 1) + (m_instruments[channel[chan].inst].data[10] & 192));
 }
 
 void CmodPlayer::setfreq(unsigned char chan)
@@ -648,16 +648,16 @@ void CmodPlayer::playnote(unsigned char chan)
     getOpl()->writeReg(0xb0 + oplchan, 0);	// stop old note
 
   // set instrument data
-  getOpl()->writeReg(0x20 + op, inst[insnr].data[1]);
-  getOpl()->writeReg(0x23 + op, inst[insnr].data[2]);
-  getOpl()->writeReg(0x60 + op, inst[insnr].data[3]);
-  getOpl()->writeReg(0x63 + op, inst[insnr].data[4]);
-  getOpl()->writeReg(0x80 + op, inst[insnr].data[5]);
-  getOpl()->writeReg(0x83 + op, inst[insnr].data[6]);
-  getOpl()->writeReg(0xe0 + op, inst[insnr].data[7]);
-  getOpl()->writeReg(0xe3 + op, inst[insnr].data[8]);
-  getOpl()->writeReg(0xc0 + oplchan, inst[insnr].data[0]);
-  getOpl()->writeReg(0xbd, inst[insnr].misc);	// set misc. register
+  getOpl()->writeReg(0x20 + op, m_instruments[insnr].data[1]);
+  getOpl()->writeReg(0x23 + op, m_instruments[insnr].data[2]);
+  getOpl()->writeReg(0x60 + op, m_instruments[insnr].data[3]);
+  getOpl()->writeReg(0x63 + op, m_instruments[insnr].data[4]);
+  getOpl()->writeReg(0x80 + op, m_instruments[insnr].data[5]);
+  getOpl()->writeReg(0x83 + op, m_instruments[insnr].data[6]);
+  getOpl()->writeReg(0xe0 + op, m_instruments[insnr].data[7]);
+  getOpl()->writeReg(0xe3 + op, m_instruments[insnr].data[8]);
+  getOpl()->writeReg(0xc0 + oplchan, m_instruments[insnr].data[0]);
+  getOpl()->writeReg(0xbd, m_instruments[insnr].misc);	// set misc. register
 
   // set frequency, volume & play
   channel[chan].key = 1;
@@ -689,7 +689,7 @@ void CmodPlayer::setnote(unsigned char chan, int note)
     else
       channel[chan].freq = notetable[11];
   channel[chan].oct = (note - 1) / 12;
-  channel[chan].freq += inst[channel[chan].inst].slide;	// apply pre-slide
+  channel[chan].freq += m_instruments[channel[chan].inst].slide;	// apply pre-slide
 }
 
 void CmodPlayer::slide_down(unsigned char chan, int amount)
@@ -795,7 +795,7 @@ void CmodPlayer::vol_up_alt(unsigned char chan, int amount)
     channel[chan].vol1 += amount;
   else
     channel[chan].vol1 = 63;
-  if(inst[channel[chan].inst].data[0] & 1) {
+  if(m_instruments[channel[chan].inst].data[0] & 1) {
     if(channel[chan].vol2 + amount < 63)
       channel[chan].vol2 += amount;
     else
@@ -809,7 +809,7 @@ void CmodPlayer::vol_down_alt(unsigned char chan, int amount)
     channel[chan].vol1 -= amount;
   else
     channel[chan].vol1 = 0;
-  if(inst[channel[chan].inst].data[0] & 1) {
+  if(m_instruments[channel[chan].inst].data[0] & 1) {
     if(channel[chan].vol2 - amount > 0)
       channel[chan].vol2 -= amount;
     else
