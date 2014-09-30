@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software Foundation,
- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #ifndef H_DEFINES
@@ -26,11 +26,11 @@
 #define BADPLAY_VERSION "BAdPlay/UNIX 0.1"
 
 // Message urgency levels
-#define MSG_PANIC	0	// Unmaskable
-#define MSG_ERROR	1
-#define MSG_WARN	2
-#define MSG_NOTE	3
-#define MSG_DEBUG	4
+#define MSG_PANIC 0 // Unmaskable
+#define MSG_ERROR 1
+#define MSG_WARN 2
+#define MSG_NOTE 3
+#define MSG_DEBUG 4
 
 /***** Global functions *****/
 

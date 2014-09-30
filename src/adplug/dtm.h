@@ -21,49 +21,47 @@
 
 #include "protrack.h"
 
-class CdtmLoader: public CmodPlayer
-{
- public:
+class CdtmLoader : public CmodPlayer {
+public:
   static CPlayer *factory();
 
-  CdtmLoader() : CmodPlayer() { };
+  CdtmLoader() : CmodPlayer() {}
+  ;
 
-  bool	load(const std::string &filename, const CFileProvider &fp);
-  void	rewind(int subsong);
+  bool load(const std::string &filename, const CFileProvider &fp);
+  void rewind(int subsong);
   size_t framesUntilUpdate();
 
-  std::string     gettype();
-  std::string     gettitle();
-  std::string     getauthor();
-  std::string     getdesc();
-  std::string     getinstrument(unsigned int n);
-  unsigned int    getinstruments();
+  std::string gettype();
+  std::string gettitle();
+  std::string getauthor();
+  std::string getdesc();
+  std::string getinstrument(unsigned int n);
+  unsigned int getinstruments();
 
- private:
+private:
 
-  struct dtm_header
-  {
-    char            id[12];
-    unsigned char   version;
-    char            title[20];
-    char            author[20];
-    unsigned char   numpat;
-    unsigned char   numinst;
+  struct dtm_header {
+    char id[12];
+    unsigned char version;
+    char title[20];
+    char author[20];
+    unsigned char numpat;
+    unsigned char numinst;
   } header;
 
-  char desc[80*16];
+  char desc[80 * 16];
 
-  struct dtm_instrument
-  {
-    char            name[13];
-    unsigned char   data[12];
+  struct dtm_instrument {
+    char name[13];
+    unsigned char data[12];
   } instruments[128];
 
-  struct dtm_event
-  {
-    unsigned char	byte0;
-    unsigned char	byte1;
+  struct dtm_event {
+    unsigned char byte0;
+    unsigned char byte1;
   };
 
-  long unpack_pattern(unsigned char *ibuf, long ilen, unsigned char *obuf, long olen);
+  long unpack_pattern(unsigned char *ibuf, long ilen, unsigned char *obuf,
+                      long olen);
 };

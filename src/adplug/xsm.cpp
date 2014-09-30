@@ -23,28 +23,30 @@
 
 #include "xsm.h"
 
-CxsmPlayer::CxsmPlayer()
-  : CPlayer(), music(0)
-{
+CxsmPlayer::CxsmPlayer() : CPlayer(), music(0) {}
+
+CxsmPlayer::~CxsmPlayer() {
+  if (music)
+    delete[] music;
 }
 
-CxsmPlayer::~CxsmPlayer()
-{
-  if(music) delete [] music;
-}
-
-bool CxsmPlayer::load(const std::string &filename, const CFileProvider &fp)
-{
-  binistream *f = fp.open(filename); if(!f) return false;
-  char			id[6];
-  int			i, j;
+bool CxsmPlayer::load(const std::string &filename, const CFileProvider &fp) {
+  binistream *f = fp.open(filename);
+  if (!f)
+    return false;
+  char id[6];
+  int i, j;
 
   // check if header matches
-  f->readString(id, 6); songlen = f->readInt(2);
-  if(strncmp(id, "ofTAZ!", 6) || songlen > 3200) { fp.close(f); return false; }
+  f->readString(id, 6);
+  songlen = f->readInt(2);
+  if (strncmp(id, "ofTAZ!", 6) || songlen > 3200) {
+    fp.close(f);
+    return false;
+  }
 
   // read and set instruments
-  for(i = 0; i < 9; i++) {
+  for (i = 0; i < 9; i++) {
     getOpl()->writeReg(0x20 + m_opTable[i], f->readInt(1));
     getOpl()->writeReg(0x23 + m_opTable[i], f->readInt(1));
     getOpl()->writeReg(0x40 + m_opTable[i], f->readInt(1));
@@ -60,9 +62,9 @@ bool CxsmPlayer::load(const std::string &filename, const CFileProvider &fp)
   }
 
   // read song data
-  music = new char [songlen * 9];
-  for(i = 0; i < 9; i++)
-    for(j = 0; j < songlen; j++)
+  music = new char[songlen * 9];
+  for (i = 0; i < 9; i++)
+    for (j = 0; j < songlen; j++)
       music[j * 9 + i] = f->readInt(1);
 
   // success
@@ -71,21 +73,20 @@ bool CxsmPlayer::load(const std::string &filename, const CFileProvider &fp)
   return true;
 }
 
-bool CxsmPlayer::update()
-{
+bool CxsmPlayer::update() {
   int c;
 
-  if(notenum >= songlen) {
+  if (notenum >= songlen) {
     songend = true;
     notenum = last = 0;
   }
 
-  for(c = 0; c < 9; c++)
-    if(music[notenum * 9 + c] != music[last * 9 + c])
+  for (c = 0; c < 9; c++)
+    if (music[notenum * 9 + c] != music[last * 9 + c])
       getOpl()->writeReg(0xb0 + c, 0);
 
-  for(c = 0; c < 9; c++) {
-    if(music[notenum * 9 + c])
+  for (c = 0; c < 9; c++) {
+    if (music[notenum * 9 + c])
       play_note(c, music[notenum * 9 + c] % 12, music[notenum * 9 + c] / 12);
     else
       play_note(c, 0, 0);
@@ -96,22 +97,18 @@ bool CxsmPlayer::update()
   return !songend;
 }
 
-void CxsmPlayer::rewind(int)
-{
+void CxsmPlayer::rewind(int) {
   notenum = last = 0;
   songend = false;
 }
 
-size_t CxsmPlayer::framesUntilUpdate()
-{
-  return SampleRate/5;
-}
+size_t CxsmPlayer::framesUntilUpdate() { return SampleRate / 5; }
 
-void CxsmPlayer::play_note(int c, int note, int octv)
-{
+void CxsmPlayer::play_note(int c, int note, int octv) {
   int freq = m_noteTable[note];
 
-  if(!note && !octv) freq = 0;
+  if (!note && !octv)
+    freq = 0;
   getOpl()->writeReg(0xa0 + c, freq & 0xff);
   getOpl()->writeReg(0xb0 + c, (freq / 0xff) | 32 | (octv * 4));
 }

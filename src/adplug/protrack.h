@@ -24,8 +24,7 @@
 
 #include "player.h"
 
-class CmodPlayer: public CPlayer
-{
+class CmodPlayer : public CPlayer {
 public:
   CmodPlayer();
   virtual ~CmodPlayer();
@@ -34,20 +33,14 @@ public:
   void rewind(int);
   size_t framesUntilUpdate();
 
-  unsigned int getpatterns()
-    { return nop; }
-  unsigned int getpattern()
-    { return m_order[ord]; }
-  unsigned int getorders()
-    { return m_length; }
-  unsigned int getorder()
-    { return ord; }
-  unsigned int getrow()
-    { return rw; }
-  unsigned int getspeed()
-    { return speed; }
+  unsigned int getpatterns() { return nop; }
+  unsigned int getpattern() { return m_order[ord]; }
+  unsigned int getorders() { return m_length; }
+  unsigned int getorder() { return ord; }
+  unsigned int getrow() { return rw; }
+  unsigned int getspeed() { return speed; }
 
- protected:
+protected:
   enum Flags {
     Standard = 0,
     Decimal = 1 << 0,
@@ -60,13 +53,13 @@ public:
   };
 
   struct Instrument {
-    unsigned char data[11],arpstart,arpspeed,arppos,arpspdcnt,misc;
+    unsigned char data[11], arpstart, arpspeed, arppos, arpspdcnt, misc;
     signed char slide;
   };
   Instrument *m_instruments;
 
   struct Tracks {
-    unsigned char note,command,inst,param2,param1;
+    unsigned char note, command, inst, param2, param1;
   } **m_tracks;
 
   unsigned char *m_order, *arplist, *arpcmd, m_initspeed;
@@ -75,9 +68,9 @@ public:
   int m_flags;
 
   struct Channel {
-    unsigned short freq,nextfreq;
-    unsigned char oct,vol1,vol2,inst,fx,info1,info2,key,nextoct,
-      note,portainfo,vibinfo1,vibinfo2,arppos,arpspdcnt;
+    unsigned short freq, nextfreq;
+    unsigned char oct, vol1, vol2, inst, fx, info1, info2, key, nextoct, note,
+        portainfo, vibinfo1, vibinfo2, arppos, arpspdcnt;
     signed char trigger;
   } *channel;
 
@@ -85,12 +78,13 @@ public:
   bool init_specialarp();
   void init_notetable(const unsigned short *newnotetable);
   bool realloc_order(unsigned long len);
-  bool realloc_patterns(unsigned long pats, unsigned long rows, unsigned long chans);
+  bool realloc_patterns(unsigned long pats, unsigned long rows,
+                        unsigned long chans);
   bool realloc_instruments(unsigned long len);
 
   void dealloc();
 
- private:
+private:
   static const unsigned short sa2_notetable[12];
   static const unsigned char vibratotab[32];
 

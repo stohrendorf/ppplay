@@ -24,38 +24,36 @@
 
 #include "player.h"
 
-class CsngPlayer: public CPlayer
-{
+class CsngPlayer : public CPlayer {
 public:
   static CPlayer *factory();
 
-	bool load(const std::string &filename, const CFileProvider &fp);
-	bool update();
-	void rewind(int subsong);
-    size_t framesUntilUpdate() override {
-        return SampleRate/70;
-    }
+  bool load(const std::string &filename, const CFileProvider &fp);
+  bool update();
+  void rewind(int subsong);
+  size_t framesUntilUpdate() override { return SampleRate / 70; }
 
-    std::string gettype() {
-        return "SNG File Format";
-    }
+  std::string gettype() { return "SNG File Format"; }
 
 protected:
-	struct {
-        char id[4] = {0,0,0,0};
-        unsigned short length=0, start=0, loop=0;
-        unsigned char delay=0;
-        bool compressed=false;
-    } m_header{};
+  struct {
+    char id[4] = { 0, 0, 0, 0 };
+    unsigned short length = 0, start = 0, loop = 0;
+    unsigned char delay = 0;
+    bool compressed = false;
+  } m_header {
+  }
+  ;
 
-	struct Sdata {
-        unsigned char val=0, reg=0;
-    };
-    std::vector<Sdata> m_data{};
+  struct Sdata {
+    unsigned char val = 0, reg = 0;
+  };
+  std::vector<Sdata> m_data {}
+  ;
 
-    unsigned char m_del = 0;
-    unsigned short m_pos = 0;
-    bool m_songEnd = false;
+  unsigned char m_del = 0;
+  unsigned short m_pos = 0;
+  bool m_songEnd = false;
 };
 
 #endif

@@ -21,8 +21,7 @@
 
 #include "player.h"
 
-class CxsmPlayer: public CPlayer
-{
+class CxsmPlayer : public CPlayer {
 public:
   static CPlayer *factory() { return new CxsmPlayer(); }
 
@@ -37,10 +36,10 @@ public:
   std::string gettype() { return std::string("eXtra Simple Music"); }
 
 private:
-  unsigned short	songlen;
-  char			*music;
-  unsigned int		last, notenum;
-  bool			songend;
+  unsigned short songlen;
+  char *music;
+  unsigned int last, notenum;
+  bool songend;
 
   void play_note(int c, int note, int octv);
 };

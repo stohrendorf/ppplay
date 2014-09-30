@@ -21,24 +21,21 @@
 
 #include "protrack.h"
 
-class CradLoader: public CmodPlayer
-{
+class CradLoader : public CmodPlayer {
 public:
-    static CPlayer *factory();
+  static CPlayer *factory();
 
-    CradLoader() : CmodPlayer()
-    {}
+  CradLoader() : CmodPlayer() {}
 
-    bool load(const std::string &filename, const CFileProvider &fp);
-    size_t framesUntilUpdate();
+  bool load(const std::string &filename, const CFileProvider &fp);
+  size_t framesUntilUpdate();
 
-    std::string gettype()
-    { return "Reality ADlib Tracker"; }
-    std::string getdesc()
-    { return m_desc; }
+  std::string gettype() { return "Reality ADlib Tracker"; }
+  std::string getdesc() { return m_desc; }
 
 private:
-    uint8_t m_version=0;
-    uint8_t m_radflags=0;
-    std::string m_desc{};
+  uint8_t m_version = 0;
+  uint8_t m_radflags = 0;
+  std::string m_desc {}
+  ;
 };

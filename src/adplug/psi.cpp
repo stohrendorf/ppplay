@@ -38,33 +38,25 @@
 #include "psi.h"
 #include "debug.h"
 
-const unsigned char CxadpsiPlayer::psi_adlib_registers[99] =
-{
-  0x20, 0x23, 0x40, 0x43, 0x60, 0x63, 0x80, 0x83, 0xE0, 0xE3, 0xC0,
-  0x21, 0x24, 0x41, 0x44, 0x61, 0x64, 0x81, 0x84, 0xE1, 0xE4, 0xC1,
-  0x22, 0x25, 0x42, 0x45, 0x62, 0x65, 0x82, 0x85, 0xE2, 0xE5, 0xC2,
-  0x28, 0x2B, 0x48, 0x4B, 0x68, 0x6B, 0x88, 0x8B, 0xE8, 0xEB, 0xC3,
-  0x29, 0x2C, 0x49, 0x4C, 0x69, 0x6C, 0x89, 0x8C, 0xE9, 0xEC, 0xC4,
-  0x2A, 0x2D, 0x4A, 0x4D, 0x6A, 0x6D, 0x8A, 0x8D, 0xEA, 0xED, 0xC5,
-  0x30, 0x33, 0x50, 0x53, 0x70, 0x73, 0x90, 0x93, 0xF0, 0xF3, 0xC6,
-  0x31, 0x34, 0x51, 0x54, 0x71, 0x74, 0x91, 0x94, 0xF1, 0xF4, 0xC7,
-  0x32, 0x35, 0x52, 0x55, 0x72, 0x75, 0x92, 0x95, 0xF2, 0xF5, 0xC8
+const unsigned char CxadpsiPlayer::psi_adlib_registers[99] = {
+  0x20, 0x23, 0x40, 0x43, 0x60, 0x63, 0x80, 0x83, 0xE0, 0xE3, 0xC0, 0x21, 0x24,
+  0x41, 0x44, 0x61, 0x64, 0x81, 0x84, 0xE1, 0xE4, 0xC1, 0x22, 0x25, 0x42, 0x45,
+  0x62, 0x65, 0x82, 0x85, 0xE2, 0xE5, 0xC2, 0x28, 0x2B, 0x48, 0x4B, 0x68, 0x6B,
+  0x88, 0x8B, 0xE8, 0xEB, 0xC3, 0x29, 0x2C, 0x49, 0x4C, 0x69, 0x6C, 0x89, 0x8C,
+  0xE9, 0xEC, 0xC4, 0x2A, 0x2D, 0x4A, 0x4D, 0x6A, 0x6D, 0x8A, 0x8D, 0xEA, 0xED,
+  0xC5, 0x30, 0x33, 0x50, 0x53, 0x70, 0x73, 0x90, 0x93, 0xF0, 0xF3, 0xC6, 0x31,
+  0x34, 0x51, 0x54, 0x71, 0x74, 0x91, 0x94, 0xF1, 0xF4, 0xC7, 0x32, 0x35, 0x52,
+  0x55, 0x72, 0x75, 0x92, 0x95, 0xF2, 0xF5, 0xC8
 };
 
-const unsigned short CxadpsiPlayer::psi_notes[16] =
-{
-  0x216B, 0x2181, 0x2198, 0x21B0, 0x21CA, 0x21E5, 0x2202, 0x2220,
-  0x2241, 0x2263, 0x2287, 0x2364,
-  0x0000, 0x0000, 0x0000, 0x0000 // by riven
+const unsigned short CxadpsiPlayer::psi_notes[16] = {
+  0x216B, 0x2181, 0x2198, 0x21B0, 0x21CA, 0x21E5, 0x2202, 0x2220, 0x2241,
+  0x2263, 0x2287, 0x2364, 0x0000, 0x0000, 0x0000, 0x0000 // by riven
 };
 
-CPlayer *CxadpsiPlayer::factory()
-{
-  return new CxadpsiPlayer();
-}
+CPlayer *CxadpsiPlayer::factory() { return new CxadpsiPlayer(); }
 
-void CxadpsiPlayer::xadplayer_rewind(int)
-{
+void CxadpsiPlayer::xadplayer_rewind(int) {
   opl_write(0x01, 0x20);
   opl_write(0x08, 0x00);
   opl_write(0xBD, 0x00);
@@ -76,16 +68,16 @@ void CxadpsiPlayer::xadplayer_rewind(int)
   // define instruments
   psi.instr_table = &tune[header.instr_ptr];
 
-  for(int i=0; i<8; i++)
-  {
-    for(int j=0; j<11; j++) {
-      unsigned short inspos = (psi.instr_table[i * 2 + 1] << 8) + psi.instr_table[i * 2];
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 11; j++) {
+      unsigned short inspos =
+          (psi.instr_table[i * 2 + 1] << 8) + psi.instr_table[i * 2];
 
-      opl_write(psi_adlib_registers[i*11 + j],tune[inspos + j]);
+      opl_write(psi_adlib_registers[i * 11 + j], tune[inspos + j]);
     }
 
-    opl_write(0xA0+i, 0x00);
-    opl_write(0xB0+i, 0x00);
+    opl_write(0xA0 + i, 0x00);
+    opl_write(0xB0 + i, 0x00);
 
     psi.note_delay[i] = 1;
     psi.note_curdelay[i] = 1;
@@ -96,34 +88,31 @@ void CxadpsiPlayer::xadplayer_rewind(int)
   psi.seq_table = &tune[header.seq_ptr];
 }
 
-void CxadpsiPlayer::xadplayer_update()
-{
+void CxadpsiPlayer::xadplayer_update() {
   unsigned short ptr;
 
-  for(int i=0; i<8; i++)
-  {
-    ptr = (psi.seq_table[(i<<1) * 2 + 1] << 8) + psi.seq_table[(i<<1) * 2];
+  for (int i = 0; i < 8; i++) {
+    ptr = (psi.seq_table[(i << 1) * 2 + 1] << 8) + psi.seq_table[(i << 1) * 2];
 
     psi.note_curdelay[i]--;
 
-    if (!psi.note_curdelay[i])
-    {
-      opl_write(0xA0+i, 0x00);
-      opl_write(0xB0+i, 0x00);
+    if (!psi.note_curdelay[i]) {
+      opl_write(0xA0 + i, 0x00);
+      opl_write(0xB0 + i, 0x00);
 
       unsigned char event = tune[ptr++];
 #ifdef DEBUG
-  AdPlug_LogWrite("channel %02X, event %02X:\n",i+1,event);
+      AdPlug_LogWrite("channel %02X, event %02X:\n", i + 1, event);
 #endif
 
       // end of sequence ?
-      if (!event)
-      {
-	ptr = (psi.seq_table[(i<<1) * 2 + 3] << 8) + psi.seq_table[(i<<1) * 2 + 2];
+      if (!event) {
+        ptr = (psi.seq_table[(i << 1) * 2 + 3] << 8) +
+              psi.seq_table[(i << 1) * 2 + 2];
 
         event = tune[ptr++];
 #ifdef DEBUG
-  AdPlug_LogWrite(" channel %02X, event %02X:\n",i+1,event);
+        AdPlug_LogWrite(" channel %02X, event %02X:\n", i + 1, event);
 #endif
 
         // set sequence loop flag
@@ -131,18 +120,17 @@ void CxadpsiPlayer::xadplayer_update()
 
         // module loop ?
         plr.looping = 1;
-        for(int j=0; j<8; j++)
+        for (int j = 0; j < 8; j++)
           plr.looping &= psi.looping[j];
       }
 
       // new note delay ?
-      if (event & 0x80)
-      {
+      if (event & 0x80) {
         psi.note_delay[i] = (event & 0x7F);
 
         event = tune[ptr++];
 #ifdef DEBUG
-  AdPlug_LogWrite("  channel %02X, event %02X:\n",i+1,event);
+        AdPlug_LogWrite("  channel %02X, event %02X:\n", i + 1, event);
 #endif
       }
 
@@ -151,27 +139,20 @@ void CxadpsiPlayer::xadplayer_update()
       // play note
       unsigned short note = psi_notes[event & 0x0F];
 
-      opl_write(0xA0+i, note & 0xFF);
-      opl_write(0xB0+i, (note >> 8) + ((event >> 2) & 0xFC));
+      opl_write(0xA0 + i, note & 0xFF);
+      opl_write(0xB0 + i, (note >> 8) + ((event >> 2) & 0xFC));
 
       // save position
-      psi.seq_table[(i<<1) * 2] = ptr & 0xff;
-      psi.seq_table[(i<<1) * 2 + 1] = ptr >> 8;
+      psi.seq_table[(i << 1) * 2] = ptr & 0xff;
+      psi.seq_table[(i << 1) * 2 + 1] = ptr >> 8;
     }
   }
 }
 
-float CxadpsiPlayer::xadplayer_getrefresh()
-{
-  return 70.0f;
-}
+float CxadpsiPlayer::xadplayer_getrefresh() { return 70.0f; }
 
-std::string CxadpsiPlayer::xadplayer_gettype()
-{
+std::string CxadpsiPlayer::xadplayer_gettype() {
   return std::string("xad: psi player");
 }
 
-unsigned int CxadpsiPlayer::xadplayer_getinstruments()
-{
-  return 8;
-}
+unsigned int CxadpsiPlayer::xadplayer_getinstruments() { return 8; }

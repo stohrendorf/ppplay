@@ -21,35 +21,30 @@
 
 #include "player.h"
 
-class CbamPlayer: public CPlayer
-{
+class CbamPlayer : public CPlayer {
 public:
   static CPlayer *factory();
 
-	CbamPlayer()
-        : CPlayer()
-    { }
+  CbamPlayer() : CPlayer() {}
 
-	bool load(const std::string &filename, const CFileProvider &fp);
-	bool update();
-	void rewind(int);
-    size_t framesUntilUpdate() override
-    { return SampleRate/25; }
+  bool load(const std::string &filename, const CFileProvider &fp);
+  bool update();
+  void rewind(int);
+  size_t framesUntilUpdate() override { return SampleRate / 25; }
 
-	std::string gettype()
-    { return "Bob's Adlib Music"; }
+  std::string gettype() { return "Bob's Adlib Music"; }
 
 private:
-	static const unsigned short freq[];
+  static const unsigned short freq[];
 
-    std::vector<uint8_t> m_song;
-    unsigned char  del;
-    unsigned long	pos, gosub;
-	bool		songend, chorus;
+  std::vector<uint8_t> m_song;
+  unsigned char del;
+  unsigned long pos, gosub;
+  bool songend, chorus;
 
-	struct {
-		unsigned long	target;
-		bool		defined;
-		unsigned char	count;
-	} label[16];
+  struct {
+    unsigned long target;
+    bool defined;
+    unsigned char count;
+  } label[16];
 };

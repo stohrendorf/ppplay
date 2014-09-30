@@ -21,31 +21,27 @@
 
 #include "xad.h"
 
-class CxadhypPlayer: public CxadPlayer
-{
+class CxadhypPlayer : public CxadPlayer {
 public:
   static CPlayer *factory();
 
-  CxadhypPlayer(): CxadPlayer()
-    { }
+  CxadhypPlayer() : CxadPlayer() {}
 
 protected:
-  struct
-  {
-    unsigned short  pointer;
+  struct {
+    unsigned short pointer;
   } hyp;
   //
-  bool		    xadplayer_load()
-    {
-      if(xad.fmt == HYP)
-	return true;
-      else
-	return false;
-    }
-  void 		    xadplayer_rewind(int);
-  void 		    xadplayer_update();
-  float 	    xadplayer_getrefresh();
-  std::string	    xadplayer_gettype();
+  bool xadplayer_load() {
+    if (xad.fmt == HYP)
+      return true;
+    else
+      return false;
+  }
+  void xadplayer_rewind(int);
+  void xadplayer_update();
+  float xadplayer_getrefresh();
+  std::string xadplayer_gettype();
 
 private:
   static const unsigned char hyp_adlib_registers[99];

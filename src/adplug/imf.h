@@ -24,44 +24,44 @@
 
 #include "player.h"
 
-class CimfPlayer: public CPlayer
-{
+class CimfPlayer : public CPlayer {
 public:
   static CPlayer *factory();
 
-	bool load(const std::string &filename, const CFileProvider &fp);
-	bool update();
-	void rewind(int subsong);
-    size_t framesUntilUpdate() override {
-        return SampleRate/m_timer;
-    }
+  bool load(const std::string &filename, const CFileProvider &fp);
+  bool update();
+  void rewind(int subsong);
+  size_t framesUntilUpdate() override { return SampleRate / m_timer; }
 
-    std::string gettype() {
-        return "IMF File Format";
-    }
-	std::string gettitle();
-    std::string getauthor() {
-        return m_authorName;
-    }
-	std::string getdesc();
+  std::string gettype() { return "IMF File Format"; }
+  std::string gettitle();
+  std::string getauthor() { return m_authorName; }
+  std::string getdesc();
 
 protected:
-    unsigned long m_pos=0;
-    unsigned short m_del=0;
-    bool m_songend=false;
-    float m_rate=0;
-    float m_timer=0;
-    std::string m_footer{};
-    std::string	m_trackName{}, m_gameName{}, m_authorName{}, m_remarks{};
+  unsigned long m_pos = 0;
+  unsigned short m_del = 0;
+  bool m_songend = false;
+  float m_rate = 0;
+  float m_timer = 0;
+  std::string m_footer {}
+  ;
+  std::string m_trackName {}
+  , m_gameName {}
+  , m_authorName {}
+  , m_remarks {}
+  ;
 
-	struct Sdata {
-        unsigned char reg=0, val=0;
-        unsigned short time=0;
-    };
-    std::vector<Sdata> m_data{};
+  struct Sdata {
+    unsigned char reg = 0, val = 0;
+    unsigned short time = 0;
+  };
+  std::vector<Sdata> m_data {}
+  ;
 
 private:
-	float getrate(const std::string &filename, const CFileProvider &fp, binistream *f);
+  float getrate(const std::string &filename, const CFileProvider &fp,
+                binistream *f);
 };
 
 #endif

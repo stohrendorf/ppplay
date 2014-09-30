@@ -21,30 +21,26 @@
 
 #include "hsc.h"
 
-class CmtkLoader: public ChscPlayer
-{
- public:
+class CmtkLoader : public ChscPlayer {
+public:
   static CPlayer *factory();
 
-  CmtkLoader()
-    : ChscPlayer()
-    {
-      m_mtkmode = 1;
-    };
+  CmtkLoader() : ChscPlayer() { m_mtkmode = 1; }
+  ;
 
   bool load(const std::string &filename, const CFileProvider &fp);
 
-  std::string gettype()
-    { return std::string("MPU-401 Trakker"); };
-  std::string gettitle()
-    { return std::string(title); };
-  std::string getauthor()
-    { return std::string(composer); };
-  unsigned int getinstruments()
-    { return 128; };
-  std::string getinstrument(unsigned int n)
-    { return std::string(instname[n]); };
+  std::string gettype() { return std::string("MPU-401 Trakker"); }
+  ;
+  std::string gettitle() { return std::string(title); }
+  ;
+  std::string getauthor() { return std::string(composer); }
+  ;
+  unsigned int getinstruments() { return 128; }
+  ;
+  std::string getinstrument(unsigned int n) { return std::string(instname[n]); }
+  ;
 
- private:
-  char title[34],composer[34],instname[0x80][34];
+private:
+  char title[34], composer[34], instname[0x80][34];
 };

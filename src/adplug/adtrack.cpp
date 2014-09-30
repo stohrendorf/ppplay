@@ -37,41 +37,52 @@
 
 /*** Public methods ***/
 
-CPlayer *CadtrackLoader::factory()
-{
-  return new CadtrackLoader();
-}
+CPlayer *CadtrackLoader::factory() { return new CadtrackLoader(); }
 
-bool CadtrackLoader::load(const std::string &filename, const CFileProvider &fp)
-{
-  binistream *f = fp.open(filename); if(!f) return false;
+bool CadtrackLoader::load(const std::string &filename,
+                          const CFileProvider &fp) {
+  binistream *f = fp.open(filename);
+  if (!f)
+    return false;
   binistream *instf;
   char note[2];
   unsigned short rwp;
   unsigned char chp, octave, pnote = 0;
-  int i,j;
+  int i, j;
   AdTrackInst myinst;
 
   // file validation
-  if(!fp.extension(filename, ".sng") || fp.filesize(f) != 36000)
-    { fp.close(f); return false; }
+  if (!fp.extension(filename, ".sng") || fp.filesize(f) != 36000) {
+    fp.close(f);
+    return false;
+  }
 
   // check for instruments file
   std::string instfilename(filename, 0, filename.find_last_of('.'));
   instfilename += ".ins";
   AdPlug_LogWrite("CadtrackLoader::load(,\"%s\"): Checking for \"%s\"...\n",
-		  filename.c_str(), instfilename.c_str());
+                  filename.c_str(), instfilename.c_str());
   instf = fp.open(instfilename);
-  if(!instf || fp.filesize(instf) != 468) { fp.close(f); return false; }
+  if (!instf || fp.filesize(instf) != 468) {
+    fp.close(f);
+    return false;
+  }
 
   // give CmodPlayer a hint on what we're up to
-  realloc_patterns(1,1000,9); realloc_instruments(9); realloc_order(1);
-  init_trackord(); m_flags = NoKeyOn;
-  (*m_order) = 0; m_length = 1; m_restartpos = 0; m_bpm = 120; m_initspeed = 3;
+  realloc_patterns(1, 1000, 9);
+  realloc_instruments(9);
+  realloc_order(1);
+  init_trackord();
+  m_flags = NoKeyOn;
+  (*m_order) = 0;
+  m_length = 1;
+  m_restartpos = 0;
+  m_bpm = 120;
+  m_initspeed = 3;
 
   // load instruments from instruments file
-  for(i=0;i<9;i++) {
-    for(j=0;j<2;j++) {
+  for (i = 0; i < 9; i++) {
+    for (j = 0; j < 2; j++) {
       myinst.op[j].appampmod = instf->readInt(2);
       myinst.op[j].appvib = instf->readInt(2);
       myinst.op[j].maintsuslvl = instf->readInt(2);
@@ -91,31 +102,64 @@ bool CadtrackLoader::load(const std::string &filename, const CFileProvider &fp)
   fp.close(instf);
 
   // load file
-  for(rwp=0;rwp<1000;rwp++)
-    for(chp=0;chp<9;chp++) {
+  for (rwp = 0; rwp < 1000; rwp++)
+    for (chp = 0; chp < 9; chp++) {
       // read next record
-      f->readString(note, 2); octave = f->readInt(1); f->ignore();
-      switch(*note) {
-      case 'C': if(note[1] == '#') pnote = 2; else pnote = 1; break;
-      case 'D': if(note[1] == '#') pnote = 4; else pnote = 3; break;
-      case 'E': pnote = 5; break;
-      case 'F': if(note[1] == '#') pnote = 7; else pnote = 6; break;
-      case 'G': if(note[1] == '#') pnote = 9; else pnote = 8; break;
-      case 'A': if(note[1] == '#') pnote = 11; else pnote = 10; break;
-      case 'B': pnote = 12; break;
+      f->readString(note, 2);
+      octave = f->readInt(1);
+      f->ignore();
+      switch (*note) {
+      case 'C':
+        if (note[1] == '#')
+          pnote = 2;
+        else
+          pnote = 1;
+        break;
+      case 'D':
+        if (note[1] == '#')
+          pnote = 4;
+        else
+          pnote = 3;
+        break;
+      case 'E':
+        pnote = 5;
+        break;
+      case 'F':
+        if (note[1] == '#')
+          pnote = 7;
+        else
+          pnote = 6;
+        break;
+      case 'G':
+        if (note[1] == '#')
+          pnote = 9;
+        else
+          pnote = 8;
+        break;
+      case 'A':
+        if (note[1] == '#')
+          pnote = 11;
+        else
+          pnote = 10;
+        break;
+      case 'B':
+        pnote = 12;
+        break;
       case '\0':
-	if(note[1] == '\0')
-	  m_tracks[chp][rwp].note = 127;
-	else {
-	  fp.close(f);
-	  return false;
-	}
-	break;
-      default: fp.close(f); return false;
+        if (note[1] == '\0')
+          m_tracks[chp][rwp].note = 127;
+        else {
+          fp.close(f);
+          return false;
+        }
+        break;
+      default:
+        fp.close(f);
+        return false;
       }
-      if((*note) != '\0') {
-	m_tracks[chp][rwp].note = pnote + (octave * 12);
-	m_tracks[chp][rwp].inst = chp + 1;
+      if ((*note) != '\0') {
+        m_tracks[chp][rwp].note = pnote + (octave * 12);
+        m_tracks[chp][rwp].inst = chp + 1;
       }
     }
 
@@ -124,27 +168,25 @@ bool CadtrackLoader::load(const std::string &filename, const CFileProvider &fp)
   return true;
 }
 
-size_t CadtrackLoader::framesUntilUpdate()
-{
-  return SampleRate/18.2;
-}
+size_t CadtrackLoader::framesUntilUpdate() { return SampleRate / 18.2; }
 
 /*** Private methods ***/
 
-void CadtrackLoader::convert_instrument(unsigned int n, AdTrackInst *i)
-{
+void CadtrackLoader::convert_instrument(unsigned int n, AdTrackInst *i) {
   // Carrier "Amp Mod / Vib / Env Type / KSR / Multiple" register
   m_instruments[n].data[2] = i->op[Carrier].appampmod ? 1 << 7 : 0;
   m_instruments[n].data[2] += i->op[Carrier].appvib ? 1 << 6 : 0;
   m_instruments[n].data[2] += i->op[Carrier].maintsuslvl ? 1 << 5 : 0;
   m_instruments[n].data[2] += i->op[Carrier].keybscale ? 1 << 4 : 0;
-  m_instruments[n].data[2] += (i->op[Carrier].octave + 1) & 0xffff; // Bug in original tracker
-  // Modulator...
+  m_instruments[n].data[2] +=
+      (i->op[Carrier].octave + 1) & 0xffff; // Bug in original tracker
+                                            // Modulator...
   m_instruments[n].data[1] = i->op[Modulator].appampmod ? 1 << 7 : 0;
   m_instruments[n].data[1] += i->op[Modulator].appvib ? 1 << 6 : 0;
   m_instruments[n].data[1] += i->op[Modulator].maintsuslvl ? 1 << 5 : 0;
   m_instruments[n].data[1] += i->op[Modulator].keybscale ? 1 << 4 : 0;
-  m_instruments[n].data[1] += (i->op[Modulator].octave + 1) & 0xffff; // Bug in original tracker
+  m_instruments[n].data[1] +=
+      (i->op[Modulator].octave + 1) & 0xffff; // Bug in original tracker
 
   // Carrier "Key Scaling / Level" register
   m_instruments[n].data[10] = (i->op[Carrier].freqrisevollvldn & 3) << 6;

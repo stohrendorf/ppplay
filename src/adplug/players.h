@@ -28,13 +28,12 @@
 #include <ymf262/opl3.h>
 #include "player.h"
 
-class CPlayerDesc
-{
+class CPlayerDesc {
 public:
   typedef CPlayer *(*Factory)();
 
-  Factory	factory;
-  std::string	filetype;
+  Factory factory;
+  std::string filetype;
 
   CPlayerDesc();
   CPlayerDesc(const CPlayerDesc &pd);
@@ -46,12 +45,11 @@ public:
   const char *get_extension(unsigned int n) const;
 
 private:
-  char		*extensions;
-  unsigned long	extlength;
+  char *extensions;
+  unsigned long extlength;
 };
 
-class CPlayers: public std::list<const CPlayerDesc *>
-{
+class CPlayers : public std::list<const CPlayerDesc *> {
 public:
   const CPlayerDesc *lookup_filetype(const std::string &ftype) const;
   const CPlayerDesc *lookup_extension(const std::string &extension) const;

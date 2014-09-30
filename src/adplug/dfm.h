@@ -21,32 +21,35 @@
 
 #include "protrack.h"
 
-class CdfmLoader: public CmodPlayer
-{
+class CdfmLoader : public CmodPlayer {
 public:
   static CPlayer *factory();
 
-	CdfmLoader()
-		: CmodPlayer()
-	{ };
+  CdfmLoader() : CmodPlayer() {}
+  ;
 
-	bool load(const std::string &filename, const CFileProvider &fp);
-	size_t framesUntilUpdate();
+  bool load(const std::string &filename, const CFileProvider &fp);
+  size_t framesUntilUpdate();
 
-	std::string gettype();
-	unsigned int getinstruments()
-	{ return 32; };
-	std::string getinstrument(unsigned int n)
-	{ if(*instname[n]) return std::string(instname[n],1,*instname[n]); else return std::string(); };
-	std::string getdesc()
-	{ return std::string(songinfo,1,*songinfo); };
+  std::string gettype();
+  unsigned int getinstruments() { return 32; }
+  ;
+  std::string getinstrument(unsigned int n) {
+    if (*instname[n])
+      return std::string(instname[n], 1, *instname[n]);
+    else
+      return std::string();
+  }
+  ;
+  std::string getdesc() { return std::string(songinfo, 1, *songinfo); }
+  ;
 
 private:
-	struct {
-		char id[4];
-		unsigned char hiver,lover;
-	} header;
+  struct {
+    char id[4];
+    unsigned char hiver, lover;
+  } header;
 
-	char songinfo[33];
-	char instname[32][12];
+  char songinfo[33];
+  char instname[32][12];
 };

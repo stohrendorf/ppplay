@@ -21,32 +21,33 @@
 
 #include "player.h"
 
-class CrawPlayer: public CPlayer
-{
+class CrawPlayer : public CPlayer {
 public:
   static CPlayer *factory();
 
-	CrawPlayer()
-		: CPlayer(), data(0)
-	{ };
-	~CrawPlayer()
-	{ if(data) delete [] data; };
+  CrawPlayer() : CPlayer(), data(0) {}
+  ;
+  ~CrawPlayer() {
+    if (data)
+      delete[] data;
+  }
+  ;
 
-	bool load(const std::string &filename, const CFileProvider &fp);
-	bool update();
-	void rewind(int);
-	size_t framesUntilUpdate();
+  bool load(const std::string &filename, const CFileProvider &fp);
+  bool update();
+  void rewind(int);
+  size_t framesUntilUpdate();
 
-	std::string gettype()
-	{ return std::string("RdosPlay RAW"); };
+  std::string gettype() { return std::string("RdosPlay RAW"); }
+  ;
 
 protected:
-	struct Tdata {
-		unsigned char param, command;
-	} *data;
+  struct Tdata {
+    unsigned char param, command;
+  } *data;
 
-	unsigned long pos, length;
-	unsigned short clock, speed;
-	unsigned char del;
-	bool songend;
+  unsigned long pos, length;
+  unsigned short clock, speed;
+  unsigned char del;
+  bool songend;
 };

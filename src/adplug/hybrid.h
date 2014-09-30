@@ -21,57 +21,52 @@
 
 #include "xad.h"
 
-class CxadhybridPlayer: public CxadPlayer
-{
+class CxadhybridPlayer : public CxadPlayer {
 public:
   static CPlayer *factory();
 
-  CxadhybridPlayer(): CxadPlayer()
-    { }
+  CxadhybridPlayer() : CxadPlayer() {}
 
 protected:
-  struct hyb_instrument
-  {
-    char            name[7];
-    unsigned char   mod_wave;
-    unsigned char   mod_AD;
-    unsigned char   mod_SR;
-    unsigned char   mod_crtl;
-    unsigned char   mod_volume;
-    unsigned char   car_wave;
-    unsigned char   car_AD;
-    unsigned char   car_SR;
-    unsigned char   car_crtl;
-    unsigned char   car_volume;
-    unsigned char   connect;
+  struct hyb_instrument {
+    char name[7];
+    unsigned char mod_wave;
+    unsigned char mod_AD;
+    unsigned char mod_SR;
+    unsigned char mod_crtl;
+    unsigned char mod_volume;
+    unsigned char car_wave;
+    unsigned char car_AD;
+    unsigned char car_SR;
+    unsigned char car_crtl;
+    unsigned char car_volume;
+    unsigned char connect;
   };
 
-  struct
-  {
-    unsigned char   order_pos;
-    unsigned char   pattern_pos;
+  struct {
+    unsigned char order_pos;
+    unsigned char pattern_pos;
 
-    unsigned char   *order;
+    unsigned char *order;
 
-    hyb_instrument  *inst;
+    hyb_instrument *inst;
 
-    struct
-    {
-      unsigned short  freq;
-      unsigned short  freq_slide;
+    struct {
+      unsigned short freq;
+      unsigned short freq_slide;
     } channel[9];
 
-    unsigned char   speed;
-    unsigned char   speed_counter;
+    unsigned char speed;
+    unsigned char speed_counter;
   } hyb;
   //
-  bool            xadplayer_load();
-  void            xadplayer_rewind(int);
-  void            xadplayer_update();
-  float           xadplayer_getrefresh();
-  std::string     xadplayer_gettype();
-  std::string     xadplayer_getinstrument(unsigned int i);
-  unsigned int    xadplayer_getinstruments();
+  bool xadplayer_load();
+  void xadplayer_rewind(int);
+  void xadplayer_update();
+  float xadplayer_getrefresh();
+  std::string xadplayer_gettype();
+  std::string xadplayer_getinstrument(unsigned int i);
+  unsigned int xadplayer_getinstruments();
 
 private:
   static const unsigned char hyb_adlib_registers[99];

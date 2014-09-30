@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software Foundation,
- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #ifndef H_DISK
@@ -24,18 +24,17 @@
 
 #include "output.h"
 
-class DiskWriter: public EmuPlayer
-{
-    DISABLE_COPY(DiskWriter)
+class DiskWriter : public EmuPlayer {
+  DISABLE_COPY(DiskWriter)
 public:
   DiskWriter(const char *filename, unsigned long nfreq);
   virtual ~DiskWriter();
 
 protected:
-  virtual void output(const std::vector<int16_t>& buf) override;
+  virtual void output(const std::vector<int16_t> &buf) override;
 
 private:
-  binostream	*f;
+  binostream *f;
   unsigned long samplesize;
 };
 

@@ -21,65 +21,64 @@
 
 #include "xad.h"
 
-class CxadbmfPlayer: public CxadPlayer
-{
+class CxadbmfPlayer : public CxadPlayer {
 public:
   static CPlayer *factory();
 
-  CxadbmfPlayer(): CxadPlayer()
-    { };
-  ~CxadbmfPlayer()
-    { };
+  CxadbmfPlayer() : CxadPlayer() {}
+  ;
+  ~CxadbmfPlayer() {}
+  ;
 
 protected:
-  enum { BMF0_9B, BMF1_1, BMF1_2 };
+  enum {
+    BMF0_9B,
+    BMF1_1,
+    BMF1_2
+  };
   //
-  struct bmf_event
-  {
-    unsigned char   note;
-    unsigned char   delay;
-    unsigned char   volume;
-    unsigned char   instrument;
-    unsigned char   cmd;
-    unsigned char   cmd_data;
+  struct bmf_event {
+    unsigned char note;
+    unsigned char delay;
+    unsigned char volume;
+    unsigned char instrument;
+    unsigned char cmd;
+    unsigned char cmd_data;
   };
 
-  struct
-  {
-    unsigned char   version;
-    char            title[36];
-    char            author[36];
-    float           timer;
-    unsigned char   speed;
-  
-    struct
-    {
-      char            name[11];
-      unsigned char   data[13];
+  struct {
+    unsigned char version;
+    char title[36];
+    char author[36];
+    float timer;
+    unsigned char speed;
+
+    struct {
+      char name[11];
+      unsigned char data[13];
     } instruments[32];
 
-    bmf_event       streams[9][1024];
+    bmf_event streams[9][1024];
 
-    int             active_streams;
+    int active_streams;
 
-    struct
-    {
-      unsigned short  stream_position;
-      unsigned char   delay;
-      unsigned short  loop_position;
-      unsigned char   loop_counter;
+    struct {
+      unsigned short stream_position;
+      unsigned char delay;
+      unsigned short loop_position;
+      unsigned char loop_counter;
     } channel[9];
   } bmf;
   //
-  bool            xadplayer_load();
-  void            xadplayer_rewind(int);
-  void            xadplayer_update();
-  float           xadplayer_getrefresh();
-  std::string     xadplayer_gettype();
-  std::string     xadplayer_gettitle();
-  std::string     xadplayer_getauthor();
-  std::string     xadplayer_getinstrument(unsigned int i);
-  unsigned int    xadplayer_getinstruments();
+  bool xadplayer_load();
+  void xadplayer_rewind(int);
+  void xadplayer_update();
+  float xadplayer_getrefresh();
+  std::string xadplayer_gettype();
+  std::string xadplayer_gettitle();
+  std::string xadplayer_getauthor();
+  std::string xadplayer_getinstrument(unsigned int i);
+  unsigned int xadplayer_getinstruments();
   //
 private:
   static const unsigned char bmf_adlib_registers[117];
@@ -87,5 +86,5 @@ private:
   static const unsigned short bmf_notes_2[12];
   static const unsigned char bmf_default_instrument[13];
 
-  int             __bmf_convert_stream(unsigned char *stream, int channel);
+  int __bmf_convert_stream(unsigned char *stream, int channel);
 };

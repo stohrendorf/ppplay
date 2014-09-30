@@ -29,142 +29,145 @@
 #include <libbinio/binio.h>
 #include "stuff/utils.h"
 
-class CAdPlugDatabase
-{
-    DISABLE_COPY(CAdPlugDatabase)
+class CAdPlugDatabase {
+  DISABLE_COPY(CAdPlugDatabase)
 public:
-    struct CKey
-    {
-        unsigned short	crc16 = 0;
-        unsigned long	crc32 = 0;
+  struct CKey {
+    unsigned short crc16 = 0;
+    unsigned long crc32 = 0;
 
-        CKey() = default;
-        CKey(binistream &in);
+    CKey() = default;
+    CKey(binistream &in);
 
-        bool operator==(const CKey &key);
+    bool operator==(const CKey &key);
 
-    private:
-        void make(binistream &in);
+  private:
+    void make(binistream &in);
+  };
+
+  class CRecord {
+  public:
+    enum RecordType {
+      Plain,
+      SongInfo,
+      ClockSpeed
     };
 
-    class CRecord
-    {
-    public:
-        enum RecordType { Plain, SongInfo, ClockSpeed };
+    RecordType m_type = Plain;
+    CKey m_key {}
+    ;
+    std::string m_filetype {}
+    , m_comment {}
+    ;
 
-        RecordType	m_type = Plain;
-        CKey	m_key{};
-        std::string	m_filetype{}, m_comment{};
+    static CRecord *factory(RecordType m_type);
+    static CRecord *factory(binistream &in);
 
-        static CRecord *factory(RecordType m_type);
-        static CRecord *factory(binistream &in);
+    CRecord() = default;
+    virtual ~CRecord() = default;
 
-        CRecord() = default;
-        virtual ~CRecord() = default;
+    void write(binostream &out);
 
-        void write(binostream &out);
+    bool user_read(std::istream &in, std::ostream &out);
+    bool user_write(std::ostream &out);
 
-        bool user_read(std::istream &in, std::ostream &out);
-        bool user_write(std::ostream &out);
+  protected:
+    virtual void read_own(binistream &in) = 0;
+    virtual void write_own(binostream &out) = 0;
+    virtual unsigned long get_size() = 0;
+    virtual bool user_read_own(std::istream &in, std::ostream &out) = 0;
+    virtual bool user_write_own(std::ostream &out) = 0;
+  };
 
-    protected:
-        virtual void read_own(binistream &in) = 0;
-        virtual void write_own(binostream &out) = 0;
-        virtual unsigned long get_size() = 0;
-        virtual bool user_read_own(std::istream &in, std::ostream &out) = 0;
-        virtual bool user_write_own(std::ostream &out) = 0;
-    };
+  CAdPlugDatabase();
+  ~CAdPlugDatabase();
 
-    CAdPlugDatabase();
-    ~CAdPlugDatabase();
+  bool load(std::string db_name);
+  bool load(binistream &f);
+  bool save(std::string db_name);
+  bool save(binostream &f);
 
-    bool	load(std::string db_name);
-    bool	load(binistream &f);
-    bool	save(std::string db_name);
-    bool	save(binostream &f);
+  bool insert(CRecord *record);
 
-    bool	insert(CRecord *record);
+  void wipe(CRecord *record);
+  void wipe();
 
-    void	wipe(CRecord *record);
-    void	wipe();
+  CRecord *search(CKey const &key);
+  bool lookup(CKey const &key);
 
-    CRecord *search(CKey const &key);
-    bool lookup(CKey const &key);
+  CRecord *get_record();
 
-    CRecord *get_record();
+  bool go_forward();
+  bool go_backward();
 
-    bool	go_forward();
-    bool	go_backward();
-
-    void	goto_begin();
-    void	goto_end();
+  void goto_begin();
+  void goto_end();
 
 private:
-    static const unsigned short hash_radix;
+  static const unsigned short hash_radix;
 
-    struct DB_Bucket
-    {
-        DISABLE_COPY(DB_Bucket)
-        unsigned long	index = 0;
-        bool		deleted = false;
-        DB_Bucket		*chain = nullptr;
+  struct DB_Bucket {
+    DISABLE_COPY(DB_Bucket)
+    unsigned long index = 0;
+    bool deleted = false;
+    DB_Bucket *chain = nullptr;
 
-        CRecord		*record = nullptr;
+    CRecord *record = nullptr;
 
-        DB_Bucket(unsigned long nindex, CRecord *newrecord, DB_Bucket *newchain = 0);
-        ~DB_Bucket();
-    };
+    DB_Bucket(unsigned long nindex, CRecord *newrecord,
+              DB_Bucket *newchain = 0);
+    ~DB_Bucket();
+  };
 
-    DB_Bucket	**m_dbLinear = nullptr;
-    DB_Bucket	**m_dbHashed = nullptr;
+  DB_Bucket **m_dbLinear = nullptr;
+  DB_Bucket **m_dbHashed = nullptr;
 
-    unsigned long	linear_index = 0, linear_logic_length = 0, linear_length = 0;
+  unsigned long linear_index = 0, linear_logic_length = 0, linear_length = 0;
 
-    unsigned long make_hash(CKey const &key);
+  unsigned long make_hash(CKey const &key);
 };
 
-class CPlainRecord: public CAdPlugDatabase::CRecord
-{
+class CPlainRecord : public CAdPlugDatabase::CRecord {
 public:
-    CPlainRecord() { m_type = Plain; }
+  CPlainRecord() { m_type = Plain; }
 
 protected:
-    virtual void read_own(binistream &) {}
-    virtual void write_own(binostream &) {}
-    virtual unsigned long get_size() { return 0; }
-    virtual bool user_read_own(std::istream &, std::ostream &) { return true; }
-    virtual bool user_write_own(std::ostream &) { return true; }
+  virtual void read_own(binistream &) {}
+  virtual void write_own(binostream &) {}
+  virtual unsigned long get_size() { return 0; }
+  virtual bool user_read_own(std::istream &, std::ostream &) { return true; }
+  virtual bool user_write_own(std::ostream &) { return true; }
 };
 
-class CInfoRecord: public CAdPlugDatabase::CRecord
-{
+class CInfoRecord : public CAdPlugDatabase::CRecord {
 public:
-    std::string	m_title{};
-    std::string	m_author{};
+  std::string m_title {}
+  ;
+  std::string m_author {}
+  ;
 
-    CInfoRecord();
+  CInfoRecord();
 
 protected:
-    virtual void read_own(binistream &in);
-    virtual void write_own(binostream &out);
-    virtual unsigned long get_size();
-    virtual bool user_read_own(std::istream &in, std::ostream &out);
-    virtual bool user_write_own(std::ostream &out);
+  virtual void read_own(binistream &in);
+  virtual void write_own(binostream &out);
+  virtual unsigned long get_size();
+  virtual bool user_read_own(std::istream &in, std::ostream &out);
+  virtual bool user_write_own(std::ostream &out);
 };
 
-class CClockRecord: public CAdPlugDatabase::CRecord
-{
+class CClockRecord : public CAdPlugDatabase::CRecord {
 public:
-    float	m_clock = 0;
+  float m_clock = 0;
 
-    CClockRecord();
+  CClockRecord();
 
 protected:
-    virtual void read_own(binistream &in);
-    virtual void write_own(binostream &out);
-    virtual unsigned long get_size();
-    virtual bool user_read_own(std::istream &in, std::ostream &out);
-    virtual bool user_write_own(std::ostream &out);
+  virtual void read_own(binistream &in);
+  virtual void write_own(binostream &out);
+  virtual unsigned long get_size();
+  virtual bool user_read_own(std::istream &in, std::ostream &out);
+  virtual bool user_write_own(std::ostream &out);
 };
 
 #endif

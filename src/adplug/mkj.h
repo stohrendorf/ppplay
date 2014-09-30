@@ -21,30 +21,28 @@
 
 #include "player.h"
 
-class CmkjPlayer: public CPlayer
-{
+class CmkjPlayer : public CPlayer {
 public:
   static CPlayer *factory();
 
-	CmkjPlayer()
-		: CPlayer(), songbuf(0)
-	{ }
-	~CmkjPlayer()
-	{ if(songbuf) delete [] songbuf; }
+  CmkjPlayer() : CPlayer(), songbuf(0) {}
+  ~CmkjPlayer() {
+    if (songbuf)
+      delete[] songbuf;
+  }
 
-	bool load(const std::string &filename, const CFileProvider &fp);
-	bool update();
-	void rewind(int);
-	size_t framesUntilUpdate();
+  bool load(const std::string &filename, const CFileProvider &fp);
+  bool update();
+  void rewind(int);
+  size_t framesUntilUpdate();
 
-	std::string gettype()
-	{ return std::string("MKJamz Audio File"); }
+  std::string gettype() { return std::string("MKJamz Audio File"); }
 
 private:
-	short maxchannel,maxnotes,*songbuf;
-	bool songend;
+  short maxchannel, maxnotes, *songbuf;
+  bool songend;
 
-	struct {
-		short defined,songptr,octave,waveform,pstat,speed,delay;
-	} channel[9];
+  struct {
+    short defined, songptr, octave, waveform, pstat, speed, delay;
+  } channel[9];
 };

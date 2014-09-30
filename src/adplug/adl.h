@@ -26,52 +26,49 @@
 
 class AdlibDriver;
 
-class CadlPlayer: public CPlayer
-{
+class CadlPlayer : public CPlayer {
 public:
-    static CPlayer *factory();
+  static CPlayer *factory();
 
-    CadlPlayer();
-    ~CadlPlayer() = default;
+  CadlPlayer();
+  ~CadlPlayer() = default;
 
-    bool load(const std::string &filename, const CFileProvider &fp);
-    bool update();
-    void rewind(int subsong = -1);
+  bool load(const std::string &filename, const CFileProvider &fp);
+  bool update();
+  void rewind(int subsong = -1);
 
-    // refresh rate is fixed at 72Hz
-    size_t framesUntilUpdate() override {
-        return SampleRate / 72;
-    }
+  // refresh rate is fixed at 72Hz
+  size_t framesUntilUpdate() override { return SampleRate / 72; }
 
-    unsigned int getsubsongs();
-    unsigned int getsubsong() { return cursubsong; }
-    std::string gettype() { return std::string("Westwood ADL"); }
+  unsigned int getsubsongs();
+  unsigned int getsubsong() { return cursubsong; }
+  std::string gettype() { return std::string("Westwood ADL"); }
 
 private:
-    int numsubsongs, cursubsong;
+  int numsubsongs, cursubsong;
 
-    std::unique_ptr<AdlibDriver> _driver;
+  std::unique_ptr<AdlibDriver> _driver;
 
-    std::array<uint8_t,120> _trackEntries;
-    std::vector<uint8_t> _soundDataPtr;
-    int _sfxPlayingSound;
+  std::array<uint8_t, 120> _trackEntries;
+  std::vector<uint8_t> _soundDataPtr;
+  int _sfxPlayingSound;
 
-    uint8_t _sfxPriority;
-    uint8_t _sfxFourthByteOfSong;
+  uint8_t _sfxPriority;
+  uint8_t _sfxFourthByteOfSong;
 
-    int _numSoundTriggers;
-    const int *_soundTriggers;
+  int _numSoundTriggers;
+  const int *_soundTriggers;
 
-    static const int _kyra1NumSoundTriggers;
-    static const int _kyra1SoundTriggers[];
+  static const int _kyra1NumSoundTriggers;
+  static const int _kyra1SoundTriggers[];
 
-    bool init();
-    void process();
-    void playTrack(uint8_t track);
-    void playSoundEffect(uint8_t track);
-    void play(uint8_t track);
-    void unk1();
-    void unk2();
+  bool init();
+  void process();
+  void playTrack(uint8_t track);
+  void playSoundEffect(uint8_t track);
+  void play(uint8_t track);
+  void unk1();
+  void unk2();
 };
 
 #endif

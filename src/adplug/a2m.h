@@ -24,74 +24,65 @@
 
 #include "protrack.h"
 
-class Ca2mLoader: public CmodPlayer
-{
+class Ca2mLoader : public CmodPlayer {
 public:
-    static CPlayer *factory();
+  static CPlayer *factory();
 
-    bool load(const std::string &filename, const CFileProvider &fp);
-    size_t framesUntilUpdate();
+  bool load(const std::string &filename, const CFileProvider &fp);
+  size_t framesUntilUpdate();
 
-    std::string gettype() {
-        return "AdLib Tracker 2";
-    }
-    std::string gettitle() {
-        return m_songname;
-    }
-    std::string getauthor() {
-        return m_author;
-    }
-    unsigned int getinstruments() {
-        return 250;
-    }
-    std::string getinstrument(unsigned int n) {
-        return m_instname[n];
-    }
+  std::string gettype() { return "AdLib Tracker 2"; }
+  std::string gettitle() { return m_songname; }
+  std::string getauthor() { return m_author; }
+  unsigned int getinstruments() { return 250; }
+  std::string getinstrument(unsigned int n) { return m_instname[n]; }
 
 private:
 
-#define ADPLUG_A2M_COPYRANGES		6
-#define ADPLUG_A2M_FIRSTCODE		257
-#define ADPLUG_A2M_MINCOPY		3
-#define ADPLUG_A2M_MAXCOPY		255
-#define ADPLUG_A2M_CODESPERRANGE	(ADPLUG_A2M_MAXCOPY - ADPLUG_A2M_MINCOPY + 1)
-#define ADPLUG_A2M_MAXCHAR		(ADPLUG_A2M_FIRSTCODE + ADPLUG_A2M_COPYRANGES * ADPLUG_A2M_CODESPERRANGE - 1)
-#define ADPLUG_A2M_TWICEMAX		(2 * ADPLUG_A2M_MAXCHAR + 1)
+#define ADPLUG_A2M_COPYRANGES 6
+#define ADPLUG_A2M_FIRSTCODE 257
+#define ADPLUG_A2M_MINCOPY 3
+#define ADPLUG_A2M_MAXCOPY 255
+#define ADPLUG_A2M_CODESPERRANGE (ADPLUG_A2M_MAXCOPY - ADPLUG_A2M_MINCOPY + 1)
+#define ADPLUG_A2M_MAXCHAR                                                     \
+  (ADPLUG_A2M_FIRSTCODE + ADPLUG_A2M_COPYRANGES * ADPLUG_A2M_CODESPERRANGE - 1)
+#define ADPLUG_A2M_TWICEMAX (2 * ADPLUG_A2M_MAXCHAR + 1)
 
-    static const unsigned int MAXFREQ=2000,
-    MINCOPY=ADPLUG_A2M_MINCOPY,
-    MAXCOPY=ADPLUG_A2M_MAXCOPY,
-    COPYRANGES=ADPLUG_A2M_COPYRANGES,
-    CODESPERRANGE=ADPLUG_A2M_CODESPERRANGE,
-    TERMINATE=256,
-    FIRSTCODE=ADPLUG_A2M_FIRSTCODE,
-    MAXCHAR=FIRSTCODE + COPYRANGES * CODESPERRANGE - 1,
-    SUCCMAX=MAXCHAR + 1,
-    TWICEMAX=ADPLUG_A2M_TWICEMAX,
-    ROOT=1,
-    MAXBUF=42 * 1024,
-    MAXDISTANCE=21389,
-    MAXSIZE=21389 + MAXCOPY;
+  static const unsigned int MAXFREQ = 2000, MINCOPY = ADPLUG_A2M_MINCOPY,
+                            MAXCOPY = ADPLUG_A2M_MAXCOPY,
+                            COPYRANGES = ADPLUG_A2M_COPYRANGES,
+                            CODESPERRANGE = ADPLUG_A2M_CODESPERRANGE,
+                            TERMINATE = 256, FIRSTCODE = ADPLUG_A2M_FIRSTCODE,
+                            MAXCHAR =
+                                FIRSTCODE + COPYRANGES * CODESPERRANGE - 1,
+                            SUCCMAX = MAXCHAR + 1,
+                            TWICEMAX = ADPLUG_A2M_TWICEMAX, ROOT = 1,
+                            MAXBUF = 42 * 1024, MAXDISTANCE = 21389,
+                            MAXSIZE = 21389 + MAXCOPY;
 
-    static const unsigned short m_bitvalue[14];
-    static const signed short m_copybits[ADPLUG_A2M_COPYRANGES],
-    m_copymin[ADPLUG_A2M_COPYRANGES];
+  static const unsigned short m_bitvalue[14];
+  static const signed short m_copybits[ADPLUG_A2M_COPYRANGES],
+      m_copymin[ADPLUG_A2M_COPYRANGES];
 
-    void inittree();
-    void updatefreq(unsigned short a,unsigned short b);
-    void updatemodel(unsigned short code);
-    unsigned short inputcode(unsigned short bits);
-    unsigned short uncompress();
-    void decode();
-    unsigned short sixdepak(unsigned short *source,unsigned char *dest,unsigned short size);
+  void inittree();
+  void updatefreq(unsigned short a, unsigned short b);
+  void updatemodel(unsigned short code);
+  unsigned short inputcode(unsigned short bits);
+  unsigned short uncompress();
+  void decode();
+  unsigned short sixdepak(unsigned short *source, unsigned char *dest,
+                          unsigned short size);
 
-    std::string m_songname, m_author, m_instname[250];
+  std::string m_songname, m_author, m_instname[250];
 
-    unsigned short m_bitcount=0, m_bitbuffer=0, m_bufcount=0, m_obufcount=0, m_inputSize=0,
-    m_outputSize=0, m_leftc[ADPLUG_A2M_MAXCHAR+1], m_rightc[ADPLUG_A2M_MAXCHAR+1],
-    m_dad[ADPLUG_A2M_TWICEMAX+1], m_freq[ADPLUG_A2M_TWICEMAX+1], *m_wdbuf=nullptr;
-    unsigned char *m_obuf=nullptr;
-    std::vector<uint8_t> m_buf;
+  unsigned short m_bitcount = 0, m_bitbuffer = 0, m_bufcount = 0,
+                 m_obufcount = 0, m_inputSize = 0, m_outputSize = 0,
+                 m_leftc[ADPLUG_A2M_MAXCHAR + 1],
+                 m_rightc[ADPLUG_A2M_MAXCHAR + 1],
+                 m_dad[ADPLUG_A2M_TWICEMAX + 1],
+                 m_freq[ADPLUG_A2M_TWICEMAX + 1], *m_wdbuf = nullptr;
+  unsigned char *m_obuf = nullptr;
+  std::vector<uint8_t> m_buf;
 };
 
 #endif

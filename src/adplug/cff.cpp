@@ -20,7 +20,8 @@
 */
 /*
   NOTE: Conversion of slides is not 100% accurate. Original volume slides
-  have effect on carrier volume only. Also, original arpeggio, frequency & volume
+  have effect on carrier volume only. Also, original arpeggio, frequency &
+  volume
   slides use previous effect data instead of current.
 */
 
@@ -32,290 +33,271 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CPlayer *CcffLoader::factory()
-{
-  return new CcffLoader();
-}
+CPlayer *CcffLoader::factory() { return new CcffLoader(); }
 
-bool CcffLoader::load(const std::string &filename, const CFileProvider &fp)
-{
-  binistream *f = fp.open(filename); if(!f) return false;
-  const unsigned char conv_inst[11] = { 2,1,10,9,4,3,6,5,0,8,7 };
-  const unsigned short conv_note[12] = { 0x16B, 0x181, 0x198, 0x1B0, 0x1CA, 0x1E5, 0x202, 0x220, 0x241, 0x263, 0x287, 0x2AE };
+bool CcffLoader::load(const std::string &filename, const CFileProvider &fp) {
+  binistream *f = fp.open(filename);
+  if (!f)
+    return false;
+  const unsigned char conv_inst[11] = { 2, 1, 10, 9, 4, 3, 6, 5, 0, 8, 7 };
+  const unsigned short conv_note[12] = { 0x16B, 0x181, 0x198, 0x1B0, 0x1CA,
+                                         0x1E5, 0x202, 0x220, 0x241, 0x263,
+                                         0x287, 0x2AE };
 
-  int i,j,k,t=0;
+  int i, j, k, t = 0;
 
   // '<CUD-FM-File>' - signed ?
   f->readString(header.id, 16);
-  header.version = f->readInt(1); header.size = f->readInt(2);
-  header.packed = f->readInt(1); f->readString((char *)header.reserved, 12);
-  if (memcmp(header.id,"<CUD-FM-File>""\x1A\xDE\xE0",16))
-    { fp.close(f); return false; }
+  header.version = f->readInt(1);
+  header.size = f->readInt(2);
+  header.packed = f->readInt(1);
+  f->readString((char *)header.reserved, 12);
+  if (memcmp(header.id, "<CUD-FM-File>"
+                        "\x1A\xDE\xE0",
+             16)) {
+    fp.close(f);
+    return false;
+  }
 
-  unsigned char *module = new unsigned char [0x10000];
+  unsigned char *module = new unsigned char[0x10000];
 
   // packed ?
-  if (header.packed)
-    {
-      cff_unpacker *unpacker = new cff_unpacker;
+  if (header.packed) {
+    cff_unpacker *unpacker = new cff_unpacker;
 
-      unsigned char *packed_module = new unsigned char [header.size + 4];
+    unsigned char *packed_module = new unsigned char[header.size + 4];
 
-      memset(packed_module,0,header.size + 4);
+    memset(packed_module, 0, header.size + 4);
 
-      f->readString((char *)packed_module, header.size);
-      fp.close(f);
+    f->readString((char *)packed_module, header.size);
+    fp.close(f);
 
-      if (!unpacker->unpack(packed_module,module))
-	{
-	  delete unpacker;
-	  delete packed_module;
-	  delete module;
-	  return false;
-	}
-
+    if (!unpacker->unpack(packed_module, module)) {
       delete unpacker;
-      delete packed_module;
+      delete[] packed_module;
+      delete module;
+      return false;
+    }
 
-      if (memcmp(&module[0x5E1],"CUD-FM-File - SEND A POSTCARD -",31))
-	{
-	  delete module;
-	  return false;
-	}
+    delete unpacker;
+    delete[] packed_module;
+
+    if (memcmp(&module[0x5E1], "CUD-FM-File - SEND A POSTCARD -", 31)) {
+      delete module;
+      return false;
     }
-  else
-    {
-      f->readString((char *)module, header.size);
-      fp.close(f);
-    }
+  } else {
+    f->readString((char *)module, header.size);
+    fp.close(f);
+  }
 
   // init CmodPlayer
   realloc_instruments(47);
   realloc_order(64);
-  realloc_patterns(36,64,9);
+  realloc_patterns(36, 64, 9);
   init_notetable(conv_note);
   init_trackord();
 
   // load instruments
-  for (i=0;i<47;i++)
-    {
-      memcpy(&instruments[i],&module[i*32],sizeof(cff_instrument));
+  for (i = 0; i < 47; i++) {
+    memcpy(&instruments[i], &module[i * 32], sizeof(cff_instrument));
 
-      for (j=0;j<11;j++)
-	m_instruments[i].data[conv_inst[j]] = instruments[i].data[j];
+    for (j = 0; j < 11; j++)
+      m_instruments[i].data[conv_inst[j]] = instruments[i].data[j];
 
-      instruments[i].name[20] = 0;
-    }
+    instruments[i].name[20] = 0;
+  }
 
   // number of patterns
   nop = module[0x5E0];
 
   // load title & author
-  memcpy(song_title,&module[0x614],20);
-  memcpy(song_author,&module[0x600],20);
+  memcpy(song_title, &module[0x614], 20);
+  memcpy(song_author, &module[0x600], 20);
 
   // load order
-  memcpy(m_order,&module[0x628],64);
+  memcpy(m_order, &module[0x628], 64);
 
   // load tracks
-  for (i=0;i<nop;i++)
-    {
-      unsigned char old_event_byte2[9];
+  for (i = 0; i < nop; i++) {
+    unsigned char old_event_byte2[9];
 
-      memset(old_event_byte2,0,9);
+    memset(old_event_byte2, 0, 9);
 
-      for (j=0;j<9;j++)
-	{
-	  for (k=0;k<64;k++)
-	    {
-	      cff_event *event = (cff_event *)&module[0x669 + ((i*64+k)*9+j)*3];
+    for (j = 0; j < 9; j++) {
+      for (k = 0; k < 64; k++) {
+        cff_event *event =
+            (cff_event *)&module[0x669 + ((i * 64 + k) * 9 + j) * 3];
 
-	      // convert note
-	      if (event->byte0 == 0x6D)
-		m_tracks[t][k].note = 127;
-	      else
-		if (event->byte0)
-		  m_tracks[t][k].note = event->byte0;
+        // convert note
+        if (event->byte0 == 0x6D)
+          m_tracks[t][k].note = 127;
+        else if (event->byte0)
+          m_tracks[t][k].note = event->byte0;
 
-	      if (event->byte2)
-		old_event_byte2[j] = event->byte2;
+        if (event->byte2)
+          old_event_byte2[j] = event->byte2;
 
-	      // convert effect
-	      switch (event->byte1)
-		{
-		case 'I': // set instrument
-		  m_tracks[t][k].inst = event->byte2 + 1;
-		  m_tracks[t][k].param1 = m_tracks[t][k].param2 = 0;
-		  break;
+        // convert effect
+        switch (event->byte1) {
+        case 'I': // set instrument
+          m_tracks[t][k].inst = event->byte2 + 1;
+          m_tracks[t][k].param1 = m_tracks[t][k].param2 = 0;
+          break;
 
-		case 'H': // set tempo
-		  m_tracks[t][k].command = 7;
-		  if (event->byte2 < 16)
-		    {
-		      m_tracks[t][k].param1 = 0x07;
-		      m_tracks[t][k].param2 = 0x0D;
-		    }
-		  break;
+        case 'H': // set tempo
+          m_tracks[t][k].command = 7;
+          if (event->byte2 < 16) {
+            m_tracks[t][k].param1 = 0x07;
+            m_tracks[t][k].param2 = 0x0D;
+          }
+          break;
 
-		case 'A': // set speed
-		  m_tracks[t][k].command = 19;
-		  m_tracks[t][k].param1  = event->byte2 >> 4;
-		  m_tracks[t][k].param2  = event->byte2 & 15;
-		  break;
+        case 'A': // set speed
+          m_tracks[t][k].command = 19;
+          m_tracks[t][k].param1 = event->byte2 >> 4;
+          m_tracks[t][k].param2 = event->byte2 & 15;
+          break;
 
-		case 'L': // pattern break
-		  m_tracks[t][k].command = 13;
-		  m_tracks[t][k].param1  = event->byte2 >> 4;
-		  m_tracks[t][k].param2  = event->byte2 & 15;
-		  break;
+        case 'L': // pattern break
+          m_tracks[t][k].command = 13;
+          m_tracks[t][k].param1 = event->byte2 >> 4;
+          m_tracks[t][k].param2 = event->byte2 & 15;
+          break;
 
-		case 'K': // order jump
-		  m_tracks[t][k].command = 11;
-		  m_tracks[t][k].param1  = event->byte2 >> 4;
-		  m_tracks[t][k].param2  = event->byte2 & 15;
-		  break;
+        case 'K': // order jump
+          m_tracks[t][k].command = 11;
+          m_tracks[t][k].param1 = event->byte2 >> 4;
+          m_tracks[t][k].param2 = event->byte2 & 15;
+          break;
 
-		case 'M': // set vibrato/tremolo
-		  m_tracks[t][k].command = 27;
-		  m_tracks[t][k].param1  = event->byte2 >> 4;
-		  m_tracks[t][k].param2  = event->byte2 & 15;
-		  break;
+        case 'M': // set vibrato/tremolo
+          m_tracks[t][k].command = 27;
+          m_tracks[t][k].param1 = event->byte2 >> 4;
+          m_tracks[t][k].param2 = event->byte2 & 15;
+          break;
 
-		case 'C': // set modulator volume
-		  m_tracks[t][k].command = 21;
-		  m_tracks[t][k].param1 = (0x3F - event->byte2) >> 4;
-		  m_tracks[t][k].param2 = (0x3F - event->byte2) & 15;
-		  break;
+        case 'C': // set modulator volume
+          m_tracks[t][k].command = 21;
+          m_tracks[t][k].param1 = (0x3F - event->byte2) >> 4;
+          m_tracks[t][k].param2 = (0x3F - event->byte2) & 15;
+          break;
 
-		case 'G': // set carrier volume
-		  m_tracks[t][k].command = 22;
-		  m_tracks[t][k].param1 = (0x3F - event->byte2) >> 4;
-		  m_tracks[t][k].param2 = (0x3F - event->byte2) & 15;
-		  break;
+        case 'G': // set carrier volume
+          m_tracks[t][k].command = 22;
+          m_tracks[t][k].param1 = (0x3F - event->byte2) >> 4;
+          m_tracks[t][k].param2 = (0x3F - event->byte2) & 15;
+          break;
 
-		case 'B': // set carrier waveform
-		  m_tracks[t][k].command = 25;
-		  m_tracks[t][k].param1  = event->byte2;
-		  m_tracks[t][k].param2  = 0x0F;
-		  break;
+        case 'B': // set carrier waveform
+          m_tracks[t][k].command = 25;
+          m_tracks[t][k].param1 = event->byte2;
+          m_tracks[t][k].param2 = 0x0F;
+          break;
 
-		case 'E': // fine frequency slide down
-		  m_tracks[t][k].command = 24;
-		  m_tracks[t][k].param1  = old_event_byte2[j] >> 4;
-		  m_tracks[t][k].param2  = old_event_byte2[j] & 15;
-		  break;
+        case 'E': // fine frequency slide down
+          m_tracks[t][k].command = 24;
+          m_tracks[t][k].param1 = old_event_byte2[j] >> 4;
+          m_tracks[t][k].param2 = old_event_byte2[j] & 15;
+          break;
 
-		case 'F': // fine frequency slide up
-		  m_tracks[t][k].command = 23;
-		  m_tracks[t][k].param1  = old_event_byte2[j] >> 4;
-		  m_tracks[t][k].param2  = old_event_byte2[j] & 15;
-		  break;
+        case 'F': // fine frequency slide up
+          m_tracks[t][k].command = 23;
+          m_tracks[t][k].param1 = old_event_byte2[j] >> 4;
+          m_tracks[t][k].param2 = old_event_byte2[j] & 15;
+          break;
 
-		case 'D': // fine volume slide
-		  m_tracks[t][k].command = 14;
-		  if (old_event_byte2[j] & 15)
-		    {
-		      // slide down
-		      m_tracks[t][k].param1 = 5;
-		      m_tracks[t][k].param2 = old_event_byte2[j] & 15;
-		    }
-		  else
-		    {
-		      // slide up
-		      m_tracks[t][k].param1 = 4;
-		      m_tracks[t][k].param2 = old_event_byte2[j] >> 4;
-		    }
-		  break;
+        case 'D': // fine volume slide
+          m_tracks[t][k].command = 14;
+          if (old_event_byte2[j] & 15) {
+            // slide down
+            m_tracks[t][k].param1 = 5;
+            m_tracks[t][k].param2 = old_event_byte2[j] & 15;
+          } else {
+            // slide up
+            m_tracks[t][k].param1 = 4;
+            m_tracks[t][k].param2 = old_event_byte2[j] >> 4;
+          }
+          break;
 
-		case 'J': // arpeggio
-		  m_tracks[t][k].param1  = old_event_byte2[j] >> 4;
-		  m_tracks[t][k].param2  = old_event_byte2[j] & 15;
-		  break;
-		}
-	    }
+        case 'J': // arpeggio
+          m_tracks[t][k].param1 = old_event_byte2[j] >> 4;
+          m_tracks[t][k].param2 = old_event_byte2[j] & 15;
+          break;
+        }
+      }
 
-	  t++;
-	}
+      t++;
     }
+  }
 
-  delete [] module;
+  delete[] module;
 
   // order loop
   m_restartpos = 0;
 
   // order length
-  for (i=0;i<64;i++)
-    {
-      if (m_order[i] >= 0x80)
-	{
-	  m_length = i;
-	  break;
-	}
+  for (i = 0; i < 64; i++) {
+    if (m_order[i] >= 0x80) {
+      m_length = i;
+      break;
     }
+  }
 
   // default tempo
   m_bpm = 0x7D;
 
   rewind(0);
 
-  return true;	
+  return true;
 }
 
-void CcffLoader::rewind(int subsong)
-{
+void CcffLoader::rewind(int subsong) {
   CmodPlayer::rewind(subsong);
 
   // default instruments
-  for (int i=0;i<9;i++)
-    {
-      channel[i].inst = i;
+  for (int i = 0; i < 9; i++) {
+    channel[i].inst = i;
 
-      channel[i].vol1 = 63 - (m_instruments[i].data[10] & 63);
-      channel[i].vol2 = 63 - (m_instruments[i].data[9] & 63);
-    }
+    channel[i].vol1 = 63 - (m_instruments[i].data[10] & 63);
+    channel[i].vol2 = 63 - (m_instruments[i].data[9] & 63);
+  }
 }
 
-std::string CcffLoader::gettype()
-{
+std::string CcffLoader::gettype() {
   if (header.packed)
     return std::string("BoomTracker 4, packed");
   else
     return std::string("BoomTracker 4");
 }
 
-std::string CcffLoader::gettitle()
-{
-  return std::string(song_title,20);
-}
+std::string CcffLoader::gettitle() { return std::string(song_title, 20); }
 
-std::string CcffLoader::getauthor()
-{
-  return std::string(song_author,20);
-}
+std::string CcffLoader::getauthor() { return std::string(song_author, 20); }
 
-std::string CcffLoader::getinstrument(unsigned int n)
-{
+std::string CcffLoader::getinstrument(unsigned int n) {
   return std::string(instruments[n].name);
 }
 
-unsigned int CcffLoader::getinstruments()
-{
-  return 47;
-}
+unsigned int CcffLoader::getinstruments() { return 47; }
 
 /* -------- Private Methods ------------------------------- */
 
 #ifdef _WIN32
-#pragma warning(disable:4244)
-#pragma warning(disable:4018)
+#pragma warning(disable : 4244)
+#pragma warning(disable : 4018)
 #endif
 
 /*
   Lempel-Ziv-Tyr ;-)
 */
-long CcffLoader::cff_unpacker::unpack(unsigned char *ibuf, unsigned char *obuf)
-{
-  if (memcmp(ibuf,"YsComp""\x07""CUD1997""\x1A\x04",16))
+long CcffLoader::cff_unpacker::unpack(unsigned char *ibuf,
+                                      unsigned char *obuf) {
+  if (memcmp(ibuf, "YsComp"
+                   "\x07"
+                   "CUD1997"
+                   "\x1A\x04",
+             16))
     return 0;
 
   input = ibuf + 16;
@@ -324,119 +306,110 @@ long CcffLoader::cff_unpacker::unpack(unsigned char *ibuf, unsigned char *obuf)
   output_length = 0;
 
   heap = (unsigned char *)malloc(0x10000);
-  dictionary = (unsigned char **)malloc(sizeof(unsigned char *)*0x8000);
+  dictionary = (unsigned char **)malloc(sizeof(unsigned char *) * 0x8000);
 
-  memset(heap,0,0x10000);
-  memset(dictionary,0,0x8000);
+  memset(heap, 0, 0x10000);
+  memset(dictionary, 0, 0x8000);
 
   cleanup();
-  if(!startup())
+  if (!startup())
     goto out;
 
   // LZW
-  while (1)
-    {
-      new_code = get_code();
+  while (1) {
+    new_code = get_code();
 
-      // 0x00: end of data
-      if (new_code == 0)
-	break;
+    // 0x00: end of data
+    if (new_code == 0)
+      break;
 
-      // 0x01: end of block
-      if (new_code == 1)
-	{
-	  cleanup();
-	  if(!startup())
-	    goto out;
+    // 0x01: end of block
+    if (new_code == 1) {
+      cleanup();
+      if (!startup())
+        goto out;
 
-	  continue;
-	}
+      continue;
+    }
 
-      // 0x02: expand code length
-      if (new_code == 2)
-	{
-	  code_length++;
+    // 0x02: expand code length
+    if (new_code == 2) {
+      code_length++;
 
-	  continue;
-	}
+      continue;
+    }
 
-      // 0x03: RLE
-      if (new_code == 3)
-	{
-	  unsigned char old_code_length = code_length;
+    // 0x03: RLE
+    if (new_code == 3) {
+      unsigned char old_code_length = code_length;
 
-	  code_length = 2;
+      code_length = 2;
 
-	  unsigned char repeat_length = get_code() + 1;
+      unsigned char repeat_length = get_code() + 1;
 
-	  code_length = 4 << get_code();
+      code_length = 4 << get_code();
 
-	  unsigned long repeat_counter = get_code();
+      unsigned long repeat_counter = get_code();
 
-	  if(output_length + repeat_counter * repeat_length > 0x10000) {
-	    output_length = 0;
-	    goto out;
-	  }
+      if (output_length + repeat_counter * repeat_length > 0x10000) {
+        output_length = 0;
+        goto out;
+      }
 
-      for (unsigned int i=0;i<repeat_counter*repeat_length;i++) {
+      for (unsigned int i = 0; i < repeat_counter * repeat_length; i++) {
         output[output_length] = output[output_length - repeat_length];
         ++output_length;
       }
 
-	  code_length = old_code_length;
+      code_length = old_code_length;
 
-	  if(!startup())
-	    goto out;
+      if (!startup())
+        goto out;
 
-	  continue;
-	}
-
-      if (new_code >= (0x104 + dictionary_length))
-	{
-	  // dictionary <- old.code.string + old.code.char
-	  the_string[++the_string[0]] = the_string[1];
-	}
-      else
-	{
-	  // dictionary <- old.code.string + new.code.char
-	  unsigned char temp_string[256];
-
-	  translate_code(new_code,temp_string);
-
-	  the_string[++the_string[0]] = temp_string[1];
-	}
-
-      expand_dictionary(the_string);
-
-      // output <- new.code.string
-      translate_code(new_code,the_string);
-
-      if(output_length + the_string[0] > 0x10000) {
-	output_length = 0;
-	goto out;
-      }
-
-      for (int i=0;i<the_string[0];i++)
-	output[output_length++] = the_string[i+1];
-
-      old_code = new_code;
+      continue;
     }
 
- out:
+    if (new_code >= (0x104 + dictionary_length)) {
+      // dictionary <- old.code.string + old.code.char
+      the_string[++the_string[0]] = the_string[1];
+    } else {
+      // dictionary <- old.code.string + new.code.char
+      unsigned char temp_string[256];
+
+      translate_code(new_code, temp_string);
+
+      the_string[++the_string[0]] = temp_string[1];
+    }
+
+    expand_dictionary(the_string);
+
+    // output <- new.code.string
+    translate_code(new_code, the_string);
+
+    if (output_length + the_string[0] > 0x10000) {
+      output_length = 0;
+      goto out;
+    }
+
+    for (int i = 0; i < the_string[0]; i++)
+      output[output_length++] = the_string[i + 1];
+
+    old_code = new_code;
+  }
+
+out:
   free(heap);
   free(dictionary);
   return output_length;
 }
 
-unsigned long CcffLoader::cff_unpacker::get_code()
-{
+unsigned long CcffLoader::cff_unpacker::get_code() {
   unsigned long code;
 
-  while (bits_left < code_length)
-    {
-      bits_buffer |= ((*input++) << bits_left);
-      bits_left += 8;
-    }
+  while (bits_left < code_length) {
+    bits_buffer |= ((*input++) << bits_left);
+    bits_left += 8;
+  }
 
   code = bits_buffer & ((1 << code_length) - 1);
 
@@ -446,25 +419,22 @@ unsigned long CcffLoader::cff_unpacker::get_code()
   return code;
 }
 
-void CcffLoader::cff_unpacker::translate_code(unsigned long code, unsigned char *string)
-{
+void CcffLoader::cff_unpacker::translate_code(unsigned long code,
+                                              unsigned char *string) {
   unsigned char translated_string[256];
 
-  if (code >= 0x104)
-    {
-      memcpy(translated_string,dictionary[code - 0x104],(*(dictionary[code - 0x104])) + 1);
-    }
-  else
-    {
-      translated_string[0] = 1;
-      translated_string[1] = (code - 4) & 0xFF;
-    }
+  if (code >= 0x104) {
+    memcpy(translated_string, dictionary[code - 0x104],
+           (*(dictionary[code - 0x104])) + 1);
+  } else {
+    translated_string[0] = 1;
+    translated_string[1] = (code - 4) & 0xFF;
+  }
 
-  memcpy(string,translated_string,256);
+  memcpy(string, translated_string, 256);
 }
 
-void CcffLoader::cff_unpacker::cleanup()
-{
+void CcffLoader::cff_unpacker::cleanup() {
   code_length = 9;
 
   bits_buffer = 0;
@@ -474,29 +444,27 @@ void CcffLoader::cff_unpacker::cleanup()
   dictionary_length = 0;
 }
 
-int CcffLoader::cff_unpacker::startup()
-{
+int CcffLoader::cff_unpacker::startup() {
   old_code = get_code();
 
-  translate_code(old_code,the_string);
+  translate_code(old_code, the_string);
 
-  if(output_length + the_string[0] > 0x10000) {
+  if (output_length + the_string[0] > 0x10000) {
     output_length = 0;
     return 0;
   }
 
-  for (int i=0;i<the_string[0];i++)
-    output[output_length++] = the_string[i+1];
+  for (int i = 0; i < the_string[0]; i++)
+    output[output_length++] = the_string[i + 1];
 
   return 1;
 }
 
-void CcffLoader::cff_unpacker::expand_dictionary(unsigned char *string)
-{
+void CcffLoader::cff_unpacker::expand_dictionary(unsigned char *string) {
   if (string[0] >= 0xF0)
     return;
 
-  memcpy(&heap[heap_length],string,string[0] + 1);
+  memcpy(&heap[heap_length], string, string[0] + 1);
 
   dictionary[dictionary_length] = &heap[heap_length];
 
@@ -506,6 +474,6 @@ void CcffLoader::cff_unpacker::expand_dictionary(unsigned char *string)
 }
 
 #ifdef _WIN32
-#pragma warning(default:4244)
-#pragma warning(default:4018)
+#pragma warning(default : 4244)
+#pragma warning(default : 4018)
 #endif

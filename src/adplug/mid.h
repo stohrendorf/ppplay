@@ -23,8 +23,7 @@
 #include "mid/almidi.h"
 #include "stuff/numberutils.h"
 
-class CmidPlayer: public CPlayer
-{
+class CmidPlayer : public CPlayer {
 public:
   static CPlayer *factory();
 
@@ -34,18 +33,13 @@ public:
   size_t framesUntilUpdate();
 
   std::string gettype();
-  std::string gettitle()
-    { return m_title; }
-  std::string getauthor()
-    { return m_author; }
-  std::string getdesc()
-    { return m_remarks; }
-  unsigned int getinstruments()
-    { return m_tins; }
-  unsigned int getsubsongs()
-    { return m_subsongs; }
+  std::string gettitle() { return m_title; }
+  std::string getauthor() { return m_author; }
+  std::string getdesc() { return m_remarks; }
+  unsigned int getinstruments() { return m_tins; }
+  unsigned int getsubsongs() { return m_subsongs; }
 
- protected:
+protected:
   static const unsigned char adlib_opadd[];
   static const int percussion_map[];
 
@@ -72,11 +66,12 @@ public:
   size_t m_dataPos;
   unsigned long m_sierraPos; //sierras gotta be special.. :>
   int m_subsongs;
-  std::vector<uint8_t> m_data{};
+  std::vector<uint8_t> m_data {}
+  ;
 
   int m_adlibStyle;
   bool m_melodicMode;
-  using InsBank = std::array<std::array<uint8_t,14>,128>;
+  using InsBank = std::array<std::array<uint8_t, 14>, 128>;
   InsBank m_myInsBank, m_sMyInsBank;
   midi_channel m_ch[16];
   int m_chp[18][3];
@@ -92,19 +87,13 @@ public:
   bool m_doing;
 
   enum class FileType {
-      Unknown,
-      Lucas,
-      Midi,
-      Cmf,
-      Sierra,
-      AdvSierra,
-      OldLucas
+    Unknown, Lucas, Midi, Cmf, Sierra, AdvSierra, OldLucas
   };
 
   FileType m_type = FileType::Unknown;
-  int m_tins,m_stins;
+  int m_tins, m_stins;
 
- private:
+private:
   bool load_sierra_ins(const std::string &fname, const CFileProvider &fp);
   uint8_t datalook(size_t m_dataPos) const;
   uint32_t getnexti(size_t num);
@@ -121,36 +110,25 @@ public:
 
 class CDukePlayer : CPlayer {
 private:
-    std::unique_ptr<ppp::EMidi> m_emidi = nullptr;
+  std::unique_ptr<ppp::EMidi> m_emidi = nullptr;
+
 public:
-    static CPlayer* factory() {
-        return new CDukePlayer();
-    }
+  static CPlayer *factory() { return new CDukePlayer(); }
 
-    bool load(const std::string &filename, const CFileProvider &fp);
-    bool update() {
-        return m_emidi->serviceRoutine();
-    }
+  bool load(const std::string &filename, const CFileProvider &fp);
+  bool update() { return m_emidi->serviceRoutine(); }
 
-    void rewind(int){}
-    size_t framesUntilUpdate() {
-        return SampleRate / m_emidi->ticksPerSecond();
-    }
+  void rewind(int) {}
+  size_t framesUntilUpdate() { return SampleRate / m_emidi->ticksPerSecond(); }
 
-    std::string gettype()
-      { return "Duke MIDI"; }
-    std::string gettitle()
-      { return std::string(); }
-    std::string getauthor()
-      { return std::string(); }
-    std::string getdesc()
-      { return std::string(); }
-    unsigned int getinstruments()
-      { return 0; }
-    unsigned int getsubsongs()
-      { return 1; }
+  std::string gettype() { return "Duke MIDI"; }
+  std::string gettitle() { return std::string(); }
+  std::string getauthor() { return std::string(); }
+  std::string getdesc() { return std::string(); }
+  unsigned int getinstruments() { return 0; }
+  unsigned int getsubsongs() { return 1; }
 
-    virtual void read(std::array<int16_t, 4> *data) override {
-        m_emidi->read(data);
-    }
+  virtual void read(std::array<int16_t, 4> *data) override {
+    m_emidi->read(data);
+  }
 };

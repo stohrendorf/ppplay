@@ -22,40 +22,35 @@
 #include <stdint.h> // for uintxx_t
 #include "player.h"
 
-class Cdro2Player: public CPlayer
-{
-	protected:
-		uint8_t iCmdDelayS, iCmdDelayL;
-		int iConvTableLen;
-		uint8_t *piConvTable;
+class Cdro2Player : public CPlayer {
+protected:
+  uint8_t iCmdDelayS, iCmdDelayL;
+  int iConvTableLen;
+  uint8_t *piConvTable;
 
-		uint8_t *data;
-		int iLength;
-		int iPos;
-		int iDelay;
-                int xchip = 0;
+  uint8_t *data;
+  int iLength;
+  int iPos;
+  int iDelay;
+  int xchip = 0;
 
+public:
+  static CPlayer *factory();
 
-	public:
-		static CPlayer *factory();
+  Cdro2Player();
+  ~Cdro2Player();
 
-		Cdro2Player();
-		~Cdro2Player();
+  bool load(const std::string &filename, const CFileProvider &fp);
+  bool update();
+  void rewind(int);
+  size_t framesUntilUpdate();
 
-		bool load(const std::string &filename, const CFileProvider &fp);
-		bool update();
-		void rewind(int);
-		size_t framesUntilUpdate();
+  std::string gettype() { return std::string("DOSBox Raw OPL v2.0"); }
 
-		std::string gettype()
-		{
-			return std::string("DOSBox Raw OPL v2.0");
-		}
-
-	protected:
-		//unsigned char *data;
-		//unsigned long pos,length;
-		//unsigned long msdone,mstotal;
-		//unsigned short delay;
-		//unsigned char index, opl3_mode;
+protected:
+  //unsigned char *data;
+  //unsigned long pos,length;
+  //unsigned long msdone,mstotal;
+  //unsigned short delay;
+  //unsigned char index, opl3_mode;
 };

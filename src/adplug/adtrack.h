@@ -21,33 +21,34 @@
 
 #include "protrack.h"
 
-class CadtrackLoader: public CmodPlayer
-{
+class CadtrackLoader : public CmodPlayer {
 public:
   static CPlayer *factory();
 
-	CadtrackLoader()
-		: CmodPlayer()
-	{ };
+  CadtrackLoader() : CmodPlayer() {}
+  ;
 
-	bool load(const std::string &filename, const CFileProvider &fp);
-	size_t framesUntilUpdate();
+  bool load(const std::string &filename, const CFileProvider &fp);
+  size_t framesUntilUpdate();
 
-	std::string gettype()
-	{ return std::string("Adlib Tracker 1.0"); };
-	unsigned int getinstruments()
-	{ return 9; };
+  std::string gettype() { return std::string("Adlib Tracker 1.0"); }
+  ;
+  unsigned int getinstruments() { return 9; }
+  ;
 
 private:
-        enum Operators {Carrier = 1, Modulator = 0};
+  enum Operators {
+    Carrier = 1,
+    Modulator = 0
+  };
 
-	typedef struct {
-	  struct {
-	    unsigned short appampmod, appvib, maintsuslvl, keybscale, octave,
-	      freqrisevollvldn, softness, attack, decay, release, sustain,
-	      feedback, waveform;
-	  } op[2];
-	} AdTrackInst;
+  typedef struct {
+    struct {
+      unsigned short appampmod, appvib, maintsuslvl, keybscale, octave,
+          freqrisevollvldn, softness, attack, decay, release, sustain, feedback,
+          waveform;
+    } op[2];
+  } AdTrackInst;
 
-	void convert_instrument(unsigned int n, AdTrackInst *i);
+  void convert_instrument(unsigned int n, AdTrackInst *i);
 };

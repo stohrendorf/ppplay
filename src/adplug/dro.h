@@ -21,32 +21,27 @@
 
 #include "player.h"
 
-class CdroPlayer: public CPlayer
-{
- public:
+class CdroPlayer : public CPlayer {
+public:
   static CPlayer *factory();
 
   CdroPlayer();
-  ~CdroPlayer()
-    {
-      if(data)
-	delete [] data;
-    }
+  ~CdroPlayer() {
+    if (data)
+      delete[] data;
+  }
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int);
   size_t framesUntilUpdate();
 
-  std::string gettype()
-    {
-      return std::string("DOSBox Raw OPL v0.1");
-    }
+  std::string gettype() { return std::string("DOSBox Raw OPL v0.1"); }
 
- protected:
+protected:
   unsigned char *data;
-  unsigned long pos,length;
-  unsigned long msdone,mstotal;
+  unsigned long pos, length;
+  unsigned long msdone, mstotal;
   unsigned short delay;
   unsigned char index;
 };

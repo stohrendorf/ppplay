@@ -22,34 +22,29 @@
 
 #include "protrack.h"
 
-class Csa2Loader: public CmodPlayer
-{
+class Csa2Loader : public CmodPlayer {
 public:
   static CPlayer *factory();
 
-	Csa2Loader()
-		: CmodPlayer()
-	{ }
+  Csa2Loader() : CmodPlayer() {}
 
-	bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename, const CFileProvider &fp);
 
-	std::string gettype();
-	std::string gettitle();
-	unsigned int getinstruments()
-	{ return 31; }
-	std::string getinstrument(unsigned int n)
-	{
-	  if(n < 29)
-	    return std::string(instname[n],1,16);
-	  else
-	    return std::string("-broken-");
-	}
+  std::string gettype();
+  std::string gettitle();
+  unsigned int getinstruments() { return 31; }
+  std::string getinstrument(unsigned int n) {
+    if (n < 29)
+      return std::string(instname[n], 1, 16);
+    else
+      return std::string("-broken-");
+  }
 
 private:
-	struct sa2header {
-		char sadt[4];
-		unsigned char version;
-	} header;
+  struct sa2header {
+    char sadt[4];
+    unsigned char version;
+  } header;
 
-	char instname[29][17];
+  char instname[29][17];
 };

@@ -26,15 +26,11 @@
 
 /***** CPlayerDesc *****/
 
-CPlayerDesc::CPlayerDesc()
-  : factory(0), extensions(0), extlength(0)
-{
-}
+CPlayerDesc::CPlayerDesc() : factory(0), extensions(0), extlength(0) {}
 
 CPlayerDesc::CPlayerDesc(const CPlayerDesc &pd)
-  : factory(pd.factory), filetype(pd.filetype), extlength(pd.extlength)
-{
-  if(pd.extensions) {
+    : factory(pd.factory), filetype(pd.filetype), extlength(pd.extlength) {
+  if (pd.extensions) {
     extensions = (char *)malloc(extlength);
     memcpy(extensions, pd.extensions, extlength);
   } else
@@ -42,25 +38,25 @@ CPlayerDesc::CPlayerDesc(const CPlayerDesc &pd)
 }
 
 CPlayerDesc::CPlayerDesc(Factory f, const std::string &type, const char *ext)
-  : factory(f), filetype(type), extensions(0)
-{
+    : factory(f), filetype(type), extensions(0) {
   const char *i = ext;
 
   // Determine length of passed extensions list
-  while(*i) i += strlen(i) + 1;
-  extlength = i - ext + 1;	// length = difference between last and first char + 1
+  while (*i)
+    i += strlen(i) + 1;
+  extlength =
+      i - ext + 1; // length = difference between last and first char + 1
 
   extensions = (char *)malloc(extlength);
   memcpy(extensions, ext, extlength);
 }
 
-CPlayerDesc::~CPlayerDesc()
-{
-  if(extensions) free(extensions);
+CPlayerDesc::~CPlayerDesc() {
+  if (extensions)
+    free(extensions);
 }
 
-void CPlayerDesc::add_extension(const char *ext)
-{
+void CPlayerDesc::add_extension(const char *ext) {
   unsigned long newlength = extlength + strlen(ext) + 1;
 
   extensions = (char *)realloc(extensions, newlength);
@@ -69,37 +65,36 @@ void CPlayerDesc::add_extension(const char *ext)
   extlength = newlength;
 }
 
-const char *CPlayerDesc::get_extension(unsigned int n) const
-{
-  const char	*i = extensions;
-  unsigned int	j;
+const char *CPlayerDesc::get_extension(unsigned int n) const {
+  const char *i = extensions;
+  unsigned int j;
 
-  for(j = 0; j < n && (*i); j++, i += strlen(i) + 1) ;
+  for (j = 0; j < n && (*i); j++, i += strlen(i) + 1)
+    ;
   return (*i != '\0' ? i : 0);
 }
 
 /***** CPlayers *****/
 
-const CPlayerDesc *CPlayers::lookup_filetype(const std::string &ftype) const
-{
-  const_iterator	i;
+const CPlayerDesc *CPlayers::lookup_filetype(const std::string &ftype) const {
+  const_iterator i;
 
-  for(i = begin(); i != end(); i++)
-    if((*i)->filetype == ftype)
+  for (i = begin(); i != end(); i++)
+    if ((*i)->filetype == ftype)
       return *i;
 
   return 0;
 }
 
-const CPlayerDesc *CPlayers::lookup_extension(const std::string &extension) const
-{
-  const_iterator	i;
-  unsigned int		j;
+const CPlayerDesc *
+CPlayers::lookup_extension(const std::string &extension) const {
+  const_iterator i;
+  unsigned int j;
 
-  for(i = begin(); i != end(); i++)
-    for(j = 0; (*i)->get_extension(j); j++)
-      if(!strcasecmp(extension.c_str(), (*i)->get_extension(j)))
-	return *i;
+  for (i = begin(); i != end(); i++)
+    for (j = 0; (*i)->get_extension(j); j++)
+      if (!strcasecmp(extension.c_str(), (*i)->get_extension(j)))
+        return *i;
 
   return 0;
 }

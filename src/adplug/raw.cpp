@@ -24,26 +24,27 @@
 
 /*** public methods *************************************/
 
-CPlayer *CrawPlayer::factory()
-{
-  return new CrawPlayer();
-}
+CPlayer *CrawPlayer::factory() { return new CrawPlayer(); }
 
-bool CrawPlayer::load(const std::string &filename, const CFileProvider &fp)
-{
-  binistream *f = fp.open(filename); if(!f) return false;
+bool CrawPlayer::load(const std::string &filename, const CFileProvider &fp) {
+  binistream *f = fp.open(filename);
+  if (!f)
+    return false;
   char id[8];
   unsigned long i;
 
   // file validation section
   f->readString(id, 8);
-  if(strncmp(id,"RAWADATA",8)) { fp.close (f); return false; }
+  if (strncmp(id, "RAWADATA", 8)) {
+    fp.close(f);
+    return false;
+  }
 
   // load section
-  clock = f->readInt(2);	// clock speed
+  clock = f->readInt(2); // clock speed
   length = (fp.filesize(f) - 10) / 2;
-  data = new Tdata [length];
-  for(i = 0; i < length; i++) {
+  data = new Tdata[length];
+  for (i = 0; i < length; i++) {
     data[i].param = f->readInt(1);
     data[i].command = f->readInt(1);
   }
@@ -53,52 +54,56 @@ bool CrawPlayer::load(const std::string &filename, const CFileProvider &fp)
   return true;
 }
 
-bool CrawPlayer::update()
-{
-  bool	setspeed;
+bool CrawPlayer::update() {
+  bool setspeed;
 
-  if(pos >= length) return false;
+  if (pos >= length)
+    return false;
 
-  if(del) {
+  if (del) {
     del--;
     return !songend;
   }
 
   do {
     setspeed = false;
-    switch(data[pos].command) {
-    case 0: del = data[pos].param - 1; break;
+    switch (data[pos].command) {
+    case 0:
+      del = data[pos].param - 1;
+      break;
     case 2:
-      if(!data[pos].param) {
-	pos++;
-	speed = data[pos].param + (data[pos].command << 8);
-	setspeed = true;
+      if (!data[pos].param) {
+        pos++;
+        speed = data[pos].param + (data[pos].command << 8);
+        setspeed = true;
       } else
-	;//FIXME sto opl->setchip(data[pos].param - 1);
+        ; //FIXME sto opl->setchip(data[pos].param - 1);
       break;
     case 0xff:
-      if(data[pos].param == 0xff) {
-	rewind(0);		// auto-rewind song
-	songend = true;
-	return !songend;
+      if (data[pos].param == 0xff) {
+        rewind(0); // auto-rewind song
+        songend = true;
+        return !songend;
       }
       break;
     default:
-      getOpl()->writeReg(data[pos].command,data[pos].param);
+      getOpl()->writeReg(data[pos].command, data[pos].param);
       break;
     }
-  } while(data[pos++].command || setspeed);
+  } while (data[pos++].command || setspeed);
 
   return !songend;
 }
 
-void CrawPlayer::rewind(int)
-{
-  pos = del = 0; speed = clock; songend = false;
-  getOpl()->writeReg(1, 32);	// go to 9 channel mode
+void CrawPlayer::rewind(int) {
+  pos = del = 0;
+  speed = clock;
+  songend = false;
+  getOpl()->writeReg(1, 32); // go to 9 channel mode
 }
 
-size_t CrawPlayer::framesUntilUpdate()
-{
-  return SampleRate * (speed ? speed : 0xffff) / 1193180.0;	// timer oscillator speed / wait register = clock frequency
+size_t CrawPlayer::framesUntilUpdate() {
+  return SampleRate * (speed ? speed : 0xffff) /
+             1193180.0; // timer oscillator speed / wait register = clock
+                        // frequency
 }

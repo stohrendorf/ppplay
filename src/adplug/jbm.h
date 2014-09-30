@@ -24,57 +24,54 @@
 
 #include "player.h"
 
-class CjbmPlayer: public CPlayer
-{
+class CjbmPlayer : public CPlayer {
 public:
-    static CPlayer *factory();
+  static CPlayer *factory();
 
-    bool load(const std::string &filename, const CFileProvider &fp);
-    bool update();
-    void rewind(int subsong);
+  bool load(const std::string &filename, const CFileProvider &fp);
+  bool update();
+  void rewind(int subsong);
 
-    size_t framesUntilUpdate() override {
-        return SampleRate/m_timer;
-    }
+  size_t framesUntilUpdate() override { return SampleRate / m_timer; }
 
-    std::string gettype() {
-        return (m_flags&1) ? "JBM Adlib Music [rhythm mode]" : "JBM Adlib Music";
-    }
-    std::string getauthor() {
-        return std::string("Johannes Bjerregaard");
-    }
+  std::string gettype() {
+    return (m_flags & 1) ? "JBM Adlib Music [rhythm mode]" : "JBM Adlib Music";
+  }
+  std::string getauthor() { return std::string("Johannes Bjerregaard"); }
 
 protected:
 
-    std::vector<uint8_t> m_fileData{};
-    float m_timer = 0;
-    uint16_t m_flags = 0;
-    uint16_t m_voicemask = 0;
-    uint16_t m_seqTable = 0;
-    uint16_t m_seqCount = 0;
-    uint16_t m_insTable = 0;
-    uint16_t m_insCount = 0;
-    std::vector<uint16_t> m_sequences{};
+  std::vector<uint8_t> m_fileData {}
+  ;
+  float m_timer = 0;
+  uint16_t m_flags = 0;
+  uint16_t m_voicemask = 0;
+  uint16_t m_seqTable = 0;
+  uint16_t m_seqCount = 0;
+  uint16_t m_insTable = 0;
+  uint16_t m_insCount = 0;
+  std::vector<uint16_t> m_sequences {}
+  ;
 
-    struct JBMVoice {
-        uint16_t trkpos = 0;
-        uint16_t trkstart = 0;
-        uint16_t seqpos = 0;
-        uint8_t seqno = 0;
-        uint8_t note = 0;
-        int16_t vol = 0;
-        int16_t delay = 0;
-        int16_t instr = 0;
-        uint8_t frq[2] = {0,0};
-        uint8_t ivol = 0;
-        uint8_t dummy = 0;
-    };
+  struct JBMVoice {
+    uint16_t trkpos = 0;
+    uint16_t trkstart = 0;
+    uint16_t seqpos = 0;
+    uint8_t seqno = 0;
+    uint8_t note = 0;
+    int16_t vol = 0;
+    int16_t delay = 0;
+    int16_t instr = 0;
+    uint8_t frq[2] = { 0, 0 };
+    uint8_t ivol = 0;
+    uint8_t dummy = 0;
+  };
 
-    JBMVoice m_voices[11];
+  JBMVoice m_voices[11];
 
 private:
-    void set_opl_instrument(int, JBMVoice *voice);
-    void opl_noteonoff(int, bool);
+  void set_opl_instrument(int, JBMVoice *voice);
+  void opl_noteonoff(int, bool);
 };
 
 #endif

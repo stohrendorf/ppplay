@@ -24,9 +24,8 @@
 
 #include "player.h"
 
-class Cs3mPlayer: public CPlayer
-{
- public:
+class Cs3mPlayer : public CPlayer {
+public:
   static CPlayer *factory();
 
   Cs3mPlayer();
@@ -37,33 +36,35 @@ class Cs3mPlayer: public CPlayer
   size_t framesUntilUpdate();
 
   std::string gettype();
-  std::string gettitle()
-    { return std::string(header.name); };
+  std::string gettitle() { return std::string(header.name); }
+  ;
 
-  unsigned int getpatterns()
-    { return header.patnum; };
-  unsigned int getpattern()
-    { return orders[ord]; };
-  unsigned int getorders()
-    { return (header.ordnum-1); };
-  unsigned int getorder()
-    { return ord; };
-  unsigned int getrow()
-    { return crow; };
-  unsigned int getspeed()
-    { return speed; };
-  unsigned int getinstruments()
-    { return header.insnum; };
-  std::string getinstrument(unsigned int n)
-    { return std::string(inst[n].name); };
+  unsigned int getpatterns() { return header.patnum; }
+  ;
+  unsigned int getpattern() { return orders[ord]; }
+  ;
+  unsigned int getorders() { return (header.ordnum - 1); }
+  ;
+  unsigned int getorder() { return ord; }
+  ;
+  unsigned int getrow() { return crow; }
+  ;
+  unsigned int getspeed() { return speed; }
+  ;
+  unsigned int getinstruments() { return header.insnum; }
+  ;
+  std::string getinstrument(unsigned int n) {
+    return std::string(inst[n].name);
+  }
+  ;
 
- protected:
+protected:
   struct s3mheader {
-    char name[28];				// song name
-    unsigned char kennung,typ,dummy[2];
-    unsigned short ordnum,insnum,patnum,flags,cwtv,ffi;
+    char name[28]; // song name
+    unsigned char kennung, typ, dummy[2];
+    unsigned short ordnum, insnum, patnum, flags, cwtv, ffi;
     char scrm[4];
-    unsigned char gv,is,it,mv,uc,dp,dummy2[8];
+    unsigned char gv, is, it, mv, uc, dp, dummy2[8];
     unsigned short special;
     unsigned char chanset[32];
   };
@@ -71,25 +72,27 @@ class Cs3mPlayer: public CPlayer
   struct s3minst {
     unsigned char type;
     char filename[15];
-    unsigned char d00,d01,d02,d03,d04,d05,d06,d07,d08,d09,d0a,d0b,volume,dsk,dummy[2];
+    unsigned char d00, d01, d02, d03, d04, d05, d06, d07, d08, d09, d0a, d0b,
+        volume, dsk, dummy[2];
     unsigned long c2spd;
-    char dummy2[12], name[28],scri[4];
+    char dummy2[12], name[28], scri[4];
   } inst[99];
 
   struct {
-    unsigned char note,oct,instrument,volume,command,info;
+    unsigned char note, oct, instrument, volume, command, info;
   } pattern[99][64][32];
 
   struct {
-    unsigned short freq,nextfreq;
-    unsigned char oct,vol,inst,fx,info,dualinfo,key,nextoct,trigger,note;
+    unsigned short freq, nextfreq;
+    unsigned char oct, vol, inst, fx, info, dualinfo, key, nextoct, trigger,
+        note;
   } channel[9];
 
   s3mheader header;
   unsigned char orders[256];
-  unsigned char crow,ord,speed,tempo,del,songend,loopstart,loopcnt;
+  unsigned char crow, ord, speed, tempo, del, songend, loopstart, loopcnt;
 
- private:
+private:
   static const char chnresolv[];
   static const unsigned short notetable[12];
   static const unsigned char vibratotab[32];

@@ -21,33 +21,30 @@
 
 #include "xad.h"
 
-class CxadflashPlayer: public CxadPlayer
-{
+class CxadflashPlayer : public CxadPlayer {
 public:
   static CPlayer *factory();
 
-  CxadflashPlayer(): CxadPlayer()
-    { };
+  CxadflashPlayer() : CxadPlayer() {}
+  ;
 
 protected:
-  struct
-  {
-    unsigned char   order_pos;
-    unsigned char   pattern_pos;
+  struct {
+    unsigned char order_pos;
+    unsigned char pattern_pos;
   } flash;
   //
-  bool		  xadplayer_load()
-    {
-      if(xad.fmt == FLASH)
-	return true;
-      else
-	return false;
-    }
-  void            xadplayer_rewind(int);
-  void            xadplayer_update();
-  float           xadplayer_getrefresh();
-  std::string     xadplayer_gettype();
-  unsigned int    xadplayer_getinstruments();
+  bool xadplayer_load() {
+    if (xad.fmt == FLASH)
+      return true;
+    else
+      return false;
+  }
+  void xadplayer_rewind(int);
+  void xadplayer_update();
+  float xadplayer_getrefresh();
+  std::string xadplayer_gettype();
+  unsigned int xadplayer_getinstruments();
 
 private:
   static const unsigned char flash_adlib_registers[99];

@@ -25,32 +25,35 @@
 #include "dfm.h"
 #include "debug.h"
 
-CPlayer *CdfmLoader::factory()
-{
-  return new CdfmLoader();
-}
+CPlayer *CdfmLoader::factory() { return new CdfmLoader(); }
 
-bool CdfmLoader::load(const std::string &filename, const CFileProvider &fp)
-{
-  binistream *f = fp.open(filename); if(!f) return false;
-  unsigned char		npats,n,note,fx,c,r,param;
-  unsigned int		i;
-  const unsigned char	convfx[8] = {255,255,17,19,23,24,255,13};
+bool CdfmLoader::load(const std::string &filename, const CFileProvider &fp) {
+  binistream *f = fp.open(filename);
+  if (!f)
+    return false;
+  unsigned char npats, n, note, fx, c, r, param;
+  unsigned int i;
+  const unsigned char convfx[8] = { 255, 255, 17, 19, 23, 24, 255, 13 };
 
   // file validation
   f->readString(header.id, 4);
-  header.hiver = f->readInt(1); header.lover = f->readInt(1);
-  if(strncmp(header.id,"DFM\x1a",4) || header.hiver > 1)
-    { fp.close(f); return false; }
+  header.hiver = f->readInt(1);
+  header.lover = f->readInt(1);
+  if (strncmp(header.id, "DFM\x1a", 4) || header.hiver > 1) {
+    fp.close(f);
+    return false;
+  }
 
   // load
-  m_restartpos = 0; m_flags = Standard; m_bpm = 0;
+  m_restartpos = 0;
+  m_flags = Standard;
+  m_bpm = 0;
   init_trackord();
   f->readString(songinfo, 33);
   m_initspeed = f->readInt(1);
-  for(i = 0; i < 32; i++)
+  for (i = 0; i < 32; i++)
     f->readString(instname[i], 12);
-  for(i = 0; i < 32; i++) {
+  for (i = 0; i < 32; i++) {
     m_instruments[i].data[1] = f->readInt(1);
     m_instruments[i].data[2] = f->readInt(1);
     m_instruments[i].data[9] = f->readInt(1);
@@ -63,37 +66,38 @@ bool CdfmLoader::load(const std::string &filename, const CFileProvider &fp)
     m_instruments[i].data[8] = f->readInt(1);
     m_instruments[i].data[0] = f->readInt(1);
   }
-  for(i = 0; i < 128; i++) m_order[i] = f->readInt(1);
-  for(i = 0; i < 128 && m_order[i] != 128; i++)
-      /* nothing */;
+  for (i = 0; i < 128; i++)
+    m_order[i] = f->readInt(1);
+  for (i = 0; i < 128 && m_order[i] != 128; i++)
+    /* nothing */;
   m_length = i;
   npats = f->readInt(1);
-  for(i = 0; i < npats; i++) {
+  for (i = 0; i < npats; i++) {
     n = f->readInt(1);
-    for(r = 0; r < 64; r++)
-      for(c = 0; c < 9; c++) {
-	note = f->readInt(1);
-	if((note & 15) == 15)
-	  m_tracks[n*9+c][r].note = 127;	// key off
-	else
-	  m_tracks[n*9+c][r].note = ((note & 127) >> 4) * 12 + (note & 15);
-	if(note & 128) {	// additional effect byte
-	  fx = f->readInt(1);
-	  if(fx >> 5 == 1)
-	    m_tracks[n*9+c][r].inst = (fx & 31) + 1;
-	  else {
-	    m_tracks[n*9+c][r].command = convfx[fx >> 5];
-	    if(m_tracks[n*9+c][r].command == 17) {	// set volume
-	      param = fx & 31;
-	      param = 63 - param * 2;
-	      m_tracks[n*9+c][r].param1 = param >> 4;
-	      m_tracks[n*9+c][r].param2 = param & 15;
-	    } else {
-	      m_tracks[n*9+c][r].param1 = (fx & 31) >> 4;
-	      m_tracks[n*9+c][r].param2 = fx & 15;
-	    }
-	  }
-	}
+    for (r = 0; r < 64; r++)
+      for (c = 0; c < 9; c++) {
+        note = f->readInt(1);
+        if ((note & 15) == 15)
+          m_tracks[n * 9 + c][r].note = 127; // key off
+        else
+          m_tracks[n * 9 + c][r].note = ((note & 127) >> 4) * 12 + (note & 15);
+        if (note & 128) { // additional effect byte
+          fx = f->readInt(1);
+          if (fx >> 5 == 1)
+            m_tracks[n * 9 + c][r].inst = (fx & 31) + 1;
+          else {
+            m_tracks[n * 9 + c][r].command = convfx[fx >> 5];
+            if (m_tracks[n * 9 + c][r].command == 17) { // set volume
+              param = fx & 31;
+              param = 63 - param * 2;
+              m_tracks[n * 9 + c][r].param1 = param >> 4;
+              m_tracks[n * 9 + c][r].param2 = param & 15;
+            } else {
+              m_tracks[n * 9 + c][r].param1 = (fx & 31) >> 4;
+              m_tracks[n * 9 + c][r].param2 = fx & 15;
+            }
+          }
+        }
 
       }
   }
@@ -103,15 +107,11 @@ bool CdfmLoader::load(const std::string &filename, const CFileProvider &fp)
   return true;
 }
 
-std::string CdfmLoader::gettype()
-{
-	char tmpstr[20];
+std::string CdfmLoader::gettype() {
+  char tmpstr[20];
 
-	sprintf(tmpstr,"Digital-FM %d.%d",header.hiver,header.lover);
-	return std::string(tmpstr);
+  sprintf(tmpstr, "Digital-FM %d.%d", header.hiver, header.lover);
+  return std::string(tmpstr);
 }
 
-size_t CdfmLoader::framesUntilUpdate()
-{
-    return SampleRate/125;
-}
+size_t CdfmLoader::framesUntilUpdate() { return SampleRate / 125; }

@@ -21,25 +21,25 @@
 
 #include "s3m.h"
 
-class CdmoLoader: public Cs3mPlayer
-{
- public:
+class CdmoLoader : public Cs3mPlayer {
+public:
   static CPlayer *factory();
 
-  CdmoLoader() : Cs3mPlayer() { };
+  CdmoLoader() : Cs3mPlayer() {}
+  ;
 
-  bool	load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename, const CFileProvider &fp);
 
-  std::string	gettype();
-  std::string	getauthor();
+  std::string gettype();
+  std::string getauthor();
 
- private:
+private:
 
   class dmo_unpacker {
   public:
     bool decrypt(unsigned char *buf, long len);
     long unpack(unsigned char *ibuf, unsigned char *obuf,
-		unsigned long outputsize);
+                unsigned long outputsize);
 
   private:
     unsigned short brand(unsigned short range);

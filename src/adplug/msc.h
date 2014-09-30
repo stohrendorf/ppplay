@@ -21,67 +21,66 @@
 
 #include "player.h"
 
-#define MSC_SIGN_LEN	16
-#define MSC_DESC_LEN	64
+#define MSC_SIGN_LEN 16
+#define MSC_DESC_LEN 64
 
-class CmscPlayer: public CPlayer
-{
- public:
-  static CPlayer * factory();
+class CmscPlayer : public CPlayer {
+public:
+  static CPlayer *factory();
 
   CmscPlayer();
   ~CmscPlayer();
-	
+
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int);
   size_t framesUntilUpdate();
 
-  std::string gettype ();
+  std::string gettype();
 
- protected:
-  typedef unsigned char		u8;
-  typedef unsigned short	u16;
+protected:
+  typedef unsigned char u8;
+  typedef unsigned short u16;
 
   struct msc_header {
-    u8 	mh_sign [MSC_SIGN_LEN];
-    u16	mh_ver;
-    u8	mh_desc [MSC_DESC_LEN];
-    u16	mh_timer;
-    u16	mh_nr_blocks;
-    u16	mh_block_len;
+    u8 mh_sign[MSC_SIGN_LEN];
+    u16 mh_ver;
+    u8 mh_desc[MSC_DESC_LEN];
+    u16 mh_timer;
+    u16 mh_nr_blocks;
+    u16 mh_block_len;
   };
 
   struct msc_block {
-    u16		mb_length;
-    u8 *	mb_data;
+    u16 mb_length;
+    u8 *mb_data;
   };
 
   // file data
-  char *		desc;		// song desctiption
-  unsigned short	version;	// file version
-  unsigned short	nr_blocks;	// number of music blocks
-  unsigned short	block_len;	// maximal block length
-  unsigned short	timer_div;	// timer divisor
-  msc_block *		msc_data;	// compressed music data
+  char *desc;               // song desctiption
+  unsigned short version;   // file version
+  unsigned short nr_blocks; // number of music blocks
+  unsigned short block_len; // maximal block length
+  unsigned short timer_div; // timer divisor
+  msc_block *msc_data;      // compressed music data
 
   // decoder state
-  unsigned long	block_num;	// active block
-  unsigned long	block_pos;	// position in block
-  unsigned long	raw_pos;	// position in data buffer
-  u8 *		raw_data;	// decompression buffer
+  unsigned long block_num; // active block
+  unsigned long block_pos; // position in block
+  unsigned long raw_pos;   // position in data buffer
+  u8 *raw_data;            // decompression buffer
 
-  u8 		dec_prefix;	// prefix / state
-  int		dec_dist;	// prefix distance
-  unsigned int	dec_len;	// prefix length
-	
+  u8 dec_prefix;        // prefix / state
+  int dec_dist;         // prefix distance
+  unsigned int dec_len; // prefix length
+
   // player state
-  unsigned char	delay;		// active delay
-  unsigned long	play_pos;	// player position
+  unsigned char delay;    // active delay
+  unsigned long play_pos; // player position
 
- private:
-  static const u8 msc_signature [MSC_SIGN_LEN];
+private:
+  static const u8 msc_signature[MSC_SIGN_LEN];
 
-  bool load_header (binistream * bf, msc_header * hdr);
-  bool decode_octet (u8 * output);
+  bool load_header(binistream *bf, msc_header *hdr);
+  bool decode_octet(u8 *output);
 };

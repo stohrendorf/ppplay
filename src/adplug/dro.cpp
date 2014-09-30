@@ -30,68 +30,68 @@
 
 /*** public methods *************************************/
 
-CPlayer *CdroPlayer::factory()
-{
-  return new CdroPlayer();
-}
+CPlayer *CdroPlayer::factory() { return new CdroPlayer(); }
 
-CdroPlayer::CdroPlayer()
-  : CPlayer(), data(0)
-{
-}
+CdroPlayer::CdroPlayer() : CPlayer(), data(0) {}
 
-bool CdroPlayer::load(const std::string &filename, const CFileProvider &fp)
-{
-  binistream *f = fp.open(filename); if(!f) return false;
+bool CdroPlayer::load(const std::string &filename, const CFileProvider &fp) {
+  binistream *f = fp.open(filename);
+  if (!f)
+    return false;
   char id[8];
   unsigned long i;
 
   // file validation section
   f->readString(id, 8);
-  if(strncmp(id,"DBRAWOPL",8)) { fp.close (f); return false; }
-  int version = f->readInt(4);	// not very useful just yet
-  if(version != 0x10000) { fp.close(f); return false; }
+  if (strncmp(id, "DBRAWOPL", 8)) {
+    fp.close(f);
+    return false;
+  }
+  int version = f->readInt(4); // not very useful just yet
+  if (version != 0x10000) {
+    fp.close(f);
+    return false;
+  }
 
   // load section
-  mstotal = f->readInt(4);	// Total milliseconds in file
-  length = f->readInt(4);	// Total data bytes in file
-  data = new unsigned char [length];
+  mstotal = f->readInt(4); // Total milliseconds in file
+  length = f->readInt(4);  // Total data bytes in file
+  data = new unsigned char[length];
 
-  f->ignore(1);			// Type of opl data this can contain - ignored
-  for (i=0;i<3;i++)
-  	data[i]=f->readInt(1);
+  f->ignore(1); // Type of opl data this can contain - ignored
+  for (i = 0; i < 3; i++)
+    data[i] = f->readInt(1);
 
   if ((data[0] == 0) || (data[1] == 0) || (data[2] == 0)) {
-  	// Some early .DRO files only used one byte for the hardware type, then
-  	// later changed to four bytes with no version number change.  If we're
-  	// here then this is a later (more popular) file with the full four bytes
-  	// for the hardware-type.
-  	i = 0; // so ignore the three bytes we just read and start again
+    // Some early .DRO files only used one byte for the hardware type, then
+    // later changed to four bytes with no version number change.  If we're
+    // here then this is a later (more popular) file with the full four bytes
+    // for the hardware-type.
+    i = 0; // so ignore the three bytes we just read and start again
   }
-  for (;i<length;i++)
-    data[i]=f->readInt(1);
+  for (; i < length; i++)
+    data[i] = f->readInt(1);
   fp.close(f);
   rewind(0);
   return true;
 }
 
-bool CdroPlayer::update()
-{
-  if (delay>500) {
-    delay-=500;
+bool CdroPlayer::update() {
+  if (delay > 500) {
+    delay -= 500;
     return true;
   } else
-    delay=0;
+    delay = 0;
 
   while (pos < length) {
     unsigned char cmd = data[pos++];
-    switch(cmd) {
-    case 0: 
+    switch (cmd) {
+    case 0:
       delay = 1 + data[pos++];
       return true;
-    case 1: 
-      delay = 1 + data[pos] + (data[pos+1]<<8);
-      pos+=2;
+    case 1:
+      delay = 1 + data[pos] + (data[pos + 1] << 8);
+      pos += 2;
       return true;
     case 2:
       index = 0;
@@ -100,31 +100,30 @@ bool CdroPlayer::update()
       index = 1;
       break;
     default:
-      if(cmd==4) cmd = data[pos++]; //data override
-        getOpl()->writeReg(cmd,data[pos++]);
+      if (cmd == 4)
+        cmd = data[pos++]; //data override
+      getOpl()->writeReg(cmd, data[pos++]);
       break;
     }
   }
 
-  return pos<length;
+  return pos < length;
 }
 
-void CdroPlayer::rewind(int)
-{
-  delay=1; 
-  pos = index = 0; 
+void CdroPlayer::rewind(int) {
+  delay = 1;
+  pos = index = 0;
 
   //dro assumes all registers are initialized to 0
   //registers not initialized to 0 will be corrected
   //in the data stream
-  for(int i=0;i<256;i++)
-    getOpl()->writeReg(i,0);
+  for (int i = 0; i < 256; i++)
+    getOpl()->writeReg(i, 0);
 }
 
-size_t CdroPlayer::framesUntilUpdate()
-{
+size_t CdroPlayer::framesUntilUpdate() {
   if (delay > 500)
-      return SampleRate / 2;
+    return SampleRate / 2;
   else
-      return SampleRate * delay / 1000;
+    return SampleRate * delay / 1000;
 }

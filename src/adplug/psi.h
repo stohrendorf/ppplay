@@ -21,42 +21,37 @@
 
 #include "xad.h"
 
-class CxadpsiPlayer: public CxadPlayer
-{
+class CxadpsiPlayer : public CxadPlayer {
 public:
   static CPlayer *factory();
 
-  CxadpsiPlayer(): CxadPlayer()
-    { }
+  CxadpsiPlayer() : CxadPlayer() {}
 
 protected:
-  struct psi_header
-  {
-    unsigned short  instr_ptr;
-    unsigned short  seq_ptr;
+  struct psi_header {
+    unsigned short instr_ptr;
+    unsigned short seq_ptr;
   } header;
 
-  struct
-  {
-    unsigned char   *instr_table;
-    unsigned char   *seq_table;
-    unsigned char   note_delay[9];
-    unsigned char   note_curdelay[9];
-    unsigned char   looping[9];
+  struct {
+    unsigned char *instr_table;
+    unsigned char *seq_table;
+    unsigned char note_delay[9];
+    unsigned char note_curdelay[9];
+    unsigned char looping[9];
   } psi;
   //
-  bool		  xadplayer_load()
-    {
-      if(xad.fmt == PSI)
-	return true;
-      else
-	return false;
-    }
-  void            xadplayer_rewind(int);
-  void            xadplayer_update();
-  float           xadplayer_getrefresh();
-  std::string     xadplayer_gettype();
-  unsigned int    xadplayer_getinstruments();
+  bool xadplayer_load() {
+    if (xad.fmt == PSI)
+      return true;
+    else
+      return false;
+  }
+  void xadplayer_rewind(int);
+  void xadplayer_update();
+  float xadplayer_getrefresh();
+  std::string xadplayer_gettype();
+  unsigned int xadplayer_getinstruments();
 
 private:
   static const unsigned char psi_adlib_registers[99];

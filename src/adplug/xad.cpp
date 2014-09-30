@@ -24,20 +24,17 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CxadPlayer::CxadPlayer() : CPlayer()
-{
-  tune = 0;
-}
+CxadPlayer::CxadPlayer() : CPlayer() { tune = 0; }
 
-CxadPlayer::~CxadPlayer()
-{
+CxadPlayer::~CxadPlayer() {
   if (tune)
-    delete [] tune;
+    delete[] tune;
 }
 
-bool CxadPlayer::load(const std::string &filename, const CFileProvider &fp)
-{
-  binistream *f = fp.open(filename); if(!f) return false;
+bool CxadPlayer::load(const std::string &filename, const CFileProvider &fp) {
+  binistream *f = fp.open(filename);
+  if (!f)
+    return false;
   bool ret = false;
 
   // load header
@@ -49,13 +46,16 @@ bool CxadPlayer::load(const std::string &filename, const CFileProvider &fp)
   xad.reserved_a = f->readInt(1);
 
   // 'XAD!' - signed ?
-  if(xad.id != 0x21444158) { fp.close(f); return false; }
+  if (xad.id != 0x21444158) {
+    fp.close(f);
+    return false;
+  }
 
   // get file size
   tune_size = fp.filesize(f) - 80;
 
   // load()
-  tune = new unsigned char [tune_size];
+  tune = new unsigned char[tune_size];
   f->readString((char *)tune, tune_size);
   fp.close(f);
 
@@ -67,8 +67,7 @@ bool CxadPlayer::load(const std::string &filename, const CFileProvider &fp)
   return ret;
 }
 
-void CxadPlayer::rewind(int subsong)
-{
+void CxadPlayer::rewind(int subsong) {
   plr.speed = xad.speed;
   plr.speed_counter = 1;
   plr.playing = 1;
@@ -82,8 +81,7 @@ void CxadPlayer::rewind(int subsong)
 #endif
 }
 
-bool CxadPlayer::update()
-{
+bool CxadPlayer::update() {
   if (--plr.speed_counter)
     goto update_end;
 
@@ -96,43 +94,28 @@ update_end:
   return (plr.playing && (!plr.looping));
 }
 
-size_t CxadPlayer::framesUntilUpdate()
-{
-  return SampleRate/xadplayer_getrefresh();
+size_t CxadPlayer::framesUntilUpdate() {
+  return SampleRate / xadplayer_getrefresh();
 }
 
-std::string CxadPlayer::gettype()
-{
-  return xadplayer_gettype();
-}
+std::string CxadPlayer::gettype() { return xadplayer_gettype(); }
 
-std::string CxadPlayer::gettitle()
-{
-  return xadplayer_gettitle();
-}
+std::string CxadPlayer::gettitle() { return xadplayer_gettitle(); }
 
-std::string CxadPlayer::getauthor()
-{
-  return xadplayer_getauthor();
-}
+std::string CxadPlayer::getauthor() { return xadplayer_getauthor(); }
 
-std::string CxadPlayer::getinstrument(unsigned int i)
-{
+std::string CxadPlayer::getinstrument(unsigned int i) {
   return xadplayer_getinstrument(i);
 }
 
-unsigned int CxadPlayer::getinstruments()
-{
-  return xadplayer_getinstruments();
-}
+unsigned int CxadPlayer::getinstruments() { return xadplayer_getinstruments(); }
 
 /* -------- Protected Methods ------------------------------- */
 
-void CxadPlayer::opl_write(int reg, int val)
-{
+void CxadPlayer::opl_write(int reg, int val) {
   adlib[reg] = val;
 #ifdef DEBUG
-  AdPlug_LogWrite("[ %02X ] = %02X\n",reg,val);
+  AdPlug_LogWrite("[ %02X ] = %02X\n", reg, val);
 #endif
-  getOpl()->writeReg(reg,val);
+  getOpl()->writeReg(reg, val);
 }

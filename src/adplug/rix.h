@@ -22,9 +22,8 @@
 
 #include "player.h"
 
-class CrixPlayer: public CPlayer
-{
- public:
+class CrixPlayer : public CPlayer {
+public:
   static CPlayer *factory();
 
   CrixPlayer();
@@ -36,18 +35,18 @@ class CrixPlayer: public CPlayer
   size_t framesUntilUpdate();
   unsigned int getsubsongs();
 
-  std::string gettype()
-    { return std::string("Softstar RIX OPL Music Format"); };
+  std::string gettype() { return std::string("Softstar RIX OPL Music Format"); }
+  ;
 
- protected:	
+protected:
   typedef struct {
     unsigned char v[14];
   } ADDT;
 
   int flag_mkf;
   unsigned char *file_buffer;
-  unsigned char *buf_addr;  /* rix files' f_buffer */
-  unsigned short f_buffer[300];//9C0h-C18h
+  unsigned char *buf_addr;      /* rix files' f_buffer */
+  unsigned short f_buffer[300]; //9C0h-C18h
   unsigned short a0b0_data2[11];
   unsigned char a0b0_data3[18];
   unsigned char a0b0_data4[18];
@@ -56,7 +55,7 @@ class CrixPlayer: public CPlayer
   unsigned short insbuf[28];
   unsigned short displace[11];
   ADDT reg_bufs[18];
-  unsigned long pos,length;
+  unsigned long pos, length;
   unsigned char index;
 
   static const unsigned char adflag[18];
@@ -66,7 +65,7 @@ class CrixPlayer: public CPlayer
   static const unsigned char bd_reg_data[124];
   static unsigned char for40reg[18];
   static unsigned short mus_time;
-  unsigned int I,T;
+  unsigned int I, T;
   unsigned short mus_block;
   unsigned short ins_block;
   unsigned char rhythm;
@@ -79,34 +78,35 @@ class CrixPlayer: public CPlayer
   int sustain;
   int play_end;
 
-#define ad_08_reg() ad_bop(8,0)    /**/
-  inline void ad_20_reg(unsigned short);              /**/
-  inline void ad_40_reg(unsigned short);              /**/
-  inline void ad_60_reg(unsigned short);              /**/
-  inline void ad_80_reg(unsigned short);              /**/
-  inline void ad_a0b0_reg(unsigned short);            /**/
-  inline void ad_a0b0l_reg(unsigned short,unsigned short,unsigned short); /**/
-  inline void ad_a0b0l_reg_(unsigned short,unsigned short,unsigned short); /**/
-  inline void ad_bd_reg();                  /**/
-  inline void ad_bop(unsigned short,unsigned short);                     /**/
-  inline void ad_C0_reg(unsigned short);              /**/
-  inline void ad_E0_reg(unsigned short);              /**/
-  inline unsigned short ad_initial();                 /**/
-  inline unsigned short ad_test();                    /**/
-  inline void crc_trans(unsigned short,unsigned short);         /**/
-  inline void data_initial();               /* done */
-  inline void init();                       /**/
-  inline void ins_to_reg(unsigned short,unsigned short*,unsigned short);  /**/
-  inline void int_08h_entry();    /**/
-  inline void music_ctrl();                 /**/
-  inline void Pause();                      /**/
-  inline void prepare_a0b0(unsigned short,unsigned short);      /**/
-  inline void rix_90_pro(unsigned short);             /**/
-  inline void rix_A0_pro(unsigned short,unsigned short);        /**/
-  inline void rix_B0_pro(unsigned short,unsigned short);        /**/
-  inline void rix_C0_pro(unsigned short,unsigned short);        /**/
-  inline void rix_get_ins();                /**/
-  inline unsigned short rix_proc();                   /**/
+#define ad_08_reg() ad_bop(8, 0)                                            /**/
+  inline void ad_20_reg(unsigned short);                                    /**/
+  inline void ad_40_reg(unsigned short);                                    /**/
+  inline void ad_60_reg(unsigned short);                                    /**/
+  inline void ad_80_reg(unsigned short);                                    /**/
+  inline void ad_a0b0_reg(unsigned short);                                  /**/
+  inline void ad_a0b0l_reg(unsigned short, unsigned short, unsigned short); /**/
+  inline void ad_a0b0l_reg_(unsigned short, unsigned short, unsigned short);
+  /**/
+  inline void ad_bd_reg();                               /**/
+  inline void ad_bop(unsigned short, unsigned short);    /**/
+  inline void ad_C0_reg(unsigned short);                 /**/
+  inline void ad_E0_reg(unsigned short);                 /**/
+  inline unsigned short ad_initial();                    /**/
+  inline unsigned short ad_test();                       /**/
+  inline void crc_trans(unsigned short, unsigned short); /**/
+  inline void data_initial();                            /* done */
+  inline void init();                                    /**/
+  inline void ins_to_reg(unsigned short, unsigned short *, unsigned short); /**/
+  inline void int_08h_entry();                                              /**/
+  inline void music_ctrl();                                                 /**/
+  inline void Pause();                                                      /**/
+  inline void prepare_a0b0(unsigned short, unsigned short);                 /**/
+  inline void rix_90_pro(unsigned short);                                   /**/
+  inline void rix_A0_pro(unsigned short, unsigned short);                   /**/
+  inline void rix_B0_pro(unsigned short, unsigned short);                   /**/
+  inline void rix_C0_pro(unsigned short, unsigned short);                   /**/
+  inline void rix_get_ins();                                                /**/
+  inline unsigned short rix_proc();                                         /**/
   inline void set_new_int();
-  inline void switch_ad_bd(unsigned short);           /**/
+  inline void switch_ad_bd(unsigned short); /**/
 };

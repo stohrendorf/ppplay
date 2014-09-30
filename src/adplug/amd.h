@@ -21,29 +21,29 @@
 
 #include "protrack.h"
 
-class CamdLoader: public CmodPlayer
-{
+class CamdLoader : public CmodPlayer {
 public:
   static CPlayer *factory();
 
-	CamdLoader()
-		: CmodPlayer()
-	{ };
+  CamdLoader() : CmodPlayer() {}
+  ;
 
-	bool load(const std::string &filename, const CFileProvider &fp);
-	size_t framesUntilUpdate();
+  bool load(const std::string &filename, const CFileProvider &fp);
+  size_t framesUntilUpdate();
 
-	std::string gettype()
-	{ return std::string("AMUSIC Adlib Tracker"); };
-	std::string gettitle()
-	{ return std::string(songname,0,24); };
-	std::string getauthor()
-	{ return std::string(author,0,24); };
-	unsigned int getinstruments()
-	{ return 26; };
-	std::string getinstrument(unsigned int n)
-	{ return std::string(m_instrumentNames[n],0,23); };
+  std::string gettype() { return std::string("AMUSIC Adlib Tracker"); }
+  ;
+  std::string gettitle() { return std::string(songname, 0, 24); }
+  ;
+  std::string getauthor() { return std::string(author, 0, 24); }
+  ;
+  unsigned int getinstruments() { return 26; }
+  ;
+  std::string getinstrument(unsigned int n) {
+    return std::string(m_instrumentNames[n], 0, 23);
+  }
+  ;
 
 private:
-	char songname[24],author[24],m_instrumentNames[26][23];
+  char songname[24], author[24], m_instrumentNames[26][23];
 };

@@ -29,65 +29,88 @@
 #include "ymf262/opl3.h"
 #include "stuff/utils.h"
 
-class CPlayer
-{
-    DISABLE_COPY(CPlayer)
-    public:
-        static constexpr auto SampleRate = opl::Opl3::SampleRate;
-    CPlayer();
-    virtual ~CPlayer() = default;
+class CPlayer {
+  DISABLE_COPY(CPlayer)
+public:
+  static constexpr auto SampleRate = opl::Opl3::SampleRate;
+  CPlayer();
+  virtual ~CPlayer() = default;
 
-    /***** Operational methods *****/
-    virtual bool load(const std::string &filename,	// loads file
-                      const CFileProvider &fp = CProvider_Filesystem()) = 0;
-    virtual bool update() = 0;			// executes replay code for 1 tick
-    virtual void rewind(int subsong = -1) = 0;	// rewinds to specified subsong
-    virtual size_t framesUntilUpdate() = 0;
+  /***** Operational methods *****/
+  virtual bool load(const std::string &filename, // loads file
+                    const CFileProvider &fp = CProvider_Filesystem()) = 0;
+  virtual bool update() = 0;                 // executes replay code for 1 tick
+  virtual void rewind(int subsong = -1) = 0; // rewinds to specified subsong
+  virtual size_t framesUntilUpdate() = 0;
 
-    /***** Informational methods *****/
-    virtual std::string gettype() = 0;	// returns file type
-    virtual std::string gettitle()		// returns song title
-    { return std::string(); }
-    virtual std::string getauthor()		// returns song author name
-    { return std::string(); }
-    virtual std::string getdesc()		// returns song description
-    { return std::string(); }
-    virtual unsigned int getpatterns()	// returns number of patterns
-    { return 0; }
-    virtual unsigned int getpattern()	// returns currently playing pattern
-    { return 0; }
-    virtual unsigned int getorders()	// returns size of orderlist
-    { return 0; }
-    virtual unsigned int getorder()		// returns currently playing song position
-    { return 0; }
-    virtual unsigned int getrow()		// returns currently playing row
-    { return 0; }
-    virtual unsigned int getspeed()		// returns current song speed
-    { return 0; }
-    virtual unsigned int getsubsongs()	// returns number of subsongs
-    { return 1; }
-    virtual unsigned int getsubsong()	// returns current subsong
-    { return 0; }
-    virtual unsigned int getinstruments()	// returns number of instruments
-    { return 0; }
-    virtual std::string getinstrument(unsigned int)	// returns n-th instrument name
-    { return std::string(); }
+  /***** Informational methods *****/
+  virtual std::string gettype() = 0; // returns file type
+  virtual std::string gettitle()     // returns song title
+      {
+    return std::string();
+  }
+  virtual std::string getauthor() // returns song author name
+      {
+    return std::string();
+  }
+  virtual std::string getdesc() // returns song description
+      {
+    return std::string();
+  }
+  virtual unsigned int getpatterns() // returns number of patterns
+      {
+    return 0;
+  }
+  virtual unsigned int getpattern() // returns currently playing pattern
+      {
+    return 0;
+  }
+  virtual unsigned int getorders() // returns size of orderlist
+      {
+    return 0;
+  }
+  virtual unsigned int getorder() // returns currently playing song position
+      {
+    return 0;
+  }
+  virtual unsigned int getrow() // returns currently playing row
+      {
+    return 0;
+  }
+  virtual unsigned int getspeed() // returns current song speed
+      {
+    return 0;
+  }
+  virtual unsigned int getsubsongs() // returns number of subsongs
+      {
+    return 1;
+  }
+  virtual unsigned int getsubsong() // returns current subsong
+      {
+    return 0;
+  }
+  virtual unsigned int getinstruments() // returns number of instruments
+      {
+    return 0;
+  }
+  virtual std::string
+  getinstrument(unsigned int) // returns n-th instrument name
+      {
+    return std::string();
+  }
 
-    opl::Opl3* getOpl() {
-        return &m_oplChip;
-    }
-    virtual void read(std::array<int16_t,4>* data) {
-        m_oplChip.read(data);
-    }
+  opl::Opl3 *getOpl() { return &m_oplChip; }
+  virtual void read(std::array<int16_t, 4> *data) { m_oplChip.read(data); }
 
 private:
-    opl::Opl3 m_oplChip;
+  opl::Opl3 m_oplChip;
 
 protected:
-    CAdPlugDatabase	*m_db;	// AdPlug Database
+  CAdPlugDatabase *m_db; // AdPlug Database
 
-    static const unsigned short	m_noteTable[12];	// standard adlib note table
-    static const unsigned char	m_opTable[9];	// the 9 operators as expected by the OPL
+  static const unsigned short m_noteTable[12]; // standard adlib note table
+  static const unsigned char
+      m_opTable[9]; // the 9 operators as expected by the OPL
 };
 
 #endif

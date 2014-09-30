@@ -24,74 +24,68 @@
 
 #include "player.h"
 
-class CxadPlayer: public CPlayer
-{
+class CxadPlayer : public CPlayer {
 public:
   static CPlayer *factory();
 
-        CxadPlayer();
-        ~CxadPlayer();
+  CxadPlayer();
+  ~CxadPlayer();
 
-        bool	load(const std::string &filename, const CFileProvider &fp);
-        bool	update();
-        void	rewind(int subsong);
-        size_t framesUntilUpdate();
+  bool load(const std::string &filename, const CFileProvider &fp);
+  bool update();
+  void rewind(int subsong);
+  size_t framesUntilUpdate();
 
-        std::string     gettype();
-        std::string     gettitle();
-        std::string     getauthor();
-        std::string     getinstrument(unsigned int i);
-        unsigned int    getinstruments();
+  std::string gettype();
+  std::string gettitle();
+  std::string getauthor();
+  std::string getinstrument(unsigned int i);
+  unsigned int getinstruments();
 
 protected:
-	virtual void xadplayer_rewind(int subsong) = 0;
-	virtual bool xadplayer_load() = 0;
-	virtual void xadplayer_update() = 0;
-	virtual float xadplayer_getrefresh() = 0;
-	virtual std::string xadplayer_gettype() = 0;
-	virtual std::string xadplayer_gettitle()
-	  {
-	    return std::string(xad.title);
-	  }
-	virtual std::string xadplayer_getauthor()
-	  {
-	    return std::string(xad.author);
-	  }
-    virtual std::string xadplayer_getinstrument(unsigned int)
-	  {
-        return std::string();
-	  }
-	virtual unsigned int xadplayer_getinstruments()
-	  {
-	    return 0;
-	  }
+  virtual void xadplayer_rewind(int subsong) = 0;
+  virtual bool xadplayer_load() = 0;
+  virtual void xadplayer_update() = 0;
+  virtual float xadplayer_getrefresh() = 0;
+  virtual std::string xadplayer_gettype() = 0;
+  virtual std::string xadplayer_gettitle() { return std::string(xad.title); }
+  virtual std::string xadplayer_getauthor() { return std::string(xad.author); }
+  virtual std::string xadplayer_getinstrument(unsigned int) {
+    return std::string();
+  }
+  virtual unsigned int xadplayer_getinstruments() { return 0; }
 
-	enum { HYP=1, PSI, FLASH, BMF, RAT, HYBRID };
+  enum {
+    HYP = 1,
+    PSI,
+    FLASH,
+    BMF,
+    RAT,
+    HYBRID
+  };
 
-        struct xad_header
-        {
-	    unsigned long   id;
-            char            title[36];
-            char            author[36];
-            unsigned short  fmt;
-            unsigned char   speed;
-            unsigned char   reserved_a;
-        } xad;
+  struct xad_header {
+    unsigned long id;
+    char title[36];
+    char author[36];
+    unsigned short fmt;
+    unsigned char speed;
+    unsigned char reserved_a;
+  } xad;
 
-        unsigned char * tune;
-        unsigned long   tune_size;
+  unsigned char *tune;
+  unsigned long tune_size;
 
-        struct
-        {
-            int             playing;
-            int             looping;
-            unsigned char   speed;
-            unsigned char   speed_counter;
-        } plr;
+  struct {
+    int playing;
+    int looping;
+    unsigned char speed;
+    unsigned char speed_counter;
+  } plr;
 
-        unsigned char   adlib[256];
+  unsigned char adlib[256];
 
-        void opl_write(int reg, int val);
+  void opl_write(int reg, int val);
 };
 
 #endif

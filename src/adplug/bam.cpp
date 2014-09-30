@@ -36,8 +36,8 @@
  *      +----------|-----------|-------- label 1
  *                 +-----------+-------- loop points to label 1
  * 
- * both loop points loop to the same label. Storing the loop 
- * count with the label would cause chaos with the counter, 
+ * both loop points loop to the same label. Storing the loop
+ * count with the label would cause chaos with the counter,
  * when the player executes the inner jump.
  * ------------------
  * Not to worry. my reference implementation of BAM does not
@@ -50,154 +50,163 @@
 #include <string.h>
 #include "bam.h"
 
-const unsigned short CbamPlayer::freq[] = {172,182,193,205,217,230,243,258,274,
-290,307,326,345,365,387,410,435,460,489,517,547,580,614,651,1369,1389,1411,
-1434,1459,1484,1513,1541,1571,1604,1638,1675,2393,2413,2435,2458,2483,2508,
-2537,2565,2595,2628,2662,2699,3417,3437,3459,3482,3507,3532,3561,3589,3619,
-3652,3686,3723,4441,4461,4483,4506,4531,4556,4585,4613,4643,4676,4710,4747,
-5465,5485,5507,5530,5555,5580,5609,5637,5667,5700,5734,5771,6489,6509,6531,
-6554,6579,6604,6633,6661,6691,6724,6758,6795,7513,7533,7555,7578,7603,7628,
-7657,7685,7715,7748,7782,7819,7858,7898,7942,7988,8037,8089,8143,8191,8191,
-8191,8191,8191,8191,8191,8191,8191,8191,8191,8191};
+const unsigned short CbamPlayer::freq[] = {
+  172, 182, 193, 205, 217, 230, 243, 258, 274, 290, 307, 326, 345, 365, 387,
+  410, 435, 460, 489, 517, 547, 580, 614, 651, 1369, 1389, 1411, 1434, 1459,
+  1484, 1513, 1541, 1571, 1604, 1638, 1675, 2393, 2413, 2435, 2458, 2483, 2508,
+  2537, 2565, 2595, 2628, 2662, 2699, 3417, 3437, 3459, 3482, 3507, 3532, 3561,
+  3589, 3619, 3652, 3686, 3723, 4441, 4461, 4483, 4506, 4531, 4556, 4585, 4613,
+  4643, 4676, 4710, 4747, 5465, 5485, 5507, 5530, 5555, 5580, 5609, 5637, 5667,
+  5700, 5734, 5771, 6489, 6509, 6531, 6554, 6579, 6604, 6633, 6661, 6691, 6724,
+  6758, 6795, 7513, 7533, 7555, 7578, 7603, 7628, 7657, 7685, 7715, 7748, 7782,
+  7819, 7858, 7898, 7942, 7988, 8037, 8089, 8143, 8191, 8191, 8191, 8191, 8191,
+  8191, 8191, 8191, 8191, 8191, 8191, 8191
+};
 
-CPlayer *CbamPlayer::factory()
-{
-  return new CbamPlayer();
+CPlayer *CbamPlayer::factory() { return new CbamPlayer(); }
+
+bool CbamPlayer::load(const std::string &filename, const CFileProvider &fp) {
+  binistream *f = fp.open(filename);
+  if (!f)
+    return false;
+  char id[4];
+  unsigned int i;
+
+  auto size = fp.filesize(f) - 4; // filesize minus header
+  f->readString(id, 4);
+  if (strncmp(id, "CBMF", 4)) {
+    fp.close(f);
+    return false;
+  }
+
+  m_song.resize(size);
+  for (i = 0; i < size; i++)
+    m_song[i] = f->readInt(1);
+
+  fp.close(f);
+  rewind(0);
+  return true;
 }
 
-bool CbamPlayer::load(const std::string &filename, const CFileProvider &fp)
-{
-        binistream *f = fp.open(filename); if(!f) return false;
-	char id[4];
-	unsigned int i;
+bool CbamPlayer::update() {
+  unsigned char cmd, c;
 
-    auto size = fp.filesize(f) - 4;	// filesize minus header
-	f->readString(id, 4);
-	if(strncmp(id,"CBMF",4)) { fp.close(f); return false; }
+  if (del) {
+    del--;
+    return !songend;
+  }
 
-    m_song.resize(size);
-    for(i = 0; i < size; i++) m_song[i] = f->readInt(1);
+  if (pos >= m_song.size()) { // EOF detection
+    pos = 0;
+    songend = true;
+  }
 
-	fp.close(f);
-	rewind(0);
-	return true;
+  while (m_song[pos] < 128) {
+    cmd = m_song[pos] & 240;
+    c = m_song[pos] & 15;
+    switch (cmd) {
+    case 0: // stop song
+      pos = 0;
+      songend = true;
+      break;
+    case 16: // start note
+      if (c < 9) {
+        getOpl()->writeReg(0xa0 + c, freq[m_song[++pos]] & 255);
+        getOpl()->writeReg(0xb0 + c, (freq[m_song[pos]] >> 8) + 32);
+      } else
+        pos++;
+      pos++;
+      break;
+    case 32: // stop note
+      if (c < 9)
+        getOpl()->writeReg(0xb0 + c, 0);
+      pos++;
+      break;
+    case 48: // define instrument
+      if (c < 9) {
+        getOpl()->writeReg(0x20 + m_opTable[c], m_song[pos + 1]);
+        getOpl()->writeReg(0x23 + m_opTable[c], m_song[pos + 2]);
+        getOpl()->writeReg(0x40 + m_opTable[c], m_song[pos + 3]);
+        getOpl()->writeReg(0x43 + m_opTable[c], m_song[pos + 4]);
+        getOpl()->writeReg(0x60 + m_opTable[c], m_song[pos + 5]);
+        getOpl()->writeReg(0x63 + m_opTable[c], m_song[pos + 6]);
+        getOpl()->writeReg(0x80 + m_opTable[c], m_song[pos + 7]);
+        getOpl()->writeReg(0x83 + m_opTable[c], m_song[pos + 8]);
+        getOpl()->writeReg(0xe0 + m_opTable[c], m_song[pos + 9]);
+        getOpl()->writeReg(0xe3 + m_opTable[c], m_song[pos + 10]);
+        getOpl()->writeReg(0xc0 + c, m_song[pos + 11]);
+      }
+      pos += 12;
+      break;
+    case 80: // set label
+      label[c].target = ++pos;
+      label[c].defined = true;
+      break;
+    case 96: // jump
+      if (label[c].defined)
+        switch (m_song[pos + 1]) {
+        case 254: // infinite loop
+          if (label[c].defined) {
+            pos = label[c].target;
+            songend = true;
+            break;
+          }
+        // fall through...
+        case 255: // chorus
+          if (!chorus && label[c].defined) {
+            chorus = true;
+            gosub = pos + 2;
+            pos = label[c].target;
+            break;
+          }
+        // fall through...
+        case 0: // end of loop
+          pos += 2;
+          break;
+        default:                 // finite loop
+          if (!label[c].count) { // loop elapsed
+            label[c].count = 255;
+            pos += 2;
+            break;
+          }
+          if (label[c].count < 255) // loop defined
+            label[c].count--;
+          else // loop undefined
+            label[c].count = m_song[pos + 1] - 1;
+          pos = label[c].target;
+          break;
+        }
+      break;
+    case 112: // end of chorus
+      if (chorus) {
+        pos = gosub;
+        chorus = false;
+      } else
+        pos++;
+      break;
+    default: // reserved command (skip)
+      pos++;
+      break;
+    }
+  }
+  if (m_song[pos] >= 128) { // wait
+    del = m_song[pos] - 127;
+    pos++;
+  }
+  return !songend;
 }
 
-bool CbamPlayer::update()
-{
-	unsigned char	cmd,c;
+void CbamPlayer::rewind(int) {
+  int i;
 
-	if(del) {
-		del--;
-		return !songend;
-	}
-
-    if(pos >= m_song.size()) {	// EOF detection
-		pos = 0;
-		songend = true;
-	}
-
-    while(m_song[pos] < 128) {
-        cmd = m_song[pos] & 240;
-        c = m_song[pos] & 15;
-		switch(cmd) {
-		case 0:		// stop song
-			pos = 0;
-			songend = true;
-			break;
-		case 16:	// start note
-			if(c < 9) {
-                getOpl()->writeReg(0xa0 + c, freq[m_song[++pos]] & 255);
-                getOpl()->writeReg(0xb0 + c, (freq[m_song[pos]] >> 8) + 32);
-			} else
-				pos++;
-			pos++;
-			break;
-		case 32:	// stop note
-			if(c < 9)
-                getOpl()->writeReg(0xb0 + c, 0);
-			pos++;
-			break;
-		case 48:	// define instrument
-			if(c < 9) {
-                getOpl()->writeReg(0x20 + m_opTable[c],m_song[pos+1]);
-                getOpl()->writeReg(0x23 + m_opTable[c],m_song[pos+2]);
-                getOpl()->writeReg(0x40 + m_opTable[c],m_song[pos+3]);
-                getOpl()->writeReg(0x43 + m_opTable[c],m_song[pos+4]);
-                getOpl()->writeReg(0x60 + m_opTable[c],m_song[pos+5]);
-                getOpl()->writeReg(0x63 + m_opTable[c],m_song[pos+6]);
-                getOpl()->writeReg(0x80 + m_opTable[c],m_song[pos+7]);
-                getOpl()->writeReg(0x83 + m_opTable[c],m_song[pos+8]);
-                getOpl()->writeReg(0xe0 + m_opTable[c],m_song[pos+9]);
-                getOpl()->writeReg(0xe3 + m_opTable[c],m_song[pos+10]);
-                getOpl()->writeReg(0xc0 + c,m_song[pos+11]);
-			}
-			pos += 12;
-			break;
-		case 80:	// set label
-			label[c].target = ++pos;
-			label[c].defined = true;
-			break;
-		case 96:	// jump
-			if(label[c].defined)
-                switch(m_song[pos+1]) {
-				case 254:	// infinite loop
-					if(label[c].defined) {
-						pos = label[c].target;
-						songend = true;
-						break;
-					}
-					// fall through...
-				case 255:	// chorus
-					if(!chorus && label[c].defined) {
-						chorus = true;
-						gosub = pos + 2;
-						pos = label[c].target;
-						break;
-					}
-					// fall through...
-				case 0:		// end of loop
-					pos += 2;
-					break;
-				default:	// finite loop
-					if(!label[c].count) {	// loop elapsed
-						label[c].count = 255;
-						pos += 2;
-						break;
-					}
-					if(label[c].count < 255)	// loop defined
-						label[c].count--;
-					else						// loop undefined
-                        label[c].count = m_song[pos+1] - 1;
-					pos = label[c].target;
-					break;
-				}
-			break;
-		case 112:	// end of chorus
-			if(chorus) {
-				pos = gosub;
-				chorus = false;
-			} else
-				pos++;
-			break;
-		default:	// reserved command (skip)
-			pos++;
-			break;
-		}
-	}
-    if(m_song[pos] >= 128) {		// wait
-        del = m_song[pos] - 127;
-		pos++;
-	}
-	return !songend;
-}
-
-void CbamPlayer::rewind(int)
-{
-        int i;
-
-	pos = 0; songend = false; del = 0; gosub = 0; chorus = false;
-	memset(label, 0, sizeof(label)); label[0].defined = true;
-	for(i = 0; i < 16; i++) label[i].count = 255;	// 255 = undefined
-    getOpl()->writeReg(1,32);
+  pos = 0;
+  songend = false;
+  del = 0;
+  gosub = 0;
+  chorus = false;
+  memset(label, 0, sizeof(label));
+  label[0].defined = true;
+  for (i = 0; i < 16; i++)
+    label[i].count = 255; // 255 = undefined
+  getOpl()->writeReg(1, 32);
 }
