@@ -29,13 +29,12 @@ class Cd00Player : public CPlayer {
 public:
   static CPlayer *factory();
 
-  Cd00Player() : CPlayer(), filedata(0) {}
-  ;
+  Cd00Player() = default;
+
   ~Cd00Player() {
     if (filedata)
       delete[] filedata;
   }
-  ;
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
@@ -67,60 +66,60 @@ public:
   unsigned int getsubsongs();
 
 protected:
-#pragma pack(1)
+#pragma pack(push,1)
   struct d00header {
     char id[6];
-    unsigned char type, version, speed, subsongs, soundcard;
+    uint8_t type, version, speed, subsongs, soundcard;
     char songname[32], author[32], dummy[32];
-    unsigned short tpoin, seqptr, instptr, infoptr, spfxptr, endmark;
+    uint16_t tpoin, seqptr, instptr, infoptr, spfxptr, endmark;
   };
 
   struct d00header1 {
-    unsigned char version, speed, subsongs;
-    unsigned short tpoin, seqptr, instptr, infoptr, lpulptr, endmark;
+    uint8_t version, speed, subsongs;
+    uint16_t tpoin, seqptr, instptr, infoptr, lpulptr, endmark;
   };
-#pragma pack()
+#pragma pack(pop)
 
   struct {
-    unsigned short *order, ordpos, pattpos, del, speed, rhcnt, key, freq, inst,
+    uint16_t *order, ordpos, pattpos, del, speed, rhcnt, key, freq, inst,
         spfx, ispfx, irhcnt;
     signed short transpose, slide, slideval, vibspeed;
-    unsigned char seqend, vol, vibdepth, fxdel, modvol, cvol, levpuls,
+    uint8_t seqend, vol, vibdepth, fxdel, modvol, cvol, levpuls,
         frameskip, nextnote, note, ilevpuls, trigger, fxflag;
   } channel[9];
 
   struct Sinsts {
-    unsigned char data[11], tunelev, timer, sr, dummy[2];
-  } *inst;
+    uint8_t data[11], tunelev, timer, sr, dummy[2];
+  } *inst = nullptr;
 
   struct Sspfx {
-    unsigned short instnr;
-    signed char halfnote;
-    unsigned char modlev;
-    signed char modlevadd;
-    unsigned char duration;
-    unsigned short ptr;
-  } *spfx;
+    uint16_t instnr;
+    int8_t halfnote;
+    uint8_t modlev;
+    int8_t modlevadd;
+    uint8_t duration;
+    uint16_t ptr;
+  } *spfx = nullptr;
 
   struct Slevpuls {
-    unsigned char level;
-    signed char voladd;
-    unsigned char duration, ptr;
-  } *levpuls;
+    uint8_t level;
+    int8_t voladd;
+    uint8_t duration, ptr;
+  } *levpuls = nullptr;
 
-  unsigned char songend, version, cursubsong;
-  char *datainfo;
-  unsigned short *seqptr;
-  d00header *header;
-  d00header1 *header1;
-  char *filedata;
+  uint8_t songend = 0, version = 0, cursubsong = 0;
+  char *datainfo = nullptr;
+  uint16_t *seqptr = nullptr;
+  d00header *header = nullptr;
+  d00header1 *header1 = nullptr;
+  char *filedata = nullptr;
 
 private:
-  void setvolume(unsigned char chan);
-  void setfreq(unsigned char chan);
-  void setinst(unsigned char chan);
-  void playnote(unsigned char chan);
-  void vibrato(unsigned char chan);
+  void setvolume(uint8_t chan);
+  void setfreq(uint8_t chan);
+  void setinst(uint8_t chan);
+  void playnote(uint8_t chan);
+  void vibrato(uint8_t chan);
 };
 
 #endif

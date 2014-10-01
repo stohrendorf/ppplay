@@ -32,47 +32,41 @@ class Cu6mPlayer : public CPlayer {
 public:
   static CPlayer *factory();
 
-  Cu6mPlayer() : CPlayer(), song_data(0) {}
-  ;
+  Cu6mPlayer() = default;
 
   ~Cu6mPlayer() {
     if (song_data)
       delete[] song_data;
   }
-  ;
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int);
   size_t framesUntilUpdate();
 
-  std::string gettype() { return std::string("Ultima 6 Music"); }
-  ;
+  std::string gettype() { return "Ultima 6 Music"; }
 
 protected:
 
   struct byte_pair {
-    unsigned char lo;
-    unsigned char hi;
+    uint8_t lo;
+    uint8_t hi;
   };
 
-  struct subsong_info // information about a subsong
-      {
+  struct subsong_info { // information about a subsong
     int continue_pos;
     int subsong_repetitions;
     int subsong_start;
   };
 
-  struct dict_entry // dictionary entry
-      {
-    unsigned char root;
+  struct dict_entry { // dictionary entry
+    uint8_t root;
     int codeword;
   };
 
-  struct data_block //
-      {
+  struct data_block {
     long size;
-    unsigned char *data;
+    uint8_t *data;
   };
 
   class MyDict {
@@ -81,24 +75,24 @@ protected:
     // The actual number of dictionary entries allocated
     // is (dictionary_size-256), because there are 256 roots
     // that do not need to be stored.
-    int contains;  // number of entries currently in the dictionary
-    int dict_size; // max number of entries that will fit into the dictionary
-    dict_entry *dictionary;
+    int contains = 0x102;  // number of entries currently in the dictionary
+    int dict_size = default_dict_size; // max number of entries that will fit into the dictionary
+    dict_entry *dictionary = new dict_entry[default_dict_size - 0x100];
 
   public:
-    MyDict();    // use dictionary size of 4096
+    MyDict() = default;    // use dictionary size of 4096
     MyDict(int); // let the caller specify a dictionary size
     ~MyDict();
     void reset(); // re-initializes the dictionary
-    void add(unsigned char, int);
-    unsigned char get_root(int);
+    void add(uint8_t, int);
+    uint8_t get_root(int);
     int get_codeword(int);
   };
 
   // class variables
   long played_ticks;
 
-  unsigned char *song_data; // the uncompressed .m file (the "song")
+  uint8_t* song_data = nullptr; // the uncompressed .m file (the "song")
   bool driver_active;       // flag to prevent reentrancy
   bool songend;             // indicates song end
   int song_pos;             // current offset within the song
@@ -108,29 +102,29 @@ protected:
 
   int instrument_offsets[9]; // offsets of the adlib instrument data
                              // vibrato ("vb")
-  unsigned char vb_current_value[9];
-  unsigned char vb_double_amplitude[9];
-  unsigned char vb_multiplier[9];
-  unsigned char vb_direction_flag[9];
+  uint8_t vb_current_value[9];
+  uint8_t vb_double_amplitude[9];
+  uint8_t vb_multiplier[9];
+  uint8_t vb_direction_flag[9];
   // mute factor ("mf") = not(volume)
-  unsigned char carrier_mf[9];
+  uint8_t carrier_mf[9];
   signed char carrier_mf_signed_delta[9];
-  unsigned char carrier_mf_mod_delay_backup[9];
-  unsigned char carrier_mf_mod_delay[9];
+  uint8_t carrier_mf_mod_delay_backup[9];
+  uint8_t carrier_mf_mod_delay[9];
   // frequency
   byte_pair channel_freq[9]; // adlib freq settings for each channel
   signed char channel_freq_signed_delta[9];
 
   // protected functions used by update()
   void command_loop();
-  unsigned char read_song_byte();
+  uint8_t read_song_byte();
   signed char read_signed_song_byte();
   void dec_clip(int &);
-  byte_pair expand_freq_byte(unsigned char);
+  byte_pair expand_freq_byte(uint8_t);
   void set_adlib_freq(int channel, byte_pair freq_word);
   void set_adlib_freq_no_update(int channel, byte_pair freq_word);
-  void set_carrier_mf(int channel, unsigned char mute_factor);
-  void set_modulator_mf(int channel, unsigned char mute_factor);
+  void set_carrier_mf(int channel, uint8_t mute_factor);
+  void set_modulator_mf(int channel, uint8_t mute_factor);
   void freq_slide(int channel);
   void vibrato(int channel);
   void mf_slide(int channel);
@@ -151,16 +145,16 @@ protected:
   void command_E();
   void command_F();
 
-  void out_adlib(unsigned char adlib_register, unsigned char adlib_data);
-  void out_adlib_opcell(int channel, bool carrier, unsigned char adlib_register,
-                        unsigned char out_byte);
+  void out_adlib(uint8_t adlib_register, uint8_t adlib_data);
+  void out_adlib_opcell(int channel, bool carrier, uint8_t adlib_register,
+                        uint8_t out_byte);
 
   // protected functions used by load()
   bool lzw_decompress(data_block source, data_block dest);
-  int get_next_codeword(long &bits_read, unsigned char *source,
+  int get_next_codeword(long &bits_read, uint8_t *source,
                         int codeword_size);
-  void output_root(unsigned char root, unsigned char *destination,
+  void output_root(uint8_t root, uint8_t *destination,
                    long &position);
   void get_string(int codeword, MyDict &dictionary,
-                  std::stack<unsigned char> &root_stack);
+                  std::stack<uint8_t> &root_stack);
 };

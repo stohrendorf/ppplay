@@ -41,30 +41,21 @@ public:
 
 private:
 
-#define ADPLUG_A2M_COPYRANGES 6
-#define ADPLUG_A2M_FIRSTCODE 257
-#define ADPLUG_A2M_MINCOPY 3
-#define ADPLUG_A2M_MAXCOPY 255
-#define ADPLUG_A2M_CODESPERRANGE (ADPLUG_A2M_MAXCOPY - ADPLUG_A2M_MINCOPY + 1)
-#define ADPLUG_A2M_MAXCHAR                                                     \
-  (ADPLUG_A2M_FIRSTCODE + ADPLUG_A2M_COPYRANGES * ADPLUG_A2M_CODESPERRANGE - 1)
-#define ADPLUG_A2M_TWICEMAX (2 * ADPLUG_A2M_MAXCHAR + 1)
+  static constexpr auto COPYRANGES = 6;
+  static constexpr auto FIRSTCODE = 257;
+  static constexpr auto MINCOPY = 3;
+  static constexpr auto MAXCOPY = 255;
+  static constexpr auto CODESPERRANGE = (MAXCOPY - MINCOPY + 1);
+  static constexpr auto MAXCHAR = (FIRSTCODE + COPYRANGES * CODESPERRANGE - 1);
+  static constexpr auto TWICEMAX = (2 * MAXCHAR + 1);
 
-  static const unsigned int MAXFREQ = 2000, MINCOPY = ADPLUG_A2M_MINCOPY,
-                            MAXCOPY = ADPLUG_A2M_MAXCOPY,
-                            COPYRANGES = ADPLUG_A2M_COPYRANGES,
-                            CODESPERRANGE = ADPLUG_A2M_CODESPERRANGE,
-                            TERMINATE = 256, FIRSTCODE = ADPLUG_A2M_FIRSTCODE,
-                            MAXCHAR =
-                                FIRSTCODE + COPYRANGES * CODESPERRANGE - 1,
-                            SUCCMAX = MAXCHAR + 1,
-                            TWICEMAX = ADPLUG_A2M_TWICEMAX, ROOT = 1,
-                            MAXBUF = 42 * 1024, MAXDISTANCE = 21389,
-                            MAXSIZE = 21389 + MAXCOPY;
-
-  static const unsigned short m_bitvalue[14];
-  static const signed short m_copybits[ADPLUG_A2M_COPYRANGES],
-      m_copymin[ADPLUG_A2M_COPYRANGES];
+  static constexpr auto MAXFREQ = 2000;
+  static constexpr auto TERMINATE = 256;
+  static constexpr auto SUCCMAX = MAXCHAR + 1;
+  static constexpr auto ROOT = 1;
+  static constexpr auto MAXBUF = 42 * 1024;
+  static constexpr auto MAXDISTANCE = 21389;
+  static constexpr auto MAXSIZE = 21389 + MAXCOPY;
 
   void inittree();
   void updatefreq(unsigned short a, unsigned short b);
@@ -72,19 +63,25 @@ private:
   unsigned short inputcode(unsigned short bits);
   unsigned short uncompress();
   void decode();
-  unsigned short sixdepak(unsigned short *source, unsigned char *dest,
-                          unsigned short size);
+  size_t sixdepak(uint16_t *source, uint8_t *dest, size_t size);
 
-  std::string m_songname, m_author, m_instname[250];
+  std::string m_songname{};
+  std::string m_author{};
+  std::array<std::string,250> m_instname{};
 
-  unsigned short m_bitcount = 0, m_bitbuffer = 0, m_bufcount = 0,
-                 m_obufcount = 0, m_inputSize = 0, m_outputSize = 0,
-                 m_leftc[ADPLUG_A2M_MAXCHAR + 1],
-                 m_rightc[ADPLUG_A2M_MAXCHAR + 1],
-                 m_dad[ADPLUG_A2M_TWICEMAX + 1],
-                 m_freq[ADPLUG_A2M_TWICEMAX + 1], *m_wdbuf = nullptr;
-  unsigned char *m_obuf = nullptr;
-  std::vector<uint8_t> m_buf;
+  uint16_t m_bitcount = 0;
+  uint16_t m_bitbuffer = 0;
+  uint16_t m_bufcount = 0;
+  uint16_t m_obufcount = 0;
+  uint16_t m_inputSize = 0;
+  size_t m_outputSize = 0;
+  uint16_t m_leftc[MAXCHAR + 1];
+  uint16_t m_rightc[MAXCHAR + 1];
+  uint16_t m_dad[TWICEMAX + 1];
+  uint16_t m_freq[TWICEMAX + 1];
+  uint16_t* m_wdbuf = nullptr;
+  uint8_t* m_obuf = nullptr;
+  std::vector<uint8_t> m_buf{};
 };
 
 #endif

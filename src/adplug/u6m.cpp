@@ -818,18 +818,9 @@ void Cu6mPlayer::out_adlib_opcell(int channel, bool carrier,
 //
 // ============================================================================================
 
-Cu6mPlayer::MyDict::MyDict() {
-  dict_size = default_dict_size;
+Cu6mPlayer::MyDict::MyDict(int max_size) : contains(0x102), dict_size(max_size), dictionary(nullptr) {
   dictionary =
       new dict_entry[dict_size - 0x100]; // don't allocate space for the roots
-  contains = 0x102;
-}
-
-Cu6mPlayer::MyDict::MyDict(int max_size) {
-  dict_size = max_size;
-  dictionary =
-      new dict_entry[dict_size - 0x100]; // don't allocate space for the roots
-  contains = 0x102;
 }
 
 Cu6mPlayer::MyDict::~MyDict() { delete[] dictionary; }

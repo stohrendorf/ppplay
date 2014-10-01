@@ -108,7 +108,7 @@ bool CksmPlayer::update() {
     bufnum = 0;
     while (count >= countstop) {
       templong = note[nownote];
-      track = (int)((templong >> 8) & 15);
+      track = ((templong >> 8) & 15);
       if ((templong & 192) == 0) {
         i = 0;
 
@@ -116,13 +116,10 @@ bool CksmPlayer::update() {
                                   (chantrack[i] != ((templong >> 8) & 15))))
           i++;
         if (i < numchans) {
-          databuf[bufnum] = (char) 0;
-          bufnum++;
-          databuf[bufnum] = (unsigned char)(0xb0 + i);
-          bufnum++;
-          databuf[bufnum] =
-              (unsigned char)((adlibfreq[templong & 63] >> 8) & 223);
-          bufnum++;
+          databuf[bufnum++] = 0;
+          databuf[bufnum++] = static_cast<uint8_t>(0xb0 + i);
+          databuf[bufnum++] =
+              static_cast<uint8_t>((adlibfreq[templong & 63] >> 8) & 223);
           chanfreq[i] = 0;
           chanage[i] = 0;
         }
@@ -147,28 +144,20 @@ bool CksmPlayer::update() {
               i = j;
             }
           if (i < numchans) {
-            databuf[bufnum] = (char) 0, bufnum++;
-            databuf[bufnum] = (unsigned char)(0xb0 + i);
-            bufnum++;
-            databuf[bufnum] = (unsigned char) 0;
-            bufnum++;
+            databuf[bufnum++] = 0;
+            databuf[bufnum++] = static_cast<uint8_t>(0xb0 + i);
+            databuf[bufnum++] = 0;
             volval = (inst[trinst[track]][1] & 192) + (volevel ^ 63);
-            databuf[bufnum] = (char) 0, bufnum++;
-            databuf[bufnum] = (unsigned char)(0x40 + m_opTable[i] + 3);
-            bufnum++;
-            databuf[bufnum] = (unsigned char) volval;
-            bufnum++;
-            databuf[bufnum] = (char) 0, bufnum++;
-            databuf[bufnum] = (unsigned char)(0xa0 + i);
-            bufnum++;
-            databuf[bufnum] = (unsigned char)(adlibfreq[templong & 63] & 255);
-            bufnum++;
-            databuf[bufnum] = (char) 0, bufnum++;
-            databuf[bufnum] = (unsigned char)(0xb0 + i);
-            bufnum++;
-            databuf[bufnum] =
-                (unsigned char)((adlibfreq[templong & 63] >> 8) | 32);
-            bufnum++;
+            databuf[bufnum++] = 0;
+            databuf[bufnum++] = static_cast<uint8_t>(0x40 + m_opTable[i] + 3);
+            databuf[bufnum++] = static_cast<uint8_t>( volval );
+            databuf[bufnum++] = 0;
+            databuf[bufnum++] = static_cast<uint8_t>(0xa0 + i);
+            databuf[bufnum++] = static_cast<uint8_t>(adlibfreq[templong & 63] & 255);
+            databuf[bufnum++] = 0;
+            databuf[bufnum++] = static_cast<uint8_t>(0xb0 + i);
+            databuf[bufnum++] =
+                static_cast<uint8_t>((adlibfreq[templong & 63] >> 8) | 32);
             chanfreq[i] = templong & 63;
             chanage[i] = countstop;
           }
@@ -199,42 +188,30 @@ bool CksmPlayer::update() {
             freq -= 2048;
             break;
           }
-          databuf[bufnum] = (char) 0, bufnum++;
-          databuf[bufnum] = (unsigned char)(0xa0 + chan);
-          bufnum++;
-          databuf[bufnum] = (unsigned char)(freq & 255);
-          bufnum++;
-          databuf[bufnum] = (char) 0, bufnum++;
-          databuf[bufnum] = (unsigned char)(0xb0 + chan);
-          bufnum++;
-          databuf[bufnum] = (unsigned char)((freq >> 8) & 223);
-          bufnum++;
-          databuf[bufnum] = (char) 0, bufnum++;
-          databuf[bufnum] = (unsigned char)(0xbd);
-          bufnum++;
-          databuf[bufnum] = (unsigned char)(drumstat & (255 - drumnum));
-          bufnum++;
+          databuf[bufnum++] = 0;
+          databuf[bufnum++] = static_cast<uint8_t>(0xa0 + chan);
+          databuf[bufnum++] = static_cast<uint8_t>(freq & 255);
+          databuf[bufnum++] = 0;
+          databuf[bufnum++] = static_cast<uint8_t>(0xb0 + chan);
+          databuf[bufnum++] = static_cast<uint8_t>((freq >> 8) & 223);
+          databuf[bufnum++] = 0;
+          databuf[bufnum++] = static_cast<uint8_t>(0xbd);
+          databuf[bufnum++] = static_cast<uint8_t>(drumstat & (255 - drumnum));
           drumstat |= drumnum;
           if ((track == 11) || (track == 12) || (track == 14)) {
             volval = (inst[trinst[track]][1] & 192) + (volevel ^ 63);
-            databuf[bufnum] = (char) 0, bufnum++;
-            databuf[bufnum] = (unsigned char)(0x40 + m_opTable[chan] + 3);
-            bufnum++;
-            databuf[bufnum] = (unsigned char)(volval);
-            bufnum++;
+            databuf[bufnum++] = 0;
+            databuf[bufnum++] = static_cast<uint8_t>(0x40 + m_opTable[chan] + 3);
+            databuf[bufnum++] = static_cast<uint8_t>(volval);
           } else {
             volval = (inst[trinst[track]][6] & 192) + (volevel ^ 63);
-            databuf[bufnum] = (char) 0, bufnum++;
-            databuf[bufnum] = (unsigned char)(0x40 + m_opTable[chan]);
-            bufnum++;
-            databuf[bufnum] = (unsigned char)(volval);
-            bufnum++;
+            databuf[bufnum++] = 0;
+            databuf[bufnum++] = static_cast<uint8_t>(0x40 + m_opTable[chan]);
+            databuf[bufnum++] = static_cast<uint8_t>(volval);
           }
-          databuf[bufnum] = (char) 0, bufnum++;
-          databuf[bufnum] = (unsigned char)(0xbd);
-          bufnum++;
-          databuf[bufnum] = (unsigned char)(drumstat);
-          bufnum++;
+          databuf[bufnum++] = 0;
+          databuf[bufnum++] = static_cast<uint8_t>(0xbd);
+          databuf[bufnum++] = static_cast<uint8_t>(drumstat);
         }
       }
       nownote++;
@@ -268,7 +245,7 @@ void CksmPlayer::rewind(int) {
   if (trchan[11] == 1) {
     for (i = 0; i < 11; i++)
       instbuf[i] = inst[trinst[11]][i];
-    instbuf[1] = ((instbuf[1] & 192) | (trvol[11]) ^ 63);
+    instbuf[1] = ((instbuf[1] & 192) | (trvol[11] ^ 63));
     setinst(6, instbuf[0], instbuf[1], instbuf[2], instbuf[3], instbuf[4],
             instbuf[5], instbuf[6], instbuf[7], instbuf[8], instbuf[9],
             instbuf[10]);
@@ -276,8 +253,8 @@ void CksmPlayer::rewind(int) {
       instbuf[i] = inst[trinst[12]][i];
     for (i = 5; i < 11; i++)
       instbuf[i] = inst[trinst[15]][i];
-    instbuf[1] = ((instbuf[1] & 192) | (trvol[12]) ^ 63);
-    instbuf[6] = ((instbuf[6] & 192) | (trvol[15]) ^ 63);
+    instbuf[1] = ((instbuf[1] & 192) | (trvol[12] ^ 63));
+    instbuf[6] = ((instbuf[6] & 192) | (trvol[15] ^ 63));
     setinst(7, instbuf[0], instbuf[1], instbuf[2], instbuf[3], instbuf[4],
             instbuf[5], instbuf[6], instbuf[7], instbuf[8], instbuf[9],
             instbuf[10]);
@@ -285,8 +262,8 @@ void CksmPlayer::rewind(int) {
       instbuf[i] = inst[trinst[14]][i];
     for (i = 5; i < 11; i++)
       instbuf[i] = inst[trinst[13]][i];
-    instbuf[1] = ((instbuf[1] & 192) | (trvol[14]) ^ 63);
-    instbuf[6] = ((instbuf[6] & 192) | (trvol[13]) ^ 63);
+    instbuf[1] = ((instbuf[1] & 192) | (trvol[14] ^ 63));
+    instbuf[6] = ((instbuf[6] & 192) | (trvol[13] ^ 63));
     setinst(8, instbuf[0], instbuf[1], instbuf[2], instbuf[3], instbuf[4],
             instbuf[5], instbuf[6], instbuf[7], instbuf[8], instbuf[9],
             instbuf[10]);

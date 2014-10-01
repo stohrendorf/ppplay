@@ -26,7 +26,7 @@ class CbamPlayer : public CPlayer {
 public:
   static CPlayer *factory();
 
-  CbamPlayer() : CPlayer() {}
+  CbamPlayer() = default;
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
@@ -38,14 +38,14 @@ public:
 private:
   static const unsigned short freq[];
 
-  std::vector<uint8_t> m_song;
-  unsigned char del;
-  unsigned long pos, gosub;
-  bool songend, chorus;
+  std::vector<uint8_t> m_song{};
+  uint8_t del = 0;
+  size_t pos = 0, gosub = 0;
+  bool songend = false, chorus = false;
 
   struct {
-    unsigned long target;
-    bool defined;
-    unsigned char count;
+    size_t target = 0;
+    bool defined = false;
+    uint8_t count = 0;
   } label[16];
 };

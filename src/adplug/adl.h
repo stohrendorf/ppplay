@@ -27,12 +27,12 @@
 class AdlibDriver;
 
 class CadlPlayer : public CPlayer {
-    DISABLE_COPY(CadlPlayer)
+  DISABLE_COPY(CadlPlayer)
 public:
   static CPlayer *factory();
 
   CadlPlayer();
-  ~CadlPlayer() = default;
+  ~CadlPlayer();
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
@@ -46,22 +46,17 @@ public:
   std::string gettype() { return std::string("Westwood ADL"); }
 
 private:
-  int numsubsongs, cursubsong;
+  int numsubsongs = 0;
+  int cursubsong = 0;
 
-  std::unique_ptr<AdlibDriver> _driver;
+  AdlibDriver* _driver = nullptr;
 
-  std::array<uint8_t, 120> _trackEntries;
-  std::vector<uint8_t> _soundDataPtr;
-  int _sfxPlayingSound;
+  std::array<uint8_t, 120> _trackEntries{};
+  std::vector<uint8_t> _soundDataPtr{};
+  int _sfxPlayingSound = -1;
 
-  uint8_t _sfxPriority;
-  uint8_t _sfxFourthByteOfSong;
-
-  int _numSoundTriggers;
-  const int *_soundTriggers;
-
-  static const int _kyra1NumSoundTriggers;
-  static const int _kyra1SoundTriggers[];
+  uint8_t _sfxPriority = 0;
+  uint8_t _sfxFourthByteOfSong = 0;
 
   bool init();
   void process();

@@ -32,14 +32,13 @@
 #include <cstring>
 #include "a2m.h"
 
-const unsigned short Ca2mLoader::m_bitvalue[14] = { 1, 2, 4, 8, 16, 32, 64, 128,
-                                                    256, 512, 1024, 2048, 4096,
-                                                    8192 };
+namespace {
+constexpr uint16_t bitvalue[14] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192 };
 
-const signed short Ca2mLoader::m_copybits[COPYRANGES] = { 4, 6, 8, 10, 12, 14 };
+constexpr std::array<int16_t,6> copybits = { 4, 6, 8, 10, 12, 14 };
 
-const signed short Ca2mLoader::m_copymin[COPYRANGES] = { 0, 16, 80, 336, 1360,
-                                                         5456 };
+constexpr std::array<int16_t,6> copymin = { 0, 16, 80, 336, 1360, 5456 };
+}
 
 CPlayer *Ca2mLoader::factory() { return new Ca2mLoader(); }
 
@@ -398,7 +397,7 @@ unsigned short Ca2mLoader::inputcode(unsigned short bits) {
       m_bitcount--;
 
     if (m_bitbuffer > 0x7fff)
-      code |= m_bitvalue[i - 1];
+      code |= bitvalue[i - 1];
     m_bitbuffer <<= 1;
   }
 
@@ -438,14 +437,14 @@ void Ca2mLoader::decode() {
 
   while (c != TERMINATE) {
     if (c < 256) {
-      m_obuf[m_obufcount] = (unsigned char) c;
+      m_obuf[m_obufcount] = static_cast<uint8_t>(c);
       m_obufcount++;
       if (m_obufcount == MAXBUF) {
         m_outputSize = MAXBUF;
         m_obufcount = 0;
       }
 
-      m_buf[count] = (unsigned char) c;
+      m_buf[count] = static_cast<uint8_t>(c);
       count++;
       if (count == MAXSIZE)
         count = 0;
@@ -453,7 +452,7 @@ void Ca2mLoader::decode() {
       t = c - FIRSTCODE;
       index = t / CODESPERRANGE;
       len = t + MINCOPY - index * CODESPERRANGE;
-      dist = inputcode(m_copybits[index]) + len + m_copymin[index];
+      dist = inputcode(copybits[index]) + len + copymin[index];
 
       j = count;
       k = count - dist;
@@ -486,9 +485,8 @@ void Ca2mLoader::decode() {
   m_outputSize = m_obufcount;
 }
 
-unsigned short Ca2mLoader::sixdepak(unsigned short *source, unsigned char *dest,
-                                    unsigned short size) {
-  if ((unsigned int) size + 4096 > MAXBUF)
+size_t Ca2mLoader::sixdepak(uint16_t *source, uint8_t *dest, size_t size) {
+  if (size + 4096 > MAXBUF)
     return 0;
 
   m_buf.resize(MAXSIZE);

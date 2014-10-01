@@ -26,7 +26,7 @@ class CksmPlayer : public CPlayer {
 public:
   static CPlayer *factory();
 
-  CksmPlayer() : CPlayer() {}
+  CksmPlayer() = default;
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
@@ -40,14 +40,14 @@ public:
 private:
   static const unsigned int adlibfreq[63];
 
-  std::vector<uint32_t> note;
-  unsigned long count, countstop, chanage[18];
-  unsigned int nownote, numchans, drumstat;
-  unsigned char trinst[16], trquant[16], trchan[16], trvol[16], inst[256][11],
-      databuf[2048], chanfreq[18], chantrack[18];
-  char instname[256][20];
+  std::vector<uint32_t> note{};
+  unsigned long count = 0, countstop = 0, chanage[18] = {0};
+  unsigned int nownote = 0, numchans = 0, drumstat = 0;
+  uint8_t trinst[16] = {0}, trquant[16] = {0}, trchan[16] = {0}, trvol[16] = {0}, inst[256][11] = {{0}},
+      databuf[2048] = {0}, chanfreq[18] = {0}, chantrack[18] = {0};
+  char instname[256][20] =  {""};
 
-  bool songend;
+  bool songend = false;
 
   void loadinsts(binistream *f);
   void setinst(int chan, unsigned char v0, unsigned char v1, unsigned char v2,

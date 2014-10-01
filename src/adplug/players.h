@@ -32,21 +32,19 @@ class CPlayerDesc {
 public:
   typedef CPlayer *(*Factory)();
 
-  Factory factory;
-  std::string filetype;
+  Factory factory = nullptr;
+  std::string filetype{};
 
-  CPlayerDesc();
-  CPlayerDesc(const CPlayerDesc &pd);
-  CPlayerDesc(Factory f, const std::string &type, const char *ext);
+  CPlayerDesc() = default;
+  CPlayerDesc(Factory f, const std::string &type, const std::vector<std::string>& ext);
 
-  ~CPlayerDesc();
+  ~CPlayerDesc() = default;
 
-  void add_extension(const char *ext);
-  const char *get_extension(unsigned int n) const;
+  void add_extension(const std::string &ext);
+  std::string get_extension(size_t n) const;
 
 private:
-  char *extensions;
-  unsigned long extlength;
+  std::vector<std::string> extensions{};
 };
 
 class CPlayers : public std::list<const CPlayerDesc *> {

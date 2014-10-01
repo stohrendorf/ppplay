@@ -35,9 +35,9 @@ class CrolPlayer : public CPlayer {
 public:
   static CPlayer *factory();
 
-  CrolPlayer();
+  CrolPlayer() = default;
 
-  ~CrolPlayer();
+  ~CrolPlayer() = default;
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
@@ -47,56 +47,48 @@ public:
   std::string gettype() { return std::string("Adlib Visual Composer"); }
 
 private:
-  typedef unsigned short uint16;
-  typedef signed short int16;
-#ifdef __x86_64__
-  typedef signed int int32;
-#else
-  typedef signed long int int32;
-#endif
-  typedef float real32;
+  typedef unsigned short uint16_t;
+  typedef signed short int16_t;
 
-  typedef struct {
-    uint16 version_major;
-    uint16 version_minor;
-    char unused0[40];
-    uint16 ticks_per_beat;
-    uint16 beats_per_measure;
-    uint16 edit_scale_y;
-    uint16 edit_scale_x;
-    char unused1;
-    char mode;
-    char unused2[90];
-    char filler0[38];
-    char filler1[15];
-    real32 basic_tempo;
-  } SRolHeader;
+  struct SRolHeader {
+    uint16_t version_major = 0;
+    uint16_t version_minor = 0;
+    char UNUSED_0[40] = "";
+    uint16_t ticks_per_beat = 0;
+    uint16_t beats_per_measure = 0;
+    uint16_t edit_scale_y = 0;
+    uint16_t edit_scale_x = 0;
+    char UNUSED_1 = 0;
+    char mode = 0;
+    char UNUSED_2[90+38+15] = "";
+    float basic_tempo = 0;
+  };
 
-  typedef struct {
-    int16 time;
-    real32 multiplier;
-  } STempoEvent;
+  struct STempoEvent {
+    int16_t time;
+    float multiplier;
+  };
 
-  typedef struct {
-    int16 number;
-    int16 duration;
-  } SNoteEvent;
+  struct SNoteEvent {
+    int16_t number;
+    int16_t duration;
+  };
 
-  typedef struct {
-    int16 time;
+  struct SInstrumentEvent {
+    int16_t time;
     char name[9];
-    int16 ins_index;
-  } SInstrumentEvent;
+    int16_t ins_index;
+  };
 
-  typedef struct {
-    int16 time;
-    real32 multiplier;
-  } SVolumeEvent;
+  struct SVolumeEvent {
+    int16_t time;
+    float multiplier;
+  };
 
-  typedef struct {
-    int16 time;
-    real32 variation;
-  } SPitchEvent;
+  struct SPitchEvent {
+    int16_t time;
+    float variation;
+  };
 
   typedef std::vector<SNoteEvent> TNoteEvents;
   typedef std::vector<SInstrumentEvent> TInstrumentEvents;
@@ -116,10 +108,7 @@ private:
       kES_None = 0
     };
 
-    explicit CVoiceData()
-        : mForceNote(true), mEventStatus(kES_None), current_note(0),
-          current_note_duration(0), mNoteDuration(0), next_instrument_event(0),
-          next_volume_event(0), next_pitch_event(0) {}
+    explicit CVoiceData() = default;
 
     void Reset() {
       mForceNote = true;
@@ -132,77 +121,77 @@ private:
       next_pitch_event = 0;
     }
 
-    TNoteEvents note_events;
-    TInstrumentEvents instrument_events;
-    TVolumeEvents volume_events;
-    TPitchEvents pitch_events;
+    TNoteEvents note_events{};
+    TInstrumentEvents instrument_events{};
+    TVolumeEvents volume_events{};
+    TPitchEvents pitch_events{};
 
-    bool mForceNote : 1;
-    int mEventStatus;
-    unsigned int current_note;
-    int current_note_duration;
-    int mNoteDuration;
-    unsigned int next_instrument_event;
-    unsigned int next_volume_event;
-    unsigned int next_pitch_event;
+    bool mForceNote = true;
+    int mEventStatus = kES_None;
+    unsigned int current_note = 0;
+    int current_note_duration = 0;
+    int mNoteDuration = 0;
+    unsigned int next_instrument_event = 0;
+    unsigned int next_volume_event = 0;
+    unsigned int next_pitch_event = 0;
   };
 
-  typedef struct {
-    uint16 index;
+  struct SInstrumentName {
+    uint16_t index;
     char record_used;
     char name[9];
-  } SInstrumentName;
+  };
 
   typedef std::vector<SInstrumentName> TInstrumentNames;
 
-  typedef struct {
+  struct SBnkHeader {
     char version_major;
     char version_minor;
     char signature[6];
-    uint16 number_of_list_entries_used;
-    uint16 total_number_of_list_entries;
-    int32 abs_offset_of_name_list;
-    int32 abs_offset_of_data;
+    uint16_t number_of_list_entries_used;
+    uint16_t total_number_of_list_entries;
+    int32_t abs_offset_of_name_list;
+    int32_t abs_offset_of_data;
 
     TInstrumentNames ins_name_list;
-  } SBnkHeader;
+  };
 
-  typedef struct {
-    unsigned char key_scale_level;
-    unsigned char freq_multiplier;
-    unsigned char feed_back;
-    unsigned char attack_rate;
-    unsigned char sustain_level;
-    unsigned char sustaining_sound;
-    unsigned char decay_rate;
-    unsigned char release_rate;
-    unsigned char output_level;
-    unsigned char amplitude_vibrato;
-    unsigned char frequency_vibrato;
-    unsigned char envelope_scaling;
-    unsigned char fm_type;
-  } SFMOperator;
+  struct SFMOperator {
+    uint8_t key_scale_level;
+    uint8_t freq_multiplier;
+    uint8_t feed_back;
+    uint8_t attack_rate;
+    uint8_t sustain_level;
+    uint8_t sustaining_sound;
+    uint8_t decay_rate;
+    uint8_t release_rate;
+    uint8_t output_level;
+    uint8_t amplitude_vibrato;
+    uint8_t frequency_vibrato;
+    uint8_t envelope_scaling;
+    uint8_t fm_type;
+  };
 
-  typedef struct {
-    unsigned char ammulti;
-    unsigned char ksltl;
-    unsigned char ardr;
-    unsigned char slrr;
-    unsigned char fbc;
-    unsigned char waveform;
-  } SOPL2Op;
+  struct SOPL2Op {
+    uint8_t ammulti;
+    uint8_t ksltl;
+    uint8_t ardr;
+    uint8_t slrr;
+    uint8_t fbc;
+    uint8_t waveform;
+  };
 
-  typedef struct {
+  struct SRolInstrument {
     char mode;
     char voice_number;
     SOPL2Op modulator;
     SOPL2Op carrier;
-  } SRolInstrument;
+  };
 
-  typedef struct {
+  struct SUsedList {
     std::string name;
     SRolInstrument instrument;
-  } SUsedList;
+  };
 
   void load_tempo_events(binistream *f);
   bool load_voice_data(binistream *f, std::string const &bnk_filename,
@@ -226,7 +215,7 @@ private:
   void SetNoteMelodic(int const voice, int const note);
   void SetNotePercussive(int const voice, int const note);
   void SetFreq(int const voice, int const note, bool const keyOn = false);
-  void SetPitch(int const voice, real32 const variation);
+  void SetPitch(int const voice, float const variation);
   void SetVolume(int const voice, int const volume);
   void SetRefresh(float const multiplier);
   void send_ins_data_to_chip(int const voice, int const ins_index);
@@ -256,20 +245,20 @@ private:
 
   typedef std::vector<CVoiceData> TVoiceData;
 
-  SRolHeader *rol_header;
-  std::vector<STempoEvent> mTempoEvents;
-  TVoiceData voice_data;
-  std::vector<SUsedList> ins_list;
+  std::unique_ptr<SRolHeader> rol_header = nullptr;
+  std::vector<STempoEvent> mTempoEvents{};
+  TVoiceData voice_data{};
+  std::vector<SUsedList> ins_list{};
 
-  unsigned int mNextTempoEvent;
-  int mCurrTick;
-  int mTimeOfLastNote;
-  float mRefresh;
-  unsigned char bdRegister;
-  unsigned char bxRegister[9];
-  unsigned char volumeCache[11];
-  uint16 freqCache[11];
-  real32 pitchCache[11];
+  unsigned int mNextTempoEvent = 0;
+  int mCurrTick = 0;
+  int mTimeOfLastNote = 0;
+  float mRefresh = kDefaultUpdateTme;
+  uint8_t bdRegister = 0;
+  uint8_t bxRegister[9] = {0,0,0,0,0,0,0,0,0};
+  uint8_t volumeCache[11] = {0,0,0,0,0,0,0,0,0,0,0};
+  uint16_t freqCache[11] = {0,0,0,0,0,0,0,0,0,0,0};
+  float pitchCache[11] =  {1,1,1,1,1,1,1,1,1,1,1};
 
   static int const kSizeofDataRecord;
   static int const kMaxTickBeat;
@@ -283,7 +272,7 @@ private:
   static int const kSnareDrumFreq;
   static float const kDefaultUpdateTme;
   static float const kPitchFactor;
-  static uint16 const kNoteTable[12];
+  static uint16_t const kNoteTable[12];
 };
 
 #endif

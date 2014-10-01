@@ -65,7 +65,7 @@ bool CxadratPlayer::xadplayer_load() {
   rat.order = &tune[0x40];
 
   // load instruments
-  rat.inst = (rat_instrument *)&tune[0x140];
+  rat.inst = reinterpret_cast<rat_instrument *>(&tune[0x140]);
 
   // load pattern data
   unsigned short patseg = (rat.hdr.patseg[1] << 8) + rat.hdr.patseg[0];

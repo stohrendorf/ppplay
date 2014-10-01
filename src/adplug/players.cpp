@@ -19,82 +19,42 @@
  * players.h - Players enumeration, by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include <stdlib.h>
-#include <string.h>
+#include <boost/algorithm/string.hpp>
 
 #include "players.h"
 
 /***** CPlayerDesc *****/
 
-CPlayerDesc::CPlayerDesc() : factory(0), extensions(0), extlength(0) {}
-
-CPlayerDesc::CPlayerDesc(const CPlayerDesc &pd)
-    : factory(pd.factory), filetype(pd.filetype), extlength(pd.extlength) {
-  if (pd.extensions) {
-    extensions = (char *)malloc(extlength);
-    memcpy(extensions, pd.extensions, extlength);
-  } else
-    extensions = 0;
+CPlayerDesc::CPlayerDesc(Factory f, const std::string &type, const std::vector<std::string> &ext)
+    : factory(f), filetype(type), extensions(ext) {
 }
 
-CPlayerDesc::CPlayerDesc(Factory f, const std::string &type, const char *ext)
-    : factory(f), filetype(type), extensions(0) {
-  const char *i = ext;
-
-  // Determine length of passed extensions list
-  while (*i)
-    i += strlen(i) + 1;
-  extlength =
-      i - ext + 1; // length = difference between last and first char + 1
-
-  extensions = (char *)malloc(extlength);
-  memcpy(extensions, ext, extlength);
+void CPlayerDesc::add_extension(const std::string& ext) {
+  extensions.emplace_back(ext);
 }
 
-CPlayerDesc::~CPlayerDesc() {
-  if (extensions)
-    free(extensions);
-}
-
-void CPlayerDesc::add_extension(const char *ext) {
-  unsigned long newlength = extlength + strlen(ext) + 1;
-
-  extensions = (char *)realloc(extensions, newlength);
-  strcpy(extensions + extlength - 1, ext);
-  extensions[newlength - 1] = '\0';
-  extlength = newlength;
-}
-
-const char *CPlayerDesc::get_extension(unsigned int n) const {
-  const char *i = extensions;
-  unsigned int j;
-
-  for (j = 0; j < n && (*i); j++, i += strlen(i) + 1)
-    ;
-  return (*i != '\0' ? i : 0);
+std::string CPlayerDesc::get_extension(size_t n) const {
+  if( n >= extensions.size() )
+    return std::string();
+  return extensions[n];
 }
 
 /***** CPlayers *****/
 
 const CPlayerDesc *CPlayers::lookup_filetype(const std::string &ftype) const {
-  const_iterator i;
+  for (auto it = begin(); it != end(); it++)
+    if ((*it)->filetype == ftype)
+      return *it;
 
-  for (i = begin(); i != end(); i++)
-    if ((*i)->filetype == ftype)
-      return *i;
-
-  return 0;
+  return nullptr;
 }
 
 const CPlayerDesc *
 CPlayers::lookup_extension(const std::string &extension) const {
-  const_iterator i;
-  unsigned int j;
+  for (auto it = begin(); it != end(); it++)
+    for (auto j = 0; !(*it)->get_extension(j).empty(); j++)
+      if( boost::iequals(extension, (*it)->get_extension(j)) )
+        return *it;
 
-  for (i = begin(); i != end(); i++)
-    for (j = 0; (*i)->get_extension(j); j++)
-      if (!strcasecmp(extension.c_str(), (*i)->get_extension(j)))
-        return *i;
-
-  return 0;
+  return nullptr;
 }

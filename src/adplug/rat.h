@@ -26,29 +26,29 @@ class CxadratPlayer : public CxadPlayer {
 public:
   static CPlayer *factory();
 
-  CxadratPlayer() : CxadPlayer() {}
+  CxadratPlayer() = default;
 
 protected:
   struct rat_header {
-    char id[3];
-    unsigned char version;
-    char title[32];
-    unsigned char numchan;
-    unsigned char reserved_25;
-    unsigned char order_end;
-    unsigned char reserved_27;
-    unsigned char numinst; // ?: Number of Instruments
-    unsigned char reserved_29;
-    unsigned char numpat; // ?: Number of Patterns
-    unsigned char reserved_2B;
-    unsigned char order_start;
-    unsigned char reserved_2D;
-    unsigned char order_loop;
-    unsigned char reserved_2F;
-    unsigned char volume;
-    unsigned char speed;
-    unsigned char reserved_32[12];
-    unsigned char patseg[2];
+    char id[3] = "";
+    unsigned char version = 0;
+    char title[32] = "";
+    unsigned char numchan = 0;
+    unsigned char reserved_25 = 0;
+    unsigned char order_end = 0;
+    unsigned char reserved_27 = 0;
+    unsigned char numinst = 0; // ?: Number of Instruments
+    unsigned char reserved_29 = 0;
+    unsigned char numpat = 0; // ?: Number of Patterns
+    unsigned char reserved_2B = 0;
+    unsigned char order_start = 0;
+    unsigned char reserved_2D = 0;
+    unsigned char order_loop = 0;
+    unsigned char reserved_2F = 0;
+    unsigned char volume = 0;
+    unsigned char speed = 0;
+    unsigned char reserved_32[12] = "";
+    unsigned char patseg[2] = {0,0};
   };
 
   struct rat_event {
@@ -79,25 +79,25 @@ protected:
   };
 
   struct {
-    rat_header hdr;
+    rat_header hdr{};
 
-    unsigned char volume;
-    unsigned char order_pos;
-    unsigned char pattern_pos;
+    unsigned char volume = 0;
+    unsigned char order_pos = 0;
+    unsigned char pattern_pos = 0;
 
-    unsigned char *order;
+    unsigned char *order = nullptr;
 
-    rat_instrument *inst;
+    rat_instrument *inst = nullptr;
 
-    rat_event tracks[256][64][9];
+    rat_event tracks[256][64][9]{};
 
     struct {
-      unsigned char instrument;
-      unsigned char volume;
-      unsigned char fx;
-      unsigned char fxp;
-    } channel[9];
-  } rat;
+      unsigned char instrument = 0;
+      unsigned char volume = 0;
+      unsigned char fx = 0;
+      unsigned char fxp = 0;
+    } channel[9]{};
+  } rat{};
   //
   bool xadplayer_load();
   void xadplayer_rewind(int);
