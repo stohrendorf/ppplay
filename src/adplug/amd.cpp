@@ -60,7 +60,8 @@ bool CamdLoader::load(const std::string &filename, const CFileProvider &fp) {
   }
 
   // load section
-  memset(m_instruments, 0, 26 * sizeof(Instrument));
+  m_instruments.clear();
+  m_instruments.resize(26);
   f->seek(0);
   f->readString(songname, sizeof(songname));
   f->readString(author, sizeof(author));

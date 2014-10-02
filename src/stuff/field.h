@@ -39,8 +39,8 @@ private:
     std::size_t m_height;
     std::vector<T> m_data;
 public:
-    explicit inline Field( std::size_t width, std::size_t height )
-        : m_width( width ), m_height( height ), m_data( width* height ) {
+    explicit inline Field( std::size_t width, std::size_t height, const T& val = T() )
+        : m_width( width ), m_height( height ), m_data( width* height, val ) {
     }
     explicit inline Field() noexcept
         : m_width( 0 ), m_height( 0 ), m_data() {
@@ -77,11 +77,15 @@ public:
         return m_height;
     }
 
-    void reset( std::size_t width, std::size_t height ) {
+    void reset( std::size_t width, std::size_t height, const T& val = T() ) {
         m_data.clear();
-        m_data.resize( width * height );
+        m_data.resize( width * height, val );
         m_width = width;
         m_height = height;
+    }
+
+    void clear() {
+      reset(0, 0);
     }
 };
 

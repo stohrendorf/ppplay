@@ -56,8 +56,9 @@ bool CmadLoader::load(const std::string &filename, const CFileProvider &fp) {
   timer = f->readInt(1);
 
   // init CmodPlayer
-  realloc_instruments(9);
-  realloc_order(m_length);
+  m_instruments.clear();
+  m_instruments.resize(9);
+  m_order.resize(m_length);
   realloc_patterns(nop, 32, 9);
   init_trackord();
 

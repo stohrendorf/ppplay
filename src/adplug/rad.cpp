@@ -104,8 +104,9 @@ bool CradLoader::load(const std::string &filename, const CFileProvider &fp) {
         if (buf & 0x80)
           break;
       }
-    } else
-      memset(trackord[i], 0, 9 * 2);
+    }
+    else
+      std::fill_n(trackord[i], 9, 0);
   }
   fp.close(f);
 

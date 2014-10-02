@@ -142,32 +142,27 @@ uint32_t CmidPlayer::getval() {
 
 bool CmidPlayer::load_sierra_ins(const std::string &fname,
                                  const CFileProvider &fp) {
-  long i, j, k, l;
-  unsigned char ins[28];
-  char *pfilename;
-  binistream *f;
-
-  pfilename = (char *)malloc(fname.length() + 9);
-  strcpy(pfilename, fname.c_str());
-  j = 0;
-  for (i = strlen(pfilename) - 1; i >= 0; i--)
+  std::string pfilename = fname;
+  int j = 0;
+  for (int i = pfilename.length() - 1; i >= 0; i--)
     if (pfilename[i] == '/' || pfilename[i] == '\\') {
       j = i + 1;
       break;
     }
-  sprintf(pfilename + j + 3, "patch.003");
+  pfilename.erase(j+3);
+  pfilename += "patch.003";
 
-  f = fp.open(pfilename);
-  free(pfilename);
+  binistream* f = fp.open(pfilename);
   if (!f)
     return false;
 
   f->ignore(2);
   m_stins = 0;
-  for (i = 0; i < 2; i++) {
-    for (k = 0; k < 48; k++) {
-      l = i * 48 + k;
+  for (int i = 0; i < 2; i++) {
+    for (int k = 0; k < 48; k++) {
+      int l = i * 48 + k;
       midiprintf("\n%2d: ", l);
+      unsigned char ins[28];
       for (j = 0; j < 28; j++)
         ins[j] = f->readInt(1);
 
@@ -246,9 +241,10 @@ bool CmidPlayer::load(const std::string &filename, const CFileProvider &fp) {
   binistream *f = fp.open(filename);
   if (!f)
     return false;
-  unsigned char s[6];
 
-  f->readString((char *)s, 6);
+  unsigned char s[6];
+  f->readString(reinterpret_cast<char*>(s), 6);
+
   FileType good = FileType::Unknown;
   m_subsongs = 0;
   switch (s[0]) {
@@ -288,7 +284,7 @@ bool CmidPlayer::load(const std::string &filename, const CFileProvider &fp) {
   m_type = good;
   f->seek(0);
   m_data.resize(fp.filesize(f));
-  f->readString((char *)m_data.data(), m_data.size());
+  f->readString(reinterpret_cast<char*>(m_data.data()), m_data.size());
 
   fp.close(f);
   rewind(0);
@@ -361,22 +357,18 @@ void CmidPlayer::midi_fm_volume(int voice, int volume) {
     if ((getOpl()->readReg(0xc0 + voice) & 1) == 1)
       getOpl()->writeReg(
           0x40 + adlib_opadd[voice],
-          (unsigned char)((63 - vol) | (getOpl()->readReg(
-                                           0x40 + adlib_opadd[voice]) & 0xc0)));
+          (63 - vol) | (getOpl()->readReg(0x40 + adlib_opadd[voice]) & 0xc0));
     getOpl()->writeReg(
         0x43 + adlib_opadd[voice],
-        (unsigned char)((63 - vol) |
-                        (getOpl()->readReg(0x43 + adlib_opadd[voice]) & 0xc0)));
+        (63 - vol) | (getOpl()->readReg(0x43 + adlib_opadd[voice]) & 0xc0));
   } else {
     if ((getOpl()->readReg(0xc0 + voice) & 1) == 1)
       getOpl()->writeReg(
           0x40 + adlib_opadd[voice],
-          (unsigned char)((63 - vol) | (getOpl()->readReg(
-                                           0x40 + adlib_opadd[voice]) & 0xc0)));
+          (63 - vol) | (getOpl()->readReg(0x40 + adlib_opadd[voice]) & 0xc0));
     getOpl()->writeReg(
         0x43 + adlib_opadd[voice],
-        (unsigned char)((63 - vol) |
-                        (getOpl()->readReg(0x43 + adlib_opadd[voice]) & 0xc0)));
+        (63 - vol) | (getOpl()->readReg(0x43 + adlib_opadd[voice]) & 0xc0));
   }
 }
 
@@ -406,7 +398,7 @@ void CmidPlayer::midi_fm_endnote(int voice) {
 
   getOpl()->writeReg(
       0xb0 + voice,
-      (unsigned char)(getOpl()->readReg(0xb0 + voice) & (255 - 32)));
+      getOpl()->readReg(0xb0 + voice) & (255 - 32));
 }
 
 void CmidPlayer::midi_fm_reset() {
@@ -456,7 +448,7 @@ bool CmidPlayer::update() {
           v = m_tracks[m_currentTrack].pv;
           m_dataPos--;
         }
-        m_tracks[m_currentTrack].pv = (unsigned char) v;
+        m_tracks[m_currentTrack].pv = v;
 
         c = v & 0x0f;
         midiprintf("[cmd=%2X]", v);
@@ -526,7 +518,7 @@ bool CmidPlayer::update() {
                   nv = 127;
                 nv = my_midi_fm_vol_table.at(nv);
                 if ((m_adlibStyle & LUCAS_STYLE) != 0)
-                  nv = (int)((float) sqrt((float) nv) * 11);
+                  nv = static_cast<int>(std::sqrt(float(nv)) * 11);
               } else if (m_adlibStyle & CMF_STYLE) {
                 // CMF doesn't support note velocity (even though some files
                 // have them!)
@@ -576,8 +568,10 @@ bool CmidPlayer::update() {
               }
             }
             midiprintf(" [%d:%d:%d:%d]\n", c, m_ch[c].inum, note, vel);
-          } else
+          }
+          else {
             midiprintf("off");
+          }
           break;
         case 0xa0:    /*key after touch */
           getnext(1); // note
@@ -649,35 +643,23 @@ bool CmidPlayer::update() {
                 datalook(m_dataPos + 1) == 0x10 &&
                 datalook(m_dataPos + 2) < 16) {
               m_adlibStyle = LUCAS_STYLE | MIDI_STYLE;
-              for (i = 0; i < l; i++) {
-                midiprintf("%x ", datalook(m_dataPos + i));
-                if ((i - 3) % 10 == 0)
-                  midiprintf("\n");
-              }
-              midiprintf("\n");
               getnext(1);
               getnext(1);
               c = getnext(1);
               getnext(1);
 
               //  getnext(22); //temp
-              m_ch[c].ins[0] = (unsigned char)((getnext(1) << 4) + getnext(1));
-              m_ch[c].ins[2] = (unsigned char)(
-                  0xff - (((getnext(1) << 4) + getnext(1)) & 0x3f));
-              m_ch[c].ins[4] =
-                  (unsigned char)(0xff - ((getnext(1) << 4) + getnext(1)));
-              m_ch[c].ins[6] =
-                  (unsigned char)(0xff - ((getnext(1) << 4) + getnext(1)));
-              m_ch[c].ins[8] = (unsigned char)((getnext(1) << 4) + getnext(1));
+              m_ch[c].ins[0] = (getnext(1) << 4) + getnext(1);
+              m_ch[c].ins[2] =  0xff - (((getnext(1) << 4) + getnext(1)) & 0x3f);
+              m_ch[c].ins[4] = 0xff - ((getnext(1) << 4) + getnext(1));
+              m_ch[c].ins[6] = 0xff - ((getnext(1) << 4) + getnext(1));
+              m_ch[c].ins[8] = (getnext(1) << 4) + getnext(1);
 
-              m_ch[c].ins[1] = (unsigned char)((getnext(1) << 4) + getnext(1));
-              m_ch[c].ins[3] = (unsigned char)(
-                  0xff - (((getnext(1) << 4) + getnext(1)) & 0x3f));
-              m_ch[c].ins[5] =
-                  (unsigned char)(0xff - ((getnext(1) << 4) + getnext(1)));
-              m_ch[c].ins[7] =
-                  (unsigned char)(0xff - ((getnext(1) << 4) + getnext(1)));
-              m_ch[c].ins[9] = (unsigned char)((getnext(1) << 4) + getnext(1));
+              m_ch[c].ins[1] = (getnext(1) << 4) + getnext(1);
+              m_ch[c].ins[3] =  0xff - (((getnext(1) << 4) + getnext(1)) & 0x3f);
+              m_ch[c].ins[5] = 0xff - ((getnext(1) << 4) + getnext(1));
+              m_ch[c].ins[7] = 0xff - ((getnext(1) << 4) + getnext(1));
+              m_ch[c].ins[9] = (getnext(1) << 4) + getnext(1);
 
               i = (getnext(1) << 4);
               i += getnext(1);
@@ -789,9 +771,9 @@ bool CmidPlayer::update() {
       if (m_tracks[m_currentTrack].on)
         m_tracks[m_currentTrack].iwait -= m_iwait;
 
-    m_fwait = 1.0f / (((float) m_iwait / (float) m_deltas) *
-                      ((float) m_msqtr / (float) 1000000));
-  } else
+    m_fwait = 1.0f / ((float(m_iwait) / m_deltas) * (m_msqtr / 1000000.0));
+  }
+  else
     m_fwait = 50; // 1/50th of a second
 
   midiprintf("end update\n");
@@ -881,18 +863,15 @@ void CmidPlayer::rewind(int subsong) {
     m_msqtr = 1000000 / getnexti(2) * m_deltas;
     //the stuff in the cmf is click ticks per second..
 
-    auto i = getnexti(2);
-    if (i)
-      m_title = (char *)m_data.data() + i;
-    i = getnexti(2);
-    if (i)
-      m_author = (char *)m_data.data() + i;
-    i = getnexti(2);
-    if (i)
-      m_remarks = (char *)m_data.data() + i;
+    if (auto i = getnexti(2))
+      m_title = reinterpret_cast<char*>(m_data.data()) + i;
+    if (auto i = getnexti(2))
+      m_author = reinterpret_cast<char*>(m_data.data()) + i;
+    if (auto i = getnexti(2))
+      m_remarks = reinterpret_cast<char*>(m_data.data()) + i;
 
     getnext(16);     // channel in use table ..
-    i = getnexti(2); // num instr
+    auto i = getnexti(2); // num instr
     if (i > 128)
       i = 128;   // to ward of bad numbers...
     getnexti(2); //basic tempo
@@ -904,7 +883,7 @@ void CmidPlayer::rewind(int subsong) {
     for (uint32_t j = 0; j < i; j++) {
       midiprintf("\n%d: ", j);
       for (int l = 0; l < 14; l++) {
-        m_myInsBank[j][l] = (unsigned char) getnext(1);
+        m_myInsBank[j][l] = getnext(1);
         midiprintf("%2X ", m_myInsBank[j][l]);
       }
       getnext(2);
@@ -927,13 +906,12 @@ void CmidPlayer::rewind(int subsong) {
     m_dataPos = 9;
     m_deltas = getnext(1);
 
-    auto i = 8;
     m_dataPos = 0x19; // jump to instruments
-    m_tins = i;
-    for (uint32_t j = 0; j < i; j++) {
+    m_tins = 8;
+    for (int j = 0; j < m_tins; j++) {
       midiprintf("\n%d: ", j);
       for (int l = 0; l < 16; l++)
-        ins[l] = (unsigned char) getnext(1);
+        ins[l] = getnext(1);
 
       m_myInsBank[j][10] = ins[2];
       m_myInsBank[j][0] = ins[3];

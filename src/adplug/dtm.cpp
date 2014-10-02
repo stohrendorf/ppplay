@@ -86,8 +86,9 @@ bool CdtmLoader::load(const std::string &filename, const CFileProvider &fp) {
   }
 
   // init CmodPlayer
-  realloc_instruments(header.numinst);
-  realloc_order(100);
+  m_instruments.clear();
+  m_instruments.resize(header.numinst);
+  m_order.resize(100);
   realloc_patterns(header.numpat, 64, 9);
   init_notetable(conv_note);
   init_trackord();

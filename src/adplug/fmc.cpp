@@ -47,8 +47,9 @@ bool CfmcLoader::load(const std::string &filename, const CFileProvider &fp) {
   }
 
   // init CmodPlayer
-  realloc_instruments(32);
-  realloc_order(256);
+  m_instruments.clear();
+  m_instruments.resize(32);
+  m_order.resize(256);
   realloc_patterns(64, 64, header.numchan);
   init_trackord();
 

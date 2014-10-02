@@ -26,7 +26,7 @@ class CmadLoader : public CmodPlayer {
 public:
   static CPlayer *factory();
 
-  CmadLoader() : CmodPlayer() {}
+  CmadLoader() = default;
 
   bool load(const std::string &filename, const CFileProvider &fp);
   void rewind(int subsong);
@@ -39,9 +39,9 @@ public:
 private:
 
   struct mad_instrument {
-    char name[8];
-    unsigned char data[12]; // last two unused
-  } instruments[9];
+    char name[8]{0};
+    unsigned char data[12]{0}; // last two unused
+  } instruments[9]{};
 
-  unsigned char timer;
+  unsigned char timer = 0;
 };

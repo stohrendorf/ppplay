@@ -26,8 +26,7 @@ class CdfmLoader : public CmodPlayer {
 public:
   static CPlayer *factory();
 
-  CdfmLoader() : CmodPlayer() {}
-  ;
+  CdfmLoader() = default;
 
   bool load(const std::string &filename, const CFileProvider &fp);
   size_t framesUntilUpdate();

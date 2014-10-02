@@ -70,11 +70,11 @@ bool CadtrackLoader::load(const std::string &filename,
 
   // give CmodPlayer a hint on what we're up to
   realloc_patterns(1, 1000, 9);
-  realloc_instruments(9);
-  realloc_order(1);
+  m_instruments.resize(9);
+  m_order.resize(1);
   init_trackord();
   m_flags = NoKeyOn;
-  (*m_order) = 0;
+  m_order[0] = 0;
   m_length = 1;
   m_restartpos = 0;
   m_bpm = 120;

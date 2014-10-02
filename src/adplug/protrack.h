@@ -23,12 +23,13 @@
 #define H_PROTRACK
 
 #include "player.h"
+#include "stuff/field.h"
 
 class CmodPlayer : public CPlayer {
   DISABLE_COPY(CmodPlayer)
 public:
   CmodPlayer();
-  virtual ~CmodPlayer();
+  virtual ~CmodPlayer() = default;
 
   bool update();
   void rewind(int);
@@ -54,44 +55,48 @@ protected:
   };
 
   struct Instrument {
-    unsigned char data[11], arpstart, arpspeed, arppos, arpspdcnt, misc;
-    signed char slide;
+    unsigned char data[11]{0}, arpstart = 0, arpspeed = 0, arppos = 0, arpspdcnt = 0, misc = 0;
+    signed char slide = 0;
   };
-  Instrument *m_instruments;
+  std::vector<Instrument> m_instruments{};
 
-  struct Tracks {
-    unsigned char note, command, inst, param2, param1;
-  } **m_tracks;
+  struct Track {
+    unsigned char note = 0, command = 0, inst = 0, param2 = 0, param1 = 0;
 
-  unsigned char *m_order, *arplist, *arpcmd, m_initspeed;
-  unsigned short m_tempo, **trackord, m_bpm, nop;
-  unsigned long m_length, m_restartpos, activechan;
-  int m_flags;
+    Track() = default;
+  };
+  Field<Track> m_tracks{};
+
+  std::vector<uint8_t> m_order{};
+  unsigned char m_initspeed = 6;
+  unsigned short m_tempo = 0, m_bpm = 0, nop = 0;
+  unsigned long m_length = 0, m_restartpos = 0, activechan = 0xffffffff;
+  int m_flags = Standard;
+  Field<uint16_t> trackord{};
+  std::vector<uint8_t> arplist{};
+  std::vector<uint8_t> arpcmd{};
 
   struct Channel {
-    unsigned short freq, nextfreq;
-    unsigned char oct, vol1, vol2, inst, fx, info1, info2, key, nextoct, note,
-        portainfo, vibinfo1, vibinfo2, arppos, arpspdcnt;
-    signed char trigger;
-  } *channel;
+    unsigned short freq = 0, nextfreq = 0;
+    unsigned char oct = 0, vol1 = 0, vol2 = 0, inst = 0, fx = 0, info1 = 0, info2 = 0, key = 0, nextoct = 0, note = 0,
+        portainfo = 0, vibinfo1 = 0, vibinfo2 = 0, arppos = 0, arpspdcnt = 0;
+    signed char trigger = 0;
+  };
+  std::vector<Channel> channel{};
 
   void init_trackord();
-  bool init_specialarp();
+  void init_specialarp();
   void init_notetable(const unsigned short *newnotetable);
-  bool realloc_order(unsigned long len);
-  bool realloc_patterns(unsigned long pats, unsigned long rows,
+  void realloc_patterns(unsigned long pats, unsigned long rows,
                         unsigned long chans);
-  bool realloc_instruments(unsigned long len);
-
-  void dealloc();
 
 private:
   static const unsigned short sa2_notetable[12];
   static const unsigned char vibratotab[32];
 
-  unsigned char speed, del, songend, regbd;
-  unsigned short notetable[12];
-  unsigned long rw, ord, nrows, npats, nchans;
+  unsigned char speed = 0, del = 0, songend = 0, regbd = 0;
+  unsigned short notetable[12]{0};
+  unsigned long rw = 0, ord = 0, nrows = 0, npats = 0;
 
   void setvolume(unsigned char chan);
   void setvolume_alt(unsigned char chan);

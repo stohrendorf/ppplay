@@ -35,9 +35,9 @@
 namespace {
 constexpr uint16_t bitvalue[14] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192 };
 
-constexpr std::array<int16_t,6> copybits = { 4, 6, 8, 10, 12, 14 };
+constexpr std::array<int16_t,6> copybits = {{ 4, 6, 8, 10, 12, 14 }};
 
-constexpr std::array<int16_t,6> copymin = { 0, 16, 80, 336, 1360, 5456 };
+constexpr std::array<int16_t,6> copymin = {{ 0, 16, 80, 336, 1360, 5456 }};
 }
 
 CPlayer *Ca2mLoader::factory() { return new Ca2mLoader(); }
@@ -141,7 +141,8 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp) {
     m_orgPos += 13;
   }
 
-  memcpy(m_order, &m_org[m_orgPos], 128);
+  m_order.clear();
+  std::copy_n(m_org.begin()+m_orgPos, 128, std::back_inserter(m_order));
   m_orgPos += 128;
   m_bpm = m_org[m_orgPos++];
   m_initspeed = m_org[m_orgPos++];
@@ -209,7 +210,7 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp) {
     for (i = 0; i < numpats; i++)
       for (j = 0; j < 64; j++)
         for (k = 0; k < 9; k++) {
-          struct Tracks *track = &m_tracks[i * 9 + k][j];
+          struct Track *track = &m_tracks[i * 9 + k][j];
           unsigned char *o = &m_org[i * 64 * t * 4 + j * t * 4 + k * 4];
 
           track->note = o[0] == 255 ? 127 : o[0];
@@ -251,7 +252,7 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp) {
     for (i = 0; i < numpats; i++)
       for (j = 0; j < 18; j++)
         for (k = 0; k < 64; k++) {
-          struct Tracks *track = &m_tracks[i * 18 + j][k];
+          struct Track *track = &m_tracks[i * 18 + j][k];
           unsigned char *o = &m_org[i * 64 * t * 4 + j * 64 * 4 + k * 4];
 
           track->note = o[0] == 255 ? 127 : o[0];

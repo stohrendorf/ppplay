@@ -92,8 +92,8 @@ bool CcffLoader::load(const std::string &filename, const CFileProvider &fp) {
   }
 
   // init CmodPlayer
-  realloc_instruments(47);
-  realloc_order(64);
+  m_instruments.clear();
+  m_instruments.resize(47);
   realloc_patterns(36, 64, 9);
   init_notetable(conv_note);
   init_trackord();
@@ -116,7 +116,8 @@ bool CcffLoader::load(const std::string &filename, const CFileProvider &fp) {
   memcpy(song_author, &module[0x600], 20);
 
   // load order
-  memcpy(m_order, &module[0x628], 64);
+  m_order.clear();
+  std::copy_n(module+0x628, 64, std::back_inserter(m_order));
 
   // load tracks
   for (i = 0; i < nop; i++) {

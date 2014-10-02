@@ -45,17 +45,12 @@ const unsigned char CmodPlayer::vibratotab[32] = { 1, 2, 3, 4, 5, 6, 7, 8, 9,
 
 /*** public methods *************************************/
 
-CmodPlayer::CmodPlayer()
-    : CPlayer(), m_instruments(0), m_order(0), arplist(0), arpcmd(0),
-      m_initspeed(6), nop(0), activechan(0xffffffff), m_flags(Standard),
-      nrows(0), npats(0), nchans(0) {
-  realloc_order(128);
+CmodPlayer::CmodPlayer() {
+  m_order.resize(128);
   realloc_patterns(64, 64, 9);
-  realloc_instruments(250);
+  m_instruments.resize(250);
   init_notetable(sa2_notetable);
 }
-
-CmodPlayer::~CmodPlayer() { dealloc(); }
 
 bool CmodPlayer::update() {
   unsigned char pattbreak = 0, donote, pattnr, chan, oplchan, info1, info2,
@@ -67,10 +62,10 @@ bool CmodPlayer::update() {
     return !songend;
 
   // effect handling (timer dependant)
-  for (chan = 0; chan < nchans; chan++) {
+  for (chan = 0; chan < channel.size(); chan++) {
     oplchan = set_opl_chip(chan);
 
-    if (arplist && arpcmd &&
+    if (!arplist.empty() && !arpcmd.empty() &&
         m_instruments[channel[chan].inst].arpstart) { // special arpeggio
       if (channel[chan].arpspdcnt)
         channel[chan].arpspdcnt--;
@@ -233,7 +228,7 @@ bool CmodPlayer::update() {
   // play row
   pattern_delay = 0;
   row = rw;
-  for (chan = 0; chan < nchans; chan++) {
+  for (chan = 0; chan < channel.size(); chan++) {
     oplchan = set_opl_chip(chan);
 
     if (!(activechan >> (31 - chan)) & 1) { // channel active?
@@ -550,7 +545,11 @@ void CmodPlayer::rewind(int) {
   speed = m_initspeed;
 
   // Reset channel data
-  memset(channel, 0, sizeof(Channel) * nchans);
+  {
+    auto nchans = channel.size();
+    channel.clear();
+    channel.resize(nchans);
+  }
 
   // Compute number of patterns, if needed
   if (!nop)
@@ -581,92 +580,42 @@ size_t CmodPlayer::framesUntilUpdate() { return SampleRate * 2.5 / m_tempo; }
 void CmodPlayer::init_trackord() {
   unsigned long i;
 
-  for (i = 0; i < npats * nchans; i++)
-    trackord[i / nchans][i % nchans] = i + 1;
+  for (i = 0; i < npats * channel.size(); i++)
+    trackord[i / channel.size()][i % channel.size()] = i + 1;
 }
 
-bool CmodPlayer::init_specialarp() {
-  arplist = new unsigned char[SPECIALARPLEN];
-  arpcmd = new unsigned char[SPECIALARPLEN];
-
-  return true;
+void CmodPlayer::init_specialarp() {
+  arplist.resize(SPECIALARPLEN);
+  arpcmd.resize(SPECIALARPLEN);
 }
 
 void CmodPlayer::init_notetable(const unsigned short *newnotetable) {
   memcpy(notetable, newnotetable, 12 * 2);
 }
 
-bool CmodPlayer::realloc_order(unsigned long len) {
-  if (m_order)
-    delete[] m_order;
-  m_order = new unsigned char[len];
-  return true;
-}
-
-bool CmodPlayer::realloc_patterns(unsigned long pats, unsigned long rows,
+void CmodPlayer::realloc_patterns(unsigned long pats, unsigned long rows,
                                   unsigned long chans) {
-  unsigned long i;
-
   dealloc_patterns();
 
   // set new number of tracks, rows and channels
   npats = pats;
   nrows = rows;
-  nchans = chans;
+
+  channel.clear();
+  channel.resize(chans);
 
   // alloc new patterns
-  m_tracks = new Tracks *[pats * chans];
-  for (i = 0; i < pats * chans; i++)
-    m_tracks[i] = new Tracks[rows];
-  trackord = new unsigned short *[pats];
-  for (i = 0; i < pats; i++)
-    trackord[i] = new unsigned short[chans];
-  channel = new Channel[chans];
-
-  // initialize new patterns
-  for (i = 0; i < pats * chans; i++)
-    memset(m_tracks[i], 0, sizeof(Tracks) * rows);
-  for (i = 0; i < pats; i++)
-    memset(trackord[i], 0, chans * 2);
-
-  return true;
+  m_tracks.reset(pats*chans, rows);
+  trackord.reset(pats, chans, 0);
 }
 
 void CmodPlayer::dealloc_patterns() {
-  unsigned long i;
-
   // dealloc everything previously allocated
-  if (npats && nrows && nchans) {
-    for (i = 0; i < npats * nchans; i++)
-      delete[] m_tracks[i];
-    delete[] m_tracks;
-    for (i = 0; i < npats; i++)
-      delete[] trackord[i];
-    delete[] trackord;
-    delete[] channel;
+  if (npats && nrows && !channel.empty()) {
+    m_tracks.clear();
+    trackord.clear();
+    channel.clear();
   }
-}
-
-bool CmodPlayer::realloc_instruments(unsigned long len) {
-  // dealloc previous instance, if any
-  if (m_instruments)
-    delete[] m_instruments;
-
-  m_instruments = new Instrument[len];
-  memset(m_instruments, 0, sizeof(Instrument) * len); // reset instruments
-  return true;
-}
-
-void CmodPlayer::dealloc() {
-  if (m_instruments)
-    delete[] m_instruments;
-  if (m_order)
-    delete[] m_order;
-  if (arplist)
-    delete[] arplist;
-  if (arpcmd)
-    delete[] arpcmd;
-  dealloc_patterns();
 }
 
 /*** private methods *************************************/
@@ -705,7 +654,7 @@ void CmodPlayer::setfreq(unsigned char chan) {
   getOpl()->writeReg(0xa0 + oplchan, channel[chan].freq & 255);
   if (channel[chan].key)
     getOpl()->writeReg(0xb0 + oplchan, ((channel[chan].freq & 768) >> 8) +
-                                               (channel[chan].oct << 2) | 32);
+                                               (channel[chan].oct << 2) + 0x20);
   else
     getOpl()->writeReg(0xb0 + oplchan, ((channel[chan].freq & 768) >> 8) +
                                            (channel[chan].oct << 2));
