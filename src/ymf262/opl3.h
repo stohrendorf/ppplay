@@ -39,7 +39,7 @@ namespace opl
 class PPPLAY_OPL_EXPORT Opl3 : public ISerializable
 {
 public:
-    static constexpr int MasterClock = 14.1818e6;
+    static constexpr int MasterClock = 14.31818e6;
     static constexpr int SampleRate = MasterClock / 288;
 
 private:
