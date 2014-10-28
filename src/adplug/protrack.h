@@ -25,6 +25,8 @@
 #include "player.h"
 #include "stuff/field.h"
 
+#include <boost/optional.hpp>
+
 class CmodPlayer : public CPlayer {
   DISABLE_COPY(CmodPlayer)
 public:
@@ -73,8 +75,8 @@ protected:
   unsigned long m_length = 0, m_restartpos = 0, activechan = 0xffffffff;
   int m_flags = Standard;
   Field<uint16_t> trackord{};
-  std::vector<uint8_t> arplist{};
-  std::vector<uint8_t> arpcmd{};
+  boost::optional<std::array<uint8_t,256>> arplist{};
+  boost::optional<std::array<uint8_t,256>> arpcmd{};
 
   struct Channel {
     unsigned short freq = 0, nextfreq = 0;
@@ -85,17 +87,15 @@ protected:
   std::vector<Channel> channel{};
 
   void init_trackord();
-  void init_specialarp();
-  void init_notetable(const unsigned short *newnotetable);
+  void init_notetable(const std::array<uint16_t,12> &newnotetable);
   void realloc_patterns(unsigned long pats, unsigned long rows,
                         unsigned long chans);
 
 private:
-  static const unsigned short sa2_notetable[12];
   static const unsigned char vibratotab[32];
 
   unsigned char speed = 0, del = 0, songend = 0, regbd = 0;
-  unsigned short notetable[12]{0};
+  std::array<uint16_t,12> notetable{{0,0,0,0,0,0,0,0,0,0,0,0}};
   unsigned long rw = 0, ord = 0, nrows = 0, npats = 0;
 
   void setvolume(unsigned char chan);

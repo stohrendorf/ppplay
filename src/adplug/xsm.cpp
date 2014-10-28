@@ -25,11 +25,6 @@
 
 CxsmPlayer::CxsmPlayer() : CPlayer(), music(0) {}
 
-CxsmPlayer::~CxsmPlayer() {
-  if (music)
-    delete[] music;
-}
-
 bool CxsmPlayer::load(const std::string &filename, const CFileProvider &fp) {
   binistream *f = fp.open(filename);
   if (!f)
@@ -39,7 +34,7 @@ bool CxsmPlayer::load(const std::string &filename, const CFileProvider &fp) {
 
   // check if header matches
   f->readString(id, 6);
-  songlen = f->readInt(2);
+  int songlen = f->readInt(2);
   if (strncmp(id, "ofTAZ!", 6) || songlen > 3200) {
     fp.close(f);
     return false;
@@ -62,10 +57,11 @@ bool CxsmPlayer::load(const std::string &filename, const CFileProvider &fp) {
   }
 
   // read song data
-  music = new char[songlen * 9];
+  music.clear();
+  music.resize(songlen);
   for (i = 0; i < 9; i++)
     for (j = 0; j < songlen; j++)
-      music[j * 9 + i] = f->readInt(1);
+      music[j].data[i] = f->readInt(1);
 
   // success
   fp.close(f);
@@ -76,35 +72,35 @@ bool CxsmPlayer::load(const std::string &filename, const CFileProvider &fp) {
 bool CxsmPlayer::update() {
   int c;
 
-  if (notenum >= songlen) {
-    songend = true;
-    notenum = last = 0;
+  if (m_currentRow >= music.size()) {
+    m_songEnd = true;
+    m_currentRow = m_lastRow = 0;
   }
 
   for (c = 0; c < 9; c++)
-    if (music[notenum * 9 + c] != music[last * 9 + c])
+    if (music[m_currentRow].data[c] != music[m_lastRow].data[c])
       getOpl()->writeReg(0xb0 + c, 0);
 
   for (c = 0; c < 9; c++) {
-    if (music[notenum * 9 + c])
-      play_note(c, music[notenum * 9 + c] % 12, music[notenum * 9 + c] / 12);
+    if (music[m_currentRow].data[c])
+      playNote(c, music[m_currentRow].data[c] % 12, music[m_currentRow].data[c] / 12);
     else
-      play_note(c, 0, 0);
+      playNote(c, 0, 0);
   }
 
-  last = notenum;
-  notenum++;
-  return !songend;
+  m_lastRow = m_currentRow;
+  m_currentRow++;
+  return !m_songEnd;
 }
 
 void CxsmPlayer::rewind(int) {
-  notenum = last = 0;
-  songend = false;
+  m_currentRow = m_lastRow = 0;
+  m_songEnd = false;
 }
 
 size_t CxsmPlayer::framesUntilUpdate() { return SampleRate / 5; }
 
-void CxsmPlayer::play_note(int c, int note, int octv) {
+void CxsmPlayer::playNote(int c, int note, int octv) {
   int freq = m_noteTable[note];
 
   if (!note && !octv)

@@ -33,9 +33,9 @@
 #define JUMPMARKER 0x80   // Orderlist jump marker
 
 // SA2 compatible adlib note table
-const unsigned short CmodPlayer::sa2_notetable[12] = { 340, 363, 385, 408, 432,
-                                                       458, 485, 514, 544, 577,
-                                                       611, 647 };
+const std::array<uint16_t,12> sa2_notetable = { 340, 363, 385, 408, 432,
+                                                458, 485, 514, 544, 577,
+                                                611, 647 };
 
 // SA2 compatible vibrato rate table
 const unsigned char CmodPlayer::vibratotab[32] = { 1, 2, 3, 4, 5, 6, 7, 8, 9,
@@ -65,14 +65,14 @@ bool CmodPlayer::update() {
   for (chan = 0; chan < channel.size(); chan++) {
     oplchan = set_opl_chip(chan);
 
-    if (!arplist.empty() && !arpcmd.empty() &&
+    if (arplist.is_initialized() && arpcmd.is_initialized() &&
         m_instruments[channel[chan].inst].arpstart) { // special arpeggio
       if (channel[chan].arpspdcnt)
         channel[chan].arpspdcnt--;
-      else if (arpcmd[channel[chan].arppos] != 255) {
-        switch (arpcmd[channel[chan].arppos]) {
+      else if ((*arpcmd)[channel[chan].arppos] != 255) {
+        switch ((*arpcmd)[channel[chan].arppos]) {
         case 252:
-          channel[chan].vol1 = arplist[channel[chan].arppos]; // set volume
+          channel[chan].vol1 = (*arplist)[channel[chan].arppos]; // set volume
           if (channel[chan].vol1 > 63)                        // ?????
             channel[chan].vol1 = 63;
           channel[chan].vol2 = channel[chan].vol1;
@@ -83,30 +83,30 @@ bool CmodPlayer::update() {
           setfreq(chan);
           break; // release sustaining note
         case 254:
-          channel[chan].arppos = arplist[channel[chan].arppos];
+          channel[chan].arppos = (*arplist)[channel[chan].arppos];
           break; // arpeggio loop
         default:
-          if (arpcmd[channel[chan].arppos]) {
-            if (arpcmd[channel[chan].arppos] / 10)
+          if ((*arpcmd)[channel[chan].arppos]) {
+            if ((*arpcmd)[channel[chan].arppos] / 10)
               getOpl()->writeReg(0xe3 + m_opTable[oplchan],
-                                 arpcmd[channel[chan].arppos] / 10 - 1);
-            if (arpcmd[channel[chan].arppos] % 10)
+                                 (*arpcmd)[channel[chan].arppos] / 10 - 1);
+            if ((*arpcmd)[channel[chan].arppos] % 10)
               getOpl()->writeReg(0xe0 + m_opTable[oplchan],
-                                 (arpcmd[channel[chan].arppos] % 10) - 1);
-            if (arpcmd[channel[chan].arppos] < 10) // ?????
+                                 ((*arpcmd)[channel[chan].arppos] % 10) - 1);
+            if ((*arpcmd)[channel[chan].arppos] < 10) // ?????
               getOpl()->writeReg(0xe0 + m_opTable[oplchan],
-                                 arpcmd[channel[chan].arppos] - 1);
+                                 (*arpcmd)[channel[chan].arppos] - 1);
           }
         }
-        if (arpcmd[channel[chan].arppos] != 252) {
-          if (arplist[channel[chan].arppos] <= 96)
-            setnote(chan, channel[chan].note + arplist[channel[chan].arppos]);
-          if (arplist[channel[chan].arppos] >= 100)
-            setnote(chan, arplist[channel[chan].arppos] - 100);
+        if ((*arpcmd)[channel[chan].arppos] != 252) {
+          if ((*arplist)[channel[chan].arppos] <= 96)
+            setnote(chan, channel[chan].note + (*arplist)[channel[chan].arppos]);
+          if ((*arplist)[channel[chan].arppos] >= 100)
+            setnote(chan, (*arplist)[channel[chan].arppos] - 100);
         } else
           setnote(chan, channel[chan].note);
         setfreq(chan);
-        if (arpcmd[channel[chan].arppos] != 255)
+        if ((*arpcmd)[channel[chan].arppos] != 255)
           channel[chan].arppos++;
         channel[chan].arpspdcnt =
             m_instruments[channel[chan].inst].arpspeed - 1;
@@ -584,13 +584,8 @@ void CmodPlayer::init_trackord() {
     trackord[i / channel.size()][i % channel.size()] = i + 1;
 }
 
-void CmodPlayer::init_specialarp() {
-  arplist.resize(SPECIALARPLEN);
-  arpcmd.resize(SPECIALARPLEN);
-}
-
-void CmodPlayer::init_notetable(const unsigned short *newnotetable) {
-  memcpy(notetable, newnotetable, 12 * 2);
+void CmodPlayer::init_notetable(const std::array<uint16_t,12>& newnotetable) {
+  notetable = newnotetable;
 }
 
 void CmodPlayer::realloc_patterns(unsigned long pats, unsigned long rows,

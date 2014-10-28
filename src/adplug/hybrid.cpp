@@ -93,18 +93,18 @@ void CxadhybridPlayer::xadplayer_rewind(int) {
   }
 
   // basic OPL init
-  opl_write(0x01, 0x20);
-  opl_write(0xBD, 0x40);
-  opl_write(0x08, 0x00);
+  getOpl()->writeReg(0x01, 0x20);
+  getOpl()->writeReg(0xBD, 0x40);
+  getOpl()->writeReg(0x08, 0x00);
 
   // init OPL channels
   for (i = 0; i < 9; i++) {
     for (int j = 0; j < 11; j++)
-      opl_write(hyb_adlib_registers[i * 11 + j],
+      getOpl()->writeReg(hyb_adlib_registers[i * 11 + j],
                 0x00 /* hyb_default_instrument[j] */);
 
-    opl_write(0xA0 + i, 0x00);
-    opl_write(0xB0 + i, 0x20);
+    getOpl()->writeReg(0xA0 + i, 0x00);
+    getOpl()->writeReg(0xB0 + i, 0x20);
   }
 }
 
@@ -159,7 +159,7 @@ void CxadhybridPlayer::xadplayer_update() {
       // is instrument ?
       if (ins)
         for (j = 0; j < 11; j++)
-          opl_write(hyb_adlib_registers[i * 11 + j],
+          getOpl()->writeReg(hyb_adlib_registers[i * 11 + j],
                     *((unsigned char *)&hyb.inst[ins - 1] + 7 +
                       j)); // +7 = skip name...
 
@@ -179,13 +179,13 @@ void CxadhybridPlayer::xadplayer_update() {
 
       // set frequency
       if (!(hyb.channel[i].freq & 0x2000)) {
-        opl_write(0xA0 + i, hyb.channel[i].freq & 0xFF);
-        opl_write(0xB0 + i, hyb.channel[i].freq >> 8);
+        getOpl()->writeReg(0xA0 + i, hyb.channel[i].freq & 0xFF);
+        getOpl()->writeReg(0xB0 + i, hyb.channel[i].freq >> 8);
 
         hyb.channel[i].freq |= 0x2000;
 
-        opl_write(0xA0 + i, hyb.channel[i].freq & 0xFF);
-        opl_write(0xB0 + i, hyb.channel[i].freq >> 8);
+        getOpl()->writeReg(0xA0 + i, hyb.channel[i].freq & 0xFF);
+        getOpl()->writeReg(0xB0 + i, hyb.channel[i].freq >> 8);
       }
 
       break;
@@ -212,8 +212,8 @@ update_slides:
           (((hyb.channel[i].freq & 0x1FFF) + hyb.channel[i].freq_slide) &
            0x1FFF) | 0x2000;
 
-      opl_write(0xA0 + i, hyb.channel[i].freq & 0xFF);
-      opl_write(0xB0 + i, hyb.channel[i].freq >> 8);
+      getOpl()->writeReg(0xA0 + i, hyb.channel[i].freq & 0xFF);
+      getOpl()->writeReg(0xB0 + i, hyb.channel[i].freq >> 8);
     }
 }
 

@@ -27,20 +27,24 @@ public:
   static CPlayer *factory() { return new CxsmPlayer(); }
 
   CxsmPlayer();
-  ~CxsmPlayer();
+  ~CxsmPlayer() = default;
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
   void rewind(int subsong);
   size_t framesUntilUpdate();
 
-  std::string gettype() { return std::string("eXtra Simple Music"); }
+  std::string gettype() { return "eXtra Simple Music"; }
 
 private:
-  unsigned short songlen;
-  char *music;
-  unsigned int last, notenum;
-  bool songend;
+  struct Row {
+    char data[9] = {0,0,0,0,0,0,0,0,0};
+  };
 
-  void play_note(int c, int note, int octv);
+  std::vector<Row> music{};
+  size_t m_lastRow = 0;
+  size_t m_currentRow = 0;
+  bool m_songEnd = false;
+
+  void playNote(int c, int note, int octv);
 };

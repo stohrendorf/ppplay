@@ -95,21 +95,21 @@ void CxadratPlayer::xadplayer_rewind(int) {
   memset(&rat.channel, 0, sizeof(rat.channel[0]) * 9);
 
   // init OPL
-  opl_write(0x01, 0x20);
-  opl_write(0x08, 0x00);
-  opl_write(0xBD, 0x00);
+  getOpl()->writeReg(0x01, 0x20);
+  getOpl()->writeReg(0x08, 0x00);
+  getOpl()->writeReg(0xBD, 0x00);
 
   // set default frequencies
   for (i = 0; i < 9; i++) {
-    opl_write(0xA0 + i, 0x00);
-    opl_write(0xA3 + i, 0x00);
-    opl_write(0xB0 + i, 0x00);
-    opl_write(0xB3 + i, 0x00);
+    getOpl()->writeReg(0xA0 + i, 0x00);
+    getOpl()->writeReg(0xA3 + i, 0x00);
+    getOpl()->writeReg(0xB0 + i, 0x00);
+    getOpl()->writeReg(0xB3 + i, 0x00);
   }
 
   // set default volumes
   for (i = 0; i < 0x1F; i++)
-    opl_write(0x40 + i, 0x3F);
+    getOpl()->writeReg(0x40 + i, 0x3F);
 }
 
 void CxadratPlayer::xadplayer_update() {
@@ -142,47 +142,47 @@ void CxadratPlayer::xadplayer_update() {
     // is note ?
     if (event.note != 0xFF) {
       // mute channel
-      opl_write(0xB0 + i, 0x00);
-      opl_write(0xA0 + i, 0x00);
+      getOpl()->writeReg(0xB0 + i, 0x00);
+      getOpl()->writeReg(0xA0 + i, 0x00);
 
       // if note != 0xFE then play
       if (event.note != 0xFE) {
         unsigned char ins = rat.channel[i].instrument;
 
         // synthesis/feedback
-        opl_write(0xC0 + i, rat.inst[ins].connect);
+        getOpl()->writeReg(0xC0 + i, rat.inst[ins].connect);
 
         // controls
-        opl_write(0x20 + rat_adlib_bases[i], rat.inst[ins].mod_ctrl);
-        opl_write(0x20 + rat_adlib_bases[i + 9], rat.inst[ins].car_ctrl);
+        getOpl()->writeReg(0x20 + rat_adlib_bases[i], rat.inst[ins].mod_ctrl);
+        getOpl()->writeReg(0x20 + rat_adlib_bases[i + 9], rat.inst[ins].car_ctrl);
 
         // volumes
-        opl_write(0x40 + rat_adlib_bases[i],
+        getOpl()->writeReg(0x40 + rat_adlib_bases[i],
                   __rat_calc_volume(rat.inst[ins].mod_volume,
                                     rat.channel[i].volume, rat.volume));
-        opl_write(0x40 + rat_adlib_bases[i + 9],
+        getOpl()->writeReg(0x40 + rat_adlib_bases[i + 9],
                   __rat_calc_volume(rat.inst[ins].car_volume,
                                     rat.channel[i].volume, rat.volume));
 
         // attack/decay
-        opl_write(0x60 + rat_adlib_bases[i], rat.inst[ins].mod_AD);
-        opl_write(0x60 + rat_adlib_bases[i + 9], rat.inst[ins].car_AD);
+        getOpl()->writeReg(0x60 + rat_adlib_bases[i], rat.inst[ins].mod_AD);
+        getOpl()->writeReg(0x60 + rat_adlib_bases[i + 9], rat.inst[ins].car_AD);
 
         // sustain/release
-        opl_write(0x80 + rat_adlib_bases[i], rat.inst[ins].mod_SR);
-        opl_write(0x80 + rat_adlib_bases[i + 9], rat.inst[ins].car_SR);
+        getOpl()->writeReg(0x80 + rat_adlib_bases[i], rat.inst[ins].mod_SR);
+        getOpl()->writeReg(0x80 + rat_adlib_bases[i + 9], rat.inst[ins].car_SR);
 
         // waveforms
-        opl_write(0xE0 + rat_adlib_bases[i], rat.inst[ins].mod_wave);
-        opl_write(0xE0 + rat_adlib_bases[i + 9], rat.inst[ins].car_wave);
+        getOpl()->writeReg(0xE0 + rat_adlib_bases[i], rat.inst[ins].mod_wave);
+        getOpl()->writeReg(0xE0 + rat_adlib_bases[i + 9], rat.inst[ins].car_wave);
 
         // octave/frequency
         unsigned short insfreq =
             (rat.inst[ins].freq[1] << 8) + rat.inst[ins].freq[0];
         unsigned short freq = insfreq * rat_notes[event.note & 0x0F] / 0x20AB;
 
-        opl_write(0xA0 + i, freq & 0xFF);
-        opl_write(0xB0 + i, (freq >> 8) | ((event.note & 0xF0) >> 2) | 0x20);
+        getOpl()->writeReg(0xA0 + i, freq & 0xFF);
+        getOpl()->writeReg(0xB0 + i, (freq >> 8) | ((event.note & 0xF0) >> 2) | 0x20);
       }
     }
 

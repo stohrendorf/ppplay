@@ -88,19 +88,19 @@ void CxadflashPlayer::xadplayer_rewind(int) {
   flash.order_pos = 0;
   flash.pattern_pos = 0;
 
-  opl_write(0x08, 0x00);
-  opl_write(0xBD, 0x00);
+  getOpl()->writeReg(0x08, 0x00);
+  getOpl()->writeReg(0xBD, 0x00);
 
   // assign default instrument
   for (i = 0; i < 9; i++) {
-    opl_write(0xA0 + i, 0x00);
-    opl_write(0xB0 + i, 0x00);
+    getOpl()->writeReg(0xA0 + i, 0x00);
+    getOpl()->writeReg(0xB0 + i, 0x00);
   }
 
   // assign instruments
   for (i = 0; i < 9; i++)
     for (int j = 0; j < 11; j++)
-      opl_write(flash_adlib_registers[i * 11 + j], tune[i * 12 + j]);
+      getOpl()->writeReg(flash_adlib_registers[i * 11 + j], tune[i * 12 + j]);
 }
 
 void CxadflashPlayer::xadplayer_update() {
@@ -109,7 +109,7 @@ void CxadflashPlayer::xadplayer_update() {
 
   for (int i = 0; i < 9; i++) {
     unsigned short flash_channel_freq =
-        (adlib[0xB0 + i] << 8) + adlib[0xA0 + i];
+        (getOpl()->readReg(0xB0 + i) << 8) + getOpl()->readReg(0xA0 + i);
 
     unsigned char event_b0 = tune[event_pos++];
     unsigned char event_b1 = tune[event_pos++];
@@ -121,7 +121,7 @@ void CxadflashPlayer::xadplayer_update() {
     if (event_b0 == 0x80) // 0.0x80: Set Instrument
         {
       for (int j = 0; j < 11; j++)
-        opl_write(flash_adlib_registers[i * 11 + j], tune[event_b1 * 12 + j]);
+        getOpl()->writeReg(flash_adlib_registers[i * 11 + j], tune[event_b1 * 12 + j]);
     } else {
       if (event_b1 == 0x01)
         flash.pattern_pos = 0x3F; // 1.0x01: Pattern Break
@@ -131,14 +131,14 @@ void CxadflashPlayer::xadplayer_update() {
 
       switch (fx) {
       case 0x0A: // 1.0xAy: Set Carrier volume
-        opl_write(flash_adlib_registers[11 * i + 2], fx_p << 2);
+        getOpl()->writeReg(flash_adlib_registers[11 * i + 2], fx_p << 2);
         break;
       case 0x0B: // 1.0xBy: Set Modulator volume
-        opl_write(flash_adlib_registers[11 * i + 3], fx_p << 2);
+        getOpl()->writeReg(flash_adlib_registers[11 * i + 3], fx_p << 2);
         break;
       case 0x0C: // 1.0xCy: Set both operators volume
-        opl_write(flash_adlib_registers[11 * i + 2], fx_p << 2);
-        opl_write(flash_adlib_registers[11 * i + 3], fx_p << 2);
+        getOpl()->writeReg(flash_adlib_registers[11 * i + 2], fx_p << 2);
+        getOpl()->writeReg(flash_adlib_registers[11 * i + 3], fx_p << 2);
         break;
       //      case 0x0E:                      // 1.0xEy: ? (increase some
       // value)
@@ -149,8 +149,8 @@ void CxadflashPlayer::xadplayer_update() {
 
       if (event_b0) {
         // mute channel
-        opl_write(0xA0 + i, adlib[0xA0 + i]);
-        opl_write(0xB0 + i, adlib[0xB0 + i] & 0xDF);
+        getOpl()->writeReg(0xA0 + i, getOpl()->readReg(0xA0 + i));
+        getOpl()->writeReg(0xB0 + i, getOpl()->readReg(0xB0 + i) & 0xDF);
 
         // is note ?
         if (event_b0 != 0x7F) {
@@ -159,8 +159,8 @@ void CxadflashPlayer::xadplayer_update() {
 
           flash_channel_freq = freq | ((note_encoded & 0xFF) << 10) | 0x2000;
 
-          opl_write(0xA0 + i, flash_channel_freq & 0xFF);
-          opl_write(0xB0 + i, flash_channel_freq >> 8);
+          getOpl()->writeReg(0xA0 + i, flash_channel_freq & 0xFF);
+          getOpl()->writeReg(0xB0 + i, flash_channel_freq >> 8);
         }
       }
 
@@ -168,14 +168,14 @@ void CxadflashPlayer::xadplayer_update() {
           {
         flash_channel_freq += (fx_p << 1);
 
-        opl_write(0xA0 + i, flash_channel_freq & 0xFF);
-        opl_write(0xB0 + i, flash_channel_freq >> 8);
+        getOpl()->writeReg(0xA0 + i, flash_channel_freq & 0xFF);
+        getOpl()->writeReg(0xB0 + i, flash_channel_freq >> 8);
       } else if (fx == 0x02) // 1.0x2y: Fine Frequency Slide Down
           {
         flash_channel_freq -= (fx_p << 1);
 
-        opl_write(0xA0 + i, flash_channel_freq & 0xFF);
-        opl_write(0xB0 + i, flash_channel_freq >> 8);
+        getOpl()->writeReg(0xA0 + i, flash_channel_freq & 0xFF);
+        getOpl()->writeReg(0xB0 + i, flash_channel_freq >> 8);
       }
     }
   }

@@ -34,7 +34,7 @@ bool CdtmLoader::load(const std::string &filename, const CFileProvider &fp) {
   if (!f)
     return false;
   const unsigned char conv_inst[11] = { 2, 1, 10, 9, 4, 3, 6, 5, 0, 8, 7 };
-  const unsigned short conv_note[12] = { 0x16B, 0x181, 0x198, 0x1B0, 0x1CA,
+  const std::array<uint16_t,12> conv_note = { 0x16B, 0x181, 0x198, 0x1B0, 0x1CA,
                                          0x1E5, 0x202, 0x220, 0x241, 0x263,
                                          0x287, 0x2AE };
   int i, j, k, t = 0;

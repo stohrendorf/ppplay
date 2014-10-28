@@ -61,14 +61,14 @@ void CxadhypPlayer::xadplayer_rewind(int) {
 
   plr.speed = tune[5];
 
-  opl_write(0xBD, 0xC0);
+  getOpl()->writeReg(0xBD, 0xC0);
 
   for (i = 0; i < 9; i++)
-    adlib[0xB0 + i] = 0;
+    getOpl()->writeReg(0xB0 + i, 0);
 
   // define instruments
   for (i = 0; i < 99; i++)
-    opl_write(hyp_adlib_registers[i], tune[6 + i]);
+    getOpl()->writeReg(hyp_adlib_registers[i], tune[6 + i]);
 
   hyp.pointer = 0x69;
 }
@@ -83,20 +83,19 @@ void CxadhypPlayer::xadplayer_update() {
       unsigned char lofreq = (freq & 0xFF);
       unsigned char hifreq = (freq >> 8);
 
-      opl_write(0xB0 + i, adlib[0xB0 + i]);
+      // FIXME sto getOpl()->writeReg(0xB0 + i, adlib[0xB0 + i]);
+      // FIXME sto adlib[0xB0 + i] &= 0xDF;
 
       if (!(event & 0x40)) {
-        opl_write(0xA0 + i, lofreq);
-        opl_write(0xB0 + i, hifreq | 0x20);
+        getOpl()->writeReg(0xA0 + i, lofreq);
+        getOpl()->writeReg(0xB0 + i, hifreq | 0x20);
       }
-
-      adlib[0xB0 + i] &= 0xDF;
     }
   }
 
   hyp.pointer += 3;
 
-  if (hyp.pointer >= tune_size) {
+  if (hyp.pointer >= tune.size()) {
     hyp.pointer = 0x69;
     plr.looping = 1;
   }

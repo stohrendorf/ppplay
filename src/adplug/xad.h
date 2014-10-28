@@ -29,8 +29,8 @@ class CxadPlayer : public CPlayer {
 public:
   static CPlayer *factory();
 
-  CxadPlayer();
-  ~CxadPlayer();
+  CxadPlayer() = default;
+  ~CxadPlayer() = default;
 
   bool load(const std::string &filename, const CFileProvider &fp);
   bool update();
@@ -56,7 +56,8 @@ protected:
   }
   virtual unsigned int xadplayer_getinstruments() { return 0; }
 
-  enum {
+  enum Format : uint16_t {
+    None,
     HYP = 1,
     PSI,
     FLASH,
@@ -66,27 +67,22 @@ protected:
   };
 
   struct xad_header {
-    unsigned long id;
-    char title[36];
-    char author[36];
-    unsigned short fmt;
-    unsigned char speed;
-    unsigned char reserved_a;
-  } xad;
+    unsigned long id = 0;
+    char title[36] = "";
+    char author[36] = "";
+    Format fmt = None;
+    unsigned char speed = 0;
+    unsigned char reserved_a = 0;
+  } xad{};
 
-  unsigned char *tune;
-  unsigned long tune_size;
+  std::vector<uint8_t> tune{};
 
   struct {
-    int playing;
-    int looping;
-    unsigned char speed;
-    unsigned char speed_counter;
-  } plr;
-
-  unsigned char adlib[256];
-
-  void opl_write(int reg, int val);
+    int playing = 0;
+    int looping = 0;
+    unsigned char speed = 0;
+    unsigned char speed_counter = 0;
+  } plr{};
 };
 
 #endif

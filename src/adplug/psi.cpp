@@ -57,9 +57,9 @@ const unsigned short CxadpsiPlayer::psi_notes[16] = {
 CPlayer *CxadpsiPlayer::factory() { return new CxadpsiPlayer(); }
 
 void CxadpsiPlayer::xadplayer_rewind(int) {
-  opl_write(0x01, 0x20);
-  opl_write(0x08, 0x00);
-  opl_write(0xBD, 0x00);
+  getOpl()->writeReg(0x01, 0x20);
+  getOpl()->writeReg(0x08, 0x00);
+  getOpl()->writeReg(0xBD, 0x00);
 
   // get header
   header.instr_ptr = (tune[1] << 8) + tune[0];
@@ -73,11 +73,11 @@ void CxadpsiPlayer::xadplayer_rewind(int) {
       unsigned short inspos =
           (psi.instr_table[i * 2 + 1] << 8) + psi.instr_table[i * 2];
 
-      opl_write(psi_adlib_registers[i * 11 + j], tune[inspos + j]);
+      getOpl()->writeReg(psi_adlib_registers[i * 11 + j], tune[inspos + j]);
     }
 
-    opl_write(0xA0 + i, 0x00);
-    opl_write(0xB0 + i, 0x00);
+    getOpl()->writeReg(0xA0 + i, 0x00);
+    getOpl()->writeReg(0xB0 + i, 0x00);
 
     psi.note_delay[i] = 1;
     psi.note_curdelay[i] = 1;
@@ -97,8 +97,8 @@ void CxadpsiPlayer::xadplayer_update() {
     psi.note_curdelay[i]--;
 
     if (!psi.note_curdelay[i]) {
-      opl_write(0xA0 + i, 0x00);
-      opl_write(0xB0 + i, 0x00);
+      getOpl()->writeReg(0xA0 + i, 0x00);
+      getOpl()->writeReg(0xB0 + i, 0x00);
 
       unsigned char event = tune[ptr++];
 #ifdef DEBUG
@@ -139,8 +139,8 @@ void CxadpsiPlayer::xadplayer_update() {
       // play note
       unsigned short note = psi_notes[event & 0x0F];
 
-      opl_write(0xA0 + i, note & 0xFF);
-      opl_write(0xB0 + i, (note >> 8) + ((event >> 2) & 0xFC));
+      getOpl()->writeReg(0xA0 + i, note & 0xFF);
+      getOpl()->writeReg(0xB0 + i, (note >> 8) + ((event >> 2) & 0xFC));
 
       // save position
       psi.seq_table[(i << 1) * 2] = ptr & 0xff;

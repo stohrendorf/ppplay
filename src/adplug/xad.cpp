@@ -24,13 +24,6 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CxadPlayer::CxadPlayer() : CPlayer() { tune = 0; }
-
-CxadPlayer::~CxadPlayer() {
-  if (tune)
-    delete[] tune;
-}
-
 bool CxadPlayer::load(const std::string &filename, const CFileProvider &fp) {
   binistream *f = fp.open(filename);
   if (!f)
@@ -41,7 +34,7 @@ bool CxadPlayer::load(const std::string &filename, const CFileProvider &fp) {
   xad.id = f->readInt(4);
   f->readString(xad.title, 36);
   f->readString(xad.author, 36);
-  xad.fmt = f->readInt(2);
+  xad.fmt = static_cast<Format>(f->readInt(2));
   xad.speed = f->readInt(1);
   xad.reserved_a = f->readInt(1);
 
@@ -51,12 +44,8 @@ bool CxadPlayer::load(const std::string &filename, const CFileProvider &fp) {
     return false;
   }
 
-  // get file size
-  tune_size = fp.filesize(f) - 80;
-
-  // load()
-  tune = new unsigned char[tune_size];
-  f->readString((char *)tune, tune_size);
+  tune.resize(fp.filesize(f) - 80);
+  f->readString(reinterpret_cast<char*>(tune.data()), tune.size());
   fp.close(f);
 
   ret = xadplayer_load();
@@ -109,13 +98,3 @@ std::string CxadPlayer::getinstrument(unsigned int i) {
 }
 
 unsigned int CxadPlayer::getinstruments() { return xadplayer_getinstruments(); }
-
-/* -------- Protected Methods ------------------------------- */
-
-void CxadPlayer::opl_write(int reg, int val) {
-  adlib[reg] = val;
-#ifdef DEBUG
-  AdPlug_LogWrite("[ %02X ] = %02X\n", reg, val);
-#endif
-  getOpl()->writeReg(reg, val);
-}

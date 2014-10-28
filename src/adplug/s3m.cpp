@@ -26,8 +26,10 @@
 #include "s3m.h"
 
 const char Cs3mPlayer::chnresolv[] = // S3M -> adlib channel conversion
-    { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2,
-      3, 4, 5, 6, 7, 8, -1, -1, -1, -1, -1, -1, -1 };
+    { -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+       0,  1,  2,  3,  4,  5,  6,  7,
+       8, -1, -1, -1, -1, -1, -1, -1 };
 
 const unsigned short Cs3mPlayer::notetable[12] = // S3M adlib note table
     { 340, 363, 385, 408, 432, 458, 485, 514, 544, 577, 611, 647 };
@@ -254,23 +256,23 @@ bool Cs3mPlayer::update() {
     }
   }
 
-  if (del) { // speed compensation
-    del--;
+  if (m_patternDelay) { // speed compensation
+    m_patternDelay--;
     return !songend;
   }
 
   // arrangement handling
-  pattnr = orders[ord];
-  if (pattnr == 0xff || ord > header.ordnum) { // "--" end of song
+  pattnr = orders[m_order];
+  if (pattnr == 0xff || m_order > header.ordnum) { // "--" end of song
     songend = 1;                               // set end-flag
-    ord = 0;
-    pattnr = orders[ord];
+    m_order = 0;
+    pattnr = orders[m_order];
     if (pattnr == 0xff)
       return !songend;
   }
   if (pattnr == 0xfe) { // "++" skip marker
-    ord++;
-    pattnr = orders[ord];
+    m_order++;
+    pattnr = orders[m_order];
   }
 
   // play row
@@ -358,19 +360,19 @@ bool Cs3mPlayer::update() {
       info = channel[realchan].info; // fill infobyte cache
       switch (channel[realchan].fx) {
       case 1:
-        speed = info;
+        m_speed = info;
         break; // set speed
       case 2:
-        if (info <= ord)
+        if (info <= m_order)
           songend = 1;
-        ord = info;
+        m_order = info;
         crow = 0;
         pattbreak = 1;
         break; // jump to order
       case 3:
         if (!pattbreak) {
           crow = info;
-          ord++;
+          m_order++;
           pattbreak = 1;
         }
         break; // pattern break
@@ -421,35 +423,35 @@ bool Cs3mPlayer::update() {
         break; // arpeggio (set trigger)
       case 19:
         if (info == 0xb0) // set loop start
-          loopstart = row;
+          m_loopStart = row;
         if (info > 0xb0 && info <= 0xbf) { // pattern loop
-          if (!loopcnt) {
-            loopcnt = info & 0x0f;
-            crow = loopstart;
+          if (!m_loopCounter) {
+            m_loopCounter = info & 0x0f;
+            crow = m_loopStart;
             pattbreak = 1;
-          } else if (--loopcnt > 0) {
-            crow = loopstart;
+          } else if (--m_loopCounter > 0) {
+            crow = m_loopStart;
             pattbreak = 1;
           }
         }
         if ((info & 0xf0) == 0xe0) // patterndelay
-          del = speed * (info & 0x0f) - 1;
+          m_patternDelay = m_speed * (info & 0x0f) - 1;
         break;
       case 20:
-        tempo = info;
+        m_tempo = info;
         break; // set tempo
       }
     }
   }
 
-  if (!del)
-    del = speed - 1; // speed compensation
+  if (!m_patternDelay)
+    m_patternDelay = m_speed - 1; // speed compensation
   if (!pattbreak) {  // next row (only if no manual advance)
     crow++;
     if (crow > 63) {
       crow = 0;
-      ord++;
-      loopstart = 0;
+      m_order++;
+      m_loopStart = 0;
     }
   }
 
@@ -459,13 +461,13 @@ bool Cs3mPlayer::update() {
 void Cs3mPlayer::rewind(int) {
   // set basic variables
   songend = 0;
-  ord = 0;
+  m_order = 0;
   crow = 0;
-  tempo = header.it;
-  speed = header.is;
-  del = 0;
-  loopstart = 0;
-  loopcnt = 0;
+  m_tempo = header.it;
+  m_speed = header.is;
+  m_patternDelay = 0;
+  m_loopStart = 0;
+  m_loopCounter = 0;
 
   memset(channel, 0, sizeof(channel));
 
@@ -495,7 +497,7 @@ std::string Cs3mPlayer::gettype() {
   return (std::string("Scream Tracker ") + filever);
 }
 
-size_t Cs3mPlayer::framesUntilUpdate() { return SampleRate * 2.5 / tempo; }
+size_t Cs3mPlayer::framesUntilUpdate() { return SampleRate * 2.5 / m_tempo; }
 
 /*** private methods *************************************/
 

@@ -38,26 +38,17 @@ public:
 
   std::string gettype();
   std::string gettitle() { return std::string(header.name); }
-  ;
 
   unsigned int getpatterns() { return header.patnum; }
-  ;
-  unsigned int getpattern() { return orders[ord]; }
-  ;
+  unsigned int getpattern() { return orders[m_order]; }
   unsigned int getorders() { return (header.ordnum - 1); }
-  ;
-  unsigned int getorder() { return ord; }
-  ;
+  unsigned int getorder() { return m_order; }
   unsigned int getrow() { return crow; }
-  ;
-  unsigned int getspeed() { return speed; }
-  ;
+  unsigned int getspeed() { return m_speed; }
   unsigned int getinstruments() { return header.insnum; }
-  ;
   std::string getinstrument(unsigned int n) {
     return std::string(inst[n].name);
   }
-  ;
 
 protected:
   struct s3mheader {
@@ -91,7 +82,7 @@ protected:
 
   s3mheader header;
   unsigned char orders[256];
-  unsigned char crow, ord, speed, tempo, del, songend, loopstart, loopcnt;
+  unsigned char crow, m_order, m_speed, m_tempo, m_patternDelay, songend, m_loopStart, m_loopCounter;
 
 private:
   static const char chnresolv[];

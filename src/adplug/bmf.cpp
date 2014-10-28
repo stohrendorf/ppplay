@@ -197,23 +197,23 @@ void CxadbmfPlayer::xadplayer_rewind(int) {
 
   // OPL initialization
   if (bmf.version > BMF0_9B) {
-    opl_write(0x01, 0x20);
+    getOpl()->writeReg(0x01, 0x20);
 
     /* 1.1 */
     if (bmf.version == BMF1_1)
       for (i = 0; i < 9; i++)
         for (j = 0; j < 13; j++)
-          opl_write(bmf_adlib_registers[13 * i + j], bmf_default_instrument[j]);
+          getOpl()->writeReg(bmf_adlib_registers[13 * i + j], bmf_default_instrument[j]);
     /* 1.2 */
     else if (bmf.version == BMF1_2)
       for (i = 0x20; i < 0x100; i++)
-        opl_write(i, 0xFF); // very interesting, really!
+        getOpl()->writeReg(i, 0xFF); // very interesting, really!
   }
 
   /* ALL */
 
-  opl_write(0x08, 0x00);
-  opl_write(0xBD, 0xC0);
+  getOpl()->writeReg(0x08, 0x00);
+  getOpl()->writeReg(0xBD, 0xC0);
 }
 
 void CxadbmfPlayer::xadplayer_update() {
@@ -269,8 +269,8 @@ void CxadbmfPlayer::xadplayer_update() {
             if (cmd == 0x01) {
               unsigned char reg = bmf_adlib_registers[13 * i + 2];
 
-              opl_write(reg,
-                        (adlib[reg] | 0x3F) - bmf.streams[i][pos].cmd_data);
+              getOpl()->writeReg(reg,
+                        (getOpl()->readReg(reg) | 0x3F) - bmf.streams[i][pos].cmd_data);
             }
                 // 0x10: Set Speed
                 else if (cmd == 0x10) {
@@ -284,10 +284,10 @@ void CxadbmfPlayer::xadplayer_update() {
             unsigned char ins = bmf.streams[i][pos].instrument - 1;
 
             if (bmf.version != BMF1_1)
-              opl_write(0xB0 + i, adlib[0xB0 + i] & 0xDF);
+              getOpl()->writeReg(0xB0 + i, getOpl()->readReg(0xB0 + i) & 0xDF);
 
             for (int j = 0; j < 13; j++)
-              opl_write(bmf_adlib_registers[i * 13 + j],
+              getOpl()->writeReg(bmf_adlib_registers[i * 13 + j],
                         bmf.instruments[ins].data[j]);
           } // if (bmf.streams[i][pos].instrument)
 
@@ -296,7 +296,7 @@ void CxadbmfPlayer::xadplayer_update() {
             unsigned char vol = bmf.streams[i][pos].volume - 1;
             unsigned char reg = bmf_adlib_registers[13 * i + 3];
 
-            opl_write(reg, (adlib[reg] | 0x3F) - vol);
+            getOpl()->writeReg(reg, (getOpl()->readReg(reg) | 0x3F) - vol);
           } // if (bmf.streams[i][pos].volume)
 
           // note ?
@@ -305,7 +305,7 @@ void CxadbmfPlayer::xadplayer_update() {
             unsigned short freq = 0;
 
             // mute channel
-            opl_write(0xB0 + i, adlib[0xB0 + i] & 0xDF);
+            getOpl()->writeReg(0xB0 + i, getOpl()->readReg(0xB0 + i) & 0xDF);
 
             // get frequency
             if (bmf.version == BMF1_1) {
@@ -318,8 +318,8 @@ void CxadbmfPlayer::xadplayer_update() {
 
             // play note
             if (freq) {
-              opl_write(0xB0 + i, (freq >> 8) | ((note / 12) << 2) | 0x20);
-              opl_write(0xA0 + i, freq & 0xFF);
+              getOpl()->writeReg(0xB0 + i, (freq >> 8) | ((note / 12) << 2) | 0x20);
+              getOpl()->writeReg(0xA0 + i, freq & 0xFF);
             }
           } // if (bmf.streams[i][pos].note)
 

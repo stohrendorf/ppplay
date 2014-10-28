@@ -150,11 +150,12 @@ bool Csa2Loader::load(const std::string &filename, const CFileProvider &fp) {
   }
 
   if (sat_type & HAS_ARPEGIOLIST) {
-    init_specialarp();
+    arplist = std::array<uint8_t,256>();
     for (i = 0; i < 256; i++)
-      arplist[i] = f->readInt(1); // arpeggio list
+      (*arplist)[i] = f->readInt(1); // arpeggio list
+    arpcmd = std::array<uint8_t,256>();
     for (i = 0; i < 256; i++)
-      arpcmd[i] = f->readInt(1); // arpeggio commands
+      (*arpcmd)[i] = f->readInt(1); // arpeggio commands
   }
 
   for (i = 0; i < 64; i++) { // track orders
