@@ -589,7 +589,7 @@ void CldsPlayer::playsound(int inst_number, int channel_number, int tunehigh) {
   slotView.carrier().setWave(i->car_wave);
 
   slotView.setCnt(i->feedback & 1);
-  slotView.setFeedback((i->feedback >> 1) & 3);
+  slotView.setFeedback((i->feedback >> 1) & 7);
   slotView.setOutput(i->feedback & 0x80, i->feedback & 0x40, i->feedback & 0x20,
                      i->feedback & 0x10);
   slotView.setKeyOn(false); // key off
