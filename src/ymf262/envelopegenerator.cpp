@@ -73,13 +73,6 @@ uint8_t EnvelopeGenerator::calculateRate( uint8_t rateValue ) const
     if( rateValue == 0 ) {
         return 0;
     }
-	else if( rateValue == 15 ) {
-		// AR=15 is handled outside this function;
-		// but DR and RR always default to this value
-		// and do not take into account any frequency
-		// dependent value.
-		return 60;
-	}
     // calculate key scale number (see NTS in the YMF262 manual)
     uint8_t rof = ( m_fnum >> ( m_opl->nts() ? 8 : 9 ) ) & 0x1;
     // ...and KSR (see manual, again)
@@ -88,7 +81,8 @@ uint8_t EnvelopeGenerator::calculateRate( uint8_t rateValue ) const
         rof >>= 2;
     }
     // here, rof<=15
-    return std::min<uint8_t>( 63, rof + (rateValue << 2) );
+	// the limit of 60 results in rof=0 if rateValue=15 below
+    return std::min<uint8_t>( 60, rof + (rateValue << 2) );
 }
 
 inline uint8_t EnvelopeGenerator::advanceCounter( uint8_t rate )
