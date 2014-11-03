@@ -42,17 +42,17 @@ bool CxsmPlayer::load(const std::string &filename, const CFileProvider &fp) {
 
   // read and set instruments
   for (i = 0; i < 9; i++) {
-    getOpl()->writeReg(0x20 + m_opTable[i], f->readInt(1));
-    getOpl()->writeReg(0x23 + m_opTable[i], f->readInt(1));
-    getOpl()->writeReg(0x40 + m_opTable[i], f->readInt(1));
-    getOpl()->writeReg(0x43 + m_opTable[i], f->readInt(1));
-    getOpl()->writeReg(0x60 + m_opTable[i], f->readInt(1));
-    getOpl()->writeReg(0x63 + m_opTable[i], f->readInt(1));
-    getOpl()->writeReg(0x80 + m_opTable[i], f->readInt(1));
-    getOpl()->writeReg(0x83 + m_opTable[i], f->readInt(1));
-    getOpl()->writeReg(0xe0 + m_opTable[i], f->readInt(1));
-    getOpl()->writeReg(0xe3 + m_opTable[i], f->readInt(1));
-    getOpl()->writeReg(0xc0 + m_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x20 + s_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x23 + s_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x40 + s_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x43 + s_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x60 + s_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x63 + s_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x80 + s_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0x83 + s_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0xe0 + s_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0xe3 + s_opTable[i], f->readInt(1));
+    getOpl()->writeReg(0xc0 + s_opTable[i], f->readInt(1));
     f->ignore(5);
   }
 
@@ -101,7 +101,7 @@ void CxsmPlayer::rewind(int) {
 size_t CxsmPlayer::framesUntilUpdate() { return SampleRate / 5; }
 
 void CxsmPlayer::playNote(int c, int note, int octv) {
-  int freq = m_noteTable[note];
+  int freq = s_noteTable[note];
 
   if (!note && !octv)
     freq = 0;

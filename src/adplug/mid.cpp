@@ -1032,8 +1032,11 @@ std::string CmidPlayer::gettype() {
 
 bool CDukePlayer::load(const std::string &filename, const CFileProvider &) {
   FileStream fs(filename);
+  if(!fs.isOpen())
+    return false;
+
   try {
-    m_emidi.reset(new ppp::EMidi(fs, true));
+    m_emidi.reset(new ppp::EMidi(fs, false));
   }
   catch (...) {
     return false;

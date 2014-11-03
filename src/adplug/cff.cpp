@@ -132,9 +132,9 @@ bool CcffLoader::load(const std::string &filename, const CFileProvider &fp) {
 
         // convert note
         if (event->byte0 == 0x6D)
-          m_tracks[t][k].note = 127;
+          m_tracks.at(t,k).note = 127;
         else if (event->byte0)
-          m_tracks[t][k].note = event->byte0;
+          m_tracks.at(t,k).note = event->byte0;
 
         if (event->byte2)
           old_event_byte2[j] = event->byte2;
@@ -142,88 +142,88 @@ bool CcffLoader::load(const std::string &filename, const CFileProvider &fp) {
         // convert effect
         switch (event->byte1) {
         case 'I': // set instrument
-          m_tracks[t][k].inst = event->byte2 + 1;
-          m_tracks[t][k].param1 = m_tracks[t][k].param2 = 0;
+          m_tracks.at(t,k).inst = event->byte2 + 1;
+          m_tracks.at(t,k).param1 = m_tracks.at(t,k).param2 = 0;
           break;
 
         case 'H': // set tempo
-          m_tracks[t][k].command = 7;
+          m_tracks.at(t,k).command = 7;
           if (event->byte2 < 16) {
-            m_tracks[t][k].param1 = 0x07;
-            m_tracks[t][k].param2 = 0x0D;
+            m_tracks.at(t,k).param1 = 0x07;
+            m_tracks.at(t,k).param2 = 0x0D;
           }
           break;
 
         case 'A': // set speed
-          m_tracks[t][k].command = 19;
-          m_tracks[t][k].param1 = event->byte2 >> 4;
-          m_tracks[t][k].param2 = event->byte2 & 15;
+          m_tracks.at(t,k).command = 19;
+          m_tracks.at(t,k).param1 = event->byte2 >> 4;
+          m_tracks.at(t,k).param2 = event->byte2 & 15;
           break;
 
         case 'L': // pattern break
-          m_tracks[t][k].command = 13;
-          m_tracks[t][k].param1 = event->byte2 >> 4;
-          m_tracks[t][k].param2 = event->byte2 & 15;
+          m_tracks.at(t,k).command = 13;
+          m_tracks.at(t,k).param1 = event->byte2 >> 4;
+          m_tracks.at(t,k).param2 = event->byte2 & 15;
           break;
 
         case 'K': // order jump
-          m_tracks[t][k].command = 11;
-          m_tracks[t][k].param1 = event->byte2 >> 4;
-          m_tracks[t][k].param2 = event->byte2 & 15;
+          m_tracks.at(t,k).command = 11;
+          m_tracks.at(t,k).param1 = event->byte2 >> 4;
+          m_tracks.at(t,k).param2 = event->byte2 & 15;
           break;
 
         case 'M': // set vibrato/tremolo
-          m_tracks[t][k].command = 27;
-          m_tracks[t][k].param1 = event->byte2 >> 4;
-          m_tracks[t][k].param2 = event->byte2 & 15;
+          m_tracks.at(t,k).command = 27;
+          m_tracks.at(t,k).param1 = event->byte2 >> 4;
+          m_tracks.at(t,k).param2 = event->byte2 & 15;
           break;
 
         case 'C': // set modulator volume
-          m_tracks[t][k].command = 21;
-          m_tracks[t][k].param1 = (0x3F - event->byte2) >> 4;
-          m_tracks[t][k].param2 = (0x3F - event->byte2) & 15;
+          m_tracks.at(t,k).command = 21;
+          m_tracks.at(t,k).param1 = (0x3F - event->byte2) >> 4;
+          m_tracks.at(t,k).param2 = (0x3F - event->byte2) & 15;
           break;
 
         case 'G': // set carrier volume
-          m_tracks[t][k].command = 22;
-          m_tracks[t][k].param1 = (0x3F - event->byte2) >> 4;
-          m_tracks[t][k].param2 = (0x3F - event->byte2) & 15;
+          m_tracks.at(t,k).command = 22;
+          m_tracks.at(t,k).param1 = (0x3F - event->byte2) >> 4;
+          m_tracks.at(t,k).param2 = (0x3F - event->byte2) & 15;
           break;
 
         case 'B': // set carrier waveform
-          m_tracks[t][k].command = 25;
-          m_tracks[t][k].param1 = event->byte2;
-          m_tracks[t][k].param2 = 0x0F;
+          m_tracks.at(t,k).command = 25;
+          m_tracks.at(t,k).param1 = event->byte2;
+          m_tracks.at(t,k).param2 = 0x0F;
           break;
 
         case 'E': // fine frequency slide down
-          m_tracks[t][k].command = 24;
-          m_tracks[t][k].param1 = old_event_byte2[j] >> 4;
-          m_tracks[t][k].param2 = old_event_byte2[j] & 15;
+          m_tracks.at(t,k).command = 24;
+          m_tracks.at(t,k).param1 = old_event_byte2[j] >> 4;
+          m_tracks.at(t,k).param2 = old_event_byte2[j] & 15;
           break;
 
         case 'F': // fine frequency slide up
-          m_tracks[t][k].command = 23;
-          m_tracks[t][k].param1 = old_event_byte2[j] >> 4;
-          m_tracks[t][k].param2 = old_event_byte2[j] & 15;
+          m_tracks.at(t,k).command = 23;
+          m_tracks.at(t,k).param1 = old_event_byte2[j] >> 4;
+          m_tracks.at(t,k).param2 = old_event_byte2[j] & 15;
           break;
 
         case 'D': // fine volume slide
-          m_tracks[t][k].command = 14;
+          m_tracks.at(t,k).command = 14;
           if (old_event_byte2[j] & 15) {
             // slide down
-            m_tracks[t][k].param1 = 5;
-            m_tracks[t][k].param2 = old_event_byte2[j] & 15;
+            m_tracks.at(t,k).param1 = 5;
+            m_tracks.at(t,k).param2 = old_event_byte2[j] & 15;
           } else {
             // slide up
-            m_tracks[t][k].param1 = 4;
-            m_tracks[t][k].param2 = old_event_byte2[j] >> 4;
+            m_tracks.at(t,k).param1 = 4;
+            m_tracks.at(t,k).param2 = old_event_byte2[j] >> 4;
           }
           break;
 
         case 'J': // arpeggio
-          m_tracks[t][k].param1 = old_event_byte2[j] >> 4;
-          m_tracks[t][k].param2 = old_event_byte2[j] & 15;
+          m_tracks.at(t,k).param1 = old_event_byte2[j] >> 4;
+          m_tracks.at(t,k).param2 = old_event_byte2[j] & 15;
           break;
         }
       }

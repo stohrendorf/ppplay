@@ -212,7 +212,7 @@ bool Cd00Player::update() {
       if (version == 4) // v4: hard restart SR
         if (channel[c].del == inst[channel[c].inst].timer)
           if (channel[c].nextnote)
-            getOpl()->writeReg(0x83 + m_opTable[c], inst[channel[c].inst].sr);
+            getOpl()->writeReg(0x83 + s_opTable[c], inst[channel[c].inst].sr);
       if (version < 3)
         channel[c].del--;
       else if (channel[c].speed)
@@ -487,7 +487,7 @@ unsigned int Cd00Player::getsubsongs() {
 /*** private methods *************************************/
 
 void Cd00Player::setvolume(unsigned char chan) {
-  unsigned char op = m_opTable[chan];
+  unsigned char op = s_opTable[chan];
   unsigned short insnr = channel[chan].inst;
 
   getOpl()->writeReg(0x43 + op, (int)(63 - ((63 - (inst[insnr].data[2] & 63)) /
@@ -518,7 +518,7 @@ void Cd00Player::setfreq(unsigned char chan) {
 }
 
 void Cd00Player::setinst(unsigned char chan) {
-  unsigned char op = m_opTable[chan];
+  unsigned char op = s_opTable[chan];
   unsigned short insnr = channel[chan].inst;
 
   // set instrument data

@@ -110,23 +110,23 @@ bool CfmcLoader::load(const std::string &filename, const CFileProvider &fp) {
         event.byte2 = f->readInt(1);
 
         // convert event
-        m_tracks[t][k].note = event.byte0 & 0x7F;
-        m_tracks[t][k].inst =
+        m_tracks.at(t,k).note = event.byte0 & 0x7F;
+        m_tracks.at(t,k).inst =
             ((event.byte0 & 0x80) >> 3) + (event.byte1 >> 4) + 1;
-        m_tracks[t][k].command = conv_fx[event.byte1 & 0x0F];
-        m_tracks[t][k].param1 = event.byte2 >> 4;
-        m_tracks[t][k].param2 = event.byte2 & 0x0F;
+        m_tracks.at(t,k).command = conv_fx[event.byte1 & 0x0F];
+        m_tracks.at(t,k).param1 = event.byte2 >> 4;
+        m_tracks.at(t,k).param2 = event.byte2 & 0x0F;
 
         // fix effects
-        if (m_tracks[t][k].command == 0x0E) // 0x0E (14): Retrig
-          m_tracks[t][k].param1 = 3;
-        if (m_tracks[t][k].command == 0x1A) { // 0x1A (26): Volume Slide
-          if (m_tracks[t][k].param1 > m_tracks[t][k].param2) {
-            m_tracks[t][k].param1 -= m_tracks[t][k].param2;
-            m_tracks[t][k].param2 = 0;
+        if (m_tracks.at(t,k).command == 0x0E) // 0x0E (14): Retrig
+          m_tracks.at(t,k).param1 = 3;
+        if (m_tracks.at(t,k).command == 0x1A) { // 0x1A (26): Volume Slide
+          if (m_tracks.at(t,k).param1 > m_tracks.at(t,k).param2) {
+            m_tracks.at(t,k).param1 -= m_tracks.at(t,k).param2;
+            m_tracks.at(t,k).param2 = 0;
           } else {
-            m_tracks[t][k].param2 -= m_tracks[t][k].param1;
-            m_tracks[t][k].param1 = 0;
+            m_tracks.at(t,k).param2 -= m_tracks.at(t,k).param1;
+            m_tracks.at(t,k).param1 = 0;
           }
         }
       }

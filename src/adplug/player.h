@@ -104,13 +104,16 @@ public:
 
 private:
   opl::Opl3 m_oplChip;
-
-protected:
   CAdPlugDatabase *m_db; // AdPlug Database
 
-  static const unsigned short m_noteTable[12]; // standard adlib note table
-  static const unsigned char
-      m_opTable[9]; // the 9 operators as expected by the OPL
+protected:
+
+  CAdPlugDatabase* database() {
+    return m_db;
+  }
+
+  static const uint16_t s_noteTable[12]; // standard adlib note table
+  static const uint8_t s_opTable[9]; // the 9 operators as expected by the OPL
 };
 
 #endif

@@ -124,16 +124,16 @@ bool CbamPlayer::update() {
       break;
     case 48: // define instrument
       if (c < 9) {
-        getOpl()->writeReg(0x20 + m_opTable[c], m_song[pos + 1]);
-        getOpl()->writeReg(0x23 + m_opTable[c], m_song[pos + 2]);
-        getOpl()->writeReg(0x40 + m_opTable[c], m_song[pos + 3]);
-        getOpl()->writeReg(0x43 + m_opTable[c], m_song[pos + 4]);
-        getOpl()->writeReg(0x60 + m_opTable[c], m_song[pos + 5]);
-        getOpl()->writeReg(0x63 + m_opTable[c], m_song[pos + 6]);
-        getOpl()->writeReg(0x80 + m_opTable[c], m_song[pos + 7]);
-        getOpl()->writeReg(0x83 + m_opTable[c], m_song[pos + 8]);
-        getOpl()->writeReg(0xe0 + m_opTable[c], m_song[pos + 9]);
-        getOpl()->writeReg(0xe3 + m_opTable[c], m_song[pos + 10]);
+        getOpl()->writeReg(0x20 + s_opTable[c], m_song[pos + 1]);
+        getOpl()->writeReg(0x23 + s_opTable[c], m_song[pos + 2]);
+        getOpl()->writeReg(0x40 + s_opTable[c], m_song[pos + 3]);
+        getOpl()->writeReg(0x43 + s_opTable[c], m_song[pos + 4]);
+        getOpl()->writeReg(0x60 + s_opTable[c], m_song[pos + 5]);
+        getOpl()->writeReg(0x63 + s_opTable[c], m_song[pos + 6]);
+        getOpl()->writeReg(0x80 + s_opTable[c], m_song[pos + 7]);
+        getOpl()->writeReg(0x83 + s_opTable[c], m_song[pos + 8]);
+        getOpl()->writeReg(0xe0 + s_opTable[c], m_song[pos + 9]);
+        getOpl()->writeReg(0xe3 + s_opTable[c], m_song[pos + 10]);
         getOpl()->writeReg(0xc0 + c, m_song[pos + 11]);
       }
       pos += 12;

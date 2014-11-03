@@ -147,52 +147,52 @@ bool CdtmLoader::load(const std::string &filename, const CFileProvider &fp) {
         // instrument
         if (event->byte0 == 0x80) {
           if (event->byte1 <= 0x80)
-            m_tracks[t][k].inst = event->byte1 + 1;
+            m_tracks.at(t,k).inst = event->byte1 + 1;
         }
 
             // note + effect
             else {
-          m_tracks[t][k].note = event->byte0;
+          m_tracks.at(t,k).note = event->byte0;
 
           if ((event->byte0 != 0) && (event->byte0 != 127))
-            m_tracks[t][k].note++;
+            m_tracks.at(t,k).note++;
 
           // convert effects
           switch (event->byte1 >> 4) {
           case 0x0: // pattern break
             if ((event->byte1 & 15) == 1)
-              m_tracks[t][k].command = 13;
+              m_tracks.at(t,k).command = 13;
             break;
 
           case 0x1: // freq. slide up
-            m_tracks[t][k].command = 28;
-            m_tracks[t][k].param1 = event->byte1 & 15;
+            m_tracks.at(t,k).command = 28;
+            m_tracks.at(t,k).param1 = event->byte1 & 15;
             break;
 
           case 0x2: // freq. slide down
-            m_tracks[t][k].command = 28;
-            m_tracks[t][k].param2 = event->byte1 & 15;
+            m_tracks.at(t,k).command = 28;
+            m_tracks.at(t,k).param2 = event->byte1 & 15;
             break;
 
           case 0xA: // set carrier volume
           case 0xC: // set instrument volume
-            m_tracks[t][k].command = 22;
-            m_tracks[t][k].param1 = (0x3F - (event->byte1 & 15)) >> 4;
-            m_tracks[t][k].param2 = (0x3F - (event->byte1 & 15)) & 15;
+            m_tracks.at(t,k).command = 22;
+            m_tracks.at(t,k).param1 = (0x3F - (event->byte1 & 15)) >> 4;
+            m_tracks.at(t,k).param2 = (0x3F - (event->byte1 & 15)) & 15;
             break;
 
           case 0xB: // set modulator volume
-            m_tracks[t][k].command = 21;
-            m_tracks[t][k].param1 = (0x3F - (event->byte1 & 15)) >> 4;
-            m_tracks[t][k].param2 = (0x3F - (event->byte1 & 15)) & 15;
+            m_tracks.at(t,k).command = 21;
+            m_tracks.at(t,k).param1 = (0x3F - (event->byte1 & 15)) >> 4;
+            m_tracks.at(t,k).param2 = (0x3F - (event->byte1 & 15)) & 15;
             break;
 
           case 0xE: // set panning
             break;
 
           case 0xF: // set speed
-            m_tracks[t][k].command = 13;
-            m_tracks[t][k].param2 = event->byte1 & 15;
+            m_tracks.at(t,k).command = 13;
+            m_tracks.at(t,k).param2 = event->byte1 & 15;
             break;
           }
         }

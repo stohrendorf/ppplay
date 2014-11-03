@@ -180,10 +180,10 @@ std::string CimfPlayer::getdesc() {
 
 float CimfPlayer::getrate(const std::string &filename, const CFileProvider &fp,
                           binistream *f) {
-  if (m_db) { // Database available
+  if (database()) { // Database available
     f->seek(0, binio::Set);
     CClockRecord *record =
-        static_cast<CClockRecord *>(m_db->search(CAdPlugDatabase::CKey(*f)));
+        static_cast<CClockRecord *>(database()->search(CAdPlugDatabase::CKey(*f)));
     if (record && record->m_type == CAdPlugDatabase::CRecord::ClockSpeed)
       return record->m_clock;
   }

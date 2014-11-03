@@ -161,9 +161,9 @@ bool Csa2Loader::load(const std::string &filename, const CFileProvider &fp) {
   for (i = 0; i < 64; i++) { // track orders
     for (j = 0; j < 9; j++) {
       if (sat_type & HAS_TRACKORDER)
-        trackord[i][j] = f->readInt(1);
+        trackord.at(i,j) = f->readInt(1);
       else {
-        trackord[i][j] = i * 9 + j;
+        trackord.at(i,j) = i * 9 + j;
       }
     }
   }
@@ -183,11 +183,11 @@ bool Csa2Loader::load(const std::string &filename, const CFileProvider &fp) {
       for (j = 0; j < 64; j++) {
         for (k = 0; k < 9; k++) {
           buf = f->readInt(1);
-          m_tracks[i + k][j].note = buf ? (buf + notedis) : 0;
-          m_tracks[i + k][j].inst = f->readInt(1);
-          m_tracks[i + k][j].command = convfx[f->readInt(1) & 0xf];
-          m_tracks[i + k][j].param1 = f->readInt(1);
-          m_tracks[i + k][j].param2 = f->readInt(1);
+          m_tracks.at(i + k, j).note = buf ? (buf + notedis) : 0;
+          m_tracks.at(i + k, j).inst = f->readInt(1);
+          m_tracks.at(i + k, j).command = convfx[f->readInt(1) & 0xf];
+          m_tracks.at(i + k, j).param1 = f->readInt(1);
+          m_tracks.at(i + k, j).param2 = f->readInt(1);
         }
       }
       i += 9;
@@ -198,14 +198,14 @@ bool Csa2Loader::load(const std::string &filename, const CFileProvider &fp) {
       for (j = 0; j < 64; j++) {
         for (k = 0; k < 9; k++) {
           buf = f->readInt(1);
-          m_tracks[i + k][j].note = buf >> 1;
-          m_tracks[i + k][j].inst = (buf & 1) << 4;
+          m_tracks.at(i + k, j).note = buf >> 1;
+          m_tracks.at(i + k, j).inst = (buf & 1) << 4;
           buf = f->readInt(1);
-          m_tracks[i + k][j].inst += buf >> 4;
-          m_tracks[i + k][j].command = convfx[buf & 0x0f];
+          m_tracks.at(i + k, j).inst += buf >> 4;
+          m_tracks.at(i + k, j).command = convfx[buf & 0x0f];
           buf = f->readInt(1);
-          m_tracks[i + k][j].param1 = buf >> 4;
-          m_tracks[i + k][j].param2 = buf & 0x0f;
+          m_tracks.at(i + k, j).param1 = buf >> 4;
+          m_tracks.at(i + k, j).param2 = buf & 0x0f;
         }
       }
       i += 9;
@@ -215,14 +215,14 @@ bool Csa2Loader::load(const std::string &filename, const CFileProvider &fp) {
     while (!f->ateof()) {
       for (j = 0; j < 64; j++) {
         buf = f->readInt(1);
-        m_tracks[i][j].note = buf >> 1;
-        m_tracks[i][j].inst = (buf & 1) << 4;
+        m_tracks.at(i,j).note = buf >> 1;
+        m_tracks.at(i,j).inst = (buf & 1) << 4;
         buf = f->readInt(1);
-        m_tracks[i][j].inst += buf >> 4;
-        m_tracks[i][j].command = convfx[buf & 0x0f];
+        m_tracks.at(i,j).inst += buf >> 4;
+        m_tracks.at(i,j).command = convfx[buf & 0x0f];
         buf = f->readInt(1);
-        m_tracks[i][j].param1 = buf >> 4;
-        m_tracks[i][j].param2 = buf & 0x0f;
+        m_tracks.at(i,j).param1 = buf >> 4;
+        m_tracks.at(i,j).param2 = buf & 0x0f;
       }
       i++;
     }

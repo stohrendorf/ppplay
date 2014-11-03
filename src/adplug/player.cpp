@@ -24,11 +24,11 @@
 
 /***** CPlayer *****/
 
-const unsigned short CPlayer::m_noteTable[12] = { 363, 385, 408, 432, 458, 485,
+const uint16_t CPlayer::s_noteTable[12] = { 363, 385, 408, 432, 458, 485,
                                                   514, 544, 577, 611, 647,
                                                   686 };
 
-const unsigned char CPlayer::m_opTable[9] = { 0x00, 0x01, 0x02, 0x08, 0x09,
+const uint8_t CPlayer::s_opTable[9] = { 0x00, 0x01, 0x02, 0x08, 0x09,
                                               0x0a, 0x10, 0x11, 0x12 };
 
 CPlayer::CPlayer() : m_oplChip(), m_db(CAdPlug::database) {}

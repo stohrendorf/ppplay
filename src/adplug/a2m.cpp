@@ -210,7 +210,7 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp) {
     for (i = 0; i < numpats; i++)
       for (j = 0; j < 64; j++)
         for (k = 0; k < 9; k++) {
-          struct Track *track = &m_tracks[i * 9 + k][j];
+          struct Track *track = &m_tracks.at(i * 9 + k, j);
           unsigned char *o = &m_org[i * 64 * t * 4 + j * t * 4 + k * 4];
 
           track->note = o[0] == 255 ? 127 : o[0];
@@ -252,7 +252,7 @@ bool Ca2mLoader::load(const std::string &filename, const CFileProvider &fp) {
     for (i = 0; i < numpats; i++)
       for (j = 0; j < 18; j++)
         for (k = 0; k < 64; k++) {
-          struct Track *track = &m_tracks[i * 18 + j][k];
+          struct Track *track = &m_tracks.at(i * 18 + j, k);
           unsigned char *o = &m_org[i * 64 * t * 4 + j * 64 * 4 + k * 4];
 
           track->note = o[0] == 255 ? 127 : o[0];

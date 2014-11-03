@@ -325,7 +325,7 @@ void CrolPlayer::SetVolume(int const voice, int const volume) {
   volumeCache[voice] = (volumeCache[voice] & 0xc0) | volume;
 
   int const op_offset = (voice < kSnareDrumChannel || rol_header->mode)
-                            ? m_opTable[voice] + 3
+                            ? s_opTable[voice] + 3
                             : drum_table[voice - kSnareDrumChannel];
 
   getOpl()->writeReg(0x40 + op_offset, volumeCache[voice]);
@@ -340,7 +340,7 @@ void CrolPlayer::send_ins_data_to_chip(int const voice, int const ins_index) {
 void CrolPlayer::send_operator(int const voice, SOPL2Op const &modulator,
                                SOPL2Op const &carrier) {
   if (voice < kSnareDrumChannel || rol_header->mode) {
-    int const op_offset = m_opTable[voice];
+    int const op_offset = s_opTable[voice];
 
     getOpl()->writeReg(0x20 + op_offset, modulator.ammulti);
     getOpl()->writeReg(0x40 + op_offset, modulator.ksltl);

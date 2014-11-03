@@ -528,7 +528,7 @@ void Cs3mPlayer::load_header(binistream *f, s3mheader *h) {
 }
 
 void Cs3mPlayer::setvolume(unsigned char chan) {
-  unsigned char op = m_opTable[chan], insnr = channel[chan].inst;
+  unsigned char op = s_opTable[chan], insnr = channel[chan].inst;
 
   getOpl()->writeReg(
       0x43 + op, (int)(63 - ((63 - (inst[insnr].d03 & 63)) / 63.0) *
@@ -550,7 +550,7 @@ void Cs3mPlayer::setfreq(unsigned char chan) {
 }
 
 void Cs3mPlayer::playnote(unsigned char chan) {
-  unsigned char op = m_opTable[chan], insnr = channel[chan].inst;
+  unsigned char op = s_opTable[chan], insnr = channel[chan].inst;
 
   getOpl()->writeReg(0xb0 + chan, 0); // stop old note
 

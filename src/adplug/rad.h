@@ -26,7 +26,7 @@ class CradLoader : public CmodPlayer {
 public:
   static CPlayer *factory();
 
-  CradLoader() : CmodPlayer() {}
+  CradLoader() = default;
 
   bool load(const std::string &filename, const CFileProvider &fp);
   size_t framesUntilUpdate();

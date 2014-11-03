@@ -179,7 +179,7 @@ bool CjbmPlayer::update() {
     if (m_flags & 1 && c > 6)
       getOpl()->writeReg(0x40 + percmx_tab[c - 7], m_voices[c].vol ^ 0x3f);
     else
-      getOpl()->writeReg(0x43 + m_opTable[c], m_voices[c].vol ^ 0x3f);
+      getOpl()->writeReg(0x43 + s_opTable[c], m_voices[c].vol ^ 0x3f);
 
     // Write new frequencies and Gate bit
 
@@ -271,21 +271,21 @@ void CjbmPlayer::set_opl_instrument(int channel, JBMVoice *voice) {
   }
 
   // AM/VIB/EG/KSR/FRQMUL, KSL/OUTPUT, ADSR for 1st operator
-  getOpl()->writeReg(0x20 + m_opTable[channel], m_fileData[filePos + 0]);
-  getOpl()->writeReg(0x40 + m_opTable[channel], m_fileData[filePos + 1] ^ 0x3f);
-  getOpl()->writeReg(0x60 + m_opTable[channel], m_fileData[filePos + 2]);
-  getOpl()->writeReg(0x80 + m_opTable[channel], m_fileData[filePos + 3]);
+  getOpl()->writeReg(0x20 + s_opTable[channel], m_fileData[filePos + 0]);
+  getOpl()->writeReg(0x40 + s_opTable[channel], m_fileData[filePos + 1] ^ 0x3f);
+  getOpl()->writeReg(0x60 + s_opTable[channel], m_fileData[filePos + 2]);
+  getOpl()->writeReg(0x80 + s_opTable[channel], m_fileData[filePos + 3]);
 
   // AM/VIB/EG/KSR/FRQMUL, KSL/OUTPUT, ADSR for 2nd operator
-  getOpl()->writeReg(0x23 + m_opTable[channel], m_fileData[filePos + 4]);
-  getOpl()->writeReg(0x43 + m_opTable[channel], m_fileData[filePos + 5] ^ 0x3f);
-  getOpl()->writeReg(0x63 + m_opTable[channel], m_fileData[filePos + 6]);
-  getOpl()->writeReg(0x83 + m_opTable[channel], m_fileData[filePos + 7]);
+  getOpl()->writeReg(0x23 + s_opTable[channel], m_fileData[filePos + 4]);
+  getOpl()->writeReg(0x43 + s_opTable[channel], m_fileData[filePos + 5] ^ 0x3f);
+  getOpl()->writeReg(0x63 + s_opTable[channel], m_fileData[filePos + 6]);
+  getOpl()->writeReg(0x83 + s_opTable[channel], m_fileData[filePos + 7]);
 
   // WAVEFORM for operators
-  getOpl()->writeReg(0xe0 + m_opTable[channel],
+  getOpl()->writeReg(0xe0 + s_opTable[channel],
                      (m_fileData[filePos + 8] >> 4) & 3);
-  getOpl()->writeReg(0xe3 + m_opTable[channel],
+  getOpl()->writeReg(0xe3 + s_opTable[channel],
                      (m_fileData[filePos + 8] >> 6) & 3);
 
   // FEEDBACK/FM mode

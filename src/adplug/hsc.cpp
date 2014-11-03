@@ -144,24 +144,24 @@ bool ChscPlayer::update() {
       break;
     case 0xa0: // set carrier volume
       vol = eff_op << 2;
-      getOpl()->writeReg(0x43 + m_opTable[chan],
+      getOpl()->writeReg(0x43 + s_opTable[chan],
                          vol | (m_instr[m_channel[chan].inst][2] & ~63));
       break;
     case 0xb0: // set modulator volume
       vol = eff_op << 2;
       if (m_instr[inst][8] & 1)
-        getOpl()->writeReg(0x40 + m_opTable[chan],
+        getOpl()->writeReg(0x40 + s_opTable[chan],
                            vol | (m_instr[m_channel[chan].inst][3] & ~63));
       else
-        getOpl()->writeReg(0x40 + m_opTable[chan],
+        getOpl()->writeReg(0x40 + s_opTable[chan],
                            vol | (m_instr[inst][3] & ~63));
       break;
     case 0xc0: // set instrument volume
       db = eff_op << 2;
-      getOpl()->writeReg(0x43 + m_opTable[chan],
+      getOpl()->writeReg(0x43 + s_opTable[chan],
                          db | (m_instr[m_channel[chan].inst][2] & ~63));
       if (m_instr[inst][8] & 1)
-        getOpl()->writeReg(0x40 + m_opTable[chan],
+        getOpl()->writeReg(0x40 + s_opTable[chan],
                            db | (m_instr[m_channel[chan].inst][3] & ~63));
       break;
     case 0xd0:
@@ -192,7 +192,7 @@ bool ChscPlayer::update() {
     if (m_mtkmode) // imitate MPU-401 Trakker bug
       note--;
     Okt = ((note / 12) & 7) << 2;
-    Fnr = m_noteTable[(note % 12)] + m_instr[inst][11] + m_channel[chan].slide;
+    Fnr = s_noteTable[(note % 12)] + m_instr[inst][11] + m_channel[chan].slide;
     m_channel[chan].freq = Fnr;
     if (!m_mode6 || chan < 6)
       m_adlFreq[chan] = Okt | 32;
@@ -312,7 +312,7 @@ void ChscPlayer::setfreq(unsigned char chan, unsigned short freq) {
 
 void ChscPlayer::setvolume(unsigned char chan, int volc, int volm) {
   unsigned char *ins = m_instr[m_channel[chan].inst];
-  char op = m_opTable[chan];
+  char op = s_opTable[chan];
 
   getOpl()->writeReg(0x43 + op, volc | (ins[2] & ~63));
   if (ins[8] & 1) // carrier
@@ -323,7 +323,7 @@ void ChscPlayer::setvolume(unsigned char chan, int volc, int volm) {
 
 void ChscPlayer::setinstr(unsigned char chan, unsigned char insnr) {
   unsigned char *ins = m_instr[insnr];
-  char op = m_opTable[chan];
+  char op = s_opTable[chan];
 
   m_channel[chan].inst = insnr;       // set internal instrument
   getOpl()->writeReg(0xb0 + chan, 0); // stop old note

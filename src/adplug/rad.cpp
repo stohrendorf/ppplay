@@ -88,15 +88,15 @@ bool CradLoader::load(const std::string &filename, const CFileProvider &fp) {
           uint8_t ch = f->readInt(1);
           uint8_t c = ch & 127;
           uint8_t inp = f->readInt(1);
-          m_tracks[i * 9 + c][b].note = inp & 127;
-          m_tracks[i * 9 + c][b].inst = (inp & 128) >> 3;
+          m_tracks.at(i * 9 + c, b).note = inp & 127;
+          m_tracks.at(i * 9 + c, b).inst = (inp & 128) >> 3;
           inp = f->readInt(1);
-          m_tracks[i * 9 + c][b].inst += inp >> 4;
-          m_tracks[i * 9 + c][b].command = inp & 15;
+          m_tracks.at(i * 9 + c, b).inst += inp >> 4;
+          m_tracks.at(i * 9 + c, b).command = inp & 15;
           if (inp & 15) {
             inp = f->readInt(1);
-            m_tracks[i * 9 + c][b].param1 = inp / 10;
-            m_tracks[i * 9 + c][b].param2 = inp % 10;
+            m_tracks.at(i * 9 + c, b).param1 = inp / 10;
+            m_tracks.at(i * 9 + c, b).param2 = inp % 10;
           }
           if (ch & 0x80)
             break;
@@ -106,23 +106,24 @@ bool CradLoader::load(const std::string &filename, const CFileProvider &fp) {
       }
     }
     else
-      std::fill_n(trackord[i], 9, 0);
+      for(int j=0; j<9; ++j)
+        trackord.at(i,j) = 0;
   }
   fp.close(f);
 
   // convert replay data
   for (int i = 0; i < 32 * 9; i++) // convert patterns
     for (int j = 0; j < 64; j++) {
-      if (m_tracks[i][j].note == 15)
-        m_tracks[i][j].note = 127;
-      if (m_tracks[i][j].note > 16 && m_tracks[i][j].note < 127)
-        m_tracks[i][j].note -= 4 * (m_tracks[i][j].note >> 4);
-      if (m_tracks[i][j].note && m_tracks[i][j].note < 126)
-        m_tracks[i][j].note++;
+      if (m_tracks.at(i,j).note == 15)
+        m_tracks.at(i,j).note = 127;
+      if (m_tracks.at(i,j).note > 16 && m_tracks.at(i,j).note < 127)
+        m_tracks.at(i,j).note -= 4 * (m_tracks.at(i,j).note >> 4);
+      if (m_tracks.at(i,j).note && m_tracks.at(i,j).note < 126)
+        m_tracks.at(i,j).note++;
       static constexpr uint8_t convfx[16] = { 255, 1, 2, 3, 255, 5, 255, 255,
                                               255, 255, 20, 255, 17, 0xd, 255,
                                               19 };
-      m_tracks[i][j].command = convfx[m_tracks[i][j].command];
+      m_tracks.at(i,j).command = convfx[m_tracks.at(i,j).command];
     }
   m_restartpos = 0;
   m_initspeed = m_radflags & 31;

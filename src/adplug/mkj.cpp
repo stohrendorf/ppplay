@@ -54,14 +54,14 @@ bool CmkjPlayer::load(const std::string &filename, const CFileProvider &fp) {
   for (i = 0; i < maxchannel; i++) {
     for (j = 0; j < 8; j++)
       inst[j] = f->readInt(2);
-    getOpl()->writeReg(0x20 + m_opTable[i], inst[4]);
-    getOpl()->writeReg(0x23 + m_opTable[i], inst[0]);
-    getOpl()->writeReg(0x40 + m_opTable[i], inst[5]);
-    getOpl()->writeReg(0x43 + m_opTable[i], inst[1]);
-    getOpl()->writeReg(0x60 + m_opTable[i], inst[6]);
-    getOpl()->writeReg(0x63 + m_opTable[i], inst[2]);
-    getOpl()->writeReg(0x80 + m_opTable[i], inst[7]);
-    getOpl()->writeReg(0x83 + m_opTable[i], inst[3]);
+    getOpl()->writeReg(0x20 + s_opTable[i], inst[4]);
+    getOpl()->writeReg(0x23 + s_opTable[i], inst[0]);
+    getOpl()->writeReg(0x40 + s_opTable[i], inst[5]);
+    getOpl()->writeReg(0x43 + s_opTable[i], inst[1]);
+    getOpl()->writeReg(0x60 + s_opTable[i], inst[6]);
+    getOpl()->writeReg(0x63 + s_opTable[i], inst[2]);
+    getOpl()->writeReg(0x80 + s_opTable[i], inst[7]);
+    getOpl()->writeReg(0x83 + s_opTable[i], inst[3]);
   }
   maxnotes = f->readInt(2);
   songbuf = new short[(maxchannel + 1) * maxnotes];

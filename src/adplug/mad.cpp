@@ -73,11 +73,11 @@ bool CmadLoader::load(const std::string &filename, const CFileProvider &fp) {
 
         // convert event
         if (event < 0x61)
-          m_tracks[t][k].note = event;
+          m_tracks.at(t,k).note = event;
         if (event == 0xFF) // 0xFF: Release note
-          m_tracks[t][k].command = 8;
+          m_tracks.at(t,k).command = 8;
         if (event == 0xFE) // 0xFE: Pattern Break
-          m_tracks[t][k].command = 13;
+          m_tracks.at(t,k).command = 13;
       }
 
   // load order

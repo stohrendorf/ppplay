@@ -149,7 +149,7 @@ bool CksmPlayer::update() {
             databuf[bufnum++] = 0;
             volval = (inst[trinst[track]][1] & 192) + (volevel ^ 63);
             databuf[bufnum++] = 0;
-            databuf[bufnum++] = static_cast<uint8_t>(0x40 + m_opTable[i] + 3);
+            databuf[bufnum++] = static_cast<uint8_t>(0x40 + s_opTable[i] + 3);
             databuf[bufnum++] = static_cast<uint8_t>( volval );
             databuf[bufnum++] = 0;
             databuf[bufnum++] = static_cast<uint8_t>(0xa0 + i);
@@ -201,12 +201,12 @@ bool CksmPlayer::update() {
           if ((track == 11) || (track == 12) || (track == 14)) {
             volval = (inst[trinst[track]][1] & 192) + (volevel ^ 63);
             databuf[bufnum++] = 0;
-            databuf[bufnum++] = static_cast<uint8_t>(0x40 + m_opTable[chan] + 3);
+            databuf[bufnum++] = static_cast<uint8_t>(0x40 + s_opTable[chan] + 3);
             databuf[bufnum++] = static_cast<uint8_t>(volval);
           } else {
             volval = (inst[trinst[track]][6] & 192) + (volevel ^ 63);
             databuf[bufnum++] = 0;
-            databuf[bufnum++] = static_cast<uint8_t>(0x40 + m_opTable[chan]);
+            databuf[bufnum++] = static_cast<uint8_t>(0x40 + s_opTable[chan]);
             databuf[bufnum++] = static_cast<uint8_t>(volval);
           }
           databuf[bufnum++] = 0;
@@ -328,7 +328,7 @@ void CksmPlayer::setinst(int chan, unsigned char v0, unsigned char v1,
   getOpl()->writeReg(0xa0 + chan, 0);
   getOpl()->writeReg(0xb0 + chan, 0);
   getOpl()->writeReg(0xc0 + chan, v10);
-  offs = m_opTable[chan];
+  offs = s_opTable[chan];
   getOpl()->writeReg(0x20 + offs, v5);
   getOpl()->writeReg(0x40 + offs, v6);
   getOpl()->writeReg(0x60 + offs, v7);

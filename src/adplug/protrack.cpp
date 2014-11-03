@@ -88,13 +88,13 @@ bool CmodPlayer::update() {
         default:
           if ((*arpcmd)[channel[chan].arppos]) {
             if ((*arpcmd)[channel[chan].arppos] / 10)
-              getOpl()->writeReg(0xe3 + m_opTable[oplchan],
+              getOpl()->writeReg(0xe3 + s_opTable[oplchan],
                                  (*arpcmd)[channel[chan].arppos] / 10 - 1);
             if ((*arpcmd)[channel[chan].arppos] % 10)
-              getOpl()->writeReg(0xe0 + m_opTable[oplchan],
+              getOpl()->writeReg(0xe0 + s_opTable[oplchan],
                                  ((*arpcmd)[channel[chan].arppos] % 10) - 1);
             if ((*arpcmd)[channel[chan].arppos] < 10) // ?????
-              getOpl()->writeReg(0xe0 + m_opTable[oplchan],
+              getOpl()->writeReg(0xe0 + s_opTable[oplchan],
                                  (*arpcmd)[channel[chan].arppos] - 1);
           }
         }
@@ -235,19 +235,14 @@ bool CmodPlayer::update() {
       AdPlug_LogWrite("N/A|");
       continue;
     }
-    if (!(track = trackord[pattnr][chan])) { // resolve track
-      AdPlug_LogWrite("------------|");
+    if (!(track = trackord.at(pattnr,chan))) { // resolve track
       continue;
     } else
       track--;
 
-    AdPlug_LogWrite("%3d%3d%2X%2X%2X|", m_tracks[track][row].note,
-                    m_tracks[track][row].inst, m_tracks[track][row].command,
-                    m_tracks[track][row].param1, m_tracks[track][row].param2);
-
     donote = 0;
-    if (m_tracks[track][row].inst) {
-      channel[chan].inst = m_tracks[track][row].inst - 1;
+    if (m_tracks.at(track,row).inst) {
+      channel[chan].inst = m_tracks.at(track,row).inst - 1;
       if (!(m_flags & Faust)) {
         channel[chan].vol1 =
             63 - (m_instruments[channel[chan].inst].data[10] & 63);
@@ -257,20 +252,20 @@ bool CmodPlayer::update() {
       }
     }
 
-    if (m_tracks[track][row].note &&
-        m_tracks[track][row].command != 3) { // no tone portamento
-      channel[chan].note = m_tracks[track][row].note;
-      setnote(chan, m_tracks[track][row].note);
+    if (m_tracks.at(track,row).note &&
+        m_tracks.at(track,row).command != 3) { // no tone portamento
+      channel[chan].note = m_tracks.at(track,row).note;
+      setnote(chan, m_tracks.at(track,row).note);
       channel[chan].nextfreq = channel[chan].freq;
       channel[chan].nextoct = channel[chan].oct;
       channel[chan].arppos = m_instruments[channel[chan].inst].arpstart;
       channel[chan].arpspdcnt = 0;
-      if (m_tracks[track][row].note != 127) // handle key off
+      if (m_tracks.at(track,row).note != 127) // handle key off
         donote = 1;
     }
-    channel[chan].fx = m_tracks[track][row].command;
-    channel[chan].info1 = m_tracks[track][row].param1;
-    channel[chan].info2 = m_tracks[track][row].param2;
+    channel[chan].fx = m_tracks.at(track,row).command;
+    channel[chan].info1 = m_tracks.at(track,row).param1;
+    channel[chan].info2 = m_tracks.at(track,row).param2;
 
     if (donote)
       playnote(chan);
@@ -284,16 +279,16 @@ bool CmodPlayer::update() {
       info = (channel[chan].info1 << 4) + channel[chan].info2;
     switch (channel[chan].fx) {
     case 3: // tone portamento
-      if (m_tracks[track][row].note) {
-        if (m_tracks[track][row].note < 13)
-          channel[chan].nextfreq = notetable[m_tracks[track][row].note - 1];
-        else if (m_tracks[track][row].note % 12 > 0)
+      if (m_tracks.at(track,row).note) {
+        if (m_tracks.at(track,row).note < 13)
+          channel[chan].nextfreq = notetable[m_tracks.at(track,row).note - 1];
+        else if (m_tracks.at(track,row).note % 12 > 0)
           channel[chan].nextfreq =
-              notetable[(m_tracks[track][row].note % 12) - 1];
+              notetable[(m_tracks.at(track,row).note % 12) - 1];
         else
           channel[chan].nextfreq = notetable[11];
-        channel[chan].nextoct = (m_tracks[track][row].note - 1) / 12;
-        if (m_tracks[track][row].note == 127) { // handle key off
+        channel[chan].nextoct = (m_tracks.at(track,row).note - 1) / 12;
+        if (m_tracks.at(track,row).note == 127) { // handle key off
           channel[chan].nextfreq = channel[chan].freq;
           channel[chan].nextoct = channel[chan].oct;
         }
@@ -457,9 +452,9 @@ bool CmodPlayer::update() {
 
     case 25: // set carrier/modulator waveform
       if (info1 != 0x0f)
-        getOpl()->writeReg(0xe3 + m_opTable[oplchan], info1);
+        getOpl()->writeReg(0xe3 + s_opTable[oplchan], info1);
       if (info2 != 0x0f)
-        getOpl()->writeReg(0xe0 + m_opTable[oplchan], info2);
+        getOpl()->writeReg(0xe0 + s_opTable[oplchan], info2);
       break;
 
     case 27: // set chip tremolo/vibrato
@@ -578,10 +573,10 @@ void CmodPlayer::rewind(int) {
 size_t CmodPlayer::framesUntilUpdate() { return SampleRate * 2.5 / m_tempo; }
 
 void CmodPlayer::init_trackord() {
-  unsigned long i;
-
-  for (i = 0; i < npats * channel.size(); i++)
-    trackord[i / channel.size()][i % channel.size()] = i + 1;
+  trackord.reset(npats, channel.size());
+  for(size_t i = 0; i<npats; ++i)
+    for(size_t j=0; j<channel.size(); ++j)
+      trackord.at(i,j) = i*channel.size() + j + 1;
 }
 
 void CmodPlayer::init_notetable(const std::array<uint16_t,12>& newnotetable) {
@@ -621,10 +616,10 @@ void CmodPlayer::setvolume(unsigned char chan) {
   if (m_flags & Faust)
     setvolume_alt(chan);
   else {
-    getOpl()->writeReg(0x40 + m_opTable[oplchan],
+    getOpl()->writeReg(0x40 + s_opTable[oplchan],
                        63 - channel[chan].vol2 +
                            (m_instruments[channel[chan].inst].data[9] & 192));
-    getOpl()->writeReg(0x43 + m_opTable[oplchan],
+    getOpl()->writeReg(0x43 + s_opTable[oplchan],
                        63 - channel[chan].vol1 +
                            (m_instruments[channel[chan].inst].data[10] & 192));
   }
@@ -635,10 +630,10 @@ void CmodPlayer::setvolume_alt(unsigned char chan) {
   unsigned char ivol2 = m_instruments[channel[chan].inst].data[9] & 63;
   unsigned char ivol1 = m_instruments[channel[chan].inst].data[10] & 63;
 
-  getOpl()->writeReg(0x40 + m_opTable[oplchan],
+  getOpl()->writeReg(0x40 + s_opTable[oplchan],
                      (((63 - (channel[chan].vol2 & 63)) + ivol2) >> 1) +
                          (m_instruments[channel[chan].inst].data[9] & 192));
-  getOpl()->writeReg(0x43 + m_opTable[oplchan],
+  getOpl()->writeReg(0x43 + s_opTable[oplchan],
                      (((63 - (channel[chan].vol1 & 63)) + ivol1) >> 1) +
                          (m_instruments[channel[chan].inst].data[10] & 192));
 }
@@ -657,7 +652,7 @@ void CmodPlayer::setfreq(unsigned char chan) {
 
 void CmodPlayer::playnote(unsigned char chan) {
   unsigned char oplchan = set_opl_chip(chan);
-  unsigned char op = m_opTable[oplchan], insnr = channel[chan].inst;
+  unsigned char op = s_opTable[oplchan], insnr = channel[chan].inst;
 
   if (!(m_flags & NoKeyOn))
     getOpl()->writeReg(0xb0 + oplchan, 0); // stop old note

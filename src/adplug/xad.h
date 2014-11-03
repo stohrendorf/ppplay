@@ -49,8 +49,8 @@ protected:
   virtual void xadplayer_update() = 0;
   virtual float xadplayer_getrefresh() = 0;
   virtual std::string xadplayer_gettype() = 0;
-  virtual std::string xadplayer_gettitle() { return std::string(xad.title); }
-  virtual std::string xadplayer_getauthor() { return std::string(xad.author); }
+  virtual std::string xadplayer_gettitle() { return xad.title; }
+  virtual std::string xadplayer_getauthor() { return xad.author; }
   virtual std::string xadplayer_getinstrument(unsigned int) {
     return std::string();
   }

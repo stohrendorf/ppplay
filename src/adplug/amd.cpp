@@ -34,7 +34,7 @@ bool CamdLoader::load(const std::string &filename, const CFileProvider &fp) {
     char id[9];
     unsigned char version;
   } header;
-  int i, j, k, t, numtrax, maxi = 0;
+  int k, t, numtrax, maxi = 0;
   unsigned char buf, buf2, buf3;
   const unsigned char convfx[10] = { 0, 1, 2, 9, 17, 11, 13, 18, 3, 14 };
   const unsigned char convvol[64] = {
@@ -65,50 +65,51 @@ bool CamdLoader::load(const std::string &filename, const CFileProvider &fp) {
   f->seek(0);
   f->readString(songname, sizeof(songname));
   f->readString(author, sizeof(author));
-  for (i = 0; i < 26; i++) {
+  for (int i = 0; i < 26; i++) {
     f->readString(m_instrumentNames[i], 23);
-    for (j = 0; j < 11; j++)
+    for (int j = 0; j < 11; j++)
       m_instruments[i].data[j] = f->readInt(1);
   }
   m_length = f->readInt(1);
   nop = f->readInt(1) + 1;
-  for (i = 0; i < 128; i++)
+  for (int i = 0; i < 128; i++)
     m_order[i] = f->readInt(1);
   f->seek(10, binio::Add);
   if (header.version == 0x10) { // unpacked module
     maxi = nop * 9;
-    for (i = 0; i < 64 * 9; i++)
-      trackord[i / 9][i % 9] = i + 1;
+    for (int i = 0; i < 64; i++)
+      for(int j=0; j<9; ++j)
+        trackord.at(i,j) = i*9 + j + 1;
     t = 0;
     while (!f->ateof()) {
-      for (j = 0; j < 64; j++)
-        for (i = t; i < t + 9; i++) {
+      for (int j = 0; j < 64; j++)
+        for (int i = t; i < t + 9; i++) {
           buf = f->readInt(1);
-          m_tracks[i][j].param2 = (buf & 127) % 10;
-          m_tracks[i][j].param1 = (buf & 127) / 10;
+          m_tracks.at(i,j).param2 = (buf & 127) % 10;
+          m_tracks.at(i,j).param1 = (buf & 127) / 10;
           buf = f->readInt(1);
-          m_tracks[i][j].inst = buf >> 4;
-          m_tracks[i][j].command = buf & 0x0f;
+          m_tracks.at(i,j).inst = buf >> 4;
+          m_tracks.at(i,j).command = buf & 0x0f;
           buf = f->readInt(1);
           if (buf >> 4) // fix bug in AMD save routine
-            m_tracks[i][j].note = ((buf & 14) >> 1) * 12 + (buf >> 4);
+            m_tracks.at(i,j).note = ((buf & 14) >> 1) * 12 + (buf >> 4);
           else
-            m_tracks[i][j].note = 0;
-          m_tracks[i][j].inst += (buf & 1) << 4;
+            m_tracks.at(i,j).note = 0;
+          m_tracks.at(i,j).inst += (buf & 1) << 4;
         }
       t += 9;
     }
   } else { // packed module
-    for (i = 0; i < nop; i++)
-      for (j = 0; j < 9; j++)
-        trackord[i][j] = f->readInt(2) + 1;
+    for (int i = 0; i < nop; i++)
+      for (int j = 0; j < 9; j++)
+        trackord.at(i,j) = f->readInt(2) + 1;
     numtrax = f->readInt(2);
     for (k = 0; k < numtrax; k++) {
-      i = f->readInt(2);
+      int i = f->readInt(2);
       if (i > 575)
         i = 575; // fix corrupted modules
       maxi = (i + 1 > maxi ? i + 1 : maxi);
-      j = 0;
+      int j = 0;
       do {
         buf = f->readInt(1);
         if (buf & 128) {
@@ -122,17 +123,17 @@ bool CamdLoader::load(const std::string &filename, const CFileProvider &fp) {
           j += buf & 127;
           continue;
         }
-        m_tracks[i][j].param2 = buf % 10;
-        m_tracks[i][j].param1 = buf / 10;
+        m_tracks.at(i,j).param2 = buf % 10;
+        m_tracks.at(i,j).param1 = buf / 10;
         buf = f->readInt(1);
-        m_tracks[i][j].inst = buf >> 4;
-        m_tracks[i][j].command = buf & 0x0f;
+        m_tracks.at(i,j).inst = buf >> 4;
+        m_tracks.at(i,j).command = buf & 0x0f;
         buf = f->readInt(1);
         if (buf >> 4) // fix bug in AMD save routine
-          m_tracks[i][j].note = ((buf & 14) >> 1) * 12 + (buf >> 4);
+          m_tracks.at(i,j).note = ((buf & 14) >> 1) * 12 + (buf >> 4);
         else
-          m_tracks[i][j].note = 0;
-        m_tracks[i][j].inst += (buf & 1) << 4;
+          m_tracks.at(i,j).note = 0;
+        m_tracks.at(i,j).inst += (buf & 1) << 4;
         j++;
       } while (j < 64);
     }
@@ -143,7 +144,7 @@ bool CamdLoader::load(const std::string &filename, const CFileProvider &fp) {
   m_bpm = 50;
   m_restartpos = 0;
   m_flags = Decimal;
-  for (i = 0; i < 26; i++) { // convert instruments
+  for (int i = 0; i < 26; i++) { // convert instruments
     buf = m_instruments[i].data[0];
     buf2 = m_instruments[i].data[1];
     m_instruments[i].data[0] = m_instruments[i].data[10];
@@ -161,35 +162,35 @@ bool CamdLoader::load(const std::string &filename, const CFileProvider &fp) {
     m_instruments[i].data[8] = m_instruments[i].data[9];
     m_instruments[i].data[9] = buf2;
     m_instruments[i].data[10] = buf3;
-    for (j = 0; j < 23; j++) // convert names
+    for (int j = 0; j < 23; j++) // convert names
       if (m_instrumentNames[i][j] == '\xff')
         m_instrumentNames[i][j] = '\x20';
   }
-  for (i = 0; i < maxi; i++) // convert patterns
-    for (j = 0; j < 64; j++) {
-      m_tracks[i][j].command = convfx[m_tracks[i][j].command];
+  for (int i = 0; i < maxi; i++) // convert patterns
+    for (int j = 0; j < 64; j++) {
+      m_tracks.at(i,j).command = convfx[m_tracks.at(i,j).command];
       // extended command
-      if (m_tracks[i][j].command == 14) {
-        if (m_tracks[i][j].param1 == 2) {
-          m_tracks[i][j].command = 10;
-          m_tracks[i][j].param1 = m_tracks[i][j].param2;
-          m_tracks[i][j].param2 = 0;
+      if (m_tracks.at(i,j).command == 14) {
+        if (m_tracks.at(i,j).param1 == 2) {
+          m_tracks.at(i,j).command = 10;
+          m_tracks.at(i,j).param1 = m_tracks.at(i,j).param2;
+          m_tracks.at(i,j).param2 = 0;
         }
 
-        if (m_tracks[i][j].param1 == 3) {
-          m_tracks[i][j].command = 10;
-          m_tracks[i][j].param1 = 0;
+        if (m_tracks.at(i,j).param1 == 3) {
+          m_tracks.at(i,j).command = 10;
+          m_tracks.at(i,j).param1 = 0;
         }
       }
 
       // fix volume
-      if (m_tracks[i][j].command == 17) {
-        int vol = convvol[m_tracks[i][j].param1 * 10 + m_tracks[i][j].param2];
+      if (m_tracks.at(i,j).command == 17) {
+        int vol = convvol[m_tracks.at(i,j).param1 * 10 + m_tracks.at(i,j).param2];
 
         if (vol > 63)
           vol = 63;
-        m_tracks[i][j].param1 = vol / 10;
-        m_tracks[i][j].param2 = vol % 10;
+        m_tracks.at(i,j).param1 = vol / 10;
+        m_tracks.at(i,j).param2 = vol % 10;
       }
     }
 

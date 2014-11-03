@@ -147,7 +147,7 @@ bool CadtrackLoader::load(const std::string &filename,
         break;
       case '\0':
         if (note[1] == '\0')
-          m_tracks[chp][rwp].note = 127;
+          m_tracks.at(chp, rwp).note = 127;
         else {
           fp.close(f);
           return false;
@@ -158,8 +158,8 @@ bool CadtrackLoader::load(const std::string &filename,
         return false;
       }
       if ((*note) != '\0') {
-        m_tracks[chp][rwp].note = pnote + (octave * 12);
-        m_tracks[chp][rwp].inst = chp + 1;
+        m_tracks.at(chp, rwp).note = pnote + (octave * 12);
+        m_tracks.at(chp, rwp).inst = chp + 1;
       }
     }
 
