@@ -389,7 +389,7 @@ public:
   static const uint8_t _unkTable2_3[];
   static const uint8_t _unkTables[][32];
 
-  opl::Opl3 *opl = nullptr;
+  opl::Opl3 m_opl{};
 };
 
 int AdlibDriver::callback(int opcode, ...) {
@@ -824,7 +824,9 @@ void AdlibDriver::resetAdlibState() {
 // Old calling style: output0x388(0xABCD)
 // New calling style: writeOPL(0xAB, 0xCD)
 
-void AdlibDriver::writeOPL(uint8_t reg, uint8_t val) { opl->writeReg(reg, val); }
+void AdlibDriver::writeOPL(uint8_t reg, uint8_t val) {
+  m_opl.writeReg(reg, val);
+}
 
 void AdlibDriver::initChannel(Channel &channel) {
   memset(&channel.dataptr, 0,
