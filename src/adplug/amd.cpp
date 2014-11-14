@@ -114,11 +114,11 @@ bool CamdLoader::load(const std::string &filename, const CFileProvider &fp) {
         buf = f->readInt(1);
         if (buf & 128) {
           for (t = j; t < j + (buf & 127) && t < 64; t++) {
-            m_tracks[i][t].command = 0;
-            m_tracks[i][t].inst = 0;
-            m_tracks[i][t].note = 0;
-            m_tracks[i][t].param1 = 0;
-            m_tracks[i][t].param2 = 0;
+            m_tracks.at(i,t).command = 0;
+            m_tracks.at(i,t).inst = 0;
+            m_tracks.at(i,t).note = 0;
+            m_tracks.at(i,t).param1 = 0;
+            m_tracks.at(i,t).param2 = 0;
           }
           j += buf & 127;
           continue;

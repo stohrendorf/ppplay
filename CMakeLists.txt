@@ -207,7 +207,7 @@ function(trylinklib LIBNAME ATTRIBS)
 		/opt/csw
 		/opt
 	)
-	if("${LIBNAME}_LIB")
+        if(${LIBNAME}_LIB)
 		add_library("${LIBNAME}" ${ATTRIBS} IMPORTED)
 	endif()
 	mark_as_advanced(FORCE "${LIBNAME}_LIB")

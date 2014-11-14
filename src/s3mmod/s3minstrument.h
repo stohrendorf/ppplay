@@ -1,0 +1,4 @@
+#ifndef S3MINSTRUMENT_H
+#define S3MINSTRUMENT_H
+
+#endif // S3MINSTRUMENT_H
