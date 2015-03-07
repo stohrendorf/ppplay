@@ -28,7 +28,7 @@ public:
 
   CldsPlayer();
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   virtual bool update();
   virtual void rewind(int subsong = -1);
   size_t framesUntilUpdate() override { return SampleRate / 70; }

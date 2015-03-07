@@ -29,7 +29,7 @@ public:
   CmidPlayer() = default;
   static CPlayer *factory();
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   bool update();
   void rewind(int subsong);
   size_t framesUntilUpdate();
@@ -95,7 +95,7 @@ protected:
   int m_tins = 0, m_stins = 0;
 
 private:
-  bool load_sierra_ins(const std::string &fname, const CFileProvider &fp);
+  bool load_sierra_ins(const std::string &fname);
   uint8_t datalook(size_t m_dataPos) const;
   uint32_t getnexti(size_t num);
   uint32_t getnext(size_t num);
@@ -116,7 +116,7 @@ private:
 public:
   static CPlayer *factory() { return new CDukePlayer(); }
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   bool update() { return m_emidi->serviceRoutine(); }
 
   void rewind(int) {}

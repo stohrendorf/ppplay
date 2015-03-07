@@ -22,7 +22,8 @@
 #include <stdint.h> // for uintxx_t
 #include "player.h"
 
-typedef struct {
+struct CMFHEADER
+{
   uint16_t iInstrumentBlockOffset;
   uint16_t iMusicOffset;
   uint16_t iTicksPerQuarterNote;
@@ -33,42 +34,42 @@ typedef struct {
   uint8_t iChannelsInUse[16];
   uint16_t iNumInstruments;
   uint16_t iTempo;
-} CMFHEADER;
+};
 
-typedef struct {
+struct OPERATOR {
   uint8_t iCharMult;
   uint8_t iScalingOutput;
   uint8_t iAttackDecay;
   uint8_t iSustainRelease;
   uint8_t iWaveSel;
-} OPERATOR;
+};
 
-typedef struct {
+struct SBI {
   OPERATOR op[2]; // 0 == modulator, 1 == carrier
   uint8_t iConnection;
-} SBI;
+};
 
-typedef struct {
+struct MIDICHANNEL {
   int iPatch;     // MIDI patch for this channel
   int iPitchbend; // Current pitchbend amount for this channel
-} MIDICHANNEL;
+};
 
-typedef struct {
+struct OPLCHANNEL {
   int iNoteStart; // When the note started playing (longest notes get cut
                   // first, 0 == channel free)
   int iMIDINote;  // MIDI note number currently being played on this OPL channel
   int iMIDIChannel; // Source MIDI channel where this note came from
   int iMIDIPatch;   // Current MIDI patch set on this OPL channel
-} OPLCHANNEL;
+};
 
 class CcmfPlayer : public CPlayer {
   DISABLE_COPY(CcmfPlayer)
 private:
-  uint8_t *data;    // song data (CMF music block)
+  std::vector<uint8_t> data;    // song data (CMF music block)
   int iPlayPointer; // Current location of playback pointer
   int iSongLen;     // Max value for iPlayPointer
   CMFHEADER cmfHeader;
-  SBI *pInstruments;
+  std::vector<SBI> pInstruments;
   bool bPercussive;          // are rhythm-mode instruments enabled?
   uint8_t iCurrentRegs[256]; // Current values in the OPL chip
   int iTranspose; // Transpose amount for entire song (between -128 and +128)
@@ -88,9 +89,9 @@ public:
   static CPlayer *factory();
 
   CcmfPlayer();
-  ~CcmfPlayer();
+  ~CcmfPlayer() = default;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   bool update();
   void rewind(int);
   size_t framesUntilUpdate();

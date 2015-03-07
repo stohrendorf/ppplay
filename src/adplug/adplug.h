@@ -27,8 +27,6 @@
 #include "player.h"
 #include "players.h"
 #include <ymf262/opl3.h>
-#include "fprovide.h"
-#include "database.h"
 
 class CAdPlug {
   DISABLE_COPY(CAdPlug)
@@ -38,16 +36,12 @@ public:
   static const CPlayers players;
 
   static std::shared_ptr<CPlayer> factory(const std::string &fn,
-                                          const CPlayers &pl = players,
-                                          const CFileProvider &fp =
-                                              CProvider_Filesystem());
+                                          const CPlayers &pl = players);
 
-  static void set_database(CAdPlugDatabase *db);
   static std::string get_version();
   static void debug_output(const std::string &filename);
 
 private:
-  static CAdPlugDatabase *database;
   static const CPlayerDesc allplayers[];
 
   static const CPlayers &init_players(const CPlayerDesc pd[]);

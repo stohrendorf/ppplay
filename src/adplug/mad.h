@@ -28,7 +28,7 @@ public:
 
   CmadLoader() = default;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   void rewind(int subsong);
   size_t framesUntilUpdate();
 

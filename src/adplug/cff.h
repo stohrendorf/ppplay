@@ -27,9 +27,8 @@ public:
   static CPlayer *factory();
 
   CcffLoader() : CmodPlayer() {}
-  ;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   void rewind(int subsong);
 
   std::string gettype();
@@ -76,6 +75,7 @@ private:
     unsigned char the_string[256];
   };
 
+#pragma pack(push,1)
   struct cff_header {
     char id[16];
     unsigned char version;
@@ -83,6 +83,7 @@ private:
     unsigned char packed;
     unsigned char reserved[12];
   } header;
+#pragma pack(pop)
 
   struct cff_instrument {
     unsigned char data[12];

@@ -36,7 +36,7 @@ protected:
   } flash;
   //
   bool xadplayer_load() {
-    if (xad.fmt == FLASH)
+    if (m_xadHeader.fmt == FLASH)
       return true;
     else
       return false;

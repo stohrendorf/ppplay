@@ -30,7 +30,7 @@ public:
   Ca2mLoader() = default;
   static CPlayer *factory();
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   size_t framesUntilUpdate();
 
   std::string gettype() { return "AdLib Tracker 2"; }

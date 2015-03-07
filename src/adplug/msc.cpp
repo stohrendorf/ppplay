@@ -20,14 +20,16 @@
  */
 
 #include <cstring>
-#include <stdio.h>
+#include <cstdio>
+
+#include "stream/filestream.h"
 
 #include "msc.h"
 #include "debug.h"
 
 const unsigned char CmscPlayer::msc_signature[MSC_SIGN_LEN] = {
-  'C', 'e', 'r', 'e', 's', ' ', '\x13', ' ', 'M', 'S', 'C', 'p', 'l', 'a', 'y',
-  ' '
+    'C', 'e', 'r', 'e', 's', ' ', '\x13', ' ', 'M', 'S', 'C', 'p', 'l', 'a', 'y',
+    ' '
 };
 
 /*** public methods *************************************/
@@ -35,262 +37,231 @@ const unsigned char CmscPlayer::msc_signature[MSC_SIGN_LEN] = {
 CPlayer *CmscPlayer::factory() { return new CmscPlayer(); }
 
 CmscPlayer::CmscPlayer() : CPlayer() {
-  desc = NULL;
-  msc_data = NULL;
-  raw_data = NULL;
-  nr_blocks = 0;
+    nr_blocks = 0;
 }
 
-CmscPlayer::~CmscPlayer() {
-  if (raw_data != NULL)
-    delete[] raw_data;
+bool CmscPlayer::load(const std::string &filename) {
 
-  if (msc_data != NULL) {
-    // free compressed blocks
+    // open and validate the file
+    FileStream bf(filename);
+    if (!bf)
+        return false;
+
+    msc_header hdr;
+    if (!load_header(bf, &hdr)) {
+        return false;
+    }
+
+    // get stuff from the header
+    version = hdr.mh_ver;
+    timer_div = hdr.mh_timer;
+    nr_blocks = hdr.mh_nr_blocks;
+    block_len = hdr.mh_block_len;
+
+    if (!nr_blocks) {
+        return false;
+    }
+
+    // load compressed data blocks
+    raw_data.resize(block_len);
+
     for (int blk_num = 0; blk_num < nr_blocks; blk_num++) {
-      if (msc_data[blk_num].mb_data != NULL)
-        delete[] msc_data[blk_num].mb_data;
+        msc_data.emplace_back();
+        bf >> msc_data.back().mb_length;
+        msc_data.back().mb_data.resize(msc_data.back().mb_length);
+        bf.read(msc_data.back().mb_data.data(), msc_data.back().mb_length);
     }
 
-    delete[] msc_data;
-  }
+    // clean up & initialize
+    rewind(0);
 
-  if (desc != NULL)
-    delete[] desc;
-}
-
-bool CmscPlayer::load(const std::string &filename, const CFileProvider &fp) {
-  binistream *bf;
-  msc_header hdr;
-
-  // open and validate the file
-  bf = fp.open(filename);
-  if (!bf)
-    return false;
-
-  if (!load_header(bf, &hdr)) {
-    fp.close(bf);
-    return false;
-  }
-
-  // get stuff from the header
-  version = hdr.mh_ver;
-  timer_div = hdr.mh_timer;
-  nr_blocks = hdr.mh_nr_blocks;
-  block_len = hdr.mh_block_len;
-
-  if (!nr_blocks) {
-    fp.close(bf);
-    return false;
-  }
-
-  // load compressed data blocks
-  msc_data = new msc_block[nr_blocks];
-  raw_data = new u8[block_len];
-
-  for (int blk_num = 0; blk_num < nr_blocks; blk_num++) {
-    msc_block blk;
-
-    blk.mb_length = bf->readInt(2);
-    blk.mb_data = new u8[blk.mb_length];
-    for (int oct_num = 0; oct_num < blk.mb_length; oct_num++) {
-      blk.mb_data[oct_num] = bf->readInt(1);
-    }
-
-    msc_data[blk_num] = blk;
-  }
-
-  // clean up & initialize
-  fp.close(bf);
-  rewind(0);
-
-  return true;
+    return true;
 }
 
 bool CmscPlayer::update() {
-  // output data
-  while (!delay) {
-    u8 cmnd;
-    u8 data;
+    // output data
+    while (!delay) {
+        uint8_t cmnd;
+        uint8_t data;
 
-    // decode data
-    if (!decode_octet(&cmnd))
-      return false;
+        // decode data
+        if (!decode_octet(&cmnd))
+            return false;
 
-    if (!decode_octet(&data))
-      return false;
+        if (!decode_octet(&data))
+            return false;
 
-    // check for special commands
-    switch (cmnd) {
+        // check for special commands
+        switch (cmnd) {
 
-    // delay
-    case 0xff:
-      delay = 1 + (u8)(data - 1);
-      break;
+        // delay
+        case 0xff:
+            delay = 1 + (uint8_t)(data - 1);
+            break;
 
-    // play command & data
-    default:
-      getOpl()->writeReg(cmnd, data);
+            // play command & data
+        default:
+            getOpl()->writeReg(cmnd, data);
 
-    } // command switch
-  }   // play pass
+        } // command switch
+    }   // play pass
 
-  // count delays
-  if (delay)
-    delay--;
+    // count delays
+    if (delay)
+        delay--;
 
-  // advance player position
-  play_pos++;
-  return true;
+    // advance player position
+    play_pos++;
+    return true;
 }
 
 void CmscPlayer::rewind(int) {
-  // reset state
-  dec_prefix = 0;
-  block_num = 0;
-  block_pos = 0;
-  play_pos = 0;
-  raw_pos = 0;
-  delay = 0;
+    // reset state
+    dec_prefix = 0;
+    block_num = 0;
+    block_pos = 0;
+    play_pos = 0;
+    raw_pos = 0;
+    delay = 0;
 
-  // init the OPL chip and go to OPL2 mode
-  getOpl()->writeReg(1, 32);
+    // init the OPL chip and go to OPL2 mode
+    getOpl()->writeReg(1, 32);
 }
 
 size_t CmscPlayer::framesUntilUpdate() {
-  // PC timer oscillator frequency / wait register
-  return SampleRate * (timer_div ? timer_div : 0xffff) / 1193180;
+    // PC timer oscillator frequency / wait register
+    return SampleRate * (timer_div ? timer_div : 0xffff) / 1193180;
 }
 
 std::string CmscPlayer::gettype() {
-  char vstr[40];
+    char vstr[40];
 
-  sprintf(vstr, "AdLib MSCplay (version %d)", version);
-  return std::string(vstr);
+    sprintf(vstr, "AdLib MSCplay (version %d)", version);
+    return std::string(vstr);
 }
 
 /*** private methods *************************************/
 
-bool CmscPlayer::load_header(binistream *bf, msc_header *hdr) {
-  // check signature
-  bf->readString((char *)hdr->mh_sign, sizeof(hdr->mh_sign));
-  if (memcmp(msc_signature, hdr->mh_sign, MSC_SIGN_LEN) != 0)
-    return false;
-
-  // check version
-  hdr->mh_ver = bf->readInt(2);
-  if (hdr->mh_ver != 0)
-    return false;
-
-  bf->readString((char *)hdr->mh_desc, sizeof(hdr->mh_desc));
-  hdr->mh_timer = bf->readInt(2);
-  hdr->mh_nr_blocks = bf->readInt(2);
-  hdr->mh_block_len = bf->readInt(2);
-  return true;
-}
-
-bool CmscPlayer::decode_octet(u8 *output) {
-  msc_block blk; // compressed data block
-
-  if (block_num >= nr_blocks)
-    return false;
-
-  blk = msc_data[block_num];
-  while (1) {
-    u8 octet;        // decoded octet
-    u8 len_corr = 0; // length correction
-
-    // advance to next block if necessary
-    if (block_pos >= blk.mb_length && dec_len == 0) {
-      block_num++;
-      if (block_num >= nr_blocks)
+bool CmscPlayer::load_header(FileStream &bf, msc_header *hdr) {
+    // check signature
+    bf.read(hdr->mh_sign, sizeof(hdr->mh_sign));
+    if (memcmp(msc_signature, hdr->mh_sign, MSC_SIGN_LEN) != 0)
         return false;
 
-      blk = msc_data[block_num];
-      block_pos = 0;
-      raw_pos = 0;
-    }
+    // check version
+    bf >> hdr->mh_ver;
+    if (hdr->mh_ver != 0)
+        return false;
 
-    // decode the compressed music data
-    switch (dec_prefix) {
+    bf.read(hdr->mh_desc, sizeof(hdr->mh_desc));
+    bf >> hdr->mh_timer;
+    bf >> hdr->mh_nr_blocks;
+    bf >> hdr->mh_block_len;
+    return true;
+}
 
-    // decode prefix
-    case 155:
-    case 175:
-      octet = blk.mb_data[block_pos++];
-      if (octet == 0) {
-        // invalid prefix, output original
-        octet = dec_prefix;
-        dec_prefix = 0;
+bool CmscPlayer::decode_octet(uint8_t *output) {
+    msc_block blk; // compressed data block
+
+    if (block_num >= nr_blocks)
+        return false;
+
+    blk = msc_data[block_num];
+    while (1) {
+        uint8_t octet;        // decoded octet
+        uint8_t len_corr = 0; // length correction
+
+        // advance to next block if necessary
+        if (block_pos >= blk.mb_length && dec_len == 0) {
+            block_num++;
+            if (block_num >= nr_blocks)
+                return false;
+
+            blk = msc_data[block_num];
+            block_pos = 0;
+            raw_pos = 0;
+        }
+
+        // decode the compressed music data
+        switch (dec_prefix) {
+
+        // decode prefix
+        case 155:
+        case 175:
+            octet = blk.mb_data[block_pos++];
+            if (octet == 0) {
+                // invalid prefix, output original
+                octet = dec_prefix;
+                dec_prefix = 0;
+                break;
+            }
+
+            // isolate length and distance
+            dec_len = (octet & 0x0F);
+            // len_corr = 2;
+
+            dec_dist = (octet & 0xF0) >> 4;
+            if (dec_prefix == 155)
+                dec_dist++;
+
+            // next decode step for respective prefix type
+            dec_prefix++;
+            continue;
+
+            // check for extended length
+        case 156:
+            if (dec_len == 15)
+                dec_len += blk.mb_data[block_pos++];
+
+            // add length correction and go for copy mode
+            dec_len += len_corr;
+            dec_prefix = 255;
+            continue;
+
+            // get extended distance
+        case 176:
+            dec_dist += 17 + 16 * blk.mb_data[block_pos++];
+            // len_corr = 3;
+
+            // check for extended length
+            dec_prefix = 156;
+            continue;
+
+            // prefix copy mode
+        case 255:
+            if ((int) raw_pos >= dec_dist)
+                octet = raw_data[raw_pos - dec_dist];
+            else {
+                AdPlug_LogWrite("error! read before raw_data buffer.\n");
+                octet = 0;
+            }
+
+            dec_len--;
+            if (dec_len == 0) {
+                // back to normal mode
+                dec_prefix = 0;
+            }
+
+            break;
+
+            // normal mode
+        default:
+            octet = blk.mb_data[block_pos++];
+            if (octet == 155 || octet == 175) {
+                // it's a prefix, restart
+                dec_prefix = octet;
+                continue;
+            }
+        } // prefix switch
+
+        // output the octet
+        if (output != NULL)
+            *output = octet;
+
+        raw_data[raw_pos++] = octet;
         break;
-      }
+    }
+    ; // decode pass
 
-      // isolate length and distance
-      dec_len = (octet & 0x0F);
-      // len_corr = 2;
-
-      dec_dist = (octet & 0xF0) >> 4;
-      if (dec_prefix == 155)
-        dec_dist++;
-
-      // next decode step for respective prefix type
-      dec_prefix++;
-      continue;
-
-    // check for extended length
-    case 156:
-      if (dec_len == 15)
-        dec_len += blk.mb_data[block_pos++];
-
-      // add length correction and go for copy mode
-      dec_len += len_corr;
-      dec_prefix = 255;
-      continue;
-
-    // get extended distance
-    case 176:
-      dec_dist += 17 + 16 * blk.mb_data[block_pos++];
-      // len_corr = 3;
-
-      // check for extended length
-      dec_prefix = 156;
-      continue;
-
-    // prefix copy mode
-    case 255:
-      if ((int) raw_pos >= dec_dist)
-        octet = raw_data[raw_pos - dec_dist];
-      else {
-        AdPlug_LogWrite("error! read before raw_data buffer.\n");
-        octet = 0;
-      }
-
-      dec_len--;
-      if (dec_len == 0) {
-        // back to normal mode
-        dec_prefix = 0;
-      }
-
-      break;
-
-    // normal mode
-    default:
-      octet = blk.mb_data[block_pos++];
-      if (octet == 155 || octet == 175) {
-        // it's a prefix, restart
-        dec_prefix = octet;
-        continue;
-      }
-    } // prefix switch
-
-    // output the octet
-    if (output != NULL)
-      *output = octet;
-
-    raw_data[raw_pos++] = octet;
-    break;
-  }
-  ; // decode pass
-
-  return true;
+    return true;
 }

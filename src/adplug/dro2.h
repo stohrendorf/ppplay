@@ -25,23 +25,22 @@
 class Cdro2Player : public CPlayer {
   DISABLE_COPY(Cdro2Player)
 protected:
-  uint8_t iCmdDelayS, iCmdDelayL;
-  int iConvTableLen;
-  uint8_t *piConvTable;
+  uint8_t m_commandDelayS, m_commandDelay;
+  uint8_t m_convTableLength;
+  std::vector<uint8_t> m_convTable;
 
-  uint8_t *data;
-  int iLength;
-  int iPos;
-  int iDelay;
-  int xchip = 0;
+  std::vector<uint8_t> m_data;
+  uint32_t m_pos;
+  int m_delay;
+  int m_chipSelector = 0;
 
 public:
   static CPlayer *factory();
 
   Cdro2Player();
-  ~Cdro2Player();
+  ~Cdro2Player() = default;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   bool update();
   void rewind(int);
   size_t framesUntilUpdate();

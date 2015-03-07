@@ -30,7 +30,7 @@ public:
   CsngPlayer() = default;
   static CPlayer *factory();
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   bool update();
   void rewind(int subsong);
   size_t framesUntilUpdate() override { return SampleRate / 70; }
@@ -38,18 +38,20 @@ public:
   std::string gettype() { return "SNG File Format"; }
 
 protected:
-  struct {
+#pragma pack(push,1)
+  struct SngHeader
+  {
     char id[4] = { 0, 0, 0, 0 };
-    unsigned short length = 0, start = 0, loop = 0;
-    unsigned char delay = 0;
-    bool compressed = false;
-  } m_header {
-  }
-  ;
-
-  struct Sdata {
-    unsigned char val = 0, reg = 0;
+    uint16_t length = 0, start = 0, loop = 0;
+    uint8_t delay = 0;
+    uint8_t compressed = false;
   };
+  struct Sdata {
+    uint8_t val = 0, reg = 0;
+  };
+#pragma pack(pop)
+  SngHeader m_header;
+
   std::vector<Sdata> m_data {}
   ;
 

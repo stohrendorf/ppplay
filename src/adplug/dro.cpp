@@ -1,17 +1,17 @@
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2007 Simon Peter, <dn.tlp@gmx.net>, et al.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -19,12 +19,14 @@
  * dro.c - DOSBox Raw OPL Player by Sjoerd van der Berg <harekiet@zophar.net>
  *
  * upgraded by matthew gambrell <zeromus@zeromus.org>
- * 
+ *
  * NOTES: 3-oct-04: the DRO format is not yet finalized. beware.
  */
 
 #include <cstring>
-#include <stdio.h>
+#include <cstdio>
+
+#include "stream/filestream.h"
 
 #include "dro.h"
 
@@ -32,98 +34,94 @@
 
 CPlayer *CdroPlayer::factory() { return new CdroPlayer(); }
 
-CdroPlayer::CdroPlayer() : CPlayer(), data(0) {}
+CdroPlayer::CdroPlayer() : CPlayer() {}
 
-bool CdroPlayer::load(const std::string &filename, const CFileProvider &fp) {
-  binistream *f = fp.open(filename);
-  if (!f)
-    return false;
-  char id[8];
-  unsigned long i;
+bool CdroPlayer::load(const std::string &filename) {
+    FileStream f(filename);
+    if (!f)
+        return false;
 
-  // file validation section
-  f->readString(id, 8);
-  if (strncmp(id, "DBRAWOPL", 8)) {
-    fp.close(f);
-    return false;
-  }
-  int version = f->readInt(4); // not very useful just yet
-  if (version != 0x10000) {
-    fp.close(f);
-    return false;
-  }
+    // file validation section
+    char id[8];
+    f.read(id, 8);
+    if (strncmp(id, "DBRAWOPL", 8)) {
+        return false;
+    }
+    uint32_t version;
+    f >> version;
+    if (version != 0x10000) {
+        return false;
+    }
 
-  // load section
-  mstotal = f->readInt(4); // Total milliseconds in file
-  length = f->readInt(4);  // Total data bytes in file
-  data = new unsigned char[length];
+    // load section
+    f >> m_msTotal; // Total milliseconds in file
+    uint32_t length;
+    f >> length;  // Total data bytes in file
+    m_data.resize(length);
 
-  f->ignore(1); // Type of opl data this can contain - ignored
-  for (i = 0; i < 3; i++)
-    data[i] = f->readInt(1);
+    f.seekrel(1); // Type of opl data this can contain - ignored
+    f.read(m_data.data(), 3);
 
-  if ((data[0] == 0) || (data[1] == 0) || (data[2] == 0)) {
-    // Some early .DRO files only used one byte for the hardware type, then
-    // later changed to four bytes with no version number change.  If we're
-    // here then this is a later (more popular) file with the full four bytes
-    // for the hardware-type.
-    i = 0; // so ignore the three bytes we just read and start again
-  }
-  for (; i < length; i++)
-    data[i] = f->readInt(1);
-  fp.close(f);
-  rewind(0);
-  return true;
+    if ((m_data[0] == 0) || (m_data[1] == 0) || (m_data[2] == 0)) {
+        // Some early .DRO files only used one byte for the hardware type, then
+        // later changed to four bytes with no version number change.  If we're
+        // here then this is a later (more popular) file with the full four bytes
+        // for the hardware-type.
+        f.seekrel(-3);
+    }
+    f.read(m_data.data(), m_data.size());
+    rewind(0);
+    return true;
 }
 
 bool CdroPlayer::update() {
-  if (delay > 500) {
-    delay -= 500;
-    return true;
-  } else
-    delay = 0;
+    if (m_delay > 500) {
+        m_delay -= 500;
+        return true;
+    } else
+        m_delay = 0;
 
-  while (pos < length) {
-    unsigned char cmd = data[pos++];
-    switch (cmd) {
-    case 0:
-      delay = 1 + data[pos++];
-      return true;
-    case 1:
-      delay = 1 + data[pos] + (data[pos + 1] << 8);
-      pos += 2;
-      return true;
-    case 2:
-      index = 0;
-      break;
-    case 3:
-      index = 1;
-      break;
-    default:
-      if (cmd == 4)
-        cmd = data[pos++]; //data override
-      getOpl()->writeReg(cmd, data[pos++]);
-      break;
+    while (m_pos < m_data.size()) {
+        unsigned char cmd = m_data[m_pos++];
+        switch (cmd) {
+        case 0:
+            m_delay = 1 + m_data[m_pos++];
+            return true;
+        case 1:
+            m_delay = 1 + m_data[m_pos] + (m_data[m_pos + 1] << 8);
+            m_pos += 2;
+            return true;
+        case 2:
+            m_index = 0;
+            break;
+        case 3:
+            m_index = 1;
+            break;
+        default:
+            if (cmd == 4)
+                cmd = m_data[m_pos++]; //data override
+            getOpl()->writeReg(cmd, m_data[m_pos++]);
+            break;
+        }
     }
-  }
 
-  return pos < length;
+    return m_pos < m_data.size();
 }
 
 void CdroPlayer::rewind(int) {
-  delay = 1;
-  pos = index = 0;
+    m_delay = 1;
+    m_pos = m_index = 0;
 
-  //dro assumes all registers are initialized to 0
-  //registers not initialized to 0 will be corrected
-  //in the data stream
-  for (int i = 0; i < 256; i++)
-    getOpl()->writeReg(i, 0);
+    //dro assumes all registers are initialized to 0
+    //registers not initialized to 0 will be corrected
+    //in the data stream
+    for (int i = 0; i < 256; i++)
+        getOpl()->writeReg(i, 0);
 }
 
 size_t CdroPlayer::framesUntilUpdate() {
-  if (delay > 500)
-    return SampleRate / 2;
-  else
-    return SampleRate * delay / 1000;
+    if (m_delay > 500)
+        return SampleRate / 2;
+    else
+        return SampleRate * m_delay / 1000;
 }

@@ -25,64 +25,68 @@
 #include "player.h"
 
 class CxadPlayer : public CPlayer {
-  DISABLE_COPY(CxadPlayer)
-public:
-  static CPlayer *factory();
+    DISABLE_COPY(CxadPlayer)
+    public:
+        static CPlayer *factory();
 
-  CxadPlayer() = default;
-  ~CxadPlayer() = default;
+    CxadPlayer() = default;
+    ~CxadPlayer() = default;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
-  bool update();
-  void rewind(int subsong);
-  size_t framesUntilUpdate();
+    bool load(const std::string &filename);
+    bool update();
+    void rewind(int subsong);
+    size_t framesUntilUpdate();
 
-  std::string gettype();
-  std::string gettitle();
-  std::string getauthor();
-  std::string getinstrument(unsigned int i);
-  unsigned int getinstruments();
+    std::string gettype();
+    std::string gettitle();
+    std::string getauthor();
+    std::string getinstrument(unsigned int i);
+    unsigned int getinstruments();
 
 protected:
-  virtual void xadplayer_rewind(int subsong) = 0;
-  virtual bool xadplayer_load() = 0;
-  virtual void xadplayer_update() = 0;
-  virtual float xadplayer_getrefresh() = 0;
-  virtual std::string xadplayer_gettype() = 0;
-  virtual std::string xadplayer_gettitle() { return xad.title; }
-  virtual std::string xadplayer_getauthor() { return xad.author; }
-  virtual std::string xadplayer_getinstrument(unsigned int) {
-    return std::string();
-  }
-  virtual unsigned int xadplayer_getinstruments() { return 0; }
+    virtual void xadplayer_rewind(int subsong) = 0;
+    virtual bool xadplayer_load() = 0;
+    virtual void xadplayer_update() = 0;
+    virtual float xadplayer_getrefresh() = 0;
+    virtual std::string xadplayer_gettype() = 0;
+    virtual std::string xadplayer_gettitle() { return m_xadHeader.title; }
+    virtual std::string xadplayer_getauthor() { return m_xadHeader.author; }
+    virtual std::string xadplayer_getinstrument(unsigned int) {
+        return std::string();
+    }
+    virtual unsigned int xadplayer_getinstruments() { return 0; }
 
-  enum Format : uint16_t {
-    None,
-    HYP = 1,
-    PSI,
-    FLASH,
-    BMF,
-    RAT,
-    HYBRID
-  };
+    enum Format : uint16_t {
+        None,
+        HYP = 1,
+        PSI,
+        FLASH,
+        BMF,
+        RAT,
+        HYBRID
+    };
 
-  struct xad_header {
-    unsigned long id = 0;
-    char title[36] = "";
-    char author[36] = "";
-    Format fmt = None;
-    unsigned char speed = 0;
-    unsigned char reserved_a = 0;
-  } xad{};
+#pragma pack(push,1)
+    struct xad_header {
+        uint32_t id = 0;
+        char title[36] = "";
+        char author[36] = "";
+        Format fmt = None;
+        uint8_t speed = 0;
+        uint8_t reserved_a = 0;
+    };
+#pragma pack(pop)
 
-  std::vector<uint8_t> tune{};
+    xad_header m_xadHeader;
 
-  struct {
-    int playing = 0;
-    int looping = 0;
-    unsigned char speed = 0;
-    unsigned char speed_counter = 0;
-  } plr{};
+    std::vector<uint8_t> tune{};
+
+    struct {
+        int playing = 0;
+        int looping = 0;
+        unsigned char speed = 0;
+        unsigned char speed_counter = 0;
+    } plr{};
 };
 
 #endif

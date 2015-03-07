@@ -28,16 +28,15 @@ public:
   static CPlayer *factory();
 
   CrixPlayer();
-  ~CrixPlayer();
+  ~CrixPlayer() = default;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   bool update();
   void rewind(int subsong);
   size_t framesUntilUpdate();
   unsigned int getsubsongs();
 
   std::string gettype() { return std::string("Softstar RIX OPL Music Format"); }
-  ;
 
 protected:
   typedef struct {
@@ -45,8 +44,8 @@ protected:
   } ADDT;
 
   int flag_mkf;
-  unsigned char *file_buffer;
-  unsigned char *buf_addr;      /* rix files' f_buffer */
+  std::vector<uint8_t> file_buffer;
+  uint8_t *buf_addr;      /* rix files' f_buffer */
   unsigned short f_buffer[300]; //9C0h-C18h
   unsigned short a0b0_data2[11];
   unsigned char a0b0_data3[18];

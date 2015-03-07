@@ -24,8 +24,6 @@
 
 #include <string>
 
-#include "fprovide.h"
-#include "database.h"
 #include "ymf262/opl3.h"
 #include "stuff/utils.h"
 
@@ -37,8 +35,7 @@ public:
   virtual ~CPlayer() = default;
 
   /***** Operational methods *****/
-  virtual bool load(const std::string &filename, // loads file
-                    const CFileProvider &fp = CProvider_Filesystem()) = 0;
+  virtual bool load(const std::string &filename) = 0;
   virtual bool update() = 0;                 // executes replay code for 1 tick
   virtual void rewind(int subsong = -1) = 0; // rewinds to specified subsong
   virtual size_t framesUntilUpdate() = 0;
@@ -104,13 +101,8 @@ public:
 
 private:
   opl::Opl3 m_oplChip;
-  CAdPlugDatabase *m_db; // AdPlug Database
 
 protected:
-
-  CAdPlugDatabase* database() {
-    return m_db;
-  }
 
   static const uint16_t s_noteTable[12]; // standard adlib note table
   static const uint8_t s_opTable[9]; // the 9 operators as expected by the OPL

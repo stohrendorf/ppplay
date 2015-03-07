@@ -21,6 +21,9 @@
 
 #include "stream.h"
 
+#include <boost/filesystem/path.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
+
 /**
  * @class FileStream
  * @ingroup Common
@@ -49,6 +52,11 @@ public:
      */
     bool isOpen() const;
     std::streamsize size() const;
+
+    std::string extension() const
+    {
+        return boost::algorithm::to_lower_copy( boost::filesystem::path(name()).extension().string() );
+    }
 };
 
 #endif

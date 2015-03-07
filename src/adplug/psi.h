@@ -43,7 +43,7 @@ protected:
   } psi;
   //
   bool xadplayer_load() {
-    if (xad.fmt == PSI)
+    if (m_xadHeader.fmt == PSI)
       return true;
     else
       return false;

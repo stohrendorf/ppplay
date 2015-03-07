@@ -29,7 +29,7 @@ public:
   CdtmLoader() : CmodPlayer() {}
   ;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   void rewind(int subsong);
   size_t framesUntilUpdate();
 
@@ -44,18 +44,18 @@ private:
 
   struct dtm_header {
     char id[12];
-    unsigned char version;
+    uint8_t version;
     char title[20];
     char author[20];
-    unsigned char numpat;
-    unsigned char numinst;
+    uint8_t numpat;
+    uint8_t numinst;
   } header;
 
   char desc[80 * 16];
 
   struct dtm_instrument {
     char name[13];
-    unsigned char data[12];
+    uint8_t data[12];
   } instruments[128];
 
   struct dtm_event {

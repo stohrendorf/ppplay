@@ -31,12 +31,9 @@ public:
 
   Cd00Player() = default;
 
-  ~Cd00Player() {
-    if (filedata)
-      delete[] filedata;
-  }
+  ~Cd00Player() = default;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   bool update();
   void rewind(int subsong);
   size_t framesUntilUpdate();
@@ -112,7 +109,7 @@ protected:
   uint16_t *seqptr = nullptr;
   d00header *header = nullptr;
   d00header1 *header1 = nullptr;
-  char *filedata = nullptr;
+  std::vector<char> filedata;
 
 private:
   void setvolume(uint8_t chan);

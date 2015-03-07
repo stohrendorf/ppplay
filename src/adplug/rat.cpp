@@ -47,7 +47,7 @@ const unsigned short CxadratPlayer::rat_notes[16] = {
 CPlayer *CxadratPlayer::factory() { return new CxadratPlayer(); }
 
 bool CxadratPlayer::xadplayer_load() {
-  if (xad.fmt != RAT)
+  if (m_xadHeader.fmt != RAT)
     return false;
 
   // load header

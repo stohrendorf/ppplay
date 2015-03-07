@@ -26,29 +26,28 @@ class CrawPlayer : public CPlayer {
 public:
   static CPlayer *factory();
 
-  CrawPlayer() : CPlayer(), data(0) {}
-  ;
-  ~CrawPlayer() {
-    if (data)
-      delete[] data;
-  }
-  ;
+  CrawPlayer() : CPlayer(), m_data() {}
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  ~CrawPlayer() = default;
+
+  bool load(const std::string &filename);
   bool update();
   void rewind(int);
   size_t framesUntilUpdate();
 
   std::string gettype() { return std::string("RdosPlay RAW"); }
-  ;
 
 protected:
+#pragma pack(push,1)
   struct Tdata {
-    unsigned char param, command;
-  } *data;
+    uint8_t param, command;
+  };
+#pragma pack(pop)
+  std::vector<Tdata> m_data;
 
-  unsigned long pos, length;
-  unsigned short clock, speed;
-  unsigned char del;
-  bool songend;
+  uint16_t m_clock;
+  size_t m_pos = 0;
+  unsigned short m_speed;
+  unsigned char m_del;
+  bool m_songend;
 };

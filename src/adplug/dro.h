@@ -27,12 +27,9 @@ public:
   static CPlayer *factory();
 
   CdroPlayer();
-  ~CdroPlayer() {
-    if (data)
-      delete[] data;
-  }
+  ~CdroPlayer() = default;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   bool update();
   void rewind(int);
   size_t framesUntilUpdate();
@@ -40,9 +37,9 @@ public:
   std::string gettype() { return std::string("DOSBox Raw OPL v0.1"); }
 
 protected:
-  unsigned char *data;
-  unsigned long pos, length;
-  unsigned long msdone, mstotal;
-  unsigned short delay;
-  unsigned char index;
+  std::vector<uint8_t> m_data;
+  uint32_t m_pos;
+  uint32_t msdone, m_msTotal;
+  unsigned short m_delay;
+  unsigned char m_index;
 };

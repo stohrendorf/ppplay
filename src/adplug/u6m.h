@@ -34,12 +34,9 @@ public:
 
   Cu6mPlayer() = default;
 
-  ~Cu6mPlayer() {
-    if (song_data)
-      delete[] song_data;
-  }
+  ~Cu6mPlayer() = default;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   bool update();
   void rewind(int);
   size_t framesUntilUpdate();
@@ -92,7 +89,7 @@ protected:
   // class variables
   long played_ticks;
 
-  uint8_t* song_data = nullptr; // the uncompressed .m file (the "song")
+  std::vector<uint8_t> song_data; // the uncompressed .m file (the "song")
   bool driver_active;       // flag to prevent reentrancy
   bool songend;             // indicates song end
   int song_pos;             // current offset within the song

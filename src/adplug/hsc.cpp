@@ -19,7 +19,11 @@
  * hsc.cpp - HSC Player by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include <string.h>
+#include <cstring>
+
+#include "stream/filestream.h"
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "hsc.h"
 #include "debug.h"
@@ -28,32 +32,25 @@
 
 CPlayer *ChscPlayer::factory() { return new ChscPlayer(); }
 
-bool ChscPlayer::load(const std::string &filename, const CFileProvider &fp) {
-  binistream *f = fp.open(filename);
-  int i;
+bool ChscPlayer::load(const std::string &filename) {
+  FileStream f(filename);
 
   // file validation section
-  if (!f || !fp.extension(filename, ".hsc") || fp.filesize(f) > 59187) {
-    AdPlug_LogWrite("ChscPlayer::load(\"%s\"): Not a HSC file!\n",
-                    filename.c_str());
-    fp.close(f);
+  if (!f || f.extension() != ".hsc" || f.size() > 59187) {
+    AdPlug_LogWrite("ChscPlayer::load(\"%s\"): Not a HSC file!\n", filename.c_str());
     return false;
   }
 
   // load section
-  for (i = 0; i < 128 * 12; i++) // load instruments
-    *((unsigned char *)m_instr + i) = f->readInt(1);
-  for (i = 0; i < 128; i++) { // correct instruments
+  f.read((unsigned char *)m_instr, 128*12);
+  for (int i = 0; i < 128; i++) { // correct instruments
     m_instr[i][2] ^= (m_instr[i][2] & 0x40) << 1;
     m_instr[i][3] ^= (m_instr[i][3] & 0x40) << 1;
     m_instr[i][11] >>= 4; // slide
   }
-  for (i = 0; i < 51; i++)
-    m_song[i] = f->readInt(1);      // load tracklist
-  for (i = 0; i < 50 * 64 * 9; i++) // load patterns
-    *((char *)m_patterns + i) = f->readInt(1);
+  f.read(m_song, 51);
+  f.read((HscNote*)m_patterns, 50*64*9);
 
-  fp.close(f);
   rewind(0); // rewind module
   return true;
 }

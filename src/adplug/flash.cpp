@@ -83,7 +83,7 @@ CPlayer *CxadflashPlayer::factory() { return new CxadflashPlayer(); }
 void CxadflashPlayer::xadplayer_rewind(int) {
   int i;
 
-  plr.speed = xad.speed;
+  plr.speed = m_xadHeader.speed;
 
   flash.order_pos = 0;
   flash.pattern_pos = 0;

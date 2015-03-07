@@ -547,9 +547,9 @@ void CmodPlayer::rewind(int) {
   }
 
   // Compute number of patterns, if needed
-  if (!nop)
+  if (!numberOfPatterns)
     for (i = 0; i < m_length; i++)
-      nop = (m_order[i] > nop ? m_order[i] : nop);
+      numberOfPatterns = (m_order[i] > numberOfPatterns ? m_order[i] : numberOfPatterns);
 
   getOpl()->writeReg(1, 32); // Go to ym3812 mode
 

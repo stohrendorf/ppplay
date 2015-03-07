@@ -28,7 +28,7 @@ public:
 
   CdfmLoader() = default;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   size_t framesUntilUpdate();
 
   std::string gettype();
@@ -47,7 +47,7 @@ public:
 private:
   struct {
     char id[4];
-    unsigned char hiver, lover;
+    uint8_t hiver, lover;
   } header;
 
   char songinfo[33];

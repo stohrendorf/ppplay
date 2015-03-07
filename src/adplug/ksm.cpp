@@ -19,7 +19,11 @@
  * ksm.cpp - KSM Player for AdPlug by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include <string.h>
+#include <cstring>
+
+#include "stream/filestream.h"
+
+#include <boost/filesystem.hpp>
 
 #include "ksm.h"
 #include "debug.h"
@@ -36,13 +40,11 @@ const unsigned int CksmPlayer::adlibfreq[63] = {
 
 CPlayer *CksmPlayer::factory() { return new CksmPlayer(); }
 
-bool CksmPlayer::load(const std::string &filename, const CFileProvider &fp) {
-  binistream *f;
-  int i;
-  char *fn = new char[filename.length() + 9];
+bool CksmPlayer::load(const std::string &filename) {
+  FileStream f(filename);
 
   // file validation section
-  if (!fp.extension(filename, ".ksm")) {
+  if (!f || f.extension() != ".ksm") {
     AdPlug_LogWrite("CksmPlayer::load(,\"%s\"): File doesn't have '.ksm' "
                     "extension! Rejected!\n",
                     filename.c_str());
@@ -51,44 +53,33 @@ bool CksmPlayer::load(const std::string &filename, const CFileProvider &fp) {
   AdPlug_LogWrite("*** CksmPlayer::load(,\"%s\") ***\n", filename.c_str());
 
   // Load instruments from 'insts.dat'
-  strcpy(fn, filename.c_str());
-  for (i = strlen(fn) - 1; i >= 0; i--)
-    if (fn[i] == '/' || fn[i] == '\\')
-      break;
-  strcpy(fn + i + 1, "insts.dat");
-  AdPlug_LogWrite("Instruments file: \"%s\"\n", fn);
-  f = fp.open(fn);
-  delete[] fn;
+  boost::filesystem::path fn(filename);
+  fn.remove_filename() /= "insts.dat";
+  AdPlug_LogWrite("Instruments file: \"%s\"\n", fn.string().c_str());
+
+  FileStream insts(fn.string());
   if (!f) {
     AdPlug_LogWrite("Couldn't open instruments file! Aborting!\n");
     AdPlug_LogWrite("--- CksmPlayer::load ---\n");
     return false;
   }
-  loadinsts(f);
-  fp.close(f);
+  loadinsts(insts);
 
-  f = fp.open(filename);
-  if (!f)
-    return false;
-  for (i = 0; i < 16; i++)
-    trinst[i] = f->readInt(1);
-  for (i = 0; i < 16; i++)
-    trquant[i] = f->readInt(1);
-  for (i = 0; i < 16; i++)
-    trchan[i] = f->readInt(1);
-  f->ignore(16);
-  for (i = 0; i < 16; i++)
-    trvol[i] = f->readInt(1);
-  auto numnotes = f->readInt(2);
+  f.read(trinst, 16);
+  f.read(trquant, 16);
+  f.read(trchan, 16);
+  f.seekrel(16);
+  f.read(trvol, 16);
+  uint16_t numnotes;
+  f >> numnotes;
   note.resize(numnotes);
-  for (i = 0; i < numnotes; i++)
-    note[i] = f->readInt(4);
-  fp.close(f);
+  f.read(note.data(), note.size());
 
   if (!trchan[11]) {
     drumstat = 0;
     numchans = 9;
-  } else {
+  }
+  else {
     drumstat = 32;
     numchans = 6;
   }
@@ -307,14 +298,13 @@ std::string CksmPlayer::getinstrument(unsigned int n) {
 
 /*** private methods *************************************/
 
-void CksmPlayer::loadinsts(binistream *f) {
+void CksmPlayer::loadinsts(FileStream &f) {
   int i, j;
 
   for (i = 0; i < 256; i++) {
-    f->readString(instname[i], 20);
-    for (j = 0; j < 11; j++)
-      inst[i][j] = f->readInt(1);
-    f->ignore(2);
+    f.read(instname[i], 20);
+    f.read(inst[i], 11);
+    f.seekrel(2);
   }
 }
 

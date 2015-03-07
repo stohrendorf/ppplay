@@ -29,7 +29,7 @@ public:
   CdmoLoader() : Cs3mPlayer() {}
   ;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
 
   std::string gettype();
   std::string getauthor();

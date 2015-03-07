@@ -21,6 +21,8 @@
 
 #include "player.h"
 
+class FileStream;
+
 class CksmPlayer : public CPlayer {
   DISABLE_COPY(CksmPlayer)
 public:
@@ -28,7 +30,7 @@ public:
 
   CksmPlayer() = default;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   bool update();
   void rewind(int);
   size_t framesUntilUpdate() override { return SampleRate / 240; }
@@ -49,7 +51,7 @@ private:
 
   bool songend = false;
 
-  void loadinsts(binistream *f);
+  void loadinsts(FileStream& f);
   void setinst(int chan, unsigned char v0, unsigned char v1, unsigned char v2,
                unsigned char v3, unsigned char v4, unsigned char v5,
                unsigned char v6, unsigned char v7, unsigned char v8,

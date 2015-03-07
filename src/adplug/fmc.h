@@ -27,9 +27,8 @@ public:
   static CPlayer *factory();
 
   CfmcLoader() : CmodPlayer() {}
-  ;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   size_t framesUntilUpdate();
 
   std::string gettype();
@@ -39,51 +38,57 @@ public:
 
 private:
 
+#pragma pack(push,1)
   struct fmc_event {
-    unsigned char byte0;
-    unsigned char byte1;
-    unsigned char byte2;
+    uint8_t byte0;
+    uint8_t byte1;
+    uint8_t byte2;
   };
+#pragma pack(pop)
 
   struct fmc_header {
     char id[4];
     char title[21];
-    unsigned char numchan;
+    uint8_t numchan;
   } header;
 
+#pragma pack(push,1)
   struct fmc_instrument {
-    unsigned char synthesis;
-    unsigned char feedback;
+    uint8_t synthesis;
+    uint8_t feedback;
 
-    unsigned char mod_attack;
-    unsigned char mod_decay;
-    unsigned char mod_sustain;
-    unsigned char mod_release;
-    unsigned char mod_volume;
-    unsigned char mod_ksl;
-    unsigned char mod_freq_multi;
-    unsigned char mod_waveform;
-    unsigned char mod_sustain_sound;
-    unsigned char mod_ksr;
-    unsigned char mod_vibrato;
-    unsigned char mod_tremolo;
-    unsigned char car_attack;
-    unsigned char car_decay;
-    unsigned char car_sustain;
-    unsigned char car_release;
-    unsigned char car_volume;
-    unsigned char car_ksl;
-    unsigned char car_freq_multi;
-    unsigned char car_waveform;
-    unsigned char car_sustain_sound;
-    unsigned char car_ksr;
-    unsigned char car_vibrato;
-    unsigned char car_tremolo;
+    uint8_t mod_attack;
+    uint8_t mod_decay;
+    uint8_t mod_sustain;
+    uint8_t mod_release;
+    uint8_t mod_volume;
+    uint8_t mod_ksl;
+    uint8_t mod_freq_multi;
+    uint8_t mod_waveform;
+    uint8_t mod_sustain_sound;
+    uint8_t mod_ksr;
+    uint8_t mod_vibrato;
+    uint8_t mod_tremolo;
+    uint8_t car_attack;
+    uint8_t car_decay;
+    uint8_t car_sustain;
+    uint8_t car_release;
+    uint8_t car_volume;
+    uint8_t car_ksl;
+    uint8_t car_freq_multi;
+    uint8_t car_waveform;
+    uint8_t car_sustain_sound;
+    uint8_t car_ksr;
+    uint8_t car_vibrato;
+    uint8_t car_tremolo;
 
-    signed char pitch_shift;
+    int8_t pitch_shift;
 
     char name[21];
-  } instruments[32];
+  };
+#pragma pack(pop)
+
+  fmc_instrument instruments[32];
 
   void buildinst(unsigned char i);
 };

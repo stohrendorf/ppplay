@@ -20,22 +20,21 @@
 #ifndef H_DISK
 #define H_DISK
 
-#include <libbinio/binio.h>
-
 #include "output.h"
+#include "stream/filestream.h"
 
 class DiskWriter : public EmuPlayer {
   DISABLE_COPY(DiskWriter)
 public:
-  DiskWriter(const char *filename, unsigned long nfreq);
+  DiskWriter(const char *filename, uint32_t nfreq);
   virtual ~DiskWriter();
 
 protected:
   virtual void output(const std::vector<int16_t> &buf) override;
 
 private:
-  binostream *f;
-  unsigned long samplesize;
+  FileStream m_file;
+  uint32_t m_bytesWritten;
 };
 
 #endif

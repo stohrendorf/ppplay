@@ -34,7 +34,7 @@ protected:
   } hyp;
   //
   bool xadplayer_load() {
-    if (xad.fmt == HYP)
+    if (m_xadHeader.fmt == HYP)
       return true;
     else
       return false;

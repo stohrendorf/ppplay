@@ -1,17 +1,17 @@
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2007 Simon Peter, <dn.tlp@gmx.net>, et al.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -21,117 +21,110 @@
  */
 
 #include <cstring>
-#include <stdio.h>
+#include <cstdio>
+
+#include "stream/filestream.h"
 
 #include "dro2.h"
 
 CPlayer *Cdro2Player::factory() { return new Cdro2Player(); }
 
-Cdro2Player::Cdro2Player() : CPlayer(), piConvTable(NULL), data(0) {}
+Cdro2Player::Cdro2Player() : CPlayer(), m_convTable(NULL), m_data(0) {}
 
-Cdro2Player::~Cdro2Player() {
-  if (this->data)
-    delete[] this->data;
-  if (this->piConvTable)
-    delete[] this->piConvTable;
-}
+bool Cdro2Player::load(const std::string &filename) {
+    FileStream f(filename);
+    if (!f)
+        return false;
 
-bool Cdro2Player::load(const std::string &filename, const CFileProvider &fp) {
-  binistream *f = fp.open(filename);
-  if (!f)
-    return false;
+    char id[8];
+    f.read(id, 8);
+    if (strncmp(id, "DBRAWOPL", 8)) {
+        return false;
+    }
+    uint32_t version;
+    f >> version;
+    if (version != 0x2) {
+        return false;
+    }
 
-  char id[8];
-  f->readString(id, 8);
-  if (strncmp(id, "DBRAWOPL", 8)) {
-    fp.close(f);
-    return false;
-  }
-  int version = f->readInt(4);
-  if (version != 0x2) {
-    fp.close(f);
-    return false;
-  }
+    uint32_t length;
+    f >> length;
+    length *= 2; // stored in file as number of byte pairs
+    f.seekrel(4);                      // Length in milliseconds
+    f.seekrel(1); /// OPL type (0 == OPL2, 1 == Dual OPL2, 2 == OPL3)
+    uint8_t iFormat;
+    f >> iFormat;
+    if (iFormat != 0) {
+        return false;
+    }
+    uint8_t iCompression;
+    f >> iCompression;
+    if (iCompression != 0) {
+        return false;
+    }
+    f >> this->m_commandDelayS >> this->m_commandDelay >> this->m_convTableLength;
 
-  this->iLength = f->readInt(4) * 2; // stored in file as number of byte pairs
-  f->ignore(4);                      // Length in milliseconds
-  f->ignore(1); /// OPL type (0 == OPL2, 1 == Dual OPL2, 2 == OPL3)
-  int iFormat = f->readInt(1);
-  if (iFormat != 0) {
-    fp.close(f);
-    return false;
-  }
-  int iCompression = f->readInt(1);
-  if (iCompression != 0) {
-    fp.close(f);
-    return false;
-  }
-  this->iCmdDelayS = f->readInt(1);
-  this->iCmdDelayL = f->readInt(1);
-  this->iConvTableLen = f->readInt(1);
+    this->m_convTable.resize(this->m_convTableLength);
+    f.read(this->m_convTable.data(), this->m_convTableLength);
 
-  this->piConvTable = new uint8_t[this->iConvTableLen];
-  f->readString((char *)this->piConvTable, this->iConvTableLen);
+    this->m_data.resize(length);
+    f.read(this->m_data.data(), length);
 
-  this->data = new uint8_t[this->iLength];
-  f->readString((char *)this->data, this->iLength);
+    rewind(0);
 
-  fp.close(f);
-  rewind(0);
-
-  return true;
+    return true;
 }
 
 bool Cdro2Player::update() {
-  while (this->iPos < this->iLength) {
-    int iIndex = this->data[this->iPos++];
-    int iValue = this->data[this->iPos++];
+    while (this->m_pos < this->m_data.size()) {
+        int iIndex = this->m_data[this->m_pos++];
+        int iValue = this->m_data[this->m_pos++];
 
-    // Short delay
-    if (iIndex == this->iCmdDelayS) {
-      this->iDelay = iValue + 1;
-      return true;
+        // Short delay
+        if (iIndex == this->m_commandDelayS) {
+            this->m_delay = iValue + 1;
+            return true;
 
-      // Long delay
-    } else if (iIndex == this->iCmdDelayL) {
-      this->iDelay = (iValue + 1) << 8;
-      return true;
+            // Long delay
+        } else if (iIndex == this->m_commandDelay) {
+            this->m_delay = (iValue + 1) << 8;
+            return true;
 
-      // Normal write
-    } else {
-      if (iIndex & 0x80) {
-        // High bit means use second chip in dual-OPL2 config
-        //FIXME sto this->opl->setchip(1);
-        xchip = 0x100;
-        iIndex &= 0x7F;
-      } else {
-        //FIXME sto this->opl->setchip(0);
-        xchip = 0;
-      }
-      if (iIndex > this->iConvTableLen) {
-        printf("DRO2: Error - index beyond end of codemap table!  Corrupted "
-               ".dro?\n");
-        return false; // EOF
-      }
-      int iReg = this->piConvTable[iIndex];
-      this->getOpl()->writeReg(xchip + iReg, iValue);
+            // Normal write
+        } else {
+            if (iIndex & 0x80) {
+                // High bit means use second chip in dual-OPL2 config
+                //FIXME sto this->opl->setchip(1);
+                m_chipSelector = 0x100;
+                iIndex &= 0x7F;
+            } else {
+                //FIXME sto this->opl->setchip(0);
+                m_chipSelector = 0;
+            }
+            if (iIndex > this->m_convTableLength) {
+                printf("DRO2: Error - index beyond end of codemap table!  Corrupted "
+                       ".dro?\n");
+                return false; // EOF
+            }
+            int iReg = this->m_convTable[iIndex];
+            this->getOpl()->writeReg(m_chipSelector + iReg, iValue);
+        }
+
     }
 
-  }
-
-  // This won't result in endless-play using Adplay, but IMHO that code belongs
-  // in Adplay itself, not here.
-  return this->iPos < this->iLength;
+    // This won't result in endless-play using Adplay, but IMHO that code belongs
+    // in Adplay itself, not here.
+    return this->m_pos < this->m_data.size();
 }
 
 void Cdro2Player::rewind(int) {
-  this->iDelay = 0;
-  this->iPos = 0;
+    this->m_delay = 0;
+    this->m_pos = 0;
 }
 
 size_t Cdro2Player::framesUntilUpdate() {
-  if (iDelay > 0)
-    return SampleRate * iDelay / 1000;
-  else
-    return SampleRate / 1000;
+    if (m_delay > 0)
+        return SampleRate * m_delay / 1000;
+    else
+        return SampleRate / 1000;
 }

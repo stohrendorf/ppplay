@@ -79,7 +79,7 @@ bool CxadbmfPlayer::xadplayer_load() {
   unsigned short ptr = 0;
   int i;
 
-  if (xad.fmt != BMF)
+  if (m_xadHeader.fmt != BMF)
     return false;
 
 #ifdef DEBUG
@@ -114,8 +114,8 @@ bool CxadbmfPlayer::xadplayer_load() {
     }
     ptr++;
   } else {
-    strncpy(bmf.title, xad.title, 36);
-    strncpy(bmf.author, xad.author, 36);
+    strncpy(bmf.title, m_xadHeader.title, 36);
+    strncpy(bmf.author, m_xadHeader.author, 36);
   }
 
   // speed

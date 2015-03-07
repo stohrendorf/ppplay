@@ -30,9 +30,8 @@ public:
   static CPlayer *factory();
 
   ChspLoader() : ChscPlayer() {}
-  ;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
 };
 
 #endif

@@ -29,7 +29,7 @@ public:
   CxsmPlayer();
   ~CxsmPlayer() = default;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   bool update();
   void rewind(int subsong);
   size_t framesUntilUpdate();
@@ -38,7 +38,7 @@ public:
 
 private:
   struct Row {
-    char data[9] = {0,0,0,0,0,0,0,0,0};
+    uint8_t data[9] = {0,0,0,0,0,0,0,0,0};
   };
 
   std::vector<Row> music{};

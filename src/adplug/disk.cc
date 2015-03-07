@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software Foundation,
- * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #include <iostream>
@@ -29,58 +29,55 @@
 
 #define BUFSIZE		512
 
-DiskWriter::DiskWriter(const char *filename, unsigned long nfreq)
-  : EmuPlayer(nfreq, BUFSIZE), f(0), samplesize(0)
+DiskWriter::DiskWriter(const char *filename, uint32_t nfreq)
+    : EmuPlayer(nfreq, BUFSIZE)
+    , m_file(filename, FileStream::Mode::Write)
+    , m_bytesWritten(0)
 {
-  if(!filename) {
-    message(MSG_ERROR, "no output filename specified");
-    exit(EXIT_FAILURE);
-  }
+    if(!m_file) {
+        message(MSG_ERROR, "cannot open file for output -- %s", filename);
+        exit(EXIT_FAILURE);
+    }
 
-  // If filename is '-', output to stdout
-  if(strcmp(filename, "-"))
-    f = new binofstream(filename);
-  else
-    f = new binowstream(&std::cout);	// not very good to mix cout with stdout
-
-  if(!f || f->error()) {
-    message(MSG_ERROR, "cannot open file for output -- %s", filename);
-    if(f) delete f;
-    exit(EXIT_FAILURE);
-  }
-
-  f->setFlag(binio::BigEndian, false);
-
-  // Write Microsoft RIFF WAVE header
-  f->writeString("RIFF", 4); f->writeInt(36, 4); f->writeString("WAVEfmt ", 8);
-  f->writeInt(16, 4); f->writeInt(1, 2); f->writeInt(2, 2);
-  f->writeInt(nfreq, 4); f->writeInt(nfreq * 4, 4);
-  f->writeInt(4, 2); f->writeInt(16, 2);
-  f->writeString("data", 4); f->writeInt(0, 4);
+    // Write Microsoft RIFF WAVE header
+    m_file.write("RIFF", 4);
+    uint32_t t32;
+    t32 = 36; t32 >> m_file;
+    m_file.write("WAVEfmt ", 8);
+    t32 = 16; t32 >> m_file;
+    uint16_t t16;
+    t16 = 1; t16 >> m_file;
+    t16 = 2; t16 >> m_file;
+    nfreq >> m_file;
+    nfreq *= 4;
+    nfreq >> m_file;
+    t16 = 4; t16 >> m_file;
+    t16 = 16; t16 >> m_file;
+    m_file.write("data", 4);
+    t32 = 0; t32 >> m_file;
 }
 
 DiskWriter::~DiskWriter()
 {
-  if(!f) return;
+    if(!m_file) return;
 
-  if(samplesize % 2) { // Wave data must end on an even byte boundary
-    f->writeInt(0, 1);
-    samplesize++;
-  }
+    if(m_bytesWritten % 2) { // Wave data must end on an even byte boundary
+        uint8_t tmp = 0;
+        tmp >> m_file;
+        m_bytesWritten++;
+    }
 
-  // Write file sizes
-  f->seek(40); f->writeInt(samplesize, 4);
-  samplesize += 36; // make absolute filesize (add header size)
-  f->seek(4); f->writeInt(samplesize, 4);
-
-  // end disk writing
-  delete f;
+    // Write file sizes
+    m_file.seek(40);
+    m_bytesWritten >> m_file;
+    m_bytesWritten += 36; // make absolute filesize (add header size)
+    m_file.seek(4);
+    m_bytesWritten >> m_file;
 }
 
 void DiskWriter::output(const std::vector<int16_t> &buf)
 {
-  for(int16_t sample : buf)
-      f->writeInt(sample, 2);
+    m_file.write(buf.data(), buf.size());
 
-  samplesize += buf.size()*2;
+    m_bytesWritten += buf.size()*2;
 }

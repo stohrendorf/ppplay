@@ -63,7 +63,7 @@ const unsigned char CxadhybridPlayer::hyb_default_instrument[11] = {
 CPlayer *CxadhybridPlayer::factory() { return new CxadhybridPlayer(); }
 
 bool CxadhybridPlayer::xadplayer_load() {
-  if (xad.fmt != HYBRID)
+  if (m_xadHeader.fmt != HYBRID)
     return false;
 
   // load instruments

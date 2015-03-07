@@ -20,95 +20,102 @@
 */
 
 #include <cstring>
+
+#include "stream/filestream.h"
+
 #include "mad.h"
 
 /* -------- Public Methods -------------------------------- */
 
 CPlayer *CmadLoader::factory() { return new CmadLoader(); }
 
-bool CmadLoader::load(const std::string &filename, const CFileProvider &fp) {
-  binistream *f = fp.open(filename);
-  if (!f)
-    return false;
-  const unsigned char conv_inst[10] = { 2, 1, 10, 9, 4, 3, 6, 5, 8, 7 };
-  unsigned int i, j, k, t = 0;
+bool CmadLoader::load(const std::string &filename) {
+    FileStream f(filename);
+    if (!f)
+        return false;
+    const unsigned char conv_inst[10] = { 2, 1, 10, 9, 4, 3, 6, 5, 8, 7 };
+    // 'MAD+' - signed ?
+    char id[4];
+    f.read(id, 4);
+    if (strncmp(id, "MAD+", 4)) {
+        return false;
+    }
 
-  // 'MAD+' - signed ?
-  char id[4];
-  f->readString(id, 4);
-  if (strncmp(id, "MAD+", 4)) {
-    fp.close(f);
-    return false;
-  }
+    // load instruments
+    for (int i = 0; i < 9; i++) {
+        f.read(instruments[i].name, 8);
+        f.read(instruments[i].data, 12);
+    }
 
-  // load instruments
-  for (i = 0; i < 9; i++) {
-    f->readString(instruments[i].name, 8);
-    for (j = 0; j < 12; j++)
-      instruments[i].data[j] = f->readInt(1);
-  }
+    f.seekrel(1);
 
-  f->ignore(1);
+    // data for Protracker
+    uint8_t tmp;
+    f >> tmp;
+    m_length = tmp;
+    f >> tmp;
+    numberOfPatterns = tmp;
+    f >> tmp;
+    timer = tmp;
 
-  // data for Protracker
-  m_length = f->readInt(1);
-  nop = f->readInt(1);
-  timer = f->readInt(1);
+    // init CmodPlayer
+    m_instruments.clear();
+    m_instruments.resize(9);
+    m_order.resize(m_length);
+    realloc_patterns(numberOfPatterns, 32, 9);
+    init_trackord();
 
-  // init CmodPlayer
-  m_instruments.clear();
-  m_instruments.resize(9);
-  m_order.resize(m_length);
-  realloc_patterns(nop, 32, 9);
-  init_trackord();
+    // load tracks
+    for (auto i = 0; i < numberOfPatterns; i++) {
+        for (auto k = 0; k < 32; k++) {
+            for (auto j = 0; j < 9; j++) {
+                auto t = i * 9 + j;
 
-  // load tracks
-  for (i = 0; i < nop; i++)
-    for (k = 0; k < 32; k++)
-      for (j = 0; j < 9; j++) {
-        t = i * 9 + j;
+                // read event
+                uint8_t event;
+                f >> event;
 
-        // read event
-        unsigned char event = f->readInt(1);
+                // convert event
+                if (event < 0x61)
+                    m_tracks.at(t,k).note = event;
+                if (event == 0xFF) // 0xFF: Release note
+                    m_tracks.at(t,k).command = 8;
+                if (event == 0xFE) // 0xFE: Pattern Break
+                    m_tracks.at(t,k).command = 13;
+            }
+        }
+    }
 
-        // convert event
-        if (event < 0x61)
-          m_tracks.at(t,k).note = event;
-        if (event == 0xFF) // 0xFF: Release note
-          m_tracks.at(t,k).command = 8;
-        if (event == 0xFE) // 0xFE: Pattern Break
-          m_tracks.at(t,k).command = 13;
-      }
+    // load order
+    for (auto i = 0; i < m_length; i++) {
+        uint8_t tmp;
+        f >> tmp;
+        m_order[i] = tmp - 1;
+    }
 
-  // load order
-  for (i = 0; i < m_length; i++)
-    m_order[i] = f->readInt(1) - 1;
+    // convert instruments
+    for (auto i = 0; i < 9; i++)
+        for (auto j = 0; j < 10; j++)
+            m_instruments[i].data[conv_inst[j]] = instruments[i].data[j];
 
-  fp.close(f);
+    // data for Protracker
+    m_restartpos = 0;
+    m_initspeed = 1;
 
-  // convert instruments
-  for (i = 0; i < 9; i++)
-    for (j = 0; j < 10; j++)
-      m_instruments[i].data[conv_inst[j]] = instruments[i].data[j];
-
-  // data for Protracker
-  m_restartpos = 0;
-  m_initspeed = 1;
-
-  rewind(0);
-  return true;
+    rewind(0);
+    return true;
 }
 
 void CmadLoader::rewind(int subsong) {
-  CmodPlayer::rewind(subsong);
+    CmodPlayer::rewind(subsong);
 
-  // default instruments
-  for (int i = 0; i < 9; i++) {
-    channel[i].inst = i;
+    // default instruments
+    for (int i = 0; i < 9; i++) {
+        channel[i].inst = i;
 
-    channel[i].vol1 = 63 - (m_instruments[i].data[10] & 63);
-    channel[i].vol2 = 63 - (m_instruments[i].data[9] & 63);
-  }
+        channel[i].vol1 = 63 - (m_instruments[i].data[10] & 63);
+        channel[i].vol2 = 63 - (m_instruments[i].data[9] & 63);
+    }
 }
 
 size_t CmadLoader::framesUntilUpdate() { return SampleRate / timer; }
@@ -116,7 +123,7 @@ size_t CmadLoader::framesUntilUpdate() { return SampleRate / timer; }
 std::string CmadLoader::gettype() { return std::string("Mlat Adlib Tracker"); }
 
 std::string CmadLoader::getinstrument(unsigned int n) {
-  return std::string(instruments[n].name, 8);
+    return std::string(instruments[n].name, 8);
 }
 
 unsigned int CmadLoader::getinstruments() { return 9; }

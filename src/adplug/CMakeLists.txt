@@ -10,7 +10,6 @@ add_executable(badplay
   cff.cpp
   cmf.cpp
   d00.cpp
-  database.cpp
   debug.c
   dfm.cpp
   disk.cc
@@ -20,7 +19,6 @@ add_executable(badplay
   dtm.cpp
   flash.cpp
   fmc.cpp
-  fprovide.cpp
   getopt.c
   getopt1.c
   hsc.cpp
@@ -57,5 +55,5 @@ add_executable(badplay
   mid/timbre.cpp
   mid/dualchips.cpp
 )
-target_link_libraries(badplay -lbinio ${SDL_LIBRARY} ppplay_core ppplay_opl)
+target_link_libraries(badplay ${SDL_LIBRARY} ppplay_core ppplay_opl)
 install(TARGETS badplay DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT application)

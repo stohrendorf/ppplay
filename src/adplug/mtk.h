@@ -28,7 +28,7 @@ public:
 
   CmtkLoader() : ChscPlayer() { m_mtkmode = 1; }
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
 
   std::string gettype() { return std::string("MPU-401 Trakker"); }
   ;

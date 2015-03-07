@@ -29,7 +29,7 @@ public:
 
   Csa2Loader() : CmodPlayer() {}
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
 
   std::string gettype();
   std::string gettitle();
@@ -44,7 +44,7 @@ public:
 private:
   struct sa2header {
     char sadt[4];
-    unsigned char version;
+    uint8_t version;
   } header;
 
   char instname[29][17];

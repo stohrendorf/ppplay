@@ -22,69 +22,64 @@
 #include "xad.h"
 #include "debug.h"
 
+#include "stream/filestream.h"
+
 /* -------- Public Methods -------------------------------- */
 
-bool CxadPlayer::load(const std::string &filename, const CFileProvider &fp) {
-  binistream *f = fp.open(filename);
-  if (!f)
-    return false;
-  bool ret = false;
+bool CxadPlayer::load(const std::string &filename) {
+    FileStream f(filename);
+    if (!f)
+        return false;
+    bool ret = false;
 
-  // load header
-  xad.id = f->readInt(4);
-  f->readString(xad.title, 36);
-  f->readString(xad.author, 36);
-  xad.fmt = static_cast<Format>(f->readInt(2));
-  xad.speed = f->readInt(1);
-  xad.reserved_a = f->readInt(1);
+    // load header
+    f >> m_xadHeader;
 
-  // 'XAD!' - signed ?
-  if (xad.id != 0x21444158) {
-    fp.close(f);
-    return false;
-  }
+    // 'XAD!' - signed ?
+    if (m_xadHeader.id != 0x21444158) {
+        return false;
+    }
 
-  tune.resize(fp.filesize(f) - 80);
-  f->readString(reinterpret_cast<char*>(tune.data()), tune.size());
-  fp.close(f);
+    tune.resize(f.size() - 80);
+    f.read(tune.data(), tune.size());
 
-  ret = xadplayer_load();
+    ret = xadplayer_load();
 
-  if (ret)
-    rewind(0);
+    if (ret)
+        rewind(0);
 
-  return ret;
+    return ret;
 }
 
 void CxadPlayer::rewind(int subsong) {
-  plr.speed = xad.speed;
-  plr.speed_counter = 1;
-  plr.playing = 1;
-  plr.looping = 0;
+    plr.speed = m_xadHeader.speed;
+    plr.speed_counter = 1;
+    plr.playing = 1;
+    plr.looping = 0;
 
-  // rewind()
-  xadplayer_rewind(subsong);
+    // rewind()
+    xadplayer_rewind(subsong);
 
 #ifdef DEBUG
-  AdPlug_LogWrite("-----------\n");
+    AdPlug_LogWrite("-----------\n");
 #endif
 }
 
 bool CxadPlayer::update() {
-  if (--plr.speed_counter)
-    goto update_end;
+    if (--plr.speed_counter)
+        goto update_end;
 
-  plr.speed_counter = plr.speed;
+    plr.speed_counter = plr.speed;
 
-  // update()
-  xadplayer_update();
+    // update()
+    xadplayer_update();
 
 update_end:
-  return (plr.playing && (!plr.looping));
+    return (plr.playing && (!plr.looping));
 }
 
 size_t CxadPlayer::framesUntilUpdate() {
-  return SampleRate / xadplayer_getrefresh();
+    return SampleRate / xadplayer_getrefresh();
 }
 
 std::string CxadPlayer::gettype() { return xadplayer_gettype(); }
@@ -94,7 +89,7 @@ std::string CxadPlayer::gettitle() { return xadplayer_gettitle(); }
 std::string CxadPlayer::getauthor() { return xadplayer_getauthor(); }
 
 std::string CxadPlayer::getinstrument(unsigned int i) {
-  return xadplayer_getinstrument(i);
+    return xadplayer_getinstrument(i);
 }
 
 unsigned int CxadPlayer::getinstruments() { return xadplayer_getinstruments(); }

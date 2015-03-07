@@ -30,6 +30,8 @@
 
 #include "player.h"
 
+class FileStream;
+
 class CrolPlayer : public CPlayer {
   DISABLE_COPY(CrolPlayer)
 public:
@@ -39,7 +41,7 @@ public:
 
   ~CrolPlayer() = default;
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   bool update();
   void rewind(int);           // rewinds to specified subsong
   size_t framesUntilUpdate(); // returns needed timer refresh rate
@@ -64,6 +66,7 @@ private:
     float basic_tempo = 0;
   };
 
+#pragma pack(push,1)
   struct STempoEvent {
     int16_t time;
     float multiplier;
@@ -89,21 +92,20 @@ private:
     int16_t time;
     float variation;
   };
+#pragma pack(pop)
 
   typedef std::vector<SNoteEvent> TNoteEvents;
   typedef std::vector<SInstrumentEvent> TInstrumentEvents;
   typedef std::vector<SVolumeEvent> TVolumeEvents;
   typedef std::vector<SPitchEvent> TPitchEvents;
 
-#define bit_pos(pos) (1 << pos)
-
   class CVoiceData {
   public:
     enum EEventStatus {
-      kES_NoteEnd = bit_pos(0),
-      kES_PitchEnd = bit_pos(1),
-      kES_InstrEnd = bit_pos(2),
-      kES_VolumeEnd = bit_pos(3),
+      kES_NoteEnd = 1<<0,
+      kES_PitchEnd = 1<<1,
+      kES_InstrEnd = 1<<2,
+      kES_VolumeEnd = 1<<3,
 
       kES_None = 0
     };
@@ -136,11 +138,13 @@ private:
     unsigned int next_pitch_event = 0;
   };
 
+#pragma pack(push,1)
   struct SInstrumentName {
     uint16_t index;
     char record_used;
     char name[9];
   };
+#pragma pack(pop)
 
   typedef std::vector<SInstrumentName> TInstrumentNames;
 
@@ -156,6 +160,7 @@ private:
     TInstrumentNames ins_name_list;
   };
 
+#pragma pack(push,1)
   struct SFMOperator {
     uint8_t key_scale_level;
     uint8_t freq_multiplier;
@@ -171,6 +176,7 @@ private:
     uint8_t envelope_scaling;
     uint8_t fm_type;
   };
+#pragma pack(pop)
 
   struct SOPL2Op {
     uint8_t ammulti;
@@ -193,21 +199,20 @@ private:
     SRolInstrument instrument;
   };
 
-  void load_tempo_events(binistream *f);
-  bool load_voice_data(binistream *f, std::string const &bnk_filename,
-                       const CFileProvider &fp);
-  void load_note_events(binistream *f, CVoiceData &voice);
-  void load_instrument_events(binistream *f, CVoiceData &voice,
-                              binistream *bnk_file,
+  void load_tempo_events(FileStream& f);
+  bool load_voice_data(FileStream& f, std::string const &bnk_filename);
+  void load_note_events(FileStream& f, CVoiceData &voice);
+  void load_instrument_events(FileStream& f, CVoiceData &voice,
+                              FileStream& bnk_file,
                               SBnkHeader const &bnk_header);
-  void load_volume_events(binistream *f, CVoiceData &voice);
-  void load_pitch_events(binistream *f, CVoiceData &voice);
+  void load_volume_events(FileStream& f, CVoiceData &voice);
+  void load_pitch_events(FileStream& f, CVoiceData &voice);
 
-  bool load_bnk_info(binistream *f, SBnkHeader &header);
-  int load_rol_instrument(binistream *f, SBnkHeader const &header,
+  bool load_bnk_info(FileStream& f, SBnkHeader &header);
+  int load_rol_instrument(FileStream& f, SBnkHeader const &header,
                           std::string &name);
-  void read_rol_instrument(binistream *f, SRolInstrument &ins);
-  void read_fm_operator(binistream *f, SOPL2Op &opl2_op);
+  void read_rol_instrument(FileStream& f, SRolInstrument &ins);
+  void read_fm_operator(FileStream& f, SOPL2Op &opl2_op);
   int get_ins_index(std::string const &name) const;
 
   void UpdateVoice(int const voice, CVoiceData &voiceData);
@@ -245,7 +250,7 @@ private:
 
   typedef std::vector<CVoiceData> TVoiceData;
 
-  std::unique_ptr<SRolHeader> rol_header = nullptr;
+  SRolHeader rol_header;
   std::vector<STempoEvent> mTempoEvents{};
   TVoiceData voice_data{};
   std::vector<SUsedList> ins_list{};

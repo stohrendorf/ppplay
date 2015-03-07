@@ -31,7 +31,7 @@ public:
 
   ChscPlayer() : CPlayer(), m_mtkmode(0) {}
 
-  bool load(const std::string &filename, const CFileProvider &fp);
+  bool load(const std::string &filename);
   bool update();
   void rewind(int);
   size_t framesUntilUpdate() override {
