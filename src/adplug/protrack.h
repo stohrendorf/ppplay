@@ -38,13 +38,12 @@ class CmodPlayer : public CPlayer {
     size_t framesUntilUpdate();
 
     unsigned int getpatterns() { return numberOfPatterns; }
-    unsigned int getpattern() { return m_order[ord]; }
+    unsigned int getpattern() { return m_order[m_currentOrder]; }
     unsigned int getorders() { return m_length; }
-    unsigned int getorder() { return ord; }
-    unsigned int getrow() { return rw; }
-    unsigned int getspeed() { return speed; }
+    unsigned int getorder() { return m_currentOrder; }
+    unsigned int getrow() { return m_currentRow; }
+    unsigned int getspeed() { return m_speed; }
 
-protected:
     enum Flags {
         Standard = 0,
         Decimal = 1 << 0,
@@ -60,15 +59,16 @@ protected:
         uint8_t data[11]{0}, arpstart = 0, arpspeed = 0, arppos = 0, arpspdcnt = 0, misc = 0;
         int8_t slide = 0;
     };
-    std::vector<Instrument> m_instruments{};
 
     struct Track {
         unsigned char note = 0, command = 0, inst = 0, param2 = 0, param1 = 0;
 
         Track() = default;
     };
-    Field<Track> m_tracks{};
 
+protected:
+    std::vector<Instrument> m_instruments{};
+    Field<Track> m_tracks{};
     std::vector<uint8_t> m_order{};
     uint8_t m_initspeed = 6;
     uint16_t m_tempo = 0, m_bpm = 0, numberOfPatterns = 0;
@@ -79,10 +79,9 @@ protected:
     boost::optional<std::array<uint8_t,256>> arpcmd{};
 
     struct Channel {
-        unsigned short freq = 0, nextfreq = 0;
-        unsigned char oct = 0, vol1 = 0, vol2 = 0, inst = 0, fx = 0, info1 = 0, info2 = 0, key = 0, nextoct = 0, note = 0,
-        portainfo = 0, vibinfo1 = 0, vibinfo2 = 0, arppos = 0, arpspdcnt = 0;
-        signed char trigger = 0;
+        uint16_t freq = 0, nextfreq = 0;
+        uint8_t oct = 0, vol1 = 0, vol2 = 0, inst = 0, fx = 0, info1 = 0, info2 = 0, key = 0, nextoct = 0, note = 0, portainfo = 0, vibinfo1 = 0, vibinfo2 = 0, arppos = 0, arpspdcnt = 0;
+        int8_t trigger = 0;
     };
     std::vector<Channel> channel{};
 
@@ -92,29 +91,31 @@ protected:
                           unsigned long chans);
 
 private:
-    static const unsigned char vibratotab[32];
+    uint8_t m_speed = 0;
+    uint8_t m_delay = 0;
+    bool m_songEnd = false;
+    uint8_t m_oplBdRegister = 0;
+    std::array<uint16_t,12> m_noteTable{{0,0,0,0,0,0,0,0,0,0,0,0}};
+    uint8_t m_currentRow = 0;
+    uint8_t m_currentOrder = 0;
 
-    unsigned char speed = 0, del = 0, songend = 0, regbd = 0;
-    std::array<uint16_t,12> notetable{{0,0,0,0,0,0,0,0,0,0,0,0}};
-    unsigned long rw = 0, ord = 0, nrows = 0, npats = 0;
+    void setVolume(uint8_t chan);
+    void setVolumeAlt(uint8_t chan);
+    void setFreq(uint8_t chan);
+    void playNote(uint8_t chan);
+    void setNote(uint8_t chan, int note);
+    void slideDown(uint8_t chan, int amount);
+    void slideUp(uint8_t chan, int amount);
+    void tonePortamento(uint8_t chan, unsigned char info);
+    void vibrato(uint8_t chan, uint8_t speed, uint8_t depth);
+    void volumeUp(uint8_t chan, int amount);
+    void volumeDown(uint8_t chan, int amount);
+    void volumeUpAlt(uint8_t chan, int amount);
+    void volumeDownAlt(uint8_t chan, int amount);
 
-    void setvolume(unsigned char chan);
-    void setvolume_alt(unsigned char chan);
-    void setfreq(unsigned char chan);
-    void playnote(unsigned char chan);
-    void setnote(unsigned char chan, int note);
-    void slide_down(unsigned char chan, int amount);
-    void slide_up(unsigned char chan, int amount);
-    void tone_portamento(unsigned char chan, unsigned char info);
-    void vibrato(unsigned char chan, unsigned char speed, unsigned char depth);
-    void vol_up(unsigned char chan, int amount);
-    void vol_down(unsigned char chan, int amount);
-    void vol_up_alt(unsigned char chan, int amount);
-    void vol_down_alt(unsigned char chan, int amount);
-
-    void dealloc_patterns();
-    bool resolve_order();
-    unsigned char set_opl_chip(unsigned char chan);
+    void deallocPatterns();
+    bool resolveOrder();
+    uint8_t setOplChip(uint8_t chan);
 };
 
 #endif

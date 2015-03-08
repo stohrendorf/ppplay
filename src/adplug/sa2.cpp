@@ -64,7 +64,7 @@ bool Csa2Loader::load(const std::string &filename) {
     if (strncmp(header.sadt, "SAdT", 4)) {
         return false;
     }
-    int notedis;
+    int notedis = 0;
     switch (header.version) {
     case 1:
         notedis = +0x18;
