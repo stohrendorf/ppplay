@@ -52,17 +52,18 @@ bool CdfmLoader::load(const std::string &filename) {
     for (auto i = 0; i < 32; i++)
         f.read(instname[i], 12);
     for (auto i = 0; i < 32; i++) {
-        f >> m_instruments[i].data[1];
-        f >> m_instruments[i].data[2];
-        f >> m_instruments[i].data[9];
-        f >> m_instruments[i].data[10];
-        f >> m_instruments[i].data[3];
-        f >> m_instruments[i].data[4];
-        f >> m_instruments[i].data[5];
-        f >> m_instruments[i].data[6];
-        f >> m_instruments[i].data[7];
-        f >> m_instruments[i].data[8];
-        f >> m_instruments[i].data[0];
+        CmodPlayer::Instrument& inst = instrument(i,true);
+        f >> inst.data[1];
+        f >> inst.data[2];
+        f >> inst.data[9];
+        f >> inst.data[10];
+        f >> inst.data[3];
+        f >> inst.data[4];
+        f >> inst.data[5];
+        f >> inst.data[6];
+        f >> inst.data[7];
+        f >> inst.data[8];
+        f >> inst.data[0];
     }
     f.read(m_order.data(), 128);
     int i;

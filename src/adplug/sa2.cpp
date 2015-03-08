@@ -96,8 +96,7 @@ bool Csa2Loader::load(const std::string &filename) {
         sat_type = HAS_ARPEGIO | HAS_ARPEGIOLIST | HAS_TRACKORDER;
         break;
     case 9:
-        sat_type =
-                HAS_ARPEGIO | HAS_ARPEGIOLIST | HAS_TRACKORDER | HAS_ACTIVECHANNELS;
+        sat_type = HAS_ARPEGIO | HAS_ARPEGIOLIST | HAS_TRACKORDER | HAS_ACTIVECHANNELS;
         break;
     default: /* unknown */
         return false;
@@ -107,24 +106,25 @@ bool Csa2Loader::load(const std::string &filename) {
     // instruments
     for (int i = 0; i < 31; i++) {
         InstrumentData insts;
+        CmodPlayer::Instrument& inst = instrument(i,true);
         if (sat_type & HAS_ARPEGIO) {
             f >> insts;
 
-            m_instruments[i].arpstart = insts.arpstart;
-            m_instruments[i].arpspeed = insts.arpspeed;
-            m_instruments[i].arppos = insts.arppos;
-            m_instruments[i].arpspdcnt = insts.arpspdcnt;
+            inst.arpstart = insts.arpstart;
+            inst.arpspeed = insts.arpspeed;
+            inst.arppos = insts.arppos;
+            inst.arpspdcnt = insts.arpspdcnt;
         }
         else {
             f.read(insts.data, 11);
-            m_instruments[i].arpstart = 0;
-            m_instruments[i].arpspeed = 0;
-            m_instruments[i].arppos = 0;
-            m_instruments[i].arpspdcnt = 0;
+            inst.arpstart = 0;
+            inst.arpspeed = 0;
+            inst.arppos = 0;
+            inst.arpspdcnt = 0;
         }
-        std::copy_n(insts.data, 11, m_instruments[i].data);
-        m_instruments[i].misc = 0;
-        m_instruments[i].slide = 0;
+        std::copy_n(insts.data, 11, inst.data);
+        inst.misc = 0;
+        inst.slide = 0;
     }
 
     // instrument names

@@ -59,8 +59,6 @@ bool CmadLoader::load(const std::string &filename) {
     timer = tmp;
 
     // init CmodPlayer
-    m_instruments.clear();
-    m_instruments.resize(9);
     m_order.resize(m_length);
     realloc_patterns(numberOfPatterns, 32, 9);
     init_trackord();
@@ -96,7 +94,7 @@ bool CmadLoader::load(const std::string &filename) {
     // convert instruments
     for (auto i = 0; i < 9; i++)
         for (auto j = 0; j < 10; j++)
-            m_instruments[i].data[conv_inst[j]] = instruments[i].data[j];
+            instrument(i,true).data[conv_inst[j]] = instruments[i].data[j];
 
     // data for Protracker
     m_restartpos = 0;
@@ -113,8 +111,9 @@ void CmadLoader::rewind(int subsong) {
     for (int i = 0; i < 9; i++) {
         channel[i].inst = i;
 
-        channel[i].vol1 = 63 - (m_instruments[i].data[10] & 63);
-        channel[i].vol2 = 63 - (m_instruments[i].data[9] & 63);
+        const CmodPlayer::Instrument& inst = instrument(i);
+        channel[i].vol1 = 63 - (inst.data[10] & 63);
+        channel[i].vol2 = 63 - (inst.data[9] & 63);
     }
 }
 

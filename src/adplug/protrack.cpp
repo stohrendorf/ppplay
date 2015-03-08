@@ -55,7 +55,7 @@ CmodPlayer::CmodPlayer() {
 }
 
 bool CmodPlayer::update() {
-    unsigned char pattbreak = 0;
+    bool pattbreak = false;
 
     if (!m_speed) // song full stop
         return !m_songEnd;
@@ -316,7 +316,7 @@ bool CmodPlayer::update() {
             break;
 
         case 11: // position jump
-            pattbreak = 1;
+            pattbreak = true;
             m_currentRow = 0;
             if (info < m_currentOrder)
                 m_songEnd = true;
@@ -335,7 +335,7 @@ bool CmodPlayer::update() {
 
         case 13: // pattern break
             if (!pattbreak) {
-                pattbreak = 1;
+                pattbreak = true;
                 m_currentRow = info;
                 m_currentOrder++;
             }

@@ -62,17 +62,18 @@ bool CradLoader::load(const std::string &filename) {
     uint8_t buf;
     while(f>>buf && buf) {
         buf--;
-        f >> m_instruments[buf].data[2];
-        f >> m_instruments[buf].data[1];
-        f >> m_instruments[buf].data[10];
-        f >> m_instruments[buf].data[9];
-        f >> m_instruments[buf].data[4];
-        f >> m_instruments[buf].data[3];
-        f >> m_instruments[buf].data[6];
-        f >> m_instruments[buf].data[5];
-        f >> m_instruments[buf].data[0];
-        f >> m_instruments[buf].data[8];
-        f >> m_instruments[buf].data[7];
+        CmodPlayer::Instrument& inst = instrument(buf,true);
+        f >> inst.data[2];
+        f >> inst.data[1];
+        f >> inst.data[10];
+        f >> inst.data[9];
+        f >> inst.data[4];
+        f >> inst.data[3];
+        f >> inst.data[6];
+        f >> inst.data[5];
+        f >> inst.data[0];
+        f >> inst.data[8];
+        f >> inst.data[7];
     }
     {
         uint8_t length;

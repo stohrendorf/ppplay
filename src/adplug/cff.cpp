@@ -45,8 +45,6 @@ bool CcffLoader::load(const std::string &filename) {
                                                 0x1E5, 0x202, 0x220, 0x241, 0x263,
                                                 0x287, 0x2AE };
 
-    int i, j, k, t = 0;
-
     // '<CUD-FM-File>' - signed ?
     f.read(&header);
     if (memcmp(header.id, "<CUD-FM-File>"
@@ -78,18 +76,16 @@ bool CcffLoader::load(const std::string &filename) {
     }
 
     // init CmodPlayer
-    m_instruments.clear();
-    m_instruments.resize(47);
     realloc_patterns(36, 64, 9);
     init_notetable(conv_note);
     init_trackord();
 
     // load instruments
-    for (i = 0; i < 47; i++) {
+    for (int i = 0; i < 47; i++) {
         memcpy(&instruments[i], &module[i * 32], sizeof(cff_instrument));
 
-        for (j = 0; j < 11; j++)
-            m_instruments[i].data[conv_inst[j]] = instruments[i].data[j];
+        for (int j = 0; j < 11; j++)
+            instrument(i,true).data[conv_inst[j]] = instruments[i].data[j];
 
         instruments[i].name[20] = 0;
     }
@@ -106,15 +102,15 @@ bool CcffLoader::load(const std::string &filename) {
     std::copy_n(module.data()+0x628, 64, std::back_inserter(m_order));
 
     // load tracks
-    for (i = 0; i < numberOfPatterns; i++) {
+    int t = 0;
+    for (int i = 0; i < numberOfPatterns; i++) {
         unsigned char old_event_byte2[9];
 
         memset(old_event_byte2, 0, 9);
 
-        for (j = 0; j < 9; j++) {
-            for (k = 0; k < 64; k++) {
-                cff_event *event =
-                        (cff_event *)&module[0x669 + ((i * 64 + k) * 9 + j) * 3];
+        for (int j = 0; j < 9; j++) {
+            for (int k = 0; k < 64; k++) {
+                cff_event *event = (cff_event *)&module[0x669 + ((i * 64 + k) * 9 + j) * 3];
 
                 // convert note
                 if (event->byte0 == 0x6D)
@@ -222,7 +218,7 @@ bool CcffLoader::load(const std::string &filename) {
     m_restartpos = 0;
 
     // order length
-    for (i = 0; i < 64; i++) {
+    for (int i = 0; i < 64; i++) {
         if (m_order[i] >= 0x80) {
             m_length = i;
             break;
@@ -244,8 +240,9 @@ void CcffLoader::rewind(int subsong) {
     for (int i = 0; i < 9; i++) {
         channel[i].inst = i;
 
-        channel[i].vol1 = 63 - (m_instruments[i].data[10] & 63);
-        channel[i].vol2 = 63 - (m_instruments[i].data[9] & 63);
+        const CmodPlayer::Instrument& inst = instrument(i);
+        channel[i].vol1 = 63 - (inst.data[10] & 63);
+        channel[i].vol2 = 63 - (inst.data[9] & 63);
     }
 }
 

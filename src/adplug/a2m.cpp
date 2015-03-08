@@ -108,30 +108,31 @@ bool Ca2mLoader::load(const std::string &filename) {
     }
 
     for (int i = 0; i < 250; i++) { // instruments
-        m_instruments[i].data[0] = m_org[m_orgPos + 10];
-        m_instruments[i].data[1] = m_org[m_orgPos + 0];
-        m_instruments[i].data[2] = m_org[m_orgPos + 1];
-        m_instruments[i].data[3] = m_org[m_orgPos + 4];
-        m_instruments[i].data[4] = m_org[m_orgPos + 5];
-        m_instruments[i].data[5] = m_org[m_orgPos + 6];
-        m_instruments[i].data[6] = m_org[m_orgPos + 7];
-        m_instruments[i].data[7] = m_org[m_orgPos + 8];
-        m_instruments[i].data[8] = m_org[m_orgPos + 9];
-        m_instruments[i].data[9] = m_org[m_orgPos + 2];
-        m_instruments[i].data[10] = m_org[m_orgPos + 3];
+        CmodPlayer::Instrument& inst = instrument(i);
+        inst.data[0] = m_org[m_orgPos + 10];
+        inst.data[1] = m_org[m_orgPos + 0];
+        inst.data[2] = m_org[m_orgPos + 1];
+        inst.data[3] = m_org[m_orgPos + 4];
+        inst.data[4] = m_org[m_orgPos + 5];
+        inst.data[5] = m_org[m_orgPos + 6];
+        inst.data[6] = m_org[m_orgPos + 7];
+        inst.data[7] = m_org[m_orgPos + 8];
+        inst.data[8] = m_org[m_orgPos + 9];
+        inst.data[9] = m_org[m_orgPos + 2];
+        inst.data[10] = m_org[m_orgPos + 3];
 
         if (version < 5)
-            m_instruments[i].misc = m_org[m_orgPos + 11];
+            inst.misc = m_org[m_orgPos + 11];
         else { // version >= 5 -> OPL3 format
             int pan = m_org[m_orgPos + 11];
 
             if (pan)
-                m_instruments[i].data[0] |= (pan & 3) << 4; // set pan
+                inst.data[0] |= (pan & 3) << 4; // set pan
             else
-                m_instruments[i].data[0] |= 48; // enable both speakers
+                inst.data[0] |= 48; // enable both speakers
         }
 
-        m_instruments[i].slide = m_org[m_orgPos + 12];
+        inst.slide = m_org[m_orgPos + 12];
         m_orgPos += 13;
     }
 

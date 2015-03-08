@@ -66,8 +66,12 @@ class CmodPlayer : public CPlayer {
         Track() = default;
     };
 
+    const Instrument& instrument(size_t idx) const
+    {
+        return m_instruments[idx];
+    }
+
 protected:
-    std::vector<Instrument> m_instruments{};
     Field<Track> m_tracks{};
     std::vector<uint8_t> m_order{};
     uint8_t m_initspeed = 6;
@@ -87,8 +91,14 @@ protected:
 
     void init_trackord();
     void init_notetable(const std::array<uint16_t,12> &newnotetable);
-    void realloc_patterns(unsigned long pats, unsigned long rows,
-                          unsigned long chans);
+    void realloc_patterns(unsigned long pats, unsigned long rows, unsigned long chans);
+
+    Instrument& instrument(size_t idx, bool resizeIfNeeded = false)
+    {
+        if(resizeIfNeeded && idx >= m_instruments.size())
+            m_instruments.resize(idx+1);
+        return m_instruments[idx];
+    }
 
 private:
     uint8_t m_speed = 0;
@@ -98,6 +108,7 @@ private:
     std::array<uint16_t,12> m_noteTable{{0,0,0,0,0,0,0,0,0,0,0,0}};
     uint8_t m_currentRow = 0;
     uint8_t m_currentOrder = 0;
+    std::vector<Instrument> m_instruments{};
 
     void setVolume(uint8_t chan);
     void setVolumeAlt(uint8_t chan);

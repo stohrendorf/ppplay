@@ -85,8 +85,6 @@ bool CdtmLoader::load(const std::string &filename) {
     }
 
     // init CmodPlayer
-    m_instruments.clear();
-    m_instruments.resize(header.numinst);
     m_order.resize(100);
     realloc_patterns(header.numpat, 64, 9);
     init_notetable(conv_note);
@@ -105,7 +103,7 @@ bool CdtmLoader::load(const std::string &filename) {
         f.read(instruments[i].data, 12);
 
         for (int j = 0; j < 11; j++)
-            m_instruments[i].data[conv_inst[j]] = instruments[i].data[j];
+            instrument(i,true).data[conv_inst[j]] = instruments[i].data[j];
     }
 
     // load order
@@ -221,8 +219,9 @@ void CdtmLoader::rewind(int subsong) {
     for (int i = 0; i < 9; i++) {
         channel[i].inst = i;
 
-        channel[i].vol1 = 63 - (m_instruments[i].data[10] & 63);
-        channel[i].vol2 = 63 - (m_instruments[i].data[9] & 63);
+        const CmodPlayer::Instrument& inst = instrument(i);
+        channel[i].vol1 = 63 - (inst.data[10] & 63);
+        channel[i].vol2 = 63 - (inst.data[9] & 63);
     }
 }
 

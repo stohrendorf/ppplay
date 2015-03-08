@@ -58,14 +58,12 @@ bool CamdLoader::load(const std::string &filename) {
     }
 
     // load section
-    m_instruments.clear();
-    m_instruments.resize(26);
     f.seek(0);
     f.read(songname, sizeof(songname)/sizeof(songname[0]));
     f.read(author, sizeof(author)/sizeof(author[0]));
     for (int i = 0; i < 26; i++) {
         f.read(m_instrumentNames[i], 23);
-        f.read(m_instruments[i].data, 11);
+        f.read(instrument(i,true).data, 11);
     }
     uint8_t tmp8;
     f.read(&tmp8);
@@ -152,23 +150,24 @@ bool CamdLoader::load(const std::string &filename) {
     m_restartpos = 0;
     m_flags = Decimal;
     for (int i = 0; i < 26; i++) { // convert instruments
-        auto buf = m_instruments[i].data[0];
-        auto buf2 = m_instruments[i].data[1];
-        m_instruments[i].data[0] = m_instruments[i].data[10];
-        m_instruments[i].data[1] = buf;
-        buf = m_instruments[i].data[2];
-        m_instruments[i].data[2] = m_instruments[i].data[5];
-        auto buf3 = m_instruments[i].data[3];
-        m_instruments[i].data[3] = buf;
-        buf = m_instruments[i].data[4];
-        m_instruments[i].data[4] = m_instruments[i].data[7];
-        m_instruments[i].data[5] = buf3;
-        buf3 = m_instruments[i].data[6];
-        m_instruments[i].data[6] = m_instruments[i].data[8];
-        m_instruments[i].data[7] = buf;
-        m_instruments[i].data[8] = m_instruments[i].data[9];
-        m_instruments[i].data[9] = buf2;
-        m_instruments[i].data[10] = buf3;
+        CmodPlayer::Instrument& inst = instrument(i);
+        auto buf = inst.data[0];
+        auto buf2 = inst.data[1];
+        inst.data[0] = inst.data[10];
+        inst.data[1] = buf;
+        buf = inst.data[2];
+        inst.data[2] = inst.data[5];
+        auto buf3 = inst.data[3];
+        inst.data[3] = buf;
+        buf = inst.data[4];
+        inst.data[4] = inst.data[7];
+        inst.data[5] = buf3;
+        buf3 = inst.data[6];
+        inst.data[6] = inst.data[8];
+        inst.data[7] = buf;
+        inst.data[8] = inst.data[9];
+        inst.data[9] = buf2;
+        inst.data[10] = buf3;
         for (int j = 0; j < 23; j++) // convert names
             if (m_instrumentNames[i][j] == '\xff')
                 m_instrumentNames[i][j] = '\x20';
