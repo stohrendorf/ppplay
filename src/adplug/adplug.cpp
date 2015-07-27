@@ -116,23 +116,22 @@ const CPlayerDesc CAdPlug::allplayers[] = {
     CPlayerDesc(CmscPlayer::factory, "Adlib MSC Player", {".msc"}),
     CPlayerDesc(CrixPlayer::factory, "Softstar RIX OPL Music", {".rix"}),
     CPlayerDesc(CadlPlayer::factory, "Westwood ADL", {".adl"}),
-    CPlayerDesc(CjbmPlayer::factory, "JBM Adlib Music", {".jbm"}), CPlayerDesc()
+    CPlayerDesc(CjbmPlayer::factory, "JBM Adlib Music", {".jbm"}),
+    CPlayerDesc()
 };
 
 const CPlayers &CAdPlug::init_players(const CPlayerDesc pd[]) {
     static CPlayers initplayers;
-    unsigned int i;
 
-    for (i = 0; pd[i].factory; i++)
-        initplayers.push_back(&pd[i]);
+    for (size_t i = 0; pd[i].factory; i++)
+        initplayers.addPlayerDescription(&pd[i]);
 
     return initplayers;
 }
 
-const CPlayers CAdPlug::players = CAdPlug::init_players(CAdPlug::allplayers);
+const CPlayers CAdPlug::s_players = CAdPlug::init_players(CAdPlug::allplayers);
 
-std::shared_ptr<CPlayer> CAdPlug::factory(const std::string &fn,
-                                          const CPlayers &pl) {
+std::shared_ptr<CPlayer> CAdPlug::factory(const std::string &fn, const CPlayers &pl) {
     AdPlug_LogWrite("*** CAdPlug::factory(\"%s\",opl,fp) ***\n", fn.c_str());
 
     // Try a direct hit by file extension
@@ -172,6 +171,5 @@ std::string CAdPlug::get_version() { return "0.1"; }
 
 void CAdPlug::debug_output(const std::string &filename) {
     AdPlug_LogFile(filename.c_str());
-    AdPlug_LogWrite("CAdPlug::debug_output(\"%s\"): Redirected.\n",
-                    filename.c_str());
+    AdPlug_LogWrite("CAdPlug::debug_output(\"%s\"): Redirected.\n", filename.c_str());
 }

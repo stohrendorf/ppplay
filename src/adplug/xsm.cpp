@@ -25,8 +25,6 @@
 
 #include "xsm.h"
 
-CxsmPlayer::CxsmPlayer() : CPlayer(), music(0) {}
-
 bool CxsmPlayer::load(const std::string &filename) {
     FileStream f(filename);
     if (!f)
@@ -59,11 +57,11 @@ bool CxsmPlayer::load(const std::string &filename) {
     }
 
     // read song data
-    music.clear();
-    music.resize(songlen);
+    m_music.clear();
+    m_music.resize(songlen);
     for (int i = 0; i < 9; i++) {
         for (int j = 0; j < songlen; j++) {
-            f >> music[j].data[i];
+            f >> m_music[j].data[i];
         }
     }
 
@@ -75,18 +73,18 @@ bool CxsmPlayer::load(const std::string &filename) {
 bool CxsmPlayer::update() {
     int c;
 
-    if (m_currentRow >= music.size()) {
+    if (m_currentRow >= m_music.size()) {
         m_songEnd = true;
         m_currentRow = m_lastRow = 0;
     }
 
     for (c = 0; c < 9; c++)
-        if (music[m_currentRow].data[c] != music[m_lastRow].data[c])
+        if (m_music[m_currentRow].data[c] != m_music[m_lastRow].data[c])
             getOpl()->writeReg(0xb0 + c, 0);
 
     for (c = 0; c < 9; c++) {
-        if (music[m_currentRow].data[c])
-            playNote(c, music[m_currentRow].data[c] % 12, music[m_currentRow].data[c] / 12);
+        if (m_music[m_currentRow].data[c])
+            playNote(c, m_music[m_currentRow].data[c] % 12, m_music[m_currentRow].data[c] / 12);
         else
             playNote(c, 0, 0);
     }
@@ -101,7 +99,7 @@ void CxsmPlayer::rewind(int) {
     m_songEnd = false;
 }
 
-size_t CxsmPlayer::framesUntilUpdate() { return SampleRate / 5; }
+size_t CxsmPlayer::framesUntilUpdate() const { return SampleRate / 5; }
 
 void CxsmPlayer::playNote(int c, int note, int octv) {
     int freq = s_noteTable[note];

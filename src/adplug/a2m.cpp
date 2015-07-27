@@ -48,14 +48,81 @@ bool Ca2mLoader::load(const std::string &filename) {
     FileStream f(filename);
     if(!f)
         return false;
-    const unsigned char convfx[16] = { 0, 1, 2, 23, 24, 3, 5, 4, 6, 9, 17, 13, 11,
-                                       19, 7, 14 };
-    const unsigned char convinf1[16] = { 0, 1, 2, 6, 7, 8, 9, 4, 5, 3, 10, 11, 12,
-                                         13, 14, 15 };
-    const unsigned char newconvfx[] = { 0, 1, 2, 3, 4, 5, 6, 23, 24, 21, 10, 11,
-                                        17, 13, 7, 19, 255, 255, 22, 25, 255, 15,
-                                        255, 255, 255, 255, 255, 255, 255, 255,
-                                        255, 255, 255, 255, 255, 14, 255 };
+    const Command convfx[16] = {
+        Command::None,
+        Command::SlideUp,
+        Command::SlideDown,
+        Command::FineSlideUp,
+        Command::FineSlideDown,
+        Command::Porta,
+        Command::PortaVolSlide,
+        Command::Vibrato,
+        Command::VibVolSlide,
+        Command::SetVolume,
+        Command::SetFineVolume2,
+        Command::PatternBreak,
+        Command::OrderJump,
+        Command::RADSpeed,
+        Command::SetTempo,
+        Command::Special
+    };
+    const Command convinf1[16] = {
+        Command::SFXTremolo,
+        Command::SFXVibrato,
+        Command::SFXWaveForm,
+        Command::SFXSlideUp,
+        Command::SFXSlideDown,
+        Command::SFXVolumeUp,
+        Command::SFXVolumeDown,
+        Command::SFXFineVolumeUp,
+        Command::SFXFineVolumeDown,
+        Command::SFXRetrigger,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::SFXKeyOff
+    };
+    const Command newconvfx[] = {
+        Command::None,
+        Command::SlideUp,
+        Command::SlideDown,
+        Command::Porta,
+        Command::Vibrato,
+        Command::PortaVolSlide,
+        Command::VibVolSlide,
+        Command::FineSlideUp,
+        Command::FineSlideDown,
+        Command::ModulatorVolume,
+        Command::SA2VolSlide,
+        Command::OrderJump,
+        Command::SetFineVolume2,
+        Command::PatternBreak,
+        Command::SetTempo,
+        Command::RADSpeed,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::CarrierVolume,
+        Command::WaveForm,
+        Command::Sentinel,
+        Command::SA2Speed,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Special,
+        Command::Sentinel
+    };
 
     // read header
     char id[10];
@@ -72,9 +139,7 @@ bool Ca2mLoader::load(const std::string &filename) {
     }
 
     // load, depack & convert section
-    numberOfPatterns = numpats;
-    m_length = 128;
-    m_restartpos = 0;
+    //m_maxUsedPattern = numpats;
     uint16_t len[9];
     int t = 0;
     if (version < 5) {
@@ -108,7 +173,7 @@ bool Ca2mLoader::load(const std::string &filename) {
     }
 
     for (int i = 0; i < 250; i++) { // instruments
-        CmodPlayer::Instrument& inst = instrument(i);
+        CmodPlayer::Instrument& inst = addInstrument();
         inst.data[0] = m_org[m_orgPos + 10];
         inst.data[1] = m_org[m_orgPos + 0];
         inst.data[2] = m_org[m_orgPos + 1];
@@ -136,11 +201,11 @@ bool Ca2mLoader::load(const std::string &filename) {
         m_orgPos += 13;
     }
 
-    m_order.clear();
-    std::copy_n(m_org.begin()+m_orgPos, 128, std::back_inserter(m_order));
-    m_orgPos += 128;
-    m_bpm = m_org[m_orgPos++];
-    m_initspeed = m_org[m_orgPos++];
+    for(int i=0; i<128; ++i)
+        addOrder(m_org[m_orgPos++]);
+    setRestartOrder(0);
+    setInitialTempo(m_org[m_orgPos++]);
+    setInitialSpeed(m_org[m_orgPos++]);
     uint8_t flags = 0;
     if (version >= 5)
         flags = m_org[m_orgPos];
@@ -171,7 +236,8 @@ bool Ca2mLoader::load(const std::string &filename) {
             secPos += len[3] / 2;
             if (numpats > 48)
                 sixdepak(&m_secData[secPos], &m_org[m_orgPos], len[4]);
-        } else {
+        }
+        else {
             if (numpats > 8)
                 m_orgPos += sixdepak(&m_secData[secPos], &m_org[m_orgPos], len[2]);
             secPos += len[2] / 2;
@@ -206,40 +272,39 @@ bool Ca2mLoader::load(const std::string &filename) {
         for (int i = 0; i < numpats; i++) {
             for (int j = 0; j < 64; j++) {
                 for (int k = 0; k < 9; k++) {
-                    struct Track *track = &m_tracks.at(i * 9 + k, j);
+                    PatternCell& cell = patternCell(i * 9 + k, j);
                     unsigned char *o = &m_org[i * 64 * t * 4 + j * t * 4 + k * 4];
 
-                    track->note = o[0] == 255 ? 127 : o[0];
-                    track->inst = o[1];
-                    track->command = convfx[o[2]];
-                    track->param2 = o[3] & 0x0f;
-                    if (track->command != 14)
-                        track->param1 = o[3] >> 4;
+                    cell.note = o[0] == 255 ? 127 : o[0];
+                    cell.instrument = o[1];
+                    cell.command = convfx[o[2]];
+                    cell.loNybble = o[3] & 0x0f;
+                    if (cell.command != Command::Special) {
+                        cell.hiNybble = o[3] >> 4;
+                    }
                     else {
-                        track->param1 = convinf1[o[3] >> 4];
-                        if (track->param1 == 15 && !track->param2) { // convert key-off
-                            track->command = 8;
-                            track->param1 = 0;
-                            track->param2 = 0;
+                        cell.command = convinf1[o[3] >> 4];
+                        if (cell.command == Command::SFXKeyOff && !cell.loNybble) { // convert key-off
+                            cell.command = Command::NoteOff;
+                            cell.hiNybble = 0;
+                            cell.loNybble = 0;
                         }
                     }
-                    if (track->command == 14) {
-                        switch (track->param1) {
-                        case 2: // convert define waveform
-                            track->command = 25;
-                            track->param1 = track->param2;
-                            track->param2 = 0xf;
-                            break;
-                        case 8: // convert volume slide up
-                            track->command = 26;
-                            track->param1 = track->param2;
-                            track->param2 = 0;
-                            break;
-                        case 9: // convert volume slide down
-                            track->command = 26;
-                            track->param1 = 0;
-                            break;
-                        }
+                    switch (cell.command) {
+                    case Command::SFXWaveForm: // convert define waveform
+                        cell.command = Command::WaveForm;
+                        cell.hiNybble = cell.loNybble;
+                        cell.loNybble = 0xf;
+                        break;
+                    case Command::SFXVolumeUp: // convert volume slide up
+                        cell.command = Command::VolSlide;
+                        cell.hiNybble = cell.loNybble;
+                        cell.loNybble = 0;
+                        break;
+                    case Command::SFXVolumeDown: // convert volume slide down
+                        cell.command = Command::VolSlide;
+                        cell.hiNybble = 0;
+                        break;
                     }
                 }
             }
@@ -251,27 +316,27 @@ bool Ca2mLoader::load(const std::string &filename) {
         for (int i = 0; i < numpats; i++) {
             for (int j = 0; j < 18; j++) {
                 for (int k = 0; k < 64; k++) {
-                    struct Track *track = &m_tracks.at(i * 18 + j, k);
+                    PatternCell& cell = patternCell(i * 18 + j, k);
                     unsigned char *o = &m_org[i * 64 * t * 4 + j * 64 * 4 + k * 4];
 
-                    track->note = o[0] == 255 ? 127 : o[0];
-                    track->inst = o[1];
-                    track->command = newconvfx[o[2]];
-                    track->param1 = o[3] >> 4;
-                    track->param2 = o[3] & 0x0f;
+                    cell.note = o[0] == 255 ? 127 : o[0];
+                    cell.instrument = o[1];
+                    cell.command = newconvfx[o[2]];
+                    cell.hiNybble = o[3] >> 4;
+                    cell.loNybble = o[3] & 0x0f;
 
                     // Convert '&' command
                     if (o[2] == 36)
-                        switch (track->param1) {
+                        switch (cell.hiNybble) {
                         case 0: // pattern delay (frames)
-                            track->command = 29;
-                            track->param1 = 0;
+                            cell.command = Command::PatternDelay;
+                            cell.hiNybble = 0;
                             // param2 already set correctly
                             break;
 
                         case 1: // pattern delay (rows)
-                            track->command = 14;
-                            track->param1 = 8;
+                            cell.command = Command::SFXPatternDelay;
+                            cell.hiNybble = 0;
                             // param2 already set correctly
                             break;
                         }
@@ -289,20 +354,20 @@ bool Ca2mLoader::load(const std::string &filename) {
 
     // Process flags
     if (version >= 5) {
-        CmodPlayer::m_flags |= Opl3; // All versions >= 5 are OPL3
+        setOpl3Mode(); // All versions >= 5 are OPL3
         if (flags & 8)
-            CmodPlayer::m_flags |= Tremolo; // Tremolo depth
+            setTremolo(); // Tremolo depth
         if (flags & 16)
-            CmodPlayer::m_flags |= Vibrato; // Vibrato depth
+            setVibrato(); // Vibrato depth
     }
 
     rewind(0);
     return true;
 }
 
-size_t Ca2mLoader::framesUntilUpdate() {
-    if (m_tempo != 18)
-        return SampleRate / m_tempo;
+size_t Ca2mLoader::framesUntilUpdate() const {
+    if (currentTempo() != 18)
+        return SampleRate / currentTempo();
     else
         return SampleRate / 18.2;
 }

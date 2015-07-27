@@ -36,16 +36,30 @@
 #include "dmo.h"
 #include "debug.h"
 
-#define LOWORD(l) ((l) & 0xffff)
-#define HIWORD(l) ((l) >> 16)
-#define LOBYTE(w) ((w) & 0xff)
-#define HIBYTE(w) ((w) >> 8)
-
-#define ARRAY_AS_DWORD(a, i)                                                   \
-    ((a[i + 3] << 24) + (a[i + 2] << 16) + (a[i + 1] << 8) + a[i])
-#define ARRAY_AS_WORD(a, i) ((a[i + 1] << 8) + a[i])
-
-#define CHARP_AS_WORD(p) (((*(p + 1)) << 8) + (*p))
+namespace
+{
+constexpr inline uint16_t LOWORD(uint32_t value) {
+    return value&0xffff;
+}
+constexpr inline uint16_t HIWORD(uint32_t value) {
+    return value>>16;
+}
+constexpr inline uint8_t LOBYTE(uint16_t value) {
+    return value&0xff;
+}
+constexpr inline uint8_t HIBYTE(uint16_t value) {
+    return value>>8;
+}
+constexpr inline uint32_t ARRAY_AS_DWORD(const uint8_t* data, size_t i) {
+    return (data[i + 3] << 24) + (data[i + 2] << 16) + (data[i + 1] << 8) + data[i];
+}
+constexpr inline uint16_t ARRAY_AS_WORD(const uint8_t* data, size_t i) {
+    return (data[i + 1] << 8) + data[i];
+}
+constexpr inline uint16_t CHARP_AS_WORD(const uint8_t* data) {
+    return ARRAY_AS_WORD(data, 0);
+}
+}
 
 /* -------- Public Methods -------------------------------- */
 
@@ -74,7 +88,7 @@ bool CdmoLoader::load(const std::string &filename) {
     // decrypt
     unpacker.decrypt(packed_module.data(), packed_module.size());
 
-    const auto unpacked_length = 0x2000 * ARRAY_AS_WORD(packed_module, 12);
+    const auto unpacked_length = 0x2000 * ARRAY_AS_WORD(packed_module.data(), 12);
     std::vector<uint8_t> module(unpacked_length);
 
     // unpack
@@ -94,65 +108,72 @@ bool CdmoLoader::load(const std::string &filename) {
     uf.write(module.data(), module.size());
     uf.seek(0);
 
-    memset(&m_header, 0, sizeof(S3mHeader));
+    S3mHeader header;
 
     uf.seekrel(22); // ignore DMO header ID string
-    uf.read(m_header.name, 28);
+    uf.read(header.name, 28);
 
     uf.seekrel(2); // _unk_1
-    uf >> m_header.ordnum >> m_header.insnum >> m_header.patnum;
+    uf >> header.orderCount >> header.instrumentCount >> header.patternCount;
     uf.seekrel(2); // _unk_2
-    uf >> m_header.is >> m_header.it;
+    uf >> header.initialSpeed >> header.initialTempo;
 
-    memset(m_header.chanset, 0xFF, 32);
+    header.chanset.fill(0xff);
 
     for (int i = 0; i < 9; i++)
-        m_header.chanset[i] = 0x10 + i;
+        header.chanset[i] = 0x10 + i;
 
     uf.seekrel(32); // ignore panning settings for all 32 channels
 
     // load orders
-    uf.read(m_orders, 256);
-
-    m_orders[m_header.ordnum] = 0xFF;
+    for(int i=0; i<header.orderCount; ++i) {
+        uint8_t tmp;
+        uf >> tmp;
+        addOrder(tmp);
+    }
+    uf.seekrel(256-header.orderCount);
 
     // load pattern lengths
     uint16_t my_patlen[100];
     uf.read(my_patlen, 100);
 
     // load instruments
-    for (int i = 0; i < m_header.insnum; i++) {
-        memset(&m_instruments[i], 0, sizeof(S3mInstrument));
+    for (int i = 0; i < header.instrumentCount; i++) {
+        S3mInstrument instrument;
 
-        uf.read(m_instruments[i].name, 28);
+        uf.read(instrument.name, 28);
 
-        uf >> m_instruments[i].volume;
-        uf >> m_instruments[i].dsk;
-        uf >> m_instruments[i].c2spd;
-        uf >> m_instruments[i].type;
-        uf >> m_instruments[i].d00;
-        uf >> m_instruments[i].d01;
-        uf >> m_instruments[i].d02;
-        uf >> m_instruments[i].d03;
-        uf >> m_instruments[i].d04;
-        uf >> m_instruments[i].d05;
-        uf >> m_instruments[i].d06;
-        uf >> m_instruments[i].d07;
-        uf >> m_instruments[i].d08;
-        uf >> m_instruments[i].d09;
-        uf >> m_instruments[i].d0a;
+        uf >> instrument.volume;
+        uf >> instrument.dsk;
+        uf >> instrument.c2spd;
+        uf >> instrument.type;
+        uf >> instrument.d00;
+        uf >> instrument.d01;
+        uf >> instrument.d02;
+        uf >> instrument.d03;
+        uf >> instrument.d04;
+        uf >> instrument.d05;
+        uf >> instrument.d06;
+        uf >> instrument.d07;
+        uf >> instrument.d08;
+        uf >> instrument.d09;
+        uf >> instrument.d0a;
         /*
          * Originally, riven sets d0b = d0a and ignores 1 byte in the
          * stream, but i guess this was a typo, so i read it here.
          */
-        uf >> m_instruments[i].d0b;
+        uf >> instrument.d0b;
+
+        setInstrument(i, instrument);
     }
 
     // load patterns
-    for (int i = 0; i < m_header.patnum; i++) {
+    for (int pattern = 0; pattern < header.patternCount; pattern++) {
         const auto cur_pos = uf.pos();
 
-        for (int j = 0; j < 64; j++) {
+        for (int row = 0; row < 64; row++) {
+            S3mCell* currentChannel = patternChannel(pattern, row);
+
             while(true) {
                 uint8_t token;
                 uf >> token;
@@ -167,35 +188,37 @@ bool CdmoLoader::load(const std::string &filename) {
                     uint8_t bufbyte;
                     uf >> bufbyte;
 
-                    m_patterns[i][j][chan].note = bufbyte & 15;
-                    m_patterns[i][j][chan].octave = bufbyte >> 4;
-                    uf >> m_patterns[i][j][chan].instrument;
+                    currentChannel[chan].note = bufbyte & 15;
+                    currentChannel[chan].octave = bufbyte >> 4;
+                    uf >> currentChannel[chan].instrument;
                 }
 
                 // volume ?
                 if (token & 64)
-                    uf >> m_patterns[i][j][chan].volume;
+                    uf >> currentChannel[chan].volume;
 
                 // command ?
                 if (token & 128) {
-                    uf >> m_patterns[i][j][chan].effect;
-                    uf >> m_patterns[i][j][chan].effectValue;
+                    uf >> currentChannel[chan].effect;
+                    uf >> currentChannel[chan].effectValue;
                 }
             }
         }
 
-        uf.seek(cur_pos + my_patlen[i]);
+        uf.seek(cur_pos + my_patlen[pattern]);
     }
+
+    setHeader(header);
 
     rewind(0);
     return true;
 }
 
-std::string CdmoLoader::gettype() {
+std::string CdmoLoader::type() const {
     return std::string("TwinTeam (packed S3M)");
 }
 
-std::string CdmoLoader::getauthor() {
+std::string CdmoLoader::author() const {
     /*
   All available .DMO modules written by one composer. And because all .DMO
   stuff was lost due to hd crash (TwinTeam guys said this), there are
@@ -207,13 +230,11 @@ std::string CdmoLoader::getauthor() {
 /* -------- Private Methods ------------------------------- */
 
 unsigned short CdmoLoader::dmo_unpacker::brand(unsigned short range) {
-    unsigned short ax, bx, cx, dx;
-
-    ax = LOWORD(bseed);
-    bx = HIWORD(bseed);
-    cx = ax;
+    uint16_t ax = LOWORD(bseed);
+    uint16_t bx = HIWORD(bseed);
+    uint16_t cx = ax;
     ax = LOWORD(cx * 0x8405);
-    dx = HIWORD(cx * 0x8405);
+    uint16_t dx = HIWORD(cx * 0x8405);
     cx <<= 3;
     cx = (((HIBYTE(cx) + LOBYTE(cx)) & 0xFF) << 8) + LOBYTE(cx);
     dx += cx;
@@ -236,12 +257,10 @@ unsigned short CdmoLoader::dmo_unpacker::brand(unsigned short range) {
 }
 
 bool CdmoLoader::dmo_unpacker::decrypt(unsigned char *buf, long len) {
-    unsigned long seed = 0;
-    int i;
-
     bseed = ARRAY_AS_DWORD(buf, 0);
 
-    for (i = 0; i < ARRAY_AS_WORD(buf, 4) + 1; i++)
+    uint32_t seed = 0;
+    for (int i = 0; i < ARRAY_AS_WORD(buf, 4) + 1; i++)
         seed += brand(0xffff);
 
     bseed = seed ^ ARRAY_AS_DWORD(buf, 6);
@@ -249,7 +268,7 @@ bool CdmoLoader::dmo_unpacker::decrypt(unsigned char *buf, long len) {
     if (ARRAY_AS_WORD(buf, 10) != brand(0xffff))
         return false;
 
-    for (i = 0; i < (len - 12); i++)
+    for (int i = 0; i < (len - 12); i++)
         buf[12 + i] ^= brand(0x100);
 
     buf[len - 2] = buf[len - 1] = 0;

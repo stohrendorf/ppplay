@@ -28,56 +28,91 @@ class FileStream;
 
 class Cs3mPlayer : public CPlayer {
     DISABLE_COPY(Cs3mPlayer)
-    public:
-        static CPlayer *factory();
+public:
+    static CPlayer *factory();
 
     Cs3mPlayer();
 
     bool load(const std::string &filename);
     bool update();
     void rewind(int);
-    size_t framesUntilUpdate();
+    size_t framesUntilUpdate() const;
 
-    std::string gettype();
-    std::string gettitle() { return std::string(m_header.name); }
+    std::string type() const;
+    std::string title() const
+    {
+        return m_header.name;
+    }
 
-    unsigned int getpatterns() { return m_header.patnum; }
-    unsigned int getpattern() { return m_orders[m_order]; }
-    unsigned int getorders() { return (m_header.ordnum - 1); }
-    unsigned int getorder() { return m_order; }
-    unsigned int getrow() { return m_crow; }
-    unsigned int getspeed() { return m_speed; }
-    unsigned int getinstruments() { return m_header.insnum; }
-    std::string getinstrument(unsigned int n) {
-        return std::string(m_instruments[n].name);
+    uint32_t instrumentCount() const
+    {
+        return m_header.instrumentCount;
+    }
+    std::string instrumentTitle(size_t n) const
+    {
+        return m_instruments[n].name;
     }
 
 protected:
 #pragma pack(push,1)
     struct S3mHeader {
-        char name[28]; // song name
-        unsigned char kennung, typ, dummy[2];
-        uint16_t ordnum, insnum, patnum, flags, cwtv, ffi;
-        char scrm[4];
-        uint8_t gv, is, it, mv, uc, dp, dummy2[8];
-        uint16_t special;
-        uint8_t chanset[32];
+        char name[28] = ""; // song name
+        uint8_t endOfFile = 0;
+        uint8_t type = 0;
+        uint8_t dummy[2];
+        uint16_t orderCount = 0;
+        uint16_t instrumentCount = 0;
+        uint16_t patternCount = 0;
+        uint16_t flags = 0;
+        uint16_t trackerVersion = 0;
+        uint16_t ffi = 0;
+        char scrm[4] = "";
+        uint8_t gv = 0;
+        uint8_t initialSpeed = 0;
+        uint8_t initialTempo = 0;
+        uint8_t mv = 0;
+        uint8_t uc = 0;
+        uint8_t dp = 0;
+        uint8_t dummy2[8];
+        uint16_t special = 0;
+        std::array<uint8_t,32> chanset{{0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0}};
     };
 
     struct S3mInstrument {
-        uint8_t type;
-        char filename[15];
-        uint8_t d00, d01, d02, d03, d04, d05, d06, d07, d08, d09, d0a, d0b, volume, dsk, dummy[2];
-        uint32_t c2spd;
-        char dummy2[12], name[28], scri[4];
+        uint8_t type = 0;
+        char filename[15] = "";
+        uint8_t d00=0, d01=0, d02=0, d03=0, d04=0, d05=0, d06=0, d07=0, d08=0, d09=0, d0a=0, d0b=0, volume=0, dsk=0, dummy[2];
+        uint32_t c2spd=0;
+        char dummy2[12], name[28]="", scri[4]="";
     };
 #pragma pack(pop)
-    S3mInstrument m_instruments[99];
 
-    struct S3mPattern {
+    void setInstrument(size_t i, const S3mInstrument& instrument)
+    {
+        BOOST_ASSERT(i < 99);
+        m_instruments[i] = instrument;
+    }
+
+    struct S3mCell {
         uint8_t note, octave, instrument, volume, effect, effectValue;
     };
-    S3mPattern m_patterns[99][64][32];
+
+    S3mCell* patternChannel(size_t pattern, size_t row)
+    {
+        BOOST_ASSERT(pattern < 99);
+        BOOST_ASSERT(row < 64);
+        return m_patterns[pattern][row];
+    }
+
+    void setHeader(const S3mHeader& header)
+    {
+        m_header = header;
+    }
+
+private:
+    S3mInstrument m_instruments[99];
+
+    S3mCell m_patterns[99][64][32];
 
     struct {
         uint16_t frequency, nextFrequency;
@@ -85,10 +120,8 @@ protected:
     } m_channels[9];
 
     S3mHeader m_header;
-    uint8_t m_orders[256];
-    uint8_t m_crow, m_order, m_speed, m_tempo, m_patternDelay, songend, m_loopStart, m_loopCounter;
+    uint8_t m_patternDelay, songend, m_loopStart, m_loopCounter;
 
-private:
     static const char chnresolv[];
     static const unsigned short notetable[12];
     static const unsigned char vibratotab[32];

@@ -159,11 +159,9 @@ void CimfPlayer::rewind(int) {
     getOpl()->writeReg(1, 32); // go to OPL2 mode
 }
 
-std::string CimfPlayer::gettitle() {
-    std::string title;
-
-    title = m_trackName;
-
+std::string CimfPlayer::title() const
+{
+    std::string title = m_trackName;
     if (!m_trackName.empty() && !m_gameName.empty())
         title += " - ";
 
@@ -172,7 +170,8 @@ std::string CimfPlayer::gettitle() {
     return title;
 }
 
-std::string CimfPlayer::getdesc() {
+std::string CimfPlayer::description() const
+{
     std::string desc = m_footer;
 
     if (!m_remarks.empty() && !m_footer.empty())

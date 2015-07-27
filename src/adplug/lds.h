@@ -22,93 +22,135 @@
 #include "player.h"
 
 class CldsPlayer : public CPlayer {
-  DISABLE_COPY(CldsPlayer)
+    DISABLE_COPY(CldsPlayer)
 public:
-  static CPlayer *factory() { return new CldsPlayer(); }
+    static CPlayer *factory() { return new CldsPlayer(); }
 
-  CldsPlayer();
+    CldsPlayer() = default;
 
-  bool load(const std::string &filename);
-  virtual bool update();
-  virtual void rewind(int subsong = -1);
-  size_t framesUntilUpdate() override { return SampleRate / 70; }
+    bool load(const std::string &filename);
+    virtual bool update();
+    virtual void rewind(int subsong = -1);
+    size_t framesUntilUpdate() const
+    {
+        return SampleRate / 70;
+    }
 
-  std::string gettype() { return std::string("LOUDNESS Sound System"); }
-  unsigned int getorders() { return m_numposi; }
-  unsigned int getorder() { return m_posplay; }
-  unsigned int getrow() { return m_pattplay; }
-  unsigned int getspeed() { return m_speed; }
-  unsigned int getinstruments() { return m_soundbank.size(); }
+    std::string type() const
+    {
+        return "LOUDNESS Sound System";
+    }
+    uint32_t instrumentCount() const
+    {
+        return m_soundbank.size();
+    }
 
 private:
 #pragma pack(push, 1)
-  struct SoundBank {
-    uint8_t mod_misc;
-    uint8_t mod_vol;
-    uint8_t mod_ad;
-    uint8_t mod_sr;
-    uint8_t mod_wave;
-    uint8_t car_misc;
-    uint8_t car_vol;
-    uint8_t car_ad;
-    uint8_t car_sr;
-    uint8_t car_wave;
-    uint8_t feedback;
-    uint8_t keyoff;
-    uint8_t portamento;
-    uint8_t glide;
-    uint8_t finetune;
-    uint8_t vibrato;
-    uint8_t vibdelay;
-    uint8_t mod_trem;
-    uint8_t car_trem;
-    uint8_t tremwait;
-    uint8_t arpeggio;
-    std::array<uint8_t, 12> arp_tab;
-    uint16_t start;
-    uint16_t size;
-    uint8_t fms;
-    uint16_t transp;
-    uint8_t midinst;
-    uint8_t midvelo;
-    uint8_t midkey;
-    uint8_t midtrans;
-    uint8_t middum1;
-    uint8_t middum2;
-  };
+    struct SoundBank {
+        uint8_t mod_misc;
+        uint8_t mod_vol;
+        uint8_t mod_ad;
+        uint8_t mod_sr;
+        uint8_t mod_wave;
+        uint8_t car_misc;
+        uint8_t car_vol;
+        uint8_t car_ad;
+        uint8_t car_sr;
+        uint8_t car_wave;
+        uint8_t feedback;
+        uint8_t keyoff;
+        uint8_t portamento;
+        uint8_t glide;
+        uint8_t finetune;
+        uint8_t vibrato;
+        uint8_t vibdelay;
+        uint8_t mod_trem;
+        uint8_t car_trem;
+        uint8_t tremwait;
+        uint8_t arpeggio;
+        std::array<uint8_t, 12> arp_tab;
+        uint16_t start;
+        uint16_t size;
+        uint8_t fms;
+        uint16_t transp;
+        uint8_t midinst;
+        uint8_t midvelo;
+        uint8_t midkey;
+        uint8_t midtrans;
+        uint8_t middum1;
+        uint8_t middum2;
+    };
 #pragma pack(pop)
 
-  struct Channel {
-    uint16_t gototune, lasttune, packpos;
-    uint8_t finetune, glideto, portspeed, nextvol, volmod, volcar, vibwait,
-        vibspeed, vibrate, trmstay, trmwait, trmspeed, trmrate, trmcount,
-        trcwait, trcspeed, trcrate, trccount, arp_size, arp_speed, keycount,
-        vibcount, arp_pos, arp_count, packwait;
-    std::array<uint8_t, 12> arp_tab;
+    struct Channel {
+        uint16_t gototune = 0;
+        uint16_t lasttune = 0;
+        uint16_t packpos = 0;
+        uint8_t finetune = 0;
+        uint8_t glideto = 0;
+        uint8_t portspeed = 0;
+        uint8_t nextvol = 0;
+        uint8_t volmod = 0;
+        uint8_t volcar = 0;
+        uint8_t vibwait = 0;
+        uint8_t vibspeed = 0;
+        uint8_t vibrate = 0;
+        uint8_t trmstay = 0;
+        uint8_t trmwait = 0;
+        uint8_t trmspeed = 0;
+        uint8_t trmrate = 0;
+        uint8_t trmcount = 0;
+        uint8_t trcwait = 0;
+        uint8_t trcspeed = 0;
+        uint8_t trcrate = 0;
+        uint8_t trccount = 0;
+        uint8_t arp_size = 0;
+        uint8_t arp_speed = 0;
+        uint8_t keycount = 0;
+        uint8_t vibcount = 0;
+        uint8_t arp_pos = 0;
+        uint8_t arp_count = 0;
+        uint8_t packwait = 0;
+        std::array<uint8_t, 12> arp_tab{{}};
 
-    struct {
-      uint8_t chandelay, sound;
-      uint16_t high;
-    } chancheat;
-  };
+        Channel()
+        {
+            arp_tab.fill(0);
+        }
+
+        struct ChanCheat {
+            uint8_t chandelay = 0;
+            uint8_t sound = 0;
+            uint16_t high = 0;
+        };
+        ChanCheat chancheat{};
+    };
 
 #pragma pack(push, 1)
-  struct Position {
-    uint16_t patnum;
-    uint8_t transpose;
-  };
+    struct Position {
+        uint16_t patnum;
+        uint8_t transpose;
+    };
 #pragma pack(pop)
 
-  std::vector<SoundBank> m_soundbank;
-  Channel m_channels[9];
-  std::vector<Position> m_positions;
-  uint8_t m_jumping, m_fadeonoff, m_allvolume, m_hardfade, m_tempoNow,
-      m_pattplay, m_tempo, m_regbd, m_chandelay[9], m_mode, m_pattlen;
-  std::vector<uint16_t> m_patterns;
-  uint16_t m_posplay, m_jumppos, m_speed;
-  bool m_playing, m_songlooped;
-  uint16_t m_numposi;
-  size_t m_mainvolume;
+    std::vector<SoundBank> m_soundbank{};
+    std::array<Channel,9> m_channels{{}};
+    std::vector<Position> m_positions{};
+    uint8_t m_jumping = 0;
+    uint8_t m_fadeonoff = 0;
+    uint8_t m_allvolume = 0;
+    uint8_t m_hardfade = 0;
+    uint8_t m_initialTempo = 0;
+    uint8_t m_regbd = 0;
+    uint8_t m_chandelay[9];
+    uint8_t m_mode = 0;
+    uint8_t m_pattlen = 0;
+    std::vector<uint16_t> m_patterns{};
+    uint16_t m_jumppos = 0;
+    bool m_playing = false;
+    bool m_songlooped = false;
+    size_t m_mainvolume = 0;
 
-  void playsound(int inst_number, int channel_number, int tunehigh);
+    void playsound(int inst_number, int channel_number, int tunehigh);
 };

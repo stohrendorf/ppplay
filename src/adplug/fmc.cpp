@@ -33,8 +33,22 @@ bool CfmcLoader::load(const std::string &filename) {
     FileStream f(filename);
     if (!f)
         return false;
-    const unsigned char conv_fx[16] = { 0, 1, 2, 3, 4, 8, 255, 255, 255, 255, 26,
-                                        11, 12, 13, 14, 15 };
+    const Command conv_fx[16] = { Command::None,
+                                  Command::SlideUp,
+                                  Command::SlideDown,
+                                  Command::Porta,
+                                  Command::Vibrato,
+                                  Command::NoteOff,
+                                  Command::Sentinel,
+                                  Command::Sentinel,
+                                  Command::Sentinel,
+                                  Command::Sentinel,
+                                  Command::VolSlide,
+                                  Command::OrderJump,
+                                  Command::SetFineVolume,
+                                  Command::PatternBreak,
+                                  Command::Special,
+                                  Command::SA2Speed };
 
     // read header
     f.read(header.id, 4);
@@ -47,12 +61,13 @@ bool CfmcLoader::load(const std::string &filename) {
     }
 
     // init CmodPlayer
-    m_order.resize(256);
     realloc_patterns(64, 64, header.numchan);
     init_trackord();
 
     // load order
-    f.read(m_order.data(), 256);
+    for(uint8_t order; orderCount()<256 && f>>order && order<0xFE; )
+        addOrder(order);
+    f.seekrel(256 - orderCount());
 
     f.seekrel(2);
 
@@ -71,24 +86,25 @@ bool CfmcLoader::load(const std::string &filename) {
                 // read event
                 f >> event;
 
+                PatternCell& cell = patternCell(t,k);
                 // convert event
-                m_tracks.at(t,k).note = event.byte0 & 0x7F;
-                m_tracks.at(t,k).inst =
-                        ((event.byte0 & 0x80) >> 3) + (event.byte1 >> 4) + 1;
-                m_tracks.at(t,k).command = conv_fx[event.byte1 & 0x0F];
-                m_tracks.at(t,k).param1 = event.byte2 >> 4;
-                m_tracks.at(t,k).param2 = event.byte2 & 0x0F;
+                cell.note = event.byte0 & 0x7F;
+                cell.instrument = ((event.byte0 & 0x80) >> 3) + (event.byte1 >> 4) + 1;
+                cell.command = conv_fx[event.byte1 & 0x0F];
+                cell.hiNybble = event.byte2 >> 4;
+                cell.loNybble = event.byte2 & 0x0F;
 
                 // fix effects
-                if (m_tracks.at(t,k).command == 0x0E) // 0x0E (14): Retrig
-                    m_tracks.at(t,k).param1 = 3;
-                if (m_tracks.at(t,k).command == 0x1A) { // 0x1A (26): Volume Slide
-                    if (m_tracks.at(t,k).param1 > m_tracks.at(t,k).param2) {
-                        m_tracks.at(t,k).param1 -= m_tracks.at(t,k).param2;
-                        m_tracks.at(t,k).param2 = 0;
-                    } else {
-                        m_tracks.at(t,k).param2 -= m_tracks.at(t,k).param1;
-                        m_tracks.at(t,k).param1 = 0;
+                if (cell.command == Command::Special) // 0x0E (14): Retrig
+                    cell.command = Command::SFXRetrigger;
+                if (cell.command == Command::VolSlide) { // 0x1A (26): Volume Slide
+                    if (cell.hiNybble > cell.loNybble) {
+                        cell.hiNybble -= cell.loNybble;
+                        cell.loNybble = 0;
+                    }
+                    else {
+                        cell.loNybble -= cell.hiNybble;
+                        cell.hiNybble = 0;
                     }
                 }
             }
@@ -99,73 +115,68 @@ bool CfmcLoader::load(const std::string &filename) {
 
     // convert instruments
     for (int i = 0; i < 31; i++)
-        buildinst(i);
-
-    // order length
-    for (int i = 0; i < 256; i++) {
-        if (m_order[i] >= 0xFE) {
-            m_length = i;
-            break;
-        }
-    }
+        addInstrument(instruments[i]);
 
     // data for Protracker
-    activechan = (0xffffffff >> (32 - header.numchan)) << (32 - header.numchan);
-    numberOfPatterns = t / header.numchan;
-    m_restartpos = 0;
+    BOOST_ASSERT( header.numchan <= 32 );
+    disableAllChannels();
+    for(uint8_t i=0; i<header.numchan; ++i)
+        enableChannel(i);
+    //m_maxUsedPattern = t / header.numchan;
+    setRestartOrder(0);
 
     // flags
-    m_flags = Faust;
+    setFaust();
 
     rewind(0);
 
     return true;
 }
 
-size_t CfmcLoader::framesUntilUpdate() { return SampleRate / 50; }
+size_t CfmcLoader::framesUntilUpdate() const { return SampleRate / 50; }
 
-std::string CfmcLoader::gettype() { return std::string("Faust Music Creator"); }
+std::string CfmcLoader::type() const { return std::string("Faust Music Creator"); }
 
-std::string CfmcLoader::gettitle() { return std::string(header.title); }
+std::string CfmcLoader::title() const { return std::string(header.title); }
 
-std::string CfmcLoader::getinstrument(unsigned int n) {
-    return std::string(instruments[n].name);
+std::string CfmcLoader::instrumentTitle(size_t n) const {
+    return instruments[n].name;
 }
 
-unsigned int CfmcLoader::getinstruments() { return 32; }
+uint32_t CfmcLoader::instrumentCount() const { return 32; }
 
 /* -------- Private Methods ------------------------------- */
 
-void CfmcLoader::buildinst(unsigned char i) {
-    CmodPlayer::Instrument& inst = instrument(i,true);
-    inst.data[0] = ((instruments[i].synthesis & 1) ^ 1);
-    inst.data[0] |= ((instruments[i].feedback & 7) << 1);
+void CfmcLoader::addInstrument(const fmc_instrument& instrument) {
+    CmodPlayer::Instrument& inst = addInstrument();
+    inst.data[0] = ((instrument.synthesis & 1) ^ 1);
+    inst.data[0] |= ((instrument.feedback & 7) << 1);
 
-    inst.data[3] = ((instruments[i].mod_attack & 15) << 4);
-    inst.data[3] |= (instruments[i].mod_decay & 15);
-    inst.data[5] = ((15 - (instruments[i].mod_sustain & 15)) << 4);
-    inst.data[5] |= (instruments[i].mod_release & 15);
-    inst.data[9] = (63 - (instruments[i].mod_volume & 63));
-    inst.data[9] |= ((instruments[i].mod_ksl & 3) << 6);
-    inst.data[1] = (instruments[i].mod_freq_multi & 15);
-    inst.data[7] = (instruments[i].mod_waveform & 3);
-    inst.data[1] |= ((instruments[i].mod_sustain_sound & 1) << 5);
-    inst.data[1] |= ((instruments[i].mod_ksr & 1) << 4);
-    inst.data[1] |= ((instruments[i].mod_vibrato & 1) << 6);
-    inst.data[1] |= ((instruments[i].mod_tremolo & 1) << 7);
+    inst.data[3] = ((instrument.mod_attack & 15) << 4);
+    inst.data[3] |= (instrument.mod_decay & 15);
+    inst.data[5] = ((15 - (instrument.mod_sustain & 15)) << 4);
+    inst.data[5] |= (instrument.mod_release & 15);
+    inst.data[9] = (63 - (instrument.mod_volume & 63));
+    inst.data[9] |= ((instrument.mod_ksl & 3) << 6);
+    inst.data[1] = (instrument.mod_freq_multi & 15);
+    inst.data[7] = (instrument.mod_waveform & 3);
+    inst.data[1] |= ((instrument.mod_sustain_sound & 1) << 5);
+    inst.data[1] |= ((instrument.mod_ksr & 1) << 4);
+    inst.data[1] |= ((instrument.mod_vibrato & 1) << 6);
+    inst.data[1] |= ((instrument.mod_tremolo & 1) << 7);
 
-    inst.data[4] = ((instruments[i].car_attack & 15) << 4);
-    inst.data[4] |= (instruments[i].car_decay & 15);
-    inst.data[6] = ((15 - (instruments[i].car_sustain & 15)) << 4);
-    inst.data[6] |= (instruments[i].car_release & 15);
-    inst.data[10] = (63 - (instruments[i].car_volume & 63));
-    inst.data[10] |= ((instruments[i].car_ksl & 3) << 6);
-    inst.data[2] = (instruments[i].car_freq_multi & 15);
-    inst.data[8] = (instruments[i].car_waveform & 3);
-    inst.data[2] |= ((instruments[i].car_sustain_sound & 1) << 5);
-    inst.data[2] |= ((instruments[i].car_ksr & 1) << 4);
-    inst.data[2] |= ((instruments[i].car_vibrato & 1) << 6);
-    inst.data[2] |= ((instruments[i].car_tremolo & 1) << 7);
+    inst.data[4] = ((instrument.car_attack & 15) << 4);
+    inst.data[4] |= (instrument.car_decay & 15);
+    inst.data[6] = ((15 - (instrument.car_sustain & 15)) << 4);
+    inst.data[6] |= (instrument.car_release & 15);
+    inst.data[10] = (63 - (instrument.car_volume & 63));
+    inst.data[10] |= ((instrument.car_ksl & 3) << 6);
+    inst.data[2] = (instrument.car_freq_multi & 15);
+    inst.data[8] = (instrument.car_waveform & 3);
+    inst.data[2] |= ((instrument.car_sustain_sound & 1) << 5);
+    inst.data[2] |= ((instrument.car_ksr & 1) << 4);
+    inst.data[2] |= ((instrument.car_vibrato & 1) << 6);
+    inst.data[2] |= ((instrument.car_tremolo & 1) << 7);
 
-    inst.slide = instruments[i].pitch_shift;
+    inst.slide = instrument.pitch_shift;
 }

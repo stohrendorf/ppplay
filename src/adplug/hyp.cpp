@@ -59,7 +59,7 @@ CPlayer *CxadhypPlayer::factory() { return new CxadhypPlayer(); }
 void CxadhypPlayer::xadplayer_rewind(int) {
   int i;
 
-  plr.speed = tune[5];
+  setCurrentSpeed(tune()[5]);
 
   getOpl()->writeReg(0xBD, 0xC0);
 
@@ -68,14 +68,14 @@ void CxadhypPlayer::xadplayer_rewind(int) {
 
   // define instruments
   for (i = 0; i < 99; i++)
-    getOpl()->writeReg(hyp_adlib_registers[i], tune[6 + i]);
+    getOpl()->writeReg(hyp_adlib_registers[i], tune()[6 + i]);
 
   hyp.pointer = 0x69;
 }
 
 void CxadhypPlayer::xadplayer_update() {
   for (int i = 0; i < 9; i++) {
-    unsigned char event = tune[hyp.pointer++];
+    const auto event = tune()[hyp.pointer++];
 
     if (event) {
       unsigned short freq = hyp_notes[event & 0x3F];
@@ -95,14 +95,18 @@ void CxadhypPlayer::xadplayer_update() {
 
   hyp.pointer += 3;
 
-  if (hyp.pointer >= tune.size()) {
+  if (hyp.pointer >= tune().size()) {
     hyp.pointer = 0x69;
-    plr.looping = 1;
+    setXadLooping();
   }
 }
 
-float CxadhypPlayer::xadplayer_getrefresh() { return 60.0f; }
+size_t CxadhypPlayer::framesUntilUpdate() const
+{
+    return SampleRate / 60.0f;
+}
 
-std::string CxadhypPlayer::xadplayer_gettype() {
-  return std::string("xad: hypnosis player");
+std::string CxadhypPlayer::type() const
+{
+  return "xad: hypnosis player";
 }

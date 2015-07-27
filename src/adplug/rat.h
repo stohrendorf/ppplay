@@ -1,17 +1,17 @@
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -22,95 +22,90 @@
 #include "xad.h"
 
 class CxadratPlayer : public CxadPlayer {
-  DISABLE_COPY(CxadratPlayer)
+    DISABLE_COPY(CxadratPlayer)
 public:
-  static CPlayer *factory();
+    static CPlayer *factory();
 
-  CxadratPlayer() = default;
+    CxadratPlayer() = default;
 
-protected:
-  struct rat_header {
-    char id[3] = "";
-    unsigned char version = 0;
-    char title[32] = "";
-    unsigned char numchan = 0;
-    unsigned char reserved_25 = 0;
-    unsigned char order_end = 0;
-    unsigned char reserved_27 = 0;
-    unsigned char numinst = 0; // ?: Number of Instruments
-    unsigned char reserved_29 = 0;
-    unsigned char numpat = 0; // ?: Number of Patterns
-    unsigned char reserved_2B = 0;
-    unsigned char order_start = 0;
-    unsigned char reserved_2D = 0;
-    unsigned char order_loop = 0;
-    unsigned char reserved_2F = 0;
-    unsigned char volume = 0;
-    unsigned char speed = 0;
-    unsigned char reserved_32[12] = "";
-    unsigned char patseg[2] = {0,0};
-  };
-
-  struct rat_event {
-    unsigned char note;
-    unsigned char instrument;
-    unsigned char volume;
-    unsigned char fx;
-    unsigned char fxp;
-  };
-
-  struct rat_instrument {
-    unsigned char freq[2];
-    unsigned char reserved_2[2];
-    unsigned char mod_ctrl;
-    unsigned char car_ctrl;
-    unsigned char mod_volume;
-    unsigned char car_volume;
-    unsigned char mod_AD;
-    unsigned char car_AD;
-    unsigned char mod_SR;
-    unsigned char car_SR;
-    unsigned char mod_wave;
-    unsigned char car_wave;
-    unsigned char connect;
-    unsigned char reserved_F;
-    unsigned char volume;
-    unsigned char reserved_11[3];
-  };
-
-  struct {
-    rat_header hdr{};
-
-    unsigned char volume = 0;
-    unsigned char order_pos = 0;
-    unsigned char pattern_pos = 0;
-
-    unsigned char *order = nullptr;
-
-    rat_instrument *inst = nullptr;
-
-    rat_event tracks[256][64][9]{};
-
-    struct {
-      unsigned char instrument = 0;
-      unsigned char volume = 0;
-      unsigned char fx = 0;
-      unsigned char fxp = 0;
-    } channel[9]{};
-  } rat{};
-  //
-  bool xadplayer_load();
-  void xadplayer_rewind(int);
-  void xadplayer_update();
-  float xadplayer_getrefresh();
-  std::string xadplayer_gettype();
-  std::string xadplayer_gettitle();
-  unsigned int xadplayer_getinstruments();
-  //
 private:
-  static const unsigned char rat_adlib_bases[18];
-  static const unsigned short rat_notes[16];
+#pragma pack(push,1)
+    struct Header {
+        char id[3] = "";
+        uint8_t version = 0;
+        char title[32] = "";
+        uint8_t numchan = 0;
+        uint8_t reserved_25 = 0;
+        uint8_t order_end = 0;
+        uint8_t reserved_27 = 0;
+        uint8_t numinst = 0; // ?: Number of Instruments
+        uint8_t reserved_29 = 0;
+        uint8_t numpat = 0; // ?: Number of Patterns
+        uint8_t reserved_2B = 0;
+        uint8_t order_start = 0;
+        uint8_t reserved_2D = 0;
+        uint8_t order_loop = 0;
+        uint8_t reserved_2F = 0;
+        uint8_t volume = 0;
+        uint8_t speed = 0;
+        uint8_t reserved_32[12] = "";
+        uint8_t patseg[2] = {0,0};
+    };
 
-  unsigned char __rat_calc_volume(unsigned char ivol, unsigned char cvol,
-                                  unsigned char gvol);
+    struct Event {
+        uint8_t note;
+        uint8_t instrument;
+        uint8_t volume;
+        uint8_t fx;
+        uint8_t fxp;
+    };
+
+    struct Instrument {
+        uint8_t freq[2];
+        uint8_t reserved_2[2];
+        uint8_t mod_ctrl;
+        uint8_t car_ctrl;
+        uint8_t mod_volume;
+        uint8_t car_volume;
+        uint8_t mod_AD;
+        uint8_t car_AD;
+        uint8_t mod_SR;
+        uint8_t car_SR;
+        uint8_t mod_wave;
+        uint8_t car_wave;
+        uint8_t connect;
+        uint8_t reserved_F;
+        uint8_t volume;
+        uint8_t reserved_11[3];
+    };
+
+#pragma pack(pop)
+
+    bool xadplayer_load();
+    void xadplayer_rewind(int);
+    void xadplayer_update();
+    size_t framesUntilUpdate() const;
+    std::string type() const;
+    std::string title() const;
+    uint32_t instrumentCount() const;
+
+    const uint8_t* m_trackdataByOrder = nullptr;
+    Header m_ratHeader{};
+
+    uint8_t m_volume = 0;
+
+    const Instrument *m_instruments = nullptr;
+
+    std::array<std::array<std::array<Event,9>,64>,256> m_tracks{{}};
+
+    struct Channel {
+        uint8_t instrument = 0;
+        uint8_t volume = 0;
+        uint8_t fx = 0;
+        uint8_t fxp = 0;
+    };
+
+    std::array<Channel,9> m_channels{{}};
+
+    uint8_t calculateVolume(uint8_t ivol, uint8_t cvol, uint8_t gvol);
 };

@@ -371,8 +371,7 @@ class AdlibDriver {
     uint8_t *_soundData = nullptr;
 
     uint8_t _soundIdTable[0x10];
-    std::array<Channel, 10> _channels {}
-    ;
+    std::array<Channel, 10> _channels{{}};
 
     uint8_t _vibratoAndAMDepthBits = 0;
     uint8_t _rhythmSectionBits = 0;
@@ -397,20 +396,28 @@ class AdlibDriver {
 int AdlibDriver::callback(int opcode, ...) {
     static const std::array<OpcodeEntry, 18> opcodeList {
         {
-#define COMMAND(x)                                                             \
-            { &AdlibDriver::x, #x }
-            COMMAND(snd_ret0x100), COMMAND(snd_ret0x1983), COMMAND(snd_initDriver),
-                    COMMAND(snd_deinitDriver), COMMAND(snd_setSoundData),
-                    COMMAND(snd_unkOpcode1), COMMAND(snd_startSong),
-                    COMMAND(snd_unkOpcode2), COMMAND(snd_unkOpcode3),
-                    COMMAND(snd_readByte), COMMAND(snd_writeByte),
-                    COMMAND(snd_getSoundTrigger), COMMAND(snd_unkOpcode4),
-                    COMMAND(snd_dummy), COMMAND(snd_getNullvar4),
-                    COMMAND(snd_setNullvar3), COMMAND(snd_setFlag), COMMAND(snd_clearFlag)
-        #undef COMMAND
+#define COMMAND(x) { &AdlibDriver::x, #x }
+            COMMAND(snd_ret0x100),
+            COMMAND(snd_ret0x1983),
+            COMMAND(snd_initDriver),
+            COMMAND(snd_deinitDriver),
+            COMMAND(snd_setSoundData),
+            COMMAND(snd_unkOpcode1),
+            COMMAND(snd_startSong),
+            COMMAND(snd_unkOpcode2),
+            COMMAND(snd_unkOpcode3),
+            COMMAND(snd_readByte),
+            COMMAND(snd_writeByte),
+            COMMAND(snd_getSoundTrigger),
+            COMMAND(snd_unkOpcode4),
+            COMMAND(snd_dummy),
+            COMMAND(snd_getNullvar4),
+            COMMAND(snd_setNullvar3),
+            COMMAND(snd_setFlag),
+            COMMAND(snd_clearFlag)
+#undef COMMAND
         }
-    }
-    ;
+    };
 
     if (opcode >= static_cast<int>(opcodeList.size()) || opcode < 0) {
         return 0;
@@ -2024,25 +2031,21 @@ const uint8_t AdlibDriver::_unkTables[][32] = {
 // At the time of writing, the only known case where Kyra 1 uses sound triggers
 // is in the castle, to cycle between three different songs.
 
-CadlPlayer::CadlPlayer() : _driver(new AdlibDriver) {
-    _trackEntries.fill(0);
-
+CadlPlayer::CadlPlayer()
+    : m_driver(new AdlibDriver)
+{
+    m_trackEntries.fill(0);
     init();
 }
 
-CadlPlayer::~CadlPlayer()
-{
-    delete _driver;
-}
-
 bool CadlPlayer::init() {
-    _driver->callback(2);
-    _driver->callback(16, int(4));
+    m_driver->callback(2);
+    m_driver->callback(16, int(4));
     return true;
 }
 
 void CadlPlayer::process() {
-    uint8_t trigger = _driver->callback(11);
+    uint8_t trigger = m_driver->callback(11);
 
     if (trigger < 4) {
         static constexpr int kyra1SoundTriggers[] = { 0, 4, 5, 3 };
@@ -2051,39 +2054,44 @@ void CadlPlayer::process() {
         if (soundId) {
             playTrack(soundId);
         }
-    } else {
+    }
+    else {
         // TODO: At this point, we really want to clear the trigger...
     }
 }
 
-void CadlPlayer::playTrack(uint8_t track) { play(track); }
+void CadlPlayer::playTrack(uint8_t track) {
+    play(track);
+}
 
-void CadlPlayer::playSoundEffect(uint8_t track) { play(track); }
+void CadlPlayer::playSoundEffect(uint8_t track) {
+    play(track);
+}
 
 void CadlPlayer::play(uint8_t track) {
-    uint8_t soundId = _trackEntries[track];
-    if (static_cast<int8_t>(soundId) == -1 || _soundDataPtr.empty())
+    uint8_t soundId = m_trackEntries[track];
+    if (static_cast<int8_t>(soundId) == -1 || m_soundDataPtr.empty())
         return;
     soundId &= 0xFF;
-    _driver->callback(16, 0);
+    m_driver->callback(16, 0);
     // 	while ((_driver->callback(16, 0) & 8)) {
     // We call the system delay and not the game delay to avoid concurrency
     // issues.
     // 		_engine->_system->delayMillis(10);
     // 	}
-    if (_sfxPlayingSound != -1) {
+    if (m_sfxPlayingSound != -1) {
         // Restore the sounds's normal values.
-        _driver->callback(10, _sfxPlayingSound, int(1), int(_sfxPriority));
-        _driver->callback(10, _sfxPlayingSound, int(3), int(_sfxFourthByteOfSong));
-        _sfxPlayingSound = -1;
+        m_driver->callback(10, m_sfxPlayingSound, int(1), int(m_sfxPriority));
+        m_driver->callback(10, m_sfxPlayingSound, int(3), int(m_sfxFourthByteOfSong));
+        m_sfxPlayingSound = -1;
     }
 
-    int chan = _driver->callback(9, soundId, int(0));
+    int chan = m_driver->callback(9, soundId, int(0));
 
     if (chan != 9) {
-        _sfxPlayingSound = soundId;
-        _sfxPriority = _driver->callback(9, soundId, int(1));
-        _sfxFourthByteOfSong = _driver->callback(9, soundId, int(3));
+        m_sfxPlayingSound = soundId;
+        m_sfxPriority = m_driver->callback(9, soundId, int(1));
+        m_sfxFourthByteOfSong = m_driver->callback(9, soundId, int(3));
 
         // In the cases I've seen, the mysterious fourth byte has been
         // the parameter for the update_setExtraLevel3() callback.
@@ -2096,14 +2104,14 @@ void CadlPlayer::play(uint8_t track) {
         // and a slightly higher (i.e. softer) extra level 3 than they
         // would have if they were started from anywhere else. Strange.
 
-        int newVal = ((((-_sfxFourthByteOfSong) + 63) * 0xFF) >> 8) & 0xFF;
+        int newVal = ((((-m_sfxFourthByteOfSong) + 63) * 0xFF) >> 8) & 0xFF;
         newVal = -newVal + 63;
-        _driver->callback(10, soundId, int(3), newVal);
-        newVal = ((_sfxPriority * 0xFF) >> 8) & 0xFF;
-        _driver->callback(10, soundId, int(1), newVal);
+        m_driver->callback(10, soundId, int(3), newVal);
+        newVal = ((m_sfxPriority * 0xFF) >> 8) & 0xFF;
+        m_driver->callback(10, soundId, int(1), newVal);
     }
 
-    _driver->callback(6, soundId);
+    m_driver->callback(6, soundId);
 }
 
 bool CadlPlayer::load(const std::string &filename) {
@@ -2121,42 +2129,44 @@ bool CadlPlayer::load(const std::string &filename) {
     file_data.resize(f.size());
     f.read(file_data.data(), f.size());
 
-    _driver->callback(8, int(-1));
+    m_driver->callback(8, int(-1));
 
-    std::copy_n(file_data.begin(), 120, _trackEntries.begin());
+    std::copy_n(file_data.begin(), 120, m_trackEntries.begin());
 
-    _soundDataPtr.resize(file_data.size() - 120);
-    std::copy_n(file_data.data() + 120, _soundDataPtr.size(),
-                _soundDataPtr.begin());
+    m_soundDataPtr.resize(file_data.size() - 120);
+    std::copy_n(file_data.data() + 120, m_soundDataPtr.size(), m_soundDataPtr.begin());
 
     file_data.clear();
 
-    _driver->callback(4, _soundDataPtr.data());
+    m_driver->callback(4, m_soundDataPtr.data());
 
     // 	_soundFileLoaded = file;
 
     // find last subsong
-    auto it =
-            std::find_if(_trackEntries.rbegin(), _trackEntries.rend(), [](uint8_t x) {
-            return x != 0xff;
-});
-    numsubsongs = &*it - &*_trackEntries.begin() + 1;
+    auto it = std::find_if(m_trackEntries.rbegin(), m_trackEntries.rend(), [](uint8_t x) {
+        return x != 0xff;
+    });
+    m_subSongCount = &*it - &*m_trackEntries.begin() + 1;
 
-    cursubsong = 2;
+    m_currentSubSong = 2;
     rewind();
+    addOrder(0);
     return true;
 }
 
 void CadlPlayer::rewind(int subsong) {
     if (subsong == -1)
-        subsong = cursubsong;
+        subsong = m_currentSubSong;
     getOpl()->writeReg(1, 32);
     playSoundEffect(subsong);
-    cursubsong = subsong;
+    m_currentSubSong = subsong;
     update();
 }
 
-unsigned int CadlPlayer::getsubsongs() { return numsubsongs; }
+unsigned int CadlPlayer::subSongCount() const
+{
+    return m_subSongCount;
+}
 
 bool CadlPlayer::update() {
     bool songend = true;
@@ -2164,10 +2174,10 @@ bool CadlPlayer::update() {
     //   if(_trackEntries[cursubsong] == 0xff)
     //     return false;
 
-    _driver->callback();
+    m_driver->callback();
 
     for (int i = 0; i < 10; i++)
-        if (_driver->_channels[i].dataptr != NULL)
+        if (m_driver->_channels[i].dataptr != NULL)
             songend = false;
 
     return !songend;

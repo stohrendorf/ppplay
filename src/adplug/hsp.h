@@ -29,7 +29,10 @@ class ChspLoader : public ChscPlayer {
 public:
   static CPlayer *factory();
 
-  ChspLoader() : ChscPlayer() {}
+  ChspLoader()
+      : ChscPlayer(false)
+  {
+  }
 
   bool load(const std::string &filename);
 };

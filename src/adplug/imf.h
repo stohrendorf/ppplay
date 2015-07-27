@@ -35,14 +35,23 @@ class CimfPlayer : public CPlayer {
     bool load(const std::string &filename);
     bool update();
     void rewind(int subsong);
-    size_t framesUntilUpdate() override { return SampleRate / m_timer; }
+    size_t framesUntilUpdate() const
+    {
+        return SampleRate / m_timer;
+    }
 
-    std::string gettype() { return "IMF File Format"; }
-    std::string gettitle();
-    std::string getauthor() { return m_authorName; }
-    std::string getdesc();
+    std::string type() const
+    {
+        return "IMF File Format";
+    }
+    std::string title() const;
+    std::string author() const
+    {
+        return m_authorName;
+    }
+    std::string description() const;
 
-protected:
+private:
     unsigned long m_pos = 0;
     unsigned short m_del = 0;
     bool m_songend = false;
@@ -64,7 +73,6 @@ protected:
 #pragma pack(pop)
     std::vector<Sdata> m_data{};
 
-private:
     float getrate(const FileStream &file);
 };
 

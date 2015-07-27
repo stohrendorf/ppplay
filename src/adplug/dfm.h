@@ -1,17 +1,17 @@
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -22,34 +22,30 @@
 #include "protrack.h"
 
 class CdfmLoader : public CmodPlayer {
-  DISABLE_COPY(CdfmLoader)
-public:
-  static CPlayer *factory();
+    DISABLE_COPY(CdfmLoader)
+    public:
+        static CPlayer *factory();
 
-  CdfmLoader() = default;
+    CdfmLoader() = default;
 
-  bool load(const std::string &filename);
-  size_t framesUntilUpdate();
+    bool load(const std::string &filename);
+    size_t framesUntilUpdate() const;
 
-  std::string gettype();
-  unsigned int getinstruments() { return 32; }
-  ;
-  std::string getinstrument(unsigned int n) {
-    if (*instname[n])
-      return std::string(instname[n], 1, *instname[n]);
-    else
-      return std::string();
-  }
-  ;
-  std::string getdesc() { return std::string(songinfo, 1, *songinfo); }
-  ;
+    std::string type() const;
+    uint32_t instrumentCount() const
+    {
+        return 32;
+    }
+    std::string instrumentTitle(size_t n) const {
+        return m_instName[n];
+    }
+    std::string description() const
+    {
+        return m_songInfo;
+    }
 
 private:
-  struct {
-    char id[4];
-    uint8_t hiver, lover;
-  } header;
-
-  char songinfo[33];
-  char instname[32][12];
+    std::string m_songInfo{};
+    std::array<std::string, 32> m_instName{{}};
+    std::string m_type{};
 };

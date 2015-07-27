@@ -47,10 +47,25 @@ private:
   std::vector<std::string> extensions{};
 };
 
-class CPlayers : public std::list<const CPlayerDesc *> {
+class CPlayers {
+private:
+    std::list<const CPlayerDesc *> m_descriptions{};
 public:
-  const CPlayerDesc *lookup_filetype(const std::string &ftype) const;
-  const CPlayerDesc *lookup_extension(const std::string &extension) const;
+    const CPlayerDesc *lookup_filetype(const std::string &ftype) const;
+    const CPlayerDesc *lookup_extension(const std::string &extension) const;
+    void addPlayerDescription(const CPlayerDesc* desc)
+    {
+        m_descriptions.push_back(desc);
+    }
+
+    std::list<const CPlayerDesc*>::const_iterator begin() const
+    {
+        return m_descriptions.cbegin();
+    }
+    std::list<const CPlayerDesc*>::const_iterator end() const
+    {
+        return m_descriptions.cend();
+    }
 };
 
 #endif

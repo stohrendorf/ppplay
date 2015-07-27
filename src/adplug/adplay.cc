@@ -90,27 +90,27 @@ void message(int level, const char *fmt, ...)
 static void usage()
 /* Print usage information. */
 {
-    printf("Usage: %s [OPTION]... FILE...\n\n"
-           "Output selection:\n"
-           "  -O, --output=OUTPUT        specify output mechanism (disk/sdl)\n\n"
-           "Disk writer (disk) specific:\n"
-           "  -d, --device=FILE          output to FILE ('-' is stdout)\n\n"
-           "SDL driver (sdl) specific:\n"
-           "  -b, --buffer=SIZE          set output buffer size to SIZE\n\n"
-           "Informative output:\n"
-           "  -i, --instruments          display instrument names\n"
-           "  -r, --realtime             display realtime song info\n"
-           "  -m, --message              display song message\n\n"
-           "Playback:\n"
-           "  -s, --subsong=N            play subsong number N\n"
-           "  -o, --once                 play only once, don't loop\n\n"
-           "Generic:\n"
-           "  -D, --database=FILE        additionally use database file FILE\n"
-           "  -q, --quiet                be more quiet\n"
-           "  -v, --verbose              be more verbose\n"
-           "  -h, --help                 display this help and exit\n"
-           "  -V, --version              output version information and exit\n\n",
-           program_name);
+    std::cout <<
+                 "Usage: " << program_name << " [OPTION]... FILE...\n\n"
+                 "Output selection:\n"
+                 "  -O, --output=OUTPUT        specify output mechanism (disk/sdl)\n\n"
+                 "Disk writer (disk) specific:\n"
+                 "  -d, --device=FILE          output to FILE ('-' is stdout)\n\n"
+                 "SDL driver (sdl) specific:\n"
+                 "  -b, --buffer=SIZE          set output buffer size to SIZE\n\n"
+                 "Informative output:\n"
+                 "  -i, --instruments          display instrument names\n"
+                 "  -r, --realtime             display realtime song info\n"
+                 "  -m, --message              display song message\n\n"
+                 "Playback:\n"
+                 "  -s, --subsong=N            play subsong number N\n"
+                 "  -o, --once                 play only once, don't loop\n\n"
+                 "Generic:\n"
+                 "  -D, --database=FILE        additionally use database file FILE\n"
+                 "  -q, --quiet                be more quiet\n"
+                 "  -v, --verbose              be more verbose\n"
+                 "  -h, --help                 display this help and exit\n"
+                 "  -V, --version              output version information and exit\n\n";
 }
 
 static int decode_switches(int argc, char **argv)
@@ -137,8 +137,7 @@ static int decode_switches(int argc, char **argv)
     {NULL, 0, NULL, 0}				// end of options
 };
 
-    while ((c = getopt_long(argc, argv, "8f:b:d:irms:ohVe:O:D:qvR:",
-                            long_options, (int *)0)) != EOF) {
+    while ((c = getopt_long(argc, argv, "8f:b:d:irms:ohVe:O:D:qvR:", long_options, nullptr)) != EOF) {
         switch (c) {
         case 'b': cfg.buf_size = atoi(optarg); break;
         case 'd': cfg.device = optarg; break;
@@ -177,8 +176,6 @@ static void play(const char *fn, Player *output, int subsong = -1)
  * default subsong of file.
  */
 {
-    unsigned long i;
-
     // initialize output & player
     auto player = CAdPlug::factory(fn);
 
@@ -190,34 +187,33 @@ static void play(const char *fn, Player *output, int subsong = -1)
     if(subsong != -1)
         player->rewind(subsong);
     else
-        subsong = player->getsubsong();
+        subsong = player->currentSubSong();
 
-    fprintf(stderr, "Playing '%s'...\n"
-                    "Type  : %s\n"
-                    "Title : %s\n"
-                    "Author: %s\n\n", fn, player->gettype().c_str(),
-            player->gettitle().c_str(), player->getauthor().c_str());
+    std::cerr << "Playing '" << fn << "'...\n"
+              << "Type  : " << player->type() << "\n"
+              << "Title : " << player->title() << "\n"
+              << "Author: " << player->author() << "\n\n";
 
     if(cfg.showinsts) {		// display instruments
-        fprintf(stderr, "Instrument names:\n");
-        for(i = 0;i < player->getinstruments(); i++)
-            fprintf(stderr, "%2lu: %s\n", i, player->getinstrument(i).c_str());
-        fprintf(stderr, "\n");
+        std::cerr << "Instrument names:\n";
+        for(size_t i = 0; i < player->instrumentCount(); i++)
+            std::cerr << i << ": " << player->instrumentTitle(i) << "\n";
+        std::cerr << "\n";
     }
 
     if(cfg.songmessage)	// display song message
-        fprintf(stderr, "Song message:\n%s\n\n", player->getdesc().c_str());
+        std::cerr << "Song message:\n" << player->description() << "\n\n";
 
     output->setPlayer( player );
 
     // play loop
     do {
         if(cfg.songinfo)	// display song info
-            fprintf(stderr, "Subsong: %d/%d, Order: %d/%d, Pattern: %d/%d, Row: %d, "
-                            "Speed: %d, Timer: %.2fHz     \r",
-                    subsong, player->getsubsongs()-1, player->getorder(),
-                    player->getorders(), player->getpattern(), player->getpatterns(),
-                    player->getrow(), player->getspeed(), float(player->framesUntilUpdate())/CPlayer::SampleRate);
+            std::cerr << "Subsong: " << subsong+1 << "/" << player->subSongCount()+0 << ", Order: "
+                      << player->currentOrder()+0 << "/" << player->orderCount()+0 << ", Pattern: "
+                      << player->currentPattern()+0 << ", Row: " << player->currentRow()+0 << ", Speed: "
+                      << player->currentSpeed()+0 << ", Timer: "
+                      << std::fixed << CPlayer::SampleRate/float(player->framesUntilUpdate()) << "Hz     \r";
 
         output->frame();
     } while(output->isPlaying() || cfg.endless);
@@ -245,8 +241,8 @@ int main(int argc, char **argv)
     // parse commandline
     int optind = decode_switches(argc,argv);
     if(optind == argc) {	// no filename given
-        fprintf(stderr, "%s: need at least one file for playback\n", program_name);
-        fprintf(stderr, "Try '%s --help' for more information.\n", program_name);
+        std::cerr << program_name << ": need at least one file for playback\n";
+        std::cerr << "Try '" << program_name << " --help' for more information.\n";
         return EXIT_FAILURE;
     }
     if(argc - optind > 1) cfg.endless = false;	// more than 1 file given

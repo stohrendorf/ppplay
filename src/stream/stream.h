@@ -122,20 +122,22 @@ public:
     inline bool good() const {
         return m_stream && m_stream->good();
     }
+
+    template<class T>
+    friend inline Stream& operator>>( Stream& str, T& data )
+    {
+        return str.read( &data );
+    }
+
+    template<class T>
+    friend inline Stream& operator<<( Stream& str, const T& data )
+    {
+        return str.write( &data );
+    }
+
 protected:
     void setName( const std::string& name );
 };
 
-template<class T>
-inline Stream& operator>>( Stream& str, T& data )
-{
-    return str.read( &data );
-}
-
-template<class T>
-inline Stream& operator<<( Stream& str, const T& data )
-{
-    return str.write( &data );
-}
 
 #endif // binstreamH

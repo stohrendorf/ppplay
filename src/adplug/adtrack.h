@@ -26,16 +26,19 @@ class CadtrackLoader : public CmodPlayer {
     public:
         static CPlayer *factory();
 
-    CadtrackLoader() : CmodPlayer() {}
-    ;
+    CadtrackLoader() = default;
 
     bool load(const std::string &filename);
-    size_t framesUntilUpdate();
+    size_t framesUntilUpdate() const;
 
-    std::string gettype() { return std::string("Adlib Tracker 1.0"); }
-    ;
-    unsigned int getinstruments() { return 9; }
-    ;
+    std::string type() const
+    {
+        return "Adlib Tracker 1.0";
+    }
+    uint32_t instrumentCount() const
+    {
+        return 9;
+    }
 
 private:
     enum Operators {
@@ -44,7 +47,7 @@ private:
     };
 
 #pragma pack(push,1)
-    struct AdTrackInst {
+    struct Instrument {
         struct Operator {
             uint16_t appampmod;
             uint16_t appvib;
@@ -64,5 +67,6 @@ private:
     };
 #pragma pack(pop)
 
-    void convert_instrument(unsigned int n, AdTrackInst *i);
+    using CmodPlayer::addInstrument;
+    void addInstrument(Instrument *i);
 };

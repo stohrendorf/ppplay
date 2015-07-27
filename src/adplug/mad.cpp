@@ -50,21 +50,21 @@ bool CmadLoader::load(const std::string &filename) {
     f.seekrel(1);
 
     // data for Protracker
+    uint8_t orderCount;
+    f >> orderCount;
+    uint8_t maxUsedPattern;
+    f >> maxUsedPattern;
     uint8_t tmp;
     f >> tmp;
-    m_length = tmp;
-    f >> tmp;
-    numberOfPatterns = tmp;
-    f >> tmp;
-    timer = tmp;
+    setCurrentSpeed(tmp);
+    setInitialSpeed(tmp);
 
     // init CmodPlayer
-    m_order.resize(m_length);
-    realloc_patterns(numberOfPatterns, 32, 9);
+    realloc_patterns(maxUsedPattern, 32, 9);
     init_trackord();
 
     // load tracks
-    for (auto i = 0; i < numberOfPatterns; i++) {
+    for (auto i = 0; i < maxUsedPattern; i++) {
         for (auto k = 0; k < 32; k++) {
             for (auto j = 0; j < 9; j++) {
                 auto t = i * 9 + j;
@@ -74,31 +74,30 @@ bool CmadLoader::load(const std::string &filename) {
                 f >> event;
 
                 // convert event
+                PatternCell& cell = patternCell(t,k);
                 if (event < 0x61)
-                    m_tracks.at(t,k).note = event;
+                    cell.note = event;
                 if (event == 0xFF) // 0xFF: Release note
-                    m_tracks.at(t,k).command = 8;
+                    cell.command = Command::NoteOff;
                 if (event == 0xFE) // 0xFE: Pattern Break
-                    m_tracks.at(t,k).command = 13;
+                    cell.command = Command::PatternBreak;
             }
         }
     }
 
     // load order
-    for (auto i = 0; i < m_length; i++) {
-        uint8_t tmp;
-        f >> tmp;
-        m_order[i] = tmp - 1;
-    }
+    for(uint8_t order; this->orderCount() < orderCount && f>>order; )
+        addOrder(order-1);
 
     // convert instruments
-    for (auto i = 0; i < 9; i++)
+    for (auto i = 0; i < 9; i++) {
+        CmodPlayer::Instrument& inst = addInstrument();
         for (auto j = 0; j < 10; j++)
-            instrument(i,true).data[conv_inst[j]] = instruments[i].data[j];
+            inst.data[conv_inst[j]] = instruments[i].data[j];
+    }
 
     // data for Protracker
-    m_restartpos = 0;
-    m_initspeed = 1;
+    setRestartOrder(0);
 
     rewind(0);
     return true;
@@ -109,20 +108,30 @@ void CmadLoader::rewind(int subsong) {
 
     // default instruments
     for (int i = 0; i < 9; i++) {
-        channel[i].inst = i;
+        channel(i).instrument = i;
 
         const CmodPlayer::Instrument& inst = instrument(i);
-        channel[i].vol1 = 63 - (inst.data[10] & 63);
-        channel[i].vol2 = 63 - (inst.data[9] & 63);
+        channel(i).carrierVolume = 63 - (inst.data[10] & 63);
+        channel(i).modulatorVolume = 63 - (inst.data[9] & 63);
     }
 }
 
-size_t CmadLoader::framesUntilUpdate() { return SampleRate / timer; }
+size_t CmadLoader::framesUntilUpdate() const
+{
+    return SampleRate / currentSpeed() / currentSpeed();
+}
 
-std::string CmadLoader::gettype() { return std::string("Mlat Adlib Tracker"); }
+std::string CmadLoader::type() const
+{
+    return "Mlat Adlib Tracker";
+}
 
-std::string CmadLoader::getinstrument(unsigned int n) {
+std::string CmadLoader::instrumentTitle(size_t n) const
+{
     return std::string(instruments[n].name, 8);
 }
 
-unsigned int CmadLoader::getinstruments() { return 9; }
+uint32_t CmadLoader::instrumentCount() const
+{
+    return 9;
+}

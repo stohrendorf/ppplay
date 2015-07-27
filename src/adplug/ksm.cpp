@@ -289,9 +289,10 @@ void CksmPlayer::rewind(int) {
   nownote = 0;
 }
 
-std::string CksmPlayer::getinstrument(unsigned int n) {
+std::string CksmPlayer::instrumentTitle(size_t n) const
+{
   if (trchan[n])
-    return std::string(instname[trinst[n]]);
+    return instname[trinst[n]];
   else
     return std::string();
 }
@@ -299,9 +300,7 @@ std::string CksmPlayer::getinstrument(unsigned int n) {
 /*** private methods *************************************/
 
 void CksmPlayer::loadinsts(FileStream &f) {
-  int i, j;
-
-  for (i = 0; i < 256; i++) {
+  for (int i = 0; i < 256; i++) {
     f.read(instname[i], 20);
     f.read(inst[i], 11);
     f.seekrel(2);

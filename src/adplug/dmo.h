@@ -22,31 +22,30 @@
 #include "s3m.h"
 
 class CdmoLoader : public Cs3mPlayer {
-  DISABLE_COPY(CdmoLoader)
-public:
-  static CPlayer *factory();
+    DISABLE_COPY(CdmoLoader)
+    public:
+        static CPlayer *factory();
 
-  CdmoLoader() : Cs3mPlayer() {}
-  ;
+    CdmoLoader() = default;
 
-  bool load(const std::string &filename);
+    bool load(const std::string &filename);
 
-  std::string gettype();
-  std::string getauthor();
+    std::string type() const;
+    std::string author() const;
 
 private:
 
-  class dmo_unpacker {
-  public:
-    bool decrypt(unsigned char *buf, long len);
-    long unpack(unsigned char *ibuf, unsigned char *obuf,
-                unsigned long outputsize);
+    class dmo_unpacker {
+    public:
+        bool decrypt(unsigned char *buf, long len);
+        long unpack(unsigned char *ibuf, unsigned char *obuf,
+                    unsigned long outputsize);
 
-  private:
-    unsigned short brand(unsigned short range);
-    short unpack_block(unsigned char *ibuf, long ilen, unsigned char *obuf);
+    private:
+        unsigned short brand(unsigned short range);
+        short unpack_block(unsigned char *ibuf, long ilen, unsigned char *obuf);
 
-    unsigned long bseed;
-    unsigned char *oend;
-  };
+        unsigned long bseed;
+        unsigned char *oend;
+    };
 };

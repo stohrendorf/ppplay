@@ -47,8 +47,6 @@ bool CadtrackLoader::load(const std::string &filename) {
         return false;
     unsigned short rwp;
     unsigned char chp, pnote = 0;
-    int i, j;
-
     // file validation
     if(f.extension() != ".sng" || f.size() != 36000) {
         return false;
@@ -67,20 +65,18 @@ bool CadtrackLoader::load(const std::string &filename) {
 
         // give CmodPlayer a hint on what we're up to
         realloc_patterns(1, 1000, 9);
-        m_order.resize(1);
+        addOrder(0);
         init_trackord();
-        m_flags = NoKeyOn;
-        m_order[0] = 0;
-        m_length = 1;
-        m_restartpos = 0;
-        m_bpm = 120;
-        m_initspeed = 3;
+        setNoKeyOn();
+        setRestartOrder(0);
+        setInitialTempo(120);
+        setInitialSpeed(3);
 
         // load instruments from instruments file
-        for (i = 0; i < 9; i++) {
-            AdTrackInst myinst;
-            f.read(&myinst);
-            convert_instrument(i, &myinst);
+        for (int i = 0; i < 9; i++) {
+            Instrument myinst;
+            f >> myinst;
+            addInstrument(&myinst);
         }
     }
 
@@ -91,7 +87,7 @@ bool CadtrackLoader::load(const std::string &filename) {
             char note[2];
             f.read(note, 2);
             uint8_t octave;
-            f.read(&octave);
+            f >> octave;
             f.seekrel(1);
             switch (*note) {
             case 'C':
@@ -132,7 +128,7 @@ bool CadtrackLoader::load(const std::string &filename) {
                 break;
             case '\0':
                 if (note[1] == '\0')
-                    m_tracks.at(chp, rwp).note = 127;
+                    patternCell(chp, rwp).note = 127;
                 else {
                     return false;
                 }
@@ -141,8 +137,8 @@ bool CadtrackLoader::load(const std::string &filename) {
                 return false;
             }
             if ((*note) != '\0') {
-                m_tracks.at(chp, rwp).note = pnote + (octave * 12);
-                m_tracks.at(chp, rwp).inst = chp + 1;
+                patternCell(chp, rwp).note = pnote + (octave * 12);
+                patternCell(chp, rwp).instrument = chp + 1;
             }
         }
     }
@@ -151,12 +147,15 @@ bool CadtrackLoader::load(const std::string &filename) {
     return true;
 }
 
-size_t CadtrackLoader::framesUntilUpdate() { return SampleRate / 18.2; }
+size_t CadtrackLoader::framesUntilUpdate() const
+{
+    return SampleRate / 18.2;
+}
 
 /*** Private methods ***/
 
-void CadtrackLoader::convert_instrument(unsigned int n, AdTrackInst *i) {
-    CmodPlayer::Instrument& inst = instrument(n, true);
+void CadtrackLoader::addInstrument(Instrument *i) {
+    CmodPlayer::Instrument& inst = addInstrument();
     // Carrier "Amp Mod / Vib / Env Type / KSR / Multiple" register
     inst.data[2] = i->op[Carrier].appampmod ? 1 << 7 : 0;
     inst.data[2] += i->op[Carrier].appvib ? 1 << 6 : 0;

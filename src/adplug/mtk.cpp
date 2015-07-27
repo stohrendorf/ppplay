@@ -33,17 +33,16 @@ bool CmtkLoader::load(const std::string &filename) {
     FileStream f(filename);
     if (!f)
         return false;
+
+
+    // read header
+#pragma pack(push,1)
     struct {
         char id[18];
         uint16_t crc, size;
     } header;
-    unsigned int i;
-    unsigned long cmpsize, cmpptr = 0, orgptr = 0;
-    unsigned short ctrlbits = 0, ctrlmask = 0, cmd, cnt, offs;
-
-    // read header
-    f.read(header.id, 18);
-    f >> header.crc >> header.size;
+#pragma pack(pop)
+    f >> header;
 
     // file validation section
     if (strncmp(header.id, "mpu401tr\x92kk\xeer@data", 18)) {
@@ -51,15 +50,16 @@ bool CmtkLoader::load(const std::string &filename) {
     }
 
     // load section
-    cmpsize = f.size() - 22;
-    std::vector<uint8_t> cmp(cmpsize);
+    std::vector<uint8_t> cmp(f.size() - 22);
     std::vector<uint8_t> org(header.size);
-    f.read(cmp.data(), cmpsize);
+    f.read(cmp.data(), cmp.size());
 
-    while (cmpptr < cmpsize) { // decompress
+    size_t orgptr = 0;
+    uint16_t ctrlbits = 0, ctrlmask = 0;
+    for(auto cmpptr = cmp.begin(); cmpptr<cmp.end(); ) { // decompress
         ctrlmask >>= 1;
         if (!ctrlmask) {
-            ctrlbits = cmp[cmpptr] + (cmp[cmpptr + 1] << 8);
+            ctrlbits = *cmpptr | (*(cmpptr + 1) << 8);
             cmpptr += 2;
             ctrlmask = 0x8000;
         }
@@ -67,41 +67,42 @@ bool CmtkLoader::load(const std::string &filename) {
             if (orgptr >= header.size)
                 return false;
 
-            org[orgptr] = cmp[cmpptr];
+            org[orgptr] = *cmpptr;
             orgptr++;
-            cmpptr++;
+            ++cmpptr;
             continue;
         }
 
         // compressed data
-        cmd = (cmp[cmpptr] >> 4) & 0x0f;
-        cnt = cmp[cmpptr] & 0x0f;
-        cmpptr++;
+        const auto cmd = (*cmpptr >> 4) & 0x0f;
+        uint16_t cnt = *cmpptr & 0x0f;
+        ++cmpptr;
+        uint16_t offs = 0;
         switch (cmd) {
         case 0:
             if (orgptr + cnt > header.size)
                 return false;
             cnt += 3;
-            memset(&org[orgptr], cmp[cmpptr], cnt);
-            cmpptr++;
+            memset(&org[orgptr], *cmpptr, cnt);
+            ++cmpptr;
             orgptr += cnt;
             break;
 
         case 1:
             if (orgptr + cnt > header.size)
                 return false;
-            cnt += (cmp[cmpptr] << 4) + 19;
-            memset(&org[orgptr], cmp[++cmpptr], cnt);
-            cmpptr++;
+            cnt += (*cmpptr << 4) + 19;
+            memset(&org[orgptr], *cmpptr, cnt);
+            cmpptr += 2;
             orgptr += cnt;
             break;
 
         case 2:
             if (orgptr + cnt > header.size)
                 return false;
-            offs = (cnt + 3) + (cmp[cmpptr] << 4);
-            cnt = cmp[++cmpptr] + 16;
-            cmpptr++;
+            offs = (cnt + 3) + (*cmpptr << 4);
+            cnt = *cmpptr + 16;
+            cmpptr += 2;
             memcpy(&org[orgptr], &org[orgptr - offs], cnt);
             orgptr += cnt;
             break;
@@ -109,7 +110,8 @@ bool CmtkLoader::load(const std::string &filename) {
         default:
             if (orgptr + cmd > header.size)
                 return false;
-            offs = (cnt + 3) + (cmp[cmpptr++] << 4);
+            offs = (cnt + 3) + (*cmpptr << 4);
+            ++cmpptr;
             memcpy(&org[orgptr], &org[orgptr - offs], cmd);
             orgptr += cmd;
             break;
@@ -119,23 +121,24 @@ bool CmtkLoader::load(const std::string &filename) {
         char songname[34], composername[34], instname[0x80][34];
         unsigned char insts[0x80][12], order[0x80], dummy, patterns[0x32][0x40][9];
     };
-    mtkdata* data = (struct mtkdata *)org.data();
+    const mtkdata* data = reinterpret_cast<const mtkdata*>(org.data());
 
     // convert to HSC replay data
-    memset(title, 0, 34);
-    strncpy(title, data->songname + 1, 33);
+    memset(m_title, 0, 34);
+    strncpy(m_title, data->songname + 1, 33);
     memset(composer, 0, 34);
     strncpy(composer, data->composername + 1, 33);
     memset(instname, 0, 0x80 * 34);
-    for (i = 0; i < 0x80; i++)
+    for (int i = 0; i < 0x80; i++)
         strncpy(instname[i], data->instname[i] + 1, 33);
-    memcpy(m_instr, data->insts, 0x80 * 12);
-    memcpy(m_song, data->order, 0x80);
-    memcpy(m_patterns, data->patterns, header.size - 6084);
-    for (i = 0; i < 128; i++) { // correct instruments
-        m_instr[i][2] ^= (m_instr[i][2] & 0x40) << 1;
-        m_instr[i][3] ^= (m_instr[i][3] & 0x40) << 1;
-        m_instr[i][11] >>= 4; // make unsigned
+    memcpy(instrumentData(), data->insts, 0x80 * 12);
+    for(int i=0; i<0x80; ++i)
+        addOrder(data->order[i]);
+    memcpy(patternData(), data->patterns, header.size - 6084);
+    for (int i = 0; i < 128; i++) { // correct instruments
+        instrumentData()[i][2] ^= (instrumentData()[i][2] & 0x40) << 1;
+        instrumentData()[i][3] ^= (instrumentData()[i][3] & 0x40) << 1;
+        instrumentData()[i][11] >>= 4; // make unsigned
     }
 
     rewind(0);

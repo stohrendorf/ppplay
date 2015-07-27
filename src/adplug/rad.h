@@ -22,21 +22,24 @@
 #include "protrack.h"
 
 class CradLoader : public CmodPlayer {
-  DISABLE_COPY(CradLoader)
+    DISABLE_COPY(CradLoader)
 public:
-  static CPlayer *factory();
+    static CPlayer *factory();
 
-  CradLoader() = default;
+    CradLoader() = default;
 
-  bool load(const std::string &filename);
-  size_t framesUntilUpdate();
+    bool load(const std::string &filename);
+    size_t framesUntilUpdate() const;
 
-  std::string gettype() { return "Reality ADlib Tracker"; }
-  std::string getdesc() { return m_desc; }
+    std::string type() const
+    {
+        return "Reality ADlib Tracker";
+    }
+    std::string description() const
+    {
+        return m_description;
+    }
 
 private:
-  uint8_t m_version = 0;
-  uint8_t m_radflags = 0;
-  std::string m_desc {}
-  ;
+    std::string m_description{};
 };

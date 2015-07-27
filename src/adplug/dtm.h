@@ -22,47 +22,43 @@
 #include "protrack.h"
 
 class CdtmLoader : public CmodPlayer {
-  DISABLE_COPY(CdtmLoader)
-public:
-  static CPlayer *factory();
+    DISABLE_COPY(CdtmLoader)
+    public:
+        static CPlayer *factory();
 
-  CdtmLoader() : CmodPlayer() {}
-  ;
+    CdtmLoader() = default;
 
-  bool load(const std::string &filename);
-  void rewind(int subsong);
-  size_t framesUntilUpdate();
+    bool load(const std::string &filename);
+    void rewind(int subsong);
+    size_t framesUntilUpdate() const;
 
-  std::string gettype();
-  std::string gettitle();
-  std::string getauthor();
-  std::string getdesc();
-  std::string getinstrument(unsigned int n);
-  unsigned int getinstruments();
+    std::string type() const;
+    std::string title() const;
+    std::string author() const;
+    std::string description() const;
+    std::string instrumentTitle(size_t n) const;
+    uint32_t instrumentCount() const;
 
 private:
 
-  struct dtm_header {
-    char id[12];
-    uint8_t version;
-    char title[20];
-    char author[20];
-    uint8_t numpat;
-    uint8_t numinst;
-  } header;
+    struct dtm_header {
+        char id[12] = "";
+        uint8_t version = 0;
+        char title[20] = "";
+        char author[20] = "";
+        uint8_t numpat = 0;
+        uint8_t numinst = 0;
+    };
 
-  char desc[80 * 16];
+    dtm_header m_header{};
 
-  struct dtm_instrument {
-    char name[13];
-    uint8_t data[12];
-  } instruments[128];
+    std::string m_description{};
 
-  struct dtm_event {
-    unsigned char byte0;
-    unsigned char byte1;
-  };
+    struct dtm_instrument {
+        char name[13] = "";
+        uint8_t data[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+    };
+    dtm_instrument m_instruments[128];
 
-  long unpack_pattern(unsigned char *ibuf, long ilen, unsigned char *obuf,
-                      long olen);
+    static std::vector<uint8_t> unpack_pattern(const std::vector<uint8_t>& input);
 };

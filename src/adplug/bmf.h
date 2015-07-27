@@ -1,17 +1,17 @@
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -22,68 +22,65 @@
 #include "xad.h"
 
 class CxadbmfPlayer : public CxadPlayer {
-  DISABLE_COPY(CxadbmfPlayer)
-public:
-  static CPlayer *factory();
+    DISABLE_COPY(CxadbmfPlayer)
+    public:
+        static CPlayer *factory();
 
-  CxadbmfPlayer() : CxadPlayer() {}
-  ~CxadbmfPlayer() {}
+    CxadbmfPlayer() = default;
+    ~CxadbmfPlayer() = default;
 
 protected:
-  enum {
-    BMF0_9B,
-    BMF1_1,
-    BMF1_2
-  };
-  //
-  struct bmf_event {
-    unsigned char note;
-    unsigned char delay;
-    unsigned char volume;
-    unsigned char instrument;
-    unsigned char cmd;
-    unsigned char cmd_data;
-  };
+    enum BmfVersion {
+        BMF0_9B,
+        BMF1_1,
+        BMF1_2
+    };
+    //
+    struct bmf_event {
+        uint8_t note;
+        uint8_t delay;
+        uint8_t volume;
+        uint8_t instrument;
+        uint8_t cmd;
+        uint8_t cmd_data;
+    };
 
-  struct {
-    unsigned char version;
-    char title[36];
-    char author[36];
-    float timer;
-    unsigned char speed;
+    BmfVersion m_bmfVersion;
+    char m_bmfTitle[36];
+    char m_bmfAuthor[36];
+    float m_bmfTimer;
 
     struct {
-      char name[11];
-      unsigned char data[13];
-    } instruments[32];
+        char name[11];
+        uint8_t data[13];
+    } m_bmfInstruments[32];
 
-    bmf_event streams[9][1024];
+    bmf_event m_bmfStreams[9][1024];
 
-    int active_streams;
+    int m_bmfActiveStreams;
 
     struct {
-      unsigned short stream_position;
-      unsigned char delay;
-      unsigned short loop_position;
-      unsigned char loop_counter;
-    } channel[9];
-  } bmf;
-  //
-  bool xadplayer_load();
-  void xadplayer_rewind(int);
-  void xadplayer_update();
-  float xadplayer_getrefresh();
-  std::string xadplayer_gettype();
-  std::string xadplayer_gettitle();
-  std::string xadplayer_getauthor();
-  std::string xadplayer_getinstrument(unsigned int i);
-  unsigned int xadplayer_getinstruments();
-  //
+        uint16_t stream_position;
+        uint8_t delay;
+        uint16_t loop_position;
+        uint8_t loop_counter;
+    } m_bmfChannels[9];
+
+    bool xadplayer_load();
+    void xadplayer_rewind(int);
+    void xadplayer_update();
+    size_t framesUntilUpdate() const;
+    std::string type() const;
+    std::string title() const;
+    std::string author() const;
+    std::string instrumentTitle(size_t i) const;
+    uint32_t instrumentCount() const;
+    //
 private:
-  static const unsigned char bmf_adlib_registers[117];
-  static const unsigned short bmf_notes[12];
-  static const unsigned short bmf_notes_2[12];
-  static const unsigned char bmf_default_instrument[13];
+    static const uint8_t bmf_adlib_registers[117];
+    static const uint16_t bmf_notes[12];
+    static const uint16_t bmf_notes_2[12];
+    static const uint8_t bmf_default_instrument[13];
 
-  int __bmf_convert_stream(unsigned char *stream, int channel);
+    int __bmf_convert_stream(const uint8_t *stream, int channel);
 };

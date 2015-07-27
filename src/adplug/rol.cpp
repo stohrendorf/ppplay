@@ -28,34 +28,35 @@
 #include "rol.h"
 #include "debug.h"
 
-int const CrolPlayer::kSizeofDataRecord = 30;
-int const CrolPlayer::kMaxTickBeat = 60;
-int const CrolPlayer::kSilenceNote = -12;
-int const CrolPlayer::kNumMelodicVoices = 9;
-int const CrolPlayer::kNumPercussiveVoices = 11;
-int const CrolPlayer::kBassDrumChannel = 6;
-int const CrolPlayer::kSnareDrumChannel = 7;
-int const CrolPlayer::kTomtomChannel = 8;
-int const CrolPlayer::kTomtomFreq = 2;    //4;
-int const CrolPlayer::kSnareDrumFreq = 2; //kTomtomFreq + 7;
-float const CrolPlayer::kDefaultUpdateTme = 18.2f;
-float const CrolPlayer::kPitchFactor = 400.0f;
+namespace {
+constexpr int kSizeofDataRecord = 30;
+constexpr int kMaxTickBeat = 60;
+constexpr int kSilenceNote = -12;
+constexpr int kNumMelodicVoices = 9;
+constexpr int kNumPercussiveVoices = 11;
+constexpr int kBassDrumChannel = 6;
+constexpr int kSnareDrumChannel = 7;
+constexpr int kTomtomChannel = 8;
+constexpr int kTomtomFreq = 2;    //4;
+constexpr int kSnareDrumFreq = 2; //kTomtomFreq + 7;
+constexpr float kPitchFactor = 400.0f;
 
-static const unsigned char drum_table[4] = { 0x14, 0x12, 0x15, 0x11 };
+constexpr uint16_t kNoteTable[12] = { 340, // C
+                                      363, // C#
+                                      385, // D
+                                      408, // D#
+                                      432, // E
+                                      458, // F
+                                      485, // F#
+                                      514, // G
+                                      544, // G#
+                                      577, // A
+                                      611, // A#
+                                      647  // B
+                                    };
 
-CrolPlayer::uint16_t const CrolPlayer::kNoteTable[12] = { 340, // C
-                                                          363, // C#
-                                                          385, // D
-                                                          408, // D#
-                                                          432, // E
-                                                          458, // F
-                                                          485, // F#
-                                                          514, // G
-                                                          544, // G#
-                                                          577, // A
-                                                          611, // A#
-                                                          647  // B
-                                                        };
+constexpr uint8_t drum_table[4] = { 0x14, 0x12, 0x15, 0x11 };
+}
 
 /*** public methods **************************************/
 
@@ -80,35 +81,35 @@ bool CrolPlayer::load(const std::string &filename) {
     delete[] fn;
     AdPlug_LogWrite("bnk_filename = \"%s\"\n", bnk_filename.c_str());
 
-    f >> rol_header.version_major;
-    f >> rol_header.version_minor;
+    f >> m_rolHeader.version_major;
+    f >> m_rolHeader.version_minor;
 
     // Version check
-    if (rol_header.version_major != 0 || rol_header.version_minor != 4) {
+    if (m_rolHeader.version_major != 0 || m_rolHeader.version_minor != 4) {
         AdPlug_LogWrite("Unsupported file version %d.%d or not a ROL file!\n",
-                        rol_header.version_major, rol_header.version_minor);
+                        m_rolHeader.version_major, m_rolHeader.version_minor);
         AdPlug_LogWrite("--- CrolPlayer::load ---\n");
         return false;
     }
 
     f.seekrel(40);
 
-    f >> rol_header.ticks_per_beat;
-    f >> rol_header.beats_per_measure;
-    f >> rol_header.edit_scale_y;
-    f >> rol_header.edit_scale_x;
+    f >> m_rolHeader.ticks_per_beat;
+    f >> m_rolHeader.beats_per_measure;
+    f >> m_rolHeader.edit_scale_y;
+    f >> m_rolHeader.edit_scale_x;
 
     f.seekrel(1);
 
-    f >> rol_header.mode;
+    f >> m_rolHeader.mode;
 
     f.seekrel(90 + 38 + 15);
 
-    f >> rol_header.basic_tempo;
+    f >> m_rolHeader.basic_tempo;
 
     load_tempo_events(f);
 
-    mTimeOfLastNote = 0;
+    m_timeOfLastNote = 0;
 
     if (load_voice_data(f, bnk_filename) != true) {
         AdPlug_LogWrite("CrolPlayer::load_voice_data(f) failed!\n");
@@ -123,14 +124,14 @@ bool CrolPlayer::load(const std::string &filename) {
 }
 //---------------------------------------------------------
 bool CrolPlayer::update() {
-    if (mNextTempoEvent < mTempoEvents.size() &&
-            mTempoEvents[mNextTempoEvent].time == mCurrTick) {
-        SetRefresh(mTempoEvents[mNextTempoEvent].multiplier);
-        ++mNextTempoEvent;
+    if (m_nextTempoEvent < m_tempoEvents.size() &&
+            m_tempoEvents[m_nextTempoEvent].time == m_currTick) {
+        SetRefresh(m_tempoEvents[m_nextTempoEvent].multiplier);
+        ++m_nextTempoEvent;
     }
 
-    TVoiceData::iterator curr = voice_data.begin();
-    TVoiceData::iterator end = voice_data.end();
+    TVoiceData::iterator curr = m_voiceData.begin();
+    TVoiceData::iterator end = m_voiceData.end();
     int voice = 0;
 
     while (curr != end) {
@@ -139,9 +140,9 @@ bool CrolPlayer::update() {
         ++voice;
     }
 
-    ++mCurrTick;
+    ++m_currTick;
 
-    if (mCurrTick > mTimeOfLastNote) {
+    if (m_currTick > m_timeOfLastNote) {
         return false;
     }
 
@@ -150,8 +151,8 @@ bool CrolPlayer::update() {
 }
 //---------------------------------------------------------
 void CrolPlayer::rewind(int) {
-    TVoiceData::iterator curr = voice_data.begin();
-    TVoiceData::iterator end = voice_data.end();
+    TVoiceData::iterator curr = m_voiceData.begin();
+    TVoiceData::iterator end = m_voiceData.end();
 
     while (curr != end) {
         CVoiceData &voice = *curr;
@@ -160,34 +161,34 @@ void CrolPlayer::rewind(int) {
         ++curr;
     }
 
-    memset(bxRegister, 0, sizeof(bxRegister));
-    memset(volumeCache, 0, sizeof(volumeCache));
+    memset(m_bxRegister, 0, sizeof(m_bxRegister));
+    memset(m_volumeCache, 0, sizeof(m_volumeCache));
 
-    bdRegister = 0;
+    m_bdRegister = 0;
 
     getOpl()->writeReg(1, 0x20); // Enable waveform select (bit 5)
 
-    if (rol_header.mode == 0) {
+    if (m_rolHeader.mode == 0) {
         getOpl()->writeReg(0xbd, 0x20); // select rhythm mode (bit 5)
-        bdRegister = 0x20;
+        m_bdRegister = 0x20;
 
         SetFreq(kTomtomChannel, 24);
         SetFreq(kSnareDrumChannel, 31);
     }
 
-    mNextTempoEvent = 0;
-    mCurrTick = 0;
+    m_nextTempoEvent = 0;
+    m_currTick = 0;
 
     SetRefresh(1.0f);
 }
 //---------------------------------------------------------
 void CrolPlayer::SetRefresh(float const multiplier) {
-    float const tickBeat = fmin(kMaxTickBeat, rol_header.ticks_per_beat);
+    float const tickBeat = fmin(kMaxTickBeat, m_rolHeader.ticks_per_beat);
 
-    mRefresh = (tickBeat * rol_header.basic_tempo * multiplier) / 60.0f;
+    m_refresh = (tickBeat * m_rolHeader.basic_tempo * multiplier) / 60.0f;
 }
 //---------------------------------------------------------
-size_t CrolPlayer::framesUntilUpdate() { return SampleRate / mRefresh; }
+size_t CrolPlayer::framesUntilUpdate() const { return SampleRate / m_refresh; }
 //---------------------------------------------------------
 void CrolPlayer::UpdateVoice(int const voice, CVoiceData &voiceData) {
     TNoteEvents const &nEvents = voiceData.note_events;
@@ -201,7 +202,7 @@ void CrolPlayer::UpdateVoice(int const voice, CVoiceData &voiceData) {
     TPitchEvents &pEvents = voiceData.pitch_events;
 
     if (!(voiceData.mEventStatus & CVoiceData::kES_InstrEnd) &&
-            iEvents[voiceData.next_instrument_event].time == mCurrTick) {
+            iEvents[voiceData.next_instrument_event].time == m_currTick) {
         if (voiceData.next_instrument_event < iEvents.size()) {
             send_ins_data_to_chip(voice,
                                   iEvents[voiceData.next_instrument_event].ins_index);
@@ -212,7 +213,7 @@ void CrolPlayer::UpdateVoice(int const voice, CVoiceData &voiceData) {
     }
 
     if (!(voiceData.mEventStatus & CVoiceData::kES_VolumeEnd) &&
-            vEvents[voiceData.next_volume_event].time == mCurrTick) {
+            vEvents[voiceData.next_volume_event].time == m_currTick) {
         SVolumeEvent const &volumeEvent = vEvents[voiceData.next_volume_event];
 
         if (voiceData.next_volume_event < vEvents.size()) {
@@ -228,7 +229,7 @@ void CrolPlayer::UpdateVoice(int const voice, CVoiceData &voiceData) {
 
     if (voiceData.mForceNote ||
             voiceData.current_note_duration > voiceData.mNoteDuration - 1) {
-        if (mCurrTick != 0) {
+        if (m_currTick != 0) {
             ++voiceData.current_note;
         }
 
@@ -247,7 +248,7 @@ void CrolPlayer::UpdateVoice(int const voice, CVoiceData &voiceData) {
     }
 
     if (!(voiceData.mEventStatus & CVoiceData::kES_PitchEnd) &&
-            pEvents[voiceData.next_pitch_event].time == mCurrTick) {
+            pEvents[voiceData.next_pitch_event].time == m_currTick) {
         if (voiceData.next_pitch_event < pEvents.size()) {
             SetPitch(voice, pEvents[voiceData.next_pitch_event].variation);
             ++voiceData.next_pitch_event;
@@ -260,7 +261,7 @@ void CrolPlayer::UpdateVoice(int const voice, CVoiceData &voiceData) {
 }
 //---------------------------------------------------------
 void CrolPlayer::SetNote(int const voice, int const note) {
-    if (voice < kBassDrumChannel || rol_header.mode) {
+    if (voice < kBassDrumChannel || m_rolHeader.mode) {
         SetNoteMelodic(voice, note);
     } else {
         SetNotePercussive(voice, note);
@@ -270,8 +271,8 @@ void CrolPlayer::SetNote(int const voice, int const note) {
 void CrolPlayer::SetNotePercussive(int const voice, int const note) {
     int const bit_pos = 4 - voice + kBassDrumChannel;
 
-    bdRegister &= ~(1 << bit_pos);
-    getOpl()->writeReg(0xbd, bdRegister);
+    m_bdRegister &= ~(1 << bit_pos);
+    getOpl()->writeReg(0xbd, m_bdRegister);
 
     if (note != kSilenceNote) {
         switch (voice) {
@@ -282,13 +283,13 @@ void CrolPlayer::SetNotePercussive(int const voice, int const note) {
             break;
         }
 
-        bdRegister |= 1 << bit_pos;
-        getOpl()->writeReg(0xbd, bdRegister);
+        m_bdRegister |= 1 << bit_pos;
+        getOpl()->writeReg(0xbd, m_bdRegister);
     }
 }
 //---------------------------------------------------------
 void CrolPlayer::SetNoteMelodic(int const voice, int const note) {
-    getOpl()->writeReg(0xb0 + voice, bxRegister[voice] & ~0x20);
+    getOpl()->writeReg(0xb0 + voice, m_bxRegister[voice] & ~0x20);
 
     if (note != kSilenceNote) {
         SetFreq(voice, note, true);
@@ -296,42 +297,42 @@ void CrolPlayer::SetNoteMelodic(int const voice, int const note) {
 }
 //---------------------------------------------------------
 void CrolPlayer::SetPitch(int const voice, float const variation) {
-    pitchCache[voice] = variation;
-    freqCache[voice] += static_cast<uint16_t>( (freqCache[voice] * (variation - 1.0f)) / kPitchFactor );
+    m_pitchCache[voice] = variation;
+    m_freqCache[voice] += static_cast<uint16_t>( (m_freqCache[voice] * (variation - 1.0f)) / kPitchFactor );
 
-    getOpl()->writeReg(0xa0 + voice, freqCache[voice] & 0xff);
+    getOpl()->writeReg(0xa0 + voice, m_freqCache[voice] & 0xff);
 }
 //---------------------------------------------------------
 void CrolPlayer::SetFreq(int const voice, int const note, bool const keyOn) {
     uint16_t freq = kNoteTable[note % 12] + ((note / 12) << 10);
-    freq += static_cast<uint16_t>((freq * (pitchCache[voice] - 1.0f)) / kPitchFactor);
+    freq += static_cast<uint16_t>((freq * (m_pitchCache[voice] - 1.0f)) / kPitchFactor);
 
-    freqCache[voice] = freq;
-    bxRegister[voice] = ((freq >> 8) & 0x1f);
+    m_freqCache[voice] = freq;
+    m_bxRegister[voice] = ((freq >> 8) & 0x1f);
 
     getOpl()->writeReg(0xa0 + voice, freq & 0xff);
-    getOpl()->writeReg(0xb0 + voice, bxRegister[voice] | (keyOn ? 0x20 : 0x0));
+    getOpl()->writeReg(0xb0 + voice, m_bxRegister[voice] | (keyOn ? 0x20 : 0x0));
 }
 //---------------------------------------------------------
 void CrolPlayer::SetVolume(int const voice, int const volume) {
-    volumeCache[voice] = (volumeCache[voice] & 0xc0) | volume;
+    m_volumeCache[voice] = (m_volumeCache[voice] & 0xc0) | volume;
 
-    int const op_offset = (voice < kSnareDrumChannel || rol_header.mode)
+    int const op_offset = (voice < kSnareDrumChannel || m_rolHeader.mode)
             ? s_opTable[voice] + 3
             : drum_table[voice - kSnareDrumChannel];
 
-    getOpl()->writeReg(0x40 + op_offset, volumeCache[voice]);
+    getOpl()->writeReg(0x40 + op_offset, m_volumeCache[voice]);
 }
 //---------------------------------------------------------
 void CrolPlayer::send_ins_data_to_chip(int const voice, int const ins_index) {
-    SRolInstrument &instrument = ins_list[ins_index].instrument;
+    SRolInstrument &instrument = m_instrumentList[ins_index].instrument;
 
     send_operator(voice, instrument.modulator, instrument.carrier);
 }
 //---------------------------------------------------------
 void CrolPlayer::send_operator(int const voice, SOPL2Op const &modulator,
                                SOPL2Op const &carrier) {
-    if (voice < kSnareDrumChannel || rol_header.mode) {
+    if (voice < kSnareDrumChannel || m_rolHeader.mode) {
         int const op_offset = s_opTable[voice];
 
         getOpl()->writeReg(0x20 + op_offset, modulator.ammulti);
@@ -341,10 +342,10 @@ void CrolPlayer::send_operator(int const voice, SOPL2Op const &modulator,
         getOpl()->writeReg(0xc0 + voice, modulator.fbc);
         getOpl()->writeReg(0xe0 + op_offset, modulator.waveform);
 
-        volumeCache[voice] = (carrier.ksltl & 0xc0) | (volumeCache[voice] & 0x3f);
+        m_volumeCache[voice] = (carrier.ksltl & 0xc0) | (m_volumeCache[voice] & 0x3f);
 
         getOpl()->writeReg(0x23 + op_offset, carrier.ammulti);
-        getOpl()->writeReg(0x43 + op_offset, volumeCache[voice]);
+        getOpl()->writeReg(0x43 + op_offset, m_volumeCache[voice]);
         getOpl()->writeReg(0x63 + op_offset, carrier.ardr);
         getOpl()->writeReg(0x83 + op_offset, carrier.slrr);
         //        opl->writeReg( 0xc3+voice    , carrier.fbc      ); <- don't bother
@@ -353,10 +354,10 @@ void CrolPlayer::send_operator(int const voice, SOPL2Op const &modulator,
     } else {
         int const op_offset = drum_table[voice - kSnareDrumChannel];
 
-        volumeCache[voice] = (modulator.ksltl & 0xc0) | (volumeCache[voice] & 0x3f);
+        m_volumeCache[voice] = (modulator.ksltl & 0xc0) | (m_volumeCache[voice] & 0x3f);
 
         getOpl()->writeReg(0x20 + op_offset, modulator.ammulti);
-        getOpl()->writeReg(0x40 + op_offset, volumeCache[voice]);
+        getOpl()->writeReg(0x40 + op_offset, m_volumeCache[voice]);
         getOpl()->writeReg(0x60 + op_offset, modulator.ardr);
         getOpl()->writeReg(0x80 + op_offset, modulator.slrr);
         getOpl()->writeReg(0xc0 + voice, modulator.fbc);
@@ -368,12 +369,12 @@ void CrolPlayer::load_tempo_events(FileStream& f) {
     int16_t num_tempo_events;
     f >> num_tempo_events;
 
-    mTempoEvents.reserve(num_tempo_events);
+    m_tempoEvents.reserve(num_tempo_events);
 
     for (int i = 0; i < num_tempo_events; ++i) {
         STempoEvent event;
         f >> event;
-        mTempoEvents.push_back(event);
+        m_tempoEvents.push_back(event);
     }
 }
 //---------------------------------------------------------
@@ -384,9 +385,9 @@ bool CrolPlayer::load_voice_data(FileStream& f, std::string const &bnk_filename)
     if (bnk_file) {
         load_bnk_info(bnk_file, bnk_header);
 
-        int const numVoices = rol_header.mode ? kNumMelodicVoices : kNumPercussiveVoices;
+        int const numVoices = m_rolHeader.mode ? kNumMelodicVoices : kNumPercussiveVoices;
 
-        voice_data.reserve(numVoices);
+        m_voiceData.reserve(numVoices);
         for (int i = 0; i < numVoices; ++i) {
             CVoiceData voice;
 
@@ -395,7 +396,7 @@ bool CrolPlayer::load_voice_data(FileStream& f, std::string const &bnk_filename)
             load_volume_events(f, voice);
             load_pitch_events(f, voice);
 
-            voice_data.push_back(voice);
+            m_voiceData.push_back(voice);
         }
 
         return true;
@@ -425,8 +426,8 @@ void CrolPlayer::load_note_events(FileStream& f, CVoiceData &voice) {
             total_duration += event.duration;
         } while (total_duration < time_of_last_note);
 
-        if (time_of_last_note > mTimeOfLastNote) {
-            mTimeOfLastNote = time_of_last_note;
+        if (time_of_last_note > m_timeOfLastNote) {
+            m_timeOfLastNote = time_of_last_note;
         }
     }
 
@@ -552,14 +553,14 @@ int CrolPlayer::load_rol_instrument(FileStream& f, SBnkHeader const &header,
         // set up default instrument data here
         memset(&usedIns.instrument, 0, sizeof(SRolInstrument));
     }
-    ins_list.push_back(usedIns);
+    m_instrumentList.push_back(usedIns);
 
-    return ins_list.size() - 1;
+    return m_instrumentList.size() - 1;
 }
 //---------------------------------------------------------
 int CrolPlayer::get_ins_index(std::string const &name) const {
-    for (unsigned int i = 0; i < ins_list.size(); ++i) {
-        if (strcasecmp(ins_list[i].name.c_str(), name.c_str()) == 0) {
+    for (unsigned int i = 0; i < m_instrumentList.size(); ++i) {
+        if (strcasecmp(m_instrumentList[i].name.c_str(), name.c_str()) == 0) {
             return i;
         }
     }

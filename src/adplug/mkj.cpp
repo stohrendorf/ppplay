@@ -194,4 +194,7 @@ void CmkjPlayer::rewind(int) {
     songend = false;
 }
 
-size_t CmkjPlayer::framesUntilUpdate() { return SampleRate / 100; }
+size_t CmkjPlayer::framesUntilUpdate() const
+{
+    return SampleRate / 100;
+}

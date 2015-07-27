@@ -48,7 +48,7 @@ Cs3mPlayer::Cs3mPlayer() : CPlayer() {
     int i, j, k;
 
     memset(m_patterns, 255, sizeof(m_patterns));
-    memset(m_orders, 255, sizeof(m_orders));
+    //memset(m_orders, 255, sizeof(m_orders));
 
     for (i = 0; i < 99; i++) // setup pattern
         for (j = 0; j < 64; j++)
@@ -66,17 +66,17 @@ bool Cs3mPlayer::load(const std::string &filename) {
     // file validation section
     f >> m_header;
     bool adlibins = false;
-    if (m_header.kennung != 0x1a || m_header.typ != 16 || m_header.insnum > 99) {
+    if (m_header.endOfFile != 0x1a || m_header.type != 16 || m_header.instrumentCount > 99) {
         return false;
     }
     else if (strncmp(m_header.scrm, "SCRM", 4)) {
         return false;
     }
     else { // is an adlib module?
-        f.seekrel(m_header.ordnum);
+        f.seekrel(m_header.orderCount);
         uint16_t insptr[99];
-        f.read(insptr, m_header.insnum);
-        for (int i = 0; i < m_header.insnum; i++) {
+        f.read(insptr, m_header.instrumentCount);
+        for (int i = 0; i < m_header.instrumentCount; i++) {
             f.seek(insptr[i] * 16);
             uint8_t tmp;
             f >> tmp;
@@ -94,22 +94,26 @@ bool Cs3mPlayer::load(const std::string &filename) {
     f.seek(sizeof(S3mHeader));              // rewind for load
 
     // security check
-    if (m_header.ordnum > 256 || m_header.insnum > 99 || m_header.patnum > 99) {
+    if (m_header.orderCount > 256 || m_header.instrumentCount > 99 || m_header.patternCount > 99) {
         return false;
     }
 
-    f.read(m_orders, m_header.ordnum);
+    for(int i=0; i<m_header.orderCount; ++i) {
+        uint8_t tmp;
+        f >> tmp;
+        addOrder(tmp);
+    }
     uint16_t insptr[99];
-    f.read(insptr, m_header.insnum);
+    f.read(insptr, m_header.instrumentCount);
     uint16_t pattptr[99];
-    f.read(pattptr, m_header.patnum);
+    f.read(pattptr, m_header.patternCount);
 
-    for (int i = 0; i < m_header.insnum; i++) { // load instruments
+    for (int i = 0; i < m_header.instrumentCount; i++) { // load instruments
         f.seek(insptr[i] * 16);
         f >> m_instruments[i];
     }
 
-    for (int i = 0; i < m_header.patnum; i++) { // depack patterns
+    for (int i = 0; i < m_header.patternCount; i++) { // depack patterns
         f.seek(pattptr[i] * 16);
         uint16_t ppatlen;
         f >> ppatlen;
@@ -231,21 +235,21 @@ bool Cs3mPlayer::update() {
     }
 
     // arrangement handling
-    auto pattnr = m_orders[m_order];
-    if (pattnr == 0xff || m_order > m_header.ordnum) { // "--" end of song
+    auto pattnr = currentPattern();
+    if (pattnr == 0xff || currentOrder() > orderCount()) { // "--" end of song
         songend = 1;                               // set end-flag
-        m_order = 0;
-        pattnr = m_orders[m_order];
+        setCurrentOrder(0);
+        pattnr = currentPattern();
         if (pattnr == 0xff)
             return !songend;
     }
     if (pattnr == 0xfe) { // "++" skip marker
-        m_order++;
-        pattnr = m_orders[m_order];
+        setCurrentOrder(currentOrder()+1);
+        pattnr = currentPattern();
     }
 
     // play row
-    auto row = m_crow; // fill row cache
+    auto row = currentRow(); // fill row cache
     bool pattbreak = false;
     for (int chan = 0; chan < 32; chan++) {
         int realchan = -1;
@@ -330,19 +334,19 @@ bool Cs3mPlayer::update() {
         auto info = m_channels[realchan].effectValue; // fill infobyte cache
         switch (m_channels[realchan].effect) {
         case 1:
-            m_speed = info;
+            setCurrentSpeed(info);
             break; // set speed
         case 2:
-            if (info <= m_order)
+            if (info <= currentOrder())
                 songend = 1;
-            m_order = info;
-            m_crow = 0;
+            setCurrentOrder(info);
+            setCurrentRow(0);
             pattbreak = true;
             break; // jump to order
         case 3:
             if (!pattbreak) {
-                m_crow = info;
-                m_order++;
+                setCurrentRow(info);
+                setCurrentOrder(currentOrder()+1);
                 pattbreak = true;
             }
             break; // pattern break
@@ -397,29 +401,28 @@ bool Cs3mPlayer::update() {
             if (info > 0xb0 && info <= 0xbf) { // pattern loop
                 if (!m_loopCounter) {
                     m_loopCounter = info & 0x0f;
-                    m_crow = m_loopStart;
+                    setCurrentRow(m_loopStart);
                     pattbreak = true;
                 } else if (--m_loopCounter > 0) {
-                    m_crow = m_loopStart;
+                    setCurrentRow(m_loopStart);
                     pattbreak = true;
                 }
             }
             if ((info & 0xf0) == 0xe0) // patterndelay
-                m_patternDelay = m_speed * (info & 0x0f) - 1;
+                m_patternDelay = currentSpeed() * (info & 0x0f) - 1;
             break;
         case 20:
-            m_tempo = info;
+            setCurrentTempo(info);
             break; // set tempo
         }
     }
 
     if (!m_patternDelay)
-        m_patternDelay = m_speed - 1; // speed compensation
+        m_patternDelay = currentSpeed() - 1; // speed compensation
     if (!pattbreak) {  // next row (only if no manual advance)
-        m_crow++;
-        if (m_crow > 63) {
-            m_crow = 0;
-            m_order++;
+        setCurrentRow((currentRow()+1)&0x3f);
+        if (currentRow() == 0) {
+            setCurrentOrder(currentOrder()+1);
             m_loopStart = 0;
         }
     }
@@ -430,10 +433,10 @@ bool Cs3mPlayer::update() {
 void Cs3mPlayer::rewind(int) {
     // set basic variables
     songend = 0;
-    m_order = 0;
-    m_crow = 0;
-    m_tempo = m_header.it;
-    m_speed = m_header.is;
+    setCurrentOrder(0);
+    setCurrentRow(0);
+    setCurrentTempo(m_header.initialTempo);
+    setCurrentSpeed(m_header.initialSpeed);
     m_patternDelay = 0;
     m_loopStart = 0;
     m_loopCounter = 0;
@@ -443,10 +446,11 @@ void Cs3mPlayer::rewind(int) {
     getOpl()->writeReg(1, 32); // Go to ym3812 mode
 }
 
-std::string Cs3mPlayer::gettype() {
+std::string Cs3mPlayer::type() const
+{
     char filever[5];
 
-    switch (m_header.cwtv) { // determine version number
+    switch (m_header.trackerVersion) { // determine version number
     case 0x1300:
         strcpy(filever, "3.00");
         break;
@@ -463,10 +467,10 @@ std::string Cs3mPlayer::gettype() {
         strcpy(filever, "3.??");
     }
 
-    return (std::string("Scream Tracker ") + filever);
+    return std::string("Scream Tracker ") + filever;
 }
 
-size_t Cs3mPlayer::framesUntilUpdate() { return SampleRate * 2.5 / m_tempo; }
+size_t Cs3mPlayer::framesUntilUpdate() const { return SampleRate * 2.5 / currentTempo(); }
 
 /*** private methods *************************************/
 

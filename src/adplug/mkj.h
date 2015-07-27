@@ -26,24 +26,28 @@ class CmkjPlayer : public CPlayer {
     public:
         static CPlayer *factory();
 
-    CmkjPlayer() : CPlayer() {}
+    CmkjPlayer() = default;
     ~CmkjPlayer() = default;
 
     bool load(const std::string &filename);
     bool update();
     void rewind(int);
-    size_t framesUntilUpdate();
+    size_t framesUntilUpdate() const;
 
-    std::string gettype() { return std::string("MKJamz Audio File"); }
+    std::string type() const
+    {
+        return "MKJamz Audio File";
+    }
 
 private:
-    int16_t m_maxChannel;
-    int16_t m_maxNotes;
-    std::vector<int16_t> m_songBuf;
-    bool songend;
+    int16_t m_maxChannel = 0;
+    int16_t m_maxNotes = 0;
+    std::vector<int16_t> m_songBuf{};
+    bool songend = true;
 
-    struct {
+    struct Channel {
         int16_t defined;
         short songptr, octave, waveform, pstat, speed, delay;
-    } m_channels[9];
+    };
+    Channel m_channels[9];
 };

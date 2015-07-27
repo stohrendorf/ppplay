@@ -38,49 +38,58 @@ bool CradLoader::load(const std::string &filename) {
     // file validation section
     char id[16];
     f.read(id, 16);
-    f >> m_version;
-    if (strncmp(id, "RAD by REALiTY!!", 16) || m_version != 0x10) {
+    uint8_t version;
+    f >> version;
+    if (strncmp(id, "RAD by REALiTY!!", 16) || version != 0x10) {
         return false;
     }
 
     // load section
-    f >> m_radflags;
-    if (m_radflags & 128) { // description
-        m_desc.clear();
+    uint8_t flags;
+    f >> flags;
+    if (flags & 0x80) { // description
+        m_description.clear();
         uint8_t buf;
         while(f>>buf && buf) {
             if (buf == 1)
-                m_desc += "\n";
+                m_description += "\n";
             else if (buf >= 2 && buf <= 0x1f)
                 for (int i = 0; i < buf; i++)
-                    m_desc += " ";
+                    m_description += " ";
             else {
-                m_desc += char(buf);
+                m_description += char(buf);
             }
         }
     }
-    uint8_t buf;
-    while(f>>buf && buf) {
-        buf--;
-        CmodPlayer::Instrument& inst = instrument(buf,true);
-        f >> inst.data[2];
-        f >> inst.data[1];
-        f >> inst.data[10];
-        f >> inst.data[9];
-        f >> inst.data[4];
-        f >> inst.data[3];
-        f >> inst.data[6];
-        f >> inst.data[5];
-        f >> inst.data[0];
-        f >> inst.data[8];
-        f >> inst.data[7];
+    {
+        uint8_t buf;
+        std::vector<CmodPlayer::Instrument::Data> instruments;
+        while(f>>buf && buf) {
+            buf--;
+            if(buf >= instruments.size())
+                instruments.resize(buf+1);
+            auto& inst = instruments[buf];
+            f >> inst[2];
+            f >> inst[1];
+            f >> inst[10];
+            f >> inst[9];
+            f >> inst[4];
+            f >> inst[3];
+            f >> inst[6];
+            f >> inst[5];
+            f >> inst[0];
+            f >> inst[8];
+            f >> inst[7];
+        }
+        for(const auto& inst : instruments)
+            addInstrument().data = inst;
     }
     {
         uint8_t length;
         f >> length;
-        m_length = length;
+        for(uint8_t order; orderCount()<length && f>>order; )
+            addOrder(order);
     }
-    f.read(m_order.data(), m_length);
     uint16_t patofs[32];
     f.read(patofs, 32);
     init_trackord();             // patterns
@@ -97,15 +106,32 @@ bool CradLoader::load(const std::string &filename) {
                     uint8_t c = ch & 127;
                     uint8_t inp;
                     f >> inp;
-                    m_tracks.at(i * 9 + c, b).note = inp & 127;
-                    m_tracks.at(i * 9 + c, b).inst = (inp & 128) >> 3;
+                    PatternCell& cell = patternCell(i*9+c, b);
+                    cell.note = inp & 127;
+                    cell.instrument = (inp & 128) >> 3;
                     f >> inp;
-                    m_tracks.at(i * 9 + c, b).inst += inp >> 4;
-                    m_tracks.at(i * 9 + c, b).command = inp & 15;
+                    cell.instrument += inp >> 4;
+                    static constexpr Command convfx[16] = { Command::Sentinel,
+                                                            Command::SlideUp,
+                                                            Command::SlideDown,
+                                                            Command::Porta,
+                                                            Command::Sentinel,
+                                                            Command::PortaVolSlide,
+                                                            Command::Sentinel,
+                                                            Command::Sentinel,
+                                                            Command::Sentinel,
+                                                            Command::Sentinel,
+                                                            Command::RADVolSlide,
+                                                            Command::Sentinel,
+                                                            Command::SetFineVolume2,
+                                                            Command::PatternBreak,
+                                                            Command::Sentinel,
+                                                            Command::RADSpeed };
+                    cell.command = convfx[inp & 15];
                     if (inp & 15) {
                         f >> inp;
-                        m_tracks.at(i * 9 + c, b).param1 = inp / 10;
-                        m_tracks.at(i * 9 + c, b).param2 = inp % 10;
+                        cell.hiNybble = inp / 10;
+                        cell.loNybble = inp % 10;
                     }
                     if (ch & 0x80)
                         break;
@@ -116,36 +142,33 @@ bool CradLoader::load(const std::string &filename) {
         }
         else {
             for(int j=0; j<9; ++j)
-                trackord.at(i,j) = 0;
+                setCellColumnMapping(i,j,0);
         }
     }
 
     // convert replay data
     for (int i = 0; i < 32 * 9; i++) // convert patterns
         for (int j = 0; j < 64; j++) {
-            if (m_tracks.at(i,j).note == 15)
-                m_tracks.at(i,j).note = 127;
-            if (m_tracks.at(i,j).note > 16 && m_tracks.at(i,j).note < 127)
-                m_tracks.at(i,j).note -= 4 * (m_tracks.at(i,j).note >> 4);
-            if (m_tracks.at(i,j).note && m_tracks.at(i,j).note < 126)
-                m_tracks.at(i,j).note++;
-            static constexpr uint8_t convfx[16] = { 255, 1, 2, 3, 255, 5, 255, 255,
-                                                    255, 255, 20, 255, 17, 0xd, 255,
-                                                    19 };
-            m_tracks.at(i,j).command = convfx[m_tracks.at(i,j).command];
+            PatternCell& cell = patternCell(i,j);
+            if (cell.note == 15)
+                cell.note = 127;
+            if (cell.note > 16 && cell.note < 127)
+                cell.note -= 4 * (cell.note >> 4);
+            if (cell.note && cell.note < 126)
+                cell.note++;
         }
-    m_restartpos = 0;
-    m_initspeed = m_radflags & 31;
-    m_bpm = m_radflags & 64 ? 0 : 50;
-    m_flags = Decimal;
+    setRestartOrder(0);
+    setInitialSpeed(flags & 0x1f);
+    setInitialTempo(flags & 0x40 ? 0 : 50);
+    setDecimalValues();
 
     rewind(0);
     return true;
 }
 
-size_t CradLoader::framesUntilUpdate() {
-    if (m_tempo)
-        return SampleRate / m_tempo;
+size_t CradLoader::framesUntilUpdate() const {
+    if (currentTempo() != 0)
+        return SampleRate / currentTempo();
     else
         return SampleRate / 18.2;
 }

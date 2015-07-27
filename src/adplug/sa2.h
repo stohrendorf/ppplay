@@ -1,17 +1,17 @@
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -23,29 +23,33 @@
 #include "protrack.h"
 
 class Csa2Loader : public CmodPlayer {
-  DISABLE_COPY(Csa2Loader)
+    DISABLE_COPY(Csa2Loader)
 public:
-  static CPlayer *factory();
+    static CPlayer *factory();
 
-  Csa2Loader() : CmodPlayer() {}
+    Csa2Loader() = default;
 
-  bool load(const std::string &filename);
+    bool load(const std::string &filename);
 
-  std::string gettype();
-  std::string gettitle();
-  unsigned int getinstruments() { return 31; }
-  std::string getinstrument(unsigned int n) {
-    if (n < 29)
-      return std::string(instname[n], 1, 16);
-    else
-      return std::string("-broken-");
-  }
+    std::string type() const;
+    std::string title() const;
+    uint32_t instrumentCount() const
+    {
+        return 29;
+    }
+    std::string instrumentTitle(size_t n) const
+    {
+        if (n < 29)
+            return std::string(m_instrumentNames[n], 1, 16);
+        else
+            return "-broken-";
+    }
 
 private:
-  struct sa2header {
-    char sadt[4];
-    uint8_t version;
-  } header;
+    struct sa2header {
+        char sadt[4];
+        uint8_t version;
+    } m_header;
 
-  char instname[29][17];
+    char m_instrumentNames[29][17];
 };

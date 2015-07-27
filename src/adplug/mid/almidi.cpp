@@ -656,19 +656,19 @@ bool EMidi::tryLoadMidi(Stream &stream)
     }
 
     uint32_t headersize;
-    stream.read(&headersize);
+    stream >> headersize;
     ppp::swapEndian(&headersize);
 
     auto headerPos = stream.pos();
 
     uint16_t format;
-    stream.read(&format);
+    stream >> format;
     ppp::swapEndian(&format);
 
-    stream.read(&m_numTracks);
+    stream >> m_numTracks;
     ppp::swapEndian(&m_numTracks);
 
-    stream.read(&m_division);
+    stream >> m_division;
     ppp::swapEndian(&m_division);
 
     if ( m_division < 0 ) {
@@ -699,7 +699,7 @@ bool EMidi::tryLoadMidi(Stream &stream)
         }
 
         uint32_t tracklength;
-        stream.read(&tracklength);
+        stream >> tracklength;
         ppp::swapEndian(&tracklength);
 
         CurrentTrack->data.resize(tracklength);
@@ -740,7 +740,7 @@ bool EMidi::tryLoadMus(Stream &stream)
     m_loop = false;
 
     MusHeader header;
-    stream.read(&header);
+    stream >> header;
 
     if ( std::strncmp(header.id, "MUS\x1a", 4) != 0 ) {
         return false;

@@ -428,18 +428,31 @@ void CcmfPlayer::rewind(int) {
 }
 
 // Return value: 1 == 1 second, 2 == 0.5 seconds
-size_t CcmfPlayer::framesUntilUpdate() {
+size_t CcmfPlayer::framesUntilUpdate() const
+{
     if (this->iDelayRemaining) {
         return SampleRate * iDelayRemaining / cmfHeader.iTicksPerSecond;
-    } else {
+    }
+    else {
         // Delay-remaining is zero (e.g. start of song) so use a tiny delay
         return SampleRate / cmfHeader.iTicksPerSecond; // wait for one tick
     }
 }
 
-std::string CcmfPlayer::gettitle() { return this->strTitle; }
-std::string CcmfPlayer::getauthor() { return this->strComposer; }
-std::string CcmfPlayer::getdesc() { return this->strRemarks; }
+std::string CcmfPlayer::title() const
+{
+    return this->strTitle;
+}
+
+std::string CcmfPlayer::author() const
+{
+    return this->strComposer;
+}
+
+std::string CcmfPlayer::description() const
+{
+    return this->strRemarks;
+}
 
 //
 // PROTECTED

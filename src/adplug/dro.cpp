@@ -34,8 +34,6 @@
 
 CPlayer *CdroPlayer::factory() { return new CdroPlayer(); }
 
-CdroPlayer::CdroPlayer() : CPlayer() {}
-
 bool CdroPlayer::load(const std::string &filename) {
     FileStream f(filename);
     if (!f)
@@ -78,7 +76,8 @@ bool CdroPlayer::update() {
     if (m_delay > 500) {
         m_delay -= 500;
         return true;
-    } else
+    }
+    else
         m_delay = 0;
 
     while (m_pos < m_data.size()) {
@@ -119,7 +118,7 @@ void CdroPlayer::rewind(int) {
         getOpl()->writeReg(i, 0);
 }
 
-size_t CdroPlayer::framesUntilUpdate() {
+size_t CdroPlayer::framesUntilUpdate() const {
     if (m_delay > 500)
         return SampleRate / 2;
     else

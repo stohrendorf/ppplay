@@ -22,26 +22,25 @@
 #include "protrack.h"
 
 class CmadLoader : public CmodPlayer {
-  DISABLE_COPY(CmadLoader)
-public:
-  static CPlayer *factory();
+    DISABLE_COPY(CmadLoader)
+    public:
+        static CPlayer *factory();
 
-  CmadLoader() = default;
+    CmadLoader() = default;
 
-  bool load(const std::string &filename);
-  void rewind(int subsong);
-  size_t framesUntilUpdate();
+    bool load(const std::string &filename);
+    void rewind(int subsong);
+    size_t framesUntilUpdate() const;
 
-  std::string gettype();
-  std::string getinstrument(unsigned int n);
-  unsigned int getinstruments();
+    std::string type() const;
+    std::string instrumentTitle(size_t n) const;
+    uint32_t instrumentCount() const;
 
 private:
 
-  struct mad_instrument {
-    char name[8]{0};
-    unsigned char data[12]{0}; // last two unused
-  } instruments[9]{};
-
-  unsigned char timer = 0;
+    struct mad_instrument {
+        char name[8]{0};
+        unsigned char data[12]{0}; // last two unused
+    };
+    mad_instrument instruments[9]{};
 };

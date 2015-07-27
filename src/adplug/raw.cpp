@@ -37,70 +37,74 @@ bool CrawPlayer::load(const std::string &filename) {
     // file validation section
     char id[8];
     f.read(id, 8);
-    if (strncmp(id, "RAWADATA", 8)) {
+    if (!std::equal(id, id+8, "RAWADATA")) {
         return false;
     }
 
     // load section
-    f >> m_clock; // clock speed
-    auto length = (f.size() - 10) / 2;
-    m_data.resize(length);
-    f.read(m_data.data(), length);
+    uint16_t clock;
+    f >> clock;
+    setInitialSpeed(clock);
+    m_data.resize((f.size() - 10) / 2);
+    f.read(m_data.data(), m_data.size());
+
+    addOrder(0);
 
     rewind(0);
     return true;
 }
 
 bool CrawPlayer::update() {
-    bool setspeed;
-
-    if (m_pos >= m_data.size())
+    if (m_dataPosition >= m_data.size())
         return false;
 
-    if (m_del) {
-        m_del--;
+    if (m_delay) {
+        m_delay--;
         return !m_songend;
     }
 
+    bool setspeed = false;
     do {
         setspeed = false;
-        switch (m_data[m_pos].command) {
+        switch (m_data[m_dataPosition].command) {
         case 0:
-            m_del = m_data[m_pos].param - 1;
+            m_delay = m_data[m_dataPosition].param - 1;
             break;
         case 2:
-            if (!m_data[m_pos].param) {
-                m_pos++;
-                m_speed = m_data[m_pos].param + (m_data[m_pos].command << 8);
+            if (!m_data[m_dataPosition].param) {
+                m_dataPosition++;
+                setCurrentSpeed(m_data[m_dataPosition].param + (m_data[m_dataPosition].command << 8));
                 setspeed = true;
-            } else
+            }
+            else {
                 ; //FIXME sto opl->setchip(data[pos].param - 1);
+            }
             break;
         case 0xff:
-            if (m_data[m_pos].param == 0xff) {
+            if (m_data[m_dataPosition].param == 0xff) {
                 rewind(0); // auto-rewind song
                 m_songend = true;
                 return !m_songend;
             }
             break;
         default:
-            getOpl()->writeReg(m_data[m_pos].command, m_data[m_pos].param);
+            getOpl()->writeReg(m_data[m_dataPosition].command, m_data[m_dataPosition].param);
             break;
         }
-    } while (m_data[m_pos++].command || setspeed);
+    } while (m_data[m_dataPosition++].command || setspeed);
 
     return !m_songend;
 }
 
 void CrawPlayer::rewind(int) {
-    m_pos = m_del = 0;
-    m_speed = m_clock;
+    m_dataPosition = m_delay = 0;
+    setCurrentSpeed(initialSpeed());
     m_songend = false;
     getOpl()->writeReg(1, 32); // go to 9 channel mode
 }
 
-size_t CrawPlayer::framesUntilUpdate() {
-    return SampleRate * (m_speed ? m_speed : 0xffff) /
+size_t CrawPlayer::framesUntilUpdate() const {
+    return SampleRate * (currentSpeed() ? currentSpeed() : 0xffff) /
             1193180.0; // timer oscillator speed / wait register = clock
     // frequency
 }

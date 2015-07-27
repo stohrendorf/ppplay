@@ -26,8 +26,8 @@
 
 class CxadPlayer : public CPlayer {
     DISABLE_COPY(CxadPlayer)
-    public:
-        static CPlayer *factory();
+public:
+    static CPlayer *factory();
 
     CxadPlayer() = default;
     ~CxadPlayer() = default;
@@ -35,26 +35,17 @@ class CxadPlayer : public CPlayer {
     bool load(const std::string &filename);
     bool update();
     void rewind(int subsong);
-    size_t framesUntilUpdate();
-
-    std::string gettype();
-    std::string gettitle();
-    std::string getauthor();
-    std::string getinstrument(unsigned int i);
-    unsigned int getinstruments();
 
 protected:
     virtual void xadplayer_rewind(int subsong) = 0;
     virtual bool xadplayer_load() = 0;
     virtual void xadplayer_update() = 0;
-    virtual float xadplayer_getrefresh() = 0;
-    virtual std::string xadplayer_gettype() = 0;
-    virtual std::string xadplayer_gettitle() { return m_xadHeader.title; }
-    virtual std::string xadplayer_getauthor() { return m_xadHeader.author; }
-    virtual std::string xadplayer_getinstrument(unsigned int) {
+    virtual std::string title() const { return m_xadHeader.title; }
+    virtual std::string author() const { return m_xadHeader.author; }
+    virtual std::string instrumentTitle(size_t) const {
         return std::string();
     }
-    virtual unsigned int xadplayer_getinstruments() { return 0; }
+    virtual uint32_t instrumentCount() const { return 0; }
 
     enum Format : uint16_t {
         None,
@@ -66,6 +57,7 @@ protected:
         HYBRID
     };
 
+private:
 #pragma pack(push,1)
     struct xad_header {
         uint32_t id = 0;
@@ -77,16 +69,34 @@ protected:
     };
 #pragma pack(pop)
 
-    xad_header m_xadHeader;
+    xad_header m_xadHeader{};
 
-    std::vector<uint8_t> tune{};
+    std::vector<uint8_t> m_tune{};
 
-    struct {
-        int playing = 0;
-        int looping = 0;
-        unsigned char speed = 0;
-        unsigned char speed_counter = 0;
-    } plr{};
+    uint8_t m_xadSpeedCounter = 0;
+    bool m_xadLooping = false;
+    bool m_xadPlaying = false;
+
+protected:
+    const xad_header& xadHeader() const
+    {
+        return m_xadHeader;
+    }
+
+    const std::vector<uint8_t>& tune() const
+    {
+        return m_tune;
+    }
+
+    void setXadSpeedCounter(uint8_t value)
+    {
+        m_xadSpeedCounter = value;
+    }
+
+    void setXadLooping()
+    {
+        m_xadLooping = true;
+    }
 };
 
 #endif

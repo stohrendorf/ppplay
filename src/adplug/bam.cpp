@@ -53,7 +53,8 @@
 
 #include "bam.h"
 
-const unsigned short CbamPlayer::freq[] = {
+namespace {
+constexpr uint16_t s_frequencies[] = {
     172, 182, 193, 205, 217, 230, 243, 258, 274, 290, 307, 326, 345, 365, 387,
     410, 435, 460, 489, 517, 547, 580, 614, 651, 1369, 1389, 1411, 1434, 1459,
     1484, 1513, 1541, 1571, 1604, 1638, 1675, 2393, 2413, 2435, 2458, 2483, 2508,
@@ -65,6 +66,7 @@ const unsigned short CbamPlayer::freq[] = {
     7819, 7858, 7898, 7942, 7988, 8037, 8089, 8143, 8191, 8191, 8191, 8191, 8191,
     8191, 8191, 8191, 8191, 8191, 8191, 8191
 };
+}
 
 CPlayer *CbamPlayer::factory() { return new CbamPlayer(); }
 
@@ -73,140 +75,132 @@ bool CbamPlayer::load(const std::string &filename) {
     if (!f)
         return false;
 
-    const auto size = f.size() - 4; // filesize minus header
-
     char id[4];
     f.read(id, 4);
-    if (strncmp(id, "CBMF", 4)) {
+    if (!std::equal(id, id+4, "CBMF")) {
         return false;
     }
 
-    m_song.resize(size);
-    f.read(m_song.data(), size);
+    m_song.resize(f.size()-4);
+    f.read(m_song.data(), m_song.size());
 
     rewind(0);
     return true;
 }
 
 bool CbamPlayer::update() {
-    unsigned char cmd, c;
-
-    if (del) {
-        del--;
-        return !songend;
+    if (m_delay) {
+        m_delay--;
+        return !m_songEnd;
     }
 
-    if (pos >= m_song.size()) { // EOF detection
-        pos = 0;
-        songend = true;
+    if (m_position >= m_song.size()) { // EOF detection
+        m_position = 0;
+        m_songEnd = true;
     }
 
-    while (m_song[pos] < 128) {
-        cmd = m_song[pos] & 240;
-        c = m_song[pos] & 15;
-        switch (cmd) {
-        case 0: // stop song
-            pos = 0;
-            songend = true;
+    while (m_song[m_position] < 128) {
+        const auto effectValue = m_song[m_position] & 0x0f;
+        switch (m_song[m_position] & 0xf0) {
+        case 0x00: // stop song
+            m_position = 0;
+            m_songEnd = true;
             break;
-        case 16: // start note
-            if (c < 9) {
-                getOpl()->writeReg(0xa0 + c, freq[m_song[++pos]] & 255);
-                getOpl()->writeReg(0xb0 + c, (freq[m_song[pos]] >> 8) + 32);
-            } else
-                pos++;
-            pos++;
-            break;
-        case 32: // stop note
-            if (c < 9)
-                getOpl()->writeReg(0xb0 + c, 0);
-            pos++;
-            break;
-        case 48: // define instrument
-            if (c < 9) {
-                getOpl()->writeReg(0x20 + s_opTable[c], m_song[pos + 1]);
-                getOpl()->writeReg(0x23 + s_opTable[c], m_song[pos + 2]);
-                getOpl()->writeReg(0x40 + s_opTable[c], m_song[pos + 3]);
-                getOpl()->writeReg(0x43 + s_opTable[c], m_song[pos + 4]);
-                getOpl()->writeReg(0x60 + s_opTable[c], m_song[pos + 5]);
-                getOpl()->writeReg(0x63 + s_opTable[c], m_song[pos + 6]);
-                getOpl()->writeReg(0x80 + s_opTable[c], m_song[pos + 7]);
-                getOpl()->writeReg(0x83 + s_opTable[c], m_song[pos + 8]);
-                getOpl()->writeReg(0xe0 + s_opTable[c], m_song[pos + 9]);
-                getOpl()->writeReg(0xe3 + s_opTable[c], m_song[pos + 10]);
-                getOpl()->writeReg(0xc0 + c, m_song[pos + 11]);
+        case 0x10: // start note
+            if (effectValue < 9) {
+                getOpl()->writeReg(0xa0 + effectValue, s_frequencies[m_song[++m_position]] & 255);
+                getOpl()->writeReg(0xb0 + effectValue, (s_frequencies[m_song[m_position]] >> 8) + 32);
             }
-            pos += 12;
+            else
+                m_position++;
+            m_position++;
             break;
-        case 80: // set label
-            label[c].target = ++pos;
-            label[c].defined = true;
+        case 0x20: // stop note
+            if (effectValue < 9)
+                getOpl()->writeReg(0xb0 + effectValue, 0);
+            m_position++;
             break;
-        case 96: // jump
-            if (label[c].defined)
-                switch (m_song[pos + 1]) {
-                case 254: // infinite loop
-                    if (label[c].defined) {
-                        pos = label[c].target;
-                        songend = true;
+        case 0x30: // define instrument
+            if (effectValue < 9) {
+                getOpl()->writeReg(0x20 + s_opTable[effectValue], m_song[m_position + 1]);
+                getOpl()->writeReg(0x23 + s_opTable[effectValue], m_song[m_position + 2]);
+                getOpl()->writeReg(0x40 + s_opTable[effectValue], m_song[m_position + 3]);
+                getOpl()->writeReg(0x43 + s_opTable[effectValue], m_song[m_position + 4]);
+                getOpl()->writeReg(0x60 + s_opTable[effectValue], m_song[m_position + 5]);
+                getOpl()->writeReg(0x63 + s_opTable[effectValue], m_song[m_position + 6]);
+                getOpl()->writeReg(0x80 + s_opTable[effectValue], m_song[m_position + 7]);
+                getOpl()->writeReg(0x83 + s_opTable[effectValue], m_song[m_position + 8]);
+                getOpl()->writeReg(0xe0 + s_opTable[effectValue], m_song[m_position + 9]);
+                getOpl()->writeReg(0xe3 + s_opTable[effectValue], m_song[m_position + 10]);
+                getOpl()->writeReg(0xc0 + effectValue, m_song[m_position + 11]);
+            }
+            m_position += 12;
+            break;
+        case 0x50: // set label
+            m_labels[effectValue].target = ++m_position;
+            m_labels[effectValue].defined = true;
+            break;
+        case 0x60: // jump
+            if (m_labels[effectValue].defined)
+                switch (m_song[m_position + 1]) {
+                case 0xfe: // infinite loop
+                    if (m_labels[effectValue].defined) {
+                        m_position = m_labels[effectValue].target;
+                        m_songEnd = true;
                         break;
                     }
                     // fall through...
-                case 255: // chorus
-                    if (!chorus && label[c].defined) {
-                        chorus = true;
-                        gosub = pos + 2;
-                        pos = label[c].target;
+                case 0xff: // chorus
+                    if (!m_chorus && m_labels[effectValue].defined) {
+                        m_chorus = true;
+                        m_goSub = m_position + 2;
+                        m_position = m_labels[effectValue].target;
                         break;
                     }
                     // fall through...
                 case 0: // end of loop
-                    pos += 2;
+                    m_position += 2;
                     break;
                 default:                 // finite loop
-                    if (!label[c].count) { // loop elapsed
-                        label[c].count = 255;
-                        pos += 2;
+                    if (!m_labels[effectValue].count) { // loop elapsed
+                        m_labels[effectValue].count = 255;
+                        m_position += 2;
                         break;
                     }
-                    if (label[c].count < 255) // loop defined
-                        label[c].count--;
+                    if (m_labels[effectValue].count < 255) // loop defined
+                        m_labels[effectValue].count--;
                     else // loop undefined
-                        label[c].count = m_song[pos + 1] - 1;
-                    pos = label[c].target;
+                        m_labels[effectValue].count = m_song[m_position + 1] - 1;
+                    m_position = m_labels[effectValue].target;
                     break;
                 }
             break;
-        case 112: // end of chorus
-            if (chorus) {
-                pos = gosub;
-                chorus = false;
-            } else
-                pos++;
+        case 0x70: // end of chorus
+            if (m_chorus) {
+                m_position = m_goSub;
+                m_chorus = false;
+            }
+            else
+                m_position++;
             break;
         default: // reserved command (skip)
-            pos++;
+            m_position++;
             break;
         }
     }
-    if (m_song[pos] >= 128) { // wait
-        del = m_song[pos] - 127;
-        pos++;
+    if (m_song[m_position] >= 0x80) { // wait
+        m_delay = m_song[m_position] - 0x7f;
+        m_position++;
     }
-    return !songend;
+    return !m_songEnd;
 }
 
 void CbamPlayer::rewind(int) {
-    int i;
-
-    pos = 0;
-    songend = false;
-    del = 0;
-    gosub = 0;
-    chorus = false;
-    memset(label, 0, sizeof(label));
-    label[0].defined = true;
-    for (i = 0; i < 16; i++)
-        label[i].count = 255; // 255 = undefined
+    m_position = 0;
+    m_songEnd = false;
+    m_delay = 0;
+    m_goSub = 0;
+    m_chorus = false;
+    m_labels.fill(Label());
     getOpl()->writeReg(1, 32);
 }

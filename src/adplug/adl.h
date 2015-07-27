@@ -27,44 +27,51 @@
 class AdlibDriver;
 
 class CadlPlayer : public CPlayer {
-  DISABLE_COPY(CadlPlayer)
+    DISABLE_COPY(CadlPlayer)
 public:
-  static CPlayer *factory();
+    static CPlayer *factory();
 
-  CadlPlayer();
-  ~CadlPlayer();
+    CadlPlayer();
+    ~CadlPlayer() = default;
 
-  bool load(const std::string &filename);
-  bool update();
-  void rewind(int subsong = -1);
+    bool load(const std::string &filename);
+    bool update();
+    void rewind(int subsong = -1);
 
-  // refresh rate is fixed at 72Hz
-  size_t framesUntilUpdate() override { return SampleRate / 72; }
+    // refresh rate is fixed at 72Hz
+    size_t framesUntilUpdate() const { return SampleRate / 72; }
 
-  unsigned int getsubsongs();
-  unsigned int getsubsong() { return cursubsong; }
-  std::string gettype() { return std::string("Westwood ADL"); }
+    unsigned int subSongCount() const;
+    unsigned int currentSubSong() const
+    {
+        return m_currentSubSong;
+    }
+
+    std::string type() const
+    {
+        return "Westwood ADL";
+    }
 
 private:
-  int numsubsongs = 0;
-  int cursubsong = 0;
+    int m_subSongCount = 0;
+    int m_currentSubSong = 0;
 
-  AdlibDriver* _driver = nullptr;
+    std::unique_ptr<AdlibDriver> m_driver;
 
-  std::array<uint8_t, 120> _trackEntries{};
-  std::vector<uint8_t> _soundDataPtr{};
-  int _sfxPlayingSound = -1;
+    std::array<uint8_t, 120> m_trackEntries{{}};
+    std::vector<uint8_t> m_soundDataPtr{};
+    int m_sfxPlayingSound = -1;
 
-  uint8_t _sfxPriority = 0;
-  uint8_t _sfxFourthByteOfSong = 0;
+    uint8_t m_sfxPriority = 0;
+    uint8_t m_sfxFourthByteOfSong = 0;
 
-  bool init();
-  void process();
-  void playTrack(uint8_t track);
-  void playSoundEffect(uint8_t track);
-  void play(uint8_t track);
-  void unk1();
-  void unk2();
+    bool init();
+    void process();
+    void playTrack(uint8_t track);
+    void playSoundEffect(uint8_t track);
+    void play(uint8_t track);
+    void unk1();
+    void unk2();
 };
 
 #endif

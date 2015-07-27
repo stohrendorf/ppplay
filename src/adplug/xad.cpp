@@ -40,8 +40,8 @@ bool CxadPlayer::load(const std::string &filename) {
         return false;
     }
 
-    tune.resize(f.size() - 80);
-    f.read(tune.data(), tune.size());
+    m_tune.resize(f.size() - 80);
+    f.read(m_tune.data(), m_tune.size());
 
     ret = xadplayer_load();
 
@@ -52,10 +52,10 @@ bool CxadPlayer::load(const std::string &filename) {
 }
 
 void CxadPlayer::rewind(int subsong) {
-    plr.speed = m_xadHeader.speed;
-    plr.speed_counter = 1;
-    plr.playing = 1;
-    plr.looping = 0;
+    setCurrentSpeed(m_xadHeader.speed);
+    m_xadSpeedCounter = 1;
+    m_xadPlaying = true;
+    m_xadLooping = false;
 
     // rewind()
     xadplayer_rewind(subsong);
@@ -66,30 +66,13 @@ void CxadPlayer::rewind(int subsong) {
 }
 
 bool CxadPlayer::update() {
-    if (--plr.speed_counter)
-        goto update_end;
+    if (--m_xadSpeedCounter == 0) {
+        m_xadSpeedCounter = currentSpeed();
 
-    plr.speed_counter = plr.speed;
+        // update()
+        xadplayer_update();
+    }
 
-    // update()
-    xadplayer_update();
-
-update_end:
-    return (plr.playing && (!plr.looping));
+    return m_xadPlaying && !m_xadLooping;
 }
 
-size_t CxadPlayer::framesUntilUpdate() {
-    return SampleRate / xadplayer_getrefresh();
-}
-
-std::string CxadPlayer::gettype() { return xadplayer_gettype(); }
-
-std::string CxadPlayer::gettitle() { return xadplayer_gettitle(); }
-
-std::string CxadPlayer::getauthor() { return xadplayer_getauthor(); }
-
-std::string CxadPlayer::getinstrument(unsigned int i) {
-    return xadplayer_getinstrument(i);
-}
-
-unsigned int CxadPlayer::getinstruments() { return xadplayer_getinstruments(); }

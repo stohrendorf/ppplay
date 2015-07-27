@@ -28,7 +28,16 @@
 
 #include "dtm.h"
 
-/* -------- Public Methods -------------------------------- */
+
+namespace
+{
+#pragma pack(push,1)
+    struct dtm_event {
+        uint8_t byte0;
+        uint8_t byte1;
+    };
+#pragma pack(pop)
+}
 
 CPlayer *CdtmLoader::factory() { return new CdtmLoader(); }
 
@@ -36,28 +45,24 @@ bool CdtmLoader::load(const std::string &filename) {
     FileStream f(filename);
     if (!f)
         return false;
-    const unsigned char conv_inst[11] = { 2, 1, 10, 9, 4, 3, 6, 5, 0, 8, 7 };
     const std::array<uint16_t,12> conv_note = { 0x16B, 0x181, 0x198, 0x1B0, 0x1CA,
                                                 0x1E5, 0x202, 0x220, 0x241, 0x263,
                                                 0x287, 0x2AE };
     // read header
-    f.read(header.id, 12);
-    f >> header.version;
-    f.read(header.title, 20);
-    f.read(header.author, 20);
-    f >>header.numpat >> header.numinst;
+    f.read(m_header.id, 12);
+    f >> m_header.version;
+    f.read(m_header.title, 20);
+    f.read(m_header.author, 20);
+    f >> m_header.numpat >> m_header.numinst;
 
     // signature exists ? good version ?
-    if (memcmp(header.id, "DeFy DTM ", 9) || header.version != 0x10) {
+    if (memcmp(m_header.id, "DeFy DTM ", 9) || m_header.version != 0x10) {
         return false;
     }
 
-    header.numinst++;
+    m_header.numinst++;
 
     // load description
-    memset(desc, 0, 80 * 16);
-
-    char bufstr[80];
 
     for (int i = 0; i < 16; i++) {
         // get line length
@@ -70,6 +75,7 @@ bool CdtmLoader::load(const std::string &filename) {
 
         // read line
         if (bufstr_length) {
+            char bufstr[81];
             f.read(bufstr, bufstr_length);
 
             for (int j = 0; j < bufstr_length; j++)
@@ -78,134 +84,140 @@ bool CdtmLoader::load(const std::string &filename) {
 
             bufstr[bufstr_length] = 0;
 
-            strcat(desc, bufstr);
+            m_description += bufstr;
         }
 
-        strcat(desc, "\n");
+        m_description += "\n";
     }
 
     // init CmodPlayer
-    m_order.resize(100);
-    realloc_patterns(header.numpat, 64, 9);
+    realloc_patterns(m_header.numpat, 64, 9);
     init_notetable(conv_note);
     init_trackord();
 
     // load instruments
-    for (int i = 0; i < header.numinst; i++) {
+    for (int i = 0; i < m_header.numinst; i++) {
         uint8_t name_length;
         f >> name_length;
 
+        BOOST_ASSERT( name_length <= sizeof(dtm_instrument::name) );
         if (name_length)
-            f.read(instruments[i].name, name_length);
+            f.read(m_instruments[i].name, name_length);
 
-        instruments[i].name[name_length] = 0;
+        m_instruments[i].name[name_length] = 0;
 
-        f.read(instruments[i].data, 12);
+        f.read(m_instruments[i].data, 12);
 
-        for (int j = 0; j < 11; j++)
-            instrument(i,true).data[conv_inst[j]] = instruments[i].data[j];
+        static const uint8_t conv_inst[11] = { 2, 1, 10, 9, 4, 3, 6, 5, 0, 8, 7 };
+
+        auto& instr = addInstrument();
+        for (int j = 0; j < 11; j++) {
+            instr.data[conv_inst[j]] = m_instruments[i].data[j];
+        }
     }
 
-    // load order
-    f.read(m_order.data(), 100);
+    // load orders
+    {
+        uint8_t orders[100];
+        f.read(orders, 100);
+        for (int i = 0; i < 100; i++) {
+            if (orders[i] < 0x80) {
+                addOrder(orders[i]);
+                continue;
+            }
 
-    numberOfPatterns = header.numpat;
+            if (orders[i] == 0xFF)
+                setRestartOrder(0);
+            else
+                setRestartOrder(orders[i] - 0x80);
 
-    std::vector<uint8_t> pattern(0x480);
+            break;
+        }
+    }
+
+    //m_maxUsedPattern = header.numpat;
 
     // load tracks
-    for (int i = 0; i < numberOfPatterns; i++) {
+    for (int i = 0; i < m_header.numpat; i++) {
         uint16_t packed_length;
         f >> packed_length;
 
         std::vector<uint8_t> packed_pattern(packed_length);
         f.read(packed_pattern.data(), packed_length);
 
-        auto unpacked_length = unpack_pattern(packed_pattern.data(), packed_length, pattern.data(), 0x480);
+        std::vector<uint8_t> pattern = unpack_pattern(packed_pattern);
 
-        if (!unpacked_length) {
+        if (pattern.empty() || pattern.size() < 0x480) {
             return false;
         }
+        pattern.resize(0x480);
 
         // convert pattern
-        int t = 0;
+        int channel = 0;
         for (int j = 0; j < 9; j++) {
-            for (int k = 0; k < 64; k++) {
-                dtm_event *event = (dtm_event *)&pattern[(k * 9 + j) * 2];
+            for (int row = 0; row < 64; row++) {
+                const dtm_event *event = reinterpret_cast<const dtm_event*>( &pattern[(row * 9 + j) * 2] );
+                PatternCell& cell = patternCell(channel, row);
 
                 if (event->byte0 == 0x80) {
                     // instrument
                     if (event->byte1 <= 0x80)
-                        m_tracks.at(t,k).inst = event->byte1 + 1;
+                        cell.instrument = event->byte1 + 1;
                 }
                 else {
                     // note + effect
-                    m_tracks.at(t,k).note = event->byte0;
+                    cell.note = event->byte0;
 
                     if ((event->byte0 != 0) && (event->byte0 != 127))
-                        m_tracks.at(t,k).note++;
+                        cell.note++;
 
                     // convert effects
                     switch (event->byte1 >> 4) {
                     case 0x0: // pattern break
                         if ((event->byte1 & 15) == 1)
-                            m_tracks.at(t,k).command = 13;
+                            cell.command = Command::PatternBreak;
                         break;
 
                     case 0x1: // freq. slide up
-                        m_tracks.at(t,k).command = 28;
-                        m_tracks.at(t,k).param1 = event->byte1 & 15;
+                        cell.command = Command::SlideUpDown;
+                        cell.hiNybble = event->byte1 & 15;
                         break;
 
                     case 0x2: // freq. slide down
-                        m_tracks.at(t,k).command = 28;
-                        m_tracks.at(t,k).param2 = event->byte1 & 15;
+                        cell.command = Command::SlideUpDown;
+                        cell.loNybble = event->byte1 & 15;
                         break;
 
                     case 0xA: // set carrier volume
                     case 0xC: // set instrument volume
-                        m_tracks.at(t,k).command = 22;
-                        m_tracks.at(t,k).param1 = (0x3F - (event->byte1 & 15)) >> 4;
-                        m_tracks.at(t,k).param2 = (0x3F - (event->byte1 & 15)) & 15;
+                        cell.command = Command::CarrierVolume;
+                        cell.hiNybble = (0x3F - (event->byte1 & 15)) >> 4;
+                        cell.loNybble = (0x3F - (event->byte1 & 15)) & 15;
                         break;
 
                     case 0xB: // set modulator volume
-                        m_tracks.at(t,k).command = 21;
-                        m_tracks.at(t,k).param1 = (0x3F - (event->byte1 & 15)) >> 4;
-                        m_tracks.at(t,k).param2 = (0x3F - (event->byte1 & 15)) & 15;
+                        cell.command = Command::ModulatorVolume;
+                        cell.hiNybble = (0x3F - (event->byte1 & 15)) >> 4;
+                        cell.loNybble = (0x3F - (event->byte1 & 15)) & 15;
                         break;
 
                     case 0xE: // set panning
                         break;
 
                     case 0xF: // set speed
-                        m_tracks.at(t,k).command = 13;
-                        m_tracks.at(t,k).param2 = event->byte1 & 15;
+                        cell.command = Command::SA2Speed; // was: PatternBreak
+                        cell.loNybble = event->byte1 & 15;
                         break;
                     }
                 }
             }
 
-            t++;
-        }
-    }
-
-    // order length
-    for (int i = 0; i < 100; i++) {
-        if (m_order[i] >= 0x80) {
-            m_length = i;
-
-            if (m_order[i] == 0xFF)
-                m_restartpos = 0;
-            else
-                m_restartpos = m_order[i] - 0x80;
-
-            break;
+            channel++;
         }
     }
 
     // initial speed
-    m_initspeed = 2;
+    setInitialSpeed(2);
 
     rewind(0);
 
@@ -217,57 +229,68 @@ void CdtmLoader::rewind(int subsong) {
 
     // default instruments
     for (int i = 0; i < 9; i++) {
-        channel[i].inst = i;
+        channel(i).instrument = i;
 
         const CmodPlayer::Instrument& inst = instrument(i);
-        channel[i].vol1 = 63 - (inst.data[10] & 63);
-        channel[i].vol2 = 63 - (inst.data[9] & 63);
+        channel(i).carrierVolume = 63 - (inst.data[10] & 63);
+        channel(i).modulatorVolume = 63 - (inst.data[9] & 63);
     }
 }
 
-size_t CdtmLoader::framesUntilUpdate() { return SampleRate / 18.2; }
-
-std::string CdtmLoader::gettype() { return std::string("DeFy Adlib Tracker"); }
-
-std::string CdtmLoader::gettitle() { return std::string(header.title); }
-
-std::string CdtmLoader::getauthor() { return std::string(header.author); }
-
-std::string CdtmLoader::getdesc() { return std::string(desc); }
-
-std::string CdtmLoader::getinstrument(unsigned int n) {
-    return std::string(instruments[n].name);
+size_t CdtmLoader::framesUntilUpdate() const
+{
+    return SampleRate / 18.2;
 }
 
-unsigned int CdtmLoader::getinstruments() { return header.numinst; }
+std::string CdtmLoader::type() const
+{
+    return "DeFy Adlib Tracker";
+}
+
+std::string CdtmLoader::title() const
+{
+    return m_header.title;
+}
+
+std::string CdtmLoader::author() const
+{
+    return m_header.author;
+}
+
+std::string CdtmLoader::description() const
+{
+    return m_description;
+}
+
+std::string CdtmLoader::instrumentTitle(size_t n) const
+{
+    return m_instruments[n].name;
+}
+
+uint32_t CdtmLoader::instrumentCount() const
+{
+    return m_header.numinst;
+}
 
 /* -------- Private Methods ------------------------------- */
 
-long CdtmLoader::unpack_pattern(unsigned char *ibuf, long ilen,
-                                unsigned char *obuf, long olen) {
-    unsigned char *input = ibuf;
-    unsigned char *output = obuf;
-
-    long input_length = 0;
-    long output_length = 0;
-
-    unsigned char repeat_byte, repeat_counter;
+std::vector<uint8_t> CdtmLoader::unpack_pattern(const std::vector<uint8_t>& input) {
+    std::vector<uint8_t> result;
 
     // RLE
-    while (input_length < ilen) {
-        repeat_byte = input[input_length++];
+    for(auto inp = input.begin(); inp < input.end(); ) {
+        auto repeat_byte = *inp++;
 
+        uint8_t repeat_counter = 1;
         if ((repeat_byte & 0xF0) == 0xD0) {
             repeat_counter = repeat_byte & 15;
-            repeat_byte = input[input_length++];
-        } else
-            repeat_counter = 1;
+            repeat_byte = *inp++;
+        }
 
         for (int i = 0; i < repeat_counter; i++) {
-            if (output_length < olen)
-                output[output_length++] = repeat_byte;
+            result.emplace_back( repeat_byte );
         }
     }
 
-    return output_length;
+    return result;
 }

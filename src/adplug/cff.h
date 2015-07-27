@@ -22,80 +22,73 @@
 #include "protrack.h"
 
 class CcffLoader : public CmodPlayer {
-  DISABLE_COPY(CcffLoader)
-public:
-  static CPlayer *factory();
+    DISABLE_COPY(CcffLoader)
+    public:
+        static CPlayer *factory();
 
-  CcffLoader() : CmodPlayer() {}
+    CcffLoader() = default;
 
-  bool load(const std::string &filename);
-  void rewind(int subsong);
+    bool load(const std::string &filename);
+    void rewind(int subsong);
 
-  std::string gettype();
-  std::string gettitle();
-  std::string getauthor();
-  std::string getinstrument(unsigned int n);
-  unsigned int getinstruments();
+    std::string type() const;
+    std::string title() const;
+    std::string author() const;
+    std::string instrumentTitle(size_t n) const;
+    uint32_t instrumentCount() const;
 
 private:
 
-  class cff_unpacker {
-  public:
+    class cff_unpacker {
+    public:
 
-    long unpack(unsigned char *ibuf, unsigned char *obuf);
+        long unpack(unsigned char *ibuf, unsigned char *obuf);
 
-  private:
+    private:
 
-    unsigned long get_code();
-    void translate_code(unsigned long code, unsigned char *string);
+        uint32_t get_code();
+        void translate_code(unsigned long code, unsigned char *string, const std::vector<std::vector<uint8_t> > &dictionary);
 
-    void cleanup();
-    int startup();
+        void cleanup();
+        bool startup(const std::vector<std::vector<uint8_t> > &dictionary);
 
-    void expand_dictionary(unsigned char *string);
+        void expand_dictionary(unsigned char *string, std::vector<std::vector<uint8_t> > &dictionary);
 
-    unsigned char *input;
-    unsigned char *output;
+        unsigned char *m_input;
+        unsigned char *m_output;
 
-    long output_length;
+        size_t m_outputLength;
 
-    unsigned char code_length;
+        unsigned char m_codeLength;
 
-    unsigned long bits_buffer;
-    unsigned int bits_left;
+        unsigned long m_bitsBuffer;
+        unsigned int m_bitsLeft;
 
-    unsigned char *heap;
-    unsigned char **dictionary;
-
-    unsigned int heap_length;
-    unsigned int dictionary_length;
-
-    unsigned long old_code, new_code;
-
-    unsigned char the_string[256];
-  };
+        unsigned char m_theString[256];
+    };
 
 #pragma pack(push,1)
-  struct cff_header {
-    char id[16];
-    unsigned char version;
-    unsigned short size;
-    unsigned char packed;
-    unsigned char reserved[12];
-  } header;
+    struct cff_header {
+        char id[16];
+        unsigned char version;
+        unsigned short size;
+        unsigned char packed;
+        unsigned char reserved[12];
+    };
+    cff_header header;
 #pragma pack(pop)
 
-  struct cff_instrument {
-    unsigned char data[12];
-    char name[21];
-  } instruments[47];
+    struct cff_instrument {
+        unsigned char data[12];
+        char name[21];
+    } instruments[47];
 
-  char song_title[20];
-  char song_author[20];
+    char song_title[20];
+    char song_author[20];
 
-  struct cff_event {
-    unsigned char byte0;
-    unsigned char byte1;
-    unsigned char byte2;
-  };
+    struct cff_event {
+        unsigned char byte0;
+        unsigned char byte1;
+        unsigned char byte2;
+    };
 };

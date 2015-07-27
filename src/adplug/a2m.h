@@ -25,63 +25,63 @@
 #include "protrack.h"
 
 class Ca2mLoader : public CmodPlayer {
-  DISABLE_COPY(Ca2mLoader)
+    DISABLE_COPY(Ca2mLoader)
 public:
-  Ca2mLoader() = default;
-  static CPlayer *factory();
+    Ca2mLoader() = default;
+    static CPlayer *factory();
 
-  bool load(const std::string &filename);
-  size_t framesUntilUpdate();
+    bool load(const std::string &filename);
+    size_t framesUntilUpdate() const;
 
-  std::string gettype() { return "AdLib Tracker 2"; }
-  std::string gettitle() { return m_songname; }
-  std::string getauthor() { return m_author; }
-  unsigned int getinstruments() { return 250; }
-  std::string getinstrument(unsigned int n) { return m_instname[n]; }
+    std::string type() const { return "AdLib Tracker 2"; }
+    std::string title() const { return m_songname; }
+    std::string author() const { return m_author; }
+    uint32_t instrumentCount() const { return 250; }
+    std::string instrumentTitle(size_t n) const { return m_instname[n]; }
 
 private:
 
-  static constexpr auto COPYRANGES = 6;
-  static constexpr auto FIRSTCODE = 257;
-  static constexpr auto MINCOPY = 3;
-  static constexpr auto MAXCOPY = 255;
-  static constexpr auto CODESPERRANGE = (MAXCOPY - MINCOPY + 1);
-  static constexpr auto MAXCHAR = (FIRSTCODE + COPYRANGES * CODESPERRANGE - 1);
-  static constexpr auto TWICEMAX = (2 * MAXCHAR + 1);
+    static constexpr auto COPYRANGES = 6;
+    static constexpr auto FIRSTCODE = 257;
+    static constexpr auto MINCOPY = 3;
+    static constexpr auto MAXCOPY = 255;
+    static constexpr auto CODESPERRANGE = (MAXCOPY - MINCOPY + 1);
+    static constexpr auto MAXCHAR = (FIRSTCODE + COPYRANGES * CODESPERRANGE - 1);
+    static constexpr auto TWICEMAX = (2 * MAXCHAR + 1);
 
-  static constexpr auto MAXFREQ = 2000;
-  static constexpr auto TERMINATE = 256;
-  static constexpr auto SUCCMAX = MAXCHAR + 1;
-  static constexpr auto ROOT = 1;
-  static constexpr auto MAXBUF = 42 * 1024;
-  static constexpr auto MAXDISTANCE = 21389;
-  static constexpr auto MAXSIZE = 21389 + MAXCOPY;
+    static constexpr auto MAXFREQ = 2000;
+    static constexpr auto TERMINATE = 256;
+    static constexpr auto SUCCMAX = MAXCHAR + 1;
+    static constexpr auto ROOT = 1;
+    static constexpr auto MAXBUF = 42 * 1024;
+    static constexpr auto MAXDISTANCE = 21389;
+    static constexpr auto MAXSIZE = 21389 + MAXCOPY;
 
-  void inittree();
-  void updatefreq(unsigned short a, unsigned short b);
-  void updatemodel(unsigned short code);
-  unsigned short inputcode(unsigned short bits);
-  unsigned short uncompress();
-  void decode();
-  size_t sixdepak(uint16_t *source, uint8_t *dest, size_t size);
+    void inittree();
+    void updatefreq(unsigned short a, unsigned short b);
+    void updatemodel(unsigned short code);
+    unsigned short inputcode(unsigned short bits);
+    unsigned short uncompress();
+    void decode();
+    size_t sixdepak(uint16_t *source, uint8_t *dest, size_t size);
 
-  std::string m_songname{};
-  std::string m_author{};
-  std::array<std::string,250> m_instname{};
+    std::string m_songname{};
+    std::string m_author{};
+    std::array<std::string,250> m_instname{{}};
 
-  uint16_t m_bitcount = 0;
-  uint16_t m_bitbuffer = 0;
-  uint16_t m_bufcount = 0;
-  uint16_t m_obufcount = 0;
-  uint16_t m_inputSize = 0;
-  size_t m_outputSize = 0;
-  uint16_t m_leftc[MAXCHAR + 1];
-  uint16_t m_rightc[MAXCHAR + 1];
-  uint16_t m_dad[TWICEMAX + 1];
-  uint16_t m_freq[TWICEMAX + 1];
-  uint16_t* m_wdbuf = nullptr;
-  uint8_t* m_obuf = nullptr;
-  std::vector<uint8_t> m_buf{};
+    uint16_t m_bitcount = 0;
+    uint16_t m_bitbuffer = 0;
+    uint16_t m_bufcount = 0;
+    uint16_t m_obufcount = 0;
+    uint16_t m_inputSize = 0;
+    size_t m_outputSize = 0;
+    uint16_t m_leftc[MAXCHAR + 1];
+    uint16_t m_rightc[MAXCHAR + 1];
+    uint16_t m_dad[TWICEMAX + 1];
+    uint16_t m_freq[TWICEMAX + 1];
+    uint16_t* m_wdbuf = nullptr;
+    uint8_t* m_obuf = nullptr;
+    std::vector<uint8_t> m_buf{};
 };
 
 #endif

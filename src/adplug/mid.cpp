@@ -224,7 +224,7 @@ void CmidPlayer::sierra_next_section() {
     m_sierraPos = m_dataPos;
     //getch();
 
-    m_fwait = 0;
+    m_fwait = std::numeric_limits<float>::max();
     m_doing = true;
 }
 
@@ -276,6 +276,7 @@ bool CmidPlayer::load(const std::string &filename) {
     m_data.resize(f.size());
     f.read(m_data.data(), m_data.size());
 
+    addOrder(0);
     rewind(0);
     return true;
 }
@@ -760,10 +761,10 @@ bool CmidPlayer::update() {
             if (m_tracks[m_currentTrack].on)
                 m_tracks[m_currentTrack].iwait -= m_iwait;
 
-        m_fwait = 1.0f / ((float(m_iwait) / m_deltas) * (m_msqtr / 1000000.0));
+        m_fwait = float(m_iwait) / m_deltas * (m_msqtr / 1000000.0);
     }
     else
-        m_fwait = 50; // 1/50th of a second
+        m_fwait = 1.0 / 50; // 1/50th of a second
 
     midiprintf("end update\n");
 
@@ -773,8 +774,8 @@ bool CmidPlayer::update() {
         return false;
 }
 
-size_t CmidPlayer::framesUntilUpdate() {
-    return SampleRate / (m_fwait > 0.01 ? m_fwait : 0.01);
+size_t CmidPlayer::framesUntilUpdate() const {
+    return SampleRate * (m_fwait < std::numeric_limits<float>::max() ? m_fwait : 100);
 }
 
 void CmidPlayer::rewind(int subsong) {
@@ -803,7 +804,7 @@ void CmidPlayer::rewind(int subsong) {
 
     m_deltas = 250; // just a number,  not a standard
     m_msqtr = 500000;
-    m_fwait = 123; // gotta be a small thing.. sorta like nothing
+    m_fwait = 1.0/123; // gotta be a small thing.. sorta like nothing
     m_iwait = 0;
 
     m_subsongs = 1;
@@ -1000,7 +1001,7 @@ void CmidPlayer::rewind(int subsong) {
     midi_fm_reset();
 }
 
-std::string CmidPlayer::gettype() {
+std::string CmidPlayer::type() const {
     switch (m_type) {
     case FileType::Lucas:
         return "LucasArts AdLib MIDI";

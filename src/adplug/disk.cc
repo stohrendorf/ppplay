@@ -42,19 +42,19 @@ DiskWriter::DiskWriter(const char *filename, uint32_t nfreq)
     // Write Microsoft RIFF WAVE header
     m_file.write("RIFF", 4);
     uint32_t t32;
-    t32 = 36; t32 >> m_file;
+    t32 = 36; m_file << t32;
     m_file.write("WAVEfmt ", 8);
-    t32 = 16; t32 >> m_file;
+    t32 = 16; m_file << t32;
     uint16_t t16;
-    t16 = 1; t16 >> m_file;
-    t16 = 2; t16 >> m_file;
-    nfreq >> m_file;
+    t16 = 1; m_file << t16;
+    t16 = 2; m_file << t16;
+    m_file << nfreq;
     nfreq *= 4;
-    nfreq >> m_file;
-    t16 = 4; t16 >> m_file;
-    t16 = 16; t16 >> m_file;
+    m_file << nfreq;
+    t16 = 4; m_file << t16;
+    t16 = 16; m_file << t16;
     m_file.write("data", 4);
-    t32 = 0; t32 >> m_file;
+    t32 = 0; m_file << t32;
 }
 
 DiskWriter::~DiskWriter()
@@ -63,16 +63,16 @@ DiskWriter::~DiskWriter()
 
     if(m_bytesWritten % 2) { // Wave data must end on an even byte boundary
         uint8_t tmp = 0;
-        tmp >> m_file;
+        m_file << tmp;
         m_bytesWritten++;
     }
 
     // Write file sizes
     m_file.seek(40);
-    m_bytesWritten >> m_file;
+    m_file << m_bytesWritten;
     m_bytesWritten += 36; // make absolute filesize (add header size)
     m_file.seek(4);
-    m_bytesWritten >> m_file;
+    m_file << m_bytesWritten;
 }
 
 void DiskWriter::output(const std::vector<int16_t> &buf)
