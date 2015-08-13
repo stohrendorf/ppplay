@@ -79,8 +79,8 @@ void SDLPlayer::callback(void *userdata, Uint8 *audiobuf, int byteLen)
 
         std::array<int16_t,4> samples;
         self->getPlayer()->read(&samples);
-        bufPtr[0] = ppp::clip(samples[0] + samples[1],-32768,32767);
-        bufPtr[1] = ppp::clip(samples[2] + samples[3],-32768,32767);
+        bufPtr[0] = ppp::clip(samples[0] + samples[2],-32768,32767);
+        bufPtr[1] = ppp::clip(samples[1] + samples[3],-32768,32767);
         bufPtr += 2;
 
         if( self->m_interp.next() == 2 ) {
