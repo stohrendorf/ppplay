@@ -224,7 +224,7 @@ bool Cs3mPlayer::update() {
             m_channels[realchan].octave = m_channels[realchan].nextOctave;
             break;
         case 21:
-            vibrato(realchan, (unsigned char)(effectValue / 4));
+            vibrato(realchan, effectValue / 4);
             break; // fine vibrato
         }
     }
@@ -367,21 +367,21 @@ bool Cs3mPlayer::update() {
             break;
         case 5:
             if (info > 0xf0) { // fine slide down
-                slide_down(realchan, (unsigned char)(info & 0x0f));
+                slide_down(realchan, info & 0x0f);
                 setfreq(realchan);
             }
             if (info > 0xe0 && info < 0xf0) { // extra fine slide down
-                slide_down(realchan, (unsigned char)((info & 0x0f) / 4));
+                slide_down(realchan, (info & 0x0f) / 4);
                 setfreq(realchan);
             }
             break;
         case 6:
             if (info > 0xf0) { // fine slide up
-                slide_up(realchan, (unsigned char)(info & 0x0f));
+                slide_up(realchan, info & 0x0f);
                 setfreq(realchan);
             }
             if (info > 0xe0 && info < 0xf0) { // extra fine slide up
-                slide_up(realchan, (unsigned char)((info & 0x0f) / 4));
+                slide_up(realchan, (info & 0x0f) / 4);
                 setfreq(realchan);
             }
             break;
@@ -478,11 +478,11 @@ void Cs3mPlayer::setvolume(unsigned char chan) {
     unsigned char op = s_opTable[chan], insnr = m_channels[chan].instrument;
 
     getOpl()->writeReg(
-                0x43 + op, (int)(63 - ((63 - (m_instruments[insnr].d03 & 63)) / 63.0) *
+                0x43 + op, static_cast<uint8_t>(63 - ((63 - (m_instruments[insnr].d03 & 63)) / 63.0) *
                                  m_channels[chan].volume) + (m_instruments[insnr].d03 & 192));
     if (m_instruments[insnr].d0a & 1)
         getOpl()->writeReg(
-                    0x40 + op, (int)(63 - ((63 - (m_instruments[insnr].d02 & 63)) / 63.0) *
+                    0x40 + op, static_cast<uint8_t>(63 - ((63 - (m_instruments[insnr].d02 & 63)) / 63.0) *
                                      m_channels[chan].volume) + (m_instruments[insnr].d02 & 192));
 }
 
@@ -550,13 +550,13 @@ void Cs3mPlayer::vibrato(unsigned char chan, unsigned char info) {
         while (m_channels[chan].trigger >= 64)
             m_channels[chan].trigger -= 64;
         if (m_channels[chan].trigger >= 16 && m_channels[chan].trigger < 48)
-            slide_down(chan, (unsigned char)(vibratotab[m_channels[chan].trigger - 16] /
+            slide_down(chan, static_cast<uint8_t>(vibratotab[m_channels[chan].trigger - 16] /
                        (16 - depth)));
         if (m_channels[chan].trigger < 16)
-            slide_up(chan, (unsigned char)(vibratotab[m_channels[chan].trigger + 16] /
+            slide_up(chan, static_cast<uint8_t>(vibratotab[m_channels[chan].trigger + 16] /
                      (16 - depth)));
         if (m_channels[chan].trigger >= 48)
-            slide_up(chan, (unsigned char)(vibratotab[m_channels[chan].trigger - 48] /
+            slide_up(chan, static_cast<uint8_t>(vibratotab[m_channels[chan].trigger - 48] /
                      (16 - depth)));
     }
     setfreq(chan);

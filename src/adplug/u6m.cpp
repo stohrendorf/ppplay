@@ -35,16 +35,16 @@ bool Cu6mPlayer::load(const std::string &filename) {
         return false;
     const auto filesize = f.size();
 
-    size_t decompressed_filesize = 0;
+    std::streamsize decompressed_filesize = 0;
     if (filesize >= 6) {
         // check if the file has a valid pseudo-header
         uint8_t pseudo_header[6];
         f.read(pseudo_header, 6);
         decompressed_filesize = pseudo_header[0] + (pseudo_header[1] << 8);
 
-        if (!((pseudo_header[2] == 0) && (pseudo_header[3] == 0) &&
+        if (!(pseudo_header[2] == 0 && pseudo_header[3] == 0 &&
               (pseudo_header[4] + ((pseudo_header[5] & 0x1) << 8) == 0x100) &&
-              (decompressed_filesize > (filesize - 4)))) {
+              decompressed_filesize > (filesize - 4))) {
             return false;
         }
     }
@@ -169,7 +169,7 @@ bool Cu6mPlayer::lzw_decompress(const Cu6mPlayer::DataBlock& source, Cu6mPlayer:
     int codeword_size = 9;
     long bits_read = 0;
     uint32_t next_free_codeword = 0x102;
-    int dictionary_size = 0x200;
+    size_t dictionary_size = 0x200;
     MyDict dictionary;
     std::stack<uint8_t> root_stack;
 
@@ -312,7 +312,7 @@ void Cu6mPlayer::get_string(uint32_t codeword, Cu6mPlayer::MyDict &dictionary,
     }
 
     // push the root at the leaf
-    root_stack.push((uint8_t) current_codeword);
+    root_stack.push(static_cast<uint8_t>(current_codeword));
 }
 
 // ============================================================================================
@@ -632,7 +632,7 @@ uint8_t Cu6mPlayer::read_song_byte() {
 }
 
 // Same as read_song_byte(), except that it returns a signed byte
-signed char Cu6mPlayer::read_signed_song_byte() {
+int8_t Cu6mPlayer::read_signed_song_byte() {
     auto song_byte = m_songData[m_songPos];
     m_songPos++;
     int signed_value;
@@ -640,9 +640,9 @@ signed char Cu6mPlayer::read_signed_song_byte() {
         signed_value = song_byte;
     }
     else {
-        signed_value = (int) song_byte - 0x100;
+        signed_value = static_cast<int>(song_byte) - 0x100;
     }
-    return ((signed char) signed_value);
+    return static_cast<int8_t>(signed_value);
 }
 
 Cu6mPlayer::byte_pair Cu6mPlayer::expand_freq_byte(uint8_t freq_byte) {
@@ -759,7 +759,7 @@ void Cu6mPlayer::mf_slide(int channel) {
             m_carrierMfSignedDelta[channel] = 0;
         }
 
-        set_carrier_mf(channel, (uint8_t) current_mf);
+        set_carrier_mf(channel, static_cast<uint8_t>(current_mf));
     }
 }
 

@@ -46,18 +46,18 @@ protected:
     };
 
     BmfVersion m_bmfVersion;
-    char m_bmfTitle[36];
-    char m_bmfAuthor[36];
-    float m_bmfTimer;
+    char m_bmfTitle[36] = "";
+    char m_bmfAuthor[36] = "";
+    float m_bmfTimer = 0;
 
     struct {
-        char name[11];
+        char name[11] = "";
         uint8_t data[13];
     } m_bmfInstruments[32];
 
     bmf_event m_bmfStreams[9][1024];
 
-    int m_bmfActiveStreams;
+    int m_bmfActiveStreams = 0;
 
     struct {
         uint16_t stream_position;

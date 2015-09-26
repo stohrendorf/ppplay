@@ -277,7 +277,7 @@ bool CmodPlayer::update() {
         // command handling (row dependant)
         const auto hiNybble = chan.hiNybble;
         const auto loNybble = chan.loNybble;
-        int info;
+        uint32_t info;
         if (m_decimalValues)
             info = chan.hiNybble * 10 + chan.loNybble;
         else
@@ -421,7 +421,7 @@ bool CmodPlayer::update() {
             break;
 
         case Command::RADSpeed: // RAD/A2M set speed
-            setCurrentSpeed(std::max(1, info));
+            setCurrentSpeed(std::max(1u, info));
             break;
 
         case Command::ModulatorVolume: // set modulator volume

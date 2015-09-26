@@ -82,11 +82,11 @@ bool CxadbmfPlayer::xadplayer_load() {
 #ifdef DEBUG
     AdPlug_LogWrite("\nbmf_load():\n\n");
 #endif
-    if (!strncmp((char *)&tune()[0], "BMF1.2", 6)) {
+    if (!strncmp(reinterpret_cast<const char*>(&tune()[0]), "BMF1.2", 6)) {
         m_bmfVersion = BMF1_2;
         m_bmfTimer = 70.0f;
     }
-    else if (!strncmp((char *)&tune()[0], "BMF1.1", 6)) {
+    else if (!strncmp(reinterpret_cast<const char *>(&tune()[0]), "BMF1.1", 6)) {
         m_bmfVersion = BMF1_1;
         m_bmfTimer = 60.0f;
     }
@@ -100,14 +100,14 @@ bool CxadbmfPlayer::xadplayer_load() {
     if (m_bmfVersion > BMF0_9B) {
         ptr += 6;
 
-        strncpy(m_bmfTitle, (char *)ptr, 36);
+        strncpy(m_bmfTitle, reinterpret_cast<const char*>(ptr), 36);
 
         while (*ptr) {
             ptr++;
         }
         ptr++;
 
-        strncpy(m_bmfAuthor, (char *)ptr, 36);
+        strncpy(m_bmfAuthor, reinterpret_cast<const char*>(ptr), 36);
 
         while (*ptr) {
             ptr++;
@@ -134,7 +134,7 @@ bool CxadbmfPlayer::xadplayer_load() {
 
         for (int i = 0; i < 32; i++) {
             if (iflags & (1 << (31 - i))) {
-                strcpy(m_bmfInstruments[i].name, (char *)ptr);
+                strcpy(m_bmfInstruments[i].name, reinterpret_cast<const char*>(ptr));
                 memcpy(m_bmfInstruments[i].data, ptr + 11, 13);
                 ptr += 24;
             }

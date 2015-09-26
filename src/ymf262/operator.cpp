@@ -125,7 +125,7 @@ int16_t Operator::nextSample( uint16_t modulator )
                 // See Channel::nextSample2Op; the "modulator" (even in non-CNT mode)
                 // is always silent.  Only in CNT mode, it gets used as a modulator,
                 // otherwise it is ignored.
-                return getOutput( modulator + m_phase, ws );
+                return getOutput( modulator + m_phase, ws ) << 1;
             case TomTomOperator:
                 return getOutput( modulator + m_phase, ws ) << 1;
             case HighHatOperator:

@@ -122,7 +122,7 @@ bool CcffLoader::load(const std::string &filename) {
 
         for (int j = 0; j < 9; j++) {
             for (int k = 0; k < 64; k++) {
-                cff_event *event = (cff_event *)&module[0x669 + ((i * 64 + k) * 9 + j) * 3];
+                const cff_event *event = reinterpret_cast<const cff_event *>(&module[0x669 + ((i * 64 + k) * 9 + j) * 3]);
                 PatternCell& cell = patternCell(t,k);
 
                 // convert note

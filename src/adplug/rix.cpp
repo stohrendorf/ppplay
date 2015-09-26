@@ -116,10 +116,11 @@ void CrixPlayer::rewind(int subsong) {
     m_regBufs.fill({});
 
     if (m_flagMkf) {
-        unsigned int *buf_index = (unsigned int *)m_fileBuffer.data();
+        const uint32_t* buf_index = reinterpret_cast<const uint32_t*>(m_fileBuffer.data());
         int offset1 = buf_index[subsong], offset2;
         while ((offset2 = buf_index[++subsong]) == offset1)
-            ;
+        {
+        }
         m_length = offset2 - offset1 + 1;
         m_bufAddr = m_fileBuffer.data() + offset1;
     }

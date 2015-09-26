@@ -42,7 +42,7 @@ bool ChscPlayer::load(const std::string &filename) {
     }
 
     // load section
-    f.read((uint8_t*)m_instr, 128*12);
+    f.read(reinterpret_cast<uint8_t*>(m_instr), 128*12);
     for (int i = 0; i < 128; i++) { // correct instruments
         m_instr[i][2] ^= (m_instr[i][2] & 0x40) << 1;
         m_instr[i][3] ^= (m_instr[i][3] & 0x40) << 1;
@@ -57,7 +57,7 @@ bool ChscPlayer::load(const std::string &filename) {
         }
         addOrder(tmp);
     }
-    f.read((HscNote*)m_patterns, 50*64*9);
+    f.read(reinterpret_cast<HscNote*>(m_patterns), 50*64*9);
 
     rewind(0); // rewind module
     return true;
@@ -240,8 +240,6 @@ bool ChscPlayer::update() {
 }
 
 void ChscPlayer::rewind(int) {
-    int i; // counter
-
     // rewind HSC player
     setCurrentRow(0);
     setCurrentOrder(0);
@@ -257,8 +255,8 @@ void ChscPlayer::rewind(int) {
     getOpl()->writeReg(8, 128);
     getOpl()->writeReg(0xbd, 0);
 
-    for (i = 0; i < 9; i++)
-        setinstr((char) i, (char) i); // init channels
+    for (uint8_t i = 0; i < 9; i++)
+        setinstr(i, i); // init channels
 }
 
 uint32_t ChscPlayer::instrumentCount() const

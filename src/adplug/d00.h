@@ -78,7 +78,8 @@ private:
 #pragma pack(pop)
 
     struct {
-        uint16_t *order, ordpos, pattpos, del, speed, rhcnt, key, freq, inst,
+        const uint16_t *order;
+        uint16_t ordpos, pattpos, del, speed, rhcnt, key, freq, inst,
         spfx, ispfx, irhcnt;
         signed short transpose, slide, slideval, vibspeed;
         uint8_t seqend, vol, vibdepth, fxdel, modvol, cvol, levpuls,
@@ -87,7 +88,8 @@ private:
 
     struct Sinsts {
         uint8_t data[11], tunelev, timer, sr, dummy[2];
-    } *inst = nullptr;
+    };
+    const Sinsts* inst = nullptr;
 
     struct Sspfx {
         uint16_t instnr;
@@ -96,18 +98,20 @@ private:
         int8_t modlevadd;
         uint8_t duration;
         uint16_t ptr;
-    } *spfx = nullptr;
+    };
+    const Sspfx* spfx = nullptr;
 
     struct Slevpuls {
         uint8_t level;
         int8_t voladd;
         uint8_t duration, ptr;
-    } *levpuls = nullptr;
+    };
+    const Slevpuls* levpuls = nullptr;
 
     bool songend = false;
     uint8_t version = 0, cursubsong = 0;
     char *datainfo = nullptr;
-    uint16_t *seqptr = nullptr;
+    const uint16_t *seqptr = nullptr;
     d00header *header = nullptr;
     d00header1 *header1 = nullptr;
     std::vector<char> filedata;

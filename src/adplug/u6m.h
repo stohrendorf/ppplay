@@ -111,7 +111,7 @@ private:
     // protected functions used by update()
     void command_loop();
     uint8_t read_song_byte();
-    signed char read_signed_song_byte();
+    int8_t read_signed_song_byte();
     void dec_clip(int &);
     byte_pair expand_freq_byte(uint8_t);
     void set_adlib_freq(int channel, byte_pair freq_word);
