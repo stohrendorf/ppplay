@@ -42,44 +42,44 @@ private:
     class cff_unpacker {
     public:
 
-        long unpack(unsigned char *ibuf, unsigned char *obuf);
+        long unpack(uint8_t *ibuf, uint8_t *obuf);
 
     private:
 
         uint32_t get_code();
-        void translate_code(unsigned long code, unsigned char *string, const std::vector<std::vector<uint8_t> > &dictionary);
+        void translate_code(unsigned long code, uint8_t *string, const std::vector<std::vector<uint8_t> > &dictionary);
 
         void cleanup();
         bool startup(const std::vector<std::vector<uint8_t> > &dictionary);
 
-        void expand_dictionary(unsigned char *string, std::vector<std::vector<uint8_t> > &dictionary);
+        void expand_dictionary(uint8_t *string, std::vector<std::vector<uint8_t> > &dictionary);
 
-        unsigned char *m_input;
-        unsigned char *m_output;
+        uint8_t *m_input;
+        uint8_t *m_output;
 
         size_t m_outputLength;
 
-        unsigned char m_codeLength;
+        uint8_t m_codeLength;
 
         unsigned long m_bitsBuffer;
         unsigned int m_bitsLeft;
 
-        unsigned char m_theString[256];
+        uint8_t m_theString[256];
     };
 
 #pragma pack(push,1)
     struct cff_header {
-        char id[16];
-        unsigned char version;
-        unsigned short size;
-        unsigned char packed;
-        unsigned char reserved[12];
+        char id[16] = "";
+        uint8_t version = 0;
+        uint16_t size = 0;
+        uint8_t packed = 0;
+        uint8_t reserved[12] = {0};
     };
-    cff_header header;
+    cff_header header{};
 #pragma pack(pop)
 
     struct cff_instrument {
-        unsigned char data[12];
+        uint8_t data[12];
         char name[21];
     } instruments[47];
 
@@ -87,8 +87,8 @@ private:
     char song_author[20];
 
     struct cff_event {
-        unsigned char byte0;
-        unsigned char byte1;
-        unsigned char byte2;
+        uint8_t byte0;
+        uint8_t byte1;
+        uint8_t byte2;
     };
 };

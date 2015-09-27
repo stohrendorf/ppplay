@@ -336,11 +336,12 @@ inline void CrixPlayer::ad_a0b0l_reg(uint16_t index, uint16_t p2, uint16_t p3) {
     uint16_t i = p2 + m_a0b0Data2[index];
     m_a0b0Data4[index] = p3;
     m_a0b0Data3[index] = p2;
-    i = ((signed short) i <= 0x5F ? i : 0x5F);
-    i = ((signed short) i >= 0 ? i : 0);
-    uint16_t data = m_fBuffer[m_addrsHead[i] + m_displace[index] / 2];
+    int16_t i2 = static_cast<int16_t>(i);
+    i2 = (i2 <= 0x5F ? i2 : 0x5F);
+    i2 = (i2 >= 0 ? i2 : 0);
+    uint16_t data = m_fBuffer[m_addrsHead[i2] + m_displace[index] / 2];
     ad_bop(0xA0 + index, data);
-    data = m_a0b0Data5[i] * 4 + (p3 < 1 ? 0 : 0x20) + ((data >> 8) & 3);
+    data = m_a0b0Data5[i2] * 4 + (p3 < 1 ? 0 : 0x20) + ((data >> 8) & 3);
     ad_bop(0xB0 + index, data);
 }
 /*--------------------------------------------------------------*/

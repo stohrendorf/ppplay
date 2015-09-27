@@ -83,30 +83,30 @@ private:
     };
 
     // class variables
-    long played_ticks;
+    long played_ticks = 0;
 
-    std::vector<uint8_t> m_songData; // the uncompressed .m file (the "song")
-    bool m_driverActive;       // flag to prevent reentrancy
-    bool m_songEnd;             // indicates song end
-    int m_songPos;             // current offset within the song
-    int m_loopPosition;        // position of the loop point
-    int m_readDelay; // delay (in timer ticks) before further song data is read
-    std::stack<subsong_info> m_subsongStack;
+    std::vector<uint8_t> m_songData{}; // the uncompressed .m file (the "song")
+    bool m_driverActive = false;       // flag to prevent reentrancy
+    bool m_songEnd = false;             // indicates song end
+    int m_songPos = 0;             // current offset within the song
+    int m_loopPosition = 0;        // position of the loop point
+    int m_readDelay = 0; // delay (in timer ticks) before further song data is read
+    std::stack<subsong_info> m_subsongStack{};
 
-    int m_instrumentOffsets[9]; // offsets of the adlib instrument data
+    int m_instrumentOffsets[9] = {0}; // offsets of the adlib instrument data
     // vibrato ("vb")
-    uint8_t m_vbCurrentValue[9];
-    uint8_t m_vbDoubleAmplitude[9];
-    uint8_t m_vbMultiplier[9];
-    bool m_vbDirectionFlag[9];
+    uint8_t m_vbCurrentValue[9] = {0};
+    uint8_t m_vbDoubleAmplitude[9] = {0};
+    uint8_t m_vbMultiplier[9] = {0};
+    bool m_vbDirectionFlag[9] = {false};
     // mute factor ("mf") = not(volume)
-    uint8_t m_carrierMf[9];
-    int8_t m_carrierMfSignedDelta[9];
-    uint8_t m_carrierMfModDelayBackup[9];
-    uint8_t m_carrierMfModDelay[9];
+    uint8_t m_carrierMf[9] = {0};
+    int8_t m_carrierMfSignedDelta[9] = {0};
+    uint8_t m_carrierMfModDelayBackup[9] = {0};
+    uint8_t m_carrierMfModDelay[9] = {0};
     // frequency
-    byte_pair m_channelFreq[9]; // adlib freq settings for each channel
-    int8_t m_channelFreqSignedDelta[9];
+    byte_pair m_channelFreq[9]{}; // adlib freq settings for each channel
+    int8_t m_channelFreqSignedDelta[9] = {0};
 
     // protected functions used by update()
     void command_loop();

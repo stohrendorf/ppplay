@@ -512,11 +512,11 @@ bool CmodPlayer::resolveOrder() /*
 {
     if (currentOrder() < orderCount()) {
         while (currentPattern() >= JUMPMARKER) { // jump to order
-            const auto neword = currentPattern() - JUMPMARKER;
+            const int neword = currentPattern() - JUMPMARKER;
 
-            if (neword <= currentOrder())
+            if (neword <= static_cast<int>(currentOrder()))
                 m_songEnd = true;
-            else if (neword == currentOrder())
+            else if (neword == static_cast<int>(currentOrder()))
                 return false;
             setCurrentOrder(neword);
         }

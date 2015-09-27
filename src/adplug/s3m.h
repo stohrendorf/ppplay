@@ -75,7 +75,7 @@ protected:
         uint8_t dp = 0;
         uint8_t dummy2[8];
         uint16_t special = 0;
-        std::array<uint8_t,32> chanset{{0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0}};
+        std::array<uint8_t,32> chanset{{0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0}};
     };
 
     struct S3mInstrument {
@@ -119,8 +119,8 @@ private:
         uint8_t octave, volume, instrument, effect, effectValue, dualInfo, key, nextOctave, trigger, note;
     } m_channels[9];
 
-    S3mHeader m_header;
-    uint8_t m_patternDelay, songend, m_loopStart, m_loopCounter;
+    S3mHeader m_header{};
+    uint8_t m_patternDelay = 0, songend = 0, m_loopStart = 0, m_loopCounter = 0;
 
     static const char chnresolv[];
     static const unsigned short notetable[12];

@@ -54,30 +54,32 @@ private:
     bool m_flagMkf = false;
     std::vector<uint8_t> m_fileBuffer{};
     const uint8_t* m_bufAddr = nullptr;      /* rix files' f_buffer */
-    std::array<uint16_t,300> m_fBuffer; //9C0h-C18h
-    std::array<uint16_t,11> m_a0b0Data2;
-    std::array<uint8_t,18> m_a0b0Data3;
-    std::array<uint8_t,18> m_a0b0Data4;
-    std::array<uint8_t,96> m_a0b0Data5;
-    std::array<uint8_t,96> m_addrsHead;
-    std::array<uint16_t,28> m_insBuf;
-    std::array<uint16_t,11> m_displace;
-    std::array<ADDT,18> m_regBufs;
-    size_t m_pos, m_length;
-    uint8_t m_index;
+    std::array<uint16_t,300> m_fBuffer{{}}; //9C0h-C18h
+    std::array<uint16_t,11> m_a0b0Data2{{}};
+    std::array<uint8_t,18> m_a0b0Data3{{}};
+    std::array<uint8_t,18> m_a0b0Data4{{}};
+    std::array<uint8_t,96> m_a0b0Data5{{}};
+    std::array<uint8_t,96> m_addrsHead{{}};
+    std::array<uint16_t,28> m_insBuf{{}};
+    std::array<uint16_t,11> m_displace{{}};
+    std::array<ADDT,18> m_regBufs{{}};
+    size_t m_pos = 0;
+    size_t m_length = 0;
+    uint8_t m_index = 0;
 
-    unsigned int m_i, m_t;
-    uint16_t m_musBlock;
-    uint16_t m_insBlock;
-    uint8_t m_rhythm;
-    bool m_musicOn;
-    uint8_t m_pauseFlag;
-    uint16_t m_band;
-    uint8_t m_bandLow;
-    uint16_t m_e0RegFlag;
-    uint8_t m_bdModify;
-    int m_sustain;
-    bool m_playEnd;
+    uint32_t m_i = 0;
+    uint32_t m_t = 0;
+    uint16_t m_musBlock = 0;
+    uint16_t m_insBlock = 0;
+    uint8_t m_rhythm = 0;
+    bool m_musicOn = false;
+    uint8_t m_pauseFlag = 0;
+    uint16_t m_band = 0;
+    uint8_t m_bandLow = 0;
+    uint16_t m_e0RegFlag = 0;
+    uint8_t m_bdModify = 0;
+    int m_sustain = 0;
+    bool m_playEnd = false;
 
     std::array<uint8_t,18> m_for40reg{{}};
 

@@ -45,14 +45,12 @@ const unsigned char Cs3mPlayer::vibratotab[32] = // vibrato rate table
 CPlayer *Cs3mPlayer::factory() { return new Cs3mPlayer(); }
 
 Cs3mPlayer::Cs3mPlayer() : CPlayer() {
-    int i, j, k;
-
     memset(m_patterns, 255, sizeof(m_patterns));
     //memset(m_orders, 255, sizeof(m_orders));
 
-    for (i = 0; i < 99; i++) // setup pattern
-        for (j = 0; j < 64; j++)
-            for (k = 0; k < 32; k++) {
+    for (int i = 0; i < 99; i++) // setup pattern
+        for (int j = 0; j < 64; j++)
+            for (int k = 0; k < 32; k++) {
                 m_patterns[i][j][k].instrument = 0;
                 m_patterns[i][j][k].effectValue = 0;
             }

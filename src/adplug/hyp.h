@@ -29,10 +29,8 @@ class CxadhypPlayer : public CxadPlayer {
     CxadhypPlayer() = default;
 
 protected:
-    struct {
-        unsigned short pointer;
-    } hyp;
-    //
+    uint16_t m_hypPointer = 0;
+
     bool xadplayer_load() {
         if (xadHeader().fmt == HYP)
             return true;
@@ -45,6 +43,6 @@ protected:
     std::string type() const;
 
 private:
-    static const unsigned char hyp_adlib_registers[99];
-    static const unsigned short hyp_notes[73];
+    static const uint8_t hyp_adlib_registers[99];
+    static const uint16_t hyp_notes[73];
 };

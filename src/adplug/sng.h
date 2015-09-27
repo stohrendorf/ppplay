@@ -56,7 +56,7 @@ private:
         uint8_t val = 0, reg = 0;
     };
 #pragma pack(pop)
-    SngHeader m_header;
+    SngHeader m_header{};
 
     std::vector<Sdata> m_data{};
 

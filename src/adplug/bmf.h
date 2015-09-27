@@ -45,7 +45,7 @@ protected:
         uint8_t cmd_data;
     };
 
-    BmfVersion m_bmfVersion;
+    BmfVersion m_bmfVersion = BMF0_9B;
     char m_bmfTitle[36] = "";
     char m_bmfAuthor[36] = "";
     float m_bmfTimer = 0;

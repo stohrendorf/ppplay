@@ -47,9 +47,10 @@ public:
 
 private:
     struct sa2header {
-        char sadt[4];
-        uint8_t version;
-    } m_header;
+        char sadt[4] = "";
+        uint8_t version = 0;
+    };
+    sa2header m_header{};
 
     char m_instrumentNames[29][17];
 };

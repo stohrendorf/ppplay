@@ -47,10 +47,11 @@ private:
 #pragma pack(pop)
 
     struct fmc_header {
-        char id[4];
-        char title[21];
-        uint8_t numchan;
-    } header;
+        char id[4] = "";
+        char title[21] = "";
+        uint8_t numchan = 0;
+    };
+    fmc_header header{};
 
 #pragma pack(push,1)
     struct fmc_instrument {

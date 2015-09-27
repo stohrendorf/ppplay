@@ -149,15 +149,15 @@ private:
     typedef std::vector<SInstrumentName> TInstrumentNames;
 
     struct SBnkHeader {
-        char version_major;
-        char version_minor;
-        char signature[6];
-        uint16_t number_of_list_entries_used;
-        uint16_t total_number_of_list_entries;
-        int32_t abs_offset_of_name_list;
-        int32_t abs_offset_of_data;
+        char version_major = 0;
+        char version_minor = 0;
+        char signature[6] = "";
+        uint16_t number_of_list_entries_used = 0;
+        uint16_t total_number_of_list_entries = 0;
+        int32_t abs_offset_of_name_list = 0;
+        int32_t abs_offset_of_data = 0;
 
-        TInstrumentNames ins_name_list;
+        TInstrumentNames ins_name_list{};
     };
 
 #pragma pack(push,1)
@@ -179,24 +179,24 @@ private:
 #pragma pack(pop)
 
     struct SOPL2Op {
-        uint8_t ammulti;
-        uint8_t ksltl;
-        uint8_t ardr;
-        uint8_t slrr;
-        uint8_t fbc;
-        uint8_t waveform;
+        uint8_t ammulti = 0;
+        uint8_t ksltl = 0;
+        uint8_t ardr = 0;
+        uint8_t slrr = 0;
+        uint8_t fbc = 0;
+        uint8_t waveform = 0;
     };
 
     struct SRolInstrument {
-        char mode;
-        char voice_number;
-        SOPL2Op modulator;
-        SOPL2Op carrier;
+        char mode = 0;
+        char voice_number = 0;
+        SOPL2Op modulator{};
+        SOPL2Op carrier{};
     };
 
     struct SUsedList {
-        std::string name;
-        SRolInstrument instrument;
+        std::string name{};
+        SRolInstrument instrument{};
     };
 
     void load_tempo_events(FileStream& f);
@@ -250,7 +250,7 @@ private:
 
     typedef std::vector<CVoiceData> TVoiceData;
 
-    SRolHeader m_rolHeader;
+    SRolHeader m_rolHeader{};
     std::vector<STempoEvent> m_tempoEvents{};
     TVoiceData m_voiceData{};
     std::vector<SUsedList> m_instrumentList{};

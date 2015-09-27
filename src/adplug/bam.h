@@ -54,5 +54,5 @@ private:
         bool defined = true;
         uint8_t count = 0xff;
     };
-    std::array<Label,16> m_labels;
+    std::array<Label,16> m_labels{{}};
 };

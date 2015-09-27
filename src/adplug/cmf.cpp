@@ -88,8 +88,8 @@ uint8_t cDefaultPatches[] = "\x01\x11\x4F\x00\xF1\xD2\x53\x74\x00\x00\x06"
 CPlayer *CcmfPlayer::factory() { return new CcmfPlayer(); }
 
 CcmfPlayer::CcmfPlayer()
-    : CPlayer(), data(), pInstruments(), bPercussive(false),
-      iTranspose(0), iPrevCommand(0) {
+    : CPlayer()
+{
     assert(OPLOFFSET(1 - 1) == 0x00);
     assert(OPLOFFSET(5 - 1) == 0x09);
     assert(OPLOFFSET(9 - 1) == 0x12);

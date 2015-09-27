@@ -114,7 +114,7 @@ private:
     const uint16_t *seqptr = nullptr;
     d00header *header = nullptr;
     d00header1 *header1 = nullptr;
-    std::vector<char> filedata;
+    std::vector<char> filedata{};
 
     void setvolume(uint8_t chan);
     void setfreq(uint8_t chan);
