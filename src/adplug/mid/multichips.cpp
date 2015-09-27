@@ -199,21 +199,7 @@ void MultiChips::applyPitch(Voice* voice, bool rightChan)
     else if ( note < 0 )
         note = 0;
 
-    auto detune = m_channels.at(voice->channel).keyDetune;
-    if(m_stereo && rightChan) {
-        detune += 5;
-        if( detune >= NotePitch.size() ) {
-            ++note;
-            if(note >= 8*12) {
-                --note;
-                detune -= 5;
-            }
-            else {
-                detune -= NotePitch.size();
-            }
-        }
-    }
-
+    const auto detune = m_channels.at(voice->channel).keyDetune;
     voice->pitch = ((note/12)<<10) | NotePitch.at(detune).at(note%12);
 
     opl::SlotView slot = m_chips[voice->chip].getSlotView(voice->num + (m_stereo&&rightChan ? Voice::StereoOffset : 0));
