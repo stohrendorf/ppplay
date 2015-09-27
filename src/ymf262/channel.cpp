@@ -149,19 +149,6 @@ void Channel::nextSample( std::array< int16_t, 4 >* dest )
 
 void Channel::nextSample2Op( std::array< int16_t, 4 >* dest )
 {
-    if( isRhythmChannel() ) {
-        if( m_operators[0] == m_opl->bassDrumOp1() ) {
-            int16_t output = feedback();
-            if( !m_cnt )
-                output = m_operators[0]->nextSample( output );
-            output = m_operators[1]->nextSample( output );
-            getInFourChannels( dest, output );
-            return;
-        }
-        getInFourChannels( dest, m_operators[0]->nextSample() + m_operators[1]->nextSample() );
-        return;
-    }
-
     int16_t channelOutput = m_operators[0]->nextSample( feedback() );
     pushFeedback( channelOutput );
 
@@ -171,8 +158,13 @@ void Channel::nextSample2Op( std::array< int16_t, 4 >* dest )
     }
     else {
         // CNT = 1, the operators are in parallel, with the first in feedback.
+        if( isRhythmChannel() && m_operators[0] == m_opl->bassDrumOp1() )
+            channelOutput = 0; // the first bass drum operator is ignored when in parallel
         channelOutput += m_operators[1]->nextSample();
     }
+    if(isRhythmChannel())
+        channelOutput *= 2;
+
     getInFourChannels( dest, channelOutput );
 }
 

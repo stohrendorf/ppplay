@@ -77,18 +77,17 @@ void Operator::update_5_WS3()
 int16_t Operator::handleTopCymbal( uint8_t ws )
 {
     // The Top Cymbal operator uses his own phase together with the High Hat phase.
-    const uint16_t highHatPhase = m_opl->highHatOperator()->m_phase;
-    const uint16_t phaseBit = ( ( ( m_phase & 0x88 ) ^ ( ( m_phase << 5 ) & 0x80 ) ) | ( ( highHatPhase ^ ( highHatPhase << 2 ) ) & 0x20 ) ) ? 0x02 : 0x00;
+    uint16_t& highHatPhase = m_opl->highHatOperator()->m_phase;
+    const uint16_t phaseBit = ( ( ( highHatPhase & 0x88 ) ^ ( ( highHatPhase << 5 ) & 0x80 ) ) | ( ( highHatPhase ^ ( highHatPhase << 2 ) ) & 0x20 ) ) ? 0x02 : 0x00;
 
-    m_phase = ( 1 + phaseBit ) << 8;
+    highHatPhase = ( 1 + phaseBit ) << 8;
 
-    return getOutput( m_phase, ws );
+    return getOutput( highHatPhase, ws );
 }
 
 int16_t Operator::handleHighHat( uint8_t ws )
 {
-    const uint16_t cymbalPhase = m_opl->topCymbalOperator()->m_phase;
-    const uint16_t phaseBit = ( ( ( m_phase & 0x88 ) ^ ( ( m_phase << 5 ) & 0x80 ) ) | ( ( cymbalPhase ^ ( cymbalPhase << 2 ) ) & 0x20 ) ) ? 0x02 : 0x00;
+    const uint16_t phaseBit = ( ( ( m_phase & 0x88 ) ^ ( ( m_phase << 5 ) & 0x80 ) ) | ( ( m_phase ^ ( m_phase << 2 ) ) & 0x20 ) ) ? 0x02 : 0x00;
     const uint16_t noiseBit = m_opl->randBit() << 1;
     m_phase = ( phaseBit << 8 ) | ( 0x34 << ( phaseBit ^ noiseBit ) );
     return getOutput( m_phase, ws );
@@ -97,8 +96,7 @@ int16_t Operator::handleHighHat( uint8_t ws )
 int16_t Operator::handleSnareDrum( uint8_t ws )
 {
     const uint16_t noiseBit = m_opl->randBit() << 8;
-    const uint16_t phase = m_opl->snareDrumOperator()->m_phase;
-    m_phase = ( 0x100 + ( phase & 0x100 ) ) ^ noiseBit;
+    m_phase = ( 0x100 + ( m_phase & 0x100 ) ) ^ noiseBit;
     return getOutput( m_phase, ws );
 }
 
@@ -116,22 +114,20 @@ int16_t Operator::nextSample( uint16_t modulator )
         static constexpr int HighHatOperator   = 0x11; // Channel 8, operator 14
         static constexpr int TomTomOperator    = 0x12; // Channel 9, operator 15
         static constexpr int BassDrumOperator2 = 0x13; // Channel 7, operator 16
-        static constexpr int SnareDrumOperator = 0x14; // Channel 8, operator 17
-        static constexpr int TopCymbalOperator = 0x15; // Channel 9, operator 18
+        static constexpr int TopCymbalOperator = 0x14; // Channel 8, operator 17
+        static constexpr int SnareDrumOperator = 0x15; // Channel 9, operator 18
 
         switch( m_operatorBaseAddress ) {
             case BassDrumOperator1:
-                return getOutput( modulator + m_phase, ws ); // Don't double the output when used as a modulator
             case BassDrumOperator2:
-                return getOutput( modulator + m_phase, ws ) << 1;
             case TomTomOperator:
-                return getOutput( modulator + m_phase, ws ) << 1;
+                return getOutput( modulator + m_phase, ws );
             case HighHatOperator:
-                return handleHighHat( ws ) << 1;
+                return handleHighHat( ws );
             case SnareDrumOperator:
-                return handleSnareDrum( ws ) << 1;
+                return handleSnareDrum( ws );
             case TopCymbalOperator:
-                return handleTopCymbal( ws ) << 1;
+                return handleTopCymbal( ws );
         }
     }
 
