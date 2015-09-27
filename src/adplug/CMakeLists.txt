@@ -53,7 +53,7 @@ add_executable(badplay
   xsm.cpp
   mid/almidi.cpp
   mid/timbre.cpp
-  mid/dualchips.cpp
+  mid/multichips.cpp
 )
 target_link_libraries(badplay ${SDL_LIBRARY} ppplay_core ppplay_opl)
 install(TARGETS badplay DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT application)

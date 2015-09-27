@@ -1,7 +1,7 @@
 #ifndef PPP_ALMIDI_H
 #define PPP_ALMIDI_H
 
-#include "dualchips.h"
+#include "multichips.h"
 #include "stream/stream.h"
 
 namespace ppp {
@@ -12,9 +12,8 @@ class EMidi
 private:
     struct Track;
 
-    DualChips m_chips;
-    Track *m_trackPtr = nullptr;
-    uint16_t m_numTracks = 0;
+    MultiChips m_chips;
+    std::vector<Track> m_tracks;
 
     bool m_loop = false;
 
@@ -55,8 +54,8 @@ private:
 
     void resetTracks();
     void advanceTick();
-    void metaEvent(Track* Track);
-    bool interpretControllerInfo(Track *Track, bool TimeSet, int channel, uint8_t c1, uint8_t c2);
+    void metaEvent(Track& track);
+    bool interpretControllerInfo(Track& track, bool timeSet, int channel, uint8_t c1, uint8_t c2);
     void setChannelVolume(int channel, int volume);
     void allNotesOff();
     void sendChannelVolumes();
@@ -70,7 +69,7 @@ private:
     bool serviceRoutineMus();
 
 public:
-    EMidi(Stream& stream, bool stereo);
+    EMidi(Stream& stream, size_t chipCount, bool stereo);
     ~EMidi();
 
     bool serviceRoutine();

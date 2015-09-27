@@ -101,20 +101,17 @@ void EMidi::resetTracks()
     m_activeTracks    = 0;
     m_context         = 0;
 
-    Track* ptr = m_trackPtr;
-    for( int i = 0; i < m_numTracks; i++ ) {
-        ptr->dataPos = 0;
-        ptr->delay = ptr->readDelta();
-        ptr->active = ptr->includeTrack;
-        ptr->runningStatus = -1;
-        ptr->currentContext = 0;
-        ptr->contexts[ 0 ].loopstart = SongContext::Unlooped;
-        ptr->contexts[ 0 ].loopcount = 0;
+    for( Track& track : m_tracks ) {
+        track.dataPos = 0;
+        track.delay = track.readDelta();
+        track.active = track.includeTrack;
+        track.runningStatus = -1;
+        track.currentContext = 0;
+        track.contexts[ 0 ].loopstart = SongContext::Unlooped;
+        track.contexts[ 0 ].loopcount = 0;
 
-        if ( ptr->active )
+        if ( track.active )
             m_activeTracks++;
-
-        ptr++;
     }
 }
 
@@ -135,10 +132,10 @@ void EMidi::advanceTick()
     }
 }
 
-void EMidi::metaEvent(EMidi::Track* track)
+void EMidi::metaEvent(EMidi::Track& track)
 {
-    auto command = track->nextByte();
-    auto length = track->readDelta();
+    auto command = track.nextByte();
+    auto length = track.readDelta();
 
 #define MIDI_END_OF_TRACK          0x2F
 #define MIDI_TEMPO_CHANGE          0x51
@@ -146,15 +143,15 @@ void EMidi::metaEvent(EMidi::Track* track)
 
     switch( command ) {
     case MIDI_END_OF_TRACK :
-        track->active = false;
+        track.active = false;
         m_activeTracks--;
         break;
 
     case MIDI_TEMPO_CHANGE : {
         BOOST_ASSERT(length>=3);
-        uint32_t num = track->nextByte() << 16;
-        num |= track->nextByte()<<8;
-        num |= track->nextByte();
+        uint32_t num = track.nextByte() << 16;
+        num |= track.nextByte()<<8;
+        num |= track.nextByte();
         length -= 3;
         setTempo( 60000000L / num );
         break;
@@ -169,8 +166,8 @@ void EMidi::metaEvent(EMidi::Track* track)
         m_timing.tick = 0;
         m_timing.beat = 1;
 
-        m_timing.beatsPerMeasure = track->nextByte();
-        m_timing.timeBase = 1 << track->nextByte();
+        m_timing.beatsPerMeasure = track.nextByte();
+        m_timing.timeBase = 1 << track.nextByte();
         length -= 2;
         m_timing.ticksPerBeat = ( m_division * 4 ) / m_timing.timeBase;
         break;
@@ -178,10 +175,10 @@ void EMidi::metaEvent(EMidi::Track* track)
         break;
     }
 
-    track->dataPos += length;
+    track.dataPos += length;
 }
 
-bool EMidi::interpretControllerInfo ( EMidi::Track *track, bool timeSet, int channel, uint8_t c1, uint8_t c2 )
+bool EMidi::interpretControllerInfo ( EMidi::Track& track, bool timeSet, int channel, uint8_t c1, uint8_t c2 )
 {
     BOOST_ASSERT( channel>=0 && channel<16 );
     Track *trackptr;
@@ -211,11 +208,11 @@ bool EMidi::interpretControllerInfo ( EMidi::Track *track, bool timeSet, int cha
 
     switch( c1 ) {
     case MIDI_MONO_MODE_ON :
-        track->dataPos++;
+        track.dataPos++;
         break;
 
     case MIDI_VOLUME :
-        if ( !track->volumeChange ) {
+        if ( !track.volumeChange ) {
             setChannelVolume( channel, c2 );
         }
         break;
@@ -225,13 +222,13 @@ bool EMidi::interpretControllerInfo ( EMidi::Track *track, bool timeSet, int cha
         break;
 
     case EMIDI_PROGRAM_CHANGE :
-        if ( track->programChange ) {
+        if ( track.programChange ) {
             m_chips.programChange( channel, c2 & 0x7f );
         }
         break;
 
     case EMIDI_VOLUME_CHANGE :
-        if ( track->volumeChange ) {
+        if ( track.volumeChange ) {
             setChannelVolume( channel, c2 );
         }
         break;
@@ -240,20 +237,20 @@ bool EMidi::interpretControllerInfo ( EMidi::Track *track, bool timeSet, int cha
         break;
 
     case EMIDI_CONTEXT_END :
-        if ( track->currentContext == m_context || m_context < 0 || track->contexts[ m_context ].pos == 0 ) {
+        if ( track.currentContext == m_context || m_context < 0 || track.contexts[ m_context ].pos == 0 ) {
             break;
         }
 
-        track->currentContext = m_context;
-        track->contexts[ 0 ].loopstart = track->contexts[ m_context ].loopstart;
-        track->contexts[ 0 ].loopcount = track->contexts[ m_context ].loopcount;
-        track->dataPos = track->contexts[ m_context ].pos;
-        track->runningStatus = track->contexts[ m_context ].runningStatus;
+        track.currentContext = m_context;
+        track.contexts[ 0 ].loopstart = track.contexts[ m_context ].loopstart;
+        track.contexts[ 0 ].loopcount = track.contexts[ m_context ].loopcount;
+        track.dataPos = track.contexts[ m_context ].pos;
+        track.runningStatus = track.contexts[ m_context ].runningStatus;
 
         if ( timeSet )
             break;
 
-        m_timing           = track->contexts[ m_context ].timing;
+        m_timing           = track.contexts[ m_context ].timing;
         timeSet = true;
         break;
 
@@ -267,11 +264,11 @@ bool EMidi::interpretControllerInfo ( EMidi::Track *track, bool timeSet, int cha
         }
 
         if ( c1 == EMIDI_SONG_LOOP_START ) {
-            trackptr = m_trackPtr;
-            tracknum = m_numTracks;
+            trackptr = m_tracks.data();
+            tracknum = m_tracks.size();
         }
         else {
-            trackptr = track;
+            trackptr = &track;
             tracknum = 1;
         }
 
@@ -290,17 +287,17 @@ bool EMidi::interpretControllerInfo ( EMidi::Track *track, bool timeSet, int cha
 
     case EMIDI_LOOP_END :
     case EMIDI_SONG_LOOP_END :
-        if ( c2 != EMIDI_END_LOOP_VALUE || track->contexts[ 0 ].loopstart == SongContext::Unlooped || track->contexts[ 0 ].loopcount == 0 ) {
+        if ( c2 != EMIDI_END_LOOP_VALUE || track.contexts[ 0 ].loopstart == SongContext::Unlooped || track.contexts[ 0 ].loopcount == 0 ) {
             break;
         }
 
         if ( c1 == EMIDI_SONG_LOOP_END ) {
-            trackptr = m_trackPtr;
-            tracknum = m_numTracks;
+            trackptr = m_tracks.data();
+            tracknum = m_tracks.size();
             m_activeTracks = 0;
         }
         else {
-            trackptr = track;
+            trackptr = &track;
             tracknum = 1;
             m_activeTracks--;
         }
@@ -334,22 +331,22 @@ bool EMidi::interpretControllerInfo ( EMidi::Track *track, bool timeSet, int cha
         m_chips.allNotesOff(channel);
         break;
     case MIDI_RESET_ALL_CONTROLLERS:
-        m_chips.controlChange( channel, DualChips::ControlData::ResetAllControllers );
+        m_chips.controlChange( channel, MultiChips::ControlData::ResetAllControllers );
         break;
     case 100:
-        m_chips.controlChange( channel, DualChips::ControlData::RpnMsb, c2 );
+        m_chips.controlChange( channel, MultiChips::ControlData::RpnMsb, c2 );
         break;
     case 101:
-        m_chips.controlChange( channel, DualChips::ControlData::RpnLsb, c2 );
+        m_chips.controlChange( channel, MultiChips::ControlData::RpnLsb, c2 );
         break;
     case 6:
-        m_chips.controlChange( channel, DualChips::ControlData::DataentryMsb, c2 );
+        m_chips.controlChange( channel, MultiChips::ControlData::DataentryMsb, c2 );
         break;
     case 38:
-        m_chips.controlChange( channel, DualChips::ControlData::DataentryLsb, c2 );
+        m_chips.controlChange( channel, MultiChips::ControlData::DataentryLsb, c2 );
         break;
     case 10:
-        m_chips.controlChange( channel, DualChips::ControlData::Pan, c2 );
+        m_chips.controlChange( channel, MultiChips::ControlData::Pan, c2 );
         break;
     }
 
@@ -370,102 +367,105 @@ bool EMidi::serviceRoutine()
 
 bool EMidi::serviceRoutineMidi()
 {
-    bool   TimeSet = false;
+    bool timeSet = false;
 
-    auto Track = m_trackPtr;
-    auto tracknum = 0;
-    while( tracknum < m_numTracks ) {
-        while( Track->active && Track->delay == 0 ) {
-            if( Track->dataPos >= Track->data.size()) {
-                Track->active = false;
-                break;
-            }
-            auto event = Track->nextByte();
+    while(true) {
+        bool repeat = false;
 
-            if ( event & MIDI_RUNNING_STATUS ) {
-                Track->runningStatus = event;
-            }
-            else {
-                BOOST_ASSERT(Track->runningStatus != -1);
-                event = Track->runningStatus;
-                Track->dataPos--;
-            }
-
-            if ( ( (event>>4)&0x0f ) == MIDI_SPECIAL ) {
-                switch( event ) {
-                case MIDI_SYSEX :
-                case MIDI_SYSEX_CONTINUE :
-                    Track->sysEx();
-                    break;
-
-                case MIDI_META_EVENT :
-                    metaEvent( Track );
+        for( Track& track : m_tracks ) {
+            while( track.active && track.delay == 0 ) {
+                if( track.dataPos >= track.data.size()) {
+                    track.active = false;
                     break;
                 }
+                auto event = track.nextByte();
 
-                if ( Track->active ) {
-                    Track->delay = Track->readDelta();
+                if ( event & MIDI_RUNNING_STATUS ) {
+                    track.runningStatus = event;
+                }
+                else {
+                    BOOST_ASSERT(track.runningStatus != -1);
+                    event = track.runningStatus;
+                    track.dataPos--;
                 }
 
-                continue;
+                if ( ( (event>>4)&0x0f ) == MIDI_SPECIAL ) {
+                    switch( event ) {
+                    case MIDI_SYSEX :
+                    case MIDI_SYSEX_CONTINUE :
+                        track.sysEx();
+                        break;
+
+                    case MIDI_META_EVENT :
+                        metaEvent( track );
+                        break;
+                    }
+
+                    if ( track.active ) {
+                        track.delay = track.readDelta();
+                    }
+
+                    continue;
+                }
+
+                auto channel = event&0x0f;
+                auto command = (event>>4)&0x0f;
+
+                BOOST_ASSERT(command>=8);
+                uint8_t c1=0, c2=0;
+                if ( commandLengths[ command ] > 0 ) {
+                    c1 = track.nextByte();
+                    if ( commandLengths[ command ] > 1 ) {
+                        c2 = track.nextByte();
+                    }
+                }
+
+                switch ( command ) {
+                case MIDI_NOTE_OFF :
+                    m_chips.noteOff( channel, c1 );
+                    break;
+
+                case MIDI_NOTE_ON :
+                    m_chips.noteOn( channel, c1, c2 );
+                    break;
+
+                case MIDI_CONTROL_CHANGE :
+                    timeSet = interpretControllerInfo( track, timeSet, channel, c1, c2 );
+                    break;
+
+                case MIDI_PROGRAM_CHANGE :
+                    if ( !track.programChange ) {
+                        m_chips.programChange( channel, c1 & 0x7f );
+                    }
+                    break;
+
+                case MIDI_PITCH_BEND:
+                    m_chips.pitchBend(channel, c1, c2);
+                    break;
+
+                default :
+                    break;
+                }
+
+                track.delay = track.readDelta();
             }
 
-            auto channel = event&0x0f;
-            auto command = (event>>4)&0x0f;
+            track.delay--;
 
-            BOOST_ASSERT(command>=8);
-            uint8_t c1=0, c2=0;
-            if ( commandLengths[ command ] > 0 ) {
-                c1 = Track->nextByte();
-                if ( commandLengths[ command ] > 1 ) {
-                    c2 = Track->nextByte();
+            if ( m_activeTracks == 0 ) {
+                resetTracks();
+                if ( m_loop ) {
+                    repeat = true;
+                    break;
+                }
+                else {
+                    return false;
                 }
             }
-
-            switch ( command ) {
-            case MIDI_NOTE_OFF :
-                m_chips.noteOff( channel, c1 );
-                break;
-
-            case MIDI_NOTE_ON :
-                m_chips.noteOn( channel, c1, c2 );
-                break;
-
-            case MIDI_CONTROL_CHANGE :
-                TimeSet = interpretControllerInfo( Track, TimeSet, channel, c1, c2 );
-                break;
-
-            case MIDI_PROGRAM_CHANGE :
-                if ( !Track->programChange ) {
-                    m_chips.programChange( channel, c1 & 0x7f );
-                }
-                break;
-
-            case MIDI_PITCH_BEND:
-                m_chips.pitchBend(channel, c1, c2);
-                break;
-
-            default :
-                break;
-            }
-
-            Track->delay = Track->readDelta();
         }
 
-        Track->delay--;
-        Track++;
-        tracknum++;
-
-        if ( m_activeTracks == 0 ) {
-            resetTracks();
-            if ( m_loop ) {
-                tracknum = 0;
-                Track = m_trackPtr;
-            }
-            else {
-                return false;
-            }
-        }
+        if(!repeat)
+            break;
     }
 
     advanceTick();
@@ -478,13 +478,13 @@ bool EMidi::serviceRoutineMus()
     // if looping is enabled, as there's a "break" at the very end.
     while( true ) {
         bool pitchIsUsed = false;
-        while( m_trackPtr[0].active && m_trackPtr[0].delay == 0 ) {
-            if( m_trackPtr[0].dataPos >= m_trackPtr[0].data.size()) {
-                m_trackPtr[0].active = false;
+        while( m_tracks[0].active && m_tracks[0].delay == 0 ) {
+            if( m_tracks[0].dataPos >= m_tracks[0].data.size()) {
+                m_tracks[0].active = false;
                 break;
             }
 
-            auto event = m_trackPtr[0].nextByte();
+            auto event = m_tracks[0].nextByte();
 
             auto channel = event & 0x0f;
             // swap channels 9 and 15 to use MIDI's percussion channel handling
@@ -498,34 +498,34 @@ bool EMidi::serviceRoutineMus()
 
             switch ( eventType ) {
             case 0: // note off
-                m_chips.noteOff( channel, m_trackPtr[0].nextByte() & 0x7f );
+                m_chips.noteOff( channel, m_tracks[0].nextByte() & 0x7f );
                 break;
 
             case 1: { // note on
-                auto tmp = m_trackPtr[0].nextByte();
+                auto tmp = m_tracks[0].nextByte();
                 auto vol = m_channelVolume[channel];
                 if( tmp&0x80 ) {
-                    vol = m_channelVolume[channel] = (m_trackPtr[0].nextByte() & 0x7f);
+                    vol = m_channelVolume[channel] = (m_tracks[0].nextByte() & 0x7f);
                 }
                 m_chips.noteOn( channel, tmp & 0x7f, vol );
                 break;
             }
 
             case 2: { // pitch wheel
-                auto data = m_trackPtr[0].nextByte();
+                auto data = m_tracks[0].nextByte();
                 m_chips.pitchBend(channel, data<<7, data>>1 );
                 pitchIsUsed = true;
                 break;
             }
 
             case 3: { // sysevent
-                auto sys = m_trackPtr[0].nextByte() & 0x7f;
+                auto sys = m_tracks[0].nextByte() & 0x7f;
                 switch( sys ) {
                 case 11:
                     m_chips.allNotesOff(channel);
                     break;
                 case 14:
-                    interpretControllerInfo(m_trackPtr, true, channel, 121, 0);
+                    interpretControllerInfo(m_tracks[0], true, channel, 121, 0);
                     break;
                 }
 
@@ -533,14 +533,14 @@ bool EMidi::serviceRoutineMus()
             }
 
             case 4: { // control change
-                auto c1 = m_trackPtr[0].nextByte();
-                auto c2 = m_trackPtr[0].nextByte();
+                auto c1 = m_tracks[0].nextByte();
+                auto c2 = m_tracks[0].nextByte();
                 switch(c1 & 0x7f) {
                 case 0: // patch change:
                     m_chips.programChange( channel, c2 & 0x7f );
                     break;
                 case 3: // volume
-                    interpretControllerInfo( m_trackPtr, true, channel, 7, c2 & 0x7f );
+                    interpretControllerInfo( m_tracks[0], true, channel, 7, c2 & 0x7f );
                     break;
                 case 4: // pan
                     break;
@@ -549,7 +549,7 @@ bool EMidi::serviceRoutineMus()
                 break;
             }
             case 6: // end of score
-                m_trackPtr[0].active = false;
+                m_tracks[0].active = false;
                 --m_activeTracks;
                 break;
             }
@@ -559,11 +559,11 @@ bool EMidi::serviceRoutineMus()
 
             if( isLast ) {
                 // read timing information...
-                m_trackPtr[0].delay = m_trackPtr[0].readDelta();
+                m_tracks[0].delay = m_tracks[0].readDelta();
             }
         }
 
-        m_trackPtr[0].delay--;
+        m_tracks[0].delay--;
 
         if ( m_activeTracks == 0 ) {
             resetTracks();
@@ -609,12 +609,12 @@ void EMidi::reset()
     allNotesOff();
 
     for( size_t channel = 0; channel < NUM_MIDI_CHANNELS; channel++ ) {
-        m_chips.controlChange( channel, DualChips::ControlData::ResetAllControllers );
-        m_chips.controlChange( channel, DualChips::ControlData::RpnMsb, 0 );
-        m_chips.controlChange( channel, DualChips::ControlData::RpnLsb, 0 );
-        m_chips.controlChange( channel, DualChips::ControlData::DataentryMsb, 2 );
-        m_chips.controlChange( channel, DualChips::ControlData::DataentryLsb, 0 );
-        m_chips.controlChange( channel, DualChips::ControlData::Pan, 64 );
+        m_chips.controlChange( channel, MultiChips::ControlData::ResetAllControllers );
+        m_chips.controlChange( channel, MultiChips::ControlData::RpnMsb, 0 );
+        m_chips.controlChange( channel, MultiChips::ControlData::RpnLsb, 0 );
+        m_chips.controlChange( channel, MultiChips::ControlData::DataentryMsb, 2 );
+        m_chips.controlChange( channel, MultiChips::ControlData::DataentryLsb, 0 );
+        m_chips.controlChange( channel, MultiChips::ControlData::Pan, 64 );
         static constexpr auto GenMidiDefaultVolume = 90;
         m_channelVolume[ channel ] = GenMidiDefaultVolume;
     }
@@ -632,15 +632,15 @@ void EMidi::setVolume ( int volume )
     sendChannelVolumes();
 }
 
-EMidi::EMidi(Stream &stream, bool stereo) : m_chips(stereo)
+EMidi::EMidi(Stream &stream, size_t chipCount, bool stereo)
+    : m_chips(chipCount, stereo)
+    , m_tracks()
 {
     if(!tryLoadMidi(stream) && !tryLoadMus(stream))
-        throw std::runtime_error("xxx"); // TODO
+        throw std::runtime_error("Failed to load MID/MUS stream"); // TODO
 }
 
-EMidi::~EMidi() {
-    delete[] m_trackPtr;
-}
+EMidi::~EMidi() = default;
 
 
 bool EMidi::tryLoadMidi(Stream &stream)
@@ -665,8 +665,9 @@ bool EMidi::tryLoadMidi(Stream &stream)
     stream >> format;
     ppp::swapEndian(&format);
 
-    stream >> m_numTracks;
-    ppp::swapEndian(&m_numTracks);
+    uint16_t numTracks;
+    stream >> numTracks;
+    ppp::swapEndian(&numTracks);
 
     stream >> m_division;
     ppp::swapEndian(&m_division);
@@ -682,18 +683,15 @@ bool EMidi::tryLoadMidi(Stream &stream)
 
     stream.seek( headerPos + headersize );
 
-    if ( m_numTracks == 0 ) {
+    if ( numTracks == 0 ) {
         return false;
     }
 
-    m_trackPtr = new Track[m_numTracks];
-    auto CurrentTrack = m_trackPtr;
-    auto numtracks    = m_numTracks;
-    while( numtracks-- ) {
+    m_tracks.resize(numTracks);
+    for( Track& track : m_tracks ) {
         stream.read(signature, 4);
         if( std::strncmp(signature, "MTrk", 4) != 0 ) {
-            delete[] m_trackPtr;
-            m_trackPtr = nullptr;
+            m_tracks.clear();
 
             return false;
         }
@@ -702,9 +700,8 @@ bool EMidi::tryLoadMidi(Stream &stream)
         stream >> tracklength;
         ppp::swapEndian(&tracklength);
 
-        CurrentTrack->data.resize(tracklength);
-        stream.read(CurrentTrack->data.data(), CurrentTrack->data.size());
-        CurrentTrack++;
+        track.data.resize(tracklength);
+        stream.read(track.data.data(), track.data.size());
     }
 
     initEmidi();
@@ -747,16 +744,15 @@ bool EMidi::tryLoadMus(Stream &stream)
     }
 
     m_division = 60; // TODO check
-    m_numTracks = 1;
-    m_trackPtr = new Track[m_numTracks];
+    m_tracks.resize(1);
 
     stream.seek(header.scoreStart);
-    m_trackPtr[0].data.resize(header.scoreLen);
-    stream.read(m_trackPtr[0].data.data(), m_trackPtr[0].data.size());
+    m_tracks[0].data.resize(header.scoreLen);
+    stream.read(m_tracks[0].data.data(), m_tracks[0].data.size());
 
     //initEmidi();
 
-    m_trackPtr[0].includeTrack = true;
+    m_tracks[0].includeTrack = true;
     resetTracks();
 
     reset();
@@ -779,9 +775,7 @@ void EMidi::initEmidi()
 {
     resetTracks();
 
-    Track* track = m_trackPtr;
-    int tracknum = 0;
-    while( tracknum < m_numTracks && track != nullptr ) {
+    for( Track& track : m_tracks ) {
         m_timing = Timing();
         m_timing.ticksPerBeat = m_division;
 
@@ -789,34 +783,34 @@ void EMidi::initEmidi()
         m_activeTracks    = 0;
         m_context         = -1;
 
-        track->runningStatus = -1;
-        track->active        = true;
+        track.runningStatus = -1;
+        track.active        = true;
 
-        track->programChange = false;
-        track->volumeChange  = false;
-        track->includeTrack  = true;
+        track.programChange = false;
+        track.volumeChange  = false;
+        track.includeTrack  = true;
 
-        // std::memset( Track->context, 0, sizeof( Track->context ) );
+        // std::memset( track.context, 0, sizeof( track.context ) );
 
-        while( track->delay > 0 ) {
+        while( track.delay > 0 ) {
             advanceTick();
-            track->delay--;
+            track.delay--;
         }
 
         bool includeFound = false;
-        while ( track->active ) {
-            if( track->dataPos >= track->data.size() ) {
-                track->active = false;
+        while ( track.active ) {
+            if( track.dataPos >= track.data.size() ) {
+                track.active = false;
                 break;
             }
-            auto event = track->nextByte();
+            auto event = track.nextByte();
 
             if ( ( (event>>4)&0x0f ) == MIDI_SPECIAL ) {
                 switch( event )
                 {
                 case MIDI_SYSEX :
                 case MIDI_SYSEX_CONTINUE :
-                    track->sysEx();
+                    track.sysEx();
                     break;
 
                 case MIDI_META_EVENT :
@@ -824,11 +818,11 @@ void EMidi::initEmidi()
                     break;
                 }
 
-                if ( track->active ) {
-                    track->delay = track->readDelta();
-                    while( track->delay > 0 ) {
+                if ( track.active ) {
+                    track.delay = track.readDelta();
+                    while( track.delay > 0 ) {
                         advanceTick();
-                        track->delay--;
+                        track.delay--;
                     }
                 }
 
@@ -837,12 +831,12 @@ void EMidi::initEmidi()
 
 
             if ( event & MIDI_RUNNING_STATUS ) {
-                track->runningStatus = event;
+                track.runningStatus = event;
             }
             else {
-                BOOST_ASSERT(track->runningStatus != -1);
-                event = track->runningStatus;
-                track->dataPos--;
+                BOOST_ASSERT(track.runningStatus != -1);
+                event = track.runningStatus;
+                track.dataPos--;
             }
 
             auto command = (event>>4)&0x0f;
@@ -850,15 +844,15 @@ void EMidi::initEmidi()
             int length = commandLengths[ command ];
 
             if ( command == MIDI_CONTROL_CHANGE ) {
-                if ( track->currentByte() == MIDI_MONO_MODE_ON )
+                if ( track.currentByte() == MIDI_MONO_MODE_ON )
                     length++;
                 uint8_t c1=0, c2=0;
                 if(length>0) {
-                    c1 = track->nextByte();
+                    c1 = track.nextByte();
                     --length;
                 }
                 if(length>0) {
-                    c2 = track->nextByte();
+                    c2 = track.nextByte();
                     --length;
                 }
 
@@ -866,23 +860,23 @@ void EMidi::initEmidi()
                 case EMIDI_LOOP_START :
                 case EMIDI_SONG_LOOP_START :
                     if ( c2 == 0 ) {
-                        track->contexts[ 0 ].loopcount = SongContext::InfiniteLoop;
+                        track.contexts[ 0 ].loopcount = SongContext::InfiniteLoop;
                     }
                     else {
-                        track->contexts[ 0 ].loopcount = c2;
+                        track.contexts[ 0 ].loopcount = c2;
                     }
 
-                    track->contexts[ 0 ].pos              = track->dataPos;
-                    track->contexts[ 0 ].loopstart        = track->dataPos;
-                    track->contexts[ 0 ].runningStatus    = track->runningStatus;
-                    track->contexts[ 0 ].timing           = m_timing;
+                    track.contexts[ 0 ].pos              = track.dataPos;
+                    track.contexts[ 0 ].loopstart        = track.dataPos;
+                    track.contexts[ 0 ].runningStatus    = track.runningStatus;
+                    track.contexts[ 0 ].timing           = m_timing;
                     break;
 
                 case EMIDI_LOOP_END :
                 case EMIDI_SONG_LOOP_END :
                     if ( c2 == EMIDI_END_LOOP_VALUE ) {
-                        track->contexts[ 0 ].loopstart = SongContext::Unlooped;
-                        track->contexts[ 0 ].loopcount = 0;
+                        track.contexts[ 0 ].loopstart = SongContext::Unlooped;
+                        track.contexts[ 0 ].loopcount = 0;
                     }
                     break;
 
@@ -890,43 +884,43 @@ void EMidi::initEmidi()
                     if ( EMIDI_AffectsCurrentCard( c2, EMIDI_Adlib ) ) {
                         //printf( "Include track %d on card %d\n", tracknum, c2 );
                         includeFound = true;
-                        track->includeTrack = true;
+                        track.includeTrack = true;
                     }
                     else if ( !includeFound ) {
                         //printf( "Track excluded %d on card %d\n", tracknum, c2 );
                         includeFound = true;
-                        track->includeTrack = false;
+                        track.includeTrack = false;
                     }
                     break;
 
                 case EMIDI_EXCLUDE_TRACK :
                     if ( EMIDI_AffectsCurrentCard( c2, EMIDI_Adlib ) ) {
                         //printf( "Exclude track %d on card %d\n", tracknum, c2 );
-                        track->includeTrack = false;
+                        track.includeTrack = false;
                     }
                     break;
 
                 case EMIDI_PROGRAM_CHANGE :
-                    if ( !track->programChange ) {
+                    if ( !track.programChange ) {
                         //printf( "Program change on track %d\n", tracknum );
-                        track->programChange = true;
+                        track.programChange = true;
                     }
                     break;
 
                 case EMIDI_VOLUME_CHANGE :
-                    if ( !track->volumeChange ) {
+                    if ( !track.volumeChange ) {
                         //printf( "Volume change on track %d\n", tracknum );
-                        track->volumeChange = true;
+                        track.volumeChange = true;
                     }
                     break;
 
                 case EMIDI_CONTEXT_START :
-                    if ( c2 > 0 && c2 < track->contexts.size() ) {
-                        track->contexts[ c2 ].pos              = track->dataPos;
-                        track->contexts[ c2 ].loopstart        = track->contexts[ 0 ].loopstart;
-                        track->contexts[ c2 ].loopcount        = track->contexts[ 0 ].loopcount;
-                        track->contexts[ c2 ].runningStatus    = track->runningStatus;
-                        track->contexts[ c2 ].timing           = m_timing;
+                    if ( c2 > 0 && c2 < track.contexts.size() ) {
+                        track.contexts[ c2 ].pos              = track.dataPos;
+                        track.contexts[ c2 ].loopstart        = track.contexts[ 0 ].loopstart;
+                        track.contexts[ c2 ].loopcount        = track.contexts[ 0 ].loopcount;
+                        track.contexts[ c2 ].runningStatus    = track.runningStatus;
+                        track.contexts[ c2 ].timing           = m_timing;
                     }
                     break;
 
@@ -936,17 +930,14 @@ void EMidi::initEmidi()
             }
 
             BOOST_ASSERT(length>=0);
-            track->dataPos += length;
-            track->delay = track->readDelta();
+            track.dataPos += length;
+            track.delay = track.readDelta();
 
-            while( track->delay > 0 ) {
+            while( track.delay > 0 ) {
                 advanceTick();
-                track->delay--;
+                track.delay--;
             }
         }
-
-        track++;
-        tracknum++;
     }
 
     resetTracks();

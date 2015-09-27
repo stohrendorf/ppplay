@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "almidi.h"
 
 namespace ppp {
-std::array<ppp::DualChips::Timbre,256> ADLIB_TimbreBank
+std::array<ppp::MultiChips::Timbre,256> ADLIB_TimbreBank
 {{
     { { 33, 33 }, { 143, 6 }, { 242, 242 }, { 69, 118 }, { 0, 0 }, 8, 0 },
     { { 49, 33 }, { 75, 0 }, { 242, 242 }, { 84, 86 }, { 0, 0 }, 8, 0 },

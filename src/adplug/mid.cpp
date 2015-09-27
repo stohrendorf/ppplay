@@ -1026,7 +1026,7 @@ bool CDukePlayer::load(const std::string &filename) {
         return false;
 
     try {
-        m_emidi.reset(new ppp::EMidi(fs, false));
+        m_emidi.reset(new ppp::EMidi(fs, 4, true));
     }
     catch (...) {
         return false;

@@ -7,7 +7,7 @@
 
 namespace ppp
 {
-class DualChips
+class MultiChips
 {
 public:
     struct Timbre
@@ -30,6 +30,8 @@ public:
     struct Voice
     {
         static constexpr auto StereoOffset = 9;
+        //! @brief This voice's chip index.
+        size_t chip = 0;
         //! @brief This voice's index; used to calculate the slot.
         uint num = 0;
         //! @brief The active MIDI key.
@@ -46,7 +48,7 @@ public:
         uint8_t pan = 64;
     };
 
-    typedef std::vector<Voice*> VoiceList;
+    using VoiceList = std::vector<Voice*>;
 
     struct Channel
     {
@@ -80,9 +82,17 @@ public:
         ResetAllControllers, RpnMsb, RpnLsb, DataentryMsb, DataentryLsb, Pan
     };
 
-    DualChips(bool stereo) : m_voices(), m_channels(), m_timbreBank(), m_stereo(stereo)
+    MultiChips(size_t chipCount, bool stereo)
+        : m_chips(chipCount)
+        , m_voices(chipCount * (stereo ? 9 : 18))
+        , m_channels()
+        , m_timbreBank()
+        , m_stereo(stereo)
     {
-        extern std::array<DualChips::Timbre,256> ADLIB_TimbreBank;
+        if(chipCount == 0)
+            throw std::runtime_error("Must at least use one chip");
+
+        extern std::array<MultiChips::Timbre,256> ADLIB_TimbreBank;
         m_timbreBank = ADLIB_TimbreBank;
 
         reset();
@@ -99,7 +109,19 @@ public:
     void pitchBend(uint8_t channel, uint8_t lsb, uint8_t msb);
 
     void read(std::array<int16_t,4>* data) {
-        m_chip.read(data);
+        if(data) {
+            data->fill(0);
+            for(opl::Opl3& chip : m_chips) {
+                std::array<int16_t,4> tmp;
+                chip.read(&tmp);
+                for(int i=0; i<4; ++i)
+                    (*data)[i] += tmp[i];
+            }
+        }
+        else {
+            for(opl::Opl3& chip : m_chips)
+                chip.read(nullptr);
+        }
     }
 
     void useAdlibVolumes(bool value) noexcept {
@@ -107,8 +129,8 @@ public:
     }
 
 private:
-    opl::Opl3 m_chip{};
-    std::array<Voice, 18> m_voices;
+    std::vector<opl::Opl3> m_chips;
+    std::vector<Voice> m_voices;
     std::array<Channel, 16> m_channels;
     std::array<Timbre,256> m_timbreBank;
     std::set<Voice*> m_voicePool{};
