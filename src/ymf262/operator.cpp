@@ -114,8 +114,8 @@ int16_t Operator::nextSample( uint16_t modulator )
         static constexpr int HighHatOperator   = 0x11; // Channel 8, operator 14
         static constexpr int TomTomOperator    = 0x12; // Channel 9, operator 15
         static constexpr int BassDrumOperator2 = 0x13; // Channel 7, operator 16
-        static constexpr int TopCymbalOperator = 0x14; // Channel 8, operator 17
-        static constexpr int SnareDrumOperator = 0x15; // Channel 9, operator 18
+        static constexpr int SnareDrumOperator = 0x14; // Channel 9, operator 18
+        static constexpr int TopCymbalOperator = 0x15; // Channel 8, operator 17
 
         switch( m_operatorBaseAddress ) {
             case BassDrumOperator1:

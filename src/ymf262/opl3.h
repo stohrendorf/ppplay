@@ -128,10 +128,10 @@ public:
     Operator* bassDrumOp2() const {
         return m_operators[0][0x13].get();
     }
-    Operator* topCymbalOperator() const {
+    Operator* snareDrumOperator() const {
         return m_operators[0][0x14].get();
     }
-    Operator* snareDrumOperator() const {
+    Operator* topCymbalOperator() const {
         return m_operators[0][0x15].get();
     }
     bool dvb() const {
