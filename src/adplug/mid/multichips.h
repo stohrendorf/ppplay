@@ -44,7 +44,7 @@ public:
         //! @brief This voice's chip index.
         size_t chip = 0;
         //! @brief This voice's index; used to calculate the slot.
-        uint num = 0;
+        uint slotId = 0;
         //! @brief The active MIDI key.
         uint key = 0;
         //! @brief Key velocity (0..127).
@@ -55,6 +55,9 @@ public:
         int timbre = -1;
         bool isNoteOn = false;
         uint8_t pan = 64;
+#ifdef USE_BANKDB
+        Voice* secondary = nullptr;
+#endif
     };
 
     using VoiceList = std::vector<Voice*>;
@@ -108,7 +111,7 @@ public:
         m_timbreBank = ADLIB_TimbreBank;
 #else
         m_bankDb.load(ppp::whereAmI() + "/../share/ppplay/bankdb.txt");
-        m_bank = m_bankDb.bank("duke");
+        m_bank = m_bankDb.bank("mus");
         if(!m_bank)
             throw std::runtime_error("Bank not found");
 #endif
