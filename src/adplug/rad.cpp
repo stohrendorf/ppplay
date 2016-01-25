@@ -51,11 +51,12 @@ bool CradLoader::load(const std::string &filename) {
         m_description.clear();
         uint8_t buf;
         while(f>>buf && buf) {
-            if (buf == 1)
+            if (buf == 1) {
                 m_description += "\n";
-            else if (buf >= 2 && buf <= 0x1f)
-                for (int i = 0; i < buf; i++)
-                    m_description += " ";
+            }
+            else if (buf >= 2 && buf <= 0x1f) {
+                m_description.append(buf, ' ');
+            }
             else {
                 m_description += char(buf);
             }
@@ -64,103 +65,100 @@ bool CradLoader::load(const std::string &filename) {
     {
         uint8_t buf;
         std::vector<CmodPlayer::Instrument::Data> instruments;
-        while(f>>buf && buf) {
+        while(f>>buf && buf!=0) {
             buf--;
             if(buf >= instruments.size())
                 instruments.resize(buf+1);
-            auto& inst = instruments[buf];
-            f >> inst[2];
-            f >> inst[1];
-            f >> inst[10];
-            f >> inst[9];
-            f >> inst[4];
-            f >> inst[3];
-            f >> inst[6];
-            f >> inst[5];
-            f >> inst[0];
-            f >> inst[8];
-            f >> inst[7];
+            CmodPlayer::Instrument::Data& inst = instruments[buf];
+            for(auto index : {2, 1, 10, 9, 4, 3, 6, 5, 0, 8, 7})
+                f >> inst[index];
         }
-        for(const auto& inst : instruments)
+        for(const CmodPlayer::Instrument::Data& inst : instruments)
             addInstrument().data = inst;
     }
     {
         uint8_t length;
         f >> length;
-        for(uint8_t order; orderCount()<length && f>>order; )
+        while(orderCount()<length) {
+            uint8_t order;
+            f >> order;
             addOrder(order);
+        }
     }
     uint16_t patofs[32];
     f.read(patofs, 32);
     init_trackord();             // patterns
-    for (int i = 0; i < 32; i++) {
-        if (patofs[i]) {
-            f.seek(patofs[i]);
+    for (int patternIdx = 0; patternIdx < 32; patternIdx++) {
+        if (patofs[patternIdx] == 0) {
+            for(int j=0; j<9; ++j)
+                setCellColumnMapping(patternIdx,j,0);
+            continue;
+        }
+
+        f.seek(patofs[patternIdx]);
+        while (true) { // for each row
+            uint8_t buf;
+            f >> buf;
+            const uint8_t row = buf & 0x7f;
             while (true) {
-                uint8_t buf;
-                f >> buf;
-                uint8_t b = buf & 127;
-                while (true) {
-                    uint8_t ch;
-                    f >> ch;
-                    uint8_t c = ch & 127;
-                    uint8_t inp;
-                    f >> inp;
-                    PatternCell& cell = patternCell(i*9+c, b);
-                    cell.note = inp & 127;
-                    cell.instrument = (inp & 128) >> 3;
-                    f >> inp;
-                    cell.instrument += inp >> 4;
-                    static constexpr Command convfx[16] = { Command::Sentinel,
-                                                            Command::SlideUp,
-                                                            Command::SlideDown,
-                                                            Command::Porta,
-                                                            Command::Sentinel,
-                                                            Command::PortaVolSlide,
-                                                            Command::Sentinel,
-                                                            Command::Sentinel,
-                                                            Command::Sentinel,
-                                                            Command::Sentinel,
-                                                            Command::RADVolSlide,
-                                                            Command::Sentinel,
-                                                            Command::SetFineVolume2,
-                                                            Command::PatternBreak,
-                                                            Command::Sentinel,
-                                                            Command::RADSpeed };
-                    cell.command = convfx[inp & 15];
-                    if (inp & 15) {
-                        f >> inp;
-                        cell.hiNybble = inp / 10;
-                        cell.loNybble = inp % 10;
-                    }
-                    if (ch & 0x80)
-                        break;
+                uint8_t channelData;
+                f >> channelData;
+                const uint8_t channel = channelData & 0x7f;
+
+                uint8_t insAndNote;
+                f >> insAndNote;
+                PatternCell& cell = patternCell(patternIdx*9 + channel, row);
+                cell.note = insAndNote & 127; // 6..4 octave, 3..0 note (1..12)
+                cell.instrument = (insAndNote & 0x80) >> 3;
+
+                if ((insAndNote&0x0f) == 0x0f) {
+                    cell.note = CmodPlayer::PatternCell::KeyOff;
                 }
-                if (buf & 0x80)
+                else if((insAndNote&0x0f) == 0) {
+                    cell.note = CmodPlayer::PatternCell::NoNote;
+                }
+                else {
+                    cell.note = ((insAndNote&0x70) >> 4) * 12 + (insAndNote&0x0f);
+                }
+
+                uint8_t insAndFx;
+                f >> insAndFx;
+                cell.instrument |= insAndFx >> 4;
+                static constexpr Command convfx[16] = { Command::Sentinel,
+                                                        Command::SlideUp,
+                                                        Command::SlideDown,
+                                                        Command::Porta,
+                                                        Command::Sentinel,
+                                                        Command::PortaVolSlide,
+                                                        Command::Sentinel,
+                                                        Command::Sentinel,
+                                                        Command::Sentinel,
+                                                        Command::Sentinel,
+                                                        Command::RADVolSlide,
+                                                        Command::Sentinel,
+                                                        Command::SetFineVolume2,
+                                                        Command::PatternBreak,
+                                                        Command::Sentinel,
+                                                        Command::RADSpeed };
+                cell.command = convfx[insAndFx & 0x0f];
+                if(cell.command != Command::Sentinel) {
+                    // FX is present, read parameter
+                    f >> insAndFx;
+                    insAndFx &= ~0x80;
+                    cell.hiNybble = insAndFx >> 4;
+                    cell.loNybble = insAndFx & 0x0f;
+                }
+                if(channelData & 0x80) // last column in row
                     break;
             }
-        }
-        else {
-            for(int j=0; j<9; ++j)
-                setCellColumnMapping(i,j,0);
+            if(buf & 0x80) // last row
+                break;
         }
     }
 
-    // convert replay data
-    for (int i = 0; i < 32 * 9; i++) // convert patterns
-        for (int j = 0; j < 64; j++) {
-            PatternCell& cell = patternCell(i,j);
-            if (cell.note == 15)
-                cell.note = 127;
-            if (cell.note > 16 && cell.note < 127)
-                cell.note -= 4 * (cell.note >> 4);
-            if (cell.note && cell.note < 126)
-                cell.note++;
-        }
     setRestartOrder(0);
     setInitialSpeed(flags & 0x1f);
     setInitialTempo(flags & 0x40 ? 0 : 50);
-    setDecimalValues();
 
     rewind(0);
     return true;

@@ -136,7 +136,7 @@ bool CcmfPlayer::load(const std::string &filename) {
 
     f.seek(this->cmfHeader.iInstrumentBlockOffset);
     this->pInstruments.resize(
-            std::min<int>(128, this->cmfHeader.iNumInstruments)
+            std::max(uint16_t(128), this->cmfHeader.iNumInstruments)
             ); // Always at least 128 available for use
 
     for (int i = 0; i < this->cmfHeader.iNumInstruments; i++) {
@@ -158,18 +158,12 @@ bool CcmfPlayer::load(const std::string &filename) {
     for (int i = this->cmfHeader.iNumInstruments; i < 128; i++) {
         this->pInstruments[i].op[0].iCharMult = cDefaultPatches[(i % 16) * 11 + 0];
         this->pInstruments[i].op[1].iCharMult = cDefaultPatches[(i % 16) * 11 + 1];
-        this->pInstruments[i].op[0].iScalingOutput =
-                cDefaultPatches[(i % 16) * 11 + 2];
-        this->pInstruments[i].op[1].iScalingOutput =
-                cDefaultPatches[(i % 16) * 11 + 3];
-        this->pInstruments[i].op[0].iAttackDecay =
-                cDefaultPatches[(i % 16) * 11 + 4];
-        this->pInstruments[i].op[1].iAttackDecay =
-                cDefaultPatches[(i % 16) * 11 + 5];
-        this->pInstruments[i].op[0].iSustainRelease =
-                cDefaultPatches[(i % 16) * 11 + 6];
-        this->pInstruments[i].op[1].iSustainRelease =
-                cDefaultPatches[(i % 16) * 11 + 7];
+        this->pInstruments[i].op[0].iScalingOutput = cDefaultPatches[(i % 16) * 11 + 2];
+        this->pInstruments[i].op[1].iScalingOutput = cDefaultPatches[(i % 16) * 11 + 3];
+        this->pInstruments[i].op[0].iAttackDecay = cDefaultPatches[(i % 16) * 11 + 4];
+        this->pInstruments[i].op[1].iAttackDecay = cDefaultPatches[(i % 16) * 11 + 5];
+        this->pInstruments[i].op[0].iSustainRelease = cDefaultPatches[(i % 16) * 11 + 6];
+        this->pInstruments[i].op[1].iSustainRelease = cDefaultPatches[(i % 16) * 11 + 7];
         this->pInstruments[i].op[0].iWaveSel = cDefaultPatches[(i % 16) * 11 + 8];
         this->pInstruments[i].op[1].iWaveSel = cDefaultPatches[(i % 16) * 11 + 9];
         this->pInstruments[i].iConnection = cDefaultPatches[(i % 16) * 11 + 10];

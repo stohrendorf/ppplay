@@ -45,6 +45,7 @@
 #include "light4cxx/logger.h"
 
 #include "src/stuff/pluginregistry.h"
+#include "src/stuff/system.h"
 
 #include <SDL.h>
 
@@ -155,20 +156,7 @@ bool parseCmdLine( int argc, char* argv[] )
             light4cxx::Logger::setLevel( light4cxx::Level::All );
     }
 
-    char selfPath[1024];
-#ifdef WIN32
-    auto selfPathLen = GetModuleFileNameA(nullptr, selfPath, sizeof(selfPath));
-    if(selfPathLen != sizeof(selfPath)) {
-        ppp::PluginRegistry::instance().setSearchPath( boost::filesystem::path(selfPath).parent_path() / ".." / LIBEXECDIR );
-    }
-#else
-    // this is not NUL-terminated.
-    auto selfPathLen = readlink("/proc/self/exe", selfPath, sizeof(selfPath)-1);
-    if(selfPathLen != -1) {
-        selfPath[selfPathLen] = '\0';
-        ppp::PluginRegistry::instance().setSearchPath( boost::filesystem::path(selfPath).parent_path() / ".." / LIBEXECDIR );
-    }
-#endif
+    ppp::PluginRegistry::instance().setSearchPath( boost::filesystem::path(ppp::whereAmI()).parent_path() / ".." / LIBEXECDIR );
 
     using std::cout;
     using std::endl;

@@ -56,7 +56,15 @@ void MultiChips::applyTimbre(Voice* voice, bool rightChan)
             return;
     }
 
+#ifndef USE_BANKDB
     const Timbre* timbre = &m_timbreBank.at(patch);
+#else
+    const bankdb::Instrument* timbre = instrument(patch);
+    if(!timbre)
+        throw std::runtime_error("Patch not found");
+    if(timbre->second)
+        throw std::runtime_error("4-op");
+#endif
     voice->timbre = patch;
 
     opl::SlotView slot = m_chips[voice->chip].getSlotView(voice->num + (m_stereo&&rightChan ? Voice::StereoOffset : 0));
@@ -64,11 +72,7 @@ void MultiChips::applyTimbre(Voice* voice, bool rightChan)
     slot.setKeyOn(false);
     slot.setFnum(0);
     slot.setBlock(0);
-    if(m_stereo) {
-        slot.setOutput(!rightChan, !rightChan, rightChan, rightChan);
-    }
-    else
-        slot.setOutput(true, true, true, true);
+#ifndef USE_BANKDB
     slot.setFeedback((timbre->feedback>>1)&7);
     slot.setCnt(timbre->feedback&1);
 
@@ -99,7 +103,18 @@ void MultiChips::applyTimbre(Voice* voice, bool rightChan)
     slot.carrier().setMult(timbre->amVibEgtKsrMult.carrier & 0x0f);
     slot.carrier().setWave(timbre->wave.carrier&3);
     slot.carrier().setKsl(timbre->kslLevel.carrier>>6);
+#else
+    timbre->first->apply(slot);
+    if(timbre->first->data[10]&1)
+        slot.modulator().setTotalLevel(63);
+#endif
     slot.carrier().setTotalLevel(63);
+
+    if(m_stereo) {
+        slot.setOutput(!rightChan, !rightChan, rightChan, rightChan);
+    }
+    else
+        slot.setOutput(true, true, true, true);
 }
 
 #define USE_VOLUME_MAPPING
@@ -153,12 +168,22 @@ void MultiChips::applyVolume(Voice* voice, bool rightChan)
 {
     opl::SlotView slot = m_chips[voice->chip].getSlotView(voice->num + (m_stereo&&rightChan ? Voice::StereoOffset : 0));
 
+#ifndef USE_BANKDB
     const Timbre& timbre = m_timbreBank.at(voice->timbre);
+#else
+    const bankdb::Instrument* timbre = instrument(voice->timbre);
+    if(!timbre)
+        throw std::runtime_error("Patch not found");
+    if(timbre->second)
+        throw std::runtime_error("4-op");
+#endif
 
     const Channel& chan = m_channels.at(voice->channel);
     uint8_t pan = 64;
     if(m_stereo)
         pan = rightChan ? chan.pan : 127-chan.pan;
+
+#ifndef USE_BANKDB
     uint level = calculateTotalLevel( timbre.kslLevel.carrier & 0x3f, voice->velocity, chan.volume, m_adlibVolumes, pan);
     slot.carrier().setTotalLevel(level);
 
@@ -166,6 +191,15 @@ void MultiChips::applyVolume(Voice* voice, bool rightChan)
         level = calculateTotalLevel( timbre.kslLevel.modulator & 0x3f, voice->velocity, chan.volume, m_adlibVolumes, pan);
         slot.modulator().setTotalLevel(level);
     }
+#else
+    uint level = calculateTotalLevel( timbre->first->data[8]&0x3f, voice->velocity, chan.volume, m_adlibVolumes, pan);
+    slot.carrier().setTotalLevel(level);
+
+    if ( timbre->first->data[10]&0x01 ) {
+        level = calculateTotalLevel( timbre->first->data[9]&0x3f, voice->velocity, chan.volume, m_adlibVolumes, pan);
+        slot.modulator().setTotalLevel(level);
+    }
+#endif
 }
 
 MultiChips::Voice *MultiChips::allocVoice()
@@ -184,6 +218,7 @@ void MultiChips::applyPitch(Voice* voice, bool rightChan)
 {
     int note;
     uint32_t patch;
+#ifndef USE_BANKDB
     if ( voice->channel == 9 ) {
         patch = voice->key + 128;
         note  = m_timbreBank.at(patch).transpose;
@@ -192,15 +227,36 @@ void MultiChips::applyPitch(Voice* voice, bool rightChan)
         patch = m_channels.at(voice->channel).timbre;
         note  = voice->key + m_timbreBank.at(patch).transpose;
     }
+#else
+    if ( voice->channel == 9 ) {
+        patch = voice->key + 128;
+        const bankdb::Instrument* timbre = instrument(patch);
+        if(!timbre)
+            throw std::runtime_error("Patch not found");
+        if(timbre->second)
+            throw std::runtime_error("4-op");
+        if(!timbre->noteOverride)
+            throw std::runtime_error("No note override");
+        note  = *timbre->noteOverride;
+    }
+    else {
+        patch = m_channels.at(voice->channel).timbre;
+        const bankdb::Instrument* timbre = instrument(patch);
+        if(!timbre)
+            throw std::runtime_error("Patch not found");
+        if(timbre->second)
+            throw std::runtime_error("4-op");
+        note  = voice->key + timbre->first->finetune;
+    }
+#endif
 
     note += m_channels.at(voice->channel).keyOffset - 12;
-    if ( note >= 8*12 )
+    if( note >= 8*12 )
         note = 8*12 - 1;
-    else if ( note < 0 )
+    else if( note < 0 )
         note = 0;
 
     const auto detune = m_channels.at(voice->channel).keyDetune;
-    voice->pitch = ((note/12)<<10) | NotePitch.at(detune).at(note%12);
 
     opl::SlotView slot = m_chips[voice->chip].getSlotView(voice->num + (m_stereo&&rightChan ? Voice::StereoOffset : 0));
     slot.setFnum(NotePitch[ detune ][ note%12 ]);

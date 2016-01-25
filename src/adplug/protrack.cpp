@@ -122,7 +122,7 @@ bool CmodPlayer::update() {
         const auto hiNybble = chan.hiNybble;
         const auto loNybble = chan.loNybble;
         int info;
-        if (m_decimalValues)
+        if(m_decimalValues)
             info = chan.hiNybble * 10 + chan.loNybble;
         else
             info = (chan.hiNybble << 4) + chan.loNybble;
@@ -278,7 +278,7 @@ bool CmodPlayer::update() {
         const auto hiNybble = chan.hiNybble;
         const auto loNybble = chan.loNybble;
         uint32_t info;
-        if (m_decimalValues)
+        if(m_decimalValues)
             info = chan.hiNybble * 10 + chan.loNybble;
         else
             info = (chan.hiNybble << 4) + chan.loNybble;

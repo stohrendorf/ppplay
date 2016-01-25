@@ -225,6 +225,21 @@ public:
     void setMult(uint8_t mult) {
         m_opl->replaceRegBits(m_baseRegister+0x20, 0, 4, mult);
     }
+    void set20(uint8_t value) {
+        m_opl->writeReg(m_baseRegister+0x20, value);
+    }
+    void set40(uint8_t value) {
+        m_opl->writeReg(m_baseRegister+0x40, value);
+    }
+    void set60(uint8_t value) {
+        m_opl->writeReg(m_baseRegister+0x60, value);
+    }
+    void set80(uint8_t value) {
+        m_opl->writeReg(m_baseRegister+0x80, value);
+    }
+    void setE0(uint8_t value) {
+        m_opl->writeReg(m_baseRegister+0xE0, value);
+    }
 };
 
 class PPPLAY_OPL_EXPORT SlotView
@@ -269,6 +284,9 @@ public:
         m_opl->replaceRegBits(m_baseRegister+0xc0, 6, 1, chb?1:0);
         m_opl->replaceRegBits(m_baseRegister+0xc0, 5, 1, chc?1:0);
         m_opl->replaceRegBits(m_baseRegister+0xc0, 4, 1, chd?1:0);
+    }
+    void setC0(uint8_t value) {
+        m_opl->writeReg(m_baseRegister+0xc0, value);
     }
 
     OperatorView& modulator() noexcept {

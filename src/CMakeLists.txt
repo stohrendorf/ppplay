@@ -38,7 +38,7 @@ add_library(ppplay_core SHARED
 	stuff/pluginregistry.cpp
 	stuff/numberutils.cpp
 	stuff/sdltimer.cpp
-	stuff/stringutils.cpp
+        stuff/system.cpp
 	output/audiofifo.cpp
 	output/abstractaudiooutput.cpp
 	output/abstractaudiosource.cpp

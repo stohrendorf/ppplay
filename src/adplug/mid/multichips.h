@@ -3,13 +3,23 @@
 
 #include "ymf262/opl3.h"
 
+#include "stuff/utils.h"
+
+#ifdef USE_BANKDB
+#include "../bankgen/bankdatabase.h"
+#endif
+
+#include "stuff/system.h"
+
 #include <set>
 
 namespace ppp
 {
 class MultiChips
 {
+    DISABLE_COPY(MultiChips)
 public:
+#ifndef USE_BANKDB
     struct Timbre
     {
         struct OperatorData {
@@ -26,6 +36,7 @@ public:
         SlotData feedback;
         int8_t transpose;
     };
+#endif
 
     struct Voice
     {
@@ -40,8 +51,6 @@ public:
         uint8_t velocity = 0;
         //! @brief The channel this voice belongs to.
         int channel = -1;
-        //! @brief The current frequency.
-        uint32_t pitch = 0;
         //! @brief The active MIDI patch/instrument.
         int timbre = -1;
         bool isNoteOn = false;
@@ -86,14 +95,23 @@ public:
         : m_chips(chipCount)
         , m_voices(chipCount * (stereo ? 9 : 18))
         , m_channels()
+#ifndef USE_BANKDB
         , m_timbreBank()
+#endif
         , m_stereo(stereo)
     {
         if(chipCount == 0)
             throw std::runtime_error("Must at least use one chip");
 
+#ifndef USE_BANKDB
         extern std::array<MultiChips::Timbre,256> ADLIB_TimbreBank;
         m_timbreBank = ADLIB_TimbreBank;
+#else
+        m_bankDb.load(ppp::whereAmI() + "/../share/ppplay/bankdb.txt");
+        m_bank = m_bankDb.bank("duke");
+        if(!m_bank)
+            throw std::runtime_error("Bank not found");
+#endif
 
         reset();
         resetVoices();
@@ -132,7 +150,23 @@ private:
     std::vector<opl::Opl3> m_chips;
     std::vector<Voice> m_voices;
     std::array<Channel, 16> m_channels;
-    std::array<Timbre,256> m_timbreBank;
+#ifndef USE_BANKDB
+    std::array<MultiChips::Timbre,256> m_timbreBank;
+#else
+    bankdb::BankDatabase m_bankDb{};
+    const bankdb::Bank* m_bank = nullptr;
+    const bankdb::Instrument* instrument(size_t idx) const
+    {
+        if(m_bank == nullptr)
+            return nullptr;
+
+        auto it = m_bank->instruments.find(idx);
+        if(it == m_bank->instruments.end())
+            return nullptr;
+        else
+            return &it->second;
+    }
+#endif
     std::set<Voice*> m_voicePool{};
     bool m_adlibVolumes = true;
     bool m_stereo;

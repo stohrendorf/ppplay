@@ -98,6 +98,9 @@ public:
     };
 
     struct PatternCell {
+        static constexpr const uint8_t KeyOff = 127;
+        static constexpr const uint8_t NoNote = 0;
+
         uint8_t note = 0;
         Command command = Command::None;
 
