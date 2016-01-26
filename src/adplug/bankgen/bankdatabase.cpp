@@ -2,12 +2,12 @@
 
 #include "ymf262/opl3.h"
 
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/xml_iarchive.hpp>
 
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/optional.hpp>
+#include <boost/serialization/string.hpp>
 
 #include <fstream>
 
@@ -93,26 +93,19 @@ bool bankdb::Instrument::operator==(const bankdb::Instrument& b) const
 bool bankdb::Instrument::operator<(const bankdb::Instrument& b) const
 {
     if(first != b.first)
-        return ptrLess(first, b.first);
+        return SlotSettings::ptrLess(first, b.first);
     if(second != b.second)
-        return ptrLess(second, b.second);
+        return SlotSettings::ptrLess(second, b.second);
     if(noteOverride != b.noteOverride)
         return noteOverride < b.noteOverride;
     return pseudo4op < b.pseudo4op;
 }
 
-void bankdb::BankDatabase::save(const std::string& filename) const
-{
-    std::ofstream ofs(filename);
-    boost::archive::text_oarchive oa(ofs);
-    oa << *this;
-}
-
 void bankdb::BankDatabase::load(const std::string& filename)
 {
     std::ifstream ifs(filename);
-    boost::archive::text_iarchive ia(ifs);
-    ia >> *this;
+    boost::archive::xml_iarchive ia(ifs);
+    ia >> boost::serialization::make_nvp("database", *this);
 
     //std::cout << "Banks:\n";
     //for(const auto& x : m_banks)

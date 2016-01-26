@@ -68,19 +68,8 @@ if(USE_BANKDB)
 
     add_subdirectory(bankgen)
 
-    set(BANKDB_FILE ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_DATAROOTDIR}/ppplay/bankdb.txt)
-
-    add_custom_command(
-        TARGET badplay POST_BUILD
-        COMMAND ${CMAKE_COMMAND} ARGS -E make_directory ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_DATAROOTDIR}/ppplay
-        COMMAND ppplay_bankgen ARGS ${BANKDB_FILE}
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/data/oplbanks
-        COMMENT "Generating MIDI bank database..."
-    )
     # add_dependencies(badplay ${CMAKE_SOURCE_DIR}/data/bankdb.txt)
     target_link_libraries(badplay ppplay_bankdb)
-
-    install(FILES ${BANKDB_FILE} DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/ppplay)
 endif()
 
 install(TARGETS badplay DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT application)

@@ -52,6 +52,8 @@ private:
 
     Format m_format = Format::PlainMidi;
 
+    uint8_t m_channelPrefix = 0;
+
     void resetTracks();
     void advanceTick();
     void metaEvent(Track& track);
@@ -78,6 +80,17 @@ public:
     }
     void read(std::array<int16_t,4>* data) {
         m_chips.read(data);
+    }
+
+    const char* shortFormatName() const {
+        switch(m_format) {
+        case Format::PlainMidi:
+            return "MIDI";
+        case Format::IdMus:
+            return "MUS";
+        default:
+            return "";
+        }
     }
 };
 

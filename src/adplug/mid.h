@@ -141,7 +141,8 @@ public:
 
     std::string type() const
     {
-        return "Duke MIDI";
+        std::string fmt = m_emidi->shortFormatName();
+        return "Duke MIDI (" + fmt + ")";
     }
     std::string title() const
     {

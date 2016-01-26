@@ -23,5 +23,6 @@ public:
 
     void loadBisqwit(const char* fn, const char* bankname, const char* prefix);
 
+    void save(const std::string& filename);
     void dump();
 };

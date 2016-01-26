@@ -3,8 +3,17 @@
 #include "stream/filestream.h"
 #include "stuff/stringutils.h"
 
+#include <boost/archive/xml_oarchive.hpp>
+
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/optional.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/json_parser.hpp>
+
+#include <boost/range/adaptors.hpp>
 
 namespace
 {
@@ -62,8 +71,8 @@ boost::property_tree::ptree toPtree(const bankdb::Instrument& ins)
         entry.put("noteOverride", static_cast<int>(*ins.noteOverride));
 
     entry.put("pseudo4op", ins.pseudo4op);
-    entry.put("name1", ins.name1);
-    entry.put("name2", ins.name2);
+    entry.put("localName", ins.localName);
+    entry.put("generatedName", ins.generatedName);
 
     return entry;
 }
@@ -348,8 +357,8 @@ void BankDatabaseGen::loadBnk(const char* filename, const char* bankname, const 
             instrument.noteOverride = usage_flag;
         instrument.pseudo4op = false;
 
-        instrument.name1 = name;
-        instrument.name2 = stringFmt("%s%u", prefix, n);
+        instrument.localName = name;
+        instrument.generatedName = stringFmt("%s%u", prefix, n);
     }
 }
 
@@ -413,8 +422,8 @@ void BankDatabaseGen::loadBnk2(const char* fn, const char* bankname, const char*
         instrument.pseudo4op = false;
 
         instrument.first = std::make_shared<bankdb::SlotSettings>(slotSettings[0]);
-        instrument.name1 = name;
-        instrument.name2 = stringFmt("%s%c%u", prefix, (gmno&128)?'P':'M', int(gmno&127));
+        instrument.localName = name;
+        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno&128)?'P':'M', int(gmno&127));
 
         if(xxP24NNN & 8)
         {
@@ -436,7 +445,6 @@ void BankDatabaseGen::loadDoom(const char* fn, const char* bankname, const char*
     {
         const size_t offset1 = 0x18A4 + a*32;
         const size_t offset2 = 8      + a*36;
-
 
         std::string name = stringncpy(reinterpret_cast<const char*>(&data[offset1]), 32);
 
@@ -472,15 +480,14 @@ void BankDatabaseGen::loadDoom(const char* fn, const char* bankname, const char*
             slotSettings[1].finetune -= 12;
         }
         instrument.first = std::make_shared<bankdb::SlotSettings>(slotSettings[0]);
-        instrument.name1 = name;
-        instrument.name2 = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
+        instrument.localName = name;
+        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
 
         if((ins.flags&4) != 0) // Double instrument
         {
             instrument.pseudo4op = true;
             instrument.second = std::make_shared<bankdb::SlotSettings>(slotSettings[1]);
         }
-
     }
 }
 
@@ -540,14 +547,14 @@ void BankDatabaseGen::loadMiles(const char* fn, const char* bankname, const char
             instrument.noteOverride = data[offset+3] != 0 ? data[offset+3] : 35;
         instrument.pseudo4op = false;
         if(midi_index >= 0)
-            instrument.name1 = MidiInsName[midi_index];
+            instrument.localName = MidiInsName[midi_index];
 
         instrument.first = std::make_shared<bankdb::SlotSettings>(slotSettings[0]);
 
         if(inscount > 1)
             instrument.second = std::make_shared<bankdb::SlotSettings>(slotSettings[1]);
 
-        instrument.name2 = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
+        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
     }
 }
 
@@ -589,8 +596,8 @@ void BankDatabaseGen::loadIBK(const char* fn, const char* bankname, const char* 
             instrument.noteOverride = 35;
         instrument.pseudo4op = false;
         instrument.first = std::make_shared<bankdb::SlotSettings>(slotSettings);
-        instrument.name1 = name;
-        instrument.name2 = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
+        instrument.localName = name;
+        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
     }
 }
 
@@ -644,9 +651,9 @@ void BankDatabaseGen::loadJunglevision(const char* fn, const char* bankname, con
         }
 
         if(midi_index >= 0)
-            instrument.name1 = MidiInsName[midi_index];
+            instrument.localName = MidiInsName[midi_index];
 
-        instrument.name2 = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
+        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
 
         instrument.first = std::make_shared<bankdb::SlotSettings>(slotSettings[0]);
         if(data[offset] != 0)
@@ -685,9 +692,9 @@ void BankDatabaseGen::loadTMB(const char* fn, const char* bankname, const char* 
         instrument.pseudo4op = false;
 
         if(midi_index >= 0)
-            instrument.name1 = MidiInsName[midi_index];
+            instrument.localName = MidiInsName[midi_index];
 
-        instrument.name2 = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
+        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
     }
 }
 
@@ -718,9 +725,9 @@ void BankDatabaseGen::loadBisqwit(const char* fn, const char* bankname, const ch
         fp.read(instrument.second->data.data(), 11);
 
         if(midi_index >= 0)
-            instrument.name1 = MidiInsName[midi_index];
+            instrument.localName = MidiInsName[midi_index];
 
-        instrument.name2 = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
+        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
     }
 }
 
@@ -746,4 +753,67 @@ void BankDatabaseGen::dump()
 
     boost::property_tree::write_json(std::cout, json);
     std::cout << std::endl;
+}
+
+namespace
+{
+struct PtrCompare
+{
+    bool operator()(const bankdb::SlotSettings::Ptr& a, const bankdb::SlotSettings::Ptr& b) const
+    {
+        return bankdb::SlotSettings::ptrLess(a, b);
+    }
+};
+}
+
+void BankDatabaseGen::save(const std::string& filename)
+{
+    // Make slot settings unique (and verify the instruments if enabled)
+    {
+        std::cout << "Compressing... ";
+        std::set<bankdb::SlotSettings::Ptr, PtrCompare> slots;
+        size_t processed = 0;
+        for(auto& bank : banks()) {
+            for(bankdb::Instrument& instrument : bank.second.instruments | boost::adaptors::map_values) {
+                instrument.first = *slots.insert(instrument.first).first;
+                ++processed;
+                if(instrument.second) {
+                    instrument.second = *slots.insert(instrument.second).first;
+                    ++processed;
+                    if(!instrument.pseudo4op)
+                        bank.second.uses4op = true;
+                }
+            }
+
+            bank.second.onlyPercussion = true;
+
+            for(size_t i=0; i<128; ++i) {
+                auto it = bank.second.instruments.find(i);
+                if(it != bank.second.instruments.end()) {
+                    bank.second.onlyPercussion = false;
+                    break;
+                }
+            }
+
+#ifdef VERIFY_INSTRUMENTS
+            if(bank.second.onlyPercussion)
+                continue;
+
+            for(size_t i=0; i<128; ++i) {
+                auto it = bank.second.instruments.find(i);
+                if(it == bank.second.instruments.end()) {
+                    throw std::runtime_error(stringFmt("Missing instrument #%d in bank %s", i, bank.first));
+                }
+                if(!it->second.first) {
+                    throw std::runtime_error(stringFmt("Missing first slot settings in instrument #%d in bank %s", i, bank.first));
+                }
+            }
+#endif
+        }
+        std::cout << "done " << processed << "=>" << slots.size() << "\n";
+    }
+
+    std::ofstream ofs(filename);
+    boost::archive::xml_oarchive oa(ofs);
+    oa << boost::serialization::make_nvp("database", *this);
 }

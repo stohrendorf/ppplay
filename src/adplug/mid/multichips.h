@@ -68,7 +68,7 @@ public:
         static constexpr auto DefaultPitchBendRange = 200;
 
         std::set<Voice*> voices{};
-        int timbre = 0;
+        int timbre = -1;
         int pitchbend = 0;
         int keyOffset = 0;
         uint keyDetune = 0;
@@ -82,9 +82,10 @@ public:
 
         Voice* getVoice(uint8_t key) const
         {
-            for(auto voice : voices)
+            for(auto voice : voices) {
                 if(voice->key == key)
                     return voice;
+            }
 
             return nullptr;
         }
@@ -110,10 +111,17 @@ public:
         extern std::array<MultiChips::Timbre,256> ADLIB_TimbreBank;
         m_timbreBank = ADLIB_TimbreBank;
 #else
-        m_bankDb.load(ppp::whereAmI() + "/../share/ppplay/bankdb.txt");
-        m_bank = m_bankDb.bank("mus");
-        if(!m_bank)
+        m_bankDb.load(ppp::whereAmI() + "/../share/ppplay/bankdb.xml");
+        m_melodicBank = m_bankDb.bank("dM");
+        if(!m_melodicBank)
             throw std::runtime_error("Bank not found");
+        if(m_melodicBank->uses4op)
+            throw std::runtime_error("Bank uses pure 4-op slots");
+        if(m_melodicBank->onlyPercussion)
+            throw std::runtime_error("Bank only provides rhythm instruments");
+        m_percussionBank = m_bankDb.bank("HMIGP");
+        if(!m_percussionBank)
+            m_percussionBank = m_melodicBank;
 #endif
 
         reset();
@@ -157,17 +165,26 @@ private:
     std::array<MultiChips::Timbre,256> m_timbreBank;
 #else
     bankdb::BankDatabase m_bankDb{};
-    const bankdb::Bank* m_bank = nullptr;
-    const bankdb::Instrument* instrument(size_t idx) const
+    const bankdb::Bank* m_melodicBank = nullptr;
+    const bankdb::Bank* m_percussionBank = nullptr;
+    static const bankdb::Instrument* instrument(size_t idx, const bankdb::Bank* bank)
     {
-        if(m_bank == nullptr)
+        if(bank == nullptr)
             return nullptr;
 
-        auto it = m_bank->instruments.find(idx);
-        if(it == m_bank->instruments.end())
+        const auto& it = bank->instruments.find(idx);
+        if(it == bank->instruments.end())
             return nullptr;
         else
             return &it->second;
+    }
+
+    const bankdb::Instrument* instrument(size_t idx) const
+    {
+        if(idx < 128)
+            return instrument(idx, m_melodicBank);
+        else
+            return instrument(idx, m_percussionBank);
     }
 #endif
     std::set<Voice*> m_voicePool{};
@@ -178,6 +195,7 @@ private:
     void applyVolume(Voice *voice, bool rightChan);
     void applyPitch(Voice *voice, bool rightChan);
     Voice* allocVoice();
+    void freeVoice(Channel& channel, Voice* voice);
     void resetVoices();
     void flushCard();
     void reset();

@@ -1,6 +1,9 @@
 #pragma once
 
 #include <boost/optional.hpp>
+#include <boost/serialization/tracking.hpp>
+#include <boost/serialization/nvp.hpp>
+#include <boost/serialization/version.hpp>
 
 #include <array>
 #include <iostream>
@@ -26,8 +29,8 @@ struct SlotSettings
     template<class Archive>
     void serialize(Archive& ar, const unsigned int /*version*/)
     {
-        ar & data;
-        ar & finetune;
+        ar & BOOST_SERIALIZATION_NVP(data);
+        ar & BOOST_SERIALIZATION_NVP(finetune);
     }
 
     bool operator==(const SlotSettings& b) const;
@@ -37,34 +40,7 @@ struct SlotSettings
     bool operator<(const SlotSettings& b) const;
 
     void apply(opl::SlotView& slot) const;
-};
 
-struct Instrument
-{
-    SlotSettings::Ptr first = nullptr;
-    SlotSettings::Ptr second = nullptr;
-    boost::optional<uint8_t> noteOverride = boost::none;
-    bool pseudo4op = false;
-
-    std::string name1{};
-    std::string name2{};
-
-    bool operator==(const Instrument& b) const;
-
-    bool operator<(const Instrument& b) const;
-
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned int /*version*/)
-    {
-        ar & first;
-        ar & second;
-        ar & noteOverride;
-        ar & pseudo4op;
-        ar & name1;
-        ar & name2;
-    }
-
-private:
     static bool ptrLess(const SlotSettings::Ptr& a, const SlotSettings::Ptr& b)
     {
         if(a == nullptr && b == nullptr)
@@ -78,15 +54,45 @@ private:
     }
 };
 
-struct Bank
+struct Instrument
 {
-    std::map<size_t, Instrument> instruments{};
-    std::string description{};
+    SlotSettings::Ptr first = nullptr;
+    SlotSettings::Ptr second = nullptr;
+    boost::optional<uint8_t> noteOverride = boost::none;
+    bool pseudo4op = false;
+
+    std::string localName{};
+    std::string generatedName{};
+
+    bool operator==(const Instrument& b) const;
+
+    bool operator<(const Instrument& b) const;
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int /*version*/)
     {
-        ar & description & instruments;
+        ar & BOOST_SERIALIZATION_NVP(first);
+        ar & BOOST_SERIALIZATION_NVP(second);
+        ar & BOOST_SERIALIZATION_NVP(noteOverride);
+        ar & BOOST_SERIALIZATION_NVP(pseudo4op);
+        ar & BOOST_SERIALIZATION_NVP(localName);
+        ar & BOOST_SERIALIZATION_NVP(generatedName);
+    }
+};
+
+struct Bank
+{
+    std::map<size_t, Instrument> instruments{};
+    std::string description{};
+    bool uses4op = false;
+    bool onlyPercussion = false;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/)
+    {
+        ar & BOOST_SERIALIZATION_NVP(description);
+        ar & BOOST_SERIALIZATION_NVP(instruments);
+        ar & BOOST_SERIALIZATION_NVP(uses4op);
     }
 
 };
@@ -99,10 +105,9 @@ public:
     template<class Archive>
     void serialize(Archive& ar, const unsigned int /*version*/)
     {
-        ar & m_banks;
+        ar & boost::serialization::make_nvp("banks", m_banks);
     }
 
-    void save(const std::string& filename) const;
     void load(const std::string& filename);
 
     const Bank* bank(const std::string& name) const
@@ -135,10 +140,15 @@ protected:
         return m_banks[bankId].instruments[index];
     }
 
-    const std::map<std::string, Bank>& banks() const noexcept
+    std::map<std::string, Bank>& banks() noexcept
     {
         return m_banks;
     }
 };
 
 } // namespace bankdb
+
+BOOST_CLASS_TRACKING(bankdb::SlotSettings, boost::serialization::track_always)
+BOOST_CLASS_VERSION(bankdb::SlotSettings, 1)
+BOOST_CLASS_VERSION(bankdb::Instrument, 1)
+BOOST_CLASS_VERSION(bankdb::BankDatabase, 1)

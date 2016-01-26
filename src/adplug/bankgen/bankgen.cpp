@@ -20,8 +20,10 @@
 
 int main(int argc, char** argv)
 {
-    if(argc < 2)
+    if(argc < 2) {
+        std::cout << "Missing output filename.\n";
         return EXIT_FAILURE;
+    }
 
     BankDatabaseGen db;
     db.loadMiles("opl_files/sc3.opl",
@@ -119,8 +121,14 @@ int main(int argc, char** argv)
 
     db.loadDoom("raptor/genmidi.op2", "DMX (Raptor)", "rapt");
 
-    // db.dump();
-    db.save(argv[1]);
+    try {
+        // db.dump();
+        db.save(argv[1]);
+    }
+    catch(std::runtime_error& ex) {
+        std::cout << "Failed to create " << argv[1] << ": " << ex.what() << "\n";
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }

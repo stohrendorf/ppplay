@@ -171,7 +171,70 @@ void EMidi::metaEvent(EMidi::Track& track)
         length -= 2;
         m_timing.ticksPerBeat = ( m_division * 4 ) / m_timing.timeBase;
         break;
+    case 0x20: // MIDI channel prefix assignment
+        BOOST_ASSERT( length == 1 );
+        m_channelPrefix = track.nextByte();
+        --length;
+        break;
+    case 0x02: // Copyright notice
+        std::cout << "Copyright: ";
+        while(length--)
+            std::cout << char(track.nextByte());
+        std::cout << "\n";
+        length = 0;
+        break;
+    case 0x01: // Text event
+        std::cout << "Comment: ";
+        while(length--)
+            std::cout << char(track.nextByte());
+        std::cout << "\n";
+        length = 0;
+        break;
+    case 0x03: // Sequence/track name
+        std::cout << "Track name: ";
+        while(length--)
+            std::cout << char(track.nextByte());
+        std::cout << "\n";
+        length = 0;
+        break;
+    case 0x04: // Instrument name
+        std::cout << "Instrument name: ";
+        while(length--)
+            std::cout << char(track.nextByte());
+        std::cout << "\n";
+        length = 0;
+        break;
+    case 0x05: // lyric text
+        std::cout << "Lyric: ";
+        while(length--)
+            std::cout << char(track.nextByte());
+        length = 0;
+        std::cout << "\n";
+        break;
+    case 0x06: // marker text
+        std::cout << "Marker: ";
+        while(length--)
+            std::cout << char(track.nextByte());
+        length = 0;
+        std::cout << "\n";
+        break;
+    case 0x08: // title OR muse score program name
+        std::cout << "Title: ";
+        while(length--)
+            std::cout << char(track.nextByte());
+        length = 0;
+        std::cout << "\n";
+        break;
+    case 0x00: // Sequence number
+    case 0x07: // Cue point
+    case 0x09: // muse score device name
+    case 0x21: // MIDI port
+    case 0x54: // SMPTE offset
+    case 0x59: // Key signature
+    case 0x7f: // Sequencer specific event
+        break;
     default:
+        throw std::runtime_error("Unhandled meta event");
         break;
     }
 
@@ -193,8 +256,10 @@ bool EMidi::interpretControllerInfo ( EMidi::Track& track, bool timeSet, int cha
 
 #define MIDI_NOTE_OFF              0x8
 #define MIDI_NOTE_ON               0x9
+#define MIDI_POLYPHONIC_PRESSURE   0xA
 #define MIDI_CONTROL_CHANGE        0xB
 #define MIDI_PROGRAM_CHANGE        0xC
+#define MIDI_CHANNEL_PRESSURE      0xD
 #define MIDI_PITCH_BEND            0xE
 #define MIDI_SPECIAL               0xF
 
@@ -333,21 +398,31 @@ bool EMidi::interpretControllerInfo ( EMidi::Track& track, bool timeSet, int cha
     case MIDI_RESET_ALL_CONTROLLERS:
         m_chips.controlChange( channel, MultiChips::ControlData::ResetAllControllers );
         break;
-    case 100:
-        m_chips.controlChange( channel, MultiChips::ControlData::RpnMsb, c2 );
-        break;
-    case 101:
+    case 100: // Registered Parameter Number (LSB)
         m_chips.controlChange( channel, MultiChips::ControlData::RpnLsb, c2 );
         break;
-    case 6:
+    case 101: // Registered Parameter Number (MSB)
+        m_chips.controlChange( channel, MultiChips::ControlData::RpnMsb, c2 );
+        break;
+    case 6: // Data Entry
         m_chips.controlChange( channel, MultiChips::ControlData::DataentryMsb, c2 );
         break;
-    case 38:
+    case 38: // Data Entry
         m_chips.controlChange( channel, MultiChips::ControlData::DataentryLsb, c2 );
         break;
-    case 10:
+    case 10: // Pan
         m_chips.controlChange( channel, MultiChips::ControlData::Pan, c2 );
         break;
+    case 1: // Modulation wheel
+    case 8: // Balance
+    case 91: // Effects 1 (Reverb Send Level)
+    case 93: // Effects 3 (Chorus Send Level)
+    case 0: // Bank select
+    case 32: // Bank select
+        break;
+    default:
+        // throw std::runtime_error("Unhandled controller event");
+        std::cout << "Unhandled controller event #" << int(c1) << std::endl;
     }
 
     return timeSet;
@@ -399,6 +474,9 @@ bool EMidi::serviceRoutineMidi()
                     case MIDI_META_EVENT :
                         metaEvent( track );
                         break;
+
+                    default:
+                        throw std::runtime_error("Unhandled special command");
                     }
 
                     if ( track.active ) {
@@ -443,7 +521,12 @@ bool EMidi::serviceRoutineMidi()
                     m_chips.pitchBend(channel, c1, c2);
                     break;
 
-                default :
+                case MIDI_POLYPHONIC_PRESSURE:
+                case MIDI_CHANNEL_PRESSURE:
+                    break;
+
+                default:
+                    throw std::runtime_error("Unhandled command");
                     break;
                 }
 
@@ -552,6 +635,8 @@ bool EMidi::serviceRoutineMus()
                 m_tracks[0].active = false;
                 --m_activeTracks;
                 break;
+            default:
+                throw std::runtime_error("Unhandled event type");
             }
 
             if(!pitchIsUsed)
@@ -816,6 +901,8 @@ void EMidi::initEmidi()
                 case MIDI_META_EVENT :
                     metaEvent( track );
                     break;
+                default:
+                    throw std::runtime_error("Unhandled event");
                 }
 
                 if ( track.active ) {
@@ -901,17 +988,11 @@ void EMidi::initEmidi()
                     break;
 
                 case EMIDI_PROGRAM_CHANGE :
-                    if ( !track.programChange ) {
-                        //printf( "Program change on track %d\n", tracknum );
-                        track.programChange = true;
-                    }
+                    track.programChange = true;
                     break;
 
                 case EMIDI_VOLUME_CHANGE :
-                    if ( !track.volumeChange ) {
-                        //printf( "Volume change on track %d\n", tracknum );
-                        track.volumeChange = true;
-                    }
+                    track.volumeChange = true;
                     break;
 
                 case EMIDI_CONTEXT_START :
