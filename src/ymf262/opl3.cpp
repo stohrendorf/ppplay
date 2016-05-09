@@ -172,7 +172,7 @@ void Opl3::write( int array, int address, uint8_t data )
                 set4opConnections();
             }
             else if( address == 0x08 ) {
-                m_nts = m_registers[_1_NTS1_6_Offset] & 0x40;
+                m_nts = (m_registers[_1_NTS1_6_Offset] & 0x40) != 0;
             }
             break;
 
@@ -239,10 +239,10 @@ void Opl3::write( int array, int address, uint8_t data )
 void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
 {
     const uint8_t dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 = m_registers[DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1_Offset];
-    m_dam = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x80;
-    m_dvb = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x40;
+    m_dam = (dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x80) != 0;
+    m_dvb = (dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x40) != 0;
 
-    bool new_ryt = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x20;
+    bool new_ryt = (dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x20) != 0;
     if( new_ryt != m_ryt ) {
         m_ryt = new_ryt;
         for( int i = 6; i < 9; i++ ) {
@@ -250,7 +250,7 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
         }
     }
 
-    bool new_bd = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x10;
+    bool new_bd = (dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x10) != 0;
     if( new_bd != m_bd ) {
         m_bd = new_bd;
         if( m_bd ) {
@@ -259,7 +259,7 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
         }
     }
 
-    bool new_sd = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x08;
+    bool new_sd = (dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x08) != 0;
     if( new_sd != m_sd ) {
         m_sd = new_sd;
         if( m_sd ) {
@@ -271,7 +271,7 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
         tomTomOperator()->keyOn();
     }
 
-    bool new_tc = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x02;
+    bool new_tc = (dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x02) != 0;
     if( new_tc != m_tc ) {
         m_tc = new_tc;
         if( m_tc ) {
@@ -279,7 +279,7 @@ void Opl3::update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1()
         }
     }
 
-    bool new_hh = dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x01;
+    bool new_hh = (dam1_dvb1_ryt1_bd1_sd1_tom1_tc1_hh1 & 0x01) != 0;
     if( new_hh != m_hh ) {
         m_hh = new_hh;
         if( m_hh ) {

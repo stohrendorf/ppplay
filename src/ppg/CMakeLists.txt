@@ -1,6 +1,8 @@
 include(GenerateExportHeader)
 add_compiler_export_flags()
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 add_library(ppplay_ppg SHARED
 	widget.cpp
 	label.cpp

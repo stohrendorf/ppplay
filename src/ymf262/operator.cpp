@@ -35,12 +35,12 @@ void Operator::update_AM1_VIB1_EGT1_KSR1_MULT4()
 
     uint8_t am1_vib1_egt1_ksr1_mult4 = m_opl->readReg( m_operatorBaseAddress + Operator::AM1_VIB1_EGT1_KSR1_MULT4_Offset );
 
-    m_am  = am1_vib1_egt1_ksr1_mult4 & 0x80;
-    m_vib = am1_vib1_egt1_ksr1_mult4 & 0x40;
-    m_egt = am1_vib1_egt1_ksr1_mult4 & 0x20;
+    m_am  = (am1_vib1_egt1_ksr1_mult4 & 0x80) != 0;
+    m_vib = (am1_vib1_egt1_ksr1_mult4 & 0x40) != 0;
+    m_egt = (am1_vib1_egt1_ksr1_mult4 & 0x20) != 0;
 
     m_phaseGenerator.setFrequency( m_f_number, m_block, am1_vib1_egt1_ksr1_mult4 & 0x0F );
-    m_envelopeGenerator.setKsr( am1_vib1_egt1_ksr1_mult4 & 0x10 );
+    m_envelopeGenerator.setKsr( (am1_vib1_egt1_ksr1_mult4 & 0x10) != 0 );
 }
 
 void Operator::update_KSL2_TL6()
@@ -329,7 +329,7 @@ uint16_t sinLog( uint8_t ws, uint16_t phi )
  */
 int16_t sinExp( uint16_t expVal )
 {
-    const bool isSigned = expVal & SignBit;
+    const bool isSigned = (expVal & SignBit) != 0;
 
     expVal &= ~SignBit;
     // expVal: 0..2137+511*8 = 0..6225

@@ -4,6 +4,7 @@
 #include <cmath>
 #include <array>
 #include <algorithm>
+#include <numeric>
 
 namespace opl
 {
@@ -64,16 +65,18 @@ private:
     std::array<float_t,NTaps> m_taps;
     std::array<float_t,NTaps> m_sr;
 
+    static const constexpr float Pi = 3.14159265358979323846f;
+
 public:
     HighPassFilter() : m_taps(detail::createZeroArray<float_t,NTaps>()), m_sr(detail::createZeroArray<float_t,NTaps>()) {
-        const float_t lambda = 2 * M_PI * Cutoff / InputRate;
+        const float_t lambda = 2 * Pi * Cutoff / InputRate;
 
         for(int n = 0; n < NTaps; n++) {
             float_t mm = n - (NTaps - 1.0) / 2.0;
             if( mm == 0.0 )
-                m_taps[n] = 1.0 - lambda / M_PI;
+                m_taps[n] = 1 - lambda / Pi;
             else
-                m_taps[n] = -std::sin( mm * lambda ) / (mm * M_PI);
+                m_taps[n] = -std::sin( mm * lambda ) / (mm * Pi);
         }
     }
 
@@ -84,7 +87,7 @@ public:
         }
         m_sr[0] = sample;
 
-        return std::inner_product(m_sr.begin(), m_sr.end(), m_taps.begin(), 0.0);
+        return std::inner_product(m_sr.begin(), m_sr.end(), m_taps.begin(), 0.0f);
     }
 };
 

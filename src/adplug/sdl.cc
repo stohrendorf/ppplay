@@ -17,8 +17,6 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <unistd.h>
-
 #include "sdl.h"
 #include "defines.h"
 
@@ -41,7 +39,7 @@ SDLPlayer::SDLPlayer(int freq, size_t bufsize)
     m_spec.callback = SDLPlayer::callback;
     m_spec.userdata = this;
 
-    if(SDL_OpenAudio(&m_spec, NULL) < 0) {
+    if(SDL_OpenAudio(&m_spec, &m_spec) < 0) {
         message(MSG_ERROR, "unable to open audio -- %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }

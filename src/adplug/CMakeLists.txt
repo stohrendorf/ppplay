@@ -19,8 +19,6 @@ set(BADPLAY_SRCS
     dtm.cpp
     flash.cpp
     fmc.cpp
-    getopt.c
-    getopt1.c
     hsc.cpp
     hsp.cpp
     hybrid.cpp
@@ -61,7 +59,7 @@ if(NOT USE_BANKDB)
 endif()
 
 add_executable(badplay ${BADPLAY_SRCS})
-target_link_libraries(badplay ${SDL_LIBRARY} ppplay_core ppplay_opl)
+target_link_libraries(badplay ${SDL_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ppplay_core ppplay_opl)
 
 if(USE_BANKDB)
     target_compile_definitions(badplay PRIVATE -DUSE_BANKDB)

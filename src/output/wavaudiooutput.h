@@ -21,6 +21,8 @@
 
 #include "abstractaudiooutput.h"
 
+#include "ppplay_output_wav_export.h"
+
 #include <fstream>
 
 /**
@@ -28,7 +30,7 @@
  * @{
  */
 
-class WavAudioOutput : public AbstractAudioOutput
+class PPPLAY_OUTPUT_WAV_EXPORT WavAudioOutput : public AbstractAudioOutput
 {
     DISABLE_COPY( WavAudioOutput )
     WavAudioOutput() = delete;

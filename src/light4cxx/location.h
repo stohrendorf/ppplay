@@ -23,6 +23,8 @@
 
 #include "level.h"
 
+#include <boost/current_function.hpp>
+
 #include <string>
 #include <thread>
 
@@ -171,7 +173,7 @@ public:
  * @brief Creates a Location instance with the location set to the current
  * file, line, function and thread.
  */
-#define L4CXX_LOCATION ::light4cxx::Location(__LINE__, __FILE__, __PRETTY_FUNCTION__, ::std::this_thread::get_id())
+#define L4CXX_LOCATION ::light4cxx::Location(__LINE__, __FILE__, BOOST_CURRENT_FUNCTION, ::std::this_thread::get_id())
 
 /**
  * @}

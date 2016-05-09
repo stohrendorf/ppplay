@@ -5,6 +5,5 @@ add_library(ppplay_input_hsc MODULE
 	plugin.cpp
 	hscmodule.cpp
 )
-set_target_properties(ppplay_input_hsc PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LOCAL_LIBEXEC})
 target_link_libraries(ppplay_input_hsc ppplay_module_base ppplay_core ppplay_opl)
 install(TARGETS ppplay_input_hsc LIBRARY DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} COMPONENT Plugins OPTIONAL)

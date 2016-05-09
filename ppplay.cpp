@@ -156,7 +156,11 @@ bool parseCmdLine( int argc, char* argv[] )
             light4cxx::Logger::setLevel( light4cxx::Level::All );
     }
 
+#ifndef WIN32
     ppp::PluginRegistry::instance().setSearchPath( boost::filesystem::path(ppp::whereAmI()).parent_path() / ".." / LIBEXECDIR );
+#else
+    ppp::PluginRegistry::instance().setSearchPath(boost::filesystem::path(ppp::whereAmI()).parent_path() / LIBEXECDIR);
+#endif
 
     using std::cout;
     using std::endl;
@@ -243,7 +247,7 @@ void terminateHandler()
     std::cerr << "The message above means that PPPlay encountered a problem which was so\n"
               << "unexpected that, despite all taken care, caused it to die a sudden death.\n"
               << "To help PPPlay learn to handle this problem, please submit a bug report to:\n"
-              << "    http://sourceforge.net/p/peepeeplayer/tickets/\n"
+              << "    https://github.com/stohrendorf/ppplay/issues\n"
               << "If possible, please add the file you tried to play and the message above,\n"
               << "so the authors can examine and hopefully solve the mystery. Thank you!"
               << std::endl;

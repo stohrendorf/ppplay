@@ -18,7 +18,7 @@
 
 #include "progressbar.h"
 
-#include <boost/assert.hpp>
+#include <algorithm>
 
 /**
  * @ingroup ppg

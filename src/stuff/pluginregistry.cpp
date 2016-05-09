@@ -20,6 +20,7 @@
 #include "inputplugin.h"
 #include "stream/archivefilestream.h"
 #include "stream/filestream.h"
+#include "stuff/system.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -57,6 +58,8 @@ light4cxx::Logger* logger()
 
 PluginRegistry::PluginRegistry() : m_handles(), m_searchPath(LIBEXECDIR)
 {
+    SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS | LOAD_LIBRARY_SEARCH_USER_DIRS | LOAD_LIBRARY_SEARCH_APPLICATION_DIR);
+    AddDllDirectory(boost::filesystem::path(ppp::whereAmI()).parent_path().native().c_str());
 }
 
 PluginRegistry::~PluginRegistry()
@@ -100,6 +103,7 @@ AbstractModule::Ptr PluginRegistry::tryLoad( const std::string& filename, uint32
 #endif
                 file.clear();
                 file.seek( 0 );
+                logger()->debug(L4CXX_LOCATION, "Trying to load using input plugin %s", plugin->name());
                 if( AbstractModule* result = plugin->load( &file, frq, maxRpt, inter ) ) {
                     return AbstractModule::Ptr( result );
                 }
@@ -139,11 +143,11 @@ void PluginRegistry::findPlugins()
 
     std::list<boost::filesystem::path> paths;
     std::copy( boost::filesystem::directory_iterator( instance().m_searchPath ), boost::filesystem::directory_iterator(), std::back_inserter( paths ) );
-    for( const auto & entry : paths ) {
+    for( const auto& entry : paths ) {
         // find every file in m_searchPath that begins with "libppplay_input_"
 #ifdef WIN32
         logger()->info( L4CXX_LOCATION, "Checking: %s", wideToMultibyte(entry.filename().native()) );
-        if( entry.filename().native().find( L"libppplay_input_" ) != 0 )
+        if( entry.filename().native().find( L"ppplay_input_" ) != 0 )
             continue;
 #else
         logger()->info( L4CXX_LOCATION, "Checking: %s", entry.filename().native() );
@@ -160,7 +164,7 @@ void PluginRegistry::findPlugins()
 #endif
         if( !handle ) {
 #ifdef WIN32
-            logger()->error( L4CXX_LOCATION, "Failed to load plugin '%s'", wideToMultibyte(entry.native()) );
+            logger()->error( L4CXX_LOCATION, "Failed to load plugin '%s' (error %d)", wideToMultibyte(entry.native()), GetLastError());
 #else
             logger()->error( L4CXX_LOCATION, "Failed to load plugin '%s': %s", entry.native(), dlerror() );
 #endif
@@ -173,7 +177,7 @@ void PluginRegistry::findPlugins()
 #endif
         if( !plugin ) {
 #ifdef WIN32
-            logger()->error( L4CXX_LOCATION, "Failed to load plugin '%s'", wideToMultibyte(entry.native()) );
+            logger()->error( L4CXX_LOCATION, "Failed to load plugin '%s' (missing 'plugin' structure, error %d)", wideToMultibyte(entry.native()), GetLastError());
             FreeLibrary( handle );
 #else
             logger()->error( L4CXX_LOCATION, "Failed to load plugin '%s': %s", entry.native(), dlerror() );

@@ -26,7 +26,8 @@
 #include <vector>
 #include <string>
 #include <cstring>
-#include <strings.h>
+
+#include <boost/algorithm/string.hpp>
 
 #include "player.h"
 
@@ -244,7 +245,7 @@ private:
 
     private:
         bool keyLess(const char *const lhs, const char *const rhs) const {
-            return strcasecmp(lhs, rhs) < 0;
+            return boost::algorithm::ilexicographical_compare(lhs, rhs);
         }
     };
 

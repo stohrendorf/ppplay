@@ -3,7 +3,7 @@ add_executable(
 	ppg_test_exe
 	ppg_test.cpp
 )
-target_link_libraries(ppg_test_exe ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(ppg_test_exe ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ppplay_ppg)
 if(COMPILER_IS_CLANG)
 	target_link_libraries(ppg_test_exe stdc++)
 endif()

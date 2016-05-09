@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 cmake_policy(SET CMP0003 NEW)
 cmake_policy(SET CMP0015 NEW)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 if(MINGW)
 	set(CMAKE_RC_COMPILER_INIT windres)
 	ENABLE_LANGUAGE(RC)
@@ -25,7 +27,7 @@ if(IS_BIG_ENDIAN)
 endif()
 
 string(FIND "${CMAKE_CXX_COMPILER}" "clang" COMPILER_IS_CLANG)
-if(${COMPILER_IS_CLANG} EQUAL "-1")
+if(COMPILER_IS_CLANG EQUAL "-1")
 	set(COMPILER_IS_CLANG FALSE)
 else()
 	set(COMPILER_IS_CLANG TRUE)
@@ -49,14 +51,6 @@ elseif(CMAKE_COMPILER_IS_GNUCXX)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
 		endif()
 	endif()
-else()
-	message(FATAL_ERROR "Sorry, you need at least GCC 4.8.2")
-endif()
-
-if(NOT __COMPILER_GNU)
-	message(WARNING "Manually including GCC configuration")
-	include(Compiler/GNU)
-	__compiler_gnu(CXX)
 endif()
 
 INCLUDE(InstallRequiredSystemLibraries)
@@ -82,8 +76,6 @@ foreach(_INST_TYPE BIN LIB LIBEXEC INCLUDE DATAROOT)
     set(CMAKE_INSTALL_FULL_${_INST_TYPE}DIR ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_${_INST_TYPE}DIR})
 endforeach()
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 set(LOCAL_LIBEXEC ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBEXECDIR})
 
 #########
@@ -95,8 +87,8 @@ SET(CPACK_PACKAGE_VENDOR "Steffen Ohrendorf <steffen.ohrendorf@gmx.de>")
 # SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ReadMe.txt")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/gpl-3.0.txt")
 SET(CPACK_PACKAGE_VERSION_MAJOR "0")
-SET(CPACK_PACKAGE_VERSION_MINOR "1")
-SET(CPACK_PACKAGE_VERSION_PATCH "3")
+SET(CPACK_PACKAGE_VERSION_MINOR "2")
+SET(CPACK_PACKAGE_VERSION_PATCH "0-alpha0")
 SET(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 SET(CPACK_PACKAGE_INSTALL_DIRECTORY "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}")
 SET(CPACK_STRIP_FILES TRUE)
@@ -127,29 +119,31 @@ INCLUDE(CPack)
 #########
 # setting compiler flags
 #########
-if(NOT WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtual -pedantic -std=c++11")
-else()
-    # Boost produces massive amounts of warnings on Windows, as it's most likely not within the compiler's system path.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -std=c++11")
-endif()
+if(CMAKE_COMPILER_IS_GNUCXX)
+    if(NOT WIN32)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Weffc++ -Wextra -Wold-style-cast -Woverloaded-virtual -pedantic -std=c++11")
+    else()
+        # Boost produces massive amounts of warnings on Windows, as it's most likely not within the compiler's system path.
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -std=c++11")
+    endif()
+    
+    option(WITH_PROFILING "Whether to enable profiling (-pg)" OFF)
+    if(WITH_PROFILING)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+        message(WARNING "You have enabled profiling. This will decrease performance and should be disabled when building for distribution.")
+    endif()
 
-option(WITH_PROFILING "Whether to enable profiling (-pg)" OFF)
-if(WITH_PROFILING)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
-	message(WARNING "You have enabled profiling. This will decrease performance and should be disabled when building for distribution.")
-endif()
+    option(WITH_NATIVE_MARCH "Sets -march=native (WARNING: Do not use when distributing binaries!)" OFF)
+    if(WITH_NATIVE_MARCH)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+        message(WARNING "You have enabled a Native Build (-march=native). This will most likely ONLY work on YOUR machine!")
+    endif()
 
-option(WITH_NATIVE_MARCH "Sets -march=native (WARNING: Do not use when distributing binaries!)" OFF)
-if(WITH_NATIVE_MARCH)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-	message(WARNING "You have enabled a Native Build (-march=native). This will most likely ONLY work on YOUR machine!")
-endif()
-
-option(WITH_LTO "Enables link-time optimization" OFF)
-if(WITH_LTO)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
-	message(STATUS "Link-time optimization (-flto) enabled")
+    option(WITH_LTO "Enables link-time optimization" OFF)
+    if(WITH_LTO)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+        message(STATUS "Link-time optimization (-flto) enabled")
+    endif()
 endif()
 
 if(MINGW)
@@ -170,6 +164,34 @@ if(DEFINED SANITIZE_ADDRESS)
 	add_feature_info("ThreadSanitizer" SANITIZE_THREAD "Thread Sanitization")
 endif()
 
+
+#########
+# add SDL
+#########
+find_package(SDL2 REQUIRED)
+if(NOT SDL2_FOUND)
+	message(FATAL_ERROR "SDL not found")
+endif()
+set_package_info(SDL2 "Simple DirectMedia Layer" "http://www.libsdl.org" "The SDL library is used for audio and video output.")
+include_directories(${SDL2_INCLUDE_DIR})
+
+#set(Boost_USE_STATIC_LIBS FALSE)
+set(Boost_USE_MULTITHREADED TRUE)
+add_definitions(-DBOOST_ALL_NO_LIB -DBOOST_ALL_DYN_LINK)
+find_package(Boost COMPONENTS program_options filesystem system unit_test_framework serialization REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+
+set_package_info(Boost "Boost libraries" "http://www.boost.org")
+set_package_info(program_options "Boost program_options library" "http://www.boost.org" "The Boost program_options library is used to parse command line arguments.")
+set_package_info(filesystem "Boost filesystem library" "http://www.boost.org" "The Boost filesystem library is used to handle file paths and information.")
+set_package_info(system "Boost system library" "http://www.boost.org" "The Boost system library handles system dependent things.")
+set_package_info(serialization "Boost serialization library" "http://www.boost.org" "The Boost serialization library is used for the midi bank database.")
+
+include_directories(src)
+enable_testing()
+add_subdirectory(src)
+
+
 #########
 # init main application target settings
 #########
@@ -180,7 +202,6 @@ if(WIN32 OR MINGW)
 endif()
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/src)
 ADD_EXECUTABLE(ppplay ${ppp_SRCS} config.h)
-set_property(TARGET ppplay PROPERTY RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 if(MINGW)
 	target_link_libraries(ppplay stdc++ mingw32)
@@ -188,7 +209,7 @@ elseif(COMPILER_IS_CLANG)
 	target_link_libraries(ppplay stdc++)
 endif()
 
-target_link_libraries(ppplay ppplay_core ppplay_module_base ppplay_ppg ppplay_output_sdl ppplay_output_wav)
+target_link_libraries(ppplay ppplay_core ppplay_module_base ppplay_ppg ppplay_output_sdl ppplay_output_wav ${Boost_PROGRAM_OPTIONS_LIBRARY} ${SDL2_LIBRARY})
 
 #########
 # link libraries
@@ -230,41 +251,6 @@ if(WITH_OGG)
         target_link_libraries(ppplay ppplay_output_ogg ${vorbis_LIB} ${vorbisenc_LIB})
 endif()
 
-
-#########
-# add SDL
-#########
-set(SDL_ROOT "" CACHE PATH "The location of the SDL install prefix (only used if the SDL is not yet found)")
-if(SDL_ROOT)
-   list(APPEND CMAKE_PREFIX_PATH ${SDL_ROOT})
-endif()
-find_package(SDL REQUIRED)
-if(NOT SDL_FOUND)
-	message(FATAL_ERROR "SDL not found")
-endif()
-set_package_info(SDL "Simple DirectMedia Layer" "http://www.libsdl.org" "The SDL library is used for audio and video output.")
-include_directories(${SDL_INCLUDE_DIR})
-target_link_libraries(ppplay ${SDL_LIBRARY})
-
-set(Boost_USE_STATIC_LIBS FALSE)
-set(Boost_USE_MULTITHREADED TRUE)
-include(FindBoost)
-find_package(Boost COMPONENTS program_options filesystem system unit_test_framework serialization REQUIRED)
-if(Boost_FOUND)
-	include_directories(${Boost_INCLUDE_DIRS})
-	target_link_libraries(ppplay ${Boost_PROGRAM_OPTIONS_LIBRARY})
-else()
-	message(FATAL_ERROR "Boost Libraries not found!")
-endif()
-set_package_info(Boost "Boost libraries" "http://www.boost.org")
-set_package_info(program_options "Boost program_options library" "http://www.boost.org" "The Boost program_options library is used to parse command line arguments.")
-set_package_info(filesystem "Boost filesystem library" "http://www.boost.org" "The Boost filesystem library is used to handle file paths and information.")
-set_package_info(system "Boost system library" "http://www.boost.org" "The Boost system library handles system dependent things.")
-set_package_info(serialization "Boost serialization library" "http://www.boost.org" "The Boost serialization library is used for the midi bank database.")
-
-include_directories(src)
-enable_testing()
-add_subdirectory(src)
 
 #########
 # set install command

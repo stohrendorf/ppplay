@@ -43,7 +43,7 @@ extern PPPLAY_MODULE_BASE_EXPORT const std::array<const char*, 12> NoteNames;
  * @tparam TSplitNibbles Set to @c true to handle each nibble separately.
  */
 template<bool TSplitNibbles>
-class PPPLAY_MODULE_BASE_EXPORT RememberByte
+class RememberByte
 {
 private:
     //! @brief Value of the byte

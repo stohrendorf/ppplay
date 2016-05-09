@@ -20,8 +20,9 @@
  *
  * Visit:  http://tenacity.hispeed.com/aomit/oplx/
  */
-#include <cstring>
 #include <algorithm>
+
+#include <boost/algorithm/string.hpp>
 
 #include "stream/filestream.h"
 
@@ -560,7 +561,7 @@ int CrolPlayer::load_rol_instrument(FileStream& f, SBnkHeader const &header,
 //---------------------------------------------------------
 int CrolPlayer::get_ins_index(std::string const &name) const {
     for (unsigned int i = 0; i < m_instrumentList.size(); ++i) {
-        if (strcasecmp(m_instrumentList[i].name.c_str(), name.c_str()) == 0) {
+        if(boost::iequals(m_instrumentList[i].name, name)) {
             return i;
         }
     }

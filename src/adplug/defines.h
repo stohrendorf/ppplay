@@ -23,7 +23,7 @@
 /***** Defines *****/
 
 // AdPlay/UNIX version string
-#define BADPLAY_VERSION "BAdPlay/UNIX 0.1"
+#define BADPLAY_VERSION "BAdPlay/UNIX 0.2-alpha0"
 
 // Message urgency levels
 #define MSG_PANIC 0 // Unmaskable

@@ -19,6 +19,7 @@
 #include "stereopeakbar.h"
 
 #include <boost/assert.hpp>
+#include <algorithm>
 
 namespace ppg
 {

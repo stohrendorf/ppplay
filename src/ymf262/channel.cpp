@@ -55,7 +55,7 @@ void Channel::update_2_KON1_BLOCK3_FNUMH2()
     m_fnum = ( m_fnum & 0xff ) | ( ( _2_kon1_block3_fnumh2 & 0x03 ) << 8 );
     updateOperators();
 
-    bool newKon = _2_kon1_block3_fnumh2 & 0x20;
+    bool newKon = (_2_kon1_block3_fnumh2 & 0x20) != 0;
     if( newKon != m_kon ) {
         if( newKon ) {
             keyOn();

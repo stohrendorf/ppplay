@@ -226,6 +226,7 @@ void UIMain::drawThis()
     const int height = ppg::SDLScreen::instance()->area().height() * 16;
     const float scale = m_fftLeft.size() * 1.0f / width2;
 
+    ppg::SDLScreen::instance()->lockPixels();
     for( size_t i = 0; i < m_fftLeft.size(); i++ ) {
         for( size_t y = 1; y <= m_fftLeft[i] / 4; y++ ) {
             ppg::SDLScreen::instance()->drawPixel( i / scale, height - y - 1, ppg::Color::LightGreen );
@@ -234,4 +235,5 @@ void UIMain::drawThis()
             ppg::SDLScreen::instance()->drawPixel( i / scale + width2, height - y - 1, ppg::Color::LightRed );
         }
     }
+    ppg::SDLScreen::instance()->unlockPixels();
 }

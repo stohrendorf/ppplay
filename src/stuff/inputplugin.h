@@ -12,6 +12,11 @@
 #error Unsupported compiler
 #endif
 
+#define EXPOSE_PLUGIN(class) \
+    extern "C" { \
+        PPPLAY_PLUGIN_EXPORT class plugin; \
+    }
+
 class Stream;
 
 namespace ppp

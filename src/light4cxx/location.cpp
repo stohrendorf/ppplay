@@ -37,8 +37,13 @@ timespec s_realTime;
 
 int initializer()
 {
+#ifdef _MSC_VER
+    timespec_get(&s_processTime, 0);
+    timespec_get(&s_realTime, 0);
+#else
     clock_gettime( CLOCK_PROCESS_CPUTIME_ID, &s_processTime );
     clock_gettime( CLOCK_REALTIME, &s_realTime );
+#endif
     return 1;
 }
 
@@ -51,7 +56,11 @@ int _s_clock_init_var = initializer();
 inline float_t processTime()
 {
     timespec tmp;
+#ifdef _MSC_VER
+    timespec_get(&tmp, 0);
+#else
     clock_gettime( CLOCK_THREAD_CPUTIME_ID, &tmp );
+#endif
     float_t res = ( tmp.tv_sec - s_processTime.tv_sec ) * 1000.0f;
     res += ( tmp.tv_nsec - s_processTime.tv_nsec ) / 1000000.0f;
     return res;
@@ -63,7 +72,11 @@ inline float_t processTime()
 inline float_t realTime()
 {
     timespec tmp;
+#ifdef _MSC_VER
+    timespec_get(&tmp, 0);
+#else
     clock_gettime( CLOCK_REALTIME, &tmp );
+#endif
     float_t res = ( tmp.tv_sec - s_realTime.tv_sec ) * 1000.0f;
     res += ( tmp.tv_nsec - s_realTime.tv_nsec ) / 1000000.0f;
     return res;

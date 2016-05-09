@@ -153,7 +153,10 @@ inline BasicSampleFrame Sample::sampleAt( std::streamoff pos ) const noexcept
     if( pos == BresenInterpolation::InvalidPosition || pos < 0 ) {
         return BasicSampleFrame();
     }
-    return m_data[makeRealPos( pos )];
+    pos = makeRealPos(pos);
+    if(pos >= m_data.size())
+        return{ 0,0 };
+    return m_data[pos];
 }
 
 inline std::streamoff Sample::makeRealPos( std::streamoff pos ) const noexcept

@@ -19,35 +19,19 @@
 
 #include <cstdlib>
 #include <cstdio>
-#include <cstdarg>
-#include <cstring>
 #include <csignal>
-#include "adplug.h"
 
-#include <getopt.h>
+#include <boost/program_options.hpp>
+
+#include "adplug.h"
 
 #include "defines.h"
 #include "output.h"
 #include "cli-players.h"
 
-/***** Defines *****/
-
-// Default file name of AdPlug's database file
-#define ADPLUGDB_FILE		"adplug.db"
-
-// Default AdPlug user's configuration subdirectory
-#define ADPLUG_CONFDIR		".adplug"
-
-// Default path to AdPlug's system-wide database file
-#ifdef ADPLUG_DATA_DIR
-#  define ADPLUGDB_PATH		ADPLUG_DATA_DIR "/" ADPLUGDB_FILE
-#else
-#  define ADPLUGDB_PATH		ADPLUGDB_FILE
-#endif
-
 /***** Global variables *****/
 
-static const char	*program_name;
+static const char* program_name;
 static std::unique_ptr<Player> output; // global player object
 
 /***** Configuration (and defaults) *****/
@@ -55,16 +39,16 @@ static std::unique_ptr<Player> output; // global player object
 static struct {
     int buf_size, message_level;
     int subsong;
-    const char *device;
-    const char *userdb;
-    bool endless, showinsts, songinfo, songmessage;
+    std::string device;
+    std::string userdb;
+    bool playOnce, showinsts, songinfo, songmessage;
     Outputs output;
     int repeats;
 } cfg = {
     2048, MSG_NOTE,
     -1,
-    nullptr,
-    nullptr,
+    std::string(),
+    std::string(),
     true, false, false, false,
     DEFAULT_DRIVER,
     1
@@ -113,60 +97,75 @@ static void usage()
                  "  -V, --version              output version information and exit\n\n";
 }
 
-static int decode_switches(int argc, char **argv)
+static std::string decode_switches(int argc, char **argv)
 /*
  * Set all the option flags according to the switches specified.
  * Return the index of the first non-option argument.
  */
 {
-    int c;
-    struct option const long_options[] = {
-    {"buffer", required_argument, NULL, 'b'},	// buffer size
-    {"device", required_argument, NULL, 'd'},	// device file
-    {"instruments", no_argument, NULL, 'i'},	// show instruments
-    {"realtime", no_argument, NULL, 'r'},	// realtime song info
-    {"message", no_argument, NULL, 'm'},	// song message
-    {"subsong", no_argument, NULL, 's'},	// play subsong
-    {"once", no_argument, NULL, 'o'},		// don't loop
-    {"help", no_argument, NULL, 'h'},		// display help
-    {"version", no_argument, NULL, 'V'},	// version information
-    {"output", required_argument, NULL, 'O'},	// output mechanism
-    {"quiet", no_argument, NULL, 'q'},		// be more quiet
-    {"verbose", no_argument, NULL, 'v'},	// be more verbose
-    {"repeats", required_argument, NULL, 'R'},
-    {NULL, 0, NULL, 0}				// end of options
-};
+    boost::program_options::options_description options("General Options");
+    options.add_options()
+        ( "b,buffer", boost::program_options::value<int>(&cfg.buf_size), "buffer size" )
+        ( "d,device", boost::program_options::value<std::string>(&cfg.device), "device file" )
+        ( "i,instruments", boost::program_options::bool_switch(&cfg.showinsts), "show instruments" )
+        ( "r,realtime", boost::program_options::bool_switch(&cfg.songinfo), "realtime song info" )
+        ( "m,message", boost::program_options::bool_switch(&cfg.songmessage), "song message" )
+        ( "s,subsong", boost::program_options::value<int>(&cfg.subsong), "play subsong" )
+        ( "o,once", boost::program_options::bool_switch(&cfg.playOnce), "don't loop" )
+        ( "h,help", boost::program_options::bool_switch(), "display help" )
+        ( "V,version", boost::program_options::bool_switch(), "version information" )
+        ( "O,output", boost::program_options::value<std::string>(), "output mechanism" )
+        ( "q,quiet", boost::program_options::bool_switch(), "be more quiet" )
+        ( "v,verbose", boost::program_options::bool_switch(), "be more verbose" )
+        ( "R,repeats", boost::program_options::value<int>(&cfg.repeats) )
+        ( "file", boost::program_options::value<std::string>()->required(), "File to play" )
+        ;
 
-    while ((c = getopt_long(argc, argv, "8f:b:d:irms:ohVe:O:D:qvR:", long_options, nullptr)) != EOF) {
-        switch (c) {
-        case 'b': cfg.buf_size = atoi(optarg); break;
-        case 'd': cfg.device = optarg; break;
-        case 'i': cfg.showinsts = true; break;
-        case 'r': cfg.songinfo = true; break;
-        case 'm': cfg.songmessage = true; break;
-        case 's': cfg.subsong = atoi(optarg); break;
-        case 'o': cfg.endless = false; break;
-        case 'V': puts(BADPLAY_VERSION); exit(EXIT_SUCCESS);
-        case 'h':	usage(); exit(EXIT_SUCCESS); break;
-        case 'R': cfg.repeats = atoi(optarg); break;
-        case 'O':
-            if(!strcmp(optarg,"disk")) {
-                cfg.output = Outputs::disk;
-                cfg.endless = false; // endless output is almost never desired here
-            }
-            else if(!strcmp(optarg,"sdl"))
-                cfg.output = Outputs::sdl;
-            else {
-                message(MSG_ERROR, "unknown output method -- %s", optarg);
-                exit(EXIT_FAILURE);
-            }
-            break;
-        case 'q': if(cfg.message_level) cfg.message_level--; break;
-        case 'v': cfg.message_level++; break;
+    boost::program_options::positional_options_description p;
+    p.add("file", 1);
+
+    boost::program_options::variables_map vm;
+    try {
+        boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(options).positional(p).run(), vm);
+        boost::program_options::notify(vm);
+    }
+    catch(std::exception& ex) {
+        std::cerr << "Failed to parse command line: " << ex.what() << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    if(vm.count("version")) {
+        std::cout << BADPLAY_VERSION << std::endl;
+        exit(EXIT_SUCCESS);
+    }
+
+    if(vm.count("help") || vm.count("file") == 0) {
+        std::cout << program_name << " [options] <file>\n";
+        std::cout << options;
+        exit(EXIT_SUCCESS);
+    }
+
+    if(vm.count("output")) {
+        if(vm["output"].as<std::string>() == "disk") {
+            cfg.output = Outputs::disk;
+            cfg.playOnce = true;
+        }
+        else if(vm["output"].as<std::string>() == "sdl") {
+            cfg.output = Outputs::sdl;
+        }
+        else {
+            message(MSG_ERROR, "unknown output method -- %s", vm["output"].as<std::string>().c_str());
+            exit(EXIT_FAILURE);
         }
     }
 
-    return optind;
+    if(vm.count("verbose"))
+        cfg.message_level++;
+    
+    if(vm.count("quiet"))
+        cfg.message_level--;
+
+    return vm["file"].as<std::string>();
 }
 
 static void play(const char *fn, Player *output, int subsong = -1)
@@ -216,7 +215,7 @@ static void play(const char *fn, Player *output, int subsong = -1)
                       << std::fixed << CPlayer::SampleRate/float(player->framesUntilUpdate()) << "Hz     \r";
 
         output->frame();
-    } while(output->isPlaying() || cfg.endless);
+    } while(output->isPlaying() || !cfg.playOnce);
 }
 
 static void sighandler(int signal)
@@ -239,13 +238,7 @@ int main(int argc, char **argv)
     signal(SIGTERM, sighandler);
 
     // parse commandline
-    int optind = decode_switches(argc,argv);
-    if(optind == argc) {	// no filename given
-        std::cerr << program_name << ": need at least one file for playback\n";
-        std::cerr << "Try '" << program_name << " --help' for more information.\n";
-        return EXIT_FAILURE;
-    }
-    if(argc - optind > 1) cfg.endless = false;	// more than 1 file given
+    auto fn = decode_switches(argc,argv);
 
     // init player
     switch(cfg.output) {
@@ -253,7 +246,7 @@ int main(int argc, char **argv)
         message(MSG_PANIC, "no output methods compiled in");
         exit(EXIT_FAILURE);
     case Outputs::disk:
-        output.reset( new DiskWriter(cfg.device, 44100) );
+        output.reset( new DiskWriter(cfg.device.c_str(), 44100) );
         break;
     case Outputs::sdl:
         output.reset( new SDLPlayer(44100, cfg.buf_size) );
@@ -264,10 +257,8 @@ int main(int argc, char **argv)
     }
 
     // play all files from commandline
-    for(int i=optind;i<argc;i++) {
-        for(int r=0; r<cfg.repeats; ++r) {
-            play(argv[i],output.get(),cfg.subsong);
-        }
+    for(int r=0; r<cfg.repeats; ++r) {
+        play(fn.c_str(), output.get(), cfg.subsong);
     }
 
     return EXIT_FAILURE;

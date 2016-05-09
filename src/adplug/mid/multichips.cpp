@@ -153,7 +153,7 @@ namespace
 inline uint8_t calculateTotalLevel(uint8_t insLevel, uint8_t velocity, uint8_t channelVolume, bool adlibMode, uint8_t pan)
 {
     BOOST_ASSERT(insLevel<64);
-    uint volume = insLevel^63;
+    unsigned int volume = insLevel^63;
     volume *= ( std::min<uint16_t>( 127u, velocity ) + 0x80 );
     if(adlibMode) {
         volume  = ( channelVolume * volume ) >> 15;
@@ -217,7 +217,7 @@ void MultiChips::applyVolume(Voice* voice, bool rightChan)
         pan = rightChan ? chan.pan : 127-chan.pan;
 
 #ifndef USE_BANKDB
-    uint level = calculateTotalLevel( timbre.kslLevel.carrier & 0x3f, voice->velocity, chan.volume, m_adlibVolumes, pan);
+    uint32_t level = calculateTotalLevel( timbre.kslLevel.carrier & 0x3f, voice->velocity, chan.volume, m_adlibVolumes, pan);
     slot.carrier().setTotalLevel(level);
 
     if ( timbre.feedback & 0x01 ) {
@@ -225,7 +225,7 @@ void MultiChips::applyVolume(Voice* voice, bool rightChan)
         slot.modulator().setTotalLevel(level);
     }
 #else
-    uint level = calculateTotalLevel( timbre->first->data[8]&0x3f, voice->velocity, chan.volume, m_adlibVolumes, pan);
+    unsigned int level = calculateTotalLevel( timbre->first->data[8]&0x3f, voice->velocity, chan.volume, m_adlibVolumes, pan);
     slot.carrier().setTotalLevel(level);
 
     if ( timbre->first->data[10]&0x01 ) {
@@ -255,8 +255,9 @@ MultiChips::Voice *MultiChips::allocVoice()
         auto result = *m_voicePool.begin();
         if(m_voicePool.erase( result ) == 0)
             throw std::runtime_error("Oooops");
-
+#ifdef USE_BANKDB
         BOOST_ASSERT(result->secondary == nullptr);
+#endif
         return result;
     }
 
@@ -282,11 +283,11 @@ void MultiChips::applyPitch(Voice* voice, bool rightChan)
 #ifndef USE_BANKDB
     if ( voice->channel == 9 ) {
         patch = voice->key + 128;
-        note1 = m_timbreBank.at(patch).transpose;
+        note = m_timbreBank.at(patch).transpose;
     }
     else {
         patch = m_channels.at(voice->channel).timbre;
-        note1 = voice->key + m_timbreBank.at(patch).transpose;
+        note = voice->key + m_timbreBank.at(patch).transpose;
     }
 #else
     int detune1 = 0, detune2 = 0;
@@ -326,8 +327,11 @@ void MultiChips::applyPitch(Voice* voice, bool rightChan)
     const auto detune = m_channels.at(voice->channel).keyDetune;
 
     const auto origNote = note;
-
+#ifdef USE_BANKDB
     note += m_channels.at(voice->channel).keyOffset - 12 + detune1;
+#else
+    note += m_channels.at(voice->channel).keyOffset - 12;
+#endif
     if( note >= 8*12 )
         note = 8*12 - 1;
     else if( note < 0 )
@@ -515,7 +519,9 @@ void MultiChips::resetVoices()
     for( size_t index = 0; index < m_voices.size(); ++index ) {
         m_voices[index].chip = index / voicesPerChip;
         m_voices[index].slotId = index % voicesPerChip;
+#ifdef USE_BANKDB
         m_voices[index].secondary = nullptr;
+#endif
         m_voicePool.insert(&m_voices[index]);
     }
 

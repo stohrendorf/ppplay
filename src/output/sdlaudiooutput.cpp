@@ -101,8 +101,7 @@ int SDLAudioOutput::internal_init( int desiredFrq )
         return 0;
     }
     desiredFrq = desired->freq;
-    char driverName[256];
-    if( SDL_AudioDriverName( driverName, 255 ) ) {
+    if(const char* driverName = SDL_GetCurrentAudioDriver()) {
         logger()->info( L4CXX_LOCATION, "Using audio driver '%s'", driverName );
     }
     setErrorCode( NoError );

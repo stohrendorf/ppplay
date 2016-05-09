@@ -62,10 +62,12 @@ public:
      * @see isLoading()
      */
     bool isSaving() const ;
+#ifndef _MSC_VER
 // the pragma is used to get rid of the following annoying GCC message:
 // warning: ‘AbstractArchive& AbstractArchive::operator%(T&)’ should return by value [-Weffc++]
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
+#endif
     inline AbstractArchive& operator%( ISerializable* data ) {
         return archive( data );
     }
@@ -85,7 +87,7 @@ public:
     // does not overwrite the above overloads for ISerializable.
     typename std::enable_if < !std::is_base_of<ISerializable, typename std::remove_pointer<T>::type >::value, AbstractArchive& >::type
     operator%( T& data ) {
-        static_assert( std::has_trivial_copy_assign<T>::value, "Data to serialize must be trivially copyable" );
+        static_assert( std::is_trivially_copy_assignable<T>::value, "Data to serialize must be trivially copyable" );
         static_assert( !std::is_pointer<T>::value, "Data to serialize must not be a pointer" );
         if( m_loading ) {
             *m_stream >> data;
@@ -95,7 +97,9 @@ public:
         }
         return *this;
     }
+#ifndef _MSC_VER
 #pragma GCC diagnostic pop
+#endif
     /**
      * @brief Serialization operator for arrays
      * @tparam T Data type
@@ -106,7 +110,7 @@ public:
      */
     template<class T>
     inline AbstractArchive& array( T* data, size_t count ) {
-        static_assert( std::has_trivial_copy_assign<T>::value, "Array to serialize must be trivially copyable" );
+        static_assert( std::is_trivially_copy_assignable<T>::value, "Array to serialize must be trivially copyable" );
         static_assert( !std::is_pointer<T>::value, "Array to serialize must not be a pointer" );
         BOOST_ASSERT( data != nullptr );
         if( m_loading ) {
@@ -140,8 +144,10 @@ public:
     void finishLoad();
 };
 
+#ifndef _MSC_VER
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
+#endif
 template<>
 inline AbstractArchive& AbstractArchive::operator%( std::string& str )
 {
@@ -154,10 +160,13 @@ inline AbstractArchive& AbstractArchive::operator%( std::string& str )
         size_t len = 0;
         m_stream->read( &len );
         str.resize( len );
-        m_stream->read( &str.front(), len );
+        if(!str.empty())
+            m_stream->read( &str.front(), len );
     }
     return *this;
 }
+#ifndef _MSC_VER
 #pragma GCC diagnostic pop
+#endif
 
 #endif

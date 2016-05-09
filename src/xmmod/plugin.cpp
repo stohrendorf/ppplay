@@ -22,4 +22,4 @@ public:
 };
 }
 
-PPPLAY_PLUGIN_EXPORT ppp::Plugin plugin;
+EXPOSE_PLUGIN(ppp::Plugin)

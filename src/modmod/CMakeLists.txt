@@ -16,6 +16,5 @@ add_library(ppplay_input_mod MODULE
 	modorder.cpp
 	plugin.cpp
 )
-set_target_properties(ppplay_input_mod PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LOCAL_LIBEXEC})
 target_link_libraries(ppplay_input_mod ppplay_module_base ppplay_core)
 install(TARGETS ppplay_input_mod LIBRARY DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} COMPONENT Plugins OPTIONAL)

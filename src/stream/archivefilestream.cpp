@@ -66,11 +66,10 @@ ArchiveFileStream::ArchiveFileStream( const std::string& filename ) : MemoryStre
             if( zipFilePath == "." || current == zipFilePath ) {
                 setName( current.string() );
                 std::stringstream* str = static_cast<std::stringstream*>( stream() );
-                int size = archive_entry_size( entry );
-                char* data = new char[size];
-                archive_read_data( arch, data, size );
-                str->write( data, size );
-                delete[] data;
+                auto size = archive_entry_size( entry );
+                std::vector<char> data(size);
+                archive_read_data( arch, data.data(), size );
+                str->write( data.data(), size );
                 break;
             }
         }

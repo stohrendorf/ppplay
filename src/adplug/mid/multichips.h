@@ -44,9 +44,9 @@ public:
         //! @brief This voice's chip index.
         size_t chip = 0;
         //! @brief This voice's index; used to calculate the slot.
-        uint slotId = 0;
+        unsigned int slotId = 0;
         //! @brief The active MIDI key.
-        uint key = 0;
+        unsigned int key = 0;
         //! @brief Key velocity (0..127).
         uint8_t velocity = 0;
         //! @brief The channel this voice belongs to.
@@ -71,10 +71,10 @@ public:
         int timbre = -1;
         int pitchbend = 0;
         int keyOffset = 0;
-        uint keyDetune = 0;
-        uint volume = DefaultChannelVolume;
+        unsigned int keyDetune = 0;
+        unsigned int volume = DefaultChannelVolume;
         int detune = 0;
-        uint rpn = 0;
+        unsigned int rpn = 0;
         uint8_t pan = 64;
         short pitchBendRange = DefaultPitchBendRange;
         short pitchBendSemiTones = DefaultPitchBendRange/100;

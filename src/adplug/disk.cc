@@ -18,11 +18,7 @@
  */
 
 #include <iostream>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <libbinio/binwrap.h>
-#include <libbinio/binfile.h>
+#include <cstdlib>
 
 #include "defines.h"
 #include "disk.h"

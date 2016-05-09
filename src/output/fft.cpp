@@ -148,7 +148,7 @@ void fftToAmp( const std::array<SimpleComplex<float>, ppp::FFT::InputLength>& ff
     dest->resize( ppp::FFT::InputLength / 2 );
     uint16_t* ampsPtr = &dest->front();
     for( size_t i = 0; i < ppp::FFT::InputLength / 2; i++ ) {
-        *( ampsPtr++ ) = fft[i].length() * sqrt( i );
+        *( ampsPtr++ ) = static_cast<uint16_t>( fft[i].length() * sqrt( i ) );
     }
 }
 

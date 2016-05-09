@@ -45,7 +45,7 @@ private:
     /**
      * @brief The internal SDL Timer ID
      */
-    struct _SDL_TimerID* m_id;
+    int m_id;
     std::mutex m_callbackMutex;
     /**
      * @brief SDL Timer callback handler

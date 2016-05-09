@@ -33,7 +33,7 @@ namespace ppg
  * @class SDLScreen
  * @brief The virtual DOS screen (SDL implementation)
  */
-class PPPLAY_PPG_EXPORT SDLScreen : public Widget, public SDLTimer
+class PPPLAY_PPG_EXPORT SDLScreen final : public Widget, public SDLTimer
 {
     DISABLE_COPY( SDLScreen )
 private:
@@ -61,6 +61,8 @@ public:
     void clear( uint8_t c, Color foreground, Color background );
     virtual void drawChar( int x, int y, char c );
     void drawPixel( int x, int y, Color c );
+    void lockPixels();
+    void unlockPixels();
     void clearPixels( Color c = Color::None );
     virtual void setFgColorAt( int x, int y, Color c );
     virtual void setBgColorAt( int x, int y, Color c );

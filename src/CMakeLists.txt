@@ -49,7 +49,7 @@ add_library(ppplay_core SHARED
 generate_export_header(ppplay_core)
 set_target_properties(ppplay_core PROPERTIES SOVERSION 1)
 
-target_link_libraries(ppplay_core ppplay_stream ${SDL_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+target_link_libraries(ppplay_core ppplay_stream ${SDL2_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 if(WITH_MP3LAME)
 	target_link_libraries(ppplay_core ${mp3lame_LIB})
 endif()

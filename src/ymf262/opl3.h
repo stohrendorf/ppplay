@@ -180,8 +180,8 @@ private:
     friend class Opl3;
 
     Opl3* m_opl;
-    size_t m_baseRegister;
-    OperatorView(Opl3* opl, size_t baseRegister) : m_opl(opl), m_baseRegister(baseRegister)
+    uint16_t m_baseRegister;
+    OperatorView(Opl3* opl, uint16_t baseRegister) : m_opl(opl), m_baseRegister(baseRegister)
     {
         BOOST_ASSERT( (baseRegister&0xff)<=21 );
         BOOST_ASSERT( (baseRegister>>8)<=1 );
@@ -247,11 +247,11 @@ class PPPLAY_OPL_EXPORT SlotView
     friend class Opl3;
 
     Opl3* m_opl;
-    size_t m_baseRegister;
+    uint16_t m_baseRegister;
     OperatorView m_modulator;
     OperatorView m_carrier;
 
-    SlotView(Opl3* opl, size_t baseRegister, OperatorView&& modulator, OperatorView&& carrier)
+    SlotView(Opl3* opl, uint16_t baseRegister, OperatorView&& modulator, OperatorView&& carrier)
         : m_opl(opl)
         , m_baseRegister(baseRegister)
         , m_modulator(std::move(modulator))

@@ -13,8 +13,8 @@ std::string whereAmI()
     char tmp[1024];
     std::string path;
 #ifdef WIN32
-    auto selfPathLen = GetModuleFileNameA(nullptr, selfPath, sizeof(selfPath));
-    if(selfPathLen == sizeof(selfPath)) {
+    auto selfPathLen = GetModuleFileNameA(nullptr, tmp, sizeof(tmp));
+    if(selfPathLen == sizeof(tmp)) {
         return std::string();
     }
 #else
@@ -23,8 +23,8 @@ std::string whereAmI()
     if(selfPathLen == -1) {
         return std::string();
     }
-    tmp[selfPathLen] = '\0';
 #endif
+    tmp[selfPathLen] = '\0';
     path = tmp;
     auto idx = path.find_last_of("\\/");
     return path.substr(0, idx);
