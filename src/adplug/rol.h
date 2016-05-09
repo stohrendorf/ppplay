@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2008 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -20,12 +22,9 @@
  *
  * Visit:  http://tenacity.hispeed.com/aomit/oplx/
  */
-#ifndef H_ROLPLAYER
-#define H_ROLPLAYER
 
 #include <vector>
 #include <string>
-#include <cstring>
 
 #include <boost/algorithm/string.hpp>
 
@@ -33,27 +32,29 @@
 
 class FileStream;
 
-class CrolPlayer : public CPlayer {
+class CrolPlayer : public Player
+{
     DISABLE_COPY(CrolPlayer)
 public:
-    static CPlayer *factory();
+    static Player *factory();
 
     CrolPlayer() = default;
 
     ~CrolPlayer() = default;
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int);           // rewinds to specified subsong
-    size_t framesUntilUpdate() const; // returns needed timer refresh rate
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int) override;           // rewinds to specified subsong
+    size_t framesUntilUpdate() const override; // returns needed timer refresh rate
 
-    std::string type() const
+    std::string type() const override
     {
         return "Adlib Visual Composer";
     }
 
 private:
-    struct SRolHeader {
+    struct SRolHeader
+    {
         uint16_t version_major = 0;
         uint16_t version_minor = 0;
         char UNUSED_0[40] = "";
@@ -63,33 +64,38 @@ private:
         uint16_t edit_scale_x = 0;
         char UNUSED_1 = 0;
         char mode = 0;
-        char UNUSED_2[90+38+15] = "";
+        char UNUSED_2[90 + 38 + 15] = "";
         float basic_tempo = 0;
     };
 
 #pragma pack(push,1)
-    struct STempoEvent {
+    struct STempoEvent
+    {
         int16_t time;
         float multiplier;
     };
 
-    struct SNoteEvent {
+    struct SNoteEvent
+    {
         int16_t number;
         int16_t duration;
     };
 
-    struct SInstrumentEvent {
+    struct SInstrumentEvent
+    {
         int16_t time;
         char name[9];
         int16_t ins_index;
     };
 
-    struct SVolumeEvent {
+    struct SVolumeEvent
+    {
         int16_t time;
         float multiplier;
     };
 
-    struct SPitchEvent {
+    struct SPitchEvent
+    {
         int16_t time;
         float variation;
     };
@@ -100,20 +106,23 @@ private:
     typedef std::vector<SVolumeEvent> TVolumeEvents;
     typedef std::vector<SPitchEvent> TPitchEvents;
 
-    class CVoiceData {
+    class CVoiceData
+    {
     public:
-        enum EEventStatus {
-            kES_NoteEnd = 1<<0,
-            kES_PitchEnd = 1<<1,
-            kES_InstrEnd = 1<<2,
-            kES_VolumeEnd = 1<<3,
+        enum EEventStatus
+        {
+            kES_NoteEnd = 1 << 0,
+            kES_PitchEnd = 1 << 1,
+            kES_InstrEnd = 1 << 2,
+            kES_VolumeEnd = 1 << 3,
 
             kES_None = 0
         };
 
         explicit CVoiceData() = default;
 
-        void Reset() {
+        void Reset()
+        {
             mForceNote = true;
             mEventStatus = kES_None;
             current_note = 0;
@@ -140,7 +149,8 @@ private:
     };
 
 #pragma pack(push,1)
-    struct SInstrumentName {
+    struct SInstrumentName
+    {
         uint16_t index;
         char record_used;
         char name[9];
@@ -149,7 +159,8 @@ private:
 
     typedef std::vector<SInstrumentName> TInstrumentNames;
 
-    struct SBnkHeader {
+    struct SBnkHeader
+    {
         char version_major = 0;
         char version_minor = 0;
         char signature[6] = "";
@@ -162,7 +173,8 @@ private:
     };
 
 #pragma pack(push,1)
-    struct SFMOperator {
+    struct SFMOperator
+    {
         uint8_t key_scale_level;
         uint8_t freq_multiplier;
         uint8_t feed_back;
@@ -179,7 +191,8 @@ private:
     };
 #pragma pack(pop)
 
-    struct SOPL2Op {
+    struct SOPL2Op
+    {
         uint8_t ammulti = 0;
         uint8_t ksltl = 0;
         uint8_t ardr = 0;
@@ -188,14 +201,16 @@ private:
         uint8_t waveform = 0;
     };
 
-    struct SRolInstrument {
+    struct SRolInstrument
+    {
         char mode = 0;
         char voice_number = 0;
         SOPL2Op modulator{};
         SOPL2Op carrier{};
     };
 
-    struct SUsedList {
+    struct SUsedList
+    {
         std::string name{};
         SRolInstrument instrument{};
     };
@@ -228,23 +243,28 @@ private:
     void send_operator(int const voice, SOPL2Op const &modulator,
                        SOPL2Op const &carrier);
 
-    class StringCompare {
+    class StringCompare
+    {
     public:
         bool operator()(SInstrumentName const &lhs,
-                        SInstrumentName const &rhs) const {
+                        SInstrumentName const &rhs) const
+        {
             return keyLess(lhs.name, rhs.name);
         }
 
-        bool operator()(SInstrumentName const &lhs, std::string const &rhs) const {
+        bool operator()(SInstrumentName const &lhs, std::string const &rhs) const
+        {
             return keyLess(lhs.name, rhs.c_str());
         }
 
-        bool operator()(std::string const &lhs, SInstrumentName const &rhs) const {
+        bool operator()(std::string const &lhs, SInstrumentName const &rhs) const
+        {
             return keyLess(lhs.c_str(), rhs.name);
         }
 
     private:
-        bool keyLess(const char *const lhs, const char *const rhs) const {
+        bool keyLess(const char *const lhs, const char *const rhs) const
+        {
             return boost::algorithm::ilexicographical_compare(lhs, rhs);
         }
     };
@@ -263,10 +283,8 @@ private:
     int m_timeOfLastNote = 0;
     float m_refresh = kDefaultUpdateTme;
     uint8_t m_bdRegister = 0;
-    uint8_t m_bxRegister[9] = {0,0,0,0,0,0,0,0,0};
-    uint8_t m_volumeCache[11] = {0,0,0,0,0,0,0,0,0,0,0};
-    uint16_t m_freqCache[11] = {0,0,0,0,0,0,0,0,0,0,0};
-    float m_pitchCache[11] =  {1,1,1,1,1,1,1,1,1,1,1};
+    uint8_t m_bxRegister[9] = { 0,0,0,0,0,0,0,0,0 };
+    uint8_t m_volumeCache[11] = { 0,0,0,0,0,0,0,0,0,0,0 };
+    uint16_t m_freqCache[11] = { 0,0,0,0,0,0,0,0,0,0,0 };
+    float m_pitchCache[11] = { 1,1,1,1,1,1,1,1,1,1,1 };
 };
-
-#endif

@@ -19,21 +19,22 @@
  * [xad] RAT player, by Riven the Mage <riven@ok.ru>
  */
 
-/*
-    - discovery -
+ /*
+     - discovery -
 
-  file(s) : PINA.EXE
-     type : Experimental Connection BBStro tune
-     tune : by (?)Ratt/GRIF
-   player : by (?)Ratt/GRIF
-  comment : there are bug in original replayer's adlib_init(): wrong frequency
-  registers.
-*/
+   file(s) : PINA.EXE
+      type : Experimental Connection BBStro tune
+      tune : by (?)Ratt/GRIF
+    player : by (?)Ratt/GRIF
+   comment : there are bug in original replayer's adlib_init(): wrong frequency
+   registers.
+ */
 
 #include <cstring>
 #include "rat.h"
 
-namespace {
+namespace
+{
 constexpr uint8_t rat_adlib_bases[18] = {
     0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12, 0x03, 0x04, 0x05, 0x0B,
     0x0C, 0x0D, 0x13, 0x14, 0x15
@@ -45,21 +46,25 @@ constexpr uint16_t rat_notes[16] = {
 };
 }
 
-CPlayer *CxadratPlayer::factory() { return new CxadratPlayer(); }
+Player* CxadratPlayer::factory()
+{
+    return new CxadratPlayer();
+}
 
-bool CxadratPlayer::xadplayer_load() {
-    if (xadHeader().fmt != RAT)
+bool CxadratPlayer::xadplayer_load()
+{
+    if(xadHeader().fmt != RAT)
         return false;
 
     // load header
-    std::copy_n( tune().begin(), sizeof(Header), reinterpret_cast<uint8_t*>(&m_ratHeader) );
+    std::copy_n(tune().begin(), sizeof(Header), reinterpret_cast<uint8_t*>(&m_ratHeader));
 
     // is 'RAT'-signed ?
-    if (!std::equal(m_ratHeader.id, m_ratHeader.id+3, "RAT"))
+    if(!std::equal(m_ratHeader.id, m_ratHeader.id + 3, "RAT"))
         return false;
 
     // is version 1.0 ?
-    if (m_ratHeader.version != 0x10)
+    if(m_ratHeader.version != 0x10)
         return false;
 
     // load order
@@ -72,9 +77,10 @@ bool CxadratPlayer::xadplayer_load() {
     unsigned short patseg = (m_ratHeader.patseg[1] << 8) + m_ratHeader.patseg[0];
     const Event* event_ptr = reinterpret_cast<const Event*>(&tune()[patseg << 4]);
 
-    for (int i = 0; i < m_ratHeader.numpat; i++)
-        for (int j = 0; j < 64; j++)
-            for (int k = 0; k < m_ratHeader.numchan; k++) {
+    for(int i = 0; i < m_ratHeader.numpat; i++)
+        for(int j = 0; j < 64; j++)
+            for(int k = 0; k < m_ratHeader.numchan; k++)
+            {
                 m_tracks[i][j][k] = *event_ptr;
                 ++event_ptr;
             }
@@ -82,7 +88,8 @@ bool CxadratPlayer::xadplayer_load() {
     return true;
 }
 
-void CxadratPlayer::xadplayer_rewind(int) {
+void CxadratPlayer::xadplayer_rewind(int)
+{
     setCurrentOrder(m_ratHeader.order_start);
     setCurrentRow(0);
     m_volume = m_ratHeader.volume;
@@ -98,7 +105,8 @@ void CxadratPlayer::xadplayer_rewind(int) {
     getOpl()->writeReg(0xBD, 0x00);
 
     // set default frequencies
-    for (int i = 0; i < 9; i++) {
+    for(int i = 0; i < 9; i++)
+    {
         getOpl()->writeReg(0xA0 + i, 0x00);
         getOpl()->writeReg(0xA3 + i, 0x00);
         getOpl()->writeReg(0xB0 + i, 0x00);
@@ -106,33 +114,38 @@ void CxadratPlayer::xadplayer_rewind(int) {
     }
 
     // set default volumes
-    for (int i = 0; i < 0x1F; i++)
+    for(int i = 0; i < 0x1F; i++)
         getOpl()->writeReg(0x40 + i, 0x3F);
 }
 
-void CxadratPlayer::xadplayer_update() {
+void CxadratPlayer::xadplayer_update()
+{
     // process events
-    for (int i = 0; i < m_ratHeader.numchan; i++) {
+    for(int i = 0; i < m_ratHeader.numchan; i++)
+    {
         const Event& event = reinterpret_cast<const Event&>(m_tracks[m_trackdataByOrder[currentOrder()]][currentRow()][i]);
 
         // is instrument ?
-        if (event.instrument != 0xFF) {
+        if(event.instrument != 0xFF)
+        {
             m_channels[i].instrument = event.instrument - 1;
             m_channels[i].volume = m_instruments[event.instrument - 1].volume;
         }
 
         // is volume ?
-        if (event.volume != 0xFF)
+        if(event.volume != 0xFF)
             m_channels[i].volume = event.volume;
 
         // is note ?
-        if (event.note != 0xFF) {
+        if(event.note != 0xFF)
+        {
             // mute channel
             getOpl()->writeReg(0xB0 + i, 0x00);
             getOpl()->writeReg(0xA0 + i, 0x00);
 
             // if note != 0xFE then play
-            if (event.note != 0xFE) {
+            if(event.note != 0xFE)
+            {
                 const auto ins = m_channels[i].instrument;
 
                 // synthesis/feedback
@@ -145,10 +158,10 @@ void CxadratPlayer::xadplayer_update() {
                 // volumes
                 getOpl()->writeReg(0x40 + rat_adlib_bases[i],
                                    calculateVolume(m_instruments[ins].mod_volume,
-                                                     m_channels[i].volume, m_volume));
+                                                   m_channels[i].volume, m_volume));
                 getOpl()->writeReg(0x40 + rat_adlib_bases[i + 9],
-                        calculateVolume(m_instruments[ins].car_volume,
-                                          m_channels[i].volume, m_volume));
+                                   calculateVolume(m_instruments[ins].car_volume,
+                                                   m_channels[i].volume, m_volume));
 
                 // attack/decay
                 getOpl()->writeReg(0x60 + rat_adlib_bases[i], m_instruments[ins].mod_AD);
@@ -164,7 +177,7 @@ void CxadratPlayer::xadplayer_update() {
 
                 // octave/frequency
                 unsigned short insfreq =
-                        (m_instruments[ins].freq[1] << 8) + m_instruments[ins].freq[0];
+                    (m_instruments[ins].freq[1] << 8) + m_instruments[ins].freq[0];
                 unsigned short freq = insfreq * rat_notes[event.note & 0x0F] / 0x20AB;
 
                 getOpl()->writeReg(0xA0 + i, freq & 0xFF);
@@ -173,51 +186,56 @@ void CxadratPlayer::xadplayer_update() {
         }
 
         // is effect ?
-        if (event.fx != 0xFF) {
+        if(event.fx != 0xFF)
+        {
             m_channels[i].fx = event.fx;
             m_channels[i].fxp = event.fxp;
         }
     }
 
     // next row
-    setCurrentRow(currentRow()+1);
+    setCurrentRow(currentRow() + 1);
 
     // process effects
-    for (int i = 0; i < m_ratHeader.numchan; i++) {
+    for(int i = 0; i < m_ratHeader.numchan; i++)
+    {
         const auto old_order_pos = currentOrder();
 
-        switch (m_channels[i].fx) {
-        case 0x01: // 0x01: Set Speed
-            setCurrentSpeed(m_channels[i].fxp);
-            break;
-        case 0x02: // 0x02: Position Jump
-            if (m_channels[i].fxp < m_ratHeader.order_end)
-                setCurrentOrder(m_channels[i].fxp);
-            else
-                setCurrentOrder(0);
+        switch(m_channels[i].fx)
+        {
+            case 0x01: // 0x01: Set Speed
+                setCurrentSpeed(m_channels[i].fxp);
+                break;
+            case 0x02: // 0x02: Position Jump
+                if(m_channels[i].fxp < m_ratHeader.order_end)
+                    setCurrentOrder(m_channels[i].fxp);
+                else
+                    setCurrentOrder(0);
 
-            // jumpback ?
-            if (currentOrder() <= old_order_pos)
-                setXadLooping();
+                // jumpback ?
+                if(currentOrder() <= old_order_pos)
+                    setXadLooping();
 
-            setCurrentRow(0);
-            break;
-        case 0x03: // 0x03: Pattern Break (?)
-            setCurrentRow(0x40);
-            break;
+                setCurrentRow(0);
+                break;
+            case 0x03: // 0x03: Pattern Break (?)
+                setCurrentRow(0x40);
+                break;
         }
 
         m_channels[i].fx = 0;
     }
 
     // end of pattern ?
-    if (currentRow() >= 0x40) {
+    if(currentRow() >= 0x40)
+    {
         setCurrentRow(0);
 
-        setCurrentOrder(currentOrder()+1);
+        setCurrentOrder(currentOrder() + 1);
 
         // end of module ?
-        if (currentOrder() == m_ratHeader.order_end) {
+        if(currentOrder() == m_ratHeader.order_end)
+        {
             setCurrentOrder(m_ratHeader.order_loop);
 
             setXadLooping();
@@ -247,7 +265,8 @@ uint32_t CxadratPlayer::instrumentCount() const
 
 /* -------- Internal Functions ---------------------------- */
 
-uint8_t CxadratPlayer::calculateVolume(uint8_t ivol, uint8_t cvol, uint8_t gvol) {
+uint8_t CxadratPlayer::calculateVolume(uint8_t ivol, uint8_t cvol, uint8_t gvol)
+{
     uint16_t vol;
 
     vol = ivol;

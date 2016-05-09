@@ -1,3 +1,4 @@
+#pragma once
 /*
  * AdPlay/UNIX - OPL2 audio player
  * Copyright (C) 2001 - 2003 Simon Peter <dn.tlp@gmx.net>
@@ -17,14 +18,12 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef H_SDL
-#define H_SDL
-
 #include <SDL.h>
 
 #include "output.h"
 
-class SDLPlayer : public Player {
+class SDLPlayer : public PlayerHandler
+{
     DISABLE_COPY(SDLPlayer)
 private:
     SDL_AudioSpec m_spec;
@@ -36,7 +35,5 @@ public:
     SDLPlayer(int freq, size_t bufsize);
     virtual ~SDLPlayer();
 
-    virtual void frame();
+    virtual void frame() override;
 };
-
-#endif

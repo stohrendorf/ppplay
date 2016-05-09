@@ -27,14 +27,14 @@
 
 namespace opl
 {
-
-void EnvelopeGenerator::setAttennuation( uint16_t f_number, uint8_t block, uint8_t ksl )
+void EnvelopeGenerator::setAttennuation(uint16_t f_number, uint8_t block, uint8_t ksl)
 {
     m_fnum = f_number & 0x3ff;
     m_block = block & 0x07;
     m_ksl = ksl & 0x03;
 
-    if( m_ksl == 0 ) {
+    if(m_ksl == 0)
+    {
         m_kslAdd = 0;
         return;
     }
@@ -47,13 +47,15 @@ void EnvelopeGenerator::setAttennuation( uint16_t f_number, uint8_t block, uint8
     };
     // 7 negated is, by one's complement, effectively -8. To compensate this,
     // the ROM's values have an offset of 8.
-    int tmp = kslRom[m_fnum >> 6] + 8 * ( m_block - 8 );
-    if( tmp <= 0 ) {
+    int tmp = kslRom[m_fnum >> 6] + 8 * (m_block - 8);
+    if(tmp <= 0)
+    {
         m_kslAdd = 0;
         return;
     }
     m_kslAdd = tmp;
-    switch( m_ksl ) {
+    switch(m_ksl)
+    {
         case 1:
             // 3 db
             m_kslAdd <<= 1;
@@ -68,59 +70,64 @@ void EnvelopeGenerator::setAttennuation( uint16_t f_number, uint8_t block, uint8
     }
 }
 
-uint8_t EnvelopeGenerator::calculateRate( uint8_t rateValue ) const
+uint8_t EnvelopeGenerator::calculateRate(uint8_t rateValue) const
 {
-    if( rateValue == 0 ) {
+    if(rateValue == 0)
+    {
         return 0;
     }
     // calculate key scale number (see NTS in the YMF262 manual)
-    uint8_t rof = ( m_fnum >> ( m_opl->nts() ? 8 : 9 ) ) & 0x1;
+    uint8_t rof = (m_fnum >> (m_opl->nts() ? 8 : 9)) & 0x1;
     // ...and KSR (see manual, again)
     rof |= m_block << 1;
-    if( !m_ksr ) {
+    if(!m_ksr)
+    {
         rof >>= 2;
     }
     // here, rof<=15
-	// the limit of 60 results in rof=0 if rateValue=15 below
-    return std::min<uint8_t>( 60, rof + (rateValue << 2) );
+        // the limit of 60 results in rof=0 if rateValue=15 below
+    return std::min<uint8_t>(60, rof + (rateValue << 2));
 }
 
-inline uint8_t EnvelopeGenerator::advanceCounter( uint8_t rate )
+inline uint8_t EnvelopeGenerator::advanceCounter(uint8_t rate)
 {
-    BOOST_ASSERT( rate < 16 );
-    if( rate == 0 ) {
+    BOOST_ASSERT(rate < 16);
+    if(rate == 0)
+    {
         return 0;
     }
-    const uint8_t effectiveRate = calculateRate( rate );
+    const uint8_t effectiveRate = calculateRate(rate);
     // rateValue <= 15
     const uint8_t rateValue = effectiveRate >> 2;
-    BOOST_ASSERT( rateValue<=15 );
+    BOOST_ASSERT(rateValue <= 15);
     // rof <= 3
     const uint8_t rof = effectiveRate & 3;
-    BOOST_ASSERT( rof<=3 );
+    BOOST_ASSERT(rof <= 3);
     // 4 <= Delta <= (7<<15)
-    m_counter += uint32_t( 4 | rof ) << rateValue;
+    m_counter += uint32_t(4 | rof) << rateValue;
     // overflow <= 7
     uint8_t overflow = m_counter >> 15;
-    BOOST_ASSERT( overflow<=7 );
-    m_counter &= ( 1 << 15 ) - 1;
+    BOOST_ASSERT(overflow <= 7);
+    m_counter &= (1 << 15) - 1;
     return overflow;
 }
 
-void EnvelopeGenerator::attenuate( uint8_t rate )
+void EnvelopeGenerator::attenuate(uint8_t rate)
 {
-    BOOST_ASSERT( rate < 64 );
-    m_env += advanceCounter( rate );
-    if( m_env > Silence ) {
+    BOOST_ASSERT(rate < 64);
+    m_env += advanceCounter(rate);
+    if(m_env > Silence)
+    {
         m_env = Silence;
     }
 }
 
 void EnvelopeGenerator::attack()
 {
-    BOOST_ASSERT( m_env > 0 );
-    uint8_t overflow = advanceCounter( m_ar );
-    if( overflow == 0 ) {
+    BOOST_ASSERT(m_env > 0);
+    uint8_t overflow = advanceCounter(m_ar);
+    if(overflow == 0)
+    {
         return;
     }
 
@@ -132,61 +139,68 @@ void EnvelopeGenerator::attack()
     // But the attack only occurs if m_env>0, so an overflow cannot occur
     // here.
     // +1 for one's complement.
-    m_env -= ( ( m_env * overflow ) >> 3 ) + 1;
+    m_env -= ((m_env * overflow) >> 3) + 1;
 }
 
-uint16_t EnvelopeGenerator::advance( bool egt, bool am )
+uint16_t EnvelopeGenerator::advance(bool egt, bool am)
 {
-    switch( m_stage ) {
+    switch(m_stage)
+    {
         case Stage::Attack:
-            if( m_env == 0 ) {
+            if(m_env == 0)
+            {
                 m_stage = Stage::Decay;
             }
-            else {
+            else
+            {
                 attack();
             }
             break;
 
         case Stage::Decay:
-            if( ( m_env >> 4 ) >= m_sl ) {
+            if((m_env >> 4) >= m_sl)
+            {
                 m_stage = Stage::Sustain;
                 break;
             }
-            attenuate( m_dr );
+            attenuate(m_dr);
             break;
 
         case Stage::Sustain:
-            if( !egt ) {
+            if(!egt)
+            {
                 m_stage = Stage::Release;
             }
             break;
 
         case Stage::Release:
-            attenuate( m_rr );
+            attenuate(m_rr);
             break;
     }
 
-    int total = m_env + ( m_tl << 2 ) + m_kslAdd;
+    int total = m_env + (m_tl << 2) + m_kslAdd;
 
-    if( am ) {
+    if(am)
+    {
         int amVal = m_opl->tremoloIndex() >> 8;
-        if( amVal > 26 ) {
-            amVal = ( 2 * 26 ) + ~amVal;
+        if(amVal > 26)
+        {
+            amVal = (2 * 26) + ~amVal;
         }
-        BOOST_ASSERT( amVal >= 0 && amVal <= 26 );
-        if( !m_opl->dam() ) {
+        BOOST_ASSERT(amVal >= 0 && amVal <= 26);
+        if(!m_opl->dam())
+        {
             amVal >>= 2;
         }
         total += amVal;
     }
 
-    if( total < 0 )
+    if(total < 0)
         m_total = 0;
-    else if( total > Silence )
+    else if(total > Silence)
         m_total = Silence;
     else
         m_total = total;
     return m_total;
 }
-
 }

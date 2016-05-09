@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,21 +23,22 @@
 
 #include "protrack.h"
 
-class CradLoader : public CmodPlayer {
+class CradLoader : public CmodPlayer
+{
     DISABLE_COPY(CradLoader)
 public:
-    static CPlayer *factory();
+    static Player *factory();
 
     CradLoader() = default;
 
-    bool load(const std::string &filename);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const
+    std::string type() const override
     {
         return "Reality ADlib Tracker";
     }
-    std::string description() const
+    std::string description() const override
     {
         return m_description;
     }

@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2006 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -24,55 +26,60 @@
 
 #include "player.h"
 
-class Cu6mPlayer : public CPlayer {
+class Cu6mPlayer : public Player
+{
     DISABLE_COPY(Cu6mPlayer)
 public:
-    static CPlayer *factory();
+    static Player *factory();
 
     Cu6mPlayer() = default;
 
     ~Cu6mPlayer() = default;
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const
+    std::string type() const override
     {
         return "Ultima 6 Music";
     }
 
 private:
-    struct byte_pair {
+    struct byte_pair
+    {
         uint8_t lo;
         uint8_t hi;
     };
 
-    struct subsong_info { // information about a subsong
+    struct subsong_info
+    { // information about a subsong
         int continue_pos;
         int subsong_repetitions;
         int subsong_start;
     };
 
-    struct DictionaryEntry { // dictionary entry
+    struct DictionaryEntry
+    { // dictionary entry
         uint8_t root;
         uint32_t codeword;
     };
 
     using DataBlock = std::vector<uint8_t>;
 
-    class MyDict {
+    class MyDict
+    {
         DISABLE_COPY(MyDict)
     public:
         static constexpr int MaxCodewordLength = 12; // maximum codeword length in bits
-        static constexpr int DefaultDictionarySize = 1<<MaxCodewordLength;
+        static constexpr int DefaultDictionarySize = 1 << MaxCodewordLength;
     private:
         // The actual number of dictionary entries allocated
         // is (dictionary_size-256), because there are 256 roots
         // that do not need to be stored.
         size_t m_contains = 2;  // number of entries currently in the dictionary
-        std::array<DictionaryEntry,DefaultDictionarySize-0x100> m_dictionary{{}};
+        std::array<DictionaryEntry, DefaultDictionarySize - 0x100> m_dictionary{ {} };
 
     public:
         MyDict() = default;    // use dictionary size of 4096
@@ -93,20 +100,20 @@ private:
     int m_readDelay = 0; // delay (in timer ticks) before further song data is read
     std::stack<subsong_info> m_subsongStack{};
 
-    int m_instrumentOffsets[9] = {0}; // offsets of the adlib instrument data
+    int m_instrumentOffsets[9] = { 0 }; // offsets of the adlib instrument data
     // vibrato ("vb")
-    uint8_t m_vbCurrentValue[9] = {0};
-    uint8_t m_vbDoubleAmplitude[9] = {0};
-    uint8_t m_vbMultiplier[9] = {0};
-    bool m_vbDirectionFlag[9] = {false};
+    uint8_t m_vbCurrentValue[9] = { 0 };
+    uint8_t m_vbDoubleAmplitude[9] = { 0 };
+    uint8_t m_vbMultiplier[9] = { 0 };
+    bool m_vbDirectionFlag[9] = { false };
     // mute factor ("mf") = not(volume)
-    uint8_t m_carrierMf[9] = {0};
-    int8_t m_carrierMfSignedDelta[9] = {0};
-    uint8_t m_carrierMfModDelayBackup[9] = {0};
-    uint8_t m_carrierMfModDelay[9] = {0};
+    uint8_t m_carrierMf[9] = { 0 };
+    int8_t m_carrierMfSignedDelta[9] = { 0 };
+    uint8_t m_carrierMfModDelayBackup[9] = { 0 };
+    uint8_t m_carrierMfModDelay[9] = { 0 };
     // frequency
     byte_pair m_channelFreq[9]{}; // adlib freq settings for each channel
-    int8_t m_channelFreqSignedDelta[9] = {0};
+    int8_t m_channelFreqSignedDelta[9] = { 0 };
 
     // protected functions used by update()
     void command_loop();
@@ -147,7 +154,7 @@ private:
     static void output_root(uint8_t root, uint8_t *destination, size_t& position);
     bool safeOutputRoot(uint8_t c, DataBlock& d, size_t& p)
     {
-        if (p >= d.size())
+        if(p >= d.size())
             return false;
         output_root(c, d.data(), p);
         return true;

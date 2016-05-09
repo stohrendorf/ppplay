@@ -1,26 +1,26 @@
 appicon_id ICON ppplay.ico
 
 1 VERSIONINFO
-FILEVERSION     0,1,3,0
-PRODUCTVERSION  0,1,3,0
+FILEVERSION     0, 1, 3, 0
+PRODUCTVERSION  0, 1, 3, 0
 BEGIN
-  BLOCK "StringFileInfo"
-  BEGIN
-    BLOCK "040904E4"
-    BEGIN
-      VALUE "CompanyName", "Open Source"
-      VALUE "FileDescription", "PPPlay"
-      VALUE "FileVersion", "1.0"
-      VALUE "InternalName", "ppplay"
-      VALUE "LegalCopyright", "Steffen Ohrendorf"
-      VALUE "OriginalFilename", "ppplay.exe"
-      VALUE "ProductName", "PPPlay"
-      VALUE "ProductVersion", "0.1.3"
-    END
-  END
+BLOCK "StringFileInfo"
+BEGIN
+BLOCK "040904E4"
+BEGIN
+VALUE "CompanyName", "Open Source"
+VALUE "FileDescription", "PPPlay"
+VALUE "FileVersion", "1.0"
+VALUE "InternalName", "ppplay"
+VALUE "LegalCopyright", "Steffen Ohrendorf"
+VALUE "OriginalFilename", "ppplay.exe"
+VALUE "ProductName", "PPPlay"
+VALUE "ProductVersion", "0.1.3"
+END
+END
 
-  BLOCK "VarFileInfo"
-  BEGIN
-    VALUE "Translation", 0x409, 1252
-  END
+BLOCK "VarFileInfo"
+BEGIN
+VALUE "Translation", 0x409, 1252
+END
 END

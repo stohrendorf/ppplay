@@ -20,7 +20,7 @@
 
 #include <iostream>
 
-Stream::Stream( std::iostream* stream, const std::string& name ) : m_stream( stream ), m_name( name )
+Stream::Stream(std::iostream* stream, const std::string& name) : m_stream(stream), m_name(name)
 {
 }
 
@@ -34,17 +34,17 @@ void Stream::clear()
     m_stream->clear();
 }
 
-void Stream::seek( std::streamoff pos )
+void Stream::seek(std::streamoff pos)
 {
-    m_stream->seekg( pos );
-    m_stream->seekp( pos );
+    m_stream->seekg(pos);
+    m_stream->seekp(pos);
 }
 
-void Stream::seekrel( std::streamoff delta )
+void Stream::seekrel(std::streamoff delta)
 {
     uint32_t p = pos();
-    m_stream->seekg( p + delta );
-    m_stream->seekp( p + delta );
+    m_stream->seekg(p + delta);
+    m_stream->seekp(p + delta);
 }
 
 std::streamoff Stream::pos() const
@@ -67,7 +67,7 @@ std::string Stream::name() const
     return m_name;
 }
 
-void Stream::setName( const std::string& name )
+void Stream::setName(const std::string& name)
 {
     m_name = name;
 }

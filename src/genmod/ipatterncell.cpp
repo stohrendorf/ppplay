@@ -25,12 +25,10 @@
 
 namespace ppp
 {
-
 light4cxx::Logger* IPatternCell::logger()
 {
-    return light4cxx::Logger::get( "cell" );
+    return light4cxx::Logger::get("cell");
 }
-
 }
 
 /**

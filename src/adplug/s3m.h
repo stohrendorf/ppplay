@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2006 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -19,43 +21,42 @@
  * s3m.h - AdLib S3M Player by Simon Peter <dn.tlp@gmx.net>
  */
 
-#ifndef H_ADPLUG_S3M
-#define H_ADPLUG_S3M
-
 #include "player.h"
 
 class FileStream;
 
-class Cs3mPlayer : public CPlayer {
+class Cs3mPlayer : public Player
+{
     DISABLE_COPY(Cs3mPlayer)
 public:
-    static CPlayer *factory();
+    static Player *factory();
 
     Cs3mPlayer();
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const;
-    std::string title() const
+    std::string type() const override;
+    std::string title() const override
     {
         return m_header.name;
     }
 
-    uint32_t instrumentCount() const
+    uint32_t instrumentCount() const override
     {
         return m_header.instrumentCount;
     }
-    std::string instrumentTitle(size_t n) const
+    std::string instrumentTitle(size_t n) const override
     {
         return m_instruments[n].name;
     }
 
 protected:
 #pragma pack(push,1)
-    struct S3mHeader {
+    struct S3mHeader
+    {
         char name[28] = ""; // song name
         uint8_t endOfFile = 0;
         uint8_t type = 0;
@@ -75,15 +76,16 @@ protected:
         uint8_t dp = 0;
         uint8_t dummy2[8];
         uint16_t special = 0;
-        std::array<uint8_t,32> chanset{{0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0}};
+        std::array<uint8_t, 32> chanset{ {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0} };
     };
 
-    struct S3mInstrument {
+    struct S3mInstrument
+    {
         uint8_t type = 0;
         char filename[15] = "";
-        uint8_t d00=0, d01=0, d02=0, d03=0, d04=0, d05=0, d06=0, d07=0, d08=0, d09=0, d0a=0, d0b=0, volume=0, dsk=0, dummy[2];
-        uint32_t c2spd=0;
-        char dummy2[12], name[28]="", scri[4]="";
+        uint8_t d00 = 0, d01 = 0, d02 = 0, d03 = 0, d04 = 0, d05 = 0, d06 = 0, d07 = 0, d08 = 0, d09 = 0, d0a = 0, d0b = 0, volume = 0, dsk = 0, dummy[2];
+        uint32_t c2spd = 0;
+        char dummy2[12], name[28] = "", scri[4] = "";
     };
 #pragma pack(pop)
 
@@ -93,7 +95,8 @@ protected:
         m_instruments[i] = instrument;
     }
 
-    struct S3mCell {
+    struct S3mCell
+    {
         uint8_t note, octave, instrument, volume, effect, effectValue;
     };
 
@@ -114,7 +117,8 @@ private:
 
     S3mCell m_patterns[99][64][32];
 
-    struct {
+    struct
+    {
         uint16_t frequency, nextFrequency;
         uint8_t octave, volume, instrument, effect, effectValue, dualInfo, key, nextOctave, trigger, note;
     } m_channels[9];
@@ -134,5 +138,3 @@ private:
     void vibrato(unsigned char chan, unsigned char effectValue);
     void tone_portamento(unsigned char chan, unsigned char effectValue);
 };
-
-#endif

@@ -19,14 +19,14 @@
  * [xad] FLASH player, by Riven the Mage <riven@ok.ru>
  */
 
-/*
-    - discovery -
+ /*
+     - discovery -
 
-  file(s) : LA-INTRO.EXE
-     type : Lunatic Asylum BBStro
-     tune : by Rogue [Logic Design]
-   player : by Flash [Logic Design]
-*/
+   file(s) : LA-INTRO.EXE
+      type : Lunatic Asylum BBStro
+      tune : by Rogue [Logic Design]
+    player : by Flash [Logic Design]
+ */
 
 #include "flash.h"
 
@@ -69,18 +69,21 @@ const unsigned short CxadflashPlayer::flash_notes_encoded[268] = {
 };
 
 const unsigned short CxadflashPlayer::flash_notes[12] = { 0x157, 0x16B, 0x181,
-                                                          0x198, 0x1B0, 0x1CA,
-                                                          0x1E5, 0x202, 0x220,
-                                                          0x241, 0x263, 0x287 };
+    0x198, 0x1B0, 0x1CA,
+    0x1E5, 0x202, 0x220,
+    0x241, 0x263, 0x287 };
 
 const unsigned char CxadflashPlayer::flash_default_instrument[8] = {
     0x00, 0x00, 0x3F, 0x3F, 0xFF, 0xFF, 0xFF, 0xFF
 };
 
-CPlayer *CxadflashPlayer::factory() { return new CxadflashPlayer(); }
+Player* CxadflashPlayer::factory()
+{
+    return new CxadflashPlayer();
+}
 
-void CxadflashPlayer::xadplayer_rewind(int) {
-
+void CxadflashPlayer::xadplayer_rewind(int)
+{
     setCurrentSpeed(xadHeader().speed);
     setCurrentRow(0);
 
@@ -90,21 +93,24 @@ void CxadflashPlayer::xadplayer_rewind(int) {
     getOpl()->writeReg(0xBD, 0x00);
 
     // assign default instrument
-    for (int i = 0; i < 9; i++) {
+    for(int i = 0; i < 9; i++)
+    {
         getOpl()->writeReg(0xA0 + i, 0x00);
         getOpl()->writeReg(0xB0 + i, 0x00);
     }
 
     // assign instruments
-    for (int i = 0; i < 9; i++)
-        for (int j = 0; j < 11; j++)
+    for(int i = 0; i < 9; i++)
+        for(int j = 0; j < 11; j++)
             getOpl()->writeReg(flash_adlib_registers[i * 11 + j], tune()[i * 12 + j]);
 }
 
-void CxadflashPlayer::xadplayer_update() {
+void CxadflashPlayer::xadplayer_update()
+{
     size_t event_pos = (tune()[0x600 + currentOrder()] * 1152) + (currentRow() * 18) + 0x633;
 
-    for (int i = 0; i < 9; i++) {
+    for(int i = 0; i < 9; i++)
+    {
         uint16_t flash_channel_freq = (getOpl()->readReg(0xB0 + i) << 8) + getOpl()->readReg(0xA0 + i);
 
         const auto event_b0 = tune()[event_pos++];
@@ -114,43 +120,47 @@ void CxadflashPlayer::xadplayer_update() {
                         event_b1);
 #endif
 
-        if (event_b0 == 0x80) // 0.0x80: Set Instrument
+        if(event_b0 == 0x80) // 0.0x80: Set Instrument
         {
-            for (int j = 0; j < 11; j++)
+            for(int j = 0; j < 11; j++)
                 getOpl()->writeReg(flash_adlib_registers[i * 11 + j], tune()[event_b1 * 12 + j]);
         }
-        else {
-            if (event_b1 == 0x01)
+        else
+        {
+            if(event_b1 == 0x01)
                 setCurrentRow(0x3F); // 1.0x01: Pattern Break
 
             unsigned char fx = (event_b1 >> 4);
             unsigned char fx_p = (event_b1 & 0x0F);
 
-            switch (fx) {
-            case 0x0A: // 1.0xAy: Set Carrier volume
-                getOpl()->writeReg(flash_adlib_registers[11 * i + 2], fx_p << 2);
-                break;
-            case 0x0B: // 1.0xBy: Set Modulator volume
-                getOpl()->writeReg(flash_adlib_registers[11 * i + 3], fx_p << 2);
-                break;
-            case 0x0C: // 1.0xCy: Set both operators volume
-                getOpl()->writeReg(flash_adlib_registers[11 * i + 2], fx_p << 2);
-                getOpl()->writeReg(flash_adlib_registers[11 * i + 3], fx_p << 2);
-                break;
-                //      case 0x0E:                      // 1.0xEy: ? (increase some
-                // value)
-            case 0x0F: // 1.0xFy: Set Speed
-                setCurrentSpeed(fx_p + 1);
-                break;
+            switch(fx)
+            {
+                case 0x0A: // 1.0xAy: Set Carrier volume
+                    getOpl()->writeReg(flash_adlib_registers[11 * i + 2], fx_p << 2);
+                    break;
+                case 0x0B: // 1.0xBy: Set Modulator volume
+                    getOpl()->writeReg(flash_adlib_registers[11 * i + 3], fx_p << 2);
+                    break;
+                case 0x0C: // 1.0xCy: Set both operators volume
+                    getOpl()->writeReg(flash_adlib_registers[11 * i + 2], fx_p << 2);
+                    getOpl()->writeReg(flash_adlib_registers[11 * i + 3], fx_p << 2);
+                    break;
+                    //      case 0x0E:                      // 1.0xEy: ? (increase some
+                    // value)
+                case 0x0F: // 1.0xFy: Set Speed
+                    setCurrentSpeed(fx_p + 1);
+                    break;
             }
 
-            if (event_b0) {
+            if(event_b0)
+            {
                 // mute channel
                 getOpl()->writeReg(0xA0 + i, getOpl()->readReg(0xA0 + i));
                 getOpl()->writeReg(0xB0 + i, getOpl()->readReg(0xB0 + i) & 0xDF);
 
                 // is note ?
-                if (event_b0 != 0x7F) {
+                if(event_b0 != 0x7F)
+                {
                     unsigned short note_encoded = flash_notes_encoded[event_b0];
                     unsigned short freq = flash_notes[(note_encoded >> 8) - 1];
 
@@ -161,13 +171,14 @@ void CxadflashPlayer::xadplayer_update() {
                 }
             }
 
-            if (fx == 0x01) // 1.0x1y: Fine Frequency Slide Up
+            if(fx == 0x01) // 1.0x1y: Fine Frequency Slide Up
             {
                 flash_channel_freq += (fx_p << 1);
 
                 getOpl()->writeReg(0xA0 + i, flash_channel_freq & 0xFF);
                 getOpl()->writeReg(0xB0 + i, flash_channel_freq >> 8);
-            } else if (fx == 0x02) // 1.0x2y: Fine Frequency Slide Down
+            }
+            else if(fx == 0x02) // 1.0x2y: Fine Frequency Slide Down
             {
                 flash_channel_freq -= (fx_p << 1);
 
@@ -178,15 +189,17 @@ void CxadflashPlayer::xadplayer_update() {
     }
 
     // next row
-    setCurrentRow(currentRow()+1);
+    setCurrentRow(currentRow() + 1);
 
     // end of pattern ?
-    if (currentRow() >= 0x40) {
+    if(currentRow() >= 0x40)
+    {
         setCurrentRow(0);
-        setCurrentOrder(currentOrder()+1);
+        setCurrentOrder(currentOrder() + 1);
 
         // end of module ?
-        if (tune()[0x600 + currentOrder()] == 0xFF) {
+        if(tune()[0x600 + currentOrder()] == 0xFF)
+        {
             setCurrentOrder(0);
 
             setXadLooping();

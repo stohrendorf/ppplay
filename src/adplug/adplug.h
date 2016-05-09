@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * AdPlug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -19,30 +21,25 @@
  * adplug.h - AdPlug main header file, by Simon Peter <dn.tlp@gmx.net>
  */
 
-#ifndef H_ADPLUG_ADPLUG
-#define H_ADPLUG_ADPLUG
-
-#include <string>
-
 #include "player.h"
 #include "players.h"
-#include <ymf262/opl3.h>
 
-class CAdPlug {
-    DISABLE_COPY(CAdPlug)
-    friend CPlayer::CPlayer();
+#include "ymf262/opl3.h"
+
+class AdPlug
+{
+    DISABLE_COPY(AdPlug)
+        friend Player::Player();
 
 public:
-    static const CPlayers s_players;
+    static const Players s_players;
 
-    static std::shared_ptr<CPlayer> factory(const std::string &fn, const CPlayers &pl = s_players);
+    static std::shared_ptr<Player> factory(const std::string &fn, const Players &pl = s_players);
 
     static std::string get_version();
 
 private:
-    static const CPlayerDesc allplayers[];
+    static const PlayerDesc allplayers[];
 
-    static const CPlayers &init_players(const CPlayerDesc pd[]);
+    static const Players &init_players(const PlayerDesc pd[]);
 };
-
-#endif

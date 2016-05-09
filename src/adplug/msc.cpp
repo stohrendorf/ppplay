@@ -25,19 +25,23 @@
 
 #include "msc.h"
 
-/*** public methods *************************************/
+ /*** public methods *************************************/
 
-CPlayer *CmscPlayer::factory() { return new CmscPlayer(); }
+Player* CmscPlayer::factory()
+{
+    return new CmscPlayer();
+}
 
-bool CmscPlayer::load(const std::string &filename) {
-
+bool CmscPlayer::load(const std::string& filename)
+{
     // open and validate the file
     FileStream bf(filename);
-    if (!bf)
+    if(!bf)
         return false;
 
     msc_header hdr;
-    if (!load_header(bf, &hdr)) {
+    if(!load_header(bf, &hdr))
+    {
         return false;
     }
 
@@ -47,14 +51,16 @@ bool CmscPlayer::load(const std::string &filename) {
     setCurrentTempo(hdr.mh_timer);
     addOrder(0);
 
-    if (!hdr.mh_nr_blocks) {
+    if(!hdr.mh_nr_blocks)
+    {
         return false;
     }
 
     // load compressed data blocks
     m_rawData.resize(hdr.mh_block_len);
 
-    for (int blk_num = 0; blk_num < hdr.mh_nr_blocks; blk_num++) {
+    for(int blk_num = 0; blk_num < hdr.mh_nr_blocks; blk_num++)
+    {
         m_mscData.emplace_back();
         uint16_t blockLength;
         bf >> blockLength;
@@ -68,20 +74,23 @@ bool CmscPlayer::load(const std::string &filename) {
     return true;
 }
 
-bool CmscPlayer::update() {
+bool CmscPlayer::update()
+{
     // output data
-    while (!m_delay) {
+    while(!m_delay)
+    {
         // decode data
         uint8_t cmnd;
-        if (!decode_octet(&cmnd))
+        if(!decode_octet(&cmnd))
             return false;
 
         uint8_t data;
-        if (!decode_octet(&data))
+        if(!decode_octet(&data))
             return false;
 
         // check for special commands
-        switch (cmnd) {
+        switch(cmnd)
+        {
             case 0xff:
                 // delay
                 m_delay = data;
@@ -91,16 +100,17 @@ bool CmscPlayer::update() {
                 // play command & data
                 getOpl()->writeReg(cmnd, data);
         } // command switch
-    }   // play pass
+    } // play pass
 
     // count delays
-    if (m_delay)
+    if(m_delay)
         m_delay--;
 
     return true;
 }
 
-void CmscPlayer::rewind(int) {
+void CmscPlayer::rewind(int)
+{
     // reset state
     m_decoderPrefix = 0;
     m_mscDataIndex = 0;
@@ -112,12 +122,14 @@ void CmscPlayer::rewind(int) {
     getOpl()->writeReg(1, 32);
 }
 
-size_t CmscPlayer::framesUntilUpdate() const {
+size_t CmscPlayer::framesUntilUpdate() const
+{
     // PC timer oscillator frequency / wait register
     return SampleRate * (currentTempo() ? currentTempo() : 0xffff) / 1193180;
 }
 
-std::string CmscPlayer::type() const {
+std::string CmscPlayer::type() const
+{
     char vstr[40];
 
     sprintf(vstr, "AdLib MSCplay (version %d)", m_version);
@@ -126,7 +138,8 @@ std::string CmscPlayer::type() const {
 
 /*** private methods *************************************/
 
-bool CmscPlayer::load_header(FileStream &bf, msc_header *hdr) {
+bool CmscPlayer::load_header(FileStream& bf, msc_header* hdr)
+{
     static const uint8_t msc_signature[MSC_SIGN_LEN] = {
         'C', 'e', 'r', 'e', 's', ' ', '\x13', ' ', 'M', 'S', 'C', 'p', 'l', 'a', 'y',
         ' '
@@ -136,27 +149,29 @@ bool CmscPlayer::load_header(FileStream &bf, msc_header *hdr) {
     bf >> *hdr;
 
     // check signature
-    if (memcmp(msc_signature, hdr->mh_sign, MSC_SIGN_LEN) != 0)
+    if(memcmp(msc_signature, hdr->mh_sign, MSC_SIGN_LEN) != 0)
         return false;
 
     // check version
-    if (hdr->mh_ver != 0)
+    if(hdr->mh_ver != 0)
         return false;
 
     return true;
 }
 
-bool CmscPlayer::decode_octet(uint8_t *output) {
-    if (m_mscDataIndex >= m_mscData.size())
+bool CmscPlayer::decode_octet(uint8_t* output)
+{
+    if(m_mscDataIndex >= m_mscData.size())
         return false;
 
     const std::vector<uint8_t>* blkData = &m_mscData[m_mscDataIndex];
-    while (true) {
-
+    while(true)
+    {
         // advance to next block if necessary
-        if (m_blockPos >= blkData->size() && m_prefixLength == 0) {
+        if(m_blockPos >= blkData->size() && m_prefixLength == 0)
+        {
             m_mscDataIndex++;
-            if (m_mscDataIndex >= m_mscData.size())
+            if(m_mscDataIndex >= m_mscData.size())
                 return false;
 
             blkData = &m_mscData[m_mscDataIndex];
@@ -165,84 +180,87 @@ bool CmscPlayer::decode_octet(uint8_t *output) {
         }
 
         // decode the compressed music data
-        uint8_t octet;        // decoded octet
-        switch (m_decoderPrefix) {
+        uint8_t octet; // decoded octet
+        switch(m_decoderPrefix)
+        {
+            // decode prefix
+            case 155:
+            case 175:
+                octet = (*blkData)[m_blockPos++];
+                if(octet == 0)
+                {
+                    // invalid prefix, output original
+                    octet = m_decoderPrefix;
+                    m_decoderPrefix = 0;
+                    break;
+                }
 
-        // decode prefix
-        case 155:
-        case 175:
-            octet = (*blkData)[m_blockPos++];
-            if (octet == 0) {
-                // invalid prefix, output original
-                octet = m_decoderPrefix;
-                m_decoderPrefix = 0;
-                break;
-            }
+                // isolate length and distance
+                m_prefixLength = (octet & 0x0F);
+                // len_corr = 2;
 
-            // isolate length and distance
-            m_prefixLength = (octet & 0x0F);
-            // len_corr = 2;
+                m_prefixDistance = (octet & 0xF0) >> 4;
+                if(m_decoderPrefix == 155)
+                    m_prefixDistance++;
 
-            m_prefixDistance = (octet & 0xF0) >> 4;
-            if (m_decoderPrefix == 155)
-                m_prefixDistance++;
-
-            // next decode step for respective prefix type
-            m_decoderPrefix++;
-            continue;
-
-            // check for extended length
-        case 156:
-            if (m_prefixLength == 15)
-                m_prefixLength += (*blkData)[m_blockPos++];
-
-            // add length correction and go for copy mode
-            m_decoderPrefix = 255;
-            continue;
-
-            // get extended distance
-        case 176:
-            m_prefixDistance += 17 + 16 * (*blkData)[m_blockPos++];
-            // len_corr = 3;
-
-            // check for extended length
-            m_decoderPrefix = 156;
-            continue;
-
-            // prefix copy mode
-        case 255:
-            if (m_rawDataPos >= m_prefixDistance)
-                octet = m_rawData.at(m_rawDataPos - m_prefixDistance);
-            else {
-                octet = 0;
-            }
-
-            m_prefixLength--;
-            if (m_prefixLength == 0) {
-                // back to normal mode
-                m_decoderPrefix = 0;
-            }
-
-            break;
-
-            // normal mode
-        default:
-            octet = (*blkData)[m_blockPos++];
-            if (octet == 155 || octet == 175) {
-                // it's a prefix, restart
-                m_decoderPrefix = octet;
+                // next decode step for respective prefix type
+                m_decoderPrefix++;
                 continue;
-            }
+
+                // check for extended length
+            case 156:
+                if(m_prefixLength == 15)
+                    m_prefixLength += (*blkData)[m_blockPos++];
+
+                // add length correction and go for copy mode
+                m_decoderPrefix = 255;
+                continue;
+
+                // get extended distance
+            case 176:
+                m_prefixDistance += 17 + 16 * (*blkData)[m_blockPos++];
+                // len_corr = 3;
+
+                // check for extended length
+                m_decoderPrefix = 156;
+                continue;
+
+                // prefix copy mode
+            case 255:
+                if(m_rawDataPos >= m_prefixDistance)
+                    octet = m_rawData.at(m_rawDataPos - m_prefixDistance);
+                else
+                {
+                    octet = 0;
+                }
+
+                m_prefixLength--;
+                if(m_prefixLength == 0)
+                {
+                    // back to normal mode
+                    m_decoderPrefix = 0;
+                }
+
+                break;
+
+                // normal mode
+            default:
+                octet = (*blkData)[m_blockPos++];
+                if(octet == 155 || octet == 175)
+                {
+                    // it's a prefix, restart
+                    m_decoderPrefix = octet;
+                    continue;
+                }
         } // prefix switch
 
         // output the octet
-        if (output != nullptr)
+        if(output != nullptr)
             *output = octet;
 
         m_rawData.at(m_rawDataPos++) = octet;
         break;
-    }
-    ; // decode pass
+    }; // decode pass
 
     return true;
 }

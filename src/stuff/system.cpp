@@ -14,13 +14,15 @@ std::string whereAmI()
     std::string path;
 #ifdef WIN32
     auto selfPathLen = GetModuleFileNameA(nullptr, tmp, sizeof(tmp));
-    if(selfPathLen == sizeof(tmp)) {
+    if(selfPathLen == sizeof(tmp))
+    {
         return std::string();
     }
 #else
     // this is not NUL-terminated.
-    auto selfPathLen = readlink("/proc/self/exe", tmp, sizeof(tmp)-1);
-    if(selfPathLen == -1) {
+    auto selfPathLen = readlink("/proc/self/exe", tmp, sizeof(tmp) - 1);
+    if(selfPathLen == -1)
+    {
         return std::string();
     }
 #endif

@@ -29,7 +29,7 @@
 
 namespace
 {
-light4cxx::Logger* logger = light4cxx::Logger::get( "ppg.sdl" );
+light4cxx::Logger* logger = light4cxx::Logger::get("ppg.sdl");
 }
 
 /**
@@ -39,7 +39,6 @@ light4cxx::Logger* logger = light4cxx::Logger::get( "ppg.sdl" );
 
 namespace ppg
 {
-
 namespace
 {
 /**
@@ -54,17 +53,19 @@ namespace
  *
  * Please note that the layers are constantly locked.
  */
-struct InstanceData final {
+struct InstanceData final
+{
 private:
-    DISABLE_COPY( InstanceData )
-    /**
-     * @brief Maps DOS color values to their on-screen representation
-     * @see ppg::Color
-     */
-    Uint32 dosColors[17]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    DISABLE_COPY(InstanceData)
+        /**
+         * @brief Maps DOS color values to their on-screen representation
+         * @see ppg::Color
+         */
+        Uint32 dosColors[17]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-    inline Uint32 mapColor( ppg::Color c ) const {
-        return dosColors[static_cast<int>( c )];
+    inline Uint32 mapColor(ppg::Color c) const
+    {
+        return dosColors[static_cast<int>(c)];
     }
 
     struct Char
@@ -76,9 +77,9 @@ private:
         Char() = default;
 
         Char(char c, Color fg, Color bg)
-            : chr{c}
-            , foreground{fg}
-            , background{bg}
+            : chr{ c }
+            , foreground{ fg }
+            , background{ bg }
         {
         }
 
@@ -127,7 +128,8 @@ private:
 public:
     InstanceData() = default;
 
-    ~InstanceData() {
+    ~InstanceData()
+    {
         reset();
     }
 
@@ -151,8 +153,10 @@ public:
         return !chars.empty();
     }
 
-    inline void reset() {
-        if( chars.empty()) {
+    inline void reset()
+    {
+        if(chars.empty())
+        {
             return;
         }
 
@@ -171,8 +175,9 @@ public:
         mainWindow = nullptr;
     }
 
-    bool contains( int x, int y ) const {
-        return ( x >= 0 ) && ( y >= 0 ) && ( y < windowHeight ) && ( x < windowWidth );
+    bool contains(int x, int y) const
+    {
+        return (x >= 0) && (y >= 0) && (y < windowHeight) && (x < windowWidth);
     }
 
 private:
@@ -186,8 +191,10 @@ private:
      * @param[in] y Y position
      * @param[in] color %Screen color value
      */
-    inline bool setPixel( SDL_Texture* texture, int x, int y, Uint32 color ) {
-        if( texture != nullptr && contains( x, y ) ) {
+    inline bool setPixel(SDL_Texture* texture, int x, int y, Uint32 color)
+    {
+        if(texture != nullptr && contains(x, y))
+        {
             void* pixels;
             int pitch;
             if(SDL_LockTexture(texture, nullptr, &pixels, &pitch) != 0)
@@ -199,16 +206,19 @@ private:
         return false;
     }
 
-    inline void setPixel( int x, int y, Uint32 color, Uint32* pixels, int pitch ) {
-        pixels[ y * pitch / sizeof( Uint32 ) + x] = color;
+    inline void setPixel(int x, int y, Uint32 color, Uint32* pixels, int pitch)
+    {
+        pixels[y * pitch / sizeof(Uint32) + x] = color;
     }
 
 public:
-    void clearPixels( Color c = Color::None ) {
-        clearTexture( pixelLayer, c );
+    void clearPixels(Color c = Color::None)
+    {
+        clearTexture(pixelLayer, c);
     }
 
-    void setPixel(int x, int y, Color color) {
+    void setPixel(int x, int y, Color color)
+    {
         if(!contains(x, y))
             return;
 
@@ -232,7 +242,8 @@ public:
     }
 
 private:
-    void clearTexture( SDL_Texture* texture, Color c ) const {
+    void clearTexture(SDL_Texture* texture, Color c) const
+    {
         Uint32 fmt;
         int access, w, h;
         SDL_QueryTexture(texture, &fmt, &access, &w, &h);
@@ -240,14 +251,14 @@ private:
         void* pixels;
         int pitch;
         SDL_LockTexture(texture, nullptr, &pixels, &pitch);
-        size_t count = h * pitch / sizeof( Uint32 );
-        Uint32 color = mapColor( c );
-        std::fill_n(reinterpret_cast<Uint32*>(pixels), count, color );
+        size_t count = h * pitch / sizeof(Uint32);
+        Uint32 color = mapColor(c);
+        std::fill_n(reinterpret_cast<Uint32*>(pixels), count, color);
         SDL_UnlockTexture(texture);
     }
 
 public:
-    bool init( int charWidth, int charHeight, const std::string& title );
+    bool init(int charWidth, int charHeight, const std::string& title);
 
 private:
     /**
@@ -259,36 +270,44 @@ private:
      * @param[in] background Background color
      * @param[in] opaque Set to @c false to draw a transparent char
      */
-    inline void drawChar( int x, int y, char c, Uint32 foreground, Uint32 background, Uint32* fgPixels, int fgPitch, Uint32* bgPixels, int bgPitch ) {
+    inline void drawChar(int x, int y, char c, Uint32 foreground, Uint32 background, Uint32* fgPixels, int fgPitch, Uint32* bgPixels, int bgPitch)
+    {
         x <<= 3;
         y <<= 4;
-        for( int py = 0; py < 16; py++ ) {
-            for( int px = 0; px < 8; px++ ) {
-                if( plFont816[uint8_t( c )][py] & ( 0x80 >> px ) ) {
-                    setPixel( x + px, y + py, foreground, fgPixels, fgPitch );
+        for(int py = 0; py < 16; py++)
+        {
+            for(int px = 0; px < 8; px++)
+            {
+                if(plFont816[uint8_t(c)][py] & (0x80 >> px))
+                {
+                    setPixel(x + px, y + py, foreground, fgPixels, fgPitch);
                 }
-                else {
-                    setPixel( x + px, y + py, mapColor( Color::None ), fgPixels, fgPitch);
+                else
+                {
+                    setPixel(x + px, y + py, mapColor(Color::None), fgPixels, fgPitch);
                 }
 
-                setPixel( x + px, y + py, background, bgPixels, bgPitch);
+                setPixel(x + px, y + py, background, bgPixels, bgPitch);
             }
         }
     }
 
 public:
-    void clear( char c, ppg::Color foreground, ppg::Color background );
-    void redraw( bool showMouse, int cursorX, int cursorY );
+    void clear(char c, ppg::Color foreground, ppg::Color background);
+    void redraw(bool showMouse, int cursorX, int cursorY);
 };
 
-bool InstanceData::init( int charWidth, int charHeight, const std::string& title )
+bool InstanceData::init(int charWidth, int charHeight, const std::string& title)
 {
-    if( mainWindow != nullptr ) {
+    if(mainWindow != nullptr)
+    {
         return false;
     }
-    if( !SDL_WasInit( SDL_INIT_VIDEO ) ) {
-        if( SDL_Init( SDL_INIT_VIDEO ) == -1 ) {
-            BOOST_THROW_EXCEPTION( std::runtime_error( "Initialization of SDL Video surface failed" ) );
+    if(!SDL_WasInit(SDL_INIT_VIDEO))
+    {
+        if(SDL_Init(SDL_INIT_VIDEO) == -1)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Initialization of SDL Video surface failed"));
         }
     }
     windowWidth = charWidth * 8;
@@ -296,58 +315,62 @@ bool InstanceData::init( int charWidth, int charHeight, const std::string& title
     this->charWidth = charWidth;
     this->charHeight = charHeight;
 
-    if(SDL_CreateWindowAndRenderer(windowWidth, windowHeight, 0, &mainWindow, &mainRenderer) != 0) {
+    if(SDL_CreateWindowAndRenderer(windowWidth, windowHeight, 0, &mainWindow, &mainRenderer) != 0)
+    {
         BOOST_THROW_EXCEPTION(std::runtime_error("Screen Initialization failed"));
     }
     SDL_SetWindowTitle(mainWindow, title.c_str());
-    if( !mainWindow ) {
-        BOOST_THROW_EXCEPTION( std::runtime_error( "Window Initialization failed" ) );
+    if(!mainWindow)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Window Initialization failed"));
     }
     if(!mainRenderer)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Renderer Initialization failed"));
     }
 
-    if( const char* videoDrv = SDL_GetCurrentVideoDriver() ) {
-        logger->info( L4CXX_LOCATION, "Using video driver '%s'", videoDrv );
+    if(const char* videoDrv = SDL_GetCurrentVideoDriver())
+    {
+        logger->info(L4CXX_LOCATION, "Using video driver '%s'", videoDrv);
     }
 
-    backgroundLayer = SDL_CreateTexture( mainRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, windowWidth, windowHeight);
+    backgroundLayer = SDL_CreateTexture(mainRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, windowWidth, windowHeight);
     clearTexture(backgroundLayer, Color::Black);
     SDL_SetTextureBlendMode(backgroundLayer, SDL_BLENDMODE_NONE);
-    pixelLayer = SDL_CreateTexture( mainRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, windowWidth, windowHeight);
+    pixelLayer = SDL_CreateTexture(mainRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, windowWidth, windowHeight);
     clearTexture(pixelLayer, Color::None);
     SDL_SetTextureBlendMode(pixelLayer, SDL_BLENDMODE_BLEND);
-    foregroundLayer = SDL_CreateTexture( mainRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, windowWidth, windowHeight);
-    clearTexture(foregroundLayer, Color::Black );
+    foregroundLayer = SDL_CreateTexture(mainRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, windowWidth, windowHeight);
+    clearTexture(foregroundLayer, Color::Black);
     SDL_SetTextureBlendMode(foregroundLayer, SDL_BLENDMODE_BLEND);
 
-    dosColors[static_cast<int>( Color::None )]        = 0x00000000; // transparent
-    dosColors[static_cast<int>( Color::Black )]       = 0x000000ff; // black
-    dosColors[static_cast<int>( Color::Blue )]        = 0x0000aaff; // blue
-    dosColors[static_cast<int>( Color::Green )]       = 0x00aa00ff; // green
-    dosColors[static_cast<int>( Color::Aqua )]        = 0x00aaaaff; // aqua
-    dosColors[static_cast<int>( Color::Red )]         = 0xaa0000ff; // red
-    dosColors[static_cast<int>( Color::Purple )]      = 0xaa00aaff; // purple
-    dosColors[static_cast<int>( Color::Brown )]       = 0xaa5500ff; // brown
-    dosColors[static_cast<int>( Color::White )]       = 0xaaaaaaff; // white
-    dosColors[static_cast<int>( Color::Gray )]        = 0x555555ff; // gray
-    dosColors[static_cast<int>( Color::LightBlue )]   = 0x5555ffff; // light blue
-    dosColors[static_cast<int>( Color::LightGreen )]  = 0x55ff55ff; // light green
-    dosColors[static_cast<int>( Color::LightAqua )]   = 0x55ffffff; // light aqua
-    dosColors[static_cast<int>( Color::LightRed )]    = 0xff5555ff; // light red (orange?)
-    dosColors[static_cast<int>( Color::LightPurple )] = 0xff55ffff; // light purple
-    dosColors[static_cast<int>( Color::Yellow )]      = 0xffff55ff; // yellow
-    dosColors[static_cast<int>( Color::BrightWhite )] = 0xffffffff; // bright white
+    dosColors[static_cast<int>(Color::None)] = 0x00000000; // transparent
+    dosColors[static_cast<int>(Color::Black)] = 0x000000ff; // black
+    dosColors[static_cast<int>(Color::Blue)] = 0x0000aaff; // blue
+    dosColors[static_cast<int>(Color::Green)] = 0x00aa00ff; // green
+    dosColors[static_cast<int>(Color::Aqua)] = 0x00aaaaff; // aqua
+    dosColors[static_cast<int>(Color::Red)] = 0xaa0000ff; // red
+    dosColors[static_cast<int>(Color::Purple)] = 0xaa00aaff; // purple
+    dosColors[static_cast<int>(Color::Brown)] = 0xaa5500ff; // brown
+    dosColors[static_cast<int>(Color::White)] = 0xaaaaaaff; // white
+    dosColors[static_cast<int>(Color::Gray)] = 0x555555ff; // gray
+    dosColors[static_cast<int>(Color::LightBlue)] = 0x5555ffff; // light blue
+    dosColors[static_cast<int>(Color::LightGreen)] = 0x55ff55ff; // light green
+    dosColors[static_cast<int>(Color::LightAqua)] = 0x55ffffff; // light aqua
+    dosColors[static_cast<int>(Color::LightRed)] = 0xff5555ff; // light red (orange?)
+    dosColors[static_cast<int>(Color::LightPurple)] = 0xff55ffff; // light purple
+    dosColors[static_cast<int>(Color::Yellow)] = 0xffff55ff; // yellow
+    dosColors[static_cast<int>(Color::BrightWhite)] = 0xffffffff; // bright white
 
     chars.resize(charWidth * charHeight);
 
     return true;
 }
 
-void InstanceData::clear( char c, ppg::Color foreground, ppg::Color background )
+void InstanceData::clear(char c, ppg::Color foreground, ppg::Color background)
 {
-    for(CharCell& cell : chars) {
+    for(CharCell& cell : chars)
+    {
         cell.chr.chr = c;
         cell.chr.foreground = foreground;
         cell.chr.background = background;
@@ -356,7 +379,7 @@ void InstanceData::clear( char c, ppg::Color foreground, ppg::Color background )
     clearPixels();
 }
 
-void InstanceData::redraw( bool showMouse, int cursorX, int cursorY )
+void InstanceData::redraw(bool showMouse, int cursorX, int cursorY)
 {
     void* fgPixels;
     void* bgPixels;
@@ -370,10 +393,13 @@ void InstanceData::redraw( bool showMouse, int cursorX, int cursorY )
     {
         // redraw the screen characters if changed
         size_t ofs = 0;
-        for( size_t y = 0; y < charHeight; y++ ) {
-            for( size_t x = 0; x < charWidth; x++, ofs++ ) {
-                if( chars[ofs].isDirty() ) {
-                    drawChar( x, y, chars[ofs].chr.chr, mapColor( chars[ofs].chr.foreground ), mapColor( chars[ofs].chr.background ), static_cast<Uint32*>(fgPixels), fgPitch, static_cast<Uint32*>(bgPixels), bgPitch );
+        for(size_t y = 0; y < charHeight; y++)
+        {
+            for(size_t x = 0; x < charWidth; x++, ofs++)
+            {
+                if(chars[ofs].isDirty())
+                {
+                    drawChar(x, y, chars[ofs].chr.chr, mapColor(chars[ofs].chr.foreground), mapColor(chars[ofs].chr.background), static_cast<Uint32*>(fgPixels), fgPitch, static_cast<Uint32*>(bgPixels), bgPitch);
                     chars[ofs].visible = chars[ofs].chr;
                 }
             }
@@ -381,11 +407,12 @@ void InstanceData::redraw( bool showMouse, int cursorX, int cursorY )
     }
 
     // show the mouse cursor if applicable
-    if( showMouse && contains( cursorX, cursorY ) ) {
+    if(showMouse && contains(cursorX, cursorY))
+    {
         size_t ofs = cursorX + cursorY * charWidth;
-        Uint32 c1 = mapColor( ~chars[ofs].visible.foreground );
-        Uint32 c2 = mapColor( ~chars[ofs].visible.background );
-        drawChar( cursorX, cursorY, chars[ofs].chr.chr, c1, c2, static_cast<Uint32*>(fgPixels), fgPitch, static_cast<Uint32*>(bgPixels), bgPitch );
+        Uint32 c1 = mapColor(~chars[ofs].visible.foreground);
+        Uint32 c2 = mapColor(~chars[ofs].visible.background);
+        drawChar(cursorX, cursorY, chars[ofs].chr.chr, c1, c2, static_cast<Uint32*>(fgPixels), fgPitch, static_cast<Uint32*>(bgPixels), bgPitch);
         chars[ofs].visible.foreground = ~chars[ofs].chr.foreground;
         chars[ofs].visible.background = ~chars[ofs].chr.background;
     }
@@ -405,7 +432,6 @@ void InstanceData::redraw( bool showMouse, int cursorX, int cursorY )
 }
 
 InstanceData instanceData;
-
 } // anonymous namespace
 
 SDLScreen* SDLScreen::instance()
@@ -413,82 +439,86 @@ SDLScreen* SDLScreen::instance()
     return instanceData.screen;
 }
 
-SDLScreen::SDLScreen( int w, int h, const std::string& title ) : Widget( nullptr ), SDLTimer(1000/30), m_cursorX( 0 ), m_cursorY( 0 )
+SDLScreen::SDLScreen(int w, int h, const std::string& title) : Widget(nullptr), SDLTimer(1000 / 30), m_cursorX(0), m_cursorY(0)
 {
-    if( !instanceData.init( w, h, title ) ) {
-        BOOST_THROW_EXCEPTION( std::runtime_error( "SDL Screen Surface already aquired" ) );
+    if(!instanceData.init(w, h, title))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("SDL Screen Surface already aquired"));
     }
-    Widget::setPosition( 0, 0 );
-    Widget::setSize( w, h );
-    SDL_ShowCursor( 0 );
+    Widget::setPosition(0, 0);
+    Widget::setSize(w, h);
+    SDL_ShowCursor(0);
     instanceData.screen = this;
 }
 
 SDLScreen::~SDLScreen()
 {
-    LockGuard guard( this );
+    LockGuard guard(this);
     instanceData.screen = nullptr;
     instanceData.reset();
 }
 
-void SDLScreen::clear( uint8_t c, Color foreground, Color background )
+void SDLScreen::clear(uint8_t c, Color foreground, Color background)
 {
-    LockGuard guard( this );
-    instanceData.clear( c, foreground, background );
+    LockGuard guard(this);
+    instanceData.clear(c, foreground, background);
 }
 
 void SDLScreen::drawThis()
 {
-    LockGuard guard( this );
-    instanceData.redraw( hasMouseFocus(), m_cursorX, m_cursorY );
+    LockGuard guard(this);
+    instanceData.redraw(hasMouseFocus(), m_cursorX, m_cursorY);
 }
 
-void SDLScreen::drawChar( int x, int y, char c )
+void SDLScreen::drawChar(int x, int y, char c)
 {
-    LockGuard guard( this );
-    if( !instanceData.contains( x, y ) ) {
-        logger->error( L4CXX_LOCATION, "Out of range: %d, %d", x, y );
+    LockGuard guard(this);
+    if(!instanceData.contains(x, y))
+    {
+        logger->error(L4CXX_LOCATION, "Out of range: %d, %d", x, y);
         return;
     }
     instanceData.setChar(x, y, c);
 }
 
-void SDLScreen::setFgColorAt( int x, int y, Color c )
+void SDLScreen::setFgColorAt(int x, int y, Color c)
 {
-    LockGuard guard( this );
-    if( !instanceData.contains( x, y ) ) {
+    LockGuard guard(this);
+    if(!instanceData.contains(x, y))
+    {
         return;
     }
     instanceData.setFgColor(x, y, c);
 }
 
-void SDLScreen::setBgColorAt( int x, int y, Color c )
+void SDLScreen::setBgColorAt(int x, int y, Color c)
 {
-    LockGuard guard( this );
-    if( !instanceData.contains( x, y ) ) {
+    LockGuard guard(this);
+    if(!instanceData.contains(x, y))
+    {
         return;
     }
     instanceData.setBgColor(x, y, c);
 }
 
-bool SDLScreen::onMouseMove( int x, int y )
+bool SDLScreen::onMouseMove(int x, int y)
 {
     m_cursorX = x;
     m_cursorY = y;
-    Widget::onMouseMove( x, y );
+    Widget::onMouseMove(x, y);
     return true;
 }
 
 bool SDLScreen::hasMouseFocus() const
 {
-    LockGuard guard( this );
-    return ( SDL_GetWindowFlags(instanceData.mainWindow)&SDL_WINDOW_MOUSE_FOCUS) != 0;
+    LockGuard guard(this);
+    return (SDL_GetWindowFlags(instanceData.mainWindow)&SDL_WINDOW_MOUSE_FOCUS) != 0;
 }
 
-void SDLScreen::drawPixel( int x, int y, Color c )
+void SDLScreen::drawPixel(int x, int y, Color c)
 {
-    LockGuard guard( this );
-    instanceData.setPixel( x, y, c );
+    LockGuard guard(this);
+    instanceData.setPixel(x, y, c);
 }
 
 void SDLScreen::lockPixels()
@@ -503,23 +533,22 @@ void SDLScreen::unlockPixels()
     instanceData.unlockPixels();
 }
 
-void SDLScreen::clearPixels( Color c )
+void SDLScreen::clearPixels(Color c)
 {
-    LockGuard guard( this );
-    instanceData.clearPixels( c );
+    LockGuard guard(this);
+    instanceData.clearPixels(c);
 }
 
 void SDLScreen::onTimer()
 {
-    LockGuard guard( this );
+    LockGuard guard(this);
     // chars will be the first deleted, visibleColorsB will be last initialized
     if(!instanceData.isValid())
         return;
-    clear( ' ', ppg::Color::White, ppg::Color::Black );
+    clear(' ', ppg::Color::White, ppg::Color::Black);
     clearPixels();
     draw();
 }
-
 } // namespace ppg
 
 /**

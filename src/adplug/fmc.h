@@ -1,3 +1,5 @@
+#pragma once
+
 /*
   Adplug - Replayer for many OPL2/OPL3 audio file formats.
   Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,32 +23,35 @@
 
 #include "protrack.h"
 
-class CfmcLoader : public CmodPlayer {
+class CfmcLoader : public CmodPlayer
+{
     DISABLE_COPY(CfmcLoader)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CfmcLoader() = default;
 
-    bool load(const std::string &filename);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const;
-    std::string title() const;
-    std::string instrumentTitle(size_t n) const;
-    uint32_t instrumentCount() const;
+    std::string type() const override;
+    std::string title() const override;
+    std::string instrumentTitle(size_t n) const override;
+    uint32_t instrumentCount() const override;
 
 private:
 
 #pragma pack(push,1)
-    struct fmc_event {
+    struct fmc_event
+    {
         uint8_t byte0;
         uint8_t byte1;
         uint8_t byte2;
     };
 #pragma pack(pop)
 
-    struct fmc_header {
+    struct fmc_header
+    {
         char id[4] = "";
         char title[21] = "";
         uint8_t numchan = 0;
@@ -54,7 +59,8 @@ private:
     fmc_header header{};
 
 #pragma pack(push,1)
-    struct fmc_instrument {
+    struct fmc_instrument
+    {
         uint8_t synthesis;
         uint8_t feedback;
 

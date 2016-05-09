@@ -36,18 +36,23 @@
 
 #include "stream/filestream.h"
 
-/*** Public methods ***/
+ /*** Public methods ***/
 
-CPlayer *CadtrackLoader::factory() { return new CadtrackLoader(); }
+Player* CadtrackLoader::factory()
+{
+    return new CadtrackLoader();
+}
 
-bool CadtrackLoader::load(const std::string &filename) {
+bool CadtrackLoader::load(const std::string& filename)
+{
     FileStream f(filename);
-    if (!f)
+    if(!f)
         return false;
     unsigned short rwp;
     unsigned char chp, pnote = 0;
     // file validation
-    if(f.extension() != ".sng" || f.size() != 36000) {
+    if(f.extension() != ".sng" || f.size() != 36000)
+    {
         return false;
     }
 
@@ -56,7 +61,8 @@ bool CadtrackLoader::load(const std::string &filename) {
     instfilename += ".ins";
     {
         FileStream instf(instfilename);
-        if (!instf || instf.size() != 468) {
+        if(!instf || instf.size() != 468)
+        {
             return false;
         }
 
@@ -70,7 +76,8 @@ bool CadtrackLoader::load(const std::string &filename) {
         setInitialSpeed(3);
 
         // load instruments from instruments file
-        for (int i = 0; i < 9; i++) {
+        for(int i = 0; i < 9; i++)
+        {
             Instrument myinst;
             f >> myinst;
             addInstrument(&myinst);
@@ -78,62 +85,67 @@ bool CadtrackLoader::load(const std::string &filename) {
     }
 
     // load file
-    for (rwp = 0; rwp < 1000; rwp++) {
-        for (chp = 0; chp < 9; chp++) {
+    for(rwp = 0; rwp < 1000; rwp++)
+    {
+        for(chp = 0; chp < 9; chp++)
+        {
             // read next record
             char note[2];
             f.read(note, 2);
             uint8_t octave;
             f >> octave;
             f.seekrel(1);
-            switch (*note) {
-            case 'C':
-                if (note[1] == '#')
-                    pnote = 2;
-                else
-                    pnote = 1;
-                break;
-            case 'D':
-                if (note[1] == '#')
-                    pnote = 4;
-                else
-                    pnote = 3;
-                break;
-            case 'E':
-                pnote = 5;
-                break;
-            case 'F':
-                if (note[1] == '#')
-                    pnote = 7;
-                else
-                    pnote = 6;
-                break;
-            case 'G':
-                if (note[1] == '#')
-                    pnote = 9;
-                else
-                    pnote = 8;
-                break;
-            case 'A':
-                if (note[1] == '#')
-                    pnote = 11;
-                else
-                    pnote = 10;
-                break;
-            case 'B':
-                pnote = 12;
-                break;
-            case '\0':
-                if (note[1] == '\0')
-                    patternCell(chp, rwp).note = 127;
-                else {
+            switch(*note)
+            {
+                case 'C':
+                    if(note[1] == '#')
+                        pnote = 2;
+                    else
+                        pnote = 1;
+                    break;
+                case 'D':
+                    if(note[1] == '#')
+                        pnote = 4;
+                    else
+                        pnote = 3;
+                    break;
+                case 'E':
+                    pnote = 5;
+                    break;
+                case 'F':
+                    if(note[1] == '#')
+                        pnote = 7;
+                    else
+                        pnote = 6;
+                    break;
+                case 'G':
+                    if(note[1] == '#')
+                        pnote = 9;
+                    else
+                        pnote = 8;
+                    break;
+                case 'A':
+                    if(note[1] == '#')
+                        pnote = 11;
+                    else
+                        pnote = 10;
+                    break;
+                case 'B':
+                    pnote = 12;
+                    break;
+                case '\0':
+                    if(note[1] == '\0')
+                        patternCell(chp, rwp).note = 127;
+                    else
+                    {
+                        return false;
+                    }
+                    break;
+                default:
                     return false;
-                }
-                break;
-            default:
-                return false;
             }
-            if ((*note) != '\0') {
+            if((*note) != '\0')
+            {
                 patternCell(chp, rwp).note = pnote + (octave * 12);
                 patternCell(chp, rwp).instrument = chp + 1;
             }
@@ -151,7 +163,8 @@ size_t CadtrackLoader::framesUntilUpdate() const
 
 /*** Private methods ***/
 
-void CadtrackLoader::addInstrument(Instrument *i) {
+void CadtrackLoader::addInstrument(Instrument* i)
+{
     CmodPlayer::Instrument& inst = addInstrument();
     // Carrier "Amp Mod / Vib / Env Type / KSR / Multiple" register
     inst.data[2] = i->op[Carrier].appampmod ? 1 << 7 : 0;

@@ -26,37 +26,43 @@
 
 #include "sa2.h"
 
-CPlayer *Csa2Loader::factory() { return new Csa2Loader(); }
+Player* Csa2Loader::factory()
+{
+    return new Csa2Loader();
+}
 
-bool Csa2Loader::load(const std::string &filename) {
+bool Csa2Loader::load(const std::string& filename)
+{
     FileStream f(filename);
-    if (!f)
+    if(!f)
         return false;
 
 #pragma pack(push,1)
-    struct InstrumentData {
+    struct InstrumentData
+    {
         uint8_t data[11], arpstart, arpspeed, arppos, arpspdcnt;
     };
 #pragma pack(pop)
 
     const Command convfx[16] = { Command::None,
-                                 Command::SlideUp,
-                                 Command::SlideDown,
-                                 Command::Porta,
-                                 Command::Vibrato,
-                                 Command::PortaVolSlide,
-                                 Command::VibVolSlide,
-                                 Command::Sentinel,
-                                 Command::NoteOff,
-                                 Command::Sentinel,
-                                 Command::SA2VolSlide,
-                                 Command::OrderJump,
-                                 Command::SetFineVolume,
-                                 Command::PatternBreak,
-                                 Command::Sentinel,
-                                 Command::SA2Speed };
+        Command::SlideUp,
+        Command::SlideDown,
+        Command::Porta,
+        Command::Vibrato,
+        Command::PortaVolSlide,
+        Command::VibVolSlide,
+        Command::Sentinel,
+        Command::NoteOff,
+        Command::Sentinel,
+        Command::SA2VolSlide,
+        Command::OrderJump,
+        Command::SetFineVolume,
+        Command::PatternBreak,
+        Command::Sentinel,
+        Command::SA2Speed };
     unsigned char sat_type;
-    enum SAT_TYPE {
+    enum SAT_TYPE
+    {
         HAS_ARPEGIOLIST = (1 << 7),
         HAS_V7PATTERNS = (1 << 6),
         HAS_ACTIVECHANNELS = (1 << 5),
@@ -72,60 +78,65 @@ bool Csa2Loader::load(const std::string &filename) {
     f >> m_header.version;
 
     // file validation section
-    if (strncmp(m_header.sadt, "SAdT", 4)) {
+    if(strncmp(m_header.sadt, "SAdT", 4))
+    {
         return false;
     }
     int notedis = 0;
-    switch (m_header.version) {
-    case 1:
-        notedis = +0x18;
-        sat_type = HAS_UNKNOWN127 | HAS_OLDPATTERNS | HAS_OLDBPM;
-        break;
-    case 2:
-        notedis = +0x18;
-        sat_type = HAS_OLDPATTERNS | HAS_OLDBPM;
-        break;
-    case 3:
-        notedis = +0x0c;
-        sat_type = HAS_OLDPATTERNS | HAS_OLDBPM;
-        break;
-    case 4:
-        notedis = +0x0c;
-        sat_type = HAS_ARPEGIO | HAS_OLDPATTERNS | HAS_OLDBPM;
-        break;
-    case 5:
-        notedis = +0x0c;
-        sat_type = HAS_ARPEGIO | HAS_ARPEGIOLIST | HAS_OLDPATTERNS | HAS_OLDBPM;
-        break;
-    case 6:
-        sat_type = HAS_ARPEGIO | HAS_ARPEGIOLIST | HAS_OLDPATTERNS | HAS_OLDBPM;
-        break;
-    case 7:
-        sat_type = HAS_ARPEGIO | HAS_ARPEGIOLIST | HAS_V7PATTERNS;
-        break;
-    case 8:
-        sat_type = HAS_ARPEGIO | HAS_ARPEGIOLIST | HAS_TRACKORDER;
-        break;
-    case 9:
-        sat_type = HAS_ARPEGIO | HAS_ARPEGIOLIST | HAS_TRACKORDER | HAS_ACTIVECHANNELS;
-        break;
-    default: /* unknown */
-        return false;
+    switch(m_header.version)
+    {
+        case 1:
+            notedis = +0x18;
+            sat_type = HAS_UNKNOWN127 | HAS_OLDPATTERNS | HAS_OLDBPM;
+            break;
+        case 2:
+            notedis = +0x18;
+            sat_type = HAS_OLDPATTERNS | HAS_OLDBPM;
+            break;
+        case 3:
+            notedis = +0x0c;
+            sat_type = HAS_OLDPATTERNS | HAS_OLDBPM;
+            break;
+        case 4:
+            notedis = +0x0c;
+            sat_type = HAS_ARPEGIO | HAS_OLDPATTERNS | HAS_OLDBPM;
+            break;
+        case 5:
+            notedis = +0x0c;
+            sat_type = HAS_ARPEGIO | HAS_ARPEGIOLIST | HAS_OLDPATTERNS | HAS_OLDBPM;
+            break;
+        case 6:
+            sat_type = HAS_ARPEGIO | HAS_ARPEGIOLIST | HAS_OLDPATTERNS | HAS_OLDBPM;
+            break;
+        case 7:
+            sat_type = HAS_ARPEGIO | HAS_ARPEGIOLIST | HAS_V7PATTERNS;
+            break;
+        case 8:
+            sat_type = HAS_ARPEGIO | HAS_ARPEGIOLIST | HAS_TRACKORDER;
+            break;
+        case 9:
+            sat_type = HAS_ARPEGIO | HAS_ARPEGIOLIST | HAS_TRACKORDER | HAS_ACTIVECHANNELS;
+            break;
+        default: /* unknown */
+            return false;
     }
 
     // load section
     // instruments
-    for (int i = 0; i < 31; i++) {
+    for(int i = 0; i < 31; i++)
+    {
         InstrumentData sa2Instr;
         CmodPlayer::Instrument& inst = addInstrument();
-        if (sat_type & HAS_ARPEGIO) {
+        if(sat_type & HAS_ARPEGIO)
+        {
             f >> sa2Instr;
 
             inst.arpeggioStart = sa2Instr.arpstart;
             inst.arpeggioSpeed = sa2Instr.arpspeed;
             inst.arpeggioPos = sa2Instr.arppos;
         }
-        else {
+        else
+        {
             f.read(sa2Instr.data, 11);
             inst.arpeggioStart = 0;
             inst.arpeggioSpeed = 0;
@@ -137,7 +148,8 @@ bool Csa2Loader::load(const std::string &filename) {
     }
 
     // instrument names
-    for (int i = 0; i < 29; i++) {
+    for(int i = 0; i < 29; i++)
+    {
         f.read(m_instrumentNames[i], 17);
     }
 
@@ -146,16 +158,16 @@ bool Csa2Loader::load(const std::string &filename) {
     {
         uint8_t orderData[128];
         f.read(orderData, 128);
-        if (sat_type & HAS_UNKNOWN127)
+        if(sat_type & HAS_UNKNOWN127)
             f.seekrel(127);
         //f >> m_maxUsedPattern;
         f.seekrel(2);
 
         uint8_t orderCount;
         f >> orderCount;
-        if(orderCount>128)
+        if(orderCount > 128)
             orderCount = 128;
-        for(uint8_t i=0; i<orderCount; ++i)
+        for(uint8_t i = 0; i < orderCount; ++i)
             addOrder(orderData[i]);
 
         uint8_t restartPos;
@@ -166,14 +178,17 @@ bool Csa2Loader::load(const std::string &filename) {
     // bpm
     uint16_t initialTempo;
     f >> initialTempo;
-    if (sat_type & HAS_OLDBPM) {
+    if(sat_type & HAS_OLDBPM)
+    {
         setInitialTempo(initialTempo * 125 / 50);
     }
-    else {
+    else
+    {
         setInitialTempo(initialTempo);
     }
 
-    if (sat_type & HAS_ARPEGIOLIST) {
+    if(sat_type & HAS_ARPEGIOLIST)
+    {
         ArpeggioData data;
         f.read(data.data(), 256);
         setArpeggioList(data);
@@ -181,37 +196,46 @@ bool Csa2Loader::load(const std::string &filename) {
         setArpeggioCommands(data);
     }
 
-    for (int i = 0; i < 64; i++) { // track orders
-        for (int j = 0; j < 9; j++) {
-            if (sat_type & HAS_TRACKORDER) {
+    for(int i = 0; i < 64; i++)
+    { // track orders
+        for(int j = 0; j < 9; j++)
+        {
+            if(sat_type & HAS_TRACKORDER)
+            {
                 uint8_t tmp;
                 f >> tmp;
                 setCellColumnMapping(i, j, tmp);
             }
-            else {
+            else
+            {
                 setCellColumnMapping(i, j, i * 9 + j);
             }
         }
     }
 
-    if (sat_type & HAS_ACTIVECHANNELS) {
+    if(sat_type & HAS_ACTIVECHANNELS)
+    {
         disableAllChannels();
         uint16_t tmp;
         f >> tmp;
-        for(auto i=0; i<16; ++i)
-            if(tmp & (0x8000>>i))
+        for(auto i = 0; i < 16; ++i)
+            if(tmp & (0x8000 >> i))
                 enableChannel(i);
     }
 
     // track data
-    if (sat_type & HAS_OLDPATTERNS) {
+    if(sat_type & HAS_OLDPATTERNS)
+    {
         int i = 0;
-        while(f.pos() < f.size()) {
-            for (int j = 0; j < 64; j++) {
-                for (int k = 0; k < 9; k++) {
+        while(f.pos() < f.size())
+        {
+            for(int j = 0; j < 64; j++)
+            {
+                for(int k = 0; k < 9; k++)
+                {
                     uint8_t buf;
                     f >> buf;
-                    PatternCell& cell = patternCell(i+k,j);
+                    PatternCell& cell = patternCell(i + k, j);
                     cell.note = buf ? (buf + notedis) : 0;
                     f >> buf;
                     cell.instrument = buf;
@@ -226,14 +250,18 @@ bool Csa2Loader::load(const std::string &filename) {
             i += 9;
         }
     }
-    else if (sat_type & HAS_V7PATTERNS) {
+    else if(sat_type & HAS_V7PATTERNS)
+    {
         int i = 0;
-        while (f.pos() < f.size()) {
-            for (int j = 0; j < 64; j++) {
-                for (int k = 0; k < 9; k++) {
+        while(f.pos() < f.size())
+        {
+            for(int j = 0; j < 64; j++)
+            {
+                for(int k = 0; k < 9; k++)
+                {
                     uint8_t buf;
                     f >> buf;
-                    PatternCell& cell = patternCell(i+k,j);
+                    PatternCell& cell = patternCell(i + k, j);
                     cell.note = buf >> 1;
                     cell.instrument = (buf & 1) << 4;
                     f >> buf;
@@ -247,13 +275,16 @@ bool Csa2Loader::load(const std::string &filename) {
             i += 9;
         }
     }
-    else {
+    else
+    {
         int i = 0;
-        while (f && f.pos() < f.size()) {
-            for (int j = 0; j < 64; j++) {
+        while(f && f.pos() < f.size())
+        {
+            for(int j = 0; j < 64; j++)
+            {
                 uint8_t buf;
                 f >> buf;
-                PatternCell& cell = patternCell(i,j);
+                PatternCell& cell = patternCell(i, j);
                 cell.note = buf >> 1;
                 cell.instrument = (buf & 1) << 4;
                 f >> buf;
@@ -268,44 +299,48 @@ bool Csa2Loader::load(const std::string &filename) {
     }
 
     // fix instrument names
-    for (int i = 0; i < 29; i++)
-        for (int j = 0; j < 17; j++)
-            if (!m_instrumentNames[i][j])
+    for(int i = 0; i < 29; i++)
+        for(int j = 0; j < 17; j++)
+            if(!m_instrumentNames[i][j])
                 m_instrumentNames[i][j] = ' ';
 
     rewind(0); // rewind module
     return true;
 }
 
-std::string Csa2Loader::type() const {
+std::string Csa2Loader::type() const
+{
     char tmpstr[40];
 
     sprintf(tmpstr, "Surprise! Adlib Tracker 2 (version %d)", m_header.version);
     return std::string(tmpstr);
 }
 
-std::string Csa2Loader::title() const {
+std::string Csa2Loader::title() const
+{
     char bufinst[29 * 17], buf[18];
     int i, ptr;
 
     // parse instrument names for song name
     memset(bufinst, '\0', 29 * 17);
-    for (i = 0; i < 29; i++) {
+    for(i = 0; i < 29; i++)
+    {
         buf[16] = ' ';
         buf[17] = '\0';
         memcpy(buf, m_instrumentNames[i] + 1, 16);
-        for (ptr = 16; ptr > 0; ptr--)
-            if (buf[ptr] == ' ')
+        for(ptr = 16; ptr > 0; ptr--)
+            if(buf[ptr] == ' ')
                 buf[ptr] = '\0';
-            else {
-                if (ptr < 16)
+            else
+            {
+                if(ptr < 16)
                     buf[ptr + 1] = ' ';
                 break;
             }
         strcat(bufinst, buf);
     }
 
-    if (strchr(bufinst, '"'))
+    if(strchr(bufinst, '"'))
         return std::string(bufinst, strchr(bufinst, '"') - bufinst + 1,
                            strrchr(bufinst, '"') - strchr(bufinst, '"') - 1);
     else

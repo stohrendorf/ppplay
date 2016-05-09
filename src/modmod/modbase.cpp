@@ -22,24 +22,25 @@ namespace ppp
 {
 namespace mod
 {
-
-uint16_t noteIndexToPeriod( uint8_t index )
+uint16_t noteIndexToPeriod(uint8_t index)
 {
-    constexpr std::array<uint16_t, 12> periods = {{1712, 1616, 1524, 1440, 1356, 1280, 1208, 1140, 1076, 1016, 960, 906}};
-    return periods[index % 12] >> ( index / 12 );
+    constexpr std::array<uint16_t, 12> periods = { {1712, 1616, 1524, 1440, 1356, 1280, 1208, 1140, 1076, 1016, 960, 906} };
+    return periods[index % 12] >> (index / 12);
 }
 
-uint8_t periodToNoteIndex( uint16_t period )
+uint8_t periodToNoteIndex(uint16_t period)
 {
-    for( uint_fast8_t i = 0; i < 12 * 5; i++ ) {
-        if( noteIndexToPeriod( i ) <= period ) {
+    for(uint_fast8_t i = 0; i < 12 * 5; i++)
+    {
+        if(noteIndexToPeriod(i) <= period)
+        {
             return i;
         }
     }
     return 255;
 }
 
-const std::array<const std::array<const uint16_t, 5* 12>, 16> fullPeriods = {{
+const std::array<const std::array<const uint16_t, 5 * 12>, 16> fullPeriods = { {
         {{
                 1712, 1616, 1524, 1440, 1356, 1280, 1208, 1140, 1076, 1016, 960 , 906,
                 856 , 808 , 762 , 720 , 678 , 640 , 604 , 570 , 538 , 508 , 480 , 453,
@@ -170,6 +171,5 @@ const std::array<const std::array<const uint16_t, 5* 12>, 16> fullPeriods = {{
         }
     }
 };
-
 }
 }

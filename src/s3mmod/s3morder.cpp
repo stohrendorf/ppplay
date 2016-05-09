@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include "s3morder.h"
 
 #include "s3mbase.h"
@@ -25,11 +24,9 @@ namespace ppp
 {
 namespace s3m
 {
-
 bool S3mOrder::isUnplayed() const
 {
     return index() != s3mOrderEnd && index() != s3mOrderSkip && playbackCount() == 0;
 }
-
 }
 }

@@ -22,15 +22,21 @@
 #include "stream/filestream.h"
 
 #include "amd.h"
+#include <stuff/stringutils.h>
 
-CPlayer *CamdLoader::factory() { return new CamdLoader(); }
+Player* CamdLoader::factory()
+{
+    return new CamdLoader();
+}
 
-bool CamdLoader::load(const std::string &filename) {
+bool CamdLoader::load(const std::string& filename)
+{
     FileStream f(filename);
-    if (!f)
+    if(!f)
         return false;
 #pragma pack(push,1)
-    struct {
+    struct
+    {
         char id[9];
         uint8_t version;
     } header;
@@ -55,65 +61,79 @@ bool CamdLoader::load(const std::string &filename) {
     };
 
     // file validation section
-    if (f.size() < 1072) {
+    if(f.size() < 1072)
+    {
         return false;
     }
     f.seek(1062);
     f >> header;
-    if (strncmp(header.id, "<o\xefQU\xeeRoR", 9) && strncmp(header.id, "MaDoKaN96", 9)) {
+    if(strncmp(header.id, "<o\xefQU\xeeRoR", 9) && strncmp(header.id, "MaDoKaN96", 9))
+    {
         return false;
     }
 
     // load section
     f.seek(0);
-    f.read(m_amdSongname, sizeof(m_amdSongname)/sizeof(m_amdSongname[0]));
-    f.read(m_author, sizeof(m_author)/sizeof(m_author[0]));
-    for (int i = 0; i < 26; i++) {
-        f.read(m_instrumentNames[i], 23);
-        std::replace(m_instrumentNames[i], m_instrumentNames[i]+23, '\xff', '\x20');
+
+    static constexpr size_t StringLength = 24;
+
+    char str[StringLength];
+    f.read(str, StringLength);
+    m_amdSongname = stringncpy(str, StringLength);
+    f.read(str, StringLength);
+    m_author = stringncpy(str, StringLength);
+    for(int i = 0; i < 26; i++)
+    {
+        f.read(str, StringLength - 1);
+        m_instrumentNames[i] = stringncpy(str, StringLength - 1);
+        std::replace(m_instrumentNames[i].begin(), m_instrumentNames[i].end(), '\xff', '\x20');
 
         Instrument::Data data;
         f.read(data.data(), 11);
 
         static const uint8_t mapping[11] = { 10, 0, 5, 2, 7, 3, 8, 4, 9, 1, 6 };
         CmodPlayer::Instrument& inst = addInstrument();
-        for(int j=0; j<11; ++j)
+        for(int j = 0; j < 11; ++j)
             inst.data[j] = data[mapping[j]];
     }
     uint8_t orderCount;
     f >> orderCount;
-    if(orderCount>128)
+    if(orderCount > 128)
         orderCount = 128;
     uint8_t tmp8;
     f >> tmp8;
     //m_maxUsedPattern = tmp8 + 1;
-    const auto maxUsedPattern = tmp8+1;
-    for(uint8_t i=0; i<orderCount; ++i) {
+    const auto maxUsedPattern = tmp8 + 1;
+    for(uint8_t i = 0; i < orderCount; ++i)
+    {
         f >> tmp8;
         addOrder(tmp8);
     }
-    f.seekrel(128-orderCount);
+    f.seekrel(128 - orderCount);
     f.seekrel(10);
     int maxi = 0;
-    if (header.version == 0x10) { // unpacked module
+    if(header.version == 0x10)
+    { // unpacked module
         maxi = maxUsedPattern * 9;
-        for (int i = 0; i < 64; i++)
-            for(int j=0; j<9; ++j)
-                setCellColumnMapping(i, j, i*9 + j + 1);
+        for(int i = 0; i < 64; i++)
+            for(int j = 0; j < 9; ++j)
+                setCellColumnMapping(i, j, i * 9 + j + 1);
         int t = 0;
-        while (f.pos() != f.size()) {
-            for (int j = 0; j < 64; j++)
-                for (int i = t; i < t + 9; i++) {
+        while(f.pos() != f.size())
+        {
+            for(int j = 0; j < 64; j++)
+                for(int i = t; i < t + 9; i++)
+                {
                     uint8_t buf;
                     f >> buf;
-                    PatternCell& cell = patternCell(i,j);
+                    PatternCell& cell = patternCell(i, j);
                     cell.loNybble = (buf & 127) % 10;
                     cell.hiNybble = (buf & 127) / 10;
                     f >> buf;
                     cell.instrument = buf >> 4;
                     cell.command = convfx[buf & 0x0f];
                     f >> buf;
-                    if (buf >> 4) // fix bug in AMD save routine
+                    if(buf >> 4) // fix bug in AMD save routine
                         cell.note = ((buf & 14) >> 1) * 12 + (buf >> 4);
                     else
                         cell.note = 0;
@@ -122,9 +142,12 @@ bool CamdLoader::load(const std::string &filename) {
             t += 9;
         }
     }
-    else { // packed module
-        for (int i = 0; i < maxUsedPattern; i++) {
-            for (int j = 0; j < 9; j++) {
+    else
+    { // packed module
+        for(int i = 0; i < maxUsedPattern; i++)
+        {
+            for(int j = 0; j < 9; j++)
+            {
                 uint16_t tmp16;
                 f >> tmp16;
                 setCellColumnMapping(i, j, tmp16 + 1);
@@ -132,19 +155,23 @@ bool CamdLoader::load(const std::string &filename) {
         }
         uint16_t numtrax;
         f >> numtrax;
-        for (int k = 0; k < numtrax; k++) {
+        for(int k = 0; k < numtrax; k++)
+        {
             uint16_t i;
             f >> i;
-            if (i > 575)
+            if(i > 575)
                 i = 575; // fix corrupted modules
             maxi = (i + 1 > maxi ? i + 1 : maxi);
             int j = 0;
-            do {
+            do
+            {
                 uint8_t buf;
                 f >> buf;
-                if (buf & 128) {
-                    for (int t = j; t < j + (buf & 127) && t < 64; t++) {
-                        PatternCell& cell = patternCell(i,t);
+                if(buf & 128)
+                {
+                    for(int t = j; t < j + (buf & 127) && t < 64; t++)
+                    {
+                        PatternCell& cell = patternCell(i, t);
                         cell.command = Command::None;
                         cell.instrument = 0;
                         cell.note = 0;
@@ -154,20 +181,20 @@ bool CamdLoader::load(const std::string &filename) {
                     j += buf & 127;
                     continue;
                 }
-                PatternCell& cell = patternCell(i,j);
+                PatternCell& cell = patternCell(i, j);
                 cell.loNybble = buf % 10;
                 cell.hiNybble = buf / 10;
                 f >> buf;
                 cell.instrument = buf >> 4;
                 cell.command = convfx[buf & 0x0f];
                 f >> buf;
-                if (buf >> 4) // fix bug in AMD save routine
+                if(buf >> 4) // fix bug in AMD save routine
                     cell.note = ((buf & 14) >> 1) * 12 + (buf >> 4);
                 else
                     cell.note = 0;
                 cell.instrument += (buf & 1) << 4;
                 j++;
-            } while (j < 64);
+            } while(j < 64);
         }
     }
 
@@ -175,28 +202,34 @@ bool CamdLoader::load(const std::string &filename) {
     setInitialTempo(50);
     setRestartOrder(0);
     setDecimalValues();
-    for (int i = 0; i < maxi; i++) { // convert patterns
-        for (int j = 0; j < 64; j++) {
-            PatternCell& cell = patternCell(i,j);
+    for(int i = 0; i < maxi; i++)
+    { // convert patterns
+        for(int j = 0; j < 64; j++)
+        {
+            PatternCell& cell = patternCell(i, j);
             // extended command
-            if (cell.command == Command::Special) {
-                if (cell.hiNybble == 2) {
+            if(cell.command == Command::Special)
+            {
+                if(cell.hiNybble == 2)
+                {
                     cell.command = Command::SA2VolSlide;
                     cell.hiNybble = cell.loNybble;
                     cell.loNybble = 0;
                 }
 
-                if (cell.hiNybble == 3) {
+                if(cell.hiNybble == 3)
+                {
                     cell.command = Command::SA2VolSlide;
                     cell.hiNybble = 0;
                 }
             }
 
             // fix volume
-            if (cell.command == Command::SetFineVolume2) {
+            if(cell.command == Command::SetFineVolume2)
+            {
                 int vol = convvol[cell.hiNybble * 10 + cell.loNybble];
 
-                if (vol > 63)
+                if(vol > 63)
                     vol = 63;
                 cell.hiNybble = vol / 10;
                 cell.loNybble = vol % 10;
@@ -210,7 +243,7 @@ bool CamdLoader::load(const std::string &filename) {
 
 size_t CamdLoader::framesUntilUpdate() const
 {
-    if (currentTempo())
+    if(currentTempo())
         return SampleRate / currentTempo();
     else
         return static_cast<size_t>(SampleRate / 18.2);

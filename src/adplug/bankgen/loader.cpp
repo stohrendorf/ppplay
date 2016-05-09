@@ -17,43 +17,42 @@
 
 namespace
 {
-
 boost::property_tree::ptree toPtree(const bankdb::SlotSettings& ss)
 {
     boost::property_tree::ptree entry;
 
     entry.put("carrier.waveform", int(ss.data[6]));
-    entry.put("carrier.sustainLevel", int(ss.data[4]>>4));
-    entry.put("carrier.releaseRate", int(ss.data[4]&0x0f));
-    entry.put("carrier.attackRate", int(ss.data[2]>>4));
-    entry.put("carrier.decayRate", int(ss.data[2]&0x0f));
-    entry.put("carrier.tremolo", (ss.data[0]&0x80) != 0);
-    entry.put("carrier.vibrato", (ss.data[0]&0x40) != 0);
-    entry.put("carrier.noSustain", (ss.data[0]&0x20) != 0);
-    entry.put("carrier.keyScaleRate", (ss.data[0]&0x10) != 0);
-    entry.put("carrier.multiplier", int(ss.data[0]&0x0f));
-    entry.put("carrier.keyScaleLevel", int(ss.data[8]>>6));
-    entry.put("carrier.totalLevel", int(ss.data[8]&0x3f));
+    entry.put("carrier.sustainLevel", int(ss.data[4] >> 4));
+    entry.put("carrier.releaseRate", int(ss.data[4] & 0x0f));
+    entry.put("carrier.attackRate", int(ss.data[2] >> 4));
+    entry.put("carrier.decayRate", int(ss.data[2] & 0x0f));
+    entry.put("carrier.tremolo", (ss.data[0] & 0x80) != 0);
+    entry.put("carrier.vibrato", (ss.data[0] & 0x40) != 0);
+    entry.put("carrier.noSustain", (ss.data[0] & 0x20) != 0);
+    entry.put("carrier.keyScaleRate", (ss.data[0] & 0x10) != 0);
+    entry.put("carrier.multiplier", int(ss.data[0] & 0x0f));
+    entry.put("carrier.keyScaleLevel", int(ss.data[8] >> 6));
+    entry.put("carrier.totalLevel", int(ss.data[8] & 0x3f));
 
     entry.put("modulator.waveform", int(ss.data[7]));
-    entry.put("modulator.sustainLevel", int(ss.data[5]>>4));
-    entry.put("modulator.releaseRate", int(ss.data[5]&0x0f));
-    entry.put("modulator.attackRate", int(ss.data[3]>>4));
-    entry.put("modulator.decayRate", int(ss.data[3]&0x0f));
-    entry.put("modulator.tremolo", (ss.data[1]&0x80) != 0);
-    entry.put("modulator.vibrato", (ss.data[1]&0x40) != 0);
-    entry.put("modulator.noSustain", (ss.data[1]&0x20) != 0);
-    entry.put("modulator.keyScaleRate", (ss.data[1]&0x10) != 0);
-    entry.put("modulator.multiplier", int(ss.data[1]&0x0f));
-    entry.put("modulator.keyScaleLevel", int(ss.data[9]>>6));
-    entry.put("modulator.totalLevel", int(ss.data[9]&0x3f));
+    entry.put("modulator.sustainLevel", int(ss.data[5] >> 4));
+    entry.put("modulator.releaseRate", int(ss.data[5] & 0x0f));
+    entry.put("modulator.attackRate", int(ss.data[3] >> 4));
+    entry.put("modulator.decayRate", int(ss.data[3] & 0x0f));
+    entry.put("modulator.tremolo", (ss.data[1] & 0x80) != 0);
+    entry.put("modulator.vibrato", (ss.data[1] & 0x40) != 0);
+    entry.put("modulator.noSustain", (ss.data[1] & 0x20) != 0);
+    entry.put("modulator.keyScaleRate", (ss.data[1] & 0x10) != 0);
+    entry.put("modulator.multiplier", int(ss.data[1] & 0x0f));
+    entry.put("modulator.keyScaleLevel", int(ss.data[9] >> 6));
+    entry.put("modulator.totalLevel", int(ss.data[9] & 0x3f));
 
-    entry.put("additive", (ss.data[10]&0x01) != 0);
-    entry.put("feedback", int((ss.data[10]>>1) & 7));
-    entry.put("connection.a", (ss.data[10]&0x80) != 0);
-    entry.put("connection.b", (ss.data[10]&0x40) != 0);
-    entry.put("connection.c", (ss.data[10]&0x20) != 0);
-    entry.put("connection.d", (ss.data[10]&0x10) != 0);
+    entry.put("additive", (ss.data[10] & 0x01) != 0);
+    entry.put("feedback", int((ss.data[10] >> 1) & 7));
+    entry.put("connection.a", (ss.data[10] & 0x80) != 0);
+    entry.put("connection.b", (ss.data[10] & 0x40) != 0);
+    entry.put("connection.c", (ss.data[10] & 0x20) != 0);
+    entry.put("connection.d", (ss.data[10] & 0x10) != 0);
 
     return entry;
 }
@@ -255,8 +254,7 @@ const std::string MidiInsName[] = {
     "Open Cuica",
     "Mute Triangle",
     "Open Triangle",
-    "Shaker","Jingle Bell","Bell Tree","Castanets","Mute Surdu","Open Surdu",""};
-
+    "Shaker","Jingle Bell","Bell Tree","Castanets","Mute Surdu","Open Surdu","" };
 
 #pragma pack(push,1)
 struct Doom_OPL2instrument
@@ -291,7 +289,6 @@ struct Doom_opl_instr
     Doom_OPL2instrument patchdata[2];
 };
 #pragma pack(pop)
-
 } // anonymous namespace
 
 void BankDatabaseGen::loadBnk(const char* filename, const char* bankname, const char* prefix)
@@ -310,47 +307,48 @@ void BankDatabaseGen::loadBnk(const char* filename, const char* bankname, const 
     uint32_t data_offset = *reinterpret_cast<uint32_t*>(&data[16]);// data_offset
     // 16..23: 8 byte sof filler
 
-    for(unsigned n=0; n<entries_used; ++n) {
-        const size_t offset1 = name_offset + n*12;
+    for(unsigned n = 0; n < entries_used; ++n)
+    {
+        const size_t offset1 = name_offset + n * 12;
 
-        unsigned short data_index = data[offset1+0] + data[offset1+1]*256;
-        unsigned char usage_flag = data[offset1+2];
-        std::string name = stringncpy(reinterpret_cast<const char*>(&data[offset1+3]), 9);
+        unsigned short data_index = data[offset1 + 0] + data[offset1 + 1] * 256;
+        unsigned char usage_flag = data[offset1 + 2];
+        std::string name = stringncpy(reinterpret_cast<const char*>(&data[offset1 + 3]), 9);
 
         const size_t offset2 = data_offset + data_index * 30;
         // const unsigned char mode      = data[offset2+0];
         //const unsigned char voice_num = data[offset2+1];
-        const uint8_t* op1 = &data[offset2+2];  // 13 bytes
-        const uint8_t* op2 = &data[offset2+15];
-        const uint8_t waveform_mod = data[offset2+28];
-        const uint8_t waveform_car = data[offset2+29];
+        const uint8_t* op1 = &data[offset2 + 2];  // 13 bytes
+        const uint8_t* op2 = &data[offset2 + 15];
+        const uint8_t waveform_mod = data[offset2 + 28];
+        const uint8_t waveform_car = data[offset2 + 29];
 
         bool percussive = (usage_flag >= 16);
 
-        int gmno = (n + percussive*128);
+        int gmno = (n + percussive * 128);
 
         bankdb::Instrument& instrument = addInstrument(prefix, gmno);
         instrument.first = std::make_shared<bankdb::SlotSettings>();
 
-        instrument.first->data[0] = (op1[ 9] << 7) // TREMOLO FLAG
-                + (op1[10] << 6) // VIBRATO FLAG
-                + (op1[ 5] << 5) // SUSTAIN FLAG
-                + (op1[11] << 4) // SCALING FLAG
-                + op1[ 1];      // FREQMUL
-        instrument.first->data[1] = (op2[ 9] << 7)
-                + (op2[10] << 6)
-                + (op2[ 5] << 5)
-                + (op2[11] << 4)
-                + op2[ 1];
-        instrument.first->data[2] = op1[3]*0x10 + op1[6]; // ATTACK, DECAY
-        instrument.first->data[3] = op2[3]*0x10 + op2[6];
-        instrument.first->data[4] = op1[4]*0x10 + op1[7]; // SUSTAIN, RELEASE
-        instrument.first->data[5] = op2[4]*0x10 + op2[7];
+        instrument.first->data[0] = (op1[9] << 7) // TREMOLO FLAG
+            + (op1[10] << 6) // VIBRATO FLAG
+            + (op1[5] << 5) // SUSTAIN FLAG
+            + (op1[11] << 4) // SCALING FLAG
+            + op1[1];      // FREQMUL
+        instrument.first->data[1] = (op2[9] << 7)
+            + (op2[10] << 6)
+            + (op2[5] << 5)
+            + (op2[11] << 4)
+            + op2[1];
+        instrument.first->data[2] = op1[3] * 0x10 + op1[6]; // ATTACK, DECAY
+        instrument.first->data[3] = op2[3] * 0x10 + op2[6];
+        instrument.first->data[4] = op1[4] * 0x10 + op1[7]; // SUSTAIN, RELEASE
+        instrument.first->data[5] = op2[4] * 0x10 + op2[7];
         instrument.first->data[6] = waveform_mod;
         instrument.first->data[7] = waveform_car;
-        instrument.first->data[8] = op1[0]*0x40 + op1[8]; // KSL , LEVEL
-        instrument.first->data[9] = op2[0]*0x40 + op2[8]; // KSL , LEVEL
-        instrument.first->data[10] = op1[2]*2 + op1[12]; // FEEDBACK, ADDITIVEFLAG
+        instrument.first->data[8] = op1[0] * 0x40 + op1[8]; // KSL , LEVEL
+        instrument.first->data[9] = op2[0] * 0x40 + op2[8]; // KSL , LEVEL
+        instrument.first->data[10] = op1[2] * 2 + op1[12]; // FEEDBACK, ADDITIVEFLAG
         instrument.first->finetune = 0;
         // Note: op2[2] and op2[12] are unused and contain garbage.
         if(percussive && usage_flag != 0)
@@ -370,18 +368,19 @@ void BankDatabaseGen::loadBnk2(const char* fn, const char* bankname, const char*
     std::vector<uint8_t> data(fp.size());
     fp.read(data.data(), data.size());
 
-    uint16_t ins_entries = *reinterpret_cast<uint16_t*>(&data[28+2+10]);
+    uint16_t ins_entries = *reinterpret_cast<uint16_t*>(&data[28 + 2 + 10]);
     uint8_t* records = &data[48];
 
-    for(unsigned n=0; n<ins_entries; ++n) {
-        const size_t offset1 = n*28;
+    for(unsigned n = 0; n < ins_entries; ++n)
+    {
+        const size_t offset1 = n * 28;
         int used = records[offset1 + 15];
         // int attrib   = *(int*)&records[offset1 + 16];
-        int32_t offset2  = *reinterpret_cast<int32_t*>(&records[offset1 + 20]);
+        int32_t offset2 = *reinterpret_cast<int32_t*>(&records[offset1 + 20]);
         if(used == 0)
             continue;
 
-        std::string name = stringncpy(reinterpret_cast<const char*>(&records[offset1+3]), 12);
+        std::string name = stringncpy(reinterpret_cast<const char*>(&records[offset1 + 3]), 12);
 
         int gmno = 0;
         if(name.substr(0, melo_filter.size()) == melo_filter)
@@ -392,25 +391,25 @@ void BankDatabaseGen::loadBnk2(const char* fn, const char* bankname, const char*
             continue;
 
         const unsigned char* insdata = &data[offset2];
-        const unsigned char* ops[4] = { insdata+0, insdata+6, insdata+12, insdata+18 };
+        const unsigned char* ops[4] = { insdata + 0, insdata + 6, insdata + 12, insdata + 18 };
         unsigned char C4xxxFFFC = insdata[24];
         unsigned char xxP24NNN = insdata[25];
         unsigned char TTTTTTTT = insdata[26];
         // unsigned char xxxxxxxx = insdata[27];
 
         bankdb::SlotSettings slotSettings[2];
-        for(unsigned a=0; a<2; ++a)
+        for(unsigned a = 0; a < 2; ++a)
         {
-            slotSettings[a].data[0] = ops[a*2+0][0];
-            slotSettings[a].data[1] = ops[a*2+1][0];
-            slotSettings[a].data[2] = ops[a*2+0][2];
-            slotSettings[a].data[3] = ops[a*2+1][2];
-            slotSettings[a].data[4] = ops[a*2+0][3];
-            slotSettings[a].data[5] = ops[a*2+1][3];
-            slotSettings[a].data[6] = ops[a*2+0][4] & 0x07;
-            slotSettings[a].data[7] = ops[a*2+1][4] & 0x07;
-            slotSettings[a].data[8] = ops[a*2+0][1];
-            slotSettings[a].data[9] = ops[a*2+1][1];
+            slotSettings[a].data[0] = ops[a * 2 + 0][0];
+            slotSettings[a].data[1] = ops[a * 2 + 1][0];
+            slotSettings[a].data[2] = ops[a * 2 + 0][2];
+            slotSettings[a].data[3] = ops[a * 2 + 1][2];
+            slotSettings[a].data[4] = ops[a * 2 + 0][3];
+            slotSettings[a].data[5] = ops[a * 2 + 1][3];
+            slotSettings[a].data[6] = ops[a * 2 + 0][4] & 0x07;
+            slotSettings[a].data[7] = ops[a * 2 + 1][4] & 0x07;
+            slotSettings[a].data[8] = ops[a * 2 + 0][1];
+            slotSettings[a].data[9] = ops[a * 2 + 1][1];
             slotSettings[a].finetune = TTTTTTTT;
         }
         slotSettings[0].data[10] = C4xxxFFFC & 0x0F;
@@ -423,7 +422,7 @@ void BankDatabaseGen::loadBnk2(const char* fn, const char* bankname, const char*
 
         instrument.first = std::make_shared<bankdb::SlotSettings>(slotSettings[0]);
         instrument.localName = name;
-        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno&128)?'P':'M', int(gmno&127));
+        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno & 128) ? 'P' : 'M', int(gmno & 127));
 
         if(xxP24NNN & 8)
         {
@@ -441,19 +440,19 @@ void BankDatabaseGen::loadDoom(const char* fn, const char* bankname, const char*
     std::vector<uint8_t> data(fp.size());
     fp.read(data.data(), data.size());
 
-    for(int a=0; a<175; ++a)
+    for(int a = 0; a < 175; ++a)
     {
-        const size_t offset1 = 0x18A4 + a*32;
-        const size_t offset2 = 8      + a*36;
+        const size_t offset1 = 0x18A4 + a * 32;
+        const size_t offset2 = 8 + a * 36;
 
         std::string name = stringncpy(reinterpret_cast<const char*>(&data[offset1]), 32);
 
-        int gmno = a<128 ? a : ((a|128)+35);
+        int gmno = a < 128 ? a : ((a | 128) + 35);
 
         const Doom_opl_instr& ins = *reinterpret_cast<const Doom_opl_instr*>(&data[offset2]);
 
         bankdb::SlotSettings slotSettings[2];
-        for(unsigned index=0; index<2; ++index)
+        for(unsigned index = 0; index < 2; ++index)
         {
             const Doom_OPL2instrument& src = ins.patchdata[index];
             slotSettings[index].data[0] = src.trem_vibr_1;
@@ -481,9 +480,9 @@ void BankDatabaseGen::loadDoom(const char* fn, const char* bankname, const char*
         }
         instrument.first = std::make_shared<bankdb::SlotSettings>(slotSettings[0]);
         instrument.localName = name;
-        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
+        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), int(gmno & 127));
 
-        if((ins.flags&4) != 0) // Double instrument
+        if((ins.flags & 4) != 0) // Double instrument
         {
             instrument.pseudo4op = true;
             instrument.second = std::make_shared<bankdb::SlotSettings>(slotSettings[1]);
@@ -499,39 +498,39 @@ void BankDatabaseGen::loadMiles(const char* fn, const char* bankname, const char
     std::vector<uint8_t> data(fp.size());
     fp.read(data.data(), data.size());
 
-    for(unsigned a=0; a<2000; ++a)
+    for(unsigned a = 0; a < 2000; ++a)
     {
-        unsigned gmnumber  = data[a*6+0];
+        unsigned gmnumber = data[a * 6 + 0];
         if(gmnumber == 0xFF)
             break;
 
-        unsigned gmnumber2 = data[a*6+1];
+        unsigned gmnumber2 = data[a * 6 + 1];
         if(gmnumber2 != 0 && gmnumber2 != 0x7F)
             continue;
 
-        int gmno = gmnumber2==0x7F ? gmnumber+0x80 : gmnumber;
+        int gmno = gmnumber2 == 0x7F ? gmnumber + 0x80 : gmnumber;
         int midi_index = gmno < 128 ? gmno
-                                    : gmno < 128+35 ? -1
-                                                    : gmno < 128+88 ? gmno-35
-                                                                    : -1;
+            : gmno < 128 + 35 ? -1
+            : gmno < 128 + 88 ? gmno - 35
+            : -1;
 
-        uint32_t offset = *reinterpret_cast<uint32_t*>(&data[a*6+2]);
+        uint32_t offset = *reinterpret_cast<uint32_t*>(&data[a * 6 + 2]);
 
-        unsigned length = data[offset] + data[offset+1]*256;
-        signed char notenum = data[offset+2];
+        unsigned length = data[offset] + data[offset + 1] * 256;
+        signed char notenum = data[offset + 2];
 
         bankdb::SlotSettings slotSettings[200];
 
-        const unsigned inscount = (length-3)/11;
-        for(unsigned i=0; i<inscount; ++i)
+        const unsigned inscount = (length - 3) / 11;
+        for(unsigned i = 0; i < inscount; ++i)
         {
-            unsigned o = offset + 3 + i*11;
+            unsigned o = offset + 3 + i * 11;
             slotSettings[i].finetune = (gmno < 128 && i == 0) ? notenum : 0;
-            const uint8_t mapping[10] = {0,8,2,4,6,1,9,3,5,7};
-            for(int m=0; m<10; ++m)
-                slotSettings[i].data[mapping[m]] = data[o+m];
+            const uint8_t mapping[10] = { 0,8,2,4,6,1,9,3,5,7 };
+            for(int m = 0; m < 10; ++m)
+                slotSettings[i].data[mapping[m]] = data[o + m];
 
-            unsigned fb_c = data[offset+3+5];
+            unsigned fb_c = data[offset + 3 + 5];
             slotSettings[i].data[10] = fb_c;
             if(i == 1)
             {
@@ -544,7 +543,7 @@ void BankDatabaseGen::loadMiles(const char* fn, const char* bankname, const char
 
         bankdb::Instrument& instrument = addInstrument(prefix, gmno);
         if(gmno >= 128)
-            instrument.noteOverride = data[offset+3] != 0 ? data[offset+3] : 35;
+            instrument.noteOverride = data[offset + 3] != 0 ? data[offset + 3] : 35;
         instrument.pseudo4op = false;
         if(midi_index >= 0)
             instrument.localName = MidiInsName[midi_index];
@@ -554,7 +553,7 @@ void BankDatabaseGen::loadMiles(const char* fn, const char* bankname, const char
         if(inscount > 1)
             instrument.second = std::make_shared<bankdb::SlotSettings>(slotSettings[1]);
 
-        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
+        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), int(gmno & 127));
     }
 }
 
@@ -569,17 +568,17 @@ void BankDatabaseGen::loadIBK(const char* fn, const char* bankname, const char* 
     unsigned offs1_base = 0x804, offs1_len = 9;
     unsigned offs2_base = 0x004, offs2_len = 16;
 
-    for(unsigned a=0; a<128; ++a)
+    for(unsigned a = 0; a < 128; ++a)
     {
         unsigned offset1 = offs1_base + a*offs1_len;
         unsigned offset2 = offs2_base + a*offs2_len;
 
         std::string name;
-        for(unsigned p=0; p<9; ++p)
-            if(data[offset1+p] >= 0x20 && data[offset1+p] <= 0x7e)
-                name += char(data[offset1+p]);
+        for(unsigned p = 0; p < 9; ++p)
+            if(data[offset1 + p] >= 0x20 && data[offset1 + p] <= 0x7e)
+                name += char(data[offset1 + p]);
 
-        int gmno = a + 128*percussive;
+        int gmno = a + 128 * percussive;
         // int midi_index = gmno < 128 ? gmno
         //               : gmno < 128+35 ? -1
         //               : gmno < 128+88 ? gmno-35
@@ -587,9 +586,9 @@ void BankDatabaseGen::loadIBK(const char* fn, const char* bankname, const char* 
 
         bankdb::SlotSettings slotSettings;
         // [+11] seems to be used also, what is it for?
-        const uint8_t mapping[11] = {0,1,8,9,2,3,4,5,6,7,10};
-        for(int m=0; m<11; ++m)
-            slotSettings.data[mapping[m]] = data[offset2+m];
+        const uint8_t mapping[11] = { 0,1,8,9,2,3,4,5,6,7,10 };
+        for(int m = 0; m < 11; ++m)
+            slotSettings.data[mapping[m]] = data[offset2 + m];
         slotSettings.finetune = 0;
         bankdb::Instrument& instrument = addInstrument(prefix, gmno);
         if(gmno >= 128)
@@ -597,7 +596,7 @@ void BankDatabaseGen::loadIBK(const char* fn, const char* bankname, const char* 
         instrument.pseudo4op = false;
         instrument.first = std::make_shared<bankdb::SlotSettings>(slotSettings);
         instrument.localName = name;
-        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
+        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), int(gmno & 127));
     }
 }
 
@@ -616,21 +615,22 @@ void BankDatabaseGen::loadJunglevision(const char* fn, const char* bankname, con
 
     unsigned total_ins = ins_count + drum_count;
 
-    for ( unsigned a = 0; a < total_ins; ++a )
+    for(unsigned a = 0; a < total_ins; ++a)
     {
         unsigned offset = 0x28 + a * 0x18;
         unsigned gmno = (a < ins_count) ? (a + first_ins) : (a + first_drum);
         int midi_index = gmno < 128 ? gmno
-                                    : gmno < 128+35 ? -1
-                                                    : gmno < 128+88 ? gmno-35
-                                                                    : -1;
+            : gmno < 128 + 35 ? -1
+            : gmno < 128 + 88 ? gmno - 35
+            : -1;
 
         bankdb::SlotSettings slotSettings[2];
 
-        const uint8_t mapping[10] = {2,8,4,10,5,11,6,12,3,9};
-        for(int m=0; m<10; ++m) {
-            slotSettings[0].data[m] = data[offset+mapping[m]];
-            slotSettings[1].data[m] = data[offset+mapping[m]+11];
+        const uint8_t mapping[10] = { 2,8,4,10,5,11,6,12,3,9 };
+        for(int m = 0; m < 10; ++m)
+        {
+            slotSettings[0].data[m] = data[offset + mapping[m]];
+            slotSettings[1].data[m] = data[offset + mapping[m] + 11];
         }
 
         slotSettings[0].data[10] = data[offset + 7] & ~0x30;
@@ -653,7 +653,7 @@ void BankDatabaseGen::loadJunglevision(const char* fn, const char* bankname, con
         if(midi_index >= 0)
             instrument.localName = MidiInsName[midi_index];
 
-        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
+        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), int(gmno & 127));
 
         instrument.first = std::make_shared<bankdb::SlotSettings>(slotSettings[0]);
         if(data[offset] != 0)
@@ -671,20 +671,20 @@ void BankDatabaseGen::loadTMB(const char* fn, const char* bankname, const char* 
     std::vector<uint8_t> data(fp.size(), 0);
     fp.read(data.data(), data.size());
 
-    for ( unsigned a = 0; a < 256; ++a )
+    for(unsigned a = 0; a < 256; ++a)
     {
         unsigned offset = a * 0x0D;
         unsigned gmno = a;
         int midi_index = gmno < 128 ? gmno
-                                    : gmno < 128+35 ? -1
-                                                    : gmno < 128+88 ? gmno-35
-                                                                    : -1;
+            : gmno < 128 + 35 ? -1
+            : gmno < 128 + 88 ? gmno - 35
+            : -1;
 
         bankdb::Instrument& instrument = addInstrument(prefix, gmno);
         instrument.first = std::make_shared<bankdb::SlotSettings>();
-        const uint8_t mapping[11] = {0,1,4,5,6,7,8,9,2,3,10};
-        for(int m=0; m<11; ++m)
-            instrument.first->data[m] = data[offset+mapping[m]];
+        const uint8_t mapping[11] = { 0,1,4,5,6,7,8,9,2,3,10 };
+        for(int m = 0; m < 11; ++m)
+            instrument.first->data[m] = data[offset + mapping[m]];
         instrument.first->finetune = 0; //data[offset + 12];
 
         if(gmno >= 128 && data[offset + 11] != 0)
@@ -694,7 +694,7 @@ void BankDatabaseGen::loadTMB(const char* fn, const char* bankname, const char* 
         if(midi_index >= 0)
             instrument.localName = MidiInsName[midi_index];
 
-        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
+        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), int(gmno & 127));
     }
 }
 
@@ -703,14 +703,14 @@ void BankDatabaseGen::loadBisqwit(const char* fn, const char* bankname, const ch
     registerBank(prefix, bankname);
 
     FileStream fp(fn);
-    for ( unsigned a = 0; a < 256; ++a )
+    for(unsigned a = 0; a < 256; ++a)
     {
         // unsigned offset = a * 25;
         unsigned gmno = a;
         int midi_index = gmno < 128 ? gmno
-                                    : gmno < 128+35 ? -1
-                                                    : gmno < 128+88 ? gmno-35
-                                                                    : -1;
+            : gmno < 128 + 35 ? -1
+            : gmno < 128 + 88 ? gmno - 35
+            : -1;
 
         bankdb::Instrument& instrument = addInstrument(prefix, gmno);
         instrument.noteOverride = 0;
@@ -727,7 +727,7 @@ void BankDatabaseGen::loadBisqwit(const char* fn, const char* bankname, const ch
         if(midi_index >= 0)
             instrument.localName = MidiInsName[midi_index];
 
-        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno<128?'M':'P'), int(gmno&127));
+        instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), int(gmno & 127));
     }
 }
 
@@ -735,11 +735,13 @@ void BankDatabaseGen::dump()
 {
     boost::property_tree::ptree jsonBanks;
 
-    for(const auto& bank : banks()) {
+    for(const auto& bank : banks())
+    {
         boost::property_tree::ptree jsonBank;
 
         int instrId = 0;
-        for(const auto& instrument : bank.second.instruments) {
+        for(const auto& instrument : bank.second.instruments)
+        {
             boost::property_tree::ptree jsonInstr = toPtree(instrument.second);
             jsonInstr.put("index", instrument.first);
             jsonBank.add_child(boost::lexical_cast<std::string>(instrId++), jsonInstr);
@@ -773,11 +775,14 @@ void BankDatabaseGen::save(const std::string& filename)
         std::cout << "Compressing... ";
         std::set<bankdb::SlotSettings::Ptr, PtrCompare> slots;
         size_t processed = 0;
-        for(auto& bank : banks()) {
-            for(bankdb::Instrument& instrument : bank.second.instruments | boost::adaptors::map_values) {
+        for(auto& bank : banks())
+        {
+            for(bankdb::Instrument& instrument : bank.second.instruments | boost::adaptors::map_values)
+            {
                 instrument.first = *slots.insert(instrument.first).first;
                 ++processed;
-                if(instrument.second) {
+                if(instrument.second)
+                {
                     instrument.second = *slots.insert(instrument.second).first;
                     ++processed;
                     if(!instrument.pseudo4op)
@@ -787,9 +792,11 @@ void BankDatabaseGen::save(const std::string& filename)
 
             bank.second.onlyPercussion = true;
 
-            for(size_t i=0; i<128; ++i) {
+            for(size_t i = 0; i < 128; ++i)
+            {
                 auto it = bank.second.instruments.find(i);
-                if(it != bank.second.instruments.end()) {
+                if(it != bank.second.instruments.end())
+                {
                     bank.second.onlyPercussion = false;
                     break;
                 }
@@ -799,12 +806,15 @@ void BankDatabaseGen::save(const std::string& filename)
             if(bank.second.onlyPercussion)
                 continue;
 
-            for(size_t i=0; i<128; ++i) {
+            for(size_t i = 0; i < 128; ++i)
+            {
                 auto it = bank.second.instruments.find(i);
-                if(it == bank.second.instruments.end()) {
+                if(it == bank.second.instruments.end())
+                {
                     throw std::runtime_error(stringFmt("Missing instrument #%d in bank %s", i, bank.first));
                 }
-                if(!it->second.first) {
+                if(!it->second.first)
+                {
                     throw std::runtime_error(stringFmt("Missing first slot settings in instrument #%d in bank %s", i, bank.first));
                 }
             }

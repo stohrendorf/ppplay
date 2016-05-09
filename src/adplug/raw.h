@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2005 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,28 +23,30 @@
 
 #include "player.h"
 
-class CrawPlayer : public CPlayer {
+class CrawPlayer : public Player
+{
     DISABLE_COPY(CrawPlayer)
 public:
-    static CPlayer *factory();
+    static Player *factory();
 
     CrawPlayer() = default;
 
     ~CrawPlayer() = default;
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const
+    std::string type() const override
     {
         return "RdosPlay RAW";
     }
 
 private:
 #pragma pack(push,1)
-    struct TrackData {
+    struct TrackData
+    {
         uint8_t param, command;
     };
 #pragma pack(pop)

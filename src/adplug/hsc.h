@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2007 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -19,54 +21,53 @@
  * hsc.h - HSC Player by Simon Peter <dn.tlp@gmx.net>
  */
 
-#ifndef H_ADPLUG_HSCPLAYER
-#define H_ADPLUG_HSCPLAYER
-
 #include "player.h"
 
-class ChscPlayer : public CPlayer {
+class ChscPlayer : public Player
+{
     DISABLE_COPY(ChscPlayer)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     explicit ChscPlayer(bool mtkMode)
-        : CPlayer()
+        : Player()
         , m_mtkmode(mtkMode)
     {
     }
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int);
-    size_t framesUntilUpdate() const
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int) override;
+    size_t framesUntilUpdate() const override
     {
         return static_cast<size_t>(SampleRate / 18.2);
     } // refresh rate is fixed at 18.2Hz
 
-    std::string type() const
+    std::string type() const override
     {
         return "HSC Adlib Composer / HSC-Tracker";
     }
-    uint32_t instrumentCount() const;
+    uint32_t instrumentCount() const override;
 
 protected:
-    struct HscNote {
+    struct HscNote
+    {
         unsigned char note = 0, effect = 0;
     }; // note type in HSC pattern
 
-    struct HscChan {
+    struct HscChan
+    {
         unsigned char inst = 0;  // current instrument
         signed char slide = 0;   // used for manual slide-effects
         unsigned short freq = 0; // actual replaying frequency
     };
-
 
 private:
     HscChan m_channel[9];           // player channel-info
     uint8_t m_instr[128][12]; // instrument data
     HscNote m_patterns[50][64 * 9]; // pattern data
     unsigned char // various bytes & flags
-    m_pattbreak = 0, m_mode6 = 0, m_bd = 0, m_fadein = 0;
+        m_pattbreak = 0, m_mode6 = 0, m_bd = 0, m_fadein = 0;
     unsigned int m_del = 0;
     unsigned char m_adlFreq[9]; // adlib frequency registers
     bool m_mtkmode = false;          // flag: MPU-401 Trakker mode on/off
@@ -86,5 +87,3 @@ protected:
         return m_patterns;
     }
 };
-
-#endif

@@ -1,11 +1,10 @@
-#ifndef PPP_ALMIDI_H
-#define PPP_ALMIDI_H
+#pragma once
 
 #include "multichips.h"
 #include "stream/stream.h"
 
-namespace ppp {
-
+namespace ppp
+{
 class EMidi
 {
     DISABLE_COPY(EMidi)
@@ -21,9 +20,10 @@ private:
 
     struct SongContext;
 
-    struct Timing {
-        int  tick    = 0;
-        int  beat    = 1;
+    struct Timing
+    {
+        int  tick = 0;
+        int  beat = 1;
         int  measure = 1;
         int  beatsPerMeasure = 4;
         int  ticksPerBeat = 0;
@@ -43,9 +43,10 @@ private:
 
     size_t m_ticksPerSecond = 0;
 
-    std::array<int,16> m_channelVolume{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
+    std::array<int, 16> m_channelVolume{ {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0} };
 
-    enum class Format {
+    enum class Format
+    {
         PlainMidi,
         IdMus
     };
@@ -75,25 +76,26 @@ public:
     ~EMidi();
 
     bool serviceRoutine();
-    size_t ticksPerSecond() const noexcept {
+    size_t ticksPerSecond() const noexcept
+    {
         return m_ticksPerSecond;
     }
-    void read(std::array<int16_t,4>* data) {
+    void read(std::array<int16_t, 4>* data)
+    {
         m_chips.read(data);
     }
 
-    const char* shortFormatName() const {
-        switch(m_format) {
-        case Format::PlainMidi:
-            return "MIDI";
-        case Format::IdMus:
-            return "MUS";
-        default:
-            return "";
+    const char* shortFormatName() const
+    {
+        switch(m_format)
+        {
+            case Format::PlainMidi:
+                return "MIDI";
+            case Format::IdMus:
+                return "MUS";
+            default:
+                return "";
         }
     }
 };
-
 }
-
-#endif

@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <cstring>
 
-namespace ppp {
-
+namespace ppp
+{
 constexpr auto NUM_MIDI_CHANNELS = 16;
 
 #define EMIDI_END_LOOP_VALUE    127
@@ -27,11 +27,11 @@ constexpr auto NUM_MIDI_CHANNELS = 16;
 #define EMIDI_AffectsCurrentCard( c, type ) \
     ( ( ( c ) == EMIDI_ALL_CARDS ) || ( ( c ) == ( type ) ) )
 
-
-namespace {
-constexpr std::array<int,16> commandLengths = {{
+namespace
+{
+constexpr std::array<int, 16> commandLengths = { {
     0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0
-}};
+} };
 }
 
 struct EMidi::SongContext
@@ -49,34 +49,41 @@ struct EMidi::SongContext
 
 struct EMidi::Track
 {
-    Track() : contexts() {
+    Track() : contexts()
+    {
     }
 
     std::size_t dataPos = 0;
     std::vector<uint8_t> data{};
 
-    uint8_t nextByte() {
-        BOOST_ASSERT( dataPos < data.size() );
+    uint8_t nextByte()
+    {
+        BOOST_ASSERT(dataPos < data.size());
         return data[dataPos++];
     }
-    uint8_t currentByte() {
-        BOOST_ASSERT( dataPos < data.size() );
+
+    uint8_t currentByte()
+    {
+        BOOST_ASSERT(dataPos < data.size());
         return data[dataPos];
     }
 
-    uint32_t readDelta() {
+    uint32_t readDelta()
+    {
         uint32_t value = 0;
 
         uint8_t c;
-        do {
+        do
+        {
             c = nextByte();
-            value = ( value << 7 ) | ( c & 0x7f );
-        } while( c & 0x80 );
+            value = (value << 7) | (c & 0x7f);
+        } while(c & 0x80);
 
         return value;
     }
 
-    void sysEx() {
+    void sysEx()
+    {
         dataPos += readDelta();
     }
 
@@ -85,7 +92,7 @@ struct EMidi::Track
     short runningStatus = -1;
 
     short currentContext = 0;
-    std::array<SongContext,7> contexts;
+    std::array<SongContext, 7> contexts;
 
     bool includeTrack = false;
     bool programChange = false;
@@ -98,19 +105,20 @@ void EMidi::resetTracks()
     m_timing.ticksPerBeat = m_division;
 
     m_positionInTicks = 0;
-    m_activeTracks    = 0;
-    m_context         = 0;
+    m_activeTracks = 0;
+    m_context = 0;
 
-    for( Track& track : m_tracks ) {
+    for(Track& track : m_tracks)
+    {
         track.dataPos = 0;
         track.delay = track.readDelta();
         track.active = track.includeTrack;
         track.runningStatus = -1;
         track.currentContext = 0;
-        track.contexts[ 0 ].loopstart = SongContext::Unlooped;
-        track.contexts[ 0 ].loopcount = 0;
+        track.contexts[0].loopstart = SongContext::Unlooped;
+        track.contexts[0].loopcount = 0;
 
-        if ( track.active )
+        if(track.active)
             m_activeTracks++;
     }
 }
@@ -120,12 +128,12 @@ void EMidi::advanceTick()
     m_positionInTicks++;
 
     m_timing.tick++;
-    while( m_timing.tick > m_timing.ticksPerBeat )
+    while(m_timing.tick > m_timing.ticksPerBeat)
     {
         m_timing.tick -= m_timing.ticksPerBeat;
         m_timing.beat++;
     }
-    while( m_timing.beat > m_timing.beatsPerMeasure )
+    while(m_timing.beat > m_timing.beatsPerMeasure)
     {
         m_timing.beat -= m_timing.beatsPerMeasure;
         m_timing.measure++;
@@ -141,109 +149,112 @@ void EMidi::metaEvent(EMidi::Track& track)
 #define MIDI_TEMPO_CHANGE          0x51
 #define MIDI_TIME_SIGNATURE        0x58
 
-    switch( command ) {
-    case MIDI_END_OF_TRACK :
-        track.active = false;
-        m_activeTracks--;
-        break;
+    switch(command)
+    {
+        case MIDI_END_OF_TRACK:
+            track.active = false;
+            m_activeTracks--;
+            break;
 
-    case MIDI_TEMPO_CHANGE : {
-        BOOST_ASSERT(length>=3);
-        uint32_t num = track.nextByte() << 16;
-        num |= track.nextByte()<<8;
-        num |= track.nextByte();
-        length -= 3;
-        setTempo( 60000000L / num );
-        break;
-    }
-
-    case MIDI_TIME_SIGNATURE :
-        BOOST_ASSERT(length>=2);
-        if( m_timing.tick > 0 || m_timing.beat > 1 ) {
-            m_timing.measure++;
+        case MIDI_TEMPO_CHANGE:
+        {
+            BOOST_ASSERT(length >= 3);
+            uint32_t num = track.nextByte() << 16;
+            num |= track.nextByte() << 8;
+            num |= track.nextByte();
+            length -= 3;
+            setTempo(60000000L / num);
+            break;
         }
 
-        m_timing.tick = 0;
-        m_timing.beat = 1;
+        case MIDI_TIME_SIGNATURE:
+            BOOST_ASSERT(length >= 2);
+            if(m_timing.tick > 0 || m_timing.beat > 1)
+            {
+                m_timing.measure++;
+            }
 
-        m_timing.beatsPerMeasure = track.nextByte();
-        m_timing.timeBase = 1 << track.nextByte();
-        length -= 2;
-        m_timing.ticksPerBeat = ( m_division * 4 ) / m_timing.timeBase;
-        break;
-    case 0x20: // MIDI channel prefix assignment
-        BOOST_ASSERT( length == 1 );
-        m_channelPrefix = track.nextByte();
-        --length;
-        break;
-    case 0x02: // Copyright notice
-        std::cout << "Copyright: ";
-        while(length--)
-            std::cout << char(track.nextByte());
-        std::cout << "\n";
-        length = 0;
-        break;
-    case 0x01: // Text event
-        std::cout << "Comment: ";
-        while(length--)
-            std::cout << char(track.nextByte());
-        std::cout << "\n";
-        length = 0;
-        break;
-    case 0x03: // Sequence/track name
-        std::cout << "Track name: ";
-        while(length--)
-            std::cout << char(track.nextByte());
-        std::cout << "\n";
-        length = 0;
-        break;
-    case 0x04: // Instrument name
-        std::cout << "Instrument name: ";
-        while(length--)
-            std::cout << char(track.nextByte());
-        std::cout << "\n";
-        length = 0;
-        break;
-    case 0x05: // lyric text
-        std::cout << "Lyric: ";
-        while(length--)
-            std::cout << char(track.nextByte());
-        length = 0;
-        std::cout << "\n";
-        break;
-    case 0x06: // marker text
-        std::cout << "Marker: ";
-        while(length--)
-            std::cout << char(track.nextByte());
-        length = 0;
-        std::cout << "\n";
-        break;
-    case 0x08: // title OR muse score program name
-        std::cout << "Title: ";
-        while(length--)
-            std::cout << char(track.nextByte());
-        length = 0;
-        std::cout << "\n";
-        break;
-    case 0x00: // Sequence number
-    case 0x07: // Cue point
-    case 0x09: // muse score device name
-    case 0x21: // MIDI port
-    case 0x54: // SMPTE offset
-    case 0x59: // Key signature
-    case 0x7f: // Sequencer specific event
-        break;
-    default:
-        throw std::runtime_error("Unhandled meta event");
+            m_timing.tick = 0;
+            m_timing.beat = 1;
+
+            m_timing.beatsPerMeasure = track.nextByte();
+            m_timing.timeBase = 1 << track.nextByte();
+            length -= 2;
+            m_timing.ticksPerBeat = (m_division * 4) / m_timing.timeBase;
+            break;
+        case 0x20: // MIDI channel prefix assignment
+            BOOST_ASSERT(length == 1);
+            m_channelPrefix = track.nextByte();
+            --length;
+            break;
+        case 0x02: // Copyright notice
+            std::cout << "Copyright: ";
+            while(length--)
+                std::cout << char(track.nextByte());
+            std::cout << "\n";
+            length = 0;
+            break;
+        case 0x01: // Text event
+            std::cout << "Comment: ";
+            while(length--)
+                std::cout << char(track.nextByte());
+            std::cout << "\n";
+            length = 0;
+            break;
+        case 0x03: // Sequence/track name
+            std::cout << "Track name: ";
+            while(length--)
+                std::cout << char(track.nextByte());
+            std::cout << "\n";
+            length = 0;
+            break;
+        case 0x04: // Instrument name
+            std::cout << "Instrument name: ";
+            while(length--)
+                std::cout << char(track.nextByte());
+            std::cout << "\n";
+            length = 0;
+            break;
+        case 0x05: // lyric text
+            std::cout << "Lyric: ";
+            while(length--)
+                std::cout << char(track.nextByte());
+            length = 0;
+            std::cout << "\n";
+            break;
+        case 0x06: // marker text
+            std::cout << "Marker: ";
+            while(length--)
+                std::cout << char(track.nextByte());
+            length = 0;
+            std::cout << "\n";
+            break;
+        case 0x08: // title OR muse score program name
+            std::cout << "Title: ";
+            while(length--)
+                std::cout << char(track.nextByte());
+            length = 0;
+            std::cout << "\n";
+            break;
+        case 0x00: // Sequence number
+        case 0x07: // Cue point
+        case 0x09: // muse score device name
+        case 0x21: // MIDI port
+        case 0x54: // SMPTE offset
+        case 0x59: // Key signature
+        case 0x7f: // Sequencer specific event
+            break;
+        default:
+            throw std::runtime_error("Unhandled meta event");
     }
 
     track.dataPos += length;
 }
 
-bool EMidi::interpretControllerInfo ( EMidi::Track& track, bool timeSet, int channel, uint8_t c1, uint8_t c2 )
+bool EMidi::interpretControllerInfo(EMidi::Track& track, bool timeSet, int channel, uint8_t c1, uint8_t c2)
 {
-    BOOST_ASSERT( channel>=0 && channel<16 );
-    Track *trackptr;
+    BOOST_ASSERT(channel >= 0 && channel < 16);
+    Track* trackptr;
     int tracknum;
     int loopcount;
 
@@ -270,158 +281,174 @@ bool EMidi::interpretControllerInfo ( EMidi::Track& track, bool timeSet, int cha
 #define MIDI_MONO_MODE_ON          0x7E
 #define MIDI_SYSTEM_RESET          0xFF
 
-    switch( c1 ) {
-    case MIDI_MONO_MODE_ON :
-        track.dataPos++;
-        break;
-
-    case MIDI_VOLUME :
-        if ( !track.volumeChange ) {
-            setChannelVolume( channel, c2 );
-        }
-        break;
-
-    case EMIDI_INCLUDE_TRACK :
-    case EMIDI_EXCLUDE_TRACK :
-        break;
-
-    case EMIDI_PROGRAM_CHANGE :
-        if ( track.programChange ) {
-            m_chips.programChange( channel, c2 & 0x7f );
-        }
-        break;
-
-    case EMIDI_VOLUME_CHANGE :
-        if ( track.volumeChange ) {
-            setChannelVolume( channel, c2 );
-        }
-        break;
-
-    case EMIDI_CONTEXT_START :
-        break;
-
-    case EMIDI_CONTEXT_END :
-        if ( track.currentContext == m_context || m_context < 0 || track.contexts[ m_context ].pos == 0 ) {
-            break;
-        }
-
-        track.currentContext = m_context;
-        track.contexts[ 0 ].loopstart = track.contexts[ m_context ].loopstart;
-        track.contexts[ 0 ].loopcount = track.contexts[ m_context ].loopcount;
-        track.dataPos = track.contexts[ m_context ].pos;
-        track.runningStatus = track.contexts[ m_context ].runningStatus;
-
-        if ( timeSet )
+    switch(c1)
+    {
+        case MIDI_MONO_MODE_ON:
+            track.dataPos++;
             break;
 
-        m_timing           = track.contexts[ m_context ].timing;
-        timeSet = true;
-        break;
-
-    case EMIDI_LOOP_START :
-    case EMIDI_SONG_LOOP_START :
-        if ( c2 == 0 ) {
-            loopcount = SongContext::InfiniteLoop;
-        }
-        else {
-            loopcount = c2;
-        }
-
-        if ( c1 == EMIDI_SONG_LOOP_START ) {
-            trackptr = m_tracks.data();
-            tracknum = m_tracks.size();
-        }
-        else {
-            trackptr = &track;
-            tracknum = 1;
-        }
-
-        while( tracknum > 0 ) {
-            trackptr->contexts[ 0 ].loopcount        = loopcount;
-            trackptr->contexts[ 0 ].pos              = trackptr->dataPos;
-            trackptr->contexts[ 0 ].loopstart        = trackptr->dataPos;
-            trackptr->contexts[ 0 ].runningStatus    = trackptr->runningStatus;
-            trackptr->contexts[ 0 ].active           = trackptr->active;
-            trackptr->contexts[ 0 ].delay            = trackptr->delay;
-            trackptr->contexts[ 0 ].timing           = m_timing;
-            trackptr++;
-            tracknum--;
-        }
-        break;
-
-    case EMIDI_LOOP_END :
-    case EMIDI_SONG_LOOP_END :
-        if ( c2 != EMIDI_END_LOOP_VALUE || track.contexts[ 0 ].loopstart == SongContext::Unlooped || track.contexts[ 0 ].loopcount == 0 ) {
+        case MIDI_VOLUME:
+            if(!track.volumeChange)
+            {
+                setChannelVolume(channel, c2);
+            }
             break;
-        }
 
-        if ( c1 == EMIDI_SONG_LOOP_END ) {
-            trackptr = m_tracks.data();
-            tracknum = m_tracks.size();
-            m_activeTracks = 0;
-        }
-        else {
-            trackptr = &track;
-            tracknum = 1;
-            m_activeTracks--;
-        }
+        case EMIDI_INCLUDE_TRACK:
+        case EMIDI_EXCLUDE_TRACK:
+            break;
 
-        while( tracknum > 0 ) {
-            if( trackptr->contexts[ 0 ].loopcount != SongContext::InfiniteLoop ) {
-                trackptr->contexts[ 0 ].loopcount--;
+        case EMIDI_PROGRAM_CHANGE:
+            if(track.programChange)
+            {
+                m_chips.programChange(channel, c2 & 0x7f);
+            }
+            break;
+
+        case EMIDI_VOLUME_CHANGE:
+            if(track.volumeChange)
+            {
+                setChannelVolume(channel, c2);
+            }
+            break;
+
+        case EMIDI_CONTEXT_START:
+            break;
+
+        case EMIDI_CONTEXT_END:
+            if(track.currentContext == m_context || m_context < 0 || track.contexts[m_context].pos == 0)
+            {
+                break;
             }
 
-            BOOST_ASSERT( trackptr->contexts[ 0 ].loopstart != SongContext::Unlooped );
-            trackptr->dataPos       = trackptr->contexts[ 0 ].loopstart;
-            trackptr->runningStatus = trackptr->contexts[ 0 ].runningStatus;
-            trackptr->delay         = trackptr->contexts[ 0 ].delay;
-            trackptr->active        = trackptr->contexts[ 0 ].active;
-            if ( trackptr->active )
-                m_activeTracks++;
+            track.currentContext = m_context;
+            track.contexts[0].loopstart = track.contexts[m_context].loopstart;
+            track.contexts[0].loopcount = track.contexts[m_context].loopcount;
+            track.dataPos = track.contexts[m_context].pos;
+            track.runningStatus = track.contexts[m_context].runningStatus;
 
-            if( !timeSet ) {
-                m_timing = trackptr->contexts[0].timing;
-                timeSet = true;
+            if(timeSet)
+                break;
+
+            m_timing = track.contexts[m_context].timing;
+            timeSet = true;
+            break;
+
+        case EMIDI_LOOP_START:
+        case EMIDI_SONG_LOOP_START:
+            if(c2 == 0)
+            {
+                loopcount = SongContext::InfiniteLoop;
+            }
+            else
+            {
+                loopcount = c2;
             }
 
-            trackptr++;
-            tracknum--;
-        }
-        break;
-    case MIDI_DETUNE:
-        m_chips.setChannelDetune( channel, c2 );
-        break;
-    case MIDI_ALL_NOTES_OFF:
-        m_chips.allNotesOff(channel);
-        break;
-    case MIDI_RESET_ALL_CONTROLLERS:
-        m_chips.controlChange( channel, MultiChips::ControlData::ResetAllControllers );
-        break;
-    case 100: // Registered Parameter Number (LSB)
-        m_chips.controlChange( channel, MultiChips::ControlData::RpnLsb, c2 );
-        break;
-    case 101: // Registered Parameter Number (MSB)
-        m_chips.controlChange( channel, MultiChips::ControlData::RpnMsb, c2 );
-        break;
-    case 6: // Data Entry
-        m_chips.controlChange( channel, MultiChips::ControlData::DataentryMsb, c2 );
-        break;
-    case 38: // Data Entry
-        m_chips.controlChange( channel, MultiChips::ControlData::DataentryLsb, c2 );
-        break;
-    case 10: // Pan
-        m_chips.controlChange( channel, MultiChips::ControlData::Pan, c2 );
-        break;
-    case 1: // Modulation wheel
-    case 8: // Balance
-    case 91: // Effects 1 (Reverb Send Level)
-    case 93: // Effects 3 (Chorus Send Level)
-    case 0: // Bank select
-    case 32: // Bank select
-        break;
-    default:
-        // throw std::runtime_error("Unhandled controller event");
-        std::cout << "Unhandled controller event #" << int(c1) << std::endl;
+            if(c1 == EMIDI_SONG_LOOP_START)
+            {
+                trackptr = m_tracks.data();
+                tracknum = m_tracks.size();
+            }
+            else
+            {
+                trackptr = &track;
+                tracknum = 1;
+            }
+
+            while(tracknum > 0)
+            {
+                trackptr->contexts[0].loopcount = loopcount;
+                trackptr->contexts[0].pos = trackptr->dataPos;
+                trackptr->contexts[0].loopstart = trackptr->dataPos;
+                trackptr->contexts[0].runningStatus = trackptr->runningStatus;
+                trackptr->contexts[0].active = trackptr->active;
+                trackptr->contexts[0].delay = trackptr->delay;
+                trackptr->contexts[0].timing = m_timing;
+                trackptr++;
+                tracknum--;
+            }
+            break;
+
+        case EMIDI_LOOP_END:
+        case EMIDI_SONG_LOOP_END:
+            if(c2 != EMIDI_END_LOOP_VALUE || track.contexts[0].loopstart == SongContext::Unlooped || track.contexts[0].loopcount == 0)
+            {
+                break;
+            }
+
+            if(c1 == EMIDI_SONG_LOOP_END)
+            {
+                trackptr = m_tracks.data();
+                tracknum = m_tracks.size();
+                m_activeTracks = 0;
+            }
+            else
+            {
+                trackptr = &track;
+                tracknum = 1;
+                m_activeTracks--;
+            }
+
+            while(tracknum > 0)
+            {
+                if(trackptr->contexts[0].loopcount != SongContext::InfiniteLoop)
+                {
+                    trackptr->contexts[0].loopcount--;
+                }
+
+                BOOST_ASSERT(trackptr->contexts[0].loopstart != SongContext::Unlooped);
+                trackptr->dataPos = trackptr->contexts[0].loopstart;
+                trackptr->runningStatus = trackptr->contexts[0].runningStatus;
+                trackptr->delay = trackptr->contexts[0].delay;
+                trackptr->active = trackptr->contexts[0].active;
+                if(trackptr->active)
+                    m_activeTracks++;
+
+                if(!timeSet)
+                {
+                    m_timing = trackptr->contexts[0].timing;
+                    timeSet = true;
+                }
+
+                trackptr++;
+                tracknum--;
+            }
+            break;
+        case MIDI_DETUNE:
+            m_chips.setChannelDetune(channel, c2);
+            break;
+        case MIDI_ALL_NOTES_OFF:
+            m_chips.allNotesOff(channel);
+            break;
+        case MIDI_RESET_ALL_CONTROLLERS:
+            m_chips.controlChange(channel, MultiChips::ControlData::ResetAllControllers);
+            break;
+        case 100: // Registered Parameter Number (LSB)
+            m_chips.controlChange(channel, MultiChips::ControlData::RpnLsb, c2);
+            break;
+        case 101: // Registered Parameter Number (MSB)
+            m_chips.controlChange(channel, MultiChips::ControlData::RpnMsb, c2);
+            break;
+        case 6: // Data Entry
+            m_chips.controlChange(channel, MultiChips::ControlData::DataentryMsb, c2);
+            break;
+        case 38: // Data Entry
+            m_chips.controlChange(channel, MultiChips::ControlData::DataentryLsb, c2);
+            break;
+        case 10: // Pan
+            m_chips.controlChange(channel, MultiChips::ControlData::Pan, c2);
+            break;
+        case 1: // Modulation wheel
+        case 8: // Balance
+        case 91: // Effects 1 (Reverb Send Level)
+        case 93: // Effects 3 (Chorus Send Level)
+        case 0: // Bank select
+        case 32: // Bank select
+            break;
+        default:
+            // throw std::runtime_error("Unhandled controller event");
+            std::cout << "Unhandled controller event #" << int(c1) << std::endl;
     }
 
     return timeSet;
@@ -429,13 +456,14 @@ bool EMidi::interpretControllerInfo ( EMidi::Track& track, bool timeSet, int cha
 
 bool EMidi::serviceRoutine()
 {
-    switch(m_format) {
-    case Format::PlainMidi:
-        return serviceRoutineMidi();
-    case Format::IdMus:
-        return serviceRoutineMus();
-    default:
-        return false;
+    switch(m_format)
+    {
+        case Format::PlainMidi:
+            return serviceRoutineMidi();
+        case Format::IdMus:
+            return serviceRoutineMus();
+        default:
+            return false;
     }
 }
 
@@ -443,89 +471,102 @@ bool EMidi::serviceRoutineMidi()
 {
     bool timeSet = false;
 
-    while(true) {
+    while(true)
+    {
         bool repeat = false;
 
-        for( Track& track : m_tracks ) {
-            while( track.active && track.delay == 0 ) {
-                if( track.dataPos >= track.data.size()) {
+        for(Track& track : m_tracks)
+        {
+            while(track.active && track.delay == 0)
+            {
+                if(track.dataPos >= track.data.size())
+                {
                     track.active = false;
                     break;
                 }
                 auto event = track.nextByte();
 
-                if ( event & MIDI_RUNNING_STATUS ) {
+                if(event & MIDI_RUNNING_STATUS)
+                {
                     track.runningStatus = event;
                 }
-                else {
+                else
+                {
                     BOOST_ASSERT(track.runningStatus != -1);
                     event = track.runningStatus;
                     track.dataPos--;
                 }
 
-                if ( ( (event>>4)&0x0f ) == MIDI_SPECIAL ) {
-                    switch( event ) {
-                    case MIDI_SYSEX :
-                    case MIDI_SYSEX_CONTINUE :
-                        track.sysEx();
-                        break;
+                if(((event >> 4) & 0x0f) == MIDI_SPECIAL)
+                {
+                    switch(event)
+                    {
+                        case MIDI_SYSEX:
+                        case MIDI_SYSEX_CONTINUE:
+                            track.sysEx();
+                            break;
 
-                    case MIDI_META_EVENT :
-                        metaEvent( track );
-                        break;
+                        case MIDI_META_EVENT:
+                            metaEvent(track);
+                            break;
 
-                    default:
-                        throw std::runtime_error("Unhandled special command");
+                        default:
+                            throw std::runtime_error("Unhandled special command");
                     }
 
-                    if ( track.active ) {
+                    if(track.active)
+                    {
                         track.delay = track.readDelta();
                     }
 
                     continue;
                 }
 
-                auto channel = event&0x0f;
-                auto command = (event>>4)&0x0f;
+                auto channel = event & 0x0f;
+                auto command = (event >> 4) & 0x0f;
 
-                BOOST_ASSERT(command>=8);
-                uint8_t c1=0, c2=0;
-                if ( commandLengths[ command ] > 0 ) {
+                BOOST_ASSERT(command >= 8);
+                uint8_t c1 = 0, c2 = 0;
+                if(commandLengths[command] > 0)
+                {
                     c1 = track.nextByte();
-                    if ( commandLengths[ command ] > 1 ) {
+                    if(commandLengths[command] > 1)
+                    {
                         c2 = track.nextByte();
                     }
                 }
 
-                switch ( command ) {
-                case MIDI_NOTE_OFF :
-                    m_chips.noteOff( channel, c1 );
-                    break;
+                switch(command)
+                {
+                    case MIDI_NOTE_OFF:
+                        m_chips.noteOff(channel, c1);
+                        break;
 
-                case MIDI_NOTE_ON :
-                    m_chips.noteOn( channel, c1, c2 );
-                    break;
+                    case MIDI_NOTE_ON:
+                        m_chips.noteOn(channel, c1, c2);
+                        break;
 
-                case MIDI_CONTROL_CHANGE :
-                    timeSet = interpretControllerInfo( track, timeSet, channel, c1, c2 );
-                    break;
+                    case MIDI_CONTROL_CHANGE:
+                        timeSet = interpretControllerInfo(track, timeSet, channel, c1, c2);
+                        break;
 
-                case MIDI_PROGRAM_CHANGE :
-                    if ( !track.programChange ) {
-                        m_chips.programChange( channel, c1 & 0x7f );
-                    }
-                    break;
+                    case MIDI_PROGRAM_CHANGE:
+                        if(!track.programChange)
+                        {
+                            m_chips.programChange(channel, c1 & 0x7f);
+                        }
+                        break;
 
-                case MIDI_PITCH_BEND:
-                    m_chips.pitchBend(channel, c1, c2);
-                    break;
+                    case MIDI_PITCH_BEND:
+                        m_chips.pitchBend(channel, c1, c2);
+                        break;
 
-                case MIDI_POLYPHONIC_PRESSURE:
-                case MIDI_CHANNEL_PRESSURE:
-                    break;
+                    case MIDI_POLYPHONIC_PRESSURE:
+                    case MIDI_CHANNEL_PRESSURE:
+                        break;
 
-                default:
-                    throw std::runtime_error("Unhandled command");
+                    default:
+                        throw std::runtime_error("Unhandled command");
                 }
 
                 track.delay = track.readDelta();
@@ -533,13 +574,16 @@ bool EMidi::serviceRoutineMidi()
 
             track.delay--;
 
-            if ( m_activeTracks == 0 ) {
+            if(m_activeTracks == 0)
+            {
                 resetTracks();
-                if ( m_loop ) {
+                if(m_loop)
+                {
                     repeat = true;
                     break;
                 }
-                else {
+                else
+                {
                     return false;
                 }
             }
@@ -557,10 +601,13 @@ bool EMidi::serviceRoutineMus()
 {
     // This loop isn't endless; it's only used as a "goto-less goto"
     // if looping is enabled, as there's a "break" at the very end.
-    while( true ) {
+    while(true)
+    {
         bool pitchIsUsed = false;
-        while( m_tracks[0].active && m_tracks[0].delay == 0 ) {
-            if( m_tracks[0].dataPos >= m_tracks[0].data.size()) {
+        while(m_tracks[0].active && m_tracks[0].delay == 0)
+        {
+            if(m_tracks[0].dataPos >= m_tracks[0].data.size())
+            {
                 m_tracks[0].active = false;
                 break;
             }
@@ -569,78 +616,87 @@ bool EMidi::serviceRoutineMus()
 
             auto channel = event & 0x0f;
             // swap channels 9 and 15 to use MIDI's percussion channel handling
-            if( channel==9 )
+            if(channel == 9)
                 channel = 15;
-            else if( channel==15 )
+            else if(channel == 15)
                 channel = 9;
 
-            const auto eventType = (event>>4)&7;
+            const auto eventType = (event >> 4) & 7;
             const bool isLast = (event & 0x80) != 0;
 
-            switch ( eventType ) {
-            case 0: // note off
-                m_chips.noteOff( channel, m_tracks[0].nextByte() & 0x7f );
-                break;
-
-            case 1: { // note on
-                auto tmp = m_tracks[0].nextByte();
-                auto vol = m_channelVolume[channel];
-                if( tmp&0x80 ) {
-                    vol = m_channelVolume[channel] = (m_tracks[0].nextByte() & 0x7f);
-                }
-                m_chips.noteOn( channel, tmp & 0x7f, vol );
-                break;
-            }
-
-            case 2: { // pitch wheel
-                auto data = m_tracks[0].nextByte();
-                m_chips.pitchBend(channel, data<<7, data>>1 );
-                pitchIsUsed = true;
-                break;
-            }
-
-            case 3: { // sysevent
-                auto sys = m_tracks[0].nextByte() & 0x7f;
-                switch( sys ) {
-                case 11:
-                    m_chips.allNotesOff(channel);
+            switch(eventType)
+            {
+                case 0: // note off
+                    m_chips.noteOff(channel, m_tracks[0].nextByte() & 0x7f);
                     break;
-                case 14:
-                    interpretControllerInfo(m_tracks[0], true, channel, 121, 0);
+
+                case 1:
+                { // note on
+                    auto tmp = m_tracks[0].nextByte();
+                    auto vol = m_channelVolume[channel];
+                    if(tmp & 0x80)
+                    {
+                        vol = m_channelVolume[channel] = (m_tracks[0].nextByte() & 0x7f);
+                    }
+                    m_chips.noteOn(channel, tmp & 0x7f, vol);
                     break;
                 }
 
-                break;
-            }
-
-            case 4: { // control change
-                auto c1 = m_tracks[0].nextByte();
-                auto c2 = m_tracks[0].nextByte();
-                switch(c1 & 0x7f) {
-                case 0: // patch change:
-                    m_chips.programChange( channel, c2 & 0x7f );
-                    break;
-                case 3: // volume
-                    interpretControllerInfo( m_tracks[0], true, channel, 7, c2 & 0x7f );
-                    break;
-                case 4: // pan
+                case 2:
+                { // pitch wheel
+                    auto data = m_tracks[0].nextByte();
+                    m_chips.pitchBend(channel, data << 7, data >> 1);
+                    pitchIsUsed = true;
                     break;
                 }
 
-                break;
-            }
-            case 6: // end of score
-                m_tracks[0].active = false;
-                --m_activeTracks;
-                break;
-            default:
-                throw std::runtime_error("Unhandled event type");
+                case 3:
+                { // sysevent
+                    auto sys = m_tracks[0].nextByte() & 0x7f;
+                    switch(sys)
+                    {
+                        case 11:
+                            m_chips.allNotesOff(channel);
+                            break;
+                        case 14:
+                            interpretControllerInfo(m_tracks[0], true, channel, 121, 0);
+                            break;
+                    }
+
+                    break;
+                }
+
+                case 4:
+                { // control change
+                    auto c1 = m_tracks[0].nextByte();
+                    auto c2 = m_tracks[0].nextByte();
+                    switch(c1 & 0x7f)
+                    {
+                        case 0: // patch change:
+                            m_chips.programChange(channel, c2 & 0x7f);
+                            break;
+                        case 3: // volume
+                            interpretControllerInfo(m_tracks[0], true, channel, 7, c2 & 0x7f);
+                            break;
+                        case 4: // pan
+                            break;
+                    }
+
+                    break;
+                }
+                case 6: // end of score
+                    m_tracks[0].active = false;
+                    --m_activeTracks;
+                    break;
+                default:
+                    throw std::runtime_error("Unhandled event type");
             }
 
             if(!pitchIsUsed)
-                m_chips.pitchBend(channel, 0, 64 ); // reset pitch wheel
+                m_chips.pitchBend(channel, 0, 64); // reset pitch wheel
 
-            if( isLast ) {
+            if(isLast)
+            {
                 // read timing information...
                 m_tracks[0].delay = m_tracks[0].readDelta();
             }
@@ -648,12 +704,15 @@ bool EMidi::serviceRoutineMus()
 
         m_tracks[0].delay--;
 
-        if ( m_activeTracks == 0 ) {
+        if(m_activeTracks == 0)
+        {
             resetTracks();
-            if ( m_loop ) {
+            if(m_loop)
+            {
                 continue;
             }
-            else {
+            else
+            {
                 return false;
             }
         }
@@ -662,60 +721,61 @@ bool EMidi::serviceRoutineMus()
     }
 
     advanceTick();
-    return m_activeTracks>0;
+    return m_activeTracks > 0;
 }
 
 void EMidi::allNotesOff()
 {
-    for( size_t channel = 0; channel < NUM_MIDI_CHANNELS; channel++ )
+    for(size_t channel = 0; channel < NUM_MIDI_CHANNELS; channel++)
         m_chips.allNotesOff(channel);
 }
 
-void EMidi::setChannelVolume( int channel, int volume )
+void EMidi::setChannelVolume(int channel, int volume)
 {
-    m_channelVolume[ channel ] = volume;
+    m_channelVolume[channel] = volume;
 
     volume *= m_totalVolume;
     volume /= 255;
 
-    m_chips.setChannelVolume( channel, volume );
+    m_chips.setChannelVolume(channel, volume);
 }
 
 void EMidi::sendChannelVolumes()
 {
-    for( size_t channel = 0; channel < NUM_MIDI_CHANNELS; channel++ )
-        m_chips.setChannelVolume( channel, m_channelVolume[ channel ] );
+    for(size_t channel = 0; channel < NUM_MIDI_CHANNELS; channel++)
+        m_chips.setChannelVolume(channel, m_channelVolume[channel]);
 }
 
 void EMidi::reset()
 {
     allNotesOff();
 
-    for( size_t channel = 0; channel < NUM_MIDI_CHANNELS; channel++ ) {
-        m_chips.controlChange( channel, MultiChips::ControlData::ResetAllControllers );
-        m_chips.controlChange( channel, MultiChips::ControlData::RpnMsb, 0 );
-        m_chips.controlChange( channel, MultiChips::ControlData::RpnLsb, 0 );
-        m_chips.controlChange( channel, MultiChips::ControlData::DataentryMsb, 2 );
-        m_chips.controlChange( channel, MultiChips::ControlData::DataentryLsb, 0 );
-        m_chips.controlChange( channel, MultiChips::ControlData::Pan, 64 );
+    for(size_t channel = 0; channel < NUM_MIDI_CHANNELS; channel++)
+    {
+        m_chips.controlChange(channel, MultiChips::ControlData::ResetAllControllers);
+        m_chips.controlChange(channel, MultiChips::ControlData::RpnMsb, 0);
+        m_chips.controlChange(channel, MultiChips::ControlData::RpnLsb, 0);
+        m_chips.controlChange(channel, MultiChips::ControlData::DataentryMsb, 2);
+        m_chips.controlChange(channel, MultiChips::ControlData::DataentryLsb, 0);
+        m_chips.controlChange(channel, MultiChips::ControlData::Pan, 64);
         static constexpr auto GenMidiDefaultVolume = 90;
-        m_channelVolume[ channel ] = GenMidiDefaultVolume;
+        m_channelVolume[channel] = GenMidiDefaultVolume;
     }
 
     sendChannelVolumes();
 }
 
-void EMidi::setVolume ( int volume )
+void EMidi::setVolume(int volume)
 {
-    volume = std::min( 255, volume );
-    volume = std::max( 0, volume );
+    volume = std::min(255, volume);
+    volume = std::max(0, volume);
 
     m_totalVolume = volume;
 
     sendChannelVolumes();
 }
 
-EMidi::EMidi(Stream &stream, size_t chipCount, bool stereo)
+EMidi::EMidi(Stream& stream, size_t chipCount, bool stereo)
     : m_chips(chipCount, stereo)
     , m_tracks()
 {
@@ -725,8 +785,7 @@ EMidi::EMidi(Stream &stream, size_t chipCount, bool stereo)
 
 EMidi::~EMidi() = default;
 
-
-bool EMidi::tryLoadMidi(Stream &stream)
+bool EMidi::tryLoadMidi(Stream& stream)
 {
     stream.seek(0);
 
@@ -734,7 +793,8 @@ bool EMidi::tryLoadMidi(Stream &stream)
 
     char signature[4];
     stream.read(signature, 4);
-    if ( std::strncmp(signature, "MThd", 4) != 0 ) {
+    if(std::strncmp(signature, "MThd", 4) != 0)
+    {
         return false;
     }
 
@@ -755,25 +815,30 @@ bool EMidi::tryLoadMidi(Stream &stream)
     stream >> m_division;
     ppp::swapEndian(&m_division);
 
-    if ( m_division < 0 ) {
+    if(m_division < 0)
+    {
         // If a SMPTE time division is given, just set to 96 so no errors occur
         m_division = 96;
     }
 
-    if ( format > 1 ) {
+    if(format > 1)
+    {
         return false;
     }
 
-    stream.seek( headerPos + headersize );
+    stream.seek(headerPos + headersize);
 
-    if ( numTracks == 0 ) {
+    if(numTracks == 0)
+    {
         return false;
     }
 
     m_tracks.resize(numTracks);
-    for( Track& track : m_tracks ) {
+    for(Track& track : m_tracks)
+    {
         stream.read(signature, 4);
-        if( std::strncmp(signature, "MTrk", 4) != 0 ) {
+        if(std::strncmp(signature, "MTrk", 4) != 0)
+        {
             m_tracks.clear();
 
             return false;
@@ -793,7 +858,7 @@ bool EMidi::tryLoadMidi(Stream &stream)
 
     reset();
 
-    setTempo( 120 );
+    setTempo(120);
 
     m_format = Format::PlainMidi;
     m_chips.useAdlibVolumes(false);
@@ -801,7 +866,8 @@ bool EMidi::tryLoadMidi(Stream &stream)
 }
 
 #pragma pack(push,1)
-struct MusHeader {
+struct MusHeader
+{
     char id[4];
     uint16_t scoreLen;
     //! @brief Absolute file position
@@ -813,7 +879,7 @@ struct MusHeader {
 };
 #pragma pack(pop)
 
-bool EMidi::tryLoadMus(Stream &stream)
+bool EMidi::tryLoadMus(Stream& stream)
 {
     stream.seek(0);
 
@@ -822,7 +888,8 @@ bool EMidi::tryLoadMus(Stream &stream)
     MusHeader header;
     stream >> header;
 
-    if ( std::strncmp(header.id, "MUS\x1a", 4) != 0 ) {
+    if(std::strncmp(header.id, "MUS\x1a", 4) != 0)
+    {
         return false;
     }
 
@@ -840,72 +907,78 @@ bool EMidi::tryLoadMus(Stream &stream)
 
     reset();
 
-    setTempo( 140 );
+    setTempo(140);
 
     m_format = Format::IdMus;
     m_chips.useAdlibVolumes(true);
     return true;
 }
 
-void EMidi::setTempo ( int tempo )
+void EMidi::setTempo(int tempo)
 {
     m_tempo = tempo;
-    m_ticksPerSecond = ( tempo * m_division ) / 60;
+    m_ticksPerSecond = (tempo * m_division) / 60;
 }
-
 
 void EMidi::initEmidi()
 {
     resetTracks();
 
-    for( Track& track : m_tracks ) {
+    for(Track& track : m_tracks)
+    {
         m_timing = Timing();
         m_timing.ticksPerBeat = m_division;
 
         m_positionInTicks = 0;
-        m_activeTracks    = 0;
-        m_context         = -1;
+        m_activeTracks = 0;
+        m_context = -1;
 
         track.runningStatus = -1;
-        track.active        = true;
+        track.active = true;
 
         track.programChange = false;
-        track.volumeChange  = false;
-        track.includeTrack  = true;
+        track.volumeChange = false;
+        track.includeTrack = true;
 
         // std::memset( track.context, 0, sizeof( track.context ) );
 
-        while( track.delay > 0 ) {
+        while(track.delay > 0)
+        {
             advanceTick();
             track.delay--;
         }
 
         bool includeFound = false;
-        while ( track.active ) {
-            if( track.dataPos >= track.data.size() ) {
+        while(track.active)
+        {
+            if(track.dataPos >= track.data.size())
+            {
                 track.active = false;
                 break;
             }
             auto event = track.nextByte();
 
-            if ( ( (event>>4)&0x0f ) == MIDI_SPECIAL ) {
-                switch( event )
+            if(((event >> 4) & 0x0f) == MIDI_SPECIAL)
+            {
+                switch(event)
                 {
-                case MIDI_SYSEX :
-                case MIDI_SYSEX_CONTINUE :
-                    track.sysEx();
-                    break;
+                    case MIDI_SYSEX:
+                    case MIDI_SYSEX_CONTINUE:
+                        track.sysEx();
+                        break;
 
-                case MIDI_META_EVENT :
-                    metaEvent( track );
-                    break;
-                default:
-                    throw std::runtime_error("Unhandled event");
+                    case MIDI_META_EVENT:
+                        metaEvent(track);
+                        break;
+                    default:
+                        throw std::runtime_error("Unhandled event");
                 }
 
-                if ( track.active ) {
+                if(track.active)
+                {
                     track.delay = track.readDelta();
-                    while( track.delay > 0 ) {
+                    while(track.delay > 0)
+                    {
                         advanceTick();
                         track.delay--;
                     }
@@ -914,105 +987,118 @@ void EMidi::initEmidi()
                 continue;
             }
 
-
-            if ( event & MIDI_RUNNING_STATUS ) {
+            if(event & MIDI_RUNNING_STATUS)
+            {
                 track.runningStatus = event;
             }
-            else {
+            else
+            {
                 BOOST_ASSERT(track.runningStatus != -1);
                 event = track.runningStatus;
                 track.dataPos--;
             }
 
-            auto command = (event>>4)&0x0f;
-            BOOST_ASSERT(command>=8);
-            int length = commandLengths[ command ];
+            auto command = (event >> 4) & 0x0f;
+            BOOST_ASSERT(command >= 8);
+            int length = commandLengths[command];
 
-            if ( command == MIDI_CONTROL_CHANGE ) {
-                if ( track.currentByte() == MIDI_MONO_MODE_ON )
+            if(command == MIDI_CONTROL_CHANGE)
+            {
+                if(track.currentByte() == MIDI_MONO_MODE_ON)
                     length++;
-                uint8_t c1=0, c2=0;
-                if(length>0) {
+                uint8_t c1 = 0, c2 = 0;
+                if(length > 0)
+                {
                     c1 = track.nextByte();
                     --length;
                 }
-                if(length>0) {
+                if(length > 0)
+                {
                     c2 = track.nextByte();
                     --length;
                 }
 
-                switch( c1 ) {
-                case EMIDI_LOOP_START :
-                case EMIDI_SONG_LOOP_START :
-                    if ( c2 == 0 ) {
-                        track.contexts[ 0 ].loopcount = SongContext::InfiniteLoop;
-                    }
-                    else {
-                        track.contexts[ 0 ].loopcount = c2;
-                    }
+                switch(c1)
+                {
+                    case EMIDI_LOOP_START:
+                    case EMIDI_SONG_LOOP_START:
+                        if(c2 == 0)
+                        {
+                            track.contexts[0].loopcount = SongContext::InfiniteLoop;
+                        }
+                        else
+                        {
+                            track.contexts[0].loopcount = c2;
+                        }
 
-                    track.contexts[ 0 ].pos              = track.dataPos;
-                    track.contexts[ 0 ].loopstart        = track.dataPos;
-                    track.contexts[ 0 ].runningStatus    = track.runningStatus;
-                    track.contexts[ 0 ].timing           = m_timing;
-                    break;
+                        track.contexts[0].pos = track.dataPos;
+                        track.contexts[0].loopstart = track.dataPos;
+                        track.contexts[0].runningStatus = track.runningStatus;
+                        track.contexts[0].timing = m_timing;
+                        break;
 
-                case EMIDI_LOOP_END :
-                case EMIDI_SONG_LOOP_END :
-                    if ( c2 == EMIDI_END_LOOP_VALUE ) {
-                        track.contexts[ 0 ].loopstart = SongContext::Unlooped;
-                        track.contexts[ 0 ].loopcount = 0;
-                    }
-                    break;
+                    case EMIDI_LOOP_END:
+                    case EMIDI_SONG_LOOP_END:
+                        if(c2 == EMIDI_END_LOOP_VALUE)
+                        {
+                            track.contexts[0].loopstart = SongContext::Unlooped;
+                            track.contexts[0].loopcount = 0;
+                        }
+                        break;
 
-                case EMIDI_INCLUDE_TRACK :
-                    if ( EMIDI_AffectsCurrentCard( c2, EMIDI_Adlib ) ) {
-                        //printf( "Include track %d on card %d\n", tracknum, c2 );
-                        includeFound = true;
-                        track.includeTrack = true;
-                    }
-                    else if ( !includeFound ) {
-                        //printf( "Track excluded %d on card %d\n", tracknum, c2 );
-                        includeFound = true;
-                        track.includeTrack = false;
-                    }
-                    break;
+                    case EMIDI_INCLUDE_TRACK:
+                        if(EMIDI_AffectsCurrentCard(c2, EMIDI_Adlib))
+                        {
+                            //printf( "Include track %d on card %d\n", tracknum, c2 );
+                            includeFound = true;
+                            track.includeTrack = true;
+                        }
+                        else if(!includeFound)
+                        {
+                            //printf( "Track excluded %d on card %d\n", tracknum, c2 );
+                            includeFound = true;
+                            track.includeTrack = false;
+                        }
+                        break;
 
-                case EMIDI_EXCLUDE_TRACK :
-                    if ( EMIDI_AffectsCurrentCard( c2, EMIDI_Adlib ) ) {
-                        //printf( "Exclude track %d on card %d\n", tracknum, c2 );
-                        track.includeTrack = false;
-                    }
-                    break;
+                    case EMIDI_EXCLUDE_TRACK:
+                        if(EMIDI_AffectsCurrentCard(c2, EMIDI_Adlib))
+                        {
+                            //printf( "Exclude track %d on card %d\n", tracknum, c2 );
+                            track.includeTrack = false;
+                        }
+                        break;
 
-                case EMIDI_PROGRAM_CHANGE :
-                    track.programChange = true;
-                    break;
+                    case EMIDI_PROGRAM_CHANGE:
+                        track.programChange = true;
+                        break;
 
-                case EMIDI_VOLUME_CHANGE :
-                    track.volumeChange = true;
-                    break;
+                    case EMIDI_VOLUME_CHANGE:
+                        track.volumeChange = true;
+                        break;
 
-                case EMIDI_CONTEXT_START :
-                    if ( c2 > 0 && c2 < track.contexts.size() ) {
-                        track.contexts[ c2 ].pos              = track.dataPos;
-                        track.contexts[ c2 ].loopstart        = track.contexts[ 0 ].loopstart;
-                        track.contexts[ c2 ].loopcount        = track.contexts[ 0 ].loopcount;
-                        track.contexts[ c2 ].runningStatus    = track.runningStatus;
-                        track.contexts[ c2 ].timing           = m_timing;
-                    }
-                    break;
+                    case EMIDI_CONTEXT_START:
+                        if(c2 > 0 && c2 < track.contexts.size())
+                        {
+                            track.contexts[c2].pos = track.dataPos;
+                            track.contexts[c2].loopstart = track.contexts[0].loopstart;
+                            track.contexts[c2].loopcount = track.contexts[0].loopcount;
+                            track.contexts[c2].runningStatus = track.runningStatus;
+                            track.contexts[c2].timing = m_timing;
+                        }
+                        break;
 
-                case EMIDI_CONTEXT_END :
-                    break;
+                    case EMIDI_CONTEXT_END:
+                        break;
                 }
             }
 
-            BOOST_ASSERT(length>=0);
+            BOOST_ASSERT(length >= 0);
             track.dataPos += length;
             track.delay = track.readDelta();
 
-            while( track.delay > 0 ) {
+            while(track.delay > 0)
+            {
                 advanceTick();
                 track.delay--;
             }
@@ -1021,5 +1107,4 @@ void EMidi::initEmidi()
 
     resetTracks();
 }
-
 }

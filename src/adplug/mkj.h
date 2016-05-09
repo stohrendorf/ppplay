@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,20 +23,21 @@
 
 #include "player.h"
 
-class CmkjPlayer : public CPlayer {
+class CmkjPlayer : public Player
+{
     DISABLE_COPY(CmkjPlayer)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CmkjPlayer() = default;
     ~CmkjPlayer() = default;
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const
+    std::string type() const override
     {
         return "MKJamz Audio File";
     }
@@ -45,7 +48,8 @@ private:
     std::vector<int16_t> m_songBuf{};
     bool songend = true;
 
-    struct Channel {
+    struct Channel
+    {
         int16_t defined;
         short songptr, octave, waveform, pstat, speed, delay;
     };

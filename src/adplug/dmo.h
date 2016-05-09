@@ -1,3 +1,5 @@
+#pragma once
+
 /*
   Adplug - Replayer for many OPL2/OPL3 audio file formats.
   Copyright (C) 1999 - 2006 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,21 +23,23 @@
 
 #include "s3m.h"
 
-class CdmoLoader : public Cs3mPlayer {
+class CdmoLoader : public Cs3mPlayer
+{
     DISABLE_COPY(CdmoLoader)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CdmoLoader() = default;
 
-    bool load(const std::string &filename);
+    bool load(const std::string &filename) override;
 
-    std::string type() const;
-    std::string author() const;
+    std::string type() const override;
+    std::string author() const override;
 
 private:
 
-    class dmo_unpacker {
+    class dmo_unpacker
+    {
     public:
         bool decrypt(unsigned char *buf, size_t len);
         long unpack(unsigned char *ibuf, unsigned char *obuf,
@@ -45,7 +49,7 @@ private:
         unsigned short brand(unsigned short range);
         short unpack_block(unsigned char *ibuf, long ilen, unsigned char *obuf);
 
-        unsigned long bseed;
-        unsigned char *oend;
+        unsigned long bseed = 0;
+        unsigned char *oend = nullptr;
     };
 };

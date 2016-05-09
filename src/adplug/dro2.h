@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2005 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -19,13 +21,14 @@
  * dro2.h - DOSBox Raw OPL v2.0 player by Adam Nielsen <malvineous@shikadi.net>
  */
 
-#include <stdint.h> // for uintxx_t
+#include <cstdint>
 #include "player.h"
 
-class Cdro2Player : public CPlayer {
+class Cdro2Player : public Player
+{
     DISABLE_COPY(Cdro2Player)
 
-    uint8_t m_commandDelayS = 0, m_commandDelay = 0;
+        uint8_t m_commandDelayS = 0, m_commandDelay = 0;
     std::vector<uint8_t> m_convTable{};
 
     std::vector<uint8_t> m_data{};
@@ -34,17 +37,17 @@ class Cdro2Player : public CPlayer {
     int m_chipSelector = 0;
 
 public:
-    static CPlayer *factory();
+    static Player *factory();
 
     Cdro2Player() = default;
     ~Cdro2Player() = default;
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const
+    std::string type() const override
     {
         return "DOSBox Raw OPL v2.0";
     }

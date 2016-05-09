@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,16 +23,18 @@
 
 #include "xad.h"
 
-class CxadratPlayer : public CxadPlayer {
+class CxadratPlayer : public CxadPlayer
+{
     DISABLE_COPY(CxadratPlayer)
 public:
-    static CPlayer *factory();
+    static Player *factory();
 
     CxadratPlayer() = default;
 
 private:
 #pragma pack(push,1)
-    struct Header {
+    struct Header
+    {
         char id[3] = "";
         uint8_t version = 0;
         char title[32] = "";
@@ -49,10 +53,11 @@ private:
         uint8_t volume = 0;
         uint8_t speed = 0;
         uint8_t reserved_32[12] = "";
-        uint8_t patseg[2] = {0,0};
+        uint8_t patseg[2] = { 0,0 };
     };
 
-    struct Event {
+    struct Event
+    {
         uint8_t note;
         uint8_t instrument;
         uint8_t volume;
@@ -60,7 +65,8 @@ private:
         uint8_t fxp;
     };
 
-    struct Instrument {
+    struct Instrument
+    {
         uint8_t freq[2];
         uint8_t reserved_2[2];
         uint8_t mod_ctrl;
@@ -81,13 +87,13 @@ private:
 
 #pragma pack(pop)
 
-    bool xadplayer_load();
-    void xadplayer_rewind(int);
-    void xadplayer_update();
-    size_t framesUntilUpdate() const;
-    std::string type() const;
-    std::string title() const;
-    uint32_t instrumentCount() const;
+    bool xadplayer_load() override;
+    void xadplayer_rewind(int) override;
+    void xadplayer_update() override;
+    size_t framesUntilUpdate() const override;
+    std::string type() const override;
+    std::string title() const override;
+    uint32_t instrumentCount() const override;
 
     const uint8_t* m_trackdataByOrder = nullptr;
     Header m_ratHeader{};
@@ -96,16 +102,17 @@ private:
 
     const Instrument *m_instruments = nullptr;
 
-    std::array<std::array<std::array<Event,9>,64>,256> m_tracks{{}};
+    std::array<std::array<std::array<Event, 9>, 64>, 256> m_tracks{ {} };
 
-    struct Channel {
+    struct Channel
+    {
         uint8_t instrument = 0;
         uint8_t volume = 0;
         uint8_t fx = 0;
         uint8_t fxp = 0;
     };
 
-    std::array<Channel,9> m_channels{{}};
+    std::array<Channel, 9> m_channels{ {} };
 
     static uint8_t calculateVolume(uint8_t ivol, uint8_t cvol, uint8_t gvol);
 };

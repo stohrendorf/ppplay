@@ -32,7 +32,8 @@ SDLPlayer::SDLPlayer(int freq, size_t bufsize)
 {
     memset(&m_spec, 0x00, sizeof(SDL_AudioSpec));
 
-    if(SDL_Init(SDL_INIT_AUDIO) < 0) {
+    if(SDL_Init(SDL_INIT_AUDIO) < 0)
+    {
         logger->fatal(L4CXX_LOCATION, "unable to initialize SDL -- %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
@@ -44,7 +45,8 @@ SDLPlayer::SDLPlayer(int freq, size_t bufsize)
     m_spec.callback = SDLPlayer::callback;
     m_spec.userdata = this;
 
-    if(SDL_OpenAudio(&m_spec, &m_spec) < 0) {
+    if(SDL_OpenAudio(&m_spec, &m_spec) < 0)
+    {
         logger->fatal(L4CXX_LOCATION, "unable to open audio -- %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
@@ -67,27 +69,30 @@ void SDLPlayer::frame()
     SDL_Delay(m_spec.freq / (m_spec.size / 4));
 }
 
-void SDLPlayer::callback(void *userdata, Uint8 *audiobuf, int byteLen)
+void SDLPlayer::callback(void* userdata, Uint8* audiobuf, int byteLen)
 {
     SDLPlayer* self = reinterpret_cast<SDLPlayer*>(userdata);
     static long framesUntilUpdate = 0;
     size_t framesToWrite = byteLen / 4;
-    int16_t *bufPtr = reinterpret_cast<int16_t*>(audiobuf);
+    int16_t* bufPtr = reinterpret_cast<int16_t*>(audiobuf);
     // Prepare audiobuf with emulator output
-    while(framesToWrite > 0) {
-        while(framesUntilUpdate <= 0) {
-            self->setIsPlaying( self->getPlayer()->update() );
+    while(framesToWrite > 0)
+    {
+        while(framesUntilUpdate <= 0)
+        {
+            self->setIsPlaying(self->getPlayer()->update());
             framesUntilUpdate += self->getPlayer()->framesUntilUpdate();
         }
 
-        std::array<int16_t,4> samples;
+        std::array<int16_t, 4> samples;
         self->getPlayer()->read(&samples);
-        bufPtr[0] = ppp::clip(samples[0] + samples[2],-32768,32767);
-        bufPtr[1] = ppp::clip(samples[1] + samples[3],-32768,32767);
+        bufPtr[0] = ppp::clip(samples[0] + samples[2], -32768, 32767);
+        bufPtr[1] = ppp::clip(samples[1] + samples[3], -32768, 32767);
         bufPtr += 2;
 
-        if( self->m_interp.next() == 2 ) {
-            self->getPlayer()->read( nullptr ); // skip a sample
+        if(self->m_interp.next() == 2)
+        {
+            self->getPlayer()->read(nullptr); // skip a sample
             --framesUntilUpdate;
         }
         self->m_interp = 0;

@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * AdPlug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2007 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -19,79 +21,82 @@
  * d00.h - D00 Player by Simon Peter <dn.tlp@gmx.net>
  */
 
-#ifndef H_D00
-#define H_D00
-
 #include "player.h"
 
-class Cd00Player : public CPlayer {
+class Cd00Player : public Player
+{
     DISABLE_COPY(Cd00Player)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     Cd00Player() = default;
 
     ~Cd00Player() = default;
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int subsong);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int subsong) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const;
-    std::string title() const
+    std::string type() const override;
+    std::string title() const override
     {
-        if (version > 1)
+        if(version > 1)
             return header->songname;
         else
             return std::string();
     }
-    std::string author() const
+    std::string author() const override
     {
-        if (version > 1)
+        if(version > 1)
             return header->author;
         else
             return std::string();
     }
-    std::string description() const
+    std::string description() const override
     {
         if(*datainfo)
             return datainfo;
         else
             return std::string();
     }
-    uint32_t subSongCount() const;
+    uint32_t subSongCount() const override;
 
 private:
 #pragma pack(push,1)
-    struct d00header {
+    struct d00header
+    {
         char id[6];
         uint8_t type, version, speed, subsongs, soundcard;
         char songname[32], author[32], dummy[32];
         uint16_t tpoin, seqptr, instptr, infoptr, spfxptr, endmark;
     };
 
-    struct d00header1 {
+    struct d00header1
+    {
         uint8_t version, speed, subsongs;
         uint16_t tpoin, seqptr, instptr, infoptr, lpulptr, endmark;
     };
 #pragma pack(pop)
 
-    struct {
+    struct
+    {
         const uint16_t *order;
         uint16_t ordpos, pattpos, del, speed, rhcnt, key, freq, inst,
-        spfx, ispfx, irhcnt;
+            spfx, ispfx, irhcnt;
         signed short transpose, slide, slideval, vibspeed;
         uint8_t seqend, vol, vibdepth, fxdel, modvol, cvol, levpuls,
-        frameskip, nextnote, note, ilevpuls, trigger, fxflag;
+            frameskip, nextnote, note, ilevpuls, trigger, fxflag;
     } channel[9];
 
-    struct Sinsts {
+    struct Sinsts
+    {
         uint8_t data[11], tunelev, timer, sr, dummy[2];
     };
     const Sinsts* inst = nullptr;
 
-    struct Sspfx {
+    struct Sspfx
+    {
         uint16_t instnr;
         int8_t halfnote;
         uint8_t modlev;
@@ -101,7 +106,8 @@ private:
     };
     const Sspfx* spfx = nullptr;
 
-    struct Slevpuls {
+    struct Slevpuls
+    {
         uint8_t level;
         int8_t voladd;
         uint8_t duration, ptr;
@@ -122,5 +128,3 @@ private:
     void playnote(uint8_t chan);
     void vibrato(uint8_t chan);
 };
-
-#endif

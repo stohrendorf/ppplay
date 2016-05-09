@@ -20,40 +20,41 @@
 
 int main(int argc, char** argv)
 {
-    if(argc < 2) {
+    if(argc < 2)
+    {
         std::cout << "Missing output filename.\n";
         return EXIT_FAILURE;
     }
 
     BankDatabaseGen db;
     db.loadMiles("opl_files/sc3.opl",
-              "AIL (Star Control 3, Albion, Empire 2, Sensible Soccer, Settlers 2, many others)",
-              "G"); // Our "standard" bank! Same as file22.opl
+                 "AIL (Star Control 3, Albion, Empire 2, Sensible Soccer, Settlers 2, many others)",
+                 "G"); // Our "standard" bank! Same as file22.opl
 
     db.loadBisqwit("op3_files/bisqwit.adlraw",
-                "Bisqwit (selection of 4op and 2op)",
-                "Bisq");
+                   "Bisqwit (selection of 4op and 2op)",
+                   "Bisq");
 
     db.loadBnk("bnk_files/melodic.bnk", "HMI (Descent, Asterix)", "HMIGM"); // same as file156.bnk
-    db.loadBnk("bnk_files/drum.bnk",    "HMI (Descent, Asterix)", "HMIGP");
+    db.loadBnk("bnk_files/drum.bnk", "HMI (Descent, Asterix)", "HMIGP");
     db.loadBnk("bnk_files/intmelo.bnk", "HMI (Descent:: Int)", "intM");
     db.loadBnk("bnk_files/intdrum.bnk", "HMI (Descent:: Int)", "intP");
     db.loadBnk("bnk_files/hammelo.bnk", "HMI (Descent:: Ham)", "hamM");
     db.loadBnk("bnk_files/hamdrum.bnk", "HMI (Descent:: Ham)", "hamP");
-    db.loadBnk("bnk_files/rickmelo.bnk","HMI (Descent:: Rick)", "rickM");
-    db.loadBnk("bnk_files/rickdrum.bnk","HMI (Descent:: Rick)", "rickP");
+    db.loadBnk("bnk_files/rickmelo.bnk", "HMI (Descent:: Rick)", "rickM");
+    db.loadBnk("bnk_files/rickdrum.bnk", "HMI (Descent:: Rick)", "rickP");
 
-    db.loadBnk("bnk_files/d2melo.bnk",  "HMI (Descent 2)", "b6M");
-    db.loadBnk("bnk_files/d2drum.bnk",  "HMI (Descent 2)", "b6P");
+    db.loadBnk("bnk_files/d2melo.bnk", "HMI (Descent 2)", "b6M");
+    db.loadBnk("bnk_files/d2drum.bnk", "HMI (Descent 2)", "b6P");
     db.loadBnk("bnk_files/normmelo.bnk", "HMI (Normality)", "b7M");
     db.loadBnk("bnk_files/normdrum.bnk", "HMI (Normality)", "b7P"); // same as file122.bnk
-    db.loadBnk("bnk_files/ssmelo.bnk",  "HMI (Shattered Steel)", "b8M");
-    db.loadBnk("bnk_files/ssdrum.bnk",  "HMI (Shattered Steel)", "b8P");
+    db.loadBnk("bnk_files/ssmelo.bnk", "HMI (Shattered Steel)", "b8M");
+    db.loadBnk("bnk_files/ssdrum.bnk", "HMI (Shattered Steel)", "b8P");
 
     db.loadBnk("bnk_files/file131.bnk", "HMI (Theme Park)", "b9M");
     db.loadBnk("bnk_files/file132.bnk", "HMI (Theme Park)", "b9P");
-    db.loadBnk("bnk_files/file133.bnk", "HMI (3d Table Sports, Battle Arena Toshinden)","b10P");
-    db.loadBnk("bnk_files/file134.bnk", "HMI (3d Table Sports, Battle Arena Toshinden)","b10M");
+    db.loadBnk("bnk_files/file133.bnk", "HMI (3d Table Sports, Battle Arena Toshinden)", "b10P");
+    db.loadBnk("bnk_files/file134.bnk", "HMI (3d Table Sports, Battle Arena Toshinden)", "b10M");
     db.loadBnk("bnk_files/file142.bnk", "HMI (Aces of the Deep)", "b11P");
     db.loadBnk("bnk_files/file143.bnk", "HMI (Aces of the Deep)", "b11M");
     db.loadBnk("bnk_files/file144.bnk", "HMI (Earthsiege)", "b12M");
@@ -98,18 +99,18 @@ int main(int argc, char** argv)
     db.loadMiles("opl_files/file53.opl", "AIL (Battle Chess 4000 :: partially 4op, melodic only)", "f53G");
     db.loadMiles("opl_files/file54.opl", "AIL (Ultimate Soccer Manager :: partially 4op)", "f54G");
 
-    db.loadMiles("opl_files/sample.ad",  "AIL (Air Bucks, Blue And The Gray, America Invades, Terminator 2029)", "MG"); // same as file51.opl
+    db.loadMiles("opl_files/sample.ad", "AIL (Air Bucks, Blue And The Gray, America Invades, Terminator 2029)", "MG"); // same as file51.opl
     db.loadMiles("opl_files/sample.opl", "AIL (Ultima Underworld 2)", "oG"); // same as file40.opl
     db.loadMiles("opl_files/file15.opl", "AIL (Kasparov's Gambit)", "f15G");
     db.loadMiles("opl_files/file16.opl", "AIL (High Seas Trader :: MISSING INSTRUMENTS)", "f16G");
 
-    db.loadBnk2("bnk_files/file159.bnk", "AIL (Master of Magic, Master of Orion 2 :: 4op, std percussion)", "b50", "gm","gps"); // fat-opl3
-    db.loadBnk2("bnk_files/file159.bnk", "AIL (Master of Magic, Master of Orion 2 :: 4op, orchestral percussion)", "b51", "gm","gpo");
+    db.loadBnk2("bnk_files/file159.bnk", "AIL (Master of Magic, Master of Orion 2 :: 4op, std percussion)", "b50", "gm", "gps"); // fat-opl3
+    db.loadBnk2("bnk_files/file159.bnk", "AIL (Master of Magic, Master of Orion 2 :: 4op, orchestral percussion)", "b51", "gm", "gpo");
 
     db.loadIBK("ibk_files/soccer-genmidi.ibk", "SB (Action Soccer)", "b55M", false);
-    db.loadIBK("ibk_files/soccer-percs.ibk",   "SB (Action Soccer)", "b55P", true);
-    db.loadIBK("ibk_files/game.ibk",           "SB (3d Cyberpuck :: melodic only)", "b56", false);
-    db.loadIBK("ibk_files/mt_fm.ibk",          "SB (Simon the Sorcerer :: melodic only)", "b57", false);
+    db.loadIBK("ibk_files/soccer-percs.ibk", "SB (Action Soccer)", "b55P", true);
+    db.loadIBK("ibk_files/game.ibk", "SB (3d Cyberpuck :: melodic only)", "b56", false);
+    db.loadIBK("ibk_files/mt_fm.ibk", "SB (Simon the Sorcerer :: melodic only)", "b57", false);
 
     db.loadJunglevision("op3_files/fat2.op3", "OP3 (The Fat Man 2op set)", "fat2");
     db.loadJunglevision("op3_files/fat4.op3", "OP3 (The Fat Man 4op set)", "fat4");
@@ -117,15 +118,17 @@ int main(int argc, char** argv)
     db.loadJunglevision("op3_files/wallace.op3", "OP3 (Wallace 2op set, Nitemare 3D :: melodic only)", "b61");
 
     db.loadTMB("tmb_files/d3dtimbr.tmb", "TMB (Duke Nukem 3D)", "duke");
-    db.loadTMB("tmb_files/swtimbr.tmb",  "TMB (Shadow Warrior)", "sw");
+    db.loadTMB("tmb_files/swtimbr.tmb", "TMB (Shadow Warrior)", "sw");
 
     db.loadDoom("raptor/genmidi.op2", "DMX (Raptor)", "rapt");
 
-    try {
+    try
+    {
         // db.dump();
         db.save(argv[1]);
     }
-    catch(std::runtime_error& ex) {
+    catch(std::runtime_error& ex)
+    {
         std::cout << "Failed to create " << argv[1] << ": " << ex.what() << "\n";
         return EXIT_FAILURE;
     }

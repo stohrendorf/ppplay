@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2005 Simon Peter <dn.tlp@gmx.net>, et al.
@@ -19,37 +21,35 @@
  * imf.h - IMF Player by Simon Peter <dn.tlp@gmx.net>
  */
 
-#ifndef H_ADPLUG_IMFPLAYER
-#define H_ADPLUG_IMFPLAYER
-
 #include "player.h"
 
 class FileStream;
 
-class CimfPlayer : public CPlayer {
+class CimfPlayer : public Player
+{
     DISABLE_COPY(CimfPlayer)
-    public:
-        CimfPlayer() = default;
-    static CPlayer *factory();
+public:
+    CimfPlayer() = default;
+    static Player *factory();
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int subsong);
-    size_t framesUntilUpdate() const
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int subsong) override;
+    size_t framesUntilUpdate() const override
     {
         return static_cast<size_t>(SampleRate / m_timer);
     }
 
-    std::string type() const
+    std::string type() const override
     {
         return "IMF File Format";
     }
-    std::string title() const;
-    std::string author() const
+    std::string title() const override;
+    std::string author() const override
     {
         return m_authorName;
     }
-    std::string description() const;
+    std::string description() const override;
 
 private:
     unsigned long m_pos = 0;
@@ -59,14 +59,15 @@ private:
     float m_timer = 0;
     std::string m_footer{};
 
-    std::string m_trackName {}
-    , m_gameName {}
-    , m_authorName {}
-    , m_remarks {}
+    std::string m_trackName{}
+        , m_gameName{}
+        , m_authorName{}
+        , m_remarks{}
     ;
 
 #pragma pack(push,1)
-    struct Sdata {
+    struct Sdata
+    {
         uint8_t reg = 0, val = 0;
         uint16_t time = 0;
     };
@@ -75,5 +76,3 @@ private:
 
     static int getrate(const FileStream &file);
 };
-
-#endif

@@ -19,7 +19,7 @@
 #include "abstractaudiosource.h"
 
 AbstractAudioSource::AbstractAudioSource() noexcept :
-m_initialized( false ), m_frequency( 0 ), m_paused( false ), m_mutex()
+m_initialized(false), m_frequency(0), m_paused(false), m_mutex()
 {
 }
 
@@ -30,7 +30,7 @@ bool AbstractAudioSource::initialized() const noexcept
 
 bool AbstractAudioSource::fail()
 {
-    std::lock_guard<std::recursive_mutex> lock( m_mutex );
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     m_initialized = false;
     m_frequency = 0;
     return false;
@@ -41,22 +41,23 @@ uint32_t AbstractAudioSource::frequency() const noexcept
     return m_frequency;
 }
 
-bool AbstractAudioSource::initialize( uint32_t frequency )
+bool AbstractAudioSource::initialize(uint32_t frequency)
 {
-    std::lock_guard<std::recursive_mutex> lock( m_mutex );
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     m_frequency = frequency;
-    bool res = internal_initialize( frequency );
-    if( res ) {
+    bool res = internal_initialize(frequency);
+    if(res)
+    {
         m_frequency = frequency;
         m_initialized = true;
     }
-    else {
+    else
+    {
         m_frequency = 0;
         m_initialized = false;
     }
     return res;
 }
-
 
 uint16_t AbstractAudioSource::internal_volumeLeft() const
 {
@@ -65,7 +66,7 @@ uint16_t AbstractAudioSource::internal_volumeLeft() const
 
 uint16_t AbstractAudioSource::volumeLeft() const
 {
-    std::lock_guard<std::recursive_mutex> lock( m_mutex );
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     return internal_volumeLeft();
 }
 
@@ -76,7 +77,7 @@ uint16_t AbstractAudioSource::internal_volumeRight() const
 
 uint16_t AbstractAudioSource::volumeRight() const
 {
-    std::lock_guard<std::recursive_mutex> lock( m_mutex );
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     return internal_volumeRight();
 }
 
@@ -87,17 +88,17 @@ size_t AbstractAudioSource::internal_preferredBufferSize() const
 
 size_t AbstractAudioSource::preferredBufferSize() const
 {
-    std::lock_guard<std::recursive_mutex> lock( m_mutex );
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     return internal_preferredBufferSize();
 }
 
-size_t AbstractAudioSource::getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames )
+size_t AbstractAudioSource::getAudioData(AudioFrameBuffer& buffer, size_t requestedFrames)
 {
-    std::lock_guard<std::recursive_mutex> lock( m_mutex );
-    return internal_getAudioData( buffer, requestedFrames );
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+    return internal_getAudioData(buffer, requestedFrames);
 }
 
 light4cxx::Logger* AbstractAudioSource::logger()
 {
-    return light4cxx::Logger::get( "audio.source" );
+    return light4cxx::Logger::get("audio.source");
 }

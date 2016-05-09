@@ -1,3 +1,5 @@
+#pragma once
+
 /*
   AdPlug - Replayer for many OPL2/OPL3 audio file formats.
   Copyright (C) 1999 - 2003 Simon Peter <dn.tlp@gmx.net>, et al.
@@ -19,35 +21,42 @@
   xad.h - XAD shell player by Riven the Mage <riven@ok.ru>
 */
 
-#ifndef H_ADPLUG_XAD
-#define H_ADPLUG_XAD
-
 #include "player.h"
 
-class CxadPlayer : public CPlayer {
+class CxadPlayer : public Player
+{
     DISABLE_COPY(CxadPlayer)
 public:
-    static CPlayer *factory();
-
     CxadPlayer() = default;
     ~CxadPlayer() = default;
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int subsong);
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int subsong) override;
 
 protected:
     virtual void xadplayer_rewind(int subsong) = 0;
     virtual bool xadplayer_load() = 0;
     virtual void xadplayer_update() = 0;
-    virtual std::string title() const { return m_xadHeader.title; }
-    virtual std::string author() const { return m_xadHeader.author; }
-    virtual std::string instrumentTitle(size_t) const {
+    virtual std::string title() const override
+    {
+        return m_xadHeader.title;
+    }
+    virtual std::string author() const override
+    {
+        return m_xadHeader.author;
+    }
+    virtual std::string instrumentTitle(size_t) const override
+    {
         return std::string();
     }
-    virtual uint32_t instrumentCount() const { return 0; }
+    virtual uint32_t instrumentCount() const override
+    {
+        return 0;
+    }
 
-    enum Format : uint16_t {
+    enum Format : uint16_t
+    {
         None,
         HYP = 1,
         PSI,
@@ -59,7 +68,8 @@ protected:
 
 private:
 #pragma pack(push,1)
-    struct xad_header {
+    struct xad_header
+    {
         uint32_t id = 0;
         char title[36] = "";
         char author[36] = "";
@@ -98,5 +108,3 @@ protected:
         m_xadLooping = true;
     }
 };
-
-#endif

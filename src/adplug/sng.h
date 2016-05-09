@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2002 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -19,26 +21,24 @@
  * sng.h - SNG Player by Simon Peter <dn.tlp@gmx.net>
  */
 
-#ifndef H_ADPLUG_SNGPLAYER
-#define H_ADPLUG_SNGPLAYER
-
 #include "player.h"
 
-class CsngPlayer : public CPlayer {
+class CsngPlayer : public Player
+{
     DISABLE_COPY(CsngPlayer)
 public:
     CsngPlayer() = default;
-    static CPlayer *factory();
+    static Player *factory();
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int subsong);
-    size_t framesUntilUpdate() const
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int subsong) override;
+    size_t framesUntilUpdate() const override
     {
         return SampleRate / 70;
     }
 
-    std::string type() const
+    std::string type() const override
     {
         return "SNG File Format";
     }
@@ -52,7 +52,8 @@ private:
         uint8_t delay = 0;
         uint8_t compressed = false;
     };
-    struct Sdata {
+    struct Sdata
+    {
         uint8_t val = 0, reg = 0;
     };
 #pragma pack(pop)
@@ -64,5 +65,3 @@ private:
     unsigned short m_pos = 0;
     bool m_songEnd = false;
 };
-
-#endif

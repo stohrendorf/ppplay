@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2005 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,20 +23,21 @@
 
 #include "player.h"
 
-class CdroPlayer : public CPlayer {
+class CdroPlayer : public Player
+{
     DISABLE_COPY(CdroPlayer)
 public:
-    static CPlayer *factory();
+    static Player *factory();
 
     CdroPlayer() = default;
     ~CdroPlayer() = default;
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const
+    std::string type() const override
     {
         return "DOSBox Raw OPL v0.1";
     }

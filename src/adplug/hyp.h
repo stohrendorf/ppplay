@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,26 +23,28 @@
 
 #include "xad.h"
 
-class CxadhypPlayer : public CxadPlayer {
+class CxadhypPlayer : public CxadPlayer
+{
     DISABLE_COPY(CxadhypPlayer)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CxadhypPlayer() = default;
 
 protected:
     uint16_t m_hypPointer = 0;
 
-    bool xadplayer_load() {
-        if (xadHeader().fmt == HYP)
+    bool xadplayer_load() override
+    {
+        if(xadHeader().fmt == HYP)
             return true;
         else
             return false;
     }
-    void xadplayer_rewind(int);
-    void xadplayer_update();
-    size_t framesUntilUpdate() const;
-    std::string type() const;
+    void xadplayer_rewind(int) override;
+    void xadplayer_update() override;
+    size_t framesUntilUpdate() const override;
+    std::string type() const override;
 
 private:
     static const uint8_t hyp_adlib_registers[99];

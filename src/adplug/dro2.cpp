@@ -26,37 +26,45 @@
 
 #include "dro2.h"
 
-CPlayer *Cdro2Player::factory() { return new Cdro2Player(); }
+Player* Cdro2Player::factory()
+{
+    return new Cdro2Player();
+}
 
-bool Cdro2Player::load(const std::string &filename) {
+bool Cdro2Player::load(const std::string& filename)
+{
     FileStream f(filename);
-    if (!f)
+    if(!f)
         return false;
 
     char id[8];
     f.read(id, 8);
-    if (strncmp(id, "DBRAWOPL", 8)) {
+    if(strncmp(id, "DBRAWOPL", 8))
+    {
         return false;
     }
     uint32_t version;
     f >> version;
-    if (version != 0x2) {
+    if(version != 0x2)
+    {
         return false;
     }
 
     uint32_t length;
     f >> length;
     length *= 2; // stored in file as number of byte pairs
-    f.seekrel(4);                      // Length in milliseconds
+    f.seekrel(4); // Length in milliseconds
     f.seekrel(1); /// OPL type (0 == OPL2, 1 == Dual OPL2, 2 == OPL3)
     uint8_t iFormat;
     f >> iFormat;
-    if (iFormat != 0) {
+    if(iFormat != 0)
+    {
         return false;
     }
     uint8_t iCompression;
     f >> iCompression;
-    if (iCompression != 0) {
+    if(iCompression != 0)
+    {
         return false;
     }
     uint8_t convTableLength;
@@ -73,33 +81,44 @@ bool Cdro2Player::load(const std::string &filename) {
     return true;
 }
 
-bool Cdro2Player::update() {
-    while (m_pos < m_data.size()) {
+bool Cdro2Player::update()
+{
+    while(m_pos < m_data.size())
+    {
         auto iIndex = m_data[m_pos++];
         const auto iValue = m_data[m_pos++];
 
         // Short delay
-        if (iIndex == m_commandDelayS) {
+        if(iIndex == m_commandDelayS)
+        {
             m_delay = iValue + 1;
             return true;
 
             // Long delay
-        } else if (iIndex == m_commandDelay) {
+        }
+        else if(iIndex == m_commandDelay)
+        {
             m_delay = (iValue + 1) << 8;
             return true;
 
             // Normal write
-        } else {
-            if (iIndex & 0x80) {
+        }
+        else
+        {
+            if(iIndex & 0x80)
+            {
                 // High bit means use second chip in dual-OPL2 config
                 //FIXME sto opl->setchip(1);
                 m_chipSelector = 0x100;
                 iIndex &= 0x7F;
-            } else {
+            }
+            else
+            {
                 //FIXME sto opl->setchip(0);
                 m_chipSelector = 0;
             }
-            if (iIndex > m_convTable.size()) {
+            if(iIndex > m_convTable.size())
+            {
                 printf("DRO2: Error - index beyond end of codemap table!  Corrupted "
                        ".dro?\n");
                 return false; // EOF
@@ -107,7 +126,6 @@ bool Cdro2Player::update() {
             int iReg = m_convTable[iIndex];
             getOpl()->writeReg(m_chipSelector + iReg, iValue);
         }
-
     }
 
     // This won't result in endless-play using Adplay, but IMHO that code belongs
@@ -115,13 +133,15 @@ bool Cdro2Player::update() {
     return m_pos < m_data.size();
 }
 
-void Cdro2Player::rewind(int) {
+void Cdro2Player::rewind(int)
+{
     m_delay = 0;
     m_pos = 0;
 }
 
-size_t Cdro2Player::framesUntilUpdate() const {
-    if (m_delay > 0)
+size_t Cdro2Player::framesUntilUpdate() const
+{
+    if(m_delay > 0)
         return SampleRate * m_delay / 1000;
     else
         return SampleRate / 1000;

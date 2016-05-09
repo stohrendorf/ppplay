@@ -27,20 +27,24 @@
 
 #include "dfm.h"
 
-CPlayer *CdfmLoader::factory() { return new CdfmLoader(); }
+Player* CdfmLoader::factory()
+{
+    return new CdfmLoader();
+}
 
-bool CdfmLoader::load(const std::string &filename) {
+bool CdfmLoader::load(const std::string& filename)
+{
     FileStream f(filename);
-    if (!f)
+    if(!f)
         return false;
     const Command convfx[8] = { Command::Sentinel,
-                                Command::Sentinel,
-                                Command::SetFineVolume2,
-                                Command::RADSpeed,
-                                Command::FineSlideUp,
-                                Command::FineSlideDown,
-                                Command::Sentinel,
-                                Command::PatternBreak };
+        Command::Sentinel,
+        Command::SetFineVolume2,
+        Command::RADSpeed,
+        Command::FineSlideUp,
+        Command::FineSlideDown,
+        Command::Sentinel,
+        Command::PatternBreak };
 
     // file validation
     char id[4];
@@ -49,7 +53,8 @@ bool CdfmLoader::load(const std::string &filename) {
     uint8_t hiver, lover;
     f >> hiver >> lover;
 
-    if (strncmp(id, "DFM\x1a", 4) || hiver > 1) {
+    if(strncmp(id, "DFM\x1a", 4) || hiver > 1)
+    {
         return false;
     }
 
@@ -66,12 +71,14 @@ bool CdfmLoader::load(const std::string &filename) {
     uint8_t initSpeed;
     f >> initSpeed;
     setInitialSpeed(initSpeed);
-    for (auto i = 0; i < 32; i++) {
+    for(auto i = 0; i < 32; i++)
+    {
         char instname[12];
         f.read(instname, 12);
-        m_instName[i].assign( instname, 1, instname[0] );
+        m_instName[i].assign(instname, 1, instname[0]);
     }
-    for (auto i = 0; i < 32; i++) {
+    for(auto i = 0; i < 32; i++)
+    {
         CmodPlayer::Instrument& inst = addInstrument();
         f >> inst.data[1];
         f >> inst.data[2];
@@ -85,39 +92,46 @@ bool CdfmLoader::load(const std::string &filename) {
         f >> inst.data[8];
         f >> inst.data[0];
     }
-    for(uint8_t order; orderCount()<128 && f>>order && order!=0x80; )
+    for(uint8_t order; orderCount() < 128 && f >> order && order != 0x80; )
         addOrder(order);
     setRestartOrder(0);
 
-    f.seekrel(128-orderCount());
+    f.seekrel(128 - orderCount());
     uint8_t npats;
     f >> npats;
-    for (auto i = 0; i < npats; i++) {
+    for(auto i = 0; i < npats; i++)
+    {
         uint8_t n;
         f >> n;
-        for (auto r = 0; r < 64; r++) {
-            for (auto c = 0; c < 9; c++) {
+        for(auto r = 0; r < 64; r++)
+        {
+            for(auto c = 0; c < 9; c++)
+            {
                 uint8_t note;
                 f >> note;
-                PatternCell& cell = patternCell(n*9+c, r);
-                if ((note & 15) == 15)
+                PatternCell& cell = patternCell(n * 9 + c, r);
+                if((note & 15) == 15)
                     cell.note = 127; // key off
                 else
                     cell.note = ((note & 127) >> 4) * 12 + (note & 15);
-                if (note & 128) { // additional effect byte
+                if(note & 128)
+                { // additional effect byte
                     uint8_t fx;
                     f >> fx;
-                    if ((fx >> 5) == 1)
+                    if((fx >> 5) == 1)
                         cell.instrument = (fx & 31) + 1;
-                    else {
+                    else
+                    {
                         cell.command = convfx[fx >> 5];
-                        if (cell.command == Command::SetFineVolume2) { // set volume
+                        if(cell.command == Command::SetFineVolume2)
+                        { // set volume
                             auto param = fx & 31;
                             param = 63 - param * 2;
                             cell.hiNybble = param >> 4;
                             cell.loNybble = param & 15;
                         }
-                        else {
+                        else
+                        {
                             cell.hiNybble = (fx & 31) >> 4;
                             cell.loNybble = fx & 15;
                         }

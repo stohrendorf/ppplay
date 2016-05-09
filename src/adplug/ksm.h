@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -23,40 +25,41 @@
 
 class FileStream;
 
-class CksmPlayer : public CPlayer {
+class CksmPlayer : public Player
+{
     DISABLE_COPY(CksmPlayer)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CksmPlayer() = default;
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int);
-    size_t framesUntilUpdate() const
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int) override;
+    size_t framesUntilUpdate() const override
     {
         return SampleRate / 240;
     }
 
-    std::string type() const
+    std::string type() const override
     {
         return "Ken Silverman's Music Format";
     }
-    uint32_t instrumentCount() const
+    uint32_t instrumentCount() const override
     {
         return 16;
     }
-    std::string instrumentTitle(size_t n) const;
+    std::string instrumentTitle(size_t n) const override;
 
 private:
     static const unsigned int adlibfreq[63];
 
     std::vector<uint32_t> note{};
-    unsigned long count = 0, countstop = 0, chanage[18] = {0};
+    unsigned long count = 0, countstop = 0, chanage[18] = { 0 };
     unsigned int nownote = 0, numchans = 0, drumstat = 0;
-    uint8_t trinst[16] = {0}, trquant[16] = {0}, trchan[16] = {0}, trvol[16] = {0}, inst[256][11] = {{0}},
-    databuf[2048] = {0}, chanfreq[18] = {0}, chantrack[18] = {0};
-    char instname[256][20] =  {""};
+    uint8_t trinst[16] = { 0 }, trquant[16] = { 0 }, trchan[16] = { 0 }, trvol[16] = { 0 }, inst[256][11] = { {0} },
+        databuf[2048] = { 0 }, chanfreq[18] = { 0 }, chantrack[18] = { 0 };
+    char instname[256][20] = { "" };
 
     bool songend = false;
 

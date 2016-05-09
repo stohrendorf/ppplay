@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,26 +23,28 @@
 
 #include "xad.h"
 
-class CxadflashPlayer : public CxadPlayer {
+class CxadflashPlayer : public CxadPlayer
+{
     DISABLE_COPY(CxadflashPlayer)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CxadflashPlayer() = default;
 
 protected:
     //
-    bool xadplayer_load() {
-        if (xadHeader().fmt == FLASH)
+    bool xadplayer_load() override
+    {
+        if(xadHeader().fmt == FLASH)
             return true;
         else
             return false;
     }
-    void xadplayer_rewind(int);
-    void xadplayer_update();
-    size_t framesUntilUpdate() const;
-    std::string type() const;
-    uint32_t instrumentCount() const;
+    void xadplayer_rewind(int) override;
+    void xadplayer_update() override;
+    size_t framesUntilUpdate() const override;
+    std::string type() const override;
+    uint32_t instrumentCount() const override;
 
 private:
     static const unsigned char flash_adlib_registers[99];

@@ -19,14 +19,14 @@
  * [xad] HYBRID player, by Riven the Mage <riven@ok.ru>
  */
 
-/*
-    - discovery -
+ /*
+     - discovery -
 
-  file(s) : HYBRID.EXE
-     type : Hybrid cracktro for Apache Longbow CD-RIP
-     tune : from 'Mig-29 Super Fulcrum' game by Domark
-   player : from 'Mig-29 Super Fulcrum' game by Domark
-*/
+   file(s) : HYBRID.EXE
+      type : Hybrid cracktro for Apache Longbow CD-RIP
+      tune : from 'Mig-29 Super Fulcrum' game by Domark
+    player : from 'Mig-29 Super Fulcrum' game by Domark
+ */
 
 #include "hybrid.h"
 
@@ -59,10 +59,14 @@ const unsigned char CxadhybridPlayer::hyb_default_instrument[11] = {
     0x00, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0x00
 };
 
-CPlayer *CxadhybridPlayer::factory() { return new CxadhybridPlayer(); }
+Player* CxadhybridPlayer::factory()
+{
+    return new CxadhybridPlayer();
+}
 
-bool CxadhybridPlayer::xadplayer_load() {
-    if (xadHeader().fmt != HYBRID)
+bool CxadhybridPlayer::xadplayer_load()
+{
+    if(xadHeader().fmt != HYBRID)
         return false;
 
     // load instruments
@@ -74,7 +78,8 @@ bool CxadhybridPlayer::xadplayer_load() {
     return true;
 }
 
-void CxadhybridPlayer::xadplayer_rewind(int) {
+void CxadhybridPlayer::xadplayer_rewind(int)
+{
     setCurrentOrder(0);
     setCurrentRow(0);
     setCurrentSpeed(6);
@@ -82,7 +87,8 @@ void CxadhybridPlayer::xadplayer_rewind(int) {
     hyb.speed_counter = 1;
 
     // init channel data
-    for (int i = 0; i < 9; i++) {
+    for(int i = 0; i < 9; i++)
+    {
         hyb.channel[i].freq = 0x2000;
         hyb.channel[i].freq_slide = 0x0000;
     }
@@ -93,28 +99,31 @@ void CxadhybridPlayer::xadplayer_rewind(int) {
     getOpl()->writeReg(0x08, 0x00);
 
     // init OPL channels
-    for (int i = 0; i < 9; i++) {
-        for (int j = 0; j < 11; j++)
+    for(int i = 0; i < 9; i++)
+    {
+        for(int j = 0; j < 11; j++)
             getOpl()->writeReg(hyb_adlib_registers[i * 11 + j],
-                    0x00 /* hyb_default_instrument[j] */);
+                               0x00 /* hyb_default_instrument[j] */);
 
         getOpl()->writeReg(0xA0 + i, 0x00);
         getOpl()->writeReg(0xB0 + i, 0x20);
     }
 }
 
-void CxadhybridPlayer::xadplayer_update() {
+void CxadhybridPlayer::xadplayer_update()
+{
     hyb.speed_counter = currentSpeed();
 
     auto patpos = currentRow();
     auto ordpos = currentOrder();
 
-    if (--hyb.speed_counter)
+    if(--hyb.speed_counter)
         goto update_slides;
 
     // process channels
-    for (int i = 0; i < 9; i++) {
-        const uint8_t *pos = &tune()[ 0xADE + (m_orderOffsets[ordpos * 9 + i] * 64 * 2) + (patpos * 2) ];
+    for(int i = 0; i < 9; i++)
+    {
+        const uint8_t* pos = &tune()[0xADE + (m_orderOffsets[ordpos * 9 + i] * 64 * 2) + (patpos * 2)];
         // read event
         unsigned short event = (pos[1] << 8) + pos[0];
 
@@ -129,68 +138,75 @@ void CxadhybridPlayer::xadplayer_update() {
         unsigned char slide = event & 0x000F;
 
         // play event
-        switch (note) {
-        case 0x7D: // 0x7D: Set Speed
-            setCurrentSpeed(event & 0xFF);
-            break;
-        case 0x7E: // 0x7E: Jump Position
-            setCurrentOrder(event & 0xFF);
-            setCurrentRow(0x3F);
+        switch(note)
+        {
+            case 0x7D: // 0x7D: Set Speed
+                setCurrentSpeed(event & 0xFF);
+                break;
+            case 0x7E: // 0x7E: Jump Position
+                setCurrentOrder(event & 0xFF);
+                setCurrentRow(0x3F);
 
-            // jumpback ?
-            if (currentOrder() <= ordpos)
-                setXadLooping();
+                // jumpback ?
+                if(currentOrder() <= ordpos)
+                    setXadLooping();
 
-            break;
-        case 0x7F: // 0x7F: Pattern Break
-            setCurrentRow(0x3F);
-            break;
-        default:
+                break;
+            case 0x7F: // 0x7F: Pattern Break
+                setCurrentRow(0x3F);
+                break;
+            default:
 
-            // is instrument ?
-            if (ins) {
-                for (int j = 0; j < 11; j++) {
-                    const uint8_t* insData = reinterpret_cast<const uint8_t*>(&hyb.inst[ins-1])
+                // is instrument ?
+                if(ins)
+                {
+                    for(int j = 0; j < 11; j++)
+                    {
+                        const uint8_t* insData = reinterpret_cast<const uint8_t*>(&hyb.inst[ins - 1])
                             + sizeof(hyb_instrument::name);
-                    getOpl()->writeReg(hyb_adlib_registers[i * 11 + j], insData[j]);
+                        getOpl()->writeReg(hyb_adlib_registers[i * 11 + j], insData[j]);
+                    }
                 }
-            }
 
-            // is note ?
-            if (note) {
-                hyb.channel[i].freq = hyb_notes[note];
-                hyb.channel[i].freq_slide = 0;
-            }
+                // is note ?
+                if(note)
+                {
+                    hyb.channel[i].freq = hyb_notes[note];
+                    hyb.channel[i].freq_slide = 0;
+                }
 
-            // is slide ?
-            if (slide) {
-                hyb.channel[i].freq_slide = (((slide >> 3) * -1) * (slide & 7)) << 1;
+                // is slide ?
+                if(slide)
+                {
+                    hyb.channel[i].freq_slide = (((slide >> 3) * -1) * (slide & 7)) << 1;
 
-                //if (slide & 0x80)
-                //  slide = -(slide & 7);
-            }
+                    //if (slide & 0x80)
+                    //  slide = -(slide & 7);
+                }
 
-            // set frequency
-            if (!(hyb.channel[i].freq & 0x2000)) {
-                getOpl()->writeReg(0xA0 + i, hyb.channel[i].freq & 0xFF);
-                getOpl()->writeReg(0xB0 + i, hyb.channel[i].freq >> 8);
+                // set frequency
+                if(!(hyb.channel[i].freq & 0x2000))
+                {
+                    getOpl()->writeReg(0xA0 + i, hyb.channel[i].freq & 0xFF);
+                    getOpl()->writeReg(0xB0 + i, hyb.channel[i].freq >> 8);
 
-                hyb.channel[i].freq |= 0x2000;
+                    hyb.channel[i].freq |= 0x2000;
 
-                getOpl()->writeReg(0xA0 + i, hyb.channel[i].freq & 0xFF);
-                getOpl()->writeReg(0xB0 + i, hyb.channel[i].freq >> 8);
-            }
+                    getOpl()->writeReg(0xA0 + i, hyb.channel[i].freq & 0xFF);
+                    getOpl()->writeReg(0xB0 + i, hyb.channel[i].freq >> 8);
+                }
 
-            break;
+                break;
         }
     }
 
-    setCurrentRow(currentRow()+1);
+    setCurrentRow(currentRow() + 1);
 
     // end of pattern ?
-    if (currentRow() >= 0x40) {
+    if(currentRow() >= 0x40)
+    {
         setCurrentRow(0);
-        setCurrentOrder(currentOrder()+1);
+        setCurrentOrder(currentOrder() + 1);
     }
 
 update_slides:
@@ -198,11 +214,12 @@ update_slides:
     AdPlug_LogWrite("slides:\n");
 #endif
     // update fine frequency slides
-    for (int i = 0; i < 9; i++)
-        if (hyb.channel[i].freq_slide) {
+    for(int i = 0; i < 9; i++)
+        if(hyb.channel[i].freq_slide)
+        {
             hyb.channel[i].freq =
-                    (((hyb.channel[i].freq & 0x1FFF) + hyb.channel[i].freq_slide) &
-                     0x1FFF) | 0x2000;
+                (((hyb.channel[i].freq & 0x1FFF) + hyb.channel[i].freq_slide) &
+                 0x1FFF) | 0x2000;
 
             getOpl()->writeReg(0xA0 + i, hyb.channel[i].freq & 0xFF);
             getOpl()->writeReg(0xB0 + i, hyb.channel[i].freq >> 8);

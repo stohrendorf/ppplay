@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2008 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -23,35 +25,36 @@
 #include "mid/almidi.h"
 #include "stuff/numberutils.h"
 
-class CmidPlayer : public CPlayer {
+class CmidPlayer : public Player
+{
     DISABLE_COPY(CmidPlayer)
-    public:
-        CmidPlayer() = default;
-    static CPlayer *factory();
+public:
+    CmidPlayer() = default;
+    static Player *factory();
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int subsong);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int subsong) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const;
-    std::string title() const
+    std::string type() const override;
+    std::string title() const override
     {
         return m_title;
     }
-    std::string author() const
+    std::string author() const override
     {
         return m_author;
     }
-    std::string description() const
+    std::string description() const override
     {
         return m_remarks;
     }
-    uint32_t instrumentCount() const
+    uint32_t instrumentCount() const override
     {
         return m_tins;
     }
-    uint32_t subSongCount() const
+    uint32_t subSongCount() const override
     {
         return m_subsongs;
     }
@@ -60,15 +63,17 @@ private:
     static const unsigned char adlib_opadd[];
     static const int percussion_map[];
 
-    struct midi_channel {
+    struct midi_channel
+    {
         int inum = 0;
-        unsigned char ins[11]{0};
+        unsigned char ins[11]{ 0 };
         int vol = 0;
         int nshift = 0;
         int on = 0;
     };
 
-    struct midi_track {
+    struct midi_track
+    {
         size_t tend = 0;
         size_t spos = 0;
         size_t pos = 0;
@@ -88,9 +93,9 @@ private:
     int m_adlibStyle = 0;
     bool m_melodicMode = true;
     using InsBank = std::array<std::array<uint8_t, 14>, 128>;
-    InsBank m_myInsBank{{}}, m_sMyInsBank{{}};
+    InsBank m_myInsBank{ {} }, m_sMyInsBank{ {} };
     midi_channel m_ch[16]{};
-    int m_chp[18][3]{{0}};
+    int m_chp[18][3]{ {0} };
 
     long m_deltas = 0;
     long m_msqtr = 0;
@@ -102,7 +107,8 @@ private:
     unsigned long m_iwait = 0;
     bool m_doing = false;
 
-    enum class FileType {
+    enum class FileType
+    {
         Unknown, Lucas, Midi, Cmf, Sierra, AdvSierra, OldLucas
     };
 
@@ -123,49 +129,59 @@ private:
     void midi_fm_reset();
 };
 
-class CDukePlayer : CPlayer {
+class CDukePlayer : Player
+{
 private:
     std::unique_ptr<ppp::EMidi> m_emidi = nullptr;
 
 public:
-    static CPlayer *factory() { return new CDukePlayer(); }
+    static Player *factory()
+    {
+        return new CDukePlayer();
+    }
 
-    bool load(const std::string &filename);
-    bool update() { return m_emidi->serviceRoutine(); }
+    bool load(const std::string &filename) override;
+    bool update() override
+    {
+        return m_emidi->serviceRoutine();
+    }
 
-    void rewind(int) {}
-    size_t framesUntilUpdate() const
+    void rewind(int) override
+    {
+    }
+    size_t framesUntilUpdate() const override
     {
         return SampleRate / m_emidi->ticksPerSecond();
     }
 
-    std::string type() const
+    std::string type() const override
     {
         std::string fmt = m_emidi->shortFormatName();
         return "Duke MIDI (" + fmt + ")";
     }
-    std::string title() const
+    std::string title() const override
     {
         return std::string();
     }
-    std::string author() const
+    std::string author() const override
     {
         return std::string();
     }
-    std::string description() const
+    std::string description() const override
     {
         return std::string();
     }
-    uint32_t instrumentCount() const
+    uint32_t instrumentCount() const override
     {
         return 0;
     }
-    uint32_t subSongCount() const
+    uint32_t subSongCount() const override
     {
         return 1;
     }
 
-    virtual void read(std::array<int16_t, 4> *data) override {
+    virtual void read(std::array<int16_t, 4> *data) override
+    {
         m_emidi->read(data);
     }
 };

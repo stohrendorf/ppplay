@@ -28,7 +28,6 @@
 
 namespace light4cxx
 {
-
 namespace
 {
 //! @brief The current runtime
@@ -68,9 +67,10 @@ std::string s_format = "[%T %<5t %r] %L (in %F:%l): %m";
  * @param[in] l The level to convert
  * @return String representation of @a l
  */
-const char* levelString( Level l )
+const char* levelString(Level l)
 {
-    switch( l ) {
+    switch(l)
+    {
         case Level::Off:
             return "";
         case Level::Trace:
@@ -86,30 +86,32 @@ const char* levelString( Level l )
         case Level::Fatal:
             return COLOR_RED "FATAL" COLOR_RESET;
         case Level::All:
-            BOOST_THROW_EXCEPTION( std::runtime_error( "Logging level invalid: Level::All should not be passed to levelString()" ) );
+            BOOST_THROW_EXCEPTION(std::runtime_error("Logging level invalid: Level::All should not be passed to levelString()"));
         default:
-            BOOST_THROW_EXCEPTION( std::runtime_error( "Logging level invalid: Unknown Level passed to levelString()" ) );
+            BOOST_THROW_EXCEPTION(std::runtime_error("Logging level invalid: Unknown Level passed to levelString()"));
     }
 }
-
 } // anonymous namespace
 
-void Location::setFormat( const std::string& fmt )
+void Location::setFormat(const std::string& fmt)
 {
     s_format = fmt;
 }
 
-std::string Location::toString( light4cxx::Level l, const light4cxx::Logger& logger, const std::string& msg ) const
+std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logger, const std::string& msg) const
 {
     std::ostringstream oss;
-// 	const std::ios_base::fmtflags clearFlags = oss.flags();
+    // 	const std::ios_base::fmtflags clearFlags = oss.flags();
     int state = 0;
-    for( size_t i = 0; i < s_format.length(); i++ ) {
-        char c = s_format[ i ];
-        switch( state ) {
+    for(size_t i = 0; i < s_format.length(); i++)
+    {
+        char c = s_format[i];
+        switch(state)
+        {
             case 0:
                 // scan for %
-                if( c == '%' ) {
+                if(c == '%')
+                {
                     state = 1;
                     break;
                 }
@@ -117,7 +119,8 @@ std::string Location::toString( light4cxx::Level l, const light4cxx::Logger& log
                 break;
             case 1:
                 // flags
-                switch( c ) {
+                switch(c)
+                {
                     case '#':
                         oss << std::showbase;
                         break;
@@ -128,10 +131,10 @@ std::string Location::toString( light4cxx::Level l, const light4cxx::Logger& log
                         oss << std::showpoint;
                         break;
                     case '0':
-                        oss.fill( '0' );
+                        oss.fill('0');
                         break;
                     case ' ':
-                        oss.fill( ' ' );
+                        oss.fill(' ');
                         break;
                     case '<':
                         oss << std::left;
@@ -156,20 +159,24 @@ std::string Location::toString( light4cxx::Level l, const light4cxx::Logger& log
                 break;
             case 2:
                 // field width
-                if( isdigit( c ) ) {
-                    oss.width( c - '0' );
+                if(isdigit(c))
+                {
+                    oss.width(c - '0');
                 }
-                else {
+                else
+                {
                     i--;
                 }
                 state = 3;
                 break;
             case 3:
                 // precision dot
-                if( c == '.' ) {
+                if(c == '.')
+                {
                     state = 4;
                 }
-                else {
+                else
+                {
                     // no precision
                     state = 5;
                     i--;
@@ -177,18 +184,21 @@ std::string Location::toString( light4cxx::Level l, const light4cxx::Logger& log
                 break;
             case 4:
                 // precision value
-                if( isdigit( c ) ) {
-                    oss.precision( c - '0' );
+                if(isdigit(c))
+                {
+                    oss.precision(c - '0');
                 }
-                else {
-                    oss.precision( 0 );
+                else
+                {
+                    oss.precision(0);
                     i--;
                 }
                 state = 5;
                 break;
             case 5:
                 // format specifier
-                switch( c ) {
+                switch(c)
+                {
                     case '%':
                         oss << '%';
                         break;
@@ -211,26 +221,24 @@ std::string Location::toString( light4cxx::Level l, const light4cxx::Logger& log
                         oss << timeSinceBootMs() / 1000.0f;
                         break;
                     case 't':
-                        oss << levelString( l );
+                        oss << levelString(l);
                         break;
                     case 'T':
                         oss << std::hex << m_threadId;
                         break;
                     default:
-                        BOOST_THROW_EXCEPTION( std::runtime_error( std::string( "Unknown format specifier at: " ) + s_format.substr( i ) ) );
+                        BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Unknown format specifier at: ") + s_format.substr(i)));
                 }
                 state = 0;
-                oss.copyfmt( std::ostringstream() );
+                oss.copyfmt(std::ostringstream());
                 /*				oss.flags( clearFlags );
-                				oss.fill(' ');
-                				oss.width(0);*/
+                                                oss.fill(' ');
+                                                oss.width(0);*/
                 break;
             default:
-                BOOST_THROW_EXCEPTION( std::runtime_error( "Invalid format parsing state" ) );
+                BOOST_THROW_EXCEPTION(std::runtime_error("Invalid format parsing state"));
         }
     }
     return oss.str();
 }
-
 }
-

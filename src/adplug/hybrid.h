@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,15 +23,17 @@
 
 #include "xad.h"
 
-class CxadhybridPlayer : public CxadPlayer {
+class CxadhybridPlayer : public CxadPlayer
+{
     DISABLE_COPY(CxadhybridPlayer)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CxadhybridPlayer() = default;
 
 protected:
-    struct hyb_instrument {
+    struct hyb_instrument
+    {
         char name[7];
         unsigned char mod_wave;
         unsigned char mod_AD;
@@ -44,10 +48,12 @@ protected:
         unsigned char connect;
     };
 
-    struct {
+    struct
+    {
         const hyb_instrument *inst = nullptr;
 
-        struct {
+        struct
+        {
             unsigned short freq = 0;
             unsigned short freq_slide = 0;
         } channel[9];
@@ -55,18 +61,18 @@ protected:
         unsigned char speed_counter = 0;
     } hyb{};
     //
-    bool xadplayer_load();
-    void xadplayer_rewind(int);
-    void xadplayer_update();
-    size_t framesUntilUpdate() const;
-    std::string type() const;
-    std::string instrumentTitle(size_t i) const;
-    uint32_t instrumentCount() const;
+    bool xadplayer_load() override;
+    void xadplayer_rewind(int) override;
+    void xadplayer_update() override;
+    size_t framesUntilUpdate() const override;
+    std::string type() const override;
+    std::string instrumentTitle(size_t i) const override;
+    uint32_t instrumentCount() const override;
 
 private:
     static const unsigned char hyb_adlib_registers[99];
     static const unsigned short hyb_notes[98];
     static const unsigned char hyb_default_instrument[11];
 
-    const uint8_t* m_orderOffsets = 0;
+    const uint8_t* m_orderOffsets = nullptr;
 };

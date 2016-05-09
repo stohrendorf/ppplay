@@ -30,33 +30,33 @@ namespace ppp
 {
 namespace xm
 {
-
-XmCell::XmCell() : IPatternCell(), m_note( 0 ), m_instr( 0 ), m_volume( 0 ), m_effect( Effect::None ), m_effectValue( 0 )
+XmCell::XmCell() : IPatternCell(), m_note(0), m_instr(0), m_volume(0), m_effect(Effect::None), m_effectValue(0)
 {
 }
 
-bool XmCell::load( Stream* str )
+bool XmCell::load(Stream* str)
 {
     uint8_t data;
     *str >> data;
-    if( ( data & 0x80 ) == 0 ) {
+    if((data & 0x80) == 0)
+    {
         m_note = data;
         *str >> m_instr >> m_volume;
-        str->read( reinterpret_cast<uint8_t*>( &m_effect ) );
+        str->read(reinterpret_cast<uint8_t*>(&m_effect));
         *str >> m_effectValue;
         return str->good();
     }
-    if( data & 0x01 )
+    if(data & 0x01)
         *str >> m_note;
-    if( data & 0x02 )
+    if(data & 0x02)
         *str >> m_instr;
-    if( m_instr > 0x80 )
+    if(m_instr > 0x80)
         m_instr = 0;
-    if( data & 0x04 )
+    if(data & 0x04)
         *str >> m_volume;
-    if( data & 0x08 )
-        str->read( reinterpret_cast<uint8_t*>( &m_effect ) );
-    if( data & 0x10 )
+    if(data & 0x08)
+        str->read(reinterpret_cast<uint8_t*>(&m_effect));
+    if(data & 0x10)
         *str >> m_effectValue;
     return str->good();
 }
@@ -72,32 +72,40 @@ void XmCell::clear()
 
 std::string XmCell::fxString() const
 {
-    if( m_effect == Effect::None ) {
+    if(m_effect == Effect::None)
+    {
         return "...";
     }
-    else if( static_cast<uint8_t>( m_effect ) <= 0x0f ) {
-        return stringFmt( "%1X%02X", int( m_effect ), int( m_effectValue ) );
+    else if(static_cast<uint8_t>(m_effect) <= 0x0f)
+    {
+        return stringFmt("%1X%02X", int(m_effect), int(m_effectValue));
     }
-    else if( static_cast<uint8_t>( m_effect ) <= 0x21 ) {
-        return stringFmt( "%c%02X", int( m_effect ) - 0x0f + 'F', int( m_effectValue ) );
+    else if(static_cast<uint8_t>(m_effect) <= 0x21)
+    {
+        return stringFmt("%c%02X", int(m_effect) - 0x0f + 'F', int(m_effectValue));
     }
-    else {
-        return stringFmt( "?%02X", int( m_effectValue ) );
+    else
+    {
+        return stringFmt("?%02X", int(m_effectValue));
     }
 }
 
 std::string XmCell::noteString() const
 {
-    if( m_note == 0 ) {
+    if(m_note == 0)
+    {
         return "...";
     }
-    else if( m_note == KeyOffNote ) {
+    else if(m_note == KeyOffNote)
+    {
         return "===";
     }
-    else if( m_note < KeyOffNote ) {
-        return stringFmt( "%s%d", NoteNames[( m_note - 1 ) % 12 ], ( m_note - 1 ) / 12 );
+    else if(m_note < KeyOffNote)
+    {
+        return stringFmt("%s%d", NoteNames[(m_note - 1) % 12], (m_note - 1) / 12);
     }
-    else {
+    else
+    {
         return "???";
     }
 }
@@ -107,11 +115,13 @@ std::string XmCell::trackerString() const
     /*    if(!isActive())
             return "...       ...";*/
     std::string xmsg = noteString();
-    if( m_instr == 0 ) {
+    if(m_instr == 0)
+    {
         xmsg += "    ";
     }
-    else {
-        xmsg += stringFmt( " %2X ", int( m_instr ) );
+    else
+    {
+        xmsg += stringFmt(" %2X ", int(m_instr));
     }
     /*
     VfxVolSlideDown = 6,
@@ -126,7 +136,8 @@ std::string XmCell::trackerString() const
     VfxPorta = 0xf
      */
     static constexpr char vfxChars[] = "-+DUSVPLRM";
-    switch( m_volume >> 4 ) {
+    switch(m_volume >> 4)
+    {
         case 0:
             xmsg += "   ";
             break;
@@ -135,10 +146,10 @@ std::string XmCell::trackerString() const
         case 3:
         case 4:
         case 5:
-            xmsg += stringFmt( "%2d ", m_volume - 0x10 );
+            xmsg += stringFmt("%2d ", m_volume - 0x10);
             break;
         default:
-            xmsg += stringFmt( "%c%X ", vfxChars[( m_volume >> 4 ) - 6], int( m_volume & 0x0f ) );
+            xmsg += stringFmt("%c%X ", vfxChars[(m_volume >> 4) - 6], int(m_volume & 0x0f));
             break;
     }
     return xmsg + fxString();
@@ -169,17 +180,16 @@ uint8_t XmCell::effectValue() const
     return m_effectValue;
 }
 
-AbstractArchive& XmCell::serialize( AbstractArchive* data )
+AbstractArchive& XmCell::serialize(AbstractArchive* data)
 {
     *data
-    % m_note
-    % m_instr
-    % m_volume
-    % *reinterpret_cast<uint8_t*>( &m_effect )
-    % m_effectValue;
+        % m_note
+        % m_instr
+        % m_volume
+        % *reinterpret_cast<uint8_t*>(&m_effect)
+        % m_effectValue;
     return *data;
 }
-
 }
 }
 

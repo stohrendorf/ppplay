@@ -45,13 +45,17 @@
 
 #include "imf.h"
 
-/*** public methods *************************************/
+ /*** public methods *************************************/
 
-CPlayer *CimfPlayer::factory() { return new CimfPlayer(); }
+Player* CimfPlayer::factory()
+{
+    return new CimfPlayer();
+}
 
-bool CimfPlayer::load(const std::string &filename) {
+bool CimfPlayer::load(const std::string& filename)
+{
     FileStream f(filename);
-    if (!f)
+    if(!f)
         return false;
 
     // file validation section
@@ -62,20 +66,23 @@ bool CimfPlayer::load(const std::string &filename) {
         uint8_t version;
         f >> version;
 
-        if (strncmp(header, "ADLIB", 5) || version != 1) {
-            if(f.extension() != ".imf" && f.extension() != ".wlf") {
+        if(strncmp(header, "ADLIB", 5) || version != 1)
+        {
+            if(f.extension() != ".imf" && f.extension() != ".wlf")
+            {
                 // It's no IMF file at all
                 return false;
             }
             else
                 f.seek(0); // It's a normal IMF file
         }
-        else {
+        else
+        {
             // It's a IMF file with header
             char c;
-            while(f>>c && c)
+            while(f >> c && c)
                 m_trackName += c;
-            while(f>>c && c)
+            while(f >> c && c)
                 m_gameName += c;
             f.seekrel(1);
             mfsize = f.pos() + 2;
@@ -84,18 +91,21 @@ bool CimfPlayer::load(const std::string &filename) {
 
     // load section
     uint32_t fsize;
-    if (mfsize != 0) {
+    if(mfsize != 0)
+    {
         f >> fsize;
     }
-    else {
+    else
+    {
         uint16_t tmp;
         f >> tmp;
         fsize = tmp;
     }
     auto flsize = f.size();
     size_t size;
-    if (!fsize) { // footerless file (raw music data)
-        if (mfsize)
+    if(!fsize)
+    { // footerless file (raw music data)
+        if(mfsize)
             f.seekrel(-4);
         else
             f.seekrel(-2);
@@ -108,23 +118,26 @@ bool CimfPlayer::load(const std::string &filename) {
     f.read(m_data.data(), size);
 
     // read footer, if any
-    if (fsize && (fsize < flsize - 2 - mfsize)) {
+    if(fsize && (fsize < flsize - 2 - mfsize))
+    {
         char c;
-        if (f>>c && c == 0x1a) {
+        if(f >> c && c == 0x1a)
+        {
             // Adam Nielsen's footer format
-            while(f>>c && c)
+            while(f >> c && c)
                 m_trackName += c;
-            while(f>>c && c)
+            while(f >> c && c)
                 m_authorName += c;
-            while(f>>c && c)
+            while(f >> c && c)
                 m_remarks += c;
         }
-        else {
+        else
+        {
             // Generic footer
             auto footerlen = flsize - fsize - 2 - mfsize;
-            char c;
-            while(footerlen-- && (f>>c))
-                m_footer += c;
+            char c2;
+            while(footerlen-- && (f >> c2))
+                m_footer += c2;
         }
     }
 
@@ -133,23 +146,28 @@ bool CimfPlayer::load(const std::string &filename) {
     return true;
 }
 
-bool CimfPlayer::update() {
-    do {
+bool CimfPlayer::update()
+{
+    do
+    {
         getOpl()->writeReg(m_data[m_pos].reg, m_data[m_pos].val);
         m_del = m_data[m_pos].time;
         m_pos++;
-    } while (!m_del && m_pos < m_data.size());
+    } while(!m_del && m_pos < m_data.size());
 
-    if (m_pos >= m_data.size()) {
+    if(m_pos >= m_data.size())
+    {
         m_pos = 0;
         m_songend = true;
-    } else
+    }
+    else
         m_timer = float(m_rate) / m_del;
 
     return !m_songend;
 }
 
-void CimfPlayer::rewind(int) {
+void CimfPlayer::rewind(int)
+{
     m_pos = 0;
     m_del = 0;
     m_timer = m_rate;
@@ -160,7 +178,7 @@ void CimfPlayer::rewind(int) {
 std::string CimfPlayer::title() const
 {
     std::string title = m_trackName;
-    if (!m_trackName.empty() && !m_gameName.empty())
+    if(!m_trackName.empty() && !m_gameName.empty())
         title += " - ";
 
     title += m_gameName;
@@ -172,7 +190,7 @@ std::string CimfPlayer::description() const
 {
     std::string desc = m_footer;
 
-    if (!m_remarks.empty() && !m_footer.empty())
+    if(!m_remarks.empty() && !m_footer.empty())
         desc += "\n\n";
 
     desc += m_remarks;
@@ -182,10 +200,11 @@ std::string CimfPlayer::description() const
 
 /*** private methods *************************************/
 
-int CimfPlayer::getrate(const FileStream& file) {
-    if (file.extension() == ".imf")
+int CimfPlayer::getrate(const FileStream& file)
+{
+    if(file.extension() == ".imf")
         return 560;
-    else if (file.extension() == ".wlf")
+    else if(file.extension() == ".wlf")
         return 700;
     return 700; // default speed for unknown files that aren't .IMF or .WLF
 }

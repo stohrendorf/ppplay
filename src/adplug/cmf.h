@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2009 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -19,7 +21,7 @@
  * cmf.h - CMF player by Adam Nielsen <malvineous@shikadi.net>
  */
 
-#include <stdint.h> // for uintxx_t
+#include <cstdint>
 #include "player.h"
 
 struct CMFHEADER
@@ -31,12 +33,13 @@ struct CMFHEADER
     uint16_t iTagOffsetTitle = 0;
     uint16_t iTagOffsetComposer = 0;
     uint16_t iTagOffsetRemarks = 0;
-    uint8_t iChannelsInUse[16] = {0};
+    uint8_t iChannelsInUse[16] = { 0 };
     uint16_t iNumInstruments = 0;
     uint16_t iTempo = 0;
 };
 
-struct OPERATOR {
+struct OPERATOR
+{
     uint8_t iCharMult;
     uint8_t iScalingOutput;
     uint8_t iAttackDecay;
@@ -44,17 +47,20 @@ struct OPERATOR {
     uint8_t iWaveSel;
 };
 
-struct SBI {
+struct SBI
+{
     OPERATOR op[2]; // 0 == modulator, 1 == carrier
     uint8_t iConnection;
 };
 
-struct MIDICHANNEL {
+struct MIDICHANNEL
+{
     int iPatch;     // MIDI patch for this channel
     int iPitchbend; // Current pitchbend amount for this channel
 };
 
-struct OPLCHANNEL {
+struct OPLCHANNEL
+{
     int iNoteStart; // When the note started playing (longest notes get cut
     // first, 0 == channel free)
     int iMIDINote;  // MIDI note number currently being played on this OPL channel
@@ -62,7 +68,8 @@ struct OPLCHANNEL {
     int iMIDIPatch;   // Current MIDI patch set on this OPL channel
 };
 
-class CcmfPlayer : public CPlayer {
+class CcmfPlayer : public Player
+{
     DISABLE_COPY(CcmfPlayer)
 private:
     std::vector<uint8_t> data{};    // song data (CMF music block)
@@ -71,7 +78,7 @@ private:
     CMFHEADER cmfHeader{};
     std::vector<SBI> pInstruments{};
     bool bPercussive = false;          // are rhythm-mode instruments enabled?
-    uint8_t iCurrentRegs[256] = {0}; // Current values in the OPL chip
+    uint8_t iCurrentRegs[256] = { 0 }; // Current values in the OPL chip
     int iTranspose = 0; // Transpose amount for entire song (between -128 and +128)
     uint8_t iPrevCommand = 0; // Previous command (used for repeated MIDI commands,
     // as the seek and playback code need to share this)
@@ -88,23 +95,23 @@ private:
     std::string strRemarks{};
 
 public:
-    static CPlayer *factory();
+    static Player *factory();
 
     CcmfPlayer();
     ~CcmfPlayer() = default;
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const
+    std::string type() const override
     {
         return "Creative Music File (CMF)";
     }
-    std::string title() const;
-    std::string author() const;
-    std::string description() const;
+    std::string title() const override;
+    std::string author() const override;
+    std::string description() const override;
 
 private:
     uint32_t readMIDINumber();
@@ -115,5 +122,4 @@ private:
     static uint8_t getPercChannel(uint8_t iChannel);
     void MIDIchangeInstrument(uint8_t iOPLChannel, uint8_t iMIDIChannel, uint8_t iNewInstrument);
     void MIDIcontroller(uint8_t, uint8_t iController, uint8_t iValue);
-
 };

@@ -1,5 +1,4 @@
-#ifndef PPPLAY_DUALCHIPS_H
-#define PPPLAY_DUALCHIPS_H
+#pragma once
 
 #include "ymf262/opl3.h"
 
@@ -22,7 +21,8 @@ public:
 #ifndef USE_BANKDB
     struct Timbre
     {
-        struct OperatorData {
+        struct OperatorData
+        {
             uint8_t modulator;
             uint8_t carrier;
         };
@@ -77,12 +77,13 @@ public:
         unsigned int rpn = 0;
         uint8_t pan = 64;
         short pitchBendRange = DefaultPitchBendRange;
-        short pitchBendSemiTones = DefaultPitchBendRange/100;
-        short pitchBendHundreds = DefaultPitchBendRange%100;
+        short pitchBendSemiTones = DefaultPitchBendRange / 100;
+        short pitchBendHundreds = DefaultPitchBendRange % 100;
 
         Voice* getVoice(uint8_t key) const
         {
-            for(auto voice : voices) {
+            for(auto voice : voices)
+            {
                 if(voice->key == key)
                     return voice;
             }
@@ -91,7 +92,8 @@ public:
         }
     };
 
-    enum class ControlData {
+    enum class ControlData
+    {
         ResetAllControllers, RpnMsb, RpnLsb, DataentryMsb, DataentryLsb, Pan
     };
 
@@ -108,7 +110,7 @@ public:
             throw std::runtime_error("Must at least use one chip");
 
 #ifndef USE_BANKDB
-        extern std::array<MultiChips::Timbre,256> ADLIB_TimbreBank;
+        extern std::array<MultiChips::Timbre, 256> ADLIB_TimbreBank;
         m_timbreBank = ADLIB_TimbreBank;
 #else
         m_bankDb.load(ppp::whereAmI() + "/../share/ppplay/bankdb.xml");
@@ -137,23 +139,28 @@ public:
     void setChannelDetune(uint8_t channel, int detune);
     void pitchBend(uint8_t channel, uint8_t lsb, uint8_t msb);
 
-    void read(std::array<int16_t,4>* data) {
-        if(data) {
+    void read(std::array<int16_t, 4>* data)
+    {
+        if(data)
+        {
             data->fill(0);
-            for(opl::Opl3& chip : m_chips) {
-                std::array<int16_t,4> tmp;
+            for(opl::Opl3& chip : m_chips)
+            {
+                std::array<int16_t, 4> tmp;
                 chip.read(&tmp);
-                for(int i=0; i<4; ++i)
+                for(int i = 0; i < 4; ++i)
                     (*data)[i] += tmp[i];
             }
         }
-        else {
+        else
+        {
             for(opl::Opl3& chip : m_chips)
                 chip.read(nullptr);
         }
     }
 
-    void useAdlibVolumes(bool value) noexcept {
+    void useAdlibVolumes(bool value) noexcept
+    {
         m_adlibVolumes = value;
     }
 
@@ -162,7 +169,7 @@ private:
     std::vector<Voice> m_voices;
     std::array<Channel, 16> m_channels;
 #ifndef USE_BANKDB
-    std::array<MultiChips::Timbre,256> m_timbreBank;
+    std::array<MultiChips::Timbre, 256> m_timbreBank;
 #else
     bankdb::BankDatabase m_bankDb{};
     const bankdb::Bank* m_melodicBank = nullptr;
@@ -201,5 +208,3 @@ private:
     void reset();
 };
 }
-
-#endif // DUALCHIPS_H

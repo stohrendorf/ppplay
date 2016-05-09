@@ -25,7 +25,6 @@
 
 namespace ppp
 {
-
 const std::array<const char*, 12> NoteNames = {
     {
         "C-", "C#", "D-", "D#",
@@ -33,7 +32,6 @@ const std::array<const char*, 12> NoteNames = {
         "G#", "A-", "A#", "B-"
     }
 };
-
 }
 
 /**

@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include "sdltimer.h"
 
 #include <SDL.h>
@@ -27,27 +26,28 @@
  * @{
  */
 
-uint32_t SDLTimer::callback( uint32_t interval, void* userdata )
+uint32_t SDLTimer::callback(uint32_t interval, void* userdata)
 {
-    SDLTimer* timer = static_cast<SDLTimer*>( userdata );
-    std::lock_guard<std::mutex> lock( timer->m_callbackMutex );
+    SDLTimer* timer = static_cast<SDLTimer*>(userdata);
+    std::lock_guard<std::mutex> lock(timer->m_callbackMutex);
     timer->onTimer();
     return interval;
 }
 
-SDLTimer::SDLTimer( uint32_t interval ) : ITimer(), m_interval( interval ), m_id( -1 ), m_callbackMutex()
+SDLTimer::SDLTimer(uint32_t interval) : ITimer(), m_interval(interval), m_id(-1), m_callbackMutex()
 {
     static_assert(std::is_same<decltype(m_id), SDL_TimerID>::value, "Timer ID type mismatch");
-    if( !SDL_WasInit( SDL_INIT_TIMER ) ) {
-        BOOST_ASSERT( SDL_InitSubSystem( SDL_INIT_TIMER ) == 0 );
+    if(!SDL_WasInit(SDL_INIT_TIMER))
+    {
+        BOOST_ASSERT(SDL_InitSubSystem(SDL_INIT_TIMER) == 0);
     }
-    m_id = SDL_AddTimer( m_interval, callback, this );
+    m_id = SDL_AddTimer(m_interval, callback, this);
 }
 
 SDLTimer::~SDLTimer()
 {
-    SDL_RemoveTimer( m_id );
-    std::lock_guard<std::mutex> lock( m_callbackMutex );
+    SDL_RemoveTimer(m_id);
+    std::lock_guard<std::mutex> lock(m_callbackMutex);
 }
 
 uint32_t SDLTimer::interval() const

@@ -21,11 +21,11 @@
 
 #include "output.h"
 
-/***** EmuPlayer *****/
+ /***** EmuPlayer *****/
 
 EmuPlayer::EmuPlayer(unsigned long nfreq, size_t nbufsize)
-    : Player()
-    , m_audioBuf(nbufsize*2, 0)
+    : PlayerHandler()
+    , m_audioBuf(nbufsize * 2, 0)
     , m_freq(nfreq)
     , m_oplInterp(m_freq, opl::Opl3::SampleRate)
 {
@@ -35,30 +35,33 @@ EmuPlayer::EmuPlayer(unsigned long nfreq, size_t nbufsize)
 void EmuPlayer::setBufferSize(size_t nbufsize)
 {
     m_audioBuf.clear();
-    m_audioBuf.resize(nbufsize*2, 0);
+    m_audioBuf.resize(nbufsize * 2, 0);
 }
 
 void EmuPlayer::frame()
 {
     static long framesUntilUpdate = 0;
-    size_t towrite = m_audioBuf.size()/2;
-    int16_t *pos = m_audioBuf.data();
+    size_t towrite = m_audioBuf.size() / 2;
+    int16_t* pos = m_audioBuf.data();
 
     // Prepare audiobuf with emulator output
-    while(towrite > 0) {
-        while(framesUntilUpdate < 0) {
+    while(towrite > 0)
+    {
+        while(framesUntilUpdate < 0)
+        {
             setIsPlaying(getPlayer()->update());
             framesUntilUpdate += getPlayer()->framesUntilUpdate();
         }
 
-        std::array<int16_t,4> samples;
+        std::array<int16_t, 4> samples;
         getPlayer()->read(&samples);
         pos[0] = samples[0] + samples[1];
         pos[1] = samples[2] + samples[3];
         pos += 2;
-        
-        if( m_oplInterp.next() == 2 ) {
-            getPlayer()->read( nullptr ); // skip a sample
+
+        if(m_oplInterp.next() == 2)
+        {
+            getPlayer()->read(nullptr); // skip a sample
             --framesUntilUpdate;
         }
         m_oplInterp = 0;

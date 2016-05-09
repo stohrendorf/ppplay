@@ -23,18 +23,23 @@
 
 #include "sng.h"
 
-CPlayer *CsngPlayer::factory() { return new CsngPlayer(); }
+Player* CsngPlayer::factory()
+{
+    return new CsngPlayer();
+}
 
-bool CsngPlayer::load(const std::string &filename) {
+bool CsngPlayer::load(const std::string& filename)
+{
     FileStream f(filename);
-    if (!f)
+    if(!f)
         return false;
 
     // load header
     f >> m_header;
 
     // file validation section
-    if (strncmp(m_header.id, "ObsM", 4)) {
+    if(strncmp(m_header.id, "ObsM", 4))
+    {
         return false;
     }
 
@@ -49,35 +54,41 @@ bool CsngPlayer::load(const std::string &filename) {
     return true;
 }
 
-bool CsngPlayer::update() {
-    if (m_header.compressed && m_del) {
+bool CsngPlayer::update()
+{
+    if(m_header.compressed && m_del)
+    {
         m_del--;
         return !m_songEnd;
     }
 
-    while (m_data[m_pos].reg) {
+    while(m_data[m_pos].reg)
+    {
         getOpl()->writeReg(m_data[m_pos].reg, m_data[m_pos].val);
         m_pos++;
-        if (m_pos >= m_header.length) {
+        if(m_pos >= m_header.length)
+        {
             m_songEnd = true;
             m_pos = m_header.loop;
         }
     }
 
-    if (!m_header.compressed)
+    if(!m_header.compressed)
         getOpl()->writeReg(m_data[m_pos].reg, m_data[m_pos].val);
 
-    if (m_data[m_pos].val)
+    if(m_data[m_pos].val)
         m_del = m_data[m_pos].val - 1;
     m_pos++;
-    if (m_pos >= m_header.length) {
+    if(m_pos >= m_header.length)
+    {
         m_songEnd = true;
         m_pos = m_header.loop;
     }
     return !m_songEnd;
 }
 
-void CsngPlayer::rewind(int) {
+void CsngPlayer::rewind(int)
+{
     m_pos = m_header.start;
     m_del = m_header.delay;
     m_songEnd = false;

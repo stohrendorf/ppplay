@@ -1,3 +1,5 @@
+#pragma once
+
 /*
   AdPlug - Replayer for many OPL2/OPL3 audio file formats.
   Copyright (C) 1999 - 2006 Simon Peter <dn.tlp@gmx.net>, et al.
@@ -21,25 +23,27 @@
 
 #include "protrack.h"
 
-class CcffLoader : public CmodPlayer {
+class CcffLoader : public CmodPlayer
+{
     DISABLE_COPY(CcffLoader)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CcffLoader() = default;
 
-    bool load(const std::string &filename);
-    void rewind(int subsong);
+    bool load(const std::string &filename) override;
+    void rewind(int subsong) override;
 
-    std::string type() const;
-    std::string title() const;
-    std::string author() const;
-    std::string instrumentTitle(size_t n) const;
-    uint32_t instrumentCount() const;
+    std::string type() const override;
+    std::string title() const override;
+    std::string author() const override;
+    std::string instrumentTitle(size_t n) const override;
+    uint32_t instrumentCount() const override;
 
 private:
 
-    class cff_unpacker {
+    class cff_unpacker
+    {
     public:
 
         size_t unpack(uint8_t *ibuf, uint8_t *obuf);
@@ -68,25 +72,28 @@ private:
     };
 
 #pragma pack(push,1)
-    struct cff_header {
+    struct cff_header
+    {
         char id[16] = "";
         uint8_t version = 0;
         uint16_t size = 0;
         uint8_t packed = 0;
-        uint8_t reserved[12] = {0};
+        uint8_t reserved[12] = { 0 };
     };
     cff_header header{};
 #pragma pack(pop)
 
-    struct cff_instrument {
+    struct cff_instrument
+    {
         uint8_t data[12];
         char name[21];
     } instruments[47];
 
-    char song_title[20];
-    char song_author[20];
+    std::string song_title;
+    std::string song_author;
 
-    struct cff_event {
+    struct cff_event
+    {
         uint8_t byte0;
         uint8_t byte1;
         uint8_t byte2;

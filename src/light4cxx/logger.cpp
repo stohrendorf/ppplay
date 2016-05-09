@@ -29,45 +29,45 @@
 
 namespace light4cxx
 {
-
 PPPLAY_LIGHT4CXX_EXPORT Level Logger::s_level = Level::Debug;
 PPPLAY_LIGHT4CXX_EXPORT std::ostream* Logger::s_output = &std::cout;
 
 Logger* Logger::root()
 {
-    return get( "root" );
+    return get("root");
 }
 
-Logger* Logger::get( const std::string& name )
+Logger* Logger::get(const std::string& name)
 {
     typedef std::unordered_map<std::string, std::unique_ptr<Logger>> RepoMap; //!< @brief Maps logger names to their instances
     static RepoMap s_repository; //!< @brief The logger repository
     static std::mutex lockMutex; //!< @brief Mutex for locking the repository
-    std::lock_guard<std::mutex> lockGuard( lockMutex );
+    std::lock_guard<std::mutex> lockGuard(lockMutex);
 
-    RepoMap::const_iterator elem = s_repository.find( name );
-    if( elem != s_repository.end() ) {
+    RepoMap::const_iterator elem = s_repository.find(name);
+    if(elem != s_repository.end())
+    {
         return elem->second.get();
     }
-    Logger* res = new Logger( name );
-    s_repository.insert( std::make_pair( name, std::unique_ptr<Logger>( res ) ) );
+    Logger* res = new Logger(name);
+    s_repository.insert(std::make_pair(name, std::unique_ptr<Logger>(res)));
     return res;
 }
 
-Logger::Logger( const std::string& name ) : m_name( name )
+Logger::Logger(const std::string& name) : m_name(name)
 {
 }
 
-void Logger::log( light4cxx::Level l, const light4cxx::Location& loc, const std::string& str ) const
+void Logger::log(light4cxx::Level l, const light4cxx::Location& loc, const std::string& str) const
 {
-    if( l < s_level || s_level == Level::Off ) {
+    if(l < s_level || s_level == Level::Off)
+    {
         return;
     }
     static std::mutex outMutex;
-    std::lock_guard<std::mutex> outLock( outMutex );
-    *s_output << loc.toString( l, *this, str ) << std::endl;
+    std::lock_guard<std::mutex> outLock(outMutex);
+    *s_output << loc.toString(l, *this, str) << std::endl;
 }
-
 }
 
 /**

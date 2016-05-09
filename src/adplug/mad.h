@@ -1,3 +1,5 @@
+#pragma once
+
 /*
   Adplug - Replayer for many OPL2/OPL3 audio file formats.
   Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,26 +23,28 @@
 
 #include "protrack.h"
 
-class CmadLoader : public CmodPlayer {
+class CmadLoader : public CmodPlayer
+{
     DISABLE_COPY(CmadLoader)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CmadLoader() = default;
 
-    bool load(const std::string &filename);
-    void rewind(int subsong);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    void rewind(int subsong) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const;
-    std::string instrumentTitle(size_t n) const;
-    uint32_t instrumentCount() const;
+    std::string type() const override;
+    std::string instrumentTitle(size_t n) const override;
+    uint32_t instrumentCount() const override;
 
 private:
 
-    struct mad_instrument {
-        char name[8]{0};
-        unsigned char data[12]{0}; // last two unused
+    struct mad_instrument
+    {
+        char name[8]{ 0 };
+        unsigned char data[12]{ 0 }; // last two unused
     };
     mad_instrument instruments[9]{};
 };

@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter <dn.tlp@gmx.net>, et al.
@@ -21,34 +23,38 @@
 
 #include "protrack.h"
 
-class CadtrackLoader : public CmodPlayer {
+class CadtrackLoader : public CmodPlayer
+{
     DISABLE_COPY(CadtrackLoader)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CadtrackLoader() = default;
 
-    bool load(const std::string &filename);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const
+    std::string type() const override
     {
         return "Adlib Tracker 1.0";
     }
-    uint32_t instrumentCount() const
+    uint32_t instrumentCount() const override
     {
         return 9;
     }
 
 private:
-    enum Operators {
+    enum Operators
+    {
         Carrier = 1,
         Modulator = 0
     };
 
 #pragma pack(push,1)
-    struct Instrument {
-        struct Operator {
+    struct Instrument
+    {
+        struct Operator
+        {
             uint16_t appampmod;
             uint16_t appvib;
             uint16_t maintsuslvl;

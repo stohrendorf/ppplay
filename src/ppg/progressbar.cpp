@@ -27,88 +27,95 @@
 
 namespace ppg
 {
-
-ProgressBar::ProgressBar( Widget* parent, size_t maxVal, int w ): Widget( parent ), m_maxVal( maxVal ), m_value( 0 ), m_fgColor( Color::White ), m_bgColor( Color::None )
+ProgressBar::ProgressBar(Widget* parent, size_t maxVal, int w) : Widget(parent), m_maxVal(maxVal), m_value(0), m_fgColor(Color::White), m_bgColor(Color::None)
 {
-    Widget::setHeight( 1 );
-    setWidth( std::max( w, 2 ) );
+    Widget::setHeight(1);
+    setWidth(std::max(w, 2));
 }
 
 ProgressBar::~ProgressBar() = default;
 
 size_t ProgressBar::max() const
 {
-    LockGuard guard( this );
+    LockGuard guard(this);
     return m_maxVal;
 }
 
-void ProgressBar::setMax( size_t maxVal )
+void ProgressBar::setMax(size_t maxVal)
 {
-    LockGuard guard( this );
+    LockGuard guard(this);
     m_maxVal = maxVal;
-    if( m_value > m_maxVal ) {
+    if(m_value > m_maxVal)
+    {
         m_value = m_maxVal;
     }
 }
 
 size_t ProgressBar::value() const
 {
-    LockGuard guard( this );
+    LockGuard guard(this);
     return m_value;
 }
 
-void ProgressBar::setValue( size_t val )
+void ProgressBar::setValue(size_t val)
 {
-    LockGuard guard( this );
-    if( val <= m_maxVal ) {
+    LockGuard guard(this);
+    if(val <= m_maxVal)
+    {
         m_value = val;
     }
 }
 
 void ProgressBar::drawThis()
 {
-    LockGuard guard( this );
+    LockGuard guard(this);
     int w = area().width();
-    const int pos = m_maxVal == 0 ? 0 : ( w - 2 ) * m_value / m_maxVal;
-    for( int i = 0; i < w; i++ ) {
-        if( i == 0 ) {
-            drawChar( i, 0, '[' );
+    const int pos = m_maxVal == 0 ? 0 : (w - 2) * m_value / m_maxVal;
+    for(int i = 0; i < w; i++)
+    {
+        if(i == 0)
+        {
+            drawChar(i, 0, '[');
         }
-        else if( i == w - 1 ) {
-            drawChar( i, 0, ']' );
+        else if(i == w - 1)
+        {
+            drawChar(i, 0, ']');
         }
-        else if( i <= pos ) {
-            drawChar( i, 0, static_cast<char>( 0xfe ) );
+        else if(i <= pos)
+        {
+            drawChar(i, 0, static_cast<char>(0xfe));
         }
-        else {
-            drawChar( i, 0, static_cast<char>( 0xf9 ) );
+        else
+        {
+            drawChar(i, 0, static_cast<char>(0xf9));
         }
-        if( m_fgColor != Color::None ) {
-            setFgColorAt( i, 0, m_fgColor );
+        if(m_fgColor != Color::None)
+        {
+            setFgColorAt(i, 0, m_fgColor);
         }
-        if( m_bgColor != Color::None ) {
-            setBgColorAt( i, 0, m_bgColor );
+        if(m_bgColor != Color::None)
+        {
+            setBgColorAt(i, 0, m_bgColor);
         }
     }
 }
 
-int ProgressBar::setHeight( int )
+int ProgressBar::setHeight(int)
 {
     return 1;
 }
 
-void ProgressBar::setBgColor( Color c )
+void ProgressBar::setBgColor(Color c)
 {
-    LockGuard guard( this );
+    LockGuard guard(this);
     m_bgColor = c;
 }
 
-void ProgressBar::setFgColor( Color c )
+void ProgressBar::setFgColor(Color c)
 {
-    LockGuard guard( this );
+    LockGuard guard(this);
     m_fgColor = c;
 }
-
 }
 
 /**

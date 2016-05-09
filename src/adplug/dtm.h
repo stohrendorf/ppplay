@@ -1,3 +1,5 @@
+#pragma once
+
 /*
   Adplug - Replayer for many OPL2/OPL3 audio file formats.
   Copyright (C) 1999 - 2006 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,27 +23,29 @@
 
 #include "protrack.h"
 
-class CdtmLoader : public CmodPlayer {
+class CdtmLoader : public CmodPlayer
+{
     DISABLE_COPY(CdtmLoader)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CdtmLoader() = default;
 
-    bool load(const std::string &filename);
-    void rewind(int subsong);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    void rewind(int subsong) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const;
-    std::string title() const;
-    std::string author() const;
-    std::string description() const;
-    std::string instrumentTitle(size_t n) const;
-    uint32_t instrumentCount() const;
+    std::string type() const override;
+    std::string title() const override;
+    std::string author() const override;
+    std::string description() const override;
+    std::string instrumentTitle(size_t n) const override;
+    uint32_t instrumentCount() const override;
 
 private:
 
-    struct dtm_header {
+    struct dtm_header
+    {
         char id[12] = "";
         uint8_t version = 0;
         char title[20] = "";
@@ -54,9 +58,10 @@ private:
 
     std::string m_description{};
 
-    struct dtm_instrument {
+    struct dtm_instrument
+    {
         char name[13] = "";
-        uint8_t data[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+        uint8_t data[12] = { 0,0,0,0,0,0,0,0,0,0,0,0 };
     };
     dtm_instrument m_instruments[128];
 

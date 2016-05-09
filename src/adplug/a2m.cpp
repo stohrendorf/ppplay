@@ -32,17 +32,22 @@
 #include "stream/filestream.h"
 #include "a2m.h"
 
-namespace {
-constexpr uint16_t bitvalue[14] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192 };
+namespace
+{
+const uint16_t bitvalue[14] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192 };
 
-constexpr std::array<int16_t,6> copybits = {{ 4, 6, 8, 10, 12, 14 }};
+const std::array<int16_t, 6> copybits = { {4, 6, 8, 10, 12, 14} };
 
-constexpr std::array<int16_t,6> copymin = {{ 0, 16, 80, 336, 1360, 5456 }};
+const std::array<int16_t, 6> copymin = { {0, 16, 80, 336, 1360, 5456} };
 }
 
-CPlayer *Ca2mLoader::factory() { return new Ca2mLoader(); }
+Player* Ca2mLoader::factory()
+{
+    return new Ca2mLoader();
+}
 
-bool Ca2mLoader::load(const std::string &filename) {
+bool Ca2mLoader::load(const std::string& filename)
+{
     FileStream f(filename);
     if(!f)
         return false;
@@ -132,7 +137,8 @@ bool Ca2mLoader::load(const std::string &filename) {
     f >> numpats;
 
     // file validation section
-    if (strncmp(id, "_A2module_", 10) || (version != 1 && version != 5 && version != 4 && version != 8)) {
+    if(strncmp(id, "_A2module_", 10) || (version != 1 && version != 5 && version != 4 && version != 8))
+    {
         return false;
     }
 
@@ -140,10 +146,13 @@ bool Ca2mLoader::load(const std::string &filename) {
     //m_maxUsedPattern = numpats;
     uint16_t len[9];
     int t;
-    if (version < 5) {
+    if(version < 5)
+    {
         f.read(len, 5);
         t = 9;
-    } else { // version >= 5
+    }
+    else
+    { // version >= 5
         f.read(len, 9);
         t = 18;
     }
@@ -153,24 +162,28 @@ bool Ca2mLoader::load(const std::string &filename) {
     m_secData.resize(len[0] / 2);
     std::vector<uint8_t> m_org;
     size_t m_orgPos = 0;
-    if (version == 1 || version == 5) {
-        f.read(m_secData.data(), len[0]/2);
+    if(version == 1 || version == 5)
+    {
+        f.read(m_secData.data(), len[0] / 2);
         m_org.resize(MAXBUF);
-        sixdepak(m_secData.data(), m_org.data(), len[0]);
+        sixDepak(m_secData.data(), m_org.data(), len[0]);
     }
-    else {
+    else
+    {
         f.read(m_org.data(), len[0]);
     }
     m_songname.assign(&m_org[m_orgPos], &m_org[m_orgPos] + 42);
     m_orgPos += 43;
     m_author.assign(&m_org[m_orgPos], &m_org[m_orgPos] + 42);
     m_orgPos += 43;
-    for (int i = 0; i < 250; ++i) {
+    for(int i = 0; i < 250; ++i)
+    {
         m_songname.assign(&m_org[m_orgPos], &m_org[m_orgPos] + 32);
         m_orgPos += 33;
     }
 
-    for (int i = 0; i < 250; i++) { // instruments
+    for(int i = 0; i < 250; i++)
+    { // instruments
         CmodPlayer::Instrument& inst = addInstrument();
         inst.data[0] = m_org[m_orgPos + 10];
         inst.data[1] = m_org[m_orgPos + 0];
@@ -184,12 +197,13 @@ bool Ca2mLoader::load(const std::string &filename) {
         inst.data[9] = m_org[m_orgPos + 2];
         inst.data[10] = m_org[m_orgPos + 3];
 
-        if (version < 5)
+        if(version < 5)
             inst.misc = m_org[m_orgPos + 11];
-        else { // version >= 5 -> OPL3 format
+        else
+        { // version >= 5 -> OPL3 format
             int pan = m_org[m_orgPos + 11];
 
-            if (pan)
+            if(pan)
                 inst.data[0] |= (pan & 3) << 4; // set pan
             else
                 inst.data[0] |= 48; // enable both speakers
@@ -199,123 +213,138 @@ bool Ca2mLoader::load(const std::string &filename) {
         m_orgPos += 13;
     }
 
-    for(int i=0; i<128; ++i)
+    for(int i = 0; i < 128; ++i)
         addOrder(m_org[m_orgPos++]);
     setRestartOrder(0);
     setInitialTempo(m_org[m_orgPos++]);
     setInitialSpeed(m_org[m_orgPos++]);
     uint8_t flags = 0;
-    if (version >= 5)
+    if(version >= 5)
         flags = m_org[m_orgPos];
-    if (version == 1 || version == 5)
+    if(version == 1 || version == 5)
         m_org.clear();
     m_secData.clear();
 
     // blocks 1-4 or 1-8
     size_t alength = len[1];
-    for (int i = 0; i < (version < 5 ? numpats / 16 : numpats / 8); i++)
+    for(int i = 0; i < (version < 5 ? numpats / 16 : numpats / 8); i++)
         alength += len[i + 2];
 
     m_secData.resize(alength / 2);
-    if (version == 1 || version == 5) {
-
-        f.read(m_secData.data(), alength/2);
+    if(version == 1 || version == 5)
+    {
+        f.read(m_secData.data(), alength / 2);
         m_org.resize(MAXBUF * (numpats / (version == 1 ? 16 : 8) + 1));
         m_orgPos = 0;
         size_t secPos = 0;
-        m_orgPos += sixdepak(&m_secData[secPos], &m_org[m_orgPos], len[1]);
+        m_orgPos += sixDepak(&m_secData[secPos], &m_org[m_orgPos], len[1]);
         secPos += len[1] / 2;
-        if (version == 1) {
-            if (numpats > 16)
-                m_orgPos += sixdepak(&m_secData[secPos], &m_org[m_orgPos], len[2]);
+        if(version == 1)
+        {
+            if(numpats > 16)
+                m_orgPos += sixDepak(&m_secData[secPos], &m_org[m_orgPos], len[2]);
             secPos += len[2] / 2;
-            if (numpats > 32)
-                m_orgPos += sixdepak(&m_secData[secPos], &m_org[m_orgPos], len[3]);
+            if(numpats > 32)
+                m_orgPos += sixDepak(&m_secData[secPos], &m_org[m_orgPos], len[3]);
             secPos += len[3] / 2;
-            if (numpats > 48)
-                sixdepak(&m_secData[secPos], &m_org[m_orgPos], len[4]);
+            if(numpats > 48)
+                sixDepak(&m_secData[secPos], &m_org[m_orgPos], len[4]);
         }
-        else {
-            if (numpats > 8)
-                m_orgPos += sixdepak(&m_secData[secPos], &m_org[m_orgPos], len[2]);
+        else
+        {
+            if(numpats > 8)
+                m_orgPos += sixDepak(&m_secData[secPos], &m_org[m_orgPos], len[2]);
             secPos += len[2] / 2;
-            if (numpats > 16)
-                m_orgPos += sixdepak(&m_secData[secPos], &m_org[m_orgPos], len[3]);
+            if(numpats > 16)
+                m_orgPos += sixDepak(&m_secData[secPos], &m_org[m_orgPos], len[3]);
             secPos += len[3] / 2;
-            if (numpats > 24)
-                m_orgPos += sixdepak(&m_secData[secPos], &m_org[m_orgPos], len[4]);
+            if(numpats > 24)
+                m_orgPos += sixDepak(&m_secData[secPos], &m_org[m_orgPos], len[4]);
             secPos += len[4] / 2;
-            if (numpats > 32)
-                m_orgPos += sixdepak(&m_secData[secPos], &m_org[m_orgPos], len[5]);
+            if(numpats > 32)
+                m_orgPos += sixDepak(&m_secData[secPos], &m_org[m_orgPos], len[5]);
             secPos += len[5] / 2;
-            if (numpats > 40)
-                m_orgPos += sixdepak(&m_secData[secPos], &m_org[m_orgPos], len[6]);
+            if(numpats > 40)
+                m_orgPos += sixDepak(&m_secData[secPos], &m_org[m_orgPos], len[6]);
             secPos += len[6] / 2;
-            if (numpats > 48)
-                m_orgPos += sixdepak(&m_secData[secPos], &m_org[m_orgPos], len[7]);
+            if(numpats > 48)
+                m_orgPos += sixDepak(&m_secData[secPos], &m_org[m_orgPos], len[7]);
             secPos += len[7] / 2;
-            if (numpats > 56)
-                sixdepak(&m_secData[secPos], &m_org[m_orgPos], len[8]);
+            if(numpats > 56)
+                sixDepak(&m_secData[secPos], &m_org[m_orgPos], len[8]);
         }
         m_secData.clear();
     }
-    else {
+    else
+    {
         m_org.assign(
-                    reinterpret_cast<const uint8_t *>(m_secData.data()),
-                    reinterpret_cast<const uint8_t *>(m_secData.data() + m_secData.size()));
+            reinterpret_cast<const uint8_t *>(m_secData.data()),
+            reinterpret_cast<const uint8_t *>(m_secData.data() + m_secData.size()));
         f.read(m_org.data(), alength);
     }
 
-    if (version < 5) {
-        for (int i = 0; i < numpats; i++) {
-            for (int j = 0; j < 64; j++) {
-                for (int k = 0; k < 9; k++) {
+    if(version < 5)
+    {
+        for(int i = 0; i < numpats; i++)
+        {
+            for(int j = 0; j < 64; j++)
+            {
+                for(int k = 0; k < 9; k++)
+                {
                     PatternCell& cell = patternCell(i * 9 + k, j);
-                    unsigned char *o = &m_org[i * 64 * t * 4 + j * t * 4 + k * 4];
+                    unsigned char* o = &m_org[i * 64 * t * 4 + j * t * 4 + k * 4];
 
                     cell.note = o[0] == 255 ? 127 : o[0];
                     cell.instrument = o[1];
                     cell.command = convfx[o[2]];
                     cell.loNybble = o[3] & 0x0f;
-                    if (cell.command != Command::Special) {
+                    if(cell.command != Command::Special)
+                    {
                         cell.hiNybble = o[3] >> 4;
                     }
-                    else {
+                    else
+                    {
                         cell.command = convinf1[o[3] >> 4];
-                        if (cell.command == Command::SFXKeyOff && !cell.loNybble) { // convert key-off
+                        if(cell.command == Command::SFXKeyOff && !cell.loNybble)
+                        { // convert key-off
                             cell.command = Command::NoteOff;
                             cell.hiNybble = 0;
                             cell.loNybble = 0;
                         }
                     }
-                    switch (cell.command) {
-                    case Command::SFXWaveForm: // convert define waveform
-                        cell.command = Command::WaveForm;
-                        cell.hiNybble = cell.loNybble;
-                        cell.loNybble = 0xf;
-                        break;
-                    case Command::SFXVolumeUp: // convert volume slide up
-                        cell.command = Command::VolSlide;
-                        cell.hiNybble = cell.loNybble;
-                        cell.loNybble = 0;
-                        break;
-                    case Command::SFXVolumeDown: // convert volume slide down
-                        cell.command = Command::VolSlide;
-                        cell.hiNybble = 0;
-                        break;
+                    switch(cell.command)
+                    {
+                        case Command::SFXWaveForm: // convert define waveform
+                            cell.command = Command::WaveForm;
+                            cell.hiNybble = cell.loNybble;
+                            cell.loNybble = 0xf;
+                            break;
+                        case Command::SFXVolumeUp: // convert volume slide up
+                            cell.command = Command::VolSlide;
+                            cell.hiNybble = cell.loNybble;
+                            cell.loNybble = 0;
+                            break;
+                        case Command::SFXVolumeDown: // convert volume slide down
+                            cell.command = Command::VolSlide;
+                            cell.hiNybble = 0;
+                            break;
                     }
                 }
             }
         }
     }
-    else { // version >= 5
+    else
+    { // version >= 5
         realloc_patterns(64, 64, 18);
 
-        for (int i = 0; i < numpats; i++) {
-            for (int j = 0; j < 18; j++) {
-                for (int k = 0; k < 64; k++) {
+        for(int i = 0; i < numpats; i++)
+        {
+            for(int j = 0; j < 18; j++)
+            {
+                for(int k = 0; k < 64; k++)
+                {
                     PatternCell& cell = patternCell(i * 18 + j, k);
-                    unsigned char *o = &m_org[i * 64 * t * 4 + j * 64 * 4 + k * 4];
+                    unsigned char* o = &m_org[i * 64 * t * 4 + j * 64 * 4 + k * 4];
 
                     cell.note = o[0] == 255 ? 127 : o[0];
                     cell.instrument = o[1];
@@ -324,19 +353,20 @@ bool Ca2mLoader::load(const std::string &filename) {
                     cell.loNybble = o[3] & 0x0f;
 
                     // Convert '&' command
-                    if (o[2] == 36)
-                        switch (cell.hiNybble) {
-                        case 0: // pattern delay (frames)
-                            cell.command = Command::PatternDelay;
-                            cell.hiNybble = 0;
-                            // param2 already set correctly
-                            break;
+                    if(o[2] == 36)
+                        switch(cell.hiNybble)
+                        {
+                            case 0: // pattern delay (frames)
+                                cell.command = Command::PatternDelay;
+                                cell.hiNybble = 0;
+                                // param2 already set correctly
+                                break;
 
-                        case 1: // pattern delay (rows)
-                            cell.command = Command::SFXPatternDelay;
-                            cell.hiNybble = 0;
-                            // param2 already set correctly
-                            break;
+                            case 1: // pattern delay (rows)
+                                cell.command = Command::SFXPatternDelay;
+                                cell.hiNybble = 0;
+                                // param2 already set correctly
+                                break;
                         }
                 }
             }
@@ -345,17 +375,18 @@ bool Ca2mLoader::load(const std::string &filename) {
 
     init_trackord();
 
-    if (version == 1 || version == 5)
+    if(version == 1 || version == 5)
         m_org.clear();
     else
         m_secData.clear();
 
     // Process flags
-    if (version >= 5) {
+    if(version >= 5)
+    {
         setOpl3Mode(); // All versions >= 5 are OPL3
-        if (flags & 8)
+        if(flags & 8)
             setTremolo(); // Tremolo depth
-        if (flags & 16)
+        if(flags & 16)
             setVibrato(); // Vibrato depth
     }
 
@@ -363,8 +394,9 @@ bool Ca2mLoader::load(const std::string &filename) {
     return true;
 }
 
-size_t Ca2mLoader::framesUntilUpdate() const {
-    if (currentTempo() != 18)
+size_t Ca2mLoader::framesUntilUpdate() const
+{
+    if(currentTempo() != 18)
         return SampleRate / currentTempo();
     else
         return static_cast<size_t>(SampleRate / 18.2);
@@ -372,98 +404,112 @@ size_t Ca2mLoader::framesUntilUpdate() const {
 
 /*** private methods *************************************/
 
-void Ca2mLoader::inittree() {
-    unsigned short i;
-
-    for (i = 2; i <= TWICEMAX; i++) {
+void Ca2mLoader::initTree()
+{
+    for(int i = 2; i <= TWICEMAX; i++)
+    {
         m_dad[i] = i / 2;
         m_freq[i] = 1;
     }
 
-    for (i = 1; i <= MAXCHAR; i++) {
+    for(int i = 1; i <= MAXCHAR; i++)
+    {
         m_leftc[i] = 2 * i;
         m_rightc[i] = 2 * i + 1;
     }
 }
 
-void Ca2mLoader::updatefreq(unsigned short a, unsigned short b) {
-    do {
+void Ca2mLoader::updateFreq(uint16_t a, uint16_t b)
+{
+    do
+    {
         m_freq[m_dad[a]] = m_freq[a] + m_freq[b];
         a = m_dad[a];
-        if (a != ROOT) {
-            if (m_leftc[m_dad[a]] == a)
+        if(a != ROOT)
+        {
+            if(m_leftc[m_dad[a]] == a)
                 b = m_rightc[m_dad[a]];
             else
                 b = m_leftc[m_dad[a]];
         }
-    } while (a != ROOT);
+    } while(a != ROOT);
 
-    if (m_freq[ROOT] == MAXFREQ)
-        for (a = 1; a <= TWICEMAX; a++)
+    if(m_freq[ROOT] == MAXFREQ)
+        for(a = 1; a <= TWICEMAX; a++)
             m_freq[a] >>= 1;
 }
 
-void Ca2mLoader::updatemodel(unsigned short code) {
+void Ca2mLoader::updateModel(uint16_t code)
+{
     uint16_t a = code + SUCCMAX;
 
     m_freq[a]++;
-    if (m_dad[a] != ROOT) {
+    if(m_dad[a] != ROOT)
+    {
         auto code1 = m_dad[a];
-        if (m_leftc[code1] == a)
-            updatefreq(a, m_rightc[code1]);
+        if(m_leftc[code1] == a)
+            updateFreq(a, m_rightc[code1]);
         else
-            updatefreq(a, m_leftc[code1]);
+            updateFreq(a, m_leftc[code1]);
 
-        do {
+        do
+        {
             const auto code2 = m_dad[code1];
             uint16_t b;
-            if (m_leftc[code2] == code1)
+            if(m_leftc[code2] == code1)
                 b = m_rightc[code2];
             else
                 b = m_leftc[code2];
 
-            if (m_freq[a] > m_freq[b]) {
-                if (m_leftc[code2] == code1)
+            if(m_freq[a] > m_freq[b])
+            {
+                if(m_leftc[code2] == code1)
                     m_rightc[code2] = a;
                 else
                     m_leftc[code2] = a;
 
                 uint16_t c;
-                if (m_leftc[code1] == a) {
+                if(m_leftc[code1] == a)
+                {
                     m_leftc[code1] = b;
                     c = m_rightc[code1];
                 }
-                else {
+                else
+                {
                     m_rightc[code1] = b;
                     c = m_leftc[code1];
                 }
 
                 m_dad[b] = code1;
                 m_dad[a] = code2;
-                updatefreq(b, c);
+                updateFreq(b, c);
                 a = b;
             }
 
             a = m_dad[a];
             code1 = m_dad[a];
-        } while (code1 != ROOT);
+        } while(code1 != ROOT);
     }
 }
 
-unsigned short Ca2mLoader::inputcode(unsigned short bits) {
-    unsigned short i, code = 0;
+uint16_t Ca2mLoader::inputCode(uint16_t bits)
+{
+    uint16_t code = 0;
 
-    for (i = 1; i <= bits; i++) {
-        if (!m_bitcount) {
-            if (m_bitcount == MAXBUF)
+    for(int i = 1; i <= bits; i++)
+    {
+        if(!m_bitcount)
+        {
+            if(m_bitcount == MAXBUF)
                 m_bufcount = 0;
             m_bitbuffer = m_wdbuf[m_bufcount];
             m_bufcount++;
             m_bitcount = 15;
-        } else
+        }
+        else
             m_bitcount--;
 
-        if (m_bitbuffer > 0x7fff)
+        if(m_bitbuffer > 0x7fff)
             code |= bitvalue[i - 1];
         m_bitbuffer <<= 1;
     }
@@ -471,65 +517,76 @@ unsigned short Ca2mLoader::inputcode(unsigned short bits) {
     return code;
 }
 
-unsigned short Ca2mLoader::uncompress() {
-    unsigned short a = 1;
+uint16_t Ca2mLoader::uncompress()
+{
+    uint16_t a = 1;
 
-    do {
-        if (!m_bitcount) {
-            if (m_bufcount == MAXBUF)
+    do
+    {
+        if(!m_bitcount)
+        {
+            if(m_bufcount == MAXBUF)
                 m_bufcount = 0;
             m_bitbuffer = m_wdbuf[m_bufcount];
             m_bufcount++;
             m_bitcount = 15;
-        } else
+        }
+        else
             m_bitcount--;
 
-        if (m_bitbuffer > 0x7fff)
+        if(m_bitbuffer > 0x7fff)
             a = m_rightc[a];
         else
             a = m_leftc[a];
         m_bitbuffer <<= 1;
-    } while (a <= MAXCHAR);
+    } while(a <= MAXCHAR);
 
     a -= SUCCMAX;
-    updatemodel(a);
+    updateModel(a);
     return a;
 }
 
-void Ca2mLoader::decode() {
-    unsigned short i, j, k, t, c, count = 0, dist, len, index;
+void Ca2mLoader::decode()
+{
+    uint16_t count = 0;
 
-    inittree();
-    c = uncompress();
+    initTree();
 
-    while (c != TERMINATE) {
-        if (c < 256) {
+    for(auto c = uncompress(); c != TERMINATE; c = uncompress())
+    {
+        if(c < 256)
+        {
             m_obuf[m_obufcount] = static_cast<uint8_t>(c);
             m_obufcount++;
-            if (m_obufcount == MAXBUF) {
+            if(m_obufcount == MAXBUF)
+            {
                 m_outputSize = MAXBUF;
                 m_obufcount = 0;
             }
 
             m_buf[count] = static_cast<uint8_t>(c);
             count++;
-            if (count == MAXSIZE)
+            if(count == MAXSIZE)
                 count = 0;
-        } else {
-            t = c - FIRSTCODE;
-            index = t / CODESPERRANGE;
-            len = t + MINCOPY - index * CODESPERRANGE;
-            dist = inputcode(copybits[index]) + len + copymin[index];
+        }
+        else
+        {
+            const auto t = c - FIRSTCODE;
+            const auto index = t / CODESPERRANGE;
+            const auto len = t + MINCOPY - index * CODESPERRANGE;
+            const auto dist = inputCode(copybits[index]) + len + copymin[index];
 
-            j = count;
-            k = count - dist;
-            if (count < dist)
+            auto j = count;
+            auto k = count - dist;
+            if(count < dist)
                 k += MAXSIZE;
 
-            for (i = 0; i <= len - 1; i++) {
+            for(auto i = 0; i <= len - 1; i++)
+            {
                 m_obuf[m_obufcount] = m_buf[k];
                 m_obufcount++;
-                if (m_obufcount == MAXBUF) {
+                if(m_obufcount == MAXBUF)
+                {
                     m_outputSize = MAXBUF;
                     m_obufcount = 0;
                 }
@@ -537,23 +594,23 @@ void Ca2mLoader::decode() {
                 m_buf[j] = m_buf[k];
                 j++;
                 k++;
-                if (j == MAXSIZE)
+                if(j == MAXSIZE)
                     j = 0;
-                if (k == MAXSIZE)
+                if(k == MAXSIZE)
                     k = 0;
             }
 
             count += len;
-            if (count >= MAXSIZE)
+            if(count >= MAXSIZE)
                 count -= MAXSIZE;
         }
-        c = uncompress();
     }
     m_outputSize = m_obufcount;
 }
 
-size_t Ca2mLoader::sixdepak(uint16_t *source, uint8_t *dest, size_t size) {
-    if (size + 4096 > MAXBUF)
+size_t Ca2mLoader::sixDepak(uint16_t* source, uint8_t* dest, size_t size)
+{
+    if(size + 4096 > MAXBUF)
         return 0;
 
     m_buf.resize(MAXSIZE);

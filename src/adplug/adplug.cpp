@@ -21,7 +21,7 @@
 
 #include "adplug.h"
 
-/***** Replayer includes *****/
+ /***** Replayer includes *****/
 
 #include "hsc.h"
 #include "amd.h"
@@ -75,73 +75,79 @@ light4cxx::Logger* logger = light4cxx::Logger::get("badplay.factory");
 }
 
 // List of all players that come with the standard AdPlug distribution
-const CPlayerDesc CAdPlug::allplayers[] = {
-    CPlayerDesc(ChscPlayer::factory, "HSC-Tracker", {".hsc"}),
-    CPlayerDesc(CsngPlayer::factory, "SNGPlay", {".sng"}),
-    CPlayerDesc(CimfPlayer::factory, "Apogee IMF", {".imf", ".wlf", ".adlib"}),
-    CPlayerDesc(Ca2mLoader::factory, "Adlib Tracker 2", {".a2m"}),
-    CPlayerDesc(CadtrackLoader::factory, "Adlib Tracker", {".sng"}),
-    CPlayerDesc(CamdLoader::factory, "AMUSIC", {".amd"}),
-    CPlayerDesc(CbamPlayer::factory, "Bob's Adlib Music", {".bam"}),
-    CPlayerDesc(CcmfPlayer::factory, "Creative Music File", {".cmf"}),
-    CPlayerDesc(Cd00Player::factory, "Packed EdLib", {".d00"}),
-    CPlayerDesc(CdfmLoader::factory, "Digital-FM", {".dfm"}),
-    CPlayerDesc(ChspLoader::factory, "HSC Packed", {".hsp"}),
-    CPlayerDesc(CksmPlayer::factory, "Ken Silverman Music", {".ksm"}),
-    CPlayerDesc(CmadLoader::factory, "Mlat Adlib Tracker", {".mad"}),
-    CPlayerDesc(CDukePlayer::factory, "Duke", {".mid"}),
-    CPlayerDesc(CmidPlayer::factory, "MIDI", {".mid", ".sci", ".laa"}),
-    CPlayerDesc(CmkjPlayer::factory, "MKJamz", {".mkj"}),
-    CPlayerDesc(CcffLoader::factory, "Boomtracker", {".cff"}),
-    CPlayerDesc(CdmoLoader::factory, "TwinTeam", {".dmo"}),
-    CPlayerDesc(Cs3mPlayer::factory, "Scream Tracker 3", {".s3m"}),
-    CPlayerDesc(CdtmLoader::factory, "DeFy Adlib Tracker", {".dtm"}),
-    CPlayerDesc(CfmcLoader::factory, "Faust Music Creator", {".sng"}),
-    CPlayerDesc(CmtkLoader::factory, "MPU-401 Trakker", {".mtk"}),
-    CPlayerDesc(CradLoader::factory, "Reality Adlib Tracker", {".rad"}),
-    CPlayerDesc(CrawPlayer::factory, "RdosPlay RAW", {".raw"}),
-    CPlayerDesc(Csa2Loader::factory, "Surprise! Adlib Tracker", {".sat", ".sa2"}),
-    CPlayerDesc(CxadbmfPlayer::factory, "BMF Adlib Tracker", {".xad"}),
-    CPlayerDesc(CxadflashPlayer::factory, "Flash", {".xad"}),
-    CPlayerDesc(CxadhybridPlayer::factory, "Hybrid", {".xad"}),
-    CPlayerDesc(CxadhypPlayer::factory, "Hypnosis", {".xad"}),
-    CPlayerDesc(CxadpsiPlayer::factory, "PSI", {".xad"}),
-    CPlayerDesc(CxadratPlayer::factory, "rat", {".xad"}),
-    CPlayerDesc(CldsPlayer::factory, "LOUDNESS Sound System", {".lds"}),
-    CPlayerDesc(Cu6mPlayer::factory, "Ultima 6 Music", {".m"}),
-    CPlayerDesc(CrolPlayer::factory, "Adlib Visual Composer", {".rol"}),
-    CPlayerDesc(CxsmPlayer::factory, "eXtra Simple Music", {".xsm"}),
-    CPlayerDesc(CdroPlayer::factory, "DOSBox Raw OPL v0.1", {".dro"}),
-    CPlayerDesc(Cdro2Player::factory, "DOSBox Raw OPL v2.0", {".dro"}),
-    CPlayerDesc(CmscPlayer::factory, "Adlib MSC Player", {".msc"}),
-    CPlayerDesc(CrixPlayer::factory, "Softstar RIX OPL Music", {".rix"}),
-    CPlayerDesc(CadlPlayer::factory, "Westwood ADL", {".adl"}),
-    CPlayerDesc(CjbmPlayer::factory, "JBM Adlib Music", {".jbm"}),
-    CPlayerDesc()
+const PlayerDesc AdPlug::allplayers[] = {
+    PlayerDesc(ChscPlayer::factory, "HSC-Tracker", {".hsc"}),
+    PlayerDesc(CsngPlayer::factory, "SNGPlay", {".sng"}),
+    PlayerDesc(CimfPlayer::factory, "Apogee IMF", {".imf", ".wlf", ".adlib"}),
+    PlayerDesc(Ca2mLoader::factory, "Adlib Tracker 2", {".a2m"}),
+    PlayerDesc(CadtrackLoader::factory, "Adlib Tracker", {".sng"}),
+    PlayerDesc(CamdLoader::factory, "AMUSIC", {".amd"}),
+    PlayerDesc(CbamPlayer::factory, "Bob's Adlib Music", {".bam"}),
+    PlayerDesc(CcmfPlayer::factory, "Creative Music File", {".cmf"}),
+    PlayerDesc(Cd00Player::factory, "Packed EdLib", {".d00"}),
+    PlayerDesc(CdfmLoader::factory, "Digital-FM", {".dfm"}),
+    PlayerDesc(ChspLoader::factory, "HSC Packed", {".hsp"}),
+    PlayerDesc(CksmPlayer::factory, "Ken Silverman Music", {".ksm"}),
+    PlayerDesc(CmadLoader::factory, "Mlat Adlib Tracker", {".mad"}),
+    PlayerDesc(CDukePlayer::factory, "Duke", {".mid"}),
+    PlayerDesc(CmidPlayer::factory, "MIDI", {".mid", ".sci", ".laa"}),
+    PlayerDesc(CmkjPlayer::factory, "MKJamz", {".mkj"}),
+    PlayerDesc(CcffLoader::factory, "Boomtracker", {".cff"}),
+    PlayerDesc(CdmoLoader::factory, "TwinTeam", {".dmo"}),
+    PlayerDesc(Cs3mPlayer::factory, "Scream Tracker 3", {".s3m"}),
+    PlayerDesc(CdtmLoader::factory, "DeFy Adlib Tracker", {".dtm"}),
+    PlayerDesc(CfmcLoader::factory, "Faust Music Creator", {".sng"}),
+    PlayerDesc(CmtkLoader::factory, "MPU-401 Trakker", {".mtk"}),
+    PlayerDesc(CradLoader::factory, "Reality Adlib Tracker", {".rad"}),
+    PlayerDesc(CrawPlayer::factory, "RdosPlay RAW", {".raw"}),
+    PlayerDesc(Csa2Loader::factory, "Surprise! Adlib Tracker", {".sat", ".sa2"}),
+    PlayerDesc(CxadbmfPlayer::factory, "BMF Adlib Tracker", {".xad"}),
+    PlayerDesc(CxadflashPlayer::factory, "Flash", {".xad"}),
+    PlayerDesc(CxadhybridPlayer::factory, "Hybrid", {".xad"}),
+    PlayerDesc(CxadhypPlayer::factory, "Hypnosis", {".xad"}),
+    PlayerDesc(CxadpsiPlayer::factory, "PSI", {".xad"}),
+    PlayerDesc(CxadratPlayer::factory, "rat", {".xad"}),
+    PlayerDesc(CldsPlayer::factory, "LOUDNESS Sound System", {".lds"}),
+    PlayerDesc(Cu6mPlayer::factory, "Ultima 6 Music", {".m"}),
+    PlayerDesc(CrolPlayer::factory, "Adlib Visual Composer", {".rol"}),
+    PlayerDesc(CxsmPlayer::factory, "eXtra Simple Music", {".xsm"}),
+    PlayerDesc(CdroPlayer::factory, "DOSBox Raw OPL v0.1", {".dro"}),
+    PlayerDesc(Cdro2Player::factory, "DOSBox Raw OPL v2.0", {".dro"}),
+    PlayerDesc(CmscPlayer::factory, "Adlib MSC Player", {".msc"}),
+    PlayerDesc(CrixPlayer::factory, "Softstar RIX OPL Music", {".rix"}),
+    PlayerDesc(CadlPlayer::factory, "Westwood ADL", {".adl"}),
+    PlayerDesc(CjbmPlayer::factory, "JBM Adlib Music", {".jbm"}),
+    PlayerDesc()
 };
 
-const CPlayers &CAdPlug::init_players(const CPlayerDesc pd[]) {
-    static CPlayers initplayers;
+const Players& AdPlug::init_players(const PlayerDesc pd[])
+{
+    static Players initplayers;
 
-    for (size_t i = 0; pd[i].factory; i++)
+    for(size_t i = 0; pd[i].factory; i++)
         initplayers.addPlayerDescription(&pd[i]);
 
     return initplayers;
 }
 
-const CPlayers CAdPlug::s_players = CAdPlug::init_players(CAdPlug::allplayers);
+const Players AdPlug::s_players = AdPlug::init_players(AdPlug::allplayers);
 
-std::shared_ptr<CPlayer> CAdPlug::factory(const std::string &fn, const CPlayers &pl) {
+std::shared_ptr<Player> AdPlug::factory(const std::string& fn, const Players& pl)
+{
     logger->info(L4CXX_LOCATION, "Trying to load %s", fn);
 
     // Try a direct hit by file extension
     const auto ext = boost::to_lower_copy(boost::filesystem::path(fn).extension().string());
-    for (auto i = pl.begin(); i != pl.end(); ++i) {
-        for (auto j = 0; !(*i)->get_extension(j).empty(); j++) {
-            if(ext == boost::to_lower_copy((*i)->get_extension(j))) {
+    for(auto i = pl.begin(); i != pl.end(); ++i)
+    {
+        for(auto j = 0; !(*i)->get_extension(j).empty(); j++)
+        {
+            if(ext == boost::to_lower_copy((*i)->get_extension(j)))
+            {
                 logger->debug(L4CXX_LOCATION, "Trying direct hit: %s\n", (*i)->filetype);
-                std::shared_ptr<CPlayer> p{ (*i)->factory() };
-                if (p && p->load(fn)) {
+                std::shared_ptr<Player> p{ (*i)->factory() };
+                if(p && p->load(fn))
+                {
                     return p;
                 }
             }
@@ -149,10 +155,12 @@ std::shared_ptr<CPlayer> CAdPlug::factory(const std::string &fn, const CPlayers 
     }
 
     // Try all players, one by one
-    for (auto i = pl.begin(); i != pl.end(); ++i) {
+    for(auto i = pl.begin(); i != pl.end(); ++i)
+    {
         logger->debug(L4CXX_LOCATION, "Trying: %s\n", (*i)->filetype);
-        std::shared_ptr<CPlayer> p { (*i)->factory() };
-        if (p && p->load(fn)) {
+        std::shared_ptr<Player> p{ (*i)->factory() };
+        if(p && p->load(fn))
+        {
             return p;
         }
     }
@@ -161,4 +169,7 @@ std::shared_ptr<CPlayer> CAdPlug::factory(const std::string &fn, const CPlayers 
     return nullptr;
 }
 
-std::string CAdPlug::get_version() { return "0.1"; }
+std::string AdPlug::get_version()
+{
+    return "0.1";
+}

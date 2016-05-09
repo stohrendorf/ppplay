@@ -1,17 +1,17 @@
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2006 Simon Peter, <dn.tlp@gmx.net>, et al.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -35,7 +35,7 @@ const unsigned int CksmPlayer::adlibfreq[63] = {
 
 /*** public methods **************************************/
 
-CPlayer* CksmPlayer::factory()
+Player* CksmPlayer::factory()
 {
     return new CksmPlayer();
 }
@@ -45,7 +45,7 @@ bool CksmPlayer::load(const std::string& filename)
     FileStream f(filename);
 
     // file validation section
-    if( !f || f.extension() != ".ksm" )
+    if(!f || f.extension() != ".ksm")
     {
         return false;
     }
@@ -55,7 +55,7 @@ bool CksmPlayer::load(const std::string& filename)
     fn.remove_filename() /= "insts.dat";
 
     FileStream insts(fn.string());
-    if( !f )
+    if(!f)
     {
         return false;
     }
@@ -71,7 +71,7 @@ bool CksmPlayer::load(const std::string& filename)
     note.resize(numnotes);
     f.read(note.data(), note.size());
 
-    if( !trchan[11] )
+    if(!trchan[11])
     {
         drumstat = 0;
         numchans = 9;
@@ -89,21 +89,21 @@ bool CksmPlayer::load(const std::string& filename)
 bool CksmPlayer::update()
 {
     count++;
-    if( count >= countstop )
+    if(count >= countstop)
     {
         size_t bufnum = 0;
-        while( count >= countstop )
+        while(count >= countstop)
         {
             auto templong = note[nownote];
             const auto track = ((templong >> 8) & 15);
-            if( (templong & 192) == 0 )
+            if((templong & 192) == 0)
             {
                 size_t i = 0;
 
-                while( (i < numchans) && ((chanfreq[i] != (templong & 63)) ||
-                    (chantrack[i] != ((templong >> 8) & 15))) )
+                while((i < numchans) && ((chanfreq[i] != (templong & 63)) ||
+                    (chantrack[i] != ((templong >> 8) & 15))))
                     i++;
-                if( i < numchans )
+                if(i < numchans)
                 {
                     databuf[bufnum++] = 0;
                     databuf[bufnum++] = static_cast<uint8_t>(0xb0 + i);
@@ -116,29 +116,29 @@ bool CksmPlayer::update()
             else
             {
                 int volevel = trvol[track];
-                if( (templong & 192) == 128 )
+                if((templong & 192) == 128)
                 {
                     volevel -= 4;
-                    if( volevel < 0 )
+                    if(volevel < 0)
                         volevel = 0;
                 }
-                if( (templong & 192) == 192 )
+                if((templong & 192) == 192)
                 {
                     volevel += 4;
-                    if( volevel > 63 )
+                    if(volevel > 63)
                         volevel = 63;
                 }
-                if( track < 11 )
+                if(track < 11)
                 {
                     size_t temp = 0;
                     auto i = numchans;
-                    for( size_t j = 0; j < numchans; j++ )
-                        if( (countstop - chanage[j] >= temp) && (chantrack[j] == track) )
+                    for(size_t j = 0; j < numchans; j++)
+                        if((countstop - chanage[j] >= temp) && (chantrack[j] == track))
                         {
                             temp = countstop - chanage[j];
                             i = j;
                         }
-                    if( i < numchans )
+                    if(i < numchans)
                     {
                         databuf[bufnum++] = 0;
                         databuf[bufnum++] = static_cast<uint8_t>(0xb0 + i);
@@ -158,37 +158,37 @@ bool CksmPlayer::update()
                         chanage[i] = countstop;
                     }
                 }
-                else if( (drumstat & 32) > 0 )
+                else if((drumstat & 32) > 0)
                 {
                     auto freq = adlibfreq[templong & 63];
                     int chan, drumnum;
-                    switch( track )
+                    switch(track)
                     {
-                    case 11:
-                        drumnum = 16;
-                        chan = 6;
-                        freq -= 2048;
-                        break;
-                    case 12:
-                        drumnum = 8;
-                        chan = 7;
-                        freq -= 2048;
-                        break;
-                    case 13:
-                        drumnum = 4;
-                        chan = 8;
-                        break;
-                    case 14:
-                        drumnum = 2;
-                        chan = 8;
-                        break;
-                    case 15:
-                        drumnum = 1;
-                        chan = 7;
-                        freq -= 2048;
-                        break;
-                    default:
-                        BOOST_THROW_EXCEPTION(std::runtime_error("Unexpected track number"));
+                        case 11:
+                            drumnum = 16;
+                            chan = 6;
+                            freq -= 2048;
+                            break;
+                        case 12:
+                            drumnum = 8;
+                            chan = 7;
+                            freq -= 2048;
+                            break;
+                        case 13:
+                            drumnum = 4;
+                            chan = 8;
+                            break;
+                        case 14:
+                            drumnum = 2;
+                            chan = 8;
+                            break;
+                        case 15:
+                            drumnum = 1;
+                            chan = 7;
+                            freq -= 2048;
+                            break;
+                        default:
+                            BOOST_THROW_EXCEPTION(std::runtime_error("Unexpected track number"));
                     }
                     databuf[bufnum++] = 0;
                     databuf[bufnum++] = static_cast<uint8_t>(0xa0 + chan);
@@ -200,7 +200,7 @@ bool CksmPlayer::update()
                     databuf[bufnum++] = static_cast<uint8_t>(0xbd);
                     databuf[bufnum++] = static_cast<uint8_t>(drumstat & (255 - drumnum));
                     drumstat |= drumnum;
-                    if( (track == 11) || (track == 12) || (track == 14) )
+                    if((track == 11) || (track == 12) || (track == 14))
                     {
                         const auto volval = (inst[trinst[track]][1] & 192) + (volevel ^ 63);
                         databuf[bufnum++] = 0;
@@ -220,18 +220,18 @@ bool CksmPlayer::update()
                 }
             }
             nownote++;
-            if( nownote >= note.size() )
+            if(nownote >= note.size())
             {
                 nownote = 0;
                 songend = true;
             }
             templong = note[nownote];
-            if( nownote == 0 )
+            if(nownote == 0)
                 count = (templong >> 12) - 1;
             const auto quanter = (240 / trquant[(templong >> 8) & 15]);
             countstop = (((templong >> 12) + (quanter >> 1)) / quanter) * quanter;
         }
-        for( int i = 0; i < bufnum; i += 3 )
+        for(int i = 0; i < bufnum; i += 3)
             getOpl()->writeReg(databuf[i + 1], databuf[i + 2]);
     }
     return !songend;
@@ -249,26 +249,26 @@ void CksmPlayer::rewind(int)
     getOpl()->writeReg(8, 0);
     getOpl()->writeReg(0xbd, drumstat);
 
-    if( trchan[11] == 1 )
+    if(trchan[11] == 1)
     {
-        for( i = 0; i < 11; i++ )
+        for(i = 0; i < 11; i++)
             instbuf[i] = inst[trinst[11]][i];
         instbuf[1] = ((instbuf[1] & 192) | (trvol[11] ^ 63));
         setinst(6, instbuf[0], instbuf[1], instbuf[2], instbuf[3], instbuf[4],
                 instbuf[5], instbuf[6], instbuf[7], instbuf[8], instbuf[9],
                 instbuf[10]);
-        for( i = 0; i < 5; i++ )
+        for(i = 0; i < 5; i++)
             instbuf[i] = inst[trinst[12]][i];
-        for( i = 5; i < 11; i++ )
+        for(i = 5; i < 11; i++)
             instbuf[i] = inst[trinst[15]][i];
         instbuf[1] = ((instbuf[1] & 192) | (trvol[12] ^ 63));
         instbuf[6] = ((instbuf[6] & 192) | (trvol[15] ^ 63));
         setinst(7, instbuf[0], instbuf[1], instbuf[2], instbuf[3], instbuf[4],
                 instbuf[5], instbuf[6], instbuf[7], instbuf[8], instbuf[9],
                 instbuf[10]);
-        for( i = 0; i < 5; i++ )
+        for(i = 0; i < 5; i++)
             instbuf[i] = inst[trinst[14]][i];
-        for( i = 5; i < 11; i++ )
+        for(i = 5; i < 11; i++)
             instbuf[i] = inst[trinst[13]][i];
         instbuf[1] = ((instbuf[1] & 192) | (trvol[14] ^ 63));
         instbuf[6] = ((instbuf[6] & 192) | (trvol[13] ^ 63));
@@ -277,26 +277,26 @@ void CksmPlayer::rewind(int)
                 instbuf[10]);
     }
 
-    for( i = 0; i < numchans; i++ )
+    for(i = 0; i < numchans; i++)
     {
         chantrack[i] = 0;
         chanage[i] = 0;
     }
     j = 0;
-    for( i = 0; i < 16; i++ )
-        if( (trchan[i] > 0) && (j < numchans) )
+    for(i = 0; i < 16; i++)
+        if((trchan[i] > 0) && (j < numchans))
         {
             auto k = trchan[i];
-            while( (j < numchans) && (k > 0) )
+            while((j < numchans) && (k > 0))
             {
                 chantrack[j] = i;
                 k--;
                 j++;
             }
         }
-    for( i = 0; i < numchans; i++ )
+    for(i = 0; i < numchans; i++)
     {
-        for( j = 0; j < 11; j++ )
+        for(j = 0; j < 11; j++)
             instbuf[j] = inst[trinst[chantrack[i]]][j];
         instbuf[1] = ((instbuf[1] & 192) | (63 - trvol[chantrack[i]]));
         setinst(i, instbuf[0], instbuf[1], instbuf[2], instbuf[3], instbuf[4],
@@ -312,7 +312,7 @@ void CksmPlayer::rewind(int)
 
 std::string CksmPlayer::instrumentTitle(size_t n) const
 {
-    if( trchan[n] )
+    if(trchan[n])
         return instname[trinst[n]];
     else
         return std::string();
@@ -322,7 +322,7 @@ std::string CksmPlayer::instrumentTitle(size_t n) const
 
 void CksmPlayer::loadinsts(FileStream& f)
 {
-    for( int i = 0; i < 256; i++ )
+    for(int i = 0; i < 256; i++)
     {
         f.read(instname[i], 20);
         f.read(inst[i], 11);

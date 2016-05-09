@@ -24,52 +24,55 @@
 
 void WavAudioOutput::encodeThread()
 {
-    while( AbstractAudioSource::Ptr lockedSrc = source() ) {
-        std::lock_guard<std::mutex> lock( m_mutex );
-        if( !m_file.is_open() || !m_file ) {
+    while(AbstractAudioSource::Ptr lockedSrc = source())
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if(!m_file.is_open() || !m_file)
+        {
             break;
         }
-        if( m_paused || lockedSrc->paused() ) {
-            std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+        if(m_paused || lockedSrc->paused())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             std::this_thread::yield();
             continue;
         }
         AudioFrameBuffer buffer;
-        size_t size = lockedSrc->getAudioData( buffer, lockedSrc->preferredBufferSize() );
-        if( size == 0 || !buffer || buffer->empty() ) {
-            setErrorCode( InputDry );
+        size_t size = lockedSrc->getAudioData(buffer, lockedSrc->preferredBufferSize());
+        if(size == 0 || !buffer || buffer->empty())
+        {
+            setErrorCode(InputDry);
             pause();
             return;
         }
-        m_file.write( reinterpret_cast<const char*>( &buffer->front() ), buffer->size() * sizeof( BasicSampleFrame ) );
+        m_file.write(reinterpret_cast<const char*>(&buffer->front()), buffer->size() * sizeof(BasicSampleFrame));
     }
 }
 
-
-WavAudioOutput::WavAudioOutput( const AbstractAudioSource::WeakPtr& src, const std::string& filename ): AbstractAudioOutput( src ),
-    m_file(), m_filename( filename ), m_encoderThread(), m_paused( true ), m_mutex()
+WavAudioOutput::WavAudioOutput(const AbstractAudioSource::WeakPtr& src, const std::string& filename) : AbstractAudioOutput(src),
+m_file(), m_filename(filename), m_encoderThread(), m_paused(true), m_mutex()
 {
-    logger()->info( L4CXX_LOCATION, "Created output: Filename '%s'", filename );
+    logger()->info(L4CXX_LOCATION, "Created output: Filename '%s'", filename);
 }
 
 WavAudioOutput::~WavAudioOutput()
 {
     m_encoderThread.join();
-    std::lock_guard<std::mutex> lock( m_mutex );
+    std::lock_guard<std::mutex> lock(m_mutex);
 
     const uint32_t filesize = m_file.tellp();
 
     // RIFF chunk size
     uint32_t tmp = filesize - 8;
-    m_file.seekp( 4 );
-    m_file.write( reinterpret_cast<const char*>( &tmp ), 4 );
+    m_file.seekp(4);
+    m_file.write(reinterpret_cast<const char*>(&tmp), 4);
 
     // data chunk size
     tmp = filesize - 44;
-    m_file.seekp( 40 );
-    m_file.write( reinterpret_cast<const char*>( &tmp ), 4 );
+    m_file.seekp(40);
+    m_file.write(reinterpret_cast<const char*>(&tmp), 4);
 
-    logger()->trace( L4CXX_LOCATION, "Destroyed" );
+    logger()->trace(L4CXX_LOCATION, "Destroyed");
 }
 
 uint16_t WavAudioOutput::internal_volumeRight() const
@@ -102,23 +105,26 @@ bool WavAudioOutput::internal_playing() const
     return !m_paused;
 }
 
-int WavAudioOutput::internal_init( int desiredFrq )
+int WavAudioOutput::internal_init(int desiredFrq)
 {
-    m_file.open( m_filename, std::ios::in );
-    if( m_file.is_open() ) {
+    m_file.open(m_filename, std::ios::in);
+    if(m_file.is_open())
+    {
         m_file.close();
-        logger()->error( L4CXX_LOCATION, "Output file already exists: '%s'", m_filename );
-        setErrorCode( OutputUnavailable );
+        logger()->error(L4CXX_LOCATION, "Output file already exists: '%s'", m_filename);
+        setErrorCode(OutputUnavailable);
         return 0;
     }
-    m_file.open( m_filename, std::ios::out | std::ios::binary );
-    if( !m_file.is_open() ) {
-        logger()->error( L4CXX_LOCATION, "Cannot open output file for writing: '%s'", m_filename );
-        setErrorCode( OutputUnavailable );
+    m_file.open(m_filename, std::ios::out | std::ios::binary);
+    if(!m_file.is_open())
+    {
+        logger()->error(L4CXX_LOCATION, "Cannot open output file for writing: '%s'", m_filename);
+        setErrorCode(OutputUnavailable);
         return 0;
     }
 
-    struct {
+    struct
+    {
         char id1[4];
         int32_t size1;
         char id2[4];
@@ -131,10 +137,10 @@ int WavAudioOutput::internal_init( int desiredFrq )
         int32_t subsize2;
     } header = {
         {'R', 'I', 'F', 'F'}, 0,
-        {'W', 'A', 'V', 'E'}, {'f', 'm', 't', ' '}, 16, 1, 2, static_cast<uint32_t>( desiredFrq ), uint32_t( desiredFrq * sizeof( BasicSampleFrame ) ), sizeof( BasicSampleFrame ), 16,
+        {'W', 'A', 'V', 'E'}, {'f', 'm', 't', ' '}, 16, 1, 2, static_cast<uint32_t>(desiredFrq), uint32_t(desiredFrq * sizeof(BasicSampleFrame)), sizeof(BasicSampleFrame), 16,
         {'d', 'a', 't', 'a'}, 0
     };
-    m_file.write( reinterpret_cast<const char*>( &header ), sizeof( header ) );
+    m_file.write(reinterpret_cast<const char*>(&header), sizeof(header));
 
     /*
     // ChunkID
@@ -155,11 +161,11 @@ int WavAudioOutput::internal_init( int desiredFrq )
     m_file << int32_t(0); // SubChunk size (placeholder)
     */
 
-    m_encoderThread = std::thread( &WavAudioOutput::encodeThread, this );
+    m_encoderThread = std::thread(&WavAudioOutput::encodeThread, this);
     return desiredFrq;
 }
 
 light4cxx::Logger* WavAudioOutput::logger()
 {
-    return light4cxx::Logger::get( AbstractAudioOutput::logger()->name() + ".wav" );
+    return light4cxx::Logger::get(AbstractAudioOutput::logger()->name() + ".wav");
 }

@@ -25,16 +25,18 @@
 
 /* -------- Public Methods -------------------------------- */
 
-bool CxadPlayer::load(const std::string &filename) {
+bool CxadPlayer::load(const std::string& filename)
+{
     FileStream f(filename);
-    if (!f)
+    if(!f)
         return false;
 
     // load header
     f >> m_xadHeader;
 
     // 'XAD!' - signed ?
-    if (m_xadHeader.id != 0x21444158) {
+    if(m_xadHeader.id != 0x21444158)
+    {
         return false;
     }
 
@@ -43,13 +45,14 @@ bool CxadPlayer::load(const std::string &filename) {
 
     bool ret = xadplayer_load();
 
-    if (ret)
+    if(ret)
         rewind(0);
 
     return ret;
 }
 
-void CxadPlayer::rewind(int subsong) {
+void CxadPlayer::rewind(int subsong)
+{
     setCurrentSpeed(m_xadHeader.speed);
     m_xadSpeedCounter = 1;
     m_xadPlaying = true;
@@ -63,8 +66,10 @@ void CxadPlayer::rewind(int subsong) {
 #endif
 }
 
-bool CxadPlayer::update() {
-    if (--m_xadSpeedCounter == 0) {
+bool CxadPlayer::update()
+{
+    if(--m_xadSpeedCounter == 0)
+    {
         m_xadSpeedCounter = currentSpeed();
 
         // update()
@@ -73,4 +78,3 @@ bool CxadPlayer::update() {
 
     return m_xadPlaying && !m_xadLooping;
 }
-

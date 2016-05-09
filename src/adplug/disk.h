@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * AdPlay/UNIX - OPL2 audio player
  * Copyright (C) 2001, 2002 Simon Peter <dn.tlp@gmx.net>
@@ -17,9 +19,6 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef H_DISK
-#define H_DISK
-
 #include "output.h"
 #include "stream/filestream.h"
 
@@ -36,5 +35,3 @@ private:
   FileStream m_file;
   uint32_t m_bytesWritten;
 };
-
-#endif

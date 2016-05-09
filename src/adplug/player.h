@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2007 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -19,20 +21,18 @@
  * player.h - Replayer base class, by Simon Peter <dn.tlp@gmx.net>
  */
 
-#ifndef H_ADPLUG_PLAYER
-#define H_ADPLUG_PLAYER
-
 #include <string>
 
 #include "ymf262/opl3.h"
 #include "stuff/utils.h"
 
-class CPlayer {
-    DISABLE_COPY(CPlayer)
-    public:
-        static constexpr auto SampleRate = opl::Opl3::SampleRate;
-    CPlayer();
-    virtual ~CPlayer() = default;
+class Player
+{
+    DISABLE_COPY(Player)
+public:
+    static constexpr const auto SampleRate = opl::Opl3::SampleRate;
+    Player();
+    virtual ~Player() = default;
 
     /***** Operational methods *****/
     virtual bool load(const std::string &filename) = 0;
@@ -103,15 +103,21 @@ class CPlayer {
 
     uint8_t currentPattern() const
     {
-        BOOST_ASSERT( m_currentOrder < m_order.size() );
+        BOOST_ASSERT(m_currentOrder < m_order.size());
         return m_order[m_currentOrder];
     }
 
-    opl::Opl3 *getOpl() { return &m_oplChip; }
-    virtual void read(std::array<int16_t, 4> *data) { m_oplChip.read(data); }
+    opl::Opl3 *getOpl()
+    {
+        return &m_oplChip;
+    }
+    virtual void read(std::array<int16_t, 4> *data)
+    {
+        m_oplChip.read(data);
+    }
 
 private:
-    opl::Opl3 m_oplChip;
+    opl::Opl3 m_oplChip{};
     std::vector<uint8_t> m_order{};
     size_t m_currentOrder = 0;
     uint8_t m_currentRow = 0;
@@ -126,33 +132,37 @@ protected:
         m_order.emplace_back(order);
     }
 
-    void setCurrentOrder(size_t idx) {
+    void setCurrentOrder(size_t idx)
+    {
         //BOOST_ASSERT( idx < m_order.size() );
         m_currentOrder = idx;
     }
 
-    void setCurrentRow(uint8_t idx) {
+    void setCurrentRow(uint8_t idx)
+    {
         m_currentRow = idx;
     }
 
-    void setInitialSpeed(uint16_t spd) {
+    void setInitialSpeed(uint16_t spd)
+    {
         m_initialSpeed = spd;
     }
 
-    void setCurrentSpeed(uint16_t spd) {
+    void setCurrentSpeed(uint16_t spd)
+    {
         m_currentSpeed = spd;
     }
 
-    void setInitialTempo(uint16_t tempo) {
+    void setInitialTempo(uint16_t tempo)
+    {
         m_initialTempo = tempo;
     }
 
-    void setCurrentTempo(uint16_t tempo) {
+    void setCurrentTempo(uint16_t tempo)
+    {
         m_currentTempo = tempo;
     }
 
-    static const uint16_t s_noteTable[12]; // standard adlib note table
-    static const uint8_t s_opTable[9]; // the 9 operators as expected by the OPL
+    static const std::array<uint16_t, 12> s_noteTable; // standard adlib note table
+    static const std::array<uint8_t, 9> s_opTable; // the 9 operators as expected by the OPL
 };
-
-#endif

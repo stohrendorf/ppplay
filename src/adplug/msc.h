@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2006 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -23,27 +25,29 @@
 
 class FileStream;
 
-class CmscPlayer : public CPlayer {
+class CmscPlayer : public Player
+{
     DISABLE_COPY(CmscPlayer)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CmscPlayer() = default;
     ~CmscPlayer() = default;
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const;
+    std::string type() const override;
 
     static constexpr auto MSC_SIGN_LEN = 16;
     static constexpr auto MSC_DESC_LEN = 64;
 
 private:
 #pragma pack(push,1)
-    struct msc_header {
+    struct msc_header
+    {
         uint8_t mh_sign[MSC_SIGN_LEN];
         uint16_t mh_ver;
         uint8_t mh_desc[MSC_DESC_LEN];
@@ -56,7 +60,7 @@ private:
     // file data
     std::string m_description{};               // song desctiption
     uint16_t m_version = 0;   // file version
-    std::vector<std::vector<uint8_t>> m_mscData{{}};      // compressed music data
+    std::vector<std::vector<uint8_t>> m_mscData{ {} };      // compressed music data
 
     // decoder state
     size_t m_mscDataIndex = 0; // active block

@@ -25,22 +25,28 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CPlayer *CmadLoader::factory() { return new CmadLoader(); }
+Player* CmadLoader::factory()
+{
+    return new CmadLoader();
+}
 
-bool CmadLoader::load(const std::string &filename) {
+bool CmadLoader::load(const std::string& filename)
+{
     FileStream f(filename);
-    if (!f)
+    if(!f)
         return false;
     const unsigned char conv_inst[10] = { 2, 1, 10, 9, 4, 3, 6, 5, 8, 7 };
     // 'MAD+' - signed ?
     char id[4];
     f.read(id, 4);
-    if (strncmp(id, "MAD+", 4)) {
+    if(strncmp(id, "MAD+", 4))
+    {
         return false;
     }
 
     // load instruments
-    for (int i = 0; i < 9; i++) {
+    for(int i = 0; i < 9; i++)
+    {
         f.read(instruments[i].name, 8);
         f.read(instruments[i].data, 12);
     }
@@ -62,9 +68,12 @@ bool CmadLoader::load(const std::string &filename) {
     init_trackord();
 
     // load tracks
-    for (auto i = 0; i < maxUsedPattern; i++) {
-        for (auto k = 0; k < 32; k++) {
-            for (auto j = 0; j < 9; j++) {
+    for(auto i = 0; i < maxUsedPattern; i++)
+    {
+        for(auto k = 0; k < 32; k++)
+        {
+            for(auto j = 0; j < 9; j++)
+            {
                 auto t = i * 9 + j;
 
                 // read event
@@ -72,25 +81,26 @@ bool CmadLoader::load(const std::string &filename) {
                 f >> event;
 
                 // convert event
-                PatternCell& cell = patternCell(t,k);
-                if (event < 0x61)
+                PatternCell& cell = patternCell(t, k);
+                if(event < 0x61)
                     cell.note = event;
-                if (event == 0xFF) // 0xFF: Release note
+                if(event == 0xFF) // 0xFF: Release note
                     cell.command = Command::NoteOff;
-                if (event == 0xFE) // 0xFE: Pattern Break
+                if(event == 0xFE) // 0xFE: Pattern Break
                     cell.command = Command::PatternBreak;
             }
         }
     }
 
     // load order
-    for(uint8_t order; this->orderCount() < orderCount && f>>order; )
-        addOrder(order-1);
+    for(uint8_t order; this->orderCount() < orderCount && f >> order; )
+        addOrder(order - 1);
 
     // convert instruments
-    for (auto i = 0; i < 9; i++) {
+    for(auto i = 0; i < 9; i++)
+    {
         CmodPlayer::Instrument& inst = addInstrument();
-        for (auto j = 0; j < 10; j++)
+        for(auto j = 0; j < 10; j++)
             inst.data[conv_inst[j]] = instruments[i].data[j];
     }
 
@@ -101,11 +111,13 @@ bool CmadLoader::load(const std::string &filename) {
     return true;
 }
 
-void CmadLoader::rewind(int subsong) {
+void CmadLoader::rewind(int subsong)
+{
     CmodPlayer::rewind(subsong);
 
     // default instruments
-    for (int i = 0; i < 9; i++) {
+    for(int i = 0; i < 9; i++)
+    {
         channel(i).instrument = i;
 
         const CmodPlayer::Instrument& inst = instrument(i);

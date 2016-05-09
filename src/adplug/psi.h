@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,40 +23,44 @@
 
 #include "xad.h"
 
-class CxadpsiPlayer : public CxadPlayer {
+class CxadpsiPlayer : public CxadPlayer
+{
     DISABLE_COPY(CxadpsiPlayer)
 public:
-    static CPlayer *factory();
+    static Player *factory();
 
     CxadpsiPlayer() = default;
 
 private:
-    struct Header {
+    struct Header
+    {
         uint16_t instr_ptr = 0;
         uint16_t seq_ptr = 0;
     };
 
     Header m_header{};
 
-    struct PsiData {
+    struct PsiData
+    {
         const uint8_t* instr_table = nullptr;
         const uint8_t* seq_table = nullptr;
-        uint8_t note_delay[9] = {0,0,0,0,0,0,0,0,0};
-        uint8_t note_curdelay[9] = {0,0,0,0,0,0,0,0,0};
-        std::array<bool,9> looping{{}};
+        uint8_t note_delay[9] = { 0,0,0,0,0,0,0,0,0 };
+        uint8_t note_curdelay[9] = { 0,0,0,0,0,0,0,0,0 };
+        std::array<bool, 9> looping{ {} };
     };
 
     PsiData m_psi{};
     //
-    bool xadplayer_load() {
-        if (xadHeader().fmt == PSI)
+    bool xadplayer_load() override
+    {
+        if(xadHeader().fmt == PSI)
             return true;
         else
             return false;
     }
-    void xadplayer_rewind(int);
-    void xadplayer_update();
-    size_t framesUntilUpdate() const;
-    std::string type() const;
-    uint32_t instrumentCount() const;
+    void xadplayer_rewind(int) override;
+    void xadplayer_update() override;
+    size_t framesUntilUpdate() const override;
+    std::string type() const override;
+    uint32_t instrumentCount() const override;
 };

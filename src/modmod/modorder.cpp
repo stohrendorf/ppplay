@@ -16,18 +16,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include "modorder.h"
 
 namespace ppp
 {
 namespace mod
 {
-
 bool ModOrder::isUnplayed() const
 {
     return playbackCount() == 0;
 }
-
 }
 }

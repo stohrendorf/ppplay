@@ -16,19 +16,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include "xmorder.h"
-
 
 namespace ppp
 {
 namespace xm
 {
-
 bool XmOrder::isUnplayed() const
 {
     return playbackCount() == 0;
 }
-
 }
 }

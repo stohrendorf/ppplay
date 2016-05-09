@@ -48,8 +48,59 @@ set(BADPLAY_SRCS
     u6m.cpp
     xad.cpp
     xsm.cpp
+    a2m.h
+    adl.h
+    adplay.cc
+    adplug.h
+    adtrack.h
+    amd.h
+    bam.h
+    bmf.h
+    cff.h
+    cmf.h
+    d00.h
+    dfm.h
+    disk.cc
+    dmo.h
+    dro.h
+    dro2.h
+    dtm.h
+    flash.h
+    fmc.h
+    hsc.h
+    hsp.h
+    hybrid.h
+    hyp.h
+    imf.h
+    jbm.h
+    ksm.h
+    lds.h
+    mad.h
+    mid.h
+    mkj.h
+    msc.h
+    mtk.h
+    output.cc
+    player.h
+    players.h
+    protrack.h
+    psi.h
+    rad.h
+    rat.h
+    raw.h
+    rix.h
+    rol.h
+    s3m.h
+    sa2.h
+    sdl.h
+    sng.h
+    u6m.h
+    xad.h
+    xsm.h
     mid/almidi.cpp
     mid/multichips.cpp
+    mid/almidi.h
+    mid/multichips.h
 )
 
 option(USE_BANKDB "Use MIDI bank database instead of hard-coded Duke Nukem 3D instruments" ON)

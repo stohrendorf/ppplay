@@ -32,108 +32,107 @@ namespace opl
 {
 void Operator::update_AM1_VIB1_EGT1_KSR1_MULT4()
 {
+    uint8_t am1_vib1_egt1_ksr1_mult4 = m_opl->readReg(m_operatorBaseAddress + Operator::AM1_VIB1_EGT1_KSR1_MULT4_Offset);
 
-    uint8_t am1_vib1_egt1_ksr1_mult4 = m_opl->readReg( m_operatorBaseAddress + Operator::AM1_VIB1_EGT1_KSR1_MULT4_Offset );
-
-    m_am  = (am1_vib1_egt1_ksr1_mult4 & 0x80) != 0;
+    m_am = (am1_vib1_egt1_ksr1_mult4 & 0x80) != 0;
     m_vib = (am1_vib1_egt1_ksr1_mult4 & 0x40) != 0;
     m_egt = (am1_vib1_egt1_ksr1_mult4 & 0x20) != 0;
 
-    m_phaseGenerator.setFrequency( m_f_number, m_block, am1_vib1_egt1_ksr1_mult4 & 0x0F );
-    m_envelopeGenerator.setKsr( (am1_vib1_egt1_ksr1_mult4 & 0x10) != 0 );
+    m_phaseGenerator.setFrequency(m_f_number, m_block, am1_vib1_egt1_ksr1_mult4 & 0x0F);
+    m_envelopeGenerator.setKsr((am1_vib1_egt1_ksr1_mult4 & 0x10) != 0);
 }
 
 void Operator::update_KSL2_TL6()
 {
+    const uint8_t ksl2_tl6 = m_opl->readReg(m_operatorBaseAddress + Operator::KSL2_TL6_Offset);
 
-    const uint8_t ksl2_tl6 = m_opl->readReg( m_operatorBaseAddress + Operator::KSL2_TL6_Offset );
-
-    m_envelopeGenerator.setAttennuation( m_f_number, m_block, ( ksl2_tl6 >> 6 ) & 3 );
-    m_envelopeGenerator.setTotalLevel( ksl2_tl6 & 0x3F );
+    m_envelopeGenerator.setAttennuation(m_f_number, m_block, (ksl2_tl6 >> 6) & 3);
+    m_envelopeGenerator.setTotalLevel(ksl2_tl6 & 0x3F);
 }
 
 void Operator::update_AR4_DR4()
 {
-    const uint8_t ar4_dr4 = m_opl->readReg( m_operatorBaseAddress + Operator::AR4_DR4_Offset );
+    const uint8_t ar4_dr4 = m_opl->readReg(m_operatorBaseAddress + Operator::AR4_DR4_Offset);
 
-    m_envelopeGenerator.setAttackRate( ( ar4_dr4 >> 4 ) & 0x0f );
-    m_envelopeGenerator.setDecayRate( ar4_dr4 & 0x0F );
+    m_envelopeGenerator.setAttackRate((ar4_dr4 >> 4) & 0x0f);
+    m_envelopeGenerator.setDecayRate(ar4_dr4 & 0x0F);
 }
 
 void Operator::update_SL4_RR4()
 {
+    const uint8_t sl4_rr4 = m_opl->readReg(m_operatorBaseAddress + Operator::SL4_RR4_Offset);
 
-    const uint8_t sl4_rr4 = m_opl->readReg( m_operatorBaseAddress + Operator::SL4_RR4_Offset );
-
-    m_envelopeGenerator.setSustainLevel( ( sl4_rr4 >> 4 ) & 0x0f );
-    m_envelopeGenerator.setReleaseRate( sl4_rr4 & 0x0F );
+    m_envelopeGenerator.setSustainLevel((sl4_rr4 >> 4) & 0x0f);
+    m_envelopeGenerator.setReleaseRate(sl4_rr4 & 0x0F);
 }
 
 void Operator::update_5_WS3()
 {
-    m_ws = m_opl->readReg( m_operatorBaseAddress + Operator::_5_WS3_Offset ) & 0x07;
+    m_ws = m_opl->readReg(m_operatorBaseAddress + Operator::_5_WS3_Offset) & 0x07;
 }
 
-int16_t Operator::handleTopCymbal( uint8_t ws )
+int16_t Operator::handleTopCymbal(uint8_t ws)
 {
     // The Top Cymbal operator uses its own phase together with the High Hat phase.
 
     const uint16_t hhPhase = m_opl->highHatOperator()->m_phase;
-    const uint16_t phaseBit = ( ( ( hhPhase & 0x88 ) ^ ( ( hhPhase << 5 ) & 0x80 ) ) | ( ( hhPhase ^ ( hhPhase << 2 ) ) & 0x20 ) ) ? 0x02 : 0x00;
+    const uint16_t phaseBit = (((hhPhase & 0x88) ^ ((hhPhase << 5) & 0x80)) | ((hhPhase ^ (hhPhase << 2)) & 0x20)) ? 0x02 : 0x00;
 
-    auto phase = ( 1 + phaseBit ) << 8;
-    return getOutput( phase, ws );
+    auto phase = (1 + phaseBit) << 8;
+    return getOutput(phase, ws);
 }
 
-int16_t Operator::handleHighHat( uint8_t ws )
+int16_t Operator::handleHighHat(uint8_t ws)
 {
-    const uint16_t phaseBit = ( ( ( m_phase & 0x88 ) ^ ( ( m_phase << 5 ) & 0x80 ) ) | ( ( m_phase ^ ( m_phase << 2 ) ) & 0x20 ) ) ? 0x02 : 0x00;
+    const uint16_t phaseBit = (((m_phase & 0x88) ^ ((m_phase << 5) & 0x80)) | ((m_phase ^ (m_phase << 2)) & 0x20)) ? 0x02 : 0x00;
     const uint16_t noiseBit = m_opl->randBit() << 1;
 
-    auto phase = ( phaseBit << 8 ) | ( 0x34 << ( phaseBit ^ noiseBit ) );
-    return getOutput( phase, ws );
+    auto phase = (phaseBit << 8) | (0x34 << (phaseBit ^ noiseBit));
+    return getOutput(phase, ws);
 }
 
-int16_t Operator::handleSnareDrum( uint8_t ws )
+int16_t Operator::handleSnareDrum(uint8_t ws)
 {
-    const uint16_t hhPhase = (m_opl->highHatOperator()->m_phase&0x100) ? 0x200 : 0x100;
+    const uint16_t hhPhase = (m_opl->highHatOperator()->m_phase & 0x100) ? 0x200 : 0x100;
     const uint16_t noiseBit = m_opl->randBit() << 8;
     auto phase = hhPhase ^ noiseBit;
-    return getOutput( phase, ws );
+    return getOutput(phase, ws);
 }
 
-int16_t Operator::nextSample( uint16_t modulator )
+int16_t Operator::nextSample(uint16_t modulator)
 {
-    const bool isRhythm = m_opl->ryt() && m_operatorBaseAddress>=0x10 && m_operatorBaseAddress<=0x15;
-    m_envelopeGenerator.advance( m_egt && !isRhythm, m_am );
-    m_phase = m_phaseGenerator.advance( m_vib );
+    const bool isRhythm = m_opl->ryt() && m_operatorBaseAddress >= 0x10 && m_operatorBaseAddress <= 0x15;
+    m_envelopeGenerator.advance(m_egt && !isRhythm, m_am);
+    m_phase = m_phaseGenerator.advance(m_vib);
 
     // If it is in OPL2 mode, use first four waveforms only:
-    const uint8_t ws = m_opl->isNew() ? m_ws : ( m_ws & 0x03 );
+    const uint8_t ws = m_opl->isNew() ? m_ws : (m_ws & 0x03);
 
-    if( isRhythm ) {
+    if(isRhythm)
+    {
         static constexpr int BassDrumOperator1 = 0x10; // Channel 7, operator 13
-        static constexpr int HighHatOperator   = 0x11; // Channel 8, operator 14
-        static constexpr int TomTomOperator    = 0x12; // Channel 9, operator 15
+        static constexpr int HighHatOperator = 0x11; // Channel 8, operator 14
+        static constexpr int TomTomOperator = 0x12; // Channel 9, operator 15
         static constexpr int BassDrumOperator2 = 0x13; // Channel 7, operator 16
         static constexpr int SnareDrumOperator = 0x14; // Channel 9, operator 18
         static constexpr int TopCymbalOperator = 0x15; // Channel 8, operator 17
 
-        switch( m_operatorBaseAddress ) {
+        switch(m_operatorBaseAddress)
+        {
             case BassDrumOperator1:
             case BassDrumOperator2:
             case TomTomOperator:
-                return getOutput( modulator + m_phase, ws );
+                return getOutput(modulator + m_phase, ws);
             case HighHatOperator:
-                return handleHighHat( ws ) + modulator;
+                return handleHighHat(ws) + modulator;
             case SnareDrumOperator:
-                return handleSnareDrum( ws ) + modulator;
+                return handleSnareDrum(ws) + modulator;
             case TopCymbalOperator:
-                return handleTopCymbal( ws ) + modulator;
+                return handleTopCymbal(ws) + modulator;
         }
     }
 
-    return getOutput( modulator + m_phase, ws );
+    return getOutput(modulator + m_phase, ws);
 }
 
 void Operator::keyOn()
@@ -147,7 +146,7 @@ void Operator::keyOff()
     m_envelopeGenerator.keyOff();
 }
 
-void Operator::updateOperator( uint16_t f_num, uint8_t blk )
+void Operator::updateOperator(uint16_t f_num, uint8_t blk)
 {
     m_f_number = f_num & 0x3ff;
     m_block = blk & 0x07;
@@ -158,7 +157,7 @@ void Operator::updateOperator( uint16_t f_num, uint8_t blk )
     update_5_WS3();
 }
 
-Operator::Operator( Opl3* opl, int baseAddress ) : m_opl( opl ), m_operatorBaseAddress( baseAddress ), m_phaseGenerator( opl ), m_envelopeGenerator( opl )
+Operator::Operator(Opl3* opl, int baseAddress) : m_opl(opl), m_operatorBaseAddress(baseAddress), m_phaseGenerator(opl), m_envelopeGenerator(opl)
 {
 }
 
@@ -253,11 +252,12 @@ constexpr uint16_t SignBit = 0x8000;
  * @return Logarithmic value, 0..2137, bit 15 is the sign bit
  * @note @a ws and @a phi will be bit-masked.
  */
-uint16_t sinLog( uint8_t ws, uint16_t phi )
+uint16_t sinLog(uint8_t ws, uint16_t phi)
 {
     const uint8_t index = (phi & 0xff);
 
-    switch( ( ws & 7 ) | ( phi & 0x0300 ) ) {
+    switch((ws & 7) | (phi & 0x0300))
+    {
         case 0x0000:
         case 0x0001:
         case 0x0002:
@@ -286,11 +286,11 @@ uint16_t sinLog( uint8_t ws, uint16_t phi )
         case 0x0005:
         case 0x0105:
             // fast wave +ve  Shape E
-            return sinLogTable[( ( index << 1 ) ^ ( ( index & 0x80 ) ? 0x1FF : 0x00 ) )];
+            return sinLogTable[((index << 1) ^ ((index & 0x80) ? 0x1FF : 0x00))];
 
         case 0x0104:
             // fast wave -ve  Shape F
-            return sinLogTable[( ( index << 1 ) ^ ( ( index & 0x80 ) ? 0x1FF : 0x00 ) )] | SignBit;
+            return sinLogTable[((index << 1) ^ ((index & 0x80) ? 0x1FF : 0x00))] | SignBit;
 
         case 0x0006:
         case 0x0106:
@@ -312,11 +312,11 @@ uint16_t sinLog( uint8_t ws, uint16_t phi )
 
         case 0x0207:
             // Shape K
-            return (( index ^ 0xFF ) << 3) | 0x800 | SignBit;
+            return ((index ^ 0xFF) << 3) | 0x800 | SignBit;
 
         case 0x0307:
             // Shape L
-            return (( index ^ 0xFF ) << 3) | SignBit;
+            return ((index ^ 0xFF) << 3) | SignBit;
     }
     // Shape X
     return 0x0C00;
@@ -327,22 +327,24 @@ uint16_t sinLog( uint8_t ws, uint16_t phi )
  * @param[in] expVal Exponent calculated by sinLog, including the envelope value and the @c SignBit.
  * @warning @a expVal will not be checked for correct values.
  */
-int16_t sinExp( uint16_t expVal )
+int16_t sinExp(uint16_t expVal)
 {
     const bool isSigned = (expVal & SignBit) != 0;
 
     expVal &= ~SignBit;
     // expVal: 0..2137+511*8 = 0..6225
     // result: 0..1018+1024
-    uint32_t result = 0x0400 + sinExpTable[( expVal & 0xff ) ^ 0xFF];
+    uint32_t result = 0x0400 + sinExpTable[(expVal & 0xff) ^ 0xFF];
     result <<= 1;
-    result >>= ( expVal >> 8 ); // exp
+    result >>= (expVal >> 8); // exp
 
-    if( isSigned ) {
+    if(isSigned)
+    {
         // -1 for one's complement
         return ~result;
     }
-    else {
+    else
+    {
         return result;
     }
 }
@@ -356,28 +358,27 @@ int16_t sinExp( uint16_t expVal )
  * @note @a ws and @a phase will be bit-masked in sinLog().
  * @warning @a env will not be checked for correct values.
  */
-int16_t oplSin( uint8_t ws, uint16_t phase, uint16_t env )
+int16_t oplSin(uint8_t ws, uint16_t phase, uint16_t env)
 {
     BOOST_ASSERT(env < 512);
-    return sinExp( sinLog( ws, phase ) + ( env << 3 ) );
+    return sinExp(sinLog(ws, phase) + (env << 3));
+}
 }
 
-}
-
-int16_t Operator::getOutput( uint16_t outputPhase, uint8_t ws )
+int16_t Operator::getOutput(uint16_t outputPhase, uint8_t ws)
 {
-    if( m_envelopeGenerator.isSilent() ) {
+    if(m_envelopeGenerator.isSilent())
+    {
         return 0;
     }
-    return oplSin( ws, outputPhase, m_envelopeGenerator.value() );
+    return oplSin(ws, outputPhase, m_envelopeGenerator.value());
 }
 
-AbstractArchive& Operator::serialize( AbstractArchive* archive )
+AbstractArchive& Operator::serialize(AbstractArchive* archive)
 {
     *archive % m_operatorBaseAddress % m_phaseGenerator % m_envelopeGenerator
-    % m_phase % m_am % m_vib % m_egt
-    % m_ws % m_f_number % m_block;
+        % m_phase % m_am % m_vib % m_egt
+        % m_ws % m_f_number % m_block;
     return *archive;
 }
-
 }

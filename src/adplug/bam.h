@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,22 +23,23 @@
 
 #include "player.h"
 
-class CbamPlayer : public CPlayer {
+class CbamPlayer : public Player
+{
     DISABLE_COPY(CbamPlayer)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CbamPlayer() = default;
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int);
-    size_t framesUntilUpdate() const
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int) override;
+    size_t framesUntilUpdate() const override
     {
         return SampleRate / 25;
     }
 
-    std::string type() const
+    std::string type() const override
     {
         return "Bob's Adlib Music";
     }
@@ -49,10 +52,11 @@ private:
     bool m_songEnd = false;
     bool m_chorus = false;
 
-    struct Label {
+    struct Label
+    {
         size_t target = 0;
         bool defined = true;
         uint8_t count = 0xff;
     };
-    std::array<Label,16> m_labels{{}};
+    std::array<Label, 16> m_labels{ {} };
 };

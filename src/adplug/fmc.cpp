@@ -25,28 +25,32 @@
 
 /* -------- Public Methods -------------------------------- */
 
-CPlayer *CfmcLoader::factory() { return new CfmcLoader(); }
+Player* CfmcLoader::factory()
+{
+    return new CfmcLoader();
+}
 
-bool CfmcLoader::load(const std::string &filename) {
+bool CfmcLoader::load(const std::string& filename)
+{
     FileStream f(filename);
-    if (!f)
+    if(!f)
         return false;
     const Command conv_fx[16] = { Command::None,
-                                  Command::SlideUp,
-                                  Command::SlideDown,
-                                  Command::Porta,
-                                  Command::Vibrato,
-                                  Command::NoteOff,
-                                  Command::Sentinel,
-                                  Command::Sentinel,
-                                  Command::Sentinel,
-                                  Command::Sentinel,
-                                  Command::VolSlide,
-                                  Command::OrderJump,
-                                  Command::SetFineVolume,
-                                  Command::PatternBreak,
-                                  Command::Special,
-                                  Command::SA2Speed };
+        Command::SlideUp,
+        Command::SlideDown,
+        Command::Porta,
+        Command::Vibrato,
+        Command::NoteOff,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::Sentinel,
+        Command::VolSlide,
+        Command::OrderJump,
+        Command::SetFineVolume,
+        Command::PatternBreak,
+        Command::Special,
+        Command::SA2Speed };
 
     // read header
     f.read(header.id, 4);
@@ -54,7 +58,8 @@ bool CfmcLoader::load(const std::string &filename) {
     f >> header.numchan;
 
     // 'FMC!' - signed ?
-    if (strncmp(header.id, "FMC!", 4)) {
+    if(strncmp(header.id, "FMC!", 4))
+    {
         return false;
     }
 
@@ -63,28 +68,32 @@ bool CfmcLoader::load(const std::string &filename) {
     init_trackord();
 
     // load order
-    for(uint8_t order; orderCount()<256 && f>>order && order<0xFE; )
+    for(uint8_t order; orderCount() < 256 && f >> order && order < 0xFE; )
         addOrder(order);
     f.seekrel(256 - orderCount());
 
     f.seekrel(2);
 
     // load instruments
-    for (int i = 0; i < 32; i++) {
+    for(int i = 0; i < 32; i++)
+    {
         f >> instruments[i];
     }
 
     // load tracks
     int t = 0;
-    for (int i = 0; i < 64 && f.pos() < f.size(); i++) {
-        for (int j = 0; j < header.numchan; j++) {
-            for (int k = 0; k < 64; k++) {
+    for(int i = 0; i < 64 && f.pos() < f.size(); i++)
+    {
+        for(int j = 0; j < header.numchan; j++)
+        {
+            for(int k = 0; k < 64; k++)
+            {
                 fmc_event event;
 
                 // read event
                 f >> event;
 
-                PatternCell& cell = patternCell(t,k);
+                PatternCell& cell = patternCell(t, k);
                 // convert event
                 cell.note = event.byte0 & 0x7F;
                 cell.instrument = ((event.byte0 & 0x80) >> 3) + (event.byte1 >> 4) + 1;
@@ -93,14 +102,17 @@ bool CfmcLoader::load(const std::string &filename) {
                 cell.loNybble = event.byte2 & 0x0F;
 
                 // fix effects
-                if (cell.command == Command::Special) // 0x0E (14): Retrig
+                if(cell.command == Command::Special) // 0x0E (14): Retrig
                     cell.command = Command::SFXRetrigger;
-                if (cell.command == Command::VolSlide) { // 0x1A (26): Volume Slide
-                    if (cell.hiNybble > cell.loNybble) {
+                if(cell.command == Command::VolSlide)
+                { // 0x1A (26): Volume Slide
+                    if(cell.hiNybble > cell.loNybble)
+                    {
                         cell.hiNybble -= cell.loNybble;
                         cell.loNybble = 0;
                     }
-                    else {
+                    else
+                    {
                         cell.loNybble -= cell.hiNybble;
                         cell.hiNybble = 0;
                     }
@@ -112,13 +124,13 @@ bool CfmcLoader::load(const std::string &filename) {
     }
 
     // convert instruments
-    for (int i = 0; i < 31; i++)
+    for(int i = 0; i < 31; i++)
         addInstrument(instruments[i]);
 
     // data for Protracker
-    BOOST_ASSERT( header.numchan <= 32 );
+    BOOST_ASSERT(header.numchan <= 32);
     disableAllChannels();
-    for(uint8_t i=0; i<header.numchan; ++i)
+    for(uint8_t i = 0; i < header.numchan; ++i)
         enableChannel(i);
     //m_maxUsedPattern = t / header.numchan;
     setRestartOrder(0);
@@ -131,21 +143,35 @@ bool CfmcLoader::load(const std::string &filename) {
     return true;
 }
 
-size_t CfmcLoader::framesUntilUpdate() const { return SampleRate / 50; }
+size_t CfmcLoader::framesUntilUpdate() const
+{
+    return SampleRate / 50;
+}
 
-std::string CfmcLoader::type() const { return std::string("Faust Music Creator"); }
+std::string CfmcLoader::type() const
+{
+    return std::string("Faust Music Creator");
+}
 
-std::string CfmcLoader::title() const { return std::string(header.title); }
+std::string CfmcLoader::title() const
+{
+    return std::string(header.title);
+}
 
-std::string CfmcLoader::instrumentTitle(size_t n) const {
+std::string CfmcLoader::instrumentTitle(size_t n) const
+{
     return instruments[n].name;
 }
 
-uint32_t CfmcLoader::instrumentCount() const { return 32; }
+uint32_t CfmcLoader::instrumentCount() const
+{
+    return 32;
+}
 
 /* -------- Private Methods ------------------------------- */
 
-void CfmcLoader::addInstrument(const fmc_instrument& instrument) {
+void CfmcLoader::addInstrument(const fmc_instrument& instrument)
+{
     CmodPlayer::Instrument& inst = addInstrument();
     inst.data[0] = ((instrument.synthesis & 1) ^ 1);
     inst.data[0] |= ((instrument.feedback & 7) << 1);

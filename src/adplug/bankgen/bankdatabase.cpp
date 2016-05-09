@@ -47,35 +47,35 @@ void bankdb::SlotSettings::apply(opl::SlotView& slot) const
     slot.carrier().setE0(data[7]);
     slot.carrier().set40(data[9]);
 #else
-    slot.setFeedback((data[10]>>1) & 7);
-    slot.setCnt(data[10]&0x01);
-    slot.setOutput(data[10]&0x80, data[10]&0x40, data[10]&0x20, data[10]&0x10);
+    slot.setFeedback((data[10] >> 1) & 7);
+    slot.setCnt(data[10] & 0x01);
+    slot.setOutput(data[10] & 0x80, data[10] & 0x40, data[10] & 0x20, data[10] & 0x10);
 
-    slot.modulator().setAttackRate(data[3]>>4);
-    slot.modulator().setDecayRate(data[3]&0x0f);
-    slot.modulator().setSustainLevel(data[5]>>4);
-    slot.modulator().setReleaseRate(data[5]&0x0f);
-    slot.modulator().setAm(data[1]&0x80);
-    slot.modulator().setVib(data[1]&0x40);
-    slot.modulator().setEgt(data[1]&0x20);
-    slot.modulator().setKsr(data[1]&0x10);
-    slot.modulator().setMult(data[1]&0x0f);
+    slot.modulator().setAttackRate(data[3] >> 4);
+    slot.modulator().setDecayRate(data[3] & 0x0f);
+    slot.modulator().setSustainLevel(data[5] >> 4);
+    slot.modulator().setReleaseRate(data[5] & 0x0f);
+    slot.modulator().setAm(data[1] & 0x80);
+    slot.modulator().setVib(data[1] & 0x40);
+    slot.modulator().setEgt(data[1] & 0x20);
+    slot.modulator().setKsr(data[1] & 0x10);
+    slot.modulator().setMult(data[1] & 0x0f);
     slot.modulator().setWave(data[7]);
-    slot.modulator().setKsl(data[9]>>6);
-    slot.modulator().setTotalLevel(data[9]&0x3f);
+    slot.modulator().setKsl(data[9] >> 6);
+    slot.modulator().setTotalLevel(data[9] & 0x3f);
 
-    slot.carrier().setAttackRate(data[2]>>4);
-    slot.carrier().setDecayRate(data[2]&0x0f);
-    slot.carrier().setSustainLevel(data[4]>>4);
-    slot.carrier().setReleaseRate(data[4]&0x0f);
-    slot.carrier().setAm(data[0]&0x80);
-    slot.carrier().setVib(data[0]&0x40);
-    slot.carrier().setEgt(data[0]&0x20);
-    slot.carrier().setKsr(data[0]&0x10);
-    slot.carrier().setMult(data[0]&0x0f);
+    slot.carrier().setAttackRate(data[2] >> 4);
+    slot.carrier().setDecayRate(data[2] & 0x0f);
+    slot.carrier().setSustainLevel(data[4] >> 4);
+    slot.carrier().setReleaseRate(data[4] & 0x0f);
+    slot.carrier().setAm(data[0] & 0x80);
+    slot.carrier().setVib(data[0] & 0x40);
+    slot.carrier().setEgt(data[0] & 0x20);
+    slot.carrier().setKsr(data[0] & 0x10);
+    slot.carrier().setMult(data[0] & 0x0f);
     slot.carrier().setWave(data[6]);
-    slot.carrier().setKsl(data[8]>>6);
-    slot.carrier().setTotalLevel(data[8]&0x3f);
+    slot.carrier().setKsl(data[8] >> 6);
+    slot.carrier().setTotalLevel(data[8] & 0x3f);
 #endif
 }
 

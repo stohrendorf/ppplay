@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,22 +23,25 @@
 
 #include "xad.h"
 
-class CxadbmfPlayer : public CxadPlayer {
+class CxadbmfPlayer : public CxadPlayer
+{
     DISABLE_COPY(CxadbmfPlayer)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CxadbmfPlayer() = default;
     ~CxadbmfPlayer() = default;
 
 protected:
-    enum BmfVersion {
+    enum BmfVersion
+    {
         BMF0_9B,
         BMF1_1,
         BMF1_2
     };
     //
-    struct bmf_event {
+    struct bmf_event
+    {
         uint8_t note;
         uint8_t delay;
         uint8_t volume;
@@ -46,11 +51,12 @@ protected:
     };
 
     BmfVersion m_bmfVersion = BMF0_9B;
-    char m_bmfTitle[36] = "";
-    char m_bmfAuthor[36] = "";
+    std::string m_bmfTitle{};
+    std::string m_bmfAuthor{};
     float m_bmfTimer = 0;
 
-    struct {
+    struct
+    {
         char name[11] = "";
         uint8_t data[13];
     } m_bmfInstruments[32];
@@ -59,22 +65,23 @@ protected:
 
     int m_bmfActiveStreams = 0;
 
-    struct {
+    struct
+    {
         uint16_t stream_position;
         uint8_t delay;
         uint16_t loop_position;
         uint8_t loop_counter;
     } m_bmfChannels[9];
 
-    bool xadplayer_load();
-    void xadplayer_rewind(int);
-    void xadplayer_update();
-    size_t framesUntilUpdate() const;
-    std::string type() const;
-    std::string title() const;
-    std::string author() const;
-    std::string instrumentTitle(size_t i) const;
-    uint32_t instrumentCount() const;
+    bool xadplayer_load() override;
+    void xadplayer_rewind(int) override;
+    void xadplayer_update() override;
+    size_t framesUntilUpdate() const override;
+    std::string type() const override;
+    std::string title() const override;
+    std::string author() const override;
+    std::string instrumentTitle(size_t i) const override;
+    uint32_t instrumentCount() const override;
     //
 private:
     static const uint8_t bmf_adlib_registers[117];

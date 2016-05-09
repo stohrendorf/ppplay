@@ -29,8 +29,7 @@ namespace ppp
 {
 namespace mod
 {
-
-ModCell::ModCell() : m_sampleNumber( 0 ), m_period( 0 ), m_effect( 0 ), m_effectValue( 0 ), m_note( "---" )
+ModCell::ModCell() : m_sampleNumber(0), m_period(0), m_effect(0), m_effectValue(0), m_note("---")
 {
 }
 
@@ -43,18 +42,19 @@ void ModCell::reset()
     m_note = "---";
 }
 
-bool ModCell::load( Stream* str )
+bool ModCell::load(Stream* str)
 {
     clear();
     uint8_t tmp;
     *str >> tmp;
     m_sampleNumber = tmp & 0xf0;
-    if( m_sampleNumber > 32 ) {
+    if(m_sampleNumber > 32)
+    {
         // logger()->error( L4CXX_LOCATION, "Sample out of range: %d", int(m_sampleNumber) );
         return false;
     }
     //m_sampleNumber &= 0x1f;
-    m_period = ( tmp & 0x0f ) << 8;
+    m_period = (tmp & 0x0f) << 8;
     *str >> tmp;
     m_period |= tmp;
     m_period &= 0xfff;
@@ -63,13 +63,16 @@ bool ModCell::load( Stream* str )
     m_effect = tmp & 0x0f;
     *str >> tmp;
     m_effectValue = tmp;
-    if( m_period != 0 ) {
-        uint8_t idx = periodToNoteIndex( m_period );
-        if( idx != 255 ) {
-            m_note = stringFmt( "%s%u", NoteNames[idx % 12], idx / 12 );
+    if(m_period != 0)
+    {
+        uint8_t idx = periodToNoteIndex(m_period);
+        if(idx != 255)
+        {
+            m_note = stringFmt("%s%u", NoteNames[idx % 12], idx / 12);
         }
-        else {
-            logger()->warn( L4CXX_LOCATION, "Period %d too low: Cannot find matching note name.", m_period );
+        else
+        {
+            logger()->warn(L4CXX_LOCATION, "Period %d too low: Cannot find matching note name.", m_period);
             m_note = "^^^";
         }
     }
@@ -82,7 +85,7 @@ void ModCell::clear()
     m_period = 0;
     m_effect = 0;
     m_effectValue = 0;
-    m_note.assign( "---" );
+    m_note.assign("---");
 }
 
 uint8_t ModCell::sampleNumber() const
@@ -107,36 +110,45 @@ uint8_t ModCell::effectValue() const
 
 std::string ModCell::trackerString() const
 {
-    std::string res( m_note );
-    if( m_sampleNumber != 0 ) {
-        res.append( stringFmt( " %02u", int( m_sampleNumber ) ) );
+    std::string res(m_note);
+    if(m_sampleNumber != 0)
+    {
+        res.append(stringFmt(" %02u", int(m_sampleNumber)));
     }
-    else {
-        res.append( " --" );
+    else
+    {
+        res.append(" --");
     }
-    if( m_effect == 0 && m_effectValue == 0 ) {
-        res.append( " ---" );
+    if(m_effect == 0 && m_effectValue == 0)
+    {
+        res.append(" ---");
     }
-    else {
-        res.append( stringFmt( " %01X%02X", int( m_effect ), int( m_effectValue ) ) );
+    else
+    {
+        res.append(stringFmt(" %01X%02X", int(m_effect), int(m_effectValue)));
     }
     return res;
 }
 
-AbstractArchive& ModCell::serialize( AbstractArchive* data )
+AbstractArchive& ModCell::serialize(AbstractArchive* data)
 {
     *data % m_sampleNumber % m_period % m_effect % m_effectValue;
-    if( data->isLoading() ) {
-        if( m_period != 0 ) {
-            uint8_t idx = periodToNoteIndex( m_period );
-            if( idx != 255 ) {
-                m_note = stringFmt( "%s%u", NoteNames[idx % 12] , idx / 12 );
+    if(data->isLoading())
+    {
+        if(m_period != 0)
+        {
+            uint8_t idx = periodToNoteIndex(m_period);
+            if(idx != 255)
+            {
+                m_note = stringFmt("%s%u", NoteNames[idx % 12], idx / 12);
             }
-            else {
+            else
+            {
                 m_note = "^^^";
             }
         }
-        else {
+        else
+        {
             m_note = "---";
         }
     }
@@ -145,9 +157,7 @@ AbstractArchive& ModCell::serialize( AbstractArchive* data )
 
 light4cxx::Logger* ModCell::logger()
 {
-    return light4cxx::Logger::get( IPatternCell::logger()->name() + ".mod" );
+    return light4cxx::Logger::get(IPatternCell::logger()->name() + ".mod");
 }
-
-
 }
 }

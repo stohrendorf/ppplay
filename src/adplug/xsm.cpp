@@ -23,9 +23,10 @@
 
 #include "xsm.h"
 
-bool CxsmPlayer::load(const std::string &filename) {
+bool CxsmPlayer::load(const std::string& filename)
+{
     FileStream f(filename);
-    if (!f)
+    if(!f)
         return false;
 
     // check if header matches
@@ -33,12 +34,14 @@ bool CxsmPlayer::load(const std::string &filename) {
     f.read(id, 6);
     uint16_t songlen;
     f >> songlen;
-    if (strncmp(id, "ofTAZ!", 6) || songlen > 3200) {
+    if(strncmp(id, "ofTAZ!", 6) || songlen > 3200)
+    {
         return false;
     }
 
     // read and set instruments
-    for (int i = 0; i < 9; i++) {
+    for(int i = 0; i < 9; i++)
+    {
         uint8_t insdata[16];
         f.read(insdata, 16);
         getOpl()->writeReg(0x20 + s_opTable[i], insdata[0]);
@@ -57,8 +60,10 @@ bool CxsmPlayer::load(const std::string &filename) {
     // read song data
     m_music.clear();
     m_music.resize(songlen);
-    for (int i = 0; i < 9; i++) {
-        for (int j = 0; j < songlen; j++) {
+    for(int i = 0; i < 9; i++)
+    {
+        for(int j = 0; j < songlen; j++)
+        {
             f >> m_music[j].data[i];
         }
     }
@@ -68,20 +73,23 @@ bool CxsmPlayer::load(const std::string &filename) {
     return true;
 }
 
-bool CxsmPlayer::update() {
+bool CxsmPlayer::update()
+{
     int c;
 
-    if (m_currentRow >= m_music.size()) {
+    if(m_currentRow >= m_music.size())
+    {
         m_songEnd = true;
         m_currentRow = m_lastRow = 0;
     }
 
-    for (c = 0; c < 9; c++)
-        if (m_music[m_currentRow].data[c] != m_music[m_lastRow].data[c])
+    for(c = 0; c < 9; c++)
+        if(m_music[m_currentRow].data[c] != m_music[m_lastRow].data[c])
             getOpl()->writeReg(0xb0 + c, 0);
 
-    for (c = 0; c < 9; c++) {
-        if (m_music[m_currentRow].data[c])
+    for(c = 0; c < 9; c++)
+    {
+        if(m_music[m_currentRow].data[c])
             playNote(c, m_music[m_currentRow].data[c] % 12, m_music[m_currentRow].data[c] / 12);
         else
             playNote(c, 0, 0);
@@ -92,17 +100,22 @@ bool CxsmPlayer::update() {
     return !m_songEnd;
 }
 
-void CxsmPlayer::rewind(int) {
+void CxsmPlayer::rewind(int)
+{
     m_currentRow = m_lastRow = 0;
     m_songEnd = false;
 }
 
-size_t CxsmPlayer::framesUntilUpdate() const { return SampleRate / 5; }
+size_t CxsmPlayer::framesUntilUpdate() const
+{
+    return SampleRate / 5;
+}
 
-void CxsmPlayer::playNote(int c, int note, int octv) {
+void CxsmPlayer::playNote(int c, int note, int octv)
+{
     int freq = s_noteTable[note];
 
-    if (!note && !octv)
+    if(!note && !octv)
         freq = 0;
     getOpl()->writeReg(0xa0 + c, freq & 0xff);
     getOpl()->writeReg(0xb0 + c, (freq / 0xff) | 32 | (octv * 4));

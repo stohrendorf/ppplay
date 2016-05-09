@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2006 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,34 +23,35 @@
 
 #include "hsc.h"
 
-class CmtkLoader : public ChscPlayer {
+class CmtkLoader : public ChscPlayer
+{
     DISABLE_COPY(CmtkLoader)
-    public:
-        static CPlayer *factory();
+public:
+    static Player *factory();
 
     CmtkLoader() : ChscPlayer(true)
     {
     }
 
-    bool load(const std::string &filename);
+    bool load(const std::string &filename) override;
 
-    std::string type() const
+    std::string type() const override
     {
         return "MPU-401 Trakker";
     }
-    std::string title() const
+    std::string title() const override
     {
         return m_title;
     }
-    std::string author() const
+    std::string author() const override
     {
         return composer;
     }
-    uint32_t instrumentCount() const
+    uint32_t instrumentCount() const override
     {
         return 128;
     }
-    std::string instrumentTitle(size_t n) const
+    std::string instrumentTitle(size_t n) const override
     {
         return instname[n];
     }

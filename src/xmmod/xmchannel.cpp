@@ -36,21 +36,20 @@ namespace ppp
 {
 namespace xm
 {
-
-XmChannel::XmChannel( ppp::xm::XmModule* module ) :
-    m_baseVolume( 0 ), m_currentVolume( 0 ), m_realVolume( 0 ), m_panning( 0x80 ),
-    m_realPanning( 0x80 ), m_basePeriod( 0 ), m_currentPeriod( 0 ), m_autoVibDeltaPeriod( 0 ),
-    m_finetune( 0 ), m_realNote( 0 ), m_currentCell( new XmCell() ), m_lastNote( 0 ),
-    m_volumeEnvelope(), m_panningEnvelope(), m_volScale( 0 ), m_volScaleRate( 0 ), m_keyOn( false ),
-    m_lastVolSlideFx( 0 ), m_lastPortaUpFx( 0 ), m_lastPortaDownFx( 0 ), m_lastPanSlideFx( 0 ),
-    m_lastOffsetFx( 0 ), m_lastFinePortaUpFx( 0 ), m_lastFinePortaDownFx( 0 ), m_lastFineVolUpFx( 0 ),
-    m_lastFineVolDownFx( 0 ), m_lastXFinePortaUp( 0 ), m_lastXFinePortaDown( 0 ), m_lastGlobVolSlideFx( 0 ),
-    m_lastTremorFx( 0 ), m_portaSpeed( 0 ), m_portaTargetPeriod( 0 ), m_vibratoSpeed( 0 ), m_vibratoDepth( 0 ),
-    m_vibratoPhase( 0 ), m_vibratoCtrl( 0 ), m_glissandoCtrl( 0 ), m_tremoloDepth( 0 ),
-    m_tremoloSpeed( 0 ), m_tremoloPhase( 0 ), m_tremoloCtrl( 0 ), m_tremorCountdown( 0 ),
-    m_retriggerCounter( 0 ), m_retriggerLength( 0 ), m_retriggerVolumeType( 0 ), m_patLoopCounter( 0 ),
-    m_patLoopRow( 0 ), m_autoVibType( 0 ), m_autoVibSweep( 0 ), m_autoVibSweepRate( 0 ),
-    m_autoVibDepth( 0 ), m_autoVibPhase( 0 ), m_bres( 1, 1 ), m_module( module ), m_state()
+XmChannel::XmChannel(ppp::xm::XmModule* module) :
+    m_baseVolume(0), m_currentVolume(0), m_realVolume(0), m_panning(0x80),
+    m_realPanning(0x80), m_basePeriod(0), m_currentPeriod(0), m_autoVibDeltaPeriod(0),
+    m_finetune(0), m_realNote(0), m_currentCell(new XmCell()), m_lastNote(0),
+    m_volumeEnvelope(), m_panningEnvelope(), m_volScale(0), m_volScaleRate(0), m_keyOn(false),
+    m_lastVolSlideFx(0), m_lastPortaUpFx(0), m_lastPortaDownFx(0), m_lastPanSlideFx(0),
+    m_lastOffsetFx(0), m_lastFinePortaUpFx(0), m_lastFinePortaDownFx(0), m_lastFineVolUpFx(0),
+    m_lastFineVolDownFx(0), m_lastXFinePortaUp(0), m_lastXFinePortaDown(0), m_lastGlobVolSlideFx(0),
+    m_lastTremorFx(0), m_portaSpeed(0), m_portaTargetPeriod(0), m_vibratoSpeed(0), m_vibratoDepth(0),
+    m_vibratoPhase(0), m_vibratoCtrl(0), m_glissandoCtrl(0), m_tremoloDepth(0),
+    m_tremoloSpeed(0), m_tremoloPhase(0), m_tremoloCtrl(0), m_tremorCountdown(0),
+    m_retriggerCounter(0), m_retriggerLength(0), m_retriggerVolumeType(0), m_patLoopCounter(0),
+    m_patLoopRow(0), m_autoVibType(0), m_autoVibSweep(0), m_autoVibSweepRate(0),
+    m_autoVibDepth(0), m_autoVibPhase(0), m_bres(1, 1), m_module(module), m_state()
 {
     m_state.instrument = 0;
 }
@@ -68,111 +67,128 @@ ChannelState XmChannel::status() const
 const XmSample* XmChannel::currentSample() const
 {
     const XmInstrument* instr = currentInstrument();
-    if( instr && m_lastNote > 0 ) {
-        return instr->mapNoteSample( m_lastNote - 1 );
+    if(instr && m_lastNote > 0)
+    {
+        return instr->mapNoteSample(m_lastNote - 1);
     }
     return nullptr;
 }
 
 const XmInstrument* XmChannel::currentInstrument() const
 {
-    return m_module->getInstrument( m_state.instrument );
+    return m_module->getInstrument(m_state.instrument);
 }
 
-
-void XmChannel::fxPortaUp( uint8_t fxByte )
+void XmChannel::fxPortaUp(uint8_t fxByte)
 {
     m_lastPortaUpFx = fxByte;
-    int tmp = m_basePeriod - ( m_lastPortaUpFx << 2 );
-    if( tmp < 1 ) {
+    int tmp = m_basePeriod - (m_lastPortaUpFx << 2);
+    if(tmp < 1)
+    {
         tmp = 1;
     }
     m_basePeriod = m_currentPeriod = tmp;
 }
 
-void XmChannel::fxPortaDown( uint8_t fxByte )
+void XmChannel::fxPortaDown(uint8_t fxByte)
 {
     m_lastPortaDownFx = fxByte;
-    int tmp = m_basePeriod + ( m_lastPortaDownFx << 2 );
-    if( tmp > 0x7cff ) {
+    int tmp = m_basePeriod + (m_lastPortaDownFx << 2);
+    if(tmp > 0x7cff)
+    {
         tmp = 0x7cff;
     }
     m_basePeriod = m_currentPeriod = tmp;
 }
 
-void XmChannel::fxVolSlide( uint8_t fxByte )
+void XmChannel::fxVolSlide(uint8_t fxByte)
 {
     m_lastVolSlideFx = fxByte;
     int tmp = m_baseVolume;
-    if( m_lastVolSlideFx.hi() == 0 ) {
+    if(m_lastVolSlideFx.hi() == 0)
+    {
         tmp -= m_lastVolSlideFx.lo();
     }
-    else {
+    else
+    {
         tmp += m_lastVolSlideFx.hi();
     }
-    m_baseVolume = m_currentVolume = clip<int>( tmp, 0, 0x40 );
+    m_baseVolume = m_currentVolume = clip<int>(tmp, 0, 0x40);
 }
 
-void XmChannel::fxPanSlide( uint8_t fxByte )
+void XmChannel::fxPanSlide(uint8_t fxByte)
 {
     m_lastPanSlideFx = fxByte;
     int tmp = m_panning;
-    if( m_lastPanSlideFx.hi() == 0 ) {
+    if(m_lastPanSlideFx.hi() == 0)
+    {
         tmp -= m_lastPanSlideFx.lo();
     }
-    else {
+    else
+    {
         tmp += m_lastPanSlideFx.hi();
     }
-    m_panning = clip( tmp, 0, 0xff );
+    m_panning = clip(tmp, 0, 0xff);
 }
 
-void XmChannel::triggerNote( uint8_t note )
+void XmChannel::triggerNote(uint8_t note)
 {
     m_state.active = true;
     m_state.noteTriggered = true;
-    if( note == KeyOffNote ) {
+    if(note == KeyOffNote)
+    {
         doKeyOff();
         return;
     }
     m_lastNote = note;
 
-    if( m_lastNote == 0 ) {
+    if(m_lastNote == 0)
+    {
         return;
     }
 
     const XmInstrument* instr = currentInstrument();
-    if( instr ) {
+    if(instr)
+    {
         m_panningEnvelope = instr->panningProcessor();
         m_volumeEnvelope = instr->volumeProcessor();
     }
 
-    if( !currentSample() ) {
-// 		setActive(false);
+    if(!currentSample())
+    {
+        // 		setActive(false);
         return;
     }
 
     note = m_lastNote + currentSample()->relativeNote();
-    if( !between<uint8_t>( note, 0, 119 ) ) {
+    if(!between<uint8_t>(note, 0, 119))
+    {
         return;
     }
 
-    if( m_currentCell->effect() == Effect::Extended && ( m_currentCell->effectValue() >> 4 ) == EfxSetFinetune ) {
-        m_finetune = ( ( m_currentCell->effectValue() & 0x0f ) << 4 ) - 0x80;
+    if(m_currentCell->effect() == Effect::Extended && (m_currentCell->effectValue() >> 4) == EfxSetFinetune)
+    {
+        m_finetune = ((m_currentCell->effectValue() & 0x0f) << 4) - 0x80;
     }
-    else {
+    else
+    {
         m_finetune = currentSample()->finetune();
     }
 
-    if( note != 0 ) {
-        if( uint16_t newPer = m_module->noteToPeriod( note - 1, m_finetune ) ) {
+    if(note != 0)
+    {
+        if(uint16_t newPer = m_module->noteToPeriod(note - 1, m_finetune))
+        {
             m_currentPeriod = m_basePeriod = newPer;
         }
     }
 
-    if( m_currentCell->effect() == Effect::Offset ) {
-        fxOffset( m_currentCell->effectValue() );
+    if(m_currentCell->effect() == Effect::Offset)
+    {
+        fxOffset(m_currentCell->effectValue());
     }
-    else {
+    else
+    {
         m_bres = 0;
     }
 }
@@ -180,13 +196,16 @@ void XmChannel::triggerNote( uint8_t note )
 void XmChannel::doKeyOff()
 {
     m_keyOn = false;
-    if( !m_panningEnvelope.enabled() ) {
+    if(!m_panningEnvelope.enabled())
+    {
         m_panningEnvelope.doKeyOff();
     }
-    if( !m_volumeEnvelope.enabled() ) {
+    if(!m_volumeEnvelope.enabled())
+    {
         m_baseVolume = m_currentVolume = 0;
     }
-    else {
+    else
+    {
         m_volumeEnvelope.doKeyOff();
     }
     m_state.note = ChannelState::KeyOff;
@@ -194,7 +213,8 @@ void XmChannel::doKeyOff()
 
 void XmChannel::doKeyOn()
 {
-    if( !currentInstrument() ) {
+    if(!currentInstrument())
+    {
         return;
     }
 
@@ -205,37 +225,43 @@ void XmChannel::doKeyOn()
     m_tremorCountdown = 0;
     m_state.active = true;
 
-    if( ( m_vibratoCtrl & 4 ) == 0 ) {
+    if((m_vibratoCtrl & 4) == 0)
+    {
         m_vibratoPhase = 0;
     }
     m_tremoloPhase = m_retriggerCounter = m_tremorCountdown = 0;
 
-    if( m_panningEnvelope.enabled() ) {
+    if(m_panningEnvelope.enabled())
+    {
         m_panningEnvelope.retrigger();
     }
-    if( m_volumeEnvelope.enabled() ) {
+    if(m_volumeEnvelope.enabled())
+    {
         m_volumeEnvelope.retrigger();
     }
 
     m_volScale = 0x8000;
     m_volScaleRate = currentInstrument()->fadeout();
 
-    if( currentInstrument()->vibDepth() == 0 ) {
+    if(currentInstrument()->vibDepth() == 0)
+    {
         return;
     }
 
     m_autoVibPhase = 0;
-    if( currentInstrument()->vibSweep() == 0 ) {
+    if(currentInstrument()->vibSweep() == 0)
+    {
         m_autoVibDepth = currentInstrument()->vibDepth() << 8;
         m_autoVibSweepRate = 0;
     }
-    else {
+    else
+    {
         m_autoVibDepth = 0;
         m_autoVibSweepRate = m_autoVibDepth / currentInstrument()->vibSweep();
     }
 }
 
-constexpr std::array<const int8_t, 256> g_AutoVibTable = {{
+constexpr std::array<const int8_t, 256> g_AutoVibTable = { {
         0, -2, -3, -5, -6, -8, -9, -11, -12, -14, -16,
         -17, -19, -20, -22, -23, -24, -26, -27, -29, -30, -32,
         -33, -34, -36, -37, -38, -39, -41, -42, -43, -44, -45,
@@ -263,15 +289,17 @@ constexpr std::array<const int8_t, 256> g_AutoVibTable = {{
     }
 };
 
-void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
+void XmChannel::updateTick0(const XmCell& cell, bool estimateOnly)
 {
-    if( estimateOnly ) {
-        switch( cell.effect() ) {
+    if(estimateOnly)
+    {
+        switch(cell.effect())
+        {
             case Effect::Extended:
-                fxExtended( cell.effectValue(), true );
+                fxExtended(cell.effectValue(), true);
                 break;
             case Effect::SetTempoBpm:
-                fxSetTempoBpm( cell.effectValue() );
+                fxSetTempoBpm(cell.effectValue());
                 break;
             default:
                 // silence "not handled" warnings
@@ -285,130 +313,159 @@ void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
     {
         bool vibratoContinued = m_currentCell->effectValue() != 0;
         vibratoContinued &= m_currentCell->effect() == Effect::Vibrato || m_currentCell->effect() == Effect::VibratoVolSlide;
-        vibratoContinued &= ( cell.effect() == Effect::Vibrato || cell.effect() == Effect::VibratoVolSlide );
-        if( !vibratoContinued ) {
+        vibratoContinued &= (cell.effect() == Effect::Vibrato || cell.effect() == Effect::VibratoVolSlide);
+        if(!vibratoContinued)
+        {
             m_currentPeriod = m_basePeriod;
         }
     }
 
     *m_currentCell = cell;
 
-    if( between<uint8_t>( m_currentCell->instrument(), 1, 0x80 ) ) {
+    if(between<uint8_t>(m_currentCell->instrument(), 1, 0x80))
+    {
         m_state.instrument = m_currentCell->instrument();
     }
 
-    if( m_currentCell->effect() == Effect::Extended && ( m_currentCell->effectValue() >> 4 ) == EfxNoteDelay && ( m_currentCell->effectValue() & 0x0f ) != 0 ) {
+    if(m_currentCell->effect() == Effect::Extended && (m_currentCell->effectValue() >> 4) == EfxNoteDelay && (m_currentCell->effectValue() & 0x0f) != 0)
+    {
         // note delay, but not on tick 0
         return;
     }
 
-    enum {
+    enum
+    {
         Nothing,
         KeyOffCheck,
         KeyOnCheck,
         TriggerCheck
     } nextCheck = Nothing;
 
-    if( m_currentCell->effect() == Effect::Extended && ( m_currentCell->effectValue() >> 4 ) == EfxRetrigger ) {
-        if( ( m_currentCell->effectValue() & 0x0f ) == 0 ) {
+    if(m_currentCell->effect() == Effect::Extended && (m_currentCell->effectValue() >> 4) == EfxRetrigger)
+    {
+        if((m_currentCell->effectValue() & 0x0f) == 0)
+        {
             // retrigger every frame
             nextCheck = TriggerCheck;
         }
-        if( m_currentCell->note() == KeyOffNote ) {
+        if(m_currentCell->note() == KeyOffNote)
+        {
             nextCheck = KeyOffCheck;
         }
-        else if( m_currentCell->note() != 0 ) {
-            calculatePortaTarget( m_currentCell->note() );
+        else if(m_currentCell->note() != 0)
+        {
+            calculatePortaTarget(m_currentCell->note());
             nextCheck = KeyOnCheck;
         }
     }
-    else if( ( m_currentCell->volume() >> 4 ) == VfxPorta ) {
-        if( ( m_currentCell->volume() & 0x0f ) != 0 ) {
-            m_portaSpeed = ( m_currentCell->volume() & 0x0f ) << 6;
+    else if((m_currentCell->volume() >> 4) == VfxPorta)
+    {
+        if((m_currentCell->volume() & 0x0f) != 0)
+        {
+            m_portaSpeed = (m_currentCell->volume() & 0x0f) << 6;
         }
-        if( m_currentCell->note() == KeyOffNote ) {
+        if(m_currentCell->note() == KeyOffNote)
+        {
             nextCheck = KeyOffCheck;
         }
-        else {
-            if( m_currentCell->note() != 0 ) {
-                calculatePortaTarget( m_currentCell->note() );
+        else
+        {
+            if(m_currentCell->note() != 0)
+            {
+                calculatePortaTarget(m_currentCell->note());
             }
             nextCheck = KeyOnCheck;
         }
     }
-    else if( m_currentCell->effect() == Effect::Porta || m_currentCell->effect() == Effect::PortaVolSlide ) {
-        if( m_currentCell->effect() != Effect::PortaVolSlide && m_currentCell->effectValue() != 0 ) {
+    else if(m_currentCell->effect() == Effect::Porta || m_currentCell->effect() == Effect::PortaVolSlide)
+    {
+        if(m_currentCell->effect() != Effect::PortaVolSlide && m_currentCell->effectValue() != 0)
+        {
             m_portaSpeed = m_currentCell->effectValue() << 2;
         }
-        if( m_currentCell->note() == KeyOffNote ) {
+        if(m_currentCell->note() == KeyOffNote)
+        {
             nextCheck = KeyOffCheck;
         }
-        else {
-            if( m_currentCell->note() != 0 ) {
-                calculatePortaTarget( m_currentCell->note() );
+        else
+        {
+            if(m_currentCell->note() != 0)
+            {
+                calculatePortaTarget(m_currentCell->note());
             }
             nextCheck = KeyOnCheck;
         }
     }
-    else if( m_currentCell->effect() == Effect::KeyOff && m_currentCell->effectValue() == 0 ) {
+    else if(m_currentCell->effect() == Effect::KeyOff && m_currentCell->effectValue() == 0)
+    {
         nextCheck = KeyOffCheck;
     }
-    else if( m_currentCell->note() == 0 ) {
+    else if(m_currentCell->note() == 0)
+    {
         nextCheck = KeyOnCheck;
     }
-    else {
+    else
+    {
         nextCheck = TriggerCheck;
     }
 
-    BOOST_ASSERT( nextCheck != Nothing );
-    if( nextCheck == TriggerCheck ) {
-        if( m_lastNote == KeyOffNote ) {
+    BOOST_ASSERT(nextCheck != Nothing);
+    if(nextCheck == TriggerCheck)
+    {
+        if(m_lastNote == KeyOffNote)
+        {
             nextCheck = KeyOffCheck;
         }
-        else {
-            triggerNote( m_currentCell->note() );
+        else
+        {
+            triggerNote(m_currentCell->note());
             nextCheck = KeyOnCheck;
         }
     }
-    if( nextCheck == KeyOffCheck ) {
+    if(nextCheck == KeyOffCheck)
+    {
         doKeyOff();
-        if( m_currentCell->instrument() != 0 ) {
+        if(m_currentCell->instrument() != 0)
+        {
             applySampleDefaults();
         }
         nextCheck = Nothing;
     }
-    else if( nextCheck == KeyOnCheck ) {
-        if( m_currentCell->instrument() != 0 ) {
+    else if(nextCheck == KeyOnCheck)
+    {
+        if(m_currentCell->instrument() != 0)
+        {
             applySampleDefaults();
             doKeyOn();
         }
         nextCheck = Nothing;
     }
-    BOOST_ASSERT( nextCheck == Nothing );
+    BOOST_ASSERT(nextCheck == Nothing);
 
     m_state.fxDesc = fxdesc::NullFx;
-    switch( m_currentCell->volume() >> 4 ) {
+    switch(m_currentCell->volume() >> 4)
+    {
         case 0x01:
         case 0x02:
         case 0x03:
         case 0x04:
         case 0x05:
-            m_currentVolume = m_baseVolume = clip( m_currentCell->volume() - 0x10, 0, 0x40 );
+            m_currentVolume = m_baseVolume = clip(m_currentCell->volume() - 0x10, 0, 0x40);
             break;
         case VfxFineVolSlideDown:
-            vfxFineVolSlideDown( m_currentCell->volume() );
+            vfxFineVolSlideDown(m_currentCell->volume());
             m_state.fxDesc = fxdesc::SlowVolSlideDown;
             break;
         case VfxFineVolSlideUp:
-            vfxFineVolSlideUp( m_currentCell->volume() );
+            vfxFineVolSlideUp(m_currentCell->volume());
             m_state.fxDesc = fxdesc::SlowVolSlideUp;
             break;
         case VfxSetVibSpeed:
-            vfxSetVibratoSpeed( m_currentCell->volume() );
+            vfxSetVibratoSpeed(m_currentCell->volume());
             m_state.fxDesc = fxdesc::Vibrato;
             break;
         case VfxSetPanning:
-            vfxSetPan( m_currentCell->volume() );
+            vfxSetPan(m_currentCell->volume());
             m_state.fxDesc = fxdesc::SetPanPos;
             break;
         case VfxVolSlideDown:
@@ -430,7 +487,8 @@ void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
             m_state.fxDesc = fxdesc::Vibrato;
             break;
     }
-    switch( m_currentCell->effect() ) {
+    switch(m_currentCell->effect())
+    {
         case Effect::None:
             break;
         case Effect::Arpeggio:
@@ -458,13 +516,13 @@ void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
             m_state.fxDesc = fxdesc::Tremolo;
             break;
         case Effect::VolSlide:
-            if( m_lastVolSlideFx.hi() == 0 )
+            if(m_lastVolSlideFx.hi() == 0)
                 m_state.fxDesc = fxdesc::VolSlideDown;
             else
                 m_state.fxDesc = fxdesc::VolSlideUp;
             break;
         case Effect::GlobalVolSlide:
-            if( m_lastGlobVolSlideFx.hi() == 0 )
+            if(m_lastGlobVolSlideFx.hi() == 0)
                 m_state.fxDesc = fxdesc::GlobalVolSlideDown;
             else
                 m_state.fxDesc = fxdesc::GlobalVolSlideUp;
@@ -473,7 +531,7 @@ void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
             m_state.fxDesc = fxdesc::KeyOff;
             break;
         case Effect::PanSlide:
-            if( m_lastPanSlideFx.hi() == 0 )
+            if(m_lastPanSlideFx.hi() == 0)
                 m_state.fxDesc = fxdesc::PanSlideLeft;
             else
                 m_state.fxDesc = fxdesc::PanSlideRight;
@@ -493,60 +551,65 @@ void XmChannel::updateTick0( const XmCell& cell, bool estimateOnly )
             m_state.fxDesc = fxdesc::Offset;
             break;
         case Effect::SetPanning:
-            fxSetPan( m_currentCell->effectValue() );
+            fxSetPan(m_currentCell->effectValue());
             m_state.fxDesc = fxdesc::SetPanPos;
             break;
         case Effect::SetVolume:
-            fxSetVolume( m_currentCell->effectValue() );
+            fxSetVolume(m_currentCell->effectValue());
             m_state.fxDesc = fxdesc::SetVolume;
             break;
         case Effect::Extended:
-            fxExtended( m_currentCell->effectValue(), false );
+            fxExtended(m_currentCell->effectValue(), false);
             break;
         case Effect::SetTempoBpm:
-            fxSetTempoBpm( m_currentCell->effectValue() );
+            fxSetTempoBpm(m_currentCell->effectValue());
             m_state.fxDesc = fxdesc::SetTempo;
             break;
         case Effect::SetGlobalVol:
-            fxSetGlobalVolume( m_currentCell->effectValue() );
+            fxSetGlobalVolume(m_currentCell->effectValue());
             m_state.fxDesc = fxdesc::GlobalVolume;
             break;
         case Effect::ExtraFinePorta:
-            fxExtraFinePorta( m_currentCell->effectValue() );
-            if( ( m_currentCell->effectValue() >> 4 ) == 1 ) {
+            fxExtraFinePorta(m_currentCell->effectValue());
+            if((m_currentCell->effectValue() >> 4) == 1)
+            {
                 m_state.fxDesc = fxdesc::SlowPitchSlideUp;
             }
-            else if( ( m_currentCell->effectValue() >> 4 ) == 2 ) {
+            else if((m_currentCell->effectValue() >> 4) == 2)
+            {
                 m_state.fxDesc = fxdesc::SlowPitchSlideDown;
             }
-            else {
+            else
+            {
                 m_state.fxDesc = fxdesc::NullFx;
             }
             break;
         case Effect::Retrigger:
-            fxRetrigger( m_currentCell->effectValue() );
+            fxRetrigger(m_currentCell->effectValue());
             m_state.fxDesc = fxdesc::Retrigger;
             break;
         case Effect::SetEnvPos:
-            m_volumeEnvelope.setPosition( m_currentCell->effectValue() );
-            m_panningEnvelope.setPosition( m_currentCell->effectValue() );
+            m_volumeEnvelope.setPosition(m_currentCell->effectValue());
+            m_panningEnvelope.setPosition(m_currentCell->effectValue());
             m_state.fxDesc = fxdesc::SetEnvelopePos;
             break;
     }
 }
 
-void XmChannel::updateTick1( const XmCell& cell, bool estimateOnly )
+void XmChannel::updateTick1(const XmCell& cell, bool estimateOnly)
 {
-    if( estimateOnly ) {
-        switch( cell.effect() ) {
+    if(estimateOnly)
+    {
+        switch(cell.effect())
+        {
             case Effect::Extended:
-                fxExtended( cell.effectValue(), true );
+                fxExtended(cell.effectValue(), true);
                 break;
             case Effect::PatBreak:
-                m_module->doPatternBreak( ( cell.effectValue() >> 4 ) * 10 + ( cell.effectValue() & 0x0f ) );
+                m_module->doPatternBreak((cell.effectValue() >> 4) * 10 + (cell.effectValue() & 0x0f));
                 break;
             case Effect::PosJump:
-                m_module->doJumpPos( cell.effectValue() );
+                m_module->doJumpPos(cell.effectValue());
                 break;
             default:
                 // silence "not handled" warnings
@@ -554,36 +617,41 @@ void XmChannel::updateTick1( const XmCell& cell, bool estimateOnly )
         }
         return;
     }
-    if( m_currentCell->effect() == Effect::Extended ) {
-        if( ( m_currentCell->effectValue() >> 4 ) == EfxNoteDelay ) {
-            if( ( m_currentCell->effectValue() & 0x0f ) == m_module->state().tick ) {
-                triggerNote( m_currentCell->note() );
+    if(m_currentCell->effect() == Effect::Extended)
+    {
+        if((m_currentCell->effectValue() >> 4) == EfxNoteDelay)
+        {
+            if((m_currentCell->effectValue() & 0x0f) == m_module->state().tick)
+            {
+                triggerNote(m_currentCell->note());
                 applySampleDefaults();
                 doKeyOn();
             }
         }
     }
-    switch( m_currentCell->volume() >> 4 ) {
+    switch(m_currentCell->volume() >> 4)
+    {
         case VfxVolSlideDown:
-            vfxSlideDown( m_currentCell->volume() );
+            vfxSlideDown(m_currentCell->volume());
             break;
         case VfxVolSlideUp:
-            vfxSlideUp( m_currentCell->volume() );
+            vfxSlideUp(m_currentCell->volume());
             break;
         case VfxPanSlideLeft:
-            vfxPanSlideLeft( m_currentCell->volume() );
+            vfxPanSlideLeft(m_currentCell->volume());
             break;
         case VfxPanSlideRight:
-            vfxPanSlideRight( m_currentCell->volume() );
+            vfxPanSlideRight(m_currentCell->volume());
             break;
         case VfxPorta:
             fxPorta();
             break;
         case VfxVibrato:
-            vfxVibrato( m_currentCell->volume() );
+            vfxVibrato(m_currentCell->volume());
             break;
     }
-    switch( m_currentCell->effect() ) {
+    switch(m_currentCell->effect())
+    {
         case Effect::SetPanning:
         case Effect::Offset:
         case Effect::SetVolume:
@@ -596,53 +664,54 @@ void XmChannel::updateTick1( const XmCell& cell, bool estimateOnly )
             // already handled
             break;
         case Effect::Arpeggio:
-            fxArpeggio( m_currentCell->effectValue() );
+            fxArpeggio(m_currentCell->effectValue());
             break;
         case Effect::PortaUp:
-            fxPortaUp( m_currentCell->effectValue() );
+            fxPortaUp(m_currentCell->effectValue());
             break;
         case Effect::PortaDown:
-            fxPortaDown( m_currentCell->effectValue() );
+            fxPortaDown(m_currentCell->effectValue());
             break;
         case Effect::VolSlide:
-            fxVolSlide( m_currentCell->effectValue() );
+            fxVolSlide(m_currentCell->effectValue());
             break;
         case Effect::Extended:
-            fxExtended( m_currentCell->effectValue(), false );
+            fxExtended(m_currentCell->effectValue(), false);
             break;
         case Effect::Porta:
             fxPorta();
             break;
         case Effect::PortaVolSlide:
             fxPorta();
-            fxVolSlide( m_currentCell->effectValue() );
+            fxVolSlide(m_currentCell->effectValue());
             break;
         case Effect::Vibrato:
-            fxVibrato( m_currentCell->effectValue() );
+            fxVibrato(m_currentCell->effectValue());
             break;
         case Effect::VibratoVolSlide:
-            fxVibrato( m_currentCell->effectValue() );
-            fxVolSlide( m_currentCell->effectValue() );
+            fxVibrato(m_currentCell->effectValue());
+            fxVolSlide(m_currentCell->effectValue());
             break;
         case Effect::GlobalVolSlide:
-            fxGlobalVolSlide( m_currentCell->effectValue() );
+            fxGlobalVolSlide(m_currentCell->effectValue());
             break;
         case Effect::PatBreak:
-            m_module->doPatternBreak( ( m_currentCell->effectValue() >> 4 ) * 10 + ( m_currentCell->effectValue() & 0x0f ) );
+            m_module->doPatternBreak((m_currentCell->effectValue() >> 4) * 10 + (m_currentCell->effectValue() & 0x0f));
             break;
         case Effect::PosJump:
-            m_module->doJumpPos( m_currentCell->effectValue() );
+            m_module->doJumpPos(m_currentCell->effectValue());
             break;
         case Effect::Tremolo:
-            fxTremolo( m_currentCell->effectValue() );
+            fxTremolo(m_currentCell->effectValue());
             break;
         case Effect::KeyOff:
-            if( m_module->state().tick == m_currentCell->effectValue() ) {
+            if(m_module->state().tick == m_currentCell->effectValue())
+            {
                 doKeyOff();
             }
             break;
         case Effect::Tremor:
-            fxTremor( m_currentCell->effectValue() );
+            fxTremor(m_currentCell->effectValue());
             break;
         case Effect::Retrigger:
             retriggerNote();
@@ -650,47 +719,58 @@ void XmChannel::updateTick1( const XmCell& cell, bool estimateOnly )
     }
 }
 
-
-void XmChannel::update( const XmCell& cell, bool estimateOnly )
+void XmChannel::update(const XmCell& cell, bool estimateOnly)
 {
     m_state.cell = cell.trackerString();
-    if( cell.effect() == Effect::None ) {
+    if(cell.effect() == Effect::None)
+    {
         m_state.fx = 0;
     }
-    else {
-        if( uint8_t( cell.effect() ) <= 9 ) {
-            m_state.fx = '0' + uint8_t( cell.effect() );
+    else
+    {
+        if(uint8_t(cell.effect()) <= 9)
+        {
+            m_state.fx = '0' + uint8_t(cell.effect());
         }
-        else {
-            m_state.fx = 'A' + uint8_t( cell.effect() ) - 0x0a;
+        else
+        {
+            m_state.fx = 'A' + uint8_t(cell.effect()) - 0x0a;
         }
     }
     m_state.fxParam = cell.effectValue();
 
-    if( m_module->state().tick == 0 && !m_module->isRunningPatDelay() ) {
-        updateTick0( cell, estimateOnly );
+    if(m_module->state().tick == 0 && !m_module->isRunningPatDelay())
+    {
+        updateTick0(cell, estimateOnly);
     }
-    else { // tick 1+
-        updateTick1( cell, estimateOnly );
+    else
+    { // tick 1+
+        updateTick1(cell, estimateOnly);
     }
 
-    if( !m_keyOn ) {
-        if( m_volScale >= m_volScaleRate ) {
+    if(!m_keyOn)
+    {
+        if(m_volScale >= m_volScaleRate)
+        {
             m_volScale -= m_volScaleRate;
         }
-        else {
+        else
+        {
             m_volScale = m_volScaleRate = 0;
         }
     }
-    m_volumeEnvelope.increasePosition( m_keyOn );
-    m_realVolume = m_volumeEnvelope.realVolume( m_currentVolume, m_module->state().globalVolume, m_volScale );
-    m_panningEnvelope.increasePosition( m_keyOn );
-    m_realPanning = m_panningEnvelope.realPanning( m_panning );
+    m_volumeEnvelope.increasePosition(m_keyOn);
+    m_realVolume = m_volumeEnvelope.realVolume(m_currentVolume, m_module->state().globalVolume, m_volScale);
+    m_panningEnvelope.increasePosition(m_keyOn);
+    m_realPanning = m_panningEnvelope.realPanning(m_panning);
 
-    if( currentInstrument() ) {
-        if( m_autoVibSweepRate != 0 && m_autoVibDepth != 0 && m_keyOn ) {
+    if(currentInstrument())
+    {
+        if(m_autoVibSweepRate != 0 && m_autoVibDepth != 0 && m_keyOn)
+        {
             uint16_t tmp = m_autoVibSweepRate + m_autoVibDepth;
-            if( tmp > currentInstrument()->vibDepth() ) {
+            if(tmp > currentInstrument()->vibDepth())
+            {
                 m_autoVibSweepRate = 0;
                 m_autoVibDeltaPeriod = 0;
                 tmp = currentInstrument()->vibDepth();
@@ -699,75 +779,86 @@ void XmChannel::update( const XmCell& cell, bool estimateOnly )
         }
         m_autoVibPhase += currentInstrument()->vibRate();
         int8_t value = 0;
-        switch( m_vibratoCtrl & 3 ) {
+        switch(m_vibratoCtrl & 3)
+        {
             case 0:
-                value = g_AutoVibTable[ m_autoVibPhase ];
+                value = g_AutoVibTable[m_autoVibPhase];
                 break;
             case 1:
-                if( ( m_autoVibPhase & 0x80 ) == 0 ) {
+                if((m_autoVibPhase & 0x80) == 0)
+                {
                     value = -0x40;
                 }
-                else {
+                else
+                {
                     value = 0x40;
                 }
                 break;
             case 2:
-                value = ( m_autoVibPhase >> 1 ) + 0x40;
+                value = (m_autoVibPhase >> 1) + 0x40;
                 value &= 0x7f;
                 value -= 0x40;
                 break;
             case 3:
-                value = -( m_autoVibPhase >> 1 ) + 0x40;
+                value = -(m_autoVibPhase >> 1) + 0x40;
                 value &= 0x7f;
                 value -= 0x40;
                 break;
         }
-        uint16_t newPeriod = ( value * m_autoVibDepth >> 14 ) + m_currentPeriod;
-        if( newPeriod > 0x7cff ) {
+        uint16_t newPeriod = (value * m_autoVibDepth >> 14) + m_currentPeriod;
+        if(newPeriod > 0x7cff)
+        {
             m_autoVibDeltaPeriod = 0;
         }
-        else {
+        else
+        {
             m_autoVibDeltaPeriod = value * m_autoVibDepth >> 14;
         }
     }
-    else {
+    else
+    {
         m_autoVibDeltaPeriod = 0;
     }
 
     updateStatus();
 
-    if( m_currentVolume == 0 && m_realVolume == 0 && m_volScale == 0 ) {
+    if(m_currentVolume == 0 && m_realVolume == 0 && m_volScale == 0)
+    {
         m_state.active = false;
     }
 }
 
-void XmChannel::mixTick( MixerFrameBuffer* mixBuffer )
+void XmChannel::mixTick(MixerFrameBuffer* mixBuffer)
 {
-    if( !m_state.active || !mixBuffer ) {
+    if(!m_state.active || !mixBuffer)
+    {
         return;
     }
-    m_bres.reset( m_module->frequency(), m_module->periodToFrequency( m_currentPeriod + m_autoVibDeltaPeriod ) );
+    m_bres.reset(m_module->frequency(), m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod));
     const XmSample* currSmp = currentSample();
-    if( !currSmp ) {
+    if(!currSmp)
+    {
         m_state.active = false;
         return;
     }
 #if 0
     int volLeft = 0x80;
-    if( m_realPanning > 0x80 ) {
+    if(m_realPanning > 0x80)
+    {
         volLeft = 0xff - m_realPanning;
     }
     int volRight = 0x80;
-    if( m_realPanning < 0x80 ) {
+    if(m_realPanning < 0x80)
+    {
         volRight = m_realPanning;
     }
     volLeft *= m_realVolume;
     volRight *= m_realVolume;
 #else
-    int volLeft = std::round(std::sqrt(m_realPanning/256.0f)*65536)*m_realVolume/256;
-    int volRight = std::round(std::sqrt((256-m_realPanning)/256.0f)*65536)*m_realVolume/256;
+    int volLeft = std::round(std::sqrt(m_realPanning / 256.0f) * 65536)*m_realVolume / 256;
+    int volRight = std::round(std::sqrt((256 - m_realPanning) / 256.0f) * 65536)*m_realVolume / 256;
 #endif
-    m_state.active = currSmp->mix( m_module->interpolation(), &m_bres, mixBuffer, volLeft, volRight, 13 );
+    m_state.active = currSmp->mix(m_module->interpolation(), &m_bres, mixBuffer, volLeft, volRight, 13);
 }
 
 void XmChannel::updateStatus()
@@ -775,180 +866,200 @@ void XmChannel::updateStatus()
     if(m_realPanning == 0xff)
         m_state.panning = 100;
     else
-        m_state.panning = ( m_realPanning - 0x80 ) * 100 / 0x80;
-    m_state.volume = clip<int>( m_realVolume , 0, 0x40 ) * 100 / 0x40;
+        m_state.panning = (m_realPanning - 0x80) * 100 / 0x80;
+    m_state.volume = clip<int>(m_realVolume, 0, 0x40) * 100 / 0x40;
 
-    if( m_currentCell->note() == KeyOffNote ) {
+    if(m_currentCell->note() == KeyOffNote)
+    {
         m_state.note = ChannelState::KeyOff;
     }
-    else if( !currentSample() ) {
+    else if(!currentSample())
+    {
         m_state.note = ChannelState::NoNote;
     }
-    else {
-        float fofs = m_module->periodToFineNoteIndex( m_currentPeriod + m_autoVibDeltaPeriod, m_finetune );
+    else
+    {
+        float fofs = m_module->periodToFineNoteIndex(m_currentPeriod + m_autoVibDeltaPeriod, m_finetune);
         fofs -= m_finetune / 8.0 + 16;
         fofs /= 16;
         fofs -= currentSample()->relativeNote();
-        if( fofs < 0 ) {
+        if(fofs < 0)
+        {
             m_state.note = ChannelState::TooLow;
         }
-        else if( fofs > ChannelState::MaxNote ) {
+        else if(fofs > ChannelState::MaxNote)
+        {
             m_state.note = ChannelState::TooHigh;
         }
-        else {
-            m_state.note = std::lround( fofs );
+        else
+        {
+            m_state.note = std::lround(fofs);
         }
     }
 
-    if( const XmInstrument* ins = currentInstrument() ) {
+    if(const XmInstrument* ins = currentInstrument())
+    {
         m_state.instrumentName = ins->title();
     }
-    else {
+    else
+    {
         m_state.instrumentName.clear();
     }
 }
 
-void XmChannel::fxSetVolume( uint8_t fxByte )
+void XmChannel::fxSetVolume(uint8_t fxByte)
 {
-    m_currentVolume = m_baseVolume = std::min<int>( 0x40, fxByte );
+    m_currentVolume = m_baseVolume = std::min<int>(0x40, fxByte);
 }
 
-void XmChannel::fxSetPan( uint8_t fxByte )
+void XmChannel::fxSetPan(uint8_t fxByte)
 {
     m_panning = fxByte;
 }
 
-void XmChannel::fxSetTempoBpm( uint8_t fxByte )
+void XmChannel::fxSetTempoBpm(uint8_t fxByte)
 {
-    if( fxByte >= 1 && fxByte <= 0x1f ) {
-        m_module->setSpeed( fxByte );
+    if(fxByte >= 1 && fxByte <= 0x1f)
+    {
+        m_module->setSpeed(fxByte);
     }
-    else if( fxByte >= 0x20 ) {
-        m_module->setTempo( fxByte );
+    else if(fxByte >= 0x20)
+    {
+        m_module->setTempo(fxByte);
     }
 }
 
-void XmChannel::vfxFineVolSlideDown( uint8_t fxByte )
+void XmChannel::vfxFineVolSlideDown(uint8_t fxByte)
 {
     fxByte &= 0x0f;
-    m_currentVolume = m_baseVolume = std::max<int>( 0, m_baseVolume - fxByte );
+    m_currentVolume = m_baseVolume = std::max<int>(0, m_baseVolume - fxByte);
 }
 
-void XmChannel::vfxFineVolSlideUp( uint8_t fxByte )
+void XmChannel::vfxFineVolSlideUp(uint8_t fxByte)
 {
     fxByte &= 0x0f;
-    m_currentVolume = m_baseVolume = std::min<int>( 0x40, m_baseVolume + fxByte );
+    m_currentVolume = m_baseVolume = std::min<int>(0x40, m_baseVolume + fxByte);
 }
 
-void XmChannel::vfxSetPan( uint8_t fxByte )
+void XmChannel::vfxSetPan(uint8_t fxByte)
 {
     m_panning = fxByte << 4;
 }
 
-void XmChannel::fxOffset( uint8_t fxByte )
+void XmChannel::fxOffset(uint8_t fxByte)
 {
     m_lastOffsetFx = fxByte;
     m_bres = m_lastOffsetFx << 8;
-    if( !currentSample() || ( currentSample() && m_bres >= currentSample()->length() ) ) {
+    if(!currentSample() || (currentSample() && m_bres >= currentSample()->length()))
+    {
         m_state.active = false;
     }
 }
 
-void XmChannel::vfxSlideDown( uint8_t fxByte )
+void XmChannel::vfxSlideDown(uint8_t fxByte)
 {
-    m_currentVolume = m_baseVolume = std::max<int>( m_baseVolume - ( fxByte & 0x0f ), 0 );
+    m_currentVolume = m_baseVolume = std::max<int>(m_baseVolume - (fxByte & 0x0f), 0);
 }
 
-void XmChannel::vfxSlideUp( uint8_t fxByte )
+void XmChannel::vfxSlideUp(uint8_t fxByte)
 {
-    m_currentVolume = m_baseVolume = std::min<int>( m_baseVolume + ( fxByte & 0x0f ), 0x40 );
+    m_currentVolume = m_baseVolume = std::min<int>(m_baseVolume + (fxByte & 0x0f), 0x40);
 }
 
-void XmChannel::fxSetGlobalVolume( uint8_t fxByte )
+void XmChannel::fxSetGlobalVolume(uint8_t fxByte)
 {
-    m_module->state().globalVolume = std::min<uint8_t>( fxByte, 0x40 );
+    m_module->state().globalVolume = std::min<uint8_t>(fxByte, 0x40);
 }
 
-void XmChannel::efxFinePortaUp( uint8_t fxByte )
+void XmChannel::efxFinePortaUp(uint8_t fxByte)
 {
     m_lastFinePortaUpFx = fxByte & 0x0f;
-    uint16_t tmp = m_basePeriod - ( m_lastFinePortaUpFx << 2 );
-    if( tmp < 1 ) {
+    uint16_t tmp = m_basePeriod - (m_lastFinePortaUpFx << 2);
+    if(tmp < 1)
+    {
         tmp = 1;
     }
     m_basePeriod = m_currentPeriod = tmp;
 }
 
-void XmChannel::efxFinePortaDown( uint8_t fxByte )
+void XmChannel::efxFinePortaDown(uint8_t fxByte)
 {
     m_lastFinePortaDownFx = fxByte & 0x0f;
-    uint16_t tmp = m_basePeriod + ( m_lastFinePortaDownFx << 2 );
-    if( tmp > 0x7cff ) {
+    uint16_t tmp = m_basePeriod + (m_lastFinePortaDownFx << 2);
+    if(tmp > 0x7cff)
+    {
         tmp = 0x7cff;
     }
     m_basePeriod = m_currentPeriod = tmp;
 }
 
-void XmChannel::efxFineVolDown( uint8_t fxByte )
+void XmChannel::efxFineVolDown(uint8_t fxByte)
 {
     m_lastFineVolDownFx = fxByte & 0x0f;
-    m_currentVolume = m_baseVolume = std::max<int>( m_baseVolume - m_lastFineVolDownFx, 0 );
+    m_currentVolume = m_baseVolume = std::max<int>(m_baseVolume - m_lastFineVolDownFx, 0);
 }
 
-void XmChannel::efxFineVolUp( uint8_t fxByte )
+void XmChannel::efxFineVolUp(uint8_t fxByte)
 {
     m_lastFineVolUpFx = fxByte & 0x0f;
-    m_currentVolume = m_baseVolume = std::min<int>( m_baseVolume + m_lastFineVolUpFx, 0x40 );
+    m_currentVolume = m_baseVolume = std::min<int>(m_baseVolume + m_lastFineVolUpFx, 0x40);
 }
 
-void XmChannel::fxExtraFinePorta( uint8_t fxByte )
+void XmChannel::fxExtraFinePorta(uint8_t fxByte)
 {
-    if( ( fxByte >> 4 ) == 1 ) {
+    if((fxByte >> 4) == 1)
+    {
         m_lastXFinePortaUp = fxByte & 0x0f;
-        m_basePeriod = m_currentPeriod = std::max( 1, m_basePeriod - m_lastXFinePortaUp );
+        m_basePeriod = m_currentPeriod = std::max(1, m_basePeriod - m_lastXFinePortaUp);
     }
-    else if( ( fxByte >> 4 ) == 2 ) {
+    else if((fxByte >> 4) == 2)
+    {
         m_lastXFinePortaDown = fxByte & 0x0f;
-        m_basePeriod = m_currentPeriod = std::min( 0x7cff, m_basePeriod + m_lastXFinePortaDown );
+        m_basePeriod = m_currentPeriod = std::min(0x7cff, m_basePeriod + m_lastXFinePortaDown);
     }
 }
 
-void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
+void XmChannel::fxExtended(uint8_t fxByte, bool estimateOnly)
 {
-    if( estimateOnly ) {
-        switch( fxByte >> 4 ) {
+    if(estimateOnly)
+    {
+        switch(fxByte >> 4)
+        {
             case EfxPatLoop:
-                if( m_module->state().tick == 0 ) {
-                    efxPatLoop( fxByte );
+                if(m_module->state().tick == 0)
+                {
+                    efxPatLoop(fxByte);
                 }
                 break;
             case EfxPatDelay:
-                if( m_module->state().tick == 0 ) {
-                    m_module->doPatDelay( fxByte & 0x0f );
+                if(m_module->state().tick == 0)
+                {
+                    m_module->doPatDelay(fxByte & 0x0f);
                 }
                 break;
         }
         return;
     }
-    switch( fxByte >> 4 ) {
+    switch(fxByte >> 4)
+    {
         case EfxFinePortaUp:
-            efxFinePortaUp( fxByte );
+            efxFinePortaUp(fxByte);
             m_state.fxDesc = fxdesc::SlowPitchSlideUp;
             break;
         case EfxFinePortaDown:
-            efxFinePortaDown( fxByte );
+            efxFinePortaDown(fxByte);
             m_state.fxDesc = fxdesc::SlowPitchSlideDown;
             break;
         case EfxFineVolSlideUp:
-            efxFineVolUp( fxByte );
+            efxFineVolUp(fxByte);
             m_state.fxDesc = fxdesc::SlowVolSlideUp;
             break;
         case EfxFineVolSlideDown:
-            efxFineVolDown( fxByte );
+            efxFineVolDown(fxByte);
             m_state.fxDesc = fxdesc::SlowVolSlideDown;
             break;
         case EfxSetGlissCtrl:
-            m_glissandoCtrl = ( fxByte & 0x0f ) != 0;
+            m_glissandoCtrl = (fxByte & 0x0f) != 0;
             m_state.fxDesc = fxdesc::Glissando;
             break;
         case EfxSetVibratoCtrl:
@@ -960,51 +1071,61 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
             m_state.fxDesc = fxdesc::SetTremWaveform;
             break;
         case EfxNoteCut:
-            if( m_module->state().tick == ( fxByte & 0x0f ) ) {
+            if(m_module->state().tick == (fxByte & 0x0f))
+            {
                 m_baseVolume = m_currentVolume = 0;
             }
             m_state.fxDesc = fxdesc::NoteCut;
             break;
         case EfxNoteDelay:
             m_state.fxDesc = fxdesc::NoteDelay;
-            if( m_module->state().tick == ( fxByte & 0x0f ) ) {
-                triggerNote( m_currentCell->note() );
-                if( m_currentCell->instrument() != 0 ) {
+            if(m_module->state().tick == (fxByte & 0x0f))
+            {
+                triggerNote(m_currentCell->note());
+                if(m_currentCell->instrument() != 0)
+                {
                     applySampleDefaults();
                 }
                 doKeyOn();
-                if( m_currentCell->volume() >= 0x10 && m_currentCell->volume() <= 0x50 ) {
+                if(m_currentCell->volume() >= 0x10 && m_currentCell->volume() <= 0x50)
+                {
                     m_currentVolume = m_baseVolume = m_currentCell->volume() - 0x10;
                 }
-                else if( ( m_currentCell->volume() >> 4 ) == VfxSetPanning ) {
+                else if((m_currentCell->volume() >> 4) == VfxSetPanning)
+                {
                     m_panning = m_currentCell->volume() << 4;
                 }
             }
             break;
         case EfxRetrigger:
-            if( ( fxByte & 0x0f ) != 0 ) {
-                if( m_module->state().tick % ( fxByte & 0x0f ) == 0 ) {
-                    triggerNote( 0 );
+            if((fxByte & 0x0f) != 0)
+            {
+                if(m_module->state().tick % (fxByte & 0x0f) == 0)
+                {
+                    triggerNote(0);
                     doKeyOn();
                 }
             }
             m_state.fxDesc = fxdesc::Retrigger;
             break;
         case EfxPatLoop:
-            if( m_module->state().tick == 0 ) {
-                efxPatLoop( fxByte );
+            if(m_module->state().tick == 0)
+            {
+                efxPatLoop(fxByte);
             }
             m_state.fxDesc = fxdesc::PatternLoop;
             break;
         case EfxPatDelay:
-            if( m_module->state().tick == 0 ) {
-                m_module->doPatDelay( fxByte & 0x0f );
+            if(m_module->state().tick == 0)
+            {
+                m_module->doPatDelay(fxByte & 0x0f);
             }
             m_state.fxDesc = fxdesc::PatternDelay;
             break;
         case EfxSetPan:
-            if( m_module->state().tick == 0 ) {
-                m_panning = 0xff * ( fxByte & 0x0f ) / 0x0f;
+            if(m_module->state().tick == 0)
+            {
+                m_panning = 0xff * (fxByte & 0x0f) / 0x0f;
             }
             m_state.fxDesc = fxdesc::SetPanPos;
             break;
@@ -1014,98 +1135,112 @@ void XmChannel::fxExtended( uint8_t fxByte, bool estimateOnly )
 void XmChannel::applySampleDefaults()
 {
     const XmSample* smp = currentSample();
-    if( m_currentCell->instrument() != 0 && smp ) {
+    if(m_currentCell->instrument() != 0 && smp)
+    {
         m_baseVolume = m_currentVolume = smp->volume();
         m_panning = smp->panning();
     }
 }
 
-void XmChannel::vfxSetVibratoSpeed( uint8_t fxByte )
+void XmChannel::vfxSetVibratoSpeed(uint8_t fxByte)
 {
-    m_vibratoSpeed = ( fxByte & 0x0f ) << 2;
+    m_vibratoSpeed = (fxByte & 0x0f) << 2;
 }
 
-void XmChannel::vfxPanSlideLeft( uint8_t fxByte )
+void XmChannel::vfxPanSlideLeft(uint8_t fxByte)
 {
     fxByte &= 0x0f;
-    m_panning = std::max<int>( 0, m_panning - fxByte );
+    m_panning = std::max<int>(0, m_panning - fxByte);
 }
 
-void XmChannel::vfxPanSlideRight( uint8_t fxByte )
+void XmChannel::vfxPanSlideRight(uint8_t fxByte)
 {
     fxByte &= 0x0f;
-    m_panning = std::min<int>( 0xff, m_panning + fxByte );
+    m_panning = std::min<int>(0xff, m_panning + fxByte);
 }
 
 void XmChannel::fxPorta()
 {
     int tmp = m_basePeriod;
-    if( m_portaTargetPeriod < m_basePeriod ) {
+    if(m_portaTargetPeriod < m_basePeriod)
+    {
         tmp -= m_portaSpeed;
-        if( tmp < m_portaTargetPeriod ) {
+        if(tmp < m_portaTargetPeriod)
+        {
             tmp = m_portaTargetPeriod;
         }
     }
-    else if( m_portaTargetPeriod > m_basePeriod ) {
+    else if(m_portaTargetPeriod > m_basePeriod)
+    {
         tmp += m_portaSpeed;
-        if( tmp > m_portaTargetPeriod ) {
+        if(tmp > m_portaTargetPeriod)
+        {
             tmp = m_portaTargetPeriod;
         }
     }
-    else {
+    else
+    {
         return;
     }
     m_basePeriod = tmp;
-    if( !m_glissandoCtrl ) {
+    if(!m_glissandoCtrl)
+    {
         m_currentPeriod = m_basePeriod;
     }
-    else {
-        m_currentPeriod = m_module->glissando( m_basePeriod, m_finetune );
+    else
+    {
+        m_currentPeriod = m_module->glissando(m_basePeriod, m_finetune);
     }
 }
 
-void XmChannel::calculatePortaTarget( uint8_t tarnote )
+void XmChannel::calculatePortaTarget(uint8_t tarnote)
 {
-    if( !currentSample() )
+    if(!currentSample())
         return;
-    if( tarnote != 0 && tarnote != KeyOffNote ) {
-        uint16_t newPer = m_module->noteToPeriod( tarnote + currentSample()->relativeNote() - 1, m_finetune );
-        if( newPer != 0 ) {
+    if(tarnote != 0 && tarnote != KeyOffNote)
+    {
+        uint16_t newPer = m_module->noteToPeriod(tarnote + currentSample()->relativeNote() - 1, m_finetune);
+        if(newPer != 0)
+        {
             m_portaTargetPeriod = newPer;
         }
     }
 }
 
-void XmChannel::fxArpeggio( uint8_t fxByte )
+void XmChannel::fxArpeggio(uint8_t fxByte)
 {
-    if( fxByte == 0 ) {
+    if(fxByte == 0)
+    {
         return;
     }
-    switch( m_module->state().tick % 3 ) {
+    switch(m_module->state().tick % 3)
+    {
         case 0:
             m_currentPeriod = m_basePeriod;
             break;
         case 1:
-            m_currentPeriod = m_module->glissando( m_basePeriod, m_finetune, fxByte >> 4 );
+            m_currentPeriod = m_module->glissando(m_basePeriod, m_finetune, fxByte >> 4);
             break;
         case 2:
-            m_currentPeriod = m_module->glissando( m_basePeriod, m_finetune, fxByte & 0x0f );
+            m_currentPeriod = m_module->glissando(m_basePeriod, m_finetune, fxByte & 0x0f);
             break;
     }
 }
 
-void XmChannel::fxVibrato( uint8_t fxByte )
+void XmChannel::fxVibrato(uint8_t fxByte)
 {
-    if( ( fxByte & 0x0f ) != 0 ) {
+    if((fxByte & 0x0f) != 0)
+    {
         m_vibratoDepth = fxByte & 0x0f;
     }
-    if( ( fxByte >> 4 ) != 0 ) {
-        m_vibratoSpeed = ( fxByte >> 4 ) << 2;
+    if((fxByte >> 4) != 0)
+    {
+        m_vibratoSpeed = (fxByte >> 4) << 2;
     }
     doVibrato();
 }
 
-constexpr std::array<const uint8_t, 32> g_VibTable = {{
+constexpr std::array<const uint8_t, 32> g_VibTable = { {
         0, 24, 49, 74, 97, 120, 141, 161, 180, 197, 212, 224, 235,
         244, 250, 253, 255, 253, 250, 244, 235, 224, 212, 197, 180, 161,
         141, 120, 97, 74, 49, 24
@@ -1114,103 +1249,122 @@ constexpr std::array<const uint8_t, 32> g_VibTable = {{
 
 void XmChannel::doVibrato()
 {
-    uint8_t value = ( m_vibratoPhase >> 2 ) & 0x1f;
-    switch( m_vibratoCtrl & 3 ) {
+    uint8_t value = (m_vibratoPhase >> 2) & 0x1f;
+    switch(m_vibratoCtrl & 3)
+    {
         case 0:
-            value = g_VibTable[ value ];
+            value = g_VibTable[value];
             break;
         case 1:
             value <<= 3;
-            if( ( m_vibratoPhase & 0x80 ) == 0 ) {
+            if((m_vibratoPhase & 0x80) == 0)
+            {
                 value = ~value;
             }
             break;
         default:
             value = 0xff;
     }
-    uint16_t delta = ( value * m_vibratoDepth ) >> 5;
-    if( m_vibratoPhase & 0x80 ) {
+    uint16_t delta = (value * m_vibratoDepth) >> 5;
+    if(m_vibratoPhase & 0x80)
+    {
         m_currentPeriod = m_basePeriod - delta;
     }
-    else {
+    else
+    {
         m_currentPeriod = m_basePeriod + delta;
     }
     m_vibratoPhase += m_vibratoSpeed;
 }
 
-void XmChannel::vfxVibrato( uint8_t fxByte )
+void XmChannel::vfxVibrato(uint8_t fxByte)
 {
     fxByte &= 0x0f;
-    if( fxByte != 0 ) {
+    if(fxByte != 0)
+    {
         m_vibratoDepth = fxByte;
     }
     doVibrato();
 }
 
-void XmChannel::fxGlobalVolSlide( uint8_t fxByte )
+void XmChannel::fxGlobalVolSlide(uint8_t fxByte)
 {
-// 	reuseIfZero( m_lastGlobVolSlideFx, fxByte );
+    // 	reuseIfZero( m_lastGlobVolSlideFx, fxByte );
     m_lastGlobVolSlideFx = fxByte;
-    if( m_lastGlobVolSlideFx.hi() == 0 ) {
-        m_module->state().globalVolume = std::max( 0, m_module->state().globalVolume - m_lastGlobVolSlideFx.lo() );
+    if(m_lastGlobVolSlideFx.hi() == 0)
+    {
+        m_module->state().globalVolume = std::max(0, m_module->state().globalVolume - m_lastGlobVolSlideFx.lo());
     }
-    else {
-        m_module->state().globalVolume = std::min( 0x40, m_module->state().globalVolume + m_lastGlobVolSlideFx.hi() );
+    else
+    {
+        m_module->state().globalVolume = std::min(0x40, m_module->state().globalVolume + m_lastGlobVolSlideFx.hi());
     }
 }
 
-void XmChannel::fxTremolo( uint8_t fxByte )
+void XmChannel::fxTremolo(uint8_t fxByte)
 {
-    if( ( fxByte >> 4 ) != 0 ) {
-        m_tremoloSpeed = ( fxByte >> 4 ) << 2;
+    if((fxByte >> 4) != 0)
+    {
+        m_tremoloSpeed = (fxByte >> 4) << 2;
     }
-    if( ( fxByte & 0x0f ) != 0 ) {
-        m_tremoloDepth = ( fxByte & 0x0f );
+    if((fxByte & 0x0f) != 0)
+    {
+        m_tremoloDepth = (fxByte & 0x0f);
     }
-    uint8_t value = ( m_tremoloPhase >> 2 ) & 0x1f;
-    switch( m_tremoloCtrl & 3 ) {
+    uint8_t value = (m_tremoloPhase >> 2) & 0x1f;
+    switch(m_tremoloCtrl & 3)
+    {
         case 0:
-            value = g_VibTable[ value ];
+            value = g_VibTable[value];
             break;
         case 1:
             value <<= 3;
             // This is _NOT_ a typo or c&p error!
-            if( ( m_vibratoPhase & 0x80 ) == 0 ) {
+            if((m_vibratoPhase & 0x80) == 0)
+            {
                 value = ~value;
             }
             break;
         default:
             value = 0xff;
     }
-    uint16_t delta = ( value * m_tremoloDepth ) >> 6;
-    if( m_tremoloPhase & 0x80 ) {
-        m_currentVolume = clip( m_baseVolume - delta, 0, 64 );
+    uint16_t delta = (value * m_tremoloDepth) >> 6;
+    if(m_tremoloPhase & 0x80)
+    {
+        m_currentVolume = clip(m_baseVolume - delta, 0, 64);
     }
-    else {
-        m_currentVolume = clip( m_baseVolume + delta, 0, 64 );
+    else
+    {
+        m_currentVolume = clip(m_baseVolume + delta, 0, 64);
     }
     m_tremoloPhase += m_tremoloSpeed;
 }
 
-void XmChannel::fxTremor( uint8_t fxByte )
+void XmChannel::fxTremor(uint8_t fxByte)
 {
-// 	reuseIfZero( m_lastTremorFx, fxByte );
+    // 	reuseIfZero( m_lastTremorFx, fxByte );
     m_lastTremorFx = fxByte;
-    if( ( m_tremorCountdown & 0x7f ) == 0 ) {
-        if( ( m_tremorCountdown & 0x80 ) != 0 ) {
+    if((m_tremorCountdown & 0x7f) == 0)
+    {
+        if((m_tremorCountdown & 0x80) != 0)
+        {
             m_tremorCountdown = m_lastTremorFx.lo();
         }
-        else {
+        else
+        {
             m_tremorCountdown = 0x80 | m_lastTremorFx.hi();
         }
     }
-    else {
-        m_tremorCountdown = ( m_tremorCountdown & 0x80 ) | ( ( m_tremorCountdown & 0x7f ) - 1 );
+    else
+    {
+        m_tremorCountdown = (m_tremorCountdown & 0x80) | ((m_tremorCountdown & 0x7f) - 1);
     }
-    if( m_tremorCountdown & 0x80 ) {
+    if(m_tremorCountdown & 0x80)
+    {
         m_currentVolume = m_baseVolume;
     }
-    else {
+    else
+    {
         m_currentVolume = 0;
     }
 }
@@ -1218,12 +1372,14 @@ void XmChannel::fxTremor( uint8_t fxByte )
 void XmChannel::retriggerNote()
 {
     m_retriggerCounter++;
-    if( m_retriggerCounter < m_retriggerLength ) {
+    if(m_retriggerCounter < m_retriggerLength)
+    {
         return;
     }
     m_retriggerCounter = 0;
     int newVol = m_baseVolume;
-    switch( m_retriggerVolumeType ) {
+    switch(m_retriggerVolumeType)
+    {
         case 0:
         case 8:
             break;
@@ -1242,7 +1398,8 @@ void XmChannel::retriggerNote()
         case 5:
             newVol -= 16;
             break;
-        case 6: {
+        case 6:
+        {
             newVol >>= 1;
             int tmp = newVol >> 2;
             newVol += tmp;
@@ -1275,112 +1432,118 @@ void XmChannel::retriggerNote()
             newVol <<= 1;
             break;
     }
-    m_currentVolume = m_baseVolume = clip( newVol, 0, 0x40 );
+    m_currentVolume = m_baseVolume = clip(newVol, 0, 0x40);
     const uint8_t cellVolFx = m_currentCell->volume();
-    if( cellVolFx >= 0x10 && cellVolFx <= 0x50 ) {
+    if(cellVolFx >= 0x10 && cellVolFx <= 0x50)
+    {
         m_currentVolume = m_baseVolume = cellVolFx - 0x10;
     }
-    else if( ( cellVolFx >> 4 ) == VfxSetPanning ) {
-        m_panning = ( cellVolFx & 0x0f ) << 4;
+    else if((cellVolFx >> 4) == VfxSetPanning)
+    {
+        m_panning = (cellVolFx & 0x0f) << 4;
     }
-    triggerNote( 0 );
+    triggerNote(0);
 }
 
-void XmChannel::fxRetrigger( uint8_t fxByte )
+void XmChannel::fxRetrigger(uint8_t fxByte)
 {
-    if( m_module->state().tick != 0 ) {
+    if(m_module->state().tick != 0)
+    {
         retriggerNote();
         return;
     }
     m_retriggerLength = fxByte & 0x0f;
     m_retriggerVolumeType = fxByte >> 4;
-    if( m_currentCell->note() != 0 ) {
+    if(m_currentCell->note() != 0)
+    {
         retriggerNote();
     }
 }
 
-void XmChannel::efxPatLoop( uint8_t fxByte )
+void XmChannel::efxPatLoop(uint8_t fxByte)
 {
     fxByte &= 0x0f;
-    if( fxByte == 0 ) {
+    if(fxByte == 0)
+    {
         m_patLoopRow = m_module->state().row;
         return;
     }
-    if( m_patLoopCounter == 0 ) {
+    if(m_patLoopCounter == 0)
+    {
         // when the loop counter is zero, this is the first loop running,
         // so set the counter and wait for the next loop
         m_patLoopCounter = fxByte;
-        m_module->doPatLoop( m_patLoopRow );
+        m_module->doPatLoop(m_patLoopRow);
         return;
     }
     // loop counter is not zero, meaning we are in a loop. in this case
     // decrease it. if it is not zero then, we must jump back.
     m_patLoopCounter--;
-    if( m_patLoopCounter != 0 ) {
-        m_module->doPatLoop( m_patLoopRow );
+    if(m_patLoopCounter != 0)
+    {
+        m_module->doPatLoop(m_patLoopRow);
     }
 }
 
-AbstractArchive& XmChannel::serialize( AbstractArchive* data )
+AbstractArchive& XmChannel::serialize(AbstractArchive* data)
 {
     *data
-    % m_baseVolume
-    % m_currentVolume
-    % m_realVolume
-    % m_panning
-    % m_realPanning
-    % m_basePeriod
-    % m_currentPeriod
-    % m_autoVibDeltaPeriod
-    % m_finetune
-    % m_realNote
-    % m_currentCell
-    % m_volumeEnvelope
-    % m_panningEnvelope
-    % m_volScale
-    % m_volScaleRate
-    % m_keyOn
-    % m_lastVolSlideFx
-    % m_lastPortaUpFx
-    % m_lastPortaDownFx
-    % m_lastPanSlideFx
-    % m_lastOffsetFx
-    % m_lastFinePortaUpFx
-    % m_lastFinePortaDownFx
-    % m_lastFineVolUpFx
-    % m_lastFineVolDownFx
-    % m_lastXFinePortaUp
-    % m_lastXFinePortaDown
-    % m_lastGlobVolSlideFx
-    % m_lastTremorFx
-    % m_portaSpeed
-    % m_portaTargetPeriod
-    % m_vibratoSpeed
-    % m_vibratoDepth
-    % m_vibratoPhase
-    % m_vibratoCtrl
-    % m_glissandoCtrl
-    % m_tremoloDepth
-    % m_tremoloSpeed
-    % m_tremoloPhase
-    % m_tremoloCtrl
-    % m_tremorCountdown
-    % m_retriggerCounter
-    % m_retriggerLength
-    % m_retriggerVolumeType
-    % m_patLoopCounter
-    % m_patLoopRow
-    % m_autoVibType
-    % m_autoVibSweep
-    % m_autoVibSweepRate
-    % m_autoVibDepth
-    % m_autoVibPhase
-    % m_lastNote
-    % m_bres
-    % m_state;
+        % m_baseVolume
+        % m_currentVolume
+        % m_realVolume
+        % m_panning
+        % m_realPanning
+        % m_basePeriod
+        % m_currentPeriod
+        % m_autoVibDeltaPeriod
+        % m_finetune
+        % m_realNote
+        % m_currentCell
+        % m_volumeEnvelope
+        % m_panningEnvelope
+        % m_volScale
+        % m_volScaleRate
+        % m_keyOn
+        % m_lastVolSlideFx
+        % m_lastPortaUpFx
+        % m_lastPortaDownFx
+        % m_lastPanSlideFx
+        % m_lastOffsetFx
+        % m_lastFinePortaUpFx
+        % m_lastFinePortaDownFx
+        % m_lastFineVolUpFx
+        % m_lastFineVolDownFx
+        % m_lastXFinePortaUp
+        % m_lastXFinePortaDown
+        % m_lastGlobVolSlideFx
+        % m_lastTremorFx
+        % m_portaSpeed
+        % m_portaTargetPeriod
+        % m_vibratoSpeed
+        % m_vibratoDepth
+        % m_vibratoPhase
+        % m_vibratoCtrl
+        % m_glissandoCtrl
+        % m_tremoloDepth
+        % m_tremoloSpeed
+        % m_tremoloPhase
+        % m_tremoloCtrl
+        % m_tremorCountdown
+        % m_retriggerCounter
+        % m_retriggerLength
+        % m_retriggerVolumeType
+        % m_patLoopCounter
+        % m_patLoopRow
+        % m_autoVibType
+        % m_autoVibSweep
+        % m_autoVibSweepRate
+        % m_autoVibDepth
+        % m_autoVibPhase
+        % m_lastNote
+        % m_bres
+        % m_state;
     return *data;
 }
-
 }
 }
 

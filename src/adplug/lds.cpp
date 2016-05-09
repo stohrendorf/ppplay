@@ -22,7 +22,8 @@
 #include "lds.h"
 #include "stream/filestream.h"
 
-namespace {
+namespace
+{
 // Note frequency table (16 notes / octave)
 constexpr uint16_t frequencies[] = {
     343, 344, 345, 347, 348, 349, 350, 352, 353, 354, 356, 357, 358, 359, 361,
@@ -68,15 +69,17 @@ constexpr uint16_t maxpos = 0xff;
 
 /*** public methods *************************************/
 
-bool CldsPlayer::load(const std::string &filename) {
+bool CldsPlayer::load(const std::string& filename)
+{
     // file validation section (actually just an extension check)
     FileStream fs(filename);
-    if (!fs || fs.extension() != ".lds")
+    if(!fs || fs.extension() != ".lds")
         return false;
 
     // file load section (header)
     fs >> m_mode;
-    if (m_mode > 2) {
+    if(m_mode > 2)
+    {
         return false;
     }
     uint16_t speed;
@@ -95,8 +98,9 @@ bool CldsPlayer::load(const std::string &filename) {
     uint16_t orderCount;
     fs >> orderCount;
     m_positions.resize(9 * orderCount);
-    for (size_t i = 0; i < orderCount; i++)
-        for (int j = 0; j < 9; j++) {
+    for(size_t i = 0; i < orderCount; i++)
+        for(int j = 0; j < 9; j++)
+        {
             fs >> m_positions[i * 9 + j];
             /*
              * patnum is a pointer inside the pattern space, but patterns are 16bit
@@ -115,51 +119,64 @@ bool CldsPlayer::load(const std::string &filename) {
     return true;
 }
 
-bool CldsPlayer::update() {
-    if (!m_playing)
+bool CldsPlayer::update()
+{
+    if(!m_playing)
         return false;
 
     // handle fading
-    if (m_fadeonoff) {
-        if (m_fadeonoff <= 128) {
-            if (m_allvolume > m_fadeonoff || m_allvolume == 0) {
+    if(m_fadeonoff)
+    {
+        if(m_fadeonoff <= 128)
+        {
+            if(m_allvolume > m_fadeonoff || m_allvolume == 0)
+            {
                 m_allvolume -= m_fadeonoff;
             }
-            else {
+            else
+            {
                 m_allvolume = 1;
                 m_fadeonoff = 0;
-                if (m_hardfade != 0) {
+                if(m_hardfade != 0)
+                {
                     m_playing = false;
                     m_hardfade = 0;
-                    for (int i = 0; i < 9; i++)
+                    for(int i = 0; i < 9; i++)
                         m_channels[i].keycount = 1;
                 }
             }
         }
-        else if (((m_allvolume + (0x100 - m_fadeonoff)) & 0xff) <= m_mainvolume) {
+        else if(((m_allvolume + (0x100 - m_fadeonoff)) & 0xff) <= m_mainvolume)
+        {
             m_allvolume += 0x100 - m_fadeonoff;
         }
-        else {
+        else
+        {
             m_allvolume = m_mainvolume;
             m_fadeonoff = 0;
         }
     }
     // handle channel delay
-    for (int chan = 0; chan < 9; chan++) {
-        Channel *c = &m_channels[chan];
-        if (c->chancheat.chandelay) {
+    for(int chan = 0; chan < 9; chan++)
+    {
+        Channel* c = &m_channels[chan];
+        if(c->chancheat.chandelay)
+        {
             --c->chancheat.chandelay;
-            if (c->chancheat.chandelay == 0)
+            if(c->chancheat.chandelay == 0)
                 playsound(c->chancheat.sound, chan, c->chancheat.high);
         }
     }
 
     // handle notes
-    if (!currentTempo()) {
+    if(!currentTempo())
+    {
         bool vbreak = false;
-        for (int chan = 0; chan < 9; chan++) {
-            Channel *c = &m_channels[chan];
-            if(c->packwait) {
+        for(int chan = 0; chan < 9; chan++)
+        {
+            Channel* c = &m_channels[chan];
+            if(c->packwait)
+            {
                 --c->packwait;
                 continue;
             }
@@ -167,87 +184,93 @@ bool CldsPlayer::update() {
             const uint32_t transpose = m_positions[currentOrder() * 9 + chan].transpose;
 
             const auto comword = m_patterns[patnum + c->packpos];
-            if(comword == 0) {
+            if(comword == 0)
+            {
                 c->packpos++;
                 continue;
             }
 
             const auto comhi = comword >> 8;
             const auto comlo = comword & 0xff;
-            if (comhi == 0x80) {
+            if(comhi == 0x80)
+            {
                 c->packwait = comlo;
             }
-            else if (comhi >= 0x80) {
-                switch (comhi) {
-                case 0xff:
-                    c->volcar = (((c->volcar & 0x3f) * comlo) >> 6) & 0x3f;
-                    if (getOpl()->readReg(0xc0 + chan) & 1)
-                        c->volmod = (((c->volmod & 0x3f) * comlo) >> 6) & 0x3f;
-                    break;
-                case 0xfe:
-                    m_initialTempo = comword & 0x3f;
-                    break;
-                case 0xfd:
-                    c->nextvol = comlo;
-                    break;
-                case 0xfc:
-                    m_playing = false;
-                    // in real player there's also full keyoff here, but we don't
-                    // need it
-                    break;
-                case 0xfb:
-                    c->keycount = 1;
-                    break;
-                case 0xfa:
-                    vbreak = true;
-                    m_jumppos = (currentOrder() + 1) & maxpos;
-                    break;
-                case 0xf9:
-                    vbreak = true;
-                    m_jumppos = comlo & maxpos;
-                    m_jumping = 1;
-                    if (m_jumppos < currentOrder())
-                        m_songlooped = true;
-                    break;
-                case 0xf8:
-                    c->lasttune = 0;
-                    break;
-                case 0xf7:
-                    c->vibwait = 0;
-                    // PASCAL: c->vibspeed = ((comlo >> 4) & 15) + 2;
-                    c->vibspeed = (comlo >> 4) + 2;
-                    c->vibrate = (comlo & 15) + 1;
-                    break;
-                case 0xf6:
-                    c->glideto = comlo;
-                    break;
-                case 0xf5:
-                    c->finetune = comlo;
-                    break;
-                case 0xf4:
-                    if (!m_hardfade) {
-                        m_allvolume = m_mainvolume = comlo;
-                        m_fadeonoff = 0;
-                    }
-                    break;
-                case 0xf3:
-                    if (!m_hardfade)
-                        m_fadeonoff = comlo;
-                    break;
-                case 0xf2:
-                    c->trmstay = comlo;
-                    break;
-                case 0xf1: // panorama
-                case 0xf0: // progch
-                    // MIDI commands (unhandled)
-                    break;
-                default:
-                    if (comhi < 0xa0)
-                        c->glideto = comhi & 0x1f;
-                    break;
+            else if(comhi >= 0x80)
+            {
+                switch(comhi)
+                {
+                    case 0xff:
+                        c->volcar = (((c->volcar & 0x3f) * comlo) >> 6) & 0x3f;
+                        if(getOpl()->readReg(0xc0 + chan) & 1)
+                            c->volmod = (((c->volmod & 0x3f) * comlo) >> 6) & 0x3f;
+                        break;
+                    case 0xfe:
+                        m_initialTempo = comword & 0x3f;
+                        break;
+                    case 0xfd:
+                        c->nextvol = comlo;
+                        break;
+                    case 0xfc:
+                        m_playing = false;
+                        // in real player there's also full keyoff here, but we don't
+                        // need it
+                        break;
+                    case 0xfb:
+                        c->keycount = 1;
+                        break;
+                    case 0xfa:
+                        vbreak = true;
+                        m_jumppos = (currentOrder() + 1) & maxpos;
+                        break;
+                    case 0xf9:
+                        vbreak = true;
+                        m_jumppos = comlo & maxpos;
+                        m_jumping = 1;
+                        if(m_jumppos < currentOrder())
+                            m_songlooped = true;
+                        break;
+                    case 0xf8:
+                        c->lasttune = 0;
+                        break;
+                    case 0xf7:
+                        c->vibwait = 0;
+                        // PASCAL: c->vibspeed = ((comlo >> 4) & 15) + 2;
+                        c->vibspeed = (comlo >> 4) + 2;
+                        c->vibrate = (comlo & 15) + 1;
+                        break;
+                    case 0xf6:
+                        c->glideto = comlo;
+                        break;
+                    case 0xf5:
+                        c->finetune = comlo;
+                        break;
+                    case 0xf4:
+                        if(!m_hardfade)
+                        {
+                            m_allvolume = m_mainvolume = comlo;
+                            m_fadeonoff = 0;
+                        }
+                        break;
+                    case 0xf3:
+                        if(!m_hardfade)
+                            m_fadeonoff = comlo;
+                        break;
+                    case 0xf2:
+                        c->trmstay = comlo;
+                        break;
+                    case 0xf1: // panorama
+                    case 0xf0: // progch
+                        // MIDI commands (unhandled)
+                        break;
+                    default:
+                        if(comhi < 0xa0)
+                            c->glideto = comhi & 0x1f;
+                        break;
                 }
             }
-            else {
+            else
+            {
                 /*
                  * Originally, in assembler code, the player first shifted
                  * logically left the transpose byte by 1 and then shifted
@@ -258,16 +281,18 @@ bool CldsPlayer::update() {
                  */
 
                 int8_t transp = transpose & 127;
-                if (transpose & 0x40)
+                if(transpose & 0x40)
                     transp |= 0x80;
 
                 uint8_t sound;
                 uint16_t high;
-                if (transpose & 0x80) {
+                if(transpose & 0x80)
+                {
                     sound = (comlo + transp) & maxsound;
                     high = comhi << 4;
                 }
-                else {
+                else
+                {
                     sound = comlo & maxsound;
                     high = (comhi + transp) << 4;
                 }
@@ -278,9 +303,10 @@ bool CldsPlayer::update() {
                   high = (comhi + (((transpose + 0x24) & 0xff) - 0x24)) << 4;
                 */
 
-                if (!m_chandelay[chan])
+                if(!m_chandelay[chan])
                     playsound(sound, chan, high);
-                else {
+                else
+                {
                     c->chancheat.chandelay = m_chandelay[chan];
                     c->chancheat.sound = sound;
                     c->chancheat.high = high;
@@ -303,48 +329,55 @@ bool CldsPlayer::update() {
             conttab[speed & maxcont].tempo = tempo;
           }
         */
-        setCurrentRow(currentRow()+1);
-        if (vbreak) {
+        setCurrentRow(currentRow() + 1);
+        if(vbreak)
+        {
             setCurrentRow(0);
-            for (int i = 0; i < 9; i++)
+            for(int i = 0; i < 9; i++)
                 m_channels[i].packpos = m_channels[i].packwait = 0;
             setCurrentOrder(m_jumppos);
         }
-        else if (currentRow() >= m_pattlen) {
+        else if(currentRow() >= m_pattlen)
+        {
             setCurrentRow(0);
-            for (int i = 0; i < 9; i++)
+            for(int i = 0; i < 9; i++)
                 m_channels[i].packpos = m_channels[i].packwait = 0;
             setCurrentOrder((currentOrder() + 1) & maxpos);
         }
     }
     else
-        setCurrentTempo(currentTempo()-1);
+        setCurrentTempo(currentTempo() - 1);
 
     // make effects
-    for (int chan = 0; chan < 9; chan++) {
+    for(int chan = 0; chan < 9; chan++)
+    {
         opl::SlotView slotView = getOpl()->getSlotView(chan);
-        Channel *c = &m_channels[chan];
-        if (c->keycount > 0) {
-            if (c->keycount == 1)
+        Channel* c = &m_channels[chan];
+        if(c->keycount > 0)
+        {
+            if(c->keycount == 1)
                 slotView.setKeyOn(false);
             c->keycount--;
         }
 
         // arpeggio
         uint16_t arpreg = 0;
-        if (c->arp_size != 0) {
+        if(c->arp_size != 0)
+        {
             arpreg = c->arp_tab[c->arp_pos] << 4;
-            if (arpreg == 0x800) {
-                if (c->arp_pos > 0)
+            if(arpreg == 0x800)
+            {
+                if(c->arp_pos > 0)
                     c->arp_tab[0] = c->arp_tab[c->arp_pos - 1];
                 c->arp_size = 1;
                 c->arp_pos = 0;
                 arpreg = c->arp_tab[0] << 4;
             }
 
-            if (c->arp_count == c->arp_speed) {
+            if(c->arp_count == c->arp_speed)
+            {
                 c->arp_pos++;
-                if (c->arp_pos >= c->arp_size)
+                if(c->arp_pos >= c->arp_size)
                     c->arp_pos = 0;
                 c->arp_count = 0;
             }
@@ -353,21 +386,24 @@ bool CldsPlayer::update() {
         }
 
         // glide & portamento
-        if (c->lasttune && (c->lasttune != c->gototune)) {
-            if (c->lasttune > c->gototune) {
-                if (c->lasttune - c->gototune < c->portspeed)
+        if(c->lasttune && (c->lasttune != c->gototune))
+        {
+            if(c->lasttune > c->gototune)
+            {
+                if(c->lasttune - c->gototune < c->portspeed)
                     c->lasttune = c->gototune;
                 else
                     c->lasttune -= c->portspeed;
             }
-            else {
-                if (c->gototune - c->lasttune < c->portspeed)
+            else
+            {
+                if(c->gototune - c->lasttune < c->portspeed)
                     c->lasttune = c->gototune;
                 else
                     c->lasttune += c->portspeed;
             }
 
-            if (arpreg >= 0x800)
+            if(arpreg >= 0x800)
                 arpreg = c->lasttune - (arpreg ^ 0xff0) - 16;
             else
                 arpreg += c->lasttune;
@@ -375,19 +411,22 @@ bool CldsPlayer::update() {
             slotView.setBlock(arpreg / (12 * 16) - 1);
             slotView.setFnum(frequencies[arpreg % (12 * 16)]);
         }
-        else {
+        else
+        {
             // vibrato
-            if (!c->vibwait) {
-                if (c->vibrate) {
+            if(!c->vibwait)
+            {
+                if(c->vibrate)
+                {
                     auto wibc = vibratoTable[c->vibcount & 0x3f] * c->vibrate;
 
                     auto tune = c->lasttune;
-                    if ((c->vibcount & 0x40) == 0)
+                    if((c->vibcount & 0x40) == 0)
                         tune += (wibc >> 8);
                     else
                         tune -= (wibc >> 8);
 
-                    if (arpreg >= 0x800)
+                    if(arpreg >= 0x800)
                         tune -= (arpreg ^ 0xff0) + 16;
                     else
                         tune += arpreg;
@@ -396,9 +435,10 @@ bool CldsPlayer::update() {
                     slotView.setFnum(frequencies[tune % (12 * 16)]);
                     c->vibcount += c->vibspeed;
                 }
-                else if (c->arp_size != 0) { // no vibrato, just arpeggio
+                else if(c->arp_size != 0)
+                { // no vibrato, just arpeggio
                     auto tune = c->lasttune;
-                    if (arpreg >= 0x800)
+                    if(arpreg >= 0x800)
                         tune -= (arpreg ^ 0xff0) + 16;
                     else
                         tune += arpreg;
@@ -407,12 +447,14 @@ bool CldsPlayer::update() {
                     slotView.setFnum(frequencies[tune % (12 * 16)]);
                 }
             }
-            else { // no vibrato, just arpeggio
+            else
+            { // no vibrato, just arpeggio
                 c->vibwait--;
 
-                if (c->arp_size != 0) {
+                if(c->arp_size != 0)
+                {
                     auto tune = c->lasttune;
-                    if (arpreg >= 0x800)
+                    if(arpreg >= 0x800)
                         tune -= (arpreg ^ 0xff0) + 16;
                     else
                         tune += arpreg;
@@ -424,61 +466,68 @@ bool CldsPlayer::update() {
         }
 
         // tremolo (modulator)
-        if (!c->trmwait) {
-            if (c->trmrate) {
+        if(!c->trmwait)
+        {
+            if(c->trmrate)
+            {
                 auto tremc = tremoloTable[c->trmcount & 0x7f] * c->trmrate;
                 int level = 0;
-                if ((tremc >> 8) <= (c->volmod & 0x3f))
+                if((tremc >> 8) <= (c->volmod & 0x3f))
                     level = (c->volmod & 0x3f) - (tremc >> 8);
 
-                if (m_allvolume != 0 && (getOpl()->readReg(0xc0 + chan) & 1))
+                if(m_allvolume != 0 && (getOpl()->readReg(0xc0 + chan) & 1))
                     slotView.modulator().setTotalLevel(((level * m_allvolume) >> 8) ^ 0x3f);
                 else
                     slotView.modulator().setTotalLevel(level ^ 0x3f);
 
                 c->trmcount += c->trmspeed;
             }
-            else if (m_allvolume != 0 && (getOpl()->readReg(0xc0 + chan) & 1))
-                slotView.modulator().setTotalLevel( ((((c->volmod & 0x3f) * m_allvolume) >> 8) ^ 0x3f) & 0x3f );
+            else if(m_allvolume != 0 && (getOpl()->readReg(0xc0 + chan) & 1))
+                slotView.modulator().setTotalLevel(((((c->volmod & 0x3f) * m_allvolume) >> 8) ^ 0x3f) & 0x3f);
             else
                 slotView.modulator().setTotalLevel((c->volmod ^ 0x3f) & 0x3f);
         }
-        else {
+        else
+        {
             c->trmwait--;
-            if (m_allvolume != 0 && (getOpl()->readReg(0xc0 + chan) & 1))
-                slotView.modulator().setTotalLevel( ((((c->volmod & 0x3f) * m_allvolume) >> 8) ^ 0x3f) & 0x3f );
+            if(m_allvolume != 0 && (getOpl()->readReg(0xc0 + chan) & 1))
+                slotView.modulator().setTotalLevel(((((c->volmod & 0x3f) * m_allvolume) >> 8) ^ 0x3f) & 0x3f);
         }
 
         // tremolo (carrier)
-        if (!c->trcwait) {
-            if (c->trcrate) {
+        if(!c->trcwait)
+        {
+            if(c->trcrate)
+            {
                 auto tremc = tremoloTable[c->trccount & 0x7f] * c->trcrate;
                 int level = 0;
-                if ((tremc >> 8) <= (c->volcar & 0x3f))
+                if((tremc >> 8) <= (c->volcar & 0x3f))
                     level = (c->volcar & 0x3f) - (tremc >> 8);
 
-                if (m_allvolume != 0)
+                if(m_allvolume != 0)
                     slotView.carrier().setTotalLevel(((level * m_allvolume) >> 8) ^ 0x3f);
                 else
                     slotView.carrier().setTotalLevel(level ^ 0x3f);
                 c->trccount += c->trcspeed;
             }
-            else if (m_allvolume != 0)
-                slotView.carrier().setTotalLevel( ((((c->volcar & 0x3f) * m_allvolume) >> 8) ^ 0x3f) & 0x3f );
+            else if(m_allvolume != 0)
+                slotView.carrier().setTotalLevel(((((c->volcar & 0x3f) * m_allvolume) >> 8) ^ 0x3f) & 0x3f);
             else
                 slotView.carrier().setTotalLevel((c->volcar ^ 0x3f) & 0x3f);
         }
-        else {
+        else
+        {
             c->trcwait--;
-            if (m_allvolume != 0)
-                slotView.carrier().setTotalLevel( ((((c->volcar & 0x3f) * m_allvolume) >> 8) ^ 0x3f) & 0x3f );
+            if(m_allvolume != 0)
+                slotView.carrier().setTotalLevel(((((c->volcar & 0x3f) * m_allvolume) >> 8) ^ 0x3f) & 0x3f);
         }
     }
 
     return m_playing && !m_songlooped;
 }
 
-void CldsPlayer::rewind(int) {
+void CldsPlayer::rewind(int)
+{
     // init all with 0
     setCurrentTempo(3);
     m_playing = true;
@@ -493,7 +542,8 @@ void CldsPlayer::rewind(int) {
     getOpl()->writeReg(8, 0);
     getOpl()->writeReg(0xbd, m_regbd);
 
-    for (int i = 0; i < 9; i++) {
+    for(int i = 0; i < 9; i++)
+    {
         getOpl()->writeReg(0x20 + s_opTable[i], 0);
         getOpl()->writeReg(0x23 + s_opTable[i], 0);
         getOpl()->writeReg(0x40 + s_opTable[i], 0x3f);
@@ -512,24 +562,27 @@ void CldsPlayer::rewind(int) {
 
 /*** private methods *************************************/
 
-void CldsPlayer::playsound(int inst_number, int channel_number, int tunehigh) {
-    Channel *c = &m_channels[channel_number]; // current channel
-    SoundBank *i = &m_soundbank[inst_number]; // current instrument
+void CldsPlayer::playsound(int inst_number, int channel_number, int tunehigh)
+{
+    Channel* c = &m_channels[channel_number]; // current channel
+    SoundBank* i = &m_soundbank[inst_number]; // current instrument
     // set fine tune
     tunehigh += ((i->finetune + c->finetune + 0x80) & 0xff) - 0x80;
 
     // arpeggio handling
-    if (!i->arpeggio) {
+    if(!i->arpeggio)
+    {
         unsigned short arpcalc = i->arp_tab[0] << 4;
 
-        if (arpcalc > 0x800)
+        if(arpcalc > 0x800)
             tunehigh -= (arpcalc ^ 0xff0) + 16;
         else
             tunehigh += arpcalc;
     }
 
     // glide handling
-    if (c->glideto != 0) {
+    if(c->glideto != 0)
+    {
         c->gototune = tunehigh;
         c->portspeed = c->glideto;
         c->glideto = c->finetune = 0;
@@ -544,16 +597,18 @@ void CldsPlayer::playsound(int inst_number, int channel_number, int tunehigh) {
     slotView.modulator().setKsr(i->mod_misc & 0x10);
     slotView.modulator().setMult(i->mod_misc & 0x0f);
     auto volcalc = i->mod_vol;
-    if (!c->nextvol || !(i->feedback & 1))
+    if(!c->nextvol || !(i->feedback & 1))
         c->volmod = volcalc;
     else
         c->volmod = (volcalc & 0xc0) | ((((volcalc & 0x3f) * c->nextvol) >> 6));
 
-    if ((i->feedback & 1) == 1 && m_allvolume != 0) {
-        slotView.modulator().setTotalLevel( ((c->volmod & 0x3f) * m_allvolume / 256) ^ 0x3f );
+    if((i->feedback & 1) == 1 && m_allvolume != 0)
+    {
+        slotView.modulator().setTotalLevel(((c->volmod & 0x3f) * m_allvolume / 256) ^ 0x3f);
         slotView.modulator().setKsl(c->volmod >> 6);
     }
-    else {
+    else
+    {
         slotView.modulator().setTotalLevel((c->volmod ^ 0x3f) & 0x3f);
         slotView.modulator().setKsl(0);
     }
@@ -570,17 +625,19 @@ void CldsPlayer::playsound(int inst_number, int channel_number, int tunehigh) {
     slotView.carrier().setKsr(i->car_misc & 0x10);
     slotView.carrier().setMult(i->car_misc & 0x0f);
     volcalc = i->car_vol;
-    if (!c->nextvol)
+    if(!c->nextvol)
         c->volcar = volcalc;
     else
         c->volcar = (volcalc & 0xc0) | ((((volcalc & 0x3f) * c->nextvol) >> 6));
 
-    if (m_allvolume != 0) {
+    if(m_allvolume != 0)
+    {
         slotView.carrier()
-                .setTotalLevel((((c->volcar & 0x3f) * m_allvolume) >> 8) ^ 0x3f);
+            .setTotalLevel((((c->volcar & 0x3f) * m_allvolume) >> 8) ^ 0x3f);
         slotView.carrier().setKsl(c->volcar >> 6);
     }
-    else {
+    else
+    {
         slotView.carrier().setTotalLevel((c->volcar ^ 0x3f) & 0x3f);
         slotView.carrier().setKsl(0);
     }
@@ -598,36 +655,43 @@ void CldsPlayer::playsound(int inst_number, int channel_number, int tunehigh) {
 
     auto freq = frequencies[tunehigh % (12 * 16)];
     auto octave = tunehigh / (12 * 16) - 1;
-    if (!i->glide) {
-        if (!i->portamento || !c->lasttune) {
+    if(!i->glide)
+    {
+        if(!i->portamento || !c->lasttune)
+        {
             slotView.setBlock(octave);
             slotView.setFnum(freq);
             c->lasttune = c->gototune = tunehigh;
-        } else {
+        }
+        else
+        {
             c->gototune = tunehigh;
             c->portspeed = i->portamento;
         }
     }
-    else {
+    else
+    {
         slotView.setBlock(octave);
         slotView.setFnum(freq);
         c->lasttune = tunehigh;
         c->gototune =
-                tunehigh + ((i->glide + 0x80) & 0xff) - 0x80; // set destination
+            tunehigh + ((i->glide + 0x80) & 0xff) - 0x80; // set destination
         c->portspeed = i->portamento;
     }
     slotView.setKeyOn(true);
 
-    if (!i->vibrato)
+    if(!i->vibrato)
         c->vibwait = c->vibspeed = c->vibrate = 0;
-    else {
+    else
+    {
         c->vibwait = i->vibdelay;
         // PASCAL:    c->vibspeed = ((i->vibrato >> 4) & 15) + 1;
         c->vibspeed = (i->vibrato >> 4) + 2;
         c->vibrate = (i->vibrato & 15) + 1;
     }
 
-    if (!(c->trmstay & 0xf0)) {
+    if(!(c->trmstay & 0xf0))
+    {
         c->trmwait = (i->tremwait & 0xf0) >> 3;
         // PASCAL:    c->trmspeed = (i->mod_trem >> 4) & 15;
         c->trmspeed = i->mod_trem >> 4;
@@ -635,7 +699,8 @@ void CldsPlayer::playsound(int inst_number, int channel_number, int tunehigh) {
         c->trmcount = 0;
     }
 
-    if (!(c->trmstay & 0x0f)) {
+    if(!(c->trmstay & 0x0f))
+    {
         c->trcwait = (i->tremwait & 15) << 1;
         // PASCAL:    c->trcspeed = (i->car_trem >> 4) & 15;
         c->trcspeed = i->car_trem >> 4;

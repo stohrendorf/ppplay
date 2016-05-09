@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * AdPlay/UNIX - OPL2 audio player
  * Copyright (C) 2001 - 2006 Simon Peter <dn.tlp@gmx.net>
@@ -22,9 +24,6 @@
  * and sets a reasonable default.
  */
 
-#ifndef H_PLAYERS
-#define H_PLAYERS
-
 // Enumerate ALL outputs (regardless of availability)
 enum class Outputs {
   none, disk, sdl
@@ -34,5 +33,3 @@ enum class Outputs {
 #include "sdl.h"
 
 #define DEFAULT_DRIVER Outputs::sdl
-
-#endif

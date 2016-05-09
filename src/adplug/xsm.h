@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2003 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,27 +23,32 @@
 
 #include "player.h"
 
-class CxsmPlayer : public CPlayer {
+class CxsmPlayer : public Player
+{
     DISABLE_COPY(CxsmPlayer)
 public:
-    static CPlayer *factory() { return new CxsmPlayer(); }
+    static Player *factory()
+    {
+        return new CxsmPlayer();
+    }
 
     CxsmPlayer() = default;
     ~CxsmPlayer() = default;
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int subsong);
-    size_t framesUntilUpdate() const;
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int subsong) override;
+    size_t framesUntilUpdate() const override;
 
-    std::string type() const
+    std::string type() const override
     {
         return "eXtra Simple Music";
     }
 
 private:
-    struct Row {
-        uint8_t data[9] = {0,0,0,0,0,0,0,0,0};
+    struct Row
+    {
+        uint8_t data[9] = { 0,0,0,0,0,0,0,0,0 };
     };
 
     std::vector<Row> m_music{};

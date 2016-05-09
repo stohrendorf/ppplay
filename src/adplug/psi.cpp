@@ -19,25 +19,26 @@
  * [xad] PSI player, by Riven the Mage <riven@ok.ru>
  */
 
-/*
-    - discovery -
+ /*
+     - discovery -
 
-  file(s) : 4BIDDEN.COM, PGRID.EXE
-     type : Forbidden Dreams BBStro
-            Power Grid BBStro
-     tune : by Friar Tuck [Shadow Faction/ICE]
-   player : by Psi [Future Crew]
-  comment : seems to me what 4bidden tune & player was ripped from pgrid
+   file(s) : 4BIDDEN.COM, PGRID.EXE
+      type : Forbidden Dreams BBStro
+             Power Grid BBStro
+      tune : by Friar Tuck [Shadow Faction/ICE]
+    player : by Psi [Future Crew]
+   comment : seems to me what 4bidden tune & player was ripped from pgrid
 
-  file(s) : MYSTRUNE.COM
-     type : Mystical Runes BBStro
-     tune : by ?
-   player : by Psi [Future Crew]
-*/
+   file(s) : MYSTRUNE.COM
+      type : Mystical Runes BBStro
+      tune : by ?
+    player : by Psi [Future Crew]
+ */
 
 #include "psi.h"
 
-namespace {
+namespace
+{
 constexpr uint8_t psi_adlib_registers[99] = {
     0x20, 0x23, 0x40, 0x43, 0x60, 0x63, 0x80, 0x83, 0xE0, 0xE3, 0xC0, 0x21, 0x24,
     0x41, 0x44, 0x61, 0x64, 0x81, 0x84, 0xE1, 0xE4, 0xC1, 0x22, 0x25, 0x42, 0x45,
@@ -55,9 +56,13 @@ constexpr uint16_t psi_notes[16] = {
 };
 }
 
-CPlayer *CxadpsiPlayer::factory() { return new CxadpsiPlayer(); }
+Player* CxadpsiPlayer::factory()
+{
+    return new CxadpsiPlayer();
+}
 
-void CxadpsiPlayer::xadplayer_rewind(int) {
+void CxadpsiPlayer::xadplayer_rewind(int)
+{
     getOpl()->writeReg(0x01, 0x20);
     getOpl()->writeReg(0x08, 0x00);
     getOpl()->writeReg(0xBD, 0x00);
@@ -69,10 +74,12 @@ void CxadpsiPlayer::xadplayer_rewind(int) {
     // define instruments
     m_psi.instr_table = &tune()[m_header.instr_ptr];
 
-    for (int i = 0; i < 8; i++) {
-        for (int j = 0; j < 11; j++) {
+    for(int i = 0; i < 8; i++)
+    {
+        for(int j = 0; j < 11; j++)
+        {
             unsigned short inspos =
-                    (m_psi.instr_table[i * 2 + 1] << 8) + m_psi.instr_table[i * 2];
+                (m_psi.instr_table[i * 2 + 1] << 8) + m_psi.instr_table[i * 2];
 
             getOpl()->writeReg(psi_adlib_registers[i * 11 + j], tune()[inspos + j]);
         }
@@ -89,22 +96,26 @@ void CxadpsiPlayer::xadplayer_rewind(int) {
     m_psi.seq_table = &tune()[m_header.seq_ptr];
 }
 
-void CxadpsiPlayer::xadplayer_update() {
-    for (int i = 0; i < 8; i++) {
+void CxadpsiPlayer::xadplayer_update()
+{
+    for(int i = 0; i < 8; i++)
+    {
         auto ptr = (m_psi.seq_table[(i << 1) * 2 + 1] << 8) + m_psi.seq_table[(i << 1) * 2];
 
         m_psi.note_curdelay[i]--;
 
-        if (!m_psi.note_curdelay[i]) {
+        if(!m_psi.note_curdelay[i])
+        {
             getOpl()->writeReg(0xA0 + i, 0x00);
             getOpl()->writeReg(0xB0 + i, 0x00);
 
             auto event = tune()[ptr++];
 
             // end of sequence ?
-            if (!event) {
+            if(!event)
+            {
                 ptr = (m_psi.seq_table[(i << 1) * 2 + 3] << 8) +
-                        m_psi.seq_table[(i << 1) * 2 + 2];
+                    m_psi.seq_table[(i << 1) * 2 + 2];
 
                 event = tune()[ptr++];
 
@@ -112,12 +123,13 @@ void CxadpsiPlayer::xadplayer_update() {
                 m_psi.looping[i] = true;
 
                 // module loop ?
-                if( std::find(m_psi.looping.begin(), m_psi.looping.end(), false) == m_psi.looping.end() )
+                if(std::find(m_psi.looping.begin(), m_psi.looping.end(), false) == m_psi.looping.end())
                     setXadLooping();
             }
 
             // new note delay ?
-            if (event & 0x80) {
+            if(event & 0x80)
+            {
                 m_psi.note_delay[i] = (event & 0x7F);
 
                 event = tune()[ptr++];
@@ -138,10 +150,17 @@ void CxadpsiPlayer::xadplayer_update() {
     }
 }
 
-size_t CxadpsiPlayer::framesUntilUpdate() const { return SampleRate / 70; }
+size_t CxadpsiPlayer::framesUntilUpdate() const
+{
+    return SampleRate / 70;
+}
 
-std::string CxadpsiPlayer::type() const {
+std::string CxadpsiPlayer::type() const
+{
     return "xad: psi player";
 }
 
-uint32_t CxadpsiPlayer::instrumentCount() const { return 8; }
+uint32_t CxadpsiPlayer::instrumentCount() const
+{
+    return 8;
+}

@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2004 Simon Peter, <dn.tlp@gmx.net>, et al.
@@ -21,33 +23,38 @@
 
 #include "player.h"
 
-class CldsPlayer : public CPlayer {
+class CldsPlayer : public Player
+{
     DISABLE_COPY(CldsPlayer)
 public:
-    static CPlayer *factory() { return new CldsPlayer(); }
+    static Player *factory()
+    {
+        return new CldsPlayer();
+    }
 
     CldsPlayer() = default;
 
-    bool load(const std::string &filename);
-    virtual bool update();
-    virtual void rewind(int subsong = -1);
-    size_t framesUntilUpdate() const
+    bool load(const std::string &filename) override;
+    virtual bool update() override;
+    virtual void rewind(int subsong = -1) override;
+    size_t framesUntilUpdate() const override
     {
         return SampleRate / 70;
     }
 
-    std::string type() const
+    std::string type() const override
     {
         return "LOUDNESS Sound System";
     }
-    uint32_t instrumentCount() const
+    uint32_t instrumentCount() const override
     {
         return m_soundbank.size();
     }
 
 private:
 #pragma pack(push, 1)
-    struct SoundBank {
+    struct SoundBank
+    {
         uint8_t mod_misc;
         uint8_t mod_vol;
         uint8_t mod_ad;
@@ -83,7 +90,8 @@ private:
     };
 #pragma pack(pop)
 
-    struct Channel {
+    struct Channel
+    {
         uint16_t gototune = 0;
         uint16_t lasttune = 0;
         uint16_t packpos = 0;
@@ -112,14 +120,15 @@ private:
         uint8_t arp_pos = 0;
         uint8_t arp_count = 0;
         uint8_t packwait = 0;
-        std::array<uint8_t, 12> arp_tab{{}};
+        std::array<uint8_t, 12> arp_tab{ {} };
 
         Channel()
         {
             arp_tab.fill(0);
         }
 
-        struct ChanCheat {
+        struct ChanCheat
+        {
             uint8_t chandelay = 0;
             uint8_t sound = 0;
             uint16_t high = 0;
@@ -128,14 +137,15 @@ private:
     };
 
 #pragma pack(push, 1)
-    struct Position {
+    struct Position
+    {
         uint16_t patnum;
         uint8_t transpose;
     };
 #pragma pack(pop)
 
     std::vector<SoundBank> m_soundbank{};
-    std::array<Channel,9> m_channels{{}};
+    std::array<Channel, 9> m_channels{ {} };
     std::vector<Position> m_positions{};
     uint8_t m_jumping = 0;
     uint8_t m_fadeonoff = 0;

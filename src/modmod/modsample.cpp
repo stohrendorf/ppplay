@@ -33,14 +33,14 @@ namespace ppp
 {
 namespace mod
 {
-
 #pragma pack(push,1)
 /**
  * @struct Header
  * @brief Mod Sample Header
  * @note Big-endian values
  */
-struct Header {
+struct Header
+{
     char name[22];
     uint16_t length;
     uint8_t finetune;
@@ -50,83 +50,93 @@ struct Header {
 };
 #pragma pack(pop)
 
-ModSample::ModSample() : m_finetune( 0 )
+ModSample::ModSample() : m_finetune(0)
 {
 }
 
-bool ModSample::loadHeader( Stream* stream )
+bool ModSample::loadHeader(Stream* stream)
 {
     Header hdr;
     *stream >> hdr;
-    if( !stream->good() ) {
+    if(!stream->good())
+    {
         return false;
     }
-    swapEndian( &hdr.length );
-    swapEndian( &hdr.loopStart );
-    swapEndian( &hdr.loopLength );
-    if( hdr.length > 1 ) {
-        resizeData( hdr.length << 1 );
+    swapEndian(&hdr.length);
+    swapEndian(&hdr.loopStart);
+    swapEndian(&hdr.loopLength);
+    if(hdr.length > 1)
+    {
+        resizeData(hdr.length << 1);
     }
-    else {
-        resizeData( 0 );
+    else
+    {
+        resizeData(0);
     }
-    if( hdr.loopLength > 1 && ( hdr.loopLength + hdr.loopStart <= hdr.length ) ) {
-        setLoopStart( hdr.loopStart << 1 );
-        setLoopEnd( ( hdr.loopStart + hdr.loopLength ) << 1 );
-        setLoopType( LoopType::Forward );
+    if(hdr.loopLength > 1 && (hdr.loopLength + hdr.loopStart <= hdr.length))
+    {
+        setLoopStart(hdr.loopStart << 1);
+        setLoopEnd((hdr.loopStart + hdr.loopLength) << 1);
+        setLoopType(LoopType::Forward);
     }
-    setTitle( stringncpy( hdr.name, 22 ) );
-    logger()->debug( L4CXX_LOCATION, "Length=%u, loop=%u+%u=%u, name='%s'", length(), hdr.loopStart << 1, hdr.loopLength << 1, ( hdr.loopStart + hdr.loopLength ) << 1, title() );
-    setVolume( std::min<uint8_t>( hdr.volume, 0x40 ) );
+    setTitle(stringncpy(hdr.name, 22));
+    logger()->debug(L4CXX_LOCATION, "Length=%u, loop=%u+%u=%u, name='%s'", length(), hdr.loopStart << 1, hdr.loopLength << 1, (hdr.loopStart + hdr.loopLength) << 1, title());
+    setVolume(std::min<uint8_t>(hdr.volume, 0x40));
     m_finetune = hdr.finetune & 0x0f;
     return *stream;
 }
 
-bool ModSample::loadData( Stream* stream )
+bool ModSample::loadData(Stream* stream)
 {
-    if( length() == 0 ) {
+    if(length() == 0)
+    {
         return true;
     }
     {
         // check for the funny adpcm data
         char tmp[5];
-        stream->read( tmp, 5 );
+        stream->read(tmp, 5);
 #ifdef _MSC_VER
-        if( _strnicmp( tmp, "ADPCM", 5 ) == 0 ) {
+        if(_strnicmp(tmp, "ADPCM", 5) == 0)
+        {
 #else
-        if( strncasecmp( tmp, "ADPCM", 5 ) == 0 ) {
+        if(strncasecmp(tmp, "ADPCM", 5) == 0)
+        {
 #endif
-            logger()->debug( L4CXX_LOCATION, "Detected ADPCM compressed sample data" );
-            return loadAdpcmData( stream );
+            logger()->debug(L4CXX_LOCATION, "Detected ADPCM compressed sample data");
+            return loadAdpcmData(stream);
         }
-        stream->seekrel( -5 );
-    }
-    logger()->debug( L4CXX_LOCATION, "Loading %d bytes sample data", length() );
-    if( stream->pos() + length() > stream->size() ) {
-        logger()->warn( L4CXX_LOCATION, "File truncated: %u bytes requested while only %u bytes left.", length(), stream->size() - stream->pos() );
+        stream->seekrel(-5);
+        }
+    logger()->debug(L4CXX_LOCATION, "Loading %d bytes sample data", length());
+    if(stream->pos() + length() > stream->size())
+    {
+        logger()->warn(L4CXX_LOCATION, "File truncated: %u bytes requested while only %u bytes left.", length(), stream->size() - stream->pos());
         return false;
     }
-    for( auto it = beginIterator(); it != endIterator(); it++ ) {
+    for(auto it = beginIterator(); it != endIterator(); it++)
+    {
         int8_t tmp;
         *stream >> tmp;
         it->left = it->right = tmp << 8;
     }
     return stream->good();
-}
+    }
 
-bool ModSample::loadAdpcmData( Stream* stream )
+bool ModSample::loadAdpcmData(Stream* stream)
 {
     int8_t compressionTable[16];
-    stream->read( compressionTable, 16 );
+    stream->read(compressionTable, 16);
     // signed char GetDeltaValue(signed char prev, UINT n) const { return (signed char)(prev + CompressionTable[n & 0x0F]); }
     int8_t delta = 0;
-    for( auto it = beginIterator(); it < endIterator(); ) {
+    for(auto it = beginIterator(); it < endIterator(); )
+    {
         uint8_t tmpByte;
         *stream >> tmpByte;
-        delta += compressionTable[ tmpByte & 0x0f ];
+        delta += compressionTable[tmpByte & 0x0f];
         it->left = it->right = delta << 8;
         it++;
-        delta += compressionTable[ tmpByte >> 4 ];
+        delta += compressionTable[tmpByte >> 4];
         it->left = it->right = delta << 8;
         it++;
     }
@@ -140,9 +150,7 @@ uint8_t ModSample::finetune() const
 
 light4cxx::Logger* ModSample::logger()
 {
-    return light4cxx::Logger::get( Sample::logger()->name() + ".mod" );
+    return light4cxx::Logger::get(Sample::logger()->name() + ".mod");
 }
-
-
 }
 }

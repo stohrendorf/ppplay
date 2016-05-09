@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Adplug - Replayer for many OPL2/OPL3 audio file formats.
  * Copyright (C) 1999 - 2007 Simon Peter <dn.tlp@gmx.net>, et al.
@@ -19,31 +21,29 @@
  * jbm.h - JBM Player by Dennis Lindroos <lindroos@nls.fi>
  */
 
-#ifndef H_ADPLUG_JBMPLAYER
-#define H_ADPLUG_JBMPLAYER
-
 #include "player.h"
 
-class CjbmPlayer : public CPlayer {
+class CjbmPlayer : public Player
+{
     DISABLE_COPY(CjbmPlayer)
-    public:
-        CjbmPlayer() = default;
-    static CPlayer *factory();
+public:
+    CjbmPlayer() = default;
+    static Player *factory();
 
-    bool load(const std::string &filename);
-    bool update();
-    void rewind(int subsong);
+    bool load(const std::string &filename) override;
+    bool update() override;
+    void rewind(int subsong) override;
 
-    size_t framesUntilUpdate() const
+    size_t framesUntilUpdate() const override
     {
         return static_cast<size_t>(SampleRate / m_timer);
     }
 
-    std::string type() const
+    std::string type() const override
     {
         return (m_flags & 1) ? "JBM Adlib Music [rhythm mode]" : "JBM Adlib Music";
     }
-    std::string author() const
+    std::string author() const override
     {
         return "Johannes Bjerregaard";
     }
@@ -59,7 +59,8 @@ private:
     uint16_t m_insCount = 0;
     std::vector<uint16_t> m_sequences{};
 
-    struct JBMVoice {
+    struct JBMVoice
+    {
         uint16_t trkpos = 0;
         uint16_t trkstart = 0;
         uint16_t seqpos = 0;
@@ -78,5 +79,3 @@ private:
     void set_opl_instrument(int, JBMVoice *voice);
     void opl_noteonoff(int, bool);
 };
-
-#endif
