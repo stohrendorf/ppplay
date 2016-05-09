@@ -402,8 +402,6 @@ void InstanceData::redraw( bool showMouse, int cursorX, int cursorY )
     SDL_RenderCopy(mainRenderer, foregroundLayer, nullptr, nullptr);
 
     SDL_RenderPresent(mainRenderer);
-
-    logger->info(L4CXX_LOCATION, "Render");
 }
 
 InstanceData instanceData;

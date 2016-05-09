@@ -23,69 +23,31 @@
 
 #include <stdexcept>
 #include <sstream>
-#include <time.h>
+
+#include <chrono>
 
 namespace light4cxx
 {
 
 namespace
 {
-//! @brief The current process CPU time
-timespec s_processTime;
 //! @brief The current runtime
-timespec s_realTime;
-
-int initializer()
-{
-#ifdef _MSC_VER
-    timespec_get(&s_processTime, 0);
-    timespec_get(&s_realTime, 0);
-#else
-    clock_gettime( CLOCK_PROCESS_CPUTIME_ID, &s_processTime );
-    clock_gettime( CLOCK_REALTIME, &s_realTime );
-#endif
-    return 1;
-}
-
-int _s_clock_init_var = initializer();
+std::chrono::high_resolution_clock::time_point s_bootTime = std::chrono::high_resolution_clock::now();
 
 /**
- * @brief Get the current process CPU time in seconds
- * @return Current process CPU time in seconds
+ * @brief Get the current run-time in ms
+ * @return Current run-time in ms
  */
-inline float_t processTime()
+long long timeSinceBootMs()
 {
-    timespec tmp;
-#ifdef _MSC_VER
-    timespec_get(&tmp, 0);
-#else
-    clock_gettime( CLOCK_THREAD_CPUTIME_ID, &tmp );
-#endif
-    float_t res = ( tmp.tv_sec - s_processTime.tv_sec ) * 1000.0f;
-    res += ( tmp.tv_nsec - s_processTime.tv_nsec ) / 1000000.0f;
-    return res;
-}
-/**
- * @brief Get the current run-time in seconds
- * @return Current run-time in seconds
- */
-inline float_t realTime()
-{
-    timespec tmp;
-#ifdef _MSC_VER
-    timespec_get(&tmp, 0);
-#else
-    clock_gettime( CLOCK_REALTIME, &tmp );
-#endif
-    float_t res = ( tmp.tv_sec - s_realTime.tv_sec ) * 1000.0f;
-    res += ( tmp.tv_nsec - s_realTime.tv_nsec ) / 1000000.0f;
-    return res;
+    std::chrono::high_resolution_clock::duration delta = std::chrono::high_resolution_clock::now() - s_bootTime;
+    return std::chrono::duration_cast<std::chrono::milliseconds>(delta).count();
 }
 
 /**
  * @brief The current message format
  */
-std::string s_format = "[%T %<5t %p] %L (in %F:%l): %m";
+std::string s_format = "[%T %<5t %r] %L (in %F:%l): %m";
 
 #ifndef L4CXX_NO_ANSI_COLORS
 #define COLOR_RESET  "\033[0m"
@@ -245,17 +207,8 @@ std::string Location::toString( light4cxx::Level l, const light4cxx::Logger& log
                     case 'm':
                         oss << msg;
                         break;
-                    case 'p':
-                        oss << processTime() / 1000.0f;
-                        break;
-                    case 'P':
-                        oss << static_cast<uint64_t>( processTime() / 1000.0f );
-                        break;
                     case 'r':
-                        oss << realTime() / 1000.0f;
-                        break;
-                    case 'R':
-                        oss << static_cast<uint64_t>( realTime() / 1000.0f );
+                        oss << timeSinceBootMs() / 1000.0f;
                         break;
                     case 't':
                         oss << levelString( l );
