@@ -19,8 +19,6 @@
  * hsp.cpp - HSP Loader by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 
 #include "hsp.h"

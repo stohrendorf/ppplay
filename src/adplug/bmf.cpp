@@ -44,7 +44,6 @@
 
 #include <cstring>
 #include "bmf.h"
-#include "debug.h"
 
 const uint8_t CxadbmfPlayer::bmf_adlib_registers[117] = {
     0x20, 0x23, 0x40, 0x43, 0x60, 0x63, 0x80, 0x83, 0xA0, 0xB0, 0xC0, 0xE0, 0xE3,
@@ -183,9 +182,7 @@ bool CxadbmfPlayer::xadplayer_load() {
 }
 
 void CxadbmfPlayer::xadplayer_rewind(int) {
-    int i, j;
-
-    for (i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; i++) {
         m_bmfChannels[i].stream_position = 0;
         m_bmfChannels[i].delay = 0;
         m_bmfChannels[i].loop_position = 0;
@@ -205,12 +202,12 @@ void CxadbmfPlayer::xadplayer_rewind(int) {
 
         /* 1.1 */
         if (m_bmfVersion == BMF1_1)
-            for (i = 0; i < 9; i++)
-                for (j = 0; j < 13; j++)
+            for (int i = 0; i < 9; i++)
+                for (int j = 0; j < 13; j++)
                     getOpl()->writeReg(bmf_adlib_registers[13 * i + j], bmf_default_instrument[j]);
         /* 1.2 */
         else if (m_bmfVersion == BMF1_2)
-            for (i = 0x20; i < 0x100; i++)
+            for (int i = 0x20; i < 0x100; i++)
                 getOpl()->writeReg(i, 0xFF); // very interesting, really!
     }
 

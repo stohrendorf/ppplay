@@ -10,7 +10,6 @@ set(BADPLAY_SRCS
     cff.cpp
     cmf.cpp
     d00.cpp
-    debug.c
     dfm.cpp
     disk.cc
     dmo.cpp

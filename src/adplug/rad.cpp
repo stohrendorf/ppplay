@@ -22,8 +22,6 @@
  * some volumes are dropped out
  */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 
 #include "rad.h"
@@ -158,7 +156,7 @@ bool CradLoader::load(const std::string &filename) {
 
     setRestartOrder(0);
     setInitialSpeed(flags & 0x1f);
-    setInitialTempo(flags & 0x40 ? 0 : 50);
+    setInitialTempo((flags & 0x40) ? 0 : 50);
 
     rewind(0);
     return true;

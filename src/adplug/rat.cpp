@@ -32,7 +32,6 @@
 
 #include <cstring>
 #include "rat.h"
-#include "debug.h"
 
 namespace {
 constexpr uint8_t rat_adlib_bases[18] = {

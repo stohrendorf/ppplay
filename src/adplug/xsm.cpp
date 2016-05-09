@@ -19,8 +19,6 @@
  * xsm.cpp - eXtra Simple Music Player, by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 
 #include "xsm.h"

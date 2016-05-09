@@ -19,14 +19,11 @@
  * ksm.cpp - KSM Player for AdPlug by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 
 #include <boost/filesystem.hpp>
 
 #include "ksm.h"
-#include "debug.h"
 
 const unsigned int CksmPlayer::adlibfreq[63] = {
   0, 2390, 2411, 2434, 2456, 2480, 2506, 2533, 2562, 2592, 2625, 2659, 2695,
@@ -45,22 +42,15 @@ bool CksmPlayer::load(const std::string &filename) {
 
   // file validation section
   if (!f || f.extension() != ".ksm") {
-    AdPlug_LogWrite("CksmPlayer::load(,\"%s\"): File doesn't have '.ksm' "
-                    "extension! Rejected!\n",
-                    filename.c_str());
     return false;
   }
-  AdPlug_LogWrite("*** CksmPlayer::load(,\"%s\") ***\n", filename.c_str());
 
   // Load instruments from 'insts.dat'
   boost::filesystem::path fn(filename);
   fn.remove_filename() /= "insts.dat";
-  AdPlug_LogWrite("Instruments file: \"%s\"\n", fn.string().c_str());
 
   FileStream insts(fn.string());
   if (!f) {
-    AdPlug_LogWrite("Couldn't open instruments file! Aborting!\n");
-    AdPlug_LogWrite("--- CksmPlayer::load ---\n");
     return false;
   }
   loadinsts(insts);
@@ -85,23 +75,18 @@ bool CksmPlayer::load(const std::string &filename) {
   }
 
   rewind(0);
-  AdPlug_LogWrite("--- CksmPlayer::load ---\n");
   return true;
 }
 
 bool CksmPlayer::update() {
-  int quanter, chan, drumnum, freq, track, volevel, volval;
-  unsigned int i, j, bufnum;
-  unsigned long temp, templong;
-
   count++;
   if (count >= countstop) {
-    bufnum = 0;
+    size_t bufnum = 0;
     while (count >= countstop) {
-      templong = note[nownote];
-      track = ((templong >> 8) & 15);
+      auto templong = note[nownote];
+      const auto track = ((templong >> 8) & 15);
       if ((templong & 192) == 0) {
-        i = 0;
+        int i = 0;
 
         while ((i < numchans) && ((chanfreq[i] != (templong & 63)) ||
                                   (chantrack[i] != ((templong >> 8) & 15))))
@@ -115,7 +100,7 @@ bool CksmPlayer::update() {
           chanage[i] = 0;
         }
       } else {
-        volevel = trvol[track];
+        int volevel = trvol[track];
         if ((templong & 192) == 128) {
           volevel -= 4;
           if (volevel < 0)
@@ -127,9 +112,9 @@ bool CksmPlayer::update() {
             volevel = 63;
         }
         if (track < 11) {
-          temp = 0;
-          i = numchans;
-          for (j = 0; j < numchans; j++)
+          size_t temp = 0;
+          int i = numchans;
+          for (int j = 0; j < numchans; j++)
             if ((countstop - chanage[j] >= temp) && (chantrack[j] == track)) {
               temp = countstop - chanage[j];
               i = j;
@@ -138,7 +123,7 @@ bool CksmPlayer::update() {
             databuf[bufnum++] = 0;
             databuf[bufnum++] = static_cast<uint8_t>(0xb0 + i);
             databuf[bufnum++] = 0;
-            volval = (inst[trinst[track]][1] & 192) + (volevel ^ 63);
+            const auto volval = (inst[trinst[track]][1] & 192) + (volevel ^ 63);
             databuf[bufnum++] = 0;
             databuf[bufnum++] = static_cast<uint8_t>(0x40 + s_opTable[i] + 3);
             databuf[bufnum++] = static_cast<uint8_t>( volval );
@@ -153,7 +138,8 @@ bool CksmPlayer::update() {
             chanage[i] = countstop;
           }
         } else if ((drumstat & 32) > 0) {
-          freq = adlibfreq[templong & 63];
+          auto freq = adlibfreq[templong & 63];
+          int chan, drumnum;
           switch (track) {
           case 11:
             drumnum = 16;
@@ -190,12 +176,12 @@ bool CksmPlayer::update() {
           databuf[bufnum++] = static_cast<uint8_t>(drumstat & (255 - drumnum));
           drumstat |= drumnum;
           if ((track == 11) || (track == 12) || (track == 14)) {
-            volval = (inst[trinst[track]][1] & 192) + (volevel ^ 63);
+            const auto volval = (inst[trinst[track]][1] & 192) + (volevel ^ 63);
             databuf[bufnum++] = 0;
             databuf[bufnum++] = static_cast<uint8_t>(0x40 + s_opTable[chan] + 3);
             databuf[bufnum++] = static_cast<uint8_t>(volval);
           } else {
-            volval = (inst[trinst[track]][6] & 192) + (volevel ^ 63);
+            const auto volval = (inst[trinst[track]][6] & 192) + (volevel ^ 63);
             databuf[bufnum++] = 0;
             databuf[bufnum++] = static_cast<uint8_t>(0x40 + s_opTable[chan]);
             databuf[bufnum++] = static_cast<uint8_t>(volval);
@@ -213,10 +199,10 @@ bool CksmPlayer::update() {
       templong = note[nownote];
       if (nownote == 0)
         count = (templong >> 12) - 1;
-      quanter = (240 / trquant[(templong >> 8) & 15]);
+      const auto quanter = (240 / trquant[(templong >> 8) & 15]);
       countstop = (((templong >> 12) + (quanter >> 1)) / quanter) * quanter;
     }
-    for (i = 0; i < bufnum; i += 3)
+    for (int i = 0; i < bufnum; i += 3)
       getOpl()->writeReg(databuf[i + 1], databuf[i + 2]);
   }
   return !songend;

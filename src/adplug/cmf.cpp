@@ -20,15 +20,18 @@
  *   Subset of CMF reader in MOPL code (Malvineous' OPL player), no seeking etc.
  */
 
-#include <cstdint> // for uintxx_t
 #include <cassert>
 #include <cmath>   // for pow() etc.
-#include <cstring> // for memset
 
 #include "stream/filestream.h"
 
-#include "debug.h"
 #include "cmf.h"
+#include "light4cxx/logger.h"
+
+namespace
+{
+light4cxx::Logger* logger = light4cxx::Logger::get("badplay.cmf");
+}
 
 // ------------------------------
 // OPTIONS
@@ -109,7 +112,7 @@ bool CcmfPlayer::load(const std::string &filename) {
     uint16_t iVer;
     f >> iVer;
     if ((iVer != 0x0101) && (iVer != 0x0100)) {
-        AdPlug_LogWrite("CMF file is not v1.0 or v1.1 (reports %d.%d)\n", iVer >> 8, iVer & 0xFF);
+        logger->warn(L4CXX_LOCATION, "CMF file is not v1.0 or v1.1 (reports %d.%d)", iVer >> 8, iVer & 0xFF);
         return false;
     }
 
@@ -240,8 +243,7 @@ bool CcmfPlayer::update() {
         case 0xA0: { // Polyphonic key pressure (two data bytes)
             uint8_t iNote = this->data[this->iPlayPointer++];
             uint8_t iPressure = this->data[this->iPlayPointer++];
-            AdPlug_LogWrite("CMF: Key pressure not yet implemented! (wanted "
-                            "ch%d/note %d set to %d)\n",
+            logger->debug(L4CXX_LOCATION, "CMF: Key pressure not yet implemented! (wanted ch%d/note %d set to %d)",
                             iChannel, iNote, iPressure);
             break;
         }
@@ -254,14 +256,13 @@ bool CcmfPlayer::update() {
         case 0xC0: { // Instrument change (one data byte)
             uint8_t iNewInstrument = this->data[this->iPlayPointer++];
             this->chMIDI[iChannel].iPatch = iNewInstrument;
-            AdPlug_LogWrite("CMF: Remembering MIDI channel %d now uses patch %d\n",
+            logger->debug(L4CXX_LOCATION, "CMF: Remembering MIDI channel %d now uses patch %d",
                             iChannel, iNewInstrument);
             break;
         }
         case 0xD0: { // Channel pressure (one data byte)
             uint8_t iPressure = this->data[this->iPlayPointer++];
-            AdPlug_LogWrite("CMF: Channel pressure not yet implemented! (wanted "
-                            "ch%d set to %d)\n",
+            logger->debug(L4CXX_LOCATION, "CMF: Channel pressure not yet implemented! (wanted ch%d set to %d)",
                             iChannel, iPressure);
             break;
         }
@@ -271,7 +272,7 @@ bool CcmfPlayer::update() {
             uint16_t iValue = (iMSB << 7) | iLSB;
             // 8192 is middle/off, 0 is -2 semitones, 16384 is +2 semitones
             this->chMIDI[iChannel].iPitchbend = iValue;
-            AdPlug_LogWrite("CMF: Channel %d pitchbent to %d (%+.2f)\n", iChannel + 1,
+            logger->debug(L4CXX_LOCATION, "CMF: Channel %d pitchbent to %d (%+.2f)", iChannel + 1,
                             iValue, (iValue - 8192.0f) / 8192);
             break;
         }
@@ -279,12 +280,11 @@ bool CcmfPlayer::update() {
             switch (iCommand) {
             case 0xF0: { // Sysex
                 uint8_t iNextByte;
-                AdPlug_LogWrite("Sysex message: ");
+                logger->debug(L4CXX_LOCATION, "Sysex message: ");
                 do {
                     iNextByte = this->data[this->iPlayPointer++];
-                    AdPlug_LogWrite("%02X", iNextByte);
+                    logger->debug(L4CXX_LOCATION, "%02X", iNextByte);
                 } while ((iNextByte & 0x80) == 0);
-                AdPlug_LogWrite("\n");
                 // This will have read in the terminating EOX (0xF7) message too
                 break;
             }
@@ -296,7 +296,7 @@ bool CcmfPlayer::update() {
                 break;
             case 0xF3:              // Song select
                 this->iPlayPointer++; // message data (ignored)
-                AdPlug_LogWrite("CMF: MIDI Song Select is not implemented.\n");
+                logger->debug(L4CXX_LOCATION, "CMF: MIDI Song Select is not implemented.");
                 break;
             case 0xF6: // Tune request
                 break;
@@ -316,7 +316,7 @@ bool CcmfPlayer::update() {
                 // assumed lost)
                 break;
             case 0xFC: // Stop
-                AdPlug_LogWrite("CMF: Received Real Time Stop message (0xFC)\n");
+                logger->debug(L4CXX_LOCATION, "CMF: Received Real Time Stop message (0xFC)");
                 this->bSongEnd = true;
                 this->iPlayPointer = 0; // for repeat in endless-play mode
                 break;
@@ -324,23 +324,23 @@ bool CcmfPlayer::update() {
                 uint8_t iEvent = this->data[this->iPlayPointer++];
                 switch (iEvent) {
                 case 0x2F: // end of track
-                    AdPlug_LogWrite("CMF: End-of-track, stopping playback\n");
+                    logger->debug(L4CXX_LOCATION, "CMF: End-of-track, stopping playback");
                     this->bSongEnd = true;
                     this->iPlayPointer = 0; // for repeat in endless-play mode
                     break;
                 default:
-                    AdPlug_LogWrite("CMF: Unknown MIDI meta-event 0xFF 0x%02X\n", iEvent);
+                    logger->debug(L4CXX_LOCATION, "CMF: Unknown MIDI meta-event 0xFF 0x%02X", int(iEvent));
                     break;
                 }
                 break;
             }
             default:
-                AdPlug_LogWrite("CMF: Unknown MIDI system command 0x%02X\n", iCommand);
+                logger->debug(L4CXX_LOCATION, "CMF: Unknown MIDI system command 0x%02X\n", int(iCommand));
                 break;
             }
             break;
         default:
-            AdPlug_LogWrite("CMF: Unknown MIDI command 0x%02X\n", iCommand);
+            logger->debug(L4CXX_LOCATION, "CMF: Unknown MIDI command 0x%02X\n", int(iCommand));
             break;
         }
 
@@ -417,8 +417,6 @@ void CcmfPlayer::rewind(int) {
     }
 
     memset(this->iCurrentRegs, 0, 256);
-
-    return;
 }
 
 // Return value: 1 == 1 second, 2 == 0.5 seconds
@@ -498,7 +496,6 @@ void CcmfPlayer::writeInstrumentSettings(uint8_t iChannel,
     // operators
     this->writeOPL(BASE_FEED_CONN + iChannel,
                    this->pInstruments[iInstrument].iConnection);
-    return;
 }
 
 // Write a byte to the OPL "chip" and update the current record of register
@@ -506,7 +503,6 @@ void CcmfPlayer::writeInstrumentSettings(uint8_t iChannel,
 void CcmfPlayer::writeOPL(uint8_t iRegister, uint8_t iValue) {
     this->getOpl()->writeReg(iRegister, iValue);
     this->iCurrentRegs[iRegister] = iValue;
-    return;
 }
 
 void CcmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity) {
@@ -521,8 +517,7 @@ void CcmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity) {
                 (iBlock - 20)) * 440.0 / 32.0 / 50000.0;
     uint16_t iOPLFNum = static_cast<uint16_t>(d + 0.5);
     if (iOPLFNum > 1023)
-        AdPlug_LogWrite("CMF: This note is out of range! (send this song to "
-                        "malvineous@shikadi.net!)\n");
+        logger->error(L4CXX_LOCATION, "CMF: This note is out of range! (send this song to malvineous@shikadi.net!)");
 
     // See if we're playing a rhythm mode percussive instrument
     if ((iChannel > 10) && (this->bPercussive)) {
@@ -653,8 +648,7 @@ void CcmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity) {
                     iEarliest = this->chOPL[i].iNoteStart;
                 }
             }
-            AdPlug_LogWrite(
-                        "CMF: Too many polyphonic notes, cutting note on channel %d\n",
+            logger->warn(L4CXX_LOCATION, "CMF: Too many polyphonic notes, cutting note on channel %d",
                         iOPLChannel);
         }
 
@@ -693,7 +687,6 @@ void CcmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity) {
         this->writeOPL(BASE_KEYON_FREQ + iOPLChannel,
                        OPLBIT_KEYON | (iBlock << 2) | ((iOPLFNum & 0x300) >> 8));
     }
-    return;
 }
 
 void CcmfPlayer::cmfNoteOff(uint8_t iChannel, uint8_t iNote, uint8_t) {
@@ -724,7 +717,6 @@ void CcmfPlayer::cmfNoteOff(uint8_t iChannel, uint8_t iNote, uint8_t) {
                     BASE_KEYON_FREQ + iOPLChannel,
                     this->iCurrentRegs[BASE_KEYON_FREQ + iOPLChannel] & ~OPLBIT_KEYON);
     }
-    return;
 }
 
 uint8_t CcmfPlayer::getPercChannel(uint8_t iChannel) {
@@ -740,8 +732,7 @@ uint8_t CcmfPlayer::getPercChannel(uint8_t iChannel) {
     case 15:
         return 8 - 1; // Hihat
     }
-    AdPlug_LogWrite("CMF ERR: Tried to get the percussion channel from MIDI "
-                    "channel %d - this shouldn't happen!\n",
+    logger->error(L4CXX_LOCATION, "CMF ERR: Tried to get the percussion channel from MIDI channel %d - this shouldn't happen!",
                     iChannel);
     return 0;
 }
@@ -775,8 +766,7 @@ void CcmfPlayer::MIDIchangeInstrument(uint8_t iOPLChannel, uint8_t iMIDIChannel,
             this->writeInstrumentSettings(8 - 1, 0, 0, iNewInstrument);
             break;
         default:
-            AdPlug_LogWrite(
-                        "CMF: Invalid MIDI channel %d (not melodic and not percussive!)\n",
+            logger->warn(L4CXX_LOCATION, "CMF: Invalid MIDI channel %d (not melodic and not percussive!)",
                         iMIDIChannel + 1);
             break;
         }
@@ -787,7 +777,6 @@ void CcmfPlayer::MIDIchangeInstrument(uint8_t iOPLChannel, uint8_t iMIDIChannel,
         this->writeInstrumentSettings(iOPLChannel, 1, 1, iNewInstrument);
         this->chOPL[iOPLChannel].iMIDIPatch = iNewInstrument;
     }
-    return;
 }
 
 void CcmfPlayer::MIDIcontroller(uint8_t, uint8_t iController, uint8_t iValue) {
@@ -808,12 +797,12 @@ void CcmfPlayer::MIDIcontroller(uint8_t, uint8_t iController, uint8_t iValue) {
             this->writeOPL(BASE_RHYTHM, this->iCurrentRegs[BASE_RHYTHM] &
                            ~0xC0); // switch AM+VIB extension off
         }
-        AdPlug_LogWrite("CMF: AM+VIB depth change - AM %s, VIB %s\n",
+        logger->debug(L4CXX_LOCATION, "CMF: AM+VIB depth change - AM %s, VIB %s",
                         (this->iCurrentRegs[BASE_RHYTHM] & 0x80) ? "on" : "off",
                         (this->iCurrentRegs[BASE_RHYTHM] & 0x40) ? "on" : "off");
         break;
     case 0x66:
-        AdPlug_LogWrite("CMF: Song set marker to 0x%02X\n", iValue);
+        logger->debug(L4CXX_LOCATION, "CMF: Song set marker to 0x%02X", int(iValue));
         break;
     case 0x67:
         this->bPercussive = (iValue != 0);
@@ -824,27 +813,24 @@ void CcmfPlayer::MIDIcontroller(uint8_t, uint8_t iController, uint8_t iValue) {
             this->writeOPL(BASE_RHYTHM, this->iCurrentRegs[BASE_RHYTHM] &
                            ~0x20); // switch rhythm-mode off
         }
-        AdPlug_LogWrite("CMF: Percussive/rhythm mode %s\n",
+        logger->debug(L4CXX_LOCATION, "CMF: Percussive/rhythm mode %s",
                         this->bPercussive ? "enabled" : "disabled");
         break;
     case 0x68:
         // TODO: Shouldn't this just affect the one channel, not the whole song?
         // -- have pitchbends for that
         this->iTranspose = iValue;
-        AdPlug_LogWrite(
-                    "CMF: Transposing all notes up by %d * 1/128ths of a semitone.\n",
-                    iValue);
+        logger->debug(L4CXX_LOCATION, "CMF: Transposing all notes up by %d * 1/128ths of a semitone.",
+                    int(iValue));
         break;
     case 0x69:
         this->iTranspose = -iValue;
-        AdPlug_LogWrite(
-                    "CMF: Transposing all notes down by %d * 1/128ths of a semitone.\n",
-                    iValue);
+        logger->debug(L4CXX_LOCATION, "CMF: Transposing all notes down by %d * 1/128ths of a semitone.",
+                    int(iValue));
         break;
     default:
-        AdPlug_LogWrite("CMF: Unsupported MIDI controller 0x%02X, ignoring.\n",
-                        iController);
+        logger->debug(L4CXX_LOCATION, "CMF: Unsupported MIDI controller 0x%02X, ignoring.",
+                        int(iController));
         break;
     }
-    return;
 }

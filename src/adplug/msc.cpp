@@ -19,13 +19,11 @@
  * msc.c - MSC Player by Lubomir Bulej (pallas@kadan.cz)
  */
 
-#include <cstring>
 #include <cstdio>
 
 #include "stream/filestream.h"
 
 #include "msc.h"
-#include "debug.h"
 
 /*** public methods *************************************/
 
@@ -216,7 +214,6 @@ bool CmscPlayer::decode_octet(uint8_t *output) {
             if (m_rawDataPos >= m_prefixDistance)
                 octet = m_rawData.at(m_rawDataPos - m_prefixDistance);
             else {
-                AdPlug_LogWrite("error! read before raw_data buffer.\n");
                 octet = 0;
             }
 

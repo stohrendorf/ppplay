@@ -19,8 +19,6 @@
  * raw.c - RAW Player by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 
 #include "raw.h"
@@ -63,9 +61,8 @@ bool CrawPlayer::update() {
         return !m_songend;
     }
 
-    bool setspeed = false;
     do {
-        setspeed = false;
+        bool setspeed = false;
         switch (m_data[m_dataPosition].command) {
         case 0:
             m_delay = m_data[m_dataPosition].param - 1;
@@ -91,7 +88,9 @@ bool CrawPlayer::update() {
             getOpl()->writeReg(m_data[m_dataPosition].command, m_data[m_dataPosition].param);
             break;
         }
-    } while (m_data[m_dataPosition++].command || setspeed);
+        if(!setspeed)
+            break;
+    } while (m_data[m_dataPosition++].command);
 
     return !m_songend;
 }

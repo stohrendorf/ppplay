@@ -29,7 +29,7 @@ class ChscPlayer : public CPlayer {
     public:
         static CPlayer *factory();
 
-    ChscPlayer(bool mtkMode)
+    explicit ChscPlayer(bool mtkMode)
         : CPlayer()
         , m_mtkmode(mtkMode)
     {

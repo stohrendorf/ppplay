@@ -19,13 +19,11 @@
  * mkj.cpp - MKJamz Player, by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include <cstring>
 #include <cassert>
 
 #include "stream/filestream.h"
 
 #include "mkj.h"
-#include "debug.h"
 
 CPlayer *CmkjPlayer::factory() { return new CmkjPlayer(); }
 
@@ -66,9 +64,6 @@ bool CmkjPlayer::load(const std::string &filename) {
     m_songBuf.resize((m_maxChannel + 1) * m_maxNotes);
     f.read(m_songBuf.data(), m_songBuf.size());
 
-    AdPlug_LogWrite("CmkjPlayer::load(\"%s\"): loaded file ver %.2f, %d channels,"
-                    " %d notes/channel.\n",
-                    filename.c_str(), ver, m_maxChannel, m_maxNotes);
     rewind(0);
     return true;
 }

@@ -27,7 +27,6 @@
  * Hard restart SR is sometimes wrong
  */
 
-#include <cstring>
 #include <cstdio>
 
 #include <boost/algorithm/string.hpp>
@@ -35,7 +34,6 @@
 
 #include "stream/filestream.h"
 
-#include "debug.h"
 #include "d00.h"
 
 #define HIBYTE(val) (val >> 8)
@@ -78,9 +76,6 @@ bool Cd00Player::load(const std::string &filename) {
         ver1 = true;
     }
 
-    AdPlug_LogWrite("Cd00Player::load(f,\"%s\"): %s format D00 file detected!\n",
-                    filename.c_str(), ver1 ? "Old" : "New");
-
     // load section
     auto filesize = f.size();
     f.seek(0);
@@ -114,25 +109,25 @@ bool Cd00Player::load(const std::string &filename) {
     }
     switch (version) {
     case 0:
-        levpuls = 0;
-        spfx = 0;
+        levpuls = nullptr;
+        spfx = nullptr;
         header1->speed = 70; // v0 files default to 70Hz
         break;
     case 1:
         levpuls = reinterpret_cast<const Slevpuls*>(filedata.data() + LE_WORD(&header1->lpulptr));
-        spfx = 0;
+        spfx = nullptr;
         break;
     case 2:
         levpuls = reinterpret_cast<const Slevpuls*>(filedata.data() + LE_WORD(&header->spfxptr));
-        spfx = 0;
+        spfx = nullptr;
         break;
     case 3:
-        spfx = 0;
-        levpuls = 0;
+        spfx = nullptr;
+        levpuls = nullptr;
         break;
     case 4:
         spfx = reinterpret_cast<const Sspfx*>(filedata.data() + LE_WORD(&header->spfxptr));
-        levpuls = 0;
+        levpuls = nullptr;
         break;
     }
     if (auto str = strstr(datainfo, "\xff\xff")) {
@@ -437,7 +432,7 @@ void Cd00Player::rewind(int subsong) {
         return;
 
     memset(channel, 0, sizeof(channel));
-    const Stpoin* tpoin = nullptr;
+    const Stpoin* tpoin;
     if (version > 1)
         tpoin = reinterpret_cast<const Stpoin*>(filedata.data() + LE_WORD(&header->tpoin));
     else

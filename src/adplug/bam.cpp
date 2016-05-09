@@ -47,8 +47,6 @@
  * to clobber the outer loop's counter. No stack is neccisary.
  */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 
 #include "bam.h"

@@ -22,8 +22,6 @@
   NOTE: Panning (Ex) effect is ignored.
 */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 
 #include "dtm.h"

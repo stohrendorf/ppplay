@@ -25,9 +25,7 @@
  * Protracker-like format, this is most certainly the player you want to use.
  */
 
-#include <cstring>
 #include "protrack.h"
-#include <iostream>
 
 namespace
 {
@@ -685,8 +683,10 @@ void CmodPlayer::setNote(uint8_t chan, int note) {
             note = 96;
     }
 
-    if (note < 13)
+    if (note < 13) {
+        BOOST_ASSERT(note > 0);
         m_channels[chan].frequency = m_noteTable[note - 1];
+    }
     else if (note % 12 > 0)
         m_channels[chan].frequency = m_noteTable[(note % 12) - 1];
     else

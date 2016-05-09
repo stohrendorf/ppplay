@@ -25,7 +25,6 @@
   slides use previous effect data instead of current.
 */
 
-#include <cstring>
 #include <cstdlib>
 
 #include "stream/filestream.h"
@@ -278,11 +277,6 @@ uint32_t CcffLoader::instrumentCount() const { return 47; }
 
 /* -------- Private Methods ------------------------------- */
 
-#ifdef _WIN32
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4018)
-#endif
-
 /*
   Lempel-Ziv-Tyr ;-)
 */
@@ -444,8 +438,3 @@ void CcffLoader::cff_unpacker::expand_dictionary(unsigned char *string, std::vec
 
     dictionary.emplace_back(std::move(stringData));
 }
-
-#ifdef _WIN32
-#pragma warning(default : 4244)
-#pragma warning(default : 4018)
-#endif

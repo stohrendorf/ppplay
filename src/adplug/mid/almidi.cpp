@@ -29,7 +29,7 @@ constexpr auto NUM_MIDI_CHANNELS = 16;
 
 
 namespace {
-static constexpr std::array<int,16> commandLengths = {{
+constexpr std::array<int,16> commandLengths = {{
     0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 1, 1, 2, 0
 }};
 }
@@ -67,7 +67,7 @@ struct EMidi::Track
     uint32_t readDelta() {
         uint32_t value = 0;
 
-        uint8_t c = 0;
+        uint8_t c;
         do {
             c = nextByte();
             value = ( value << 7 ) | ( c & 0x7f );
@@ -235,7 +235,6 @@ void EMidi::metaEvent(EMidi::Track& track)
         break;
     default:
         throw std::runtime_error("Unhandled meta event");
-        break;
     }
 
     track.dataPos += length;
@@ -527,7 +526,6 @@ bool EMidi::serviceRoutineMidi()
 
                 default:
                     throw std::runtime_error("Unhandled command");
-                    break;
                 }
 
                 track.delay = track.readDelta();

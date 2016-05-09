@@ -23,7 +23,6 @@
  * NOTES: 3-oct-04: the DRO format is not yet finalized. beware.
  */
 
-#include <cstring>
 #include <cstdio>
 
 #include "stream/filestream.h"

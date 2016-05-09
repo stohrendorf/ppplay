@@ -19,10 +19,7 @@
  * lds.cpp - LOUDNESS Player by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include <string.h>
-
 #include "lds.h"
-#include "debug.h"
 #include "stream/filestream.h"
 
 namespace {
@@ -243,18 +240,10 @@ bool CldsPlayer::update() {
                 case 0xf1: // panorama
                 case 0xf0: // progch
                     // MIDI commands (unhandled)
-                    AdPlug_LogWrite("CldsPlayer(): not handling MIDI command 0x%x, "
-                                    "value = 0x%x\n",
-                                    comhi);
                     break;
                 default:
                     if (comhi < 0xa0)
                         c->glideto = comhi & 0x1f;
-                    else
-                        AdPlug_LogWrite(
-                                    "CldsPlayer(): unknown command 0x%x encountered!"
-                                    " value = 0x%x\n",
-                                    comhi, comlo);
                     break;
                 }
             }

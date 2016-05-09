@@ -62,7 +62,7 @@ class PhaseGenerator
      */
     uint8_t m_mult = 0;
 public:
-    PhaseGenerator( Opl3* opl ) : m_opl( opl ) {
+    explicit PhaseGenerator( Opl3* opl ) : m_opl( opl ) {
         BOOST_ASSERT( opl != nullptr );
     }
 

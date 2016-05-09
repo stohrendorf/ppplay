@@ -20,7 +20,6 @@
 */
 
 #include "xad.h"
-#include "debug.h"
 
 #include "stream/filestream.h"
 
@@ -30,7 +29,6 @@ bool CxadPlayer::load(const std::string &filename) {
     FileStream f(filename);
     if (!f)
         return false;
-    bool ret = false;
 
     // load header
     f >> m_xadHeader;
@@ -43,7 +41,7 @@ bool CxadPlayer::load(const std::string &filename) {
     m_tune.resize(f.size() - 80);
     f.read(m_tune.data(), m_tune.size());
 
-    ret = xadplayer_load();
+    bool ret = xadplayer_load();
 
     if (ret)
         rewind(0);

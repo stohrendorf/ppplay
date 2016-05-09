@@ -19,8 +19,6 @@
  * sng.cpp - SNG Player by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 
 #include "sng.h"

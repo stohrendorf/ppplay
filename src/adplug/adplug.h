@@ -38,7 +38,6 @@ public:
     static std::shared_ptr<CPlayer> factory(const std::string &fn, const CPlayers &pl = s_players);
 
     static std::string get_version();
-    static void debug_output(const std::string &filename);
 
 private:
     static const CPlayerDesc allplayers[];

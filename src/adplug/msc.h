@@ -71,6 +71,6 @@ private:
     // player state
     uint8_t m_delay = 0;    // active delay
 
-    bool load_header(FileStream& bf, msc_header *hdr);
+    static bool load_header(FileStream& bf, msc_header *hdr);
     bool decode_octet(uint8_t *output);
 };

@@ -25,8 +25,6 @@
   A WORD ist 16 bits, a DWORD is 32 bits and a BYTE is 8 bits in this context.
 */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 #include "stream/memorystream.h"
 
@@ -34,7 +32,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include "dmo.h"
-#include "debug.h"
 
 namespace
 {
@@ -278,7 +275,7 @@ bool CdmoLoader::dmo_unpacker::decrypt(unsigned char *buf, long len) {
 
 short CdmoLoader::dmo_unpacker::unpack_block(unsigned char *ibuf, long ilen,
                                              unsigned char *obuf) {
-    unsigned char code, par1, par2;
+    unsigned char par1, par2;
     unsigned short ax, bx, cx;
 
     unsigned char *ipos = ibuf;
@@ -286,7 +283,7 @@ short CdmoLoader::dmo_unpacker::unpack_block(unsigned char *ibuf, long ilen,
 
     // LZ77 child
     while (ipos - ibuf < ilen) {
-        code = *ipos++;
+        const auto code = *ipos++;
 
         // 00xxxxxx: copy (xxxxxx + 1) bytes
         if ((code >> 6) == 0) {
@@ -364,8 +361,6 @@ short CdmoLoader::dmo_unpacker::unpack_block(unsigned char *ibuf, long ilen,
 
             for (i = 0; i < ax; i++)
                 *opos++ = *ipos++;
-
-            continue;
         }
     }
 

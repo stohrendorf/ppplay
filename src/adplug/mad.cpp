@@ -19,8 +19,6 @@
   mad.cpp - MAD loader by Riven the Mage <riven@ok.ru>
 */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 
 #include "mad.h"

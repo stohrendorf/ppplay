@@ -22,7 +22,6 @@
  * Extra Fine Slides (EEx, FEx) & Fine Vibrato (Uxy) are inaccurate
  */
 
-#include <cstring>
 #include "stream/filestream.h"
 
 #include "s3m.h"
@@ -250,11 +249,9 @@ bool Cs3mPlayer::update() {
     auto row = currentRow(); // fill row cache
     bool pattbreak = false;
     for (int chan = 0; chan < 32; chan++) {
-        int realchan = -1;
-        if (!(m_header.chanset[chan] & 128)) // resolve S3M -> AdLib channels
-            realchan = chnresolv[m_header.chanset[chan] & 127];
-        else
+        if (m_header.chanset[chan] & 128) // resolve S3M -> AdLib channels
             continue;
+        const int realchan = chnresolv[m_header.chanset[chan] & 127];
         // set channel values
         bool donote = false;
         if (m_patterns[pattnr][row][chan].note < 14) {

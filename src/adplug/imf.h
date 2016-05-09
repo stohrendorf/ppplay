@@ -73,7 +73,7 @@ private:
 #pragma pack(pop)
     std::vector<Sdata> m_data{};
 
-    float getrate(const FileStream &file);
+    static int getrate(const FileStream &file);
 };
 
 #endif

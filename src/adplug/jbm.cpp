@@ -84,8 +84,8 @@ bool CjbmPlayer::load(const std::string &filename) {
 
     // Song tempo
 
-    auto i = getWord(m_fileData, 2);
-    m_timer = 1193810.0 / (i ? i : 0xffff);
+    auto divisor = getWord(m_fileData, 2);
+    m_timer = 1193810.0 / (divisor ? divisor : 0xffff);
 
     m_seqTable = getWord(m_fileData, 4);
     m_insTable = getWord(m_fileData, 6);
@@ -219,8 +219,6 @@ void CjbmPlayer::rewind(int) {
         opl_noteonoff(8, &voice[8], 0);
     }
 #endif
-
-    return;
 }
 
 /*** private methods ************************************/
@@ -241,7 +239,6 @@ void CjbmPlayer::opl_noteonoff(int channel, bool state) {
         getOpl()->writeReg(0xb0 + channel, state ? m_voices[channel].frq[1] | 0x20
                            : m_voices[channel].frq[1] & 0x1f);
     }
-    return;
 }
 
 void CjbmPlayer::set_opl_instrument(int channel, JBMVoice *voice) {
@@ -285,6 +282,4 @@ void CjbmPlayer::set_opl_instrument(int channel, JBMVoice *voice) {
 
     // FEEDBACK/FM mode
     getOpl()->writeReg(0xc0 + channel, m_fileData[filePos + 8] & 15);
-
-    return;
 }

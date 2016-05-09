@@ -19,11 +19,7 @@
  * adplug.cpp - CAdPlug utility class, by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include <cstring>
-#include <string>
-
 #include "adplug.h"
-#include "debug.h"
 
 /***** Replayer includes *****/
 
@@ -68,10 +64,15 @@
 #include "adl.h"
 #include "jbm.h"
 
+#include "light4cxx/logger.h"
+
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
-/***** CAdPlug *****/
+namespace
+{
+light4cxx::Logger* logger = light4cxx::Logger::get("badplay.factory");
+}
 
 // List of all players that come with the standard AdPlug distribution
 const CPlayerDesc CAdPlug::allplayers[] = {
@@ -131,18 +132,16 @@ const CPlayers &CAdPlug::init_players(const CPlayerDesc pd[]) {
 const CPlayers CAdPlug::s_players = CAdPlug::init_players(CAdPlug::allplayers);
 
 std::shared_ptr<CPlayer> CAdPlug::factory(const std::string &fn, const CPlayers &pl) {
-    AdPlug_LogWrite("*** CAdPlug::factory(\"%s\",opl,fp) ***\n", fn.c_str());
+    logger->info(L4CXX_LOCATION, "Trying to load %s", fn);
 
     // Try a direct hit by file extension
     const auto ext = boost::to_lower_copy(boost::filesystem::path(fn).extension().string());
-    for (auto i = pl.begin(); i != pl.end(); i++) {
+    for (auto i = pl.begin(); i != pl.end(); ++i) {
         for (auto j = 0; !(*i)->get_extension(j).empty(); j++) {
             if(ext == boost::to_lower_copy((*i)->get_extension(j))) {
-                AdPlug_LogWrite("Trying direct hit: %s\n", (*i)->filetype.c_str());
+                logger->debug(L4CXX_LOCATION, "Trying direct hit: %s\n", (*i)->filetype);
                 std::shared_ptr<CPlayer> p{ (*i)->factory() };
                 if (p && p->load(fn)) {
-                    AdPlug_LogWrite("got it!\n");
-                    AdPlug_LogWrite("--- CAdPlug::factory ---\n");
                     return p;
                 }
             }
@@ -150,25 +149,16 @@ std::shared_ptr<CPlayer> CAdPlug::factory(const std::string &fn, const CPlayers 
     }
 
     // Try all players, one by one
-    for (auto i = pl.begin(); i != pl.end(); i++) {
-        AdPlug_LogWrite("Trying: %s\n", (*i)->filetype.c_str());
+    for (auto i = pl.begin(); i != pl.end(); ++i) {
+        logger->debug(L4CXX_LOCATION, "Trying: %s\n", (*i)->filetype);
         std::shared_ptr<CPlayer> p { (*i)->factory() };
         if (p && p->load(fn)) {
-            AdPlug_LogWrite("got it!\n");
-            AdPlug_LogWrite("--- CAdPlug::factory ---\n");
             return p;
         }
     }
 
     // Unknown file
-    AdPlug_LogWrite("End of list!\n");
-    AdPlug_LogWrite("--- CAdPlug::factory ---\n");
-    return 0;
+    return nullptr;
 }
 
 std::string CAdPlug::get_version() { return "0.1"; }
-
-void CAdPlug::debug_output(const std::string &filename) {
-    AdPlug_LogFile(filename.c_str());
-    AdPlug_LogWrite("CAdPlug::debug_output(\"%s\"): Redirected.\n", filename.c_str());
-}

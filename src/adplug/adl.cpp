@@ -55,13 +55,11 @@
 #include <cstring>
 #include <cstdint>
 #include <cstdarg>
-#include <cassert>
 #include <algorithm>
 
 #include "stream/filestream.h"
 
 #include "adl.h"
-#include "debug.h"
 
 #define ARRAYSIZE(x) ((int)(sizeof(x) / sizeof(x[0])))
 
@@ -86,9 +84,6 @@ class AdlibDriver {
 
     int callback(int opcode, ...);
     void callback();
-
-    bool isStereo() const { return false; }
-    bool endOfData() const { return false; }
 
     struct OpcodeEntry {
         typedef int(AdlibDriver::*DriverOpcode)(va_list &list);
@@ -195,7 +190,7 @@ class AdlibDriver {
 
     void resetAdlibState();
     void writeOPL(uint8_t reg, uint8_t val);
-    void initChannel(Channel &channel);
+    static void initChannel(Channel &channel);
     void noteOff(Channel &channel);
     void unkOutput2(uint8_t num);
 
@@ -208,10 +203,10 @@ class AdlibDriver {
 
     void adjustVolume(Channel &channel);
 
-    uint8_t calculateOpLevel1(Channel &channel);
-    uint8_t calculateOpLevel2(Channel &channel);
+    static uint8_t calculateOpLevel1(Channel &channel);
+    static uint8_t calculateOpLevel2(Channel &channel);
 
-    uint16_t checkValue(int16_t val) {
+    static uint16_t checkValue(int16_t val) {
         if (val < 0)
             val = 0;
         else if (val > 0x3F)
@@ -224,11 +219,13 @@ class AdlibDriver {
     // * One for programs, starting at offset 0.
     // * One for instruments, starting at offset 500.
 
-    uint8_t *getProgram(int progId) {
+    uint8_t *getProgram(int progId) const
+    {
         return _soundData + READ_LE_UINT16(_soundData + 2 * progId);
     }
 
-    uint8_t *getInstrument(int instrumentId) {
+    uint8_t *getInstrument(int instrumentId) const
+    {
         return _soundData + READ_LE_UINT16(_soundData + 500 + 2 * instrumentId);
     }
 
@@ -499,7 +496,7 @@ int AdlibDriver::snd_unkOpcode3(va_list &list) {
         _curChannel = value;
         Channel &channel = _channels[_curChannel];
         channel.priority = 0;
-        channel.dataptr = 0;
+        channel.dataptr = nullptr;
         if (value != 9) {
             noteOff(channel);
         }
@@ -844,8 +841,8 @@ void AdlibDriver::initChannel(Channel &channel) {
     channel.tempo = 0xFF;
     channel.priority = 0;
     // normally here are nullfuncs but we set 0 for now
-    channel.primaryEffect = 0;
-    channel.secondaryEffect = 0;
+    channel.primaryEffect = nullptr;
+    channel.secondaryEffect = nullptr;
     channel.spacing1 = 1;
 }
 
@@ -1329,7 +1326,7 @@ int AdlibDriver::update_stopChannel(uint8_t *&dataptr, Channel &channel, uint8_t
     if (_curChannel != 9) {
         noteOff(channel);
     }
-    dataptr = 0;
+    dataptr = nullptr;
     return 2;
 }
 
@@ -1373,7 +1370,7 @@ int AdlibDriver::update_stopOtherChannel(uint8_t *&, Channel &, uint8_t value) {
     Channel &channel2 = _channels[value];
     channel2.duration = 0;
     channel2.priority = 0;
-    channel2.dataptr = 0;
+    channel2.dataptr = nullptr;
     return 0;
 }
 
@@ -1409,7 +1406,7 @@ int AdlibDriver::update_setupPrimaryEffect1(uint8_t *&dataptr, Channel &channel,
 int AdlibDriver::update_removePrimaryEffect1(uint8_t *&dataptr, Channel &channel,
                                              uint8_t) {
     --dataptr;
-    channel.primaryEffect = 0;
+    channel.primaryEffect = nullptr;
     channel.unk30 = 0;
     return 0;
 }
@@ -1494,7 +1491,7 @@ int AdlibDriver::update_setTempo(uint8_t *&, Channel &, uint8_t value) {
 int AdlibDriver::update_removeSecondaryEffect1(uint8_t *&dataptr,
                                                Channel &channel, uint8_t) {
     --dataptr;
-    channel.secondaryEffect = 0;
+    channel.secondaryEffect = nullptr;
     return 0;
 }
 
@@ -1572,7 +1569,7 @@ int AdlibDriver::updateCallback38(uint8_t *&, Channel &, uint8_t value) {
     _curChannel = value;
     Channel &channel2 = _channels[value];
     channel2.duration = channel2.priority = 0;
-    channel2.dataptr = 0;
+    channel2.dataptr = nullptr;
     channel2.opExtraLevel2 = 0;
 
     if (value != 9) {
@@ -1617,7 +1614,7 @@ int AdlibDriver::updateCallback39(uint8_t *&dataptr, Channel &channel,
 int AdlibDriver::update_removePrimaryEffect2(uint8_t *&dataptr, Channel &channel,
                                              uint8_t) {
     --dataptr;
-    channel.primaryEffect = 0;
+    channel.primaryEffect = nullptr;
     return 0;
 }
 
@@ -2177,7 +2174,7 @@ bool CadlPlayer::update() {
     m_driver->callback();
 
     for (int i = 0; i < 10; i++)
-        if (m_driver->_channels[i].dataptr != NULL)
+        if (m_driver->_channels[i].dataptr != nullptr)
             songend = false;
 
     return !songend;

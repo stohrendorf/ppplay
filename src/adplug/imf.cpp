@@ -41,8 +41,6 @@
  * and more.
  */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 
 #include "imf.h"
@@ -184,10 +182,10 @@ std::string CimfPlayer::description() const
 
 /*** private methods *************************************/
 
-float CimfPlayer::getrate(const FileStream& file) {
+int CimfPlayer::getrate(const FileStream& file) {
     if (file.extension() == ".imf")
-        return 560.0f;
+        return 560;
     else if (file.extension() == ".wlf")
-        return 700.0f;
-    return 700.0f; // default speed for unknown files that aren't .IMF or .WLF
+        return 700;
+    return 700; // default speed for unknown files that aren't .IMF or .WLF
 }

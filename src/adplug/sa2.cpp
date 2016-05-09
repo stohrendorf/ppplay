@@ -20,14 +20,11 @@
  *           SAdT Loader by Mamiya <mamiya@users.sourceforge.net>
  */
 
-#include <cstring>
 #include <cstdio>
-#include <cstring>
 
 #include "stream/filestream.h"
 
 #include "sa2.h"
-#include "debug.h"
 
 CPlayer *Csa2Loader::factory() { return new Csa2Loader(); }
 

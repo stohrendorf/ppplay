@@ -47,12 +47,12 @@ private:
     private:
 
         uint32_t get_code();
-        void translate_code(unsigned long code, uint8_t *string, const std::vector<std::vector<uint8_t> > &dictionary);
+        static void translate_code(unsigned long code, uint8_t *string, const std::vector<std::vector<uint8_t> > &dictionary);
 
         void cleanup();
         bool startup(const std::vector<std::vector<uint8_t> > &dictionary);
 
-        void expand_dictionary(uint8_t *string, std::vector<std::vector<uint8_t> > &dictionary);
+        static void expand_dictionary(uint8_t *string, std::vector<std::vector<uint8_t> > &dictionary);
 
         uint8_t *m_input;
         uint8_t *m_output;

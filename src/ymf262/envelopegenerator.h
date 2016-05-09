@@ -152,7 +152,7 @@ private:
     void attack();
 
 public:
-    constexpr EnvelopeGenerator( Opl3* opl )
+    explicit constexpr EnvelopeGenerator( Opl3* opl )
         : m_opl( opl ) {
     }
 

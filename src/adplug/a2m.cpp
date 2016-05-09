@@ -29,8 +29,6 @@
  * Following commands are ignored: Gxy, Hxy, Kxy - &xy
  */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 #include "a2m.h"
 
@@ -141,7 +139,7 @@ bool Ca2mLoader::load(const std::string &filename) {
     // load, depack & convert section
     //m_maxUsedPattern = numpats;
     uint16_t len[9];
-    int t = 0;
+    int t;
     if (version < 5) {
         f.read(len, 5);
         t = 9;
@@ -406,18 +404,19 @@ void Ca2mLoader::updatefreq(unsigned short a, unsigned short b) {
 }
 
 void Ca2mLoader::updatemodel(unsigned short code) {
-    unsigned short a = code + SUCCMAX, b, c, code1, code2;
+    uint16_t a = code + SUCCMAX;
 
     m_freq[a]++;
     if (m_dad[a] != ROOT) {
-        code1 = m_dad[a];
+        auto code1 = m_dad[a];
         if (m_leftc[code1] == a)
             updatefreq(a, m_rightc[code1]);
         else
             updatefreq(a, m_leftc[code1]);
 
         do {
-            code2 = m_dad[code1];
+            const auto code2 = m_dad[code1];
+            uint16_t b;
             if (m_leftc[code2] == code1)
                 b = m_rightc[code2];
             else
@@ -429,10 +428,12 @@ void Ca2mLoader::updatemodel(unsigned short code) {
                 else
                     m_leftc[code2] = a;
 
+                uint16_t c;
                 if (m_leftc[code1] == a) {
                     m_leftc[code1] = b;
                     c = m_rightc[code1];
-                } else {
+                }
+                else {
                     m_rightc[code1] = b;
                     c = m_leftc[code1];
                 }

@@ -19,11 +19,9 @@
  * amd.cpp - AMD Loader by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include <cstring>
 #include "stream/filestream.h"
 
 #include "amd.h"
-#include "debug.h"
 
 CPlayer *CamdLoader::factory() { return new CamdLoader(); }
 

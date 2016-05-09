@@ -19,8 +19,6 @@
  * mtk.cpp - MPU-401 Trakker Loader by Simon Peter (dn.tlp@gmx.net)
  */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 
 #include "mtk.h"
@@ -77,7 +75,7 @@ bool CmtkLoader::load(const std::string &filename) {
         const auto cmd = (*cmpptr >> 4) & 0x0f;
         uint16_t cnt = *cmpptr & 0x0f;
         ++cmpptr;
-        uint16_t offs = 0;
+        uint16_t offs;
         switch (cmd) {
         case 0:
             if (orgptr + cnt > header.size)

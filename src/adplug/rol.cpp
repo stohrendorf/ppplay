@@ -27,7 +27,6 @@
 #include "stream/filestream.h"
 
 #include "rol.h"
-#include "debug.h"
 
 namespace {
 constexpr int kSizeofDataRecord = 30;
@@ -72,7 +71,6 @@ bool CrolPlayer::load(const std::string &filename) {
     int i;
     std::string bnk_filename;
 
-    AdPlug_LogWrite("*** CrolPlayer::load(f, \"%s\") ***\n", filename.c_str());
     strcpy(fn, filename.data());
     for (i = strlen(fn) - 1; i >= 0; i--)
         if (fn[i] == '/' || fn[i] == '\\')
@@ -80,16 +78,12 @@ bool CrolPlayer::load(const std::string &filename) {
     strcpy(fn + i + 1, "standard.bnk");
     bnk_filename = fn;
     delete[] fn;
-    AdPlug_LogWrite("bnk_filename = \"%s\"\n", bnk_filename.c_str());
 
     f >> m_rolHeader.version_major;
     f >> m_rolHeader.version_minor;
 
     // Version check
     if (m_rolHeader.version_major != 0 || m_rolHeader.version_minor != 4) {
-        AdPlug_LogWrite("Unsupported file version %d.%d or not a ROL file!\n",
-                        m_rolHeader.version_major, m_rolHeader.version_minor);
-        AdPlug_LogWrite("--- CrolPlayer::load ---\n");
         return false;
     }
 
@@ -113,14 +107,11 @@ bool CrolPlayer::load(const std::string &filename) {
     m_timeOfLastNote = 0;
 
     if (load_voice_data(f, bnk_filename) != true) {
-        AdPlug_LogWrite("CrolPlayer::load_voice_data(f) failed!\n");
-        AdPlug_LogWrite("--- CrolPlayer::load ---\n");
 
         return false;
     }
 
     rewind(0);
-    AdPlug_LogWrite("--- CrolPlayer::load ---\n");
     return true;
 }
 //---------------------------------------------------------

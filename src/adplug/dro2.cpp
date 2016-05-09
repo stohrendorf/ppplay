@@ -20,7 +20,6 @@
  * <malvineous@shikadi.net>
  */
 
-#include <cstring>
 #include <cstdio>
 
 #include "stream/filestream.h"

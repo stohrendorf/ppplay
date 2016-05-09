@@ -107,5 +107,5 @@ private:
 
     std::array<Channel,9> m_channels{{}};
 
-    uint8_t calculateVolume(uint8_t ivol, uint8_t cvol, uint8_t gvol);
+    static uint8_t calculateVolume(uint8_t ivol, uint8_t cvol, uint8_t gvol);
 };

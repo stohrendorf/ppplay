@@ -19,14 +19,11 @@
  * hsc.cpp - HSC Player by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include "hsc.h"
-#include "debug.h"
 
 /*** public methods **************************************/
 
@@ -37,7 +34,6 @@ bool ChscPlayer::load(const std::string &filename) {
 
     // file validation section
     if (!f || f.extension() != ".hsc" || f.size() > 59187) {
-        AdPlug_LogWrite("ChscPlayer::load(\"%s\"): Not a HSC file!\n", filename.c_str());
         return false;
     }
 
@@ -261,17 +257,12 @@ void ChscPlayer::rewind(int) {
 
 uint32_t ChscPlayer::instrumentCount() const
 {
-    unsigned char instcnt, instnum = 0, i;
-    bool isinst;
-
+    unsigned char instnum = 0;
     // count instruments
-    for (instcnt = 0; instcnt < 128; instcnt++) {
-        isinst = false;
-        for (i = 0; i < 12; i++)
+    for (int instcnt = 0; instcnt < 128; instcnt++) {
+        for (int i = 0; i < 12; i++)
             if (m_instr[instcnt][i])
-                isinst = true;
-        if (isinst)
-            instnum++;
+                ++instnum;
     }
 
     return instnum;

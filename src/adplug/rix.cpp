@@ -20,12 +20,9 @@
  *                                             BSPAL <BSPAL.ys168.com>
  */
 
-#include <cstring>
-
 #include "stream/filestream.h"
 
 #include "rix.h"
-#include "debug.h"
 
 namespace {
 constexpr uint8_t adflag[] = { 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1 };
@@ -204,8 +201,6 @@ inline uint16_t CrixPlayer::ad_initial() {
 }
 /*----------------------------------------------------------*/
 inline void CrixPlayer::ad_bop(uint16_t reg, uint16_t value) {
-    if (reg == 2 || reg == 3)
-        AdPlug_LogWrite("switch OPL2/3 mode!\n");
     getOpl()->writeReg(reg & 0xff, value & 0xff);
 }
 /*--------------------------------------------------------------*/
@@ -233,7 +228,7 @@ inline uint16_t CrixPlayer::rix_proc() {
     if (!m_musicOn || m_pauseFlag)
         return 0;
     m_band = 0;
-    while (m_bufAddr[m_i] != 0x80 && m_i < m_length - 1) {
+    while (m_i < m_length - 1 && m_bufAddr[m_i] != 0x80) {
         m_bandLow = m_bufAddr[m_i - 1];
         const auto ctrl = m_bufAddr[m_i];
         m_i += 2;
@@ -289,12 +284,11 @@ inline void CrixPlayer::rix_90_pro(uint16_t ctrl_l) {
 }
 /*--------------------------------------------------------------*/
 inline void CrixPlayer::rix_A0_pro(uint16_t ctrl_l, uint16_t index) {
-    if (m_rhythm == 0 || ctrl_l <= 6) {
-        prepare_a0b0(ctrl_l, index > 0x3FFF ? 0x3FFF : index);
-        ad_a0b0l_reg(ctrl_l, m_a0b0Data3[ctrl_l], m_a0b0Data4[ctrl_l]);
-    }
-    else
+    if (m_rhythm != 0 && ctrl_l > 6)
         return;
+
+    prepare_a0b0(ctrl_l, index > 0x3FFF ? 0x3FFF : index);
+    ad_a0b0l_reg(ctrl_l, m_a0b0Data3[ctrl_l], m_a0b0Data4[ctrl_l]);
 }
 /*--------------------------------------------------------------*/
 inline void CrixPlayer::prepare_a0b0(uint16_t index, uint16_t v) /* important !*/
@@ -346,7 +340,7 @@ inline void CrixPlayer::ad_a0b0l_reg(uint16_t index, uint16_t p2, uint16_t p3) {
 }
 /*--------------------------------------------------------------*/
 inline void CrixPlayer::rix_B0_pro(uint16_t ctrl_l, uint16_t index) {
-    int temp = 0;
+    int temp;
     if (m_rhythm == 0 || ctrl_l < 6)
         temp = modify[ctrl_l * 2 + 1];
     else {
@@ -364,19 +358,17 @@ inline void CrixPlayer::rix_C0_pro(uint16_t ctrl_l,
         ad_a0b0l_reg(ctrl_l, i, 1);
         return;
     }
-    else {
-        if (ctrl_l != 6) {
-            if (ctrl_l == 8) {
-                ad_a0b0l_reg(ctrl_l, i, 0);
-                ad_a0b0l_reg(7, i + 7, 0);
-            }
-        }
-        else
+
+    if (ctrl_l != 6) {
+        if (ctrl_l == 8) {
             ad_a0b0l_reg(ctrl_l, i, 0);
-        m_bdModify |= bd_reg_data[ctrl_l];
-        ad_bd_reg();
-        return;
+            ad_a0b0l_reg(7, i + 7, 0);
+        }
     }
+    else
+        ad_a0b0l_reg(ctrl_l, i, 0);
+    m_bdModify |= bd_reg_data[ctrl_l];
+    ad_bd_reg();
 }
 /*--------------------------------------------------------------*/
 inline void CrixPlayer::switch_ad_bd(uint16_t index) {

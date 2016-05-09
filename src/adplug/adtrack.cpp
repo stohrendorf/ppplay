@@ -33,7 +33,6 @@
 #include <cstring>
 
 #include "adtrack.h"
-#include "debug.h"
 
 #include "stream/filestream.h"
 
@@ -55,8 +54,6 @@ bool CadtrackLoader::load(const std::string &filename) {
     // check for instruments file
     std::string instfilename(filename, 0, filename.find_last_of('.'));
     instfilename += ".ins";
-    AdPlug_LogWrite("CadtrackLoader::load(,\"%s\"): Checking for \"%s\"...\n",
-                    filename.c_str(), instfilename.c_str());
     {
         FileStream instf(instfilename);
         if (!instf || instf.size() != 468) {

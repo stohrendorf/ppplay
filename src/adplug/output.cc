@@ -20,7 +20,6 @@
 #include <stdio.h>
 
 #include "output.h"
-#include "defines.h"
 
 /***** EmuPlayer *****/
 

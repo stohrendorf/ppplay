@@ -206,14 +206,14 @@ private:
     void load_instrument_events(FileStream& f, CVoiceData &voice,
                                 FileStream& bnk_file,
                                 SBnkHeader const &bnk_header);
-    void load_volume_events(FileStream& f, CVoiceData &voice);
-    void load_pitch_events(FileStream& f, CVoiceData &voice);
+    static void load_volume_events(FileStream& f, CVoiceData &voice);
+    static void load_pitch_events(FileStream& f, CVoiceData &voice);
 
-    bool load_bnk_info(FileStream& f, SBnkHeader &header);
+    static bool load_bnk_info(FileStream& f, SBnkHeader &header);
     int load_rol_instrument(FileStream& f, SBnkHeader const &header,
                             std::string &name);
-    void read_rol_instrument(FileStream& f, SRolInstrument &ins);
-    void read_fm_operator(FileStream& f, SOPL2Op &opl2_op);
+    static void read_rol_instrument(FileStream& f, SRolInstrument &ins);
+    static void read_fm_operator(FileStream& f, SOPL2Op &opl2_op);
     int get_ins_index(std::string const &name) const;
 
     void UpdateVoice(int const voice, CVoiceData &voiceData);

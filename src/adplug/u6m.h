@@ -112,8 +112,8 @@ private:
     void command_loop();
     uint8_t read_song_byte();
     int8_t read_signed_song_byte();
-    void dec_clip(int &);
-    byte_pair expand_freq_byte(uint8_t);
+    static void dec_clip(int &);
+    static byte_pair expand_freq_byte(uint8_t);
     void set_adlib_freq(int channel, byte_pair freq_word);
     void set_adlib_freq_no_update(int channel, byte_pair freq_word);
     void set_carrier_mf(int channel, uint8_t mute_factor);
@@ -143,8 +143,8 @@ private:
 
     // protected functions used by load()
     bool lzw_decompress(const DataBlock& source, DataBlock& dest);
-    uint32_t get_next_codeword(long &bits_read, const uint8_t *source, int codeword_size);
-    void output_root(uint8_t root, uint8_t *destination, size_t& position);
+    static uint32_t get_next_codeword(long &bits_read, const uint8_t *source, int codeword_size);
+    static void output_root(uint8_t root, uint8_t *destination, size_t& position);
     bool safeOutputRoot(uint8_t c, DataBlock& d, size_t& p)
     {
         if (p >= d.size())
@@ -153,5 +153,5 @@ private:
         return true;
     }
 
-    void get_string(uint32_t codeword, MyDict &dictionary, std::stack<uint8_t> &root_stack);
+    static void get_string(uint32_t codeword, MyDict &dictionary, std::stack<uint8_t> &root_stack);
 };

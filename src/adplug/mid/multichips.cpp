@@ -2,8 +2,6 @@
 
 #include "stuff/stringutils.h"
 
-#include <iostream>
-
 namespace ppp
 {
 

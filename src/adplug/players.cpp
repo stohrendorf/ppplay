@@ -42,7 +42,7 @@ std::string CPlayerDesc::get_extension(size_t n) const {
 /***** CPlayers *****/
 
 const CPlayerDesc *CPlayers::lookup_filetype(const std::string &ftype) const {
-  for (auto it = m_descriptions.begin(); it != m_descriptions.end(); it++)
+  for (auto it = m_descriptions.begin(); it != m_descriptions.end(); ++it)
     if ((*it)->filetype == ftype)
       return *it;
 
@@ -51,7 +51,7 @@ const CPlayerDesc *CPlayers::lookup_filetype(const std::string &ftype) const {
 
 const CPlayerDesc *
 CPlayers::lookup_extension(const std::string &extension) const {
-  for (auto it = m_descriptions.begin(); it != m_descriptions.end(); it++)
+  for (auto it = m_descriptions.begin(); it != m_descriptions.end(); ++it)
     for (auto j = 0; !(*it)->get_extension(j).empty(); j++)
       if( boost::iequals(extension, (*it)->get_extension(j)) )
         return *it;

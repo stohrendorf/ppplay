@@ -35,20 +35,18 @@ bool Cu6mPlayer::load(const std::string &filename) {
         return false;
     const auto filesize = f.size();
 
-    std::streamsize decompressed_filesize = 0;
-    if (filesize >= 6) {
-        // check if the file has a valid pseudo-header
-        uint8_t pseudo_header[6];
-        f.read(pseudo_header, 6);
-        decompressed_filesize = pseudo_header[0] + (pseudo_header[1] << 8);
-
-        if (!(pseudo_header[2] == 0 && pseudo_header[3] == 0 &&
-              (pseudo_header[4] + ((pseudo_header[5] & 0x1) << 8) == 0x100) &&
-              decompressed_filesize > (filesize - 4))) {
-            return false;
-        }
+    if (filesize < 6) {
+        return false;
     }
-    else {
+
+    // check if the file has a valid pseudo-header
+    uint8_t pseudo_header[6];
+    f.read(pseudo_header, 6);
+    std::streamsize decompressed_filesize = pseudo_header[0] + (pseudo_header[1] << 8);
+
+    if (!(pseudo_header[2] == 0 && pseudo_header[3] == 0 &&
+                                   (pseudo_header[4] + ((pseudo_header[5] & 0x1) << 8) == 0x100) &&
+                                   decompressed_filesize > (filesize - 4))) {
         return false;
     }
 
@@ -655,22 +653,19 @@ Cu6mPlayer::byte_pair Cu6mPlayer::expand_freq_byte(uint8_t freq_byte) {
         { 0xB5, 0x01 }, { 0xE9, 0x01 }, { 0x24, 0x02 }, { 0x66, 0x02 }
     };
 
-    int packed_freq;
-    int octave;
-    byte_pair freq_word;
-
-    packed_freq = freq_byte & 0x1F;
-    octave = freq_byte >> 5;
+    auto packed_freq = freq_byte & 0x1F;
+    const auto octave = freq_byte >> 5;
 
     // range check (not present in the original U6 music driver)
     if (packed_freq >= 24) {
         packed_freq = 0;
     }
 
+    byte_pair freq_word;
     freq_word.hi = freq_table[packed_freq].hi + (octave << 2);
     freq_word.lo = freq_table[packed_freq].lo;
 
-    return (freq_word);
+    return freq_word;
 }
 
 void Cu6mPlayer::set_adlib_freq(int channel, Cu6mPlayer::byte_pair freq_word) {

@@ -78,7 +78,6 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
-#include <cstring>
 #include "mid.h"
 #include "mididata.h"
 #include "stream/filestream.h"
@@ -779,7 +778,6 @@ size_t CmidPlayer::framesUntilUpdate() const {
 }
 
 void CmidPlayer::rewind(int subsong) {
-    long o_sierra_pos;
     unsigned char ins[16];
 
     m_dataPos = 0;
@@ -942,7 +940,7 @@ void CmidPlayer::rewind(int subsong) {
         m_deltas = 0x20;
         getnext(11); //worthless empty space and "stuff" :)
 
-        o_sierra_pos = m_sierraPos = m_dataPos;
+        const auto o_sierra_pos = m_sierraPos = m_dataPos;
         sierra_next_section();
         while (datalook(m_sierraPos - 2) != 0xff) {
             sierra_next_section();

@@ -36,7 +36,6 @@
 */
 
 #include "psi.h"
-#include "debug.h"
 
 namespace {
 constexpr uint8_t psi_adlib_registers[99] = {

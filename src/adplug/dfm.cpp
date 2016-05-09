@@ -26,7 +26,6 @@
 #include "stuff/stringutils.h"
 
 #include "dfm.h"
-#include "debug.h"
 
 CPlayer *CdfmLoader::factory() { return new CdfmLoader(); }
 
