@@ -146,7 +146,7 @@ bool CadtrackLoader::load(const std::string &filename) {
 
 size_t CadtrackLoader::framesUntilUpdate() const
 {
-    return SampleRate / 18.2;
+    return static_cast<size_t>(SampleRate / 18.2);
 }
 
 /*** Private methods ***/

@@ -488,7 +488,7 @@ bool CmodPlayer::update() {
     return !m_songEnd;
 }
 
-uint8_t CmodPlayer::setOplChip(uint8_t chan) /*
+uint8_t CmodPlayer::setOplChip(size_t chan) /*
                          * Sets OPL chip according to channel number. Channels
                          * 0-8 are on first chip,
                          * channels 9-17 are on second chip. Returns
@@ -564,7 +564,7 @@ void CmodPlayer::rewind(int) {
 
 size_t CmodPlayer::framesUntilUpdate() const
 {
-    return SampleRate * 2.5 / currentTempo();
+    return static_cast<size_t>(SampleRate * 2.5 / currentTempo());
 }
 
 void CmodPlayer::init_trackord() {
@@ -597,7 +597,7 @@ void CmodPlayer::deallocPatterns() {
 
 /*** private methods *************************************/
 
-void CmodPlayer::setVolume(uint8_t chan) {
+void CmodPlayer::setVolume(size_t chan) {
     const auto oplchan = setOplChip(chan);
 
     if (m_faust) {
@@ -613,7 +613,7 @@ void CmodPlayer::setVolume(uint8_t chan) {
     }
 }
 
-void CmodPlayer::setAverageVolume(uint8_t chan) {
+void CmodPlayer::setAverageVolume(size_t chan) {
     const auto oplchan = setOplChip(chan);
 
     const auto instrVolumeModulator = m_instruments[m_channels[chan].instrument].data[9] & 0x3f;
@@ -631,7 +631,7 @@ void CmodPlayer::setAverageVolume(uint8_t chan) {
                        instrFlagsCarrier);
 }
 
-void CmodPlayer::setFreq(uint8_t chan) {
+void CmodPlayer::setFreq(size_t chan) {
     unsigned char oplchan = setOplChip(chan);
 
     getOpl()->writeReg(0xa0 + oplchan, m_channels[chan].frequency & 0xff);
@@ -641,7 +641,7 @@ void CmodPlayer::setFreq(uint8_t chan) {
         getOpl()->writeReg(0xb0 + oplchan, ((m_channels[chan].frequency & 0x300) >> 8) | (m_channels[chan].octave << 2));
 }
 
-void CmodPlayer::playNote(uint8_t chan) {
+void CmodPlayer::playNote(size_t chan) {
     unsigned char oplchan = setOplChip(chan);
 
     if (!m_noKeyOn)
@@ -672,7 +672,7 @@ void CmodPlayer::playNote(uint8_t chan) {
     setVolume(chan);
 }
 
-void CmodPlayer::setNote(uint8_t chan, int note) {
+void CmodPlayer::setNote(size_t chan, int note) {
     if (note > 96) {
         if (note == 127) { // key off
             m_channels[chan].key = 0;
@@ -695,12 +695,12 @@ void CmodPlayer::setNote(uint8_t chan, int note) {
     m_channels[chan].frequency += m_instruments[m_channels[chan].instrument].slide; // apply pre-slide
 }
 
-void CmodPlayer::tonePortamento(uint8_t chan, uint8_t speed) {
+void CmodPlayer::tonePortamento(size_t chan, uint8_t speed) {
     m_channels[chan].porta(speed);
     setFreq(chan);
 }
 
-void CmodPlayer::vibrato(uint8_t chan, uint8_t speed, uint8_t depth) {
+void CmodPlayer::vibrato(size_t chan, uint8_t speed, uint8_t depth) {
     if (!speed || !depth)
         return;
 

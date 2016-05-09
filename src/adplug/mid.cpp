@@ -760,10 +760,10 @@ bool CmidPlayer::update() {
             if (m_tracks[m_currentTrack].on)
                 m_tracks[m_currentTrack].iwait -= m_iwait;
 
-        m_fwait = float(m_iwait) / m_deltas * (m_msqtr / 1000000.0);
+        m_fwait = float(m_iwait) / m_deltas * (m_msqtr / 1000000.0f);
     }
     else
-        m_fwait = 1.0 / 50; // 1/50th of a second
+        m_fwait = 1.0f / 50; // 1/50th of a second
 
     midiprintf("end update\n");
 
@@ -774,7 +774,7 @@ bool CmidPlayer::update() {
 }
 
 size_t CmidPlayer::framesUntilUpdate() const {
-    return SampleRate * (m_fwait < std::numeric_limits<float>::max() ? m_fwait : 100);
+    return static_cast<size_t>(SampleRate * (m_fwait < std::numeric_limits<float>::max() ? m_fwait : 100));
 }
 
 void CmidPlayer::rewind(int subsong) {
@@ -802,7 +802,7 @@ void CmidPlayer::rewind(int subsong) {
 
     m_deltas = 250; // just a number,  not a standard
     m_msqtr = 500000;
-    m_fwait = 1.0/123; // gotta be a small thing.. sorta like nothing
+    m_fwait = 1.0f/123; // gotta be a small thing.. sorta like nothing
     m_iwait = 0;
 
     m_subsongs = 1;

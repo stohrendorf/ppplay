@@ -37,7 +37,7 @@ class CimfPlayer : public CPlayer {
     void rewind(int subsong);
     size_t framesUntilUpdate() const
     {
-        return SampleRate / m_timer;
+        return static_cast<size_t>(SampleRate / m_timer);
     }
 
     std::string type() const
@@ -55,7 +55,7 @@ private:
     unsigned long m_pos = 0;
     unsigned short m_del = 0;
     bool m_songend = false;
-    float m_rate = 0;
+    int m_rate = 0;
     float m_timer = 0;
     std::string m_footer{};
 

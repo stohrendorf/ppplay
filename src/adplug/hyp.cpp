@@ -102,7 +102,7 @@ void CxadhypPlayer::xadplayer_update() {
 
 size_t CxadhypPlayer::framesUntilUpdate() const
 {
-    return SampleRate / 60.0f;
+    return static_cast<size_t>(SampleRate / 60);
 }
 
 std::string CxadhypPlayer::type() const

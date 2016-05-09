@@ -36,7 +36,7 @@ class CjbmPlayer : public CPlayer {
 
     size_t framesUntilUpdate() const
     {
-        return SampleRate / m_timer;
+        return static_cast<size_t>(SampleRate / m_timer);
     }
 
     std::string type() const

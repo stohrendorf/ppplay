@@ -104,6 +104,6 @@ void CrawPlayer::rewind(int) {
 
 size_t CrawPlayer::framesUntilUpdate() const {
     return SampleRate * (currentSpeed() ? currentSpeed() : 0xffff) /
-            1193180.0; // timer oscillator speed / wait register = clock
+            1193180; // timer oscillator speed / wait register = clock
     // frequency
 }

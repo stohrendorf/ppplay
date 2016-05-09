@@ -81,7 +81,7 @@ private:
     std::string m_title{};
     std::string m_remarks{};
     size_t m_dataPos = 0;
-    unsigned long m_sierraPos = 0; //sierras gotta be special.. :>
+    size_t m_sierraPos = 0; //sierras gotta be special.. :>
     int m_subsongs = 0;
     std::vector<uint8_t> m_data{};
 

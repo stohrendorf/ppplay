@@ -211,7 +211,7 @@ update_slides:
 
 size_t CxadhybridPlayer::framesUntilUpdate() const
 {
-    return SampleRate / 50.0f;
+    return SampleRate / 50;
 }
 
 std::string CxadhybridPlayer::type() const

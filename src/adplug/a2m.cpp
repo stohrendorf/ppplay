@@ -367,7 +367,7 @@ size_t Ca2mLoader::framesUntilUpdate() const {
     if (currentTempo() != 18)
         return SampleRate / currentTempo();
     else
-        return SampleRate / 18.2;
+        return static_cast<size_t>(SampleRate / 18.2);
 }
 
 /*** private methods *************************************/

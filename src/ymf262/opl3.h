@@ -46,8 +46,8 @@ class PPPLAY_OPL_EXPORT Opl3 : public ISerializable
     friend class OperatorView;
     friend class SlotView;
 public:
-    static constexpr int MasterClock = 14.31818e6;
-    static constexpr int SampleRate = MasterClock / 288;
+    static constexpr const unsigned int MasterClock = static_cast<unsigned int>(14.31818e6);
+    static constexpr const unsigned int SampleRate = MasterClock / 288;
 
 private:
     uint8_t m_registers[0x200];

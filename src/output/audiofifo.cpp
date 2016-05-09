@@ -72,7 +72,7 @@ AudioFifo::AudioFifo( const AbstractAudioSource::WeakPtr& source, size_t thresho
     logger()->debug( L4CXX_LOCATION, "Created with %d frames threshold", threshold );
     m_requestThread = std::thread( &AudioFifo::requestThread, this );
     // next bigger 2^x
-    threshold = 1UL << std::lround( std::log2( threshold ) + 0.5 );
+    threshold = 1ULL << std::lround( std::log2( threshold ) + 0.5 );
     m_buffer.set_capacity( threshold );
     logger()->debug( L4CXX_LOCATION, "Set capacity to %d", threshold );
 }
@@ -95,7 +95,7 @@ void AudioFifo::pushData( const AudioFrameBuffer& buf )
     std::unique_lock<std::mutex> lock( m_bufferMutex );
     if( buf->size() > m_buffer.capacity() - m_buffer.size() ) {
         // resize to next bigger exponent of 2
-        size_t nsize = 1UL << std::lround( std::log2( buf->size() + m_buffer.capacity() ) + 0.5 );
+        size_t nsize = 1ULL << std::lround( std::log2( buf->size() + m_buffer.capacity() ) + 0.5 );
         logger()->warn( L4CXX_LOCATION, "Capacity too low for %d frames, increasing from %d to %d", buf->size(), m_buffer.capacity(), nsize );
         m_buffer.set_capacity( nsize );
     }

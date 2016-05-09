@@ -73,7 +73,7 @@ private:
     uint16_t m_bitbuffer = 0;
     uint16_t m_bufcount = 0;
     uint16_t m_obufcount = 0;
-    uint16_t m_inputSize = 0;
+    size_t m_inputSize = 0;
     size_t m_outputSize = 0;
     uint16_t m_leftc[MAXCHAR + 1];
     uint16_t m_rightc[MAXCHAR + 1];

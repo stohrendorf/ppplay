@@ -84,7 +84,7 @@ void loadUserConfig()
     try {
         boost::property_tree::read_ini( cfgFilename, pt );
     }
-    catch( boost::property_tree::ini_parser_error& ex ) {
+    catch( boost::property_tree::ini_parser_error& ) {
         // Populate the defaults
         pt.put( "config.no_gui", false );
         pt.put( "playback.max_repeat", 2 );
@@ -389,7 +389,7 @@ int main( int argc, char* argv[] )
                 uiMain = new UIMain( dosScreen.get(), module, output );
             }
             output->play();
-            int secs = module->length() / module->frequency();
+            size_t secs = module->length() / module->frequency();
             boost::progress_display progress( module->length(), std::cout, stringFmt( "QuickWAV: %s (%dm%02ds)\n", config::filename, secs / 60, secs % 60 ) );
             while( output->playing() ) {
                 std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );

@@ -51,6 +51,8 @@ elseif(CMAKE_COMPILER_IS_GNUCXX)
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
 		endif()
 	endif()
+elseif(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4251")
 endif()
 
 INCLUDE(InstallRequiredSystemLibraries)

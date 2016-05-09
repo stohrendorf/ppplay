@@ -68,7 +68,7 @@ bool CrolPlayer::load(const std::string &filename) {
         return false;
 
     char *fn = new char[filename.length() + 12];
-    int i;
+    size_t i;
     std::string bnk_filename;
 
     strcpy(fn, filename.data());
@@ -180,7 +180,10 @@ void CrolPlayer::SetRefresh(float const multiplier) {
     m_refresh = (tickBeat * m_rolHeader.basic_tempo * multiplier) / 60.0f;
 }
 //---------------------------------------------------------
-size_t CrolPlayer::framesUntilUpdate() const { return SampleRate / m_refresh; }
+size_t CrolPlayer::framesUntilUpdate() const
+{
+    return static_cast<size_t>(SampleRate / m_refresh);
+}
 //---------------------------------------------------------
 void CrolPlayer::UpdateVoice(int const voice, CVoiceData &voiceData) {
     TNoteEvents const &nEvents = voiceData.note_events;

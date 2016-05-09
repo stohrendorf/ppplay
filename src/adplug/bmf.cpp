@@ -343,7 +343,7 @@ void CxadbmfPlayer::xadplayer_update() {
     }
 }
 
-size_t CxadbmfPlayer::framesUntilUpdate() const { return SampleRate / m_bmfTimer; }
+size_t CxadbmfPlayer::framesUntilUpdate() const { return static_cast<size_t>(SampleRate / m_bmfTimer); }
 
 std::string CxadbmfPlayer::type() const {
     return "xad: BMF Adlib Tracker";

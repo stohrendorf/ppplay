@@ -2143,7 +2143,7 @@ bool CadlPlayer::load(const std::string &filename) {
     auto it = std::find_if(m_trackEntries.rbegin(), m_trackEntries.rend(), [](uint8_t x) {
         return x != 0xff;
     });
-    m_subSongCount = &*it - &*m_trackEntries.begin() + 1;
+    m_subSongCount = m_trackEntries.size() - std::distance(m_trackEntries.rbegin(), it);
 
     m_currentSubSong = 2;
     rewind();

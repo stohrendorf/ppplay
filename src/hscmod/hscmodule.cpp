@@ -48,7 +48,7 @@ size_t Module::internal_buildTick( AudioFrameBuffer* buf )
         }
         return 0;
     }
-    const size_t BufferSize = frequency() / 18.20676;
+    const size_t BufferSize = static_cast<size_t>(frequency() / 18.20676);
     if( buf ) {
         if( !buf->get() ) {
             buf->reset( new AudioFrameBuffer::element_type );

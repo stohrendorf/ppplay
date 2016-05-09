@@ -253,7 +253,7 @@ unsigned short CdmoLoader::dmo_unpacker::brand(unsigned short range) {
     return HIWORD(HIWORD(LOWORD(bseed) * range) + HIWORD(bseed) * range);
 }
 
-bool CdmoLoader::dmo_unpacker::decrypt(unsigned char *buf, long len) {
+bool CdmoLoader::dmo_unpacker::decrypt(unsigned char *buf, size_t len) {
     bseed = ARRAY_AS_DWORD(buf, 0);
 
     uint32_t seed = 0;

@@ -92,7 +92,7 @@ bool ModSample::loadData( Stream* stream )
         char tmp[5];
         stream->read( tmp, 5 );
 #ifdef _MSC_VER
-        if( strnicmp( tmp, "ADPCM", 5 ) == 0 ) {
+        if( _strnicmp( tmp, "ADPCM", 5 ) == 0 ) {
 #else
         if( strncasecmp( tmp, "ADPCM", 5 ) == 0 ) {
 #endif

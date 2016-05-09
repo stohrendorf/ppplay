@@ -213,5 +213,5 @@ size_t CamdLoader::framesUntilUpdate() const
     if (currentTempo())
         return SampleRate / currentTempo();
     else
-        return SampleRate / 18.2;
+        return static_cast<size_t>(SampleRate / 18.2);
 }

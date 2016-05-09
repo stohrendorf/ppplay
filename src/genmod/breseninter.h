@@ -94,7 +94,7 @@ public:
         for( m_err -= m_dy; m_err < 0; m_err += m_dx ) {
             m_position++;
         }
-        return m_position;
+        return static_cast<uint_fast32_t>(m_position);
     }
 
     BresenInterpolation& operator++() {

@@ -227,7 +227,7 @@ void CxadratPlayer::xadplayer_update() {
 
 size_t CxadratPlayer::framesUntilUpdate() const
 {
-    return SampleRate / 60.0f;
+    return SampleRate / 60;
 }
 
 std::string CxadratPlayer::type() const

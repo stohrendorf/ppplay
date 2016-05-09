@@ -91,7 +91,7 @@ class CPlayer {
         return std::string();
     }
 
-    uint32_t orderCount() const
+    size_t orderCount() const
     {
         return m_order.size();
     }

@@ -42,7 +42,7 @@ private:
     class cff_unpacker {
     public:
 
-        long unpack(uint8_t *ibuf, uint8_t *obuf);
+        size_t unpack(uint8_t *ibuf, uint8_t *obuf);
 
     private:
 

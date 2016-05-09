@@ -37,7 +37,7 @@ private:
 
     class dmo_unpacker {
     public:
-        bool decrypt(unsigned char *buf, long len);
+        bool decrypt(unsigned char *buf, size_t len);
         long unpack(unsigned char *ibuf, unsigned char *obuf,
                     unsigned long outputsize);
 

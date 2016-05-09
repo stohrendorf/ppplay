@@ -237,7 +237,7 @@ void CdtmLoader::rewind(int subsong) {
 
 size_t CdtmLoader::framesUntilUpdate() const
 {
-    return SampleRate / 18.2;
+    return static_cast<size_t>(SampleRate / 18.2);
 }
 
 std::string CdtmLoader::type() const

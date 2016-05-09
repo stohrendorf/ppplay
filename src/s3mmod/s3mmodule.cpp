@@ -102,7 +102,7 @@ S3mModule::S3mModule( int maxRpt, Sample::Interpolation inter ) : AbstractModule
             chan = new S3mChannel( this );
         }
     }
-    catch( boost::exception& e ) {
+    catch( boost::exception& ) {
         BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
     }
     catch( ... ) {
@@ -150,7 +150,7 @@ bool S3mModule::load( Stream* stream )
         if( m_amigaLimits ) logger()->debug( L4CXX_LOCATION, "Amiga limits" );
         if( s3mHdr.flags & s3mFlagSpecial ) logger()->debug( L4CXX_LOCATION, "Special data present" );
         if( s3mHdr.defaultPannings == 0xFC ) logger()->debug( L4CXX_LOCATION, "Default Pannings present" );
-        unsigned char schismTest = 0;
+        bool schismTest = 0;
         switch( ( s3mHdr.createdWith >> 12 ) & 0x0f ) {
             case s3mTIdScreamTracker:
                 noConstMetaInfo().trackerInfo = "ScreamTracker v";

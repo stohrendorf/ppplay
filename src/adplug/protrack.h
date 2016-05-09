@@ -330,17 +330,17 @@ private:
     boost::optional<ArpeggioData> m_arpeggioCommands{};
 
 
-    void setVolume(uint8_t chan);
-    void setAverageVolume(uint8_t chan);
-    void setFreq(uint8_t chan);
-    void playNote(uint8_t chan);
-    void setNote(uint8_t chan, int note);
-    void tonePortamento(uint8_t chan, uint8_t info);
-    void vibrato(uint8_t chan, uint8_t speed, uint8_t depth);
+    void setVolume(size_t chan);
+    void setAverageVolume(size_t chan);
+    void setFreq(size_t chan);
+    void playNote(size_t chan);
+    void setNote(size_t chan, int note);
+    void tonePortamento(size_t chan, uint8_t info);
+    void vibrato(size_t chan, uint8_t speed, uint8_t depth);
 
     void deallocPatterns();
     bool resolveOrder();
-    uint8_t setOplChip(uint8_t chan);
+    uint8_t setOplChip(size_t chan);
 };
 
 #endif

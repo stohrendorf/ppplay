@@ -40,7 +40,7 @@ class ChscPlayer : public CPlayer {
     void rewind(int);
     size_t framesUntilUpdate() const
     {
-        return SampleRate / 18.2;
+        return static_cast<size_t>(SampleRate / 18.2);
     } // refresh rate is fixed at 18.2Hz
 
     std::string type() const

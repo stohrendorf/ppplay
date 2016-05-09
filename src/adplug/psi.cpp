@@ -138,7 +138,7 @@ void CxadpsiPlayer::xadplayer_update() {
     }
 }
 
-size_t CxadpsiPlayer::framesUntilUpdate() const { return SampleRate / 70.0f; }
+size_t CxadpsiPlayer::framesUntilUpdate() const { return SampleRate / 70; }
 
 std::string CxadpsiPlayer::type() const {
     return "xad: psi player";

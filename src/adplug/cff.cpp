@@ -280,7 +280,7 @@ uint32_t CcffLoader::instrumentCount() const { return 47; }
 /*
   Lempel-Ziv-Tyr ;-)
 */
-long CcffLoader::cff_unpacker::unpack(unsigned char *ibuf,
+size_t CcffLoader::cff_unpacker::unpack(unsigned char *ibuf,
                                       unsigned char *obuf) {
     if (memcmp(ibuf, "YsComp"
                "\x07"

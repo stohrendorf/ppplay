@@ -465,7 +465,10 @@ std::string Cs3mPlayer::type() const
     return std::string("Scream Tracker ") + filever;
 }
 
-size_t Cs3mPlayer::framesUntilUpdate() const { return SampleRate * 2.5 / currentTempo(); }
+size_t Cs3mPlayer::framesUntilUpdate() const
+{
+    return static_cast<size_t>(SampleRate * 2.5 / currentTempo());
+}
 
 /*** private methods *************************************/
 

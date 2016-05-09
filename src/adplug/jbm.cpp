@@ -85,7 +85,7 @@ bool CjbmPlayer::load(const std::string &filename) {
     // Song tempo
 
     auto divisor = getWord(m_fileData, 2);
-    m_timer = 1193810.0 / (divisor ? divisor : 0xffff);
+    m_timer = 1193810.0f / (divisor ? divisor : 0xffff);
 
     m_seqTable = getWord(m_fileData, 4);
     m_insTable = getWord(m_fileData, 6);

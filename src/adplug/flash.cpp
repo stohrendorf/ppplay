@@ -196,7 +196,7 @@ void CxadflashPlayer::xadplayer_update() {
 
 size_t CxadflashPlayer::framesUntilUpdate() const
 {
-    return SampleRate / 17.5f;
+    return static_cast<size_t>(SampleRate / 17.5);
 }
 
 std::string CxadflashPlayer::type() const
