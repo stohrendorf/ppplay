@@ -28,16 +28,21 @@
 #include "defines.h"
 #include "output.h"
 #include "cli-players.h"
+#include "light4cxx/logger.h"
 
 /***** Global variables *****/
 
+namespace
+{
+light4cxx::Logger* logger = light4cxx::Logger::get("badplay.main");
+}
 static const char* program_name;
 static std::unique_ptr<Player> output; // global player object
 
 /***** Configuration (and defaults) *****/
 
 static struct {
-    int buf_size, message_level;
+    int buf_size;
     int subsong;
     std::string device;
     std::string userdb;
@@ -45,7 +50,7 @@ static struct {
     Outputs output;
     int repeats;
 } cfg = {
-    2048, MSG_NOTE,
+    2048,
     -1,
     std::string(),
     std::string(),
@@ -53,21 +58,6 @@ static struct {
     DEFAULT_DRIVER,
     1
 };
-
-/***** Global functions *****/
-
-void message(int level, const char *fmt, ...)
-{
-    va_list argptr;
-
-    if(cfg.message_level < level) return;
-
-    fprintf(stderr, "%s: ", program_name);
-    va_start(argptr, fmt);
-    vfprintf(stderr, fmt, argptr);
-    va_end(argptr);
-    fprintf(stderr, "\n");
-}
 
 /***** Local functions *****/
 
@@ -105,20 +95,20 @@ static std::string decode_switches(int argc, char **argv)
 {
     boost::program_options::options_description options("General Options");
     options.add_options()
-        ( "b,buffer", boost::program_options::value<int>(&cfg.buf_size), "buffer size" )
-        ( "d,device", boost::program_options::value<std::string>(&cfg.device), "device file" )
-        ( "i,instruments", boost::program_options::bool_switch(&cfg.showinsts), "show instruments" )
-        ( "r,realtime", boost::program_options::bool_switch(&cfg.songinfo), "realtime song info" )
-        ( "m,message", boost::program_options::bool_switch(&cfg.songmessage), "song message" )
-        ( "s,subsong", boost::program_options::value<int>(&cfg.subsong), "play subsong" )
-        ( "o,once", boost::program_options::bool_switch(&cfg.playOnce), "don't loop" )
-        ( "h,help", boost::program_options::bool_switch(), "display help" )
-        ( "V,version", boost::program_options::bool_switch(), "version information" )
-        ( "O,output", boost::program_options::value<std::string>(), "output mechanism" )
-        ( "q,quiet", boost::program_options::bool_switch(), "be more quiet" )
-        ( "v,verbose", boost::program_options::bool_switch(), "be more verbose" )
-        ( "R,repeats", boost::program_options::value<int>(&cfg.repeats) )
-        ( "file", boost::program_options::value<std::string>()->required(), "File to play" )
+        ( "buffer,b", boost::program_options::value<int>(&cfg.buf_size), "buffer size" )
+        ( "device,d", boost::program_options::value<std::string>(&cfg.device), "device file" )
+        ( "instruments,i", boost::program_options::bool_switch(&cfg.showinsts), "show instruments" )
+        ( "realtime,r", boost::program_options::bool_switch(&cfg.songinfo), "realtime song info" )
+        ( "message,m", boost::program_options::bool_switch(&cfg.songmessage), "song message" )
+        ( "subsong,s", boost::program_options::value<int>(&cfg.subsong), "play subsong" )
+        ( "once,o", boost::program_options::bool_switch(&cfg.playOnce), "don't loop" )
+        ( "help,h", boost::program_options::bool_switch(), "display help" )
+        ( "version,V", boost::program_options::bool_switch(), "version information" )
+        ( "output,O", boost::program_options::value<std::string>(), "output mechanism" )
+        ( "quiet,q", boost::program_options::bool_switch(), "be more quiet" )
+        ( "verbose,v", boost::program_options::bool_switch(), "be more verbose" )
+        ( "repeats,R", boost::program_options::value<int>(&cfg.repeats) )
+        ( "file,f", boost::program_options::value<std::string>()->required(), "File to play" )
         ;
 
     boost::program_options::positional_options_description p;
@@ -131,15 +121,16 @@ static std::string decode_switches(int argc, char **argv)
     }
     catch(std::exception& ex) {
         std::cerr << "Failed to parse command line: " << ex.what() << std::endl;
+        usage();
         exit(EXIT_FAILURE);
     }
 
-    if(vm.count("version")) {
+    if(vm["version"].as<bool>()) {
         std::cout << BADPLAY_VERSION << std::endl;
         exit(EXIT_SUCCESS);
     }
 
-    if(vm.count("help") || vm.count("file") == 0) {
+    if(vm["help"].as<bool>() || vm.count("file") == 0) {
         std::cout << program_name << " [options] <file>\n";
         std::cout << options;
         exit(EXIT_SUCCESS);
@@ -154,16 +145,18 @@ static std::string decode_switches(int argc, char **argv)
             cfg.output = Outputs::sdl;
         }
         else {
-            message(MSG_ERROR, "unknown output method -- %s", vm["output"].as<std::string>().c_str());
+            logger->fatal(L4CXX_LOCATION, "unknown output method -- %s", vm["output"].as<std::string>());
             exit(EXIT_FAILURE);
         }
     }
 
-    if(vm.count("verbose"))
-        cfg.message_level++;
+    light4cxx::Logger::setLevel(light4cxx::Level::Info);
+
+    if(vm["verbose"].as<bool>())
+        light4cxx::Logger::setLevel(light4cxx::Level::Debug);
     
-    if(vm.count("quiet"))
-        cfg.message_level--;
+    if(vm["quiet"].as<bool>())
+        light4cxx::Logger::setLevel(light4cxx::Level::Warn);
 
     return vm["file"].as<std::string>();
 }
@@ -179,7 +172,7 @@ static void play(const char *fn, Player *output, int subsong = -1)
     auto player = CAdPlug::factory(fn);
 
     if(!player) {
-        message(MSG_WARN, "unknown filetype -- %s", fn);
+        logger->warn(L4CXX_LOCATION, "unknown filetype -- %s", fn);
         return;
     }
 
@@ -243,7 +236,7 @@ int main(int argc, char **argv)
     // init player
     switch(cfg.output) {
     case Outputs::none:
-        message(MSG_PANIC, "no output methods compiled in");
+        logger->fatal(L4CXX_LOCATION, "no output methods compiled in");
         exit(EXIT_FAILURE);
     case Outputs::disk:
         output.reset( new DiskWriter(cfg.device.c_str(), 44100) );
@@ -252,7 +245,7 @@ int main(int argc, char **argv)
         output.reset( new SDLPlayer(44100, cfg.buf_size) );
         break;
     default:
-        message(MSG_ERROR, "output method not available");
+        logger->error(L4CXX_LOCATION, "output method not available");
         return EXIT_FAILURE;
     }
 

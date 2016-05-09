@@ -20,20 +20,26 @@
 #include <iostream>
 #include <cstdlib>
 
-#include "defines.h"
 #include "disk.h"
+#include <light4cxx/logger.h>
 
-#define BUFSIZE		512
+namespace
+{
+light4cxx::Logger* logger = light4cxx::Logger::get("badplay.output.disk");
+constexpr const size_t BufferSize = 512;
+}
 
 DiskWriter::DiskWriter(const char *filename, uint32_t nfreq)
-    : EmuPlayer(nfreq, BUFSIZE)
+    : EmuPlayer(nfreq, BufferSize)
     , m_file(filename, FileStream::Mode::Write)
     , m_bytesWritten(0)
 {
     if(!m_file) {
-        message(MSG_ERROR, "cannot open file for output -- %s", filename);
-        exit(EXIT_FAILURE);
+        logger->fatal(L4CXX_LOCATION, "cannot open file for output -- %s", filename);
+        BOOST_THROW_EXCEPTION( std::runtime_error("cannot open file for output") );
     }
+
+    logger->info(L4CXX_LOCATION, "Outputting to %s", filename);
 
     // Write Microsoft RIFF WAVE header
     m_file.write("RIFF", 4);

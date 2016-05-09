@@ -25,15 +25,4 @@
 // AdPlay/UNIX version string
 #define BADPLAY_VERSION "BAdPlay/UNIX 0.2-alpha0"
 
-// Message urgency levels
-#define MSG_PANIC 0 // Unmaskable
-#define MSG_ERROR 1
-#define MSG_WARN 2
-#define MSG_NOTE 3
-#define MSG_DEBUG 4
-
-/***** Global functions *****/
-
-void message(int level, const char *fmt, ...);
-
 #endif

@@ -18,9 +18,14 @@
  */
 
 #include "sdl.h"
-#include "defines.h"
 
 #include "genmod/breseninter.h"
+#include "light4cxx/logger.h"
+
+namespace
+{
+light4cxx::Logger* logger = light4cxx::Logger::get("badplay.output.sdl");
+}
 
 SDLPlayer::SDLPlayer(int freq, size_t bufsize)
     : m_interp(freq, opl::Opl3::SampleRate)
@@ -28,7 +33,7 @@ SDLPlayer::SDLPlayer(int freq, size_t bufsize)
     memset(&m_spec, 0x00, sizeof(SDL_AudioSpec));
 
     if(SDL_Init(SDL_INIT_AUDIO) < 0) {
-        message(MSG_ERROR, "unable to initialize SDL -- %s", SDL_GetError());
+        logger->fatal(L4CXX_LOCATION, "unable to initialize SDL -- %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
 
@@ -40,11 +45,11 @@ SDLPlayer::SDLPlayer(int freq, size_t bufsize)
     m_spec.userdata = this;
 
     if(SDL_OpenAudio(&m_spec, &m_spec) < 0) {
-        message(MSG_ERROR, "unable to open audio -- %s", SDL_GetError());
+        logger->fatal(L4CXX_LOCATION, "unable to open audio -- %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
 
-    message(MSG_DEBUG, "got audio buffer size -- %d", m_spec.size);
+    logger->debug(L4CXX_LOCATION, "got audio buffer size -- %d", m_spec.size);
 }
 
 SDLPlayer::~SDLPlayer()
