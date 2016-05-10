@@ -31,7 +31,6 @@ namespace ppp
 {
 namespace mod
 {
-
 class ModCell : public IPatternCell
 {
 public:
@@ -42,15 +41,15 @@ public:
      * @retval true on success
      * @retval false if an error occured
      */
-    bool load( Stream* str );
-    virtual void clear();
-    virtual std::string trackerString() const;
+    bool load(Stream* str);
+    void clear() override;
+    std::string trackerString() const override;
     uint8_t sampleNumber() const;
     uint16_t period() const;
     uint8_t effect() const;
     uint8_t effectValue() const;
     void reset();
-    virtual AbstractArchive& serialize( AbstractArchive* data );
+    AbstractArchive& serialize(AbstractArchive* data) override;
 private:
     uint8_t m_sampleNumber;
     uint16_t m_period;
@@ -64,7 +63,6 @@ protected:
      */
     static light4cxx::Logger* logger();
 };
-
 }
 }
 

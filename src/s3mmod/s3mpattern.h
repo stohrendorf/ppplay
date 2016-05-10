@@ -34,7 +34,6 @@ namespace ppp
 {
 namespace s3m
 {
-
 class S3mCell;
 
 /**
@@ -43,7 +42,7 @@ class S3mCell;
  */
 class S3mPattern : public Field<S3mCell>
 {
-    DISABLE_COPY( S3mPattern )
+    DISABLE_COPY(S3mPattern)
 public:
     //! @brief Constructor
     explicit S3mPattern();
@@ -53,7 +52,7 @@ public:
      * @param[in] pos Position within @a str
      * @return @c true on success
      */
-    bool load( Stream* str, size_t pos );
+    bool load(Stream* str, size_t pos);
 protected:
     /**
      * @brief Get the logger
@@ -61,7 +60,6 @@ protected:
      */
     static light4cxx::Logger* logger();
 };
-
 } // namespace s3m
 } // namespace ppp
 

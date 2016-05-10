@@ -18,6 +18,12 @@ add_library(ppplay_stream SHARED
 	memarchive.cpp
 	memorystream.cpp
 	archivefilestream.cpp
+	stream.h
+	filestream.h
+	abstractarchive.h
+	memarchive.h
+	memorystream.h
+	archivefilestream.h
 )
 set_target_properties(ppplay_stream PROPERTIES SOVERSION 1)
 

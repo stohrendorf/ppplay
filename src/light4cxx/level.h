@@ -21,16 +21,15 @@
 
 namespace light4cxx
 {
-
 /**
  * @ingroup light4cxx
  * @{
  */
 
-/**
- * @brief Logging levels
- * @see light4cxx::Logger
- */
+ /**
+  * @brief Logging levels
+  * @see light4cxx::Logger
+  */
 enum class Level
 {
     All, //!< @brief Everything will be logged
@@ -46,8 +45,6 @@ enum class Level
 /**
  * @}
  */
-
 }
 
 #endif
-

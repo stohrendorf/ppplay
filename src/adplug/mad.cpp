@@ -141,7 +141,7 @@ std::string CmadLoader::instrumentTitle(size_t n) const
     return std::string(instruments[n].name, 8);
 }
 
-uint32_t CmadLoader::instrumentCount() const
+size_t CmadLoader::instrumentCount() const
 {
     return 9;
 }

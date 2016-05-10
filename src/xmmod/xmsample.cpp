@@ -95,7 +95,7 @@ bool XmSample::loadData(Stream* str)
     if(m_16bit)
     { // 16 bit
         int16_t smp16 = 0;
-        for(auto it = beginIterator(); it != endIterator(); it++)
+        for(auto it = beginIterator(); it != endIterator(); ++it)
         {
             int16_t delta;
             *str >> delta;
@@ -106,7 +106,7 @@ bool XmSample::loadData(Stream* str)
     else
     { // 8 bit
         int8_t smp8 = 0;
-        for(auto it = beginIterator(); it != endIterator(); it++)
+        for(auto it = beginIterator(); it != endIterator(); ++it)
         {
             int8_t delta;
             *str >> delta;

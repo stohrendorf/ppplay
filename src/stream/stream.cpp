@@ -18,8 +18,6 @@
 
 #include "stream.h"
 
-#include <iostream>
-
 Stream::Stream(std::iostream* stream, const std::string& name) : m_stream(stream), m_name(name)
 {
 }
@@ -42,7 +40,7 @@ void Stream::seek(std::streamoff pos)
 
 void Stream::seekrel(std::streamoff delta)
 {
-    uint32_t p = pos();
+    auto p = pos();
     m_stream->seekg(p + delta);
     m_stream->seekp(p + delta);
 }

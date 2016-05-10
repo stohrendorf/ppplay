@@ -34,7 +34,6 @@ namespace ppp
 {
 namespace xm
 {
-
 class XmSample;
 
 /**
@@ -43,7 +42,7 @@ class XmSample;
  */
 class XmInstrument
 {
-    DISABLE_COPY( XmInstrument )
+    DISABLE_COPY(XmInstrument)
 private:
     //! @brief Samples this instrument contains
     std::vector<XmSample*> m_samples;
@@ -94,21 +93,21 @@ public:
      * @param[in] str The stream to load from
      * @return @c true on success
      */
-    bool load( Stream* str );
+    bool load(Stream* str);
     /**
      * @brief Map a note index into its sample index
      * @param[in] note Note to map
      * @return Mapped sample index
      * @note @a note is zero-based!
      */
-    uint8_t mapNoteIndex( uint8_t note ) const;
+    uint8_t mapNoteIndex(uint8_t note) const;
     /**
      * @brief Map a note index into its sample
      * @param[in] note Note to map
      * @return Mapped sample
      * @note @a note is zero-based!
      */
-    XmSample* mapNoteSample( uint8_t note ) const;
+    XmSample* mapNoteSample(uint8_t note) const;
     /**
      * @brief Get the instrument's title
      * @return m_title
@@ -118,7 +117,7 @@ public:
      * @brief Get the volume fadeout value
      * @return m_fadeout
      */
-    uint16_t fadeout() const ;
+    uint16_t fadeout() const;
     /**
      * @brief Create the volume envelope processor
      * @return Volume envelope processor
@@ -156,7 +155,6 @@ protected:
      */
     static light4cxx::Logger* logger();
 };
-
 }
 }
 

@@ -32,8 +32,8 @@
 
 class PPPLAY_OUTPUT_WAV_EXPORT WavAudioOutput : public AbstractAudioOutput
 {
-    DISABLE_COPY( WavAudioOutput )
-    WavAudioOutput() = delete;
+    DISABLE_COPY(WavAudioOutput)
+        WavAudioOutput() = delete;
 private:
     std::ofstream m_file;
     std::string m_filename;
@@ -42,15 +42,15 @@ private:
     bool m_paused;
     mutable std::mutex m_mutex;
     void encodeThread();
-    virtual uint16_t internal_volumeRight() const;
-    virtual uint16_t internal_volumeLeft() const;
-    virtual void internal_pause();
-    virtual void internal_play();
-    virtual bool internal_paused() const;
-    virtual bool internal_playing() const;
-    virtual int internal_init( int desiredFrq );
+    uint16_t internal_volumeRight() const override;
+    uint16_t internal_volumeLeft() const override;
+    void internal_pause() override;
+    void internal_play() override;
+    bool internal_paused() const override;
+    bool internal_playing() const override;
+    int internal_init(int desiredFrq) override;
 public:
-    explicit WavAudioOutput( const AbstractAudioSource::WeakPtr& src, const std::string& filename );
+    explicit WavAudioOutput(const AbstractAudioSource::WeakPtr& src, const std::string& filename);
     virtual ~WavAudioOutput();
 protected:
     static light4cxx::Logger* logger();

@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef MODORDER_H
 #define MODORDER_H
 
@@ -26,17 +25,16 @@ namespace ppp
 {
 namespace mod
 {
-
 class ModOrder : public AbstractOrder
 {
-    DISABLE_COPY( ModOrder )
-    ModOrder() = delete;
+    DISABLE_COPY(ModOrder)
+        ModOrder() = delete;
 public:
-    inline ModOrder( uint8_t idx ) : AbstractOrder( idx ) {
+    explicit ModOrder(uint8_t idx) : AbstractOrder(idx)
+    {
     }
-    virtual bool isUnplayed() const;
+    bool isUnplayed() const override;
 };
-
 }
 }
 

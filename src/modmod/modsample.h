@@ -32,15 +32,14 @@ namespace ppp
 {
 namespace mod
 {
-
 class ModSample : public Sample
 {
-    DISABLE_COPY( ModSample )
+    DISABLE_COPY(ModSample)
 public:
     ModSample();
-    bool loadHeader( Stream* stream );
-    bool loadData( Stream* stream );
-    bool loadAdpcmData( Stream* stream );
+    bool loadHeader(Stream* stream);
+    bool loadData(Stream* stream);
+    bool loadAdpcmData(Stream* stream);
     uint8_t finetune() const;
 private:
     uint8_t m_finetune;
@@ -51,7 +50,6 @@ protected:
      */
     static light4cxx::Logger* logger();
 };
-
 }
 }
 

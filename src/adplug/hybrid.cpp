@@ -241,7 +241,7 @@ std::string CxadhybridPlayer::instrumentTitle(size_t i) const
     return std::string(hyb.inst[i].name, 7);
 }
 
-uint32_t CxadhybridPlayer::instrumentCount() const
+size_t CxadhybridPlayer::instrumentCount() const
 {
     return 26;
 }

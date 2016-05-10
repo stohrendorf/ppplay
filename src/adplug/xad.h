@@ -38,19 +38,19 @@ protected:
     virtual void xadplayer_rewind(int subsong) = 0;
     virtual bool xadplayer_load() = 0;
     virtual void xadplayer_update() = 0;
-    virtual std::string title() const override
+    std::string title() const override
     {
         return m_xadHeader.title;
     }
-    virtual std::string author() const override
+    std::string author() const override
     {
         return m_xadHeader.author;
     }
-    virtual std::string instrumentTitle(size_t) const override
+    std::string instrumentTitle(size_t) const override
     {
         return std::string();
     }
-    virtual uint32_t instrumentCount() const override
+    size_t instrumentCount() const override
     {
         return 0;
     }

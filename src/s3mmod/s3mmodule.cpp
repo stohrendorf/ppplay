@@ -329,7 +329,7 @@ bool S3mModule::load(Stream* stream)
         noConstMetaInfo().title = stringncpy(s3mHdr.title, 28);
         return stream->good();
     }
-    catch(boost::exception& e)
+    catch(boost::exception&)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(boost::current_exception_diagnostic_information()));
     }

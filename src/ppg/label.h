@@ -21,7 +21,6 @@
 
 #include "widget.h"
 
-#include <string>
 #include <vector>
 
 /**
@@ -31,15 +30,14 @@
 
 namespace ppg
 {
-
 /**
  * @class Label
  * @brief A colored text label
  */
 class PPPLAY_PPG_EXPORT Label : public Widget
 {
-    DISABLE_COPY( Label )
-    Label() = delete;
+    DISABLE_COPY(Label)
+        Label() = delete;
 private:
     /**
      * @brief Resizes m_fgColors and m_bgColors if the new text length or the widget's width are greater than the arrays' sizes
@@ -48,14 +46,14 @@ private:
     std::string m_text; //!< @brief The text in this label
     std::vector<Color> m_fgColors; //!< @brief Text chars' foreground colors
     std::vector<Color> m_bgColors; //!< @brief Text chars' background colors
-    virtual void drawThis();
+    void drawThis() override;
 public:
     /**
      * @brief Constructor
      * @param[in] parent Parent widget
      * @param[in] text Initial text
      */
-    Label( Widget* parent, const std::string& text = std::string() );
+    explicit Label(Widget* parent, const std::string& text = std::string());
     /**
      * @brief Label alignment enumeration class
      */
@@ -75,7 +73,7 @@ public:
      * @brief Sets the label's text
      * @param[in] txt Text to assign to this label
      */
-    void setText( const std::string& txt );
+    void setText(const std::string& txt);
     /**
      * @brief Sets the label's text from an escaped string
      * @param[in] txt Text to assign to this label
@@ -89,7 +87,7 @@ public:
      *
      * For valid names, see ppg::Color
      */
-    void setEscapedText( const std::string& txt );
+    void setEscapedText(const std::string& txt);
     /**
      * @brief Get the label's text
      * @return The label's text
@@ -100,32 +98,31 @@ public:
      * @param[in] pos Position of the requested character
      * @return Reference to the character at position @a pos
      */
-    char& charAt( size_t pos );
+    char& charAt(size_t pos);
     /**
      * @overload
      * @brief Get the character at position @a pos
      * @param[in] pos Position of the requested character
      * @return The character at position @a pos
      */
-    char charAt( size_t pos ) const;
+    char charAt(size_t pos) const;
     /**
      * @brief Set's the foreground color of @a len chars from position @a pos to @a color
      * @param[in] pos Starting position
      * @param[in] color New foreground color
      * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
      */
-    void setFgColorRange( size_t pos, Color color = Color::None, size_t len = 1 );
+    void setFgColorRange(size_t pos, Color color = Color::None, size_t len = 1);
     /**
      * @brief Set's the background color of @a len chars from position @a pos to @a color
      * @param[in] pos Starting position
      * @param[in] color New background color
      * @param[in] len Number of chars. Set to @c 0 to set all colors from @a pos to the end of the string
      */
-    void setBgColorRange( size_t pos, Color color = Color::None, size_t len = 1 );
-    virtual int setHeight( int h );
-    virtual int setWidth( int w );
+    void setBgColorRange(size_t pos, Color color = Color::None, size_t len = 1);
+    int setHeight(int h) override;
+    int setWidth(int w) override;
 };
-
 } // namespace ppg
 
 /**

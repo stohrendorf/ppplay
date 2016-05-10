@@ -29,17 +29,18 @@
  * @{
  */
 
-/**
- * @interface IAudioOutput
- * @brief Abstract base class for sound output
- */
+ /**
+  * @interface IAudioOutput
+  * @brief Abstract base class for sound output
+  */
 class PPPLAY_CORE_EXPORT AbstractAudioOutput
 {
-    DISABLE_COPY( AbstractAudioOutput )
-    AbstractAudioOutput() = delete;
+    DISABLE_COPY(AbstractAudioOutput)
+        AbstractAudioOutput() = delete;
 public:
     //! @brief Audio output device error codes
-    enum ErrorCode {
+    enum ErrorCode
+    {
         NoError, //!< @brief No error
         InputError, //!< @brief General input error
         InputDry, //!< @brief Audio source can't provide data
@@ -55,8 +56,9 @@ public:
      * @brief Constructor
      * @param[in] src Pointer to an audio data source
      */
-    inline explicit AbstractAudioOutput( const AbstractAudioSource::WeakPtr& src )
-        : m_source( src ), m_errorCode( NoError ), m_mutex() {
+    inline explicit AbstractAudioOutput(const AbstractAudioSource::WeakPtr& src)
+        : m_source(src), m_errorCode(NoError), m_mutex()
+    {
     }
     //! @brief Destructor
     virtual ~AbstractAudioOutput() = default;
@@ -66,7 +68,7 @@ public:
      */
     ErrorCode errorCode() const noexcept;
     //! @copydoc internal_init
-    int init( int desiredFrq );
+    int init(int desiredFrq);
     //! @copydoc internal_playing
     bool playing() const;
     //! @copydoc internal_paused
@@ -89,7 +91,7 @@ protected:
      * @brief Set the internal error code
      * @param[in] ec New error code
      */
-    void setErrorCode( ErrorCode ec ) noexcept;
+    void setErrorCode(ErrorCode ec) noexcept;
     /**
      * @brief Get the logger
      * @return Logger with name "audio.output"
@@ -107,7 +109,7 @@ private:
      * @retval 0 Initialization failed
      * @retval other Real output frequency
      */
-    virtual int internal_init( int desiredFrq ) = 0;
+    virtual int internal_init(int desiredFrq) = 0;
     /**
      * @brief Check if the output is in playing state
      * @return @c true if the output is in playing state

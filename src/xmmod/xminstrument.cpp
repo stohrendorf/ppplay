@@ -26,7 +26,6 @@
 
 #include "stream/stream.h"
 
-#include <cstdint>
 #include <boost/assert.hpp>
 #include <boost/format.hpp>
 

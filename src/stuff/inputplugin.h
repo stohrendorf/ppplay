@@ -1,7 +1,6 @@
 #ifndef PPPLAY_INPUTPLUGIN_H
 #define PPPLAY_INPUTPLUGIN_H
 
-#include <string>
 #include <genmod/sample.h>
 
 #if defined(_MSC_VER)
@@ -31,11 +30,14 @@ class InputPlugin
 {
 public:
     //! @brief API version
-    enum { Version = 4 };
+    enum
+    {
+        Version = 4
+    };
     /**
      * @brief Virtual empty base destructor
      */
-    virtual ~InputPlugin() { }
+    virtual ~InputPlugin() = default;
     /**
      * @brief API version
      * @return API version of the plugin
@@ -61,7 +63,7 @@ public:
      * @retval NULL if the module could not be loaded by this plugin
      * @retval else a pointer to the loaded module
      */
-    virtual AbstractModule* load( Stream* stream, uint32_t frequency, int maxRepeat, ppp::Sample::Interpolation inter ) const = 0;
+    virtual AbstractModule* load(Stream* stream, uint32_t frequency, int maxRepeat, ppp::Sample::Interpolation inter) const = 0;
 };
 }
 

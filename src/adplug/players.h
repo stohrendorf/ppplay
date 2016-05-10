@@ -23,6 +23,8 @@
 #include "ymf262/opl3.h"
 #include "player.h"
 
+#include <list>
+
 class PlayerDesc
 {
 public:

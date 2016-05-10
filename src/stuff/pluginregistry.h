@@ -32,10 +32,9 @@
 
 namespace ppp
 {
-
 class PPPLAY_CORE_EXPORT PluginRegistry
 {
-    DISABLE_COPY( PluginRegistry )
+    DISABLE_COPY(PluginRegistry)
 private:
     /**
      * @brief Default constructor
@@ -72,10 +71,9 @@ public:
      * @param[in] inter Sample interpolation type
      * @return The loaded file or a nullptr if an error occured
      */
-    static AbstractModule::Ptr tryLoad( const std::string& filename, uint32_t frq, int maxRpt, Sample::Interpolation inter );
+    static AbstractModule::Ptr tryLoad(const std::string& filename, uint32_t frq, int maxRpt, Sample::Interpolation inter);
     void setSearchPath(const boost::filesystem::path& path);
 };
-
 }
 
 #endif

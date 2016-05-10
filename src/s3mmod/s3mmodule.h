@@ -32,7 +32,6 @@ namespace ppp
 {
 namespace s3m
 {
-
 class S3mSample;
 class S3mPattern;
 class S3mChannel;
@@ -43,8 +42,8 @@ class S3mChannel;
  */
 class S3mModule : public AbstractModule
 {
-    DISABLE_COPY( S3mModule )
-    S3mModule() = delete;
+    DISABLE_COPY(S3mModule)
+        S3mModule() = delete;
     friend class S3mChannel;
 public:
     /**
@@ -54,7 +53,7 @@ public:
      * @param[in] maxRpt Maximum repeat count
      * @return Module pointer or nullptr
      */
-    static AbstractModule* factory( Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter );
+    static AbstractModule* factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter);
 private:
     uint16_t m_breakRow;      //!< @brief Row to break to, ~0 if unused
     uint16_t m_breakOrder;    //!< @brief Order to break to, ~0 if unused
@@ -75,43 +74,43 @@ private:
      * @param[in] idx Pattern index of the requested pattern
      * @return Pattern pointer or nullptr
      */
-    S3mPattern* getPattern( size_t idx ) const;
+    S3mPattern* getPattern(size_t idx) const;
 protected:
-    virtual AbstractArchive& serialize( AbstractArchive* data );
+    AbstractArchive& serialize(AbstractArchive* data) override;
 public:
     virtual ~S3mModule();
 private:
-    virtual int internal_channelCount() const;
-    virtual size_t internal_buildTick( AudioFrameBuffer* buf );
-    virtual ChannelState internal_channelStatus( size_t idx ) const;
+    int internal_channelCount() const override;
+    size_t internal_buildTick(AudioFrameBuffer* buf) override;
+    ChannelState internal_channelStatus(size_t idx) const override;
     /**
      * @copydoc ppp::GenModule::GenModule(uint8_t)
      */
-    S3mModule( int maxRpt, Sample::Interpolation inter );
+    S3mModule(int maxRpt, Sample::Interpolation inter);
     /**
      * @brief Apply global effects
      */
-    void checkGlobalFx( );
+    void checkGlobalFx();
     /**
      * @brief Adjust the playback position
      * @param[in] estimateOnly Used when estimating track length
      * @retval false if the end of the current song is reached
      * @retval true otherwise
      */
-    bool adjustPosition( bool estimateOnly );
+    bool adjustPosition(bool estimateOnly);
     /**
      * @brief Load the module
      * @param[in] fn Filename of the module to load
      * @return @c true on success
      */
-    bool load( Stream* stream );
+    bool load(Stream* stream);
     /**
      * @brief Check if a sample exists
      * @param[in] idx Sample index to check
      * @retval true if the sample exists
      * @retval false otherwise
      */
-    bool existsSample( int16_t idx );
+    bool existsSample(int16_t idx);
     /**
      * @brief Check if amiga limits are present
      * @return m_amigaLimits
@@ -137,7 +136,7 @@ private:
      * @param[in] idx Sample index
      * @return Sample pointer or nullptr
      */
-    const S3mSample* sampleAt( size_t idx ) const;
+    const S3mSample* sampleAt(size_t idx) const;
     /**
      * @brief Check if zero volume optimizations are present
      * @return m_zeroVolOpt

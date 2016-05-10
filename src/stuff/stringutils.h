@@ -19,9 +19,6 @@
 #ifndef PPPLAY_STRINGUTILS_H
 #define PPPLAY_STRINGUTILS_H
 
-#include "ppplay_core_export.h"
-
-#include <string>
 #include <boost/format.hpp>
 
 /**
@@ -29,18 +26,20 @@
  * @{
  */
 
-/**
- * @brief Helper function like strncpy, but returns a std::string
- * @param[in] src Source string
- * @param[in] maxlen Maximum length of the string to copy
- * @return Copied string
- * @note Stops at the NUL character
- */
-inline std::string stringncpy(const char *src, size_t maxlen )
+ /**
+  * @brief Helper function like strncpy, but returns a std::string
+  * @param[in] src Source string
+  * @param[in] maxlen Maximum length of the string to copy
+  * @return Copied string
+  * @note Stops at the NUL character
+  */
+inline std::string stringncpy(const char *src, size_t maxlen)
 {
     std::string res;
-    for( size_t i = 0; i < maxlen; i++ ) {
-        if( src[i] == 0x00 ) {
+    for(size_t i = 0; i < maxlen; i++)
+    {
+        if(src[i] == 0x00)
+        {
             break;
         }
         res += src[i];
@@ -48,26 +47,26 @@ inline std::string stringncpy(const char *src, size_t maxlen )
     return res;
 }
 
-inline std::string stringFmt( boost::format& fmt )
+inline std::string stringFmt(boost::format& fmt)
 {
     return fmt.str();
 }
 
-inline std::string stringFmt( std::string&& fmt )
+inline std::string stringFmt(std::string&& fmt)
 {
     return fmt;
 }
 
 template<class T, class ...Args>
-inline std::string stringFmt( boost::format& fmt, T&& val, Args&& ...args )
+inline std::string stringFmt(boost::format& fmt, T&& val, Args&& ...args)
 {
-    return stringFmt( fmt % std::forward<T>(val), std::forward<Args>(args)... );
+    return stringFmt(fmt % std::forward<T>(val), std::forward<Args>(args)...);
 }
 
 template<class T, class ...Args>
-inline std::string stringFmt( std::string&& fmt, T&& val, Args&& ...args )
+inline std::string stringFmt(std::string&& fmt, T&& val, Args&& ...args)
 {
-    return stringFmt( boost::format( std::forward<std::string>(fmt) ) % std::forward<T>(val), std::forward<Args>(args)... );
+    return stringFmt(boost::format(std::forward<std::string>(fmt)) % std::forward<T>(val), std::forward<Args>(args)...);
 }
 
 /**

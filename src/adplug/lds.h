@@ -35,8 +35,8 @@ public:
     CldsPlayer() = default;
 
     bool load(const std::string &filename) override;
-    virtual bool update() override;
-    virtual void rewind(int subsong = -1) override;
+    bool update() override;
+    void rewind(int subsong = -1) override;
     size_t framesUntilUpdate() const override
     {
         return SampleRate / 70;
@@ -46,7 +46,7 @@ public:
     {
         return "LOUDNESS Sound System";
     }
-    uint32_t instrumentCount() const override
+    size_t instrumentCount() const override
     {
         return m_soundbank.size();
     }

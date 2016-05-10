@@ -160,7 +160,7 @@ std::string CxadpsiPlayer::type() const
     return "xad: psi player";
 }
 
-uint32_t CxadpsiPlayer::instrumentCount() const
+size_t CxadpsiPlayer::instrumentCount() const
 {
     return 8;
 }

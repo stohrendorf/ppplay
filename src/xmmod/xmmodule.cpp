@@ -33,7 +33,6 @@
 #include "stream/stream.h"
 #include <genmod/channelstate.h>
 
-#include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 
 namespace ppp
@@ -391,7 +390,7 @@ uint32_t XmModule::periodToFrequency(uint16_t period) const
         uint32_t exponent = 6 - tmp / N;
         uint64_t res = (8363ull << 32) / pbFrq * std::llround(0x1000000 * std::pow(2, static_cast<float>(tmp % N) / N));
         res >>= exponent + 8 + 32;
-        return res * adjFac;
+        return static_cast<uint32_t>(res * adjFac);
     }
 }
 

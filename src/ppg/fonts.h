@@ -26,7 +26,6 @@
 
 namespace ppg
 {
-
 /**
  * @brief The 8x8 pixels font
  */
@@ -36,7 +35,6 @@ extern const unsigned char plFont88[256][8];
  * @brief The 8x16 pixels font
  */
 extern const unsigned char plFont816[256][16];
-
 }
 
 /**

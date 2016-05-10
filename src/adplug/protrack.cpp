@@ -111,7 +111,7 @@ bool CmodPlayer::update()
                 {
                     if(data <= 96)
                         setNote(channelIdx, chan.note + data);
-                    else if(data >= 100)
+                    else if(data > 100)
                         setNote(channelIdx, data - 100);
                 }
                 else
@@ -722,6 +722,8 @@ void CmodPlayer::playNote(size_t chan)
 
 void CmodPlayer::setNote(size_t chan, int note)
 {
+    BOOST_ASSERT(note > 0);
+
     if(note > 96)
     {
         if(note == 127)
@@ -736,7 +738,6 @@ void CmodPlayer::setNote(size_t chan, int note)
 
     if(note < 13)
     {
-        BOOST_ASSERT(note > 0);
         m_channels[chan].frequency = m_noteTable[note - 1];
     }
     else if(note % 12 > 0)

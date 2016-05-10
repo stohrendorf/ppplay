@@ -129,14 +129,14 @@ public:
      * @see isMultiSong()
      * @see currentSongIndex()
      */
-    uint16_t songCount() const noexcept;
+    size_t songCount() const noexcept;
     /**
      * @brief Get the currently playing song index
      * @return m_currentSongIndex
      * @see isMultiSong()
      * @see songCount()
      */
-    int16_t currentSongIndex() const;
+    size_t currentSongIndex() const;
     /**
      * @}
      */

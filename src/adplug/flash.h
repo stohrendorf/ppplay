@@ -44,7 +44,7 @@ protected:
     void xadplayer_update() override;
     size_t framesUntilUpdate() const override;
     std::string type() const override;
-    uint32_t instrumentCount() const override;
+    size_t instrumentCount() const override;
 
 private:
     static const unsigned char flash_adlib_registers[99];

@@ -32,7 +32,6 @@ namespace ppp
 {
 namespace s3m
 {
-
 /**
  * @class S3mCell
  * @brief A ScreamTracker cell
@@ -53,9 +52,9 @@ public:
      * @retval true on success
      * @retval false if an error occured
      */
-    bool load( Stream* str );
-    virtual void clear();
-    virtual std::string trackerString() const;
+    bool load(Stream* str);
+    void clear() override;
+    std::string trackerString() const override;
     /**
      * @brief Get the cell's note
      * @return m_note
@@ -81,7 +80,7 @@ public:
      * @return m_effectValue
      */
     uint8_t effectValue() const;
-    virtual AbstractArchive& serialize( AbstractArchive* data );
+    AbstractArchive& serialize(AbstractArchive* data) override;
 protected:
     /**
      * @brief Get the logger
@@ -89,7 +88,6 @@ protected:
      */
     static light4cxx::Logger* logger();
 };
-
 }
 }
 

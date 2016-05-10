@@ -81,7 +81,7 @@ protected:
     std::string title() const override;
     std::string author() const override;
     std::string instrumentTitle(size_t i) const override;
-    uint32_t instrumentCount() const override;
+    size_t instrumentCount() const override;
     //
 private:
     static const uint8_t bmf_adlib_registers[117];

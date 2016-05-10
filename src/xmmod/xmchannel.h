@@ -34,7 +34,6 @@ namespace ppp
 {
 namespace xm
 {
-
 class XmModule;
 class XmCell;
 class XmSample;
@@ -46,13 +45,13 @@ class XmInstrument;
  */
 class XmChannel : public ISerializable
 {
-    DISABLE_COPY( XmChannel )
-    XmChannel() = delete;
+    DISABLE_COPY(XmChannel)
+        XmChannel() = delete;
 private:
     /** @name Basic channel variables
      * @{
      */
-    //! @brief Base volume
+     //! @brief Base volume
     uint8_t m_baseVolume;
     //! @brief Current volume (for tremolo or such fx)
     uint8_t m_currentVolume;
@@ -80,7 +79,7 @@ private:
     /** @name Envelopes variables
      * @{
      */
-    //! @brief Volume envelope processor
+     //! @brief Volume envelope processor
     XmEnvelopeProcessor m_volumeEnvelope;
     //! @brief Panning envelope processor
     XmEnvelopeProcessor m_panningEnvelope;
@@ -95,7 +94,7 @@ private:
     /** @name Effect backup variables
      * @{
      */
-    //! @brief Last volume slide effect value
+     //! @brief Last volume slide effect value
     RememberByte<false> m_lastVolSlideFx;
     //! @brief Last porta up effect value
     RememberByte<false> m_lastPortaUpFx;
@@ -126,7 +125,7 @@ private:
     /** @name Effect state variables
      * @{
      */
-    //! @brief Current porta rate
+     //! @brief Current porta rate
     uint16_t m_portaSpeed;
     //! @brief Target period of porta effect
     uint16_t m_portaTargetPeriod;
@@ -189,85 +188,85 @@ private:
      */
     const XmInstrument* currentInstrument() const;
 
-    void updateTick0( const XmCell& cell, bool estimateOnly );
-    void updateTick1( const XmCell& cell, bool estimateOnly );
+    void updateTick0(const XmCell& cell, bool estimateOnly);
+    void updateTick1(const XmCell& cell, bool estimateOnly);
 public:
     /**
      * @brief Constructor
      * @param[in] module Pointer to the owning module
      */
-    XmChannel( XmModule* module );
+    explicit XmChannel(XmModule* module);
     ~XmChannel();
     /**
      * @brief Update the channel values
      * @param[in] cell The new cell
      * @param[in] estimateOnly Set to @c true to skip expensive effects
      */
-    void update( const XmCell& cell, bool estimateOnly );
-    virtual AbstractArchive& serialize( AbstractArchive* data );
+    void update(const XmCell& cell, bool estimateOnly);
+    AbstractArchive& serialize(AbstractArchive* data) override;
     ChannelState status() const;
-    void mixTick( MixerFrameBuffer* mixBuffer );
+    void mixTick(MixerFrameBuffer* mixBuffer);
     void updateStatus();
 private:
     /** @name Effect handlers
      * @{
      */
-    /**
-     * @brief Effect 1: Porta up
-     * @param[in] fxByte Effect value byte
-     */
-    void fxPortaUp( uint8_t fxByte );
+     /**
+      * @brief Effect 1: Porta up
+      * @param[in] fxByte Effect value byte
+      */
+    void fxPortaUp(uint8_t fxByte);
     /**
      * @brief Effect 2: Porta down
      * @param[in] fxByte Effect value byte
      */
-    void fxPortaDown( uint8_t fxByte );
+    void fxPortaDown(uint8_t fxByte);
     /**
      * @brief Effect A: Volume slide
      * @param[in] fxByte Effect value byte
      */
-    void fxVolSlide( uint8_t fxByte );
+    void fxVolSlide(uint8_t fxByte);
     /**
      * @brief Effect P: Panning slide
      * @param[in] fxByte Effect value byte
      */
-    void fxPanSlide( uint8_t fxByte );
+    void fxPanSlide(uint8_t fxByte);
     /**
      * @brief Effect C: Set volume
      * @param[in] fxByte Effect value byte
      */
-    void fxSetVolume( uint8_t fxByte );
+    void fxSetVolume(uint8_t fxByte);
     /**
      * @brief Effect 8: Set panning
      * @param[in] fxByte Effect value byte
      */
-    void fxSetPan( uint8_t fxByte );
+    void fxSetPan(uint8_t fxByte);
     /**
      * @brief Effect F: Set Tempo/BPM
      * @param[in] fxByte Effect value byte
      */
-    void fxSetTempoBpm( uint8_t fxByte );
+    void fxSetTempoBpm(uint8_t fxByte);
     /**
      * @brief Effect 9: Sample offset
      * @param[in] fxByte Effect value byte
      */
-    void fxOffset( uint8_t fxByte );
+    void fxOffset(uint8_t fxByte);
     /**
      * @brief Effect G: Set global volume
      * @param[in] fxByte Effect value byte
      */
-    void fxSetGlobalVolume( uint8_t fxByte );
+    void fxSetGlobalVolume(uint8_t fxByte);
     /**
      * @brief Effect X: Extra fine porta
      * @param[in] fxByte Effect value byte
      */
-    void fxExtraFinePorta( uint8_t fxByte );
+    void fxExtraFinePorta(uint8_t fxByte);
     /**
      * @brief Effect E: Extended effect
      * @param[in] fxByte Effect value byte
      * @param[in] estimateOnly Set to @c true to skip expensive effects
      */
-    void fxExtended( uint8_t fxByte, bool estimateOnly );
+    void fxExtended(uint8_t fxByte, bool estimateOnly);
     /**
      * @brief Effect 3: Tone porta
      */
@@ -276,121 +275,121 @@ private:
      * @brief Effect 0: Arpeggio
      * @param[in] fxByte Effect value byte
      */
-    void fxArpeggio( uint8_t fxByte );
+    void fxArpeggio(uint8_t fxByte);
     /**
      * @brief Effect 4: Vibrato
      * @param[in] fxByte Effect value byte
      */
-    void fxVibrato( uint8_t fxByte );
+    void fxVibrato(uint8_t fxByte);
     /**
      * @brief Effect H: Global volume slide
      * @param[in] fxByte Effect value byte
      */
-    void fxGlobalVolSlide( uint8_t fxByte );
+    void fxGlobalVolSlide(uint8_t fxByte);
     /**
      * @brief Effect 7: Tremolo
      * @param[in] fxByte Effect value byte
      */
-    void fxTremolo( uint8_t fxByte );
+    void fxTremolo(uint8_t fxByte);
     /**
      * @brief Effect T: Tremor
      * @param[in] fxByte Effect value byte
      */
-    void fxTremor( uint8_t fxByte );
+    void fxTremor(uint8_t fxByte);
     /**
      * @brief Effect R: Multi retrig note
      * @param[in] fxByte Effect value byte
      */
-    void fxRetrigger( uint8_t fxByte );
+    void fxRetrigger(uint8_t fxByte);
     /** @} */
 
     /** @name Volume column effect handlers
      * @{
      */
-    /**
-     * @brief Volume Effect "D": Fine volume slide down
-     * @param[in] fxByte Effect value byte
-     */
-    void vfxFineVolSlideDown( uint8_t fxByte );
+     /**
+      * @brief Volume Effect "D": Fine volume slide down
+      * @param[in] fxByte Effect value byte
+      */
+    void vfxFineVolSlideDown(uint8_t fxByte);
     /**
      * @brief Volume Effect "U": Fine volume slide up
      * @param[in] fxByte Effect value byte
      */
-    void vfxFineVolSlideUp( uint8_t fxByte );
+    void vfxFineVolSlideUp(uint8_t fxByte);
     /**
      * @brief Volume Effect "P": Set panning position
      * @param[in] fxByte Effect value byte
      */
-    void vfxSetPan( uint8_t fxByte );
+    void vfxSetPan(uint8_t fxByte);
     /**
      * @brief Volume Effect "-": Volume slide down
      * @param[in] fxByte Effect value byte
      */
-    void vfxSlideDown( uint8_t fxByte );
+    void vfxSlideDown(uint8_t fxByte);
     /**
      * @brief Volume Effect "+": Volume slide up
      * @param[in] fxByte Effect value byte
      */
-    void vfxSlideUp( uint8_t fxByte );
+    void vfxSlideUp(uint8_t fxByte);
     /**
      * @brief Volume Effect "S": Set vibrato speed
      * @param[in] fxByte Effect value byte
      */
-    void vfxSetVibratoSpeed( uint8_t fxByte );
+    void vfxSetVibratoSpeed(uint8_t fxByte);
     /**
      * @brief Volume Effect "L": Panning slide left
      * @param[in] fxByte Effect value byte
      */
-    void vfxPanSlideLeft( uint8_t fxByte );
+    void vfxPanSlideLeft(uint8_t fxByte);
     /**
      * @brief Volume Effect "R": Panning slide right
      * @param[in] fxByte Effect value byte
      */
-    void vfxPanSlideRight( uint8_t fxByte );
+    void vfxPanSlideRight(uint8_t fxByte);
     /**
      * @brief Volume Effect "V": Vibrato
      * @param[in] fxByte Effect value byte
      */
-    void vfxVibrato( uint8_t fxByte );
+    void vfxVibrato(uint8_t fxByte);
     /** @} */
 
     /** @name Extended effect handlers
      * @{
      */
-    /**
-     * @brief Extended Effect 1: Fine porta slide up
-     * @param[in] fxByte Effect value byte
-     */
-    void efxFinePortaUp( uint8_t fxByte );
+     /**
+      * @brief Extended Effect 1: Fine porta slide up
+      * @param[in] fxByte Effect value byte
+      */
+    void efxFinePortaUp(uint8_t fxByte);
     /**
      * @brief Extended Effect 2: Fine porta slide down
      * @param[in] fxByte Effect value byte
      */
-    void efxFinePortaDown( uint8_t fxByte );
+    void efxFinePortaDown(uint8_t fxByte);
     /**
      * @brief Extended Effect A: Fine volume slide up
      * @param[in] fxByte Effect value byte
      */
-    void efxFineVolUp( uint8_t fxByte );
+    void efxFineVolUp(uint8_t fxByte);
     /**
      * @brief Extended Effect B: Fine volume slide down
      * @param[in] fxByte Effect value byte
      */
-    void efxFineVolDown( uint8_t fxByte );
+    void efxFineVolDown(uint8_t fxByte);
     /**
      * @brief Extended Effect 6: Pattern loop
      * @param[in] fxByte Effect value byte
      */
-    void efxPatLoop( uint8_t fxByte );
+    void efxPatLoop(uint8_t fxByte);
     /** @} */
 
     /** @name Helper functions
      * @{
      */
-    /**
-     * @brief Trigger note
-     */
-    void triggerNote( uint8_t note );
+     /**
+      * @brief Trigger note
+      */
+    void triggerNote(uint8_t note);
     /**
      * @brief Retrigger note
      */
@@ -415,10 +414,9 @@ private:
      * @brief Calculates the porta target period
      * @param[in] targetNote The porta target note
      */
-    void calculatePortaTarget( uint8_t targetNote );
+    void calculatePortaTarget(uint8_t targetNote);
     /** @} */
 };
-
 }
 }
 

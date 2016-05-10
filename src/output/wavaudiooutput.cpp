@@ -19,7 +19,6 @@
 #include "wavaudiooutput.h"
 
 #include <boost/format.hpp>
-#include <cstdint>
 #include <chrono>
 
 void WavAudioOutput::encodeThread()

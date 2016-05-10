@@ -7,7 +7,6 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/optional.hpp>
-#include <boost/serialization/string.hpp>
 
 #include <fstream>
 

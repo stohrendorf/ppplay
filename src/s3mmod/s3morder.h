@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef S3MORDER_H
 #define S3MORDER_H
 
@@ -26,17 +25,16 @@ namespace ppp
 {
 namespace s3m
 {
-
 class S3mOrder : public AbstractOrder
 {
-    DISABLE_COPY( S3mOrder )
-    S3mOrder() = delete;
+    DISABLE_COPY(S3mOrder)
+        S3mOrder() = delete;
 public:
-    inline S3mOrder( uint8_t idx ) : AbstractOrder( idx ) {
+    explicit S3mOrder(uint8_t idx) : AbstractOrder(idx)
+    {
     }
-    virtual bool isUnplayed() const;
+    bool isUnplayed() const override;
 };
-
 }
 }
 

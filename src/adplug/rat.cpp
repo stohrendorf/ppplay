@@ -258,7 +258,7 @@ std::string CxadratPlayer::title() const
     return std::string(m_ratHeader.title, 32);
 }
 
-uint32_t CxadratPlayer::instrumentCount() const
+size_t CxadratPlayer::instrumentCount() const
 {
     return m_ratHeader.numinst;
 }

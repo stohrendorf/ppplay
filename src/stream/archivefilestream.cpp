@@ -20,7 +20,6 @@
 
 #include <archive.h>
 #include <archive_entry.h>
-#include <fstream>
 #include <sstream>
 
 #include <boost/filesystem.hpp>

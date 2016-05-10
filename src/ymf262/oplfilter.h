@@ -139,7 +139,7 @@ public:
     template<class T>
     void filter(std::array<T,N>& samples) {
         for(int i=0; i<N; ++i)
-            samples[i] = m_filters[i].filter(samples[i]);
+            samples[i] = static_cast<T>(m_filters[i].filter(samples[i]));
     }
 };
 

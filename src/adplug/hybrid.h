@@ -67,7 +67,7 @@ protected:
     size_t framesUntilUpdate() const override;
     std::string type() const override;
     std::string instrumentTitle(size_t i) const override;
-    uint32_t instrumentCount() const override;
+    size_t instrumentCount() const override;
 
 private:
     static const unsigned char hyb_adlib_registers[99];

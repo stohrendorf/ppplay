@@ -163,7 +163,7 @@ std::string CfmcLoader::instrumentTitle(size_t n) const
     return instruments[n].name;
 }
 
-uint32_t CfmcLoader::instrumentCount() const
+size_t CfmcLoader::instrumentCount() const
 {
     return 32;
 }

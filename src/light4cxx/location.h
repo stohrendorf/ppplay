@@ -23,14 +23,10 @@
 
 #include "level.h"
 
-#include <boost/current_function.hpp>
-
-#include <string>
 #include <thread>
 
 namespace light4cxx
 {
-
 /**
  * @ingroup light4cxx
  * @{
@@ -58,35 +54,40 @@ public:
      * @param[in] function Function name of the location
      * @param[in] id Thread ID of the location
      */
-    inline Location( int line, const std::string& file, const std::string& function, const std::thread::id& id )
-        : m_line( line ), m_file( file ), m_function( function ), m_threadId( id ) {
+    inline Location(int line, const std::string& file, const std::string& function, const std::thread::id& id)
+        : m_line(line), m_file(file), m_function(function), m_threadId(id)
+    {
     }
     /**
      * @brief Get m_line
      * @return m_line
      */
-    inline int line() const {
+    inline int line() const
+    {
         return m_line;
     }
     /**
      * @brief Get m_function
      * @return m_function
      */
-    inline std::string function() const {
+    inline std::string function() const
+    {
         return m_function;
     }
     /**
      * @brief Get m_file
      * @return m_file
      */
-    inline std::string file() const {
+    inline std::string file() const
+    {
         return m_file;
     }
     /**
      * @brief Get m_threadId
      * @return m_threadId
      */
-    inline std::thread::id threadId() const {
+    inline std::thread::id threadId() const
+    {
         return m_threadId;
     }
     /**
@@ -97,7 +98,7 @@ public:
      * @return The formatted string ready for output
      * @see toString()
      */
-    std::string toString( Level l, const Logger& logger, const std::string& msg ) const;
+    std::string toString(Level l, const Logger& logger, const std::string& msg) const;
     /**
      * @brief Sets the format of the output of toString()
      * @param[in] fmt The format string
@@ -166,7 +167,7 @@ public:
      * otherwise you will encounter a std::runtime_error telling you that toString()
      * cannot parse the string.
      */
-    static void setFormat( const std::string& fmt );
+    static void setFormat(const std::string& fmt);
 };
 
 /**
@@ -175,10 +176,9 @@ public:
  */
 #define L4CXX_LOCATION ::light4cxx::Location(__LINE__, __FILE__, BOOST_CURRENT_FUNCTION, ::std::this_thread::get_id())
 
-/**
- * @}
- */
-
+ /**
+  * @}
+  */
 }
 
 #endif

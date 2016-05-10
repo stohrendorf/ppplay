@@ -4,7 +4,6 @@
 #include "fft.h"
 
 #include <boost/assert.hpp>
-#include <functional>
 
 FftObserver::FftObserver(AudioFifo* fifo)
     : m_fifo(fifo), m_buffer(new AudioFrameBuffer::element_type(ppp::FFT::InputLength)), m_filled(0)

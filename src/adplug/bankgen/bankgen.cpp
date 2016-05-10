@@ -1,20 +1,9 @@
 #include <cstdio>
-#include <vector>
-#include <string>
-#include <algorithm>
-#include <cstring>
-#include <cmath>
-#include <map>
-#include <set>
-#include <fstream>
-#include <array>
 
-#include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include "stream/filestream.h"
-#include "stuff/stringutils.h"
 
 #include "loader.h"
 

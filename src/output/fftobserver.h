@@ -31,13 +31,13 @@ class AudioFifo;
  * @{
  */
 
-/**
- * @class FftObserver
- * @brief Observer for calculating the DFFT
- */
+ /**
+  * @class FftObserver
+  * @brief Observer for calculating the DFFT
+  */
 class PPPLAY_CORE_EXPORT FftObserver
 {
-    DISABLE_COPY( FftObserver )
+    DISABLE_COPY(FftObserver)
 private:
     //! @brief Observed FIFO
     AudioFifo* m_fifo;
@@ -47,18 +47,20 @@ private:
     std::vector<uint16_t> m_right;
     boost::signals2::scoped_connection m_dataPushedConnection;
 public:
-    FftObserver( AudioFifo* fifo );
+    explicit FftObserver(AudioFifo* fifo);
     ~FftObserver() = default;
 
-    const std::vector<uint16_t>& left() const {
+    const std::vector<uint16_t>& left() const
+    {
         return m_left;
     }
-    
-    const std::vector<uint16_t>& right() const {
+
+    const std::vector<uint16_t>& right() const
+    {
         return m_right;
     }
 private:
-    void dataPushed( const AudioFrameBuffer& buffer );
+    void dataPushed(const AudioFrameBuffer& buffer);
 };
 
 /**

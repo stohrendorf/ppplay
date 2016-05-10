@@ -286,7 +286,7 @@ std::string CdtmLoader::instrumentTitle(size_t n) const
     return m_instruments[n].name;
 }
 
-uint32_t CdtmLoader::instrumentCount() const
+size_t CdtmLoader::instrumentCount() const
 {
     return m_header.numinst;
 }

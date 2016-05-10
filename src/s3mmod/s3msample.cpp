@@ -26,9 +26,6 @@
 #include "s3msample.h"
 #include "stream/stream.h"
 
-#include <algorithm>
-#include <boost/format.hpp>
-
 namespace ppp
 {
 namespace s3m
@@ -140,7 +137,7 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
                     return true;
                 }
                 smpPtr->left = smpPtr->right = clip(smp16 - 32768, -32767, 32767);   // negating -32768 fails otherwise in surround mode
-                smpPtr++;
+                ++smpPtr;
             }
             if(loadStereo)
             {
@@ -154,7 +151,7 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
                         return true;
                     }
                     smpPtr->right = clip(smp16 - 32768, -32767, 32767);   // negating -32768 fails otherwise in surround mode
-                    smpPtr++;
+                    ++smpPtr;
                 }
             }
         }
@@ -171,7 +168,7 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
                     return true;
                 }
                 smpPtr->left = smpPtr->right = clip((smp8 - 128) << 8, -32767, 32767);   // negating -32768 fails otherwise in surround mode
-                smpPtr++;
+                ++smpPtr;
             }
             if(loadStereo)
             {
@@ -185,7 +182,7 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
                         return true;
                     }
                     smpPtr->right = clip((smp8 - 128) << 8, -32767, 32767);   // negating -32768 fails otherwise in surround mode
-                    smpPtr++;
+                    ++smpPtr;
                 }
             }
         }

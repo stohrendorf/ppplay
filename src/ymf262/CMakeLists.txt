@@ -9,6 +9,11 @@ add_library(ppplay_opl SHARED
 	operator.cpp
 	opl3.cpp
 	phasegenerator.cpp
+	channel.h
+	envelopegenerator.h
+	operator.h
+	opl3.h
+	phasegenerator.h
 )
 generate_export_header(ppplay_opl)
 set_target_properties(ppplay_opl PROPERTIES SOVERSION 1)

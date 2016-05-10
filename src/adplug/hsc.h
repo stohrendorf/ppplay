@@ -47,7 +47,7 @@ public:
     {
         return "HSC Adlib Composer / HSC-Tracker";
     }
-    uint32_t instrumentCount() const override;
+    size_t instrumentCount() const override;
 
 protected:
     struct HscNote

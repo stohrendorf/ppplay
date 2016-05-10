@@ -23,7 +23,6 @@
 
 #include "abstractmodule.h"
 
-#include "genbase.h"
 #include "abstractorder.h"
 #include "channelstate.h"
 #include "stream/memarchive.h"
@@ -213,13 +212,13 @@ void AbstractModule::setSpeed(uint8_t s) noexcept
     m_state.speed = s;
 }
 
-uint16_t AbstractModule::songCount() const noexcept
+size_t AbstractModule::songCount() const noexcept
 {
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
     return m_songs.size();
 }
 
-int16_t AbstractModule::currentSongIndex() const
+size_t AbstractModule::currentSongIndex() const
 {
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
     return m_songs.where();

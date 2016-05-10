@@ -24,7 +24,6 @@
 
 #ifdef WIN32
 #include <windows.h>
-#include <cwchar>
 #else
 #include <dlfcn.h>
 #endif

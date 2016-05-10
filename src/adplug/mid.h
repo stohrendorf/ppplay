@@ -23,7 +23,6 @@
 
 #include "player.h"
 #include "mid/almidi.h"
-#include "stuff/numberutils.h"
 
 class CmidPlayer : public Player
 {
@@ -50,7 +49,7 @@ public:
     {
         return m_remarks;
     }
-    uint32_t instrumentCount() const override
+    size_t instrumentCount() const override
     {
         return m_tins;
     }
@@ -171,7 +170,7 @@ public:
     {
         return std::string();
     }
-    uint32_t instrumentCount() const override
+    size_t instrumentCount() const override
     {
         return 0;
     }
@@ -180,7 +179,7 @@ public:
         return 1;
     }
 
-    virtual void read(std::array<int16_t, 4> *data) override
+    void read(std::array<int16_t, 4> *data) override
     {
         m_emidi->read(data);
     }

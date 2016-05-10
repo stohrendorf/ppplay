@@ -40,7 +40,7 @@ public:
     std::string author() const override;
     std::string description() const override;
     std::string instrumentTitle(size_t n) const override;
-    uint32_t instrumentCount() const override;
+    size_t instrumentCount() const override;
 
 private:
 

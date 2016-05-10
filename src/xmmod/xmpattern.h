@@ -35,27 +35,26 @@ namespace ppp
 {
 namespace xm
 {
-
 /**
  * @class XmPattern
  * @brief XM pattern storage class
  */
 class XmPattern : public Field<XmCell>
 {
-    DISABLE_COPY( XmPattern )
+    DISABLE_COPY(XmPattern)
 public:
     /**
      * @brief Constructor
      * @param[in] chans Number of channels/columns needed
      */
-    explicit XmPattern( int16_t chans );
+    explicit XmPattern(int16_t chans);
     /**
      * @brief Load the pattern from a stream
      * @param[in] str Stream to load from
      * @return @c true on success
      */
-    bool load( Stream* str );
-    static XmPattern* createDefaultPattern( int16_t chans );
+    bool load(Stream* str);
+    static XmPattern* createDefaultPattern(int16_t chans);
 protected:
     /**
      * @brief Get the logger
@@ -63,7 +62,6 @@ protected:
      */
     static light4cxx::Logger* logger();
 };
-
 } // namespace xm
 } // namespace ppp
 

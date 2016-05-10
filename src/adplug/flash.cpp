@@ -217,7 +217,7 @@ std::string CxadflashPlayer::type() const
     return "xad: flash player";
 }
 
-uint32_t CxadflashPlayer::instrumentCount() const
+size_t CxadflashPlayer::instrumentCount() const
 {
     return 32;
 }

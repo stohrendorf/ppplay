@@ -35,13 +35,13 @@ namespace ppg
  */
 class PPPLAY_PPG_EXPORT SDLScreen final : public Widget, public SDLTimer
 {
-    DISABLE_COPY( SDLScreen )
+    DISABLE_COPY(SDLScreen)
 private:
-    virtual void drawThis();
+    void drawThis() override;
     int m_cursorX; //!< @brief Cursor X position
     int m_cursorY; //!< @brief Cursor Y position
-    
-    virtual void onTimer();
+
+    void onTimer() override;
 public:
     static SDLScreen* instance();
     /**
@@ -50,7 +50,7 @@ public:
      * @param[in] h Height in characters
      * @param[in] title Title of the screen
      */
-    SDLScreen( int w, int h, const std::string& title );
+    SDLScreen(int w, int h, const std::string& title);
     virtual ~SDLScreen();
     /**
      * @brief Clear the screen
@@ -58,15 +58,15 @@ public:
      * @param[in] foreground Foreground color
      * @param[in] background Background color
      */
-    void clear( uint8_t c, Color foreground, Color background );
-    virtual void drawChar( int x, int y, char c );
-    void drawPixel( int x, int y, Color c );
+    void clear(uint8_t c, Color foreground, Color background);
+    void drawChar(int x, int y, char c) override;
+    void drawPixel(int x, int y, Color c);
     void lockPixels();
     void unlockPixels();
-    void clearPixels( Color c = Color::None );
-    virtual void setFgColorAt( int x, int y, Color c );
-    virtual void setBgColorAt( int x, int y, Color c );
-    virtual bool onMouseMove( int x, int y );
+    void clearPixels(Color c = Color::None);
+    void setFgColorAt(int x, int y, Color c) override;
+    void setBgColorAt(int x, int y, Color c) override;
+    bool onMouseMove(int x, int y) override;
     /**
      * @brief Whether the screen has the mouse focus
      * @retval true if the screen has the mouse focus

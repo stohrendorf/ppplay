@@ -25,9 +25,7 @@
 #include "modcell.h"
 #include "modsample.h"
 
-#include <cmath>
 #include <boost/assert.hpp>
-#include <boost/format.hpp>
 
 namespace ppp
 {
@@ -468,9 +466,9 @@ void ModChannel::fxOffset(uint8_t fxByte)
     {
         return;
     }
-    if(currentSample() && currentSample()->length() > (m_lastOffsetFx << 8))
+    if(currentSample() && currentSample()->length() > m_lastOffsetFx * 256)
     {
-        m_bresen = m_lastOffsetFx << 8;
+        m_bresen = m_lastOffsetFx * 256;
     }
 }
 

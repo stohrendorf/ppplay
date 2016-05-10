@@ -24,9 +24,6 @@
 
 #include "modcell.h"
 
-#include <vector>
-#include <cstdint>
-
 class Stream;
 
 /**
@@ -38,10 +35,9 @@ namespace ppp
 {
 namespace mod
 {
-
 class ModPattern : public Field<ModCell>
 {
-    DISABLE_COPY( ModPattern )
+    DISABLE_COPY(ModPattern)
 public:
     /**
      * @brief Constructor
@@ -52,9 +48,8 @@ public:
      * @param[in] str The stream to load from
      * @return @c true on success
      */
-    bool load( Stream* str, uint8_t numChans );
+    bool load(Stream* str, uint8_t numChans);
 };
-
 }
 }
 

@@ -33,11 +33,11 @@ Label::Label(Widget* parent, const std::string& text) :
 {
     if(length() != 0)
     {
-        setWidth(length());
+        Label::setWidth(length());
     }
     else
     {
-        setWidth(1);
+        Label::setWidth(1);
     }
     Widget::setHeight(1);
 }

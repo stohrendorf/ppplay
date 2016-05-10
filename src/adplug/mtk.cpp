@@ -22,8 +22,9 @@
 #include "stream/filestream.h"
 
 #include "mtk.h"
+#include <stuff/stringutils.h>
 
- /*** public methods **************************************/
+/*** public methods **************************************/
 
 Player* CmtkLoader::factory()
 {
@@ -124,21 +125,20 @@ bool CmtkLoader::load(const std::string& filename)
                 break;
         }
     }
+#pragma pack(push,1)
     struct mtkdata
     {
         char songname[34], composername[34], instname[0x80][34];
         unsigned char insts[0x80][12], order[0x80], dummy, patterns[0x32][0x40][9];
     };
+#pragma pack(pop)
     const mtkdata* data = reinterpret_cast<const mtkdata*>(org.data());
 
     // convert to HSC replay data
-    memset(m_title, 0, 34);
-    strncpy(m_title, data->songname + 1, 33);
-    memset(composer, 0, 34);
-    strncpy(composer, data->composername + 1, 33);
-    memset(instname, 0, 0x80 * 34);
+    m_title = stringncpy(data->songname + 1, 33);
+    m_composer = stringncpy(data->composername + 1, 33);
     for(int i = 0; i < 0x80; i++)
-        strncpy(instname[i], data->instname[i] + 1, 33);
+        m_instrumentNames[i] = stringncpy(data->instname[i] + 1, 33);
     memcpy(instrumentData(), data->insts, 0x80 * 12);
     for(int i = 0; i < 0x80; ++i)
         addOrder(data->order[i]);

@@ -19,7 +19,7 @@
 #include "memarchive.h"
 #include "memorystream.h"
 
-MemArchive::MemArchive() : AbstractArchive(Stream::Ptr(new MemoryStream()))
+MemArchive::MemArchive() : AbstractArchive(std::make_shared<MemoryStream>())
 {
 }
 

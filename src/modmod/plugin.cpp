@@ -7,19 +7,22 @@ namespace ppp
 class Plugin : public InputPlugin
 {
 public:
-    virtual int version() const
+    int version() const override
     {
         return Version;
     }
-    virtual std::string name() const
+
+    std::string name() const override
     {
         return "mod";
     };
-    virtual std::string description() const
+
+    std::string description() const override
     {
         return "Protracker Module Loader";
     };
-    virtual AbstractModule* load(Stream* stream, uint32_t frequency, int maxRepeat, Sample::Interpolation inter) const
+
+    AbstractModule* load(Stream* stream, uint32_t frequency, int maxRepeat, Sample::Interpolation inter) const override
     {
         return mod::ModModule::factory(stream, frequency, maxRepeat, inter);
     };

@@ -20,7 +20,6 @@
 #define PPPLAY_ABSTRACTAUDIOSOURCE_H
 
 #include "ppplay_core_export.h"
-#include <stuff/utils.h>
 #include "audiotypes.h"
 
 #include <light4cxx/logger.h>
@@ -32,10 +31,10 @@
  * @{
  */
 
-/**
- * @interface IAudioSource
- * @brief Audio source for IAudioOutput
- */
+ /**
+  * @interface IAudioSource
+  * @brief Audio source for IAudioOutput
+  */
 
 class PPPLAY_CORE_EXPORT AbstractAudioSource
 {
@@ -62,7 +61,7 @@ private:
      * @see preferredBufferSize()
      * @see isBusy()
      */
-    virtual size_t internal_getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames ) = 0;
+    virtual size_t internal_getAudioData(AudioFrameBuffer& buffer, size_t requestedFrames) = 0;
     /**
      * @brief Get the preferred buffer size to prevent unnecessary calls to getAudioData()
      * @retval 0 if no size is specified
@@ -73,12 +72,12 @@ private:
      * @param[in] frequency Requested frequency
      * @return @c true on success
      */
-    virtual bool internal_initialize( uint32_t frequency ) = 0;
+    virtual bool internal_initialize(uint32_t frequency) = 0;
     /**
      * @brief Get the left channel's volume
      * @return Left channel's volume, default is 0
      */
-    virtual uint16_t internal_volumeLeft() const ;
+    virtual uint16_t internal_volumeLeft() const;
     /**
      * @brief Get the right channel's volume
      * @return Right channel's volume, default is 0
@@ -104,13 +103,13 @@ public:
      */
     uint32_t frequency() const noexcept;
     inline bool paused() const noexcept;
-    inline void setPaused( bool p = true ) noexcept;
+    inline void setPaused(bool p = true) noexcept;
     //! @copydoc internal_getAudioData
-    size_t getAudioData( AudioFrameBuffer& buffer, size_t requestedFrames );
+    size_t getAudioData(AudioFrameBuffer& buffer, size_t requestedFrames);
     //! @copydoc internal_preferredBufferSize
     size_t preferredBufferSize() const;
     //! @copydoc internal_initialize
-    bool initialize( uint32_t frequency );
+    bool initialize(uint32_t frequency);
     //! @copydoc internal_volumeLeft
     uint16_t volumeLeft() const;
     //! @copydoc internal_volumeRight
@@ -125,11 +124,12 @@ protected:
 
 bool AbstractAudioSource::paused() const noexcept
 {
-    std::lock_guard<std::recursive_mutex> lock( m_mutex );
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     return m_paused;
 }
-void AbstractAudioSource::setPaused( bool p ) noexcept {
-    std::lock_guard<std::recursive_mutex> lock( m_mutex );
+void AbstractAudioSource::setPaused(bool p) noexcept
+{
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
     m_paused = p;
 }
 

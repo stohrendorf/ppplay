@@ -96,10 +96,10 @@ class Order : public ppp::AbstractOrder
     DISABLE_COPY(Order)
         Order() = delete;
 public:
-    inline Order(uint8_t idx) : AbstractOrder(idx)
+    explicit Order(uint8_t idx) : AbstractOrder(idx)
     {
     }
-    virtual bool isUnplayed() const
+    bool isUnplayed() const override
     {
         return playbackCount() == 0;
     }

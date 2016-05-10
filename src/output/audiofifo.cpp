@@ -23,7 +23,6 @@
 
 #include "audiofifo.h"
 
-#include <algorithm>
 #include <boost/assert.hpp>
 
 void AudioFifo::requestThread()

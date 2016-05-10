@@ -81,7 +81,6 @@ bool S3mCell::load(Stream* str)
     catch(...)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Exception"));
-        return false;
     }
     return str->good();
 }

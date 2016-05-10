@@ -28,10 +28,11 @@
  */
 class PPPLAY_STREAM_EXPORT ArchiveFileStream : public MemoryStream
 {
-    DISABLE_COPY( ArchiveFileStream )
+    DISABLE_COPY(ArchiveFileStream)
 public:
-    explicit ArchiveFileStream( const std::string& filename );
-    bool isOpen() const {
+    explicit ArchiveFileStream(const std::string& filename);
+    bool isOpen() const
+    {
         return m_isOpen;
     }
 private:

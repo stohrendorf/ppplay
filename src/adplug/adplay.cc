@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <csignal>
+#include <iostream>
 
 #include <boost/program_options.hpp>
 

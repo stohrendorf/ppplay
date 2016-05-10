@@ -45,7 +45,7 @@ m_peakPosL(0), m_peakPosR(0), m_peakFalloffSpeedL(0), m_peakFalloffSpeedR(0)
     }
     txt += "]";
     setText(txt);
-    setSize(length(), area().height());
+    StereoPeakBar::setSize(length(), area().height());
     int mpoint = length() / 2;
     for(int i = 0; i < width; i++)
     {

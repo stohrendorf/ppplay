@@ -35,14 +35,13 @@
 
 namespace opl
 {
-
 class Operator;
 
 class Opl3;
 
 class Channel : public ISerializable
 {
-    DISABLE_COPY( Channel )
+    DISABLE_COPY(Channel)
 public:
     typedef std::shared_ptr<Channel> Ptr;
 
@@ -77,7 +76,7 @@ private:
     uint8_t m_fb = 0;
 
     //! @brief Feedback sample values
-    int32_t m_feedback[2] = {0, 0};
+    int32_t m_feedback[2] = { 0, 0 };
 
     //! @brief Connection
     bool m_cnt = false;
@@ -96,24 +95,27 @@ public:
      * @details
      * The OPL stores the last 2 samples independent of feedback.
      */
-    int16_t feedback() const {
-        if( m_fb == 0 ) {
+    int16_t feedback() const
+    {
+        if(m_fb == 0)
+        {
             return 0;
         }
-        return ( ( m_feedback[0] + m_feedback[1] ) << m_fb ) >> 9;
+        return ((m_feedback[0] + m_feedback[1]) << m_fb) >> 9;
     }
     /**
      * @brief Push feedback into the queue
      * @param[in] fb 13 bit feedback from channel output
      */
-    void pushFeedback( int16_t fb ) {
+    void pushFeedback(int16_t fb)
+    {
         m_feedback[0] = m_feedback[1];
         m_feedback[1] = fb;
     }
 
-    Channel( Opl3* opl, int baseAddress );
-    Channel( Opl3* opl, int baseAddress, Operator* op1, Operator* op2 );
-    Channel( Opl3* opl, int baseAddress, Operator* op1, Operator* op2, Operator* op3, Operator* op4 );
+    Channel(Opl3* opl, int baseAddress);
+    Channel(Opl3* opl, int baseAddress, Operator* op1, Operator* op2);
+    Channel(Opl3* opl, int baseAddress, Operator* op1, Operator* op2, Operator* op3, Operator* op4);
 
     /**
      * @post m_fnumh<1024 && m_block<8
@@ -129,22 +131,23 @@ public:
 
     void updateChannel();
 
-    void getInFourChannels( std::array<int16_t, 4>* dest, int16_t channelOutput );
+    void getInFourChannels(std::array<int16_t, 4>* dest, int16_t channelOutput);
 
-    void nextSample( std::array<int16_t, 4>* dest );
+    void nextSample(std::array<int16_t, 4>* dest);
     void keyOn();
     void keyOff();
     void updateOperators();
 
-    int baseAddress() const {
+    int baseAddress() const
+    {
         return m_channelBaseAddress;
     }
 
-    virtual AbstractArchive& serialize( AbstractArchive* archive );
+    AbstractArchive& serialize(AbstractArchive* archive) override;
 
 private:
-    void nextSample2Op( std::array<int16_t, 4>* dest );
-    void nextSample4Op( std::array<int16_t, 4>* dest );
+    void nextSample2Op(std::array<int16_t, 4>* dest);
+    void nextSample4Op(std::array<int16_t, 4>* dest);
     bool isRhythmChannel() const;
 };
 }

@@ -30,7 +30,6 @@
 
 namespace opl
 {
-
 class Opl3;
 
 /**
@@ -62,23 +61,25 @@ class PhaseGenerator
      */
     uint8_t m_mult = 0;
 public:
-    explicit PhaseGenerator( Opl3* opl ) : m_opl( opl ) {
-        BOOST_ASSERT( opl != nullptr );
+    explicit PhaseGenerator(Opl3* opl) : m_opl(opl)
+    {
+        BOOST_ASSERT(opl != nullptr);
     }
 
     /**
      * @post m_fNum<1024 && m_block<8 && m_mult<16
      */
-    void setFrequency( uint16_t f_number, uint8_t block, uint8_t mult );
+    void setFrequency(uint16_t f_number, uint8_t block, uint8_t mult);
 
     /**
      * @brief Advance phase
      * @param[in] vib Use vibrato
      * @return 10 bit phase
      */
-    uint16_t advance( bool vib );
+    uint16_t advance(bool vib);
 
-    void keyOn() {
+    void keyOn()
+    {
         m_phase = 0;
     }
 };

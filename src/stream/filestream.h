@@ -32,8 +32,8 @@
  */
 class PPPLAY_STREAM_EXPORT FileStream : public Stream
 {
-    DISABLE_COPY( FileStream )
-    FileStream() = delete;
+    DISABLE_COPY(FileStream)
+        FileStream() = delete;
 private:
     size_t m_size; //!< @brief Cached size of the file
 public:
@@ -45,17 +45,17 @@ public:
      * @brief Default contructor
      * @param[in] filename Filename of the file to open
      */
-    explicit FileStream( const std::string& filename, Mode mode = Mode::Read );
+    explicit FileStream(const std::string& filename, Mode mode = Mode::Read);
     /**
      * @brief Check if the file is opened
      * @return @c true if the file is opened
      */
     bool isOpen() const;
-    std::streamsize size() const;
+    std::streamsize size() const override;
 
     std::string extension() const
     {
-        return boost::algorithm::to_lower_copy( boost::filesystem::path(name()).extension().string() );
+        return boost::algorithm::to_lower_copy(boost::filesystem::path(name()).extension().string());
     }
 };
 

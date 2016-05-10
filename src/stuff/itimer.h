@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef PPPLAY_ITIMER_H
 #define PPPLAY_ITIMER_H
 
@@ -29,13 +28,13 @@
  * @{
  */
 
-/**
- * @interface ITimer
- * @brief Timer interface
- */
+ /**
+  * @interface ITimer
+  * @brief Timer interface
+  */
 class ITimer
 {
-    DISABLE_COPY( ITimer )
+    DISABLE_COPY(ITimer)
 public:
     /**
      * @brief Default constructor

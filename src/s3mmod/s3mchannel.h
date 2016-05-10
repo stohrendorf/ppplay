@@ -29,8 +29,6 @@
 #include <genmod/channelstate.h>
 #include <stream/iserializable.h>
 
-#include <array>
-
 namespace light4cxx
 {
 class Logger;
@@ -42,7 +40,6 @@ namespace ppp
 {
 namespace s3m
 {
-
 class S3mModule;
 class S3mCell;
 class S3mSample;
@@ -57,7 +54,7 @@ class S3mSample;
 class S3mChannel : public ISerializable
 {
     S3mChannel() = delete; //!< @brief No default constructor
-    DISABLE_COPY( S3mChannel )
+    DISABLE_COPY(S3mChannel)
 private:
     uint8_t m_note;          //!< @brief Currently playing note
     RememberByte<true> m_lastFxByte;        //!< @brief Last FX Value
@@ -97,50 +94,50 @@ private:
      * @brief Set the current sample index
      * @param[in] idx New sample index
      */
-    void setSampleIndex( int32_t idx );
+    void setSampleIndex(int32_t idx);
 
     // new implementation
-    void fxPitchSlideUp( uint8_t fxByte );
-    void fxPitchSlideDown( uint8_t fxByte );
-    void fxVolSlide( uint8_t fxByte );
-    void fxPorta( uint8_t fxByte, bool noReuse );
-    void fxVibrato( uint8_t fxByte, bool fine, bool noReuse );
-    void fxNoteCut( uint8_t fxByte );
-    void fxNoteDelay( uint8_t fxByte );
-    void fxGlobalVolume( uint8_t fxByte );
-    void fxFineTune( uint8_t fxByte );
-    void fxSetVibWaveform( uint8_t fxByte );
-    void fxSetTremWaveform( uint8_t fxByte );
-    void fxRetrigger( uint8_t fxByte );
-    void fxOffset( uint8_t fxByte );
-    void fxTremor( uint8_t fxByte );
-    void fxTempo( uint8_t fxByte );
-    void fxSpeed( uint8_t fxByte );
-    void fxArpeggio( uint8_t fxByte );
-    void fxSpecial( uint8_t fxByte );
-    void fxTremolo( uint8_t fxByte );
+    void fxPitchSlideUp(uint8_t fxByte);
+    void fxPitchSlideDown(uint8_t fxByte);
+    void fxVolSlide(uint8_t fxByte);
+    void fxPorta(uint8_t fxByte, bool noReuse);
+    void fxVibrato(uint8_t fxByte, bool fine, bool noReuse);
+    void fxNoteCut(uint8_t fxByte);
+    void fxNoteDelay(uint8_t fxByte);
+    void fxGlobalVolume(uint8_t fxByte);
+    void fxFineTune(uint8_t fxByte);
+    void fxSetVibWaveform(uint8_t fxByte);
+    void fxSetTremWaveform(uint8_t fxByte);
+    void fxRetrigger(uint8_t fxByte);
+    void fxOffset(uint8_t fxByte);
+    void fxTremor(uint8_t fxByte);
+    void fxTempo(uint8_t fxByte);
+    void fxSpeed(uint8_t fxByte);
+    void fxArpeggio(uint8_t fxByte);
+    void fxSpecial(uint8_t fxByte);
+    void fxTremolo(uint8_t fxByte);
 
     void triggerNote();
     void playNote();
     void recalcFrequency();
-    uint16_t glissando( uint16_t period );
+    uint16_t glissando(uint16_t period);
 public:
     /**
      * @brief Constructor
      * @param[in] module Owning module
      */
-    S3mChannel( S3mModule* module );
+    explicit S3mChannel(S3mModule* module);
     ~S3mChannel();
-    void mixTick( MixerFrameBuffer* mixBuffer );
+    void mixTick(MixerFrameBuffer* mixBuffer);
     void updateStatus();
-    virtual AbstractArchive& serialize( AbstractArchive* data );
+    AbstractArchive& serialize(AbstractArchive* data) override;
     /**
      * @brief Update the channel
      * @param[in] cell Pointer to a note cell
      * @param[in] patDelay For pattern delays
      * @param[in] estimateOnly Used when estimating track length
      */
-    void update( const S3mCell& cell, bool patDelay, bool estimateOnly );
+    void update(const S3mCell& cell, bool patDelay, bool estimateOnly);
     /**
      * @brief Recalculates the real output volume
      */
@@ -150,13 +147,15 @@ public:
      * @param[in] pan Panning value
      * @pre @a pan must be within 0..64 or equal to 0xa4
      */
-    void setPanning( uint8_t pan );
+    void setPanning(uint8_t pan);
 
     ChannelState status() const;
-    void disable() {
+    void disable()
+    {
         m_isEnabled = false;
     }
-    void enable() {
+    void enable()
+    {
         m_isEnabled = true;
     }
 protected:

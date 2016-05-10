@@ -129,7 +129,7 @@ inline constexpr uint16_t st3Period(uint8_t note, uint16_t c4spd, uint16_t finet
  */
 inline uint8_t periodToNoteOffset(uint16_t per, uint16_t c4spd, uint16_t finetune = 8363)
 {
-    return std::round(-12 * std::log2(static_cast<float>(per) * c4spd / (finetune * Periods[0])));
+    return static_cast<uint8_t>(std::round(-12 * std::log2(static_cast<float>(per) * c4spd / (finetune * Periods[0]))));
 }
 
 /**

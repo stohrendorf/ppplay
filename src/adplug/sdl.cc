@@ -41,8 +41,9 @@ SDLPlayer::SDLPlayer(int freq, size_t bufsize)
     m_spec.freq = freq;
     m_spec.format = AUDIO_S16SYS;
     m_spec.channels = 2;
-    m_spec.samples = bufsize;
-    m_spec.callback = SDLPlayer::callback;
+    BOOST_ASSERT(bufsize <= std::numeric_limits<Uint16>::max());
+    m_spec.samples = static_cast<Uint16>(bufsize);
+    m_spec.callback = &SDLPlayer::callback;
     m_spec.userdata = this;
 
     if(SDL_OpenAudio(&m_spec, &m_spec) < 0)

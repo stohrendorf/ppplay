@@ -33,22 +33,24 @@
  * @{
  */
 
-/**
- * @class SDLAudioOutput
- * @brief Output class for SDL
- */
+ /**
+  * @class SDLAudioOutput
+  * @brief Output class for SDL
+  */
 class PPPLAY_OUTPUT_SDL_EXPORT SDLAudioOutput : public AbstractAudioOutput
 {
-    DISABLE_COPY( SDLAudioOutput )
-    SDLAudioOutput() = delete;
+    DISABLE_COPY(SDLAudioOutput)
+        SDLAudioOutput() = delete;
 public:
     //! @copydoc IAudioOutput::IAudioOutput(const IAudioSource::WeakPtr&)
-    explicit SDLAudioOutput( const AbstractAudioSource::WeakPtr& src );
+    explicit SDLAudioOutput(const AbstractAudioSource::WeakPtr& src);
     virtual ~SDLAudioOutput();
-    const std::vector<uint16_t>& leftFft() const {
+    const std::vector<uint16_t>& leftFft() const
+    {
         return m_fftObserver.left();
     }
-    const std::vector<uint16_t>& rightFft() const {
+    const std::vector<uint16_t>& rightFft() const
+    {
         return m_fftObserver.right();
     }
 private:
@@ -63,15 +65,15 @@ private:
      * @param[in] len_bytes Byte length of @a stream
      * @note Declared here to get access to m_fifo
      */
-    static void sdlAudioCallback( void* userdata, uint8_t* stream, int len_bytes );
-    size_t getSdlData( BasicSampleFrame* data, size_t numFrames );
-    virtual int internal_init( int desiredFrq );
-    virtual bool internal_playing() const;
-    virtual bool internal_paused() const;
-    virtual void internal_play();
-    virtual void internal_pause();
-    virtual uint16_t internal_volumeLeft() const;
-    virtual uint16_t internal_volumeRight() const;
+    static void sdlAudioCallback(void* userdata, uint8_t* stream, int len_bytes);
+    size_t getSdlData(BasicSampleFrame* data, size_t numFrames);
+    int internal_init(int desiredFrq) override;
+    bool internal_playing() const override;
+    bool internal_paused() const override;
+    void internal_play() override;
+    void internal_pause() override;
+    uint16_t internal_volumeLeft() const override;
+    uint16_t internal_volumeRight() const override;
 protected:
     /**
      * @brief Get the logger

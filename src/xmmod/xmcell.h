@@ -33,7 +33,6 @@ namespace ppp
 {
 namespace xm
 {
-
 /**
  * @class XmCell
  * @brief Cell of a pattern
@@ -53,9 +52,9 @@ public:
      * @param[in] str The stream to load from
      * @return @c true on success
      */
-    bool load( Stream* str );
-    virtual void clear();
-    virtual std::string trackerString() const;
+    bool load(Stream* str);
+    void clear() override;
+    std::string trackerString() const override;
     /**
      * @brief Get the note string, e.g. in the form "C#3"
      * @return The note string
@@ -91,9 +90,8 @@ public:
      * @return m_effectValue
      */
     uint8_t effectValue() const;
-    virtual AbstractArchive& serialize( AbstractArchive* data );
+    AbstractArchive& serialize(AbstractArchive* data) override;
 };
-
 }
 }
 

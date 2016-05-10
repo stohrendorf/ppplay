@@ -19,7 +19,6 @@
 #ifndef PPG_WIDGET_H
 #define PPG_WIDGET_H
 
-
 /**
  * @ingroup Ppg
  * @{
@@ -31,12 +30,10 @@
 #include "color.h"
 
 #include <list>
-#include <memory>
 #include <mutex>
 
 namespace ppg
 {
-
 /**
  * @class Widget
  * @brief The abstract base class for all PeePeeGUI classes
@@ -51,7 +48,7 @@ namespace ppg
  */
 class PPPLAY_PPG_EXPORT Widget
 {
-    DISABLE_COPY( Widget )
+    DISABLE_COPY(Widget)
 public:
     typedef std::list<Widget*> List; //!< @brief List of widgets
 private:
@@ -68,7 +65,7 @@ public:
      * @brief Constructor
      * @param[in] parent Parent widget
      */
-    explicit Widget( Widget* parent );
+    explicit Widget(Widget* parent);
     /**
      * @brief Destructor. Deletes all children.
      */
@@ -91,7 +88,7 @@ public:
      * @param[in] y Top position
      * @param[in] c The char to draw
      */
-    virtual void drawChar( int x, int y, char c );
+    virtual void drawChar(int x, int y, char c);
     /**
      * @brief Is this widget visible?
      * @return m_visible
@@ -103,28 +100,28 @@ public:
      * @param[in] y Top position
      * @param[in] c Dos Color Value
      */
-    virtual void setFgColorAt( int x, int y, Color c );
+    virtual void setFgColorAt(int x, int y, Color c);
     /**
      * @brief Sets the background color relative to the widget's position
      * @param[in] x Left position
      * @param[in] y Top position
      * @param[in] c Dos Color Value
      */
-    virtual void setBgColorAt( int x, int y, Color c );
+    virtual void setBgColorAt(int x, int y, Color c);
     /**
      * @brief Sets the widget's left position
      * @param[in] x Left position
      * @param[in] absolute Set to @c true to calculate the position relative to the top parent widget
      * @return New left position
      */
-    virtual int setLeft( int x, bool absolute = false );
+    virtual int setLeft(int x, bool absolute = false);
     /**
      * @brief Sets the widget's top position
      * @param[in] y Top position
      * @param[in] absolute Set to @c true to calculate the position relative to the top parent widget
      * @return New top position
      */
-    virtual int setTop( int y, bool absolute = false );
+    virtual int setTop(int y, bool absolute = false);
     /**
      * @brief Sets the widget's position
      * @param[in] x Left position
@@ -132,28 +129,28 @@ public:
      * @param[in] absolute Set to @c true to calculate the position relative to the top parent widget
      * @return @c false if the position did not change
      */
-    virtual bool setPosition( int x, int y, bool absolute = false );
+    virtual bool setPosition(int x, int y, bool absolute = false);
     /**
      * @overload
      * @param[in] pos Position
      * @param[in] absolute Set to @c true to calculate the position relative to the top parent widget
      * @return @c false if the position did not change
      */
-    virtual bool setPosition( const Point& pos, bool absolute = false );
+    virtual bool setPosition(const Point& pos, bool absolute = false);
     /**
      * @brief Sets the widget's width
      * @param[in] w Wanted width
      * @return New width
      * @pre @c w>0
      */
-    virtual int setWidth( int w );
+    virtual int setWidth(int w);
     /**
      * @brief Sets the widget's height
      * @param[in] h Wanted height
      * @return New height
      * @pre @c h>0
      */
-    virtual int setHeight( int h );
+    virtual int setHeight(int h);
     /**
      * @brief Sets the widget's size
      * @param[in] w Width
@@ -162,13 +159,13 @@ public:
      * @pre @c w>0
      * @pre @c h>0
      */
-    virtual bool setSize( int w, int h );
+    virtual bool setSize(int w, int h);
     /**
      * @overload
      * @param[in] pt New size
      * @return @c false if nothing changed
      */
-    virtual bool setSize( const Point& pt );
+    virtual bool setSize(const Point& pt);
     /**
      * @brief Get the widget's area
      * @return The widget's area
@@ -189,28 +186,28 @@ public:
      * @param[in,out] x Left coordinate
      * @param[in,out] y Top coordinate
      */
-    virtual void mapToParent( int* x, int* y ) const;
+    virtual void mapToParent(int* x, int* y) const;
     /**
      * @overload
      * @param[in] pt Coordinate
      */
-    virtual void mapToParent( Point* pt ) const;
+    virtual void mapToParent(Point* pt) const;
     /**
      * @brief Map widget's coordinates to the top parent ones
      * @param[in,out] x Left coordinate
      * @param[in,out] y Top coordinate
      */
-    virtual void mapToAbsolute( int* x, int* y ) const;
+    virtual void mapToAbsolute(int* x, int* y) const;
     /**
      * @overload
      * @param[in] pt Coordinate
      */
-    virtual void mapToAbsolute( Point* pt ) const;
+    virtual void mapToAbsolute(Point* pt) const;
     /**
      * @brief Move an element to the top
      * @param[in] vp Pointer to the element to move to the top
      */
-    virtual void toTop( Widget* vp );
+    virtual void toTop(Widget* vp);
     /**
      * @brief Mouse movement event handler
      * @param[in] x X coordinate
@@ -220,42 +217,49 @@ public:
      * @details
      * The default implementation calls the children's event handlers
      */
-    virtual bool onMouseMove( int x, int y );
+    virtual bool onMouseMove(int x, int y);
     /**
      * @brief Sets the value of m_autoDelete
      * @param[in] value The new value
      */
-    void setAutoDelete( bool value ) noexcept;
+    void setAutoDelete(bool value) noexcept;
 };
 
 class Widget::LockGuard
 {
 private:
-    DISABLE_COPY( LockGuard )
-    const Widget* const m_widget;
+    DISABLE_COPY(LockGuard)
+        const Widget* const m_widget;
 public:
-    explicit LockGuard( const Widget* const widget ) : m_widget( widget ) {
-        if( widget != nullptr ) {
+    explicit LockGuard(const Widget* const widget) : m_widget(widget)
+    {
+        if(widget != nullptr)
+        {
             widget->m_mutex.lock();
         }
     }
-    ~LockGuard() {
-        if( m_widget != nullptr ) {
+    ~LockGuard()
+    {
+        if(m_widget != nullptr)
+        {
             m_widget->m_mutex.unlock();
         }
     }
-    void lock() {
-        if( m_widget != nullptr ) {
+    void lock()
+    {
+        if(m_widget != nullptr)
+        {
             m_widget->m_mutex.lock();
         }
     }
-    void unlock() {
-        if( m_widget != nullptr ) {
+    void unlock()
+    {
+        if(m_widget != nullptr)
+        {
             m_widget->m_mutex.unlock();
         }
     }
 };
-
 } // namespace ppg
 
 /**

@@ -297,7 +297,7 @@ std::string CcffLoader::instrumentTitle(size_t n) const
     return std::string(instruments[n].name);
 }
 
-uint32_t CcffLoader::instrumentCount() const
+size_t CcffLoader::instrumentCount() const
 {
     return 47;
 }

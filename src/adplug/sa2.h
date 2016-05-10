@@ -36,7 +36,7 @@ public:
 
     std::string type() const override;
     std::string title() const override;
-    uint32_t instrumentCount() const override
+    size_t instrumentCount() const override
     {
         return 29;
     }

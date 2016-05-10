@@ -131,7 +131,7 @@ bool CksmPlayer::update()
                 if(track < 11)
                 {
                     size_t temp = 0;
-                    auto i = numchans;
+                    size_t i = numchans;
                     for(size_t j = 0; j < numchans; j++)
                         if((countstop - chanage[j] >= temp) && (chantrack[j] == track))
                         {

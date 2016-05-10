@@ -19,7 +19,6 @@
 #include "widget.h"
 #include <light4cxx/logger.h>
 
-#include <algorithm>
 #include <boost/assert.hpp>
 
 namespace ppg
@@ -151,7 +150,7 @@ void Widget::draw()
     if(!isVisible())
         return;
     // draw from bottom to top so that top elements are drawn over bottom ones
-    for(auto revIt = m_children.rbegin(); revIt != m_children.rend(); revIt++)
+    for(auto revIt = m_children.rbegin(); revIt != m_children.rend(); ++revIt)
     {
         Widget* w = *revIt;
         if(!w || !w->isVisible())

@@ -38,7 +38,7 @@ public:
     {
         return "Adlib Tracker 1.0";
     }
-    uint32_t instrumentCount() const override
+    size_t instrumentCount() const override
     {
         return 9;
     }

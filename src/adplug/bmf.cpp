@@ -408,7 +408,7 @@ std::string CxadbmfPlayer::author() const
     return m_bmfAuthor;
 }
 
-uint32_t CxadbmfPlayer::instrumentCount() const
+size_t CxadbmfPlayer::instrumentCount() const
 {
     return 32;
 }

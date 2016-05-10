@@ -34,8 +34,6 @@
 
 namespace
 {
-const uint16_t bitvalue[14] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192 };
-
 const std::array<int16_t, 6> copybits = { {4, 6, 8, 10, 12, 14} };
 
 const std::array<int16_t, 6> copymin = { {0, 16, 80, 336, 1360, 5456} };
@@ -510,7 +508,7 @@ uint16_t Ca2mLoader::inputCode(uint16_t bits)
             m_bitcount--;
 
         if(m_bitbuffer > 0x7fff)
-            code |= bitvalue[i - 1];
+            code |= 1u << (i - 1);
         m_bitbuffer <<= 1;
     }
 

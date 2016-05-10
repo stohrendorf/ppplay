@@ -10,6 +10,15 @@ add_library(ppplay_ppg SHARED
 	stereopeakbar.cpp
 	progressbar.cpp
 	fonts.cpp
+	widget.h
+	label.h
+	sdlscreen.h
+	stereopeakbar.h
+	progressbar.h
+	color.h
+	point.h
+	rect.h
+	fonts.h
 )
 set_target_properties(ppplay_ppg PROPERTIES SOVERSION 1)
 generate_export_header(ppplay_ppg)

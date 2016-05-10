@@ -43,7 +43,7 @@ struct SimpleComplex
     typedef T Type;
     Type real;
     Type imag;
-    constexpr SimpleComplex(Type r = 0, Type i = 0) noexcept : real(r), imag(i)
+    explicit constexpr SimpleComplex(Type r = 0, Type i = 0) noexcept : real(r), imag(i)
     {
     }
 

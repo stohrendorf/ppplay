@@ -44,7 +44,7 @@ public:
         return m_header.name;
     }
 
-    uint32_t instrumentCount() const override
+    size_t instrumentCount() const override
     {
         return m_header.instrumentCount;
     }

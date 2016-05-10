@@ -93,7 +93,7 @@ private:
     size_t framesUntilUpdate() const override;
     std::string type() const override;
     std::string title() const override;
-    uint32_t instrumentCount() const override;
+    size_t instrumentCount() const override;
 
     const uint8_t* m_trackdataByOrder = nullptr;
     Header m_ratHeader{};

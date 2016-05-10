@@ -55,7 +55,7 @@ public:
      * @pre @c width>=8
      * @pre @c interLen>=1
      */
-    StereoPeakBar( Widget* parent, int width, int max, int interLen, bool showPeak );
+    StereoPeakBar(Widget* parent, int width, int max, int interLen, bool showPeak);
     /**
      * @brief Destructor
      */
@@ -65,14 +65,14 @@ public:
      * @param[in] lval Left value
      * @param[in] rval Right value
      */
-    void shift( int lval, int rval );
+    void shift(int lval, int rval);
     /**
      * @brief Shift fractional values into the interpolation array
      * @param[in] lval Left value
      * @param[in] rval Right value
      * @pre @code (0<=lval<=1)&&(0<=rval<=1) @endcode
      */
-    void shiftFrac( float lval, float rval );
+    void shiftFrac(float lval, float rval);
     /**
      * @brief Get the left value
      * @return The left value
@@ -84,7 +84,6 @@ public:
      */
     int valueRight() const;
 };
-
 }
 
 /**

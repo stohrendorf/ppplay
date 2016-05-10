@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef XMENVELOPEPROCESSOR_H
 #define XMENVELOPEPROCESSOR_H
 
@@ -34,7 +33,6 @@ namespace ppp
 {
 namespace xm
 {
-
 /**
  * @class XmEnvelopeProcessor
  * @brief XM Envelope helper class
@@ -50,7 +48,8 @@ public:
         Loop = 0x04 //!< @brief Envelope is looped
     };
     //! @brief An envelope point
-    struct EnvelopePoint {
+    struct EnvelopePoint
+    {
         int16_t position; //!< @brief Position of the point
         int16_t value; //!< @brief Value of the point
     };
@@ -80,13 +79,13 @@ private:
      * @param[in] idx Point index
      * @return @c true if on the sustain point
      */
-    bool onSustain( uint8_t idx ) const;
+    bool onSustain(uint8_t idx) const;
     /**
      * @brief Check if we are at the loop end
      * @param[in] idx Point idx
      * @return @c true if at the loop end
      */
-    bool atLoopEnd( uint8_t idx ) const;
+    bool atLoopEnd(uint8_t idx) const;
 public:
     /**
      * @brief Constructor, default is to disable this envelope
@@ -102,12 +101,12 @@ public:
      * @param[in] loopStart Loop start point index
      * @param[in] loopEnd Loop end point index
      */
-    XmEnvelopeProcessor( EnvelopeFlags flags, const std::array<EnvelopePoint, 12>& points, uint8_t numPoints, uint8_t sustainPt, uint8_t loopStart, uint8_t loopEnd );
+    XmEnvelopeProcessor(EnvelopeFlags flags, const std::array<EnvelopePoint, 12>& points, uint8_t numPoints, uint8_t sustainPt, uint8_t loopStart, uint8_t loopEnd);
     /**
      * @brief Advance the envelope position if needed
      * @param[in] keyOn If the keyboard key is currently pressed
      */
-    void increasePosition( bool keyOn );
+    void increasePosition(bool keyOn);
     /**
      * @brief If the envelope is enabled
      * @return @c true if m_flags contains EnvelopFlags::Enabled
@@ -120,19 +119,19 @@ public:
      * @param[in] scale Volume scale value
      * @return The real volume used for mixing (0..64)
      */
-    uint8_t realVolume( uint8_t volume, uint8_t globalVolume, uint16_t scale );
+    uint8_t realVolume(uint8_t volume, uint8_t globalVolume, uint16_t scale);
     /**
      * @brief Calculate the real panning value
      * @param[in] panning The channel panning
      * @return The real panning
      */
-    uint8_t realPanning( uint8_t panning );
+    uint8_t realPanning(uint8_t panning);
     /**
      * @brief Set the envelope position
      * @param[in] pos The requested position (not the point index)
      */
-    void setPosition( uint8_t pos );
-    virtual AbstractArchive& serialize( AbstractArchive* data );
+    void setPosition(uint8_t pos);
+    AbstractArchive& serialize(AbstractArchive* data) override;
     void doKeyOff();
     void retrigger();
 };
@@ -143,11 +142,10 @@ public:
  * @param[in] b Flags value 2
  * @return @c true if @c a&b is not 0
  */
-inline bool operator&( const XmEnvelopeProcessor::EnvelopeFlags& a, const XmEnvelopeProcessor::EnvelopeFlags& b )
+inline bool operator&(const XmEnvelopeProcessor::EnvelopeFlags& a, const XmEnvelopeProcessor::EnvelopeFlags& b)
 {
-    return ( static_cast<uint8_t>( a ) & static_cast<uint8_t>( b ) ) != 0;
+    return (static_cast<uint8_t>(a) & static_cast<uint8_t>(b)) != 0;
 }
-
 }
 }
 

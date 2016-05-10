@@ -36,20 +36,19 @@
 
 namespace opl
 {
-
 class Opl3;
 class Operator : public ISerializable
 {
-    DISABLE_COPY( Operator )
+    DISABLE_COPY(Operator)
 public:
     typedef std::shared_ptr<Operator> Ptr;
 
     static constexpr int
-    AM1_VIB1_EGT1_KSR1_MULT4_Offset = 0x20,
-    KSL2_TL6_Offset = 0x40,
-    AR4_DR4_Offset = 0x60,
-    SL4_RR4_Offset = 0x80,
-    _5_WS3_Offset = 0xE0;
+        AM1_VIB1_EGT1_KSR1_MULT4_Offset = 0x20,
+        KSL2_TL6_Offset = 0x40,
+        AR4_DR4_Offset = 0x60,
+        SL4_RR4_Offset = 0x80,
+        _5_WS3_Offset = 0xE0;
 
 private:
     Opl3* m_opl;
@@ -73,25 +72,29 @@ private:
     // 0..7
     uint8_t m_block = 0;
 
-    int16_t handleTopCymbal( uint8_t ws );
-    int16_t handleHighHat( uint8_t ws );
-    int16_t handleSnareDrum( uint8_t ws );
+    int16_t handleTopCymbal(uint8_t ws);
+    int16_t handleHighHat(uint8_t ws);
+    int16_t handleSnareDrum(uint8_t ws);
 
 public:
-    const EnvelopeGenerator* envelopeGenerator() const {
+    const EnvelopeGenerator* envelopeGenerator() const
+    {
         return &m_envelopeGenerator;
     }
-    EnvelopeGenerator* envelopeGenerator() {
+    EnvelopeGenerator* envelopeGenerator()
+    {
         return &m_envelopeGenerator;
     }
-    const PhaseGenerator* phaseGenerator() const {
+    const PhaseGenerator* phaseGenerator() const
+    {
         return &m_phaseGenerator;
     }
-    PhaseGenerator* phaseGenerator() {
+    PhaseGenerator* phaseGenerator()
+    {
         return &m_phaseGenerator;
     }
 
-    Operator( Opl3* opl, int baseAddress );
+    Operator(Opl3* opl, int baseAddress);
 
     /**
      * @post m_mult<16
@@ -123,7 +126,7 @@ public:
      * @return 13 bit sample value
      * @see AbstractChannel::avgFeedback()
      */
-    int16_t nextSample( uint16_t modulator = 0 );
+    int16_t nextSample(uint16_t modulator = 0);
 
     /**
      * @brief Calculate operator output
@@ -131,13 +134,13 @@ public:
      * @param[in] ws Waveform selector
      * @return Waveform sample, amplitude is -4085..4084
      */
-    int16_t getOutput( uint16_t outputPhase, uint8_t ws );
+    int16_t getOutput(uint16_t outputPhase, uint8_t ws);
 
     void keyOn();
     void keyOff();
-    void updateOperator( uint16_t f_num, uint8_t blk );
+    void updateOperator(uint16_t f_num, uint8_t blk);
 
-    virtual AbstractArchive& serialize( AbstractArchive* archive );
+    AbstractArchive& serialize(AbstractArchive* archive) override;
 };
 }
 

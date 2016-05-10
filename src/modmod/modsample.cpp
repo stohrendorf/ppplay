@@ -67,7 +67,7 @@ bool ModSample::loadHeader(Stream* stream)
     swapEndian(&hdr.loopLength);
     if(hdr.length > 1)
     {
-        resizeData(hdr.length << 1);
+        resizeData(hdr.length * 2);
     }
     else
     {
@@ -75,8 +75,8 @@ bool ModSample::loadHeader(Stream* stream)
     }
     if(hdr.loopLength > 1 && (hdr.loopLength + hdr.loopStart <= hdr.length))
     {
-        setLoopStart(hdr.loopStart << 1);
-        setLoopEnd((hdr.loopStart + hdr.loopLength) << 1);
+        setLoopStart(hdr.loopStart * 2);
+        setLoopEnd((hdr.loopStart + hdr.loopLength) * 2);
         setLoopType(LoopType::Forward);
     }
     setTitle(stringncpy(hdr.name, 22));
@@ -114,7 +114,7 @@ bool ModSample::loadData(Stream* stream)
         logger()->warn(L4CXX_LOCATION, "File truncated: %u bytes requested while only %u bytes left.", length(), stream->size() - stream->pos());
         return false;
     }
-    for(auto it = beginIterator(); it != endIterator(); it++)
+    for(auto it = beginIterator(); it != endIterator(); ++it)
     {
         int8_t tmp;
         *stream >> tmp;
@@ -135,10 +135,10 @@ bool ModSample::loadAdpcmData(Stream* stream)
         *stream >> tmpByte;
         delta += compressionTable[tmpByte & 0x0f];
         it->left = it->right = delta << 8;
-        it++;
+        ++it;
         delta += compressionTable[tmpByte >> 4];
         it->left = it->right = delta << 8;
-        it++;
+        ++it;
     }
     return stream->good();
 }

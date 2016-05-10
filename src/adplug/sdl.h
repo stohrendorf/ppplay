@@ -35,5 +35,5 @@ public:
     SDLPlayer(int freq, size_t bufsize);
     virtual ~SDLPlayer();
 
-    virtual void frame() override;
+    void frame() override;
 };

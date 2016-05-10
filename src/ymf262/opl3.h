@@ -37,7 +37,6 @@
 
 namespace opl
 {
-
 class OperatorView;
 class SlotView;
 
@@ -81,7 +80,7 @@ private:
     Channel::Ptr m_channels4op[2][3];
     Channel::Ptr m_channels[2][9];
     Channel::Ptr m_disabledChannel;
-    MultiplexFilter<4,HighPassFilter<SampleRate,2,5>> m_filters{};
+    MultiplexFilter<4, HighPassFilter<SampleRate, 2, 5>> m_filters{};
 
     bool m_nts = false;
     //! @brief Depth of amplitude
@@ -89,7 +88,7 @@ private:
     //! @brief Depth of vibrato
     bool m_dvb = false;
     bool m_ryt = false;
-    bool m_bd=false, m_sd=false, m_tc=false, m_hh=false;
+    bool m_bd = false, m_sd = false, m_tc = false, m_hh = false;
     //! @brief OPL2/OPL3 mode selection
     bool m_new = false;
     //! @brief 13 bits
@@ -100,61 +99,77 @@ private:
     uint32_t m_rand = 1;
 
 public:
-    uint32_t randBit() const {
+    uint32_t randBit() const
+    {
         return m_rand & 1;
     }
-    bool isNew() const {
+    bool isNew() const
+    {
         return m_new;
     }
-    uint8_t readReg( uint16_t index ) const {
-        BOOST_ASSERT( index < 0x200 );
+    uint8_t readReg(uint16_t index) const
+    {
+        BOOST_ASSERT(index < 0x200);
         return m_registers[index];
     }
-    void writeReg( uint16_t index, uint8_t val ) {
-        write( ( index >> 8 ) & 1, index & 0xff, val );
+    void writeReg(uint16_t index, uint8_t val)
+    {
+        write((index >> 8) & 1, index & 0xff, val);
     }
-    bool nts() const {
+    bool nts() const
+    {
         return m_nts;
     }
-    Operator* bassDrumOp1() const {
+    Operator* bassDrumOp1() const
+    {
         return m_operators[0][0x10].get();
     }
-    Operator* highHatOperator() const {
+    Operator* highHatOperator() const
+    {
         return m_operators[0][0x11].get();
     }
-    Operator* tomTomOperator() const {
+    Operator* tomTomOperator() const
+    {
         return m_operators[0][0x12].get();
     }
-    Operator* bassDrumOp2() const {
+    Operator* bassDrumOp2() const
+    {
         return m_operators[0][0x13].get();
     }
-    Operator* snareDrumOperator() const {
+    Operator* snareDrumOperator() const
+    {
         return m_operators[0][0x14].get();
     }
-    Operator* topCymbalOperator() const {
+    Operator* topCymbalOperator() const
+    {
         return m_operators[0][0x15].get();
     }
-    bool dvb() const {
+    bool dvb() const
+    {
         return m_dvb;
     }
-    uint16_t vibratoIndex() const {
+    uint16_t vibratoIndex() const
+    {
         return m_vibratoIndex;
     }
-    bool dam() const {
+    bool dam() const
+    {
         return m_dam;
     }
-    bool ryt() const {
+    bool ryt() const
+    {
         return m_ryt;
     }
-    uint16_t tremoloIndex() const {
+    uint16_t tremoloIndex() const
+    {
         return m_tremoloIndex;
     }
 
-    void read( std::array< int16_t, 4 >* dest ) ;
+    void read(std::array< int16_t, 4 >* dest);
 
     Opl3();
 
-    AbstractArchive& serialize( AbstractArchive* archive );
+    AbstractArchive& serialize(AbstractArchive* archive) override;
 
     OperatorView getOperatorView(size_t index, bool second);
     SlotView getSlotView(size_t index);
@@ -162,17 +177,17 @@ private:
     void update_DAM1_DVB1_RYT1_BD1_SD1_TOM1_TC1_HH1();
     void setEnabledChannels();
     void set4opConnections();
-    void write( int array, int address, uint8_t data );
-    void replaceRegBits(int address, uint8_t ofs, uint8_t count, uint8_t value) {
-        BOOST_ASSERT(value < (1<<count));
-        BOOST_ASSERT(ofs+count <= 8);
-        const uint8_t mask = ((1<<count)-1)<<ofs;
+    void write(int array, int address, uint8_t data);
+    void replaceRegBits(int address, uint8_t ofs, uint8_t count, uint8_t value)
+    {
+        BOOST_ASSERT(value < (1 << count));
+        BOOST_ASSERT(ofs + count <= 8);
+        const uint8_t mask = ((1 << count) - 1) << ofs;
         uint8_t old = readReg(address) & ~mask;
-        value &= ((1<<count)-1);
-        writeReg(address, old | (value<<ofs));
+        value &= ((1 << count) - 1);
+        writeReg(address, old | (value << ofs));
     }
 };
-
 
 class PPPLAY_OPL_EXPORT OperatorView
 {
@@ -183,62 +198,79 @@ private:
     uint16_t m_baseRegister;
     OperatorView(Opl3* opl, uint16_t baseRegister) : m_opl(opl), m_baseRegister(baseRegister)
     {
-        BOOST_ASSERT( (baseRegister&0xff)<=21 );
-        BOOST_ASSERT( (baseRegister>>8)<=1 );
-        BOOST_ASSERT( opl != nullptr );
+        BOOST_ASSERT((baseRegister & 0xff) <= 21);
+        BOOST_ASSERT((baseRegister >> 8) <= 1);
+        BOOST_ASSERT(opl != nullptr);
     }
 
 public:
-    void setTotalLevel(uint8_t level) {
-        m_opl->replaceRegBits(m_baseRegister+0x40, 0, 6, level);
+    void setTotalLevel(uint8_t level)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0x40, 0, 6, level);
     }
-    void setKsl(uint8_t level) {
-        m_opl->replaceRegBits(m_baseRegister+0x40, 6, 2, level);
+    void setKsl(uint8_t level)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0x40, 6, 2, level);
     }
-    void setAttackRate(uint8_t rate) {
-        m_opl->replaceRegBits(m_baseRegister+0x60, 4, 4, rate);
+    void setAttackRate(uint8_t rate)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0x60, 4, 4, rate);
     }
-    void setDecayRate(uint8_t rate) {
-        m_opl->replaceRegBits(m_baseRegister+0x60, 0, 4, rate);
+    void setDecayRate(uint8_t rate)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0x60, 0, 4, rate);
     }
-    void setSustainLevel(uint8_t level) {
-        m_opl->replaceRegBits(m_baseRegister+0x80, 4, 4, level);
+    void setSustainLevel(uint8_t level)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0x80, 4, 4, level);
     }
-    void setReleaseRate(uint8_t rate) {
-        m_opl->replaceRegBits(m_baseRegister+0x80, 0, 4, rate);
+    void setReleaseRate(uint8_t rate)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0x80, 0, 4, rate);
     }
-    void setWave(uint8_t wave) {
-        m_opl->replaceRegBits(m_baseRegister+0xe0, 0, 3, wave);
+    void setWave(uint8_t wave)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0xe0, 0, 3, wave);
     }
-    void setAm(bool value) {
-        m_opl->replaceRegBits(m_baseRegister+0x20, 7, 1, value?1:0);
+    void setAm(bool value)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0x20, 7, 1, value ? 1 : 0);
     }
-    void setVib(bool value) {
-        m_opl->replaceRegBits(m_baseRegister+0x20, 6, 1, value?1:0);
+    void setVib(bool value)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0x20, 6, 1, value ? 1 : 0);
     }
-    void setEgt(bool value) {
-        m_opl->replaceRegBits(m_baseRegister+0x20, 5, 1, value?1:0);
+    void setEgt(bool value)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0x20, 5, 1, value ? 1 : 0);
     }
-    void setKsr(bool value) {
-        m_opl->replaceRegBits(m_baseRegister+0x20, 4, 1, value?1:0);
+    void setKsr(bool value)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0x20, 4, 1, value ? 1 : 0);
     }
-    void setMult(uint8_t mult) {
-        m_opl->replaceRegBits(m_baseRegister+0x20, 0, 4, mult);
+    void setMult(uint8_t mult)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0x20, 0, 4, mult);
     }
-    void set20(uint8_t value) {
-        m_opl->writeReg(m_baseRegister+0x20, value);
+    void set20(uint8_t value)
+    {
+        m_opl->writeReg(m_baseRegister + 0x20, value);
     }
-    void set40(uint8_t value) {
-        m_opl->writeReg(m_baseRegister+0x40, value);
+    void set40(uint8_t value)
+    {
+        m_opl->writeReg(m_baseRegister + 0x40, value);
     }
-    void set60(uint8_t value) {
-        m_opl->writeReg(m_baseRegister+0x60, value);
+    void set60(uint8_t value)
+    {
+        m_opl->writeReg(m_baseRegister + 0x60, value);
     }
-    void set80(uint8_t value) {
-        m_opl->writeReg(m_baseRegister+0x80, value);
+    void set80(uint8_t value)
+    {
+        m_opl->writeReg(m_baseRegister + 0x80, value);
     }
-    void setE0(uint8_t value) {
-        m_opl->writeReg(m_baseRegister+0xE0, value);
+    void setE0(uint8_t value)
+    {
+        m_opl->writeReg(m_baseRegister + 0xE0, value);
     }
 };
 
@@ -257,69 +289,77 @@ class PPPLAY_OPL_EXPORT SlotView
         , m_modulator(std::move(modulator))
         , m_carrier(std::move(carrier))
     {
-        BOOST_ASSERT( (baseRegister&0xff)<=9 );
-        BOOST_ASSERT( (baseRegister>>8)<=1 );
-        BOOST_ASSERT( opl != nullptr );
+        BOOST_ASSERT((baseRegister & 0xff) <= 9);
+        BOOST_ASSERT((baseRegister >> 8) <= 1);
+        BOOST_ASSERT(opl != nullptr);
     }
 
 public:
-    void setFnum(uint16_t fnum) {
-        m_opl->replaceRegBits(m_baseRegister+0xa0, 0, 8, fnum);
-        m_opl->replaceRegBits(m_baseRegister+0xb0, 0, 2, fnum>>8);
+    void setFnum(uint16_t fnum)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0xa0, 0, 8, static_cast<uint8_t>(fnum));
+        m_opl->replaceRegBits(m_baseRegister + 0xb0, 0, 2, static_cast<uint8_t>(fnum >> 8));
     }
-    void setBlock(uint8_t block) {
-        m_opl->replaceRegBits(m_baseRegister+0xb0, 2, 3, block);
+    void setBlock(uint8_t block)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0xb0, 2, 3, block);
     }
-    void setKeyOn(bool value) {
-        m_opl->replaceRegBits(m_baseRegister+0xb0, 5, 1, value?1:0);
+    void setKeyOn(bool value)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0xb0, 5, 1, value ? 1 : 0);
     }
-    void setFeedback(uint8_t fb) {
-        m_opl->replaceRegBits(m_baseRegister+0xc0, 1, 3, fb);
+    void setFeedback(uint8_t fb)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0xc0, 1, 3, fb);
     }
-    void setCnt(bool value) {
-        m_opl->replaceRegBits(m_baseRegister+0xc0, 0, 1, value?1:0);
+    void setCnt(bool value)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0xc0, 0, 1, value ? 1 : 0);
     }
-    void setOutput(bool cha, bool chb, bool chc, bool chd) {
-        m_opl->replaceRegBits(m_baseRegister+0xc0, 7, 1, cha?1:0);
-        m_opl->replaceRegBits(m_baseRegister+0xc0, 6, 1, chb?1:0);
-        m_opl->replaceRegBits(m_baseRegister+0xc0, 5, 1, chc?1:0);
-        m_opl->replaceRegBits(m_baseRegister+0xc0, 4, 1, chd?1:0);
+    void setOutput(bool cha, bool chb, bool chc, bool chd)
+    {
+        m_opl->replaceRegBits(m_baseRegister + 0xc0, 7, 1, cha ? 1 : 0);
+        m_opl->replaceRegBits(m_baseRegister + 0xc0, 6, 1, chb ? 1 : 0);
+        m_opl->replaceRegBits(m_baseRegister + 0xc0, 5, 1, chc ? 1 : 0);
+        m_opl->replaceRegBits(m_baseRegister + 0xc0, 4, 1, chd ? 1 : 0);
     }
-    void setC0(uint8_t value) {
-        m_opl->writeReg(m_baseRegister+0xc0, value);
+    void setC0(uint8_t value)
+    {
+        m_opl->writeReg(m_baseRegister + 0xc0, value);
     }
 
-    OperatorView& modulator() noexcept {
+    OperatorView& modulator() noexcept
+    {
         return m_modulator;
     }
-    OperatorView& carrier() noexcept {
+    OperatorView& carrier() noexcept
+    {
         return m_carrier;
     }
 };
 
 inline OperatorView Opl3::getOperatorView(size_t index, bool second)
 {
-    BOOST_ASSERT( index<18 );
-    static constexpr std::array<uint8_t,18> slotRegisterOffsets = {{
+    BOOST_ASSERT(index < 18);
+    static constexpr std::array<uint8_t, 18> slotRegisterOffsets = { {
         0,  1,  2,  3,  4,  5,
         8,  9, 10, 11, 12, 13,
         16, 17, 18, 19, 20, 21
-    }};
-    return OperatorView(this, slotRegisterOffsets.at(index) | (second?0x100:0));
+    } };
+    return OperatorView(this, slotRegisterOffsets.at(index) | (second ? 0x100 : 0));
 }
 
 inline SlotView Opl3::getSlotView(size_t index)
 {
-    BOOST_ASSERT( index<18 );
-    static constexpr std::array<std::array<uint8_t,2>,9> voiceSlotOffsets = {{
+    BOOST_ASSERT(index < 18);
+    static constexpr std::array<std::array<uint8_t, 2>, 9> voiceSlotOffsets = { {
         {{ 0, 3 }}, {{ 1, 4 }}, {{ 2, 5 }}, {{ 6, 9 }}, {{ 7, 10 }}, {{ 8, 11 }}, {{ 12, 15 }}, {{ 13, 16 }}, {{ 14, 17 }}
-    }};
+    } };
     return SlotView(this,
-                    (index%9) | ((index/9)<<8),
-                    getOperatorView(voiceSlotOffsets.at(index%9)[0], index>=9),
-                    getOperatorView(voiceSlotOffsets.at(index%9)[1], index>=9));
+                    static_cast<uint16_t>((index % 9) | ((index / 9) << 8)),
+                    getOperatorView(voiceSlotOffsets.at(index % 9)[0], index >= 9),
+                    getOperatorView(voiceSlotOffsets.at(index % 9)[1], index >= 9));
 }
-
 }
 
 #endif

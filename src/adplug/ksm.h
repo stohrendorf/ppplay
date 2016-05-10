@@ -45,7 +45,7 @@ public:
     {
         return "Ken Silverman's Music Format";
     }
-    uint32_t instrumentCount() const override
+    size_t instrumentCount() const override
     {
         return 16;
     }

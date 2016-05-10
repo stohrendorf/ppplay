@@ -25,12 +25,10 @@
 #ifndef PPP_OPL_ENVELOPEGENERATOR_H
 #define PPP_OPL_ENVELOPEGENERATOR_H
 
-#include <cmath>
 #include <cstdint>
 
 namespace opl
 {
-
 class Opl3;
 
 /**
@@ -44,6 +42,8 @@ class Opl3;
 class EnvelopeGenerator
 {
 private:
+    static constexpr uint16_t Silence = 511;
+
     enum class Stage
     {
         Attack, Decay, Sustain, Release
@@ -119,15 +119,13 @@ private:
      */
     uint32_t m_counter = 0;
 
-    static constexpr uint16_t Silence = 511;
-
     /**
      * @brief Calculates the effectively used rates
      * @return Effectively used rate for envelope calculation
      * @invariant rate<16
      * @note This method is nearly frozen.
      */
-    uint8_t calculateRate( uint8_t delta ) const;
+    uint8_t calculateRate(uint8_t delta) const;
     /**
      * @brief Advances the counter and returns the overflow
      * @param[in] rate Attack/decay/release rate
@@ -136,14 +134,14 @@ private:
      * @post Result<8
      * @note This method is nearly frozen.
      */
-    inline uint8_t advanceCounter( uint8_t rate );
+    inline uint8_t advanceCounter(uint8_t rate);
     /**
      * @brief Handles decay/release phases
      * @param[in] rate Decay/release rate register value
      * @pre rate<64
      * @note This method is nearly frozen.
      */
-    void attenuate( uint8_t rate );
+    void attenuate(uint8_t rate);
     /**
      * @brief Handles attack phase
      * @pre m_env>0
@@ -152,11 +150,13 @@ private:
     void attack();
 
 public:
-    explicit constexpr EnvelopeGenerator( Opl3* opl )
-        : m_opl( opl ) {
+    explicit constexpr EnvelopeGenerator(Opl3* opl)
+        : m_opl(opl)
+    {
     }
 
-    constexpr bool isSilent() const {
+    constexpr bool isSilent() const
+    {
         return m_total == Silence;
     }
     /**
@@ -164,9 +164,10 @@ public:
      * @param[in] sl Sustain level
      * @note @a sl will be bit-masked.
      */
-    void setSustainLevel( uint8_t sl ) {
+    void setSustainLevel(uint8_t sl)
+    {
         m_sl = sl & 0x0f;
-        if( m_sl == 0x0f )
+        if(m_sl == 0x0f)
             m_sl = 0x1f;
     }
 
@@ -175,7 +176,8 @@ public:
      * @param[in] tl Total level, 6 bits
      * @note @a tl will be bit-masked.
      */
-    void setTotalLevel( uint8_t tl ) {
+    void setTotalLevel(uint8_t tl)
+    {
         // The datasheet states that the TL formula is:
         // TL = (24*d5 + 12*d4 + 6*d3 + 3*d2 + 1.5*d1 + 0.75*d0),
         // 10^(0.075*tl) ~= 2^(tl/4)
@@ -189,24 +191,25 @@ public:
      * @note This method is frozen; it has been verified from real
      *       chip output.
      */
-    void setAttennuation( uint16_t f_number, uint8_t block, uint8_t ksl );
+    void setAttennuation(uint16_t f_number, uint8_t block, uint8_t ksl);
 
     /**
      * @brief Sets the attack rate
      * @param[in] attackRate New attack rate
      * @note @a attackRate will be bit-masked.
      */
-    void setAttackRate( uint8_t attackRate ) {
+    void setAttackRate(uint8_t attackRate)
+    {
         m_ar = attackRate & 0x0f;
     }
-
 
     /**
      * @brief Sets the decay rate
      * @param[in] decayRate New decay rate
      * @note @a decayRate will be bit-masked.
      */
-    void setDecayRate( uint8_t decayRate ) {
+    void setDecayRate(uint8_t decayRate)
+    {
         m_dr = decayRate & 0x0f;
     }
 
@@ -215,11 +218,13 @@ public:
      * @param[in] releaseRate New release rate
      * @note @a releaseRate will be bit-masked.
      */
-    void setReleaseRate( uint8_t releaseRate ) {
+    void setReleaseRate(uint8_t releaseRate)
+    {
         m_rr = releaseRate & 0x0f;
     }
 
-    void setKsr( bool ksr ) {
+    void setKsr(bool ksr)
+    {
         m_ksr = ksr;
     }
 
@@ -229,23 +234,26 @@ public:
      * @param[in] am Amplitude modulation
      * @return Envelope, 0..511 for 0..96dB attenuation
      */
-    uint16_t advance( bool egt, bool am );
+    uint16_t advance(bool egt, bool am);
 
-    constexpr uint16_t value() const {
+    constexpr uint16_t value() const
+    {
         return m_total;
     }
 
     /**
      * @post m_stage==Stage::ATTACK
      */
-    void keyOn() {
+    void keyOn()
+    {
         m_stage = Stage::Attack;
     }
 
     /**
      * @post m_stage==Stage::RELEASE
      */
-    void keyOff() {
+    void keyOff()
+    {
         m_stage = Stage::Release;
     }
 };

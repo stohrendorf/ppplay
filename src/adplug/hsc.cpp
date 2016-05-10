@@ -281,7 +281,7 @@ void ChscPlayer::rewind(int)
         setinstr(i, i); // init channels
 }
 
-uint32_t ChscPlayer::instrumentCount() const
+size_t ChscPlayer::instrumentCount() const
 {
     unsigned char instnum = 0;
     // count instruments

@@ -81,18 +81,17 @@
 #include "mid.h"
 #include "mididata.h"
 #include "stream/filestream.h"
-
- //#define TESTING
-#ifdef TESTING
-#define midiprintf printf
-#else
-#define midiprintf(...)
-#endif
+#include <light4cxx/logger.h>
 
 #define LUCAS_STYLE 1
 #define CMF_STYLE 2
 #define MIDI_STYLE 4
 #define SIERRA_STYLE 8
+
+namespace
+{
+light4cxx::Logger* logger = light4cxx::Logger::get("badplay.midi");
+}
 
 // AdLib standard operator table
 const unsigned char CmidPlayer::adlib_opadd[] = { 0x00, 0x01, 0x02, 0x08, 0x09,
@@ -166,7 +165,7 @@ bool CmidPlayer::load_sierra_ins(const std::string& fname)
         for(int k = 0; k < 48; k++)
         {
             int l = i * 48 + k;
-            midiprintf("\n%2d: ", l);
+            logger->trace(L4CXX_LOCATION, "%2d: ", l);
             unsigned char ins[28];
             f.read(ins, 28);
 
@@ -191,7 +190,7 @@ bool CmidPlayer::load_sierra_ins(const std::string& fname)
             //(ins[12] ? 0:1)+((ins[2]<<1));
 
             for(auto j = 0; j < 11; j++)
-                midiprintf("%02X ", m_myInsBank[l][j]);
+                logger->trace(L4CXX_LOCATION, "%02X ", int(m_myInsBank[l][j]));
             m_stins++;
         }
         f.seekrel(2);
@@ -208,7 +207,7 @@ void CmidPlayer::sierra_next_section()
     for(i = 0; i < 16; i++)
         m_tracks[i].on = 0;
 
-    midiprintf("\n\nnext adv sierra section:\n");
+    logger->trace(L4CXX_LOCATION, "next adv sierra section:");
 
     m_dataPos = m_sierraPos;
     i = 0;
@@ -227,7 +226,7 @@ void CmidPlayer::sierra_next_section()
         m_tracks[m_currentTrack].tend = m_data.size(); //0xFC will kill it
         m_tracks[m_currentTrack].iwait = 0;
         m_tracks[m_currentTrack].pv = 0;
-        midiprintf("track %d starts at %lx\n", m_currentTrack,
+        logger->trace(L4CXX_LOCATION, "track %d starts at %x", m_currentTrack,
                    m_tracks[m_currentTrack].spos);
 
         getnext(2);
@@ -433,7 +432,7 @@ void CmidPlayer::midi_fm_reset()
 
 bool CmidPlayer::update()
 {
-    midiprintf("update\n");
+    logger->trace(L4CXX_LOCATION, "update");
     long w, v, note, vel, ctrl, nv, x, l, lnum;
     int i = 0, j, c;
     int on, onl, numchan;
@@ -477,7 +476,7 @@ bool CmidPlayer::update()
                 m_tracks[m_currentTrack].pv = v;
 
                 c = v & 0x0f;
-                midiprintf("[cmd=%2X]", v);
+                logger->trace(L4CXX_LOCATION, "[cmd=%2X]", v);
                 switch(v & 0xf0)
                 {
                     case 0x80: /*note off*/
@@ -617,11 +616,11 @@ bool CmidPlayer::update()
                                     m_chp[on][2] = 0;
                                 }
                             }
-                            midiprintf(" [%d:%d:%d:%d]\n", c, m_ch[c].inum, note, vel);
+                            logger->trace(L4CXX_LOCATION, " [%d:%d:%d:%d]", c, m_ch[c].inum, note, vel);
                         }
                         else
                         {
-                            midiprintf("off");
+                            logger->trace(L4CXX_LOCATION, "off");
                         }
                         break;
                     case 0xa0: /*key after touch */
@@ -635,9 +634,9 @@ bool CmidPlayer::update()
                         switch(ctrl)
                         {
                             case 0x07:
-                                midiprintf("(pb:%d: %d %d)", c, ctrl, vel);
+                                logger->trace(L4CXX_LOCATION, "(pb:%d: %d %d)", c, ctrl, vel);
                                 m_ch[c].vol = vel;
-                                midiprintf("vol");
+                                logger->trace(L4CXX_LOCATION, "vol");
                                 break;
                             case 0x63:
                                 if(m_adlibStyle & CMF_STYLE)
@@ -652,13 +651,13 @@ bool CmidPlayer::update()
                                     //   3 == AM+VIB on
                                     getOpl()->writeReg(
                                         0xbd, (getOpl()->readReg(0xbd) & ~0xC0) | (vel << 6));
-                                    midiprintf(" AM+VIB depth change - AM %s, VIB %s\n",
+                                    logger->trace(L4CXX_LOCATION, " AM+VIB depth change - AM %s, VIB %s",
                                         (getOpl()->readReg(0xbd) & 0x80) ? "on" : "off",
                                                (getOpl()->readReg(0xbd) & 0x40) ? "on" : "off");
                                 }
                                 break;
                             case 0x67:
-                                midiprintf("Rhythm mode: %d\n", vel);
+                                logger->trace(L4CXX_LOCATION, "Rhythm mode: %d", vel);
                                 if((m_adlibStyle & CMF_STYLE) != 0)
                                 {
                                     m_melodicMode = (vel == 0);
@@ -691,8 +690,7 @@ bool CmidPlayer::update()
                                 l = getval();
                                 if(datalook(m_dataPos + l) == 0xf7)
                                     i = 1;
-                                midiprintf("{sysex len=%d}", l);
-                                midiprintf("\n");
+                                logger->trace(L4CXX_LOCATION, "{sysex len=%d}", l);
 
                                 if(datalook(m_dataPos) == 0x7d &&
                                    datalook(m_dataPos + 1) == 0x10 &&
@@ -723,19 +721,17 @@ bool CmidPlayer::update()
 
                                     //if ((i&1)==1) ch[c].ins[10]=1;
 
-                                    midiprintf("\n%d: ", c);
+                                    logger->trace(L4CXX_LOCATION, "%d: ", c);
                                     for(i = 0; i < 11; i++)
-                                        midiprintf("%2X ", m_ch[c].ins[i]);
+                                        logger->trace(L4CXX_LOCATION, "%2X ", int(m_ch[c].ins[i]));
                                     getnext(l - 26);
                                 }
                                 else
                                 {
-                                    midiprintf("\n");
                                     for(j = 0; j < l; j++)
-                                        midiprintf("%2X ", getnext(1));
+                                        logger->trace(L4CXX_LOCATION, "%2X ", getnext(1));
                                 }
 
-                                midiprintf("\n");
                                 if(i == 1)
                                     getnext(1);
                                 break;
@@ -760,7 +756,7 @@ bool CmidPlayer::update()
                                 if(m_type == FileType::Sierra || m_type == FileType::AdvSierra)
                                 {
                                     m_tracks[m_currentTrack].tend = m_dataPos;
-                                    midiprintf("endmark: %ld -- %lx\n", m_dataPos, m_dataPos);
+                                    logger->trace(L4CXX_LOCATION, "endmark: %d -- %x", m_dataPos, m_dataPos);
                                 }
                                 break;
                             case 0xfe:
@@ -770,24 +766,23 @@ bool CmidPlayer::update()
                             case 0xff:
                                 v = getnext(1);
                                 l = getval();
-                                midiprintf("\n");
-                                midiprintf("{%X_%X}", v, l);
+                                logger->trace(L4CXX_LOCATION, "{%X_%X}", v, l);
                                 if(v == 0x51)
                                 {
                                     lnum = getnext(l);
                                     m_msqtr = lnum; /*set tempo*/
-                                    midiprintf("(qtr=%ld)", m_msqtr);
+                                    logger->trace(L4CXX_LOCATION, "(qtr=%d)", m_msqtr);
                                 }
                                 else
                                 {
                                     for(i = 0; i < l; i++)
-                                        midiprintf("%2X ", getnext(1));
+                                        logger->trace(L4CXX_LOCATION, "%2X ", getnext(1));
                                 }
                                 break;
                         }
                         break;
                     default:
-                        midiprintf("!", v); /* if we get down here, a error occurred */
+                        logger->trace(L4CXX_LOCATION, "!%d", v); /* if we get down here, a error occurred */
                         break;
                 }
                 if(m_dataPos < m_tracks[m_currentTrack].tend)
@@ -842,7 +837,7 @@ bool CmidPlayer::update()
     else
         m_fwait = 1.0f / 50; // 1/50th of a second
 
-    midiprintf("end update\n");
+    logger->trace(L4CXX_LOCATION, "end update");
 
     if(ret)
         return true;
@@ -916,14 +911,14 @@ void CmidPlayer::rewind(int subsong)
                 m_tins = 128;
             getnext(11); /*skip header*/
             m_deltas = getnext(2);
-            midiprintf("deltas:%ld\n", m_deltas);
+            logger->trace(L4CXX_LOCATION, "deltas:%d", m_deltas);
             getnext(4);
 
             m_currentTrack = 0;
             m_tracks[m_currentTrack].on = 1;
             m_tracks[m_currentTrack].tend = getnext(4);
             m_tracks[m_currentTrack].spos = m_dataPos;
-            midiprintf("tracklen:%ld\n", m_tracks[m_currentTrack].tend);
+            logger->trace(L4CXX_LOCATION, "tracklen:%d", m_tracks[m_currentTrack].tend);
             break;
         case FileType::Cmf:
         {
@@ -948,17 +943,17 @@ void CmidPlayer::rewind(int subsong)
                 i = 128; // to ward of bad numbers...
             getnexti(2); //basic tempo
 
-            midiprintf("\nioff:%d\nmoff%d\ndeltas:%ld\nmsqtr:%ld\nnumi:%d\n", n, m,
+            logger->trace(L4CXX_LOCATION, "ioff:%d moff%d deltas:%d msqtr:%d numi:%d", n, m,
                        m_deltas, m_msqtr, i);
             m_dataPos = n; // jump to instruments
             m_tins = i;
             for(uint32_t j = 0; j < i; j++)
             {
-                midiprintf("\n%d: ", j);
+                logger->trace(L4CXX_LOCATION, "%d: ", j);
                 for(int l = 0; l < 14; l++)
                 {
                     m_myInsBank[j][l] = getnext(1);
-                    midiprintf("%2X ", m_myInsBank[j][l]);
+                    logger->trace(L4CXX_LOCATION, "%2X ", int(m_myInsBank[j][l]));
                 }
                 getnext(2);
             }
@@ -985,7 +980,7 @@ void CmidPlayer::rewind(int subsong)
             m_tins = 8;
             for(int j = 0; j < m_tins; j++)
             {
-                midiprintf("\n%d: ", j);
+                logger->trace(L4CXX_LOCATION, "%d: ", j);
                 for(int l = 0; l < 16; l++)
                     ins[l] = getnext(1);
 
@@ -1002,7 +997,7 @@ void CmidPlayer::rewind(int subsong)
                 m_myInsBank[j][9] = ins[12];
 
                 for(int l = 0; l < 11; l++)
-                    midiprintf("%2X ", m_myInsBank[j][l]);
+                    logger->trace(L4CXX_LOCATION, "%2X ", int(m_myInsBank[j][l]));
             }
 
             for(int i = 0; i < 16; i++)

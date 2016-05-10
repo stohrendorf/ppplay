@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef XMORDER_H
 #define XMORDER_H
 
@@ -26,17 +25,16 @@ namespace ppp
 {
 namespace xm
 {
-
 class XmOrder : public AbstractOrder
 {
-    DISABLE_COPY( XmOrder )
-    XmOrder() = delete;
+    DISABLE_COPY(XmOrder)
+        XmOrder() = delete;
 public:
-    inline XmOrder( uint8_t idx ) : AbstractOrder( idx ) {
+    explicit XmOrder(uint8_t idx) : AbstractOrder(idx)
+    {
     }
-    virtual bool isUnplayed() const;
+    bool isUnplayed() const override;
 };
-
 }
 }
 

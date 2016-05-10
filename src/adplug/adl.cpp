@@ -52,14 +52,11 @@
   *
   */
 
-#include <cstring>
-#include <cstdint>
-#include <cstdarg>
-#include <algorithm>
-
 #include "stream/filestream.h"
 
 #include "adl.h"
+
+#include <algorithm>
 
 #define ARRAYSIZE(x) ((int)(sizeof(x) / sizeof(x[0])))
 
@@ -86,34 +83,34 @@ public:
     AdlibDriver() = default;
     ~AdlibDriver() = default;
 
-    int callback(int opcode, ...);
+    int callback(int opcode, intptr_t a = 0, int b = 0, int c = 0);
     void callback();
 
     struct OpcodeEntry
     {
-        typedef int (AdlibDriver::*DriverOpcode)(va_list& list);
+        typedef int (AdlibDriver::*DriverOpcode)(intptr_t, int, int);
         DriverOpcode function;
         const char* name;
     };
 
-    int snd_ret0x100(va_list&);
-    int snd_ret0x1983(va_list&);
-    int snd_initDriver(va_list&);
-    int snd_deinitDriver(va_list&);
-    int snd_setSoundData(va_list& list);
-    int snd_unkOpcode1(va_list&);
-    int snd_startSong(va_list& list);
-    int snd_unkOpcode2(va_list&);
-    int snd_unkOpcode3(va_list& list);
-    int snd_readByte(va_list& list);
-    int snd_writeByte(va_list& list);
-    int snd_getSoundTrigger(va_list&);
-    int snd_unkOpcode4(va_list&);
-    int snd_dummy(va_list&);
-    int snd_getNullvar4(va_list&);
-    int snd_setNullvar3(va_list&);
-    int snd_setFlag(va_list& list);
-    int snd_clearFlag(va_list& list);
+    int snd_ret0x100(intptr_t a, int b, int c);
+    int snd_ret0x1983(intptr_t a, int b, int c);
+    int snd_initDriver(intptr_t a, int b, int c);
+    int snd_deinitDriver(intptr_t a, int b, int c);
+    int snd_setSoundData(intptr_t a, int b, int c);
+    int snd_unkOpcode1(intptr_t a, int b, int c);
+    int snd_startSong(intptr_t a, int b, int c);
+    int snd_unkOpcode2(intptr_t a, int b, int c);
+    int snd_unkOpcode3(intptr_t a, int b, int c);
+    int snd_readByte(intptr_t a, int b, int c);
+    int snd_writeByte(intptr_t a, int b, int c);
+    int snd_getSoundTrigger(intptr_t a, int b, int c);
+    int snd_unkOpcode4(intptr_t a, int b, int c);
+    int snd_dummy(intptr_t a, int b, int c);
+    int snd_getNullvar4(intptr_t a, int b, int c);
+    int snd_setNullvar3(intptr_t a, int b, int c);
+    int snd_setFlag(intptr_t a, int b, int c);
+    int snd_clearFlag(intptr_t a, int b, int c);
 
     // These variables have not yet been named, but some of them are partly
     // known nevertheless:
@@ -398,11 +395,10 @@ public:
     opl::Opl3 m_opl{};
 };
 
-int AdlibDriver::callback(int opcode, ...)
+int AdlibDriver::callback(int opcode, intptr_t a, int b, int c)
 {
-    static const std::array<OpcodeEntry, 18> opcodeList{
-        {
-#define COMMAND(x) { &AdlibDriver::x, #x }
+    static const std::array<OpcodeEntry, 18> opcodeList = {
+#define COMMAND(x) OpcodeEntry{ &AdlibDriver::x, #x }
             COMMAND(snd_ret0x100),
             COMMAND(snd_ret0x1983),
             COMMAND(snd_initDriver),
@@ -422,7 +418,6 @@ int AdlibDriver::callback(int opcode, ...)
             COMMAND(snd_setFlag),
             COMMAND(snd_clearFlag)
 #undef COMMAND
-        }
     };
 
     if(opcode >= static_cast<int>(opcodeList.size()) || opcode < 0)
@@ -430,53 +425,49 @@ int AdlibDriver::callback(int opcode, ...)
         return 0;
     }
 
-    va_list args;
-    va_start(args, opcode);
-    int returnValue = (this ->* (opcodeList[opcode].function))(args);
-    va_end(args);
+    int returnValue = (this ->* (opcodeList[opcode].function))(a, b, c);
     // 	unlock();
     return returnValue;
 }
 
 // Opcodes
 
-int AdlibDriver::snd_ret0x100(va_list&)
+int AdlibDriver::snd_ret0x100(intptr_t a, int b, int c)
 {
     return 0x100;
 }
 
-int AdlibDriver::snd_ret0x1983(va_list&)
+int AdlibDriver::snd_ret0x1983(intptr_t a, int b, int c)
 {
     return 0x1983;
 }
 
-int AdlibDriver::snd_initDriver(va_list&)
+int AdlibDriver::snd_initDriver(intptr_t a, int b, int c)
 {
     _lastProcessed = _soundsPlaying = 0;
     resetAdlibState();
     return 0;
 }
 
-int AdlibDriver::snd_deinitDriver(va_list&)
+int AdlibDriver::snd_deinitDriver(intptr_t a, int b, int c)
 {
     resetAdlibState();
     return 0;
 }
 
-int AdlibDriver::snd_setSoundData(va_list& list)
+int AdlibDriver::snd_setSoundData(intptr_t a, int b, int c)
 {
-    _soundData = va_arg(list, uint8_t *);
+    _soundData = reinterpret_cast<uint8_t*>(a);
     return 0;
 }
 
-int AdlibDriver::snd_unkOpcode1(va_list&)
+int AdlibDriver::snd_unkOpcode1(intptr_t a, int b, int c)
 {
     return 0;
 }
 
-int AdlibDriver::snd_startSong(va_list& list)
+int AdlibDriver::snd_startSong(intptr_t songId, int b, int c)
 {
-    int songId = va_arg(list, int);
     _flags |= 8;
     _flagTrigger = 1;
 
@@ -503,14 +494,13 @@ int AdlibDriver::snd_startSong(va_list& list)
     return 0;
 }
 
-int AdlibDriver::snd_unkOpcode2(va_list&)
+int AdlibDriver::snd_unkOpcode2(intptr_t a, int b, int c)
 {
     return 0;
 }
 
-int AdlibDriver::snd_unkOpcode3(va_list& list)
+int AdlibDriver::snd_unkOpcode3(intptr_t value, int b, int c)
 {
-    int value = va_arg(list, int);
     int loop = value;
     if(value < 0)
     {
@@ -536,61 +526,56 @@ int AdlibDriver::snd_unkOpcode3(va_list& list)
     return 0;
 }
 
-int AdlibDriver::snd_readByte(va_list& list)
+int AdlibDriver::snd_readByte(intptr_t a, int b, int c)
 {
-    int a = va_arg(list, int);
-    int b = va_arg(list, int);
     const uint8_t* ptr = getProgram(a) + b;
     return *ptr;
 }
 
-int AdlibDriver::snd_writeByte(va_list& list)
+int AdlibDriver::snd_writeByte(intptr_t a, int b, int c)
 {
-    int a = va_arg(list, int);
-    int b = va_arg(list, int);
-    int c = va_arg(list, int);
     uint8_t* ptr = getProgram(a) + b;
     uint8_t oldValue = *ptr;
     *ptr = static_cast<uint8_t>(c);
     return oldValue;
 }
 
-int AdlibDriver::snd_getSoundTrigger(va_list&)
+int AdlibDriver::snd_getSoundTrigger(intptr_t a, int b, int c)
 {
     return _soundTrigger;
 }
 
-int AdlibDriver::snd_unkOpcode4(va_list&)
+int AdlibDriver::snd_unkOpcode4(intptr_t a, int b, int c)
 {
     return 0;
 }
 
-int AdlibDriver::snd_dummy(va_list&)
+int AdlibDriver::snd_dummy(intptr_t a, int b, int c)
 {
     return 0;
 }
 
-int AdlibDriver::snd_getNullvar4(va_list&)
+int AdlibDriver::snd_getNullvar4(intptr_t a, int b, int c)
 {
     return 0;
 }
 
-int AdlibDriver::snd_setNullvar3(va_list&)
+int AdlibDriver::snd_setNullvar3(intptr_t a, int b, int c)
 {
     return 0;
 }
 
-int AdlibDriver::snd_setFlag(va_list& list)
+int AdlibDriver::snd_setFlag(intptr_t a, int b, int c)
 {
     int oldFlags = _flags;
-    _flags |= va_arg(list, int);
+    _flags |= a;
     return oldFlags;
 }
 
-int AdlibDriver::snd_clearFlag(va_list& list)
+int AdlibDriver::snd_clearFlag(intptr_t a, int b, int c)
 {
     int oldFlags = _flags;
-    _flags &= ~(va_arg(list, int));
+    _flags &= ~a;
     return oldFlags;
 }
 
@@ -2075,8 +2060,7 @@ int AdlibDriver::updateCallback56(uint8_t*& dataptr, Channel& channel,
 // This table holds the register offset for operator 1 for each of the nine
 // channels. To get the register offset for operator 2, simply add 3.
 
-const uint8_t AdlibDriver::_regOffset[] = { 0x00, 0x01, 0x02, 0x08, 0x09, 0x0A,
-    0x10, 0x11, 0x12 };
+const uint8_t AdlibDriver::_regOffset[] = { 0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12 };
 
 // Given the size of this table, and the range of its values, it's probably the
 // F-Numbers (10 bits) for the notes of the 12-tone scale. However, it does not
@@ -2325,7 +2309,7 @@ bool CadlPlayer::load(const std::string& filename)
 
     file_data.clear();
 
-    m_driver->callback(4, m_soundDataPtr.data());
+    m_driver->callback(4, reinterpret_cast<intptr_t>(m_soundDataPtr.data()));
 
     // 	_soundFileLoaded = file;
 

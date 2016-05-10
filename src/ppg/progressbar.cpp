@@ -30,7 +30,7 @@ namespace ppg
 ProgressBar::ProgressBar(Widget* parent, size_t maxVal, int w) : Widget(parent), m_maxVal(maxVal), m_value(0), m_fgColor(Color::White), m_bgColor(Color::None)
 {
     Widget::setHeight(1);
-    setWidth(std::max(w, 2));
+    ProgressBar::setWidth(std::max(w, 2));
 }
 
 ProgressBar::~ProgressBar() = default;

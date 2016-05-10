@@ -35,8 +35,8 @@ class ISerializable;
  */
 class PPPLAY_STREAM_EXPORT AbstractArchive
 {
-    DISABLE_COPY( AbstractArchive )
-    AbstractArchive() = delete;
+    DISABLE_COPY(AbstractArchive)
+        AbstractArchive() = delete;
 public:
     typedef std::shared_ptr<AbstractArchive> Ptr; //!< @brief Class pointer
     typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
@@ -48,31 +48,35 @@ public:
      * @brief Constructor
      * @param[in] stream The storage stream
      */
-    AbstractArchive( const Stream::Ptr& stream );
-    virtual ~AbstractArchive() { }
+    explicit AbstractArchive(const Stream::Ptr& stream);
+    virtual ~AbstractArchive()
+    {
+    }
     /**
      * @brief Whether this archive is read-only
      * @return m_loading
      * @see isSaving()
      */
-    bool isLoading() const ;
+    bool isLoading() const;
     /**
      * @brief Whether this archive is write-only
      * @return !m_loading
      * @see isLoading()
      */
-    bool isSaving() const ;
+    bool isSaving() const;
 #ifndef _MSC_VER
-// the pragma is used to get rid of the following annoying GCC message:
-// warning: ‘AbstractArchive& AbstractArchive::operator%(T&)’ should return by value [-Weffc++]
+    // the pragma is used to get rid of the following annoying GCC message:
+    // warning: ‘AbstractArchive& AbstractArchive::operator%(T&)’ should return by value [-Weffc++]
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
 #endif
-    inline AbstractArchive& operator%( ISerializable* data ) {
-        return archive( data );
+    inline AbstractArchive& operator%(ISerializable* data)
+    {
+        return archive(data);
     }
-    inline AbstractArchive& operator%( ISerializable& data ) {
-        return archive( &data );
+    inline AbstractArchive& operator%(ISerializable& data)
+    {
+        return archive(&data);
     }
     /**
      * @brief Serialization operator
@@ -83,16 +87,19 @@ public:
      */
     template<class T>
     inline
-    // This neat piece of template meta-programming is necessary so that this operator
-    // does not overwrite the above overloads for ISerializable.
-    typename std::enable_if < !std::is_base_of<ISerializable, typename std::remove_pointer<T>::type >::value, AbstractArchive& >::type
-    operator%( T& data ) {
-        static_assert( std::is_trivially_copy_assignable<T>::value, "Data to serialize must be trivially copyable" );
-        static_assert( !std::is_pointer<T>::value, "Data to serialize must not be a pointer" );
-        if( m_loading ) {
+        // This neat piece of template meta-programming is necessary so that this operator
+        // does not overwrite the above overloads for ISerializable.
+        typename std::enable_if < !std::is_base_of<ISerializable, typename std::remove_pointer<T>::type >::value, AbstractArchive& >::type
+        operator%(T& data)
+    {
+        static_assert(std::is_trivially_copy_assignable<T>::value, "Data to serialize must be trivially copyable");
+        static_assert(!std::is_pointer<T>::value, "Data to serialize must not be a pointer");
+        if(m_loading)
+        {
             *m_stream >> data;
         }
-        else {
+        else
+        {
             *m_stream << data;
         }
         return *this;
@@ -109,15 +116,18 @@ public:
      * @note Operation depends on m_loading
      */
     template<class T>
-    inline AbstractArchive& array( T* data, size_t count ) {
-        static_assert( std::is_trivially_copy_assignable<T>::value, "Array to serialize must be trivially copyable" );
-        static_assert( !std::is_pointer<T>::value, "Array to serialize must not be a pointer" );
-        BOOST_ASSERT( data != nullptr );
-        if( m_loading ) {
-            m_stream->read( data, count );
+    inline AbstractArchive& array(T* data, size_t count)
+    {
+        static_assert(std::is_trivially_copy_assignable<T>::value, "Array to serialize must be trivially copyable");
+        static_assert(!std::is_pointer<T>::value, "Array to serialize must not be a pointer");
+        BOOST_ASSERT(data != nullptr);
+        if(m_loading)
+        {
+            m_stream->read(data, count);
         }
-        else {
-            m_stream->write( data, count );
+        else
+        {
+            m_stream->write(data, count);
         }
         return *this;
     }
@@ -127,7 +137,7 @@ public:
      * @return Reference to *this
      * @note Operation depends on m_loading
      */
-    AbstractArchive& archive( ISerializable* data ) ;
+    AbstractArchive& archive(ISerializable* data);
     /**
      * @brief Finish saving operation
      * @details
@@ -149,19 +159,21 @@ public:
 #pragma GCC diagnostic ignored "-Weffc++"
 #endif
 template<>
-inline AbstractArchive& AbstractArchive::operator%( std::string& str )
+inline AbstractArchive& AbstractArchive::operator%(std::string& str)
 {
-    if( !m_loading ) {
+    if(!m_loading)
+    {
         size_t len = str.length();
-        m_stream->write( &len );
-        m_stream->write( str.data(), len );
+        m_stream->write(&len);
+        m_stream->write(str.data(), len);
     }
-    else {
+    else
+    {
         size_t len = 0;
-        m_stream->read( &len );
-        str.resize( len );
+        m_stream->read(&len);
+        str.resize(len);
         if(!str.empty())
-            m_stream->read( &str.front(), len );
+            m_stream->read(&str.front(), len);
     }
     return *this;
 }

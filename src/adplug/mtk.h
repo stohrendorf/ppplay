@@ -45,19 +45,19 @@ public:
     }
     std::string author() const override
     {
-        return composer;
+        return m_composer;
     }
-    uint32_t instrumentCount() const override
+    size_t instrumentCount() const override
     {
         return 128;
     }
     std::string instrumentTitle(size_t n) const override
     {
-        return instname[n];
+        return m_instrumentNames[n];
     }
 
 private:
-    char m_title[34];
-    char composer[34];
-    char instname[0x80][34]{};
+    std::string m_title;
+    std::string m_composer;
+    std::string m_instrumentNames[0x80]{};
 };

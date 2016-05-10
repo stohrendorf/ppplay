@@ -35,16 +35,33 @@ add_compiler_export_flags()
 set_source_files_properties(stuff/pluginregistry.cpp PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS};LIBEXECDIR=\"${CMAKE_INSTALL_FULL_LIBEXECDIR}\"")
 
 add_library(ppplay_core SHARED
-	stuff/pluginregistry.cpp
-	stuff/numberutils.cpp
-	stuff/sdltimer.cpp
-        stuff/system.cpp
-	output/audiofifo.cpp
-	output/abstractaudiooutput.cpp
-	output/abstractaudiosource.cpp
-	output/fft.cpp
-	output/fftobserver.cpp
-	output/volumeobserver.cpp
+    stuff/pluginregistry.cpp
+    stuff/numberutils.cpp
+    stuff/sdltimer.cpp
+    stuff/system.cpp
+    stuff/pluginregistry.h
+    stuff/numberutils.h
+    stuff/sdltimer.h
+    stuff/system.h
+    stuff/field.h
+    stuff/inputplugin.h
+    stuff/itimer.h
+    stuff/numberutils.h
+    stuff/stringutils.h
+    stuff/trackingcontainer.h
+    stuff/utils.h
+    output/audiofifo.cpp
+    output/abstractaudiooutput.cpp
+    output/abstractaudiosource.cpp
+    output/fft.cpp
+    output/fftobserver.cpp
+    output/volumeobserver.cpp
+    output/audiofifo.h
+    output/abstractaudiooutput.h
+    output/abstractaudiosource.h
+    output/fft.h
+    output/fftobserver.h
+    output/volumeobserver.h
 )
 generate_export_header(ppplay_core)
 set_target_properties(ppplay_core PROPERTIES SOVERSION 1)

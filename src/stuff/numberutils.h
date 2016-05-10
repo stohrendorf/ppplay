@@ -21,7 +21,6 @@
 
 #include "ppplay_core_export.h"
 
-#include <cstdint>
 #include <algorithm>
 
 namespace ppp
@@ -31,19 +30,19 @@ namespace ppp
  * @{
  */
 
-/**
- * @brief Clip a value @a v in the range from @a a to @a b
- * @tparam T Value's type
- * @param[in] v Value to clip
- * @param[in] a Lower border
- * @param[in] b Upper border
- * @return Clipped value @a v between @a a and @a b
- * @note Time-critical
- */
+ /**
+  * @brief Clip a value @a v in the range from @a a to @a b
+  * @tparam T Value's type
+  * @param[in] v Value to clip
+  * @param[in] a Lower border
+  * @param[in] b Upper border
+  * @return Clipped value @a v between @a a and @a b
+  * @note Time-critical
+  */
 template<typename T>
-inline constexpr T clip( T v, T a, T b )
+inline constexpr T clip(T v, T a, T b)
 {
-    return std::min( b, std::max( v, a ) );
+    return std::min(b, std::max(v, a));
 }
 
 /**
@@ -56,9 +55,9 @@ inline constexpr T clip( T v, T a, T b )
  * @note Time-critical
  */
 template<typename T>
-inline constexpr bool between( T v, T a, T b )
+inline constexpr bool between(T v, T a, T b)
 {
-    return ( v >= a ) && ( v <= b );
+    return (v >= a) && (v <= b);
 }
 
 /**
@@ -68,7 +67,7 @@ inline constexpr bool between( T v, T a, T b )
  * @details
  * Reverts the bytes in @a data
  */
-extern PPPLAY_CORE_EXPORT void swapEndian( char data[], size_t size );
+extern PPPLAY_CORE_EXPORT void swapEndian(char data[], size_t size);
 
 /**
  * @overload
@@ -77,9 +76,9 @@ extern PPPLAY_CORE_EXPORT void swapEndian( char data[], size_t size );
  * @param[in,out] data Data to swap
  */
 template<class T>
-inline void swapEndian( T* data )
+inline void swapEndian(T* data)
 {
-    swapEndian( reinterpret_cast<char*>( data ), sizeof( T ) );
+    swapEndian(reinterpret_cast<char*>(data), sizeof(T));
 }
 
 /**

@@ -1,10 +1,6 @@
 #include "modpattern.h"
 #include "modcell.h"
 
-#include "stuff/utils.h"
-
-#include <boost/assert.hpp>
-
 namespace ppp
 {
 namespace mod

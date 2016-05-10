@@ -82,7 +82,8 @@ public:
     {
         return 0;
     }
-    virtual uint32_t instrumentCount() const // returns number of instruments
+    // returns number of instruments
+    virtual size_t instrumentCount() const
     {
         return 0;
     }

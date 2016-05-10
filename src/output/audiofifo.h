@@ -40,23 +40,23 @@
  * @{
  */
 
-/**
- * @class AudioFifo
- * @brief Audio FIFO buffer
- *
- * @details
- * A simple thread is created that continuously requests data from the connected
- * AbstractAudioSource.
- */
+ /**
+  * @class AudioFifo
+  * @brief Audio FIFO buffer
+  *
+  * @details
+  * A simple thread is created that continuously requests data from the connected
+  * AbstractAudioSource.
+  */
 class PPPLAY_CORE_EXPORT AudioFifo
 {
-    DISABLE_COPY( AudioFifo )
-    AudioFifo() = delete;
+    DISABLE_COPY(AudioFifo)
+        AudioFifo() = delete;
 private:
     //! @brief Buffered audio frames
     boost::circular_buffer<BasicSampleFrame> m_buffer;
     //! @brief Threshold to tell when the buffer needs data
-    typename boost::circular_buffer<BasicSampleFrame>::size_type m_threshold;
+    boost::circular_buffer<BasicSampleFrame>::size_type m_threshold;
     //! @brief The requester thread that pulls the audio data from the source
     std::thread m_requestThread;
     //! @brief The audio source to pull the data from
@@ -81,7 +81,7 @@ private:
      * @brief Adds a buffer to the internal queue by copying its contents
      * @param[in] buf The buffer to add
      */
-    void pushData( const AudioFrameBuffer& buf );
+    void pushData(const AudioFrameBuffer& buf);
 
 public:
     /**
@@ -89,7 +89,7 @@ public:
      * @param[in] source The audio source that should be buffered
      * @param[in] threshold Initial value for m_threshold (minimum 256)
      */
-    AudioFifo( const AbstractAudioSource::WeakPtr& source, size_t threshold );
+    AudioFifo(const AbstractAudioSource::WeakPtr& source, size_t threshold);
     ~AudioFifo();
 
     /**
@@ -108,7 +108,7 @@ public:
      * @brief Set the FIFO buffer length
      * @param[in] len The requested buffer length (minimum 256)
      */
-    void setCapacity( size_t len );
+    void setCapacity(size_t len);
 
     /**
      * @brief Check if the FIFO is empty
@@ -117,7 +117,7 @@ public:
      */
     bool isEmpty() const;
 
-    size_t pullData( AudioFrameBuffer& buffer, size_t requestedFrames );
+    size_t pullData(AudioFrameBuffer& buffer, size_t requestedFrames);
 
     bool isSourcePaused() const
     {
@@ -127,16 +127,16 @@ public:
 
     // These are needed to replace boost::mutex (or boost::signals2::mutex) with std::mutex,
     // otherwise boost::thread would become a dependency.
-    typedef void DataSignalSignature( const AudioFrameBuffer& );
+    typedef void DataSignalSignature(const AudioFrameBuffer&);
     typedef boost::signals2::signal <
         DataSignalSignature,
         boost::signals2::optional_last_value<void>,
         int,
         std::less<int>,
         boost::function<DataSignalSignature>,
-        typename boost::signals2::detail::extended_signature<0, DataSignalSignature>::function_type,
+        boost::signals2::detail::extended_signature<0, DataSignalSignature>::function_type,
         std::mutex
-        > DataSignal;
+    > DataSignal;
 
     DataSignal dataPushed;
     DataSignal dataPulled;

@@ -111,8 +111,8 @@ UIMain::UIMain(ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, cons
     m_fftRight()
 {
     logger()->trace(L4CXX_LOCATION, "Initializing");
-    setSize(parent->area().size());
-    setPosition(0, 0);
+    UIMain::setSize(parent->area().size());
+    UIMain::setPosition(0, 0);
     show();
     m_position = new ppg::Label(this);
     m_position->setWidth(parent->area().width() - 4);
@@ -195,7 +195,7 @@ UIMain::UIMain(ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, cons
     m_progress->setPosition((area().width() - 40) / 2, 3);
     m_progress->setFgColor(ppg::Color::BrightWhite);
     m_progress->show();
-    toTop(m_progress);
+    UIMain::toTop(m_progress);
     logger()->trace(L4CXX_LOCATION, "Initialized");
 }
 

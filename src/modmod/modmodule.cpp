@@ -10,7 +10,6 @@
 #include <genmod/channelstate.h>
 
 #include <boost/exception/all.hpp>
-#include <boost/format.hpp>
 
 #include <array>
 

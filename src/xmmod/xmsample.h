@@ -32,14 +32,13 @@ namespace ppp
 {
 namespace xm
 {
-
 /**
  * @class XmSample
  * @brief XM Sample storage class
  */
 class XmSample : public Sample
 {
-    DISABLE_COPY( XmSample )
+    DISABLE_COPY(XmSample)
 private:
     //! @brief Sample finetune
     int8_t m_finetune;
@@ -57,14 +56,14 @@ public:
      * @param[in] str The stream to load from
      * @return @c true on success
      */
-    bool load( Stream* str );
+    bool load(Stream* str);
     /**
      * @brief Loads the sample data
      * @param[in] str The stream to load from
      * @return @c true on success
      * @pre Make sure you have called load(BinStream&) previously
      */
-    bool loadData( Stream* str );
+    bool loadData(Stream* str);
     /**
      * @brief Get the default finetune
      * @return The default finetune
@@ -86,7 +85,6 @@ public:
      */
     bool is16bit() const;
 };
-
 }
 }
 

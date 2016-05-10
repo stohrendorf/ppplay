@@ -45,7 +45,7 @@ public:
     {
         return m_author;
     }
-    uint32_t instrumentCount() const override
+    size_t instrumentCount() const override
     {
         return 250;
     }
