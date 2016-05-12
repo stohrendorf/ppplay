@@ -23,16 +23,16 @@
 
 #include "player.h"
 
-class CldsPlayer : public Player
+class LdsPlayer : public Player
 {
-    DISABLE_COPY(CldsPlayer)
+    DISABLE_COPY(LdsPlayer)
 public:
     static Player *factory()
     {
-        return new CldsPlayer();
+        return new LdsPlayer();
     }
 
-    CldsPlayer() = default;
+    LdsPlayer() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;

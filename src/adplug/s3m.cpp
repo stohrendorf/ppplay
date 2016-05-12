@@ -26,27 +26,27 @@
 
 #include "s3m.h"
 
-const char Cs3mPlayer::chnresolv[] = // S3M -> adlib channel conversion
+const char S3mPlayer::chnresolv[] = // S3M -> adlib channel conversion
 { -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1,
     0, 1, 2, 3, 4, 5, 6, 7,
     8, -1, -1, -1, -1, -1, -1, -1 };
 
-const unsigned short Cs3mPlayer::notetable[12] = // S3M adlib note table
+const unsigned short S3mPlayer::notetable[12] = // S3M adlib note table
 { 340, 363, 385, 408, 432, 458, 485, 514, 544, 577, 611, 647 };
 
-const unsigned char Cs3mPlayer::vibratotab[32] = // vibrato rate table
+const unsigned char S3mPlayer::vibratotab[32] = // vibrato rate table
 { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16, 15, 14, 13, 12,
     11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 };
 
 /*** public methods *************************************/
 
-Player* Cs3mPlayer::factory()
+Player* S3mPlayer::factory()
 {
-    return new Cs3mPlayer();
+    return new S3mPlayer();
 }
 
-Cs3mPlayer::Cs3mPlayer() : Player()
+S3mPlayer::S3mPlayer() : Player()
 {
     memset(m_patterns, 255, sizeof(m_patterns));
     //memset(m_orders, 255, sizeof(m_orders));
@@ -60,7 +60,7 @@ Cs3mPlayer::Cs3mPlayer() : Player()
             }
 }
 
-bool Cs3mPlayer::load(const std::string& filename)
+bool S3mPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -160,7 +160,7 @@ bool Cs3mPlayer::load(const std::string& filename)
     return true; // done
 }
 
-bool Cs3mPlayer::update()
+bool S3mPlayer::update()
 {
     // effect handling (timer dependant)
     for(int8_t realchan = 0; realchan < 9; realchan++)
@@ -483,7 +483,7 @@ bool Cs3mPlayer::update()
     return !songend; // still playing
 }
 
-void Cs3mPlayer::rewind(int)
+void S3mPlayer::rewind(int)
 {
     // set basic variables
     songend = 0;
@@ -500,7 +500,7 @@ void Cs3mPlayer::rewind(int)
     getOpl()->writeReg(1, 32); // Go to ym3812 mode
 }
 
-std::string Cs3mPlayer::type() const
+std::string S3mPlayer::type() const
 {
     char filever[5];
 
@@ -525,14 +525,14 @@ std::string Cs3mPlayer::type() const
     return std::string("Scream Tracker ") + filever;
 }
 
-size_t Cs3mPlayer::framesUntilUpdate() const
+size_t S3mPlayer::framesUntilUpdate() const
 {
     return static_cast<size_t>(SampleRate * 2.5 / currentTempo());
 }
 
 /*** private methods *************************************/
 
-void Cs3mPlayer::setvolume(unsigned char chan)
+void S3mPlayer::setvolume(unsigned char chan)
 {
     unsigned char op = s_opTable[chan], insnr = m_channels[chan].instrument;
 
@@ -545,7 +545,7 @@ void Cs3mPlayer::setvolume(unsigned char chan)
                                             m_channels[chan].volume) + (m_instruments[insnr].d02 & 192));
 }
 
-void Cs3mPlayer::setfreq(unsigned char chan)
+void S3mPlayer::setfreq(unsigned char chan)
 {
     getOpl()->writeReg(0xa0 + chan, m_channels[chan].frequency & 255);
     if(m_channels[chan].key)
@@ -556,7 +556,7 @@ void Cs3mPlayer::setfreq(unsigned char chan)
         (m_channels[chan].octave << 2));
 }
 
-void Cs3mPlayer::playnote(unsigned char chan)
+void S3mPlayer::playnote(unsigned char chan)
 {
     unsigned char op = s_opTable[chan], insnr = m_channels[chan].instrument;
 
@@ -580,7 +580,7 @@ void Cs3mPlayer::playnote(unsigned char chan)
     setfreq(chan);
 }
 
-void Cs3mPlayer::slide_down(unsigned char chan, unsigned char amount)
+void S3mPlayer::slide_down(unsigned char chan, unsigned char amount)
 {
     if(m_channels[chan].frequency - amount > 340)
         m_channels[chan].frequency -= amount;
@@ -593,7 +593,7 @@ void Cs3mPlayer::slide_down(unsigned char chan, unsigned char amount)
         m_channels[chan].frequency = 340;
 }
 
-void Cs3mPlayer::slide_up(unsigned char chan, unsigned char amount)
+void S3mPlayer::slide_up(unsigned char chan, unsigned char amount)
 {
     if(m_channels[chan].frequency + amount < 686)
         m_channels[chan].frequency += amount;
@@ -606,7 +606,7 @@ void Cs3mPlayer::slide_up(unsigned char chan, unsigned char amount)
         m_channels[chan].frequency = 686;
 }
 
-void Cs3mPlayer::vibrato(unsigned char chan, unsigned char info)
+void S3mPlayer::vibrato(unsigned char chan, unsigned char info)
 {
     unsigned char i, speed, depth;
 
@@ -631,7 +631,7 @@ void Cs3mPlayer::vibrato(unsigned char chan, unsigned char info)
     setfreq(chan);
 }
 
-void Cs3mPlayer::tone_portamento(unsigned char chan, unsigned char info)
+void S3mPlayer::tone_portamento(unsigned char chan, unsigned char info)
 {
     if(m_channels[chan].frequency + (m_channels[chan].octave << 10) <
        m_channels[chan].nextFrequency + (m_channels[chan].nextOctave << 10))

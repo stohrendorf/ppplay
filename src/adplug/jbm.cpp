@@ -62,12 +62,12 @@ inline uint16_t getWord(const std::vector<uint8_t>& data, int pos)
 
 /*** public methods *************************************/
 
-Player* CjbmPlayer::factory()
+Player* JbmPlayer::factory()
 {
-    return new CjbmPlayer();
+    return new JbmPlayer();
 }
 
-bool CjbmPlayer::load(const std::string& filename)
+bool JbmPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -125,7 +125,7 @@ bool CjbmPlayer::load(const std::string& filename)
     return true;
 }
 
-bool CjbmPlayer::update()
+bool JbmPlayer::update()
 {
     short c, spos, frq;
 
@@ -196,7 +196,7 @@ bool CjbmPlayer::update()
     return (m_voicemask);
 }
 
-void CjbmPlayer::rewind(int)
+void JbmPlayer::rewind(int)
 {
     int c;
 
@@ -239,7 +239,7 @@ void CjbmPlayer::rewind(int)
 
 /*** private methods ************************************/
 
-void CjbmPlayer::opl_noteonoff(int channel, bool state)
+void JbmPlayer::opl_noteonoff(int channel, bool state)
 {
     if(m_flags & 1 && channel > 5)
     {
@@ -261,7 +261,7 @@ void CjbmPlayer::opl_noteonoff(int channel, bool state)
     }
 }
 
-void CjbmPlayer::set_opl_instrument(int channel, JBMVoice* voice)
+void JbmPlayer::set_opl_instrument(int channel, JBMVoice* voice)
 {
     const auto filePos = m_insTable + (voice->instr << 4);
 

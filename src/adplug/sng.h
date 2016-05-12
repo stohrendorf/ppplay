@@ -23,11 +23,11 @@
 
 #include "player.h"
 
-class CsngPlayer : public Player
+class SngPlayer : public Player
 {
-    DISABLE_COPY(CsngPlayer)
+    DISABLE_COPY(SngPlayer)
 public:
-    CsngPlayer() = default;
+    SngPlayer() = default;
     static Player *factory();
 
     bool load(const std::string &filename) override;

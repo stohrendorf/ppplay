@@ -46,7 +46,7 @@
 #include "bmf.h"
 #include <stuff/stringutils.h>
 
-const uint8_t CxadbmfPlayer::bmf_adlib_registers[117] = {
+const uint8_t BmfPlayer::bmf_adlib_registers[117] = {
     0x20, 0x23, 0x40, 0x43, 0x60, 0x63, 0x80, 0x83, 0xA0, 0xB0, 0xC0, 0xE0, 0xE3,
     0x21, 0x24, 0x41, 0x44, 0x61, 0x64, 0x81, 0x84, 0xA1, 0xB1, 0xC1, 0xE1, 0xE4,
     0x22, 0x25, 0x42, 0x45, 0x62, 0x65, 0x82, 0x85, 0xA2, 0xB2, 0xC2, 0xE2, 0xE5,
@@ -58,27 +58,27 @@ const uint8_t CxadbmfPlayer::bmf_adlib_registers[117] = {
     0x32, 0x35, 0x52, 0x55, 0x72, 0x75, 0x92, 0x95, 0xA8, 0xB8, 0xC8, 0xF2, 0xF5
 };
 
-const uint16_t CxadbmfPlayer::bmf_notes[12] = { 0x157, 0x16B, 0x181,
+const uint16_t BmfPlayer::bmf_notes[12] = { 0x157, 0x16B, 0x181,
     0x198, 0x1B0, 0x1CA,
     0x1E5, 0x202, 0x220,
     0x241, 0x263, 0x287 };
 
 /* for 1.1 */
-const uint16_t CxadbmfPlayer::bmf_notes_2[12] = { 0x159, 0x16D, 0x183,
+const uint16_t BmfPlayer::bmf_notes_2[12] = { 0x159, 0x16D, 0x183,
     0x19A, 0x1B2, 0x1CC,
     0x1E8, 0x205, 0x223,
     0x244, 0x267, 0x28B };
 
-const uint8_t CxadbmfPlayer::bmf_default_instrument[13] = {
+const uint8_t BmfPlayer::bmf_default_instrument[13] = {
     0x01, 0x01, 0x3F, 0x3F, 0x00, 0x00, 0xF0, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-Player* CxadbmfPlayer::factory()
+Player* BmfPlayer::factory()
 {
-    return new CxadbmfPlayer();
+    return new BmfPlayer();
 }
 
-bool CxadbmfPlayer::xadplayer_load()
+bool BmfPlayer::xadplayer_load()
 {
     if(xadHeader().fmt != BMF)
         return false;
@@ -201,7 +201,7 @@ bool CxadbmfPlayer::xadplayer_load()
     return true;
 }
 
-void CxadbmfPlayer::xadplayer_rewind(int)
+void BmfPlayer::xadplayer_rewind(int)
 {
     for(int i = 0; i < 9; i++)
     {
@@ -240,7 +240,7 @@ void CxadbmfPlayer::xadplayer_rewind(int)
     getOpl()->writeReg(0xBD, 0xC0);
 }
 
-void CxadbmfPlayer::xadplayer_update()
+void BmfPlayer::xadplayer_update()
 {
     for(int i = 0; i < 9; i++)
     {
@@ -388,39 +388,39 @@ void CxadbmfPlayer::xadplayer_update()
     }
 }
 
-size_t CxadbmfPlayer::framesUntilUpdate() const
+size_t BmfPlayer::framesUntilUpdate() const
 {
     return static_cast<size_t>(SampleRate / m_bmfTimer);
 }
 
-std::string CxadbmfPlayer::type() const
+std::string BmfPlayer::type() const
 {
     return "xad: BMF Adlib Tracker";
 }
 
-std::string CxadbmfPlayer::title() const
+std::string BmfPlayer::title() const
 {
     return m_bmfTitle;
 }
 
-std::string CxadbmfPlayer::author() const
+std::string BmfPlayer::author() const
 {
     return m_bmfAuthor;
 }
 
-size_t CxadbmfPlayer::instrumentCount() const
+size_t BmfPlayer::instrumentCount() const
 {
     return 32;
 }
 
-std::string CxadbmfPlayer::instrumentTitle(size_t i) const
+std::string BmfPlayer::instrumentTitle(size_t i) const
 {
     return m_bmfInstruments[i].name;
 }
 
 /* -------- Internal Functions ---------------------------- */
 
-int CxadbmfPlayer::__bmf_convert_stream(const uint8_t* stream, int channel)
+int BmfPlayer::__bmf_convert_stream(const uint8_t* stream, int channel)
 {
 #ifdef DEBUG
     AdPlug_LogWrite(

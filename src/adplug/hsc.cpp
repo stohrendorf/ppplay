@@ -27,12 +27,12 @@
 
  /*** public methods **************************************/
 
-Player* ChscPlayer::factory()
+Player* HscPlayer::factory()
 {
-    return new ChscPlayer(false);
+    return new HscPlayer(false);
 }
 
-bool ChscPlayer::load(const std::string& filename)
+bool HscPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
 
@@ -67,7 +67,7 @@ bool ChscPlayer::load(const std::string& filename)
     return true;
 }
 
-bool ChscPlayer::update()
+bool HscPlayer::update()
 {
     m_del--; // player speed handling
     if(m_del > 0)
@@ -260,7 +260,7 @@ bool ChscPlayer::update()
     return !m_songend; // still playing
 }
 
-void ChscPlayer::rewind(int)
+void HscPlayer::rewind(int)
 {
     // rewind HSC player
     setCurrentRow(0);
@@ -281,7 +281,7 @@ void ChscPlayer::rewind(int)
         setinstr(i, i); // init channels
 }
 
-size_t ChscPlayer::instrumentCount() const
+size_t HscPlayer::instrumentCount() const
 {
     unsigned char instnum = 0;
     // count instruments
@@ -297,7 +297,7 @@ size_t ChscPlayer::instrumentCount() const
 
 /*** private methods *************************************/
 
-void ChscPlayer::setfreq(unsigned char chan, unsigned short freq)
+void HscPlayer::setfreq(unsigned char chan, unsigned short freq)
 {
     m_adlFreq[chan] = (m_adlFreq[chan] & ~3) | (freq >> 8);
 
@@ -305,7 +305,7 @@ void ChscPlayer::setfreq(unsigned char chan, unsigned short freq)
     getOpl()->writeReg(0xb0 + chan, m_adlFreq[chan]);
 }
 
-void ChscPlayer::setvolume(unsigned char chan, int volc, int volm)
+void HscPlayer::setvolume(unsigned char chan, int volc, int volm)
 {
     unsigned char* ins = m_instr[m_channel[chan].inst];
     char op = s_opTable[chan];
@@ -317,7 +317,7 @@ void ChscPlayer::setvolume(unsigned char chan, int volc, int volm)
         getOpl()->writeReg(0x40 + op, ins[3]); // modulator
 }
 
-void ChscPlayer::setinstr(unsigned char chan, unsigned char insnr)
+void HscPlayer::setinstr(unsigned char chan, unsigned char insnr)
 {
     unsigned char* ins = m_instr[insnr];
     char op = s_opTable[chan];

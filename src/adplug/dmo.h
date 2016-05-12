@@ -23,13 +23,13 @@
 
 #include "s3m.h"
 
-class CdmoLoader : public Cs3mPlayer
+class DmoPlayer : public S3mPlayer
 {
-    DISABLE_COPY(CdmoLoader)
+    DISABLE_COPY(DmoPlayer)
 public:
     static Player *factory();
 
-    CdmoLoader() = default;
+    DmoPlayer() = default;
 
     bool load(const std::string &filename) override;
 

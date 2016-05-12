@@ -23,13 +23,13 @@
 
 #include "player.h"
 
-class CbamPlayer : public Player
+class BamPlayer : public Player
 {
-    DISABLE_COPY(CbamPlayer)
+    DISABLE_COPY(BamPlayer)
 public:
     static Player *factory();
 
-    CbamPlayer() = default;
+    BamPlayer() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;

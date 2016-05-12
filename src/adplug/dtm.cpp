@@ -37,12 +37,12 @@ struct dtm_event
 #pragma pack(pop)
 }
 
-Player* CdtmLoader::factory()
+Player* DtmPlayer::factory()
 {
-    return new CdtmLoader();
+    return new DtmPlayer();
 }
 
-bool CdtmLoader::load(const std::string& filename)
+bool DtmPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -241,59 +241,59 @@ bool CdtmLoader::load(const std::string& filename)
     return true;
 }
 
-void CdtmLoader::rewind(int subsong)
+void DtmPlayer::rewind(int subsong)
 {
-    CmodPlayer::rewind(subsong);
+    ModPlayer::rewind(subsong);
 
     // default instruments
     for(int i = 0; i < 9; i++)
     {
         channel(i).instrument = i;
 
-        const CmodPlayer::Instrument& inst = instrument(i);
+        const ModPlayer::Instrument& inst = instrument(i);
         channel(i).carrierVolume = 63 - (inst.data[10] & 63);
         channel(i).modulatorVolume = 63 - (inst.data[9] & 63);
     }
 }
 
-size_t CdtmLoader::framesUntilUpdate() const
+size_t DtmPlayer::framesUntilUpdate() const
 {
     return static_cast<size_t>(SampleRate / 18.2);
 }
 
-std::string CdtmLoader::type() const
+std::string DtmPlayer::type() const
 {
     return "DeFy Adlib Tracker";
 }
 
-std::string CdtmLoader::title() const
+std::string DtmPlayer::title() const
 {
     return m_header.title;
 }
 
-std::string CdtmLoader::author() const
+std::string DtmPlayer::author() const
 {
     return m_header.author;
 }
 
-std::string CdtmLoader::description() const
+std::string DtmPlayer::description() const
 {
     return m_description;
 }
 
-std::string CdtmLoader::instrumentTitle(size_t n) const
+std::string DtmPlayer::instrumentTitle(size_t n) const
 {
     return m_instruments[n].name;
 }
 
-size_t CdtmLoader::instrumentCount() const
+size_t DtmPlayer::instrumentCount() const
 {
     return m_header.numinst;
 }
 
 /* -------- Private Methods ------------------------------- */
 
-std::vector<uint8_t> CdtmLoader::unpack_pattern(const std::vector<uint8_t>& input)
+std::vector<uint8_t> DtmPlayer::unpack_pattern(const std::vector<uint8_t>& input)
 {
     std::vector<uint8_t> result;
 

@@ -23,12 +23,12 @@
 
 #include "hsp.h"
 
-Player* ChspLoader::factory()
+Player* HspPlayer::factory()
 {
-    return new ChspLoader();
+    return new HspPlayer();
 }
 
-bool ChspLoader::load(const std::string& filename)
+bool HspPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f || f.extension() != ".hsp")

@@ -23,13 +23,13 @@
 
 #include "xad.h"
 
-class CxadflashPlayer : public CxadPlayer
+class FlashPlayer : public XadPlayer
 {
-    DISABLE_COPY(CxadflashPlayer)
+    DISABLE_COPY(FlashPlayer)
 public:
     static Player *factory();
 
-    CxadflashPlayer() = default;
+    FlashPlayer() = default;
 
 protected:
     //

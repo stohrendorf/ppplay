@@ -38,12 +38,12 @@
 
  /*** Public methods ***/
 
-Player* CadtrackLoader::factory()
+Player* AdTrackPlayer::factory()
 {
-    return new CadtrackLoader();
+    return new AdTrackPlayer();
 }
 
-bool CadtrackLoader::load(const std::string& filename)
+bool AdTrackPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -156,16 +156,16 @@ bool CadtrackLoader::load(const std::string& filename)
     return true;
 }
 
-size_t CadtrackLoader::framesUntilUpdate() const
+size_t AdTrackPlayer::framesUntilUpdate() const
 {
     return static_cast<size_t>(SampleRate / 18.2);
 }
 
 /*** Private methods ***/
 
-void CadtrackLoader::addInstrument(Instrument* i)
+void AdTrackPlayer::addInstrument(Instrument* i)
 {
-    CmodPlayer::Instrument& inst = addInstrument();
+    ModPlayer::Instrument& inst = addInstrument();
     // Carrier "Amp Mod / Vib / Env Type / KSR / Multiple" register
     inst.data[2] = i->op[Carrier].appampmod ? 1 << 7 : 0;
     inst.data[2] += i->op[Carrier].appvib ? 1 << 6 : 0;

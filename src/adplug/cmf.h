@@ -68,9 +68,9 @@ struct OPLCHANNEL
     int iMIDIPatch;   // Current MIDI patch set on this OPL channel
 };
 
-class CcmfPlayer : public Player
+class CmfPlayer : public Player
 {
-    DISABLE_COPY(CcmfPlayer)
+    DISABLE_COPY(CmfPlayer)
 private:
     std::vector<uint8_t> data{};    // song data (CMF music block)
     int iPlayPointer = 0; // Current location of playback pointer
@@ -97,8 +97,8 @@ private:
 public:
     static Player *factory();
 
-    CcmfPlayer();
-    ~CcmfPlayer() = default;
+    CmfPlayer();
+    ~CmfPlayer() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;

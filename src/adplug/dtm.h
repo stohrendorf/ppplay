@@ -21,15 +21,15 @@
   dtm.h - DTM loader by Riven the Mage <riven@ok.ru>
 */
 
-#include "protrack.h"
+#include "mod.h"
 
-class CdtmLoader : public CmodPlayer
+class DtmPlayer : public ModPlayer
 {
-    DISABLE_COPY(CdtmLoader)
+    DISABLE_COPY(DtmPlayer)
 public:
     static Player *factory();
 
-    CdtmLoader() = default;
+    DtmPlayer() = default;
 
     bool load(const std::string &filename) override;
     void rewind(int subsong) override;

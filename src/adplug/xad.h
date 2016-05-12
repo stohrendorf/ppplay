@@ -23,12 +23,12 @@
 
 #include "player.h"
 
-class CxadPlayer : public Player
+class XadPlayer : public Player
 {
-    DISABLE_COPY(CxadPlayer)
+    DISABLE_COPY(XadPlayer)
 public:
-    CxadPlayer() = default;
-    ~CxadPlayer() = default;
+    XadPlayer() = default;
+    ~XadPlayer() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;

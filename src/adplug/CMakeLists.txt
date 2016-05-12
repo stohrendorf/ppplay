@@ -34,7 +34,7 @@ set(BADPLAY_SRCS
     output.cc
     player.cpp
     players.cpp
-    protrack.cpp
+    mod.cpp
     psi.cpp
     rad.cpp
     rat.cpp
@@ -83,7 +83,7 @@ set(BADPLAY_SRCS
     output.cc
     player.h
     players.h
-    protrack.h
+    mod.h
     psi.h
     rad.h
     rat.h

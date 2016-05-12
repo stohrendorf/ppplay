@@ -47,12 +47,12 @@
 
  /*** public methods *************************************/
 
-Player* CimfPlayer::factory()
+Player* ImfPlayer::factory()
 {
-    return new CimfPlayer();
+    return new ImfPlayer();
 }
 
-bool CimfPlayer::load(const std::string& filename)
+bool ImfPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -146,7 +146,7 @@ bool CimfPlayer::load(const std::string& filename)
     return true;
 }
 
-bool CimfPlayer::update()
+bool ImfPlayer::update()
 {
     do
     {
@@ -166,7 +166,7 @@ bool CimfPlayer::update()
     return !m_songend;
 }
 
-void CimfPlayer::rewind(int)
+void ImfPlayer::rewind(int)
 {
     m_pos = 0;
     m_del = 0;
@@ -175,7 +175,7 @@ void CimfPlayer::rewind(int)
     getOpl()->writeReg(1, 32); // go to OPL2 mode
 }
 
-std::string CimfPlayer::title() const
+std::string ImfPlayer::title() const
 {
     std::string title = m_trackName;
     if(!m_trackName.empty() && !m_gameName.empty())
@@ -186,7 +186,7 @@ std::string CimfPlayer::title() const
     return title;
 }
 
-std::string CimfPlayer::description() const
+std::string ImfPlayer::description() const
 {
     std::string desc = m_footer;
 
@@ -200,7 +200,7 @@ std::string CimfPlayer::description() const
 
 /*** private methods *************************************/
 
-int CimfPlayer::getrate(const FileStream& file)
+int ImfPlayer::getrate(const FileStream& file)
 {
     if(file.extension() == ".imf")
         return 560;

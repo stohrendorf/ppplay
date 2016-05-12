@@ -26,12 +26,12 @@
 
 #include <boost/optional.hpp>
 
-class CmodPlayer : public Player
+class ModPlayer : public Player
 {
-    DISABLE_COPY(CmodPlayer)
+    DISABLE_COPY(ModPlayer)
 public:
-    CmodPlayer();
-    virtual ~CmodPlayer() = default;
+    ModPlayer();
+    virtual ~ModPlayer() = default;
 
     bool update() override;
     void rewind(int) override;

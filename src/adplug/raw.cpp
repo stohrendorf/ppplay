@@ -25,12 +25,12 @@
 
  /*** public methods *************************************/
 
-Player* CrawPlayer::factory()
+Player* RawPlayer::factory()
 {
-    return new CrawPlayer();
+    return new RawPlayer();
 }
 
-bool CrawPlayer::load(const std::string& filename)
+bool RawPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -57,7 +57,7 @@ bool CrawPlayer::load(const std::string& filename)
     return true;
 }
 
-bool CrawPlayer::update()
+bool RawPlayer::update()
 {
     if(m_dataPosition >= m_data.size())
         return false;
@@ -107,7 +107,7 @@ bool CrawPlayer::update()
     return !m_songend;
 }
 
-void CrawPlayer::rewind(int)
+void RawPlayer::rewind(int)
 {
     m_dataPosition = m_delay = 0;
     setCurrentSpeed(initialSpeed());
@@ -115,7 +115,7 @@ void CrawPlayer::rewind(int)
     getOpl()->writeReg(1, 32); // go to 9 channel mode
 }
 
-size_t CrawPlayer::framesUntilUpdate() const
+size_t RawPlayer::framesUntilUpdate() const
 {
     return SampleRate * (currentSpeed() ? currentSpeed() : 0xffff) /
         1193180; // timer oscillator speed / wait register = clock

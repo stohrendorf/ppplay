@@ -69,7 +69,7 @@ constexpr uint16_t maxpos = 0xff;
 
 /*** public methods *************************************/
 
-bool CldsPlayer::load(const std::string& filename)
+bool LdsPlayer::load(const std::string& filename)
 {
     // file validation section (actually just an extension check)
     FileStream fs(filename);
@@ -119,7 +119,7 @@ bool CldsPlayer::load(const std::string& filename)
     return true;
 }
 
-bool CldsPlayer::update()
+bool LdsPlayer::update()
 {
     if(!m_playing)
         return false;
@@ -526,7 +526,7 @@ bool CldsPlayer::update()
     return m_playing && !m_songlooped;
 }
 
-void CldsPlayer::rewind(int)
+void LdsPlayer::rewind(int)
 {
     // init all with 0
     setCurrentTempo(3);
@@ -562,7 +562,7 @@ void CldsPlayer::rewind(int)
 
 /*** private methods *************************************/
 
-void CldsPlayer::playsound(int inst_number, int channel_number, int tunehigh)
+void LdsPlayer::playsound(int inst_number, int channel_number, int tunehigh)
 {
     Channel* c = &m_channels[channel_number]; // current channel
     SoundBank* i = &m_soundbank[inst_number]; // current instrument

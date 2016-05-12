@@ -24,11 +24,11 @@
 #include "player.h"
 #include "mid/almidi.h"
 
-class CmidPlayer : public Player
+class MidPlayer : public Player
 {
-    DISABLE_COPY(CmidPlayer)
+    DISABLE_COPY(MidPlayer)
 public:
-    CmidPlayer() = default;
+    MidPlayer() = default;
     static Player *factory();
 
     bool load(const std::string &filename) override;

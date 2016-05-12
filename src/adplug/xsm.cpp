@@ -23,7 +23,7 @@
 
 #include "xsm.h"
 
-bool CxsmPlayer::load(const std::string& filename)
+bool XsmPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -73,7 +73,7 @@ bool CxsmPlayer::load(const std::string& filename)
     return true;
 }
 
-bool CxsmPlayer::update()
+bool XsmPlayer::update()
 {
     int c;
 
@@ -100,18 +100,18 @@ bool CxsmPlayer::update()
     return !m_songEnd;
 }
 
-void CxsmPlayer::rewind(int)
+void XsmPlayer::rewind(int)
 {
     m_currentRow = m_lastRow = 0;
     m_songEnd = false;
 }
 
-size_t CxsmPlayer::framesUntilUpdate() const
+size_t XsmPlayer::framesUntilUpdate() const
 {
     return SampleRate / 5;
 }
 
-void CxsmPlayer::playNote(int c, int note, int octv)
+void XsmPlayer::playNote(int c, int note, int octv)
 {
     int freq = s_noteTable[note];
 

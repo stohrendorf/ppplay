@@ -21,15 +21,15 @@
   cff.h - BoomTracker loader by Riven the Mage <riven@ok.ru>
 */
 
-#include "protrack.h"
+#include "mod.h"
 
-class CcffLoader : public CmodPlayer
+class CffPlayer : public ModPlayer
 {
-    DISABLE_COPY(CcffLoader)
+    DISABLE_COPY(CffPlayer)
 public:
     static Player *factory();
 
-    CcffLoader() = default;
+    CffPlayer() = default;
 
     bool load(const std::string &filename) override;
     void rewind(int subsong) override;

@@ -24,12 +24,12 @@
 
 #include "stream/filestream.h"
 
-Player* Cu6mPlayer::factory()
+Player* U6mPlayer::factory()
 {
-    return new Cu6mPlayer();
+    return new U6mPlayer();
 }
 
-bool Cu6mPlayer::load(const std::string& filename)
+bool U6mPlayer::load(const std::string& filename)
 {
     // file validation section
     // this section only checks a few *necessary* conditions
@@ -78,7 +78,7 @@ bool Cu6mPlayer::load(const std::string& filename)
     return true;
 }
 
-bool Cu6mPlayer::update()
+bool U6mPlayer::update()
 {
     if(!m_driverActive)
     {
@@ -127,7 +127,7 @@ bool Cu6mPlayer::update()
     return !m_songEnd;
 }
 
-void Cu6mPlayer::rewind(int)
+void U6mPlayer::rewind(int)
 {
     played_ticks = 0;
     m_songEnd = false;
@@ -165,7 +165,7 @@ void Cu6mPlayer::rewind(int)
     out_adlib(1, 32); // go to OPL2 mode
 }
 
-size_t Cu6mPlayer::framesUntilUpdate() const
+size_t U6mPlayer::framesUntilUpdate() const
 {
     return SampleRate /
         60; // the Ultima 6 music driver expects to be called at 60 Hz
@@ -180,7 +180,7 @@ size_t Cu6mPlayer::framesUntilUpdate() const
 // ============================================================================================
 
 // decompress from memory to memory
-bool Cu6mPlayer::lzw_decompress(const Cu6mPlayer::DataBlock& source, Cu6mPlayer::DataBlock& dest)
+bool U6mPlayer::lzw_decompress(const U6mPlayer::DataBlock& source, U6mPlayer::DataBlock& dest)
 {
     bool end_marker_reached = false;
     int codeword_size = 9;
@@ -292,7 +292,7 @@ bool Cu6mPlayer::lzw_decompress(const Cu6mPlayer::DataBlock& source, Cu6mPlayer:
 // --------------------
 
 // Read the next code word from the source buffer
-uint32_t Cu6mPlayer::get_next_codeword(long& bits_read, const uint8_t* source, int codeword_size)
+uint32_t U6mPlayer::get_next_codeword(long& bits_read, const uint8_t* source, int codeword_size)
 {
     const auto b0 = source[bits_read / 8];
     const auto b1 = source[bits_read / 8 + 1];
@@ -323,14 +323,14 @@ uint32_t Cu6mPlayer::get_next_codeword(long& bits_read, const uint8_t* source, i
 }
 
 // output a root to memory
-void Cu6mPlayer::output_root(uint8_t root, uint8_t* destination, size_t& position)
+void U6mPlayer::output_root(uint8_t root, uint8_t* destination, size_t& position)
 {
     destination[position] = root;
     position++;
 }
 
 // output the string represented by a codeword
-void Cu6mPlayer::get_string(uint32_t codeword, Cu6mPlayer::MyDict& dictionary,
+void U6mPlayer::get_string(uint32_t codeword, U6mPlayer::MyDict& dictionary,
                             std::stack<uint8_t>& root_stack)
 {
     auto current_codeword = codeword;
@@ -355,7 +355,7 @@ void Cu6mPlayer::get_string(uint32_t codeword, Cu6mPlayer::MyDict& dictionary,
 // ============================================================================================
 
 // This function reads the song data and executes the embedded commands.
-void Cu6mPlayer::command_loop()
+void U6mPlayer::command_loop()
 {
     bool repeat_loop = true; //
 
@@ -436,7 +436,7 @@ void Cu6mPlayer::command_loop()
 // Format: 0c nn
 // c = channel, nn = packed Adlib frequency
 // ----------------------------------------
-void Cu6mPlayer::command_0(int channel)
+void U6mPlayer::command_0(int channel)
 {
     uint8_t freq_byte;
     byte_pair freq_word;
@@ -451,7 +451,7 @@ void Cu6mPlayer::command_0(int channel)
 // Format: 1c nn
 // c = channel, nn = packed Adlib frequency
 // ---------------------------------------------------
-void Cu6mPlayer::command_1(int channel)
+void U6mPlayer::command_1(int channel)
 {
     uint8_t freq_byte;
     byte_pair freq_word;
@@ -472,7 +472,7 @@ void Cu6mPlayer::command_1(int channel)
 // Format: 2c nn
 // c = channel, nn = packed Adlib frequency
 // ----------------------------------------
-void Cu6mPlayer::command_2(int channel)
+void U6mPlayer::command_2(int channel)
 {
     uint8_t freq_byte;
     byte_pair freq_word;
@@ -488,7 +488,7 @@ void Cu6mPlayer::command_2(int channel)
 // Format: 3c nn
 // c = channel, nn = mute factor
 // --------------------------------------
-void Cu6mPlayer::command_3(int channel)
+void U6mPlayer::command_3(int channel)
 {
     uint8_t mf_byte;
 
@@ -502,7 +502,7 @@ void Cu6mPlayer::command_3(int channel)
 // Format: 4c nn
 // c = channel, nn = mute factor
 // ----------------------------------------
-void Cu6mPlayer::command_4(int channel)
+void U6mPlayer::command_4(int channel)
 {
     uint8_t mf_byte;
 
@@ -515,7 +515,7 @@ void Cu6mPlayer::command_4(int channel)
 // Format: 5c nn
 // c = channel, nn = signed channel pitch delta
 // --------------------------------------------
-void Cu6mPlayer::command_5(int channel)
+void U6mPlayer::command_5(int channel)
 {
     m_channelFreqSignedDelta[channel] = read_signed_song_byte();
 }
@@ -527,7 +527,7 @@ void Cu6mPlayer::command_5(int channel)
 // m = vibrato double amplitude
 // n = vibrato multiplier
 // --------------------------------------------
-void Cu6mPlayer::command_6(int channel)
+void U6mPlayer::command_6(int channel)
 {
     uint8_t vb_parameters;
 
@@ -541,7 +541,7 @@ void Cu6mPlayer::command_6(int channel)
 // Format: 7c nn
 // c = channel, nn = instrument number
 // ----------------------------------------
-void Cu6mPlayer::command_7(int channel)
+void U6mPlayer::command_7(int channel)
 {
     int instrument_offset = m_instrumentOffsets[read_song_byte()];
     out_adlib_opcell(channel, false, 0x20, m_songData[instrument_offset + 0]);
@@ -564,7 +564,7 @@ void Cu6mPlayer::command_7(int channel)
 // aa == subsong offset (low byte)
 // bb == subsong offset (high byte)
 // -------------------------------------------
-void Cu6mPlayer::command_81()
+void U6mPlayer::command_81()
 {
     subsong_info new_ss_info;
 
@@ -582,7 +582,7 @@ void Cu6mPlayer::command_81()
 // Format: 82 nn
 // nn == delay (in timer ticks) until further data will be read
 // ------------------------------------------------------------
-void Cu6mPlayer::command_82()
+void U6mPlayer::command_82()
 {
     m_readDelay = read_song_byte();
 }
@@ -592,7 +592,7 @@ void Cu6mPlayer::command_82()
 // Format: 83 nn <11 bytes>
 // nn == instrument number
 // -----------------------------
-void Cu6mPlayer::command_83()
+void U6mPlayer::command_83()
 {
     uint8_t instrument_number = read_song_byte();
     m_instrumentOffsets[instrument_number] = m_songPos;
@@ -605,7 +605,7 @@ void Cu6mPlayer::command_83()
 // c == channel
 // n == slide delay
 // ----------------------------------------------
-void Cu6mPlayer::command_85()
+void U6mPlayer::command_85()
 {
     uint8_t data_byte = read_song_byte();
     int channel = data_byte >> 4; // high nibble
@@ -621,7 +621,7 @@ void Cu6mPlayer::command_85()
 // c == channel
 // n == slide speed
 // ------------------------------------------------
-void Cu6mPlayer::command_86()
+void U6mPlayer::command_86()
 {
     uint8_t data_byte = read_song_byte();
     int channel = data_byte >> 4; // high nibble
@@ -635,7 +635,7 @@ void Cu6mPlayer::command_86()
 // Set loop point
 // Format: E?
 // --------------
-void Cu6mPlayer::command_E()
+void U6mPlayer::command_E()
 {
     m_loopPosition = m_songPos;
 }
@@ -644,7 +644,7 @@ void Cu6mPlayer::command_E()
 // Return from current subsong
 // Format: F?
 // ---------------------------
-void Cu6mPlayer::command_F()
+void U6mPlayer::command_F()
 {
     if(!m_subsongStack.empty())
     {
@@ -674,7 +674,7 @@ void Cu6mPlayer::command_F()
 
 // This function decrements its argument, without allowing it to become
 // negative.
-void Cu6mPlayer::dec_clip(int& param)
+void U6mPlayer::dec_clip(int& param)
 {
     param--;
     if(param < 0)
@@ -685,7 +685,7 @@ void Cu6mPlayer::dec_clip(int& param)
 
 // Returns the byte at the current song position.
 // Side effect: increments song_pos.
-uint8_t Cu6mPlayer::read_song_byte()
+uint8_t U6mPlayer::read_song_byte()
 {
     uint8_t song_byte;
     song_byte = m_songData[m_songPos];
@@ -694,7 +694,7 @@ uint8_t Cu6mPlayer::read_song_byte()
 }
 
 // Same as read_song_byte(), except that it returns a signed byte
-int8_t Cu6mPlayer::read_signed_song_byte()
+int8_t U6mPlayer::read_signed_song_byte()
 {
     auto song_byte = m_songData[m_songPos];
     m_songPos++;
@@ -710,7 +710,7 @@ int8_t Cu6mPlayer::read_signed_song_byte()
     return static_cast<int8_t>(signed_value);
 }
 
-Cu6mPlayer::byte_pair Cu6mPlayer::expand_freq_byte(uint8_t freq_byte)
+U6mPlayer::byte_pair U6mPlayer::expand_freq_byte(uint8_t freq_byte)
 {
     const byte_pair freq_table[24] = {
         {0x00, 0x00}, {0x58, 0x01}, {0x82, 0x01}, {0xB0, 0x01},
@@ -737,7 +737,7 @@ Cu6mPlayer::byte_pair Cu6mPlayer::expand_freq_byte(uint8_t freq_byte)
     return freq_word;
 }
 
-void Cu6mPlayer::set_adlib_freq(int channel, Cu6mPlayer::byte_pair freq_word)
+void U6mPlayer::set_adlib_freq(int channel, U6mPlayer::byte_pair freq_word)
 {
     out_adlib(0xA0 + channel, freq_word.lo);
     out_adlib(0xB0 + channel, freq_word.hi);
@@ -747,25 +747,25 @@ void Cu6mPlayer::set_adlib_freq(int channel, Cu6mPlayer::byte_pair freq_word)
 
 // this function sets the Adlib frequency, but does not update the register
 // backups
-void Cu6mPlayer::set_adlib_freq_no_update(int channel,
-                                          Cu6mPlayer::byte_pair freq_word)
+void U6mPlayer::set_adlib_freq_no_update(int channel,
+                                         U6mPlayer::byte_pair freq_word)
 {
     out_adlib(0xA0 + channel, freq_word.lo);
     out_adlib(0xB0 + channel, freq_word.hi);
 }
 
-void Cu6mPlayer::set_carrier_mf(int channel, uint8_t mute_factor)
+void U6mPlayer::set_carrier_mf(int channel, uint8_t mute_factor)
 {
     out_adlib_opcell(channel, true, 0x40, mute_factor);
     m_carrierMf[channel] = mute_factor;
 }
 
-void Cu6mPlayer::set_modulator_mf(int channel, uint8_t mute_factor)
+void U6mPlayer::set_modulator_mf(int channel, uint8_t mute_factor)
 {
     out_adlib_opcell(channel, false, 0x40, mute_factor);
 }
 
-void Cu6mPlayer::freq_slide(int channel)
+void U6mPlayer::freq_slide(int channel)
 {
     byte_pair freq = m_channelFreq[channel];
 
@@ -785,7 +785,7 @@ void Cu6mPlayer::freq_slide(int channel)
     set_adlib_freq(channel, freq);
 }
 
-void Cu6mPlayer::vibrato(int channel)
+void U6mPlayer::vibrato(int channel)
 {
     byte_pair freq;
 
@@ -824,7 +824,7 @@ void Cu6mPlayer::vibrato(int channel)
     set_adlib_freq_no_update(channel, freq);
 }
 
-void Cu6mPlayer::mf_slide(int channel)
+void U6mPlayer::mf_slide(int channel)
 {
     m_carrierMfModDelay[channel]--;
     if(m_carrierMfModDelay[channel] == 0)
@@ -846,13 +846,13 @@ void Cu6mPlayer::mf_slide(int channel)
     }
 }
 
-void Cu6mPlayer::out_adlib(uint8_t adlib_register,
+void U6mPlayer::out_adlib(uint8_t adlib_register,
                            uint8_t adlib_data)
 {
     getOpl()->writeReg(adlib_register, adlib_data);
 }
 
-void Cu6mPlayer::out_adlib_opcell(int channel, bool carrier,
+void U6mPlayer::out_adlib_opcell(int channel, bool carrier,
                                   uint8_t adlib_register,
                                   uint8_t out_byte)
 {
@@ -884,13 +884,13 @@ void Cu6mPlayer::out_adlib_opcell(int channel, bool carrier,
 // ============================================================================================
 
 // re-initializes the dictionary
-void Cu6mPlayer::MyDict::reset()
+void U6mPlayer::MyDict::reset()
 {
     m_contains = 2;
 }
 
 // Note: If the dictionary is already full, this function does nothing.
-void Cu6mPlayer::MyDict::add(uint8_t root, int codeword)
+void U6mPlayer::MyDict::add(uint8_t root, int codeword)
 {
     if(m_contains < m_dictionary.size())
     {
@@ -900,12 +900,12 @@ void Cu6mPlayer::MyDict::add(uint8_t root, int codeword)
     }
 }
 
-uint8_t Cu6mPlayer::MyDict::get_root(uint32_t codeword)
+uint8_t U6mPlayer::MyDict::get_root(uint32_t codeword)
 {
     return m_dictionary[codeword - 0x100].root;
 }
 
-uint32_t Cu6mPlayer::MyDict::get_codeword(uint32_t codeword)
+uint32_t U6mPlayer::MyDict::get_codeword(uint32_t codeword)
 {
     return m_dictionary[codeword - 0x100].codeword;
 }

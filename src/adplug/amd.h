@@ -21,15 +21,15 @@
  * amd.h - AMD Loader by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include "protrack.h"
+#include "mod.h"
 
-class CamdLoader : public CmodPlayer
+class AmdPlayer : public ModPlayer
 {
-    DISABLE_COPY(CamdLoader)
+    DISABLE_COPY(AmdPlayer)
 public:
     static Player *factory();
 
-    CamdLoader() = default;
+    AmdPlayer() = default;
 
     bool load(const std::string &filename) override;
     size_t framesUntilUpdate() const override;

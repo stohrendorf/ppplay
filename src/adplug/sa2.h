@@ -22,15 +22,15 @@
  *         SAdT Loader by Mamiya <mamiya@users.sourceforge.net>
  */
 
-#include "protrack.h"
+#include "mod.h"
 
-class Csa2Loader : public CmodPlayer
+class Sa2Player : public ModPlayer
 {
-    DISABLE_COPY(Csa2Loader)
+    DISABLE_COPY(Sa2Player)
 public:
     static Player *factory();
 
-    Csa2Loader() = default;
+    Sa2Player() = default;
 
     bool load(const std::string &filename) override;
 

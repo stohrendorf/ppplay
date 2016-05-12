@@ -61,13 +61,13 @@ constexpr uint8_t drum_table[4] = { 0x14, 0x12, 0x15, 0x11 };
 
 /*** public methods **************************************/
 
-Player* CrolPlayer::factory()
+Player* RolPlayer::factory()
 {
-    return new CrolPlayer();
+    return new RolPlayer();
 }
 
 //---------------------------------------------------------
-bool CrolPlayer::load(const std::string& filename)
+bool RolPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -123,7 +123,7 @@ bool CrolPlayer::load(const std::string& filename)
 }
 
 //---------------------------------------------------------
-bool CrolPlayer::update()
+bool RolPlayer::update()
 {
     if(m_nextTempoEvent < m_tempoEvents.size() &&
        m_tempoEvents[m_nextTempoEvent].time == m_currTick)
@@ -155,7 +155,7 @@ bool CrolPlayer::update()
 }
 
 //---------------------------------------------------------
-void CrolPlayer::rewind(int)
+void RolPlayer::rewind(int)
 {
     TVoiceData::iterator curr = m_voiceData.begin();
     TVoiceData::iterator end = m_voiceData.end();
@@ -191,7 +191,7 @@ void CrolPlayer::rewind(int)
 }
 
 //---------------------------------------------------------
-void CrolPlayer::SetRefresh(float const multiplier)
+void RolPlayer::SetRefresh(float const multiplier)
 {
     float const tickBeat = fmin(kMaxTickBeat, m_rolHeader.ticks_per_beat);
 
@@ -199,13 +199,13 @@ void CrolPlayer::SetRefresh(float const multiplier)
 }
 
 //---------------------------------------------------------
-size_t CrolPlayer::framesUntilUpdate() const
+size_t RolPlayer::framesUntilUpdate() const
 {
     return static_cast<size_t>(SampleRate / m_refresh);
 }
 
 //---------------------------------------------------------
-void CrolPlayer::UpdateVoice(int const voice, CVoiceData& voiceData)
+void RolPlayer::UpdateVoice(int const voice, CVoiceData& voiceData)
 {
     TNoteEvents const& nEvents = voiceData.note_events;
 
@@ -295,7 +295,7 @@ void CrolPlayer::UpdateVoice(int const voice, CVoiceData& voiceData)
 }
 
 //---------------------------------------------------------
-void CrolPlayer::SetNote(int const voice, int const note)
+void RolPlayer::SetNote(int const voice, int const note)
 {
     if(voice < kBassDrumChannel || m_rolHeader.mode)
     {
@@ -308,7 +308,7 @@ void CrolPlayer::SetNote(int const voice, int const note)
 }
 
 //---------------------------------------------------------
-void CrolPlayer::SetNotePercussive(int const voice, int const note)
+void RolPlayer::SetNotePercussive(int const voice, int const note)
 {
     int const bit_pos = 4 - voice + kBassDrumChannel;
 
@@ -332,7 +332,7 @@ void CrolPlayer::SetNotePercussive(int const voice, int const note)
 }
 
 //---------------------------------------------------------
-void CrolPlayer::SetNoteMelodic(int const voice, int const note)
+void RolPlayer::SetNoteMelodic(int const voice, int const note)
 {
     getOpl()->writeReg(0xb0 + voice, m_bxRegister[voice] & ~0x20);
 
@@ -343,7 +343,7 @@ void CrolPlayer::SetNoteMelodic(int const voice, int const note)
 }
 
 //---------------------------------------------------------
-void CrolPlayer::SetPitch(int const voice, float const variation)
+void RolPlayer::SetPitch(int const voice, float const variation)
 {
     m_pitchCache[voice] = variation;
     m_freqCache[voice] += static_cast<uint16_t>((m_freqCache[voice] * (variation - 1.0f)) / kPitchFactor);
@@ -352,7 +352,7 @@ void CrolPlayer::SetPitch(int const voice, float const variation)
 }
 
 //---------------------------------------------------------
-void CrolPlayer::SetFreq(int const voice, int const note, bool const keyOn)
+void RolPlayer::SetFreq(int const voice, int const note, bool const keyOn)
 {
     uint16_t freq = kNoteTable[note % 12] + ((note / 12) << 10);
     freq += static_cast<uint16_t>((freq * (m_pitchCache[voice] - 1.0f)) / kPitchFactor);
@@ -365,7 +365,7 @@ void CrolPlayer::SetFreq(int const voice, int const note, bool const keyOn)
 }
 
 //---------------------------------------------------------
-void CrolPlayer::SetVolume(int const voice, int const volume)
+void RolPlayer::SetVolume(int const voice, int const volume)
 {
     m_volumeCache[voice] = (m_volumeCache[voice] & 0xc0) | volume;
 
@@ -377,7 +377,7 @@ void CrolPlayer::SetVolume(int const voice, int const volume)
 }
 
 //---------------------------------------------------------
-void CrolPlayer::send_ins_data_to_chip(int const voice, int const ins_index)
+void RolPlayer::send_ins_data_to_chip(int const voice, int const ins_index)
 {
     SRolInstrument& instrument = m_instrumentList[ins_index].instrument;
 
@@ -385,7 +385,7 @@ void CrolPlayer::send_ins_data_to_chip(int const voice, int const ins_index)
 }
 
 //---------------------------------------------------------
-void CrolPlayer::send_operator(int const voice, SOPL2Op const& modulator,
+void RolPlayer::send_operator(int const voice, SOPL2Op const& modulator,
                                SOPL2Op const& carrier)
 {
     if(voice < kSnareDrumChannel || m_rolHeader.mode)
@@ -425,7 +425,7 @@ void CrolPlayer::send_operator(int const voice, SOPL2Op const& modulator,
 }
 
 //---------------------------------------------------------
-void CrolPlayer::load_tempo_events(FileStream& f)
+void RolPlayer::load_tempo_events(FileStream& f)
 {
     int16_t num_tempo_events;
     f >> num_tempo_events;
@@ -441,7 +441,7 @@ void CrolPlayer::load_tempo_events(FileStream& f)
 }
 
 //---------------------------------------------------------
-bool CrolPlayer::load_voice_data(FileStream& f, std::string const& bnk_filename)
+bool RolPlayer::load_voice_data(FileStream& f, std::string const& bnk_filename)
 {
     SBnkHeader bnk_header;
     FileStream bnk_file(bnk_filename);
@@ -472,7 +472,7 @@ bool CrolPlayer::load_voice_data(FileStream& f, std::string const& bnk_filename)
 }
 
 //---------------------------------------------------------
-void CrolPlayer::load_note_events(FileStream& f, CVoiceData& voice)
+void RolPlayer::load_note_events(FileStream& f, CVoiceData& voice)
 {
     f.seekrel(15);
 
@@ -506,7 +506,7 @@ void CrolPlayer::load_note_events(FileStream& f, CVoiceData& voice)
 }
 
 //---------------------------------------------------------
-void CrolPlayer::load_instrument_events(FileStream& f, CVoiceData& voice,
+void RolPlayer::load_instrument_events(FileStream& f, CVoiceData& voice,
                                         FileStream& bnk_file,
                                         SBnkHeader const& bnk_header)
 {
@@ -535,7 +535,7 @@ void CrolPlayer::load_instrument_events(FileStream& f, CVoiceData& voice,
 }
 
 //---------------------------------------------------------
-void CrolPlayer::load_volume_events(FileStream& f, CVoiceData& voice)
+void RolPlayer::load_volume_events(FileStream& f, CVoiceData& voice)
 {
     int16_t number_of_volume_events;
     f >> number_of_volume_events;
@@ -555,7 +555,7 @@ void CrolPlayer::load_volume_events(FileStream& f, CVoiceData& voice)
 }
 
 //---------------------------------------------------------
-void CrolPlayer::load_pitch_events(FileStream& f, CVoiceData& voice)
+void RolPlayer::load_pitch_events(FileStream& f, CVoiceData& voice)
 {
     int16_t number_of_pitch_events;
     f >> number_of_pitch_events;
@@ -574,7 +574,7 @@ void CrolPlayer::load_pitch_events(FileStream& f, CVoiceData& voice)
 }
 
 //---------------------------------------------------------
-bool CrolPlayer::load_bnk_info(FileStream& f, SBnkHeader& header)
+bool RolPlayer::load_bnk_info(FileStream& f, SBnkHeader& header)
 {
     f >> header.version_major;
     f >> header.version_minor;
@@ -607,7 +607,7 @@ bool CrolPlayer::load_bnk_info(FileStream& f, SBnkHeader& header)
 }
 
 //---------------------------------------------------------
-int CrolPlayer::load_rol_instrument(FileStream& f, SBnkHeader const& header,
+int RolPlayer::load_rol_instrument(FileStream& f, SBnkHeader const& header,
                                     std::string& name)
 {
     TInstrumentNames const& ins_name_list = header.ins_name_list;
@@ -649,7 +649,7 @@ int CrolPlayer::load_rol_instrument(FileStream& f, SBnkHeader const& header,
 }
 
 //---------------------------------------------------------
-int CrolPlayer::get_ins_index(std::string const& name) const
+int RolPlayer::get_ins_index(std::string const& name) const
 {
     for(unsigned int i = 0; i < m_instrumentList.size(); ++i)
     {
@@ -663,7 +663,7 @@ int CrolPlayer::get_ins_index(std::string const& name) const
 }
 
 //---------------------------------------------------------
-void CrolPlayer::read_rol_instrument(FileStream& f, SRolInstrument& ins)
+void RolPlayer::read_rol_instrument(FileStream& f, SRolInstrument& ins)
 {
     f >> ins.mode;
     f >> ins.voice_number;
@@ -676,7 +676,7 @@ void CrolPlayer::read_rol_instrument(FileStream& f, SRolInstrument& ins)
 }
 
 //---------------------------------------------------------
-void CrolPlayer::read_fm_operator(FileStream& f, SOPL2Op& opl2_op)
+void RolPlayer::read_fm_operator(FileStream& f, SOPL2Op& opl2_op)
 {
     SFMOperator fm_op;
     f >> fm_op;

@@ -26,15 +26,15 @@
 
 #include "player.h"
 
-class Cu6mPlayer : public Player
+class U6mPlayer : public Player
 {
-    DISABLE_COPY(Cu6mPlayer)
+    DISABLE_COPY(U6mPlayer)
 public:
     static Player *factory();
 
-    Cu6mPlayer() = default;
+    U6mPlayer() = default;
 
-    ~Cu6mPlayer() = default;
+    ~U6mPlayer() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;

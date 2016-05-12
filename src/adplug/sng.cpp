@@ -23,12 +23,12 @@
 
 #include "sng.h"
 
-Player* CsngPlayer::factory()
+Player* SngPlayer::factory()
 {
-    return new CsngPlayer();
+    return new SngPlayer();
 }
 
-bool CsngPlayer::load(const std::string& filename)
+bool SngPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -54,7 +54,7 @@ bool CsngPlayer::load(const std::string& filename)
     return true;
 }
 
-bool CsngPlayer::update()
+bool SngPlayer::update()
 {
     if(m_header.compressed && m_del)
     {
@@ -87,7 +87,7 @@ bool CsngPlayer::update()
     return !m_songEnd;
 }
 
-void CsngPlayer::rewind(int)
+void SngPlayer::rewind(int)
 {
     m_pos = m_header.start;
     m_del = m_header.delay;

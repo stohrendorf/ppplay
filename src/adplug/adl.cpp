@@ -2190,21 +2190,21 @@ const uint8_t AdlibDriver::_unkTables[][32] = {
 // At the time of writing, the only known case where Kyra 1 uses sound triggers
 // is in the castle, to cycle between three different songs.
 
-CadlPlayer::CadlPlayer()
+AdlPlayer::AdlPlayer()
     : m_driver(new AdlibDriver)
 {
     m_trackEntries.fill(0);
     init();
 }
 
-bool CadlPlayer::init()
+bool AdlPlayer::init()
 {
     m_driver->callback(2);
     m_driver->callback(16, int(4));
     return true;
 }
 
-void CadlPlayer::process()
+void AdlPlayer::process()
 {
     uint8_t trigger = m_driver->callback(11);
 
@@ -2224,17 +2224,17 @@ void CadlPlayer::process()
     }
 }
 
-void CadlPlayer::playTrack(uint8_t track)
+void AdlPlayer::playTrack(uint8_t track)
 {
     play(track);
 }
 
-void CadlPlayer::playSoundEffect(uint8_t track)
+void AdlPlayer::playSoundEffect(uint8_t track)
 {
     play(track);
 }
 
-void CadlPlayer::play(uint8_t track)
+void AdlPlayer::play(uint8_t track)
 {
     uint8_t soundId = m_trackEntries[track];
     if(static_cast<int8_t>(soundId) == -1 || m_soundDataPtr.empty())
@@ -2283,7 +2283,7 @@ void CadlPlayer::play(uint8_t track)
     m_driver->callback(6, soundId);
 }
 
-bool CadlPlayer::load(const std::string& filename)
+bool AdlPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
 
@@ -2326,7 +2326,7 @@ bool CadlPlayer::load(const std::string& filename)
     return true;
 }
 
-void CadlPlayer::rewind(int subsong)
+void AdlPlayer::rewind(int subsong)
 {
     if(subsong == -1)
         subsong = m_currentSubSong;
@@ -2336,12 +2336,12 @@ void CadlPlayer::rewind(int subsong)
     update();
 }
 
-unsigned int CadlPlayer::subSongCount() const
+unsigned int AdlPlayer::subSongCount() const
 {
     return m_subSongCount;
 }
 
-bool CadlPlayer::update()
+bool AdlPlayer::update()
 {
     bool songend = true;
 
@@ -2357,18 +2357,18 @@ bool CadlPlayer::update()
     return !songend;
 }
 
-void CadlPlayer::unk1()
+void AdlPlayer::unk1()
 {
     playSoundEffect(0);
     //_engine->_system->delayMillis(5 * 60);
 }
 
-void CadlPlayer::unk2()
+void AdlPlayer::unk2()
 {
     playSoundEffect(0);
 }
 
-Player* CadlPlayer::factory()
+Player* AdlPlayer::factory()
 {
-    return new CadlPlayer();
+    return new AdlPlayer();
 }

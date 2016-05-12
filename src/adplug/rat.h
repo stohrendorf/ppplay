@@ -23,13 +23,13 @@
 
 #include "xad.h"
 
-class CxadratPlayer : public CxadPlayer
+class RatPlayer : public XadPlayer
 {
-    DISABLE_COPY(CxadratPlayer)
+    DISABLE_COPY(RatPlayer)
 public:
     static Player *factory();
 
-    CxadratPlayer() = default;
+    RatPlayer() = default;
 
 private:
 #pragma pack(push,1)

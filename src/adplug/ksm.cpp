@@ -25,7 +25,7 @@
 
 #include "ksm.h"
 
-const unsigned int CksmPlayer::adlibfreq[63] = {
+const unsigned int KsmPlayer::adlibfreq[63] = {
     0, 2390, 2411, 2434, 2456, 2480, 2506, 2533, 2562, 2592, 2625, 2659, 2695,
     3414, 3435, 3458, 3480, 3504, 3530, 3557, 3586, 3616, 3649, 3683, 3719, 4438,
     4459, 4482, 4504, 4528, 4554, 4581, 4610, 4640, 4673, 4707, 4743, 5462, 5483,
@@ -35,12 +35,12 @@ const unsigned int CksmPlayer::adlibfreq[63] = {
 
 /*** public methods **************************************/
 
-Player* CksmPlayer::factory()
+Player* KsmPlayer::factory()
 {
-    return new CksmPlayer();
+    return new KsmPlayer();
 }
 
-bool CksmPlayer::load(const std::string& filename)
+bool KsmPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
 
@@ -86,7 +86,7 @@ bool CksmPlayer::load(const std::string& filename)
     return true;
 }
 
-bool CksmPlayer::update()
+bool KsmPlayer::update()
 {
     count++;
     if(count >= countstop)
@@ -237,7 +237,7 @@ bool CksmPlayer::update()
     return !songend;
 }
 
-void CksmPlayer::rewind(int)
+void KsmPlayer::rewind(int)
 {
     unsigned int i, j;
     unsigned char instbuf[11];
@@ -310,7 +310,7 @@ void CksmPlayer::rewind(int)
     nownote = 0;
 }
 
-std::string CksmPlayer::instrumentTitle(size_t n) const
+std::string KsmPlayer::instrumentTitle(size_t n) const
 {
     if(trchan[n])
         return instname[trinst[n]];
@@ -320,7 +320,7 @@ std::string CksmPlayer::instrumentTitle(size_t n) const
 
 /*** private methods *************************************/
 
-void CksmPlayer::loadinsts(FileStream& f)
+void KsmPlayer::loadinsts(FileStream& f)
 {
     for(int i = 0; i < 256; i++)
     {
@@ -330,7 +330,7 @@ void CksmPlayer::loadinsts(FileStream& f)
     }
 }
 
-void CksmPlayer::setinst(int chan, unsigned char v0, unsigned char v1,
+void KsmPlayer::setinst(int chan, unsigned char v0, unsigned char v1,
                          unsigned char v2, unsigned char v3, unsigned char v4,
                          unsigned char v5, unsigned char v6, unsigned char v7,
                          unsigned char v8, unsigned char v9,

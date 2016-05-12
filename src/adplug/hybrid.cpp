@@ -30,7 +30,7 @@
 
 #include "hybrid.h"
 
-const unsigned char CxadhybridPlayer::hyb_adlib_registers[99] = {
+const unsigned char HybridPlayer::hyb_adlib_registers[99] = {
     0xE0, 0x60, 0x80, 0x20, 0x40, 0xE3, 0x63, 0x83, 0x23, 0x43, 0xC0, 0xE1, 0x61,
     0x81, 0x21, 0x41, 0xE4, 0x64, 0x84, 0x24, 0x44, 0xC1, 0xE2, 0x62, 0x82, 0x22,
     0x42, 0xE5, 0x65, 0x85, 0x25, 0x45, 0xC2, 0xE8, 0x68, 0x88, 0x28, 0x48, 0xEB,
@@ -41,7 +41,7 @@ const unsigned char CxadhybridPlayer::hyb_adlib_registers[99] = {
     0x32, 0x52, 0xF5, 0x75, 0x95, 0x35, 0x55, 0xC8
 };
 
-const unsigned short CxadhybridPlayer::hyb_notes[98] = {
+const unsigned short HybridPlayer::hyb_notes[98] = {
     0x0000, 0x0000, 0x016B, 0x0181, 0x0198, 0x01B0, 0x01CA, 0x01E5, 0x0202,
     0x0220, 0x0241, 0x0263, 0x0287, 0x02AE, 0x056B, 0x0581, 0x0598, 0x05B0,
     0x05CA, 0x05E5, 0x0602, 0x0620, 0x0641, 0x0663, 0x0687, 0x06AE, 0x096B,
@@ -55,16 +55,16 @@ const unsigned short CxadhybridPlayer::hyb_notes[98] = {
     0x1DCA, 0x1DE5, 0x1E02, 0x1E20, 0x1E41, 0x1E63, 0x1E87, 0x1EAE
 };
 
-const unsigned char CxadhybridPlayer::hyb_default_instrument[11] = {
+const unsigned char HybridPlayer::hyb_default_instrument[11] = {
     0x00, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0x00
 };
 
-Player* CxadhybridPlayer::factory()
+Player* HybridPlayer::factory()
 {
-    return new CxadhybridPlayer();
+    return new HybridPlayer();
 }
 
-bool CxadhybridPlayer::xadplayer_load()
+bool HybridPlayer::xadplayer_load()
 {
     if(xadHeader().fmt != HYBRID)
         return false;
@@ -78,7 +78,7 @@ bool CxadhybridPlayer::xadplayer_load()
     return true;
 }
 
-void CxadhybridPlayer::xadplayer_rewind(int)
+void HybridPlayer::xadplayer_rewind(int)
 {
     setCurrentOrder(0);
     setCurrentRow(0);
@@ -110,7 +110,7 @@ void CxadhybridPlayer::xadplayer_rewind(int)
     }
 }
 
-void CxadhybridPlayer::xadplayer_update()
+void HybridPlayer::xadplayer_update()
 {
     hyb.speed_counter = currentSpeed();
 
@@ -226,22 +226,22 @@ update_slides:
         }
 }
 
-size_t CxadhybridPlayer::framesUntilUpdate() const
+size_t HybridPlayer::framesUntilUpdate() const
 {
     return SampleRate / 50;
 }
 
-std::string CxadhybridPlayer::type() const
+std::string HybridPlayer::type() const
 {
     return "xad: hybrid player";
 }
 
-std::string CxadhybridPlayer::instrumentTitle(size_t i) const
+std::string HybridPlayer::instrumentTitle(size_t i) const
 {
     return std::string(hyb.inst[i].name, 7);
 }
 
-size_t CxadhybridPlayer::instrumentCount() const
+size_t HybridPlayer::instrumentCount() const
 {
     return 26;
 }

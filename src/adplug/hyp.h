@@ -23,13 +23,13 @@
 
 #include "xad.h"
 
-class CxadhypPlayer : public CxadPlayer
+class HypPlayer : public XadPlayer
 {
-    DISABLE_COPY(CxadhypPlayer)
+    DISABLE_COPY(HypPlayer)
 public:
     static Player *factory();
 
-    CxadhypPlayer() = default;
+    HypPlayer() = default;
 
 protected:
     uint16_t m_hypPointer = 0;

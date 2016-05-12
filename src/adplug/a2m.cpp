@@ -39,12 +39,12 @@ const std::array<int16_t, 6> copybits = { {4, 6, 8, 10, 12, 14} };
 const std::array<int16_t, 6> copymin = { {0, 16, 80, 336, 1360, 5456} };
 }
 
-Player* Ca2mLoader::factory()
+Player* A2mPlayer::factory()
 {
-    return new Ca2mLoader();
+    return new A2mPlayer();
 }
 
-bool Ca2mLoader::load(const std::string& filename)
+bool A2mPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -182,7 +182,7 @@ bool Ca2mLoader::load(const std::string& filename)
 
     for(int i = 0; i < 250; i++)
     { // instruments
-        CmodPlayer::Instrument& inst = addInstrument();
+        ModPlayer::Instrument& inst = addInstrument();
         inst.data[0] = m_org[m_orgPos + 10];
         inst.data[1] = m_org[m_orgPos + 0];
         inst.data[2] = m_org[m_orgPos + 1];
@@ -392,7 +392,7 @@ bool Ca2mLoader::load(const std::string& filename)
     return true;
 }
 
-size_t Ca2mLoader::framesUntilUpdate() const
+size_t A2mPlayer::framesUntilUpdate() const
 {
     if(currentTempo() != 18)
         return SampleRate / currentTempo();
@@ -402,7 +402,7 @@ size_t Ca2mLoader::framesUntilUpdate() const
 
 /*** private methods *************************************/
 
-void Ca2mLoader::initTree()
+void A2mPlayer::initTree()
 {
     for(int i = 2; i <= TWICEMAX; i++)
     {
@@ -417,7 +417,7 @@ void Ca2mLoader::initTree()
     }
 }
 
-void Ca2mLoader::updateFreq(uint16_t a, uint16_t b)
+void A2mPlayer::updateFreq(uint16_t a, uint16_t b)
 {
     do
     {
@@ -437,7 +437,7 @@ void Ca2mLoader::updateFreq(uint16_t a, uint16_t b)
             m_freq[a] >>= 1;
 }
 
-void Ca2mLoader::updateModel(uint16_t code)
+void A2mPlayer::updateModel(uint16_t code)
 {
     uint16_t a = code + SUCCMAX;
 
@@ -490,7 +490,7 @@ void Ca2mLoader::updateModel(uint16_t code)
     }
 }
 
-uint16_t Ca2mLoader::inputCode(uint16_t bits)
+uint16_t A2mPlayer::inputCode(uint16_t bits)
 {
     uint16_t code = 0;
 
@@ -515,7 +515,7 @@ uint16_t Ca2mLoader::inputCode(uint16_t bits)
     return code;
 }
 
-uint16_t Ca2mLoader::uncompress()
+uint16_t A2mPlayer::uncompress()
 {
     uint16_t a = 1;
 
@@ -544,7 +544,7 @@ uint16_t Ca2mLoader::uncompress()
     return a;
 }
 
-void Ca2mLoader::decode()
+void A2mPlayer::decode()
 {
     uint16_t count = 0;
 
@@ -606,7 +606,7 @@ void Ca2mLoader::decode()
     m_outputSize = m_obufcount;
 }
 
-size_t Ca2mLoader::sixDepak(uint16_t* source, uint8_t* dest, size_t size)
+size_t A2mPlayer::sixDepak(uint16_t* source, uint8_t* dest, size_t size)
 {
     if(size + 4096 > MAXBUF)
         return 0;

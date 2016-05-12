@@ -26,12 +26,12 @@
 
 #include "dro2.h"
 
-Player* Cdro2Player::factory()
+Player* Dro2Player::factory()
 {
-    return new Cdro2Player();
+    return new Dro2Player();
 }
 
-bool Cdro2Player::load(const std::string& filename)
+bool Dro2Player::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -81,7 +81,7 @@ bool Cdro2Player::load(const std::string& filename)
     return true;
 }
 
-bool Cdro2Player::update()
+bool Dro2Player::update()
 {
     while(m_pos < m_data.size())
     {
@@ -133,13 +133,13 @@ bool Cdro2Player::update()
     return m_pos < m_data.size();
 }
 
-void Cdro2Player::rewind(int)
+void Dro2Player::rewind(int)
 {
     m_delay = 0;
     m_pos = 0;
 }
 
-size_t Cdro2Player::framesUntilUpdate() const
+size_t Dro2Player::framesUntilUpdate() const
 {
     if(m_delay > 0)
         return SampleRate * m_delay / 1000;

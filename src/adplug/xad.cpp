@@ -25,7 +25,7 @@
 
 /* -------- Public Methods -------------------------------- */
 
-bool CxadPlayer::load(const std::string& filename)
+bool XadPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -51,7 +51,7 @@ bool CxadPlayer::load(const std::string& filename)
     return ret;
 }
 
-void CxadPlayer::rewind(int subsong)
+void XadPlayer::rewind(int subsong)
 {
     setCurrentSpeed(m_xadHeader.speed);
     m_xadSpeedCounter = 1;
@@ -66,7 +66,7 @@ void CxadPlayer::rewind(int subsong)
 #endif
 }
 
-bool CxadPlayer::update()
+bool XadPlayer::update()
 {
     if(--m_xadSpeedCounter == 0)
     {

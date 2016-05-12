@@ -25,14 +25,14 @@
 
 class AdlibDriver;
 
-class CadlPlayer : public Player
+class AdlPlayer : public Player
 {
-    DISABLE_COPY(CadlPlayer)
+    DISABLE_COPY(AdlPlayer)
 public:
     static Player *factory();
 
-    CadlPlayer();
-    ~CadlPlayer() = default;
+    AdlPlayer();
+    ~AdlPlayer() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;

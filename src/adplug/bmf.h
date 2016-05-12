@@ -23,14 +23,14 @@
 
 #include "xad.h"
 
-class CxadbmfPlayer : public CxadPlayer
+class BmfPlayer : public XadPlayer
 {
-    DISABLE_COPY(CxadbmfPlayer)
+    DISABLE_COPY(BmfPlayer)
 public:
     static Player *factory();
 
-    CxadbmfPlayer() = default;
-    ~CxadbmfPlayer() = default;
+    BmfPlayer() = default;
+    ~BmfPlayer() = default;
 
 protected:
     enum BmfVersion

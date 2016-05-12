@@ -46,12 +46,12 @@ constexpr uint16_t rat_notes[16] = {
 };
 }
 
-Player* CxadratPlayer::factory()
+Player* RatPlayer::factory()
 {
-    return new CxadratPlayer();
+    return new RatPlayer();
 }
 
-bool CxadratPlayer::xadplayer_load()
+bool RatPlayer::xadplayer_load()
 {
     if(xadHeader().fmt != RAT)
         return false;
@@ -88,7 +88,7 @@ bool CxadratPlayer::xadplayer_load()
     return true;
 }
 
-void CxadratPlayer::xadplayer_rewind(int)
+void RatPlayer::xadplayer_rewind(int)
 {
     setCurrentOrder(m_ratHeader.order_start);
     setCurrentRow(0);
@@ -118,7 +118,7 @@ void CxadratPlayer::xadplayer_rewind(int)
         getOpl()->writeReg(0x40 + i, 0x3F);
 }
 
-void CxadratPlayer::xadplayer_update()
+void RatPlayer::xadplayer_update()
 {
     // process events
     for(int i = 0; i < m_ratHeader.numchan; i++)
@@ -243,29 +243,29 @@ void CxadratPlayer::xadplayer_update()
     }
 }
 
-size_t CxadratPlayer::framesUntilUpdate() const
+size_t RatPlayer::framesUntilUpdate() const
 {
     return SampleRate / 60;
 }
 
-std::string CxadratPlayer::type() const
+std::string RatPlayer::type() const
 {
     return "xad: rat player";
 }
 
-std::string CxadratPlayer::title() const
+std::string RatPlayer::title() const
 {
     return std::string(m_ratHeader.title, 32);
 }
 
-size_t CxadratPlayer::instrumentCount() const
+size_t RatPlayer::instrumentCount() const
 {
     return m_ratHeader.numinst;
 }
 
 /* -------- Internal Functions ---------------------------- */
 
-uint8_t CxadratPlayer::calculateVolume(uint8_t ivol, uint8_t cvol, uint8_t gvol)
+uint8_t RatPlayer::calculateVolume(uint8_t ivol, uint8_t cvol, uint8_t gvol)
 {
     uint16_t vol;
 

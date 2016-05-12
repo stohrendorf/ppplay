@@ -27,12 +27,12 @@
 
 #include "dfm.h"
 
-Player* CdfmLoader::factory()
+Player* DfmPlayer::factory()
 {
-    return new CdfmLoader();
+    return new DfmPlayer();
 }
 
-bool CdfmLoader::load(const std::string& filename)
+bool DfmPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -79,7 +79,7 @@ bool CdfmLoader::load(const std::string& filename)
     }
     for(auto i = 0; i < 32; i++)
     {
-        CmodPlayer::Instrument& inst = addInstrument();
+        ModPlayer::Instrument& inst = addInstrument();
         f >> inst.data[1];
         f >> inst.data[2];
         f >> inst.data[9];
@@ -145,12 +145,12 @@ bool CdfmLoader::load(const std::string& filename)
     return true;
 }
 
-std::string CdfmLoader::type() const
+std::string DfmPlayer::type() const
 {
     return m_type;
 }
 
-size_t CdfmLoader::framesUntilUpdate() const
+size_t DfmPlayer::framesUntilUpdate() const
 {
     return SampleRate / 125;
 }

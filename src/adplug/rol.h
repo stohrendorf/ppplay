@@ -32,15 +32,15 @@
 
 class FileStream;
 
-class CrolPlayer : public Player
+class RolPlayer : public Player
 {
-    DISABLE_COPY(CrolPlayer)
+    DISABLE_COPY(RolPlayer)
 public:
     static Player *factory();
 
-    CrolPlayer() = default;
+    RolPlayer() = default;
 
-    ~CrolPlayer() = default;
+    ~RolPlayer() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;

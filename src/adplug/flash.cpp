@@ -30,7 +30,7 @@
 
 #include "flash.h"
 
-const unsigned char CxadflashPlayer::flash_adlib_registers[99] = {
+const unsigned char FlashPlayer::flash_adlib_registers[99] = {
     0x23, 0x20, 0x43, 0x40, 0x63, 0x60, 0x83, 0x80, 0xC0, 0xE3, 0xE0, 0x24, 0x21,
     0x44, 0x41, 0x64, 0x61, 0x84, 0x81, 0xC1, 0xE4, 0xE1, 0x25, 0x22, 0x45, 0x42,
     0x65, 0x62, 0x85, 0x82, 0xC2, 0xE5, 0xE2, 0x2B, 0x28, 0x4B, 0x48, 0x6B, 0x68,
@@ -41,7 +41,7 @@ const unsigned char CxadflashPlayer::flash_adlib_registers[99] = {
     0x52, 0x75, 0x72, 0x95, 0x92, 0xC8, 0xF5, 0xF2
 };
 
-const unsigned short CxadflashPlayer::flash_notes_encoded[268] = {
+const unsigned short FlashPlayer::flash_notes_encoded[268] = {
     0x000, 0x100, 0x200, 0x300, 0x400, 0x500, 0x600, 0x700, 0x800, 0x900, 0xA00,
     0xB00, 0xC00, 0x101, 0x201, 0x301, 0x401, 0x501, 0x601, 0x701, 0x801, 0x901,
     0xA01, 0xB01, 0xC01, 0x102, 0x202, 0x302, 0x402, 0x502, 0x602, 0x702, 0x802,
@@ -68,21 +68,21 @@ const unsigned short CxadflashPlayer::flash_notes_encoded[268] = {
     0x115, 0x215, 0x315
 };
 
-const unsigned short CxadflashPlayer::flash_notes[12] = { 0x157, 0x16B, 0x181,
+const unsigned short FlashPlayer::flash_notes[12] = { 0x157, 0x16B, 0x181,
     0x198, 0x1B0, 0x1CA,
     0x1E5, 0x202, 0x220,
     0x241, 0x263, 0x287 };
 
-const unsigned char CxadflashPlayer::flash_default_instrument[8] = {
+const unsigned char FlashPlayer::flash_default_instrument[8] = {
     0x00, 0x00, 0x3F, 0x3F, 0xFF, 0xFF, 0xFF, 0xFF
 };
 
-Player* CxadflashPlayer::factory()
+Player* FlashPlayer::factory()
 {
-    return new CxadflashPlayer();
+    return new FlashPlayer();
 }
 
-void CxadflashPlayer::xadplayer_rewind(int)
+void FlashPlayer::xadplayer_rewind(int)
 {
     setCurrentSpeed(xadHeader().speed);
     setCurrentRow(0);
@@ -105,7 +105,7 @@ void CxadflashPlayer::xadplayer_rewind(int)
             getOpl()->writeReg(flash_adlib_registers[i * 11 + j], tune()[i * 12 + j]);
 }
 
-void CxadflashPlayer::xadplayer_update()
+void FlashPlayer::xadplayer_update()
 {
     size_t event_pos = (tune()[0x600 + currentOrder()] * 1152) + (currentRow() * 18) + 0x633;
 
@@ -207,17 +207,17 @@ void CxadflashPlayer::xadplayer_update()
     }
 }
 
-size_t CxadflashPlayer::framesUntilUpdate() const
+size_t FlashPlayer::framesUntilUpdate() const
 {
     return static_cast<size_t>(SampleRate / 17.5);
 }
 
-std::string CxadflashPlayer::type() const
+std::string FlashPlayer::type() const
 {
     return "xad: flash player";
 }
 
-size_t CxadflashPlayer::instrumentCount() const
+size_t FlashPlayer::instrumentCount() const
 {
     return 32;
 }

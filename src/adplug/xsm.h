@@ -23,17 +23,17 @@
 
 #include "player.h"
 
-class CxsmPlayer : public Player
+class XsmPlayer : public Player
 {
-    DISABLE_COPY(CxsmPlayer)
+    DISABLE_COPY(XsmPlayer)
 public:
     static Player *factory()
     {
-        return new CxsmPlayer();
+        return new XsmPlayer();
     }
 
-    CxsmPlayer() = default;
-    ~CxsmPlayer() = default;
+    XsmPlayer() = default;
+    ~XsmPlayer() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;

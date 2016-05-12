@@ -88,12 +88,12 @@ uint8_t cDefaultPatches[] = "\x01\x11\x4F\x00\xF1\xD2\x53\x74\x00\x00\x06"
 "\x71\x22\xC5\x00\x6E\x8B\x17\x0E\x00\x00\x02"
 "\x32\x21\x16\x80\x73\x75\x24\x57\x00\x00\x0E";
 
-Player* CcmfPlayer::factory()
+Player* CmfPlayer::factory()
 {
-    return new CcmfPlayer();
+    return new CmfPlayer();
 }
 
-CcmfPlayer::CcmfPlayer()
+CmfPlayer::CmfPlayer()
     : Player()
 {
     assert(OPLOFFSET(1 - 1) == 0x00);
@@ -101,7 +101,7 @@ CcmfPlayer::CcmfPlayer()
     assert(OPLOFFSET(9 - 1) == 0x12);
 }
 
-bool CcmfPlayer::load(const std::string& filename)
+bool CmfPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -221,7 +221,7 @@ bool CcmfPlayer::load(const std::string& filename)
     return true;
 }
 
-bool CcmfPlayer::update()
+bool CmfPlayer::update()
 {
     // This has to be here and not in getrefresh() for some reason.
     this->iDelayRemaining = 0;
@@ -394,7 +394,7 @@ bool CcmfPlayer::update()
     return !this->bSongEnd;
 }
 
-void CcmfPlayer::rewind(int)
+void CmfPlayer::rewind(int)
 {
     // Initialise
 
@@ -460,7 +460,7 @@ void CcmfPlayer::rewind(int)
 }
 
 // Return value: 1 == 1 second, 2 == 0.5 seconds
-size_t CcmfPlayer::framesUntilUpdate() const
+size_t CmfPlayer::framesUntilUpdate() const
 {
     if(this->iDelayRemaining)
     {
@@ -473,17 +473,17 @@ size_t CcmfPlayer::framesUntilUpdate() const
     }
 }
 
-std::string CcmfPlayer::title() const
+std::string CmfPlayer::title() const
 {
     return this->strTitle;
 }
 
-std::string CcmfPlayer::author() const
+std::string CmfPlayer::author() const
 {
     return this->strComposer;
 }
 
-std::string CcmfPlayer::description() const
+std::string CmfPlayer::description() const
 {
     return this->strRemarks;
 }
@@ -493,7 +493,7 @@ std::string CcmfPlayer::description() const
 //
 
 // Read a variable-length integer from MIDI data
-uint32_t CcmfPlayer::readMIDINumber()
+uint32_t CmfPlayer::readMIDINumber()
 {
     uint32_t iValue = 0;
     for(int i = 0; i < 4; i++)
@@ -512,7 +512,7 @@ uint32_t CcmfPlayer::readMIDINumber()
 //   Source - source operator to read from instrument definition
 //   Dest - destination operator on OPL chip
 // iInstrument: Index into this->pInstruments array of CMF instruments
-void CcmfPlayer::writeInstrumentSettings(uint8_t iChannel,
+void CmfPlayer::writeInstrumentSettings(uint8_t iChannel,
                                          uint8_t iOperatorSource,
                                          uint8_t iOperatorDest,
                                          uint8_t iInstrument)
@@ -545,13 +545,13 @@ void CcmfPlayer::writeInstrumentSettings(uint8_t iChannel,
 
 // Write a byte to the OPL "chip" and update the current record of register
 // states
-void CcmfPlayer::writeOPL(uint8_t iRegister, uint8_t iValue)
+void CmfPlayer::writeOPL(uint8_t iRegister, uint8_t iValue)
 {
     this->getOpl()->writeReg(iRegister, iValue);
     this->iCurrentRegs[iRegister] = iValue;
 }
 
-void CcmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity)
+void CmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity)
 {
     uint8_t iBlock = iNote / 12;
     if(iBlock > 1)
@@ -744,7 +744,7 @@ void CcmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity)
     }
 }
 
-void CcmfPlayer::cmfNoteOff(uint8_t iChannel, uint8_t iNote, uint8_t)
+void CmfPlayer::cmfNoteOff(uint8_t iChannel, uint8_t iNote, uint8_t)
 {
     if((iChannel > 10) && (this->bPercussive))
     {
@@ -780,7 +780,7 @@ void CcmfPlayer::cmfNoteOff(uint8_t iChannel, uint8_t iNote, uint8_t)
     }
 }
 
-uint8_t CcmfPlayer::getPercChannel(uint8_t iChannel)
+uint8_t CmfPlayer::getPercChannel(uint8_t iChannel)
 {
     switch(iChannel)
     {
@@ -800,7 +800,7 @@ uint8_t CcmfPlayer::getPercChannel(uint8_t iChannel)
     return 0;
 }
 
-void CcmfPlayer::MIDIchangeInstrument(uint8_t iOPLChannel, uint8_t iMIDIChannel,
+void CmfPlayer::MIDIchangeInstrument(uint8_t iOPLChannel, uint8_t iMIDIChannel,
                                       uint8_t iNewInstrument)
 {
     if((iMIDIChannel > 10) && (this->bPercussive))
@@ -847,7 +847,7 @@ void CcmfPlayer::MIDIchangeInstrument(uint8_t iOPLChannel, uint8_t iMIDIChannel,
     }
 }
 
-void CcmfPlayer::MIDIcontroller(uint8_t, uint8_t iController, uint8_t iValue)
+void CmfPlayer::MIDIcontroller(uint8_t, uint8_t iController, uint8_t iValue)
 {
     switch(iController)
     {

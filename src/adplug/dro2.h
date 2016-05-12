@@ -24,9 +24,9 @@
 #include <cstdint>
 #include "player.h"
 
-class Cdro2Player : public Player
+class Dro2Player : public Player
 {
-    DISABLE_COPY(Cdro2Player)
+    DISABLE_COPY(Dro2Player)
 
         uint8_t m_commandDelayS = 0, m_commandDelay = 0;
     std::vector<uint8_t> m_convTable{};
@@ -39,8 +39,8 @@ class Cdro2Player : public Player
 public:
     static Player *factory();
 
-    Cdro2Player() = default;
-    ~Cdro2Player() = default;
+    Dro2Player() = default;
+    ~Dro2Player() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;

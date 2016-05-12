@@ -23,14 +23,14 @@
 
 #include "hsc.h"
 
-class ChspLoader : public ChscPlayer
+class HspPlayer : public HscPlayer
 {
-    DISABLE_COPY(ChspLoader)
+    DISABLE_COPY(HspPlayer)
 public:
     static Player *factory();
 
-    ChspLoader()
-        : ChscPlayer(false)
+    HspPlayer()
+        : HscPlayer(false)
     {
     }
 

@@ -23,13 +23,13 @@
 
 #include "xad.h"
 
-class CxadhybridPlayer : public CxadPlayer
+class HybridPlayer : public XadPlayer
 {
-    DISABLE_COPY(CxadhybridPlayer)
+    DISABLE_COPY(HybridPlayer)
 public:
     static Player *factory();
 
-    CxadhybridPlayer() = default;
+    HybridPlayer() = default;
 
 protected:
     struct hyb_instrument

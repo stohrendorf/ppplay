@@ -24,12 +24,12 @@
 #include "amd.h"
 #include <stuff/stringutils.h>
 
-Player* CamdLoader::factory()
+Player* AmdPlayer::factory()
 {
-    return new CamdLoader();
+    return new AmdPlayer();
 }
 
-bool CamdLoader::load(const std::string& filename)
+bool AmdPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -92,7 +92,7 @@ bool CamdLoader::load(const std::string& filename)
         f.read(data.data(), 11);
 
         static const uint8_t mapping[11] = { 10, 0, 5, 2, 7, 3, 8, 4, 9, 1, 6 };
-        CmodPlayer::Instrument& inst = addInstrument();
+        ModPlayer::Instrument& inst = addInstrument();
         for(int j = 0; j < 11; ++j)
             inst.data[j] = data[mapping[j]];
     }
@@ -241,7 +241,7 @@ bool CamdLoader::load(const std::string& filename)
     return true;
 }
 
-size_t CamdLoader::framesUntilUpdate() const
+size_t AmdPlayer::framesUntilUpdate() const
 {
     if(currentTempo())
         return SampleRate / currentTempo();

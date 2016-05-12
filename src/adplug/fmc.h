@@ -21,15 +21,15 @@
   fmc.h - FMC loader by Riven the Mage <riven@ok.ru>
 */
 
-#include "protrack.h"
+#include "mod.h"
 
-class CfmcLoader : public CmodPlayer
+class FmcPlayer : public ModPlayer
 {
-    DISABLE_COPY(CfmcLoader)
+    DISABLE_COPY(FmcPlayer)
 public:
     static Player *factory();
 
-    CfmcLoader() = default;
+    FmcPlayer() = default;
 
     bool load(const std::string &filename) override;
     size_t framesUntilUpdate() const override;
@@ -97,6 +97,6 @@ private:
 
     fmc_instrument instruments[32];
 
-    using CmodPlayer::addInstrument;
+    using ModPlayer::addInstrument;
     void addInstrument(const fmc_instrument &instrument);
 };

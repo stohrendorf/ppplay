@@ -23,14 +23,14 @@
 
 #include "player.h"
 
-class CmkjPlayer : public Player
+class MkjPlayer : public Player
 {
-    DISABLE_COPY(CmkjPlayer)
+    DISABLE_COPY(MkjPlayer)
 public:
     static Player *factory();
 
-    CmkjPlayer() = default;
-    ~CmkjPlayer() = default;
+    MkjPlayer() = default;
+    ~MkjPlayer() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;

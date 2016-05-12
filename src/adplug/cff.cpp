@@ -34,12 +34,12 @@
 
 /* -------- Public Methods -------------------------------- */
 
-Player* CcffLoader::factory()
+Player* CffPlayer::factory()
 {
-    return new CcffLoader();
+    return new CffPlayer();
 }
 
-bool CcffLoader::load(const std::string& filename)
+bool CffPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -259,22 +259,22 @@ bool CcffLoader::load(const std::string& filename)
     return true;
 }
 
-void CcffLoader::rewind(int subsong)
+void CffPlayer::rewind(int subsong)
 {
-    CmodPlayer::rewind(subsong);
+    ModPlayer::rewind(subsong);
 
     // default instruments
     for(int i = 0; i < 9; i++)
     {
         channel(i).instrument = i;
 
-        const CmodPlayer::Instrument& inst = instrument(i);
+        const ModPlayer::Instrument& inst = instrument(i);
         channel(i).carrierVolume = 63 - (inst.data[10] & 63);
         channel(i).modulatorVolume = 63 - (inst.data[9] & 63);
     }
 }
 
-std::string CcffLoader::type() const
+std::string CffPlayer::type() const
 {
     if(header.packed)
         return "BoomTracker 4, packed";
@@ -282,22 +282,22 @@ std::string CcffLoader::type() const
         return "BoomTracker 4";
 }
 
-std::string CcffLoader::title() const
+std::string CffPlayer::title() const
 {
     return std::string(song_title, 20);
 }
 
-std::string CcffLoader::author() const
+std::string CffPlayer::author() const
 {
     return std::string(song_author, 20);
 }
 
-std::string CcffLoader::instrumentTitle(size_t n) const
+std::string CffPlayer::instrumentTitle(size_t n) const
 {
     return std::string(instruments[n].name);
 }
 
-size_t CcffLoader::instrumentCount() const
+size_t CffPlayer::instrumentCount() const
 {
     return 47;
 }
@@ -307,7 +307,7 @@ size_t CcffLoader::instrumentCount() const
 /*
   Lempel-Ziv-Tyr ;-)
 */
-size_t CcffLoader::cff_unpacker::unpack(uint8_t* ibuf,
+size_t CffPlayer::cff_unpacker::unpack(uint8_t* ibuf,
                                         uint8_t* obuf)
 {
     if(memcmp(ibuf, "YsComp"
@@ -415,7 +415,7 @@ size_t CcffLoader::cff_unpacker::unpack(uint8_t* ibuf,
     return m_outputLength;
 }
 
-uint32_t CcffLoader::cff_unpacker::get_code()
+uint32_t CffPlayer::cff_unpacker::get_code()
 {
     while(m_bitsLeft < m_codeLength)
     {
@@ -431,7 +431,7 @@ uint32_t CcffLoader::cff_unpacker::get_code()
     return code;
 }
 
-void CcffLoader::cff_unpacker::translate_code(unsigned long code, uint8_t* string, const std::vector<std::vector<uint8_t>>& dictionary)
+void CffPlayer::cff_unpacker::translate_code(unsigned long code, uint8_t* string, const std::vector<std::vector<uint8_t>>& dictionary)
 {
     uint8_t translated_string[256];
 
@@ -448,7 +448,7 @@ void CcffLoader::cff_unpacker::translate_code(unsigned long code, uint8_t* strin
     memcpy(string, translated_string, 256);
 }
 
-void CcffLoader::cff_unpacker::cleanup()
+void CffPlayer::cff_unpacker::cleanup()
 {
     m_codeLength = 9;
 
@@ -456,7 +456,7 @@ void CcffLoader::cff_unpacker::cleanup()
     m_bitsLeft = 0;
 }
 
-bool CcffLoader::cff_unpacker::startup(const std::vector<std::vector<uint8_t>>& dictionary)
+bool CffPlayer::cff_unpacker::startup(const std::vector<std::vector<uint8_t>>& dictionary)
 {
     auto oldCode = get_code();
 
@@ -474,7 +474,7 @@ bool CcffLoader::cff_unpacker::startup(const std::vector<std::vector<uint8_t>>& 
     return true;
 }
 
-void CcffLoader::cff_unpacker::expand_dictionary(uint8_t* string, std::vector<std::vector<uint8_t>>& dictionary)
+void CffPlayer::cff_unpacker::expand_dictionary(uint8_t* string, std::vector<std::vector<uint8_t>>& dictionary)
 {
     if(string[0] >= 0xF0)
         return;

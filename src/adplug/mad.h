@@ -21,15 +21,15 @@
   mad.h - MAD loader by Riven the Mage <riven@ok.ru>
 */
 
-#include "protrack.h"
+#include "mod.h"
 
-class CmadLoader : public CmodPlayer
+class MadPlayer : public ModPlayer
 {
-    DISABLE_COPY(CmadLoader)
+    DISABLE_COPY(MadPlayer)
 public:
     static Player *factory();
 
-    CmadLoader() = default;
+    MadPlayer() = default;
 
     bool load(const std::string &filename) override;
     void rewind(int subsong) override;

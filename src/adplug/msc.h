@@ -25,14 +25,14 @@
 
 class FileStream;
 
-class CmscPlayer : public Player
+class MscPlayer : public Player
 {
-    DISABLE_COPY(CmscPlayer)
+    DISABLE_COPY(MscPlayer)
 public:
     static Player *factory();
 
-    CmscPlayer() = default;
-    ~CmscPlayer() = default;
+    MscPlayer() = default;
+    ~MscPlayer() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;

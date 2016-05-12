@@ -23,13 +23,13 @@
 
 #include "player.h"
 
-class ChscPlayer : public Player
+class HscPlayer : public Player
 {
-    DISABLE_COPY(ChscPlayer)
+    DISABLE_COPY(HscPlayer)
 public:
     static Player *factory();
 
-    explicit ChscPlayer(bool mtkMode)
+    explicit HscPlayer(bool mtkMode)
         : Player()
         , m_mtkmode(mtkMode)
     {

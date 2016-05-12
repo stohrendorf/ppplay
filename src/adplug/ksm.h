@@ -25,13 +25,13 @@
 
 class FileStream;
 
-class CksmPlayer : public Player
+class KsmPlayer : public Player
 {
-    DISABLE_COPY(CksmPlayer)
+    DISABLE_COPY(KsmPlayer)
 public:
     static Player *factory();
 
-    CksmPlayer() = default;
+    KsmPlayer() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;

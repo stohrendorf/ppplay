@@ -30,7 +30,7 @@
 
 #include "hyp.h"
 
-const uint8_t CxadhypPlayer::hyp_adlib_registers[99] = {
+const uint8_t HypPlayer::hyp_adlib_registers[99] = {
     0x20, 0x23, 0x40, 0x43, 0x60, 0x63, 0x80, 0x83, 0xA0, 0xB0, 0xC0, 0x21, 0x24,
     0x41, 0x44, 0x61, 0x64, 0x81, 0x84, 0xA1, 0xB1, 0xC1, 0x22, 0x25, 0x42, 0x45,
     0x62, 0x65, 0x82, 0x85, 0xA2, 0xB2, 0xC2, 0x28, 0x2B, 0x48, 0x4B, 0x68, 0x6B,
@@ -41,7 +41,7 @@ const uint8_t CxadhypPlayer::hyp_adlib_registers[99] = {
     0x55, 0x72, 0x75, 0x92, 0x95, 0xA8, 0xB8, 0xC8
 };
 
-const uint16_t CxadhypPlayer::hyp_notes[73] = {
+const uint16_t HypPlayer::hyp_notes[73] = {
     0x0000, // by riven
     0x0956, 0x096B, 0x0980, 0x0998, 0x09B1, 0x09C9, 0x09E5, 0x0A03, 0x0A21,
     0x0A41, 0x0A63, 0x0A86, 0x0D56, 0x0D6B, 0x0D80, 0x0D98, 0x0DB1, 0x0DC9,
@@ -53,12 +53,12 @@ const uint16_t CxadhypPlayer::hyp_notes[73] = {
     0x1D98, 0x1DB1, 0x1DC9, 0x1DE5, 0x1E03, 0x1E21, 0x1E41, 0x1E63, 0x1E86
 };
 
-Player* CxadhypPlayer::factory()
+Player* HypPlayer::factory()
 {
-    return new CxadhypPlayer();
+    return new HypPlayer();
 }
 
-void CxadhypPlayer::xadplayer_rewind(int)
+void HypPlayer::xadplayer_rewind(int)
 {
     int i;
 
@@ -76,7 +76,7 @@ void CxadhypPlayer::xadplayer_rewind(int)
     m_hypPointer = 0x69;
 }
 
-void CxadhypPlayer::xadplayer_update()
+void HypPlayer::xadplayer_update()
 {
     for(int i = 0; i < 9; i++)
     {
@@ -109,12 +109,12 @@ void CxadhypPlayer::xadplayer_update()
     }
 }
 
-size_t CxadhypPlayer::framesUntilUpdate() const
+size_t HypPlayer::framesUntilUpdate() const
 {
     return static_cast<size_t>(SampleRate / 60);
 }
 
-std::string CxadhypPlayer::type() const
+std::string HypPlayer::type() const
 {
     return "xad: hypnosis player";
 }

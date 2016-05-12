@@ -94,25 +94,25 @@ light4cxx::Logger* logger = light4cxx::Logger::get("badplay.midi");
 }
 
 // AdLib standard operator table
-const unsigned char CmidPlayer::adlib_opadd[] = { 0x00, 0x01, 0x02, 0x08, 0x09,
+const unsigned char MidPlayer::adlib_opadd[] = { 0x00, 0x01, 0x02, 0x08, 0x09,
     0x0A, 0x10, 0x11, 0x12 };
 
 // Map CMF drum channels 11 - 15 to corresponding AdLib drum channels
-const int CmidPlayer::percussion_map[] = { 6, 7, 8, 8, 7 };
+const int MidPlayer::percussion_map[] = { 6, 7, 8, 8, 7 };
 
-Player* CmidPlayer::factory()
+Player* MidPlayer::factory()
 {
-    return new CmidPlayer();
+    return new MidPlayer();
 }
 
-uint8_t CmidPlayer::datalook(size_t pos) const
+uint8_t MidPlayer::datalook(size_t pos) const
 {
     if(pos >= m_data.size())
         return 0;
     return m_data[pos];
 }
 
-uint32_t CmidPlayer::getnexti(size_t num)
+uint32_t MidPlayer::getnexti(size_t num)
 {
     uint32_t v = 0;
     for(size_t i = 0; i < num; i++)
@@ -123,7 +123,7 @@ uint32_t CmidPlayer::getnexti(size_t num)
     return v;
 }
 
-uint32_t CmidPlayer::getnext(size_t num)
+uint32_t MidPlayer::getnext(size_t num)
 {
     uint32_t v = 0;
 
@@ -136,7 +136,7 @@ uint32_t CmidPlayer::getnext(size_t num)
     return v;
 }
 
-uint32_t CmidPlayer::getval()
+uint32_t MidPlayer::getval()
 {
     auto b = getnext(1);
     auto v = b & 0x7f;
@@ -148,7 +148,7 @@ uint32_t CmidPlayer::getval()
     return v;
 }
 
-bool CmidPlayer::load_sierra_ins(const std::string& fname)
+bool MidPlayer::load_sierra_ins(const std::string& fname)
 {
     boost::filesystem::path pfilename(fname);
     auto basename = pfilename.stem().string().substr(0, 3);
@@ -200,7 +200,7 @@ bool CmidPlayer::load_sierra_ins(const std::string& fname)
     return true;
 }
 
-void CmidPlayer::sierra_next_section()
+void MidPlayer::sierra_next_section()
 {
     int i, j;
 
@@ -241,7 +241,7 @@ void CmidPlayer::sierra_next_section()
     m_doing = true;
 }
 
-bool CmidPlayer::load(const std::string& filename)
+bool MidPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -298,7 +298,7 @@ bool CmidPlayer::load(const std::string& filename)
     return true;
 }
 
-void CmidPlayer::midi_fm_instrument(int voice, unsigned char* inst)
+void MidPlayer::midi_fm_instrument(int voice, unsigned char* inst)
 {
     if((m_adlibStyle & SIERRA_STYLE) != 0)
         getOpl()->writeReg(0xbd, 0); //just gotta make sure this happens..
@@ -340,7 +340,7 @@ void CmidPlayer::midi_fm_instrument(int voice, unsigned char* inst)
     getOpl()->writeReg(0xc0 + voice, inst[10]);
 }
 
-void CmidPlayer::midi_fm_percussion(int ch, unsigned char* inst)
+void MidPlayer::midi_fm_percussion(int ch, unsigned char* inst)
 {
     // map CMF drum channels 12 - 15 to corresponding AdLib drum operators
     // bass drum (channel 11) not mapped, cause it's handled like a normal
@@ -358,7 +358,7 @@ void CmidPlayer::midi_fm_percussion(int ch, unsigned char* inst)
         getOpl()->writeReg(0xc0 + percussion_map[ch - 11], inst[10]);
 }
 
-void CmidPlayer::midi_fm_volume(int voice, int volume)
+void MidPlayer::midi_fm_volume(int voice, int volume)
 {
     auto vol = volume;
     if((m_adlibStyle & SIERRA_STYLE) == 0) //sierra likes it loud!
@@ -388,7 +388,7 @@ void CmidPlayer::midi_fm_volume(int voice, int volume)
     }
 }
 
-void CmidPlayer::midi_fm_playnote(int voice, int note, int volume)
+void MidPlayer::midi_fm_playnote(int voice, int note, int volume)
 {
     note -= 12;
     if(note > 7 * 12 + 11)
@@ -409,7 +409,7 @@ void CmidPlayer::midi_fm_playnote(int voice, int note, int volume)
     getOpl()->writeReg(0xb0 + voice, c & 0xff);
 }
 
-void CmidPlayer::midi_fm_endnote(int voice)
+void MidPlayer::midi_fm_endnote(int voice)
 {
     //midi_fm_volume(voice,0);
     //getOpl()->writeReg(0xb0+voice,0);
@@ -419,7 +419,7 @@ void CmidPlayer::midi_fm_endnote(int voice)
         getOpl()->readReg(0xb0 + voice) & (255 - 32));
 }
 
-void CmidPlayer::midi_fm_reset()
+void MidPlayer::midi_fm_reset()
 {
     int i;
 
@@ -430,7 +430,7 @@ void CmidPlayer::midi_fm_reset()
     getOpl()->writeReg(0xBD, 0xc0);
 }
 
-bool CmidPlayer::update()
+bool MidPlayer::update()
 {
     logger->trace(L4CXX_LOCATION, "update");
     long w, v, note, vel, ctrl, nv, x, l, lnum;
@@ -845,12 +845,12 @@ bool CmidPlayer::update()
         return false;
 }
 
-size_t CmidPlayer::framesUntilUpdate() const
+size_t MidPlayer::framesUntilUpdate() const
 {
     return static_cast<size_t>(SampleRate * (m_fwait < std::numeric_limits<float>::max() ? m_fwait : 100));
 }
 
-void CmidPlayer::rewind(int subsong)
+void MidPlayer::rewind(int subsong)
 {
     unsigned char ins[16];
 
@@ -1089,7 +1089,7 @@ void CmidPlayer::rewind(int subsong)
     midi_fm_reset();
 }
 
-std::string CmidPlayer::type() const
+std::string MidPlayer::type() const
 {
     switch(m_type)
     {

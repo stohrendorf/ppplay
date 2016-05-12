@@ -21,13 +21,13 @@
  * a2m.h - A2M Loader by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include "protrack.h"
+#include "mod.h"
 
-class Ca2mLoader : public CmodPlayer
+class A2mPlayer : public ModPlayer
 {
-    DISABLE_COPY(Ca2mLoader)
+    DISABLE_COPY(A2mPlayer)
 public:
-    Ca2mLoader() = default;
+    A2mPlayer() = default;
     static Player *factory();
 
     bool load(const std::string &filename) override;

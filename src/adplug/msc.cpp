@@ -27,12 +27,12 @@
 
  /*** public methods *************************************/
 
-Player* CmscPlayer::factory()
+Player* MscPlayer::factory()
 {
-    return new CmscPlayer();
+    return new MscPlayer();
 }
 
-bool CmscPlayer::load(const std::string& filename)
+bool MscPlayer::load(const std::string& filename)
 {
     // open and validate the file
     FileStream bf(filename);
@@ -74,7 +74,7 @@ bool CmscPlayer::load(const std::string& filename)
     return true;
 }
 
-bool CmscPlayer::update()
+bool MscPlayer::update()
 {
     // output data
     while(!m_delay)
@@ -109,7 +109,7 @@ bool CmscPlayer::update()
     return true;
 }
 
-void CmscPlayer::rewind(int)
+void MscPlayer::rewind(int)
 {
     // reset state
     m_decoderPrefix = 0;
@@ -122,13 +122,13 @@ void CmscPlayer::rewind(int)
     getOpl()->writeReg(1, 32);
 }
 
-size_t CmscPlayer::framesUntilUpdate() const
+size_t MscPlayer::framesUntilUpdate() const
 {
     // PC timer oscillator frequency / wait register
     return SampleRate * (currentTempo() ? currentTempo() : 0xffff) / 1193180;
 }
 
-std::string CmscPlayer::type() const
+std::string MscPlayer::type() const
 {
     char vstr[40];
 
@@ -138,7 +138,7 @@ std::string CmscPlayer::type() const
 
 /*** private methods *************************************/
 
-bool CmscPlayer::load_header(FileStream& bf, msc_header* hdr)
+bool MscPlayer::load_header(FileStream& bf, msc_header* hdr)
 {
     static const uint8_t msc_signature[MSC_SIGN_LEN] = {
         'C', 'e', 'r', 'e', 's', ' ', '\x13', ' ', 'M', 'S', 'C', 'p', 'l', 'a', 'y',
@@ -159,7 +159,7 @@ bool CmscPlayer::load_header(FileStream& bf, msc_header* hdr)
     return true;
 }
 
-bool CmscPlayer::decode_octet(uint8_t* output)
+bool MscPlayer::decode_octet(uint8_t* output)
 {
     if(m_mscDataIndex >= m_mscData.size())
         return false;

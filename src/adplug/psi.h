@@ -23,13 +23,13 @@
 
 #include "xad.h"
 
-class CxadpsiPlayer : public CxadPlayer
+class PsiPlayer : public XadPlayer
 {
-    DISABLE_COPY(CxadpsiPlayer)
+    DISABLE_COPY(PsiPlayer)
 public:
     static Player *factory();
 
-    CxadpsiPlayer() = default;
+    PsiPlayer() = default;
 
 private:
     struct Header

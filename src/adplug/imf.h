@@ -25,11 +25,11 @@
 
 class FileStream;
 
-class CimfPlayer : public Player
+class ImfPlayer : public Player
 {
-    DISABLE_COPY(CimfPlayer)
+    DISABLE_COPY(ImfPlayer)
 public:
-    CimfPlayer() = default;
+    ImfPlayer() = default;
     static Player *factory();
 
     bool load(const std::string &filename) override;

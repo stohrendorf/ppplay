@@ -23,13 +23,13 @@
 
 #include "hsc.h"
 
-class CmtkLoader : public ChscPlayer
+class MtkPlayer : public HscPlayer
 {
-    DISABLE_COPY(CmtkLoader)
+    DISABLE_COPY(MtkPlayer)
 public:
     static Player *factory();
 
-    CmtkLoader() : ChscPlayer(true)
+    MtkPlayer() : HscPlayer(true)
     {
     }
 

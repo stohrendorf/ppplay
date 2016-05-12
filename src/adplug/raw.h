@@ -23,15 +23,15 @@
 
 #include "player.h"
 
-class CrawPlayer : public Player
+class RawPlayer : public Player
 {
-    DISABLE_COPY(CrawPlayer)
+    DISABLE_COPY(RawPlayer)
 public:
     static Player *factory();
 
-    CrawPlayer() = default;
+    RawPlayer() = default;
 
-    ~CrawPlayer() = default;
+    ~RawPlayer() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;

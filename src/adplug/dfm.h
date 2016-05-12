@@ -21,15 +21,15 @@
  * dfm.h - Digital-FM Loader by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include "protrack.h"
+#include "mod.h"
 
-class CdfmLoader : public CmodPlayer
+class DfmPlayer : public ModPlayer
 {
-    DISABLE_COPY(CdfmLoader)
+    DISABLE_COPY(DfmPlayer)
 public:
     static Player *factory();
 
-    CdfmLoader() = default;
+    DfmPlayer() = default;
 
     bool load(const std::string &filename) override;
     size_t framesUntilUpdate() const override;

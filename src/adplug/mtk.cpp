@@ -26,12 +26,12 @@
 
 /*** public methods **************************************/
 
-Player* CmtkLoader::factory()
+Player* MtkPlayer::factory()
 {
-    return new CmtkLoader();
+    return new MtkPlayer();
 }
 
-bool CmtkLoader::load(const std::string& filename)
+bool MtkPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)

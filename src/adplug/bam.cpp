@@ -67,12 +67,12 @@ constexpr uint16_t s_frequencies[] = {
 };
 }
 
-Player* CbamPlayer::factory()
+Player* BamPlayer::factory()
 {
-    return new CbamPlayer();
+    return new BamPlayer();
 }
 
-bool CbamPlayer::load(const std::string& filename)
+bool BamPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -92,7 +92,7 @@ bool CbamPlayer::load(const std::string& filename)
     return true;
 }
 
-bool CbamPlayer::update()
+bool BamPlayer::update()
 {
     if(m_delay)
     {
@@ -212,7 +212,7 @@ bool CbamPlayer::update()
     return !m_songEnd;
 }
 
-void CbamPlayer::rewind(int)
+void BamPlayer::rewind(int)
 {
     m_position = 0;
     m_songEnd = false;

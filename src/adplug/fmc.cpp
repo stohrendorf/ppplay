@@ -25,12 +25,12 @@
 
 /* -------- Public Methods -------------------------------- */
 
-Player* CfmcLoader::factory()
+Player* FmcPlayer::factory()
 {
-    return new CfmcLoader();
+    return new FmcPlayer();
 }
 
-bool CfmcLoader::load(const std::string& filename)
+bool FmcPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -143,36 +143,36 @@ bool CfmcLoader::load(const std::string& filename)
     return true;
 }
 
-size_t CfmcLoader::framesUntilUpdate() const
+size_t FmcPlayer::framesUntilUpdate() const
 {
     return SampleRate / 50;
 }
 
-std::string CfmcLoader::type() const
+std::string FmcPlayer::type() const
 {
     return std::string("Faust Music Creator");
 }
 
-std::string CfmcLoader::title() const
+std::string FmcPlayer::title() const
 {
     return std::string(header.title);
 }
 
-std::string CfmcLoader::instrumentTitle(size_t n) const
+std::string FmcPlayer::instrumentTitle(size_t n) const
 {
     return instruments[n].name;
 }
 
-size_t CfmcLoader::instrumentCount() const
+size_t FmcPlayer::instrumentCount() const
 {
     return 32;
 }
 
 /* -------- Private Methods ------------------------------- */
 
-void CfmcLoader::addInstrument(const fmc_instrument& instrument)
+void FmcPlayer::addInstrument(const fmc_instrument& instrument)
 {
-    CmodPlayer::Instrument& inst = addInstrument();
+    ModPlayer::Instrument& inst = addInstrument();
     inst.data[0] = ((instrument.synthesis & 1) ^ 1);
     inst.data[0] |= ((instrument.feedback & 7) << 1);
 

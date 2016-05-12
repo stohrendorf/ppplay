@@ -56,12 +56,12 @@ constexpr uint16_t psi_notes[16] = {
 };
 }
 
-Player* CxadpsiPlayer::factory()
+Player* PsiPlayer::factory()
 {
-    return new CxadpsiPlayer();
+    return new PsiPlayer();
 }
 
-void CxadpsiPlayer::xadplayer_rewind(int)
+void PsiPlayer::xadplayer_rewind(int)
 {
     getOpl()->writeReg(0x01, 0x20);
     getOpl()->writeReg(0x08, 0x00);
@@ -96,7 +96,7 @@ void CxadpsiPlayer::xadplayer_rewind(int)
     m_psi.seq_table = &tune()[m_header.seq_ptr];
 }
 
-void CxadpsiPlayer::xadplayer_update()
+void PsiPlayer::xadplayer_update()
 {
     for(int i = 0; i < 8; i++)
     {
@@ -150,17 +150,17 @@ void CxadpsiPlayer::xadplayer_update()
     }
 }
 
-size_t CxadpsiPlayer::framesUntilUpdate() const
+size_t PsiPlayer::framesUntilUpdate() const
 {
     return SampleRate / 70;
 }
 
-std::string CxadpsiPlayer::type() const
+std::string PsiPlayer::type() const
 {
     return "xad: psi player";
 }
 
-size_t CxadpsiPlayer::instrumentCount() const
+size_t PsiPlayer::instrumentCount() const
 {
     return 8;
 }

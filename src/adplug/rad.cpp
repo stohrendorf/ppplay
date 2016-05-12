@@ -26,12 +26,12 @@
 
 #include "rad.h"
 
-Player* CradLoader::factory()
+Player* RadPlayer::factory()
 {
-    return new CradLoader();
+    return new RadPlayer();
 }
 
-bool CradLoader::load(const std::string& filename)
+bool RadPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -72,17 +72,17 @@ bool CradLoader::load(const std::string& filename)
     }
     {
         uint8_t buf;
-        std::vector<CmodPlayer::Instrument::Data> instruments;
+        std::vector<ModPlayer::Instrument::Data> instruments;
         while(f >> buf && buf != 0)
         {
             buf--;
             if(buf >= instruments.size())
                 instruments.resize(buf + 1);
-            CmodPlayer::Instrument::Data& inst = instruments[buf];
+            ModPlayer::Instrument::Data& inst = instruments[buf];
             for(auto index : { 2, 1, 10, 9, 4, 3, 6, 5, 0, 8, 7 })
                 f >> inst[index];
         }
-        for(const CmodPlayer::Instrument::Data& inst : instruments)
+        for(const ModPlayer::Instrument::Data& inst : instruments)
             addInstrument().data = inst;
     }
     {
@@ -127,11 +127,11 @@ bool CradLoader::load(const std::string& filename)
 
                 if((insAndNote & 0x0f) == 0x0f)
                 {
-                    cell.note = CmodPlayer::PatternCell::KeyOff;
+                    cell.note = ModPlayer::PatternCell::KeyOff;
                 }
                 else if((insAndNote & 0x0f) == 0)
                 {
-                    cell.note = CmodPlayer::PatternCell::NoNote;
+                    cell.note = ModPlayer::PatternCell::NoNote;
                 }
                 else
                 {
@@ -182,7 +182,7 @@ bool CradLoader::load(const std::string& filename)
     return true;
 }
 
-size_t CradLoader::framesUntilUpdate() const
+size_t RadPlayer::framesUntilUpdate() const
 {
     if(currentTempo() != 0)
         return SampleRate / currentTempo();

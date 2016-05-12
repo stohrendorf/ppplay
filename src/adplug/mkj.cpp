@@ -25,12 +25,12 @@
 
 #include "mkj.h"
 
-Player* CmkjPlayer::factory()
+Player* MkjPlayer::factory()
 {
-    return new CmkjPlayer();
+    return new MkjPlayer();
 }
 
-bool CmkjPlayer::load(const std::string& filename)
+bool MkjPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -75,7 +75,7 @@ bool CmkjPlayer::load(const std::string& filename)
     return true;
 }
 
-bool CmkjPlayer::update()
+bool MkjPlayer::update()
 {
     int c, i;
     short note;
@@ -187,7 +187,7 @@ bool CmkjPlayer::update()
     return !songend;
 }
 
-void CmkjPlayer::rewind(int)
+void MkjPlayer::rewind(int)
 {
     int i;
 
@@ -203,7 +203,7 @@ void CmkjPlayer::rewind(int)
     songend = false;
 }
 
-size_t CmkjPlayer::framesUntilUpdate() const
+size_t MkjPlayer::framesUntilUpdate() const
 {
     return SampleRate / 100;
 }

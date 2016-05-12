@@ -21,15 +21,15 @@
  * adtrack.h - Adlib Tracker 1.0 Loader by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include "protrack.h"
+#include "mod.h"
 
-class CadtrackLoader : public CmodPlayer
+class AdTrackPlayer : public ModPlayer
 {
-    DISABLE_COPY(CadtrackLoader)
+    DISABLE_COPY(AdTrackPlayer)
 public:
     static Player *factory();
 
-    CadtrackLoader() = default;
+    AdTrackPlayer() = default;
 
     bool load(const std::string &filename) override;
     size_t framesUntilUpdate() const override;
@@ -73,6 +73,6 @@ private:
     };
 #pragma pack(pop)
 
-    using CmodPlayer::addInstrument;
+    using ModPlayer::addInstrument;
     void addInstrument(Instrument *i);
 };

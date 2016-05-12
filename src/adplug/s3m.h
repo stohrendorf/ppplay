@@ -25,13 +25,13 @@
 
 class FileStream;
 
-class Cs3mPlayer : public Player
+class S3mPlayer : public Player
 {
-    DISABLE_COPY(Cs3mPlayer)
+    DISABLE_COPY(S3mPlayer)
 public:
     static Player *factory();
 
-    Cs3mPlayer();
+    S3mPlayer();
 
     bool load(const std::string &filename) override;
     bool update() override;

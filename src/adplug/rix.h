@@ -24,14 +24,14 @@
 
 #include "player.h"
 
-class CrixPlayer : public Player
+class RixPlayer : public Player
 {
-    DISABLE_COPY(CrixPlayer)
+    DISABLE_COPY(RixPlayer)
 public:
     static Player *factory();
 
-    CrixPlayer();
-    ~CrixPlayer() = default;
+    RixPlayer();
+    ~RixPlayer() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;

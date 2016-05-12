@@ -25,12 +25,12 @@
 
 /* -------- Public Methods -------------------------------- */
 
-Player* CmadLoader::factory()
+Player* MadPlayer::factory()
 {
-    return new CmadLoader();
+    return new MadPlayer();
 }
 
-bool CmadLoader::load(const std::string& filename)
+bool MadPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -99,7 +99,7 @@ bool CmadLoader::load(const std::string& filename)
     // convert instruments
     for(auto i = 0; i < 9; i++)
     {
-        CmodPlayer::Instrument& inst = addInstrument();
+        ModPlayer::Instrument& inst = addInstrument();
         for(auto j = 0; j < 10; j++)
             inst.data[conv_inst[j]] = instruments[i].data[j];
     }
@@ -111,37 +111,37 @@ bool CmadLoader::load(const std::string& filename)
     return true;
 }
 
-void CmadLoader::rewind(int subsong)
+void MadPlayer::rewind(int subsong)
 {
-    CmodPlayer::rewind(subsong);
+    ModPlayer::rewind(subsong);
 
     // default instruments
     for(int i = 0; i < 9; i++)
     {
         channel(i).instrument = i;
 
-        const CmodPlayer::Instrument& inst = instrument(i);
+        const ModPlayer::Instrument& inst = instrument(i);
         channel(i).carrierVolume = 63 - (inst.data[10] & 63);
         channel(i).modulatorVolume = 63 - (inst.data[9] & 63);
     }
 }
 
-size_t CmadLoader::framesUntilUpdate() const
+size_t MadPlayer::framesUntilUpdate() const
 {
     return SampleRate / currentSpeed() / currentSpeed();
 }
 
-std::string CmadLoader::type() const
+std::string MadPlayer::type() const
 {
     return "Mlat Adlib Tracker";
 }
 
-std::string CmadLoader::instrumentTitle(size_t n) const
+std::string MadPlayer::instrumentTitle(size_t n) const
 {
     return std::string(instruments[n].name, 8);
 }
 
-size_t CmadLoader::instrumentCount() const
+size_t MadPlayer::instrumentCount() const
 {
     return 9;
 }

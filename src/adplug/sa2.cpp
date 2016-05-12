@@ -26,12 +26,12 @@
 
 #include "sa2.h"
 
-Player* Csa2Loader::factory()
+Player* Sa2Player::factory()
 {
-    return new Csa2Loader();
+    return new Sa2Player();
 }
 
-bool Csa2Loader::load(const std::string& filename)
+bool Sa2Player::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -126,7 +126,7 @@ bool Csa2Loader::load(const std::string& filename)
     for(int i = 0; i < 31; i++)
     {
         InstrumentData sa2Instr;
-        CmodPlayer::Instrument& inst = addInstrument();
+        ModPlayer::Instrument& inst = addInstrument();
         if(sat_type & HAS_ARPEGIO)
         {
             f >> sa2Instr;
@@ -308,7 +308,7 @@ bool Csa2Loader::load(const std::string& filename)
     return true;
 }
 
-std::string Csa2Loader::type() const
+std::string Sa2Player::type() const
 {
     char tmpstr[40];
 
@@ -316,7 +316,7 @@ std::string Csa2Loader::type() const
     return std::string(tmpstr);
 }
 
-std::string Csa2Loader::title() const
+std::string Sa2Player::title() const
 {
     char bufinst[29 * 17], buf[18];
     int i, ptr;

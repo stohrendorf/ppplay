@@ -25,7 +25,7 @@
  * Protracker-like format, this is most certainly the player you want to use.
  */
 
-#include "protrack.h"
+#include "mod.h"
 
 namespace
 {
@@ -45,14 +45,14 @@ const std::array<uint8_t, 32> vibratotab = { 1, 2, 3, 4, 5, 6, 7, 8, 9,
 
 /*** public methods *************************************/
 
-CmodPlayer::CmodPlayer()
+ModPlayer::ModPlayer()
 {
     realloc_patterns(64, 64, 9);
     //m_instruments.resize(250);
     init_notetable(sa2_notetable);
 }
 
-bool CmodPlayer::update()
+bool ModPlayer::update()
 {
     bool pattbreak = false;
 
@@ -520,7 +520,7 @@ bool CmodPlayer::update()
     return !m_songEnd;
 }
 
-uint8_t CmodPlayer::setOplChip(size_t chan) /*
+uint8_t ModPlayer::setOplChip(size_t chan) /*
                          * Sets OPL chip according to channel number. Channels
                          * 0-8 are on first chip,
                          * channels 9-17 are on second chip. Returns
@@ -531,7 +531,7 @@ uint8_t CmodPlayer::setOplChip(size_t chan) /*
     return chan % 9;
 }
 
-bool CmodPlayer::resolveOrder() /*
+bool ModPlayer::resolveOrder() /*
                      * Resolves current orderlist entry, checking
                      * for jumps and loops.
                      *
@@ -562,7 +562,7 @@ bool CmodPlayer::resolveOrder() /*
     return true;
 }
 
-void CmodPlayer::rewind(int)
+void ModPlayer::rewind(int)
 {
     // Reset playing variables
     m_songEnd = false;
@@ -599,12 +599,12 @@ void CmodPlayer::rewind(int)
         getOpl()->writeReg(0xbd, m_oplBdRegister);
 }
 
-size_t CmodPlayer::framesUntilUpdate() const
+size_t ModPlayer::framesUntilUpdate() const
 {
     return static_cast<size_t>(SampleRate * 2.5 / currentTempo());
 }
 
-void CmodPlayer::init_trackord()
+void ModPlayer::init_trackord()
 {
     m_cellColumnMapping.reset(m_cellColumnMapping.width(), m_channels.size());
     for(size_t i = 0; i < m_cellColumnMapping.width(); ++i)
@@ -612,12 +612,12 @@ void CmodPlayer::init_trackord()
             m_cellColumnMapping.at(i, j) = i * m_channels.size() + j + 1;
 }
 
-void CmodPlayer::init_notetable(const std::array<uint16_t, 12>& newnotetable)
+void ModPlayer::init_notetable(const std::array<uint16_t, 12>& newnotetable)
 {
     m_noteTable = newnotetable;
 }
 
-void CmodPlayer::realloc_patterns(size_t pats, size_t rows, size_t chans)
+void ModPlayer::realloc_patterns(size_t pats, size_t rows, size_t chans)
 {
     deallocPatterns();
 
@@ -629,7 +629,7 @@ void CmodPlayer::realloc_patterns(size_t pats, size_t rows, size_t chans)
     m_cellColumnMapping.reset(pats, chans, 0);
 }
 
-void CmodPlayer::deallocPatterns()
+void ModPlayer::deallocPatterns()
 {
     m_patternCells.clear();
     m_cellColumnMapping.clear();
@@ -638,7 +638,7 @@ void CmodPlayer::deallocPatterns()
 
 /*** private methods *************************************/
 
-void CmodPlayer::setVolume(size_t chan)
+void ModPlayer::setVolume(size_t chan)
 {
     const auto oplchan = setOplChip(chan);
 
@@ -657,7 +657,7 @@ void CmodPlayer::setVolume(size_t chan)
     }
 }
 
-void CmodPlayer::setAverageVolume(size_t chan)
+void ModPlayer::setAverageVolume(size_t chan)
 {
     const auto oplchan = setOplChip(chan);
 
@@ -676,7 +676,7 @@ void CmodPlayer::setAverageVolume(size_t chan)
                        instrFlagsCarrier);
 }
 
-void CmodPlayer::setFreq(size_t chan)
+void ModPlayer::setFreq(size_t chan)
 {
     unsigned char oplchan = setOplChip(chan);
 
@@ -687,7 +687,7 @@ void CmodPlayer::setFreq(size_t chan)
         getOpl()->writeReg(0xb0 + oplchan, ((m_channels[chan].frequency & 0x300) >> 8) | (m_channels[chan].octave << 2));
 }
 
-void CmodPlayer::playNote(size_t chan)
+void ModPlayer::playNote(size_t chan)
 {
     unsigned char oplchan = setOplChip(chan);
 
@@ -720,7 +720,7 @@ void CmodPlayer::playNote(size_t chan)
     setVolume(chan);
 }
 
-void CmodPlayer::setNote(size_t chan, int note)
+void ModPlayer::setNote(size_t chan, int note)
 {
     BOOST_ASSERT(note > 0);
 
@@ -748,13 +748,13 @@ void CmodPlayer::setNote(size_t chan, int note)
     m_channels[chan].frequency += m_instruments[m_channels[chan].instrument].slide; // apply pre-slide
 }
 
-void CmodPlayer::tonePortamento(size_t chan, uint8_t speed)
+void ModPlayer::tonePortamento(size_t chan, uint8_t speed)
 {
     m_channels[chan].porta(speed);
     setFreq(chan);
 }
 
-void CmodPlayer::vibrato(size_t chan, uint8_t speed, uint8_t depth)
+void ModPlayer::vibrato(size_t chan, uint8_t speed, uint8_t depth)
 {
     if(!speed || !depth)
         return;

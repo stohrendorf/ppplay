@@ -50,12 +50,12 @@ static inline uint16_t LE_WORD(const uint16_t* val)
 
 /*** public methods *************************************/
 
-Player* Cd00Player::factory()
+Player* D00Player::factory()
 {
-    return new Cd00Player();
+    return new D00Player();
 }
 
-bool Cd00Player::load(const std::string& filename)
+bool D00Player::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -160,7 +160,7 @@ bool Cd00Player::load(const std::string& filename)
     return true;
 }
 
-bool Cd00Player::update()
+bool D00Player::update()
 {
     // effect handling (timer dependant)
     for(auto c = 0; c < 9; c++)
@@ -464,7 +464,7 @@ readseq: // process sequence (pattern)
     return !songend;
 }
 
-void Cd00Player::rewind(int subsong)
+void D00Player::rewind(int subsong)
 {
     struct Stpoin
     {
@@ -513,7 +513,7 @@ void Cd00Player::rewind(int subsong)
     cursubsong = subsong;
 }
 
-std::string Cd00Player::type() const
+std::string D00Player::type() const
 {
     char tmpstr[40];
 
@@ -521,7 +521,7 @@ std::string Cd00Player::type() const
     return tmpstr;
 }
 
-size_t Cd00Player::framesUntilUpdate() const
+size_t D00Player::framesUntilUpdate() const
 {
     if(version > 1)
         return SampleRate / header->speed;
@@ -529,7 +529,7 @@ size_t Cd00Player::framesUntilUpdate() const
         return SampleRate / header1->speed;
 }
 
-unsigned int Cd00Player::subSongCount() const
+unsigned int D00Player::subSongCount() const
 {
     if(version <= 1) // return number of subsongs
         return header1->subsongs;
@@ -539,7 +539,7 @@ unsigned int Cd00Player::subSongCount() const
 
 /*** private methods *************************************/
 
-void Cd00Player::setvolume(uint8_t chan)
+void D00Player::setvolume(uint8_t chan)
 {
     const auto op = s_opTable[chan];
     const auto insnr = channel[chan].inst;
@@ -552,7 +552,7 @@ void Cd00Player::setvolume(uint8_t chan)
         getOpl()->writeReg(0x40 + op, channel[chan].modvol + (inst[insnr].data[7] & 192));
 }
 
-void Cd00Player::setfreq(uint8_t chan)
+void D00Player::setfreq(uint8_t chan)
 {
     auto freq = channel[chan].freq;
 
@@ -567,7 +567,7 @@ void Cd00Player::setfreq(uint8_t chan)
         getOpl()->writeReg(0xb0 + chan, (freq >> 8) & 31);
 }
 
-void Cd00Player::setinst(uint8_t chan)
+void D00Player::setinst(uint8_t chan)
 {
     const auto op = s_opTable[chan];
     const auto insnr = channel[chan].inst;
@@ -588,7 +588,7 @@ void Cd00Player::setinst(uint8_t chan)
         (inst[insnr].data[10] << 1) + (inst[insnr].tunelev & 1));
 }
 
-void Cd00Player::playnote(uint8_t chan)
+void D00Player::playnote(uint8_t chan)
 {
     // set misc vars & play
     getOpl()->writeReg(0xb0 + chan, 0); // stop old note
@@ -598,7 +598,7 @@ void Cd00Player::playnote(uint8_t chan)
     setvolume(chan);
 }
 
-void Cd00Player::vibrato(uint8_t chan)
+void D00Player::vibrato(uint8_t chan)
 {
     if(!channel[chan].vibdepth)
         return;

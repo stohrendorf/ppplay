@@ -21,15 +21,15 @@
  * rad.h - RAD Loader by Simon Peter <dn.tlp@gmx.net>
  */
 
-#include "protrack.h"
+#include "mod.h"
 
-class CradLoader : public CmodPlayer
+class RadPlayer : public ModPlayer
 {
-    DISABLE_COPY(CradLoader)
+    DISABLE_COPY(RadPlayer)
 public:
     static Player *factory();
 
-    CradLoader() = default;
+    RadPlayer() = default;
 
     bool load(const std::string &filename) override;
     size_t framesUntilUpdate() const override;

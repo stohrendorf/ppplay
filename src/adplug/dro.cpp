@@ -31,12 +31,12 @@
 
  /*** public methods *************************************/
 
-Player* CdroPlayer::factory()
+Player* DroPlayer::factory()
 {
-    return new CdroPlayer();
+    return new DroPlayer();
 }
 
-bool CdroPlayer::load(const std::string& filename)
+bool DroPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f)
@@ -78,7 +78,7 @@ bool CdroPlayer::load(const std::string& filename)
     return true;
 }
 
-bool CdroPlayer::update()
+bool DroPlayer::update()
 {
     if(m_delay > 500)
     {
@@ -117,7 +117,7 @@ bool CdroPlayer::update()
     return m_pos < m_data.size();
 }
 
-void CdroPlayer::rewind(int)
+void DroPlayer::rewind(int)
 {
     m_delay = 1;
     m_pos = m_index = 0;
@@ -129,7 +129,7 @@ void CdroPlayer::rewind(int)
         getOpl()->writeReg(i, 0);
 }
 
-size_t CdroPlayer::framesUntilUpdate() const
+size_t DroPlayer::framesUntilUpdate() const
 {
     if(m_delay > 500)
         return SampleRate / 2;

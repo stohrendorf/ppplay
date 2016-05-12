@@ -73,12 +73,12 @@ constexpr inline uint16_t CHARP_AS_WORD(const uint8_t* data)
 
 /* -------- Public Methods -------------------------------- */
 
-Player* CdmoLoader::factory()
+Player* DmoPlayer::factory()
 {
-    return new CdmoLoader();
+    return new DmoPlayer();
 }
 
-bool CdmoLoader::load(const std::string& filename)
+bool DmoPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if(!f || f.extension() != ".dmo")
@@ -238,12 +238,12 @@ bool CdmoLoader::load(const std::string& filename)
     return true;
 }
 
-std::string CdmoLoader::type() const
+std::string DmoPlayer::type() const
 {
     return std::string("TwinTeam (packed S3M)");
 }
 
-std::string CdmoLoader::author() const
+std::string DmoPlayer::author() const
 {
     /*
   All available .DMO modules written by one composer. And because all .DMO
@@ -255,7 +255,7 @@ std::string CdmoLoader::author() const
 
 /* -------- Private Methods ------------------------------- */
 
-unsigned short CdmoLoader::dmo_unpacker::brand(unsigned short range)
+unsigned short DmoPlayer::dmo_unpacker::brand(unsigned short range)
 {
     uint16_t ax = LOWORD(bseed);
     uint16_t bx = HIWORD(bseed);
@@ -283,7 +283,7 @@ unsigned short CdmoLoader::dmo_unpacker::brand(unsigned short range)
     return HIWORD(HIWORD(LOWORD(bseed) * range) + HIWORD(bseed) * range);
 }
 
-bool CdmoLoader::dmo_unpacker::decrypt(unsigned char* buf, size_t len)
+bool DmoPlayer::dmo_unpacker::decrypt(unsigned char* buf, size_t len)
 {
     bseed = ARRAY_AS_DWORD(buf, 0);
 
@@ -304,7 +304,7 @@ bool CdmoLoader::dmo_unpacker::decrypt(unsigned char* buf, size_t len)
     return true;
 }
 
-short CdmoLoader::dmo_unpacker::unpack_block(unsigned char* ibuf, long ilen,
+short DmoPlayer::dmo_unpacker::unpack_block(unsigned char* ibuf, long ilen,
                                              unsigned char* obuf)
 {
     unsigned char par1, par2;
@@ -407,7 +407,7 @@ short CdmoLoader::dmo_unpacker::unpack_block(unsigned char* ibuf, long ilen,
     return opos - obuf;
 }
 
-long CdmoLoader::dmo_unpacker::unpack(unsigned char* ibuf, unsigned char* obuf,
+long DmoPlayer::dmo_unpacker::unpack(unsigned char* ibuf, unsigned char* obuf,
                                       unsigned long outputsize)
 {
     long olen = 0;

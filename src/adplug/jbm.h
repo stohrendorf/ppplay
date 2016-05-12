@@ -23,11 +23,11 @@
 
 #include "player.h"
 
-class CjbmPlayer : public Player
+class JbmPlayer : public Player
 {
-    DISABLE_COPY(CjbmPlayer)
+    DISABLE_COPY(JbmPlayer)
 public:
-    CjbmPlayer() = default;
+    JbmPlayer() = default;
     static Player *factory();
 
     bool load(const std::string &filename) override;

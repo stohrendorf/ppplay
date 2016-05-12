@@ -23,14 +23,14 @@
 
 #include "player.h"
 
-class CdroPlayer : public Player
+class DroPlayer : public Player
 {
-    DISABLE_COPY(CdroPlayer)
+    DISABLE_COPY(DroPlayer)
 public:
     static Player *factory();
 
-    CdroPlayer() = default;
-    ~CdroPlayer() = default;
+    DroPlayer() = default;
+    ~DroPlayer() = default;
 
     bool load(const std::string &filename) override;
     bool update() override;
