@@ -35,7 +35,7 @@ public:
 
     bool load(const std::string &filename) override;
     bool update() override;
-    void rewind(int) override;
+    void rewind(const boost::optional<size_t>& subsong) override;
     size_t framesUntilUpdate() const override;
 
     std::string type() const override;
@@ -117,14 +117,29 @@ private:
 
     S3mCell m_patterns[99][64][32];
 
-    struct
+    struct Channel
     {
-        uint16_t frequency, nextFrequency;
-        uint8_t octave, volume, instrument, effect, effectValue, dualInfo, key, nextOctave, trigger, note;
-    } m_channels[9];
+        uint16_t frequency;
+        uint16_t nextFrequency;
+        uint8_t octave;
+        uint8_t volume;
+        uint8_t instrument;
+        uint8_t effect;
+        uint8_t effectValue;
+        uint8_t dualInfo;
+        uint8_t key;
+        uint8_t nextOctave;
+        uint8_t trigger;
+        uint8_t note;
+    };
+    
+    Channel m_channels[9];
 
     S3mHeader m_header{};
-    uint8_t m_patternDelay = 0, songend = 0, m_loopStart = 0, m_loopCounter = 0;
+    uint8_t m_patternDelay = 0;
+    bool m_songend = false;
+    uint8_t m_loopStart = 0;
+    uint8_t m_loopCounter = 0;
 
     static const char chnresolv[];
     static const unsigned short notetable[12];

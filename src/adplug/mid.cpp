@@ -850,7 +850,7 @@ size_t MidPlayer::framesUntilUpdate() const
     return static_cast<size_t>(SampleRate * (m_fwait < std::numeric_limits<float>::max() ? m_fwait : 100));
 }
 
-void MidPlayer::rewind(int subsong)
+void MidPlayer::rewind(const boost::optional<size_t>& subsong)
 {
     unsigned char ins[16];
 
@@ -1034,16 +1034,15 @@ void MidPlayer::rewind(int subsong)
                 m_subsongs++;
             }
 
-            if(subsong < 0 || subsong >= m_subsongs)
-                subsong = 0;
+            auto ss = subsong.get_value_or(0);
+            if(ss >= m_subsongs)
+                ss = 0;
 
             m_sierraPos = o_sierra_pos;
             sierra_next_section();
-            auto i = 0;
-            while(static_cast<int>(i) != subsong)
+            for(size_t i = 0; i != ss; ++i)
             {
                 sierra_next_section();
-                i++;
             }
 
             m_adlibStyle = SIERRA_STYLE | MIDI_STYLE; //advanced sierra tunes use volume
@@ -1110,7 +1109,7 @@ std::string MidPlayer::type() const
     }
 }
 
-bool CDukePlayer::load(const std::string& filename)
+bool DukePlayer::load(const std::string& filename)
 {
     FileStream fs(filename);
     if(!fs.isOpen())

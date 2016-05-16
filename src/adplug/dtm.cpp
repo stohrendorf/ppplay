@@ -25,11 +25,12 @@
 #include "stream/filestream.h"
 
 #include "dtm.h"
+#include <stuff/stringutils.h>
 
 namespace
 {
 #pragma pack(push,1)
-struct dtm_event
+struct Event
 {
     uint8_t byte0;
     uint8_t byte1;
@@ -170,7 +171,7 @@ bool DtmPlayer::load(const std::string& filename)
         {
             for(int row = 0; row < 64; row++)
             {
-                const dtm_event* event = reinterpret_cast<const dtm_event*>(&pattern[(row * 9 + j) * 2]);
+                const Event* event = reinterpret_cast<const Event*>(&pattern[(row * 9 + j) * 2]);
                 PatternCell& cell = patternCell(channel, row);
 
                 if(event->byte0 == 0x80)
@@ -241,7 +242,7 @@ bool DtmPlayer::load(const std::string& filename)
     return true;
 }
 
-void DtmPlayer::rewind(int subsong)
+void DtmPlayer::rewind(const boost::optional<size_t>& subsong)
 {
     ModPlayer::rewind(subsong);
 
@@ -268,12 +269,12 @@ std::string DtmPlayer::type() const
 
 std::string DtmPlayer::title() const
 {
-    return m_header.title;
+    return stringncpy(m_header.title, 20);
 }
 
 std::string DtmPlayer::author() const
 {
-    return m_header.author;
+    return stringncpy(m_header.author, 20);
 }
 
 std::string DtmPlayer::description() const
@@ -283,7 +284,7 @@ std::string DtmPlayer::description() const
 
 std::string DtmPlayer::instrumentTitle(size_t n) const
 {
-    return m_instruments[n].name;
+    return stringncpy(m_instruments[n].name, 13);
 }
 
 size_t DtmPlayer::instrumentCount() const

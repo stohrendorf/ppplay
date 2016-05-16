@@ -259,7 +259,7 @@ bool CffPlayer::load(const std::string& filename)
     return true;
 }
 
-void CffPlayer::rewind(int subsong)
+void CffPlayer::rewind(const boost::optional<size_t>& subsong)
 {
     ModPlayer::rewind(subsong);
 

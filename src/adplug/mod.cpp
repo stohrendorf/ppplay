@@ -562,7 +562,7 @@ bool ModPlayer::resolveOrder() /*
     return true;
 }
 
-void ModPlayer::rewind(int)
+void ModPlayer::rewind(const boost::optional<size_t>&)
 {
     // Reset playing variables
     m_songEnd = false;

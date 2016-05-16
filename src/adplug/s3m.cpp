@@ -259,18 +259,18 @@ bool S3mPlayer::update()
     if(m_patternDelay)
     { // speed compensation
         m_patternDelay--;
-        return !songend;
+        return !m_songend;
     }
 
     // arrangement handling
     auto pattnr = currentPattern();
     if(pattnr == 0xff || currentOrder() > orderCount())
     { // "--" end of song
-        songend = 1; // set end-flag
+        m_songend = true; // set end-flag
         setCurrentOrder(0);
         pattnr = currentPattern();
         if(pattnr == 0xff)
-            return !songend;
+            return !m_songend;
     }
     if(pattnr == 0xfe)
     { // "++" skip marker
@@ -378,7 +378,7 @@ bool S3mPlayer::update()
                 break; // set speed
             case 2:
                 if(info <= currentOrder())
-                    songend = 1;
+                    m_songend = true;
                 setCurrentOrder(info);
                 setCurrentRow(0);
                 pattbreak = true;
@@ -480,13 +480,13 @@ bool S3mPlayer::update()
         }
     }
 
-    return !songend; // still playing
+    return !m_songend; // still playing
 }
 
-void S3mPlayer::rewind(int)
+void S3mPlayer::rewind(const boost::optional<size_t>&)
 {
     // set basic variables
-    songend = 0;
+    m_songend = 0;
     setCurrentOrder(0);
     setCurrentRow(0);
     setCurrentTempo(m_header.initialTempo);
@@ -502,27 +502,27 @@ void S3mPlayer::rewind(int)
 
 std::string S3mPlayer::type() const
 {
-    char filever[5];
+    std::string filever;
 
     switch(m_header.trackerVersion)
     { // determine version number
         case 0x1300:
-            strcpy(filever, "3.00");
+            filever = "3.00";
             break;
         case 0x1301:
-            strcpy(filever, "3.01");
+            filever = "3.01";
             break;
         case 0x1303:
-            strcpy(filever, "3.03");
+            filever = "3.03";
             break;
         case 0x1320:
-            strcpy(filever, "3.20");
+            filever = "3.20";
             break;
         default:
-            strcpy(filever, "3.??");
+            filever = "3.??";
     }
 
-    return std::string("Scream Tracker ") + filever;
+    return "Scream Tracker " + filever;
 }
 
 size_t S3mPlayer::framesUntilUpdate() const

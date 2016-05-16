@@ -255,15 +255,14 @@ bool EMidi::interpretControllerInfo(EMidi::Track& track, bool timeSet, int chann
 {
     BOOST_ASSERT(channel >= 0 && channel < 16);
     Track* trackptr;
-    int tracknum;
+    size_t tracknum;
     int loopcount;
 
-#define MIDI_VOLUME                7
-#define MIDI_PAN                   10
 #define MIDI_DETUNE                94
 #define MIDI_RHYTHM_CHANNEL        9
-#define MIDI_RUNNING_STATUS        0x80
+#define MIDI_PAN                   10
 
+#define MIDI_VOLUME                0x7
 #define MIDI_NOTE_OFF              0x8
 #define MIDI_NOTE_ON               0x9
 #define MIDI_POLYPHONIC_PRESSURE   0xA
@@ -279,6 +278,7 @@ bool EMidi::interpretControllerInfo(EMidi::Track& track, bool timeSet, int chann
 #define MIDI_RESET_ALL_CONTROLLERS 0x79
 #define MIDI_ALL_NOTES_OFF         0x7b
 #define MIDI_MONO_MODE_ON          0x7E
+#define MIDI_RUNNING_STATUS        0x80
 #define MIDI_SYSTEM_RESET          0xFF
 
     switch(c1)

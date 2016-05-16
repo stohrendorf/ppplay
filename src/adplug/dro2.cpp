@@ -25,6 +25,7 @@
 #include "stream/filestream.h"
 
 #include "dro2.h"
+#include <iostream>
 
 Player* Dro2Player::factory()
 {
@@ -34,18 +35,18 @@ Player* Dro2Player::factory()
 bool Dro2Player::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
         return false;
 
     char id[8];
     f.read(id, 8);
-    if(strncmp(id, "DBRAWOPL", 8))
+    if( strncmp(id, "DBRAWOPL", 8) )
     {
         return false;
     }
     uint32_t version;
     f >> version;
-    if(version != 0x2)
+    if( version != 0x2 )
     {
         return false;
     }
@@ -57,13 +58,13 @@ bool Dro2Player::load(const std::string& filename)
     f.seekrel(1); /// OPL type (0 == OPL2, 1 == Dual OPL2, 2 == OPL3)
     uint8_t iFormat;
     f >> iFormat;
-    if(iFormat != 0)
+    if( iFormat != 0 )
     {
         return false;
     }
     uint8_t iCompression;
     f >> iCompression;
-    if(iCompression != 0)
+    if( iCompression != 0 )
     {
         return false;
     }
@@ -83,49 +84,45 @@ bool Dro2Player::load(const std::string& filename)
 
 bool Dro2Player::update()
 {
-    while(m_pos < m_data.size())
+    while( m_pos < m_data.size() )
     {
         auto iIndex = m_data[m_pos++];
         const auto iValue = m_data[m_pos++];
 
         // Short delay
-        if(iIndex == m_commandDelayS)
+        if( iIndex == m_commandDelayS )
         {
             m_delay = iValue + 1;
             return true;
-
-            // Long delay
         }
-        else if(iIndex == m_commandDelay)
+
+        // Long delay
+        if( iIndex == m_commandDelay )
         {
             m_delay = (iValue + 1) << 8;
             return true;
+        }
 
-            // Normal write
+        // Normal write
+        if( iIndex & 0x80 )
+        {
+            // High bit means use second chip in dual-OPL2 config
+            //FIXME sto opl->setchip(1);
+            m_chipSelector = 0x100;
+            iIndex &= 0x7F;
         }
         else
         {
-            if(iIndex & 0x80)
-            {
-                // High bit means use second chip in dual-OPL2 config
-                //FIXME sto opl->setchip(1);
-                m_chipSelector = 0x100;
-                iIndex &= 0x7F;
-            }
-            else
-            {
-                //FIXME sto opl->setchip(0);
-                m_chipSelector = 0;
-            }
-            if(iIndex > m_convTable.size())
-            {
-                printf("DRO2: Error - index beyond end of codemap table!  Corrupted "
-                       ".dro?\n");
-                return false; // EOF
-            }
-            int iReg = m_convTable[iIndex];
-            getOpl()->writeReg(m_chipSelector + iReg, iValue);
+            //FIXME sto opl->setchip(0);
+            m_chipSelector = 0;
         }
+        if( iIndex > m_convTable.size() )
+        {
+            std::cout << "DRO2: Error - index beyond end of codemap table!  Corrupted .dro?\n";
+            return false; // EOF
+        }
+        int iReg = m_convTable[iIndex];
+        getOpl()->writeReg(m_chipSelector + iReg, iValue);
     }
 
     // This won't result in endless-play using Adplay, but IMHO that code belongs
@@ -133,7 +130,7 @@ bool Dro2Player::update()
     return m_pos < m_data.size();
 }
 
-void Dro2Player::rewind(int)
+void Dro2Player::rewind(const boost::optional<size_t>&)
 {
     m_delay = 0;
     m_pos = 0;
@@ -141,7 +138,7 @@ void Dro2Player::rewind(int)
 
 size_t Dro2Player::framesUntilUpdate() const
 {
-    if(m_delay > 0)
+    if( m_delay > 0 )
         return SampleRate * m_delay / 1000;
     else
         return SampleRate / 1000;

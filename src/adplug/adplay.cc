@@ -30,8 +30,9 @@
 #include "output.h"
 #include "cli-players.h"
 #include "light4cxx/logger.h"
+#include "mid/multichips.h"
 
- /***** Global variables *****/
+/***** Global variables *****/
 
 namespace
 {
@@ -43,7 +44,7 @@ static std::unique_ptr<PlayerHandler> output; // global player object
 
 /***** Configuration (and defaults) *****/
 
-static struct
+struct Configuration
 {
     int buf_size;
     int subsong;
@@ -52,7 +53,9 @@ static struct
     bool playOnce, showinsts, songinfo, songmessage;
     Outputs output;
     int repeats;
-} cfg = {
+};
+
+static Configuration cfg = {
     2048,
     -1,
     std::string(),
@@ -63,32 +66,6 @@ static struct
 };
 
 /***** Local functions *****/
-
-static void usage()
-/* Print usage information. */
-{
-    std::cout <<
-        "Usage: " << program_name << " [OPTION]... FILE...\n\n"
-        "Output selection:\n"
-        "  -O, --output=OUTPUT        specify output mechanism (disk/sdl)\n\n"
-        "Disk writer (disk) specific:\n"
-        "  -d, --device=FILE          output to FILE ('-' is stdout)\n\n"
-        "SDL driver (sdl) specific:\n"
-        "  -b, --buffer=SIZE          set output buffer size to SIZE\n\n"
-        "Informative output:\n"
-        "  -i, --instruments          display instrument names\n"
-        "  -r, --realtime             display realtime song info\n"
-        "  -m, --message              display song message\n\n"
-        "Playback:\n"
-        "  -s, --subsong=N            play subsong number N\n"
-        "  -o, --once                 play only once, don't loop\n\n"
-        "Generic:\n"
-        "  -D, --database=FILE        additionally use database file FILE\n"
-        "  -q, --quiet                be more quiet\n"
-        "  -v, --verbose              be more verbose\n"
-        "  -h, --help                 display this help and exit\n"
-        "  -V, --version              output version information and exit\n\n";
-}
 
 static std::string decode_switches(int argc, char** argv)
 /*
@@ -111,7 +88,10 @@ static std::string decode_switches(int argc, char** argv)
         ("quiet,q", boost::program_options::bool_switch(), "be more quiet")
         ("verbose,v", boost::program_options::bool_switch(), "be more verbose")
         ("repeats,R", boost::program_options::value<int>(&cfg.repeats))
-        ("file,f", boost::program_options::value<std::string>()->required(), "File to play");
+        ("melodic-bank", boost::program_options::value<std::string>()->default_value("HMIGM"), "Default melodic MIDI bank")
+        ("percussion-bank", boost::program_options::value<std::string>()->default_value("HMIGP"), "Default percussion MIDI bank")
+        ("list-banks", boost::program_options::bool_switch(), "List all MIDI banks")
+        ("file,f", boost::program_options::value<std::string>(), "File to play");
 
     boost::program_options::positional_options_description p;
     p.add("file", 1);
@@ -125,7 +105,7 @@ static std::string decode_switches(int argc, char** argv)
     catch(std::exception& ex)
     {
         std::cerr << "Failed to parse command line: " << ex.what() << std::endl;
-        usage();
+        std::cerr << options << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -135,12 +115,30 @@ static std::string decode_switches(int argc, char** argv)
         exit(EXIT_SUCCESS);
     }
 
+    if(vm["list-banks"].as<bool>())
+    {
+        std::cout << "Known MIDI banks:\n";
+        for(const auto& bank : ppp::MultiChips::bankDbInstance().banks())
+        {
+            std::cout << bank.first << "\n";
+            std::cout << "    " << bank.second.description << "\n";
+            if(bank.second.onlyPercussion)
+                std::cout << "    ! Supports percussion instruments only.\n";
+            if(bank.second.uses4op)
+                std::cout << "    ! Contains 4-operator OPL3-only instruments.\n";
+        }
+        exit(EXIT_SUCCESS);
+    }
+
     if(vm["help"].as<bool>() || vm.count("file") == 0)
     {
         std::cout << program_name << " [options] <file>\n";
         std::cout << options;
         exit(EXIT_SUCCESS);
     }
+
+    ppp::MultiChips::setDefaultMelodicBank(vm["melodic-bank"].as<std::string>());
+    ppp::MultiChips::setDefaultPercussionBank(vm["percussion-bank"].as<std::string>());
 
     if(vm.count("output"))
     {
@@ -168,10 +166,16 @@ static std::string decode_switches(int argc, char** argv)
     if(vm["quiet"].as<bool>())
         light4cxx::Logger::setLevel(light4cxx::Level::Warn);
 
+    if(vm.count("file") == 0)
+    {
+        logger->fatal(L4CXX_LOCATION, "No file specified");
+        exit(EXIT_FAILURE);
+    }
+
     return vm["file"].as<std::string>();
 }
 
-static void play(const char* fn, PlayerHandler* output, int subsong = -1)
+static void play(const char* fn, PlayerHandler* output, const boost::optional<size_t>& subsong)
 /*
  * Start playback of subsong 'subsong' of file 'fn', using player
  * 'player'. If 'subsong' is not given or -1, start playback of
@@ -187,10 +191,10 @@ static void play(const char* fn, PlayerHandler* output, int subsong = -1)
         return;
     }
 
-    if(subsong != -1)
-        player->rewind(subsong);
-    else
-        subsong = player->currentSubSong();
+    size_t ss = subsong.get_value_or(player->currentSubSong());
+
+    if(subsong.is_initialized())
+        player->rewind(ss);
 
     std::cerr << "Playing '" << fn << "'...\n"
         << "Type  : " << player->type() << "\n"
@@ -214,7 +218,7 @@ static void play(const char* fn, PlayerHandler* output, int subsong = -1)
     do
     {
         if(cfg.songinfo) // display song info
-            std::cerr << "Subsong: " << subsong + 1 << "/" << player->subSongCount() + 0 << ", Order: "
+            std::cerr << "Subsong: " << ss + 1 << "/" << player->subSongCount() + 0 << ", Order: "
             << player->currentOrder() + 0 << "/" << player->orderCount() + 0 << ", Pattern: "
             << player->currentPattern() + 0 << ", Row: " << player->currentRow() + 0 << ", Speed: "
             << player->currentSpeed() + 0 << ", Timer: "

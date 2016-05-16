@@ -166,7 +166,7 @@ bool ImfPlayer::update()
     return !m_songend;
 }
 
-void ImfPlayer::rewind(int)
+void ImfPlayer::rewind(const boost::optional<size_t>&)
 {
     m_pos = 0;
     m_del = 0;

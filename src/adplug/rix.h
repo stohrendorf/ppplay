@@ -35,9 +35,9 @@ public:
 
     bool load(const std::string &filename) override;
     bool update() override;
-    void rewind(int subsong) override;
+    void rewind(const boost::optional<size_t>& subsong) override;
     size_t framesUntilUpdate() const override;
-    uint32_t subSongCount() const override;
+    size_t subSongCount() const override;
 
     std::string type() const override
     {

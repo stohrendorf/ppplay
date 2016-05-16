@@ -14,6 +14,7 @@ add_library(ppplay_opl SHARED
 	operator.h
 	opl3.h
 	phasegenerator.h
+	oplfilter.h
 )
 generate_export_header(ppplay_opl)
 set_target_properties(ppplay_opl PROPERTIES SOVERSION 1)

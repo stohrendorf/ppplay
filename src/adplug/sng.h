@@ -32,7 +32,7 @@ public:
 
     bool load(const std::string &filename) override;
     bool update() override;
-    void rewind(int subsong) override;
+    void rewind(const boost::optional<size_t>& subsong) override;
     size_t framesUntilUpdate() const override
     {
         return SampleRate / 70;
@@ -61,7 +61,7 @@ private:
 
     std::vector<Sdata> m_data{};
 
-    unsigned char m_del = 0;
-    unsigned short m_pos = 0;
+    uint8_t m_del = 0;
+    uint16_t m_pos = 0;
     bool m_songEnd = false;
 };

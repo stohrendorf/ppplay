@@ -74,7 +74,7 @@ protected:
     } m_bmfChannels[9];
 
     bool xadplayer_load() override;
-    void xadplayer_rewind(int) override;
+    void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
     void xadplayer_update() override;
     size_t framesUntilUpdate() const override;
     std::string type() const override;

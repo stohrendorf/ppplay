@@ -33,7 +33,7 @@ public:
 
     bool load(const std::string &filename) override;
     bool update() override;
-    void rewind(int subsong) override;
+    void rewind(const boost::optional<size_t>& subsong) override;
     size_t framesUntilUpdate() const override;
 
     std::string type() const override;
@@ -53,7 +53,7 @@ public:
     {
         return m_tins;
     }
-    uint32_t subSongCount() const override
+    size_t subSongCount() const override
     {
         return m_subsongs;
     }
@@ -128,7 +128,7 @@ private:
     void midi_fm_reset();
 };
 
-class CDukePlayer : Player
+class DukePlayer : Player
 {
 private:
     std::unique_ptr<ppp::EMidi> m_emidi = nullptr;
@@ -136,7 +136,7 @@ private:
 public:
     static Player *factory()
     {
-        return new CDukePlayer();
+        return new DukePlayer();
     }
 
     bool load(const std::string &filename) override;
@@ -145,7 +145,7 @@ public:
         return m_emidi->serviceRoutine();
     }
 
-    void rewind(int) override
+    void rewind(const boost::optional<size_t>&) override
     {
     }
     size_t framesUntilUpdate() const override
@@ -174,7 +174,7 @@ public:
     {
         return 0;
     }
-    uint32_t subSongCount() const override
+    size_t subSongCount() const override
     {
         return 1;
     }

@@ -51,9 +51,9 @@ int main(int argc, char** argv)
     db.loadBnk("bnk_files/file167.bnk", "HMI (Anvil of Dawn)", "b13P");
     db.loadBnk("bnk_files/file168.bnk", "HMI (Anvil of Dawn)", "b13M");
 
-    db.loadDoom("doom2/genmidi.op2", "DMX (Doom           :: partially pseudo 4op)", "dM");
+    db.loadDoom("doom2/genmidi.op2", "DMX (Doom :: partially pseudo 4op)", "dM");
     db.loadDoom("doom2/genmidi.htc", "DMX (Hexen, Heretic :: partially pseudo 4op)", "hxM"); // same as genmidi.hxn
-    db.loadDoom("doom2/default.op2", "DMX (MUS Play       :: partially pseudo 4op)", "mus");
+    db.loadDoom("doom2/default.op2", "DMX (MUS Play :: partially pseudo 4op)", "mus");
 
     db.loadMiles("opl_files/file17.opl", "AIL (Discworld, Grandest Fleet, Pocahontas, Slob Zone 3d, Ultima 4, Zorro)", "f17G");
     db.loadMiles("opl_files/warcraft.ad", "AIL (Warcraft 2)", "sG"); // same as file44, warcraft.opl

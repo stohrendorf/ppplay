@@ -170,7 +170,7 @@ size_t FmcPlayer::instrumentCount() const
 
 /* -------- Private Methods ------------------------------- */
 
-void FmcPlayer::addInstrument(const fmc_instrument& instrument)
+void FmcPlayer::addInstrument(const Instrument& instrument)
 {
     ModPlayer::Instrument& inst = addInstrument();
     inst.data[0] = ((instrument.synthesis & 1) ^ 1);

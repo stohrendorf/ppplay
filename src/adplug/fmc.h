@@ -59,7 +59,7 @@ private:
     fmc_header header{};
 
 #pragma pack(push,1)
-    struct fmc_instrument
+    struct Instrument
     {
         uint8_t synthesis;
         uint8_t feedback;
@@ -95,8 +95,8 @@ private:
     };
 #pragma pack(pop)
 
-    fmc_instrument instruments[32];
+    Instrument instruments[32];
 
     using ModPlayer::addInstrument;
-    void addInstrument(const fmc_instrument &instrument);
+    void addInstrument(const Instrument &instrument);
 };

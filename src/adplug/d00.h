@@ -35,7 +35,7 @@ public:
 
     bool load(const std::string &filename) override;
     bool update() override;
-    void rewind(int subsong) override;
+    void rewind(const boost::optional<size_t>& subsong) override;
     size_t framesUntilUpdate() const override;
 
     std::string type() const override;
@@ -60,7 +60,7 @@ public:
         else
             return std::string();
     }
-    uint32_t subSongCount() const override;
+    size_t subSongCount() const override;
 
 private:
 #pragma pack(push,1)
@@ -115,7 +115,8 @@ private:
     const Slevpuls* levpuls = nullptr;
 
     bool songend = false;
-    uint8_t version = 0, cursubsong = 0;
+    uint8_t version = 0;
+    size_t cursubsong = 0;
     char *datainfo = nullptr;
     const uint16_t *seqptr = nullptr;
     d00header *header = nullptr;

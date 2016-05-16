@@ -26,6 +26,8 @@
 #include "ymf262/opl3.h"
 #include "stuff/utils.h"
 
+#include <boost/optional.hpp>
+
 class Player
 {
     DISABLE_COPY(Player)
@@ -37,7 +39,7 @@ public:
     /***** Operational methods *****/
     virtual bool load(const std::string &filename) = 0;
     virtual bool update() = 0;                 // executes replay code for 1 tick
-    virtual void rewind(int subsong = -1) = 0; // rewinds to specified subsong
+    virtual void rewind(const boost::optional<size_t>& subsong = boost::none) = 0; // rewinds to specified subsong
     virtual size_t framesUntilUpdate() const = 0;
 
     /***** Informational methods *****/
@@ -74,11 +76,12 @@ public:
     {
         return m_initialTempo;
     }
-    virtual uint32_t subSongCount() const // returns number of subsongs
+    virtual size_t subSongCount() const
+    // returns number of subsongs
     {
         return 1;
     }
-    virtual uint32_t currentSubSong() const // returns current subsong
+    virtual size_t currentSubSong() const // returns current subsong
     {
         return 0;
     }

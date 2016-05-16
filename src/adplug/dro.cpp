@@ -117,7 +117,7 @@ bool DroPlayer::update()
     return m_pos < m_data.size();
 }
 
-void DroPlayer::rewind(int)
+void DroPlayer::rewind(const boost::optional<size_t>&)
 {
     m_delay = 1;
     m_pos = m_index = 0;

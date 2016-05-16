@@ -61,7 +61,7 @@ Player* PsiPlayer::factory()
     return new PsiPlayer();
 }
 
-void PsiPlayer::xadplayer_rewind(int)
+void PsiPlayer::xadplayer_rewind(const boost::optional<size_t>&)
 {
     getOpl()->writeReg(0x01, 0x20);
     getOpl()->writeReg(0x08, 0x00);

@@ -89,7 +89,7 @@ const PlayerDesc AdPlug::allplayers[] = {
     PlayerDesc(HspPlayer::factory, "HSC Packed", {".hsp"}),
     PlayerDesc(KsmPlayer::factory, "Ken Silverman Music", {".ksm"}),
     PlayerDesc(MadPlayer::factory, "Mlat Adlib Tracker", {".mad"}),
-    PlayerDesc(CDukePlayer::factory, "Duke", {".mid"}),
+    PlayerDesc(DukePlayer::factory, "Duke", {".mid"}),
     PlayerDesc(MidPlayer::factory, "MIDI", {".mid", ".sci", ".laa"}),
     PlayerDesc(MkjPlayer::factory, "MKJamz", {".mkj"}),
     PlayerDesc(CffPlayer::factory, "Boomtracker", {".cff"}),

@@ -1,7 +1,7 @@
-add_library(ppplay_bankdb STATIC bankdatabase.cpp)
+add_library(ppplay_bankdb STATIC bankdatabase.h bankdatabase.cpp)
 target_link_libraries(ppplay_bankdb PUBLIC ${Boost_SERIALIZATION_LIBRARIES} ppplay_opl)
 
-add_executable(ppplay_bankgen bankgen.cpp loader.cpp)
+add_executable(ppplay_bankgen loader.h bankgen.cpp loader.cpp)
 target_link_libraries(ppplay_bankgen ppplay_stream ppplay_bankdb)
 
 set(BANKDB_FILE ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_DATAROOTDIR}/ppplay/bankdb.xml CACHE FILEPATH "Bank database filename." FORCE)

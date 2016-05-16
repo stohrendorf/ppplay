@@ -464,7 +464,7 @@ readseq: // process sequence (pattern)
     return !songend;
 }
 
-void D00Player::rewind(int subsong)
+void D00Player::rewind(const boost::optional<size_t>& subsong)
 {
     struct Stpoin
     {
@@ -472,15 +472,12 @@ void D00Player::rewind(int subsong)
         uint8_t volume[9], dummy[5];
     };
 
-    if(subsong == -1)
-        subsong = cursubsong;
-
     if(version > 1)
     { // do nothing if subsong > number of subsongs
-        if(subsong >= header->subsongs)
+        if(subsong.get_value_or(cursubsong) >= header->subsongs)
             return;
     }
-    else if(subsong >= header1->subsongs)
+    else if(subsong.get_value_or(cursubsong) >= header1->subsongs)
         return;
 
     memset(channel, 0, sizeof(channel));
@@ -491,10 +488,10 @@ void D00Player::rewind(int subsong)
         tpoin = reinterpret_cast<const Stpoin*>(filedata.data() + LE_WORD(&header1->tpoin));
     for(int i = 0; i < 9; i++)
     {
-        if(LE_WORD(&tpoin[subsong].ptr[i]))
+        if(LE_WORD(&tpoin[subsong.get_value_or(cursubsong)].ptr[i]))
         { // track enabled
-            channel[i].speed = LE_WORD(reinterpret_cast<const uint16_t*>(filedata.data() + LE_WORD(&tpoin[subsong].ptr[i])));
-            channel[i].order = reinterpret_cast<const uint16_t*>(filedata.data() + LE_WORD(&tpoin[subsong].ptr[i]) + 2);
+            channel[i].speed = LE_WORD(reinterpret_cast<const uint16_t*>(filedata.data() + LE_WORD(&tpoin[subsong.get_value_or(cursubsong)].ptr[i])));
+            channel[i].order = reinterpret_cast<const uint16_t*>(filedata.data() + LE_WORD(&tpoin[subsong.get_value_or(cursubsong)].ptr[i]) + 2);
         }
         else
         { // track disabled
@@ -505,12 +502,12 @@ void D00Player::rewind(int subsong)
         channel[i].spfx = 0xffff; // no SpFX
         channel[i].ilevpuls = 0xff;
         channel[i].levpuls = 0xff; // no LevelPuls
-        channel[i].cvol = tpoin[subsong].volume[i] & 0x7f; // our player may savely ignore bit 7
+        channel[i].cvol = tpoin[subsong.get_value_or(cursubsong)].volume[i] & 0x7f; // our player may savely ignore bit 7
         channel[i].vol = channel[i].cvol; // initialize volume
     }
     songend = false;
     getOpl()->writeReg(1, 32); // reset OPL chip
-    cursubsong = subsong;
+    cursubsong = subsong.get_value_or(cursubsong);
 }
 
 std::string D00Player::type() const
@@ -529,7 +526,7 @@ size_t D00Player::framesUntilUpdate() const
         return SampleRate / header1->speed;
 }
 
-unsigned int D00Player::subSongCount() const
+size_t D00Player::subSongCount() const
 {
     if(version <= 1) // return number of subsongs
         return header1->subsongs;

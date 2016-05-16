@@ -196,13 +196,11 @@ bool JbmPlayer::update()
     return (m_voicemask);
 }
 
-void JbmPlayer::rewind(int)
+void JbmPlayer::rewind(const boost::optional<size_t>&)
 {
-    int c;
-
     m_voicemask = 0;
 
-    for(c = 0; c < 11; c++)
+    for(int c = 0; c < 11; c++)
     {
         m_voices[c].trkpos = m_voices[c].trkstart;
 

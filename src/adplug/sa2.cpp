@@ -25,6 +25,7 @@
 #include "stream/filestream.h"
 
 #include "sa2.h"
+#include <stuff/stringutils.h>
 
 Player* Sa2Player::factory()
 {
@@ -150,7 +151,9 @@ bool Sa2Player::load(const std::string& filename)
     // instrument names
     for(int i = 0; i < 29; i++)
     {
-        f.read(m_instrumentNames[i], 17);
+        char tmp[17];
+        f.read(tmp, 17);
+        m_instrumentNames[i] = stringncpy(tmp, 17);
     }
 
     f.seekrel(3); // dummy bytes
@@ -310,39 +313,27 @@ bool Sa2Player::load(const std::string& filename)
 
 std::string Sa2Player::type() const
 {
-    char tmpstr[40];
-
-    sprintf(tmpstr, "Surprise! Adlib Tracker 2 (version %d)", m_header.version);
-    return std::string(tmpstr);
+    return stringFmt("Surprise! Adlib Tracker 2 (version %d)", int(m_header.version));
 }
 
 std::string Sa2Player::title() const
 {
-    char bufinst[29 * 17], buf[18];
-    int i, ptr;
+    std::string bufInst;
 
     // parse instrument names for song name
-    memset(bufinst, '\0', 29 * 17);
-    for(i = 0; i < 29; i++)
+    for(int i = 0; i < 29; i++)
     {
-        buf[16] = ' ';
-        buf[17] = '\0';
-        memcpy(buf, m_instrumentNames[i] + 1, 16);
-        for(ptr = 16; ptr > 0; ptr--)
-            if(buf[ptr] == ' ')
-                buf[ptr] = '\0';
-            else
-            {
-                if(ptr < 16)
-                    buf[ptr + 1] = ' ';
-                break;
-            }
-        strcat(bufinst, buf);
+        std::string tmp = m_instrumentNames[i].substr(1);
+        while(!tmp.empty() && tmp.back() == ' ')
+            tmp.pop_back();
+
+        if(!tmp.empty() && tmp.length() < 16)
+            tmp.back() += ' ';
+        bufInst += tmp;
     }
 
-    if(strchr(bufinst, '"'))
-        return std::string(bufinst, strchr(bufinst, '"') - bufinst + 1,
-                           strrchr(bufinst, '"') - strchr(bufinst, '"') - 1);
+    if(bufInst.find('"') != std::string::npos)
+        return bufInst.substr(bufInst.find('"') + 1);
     else
         return std::string();
 }

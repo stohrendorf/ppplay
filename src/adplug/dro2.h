@@ -28,7 +28,8 @@ class Dro2Player : public Player
 {
     DISABLE_COPY(Dro2Player)
 
-        uint8_t m_commandDelayS = 0, m_commandDelay = 0;
+    uint8_t m_commandDelayS = 0;
+    uint8_t m_commandDelay = 0;
     std::vector<uint8_t> m_convTable{};
 
     std::vector<uint8_t> m_data{};
@@ -37,14 +38,14 @@ class Dro2Player : public Player
     int m_chipSelector = 0;
 
 public:
-    static Player *factory();
+    static Player* factory();
 
     Dro2Player() = default;
     ~Dro2Player() = default;
 
-    bool load(const std::string &filename) override;
+    bool load(const std::string& filename) override;
     bool update() override;
-    void rewind(int) override;
+    void rewind(const boost::optional<size_t>& subsong) override;
     size_t framesUntilUpdate() const override;
 
     std::string type() const override

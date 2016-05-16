@@ -38,7 +38,7 @@ public:
 
     bool load(const std::string &filename) override;
     bool update() override;
-    void rewind(int) override;
+    void rewind(const boost::optional<size_t>& subsong) override;
     size_t framesUntilUpdate() const override;
 
     std::string type() const override
@@ -88,9 +88,6 @@ private:
         uint8_t get_root(uint32_t);
         uint32_t get_codeword(uint32_t);
     };
-
-    // class variables
-    long played_ticks = 0;
 
     std::vector<uint8_t> m_songData{}; // the uncompressed .m file (the "song")
     bool m_driverActive = false;       // flag to prevent reentrancy
@@ -149,10 +146,11 @@ private:
     void out_adlib_opcell(int channel, bool carrier, uint8_t adlib_register, uint8_t out_byte);
 
     // protected functions used by load()
-    bool lzw_decompress(const DataBlock& source, DataBlock& dest);
+    static bool lzw_decompress(const DataBlock& source, DataBlock& dest);
     static uint32_t get_next_codeword(long &bits_read, const uint8_t *source, int codeword_size);
     static void output_root(uint8_t root, uint8_t *destination, size_t& position);
-    bool safeOutputRoot(uint8_t c, DataBlock& d, size_t& p)
+
+    static bool safeOutputRoot(uint8_t c, DataBlock& d, size_t& p)
     {
         if(p >= d.size())
             return false;

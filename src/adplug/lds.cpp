@@ -99,7 +99,7 @@ bool LdsPlayer::load(const std::string& filename)
     fs >> orderCount;
     m_positions.resize(9 * orderCount);
     for(size_t i = 0; i < orderCount; i++)
-        for(int j = 0; j < 9; j++)
+        for(size_t j = 0; j < 9; j++)
         {
             fs >> m_positions[i * 9 + j];
             /*
@@ -526,7 +526,7 @@ bool LdsPlayer::update()
     return m_playing && !m_songlooped;
 }
 
-void LdsPlayer::rewind(int)
+void LdsPlayer::rewind(const boost::optional<size_t>&)
 {
     // init all with 0
     setCurrentTempo(3);

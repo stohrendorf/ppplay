@@ -127,9 +127,8 @@ bool U6mPlayer::update()
     return !m_songEnd;
 }
 
-void U6mPlayer::rewind(int)
+void U6mPlayer::rewind(const boost::optional<size_t>&)
 {
-    played_ticks = 0;
     m_songEnd = false;
 
     // set the driver's internal variables

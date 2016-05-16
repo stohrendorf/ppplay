@@ -119,6 +119,11 @@ public:
             return &it->second;
     }
 
+    const std::map<std::string, Bank>& banks() const noexcept
+    {
+        return m_banks;
+    }
+
 private:
     std::map<std::string, Bank> m_banks{};
 

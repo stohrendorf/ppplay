@@ -100,7 +100,7 @@ bool XsmPlayer::update()
     return !m_songEnd;
 }
 
-void XsmPlayer::rewind(int)
+void XsmPlayer::rewind(const boost::optional<size_t>&)
 {
     m_currentRow = m_lastRow = 0;
     m_songEnd = false;

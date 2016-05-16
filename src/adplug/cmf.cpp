@@ -394,7 +394,7 @@ bool CmfPlayer::update()
     return !this->bSongEnd;
 }
 
-void CmfPlayer::rewind(int)
+void CmfPlayer::rewind(const boost::optional<size_t>&)
 {
     // Initialise
 

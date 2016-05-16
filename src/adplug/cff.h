@@ -32,7 +32,7 @@ public:
     CffPlayer() = default;
 
     bool load(const std::string &filename) override;
-    void rewind(int subsong) override;
+    void rewind(const boost::optional<size_t>& subsong) override;
 
     std::string type() const override;
     std::string title() const override;

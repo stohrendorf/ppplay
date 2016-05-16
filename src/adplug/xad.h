@@ -32,10 +32,10 @@ public:
 
     bool load(const std::string &filename) override;
     bool update() override;
-    void rewind(int subsong) override;
+    void rewind(const boost::optional<size_t>& subsong) override;
 
 protected:
-    virtual void xadplayer_rewind(int subsong) = 0;
+    virtual void xadplayer_rewind(const boost::optional<size_t>& subsong) = 0;
     virtual bool xadplayer_load() = 0;
     virtual void xadplayer_update() = 0;
     std::string title() const override
@@ -68,7 +68,7 @@ protected:
 
 private:
 #pragma pack(push,1)
-    struct xad_header
+    struct Header
     {
         uint32_t id = 0;
         char title[36] = "";
@@ -79,7 +79,7 @@ private:
     };
 #pragma pack(pop)
 
-    xad_header m_xadHeader{};
+    Header m_xadHeader{};
 
     std::vector<uint8_t> m_tune{};
 
@@ -88,7 +88,7 @@ private:
     bool m_xadPlaying = false;
 
 protected:
-    const xad_header& xadHeader() const
+    const Header& xadHeader() const
     {
         return m_xadHeader;
     }

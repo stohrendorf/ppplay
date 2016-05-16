@@ -35,21 +35,4 @@ public:
 
     std::string type() const override;
     std::string author() const override;
-
-private:
-
-    class dmo_unpacker
-    {
-    public:
-        bool decrypt(unsigned char *buf, size_t len);
-        long unpack(unsigned char *ibuf, unsigned char *obuf,
-                    unsigned long outputsize);
-
-    private:
-        unsigned short brand(unsigned short range);
-        short unpack_block(unsigned char *ibuf, long ilen, unsigned char *obuf);
-
-        unsigned long bseed = 0;
-        unsigned char *oend = nullptr;
-    };
 };

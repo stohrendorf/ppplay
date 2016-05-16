@@ -51,7 +51,7 @@ bool XadPlayer::load(const std::string& filename)
     return ret;
 }
 
-void XadPlayer::rewind(int subsong)
+void XadPlayer::rewind(const boost::optional<size_t>& subsong)
 {
     setCurrentSpeed(m_xadHeader.speed);
     m_xadSpeedCounter = 1;

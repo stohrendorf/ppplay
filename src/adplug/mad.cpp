@@ -111,7 +111,7 @@ bool MadPlayer::load(const std::string& filename)
     return true;
 }
 
-void MadPlayer::rewind(int subsong)
+void MadPlayer::rewind(const boost::optional<size_t>& subsong)
 {
     ModPlayer::rewind(subsong);
 

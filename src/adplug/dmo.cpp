@@ -69,6 +69,20 @@ constexpr inline uint16_t CHARP_AS_WORD(const uint8_t* data)
 {
     return ARRAY_AS_WORD(data, 0);
 }
+
+class DMOUnpacker
+{
+public:
+    bool decrypt(uint8_t *buf, size_t len);
+    size_t unpack(uint8_t *ibuf, uint8_t *obuf, size_t outputsize);
+
+private:
+    uint16_t brand(uint16_t range);
+    int16_t unpack_block(uint8_t *ibuf, size_t ilen, uint8_t *obuf) const;
+
+    size_t bseed = 0;
+    uint8_t *oend = nullptr;
+};
 }
 
 /* -------- Public Methods -------------------------------- */
@@ -87,7 +101,7 @@ bool DmoPlayer::load(const std::string& filename)
     unsigned char chkhdr[16];
     f.read(chkhdr, 16);
 
-    dmo_unpacker unpacker;
+    DMOUnpacker unpacker;
     if(!unpacker.decrypt(chkhdr, 16))
     {
         return false;
@@ -240,7 +254,7 @@ bool DmoPlayer::load(const std::string& filename)
 
 std::string DmoPlayer::type() const
 {
-    return std::string("TwinTeam (packed S3M)");
+    return "TwinTeam (packed S3M)";
 }
 
 std::string DmoPlayer::author() const
@@ -250,12 +264,12 @@ std::string DmoPlayer::author() const
   stuff was lost due to hd crash (TwinTeam guys said this), there are
   never(?) be another.
 */
-    return std::string("Benjamin GERARDIN");
+    return "Benjamin GERARDIN";
 }
 
 /* -------- Private Methods ------------------------------- */
 
-unsigned short DmoPlayer::dmo_unpacker::brand(unsigned short range)
+uint16_t DMOUnpacker::brand(uint16_t range)
 {
     uint16_t ax = LOWORD(bseed);
     uint16_t bx = HIWORD(bseed);
@@ -283,7 +297,7 @@ unsigned short DmoPlayer::dmo_unpacker::brand(unsigned short range)
     return HIWORD(HIWORD(LOWORD(bseed) * range) + HIWORD(bseed) * range);
 }
 
-bool DmoPlayer::dmo_unpacker::decrypt(unsigned char* buf, size_t len)
+bool DMOUnpacker::decrypt(uint8_t* buf, size_t len)
 {
     bseed = ARRAY_AS_DWORD(buf, 0);
 
@@ -304,14 +318,10 @@ bool DmoPlayer::dmo_unpacker::decrypt(unsigned char* buf, size_t len)
     return true;
 }
 
-short DmoPlayer::dmo_unpacker::unpack_block(unsigned char* ibuf, long ilen,
-                                             unsigned char* obuf)
+int16_t DMOUnpacker::unpack_block(uint8_t* ibuf, size_t ilen, uint8_t* obuf) const
 {
-    unsigned char par1, par2;
-    unsigned short ax, bx, cx;
-
-    unsigned char* ipos = ibuf;
-    unsigned char* opos = obuf;
+    uint8_t* ipos = ibuf;
+    uint8_t* opos = obuf;
 
     // LZ77 child
     while(ipos - ibuf < ilen)
@@ -321,7 +331,7 @@ short DmoPlayer::dmo_unpacker::unpack_block(unsigned char* ibuf, long ilen,
         // 00xxxxxx: copy (xxxxxx + 1) bytes
         if((code >> 6) == 0)
         {
-            cx = (code & 0x3F) + 1;
+            const uint16_t cx = (code & 0x3F) + 1;
 
             if(opos + cx >= oend)
                 return -1;
@@ -335,10 +345,10 @@ short DmoPlayer::dmo_unpacker::unpack_block(unsigned char* ibuf, long ilen,
         // 01xxxxxx xxxyyyyy: copy (Y + 3) bytes from (X + 1)
         if((code >> 6) == 1)
         {
-            par1 = *ipos++;
+            const auto par1 = *ipos++;
 
-            ax = ((code & 0x3F) << 3) + ((par1 & 0xE0) >> 5) + 1;
-            cx = (par1 & 0x1F) + 3;
+            const uint16_t ax = ((code & 0x3F) << 3) + ((par1 & 0xE0) >> 5) + 1;
+            const uint16_t cx = (par1 & 0x1F) + 3;
 
             if(opos + cx >= oend)
                 return -1;
@@ -355,24 +365,22 @@ short DmoPlayer::dmo_unpacker::unpack_block(unsigned char* ibuf, long ilen,
         // 10xxxxxx xyyyzzzz: copy (Y + 3) bytes from (X + 1); copy Z bytes
         if((code >> 6) == 2)
         {
-            int i;
+            const auto par1 = *ipos++;
 
-            par1 = *ipos++;
-
-            ax = ((code & 0x3F) << 1) + (par1 >> 7) + 1;
-            cx = ((par1 & 0x70) >> 4) + 3;
-            bx = par1 & 0x0F;
+            const uint16_t ax = ((code & 0x3F) << 1) + (par1 >> 7) + 1;
+            const uint16_t cx = ((par1 & 0x70) >> 4) + 3;
+            const uint16_t bx = par1 & 0x0F;
 
             if(opos + bx + cx >= oend)
                 return -1;
 
-            for(i = 0; i < cx; i++)
+            for(int i = 0; i < cx; i++)
             {
                 *opos = *(opos - ax);
                 ++opos;
             }
 
-            for(i = 0; i < bx; i++)
+            for(int i = 0; i < bx; i++)
                 *opos++ = *ipos++;
 
             continue;
@@ -381,25 +389,23 @@ short DmoPlayer::dmo_unpacker::unpack_block(unsigned char* ibuf, long ilen,
         // 11xxxxxx xxxxxxxy yyyyzzzz: copy (Y + 4) from X; copy Z bytes
         if((code >> 6) == 3)
         {
-            int i;
+            const auto par1 = *ipos++;
+            const auto par2 = *ipos++;
 
-            par1 = *ipos++;
-            par2 = *ipos++;
-
-            bx = ((code & 0x3F) << 7) + (par1 >> 1);
-            cx = ((par1 & 0x01) << 4) + (par2 >> 4) + 4;
-            ax = par2 & 0x0F;
+            const uint16_t bx = ((code & 0x3F) << 7) + (par1 >> 1);
+            const uint16_t cx = ((par1 & 0x01) << 4) + (par2 >> 4) + 4;
+            const uint16_t ax = par2 & 0x0F;
 
             if(opos + ax + cx >= oend)
                 return -1;
 
-            for(i = 0; i < cx; i++)
+            for(int i = 0; i < cx; i++)
             {
                 *opos = *(opos - bx);
                 ++opos;
             }
 
-            for(i = 0; i < ax; i++)
+            for(int i = 0; i < ax; i++)
                 *opos++ = *ipos++;
         }
     }
@@ -407,21 +413,20 @@ short DmoPlayer::dmo_unpacker::unpack_block(unsigned char* ibuf, long ilen,
     return opos - obuf;
 }
 
-long DmoPlayer::dmo_unpacker::unpack(unsigned char* ibuf, unsigned char* obuf,
-                                      unsigned long outputsize)
+size_t DMOUnpacker::unpack(uint8_t* ibuf, uint8_t* obuf, size_t outputsize)
 {
-    long olen = 0;
-    unsigned short block_count = CHARP_AS_WORD(ibuf);
+    size_t olen = 0;
+    const uint16_t block_count = CHARP_AS_WORD(ibuf);
 
     ibuf += 2;
-    unsigned char* block_length = ibuf;
+    uint8_t* block_length = ibuf;
     ibuf += 2 * block_count;
 
     oend = obuf + outputsize;
 
-    for(int i = 0; i < block_count; i++)
+    for(uint16_t i = 0; i < block_count; i++)
     {
-        unsigned short bul = CHARP_AS_WORD(ibuf);
+        auto bul = CHARP_AS_WORD(ibuf);
 
         if(unpack_block(ibuf + 2, CHARP_AS_WORD(block_length) - 2, obuf) != bul)
             return 0;

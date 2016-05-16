@@ -30,7 +30,9 @@
 
 #include "hyp.h"
 
-const uint8_t HypPlayer::hyp_adlib_registers[99] = {
+namespace
+{
+const uint8_t hyp_adlib_registers[99] = {
     0x20, 0x23, 0x40, 0x43, 0x60, 0x63, 0x80, 0x83, 0xA0, 0xB0, 0xC0, 0x21, 0x24,
     0x41, 0x44, 0x61, 0x64, 0x81, 0x84, 0xA1, 0xB1, 0xC1, 0x22, 0x25, 0x42, 0x45,
     0x62, 0x65, 0x82, 0x85, 0xA2, 0xB2, 0xC2, 0x28, 0x2B, 0x48, 0x4B, 0x68, 0x6B,
@@ -41,7 +43,7 @@ const uint8_t HypPlayer::hyp_adlib_registers[99] = {
     0x55, 0x72, 0x75, 0x92, 0x95, 0xA8, 0xB8, 0xC8
 };
 
-const uint16_t HypPlayer::hyp_notes[73] = {
+const uint16_t hyp_notes[73] = {
     0x0000, // by riven
     0x0956, 0x096B, 0x0980, 0x0998, 0x09B1, 0x09C9, 0x09E5, 0x0A03, 0x0A21,
     0x0A41, 0x0A63, 0x0A86, 0x0D56, 0x0D6B, 0x0D80, 0x0D98, 0x0DB1, 0x0DC9,
@@ -52,25 +54,24 @@ const uint16_t HypPlayer::hyp_notes[73] = {
     0x19E5, 0x1A03, 0x1A21, 0x1A41, 0x1A63, 0x1A86, 0x1D56, 0x1D6B, 0x1D80,
     0x1D98, 0x1DB1, 0x1DC9, 0x1DE5, 0x1E03, 0x1E21, 0x1E41, 0x1E63, 0x1E86
 };
+}
 
 Player* HypPlayer::factory()
 {
     return new HypPlayer();
 }
 
-void HypPlayer::xadplayer_rewind(int)
+void HypPlayer::xadplayer_rewind(const boost::optional<size_t>&)
 {
-    int i;
-
     setCurrentSpeed(tune()[5]);
 
     getOpl()->writeReg(0xBD, 0xC0);
 
-    for(i = 0; i < 9; i++)
+    for(int i = 0; i < 9; i++)
         getOpl()->writeReg(0xB0 + i, 0);
 
     // define instruments
-    for(i = 0; i < 99; i++)
+    for(int i = 0; i < 99; i++)
         getOpl()->writeReg(hyp_adlib_registers[i], tune()[6 + i]);
 
     m_hypPointer = 0x69;
@@ -82,21 +83,20 @@ void HypPlayer::xadplayer_update()
     {
         const auto event = tune()[m_hypPointer++];
 
-        if(event)
+        if(!event)
+            continue;
+
+        const auto freq = hyp_notes[event & 0x3F];
+
+        const uint8_t lofreq = (freq & 0xFF);
+        const uint8_t hifreq = (freq >> 8);
+
+        getOpl()->writeReg(0xB0 + i, getOpl()->readReg(0xB0 + i) & 0xDF);
+
+        if(!(event & 0x40))
         {
-            unsigned short freq = hyp_notes[event & 0x3F];
-
-            unsigned char lofreq = (freq & 0xFF);
-            unsigned char hifreq = (freq >> 8);
-
-            // FIXME sto getOpl()->writeReg(0xB0 + i, adlib[0xB0 + i]);
-            // FIXME sto adlib[0xB0 + i] &= 0xDF;
-
-            if(!(event & 0x40))
-            {
-                getOpl()->writeReg(0xA0 + i, lofreq);
-                getOpl()->writeReg(0xB0 + i, hifreq | 0x20);
-            }
+            getOpl()->writeReg(0xA0 + i, lofreq);
+            getOpl()->writeReg(0xB0 + i, hifreq | 0x20);
         }
     }
 

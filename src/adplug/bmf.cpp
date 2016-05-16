@@ -201,7 +201,7 @@ bool BmfPlayer::xadplayer_load()
     return true;
 }
 
-void BmfPlayer::xadplayer_rewind(int)
+void BmfPlayer::xadplayer_rewind(const boost::optional<size_t>&)
 {
     for(int i = 0; i < 9; i++)
     {

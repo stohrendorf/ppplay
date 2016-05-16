@@ -107,7 +107,7 @@ bool RawPlayer::update()
     return !m_songend;
 }
 
-void RawPlayer::rewind(int)
+void RawPlayer::rewind(const boost::optional<size_t>&)
 {
     m_dataPosition = m_delay = 0;
     setCurrentSpeed(initialSpeed());

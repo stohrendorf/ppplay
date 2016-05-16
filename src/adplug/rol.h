@@ -44,7 +44,7 @@ public:
 
     bool load(const std::string &filename) override;
     bool update() override;
-    void rewind(int) override;           // rewinds to specified subsong
+    void rewind(const boost::optional<size_t>& subsong) override;           // rewinds to specified subsong
     size_t framesUntilUpdate() const override; // returns needed timer refresh rate
 
     std::string type() const override
@@ -53,78 +53,77 @@ public:
     }
 
 private:
-    struct SRolHeader
+    struct Header
     {
         uint16_t version_major = 0;
         uint16_t version_minor = 0;
-        char UNUSED_0[40] = "";
+        uint8_t UNUSED_0[40] = "";
         uint16_t ticks_per_beat = 0;
         uint16_t beats_per_measure = 0;
         uint16_t edit_scale_y = 0;
         uint16_t edit_scale_x = 0;
-        char UNUSED_1 = 0;
-        char mode = 0;
-        char UNUSED_2[90 + 38 + 15] = "";
+        uint8_t UNUSED_1 = 0;
+        uint8_t mode = 0;
+        uint8_t UNUSED_2[90 + 38 + 15] = "";
         float basic_tempo = 0;
     };
 
 #pragma pack(push,1)
-    struct STempoEvent
+    struct TempoEvent
     {
         int16_t time;
         float multiplier;
     };
 
-    struct SNoteEvent
+    struct NoteEvent
     {
         int16_t number;
         int16_t duration;
     };
 
-    struct SInstrumentEvent
+    struct InstrumentEvent
     {
         int16_t time;
         char name[9];
         int16_t ins_index;
     };
 
-    struct SVolumeEvent
+    struct VolumeEvent
     {
         int16_t time;
         float multiplier;
     };
 
-    struct SPitchEvent
+    struct PitchEvent
     {
         int16_t time;
         float variation;
     };
 #pragma pack(pop)
 
-    typedef std::vector<SNoteEvent> TNoteEvents;
-    typedef std::vector<SInstrumentEvent> TInstrumentEvents;
-    typedef std::vector<SVolumeEvent> TVolumeEvents;
-    typedef std::vector<SPitchEvent> TPitchEvents;
+    using NoteEvents = std::vector<NoteEvent>;
+    using InstrumentEvents = std::vector<InstrumentEvent>;
+    using VolumeEvents = std::vector<VolumeEvent>;
+    using PitchEvents = std::vector<PitchEvent>;
 
-    class CVoiceData
+    class VoiceData
     {
     public:
-        enum EEventStatus
+        enum EventStatus : uint8_t
         {
-            kES_NoteEnd = 1 << 0,
-            kES_PitchEnd = 1 << 1,
-            kES_InstrEnd = 1 << 2,
-            kES_VolumeEnd = 1 << 3,
-
-            kES_None = 0
+            None = 0,
+            NoteEnd = 1 << 0,
+            PitchEnd = 1 << 1,
+            InstrEnd = 1 << 2,
+            VolumeEnd = 1 << 3
         };
 
-        explicit CVoiceData() = default;
+        explicit VoiceData() = default;
 
         void Reset()
         {
             mForceNote = true;
-            mEventStatus = kES_None;
+            mEventStatus = EventStatus::None;
             current_note = 0;
             current_note_duration = 0;
             mNoteDuration = 0;
@@ -133,13 +132,13 @@ private:
             next_pitch_event = 0;
         }
 
-        TNoteEvents note_events{};
-        TInstrumentEvents instrument_events{};
-        TVolumeEvents volume_events{};
-        TPitchEvents pitch_events{};
+        NoteEvents note_events{};
+        InstrumentEvents instrument_events{};
+        VolumeEvents volume_events{};
+        PitchEvents pitch_events{};
 
         bool mForceNote = true;
-        int mEventStatus = kES_None;
+        uint8_t mEventStatus = EventStatus::None;
         unsigned int current_note = 0;
         int current_note_duration = 0;
         int mNoteDuration = 0;
@@ -149,7 +148,7 @@ private:
     };
 
 #pragma pack(push,1)
-    struct SInstrumentName
+    struct InstrumentName
     {
         uint16_t index;
         char record_used;
@@ -157,9 +156,9 @@ private:
     };
 #pragma pack(pop)
 
-    typedef std::vector<SInstrumentName> TInstrumentNames;
+    typedef std::vector<InstrumentName> InstrumentNames;
 
-    struct SBnkHeader
+    struct BnkHeader
     {
         char version_major = 0;
         char version_minor = 0;
@@ -169,11 +168,11 @@ private:
         int32_t abs_offset_of_name_list = 0;
         int32_t abs_offset_of_data = 0;
 
-        TInstrumentNames ins_name_list{};
+        InstrumentNames ins_name_list{};
     };
 
 #pragma pack(push,1)
-    struct SFMOperator
+    struct FMOperator
     {
         uint8_t key_scale_level;
         uint8_t freq_multiplier;
@@ -191,7 +190,7 @@ private:
     };
 #pragma pack(pop)
 
-    struct SOPL2Op
+    struct OPL2Op
     {
         uint8_t ammulti = 0;
         uint8_t ksltl = 0;
@@ -201,87 +200,85 @@ private:
         uint8_t waveform = 0;
     };
 
-    struct SRolInstrument
+    struct RolInstrument
     {
         char mode = 0;
         char voice_number = 0;
-        SOPL2Op modulator{};
-        SOPL2Op carrier{};
+        OPL2Op modulator{};
+        OPL2Op carrier{};
     };
 
-    struct SUsedList
+    struct UsedList
     {
         std::string name{};
-        SRolInstrument instrument{};
+        RolInstrument instrument{};
     };
 
     void load_tempo_events(FileStream& f);
-    bool load_voice_data(FileStream& f, std::string const &bnk_filename);
-    void load_note_events(FileStream& f, CVoiceData &voice);
-    void load_instrument_events(FileStream& f, CVoiceData &voice,
+    bool load_voice_data(FileStream& f, const std::string &bnk_filename);
+    void load_note_events(FileStream& f, VoiceData &voice);
+    void load_instrument_events(FileStream& f, VoiceData &voice,
                                 FileStream& bnk_file,
-                                SBnkHeader const &bnk_header);
-    static void load_volume_events(FileStream& f, CVoiceData &voice);
-    static void load_pitch_events(FileStream& f, CVoiceData &voice);
+                                const BnkHeader &bnk_header);
+    static void load_volume_events(FileStream& f, VoiceData &voice);
+    static void load_pitch_events(FileStream& f, VoiceData &voice);
 
-    static bool load_bnk_info(FileStream& f, SBnkHeader &header);
-    int load_rol_instrument(FileStream& f, SBnkHeader const &header,
+    static bool load_bnk_info(FileStream& f, BnkHeader &header);
+    int load_rol_instrument(FileStream& f, const BnkHeader &header,
                             std::string &name);
-    static void read_rol_instrument(FileStream& f, SRolInstrument &ins);
-    static void read_fm_operator(FileStream& f, SOPL2Op &opl2_op);
-    int get_ins_index(std::string const &name) const;
+    static void read_rol_instrument(FileStream& f, RolInstrument &ins);
+    static void read_fm_operator(FileStream& f, OPL2Op &opl2_op);
+    int get_ins_index(const std::string &name) const;
 
-    void UpdateVoice(int const voice, CVoiceData &voiceData);
-    void SetNote(int const voice, int const note);
-    void SetNoteMelodic(int const voice, int const note);
-    void SetNotePercussive(int const voice, int const note);
-    void SetFreq(int const voice, int const note, bool const keyOn = false);
-    void SetPitch(int const voice, float const variation);
-    void SetVolume(int const voice, int const volume);
-    void SetRefresh(float const multiplier);
-    void send_ins_data_to_chip(int const voice, int const ins_index);
-    void send_operator(int const voice, SOPL2Op const &modulator,
-                       SOPL2Op const &carrier);
+    void UpdateVoice(int voice, VoiceData &voiceData);
+    void SetNote(int voice, int note);
+    void SetNoteMelodic(int voice, int note);
+    void SetNotePercussive(int voice, int note);
+    void SetFreq(int voice, int note, bool keyOn = false);
+    void SetPitch(int voice, float variation);
+    void SetVolume(int voice, int volume);
+    void SetRefresh(float multiplier);
+    void send_ins_data_to_chip(int voice, int ins_index);
+    void send_operator(int voice, const OPL2Op &modulator,
+                       const OPL2Op &carrier);
 
     class StringCompare
     {
     public:
-        bool operator()(SInstrumentName const &lhs,
-                        SInstrumentName const &rhs) const
+        bool operator()(const InstrumentName &lhs,
+                        const InstrumentName &rhs) const
         {
             return keyLess(lhs.name, rhs.name);
         }
 
-        bool operator()(SInstrumentName const &lhs, std::string const &rhs) const
+        bool operator()(const InstrumentName &lhs, const std::string &rhs) const
         {
             return keyLess(lhs.name, rhs.c_str());
         }
 
-        bool operator()(std::string const &lhs, SInstrumentName const &rhs) const
+        bool operator()(const std::string &lhs, const InstrumentName &rhs) const
         {
             return keyLess(lhs.c_str(), rhs.name);
         }
 
     private:
-        bool keyLess(const char *const lhs, const char *const rhs) const
+        static bool keyLess(const char* lhs, const char* rhs)
         {
             return boost::algorithm::ilexicographical_compare(lhs, rhs);
         }
     };
 
-    typedef std::vector<CVoiceData> TVoiceData;
+    Header m_rolHeader{};
+    std::vector<TempoEvent> m_tempoEvents{};
+    std::vector<VoiceData> m_voiceData{};
+    std::vector<UsedList> m_instrumentList{};
 
-    SRolHeader m_rolHeader{};
-    std::vector<STempoEvent> m_tempoEvents{};
-    TVoiceData m_voiceData{};
-    std::vector<SUsedList> m_instrumentList{};
-
-    static constexpr float kDefaultUpdateTme = 18.2f;
+    static constexpr float DefaultUpdateTme = 18.2f;
 
     uint32_t m_nextTempoEvent = 0;
     int m_currTick = 0;
     int m_timeOfLastNote = 0;
-    float m_refresh = kDefaultUpdateTme;
+    float m_refresh = DefaultUpdateTme;
     uint8_t m_bdRegister = 0;
     uint8_t m_bxRegister[9] = { 0,0,0,0,0,0,0,0,0 };
     uint8_t m_volumeCache[11] = { 0,0,0,0,0,0,0,0,0,0,0 };

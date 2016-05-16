@@ -129,7 +129,7 @@ bool MtkPlayer::load(const std::string& filename)
     struct mtkdata
     {
         char songname[34], composername[34], instname[0x80][34];
-        unsigned char insts[0x80][12], order[0x80], dummy, patterns[0x32][0x40][9];
+        uint8_t insts[0x80][12], order[0x80], dummy, patterns[0x32][0x40][9];
     };
 #pragma pack(pop)
     const mtkdata* data = reinterpret_cast<const mtkdata*>(org.data());

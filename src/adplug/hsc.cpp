@@ -260,7 +260,7 @@ bool HscPlayer::update()
     return !m_songend; // still playing
 }
 
-void HscPlayer::rewind(int)
+void HscPlayer::rewind(const boost::optional<size_t>&)
 {
     // rewind HSC player
     setCurrentRow(0);
@@ -283,7 +283,7 @@ void HscPlayer::rewind(int)
 
 size_t HscPlayer::instrumentCount() const
 {
-    unsigned char instnum = 0;
+    size_t instnum = 0;
     // count instruments
     for(int instcnt = 0; instcnt < 128; instcnt++)
     {
@@ -297,7 +297,7 @@ size_t HscPlayer::instrumentCount() const
 
 /*** private methods *************************************/
 
-void HscPlayer::setfreq(unsigned char chan, unsigned short freq)
+void HscPlayer::setfreq(uint8_t chan, unsigned short freq)
 {
     m_adlFreq[chan] = (m_adlFreq[chan] & ~3) | (freq >> 8);
 
@@ -305,9 +305,9 @@ void HscPlayer::setfreq(unsigned char chan, unsigned short freq)
     getOpl()->writeReg(0xb0 + chan, m_adlFreq[chan]);
 }
 
-void HscPlayer::setvolume(unsigned char chan, int volc, int volm)
+void HscPlayer::setvolume(uint8_t chan, int volc, int volm)
 {
-    unsigned char* ins = m_instr[m_channel[chan].inst];
+    const uint8_t* ins = m_instr[m_channel[chan].inst];
     char op = s_opTable[chan];
 
     getOpl()->writeReg(0x43 + op, volc | (ins[2] & ~63));
@@ -317,10 +317,10 @@ void HscPlayer::setvolume(unsigned char chan, int volc, int volm)
         getOpl()->writeReg(0x40 + op, ins[3]); // modulator
 }
 
-void HscPlayer::setinstr(unsigned char chan, unsigned char insnr)
+void HscPlayer::setinstr(uint8_t chan, uint8_t insnr)
 {
-    unsigned char* ins = m_instr[insnr];
-    char op = s_opTable[chan];
+    const uint8_t* ins = m_instr[insnr];
+    uint8_t op = s_opTable[chan];
 
     m_channel[chan].inst = insnr; // set internal instrument
     getOpl()->writeReg(0xb0 + chan, 0); // stop old note

@@ -32,37 +32,16 @@ public:
     HybridPlayer() = default;
 
 protected:
-    struct hyb_instrument
+#pragma pack(push,1)
+    struct Instrument
     {
         char name[7];
-        unsigned char mod_wave;
-        unsigned char mod_AD;
-        unsigned char mod_SR;
-        unsigned char mod_crtl;
-        unsigned char mod_volume;
-        unsigned char car_wave;
-        unsigned char car_AD;
-        unsigned char car_SR;
-        unsigned char car_crtl;
-        unsigned char car_volume;
-        unsigned char connect;
+        uint8_t data[11];
     };
+#pragma pack(pop)
 
-    struct
-    {
-        const hyb_instrument *inst = nullptr;
-
-        struct
-        {
-            unsigned short freq = 0;
-            unsigned short freq_slide = 0;
-        } channel[9];
-
-        unsigned char speed_counter = 0;
-    } hyb{};
-    //
     bool xadplayer_load() override;
-    void xadplayer_rewind(int) override;
+    void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
     void xadplayer_update() override;
     size_t framesUntilUpdate() const override;
     std::string type() const override;
@@ -70,9 +49,17 @@ protected:
     size_t instrumentCount() const override;
 
 private:
-    static const unsigned char hyb_adlib_registers[99];
-    static const unsigned short hyb_notes[98];
-    static const unsigned char hyb_default_instrument[11];
-
     const uint8_t* m_orderOffsets = nullptr;
+
+    const Instrument *m_instruments = nullptr;
+
+    struct Channel
+    {
+        uint16_t freq = 0;
+        uint16_t freq_slide = 0;
+    };
+
+    Channel m_channels[9];
+
+    uint8_t m_speedCounter = 0;
 };

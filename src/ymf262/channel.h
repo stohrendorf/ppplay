@@ -32,6 +32,7 @@
 #include <cstdint>
 #include <memory>
 #include <array>
+#include <boost/assert.hpp>
 
 namespace opl
 {
@@ -101,7 +102,10 @@ public:
         {
             return 0;
         }
-        return ((m_feedback[0] + m_feedback[1]) << m_fb) >> 9;
+
+        BOOST_ASSERT(m_fb < 8);
+        const int16_t d = 1 << (9 - m_fb);
+        return (m_feedback[0] + m_feedback[1]) / d;
     }
     /**
      * @brief Push feedback into the queue

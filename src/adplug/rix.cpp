@@ -94,7 +94,7 @@ bool RixPlayer::update()
     return !m_playEnd;
 }
 
-void RixPlayer::rewind(int subsong)
+void RixPlayer::rewind(const boost::optional<size_t>& subsong)
 {
     m_i = 0;
     m_t = 0;
@@ -124,8 +124,9 @@ void RixPlayer::rewind(int subsong)
     if(m_flagMkf)
     {
         const uint32_t* buf_index = reinterpret_cast<const uint32_t*>(m_fileBuffer.data());
-        int offset1 = buf_index[subsong], offset2;
-        while((offset2 = buf_index[++subsong]) == offset1)
+        auto idx = *subsong;
+        int offset1 = buf_index[idx], offset2;
+        while((offset2 = buf_index[++idx]) == offset1)
         {
         }
         m_length = offset2 - offset1 + 1;
@@ -136,7 +137,7 @@ void RixPlayer::rewind(int subsong)
     data_initial();
 }
 
-uint32_t RixPlayer::subSongCount() const
+size_t RixPlayer::subSongCount() const
 {
     if(m_flagMkf)
     {

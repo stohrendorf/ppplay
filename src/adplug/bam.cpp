@@ -212,7 +212,7 @@ bool BamPlayer::update()
     return !m_songEnd;
 }
 
-void BamPlayer::rewind(int)
+void BamPlayer::rewind(const boost::optional<size_t>&)
 {
     m_position = 0;
     m_songEnd = false;

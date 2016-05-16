@@ -4,9 +4,7 @@
 
 #include "stuff/utils.h"
 
-#ifdef USE_BANKDB
 #include "../bankgen/bankdatabase.h"
-#endif
 
 #include "stuff/system.h"
 
@@ -18,25 +16,6 @@ class MultiChips
 {
     DISABLE_COPY(MultiChips)
 public:
-#ifndef USE_BANKDB
-    struct Timbre
-    {
-        struct OperatorData
-        {
-            uint8_t modulator;
-            uint8_t carrier;
-        };
-        using SlotData = uint8_t;
-
-        OperatorData amVibEgtKsrMult;
-        OperatorData kslLevel;
-        OperatorData attackDecay;
-        OperatorData sustainRelease;
-        OperatorData wave;
-        SlotData feedback;
-        int8_t transpose;
-    };
-#endif
 
     struct Voice
     {
@@ -55,9 +34,8 @@ public:
         int timbre = -1;
         bool isNoteOn = false;
         uint8_t pan = 64;
-#ifdef USE_BANKDB
+        //! @brief Secondary slot used for pseudo-4op instruments
         Voice* secondary = nullptr;
-#endif
     };
 
     using VoiceList = std::vector<Voice*>;
@@ -97,34 +75,49 @@ public:
         ResetAllControllers, RpnMsb, RpnLsb, DataentryMsb, DataentryLsb, Pan
     };
 
+private:
+    static std::string s_defaultMelodicBank;
+    static std::string s_defaultPercussionBank;
+
+public:
+    static void setDefaultMelodicBank(const std::string& name)
+    {
+        s_defaultMelodicBank = name;
+    }
+    static void setDefaultPercussionBank(const std::string& name)
+    {
+        s_defaultPercussionBank = name;
+    }
+    static const bankdb::BankDatabase& bankDbInstance()
+    {
+        static std::unique_ptr<bankdb::BankDatabase> bankDb;
+        if(!bankDb)
+        {
+            bankDb.reset(new bankdb::BankDatabase());
+            bankDb->load(ppp::whereAmI() + "/../share/ppplay/bankdb.xml");
+        }
+        return *bankDb;
+    }
+
     MultiChips(size_t chipCount, bool stereo)
         : m_chips(chipCount)
         , m_voices(chipCount * (stereo ? 9 : 18))
         , m_channels()
-#ifndef USE_BANKDB
-        , m_timbreBank()
-#endif
         , m_stereo(stereo)
     {
         if(chipCount == 0)
             throw std::runtime_error("Must at least use one chip");
 
-#ifndef USE_BANKDB
-        extern std::array<MultiChips::Timbre, 256> ADLIB_TimbreBank;
-        m_timbreBank = ADLIB_TimbreBank;
-#else
-        m_bankDb.load(ppp::whereAmI() + "/../share/ppplay/bankdb.xml");
-        m_melodicBank = m_bankDb.bank("dM");
+        m_melodicBank = bankDbInstance().bank(s_defaultMelodicBank);
         if(!m_melodicBank)
             throw std::runtime_error("Bank not found");
         if(m_melodicBank->uses4op)
             throw std::runtime_error("Bank uses pure 4-op slots");
         if(m_melodicBank->onlyPercussion)
             throw std::runtime_error("Bank only provides rhythm instruments");
-        m_percussionBank = m_bankDb.bank("HMIGP");
+        m_percussionBank = bankDbInstance().bank(s_defaultPercussionBank);
         if(!m_percussionBank)
             m_percussionBank = m_melodicBank;
-#endif
 
         reset();
         resetVoices();
@@ -168,10 +161,6 @@ private:
     std::vector<opl::Opl3> m_chips;
     std::vector<Voice> m_voices;
     std::array<Channel, 16> m_channels;
-#ifndef USE_BANKDB
-    std::array<MultiChips::Timbre, 256> m_timbreBank;
-#else
-    bankdb::BankDatabase m_bankDb{};
     const bankdb::Bank* m_melodicBank = nullptr;
     const bankdb::Bank* m_percussionBank = nullptr;
     static const bankdb::Instrument* instrument(size_t idx, const bankdb::Bank* bank)
@@ -193,7 +182,6 @@ private:
         else
             return instrument(idx, m_percussionBank);
     }
-#endif
     std::set<Voice*> m_voicePool{};
     bool m_adlibVolumes = true;
     bool m_stereo;

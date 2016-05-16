@@ -30,33 +30,34 @@
 
 namespace
 {
-constexpr int kSizeofDataRecord = 30;
-constexpr int kMaxTickBeat = 60;
-constexpr int kSilenceNote = -12;
-constexpr int kNumMelodicVoices = 9;
-constexpr int kNumPercussiveVoices = 11;
-constexpr int kBassDrumChannel = 6;
-constexpr int kSnareDrumChannel = 7;
-constexpr int kTomtomChannel = 8;
-constexpr int kTomtomFreq = 2; //4;
-constexpr int kSnareDrumFreq = 2; //kTomtomFreq + 7;
-constexpr float kPitchFactor = 400.0f;
+    constexpr int kSizeofDataRecord = 30;
+    constexpr int kMaxTickBeat = 60;
+    constexpr int kSilenceNote = -12;
+    constexpr int kNumMelodicVoices = 9;
+    constexpr int kNumPercussiveVoices = 11;
+    constexpr int kBassDrumChannel = 6;
+    constexpr int kSnareDrumChannel = 7;
+    constexpr int kTomtomChannel = 8;
+    constexpr int kTomtomFreq = 2; //4;
+    constexpr int kSnareDrumFreq = 2; //kTomtomFreq + 7;
+    constexpr float kPitchFactor = 400.0f;
 
-constexpr uint16_t kNoteTable[12] = { 340, // C
-    363, // C#
-    385, // D
-    408, // D#
-    432, // E
-    458, // F
-    485, // F#
-    514, // G
-    544, // G#
-    577, // A
-    611, // A#
-    647 // B
-};
+    constexpr uint16_t kNoteTable[12] = {
+        340, // C
+        363, // C#
+        385, // D
+        408, // D#
+        432, // E
+        458, // F
+        485, // F#
+        514, // G
+        544, // G#
+        577, // A
+        611, // A#
+        647 // B
+    };
 
-constexpr uint8_t drum_table[4] = { 0x14, 0x12, 0x15, 0x11 };
+    constexpr uint8_t drum_table[4] = {0x14, 0x12, 0x15, 0x11};
 }
 
 /*** public methods **************************************/
@@ -70,26 +71,16 @@ Player* RolPlayer::factory()
 bool RolPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
         return false;
 
-    char* fn = new char[filename.length() + 12];
-    size_t i;
-    std::string bnk_filename;
-
-    strcpy(fn, filename.data());
-    for(i = strlen(fn) - 1; i >= 0; i--)
-        if(fn[i] == '/' || fn[i] == '\\')
-            break;
-    strcpy(fn + i + 1, "standard.bnk");
-    bnk_filename = fn;
-    delete[] fn;
+    std::string bnk_filename = (boost::filesystem::path(filename).remove_filename() / "standard.bnk").string();
 
     f >> m_rolHeader.version_major;
     f >> m_rolHeader.version_minor;
 
     // Version check
-    if(m_rolHeader.version_major != 0 || m_rolHeader.version_minor != 4)
+    if( m_rolHeader.version_major != 0 || m_rolHeader.version_minor != 4 )
     {
         return false;
     }
@@ -113,7 +104,7 @@ bool RolPlayer::load(const std::string& filename)
 
     m_timeOfLastNote = 0;
 
-    if(load_voice_data(f, bnk_filename) != true)
+    if( load_voice_data(f, bnk_filename) != true )
     {
         return false;
     }
@@ -125,27 +116,23 @@ bool RolPlayer::load(const std::string& filename)
 //---------------------------------------------------------
 bool RolPlayer::update()
 {
-    if(m_nextTempoEvent < m_tempoEvents.size() &&
-       m_tempoEvents[m_nextTempoEvent].time == m_currTick)
+    if( m_nextTempoEvent < m_tempoEvents.size() &&
+        m_tempoEvents[m_nextTempoEvent].time == m_currTick )
     {
         SetRefresh(m_tempoEvents[m_nextTempoEvent].multiplier);
         ++m_nextTempoEvent;
     }
 
-    TVoiceData::iterator curr = m_voiceData.begin();
-    TVoiceData::iterator end = m_voiceData.end();
     int voice = 0;
-
-    while(curr != end)
+    for( auto& voiceData : m_voiceData )
     {
-        UpdateVoice(voice, *curr);
-        ++curr;
+        UpdateVoice(voice, voiceData);
         ++voice;
     }
 
     ++m_currTick;
 
-    if(m_currTick > m_timeOfLastNote)
+    if( m_currTick > m_timeOfLastNote )
     {
         return false;
     }
@@ -155,17 +142,11 @@ bool RolPlayer::update()
 }
 
 //---------------------------------------------------------
-void RolPlayer::rewind(int)
+void RolPlayer::rewind(const boost::optional<size_t>&)
 {
-    TVoiceData::iterator curr = m_voiceData.begin();
-    TVoiceData::iterator end = m_voiceData.end();
-
-    while(curr != end)
+    for( auto& voice : m_voiceData )
     {
-        CVoiceData& voice = *curr;
-
         voice.Reset();
-        ++curr;
     }
 
     memset(m_bxRegister, 0, sizeof(m_bxRegister));
@@ -175,7 +156,7 @@ void RolPlayer::rewind(int)
 
     getOpl()->writeReg(1, 0x20); // Enable waveform select (bit 5)
 
-    if(m_rolHeader.mode == 0)
+    if( m_rolHeader.mode == 0 )
     {
         getOpl()->writeReg(0xbd, 0x20); // select rhythm mode (bit 5)
         m_bdRegister = 0x20;
@@ -191,9 +172,9 @@ void RolPlayer::rewind(int)
 }
 
 //---------------------------------------------------------
-void RolPlayer::SetRefresh(float const multiplier)
+void RolPlayer::SetRefresh(float multiplier)
 {
-    float const tickBeat = fmin(kMaxTickBeat, m_rolHeader.ticks_per_beat);
+    const float tickBeat = std::min<float>(kMaxTickBeat, m_rolHeader.ticks_per_beat);
 
     m_refresh = (tickBeat * m_rolHeader.basic_tempo * multiplier) / 60.0f;
 }
@@ -205,40 +186,34 @@ size_t RolPlayer::framesUntilUpdate() const
 }
 
 //---------------------------------------------------------
-void RolPlayer::UpdateVoice(int const voice, CVoiceData& voiceData)
+void RolPlayer::UpdateVoice(int voice, VoiceData& voiceData)
 {
-    TNoteEvents const& nEvents = voiceData.note_events;
-
-    if(nEvents.empty() || voiceData.mEventStatus & CVoiceData::kES_NoteEnd)
+    if( voiceData.note_events.empty() || voiceData.mEventStatus & VoiceData::EventStatus::NoteEnd )
     {
         return; // no note data to process, don't bother doing anything.
     }
 
-    TInstrumentEvents& iEvents = voiceData.instrument_events;
-    TVolumeEvents& vEvents = voiceData.volume_events;
-    TPitchEvents& pEvents = voiceData.pitch_events;
-
-    if(!(voiceData.mEventStatus & CVoiceData::kES_InstrEnd) &&
-       iEvents[voiceData.next_instrument_event].time == m_currTick)
+    if( !(voiceData.mEventStatus & VoiceData::EventStatus::InstrEnd) &&
+        voiceData.instrument_events[voiceData.next_instrument_event].time == m_currTick )
     {
-        if(voiceData.next_instrument_event < iEvents.size())
+        if( voiceData.next_instrument_event < voiceData.instrument_events.size() )
         {
             send_ins_data_to_chip(voice,
-                                  iEvents[voiceData.next_instrument_event].ins_index);
+                                  voiceData.instrument_events[voiceData.next_instrument_event].ins_index);
             ++voiceData.next_instrument_event;
         }
         else
         {
-            voiceData.mEventStatus |= CVoiceData::kES_InstrEnd;
+            voiceData.mEventStatus |= VoiceData::EventStatus::InstrEnd;
         }
     }
 
-    if(!(voiceData.mEventStatus & CVoiceData::kES_VolumeEnd) &&
-       vEvents[voiceData.next_volume_event].time == m_currTick)
+    if( !(voiceData.mEventStatus & VoiceData::EventStatus::VolumeEnd) &&
+        voiceData.volume_events[voiceData.next_volume_event].time == m_currTick )
     {
-        SVolumeEvent const& volumeEvent = vEvents[voiceData.next_volume_event];
+        const VolumeEvent& volumeEvent = voiceData.volume_events[voiceData.next_volume_event];
 
-        if(voiceData.next_volume_event < vEvents.size())
+        if( voiceData.next_volume_event < voiceData.volume_events.size() )
         {
             int const volume = static_cast<int>(63.0f * (1.0f - volumeEvent.multiplier));
 
@@ -248,21 +223,21 @@ void RolPlayer::UpdateVoice(int const voice, CVoiceData& voiceData)
         }
         else
         {
-            voiceData.mEventStatus |= CVoiceData::kES_VolumeEnd;
+            voiceData.mEventStatus |= VoiceData::EventStatus::VolumeEnd;
         }
     }
 
-    if(voiceData.mForceNote ||
-       voiceData.current_note_duration > voiceData.mNoteDuration - 1)
+    if( voiceData.mForceNote ||
+        voiceData.current_note_duration > voiceData.mNoteDuration - 1 )
     {
-        if(m_currTick != 0)
+        if( m_currTick != 0 )
         {
             ++voiceData.current_note;
         }
 
-        if(voiceData.current_note < nEvents.size())
+        if( voiceData.current_note < voiceData.note_events.size() )
         {
-            SNoteEvent const& noteEvent = nEvents[voiceData.current_note];
+            const NoteEvent& noteEvent = voiceData.note_events[voiceData.current_note];
 
             SetNote(voice, noteEvent.number);
             voiceData.current_note_duration = 0;
@@ -272,22 +247,22 @@ void RolPlayer::UpdateVoice(int const voice, CVoiceData& voiceData)
         else
         {
             SetNote(voice, kSilenceNote);
-            voiceData.mEventStatus |= CVoiceData::kES_NoteEnd;
+            voiceData.mEventStatus |= VoiceData::EventStatus::NoteEnd;
             return;
         }
     }
 
-    if(!(voiceData.mEventStatus & CVoiceData::kES_PitchEnd) &&
-       pEvents[voiceData.next_pitch_event].time == m_currTick)
+    if( !(voiceData.mEventStatus & VoiceData::EventStatus::PitchEnd) &&
+        voiceData.pitch_events[voiceData.next_pitch_event].time == m_currTick )
     {
-        if(voiceData.next_pitch_event < pEvents.size())
+        if( voiceData.next_pitch_event < voiceData.pitch_events.size() )
         {
-            SetPitch(voice, pEvents[voiceData.next_pitch_event].variation);
+            SetPitch(voice, voiceData.pitch_events[voiceData.next_pitch_event].variation);
             ++voiceData.next_pitch_event;
         }
         else
         {
-            voiceData.mEventStatus |= CVoiceData::kES_PitchEnd;
+            voiceData.mEventStatus |= VoiceData::EventStatus::PitchEnd;
         }
     }
 
@@ -295,9 +270,9 @@ void RolPlayer::UpdateVoice(int const voice, CVoiceData& voiceData)
 }
 
 //---------------------------------------------------------
-void RolPlayer::SetNote(int const voice, int const note)
+void RolPlayer::SetNote(int voice, int note)
 {
-    if(voice < kBassDrumChannel || m_rolHeader.mode)
+    if( voice < kBassDrumChannel || m_rolHeader.mode )
     {
         SetNoteMelodic(voice, note);
     }
@@ -308,22 +283,22 @@ void RolPlayer::SetNote(int const voice, int const note)
 }
 
 //---------------------------------------------------------
-void RolPlayer::SetNotePercussive(int const voice, int const note)
+void RolPlayer::SetNotePercussive(int voice, int note)
 {
-    int const bit_pos = 4 - voice + kBassDrumChannel;
+    const int bit_pos = 4 - voice + kBassDrumChannel;
 
     m_bdRegister &= ~(1 << bit_pos);
     getOpl()->writeReg(0xbd, m_bdRegister);
 
-    if(note != kSilenceNote)
+    if( note != kSilenceNote )
     {
-        switch(voice)
+        switch( voice )
         {
-            case kTomtomChannel:
-                SetFreq(kSnareDrumChannel, note + 7);
-            case kBassDrumChannel:
-                SetFreq(voice, note);
-                break;
+        case kTomtomChannel:
+            SetFreq(kSnareDrumChannel, note + 7);
+        case kBassDrumChannel:
+            SetFreq(voice, note);
+            break;
         }
 
         m_bdRegister |= 1 << bit_pos;
@@ -332,18 +307,18 @@ void RolPlayer::SetNotePercussive(int const voice, int const note)
 }
 
 //---------------------------------------------------------
-void RolPlayer::SetNoteMelodic(int const voice, int const note)
+void RolPlayer::SetNoteMelodic(int voice, int note)
 {
     getOpl()->writeReg(0xb0 + voice, m_bxRegister[voice] & ~0x20);
 
-    if(note != kSilenceNote)
+    if( note != kSilenceNote )
     {
         SetFreq(voice, note, true);
     }
 }
 
 //---------------------------------------------------------
-void RolPlayer::SetPitch(int const voice, float const variation)
+void RolPlayer::SetPitch(int voice, float variation)
 {
     m_pitchCache[voice] = variation;
     m_freqCache[voice] += static_cast<uint16_t>((m_freqCache[voice] * (variation - 1.0f)) / kPitchFactor);
@@ -352,7 +327,7 @@ void RolPlayer::SetPitch(int const voice, float const variation)
 }
 
 //---------------------------------------------------------
-void RolPlayer::SetFreq(int const voice, int const note, bool const keyOn)
+void RolPlayer::SetFreq(int voice, int note, bool keyOn)
 {
     uint16_t freq = kNoteTable[note % 12] + ((note / 12) << 10);
     freq += static_cast<uint16_t>((freq * (m_pitchCache[voice] - 1.0f)) / kPitchFactor);
@@ -365,32 +340,32 @@ void RolPlayer::SetFreq(int const voice, int const note, bool const keyOn)
 }
 
 //---------------------------------------------------------
-void RolPlayer::SetVolume(int const voice, int const volume)
+void RolPlayer::SetVolume(int voice, int volume)
 {
     m_volumeCache[voice] = (m_volumeCache[voice] & 0xc0) | volume;
 
-    int const op_offset = (voice < kSnareDrumChannel || m_rolHeader.mode)
-        ? s_opTable[voice] + 3
-        : drum_table[voice - kSnareDrumChannel];
+    const int op_offset = (voice < kSnareDrumChannel || m_rolHeader.mode)
+                              ? s_opTable[voice] + 3
+                              : drum_table[voice - kSnareDrumChannel];
 
     getOpl()->writeReg(0x40 + op_offset, m_volumeCache[voice]);
 }
 
 //---------------------------------------------------------
-void RolPlayer::send_ins_data_to_chip(int const voice, int const ins_index)
+void RolPlayer::send_ins_data_to_chip(int voice, int ins_index)
 {
-    SRolInstrument& instrument = m_instrumentList[ins_index].instrument;
+    const RolInstrument& instrument = m_instrumentList[ins_index].instrument;
 
     send_operator(voice, instrument.modulator, instrument.carrier);
 }
 
 //---------------------------------------------------------
-void RolPlayer::send_operator(int const voice, SOPL2Op const& modulator,
-                               SOPL2Op const& carrier)
+void RolPlayer::send_operator(int voice, const OPL2Op& modulator,
+                              OPL2Op const& carrier)
 {
-    if(voice < kSnareDrumChannel || m_rolHeader.mode)
+    if( voice < kSnareDrumChannel || m_rolHeader.mode )
     {
-        int const op_offset = s_opTable[voice];
+        const int op_offset = s_opTable[voice];
 
         getOpl()->writeReg(0x20 + op_offset, modulator.ammulti);
         getOpl()->writeReg(0x40 + op_offset, modulator.ksltl);
@@ -411,7 +386,7 @@ void RolPlayer::send_operator(int const voice, SOPL2Op const& modulator,
     }
     else
     {
-        int const op_offset = drum_table[voice - kSnareDrumChannel];
+        const int op_offset = drum_table[voice - kSnareDrumChannel];
 
         m_volumeCache[voice] = (modulator.ksltl & 0xc0) | (m_volumeCache[voice] & 0x3f);
 
@@ -432,9 +407,9 @@ void RolPlayer::load_tempo_events(FileStream& f)
 
     m_tempoEvents.reserve(num_tempo_events);
 
-    for(int i = 0; i < num_tempo_events; ++i)
+    for( int i = 0; i < num_tempo_events; ++i )
     {
-        STempoEvent event;
+        TempoEvent event;
         f >> event;
         m_tempoEvents.push_back(event);
     }
@@ -443,60 +418,57 @@ void RolPlayer::load_tempo_events(FileStream& f)
 //---------------------------------------------------------
 bool RolPlayer::load_voice_data(FileStream& f, std::string const& bnk_filename)
 {
-    SBnkHeader bnk_header;
+    BnkHeader bnk_header;
     FileStream bnk_file(bnk_filename);
 
-    if(bnk_file)
+    if( !bnk_file )
+        return false;
+
+    load_bnk_info(bnk_file, bnk_header);
+
+    const int numVoices = m_rolHeader.mode ? kNumMelodicVoices : kNumPercussiveVoices;
+
+    m_voiceData.reserve(numVoices);
+    for( int i = 0; i < numVoices; ++i )
     {
-        load_bnk_info(bnk_file, bnk_header);
+        VoiceData voice;
 
-        int const numVoices = m_rolHeader.mode ? kNumMelodicVoices : kNumPercussiveVoices;
+        load_note_events(f, voice);
+        load_instrument_events(f, voice, bnk_file, bnk_header);
+        load_volume_events(f, voice);
+        load_pitch_events(f, voice);
 
-        m_voiceData.reserve(numVoices);
-        for(int i = 0; i < numVoices; ++i)
-        {
-            CVoiceData voice;
-
-            load_note_events(f, voice);
-            load_instrument_events(f, voice, bnk_file, bnk_header);
-            load_volume_events(f, voice);
-            load_pitch_events(f, voice);
-
-            m_voiceData.push_back(voice);
-        }
-
-        return true;
+        m_voiceData.push_back(voice);
     }
 
-    return false;
+    return true;
 }
 
 //---------------------------------------------------------
-void RolPlayer::load_note_events(FileStream& f, CVoiceData& voice)
+void RolPlayer::load_note_events(FileStream& f, VoiceData& voice)
 {
     f.seekrel(15);
 
     int16_t time_of_last_note;
     f >> time_of_last_note;
 
-    if(time_of_last_note != 0)
+    if( time_of_last_note != 0 )
     {
-        TNoteEvents& note_events = voice.note_events;
-        int16_t total_duration = 0;
+        int total_duration = 0;
 
         do
         {
-            SNoteEvent event;
+            NoteEvent event;
             f >> event;
 
             event.number += kSilenceNote; // adding -12
 
-            note_events.push_back(event);
+            voice.note_events.push_back(event);
 
             total_duration += event.duration;
-        } while(total_duration < time_of_last_note);
+        } while( total_duration < time_of_last_note );
 
-        if(time_of_last_note > m_timeOfLastNote)
+        if( time_of_last_note > m_timeOfLastNote )
         {
             m_timeOfLastNote = time_of_last_note;
         }
@@ -506,27 +478,25 @@ void RolPlayer::load_note_events(FileStream& f, CVoiceData& voice)
 }
 
 //---------------------------------------------------------
-void RolPlayer::load_instrument_events(FileStream& f, CVoiceData& voice,
-                                        FileStream& bnk_file,
-                                        SBnkHeader const& bnk_header)
+void RolPlayer::load_instrument_events(FileStream& f, VoiceData& voice,
+                                       FileStream& bnk_file,
+                                       const BnkHeader& bnk_header)
 {
     int16_t number_of_instrument_events;
     f >> number_of_instrument_events;
 
-    TInstrumentEvents& instrument_events = voice.instrument_events;
+    voice.instrument_events.reserve(number_of_instrument_events);
 
-    instrument_events.reserve(number_of_instrument_events);
-
-    for(int i = 0; i < number_of_instrument_events; ++i)
+    for( int i = 0; i < number_of_instrument_events; ++i )
     {
-        SInstrumentEvent event;
+        InstrumentEvent event;
         f >> event.time;
         f.read(event.name, 9);
 
         std::string event_name = event.name;
         event.ins_index = load_rol_instrument(bnk_file, bnk_header, event_name);
 
-        instrument_events.push_back(event);
+        voice.instrument_events.push_back(event);
 
         f.seekrel(1 + 2);
     }
@@ -535,46 +505,42 @@ void RolPlayer::load_instrument_events(FileStream& f, CVoiceData& voice,
 }
 
 //---------------------------------------------------------
-void RolPlayer::load_volume_events(FileStream& f, CVoiceData& voice)
+void RolPlayer::load_volume_events(FileStream& f, VoiceData& voice)
 {
     int16_t number_of_volume_events;
     f >> number_of_volume_events;
 
-    TVolumeEvents& volume_events = voice.volume_events;
+    voice.volume_events.reserve(number_of_volume_events);
 
-    volume_events.reserve(number_of_volume_events);
-
-    for(int i = 0; i < number_of_volume_events; ++i)
+    for( int i = 0; i < number_of_volume_events; ++i )
     {
-        SVolumeEvent event;
+        VolumeEvent event;
         f >> event;
-        volume_events.push_back(event);
+        voice.volume_events.push_back(event);
     }
 
     f.seekrel(15);
 }
 
 //---------------------------------------------------------
-void RolPlayer::load_pitch_events(FileStream& f, CVoiceData& voice)
+void RolPlayer::load_pitch_events(FileStream& f, VoiceData& voice)
 {
     int16_t number_of_pitch_events;
     f >> number_of_pitch_events;
 
-    TPitchEvents& pitch_events = voice.pitch_events;
+    voice.pitch_events.reserve(number_of_pitch_events);
 
-    pitch_events.reserve(number_of_pitch_events);
-
-    for(int i = 0; i < number_of_pitch_events; ++i)
+    for( int i = 0; i < number_of_pitch_events; ++i )
     {
-        SPitchEvent event;
+        PitchEvent event;
         f >> event;
 
-        pitch_events.push_back(event);
+        voice.pitch_events.push_back(event);
     }
 }
 
 //---------------------------------------------------------
-bool RolPlayer::load_bnk_info(FileStream& f, SBnkHeader& header)
+bool RolPlayer::load_bnk_info(FileStream& f, BnkHeader& header)
 {
     f >> header.version_major;
     f >> header.version_minor;
@@ -588,12 +554,12 @@ bool RolPlayer::load_bnk_info(FileStream& f, SBnkHeader& header)
 
     f.seek(header.abs_offset_of_name_list);
 
-    TInstrumentNames& ins_name_list = header.ins_name_list;
+    InstrumentNames& ins_name_list = header.ins_name_list;
     ins_name_list.reserve(header.number_of_list_entries_used);
 
-    for(int i = 0; i < header.number_of_list_entries_used; ++i)
+    for( int i = 0; i < header.number_of_list_entries_used; ++i )
     {
-        SInstrumentName instrument;
+        InstrumentName instrument;
         f >> instrument;
 
         // printf("%s = #%d\n", instrument.name, i );
@@ -607,41 +573,35 @@ bool RolPlayer::load_bnk_info(FileStream& f, SBnkHeader& header)
 }
 
 //---------------------------------------------------------
-int RolPlayer::load_rol_instrument(FileStream& f, SBnkHeader const& header,
-                                    std::string& name)
+int RolPlayer::load_rol_instrument(FileStream& f, const BnkHeader& header,
+                                   std::string& name)
 {
-    TInstrumentNames const& ins_name_list = header.ins_name_list;
+    const int ins_index = get_ins_index(name);
 
-    int const ins_index = get_ins_index(name);
-
-    if(ins_index != -1)
+    if( ins_index != -1 )
     {
         return ins_index;
     }
 
-    typedef TInstrumentNames::const_iterator TInsIter;
-    typedef std::pair<TInsIter, TInsIter> TInsIterPair;
+    auto range = std::equal_range(header.ins_name_list.begin(), header.ins_name_list.end(), name, StringCompare());
 
-    TInsIterPair range = std::equal_range(
-        ins_name_list.begin(), ins_name_list.end(), name, StringCompare());
-
-    if(range.first != range.second)
+    if( range.first != range.second )
     {
         int const seekOffs = header.abs_offset_of_data + (range.first->index * kSizeofDataRecord);
         f.seek(seekOffs);
     }
 
-    SUsedList usedIns;
+    UsedList usedIns;
     usedIns.name = name;
 
-    if(range.first != range.second)
+    if( range.first != range.second )
     {
         read_rol_instrument(f, usedIns.instrument);
     }
     else
     {
         // set up default instrument data here
-        memset(&usedIns.instrument, 0, sizeof(SRolInstrument));
+        memset(&usedIns.instrument, 0, sizeof(RolInstrument));
     }
     m_instrumentList.push_back(usedIns);
 
@@ -649,11 +609,11 @@ int RolPlayer::load_rol_instrument(FileStream& f, SBnkHeader const& header,
 }
 
 //---------------------------------------------------------
-int RolPlayer::get_ins_index(std::string const& name) const
+int RolPlayer::get_ins_index(const std::string& name) const
 {
-    for(unsigned int i = 0; i < m_instrumentList.size(); ++i)
+    for( size_t i = 0; i < m_instrumentList.size(); ++i )
     {
-        if(boost::iequals(m_instrumentList[i].name, name))
+        if( boost::iequals(m_instrumentList[i].name, name) )
         {
             return i;
         }
@@ -663,7 +623,7 @@ int RolPlayer::get_ins_index(std::string const& name) const
 }
 
 //---------------------------------------------------------
-void RolPlayer::read_rol_instrument(FileStream& f, SRolInstrument& ins)
+void RolPlayer::read_rol_instrument(FileStream& f, RolInstrument& ins)
 {
     f >> ins.mode;
     f >> ins.voice_number;
@@ -676,9 +636,9 @@ void RolPlayer::read_rol_instrument(FileStream& f, SRolInstrument& ins)
 }
 
 //---------------------------------------------------------
-void RolPlayer::read_fm_operator(FileStream& f, SOPL2Op& opl2_op)
+void RolPlayer::read_fm_operator(FileStream& f, OPL2Op& opl2_op)
 {
-    SFMOperator fm_op;
+    FMOperator fm_op;
     f >> fm_op;
 
     opl2_op.ammulti = fm_op.amplitude_vibrato << 7 |

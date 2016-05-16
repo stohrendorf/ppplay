@@ -42,19 +42,19 @@ public:
     }
     std::string instrumentTitle(size_t n) const override
     {
-        if(n < 29)
-            return std::string(m_instrumentNames[n], 1, 16);
-        else
-            return "-broken-";
+        if(n < m_instrumentNames.size())
+            return m_instrumentNames[n].substr(1);
+
+        return {};
     }
 
 private:
-    struct sa2header
+    struct Header
     {
         char sadt[4] = "";
         uint8_t version = 0;
     };
-    sa2header m_header{};
+    Header m_header{};
 
-    char m_instrumentNames[29][17];
+    std::array<std::string, 29> m_instrumentNames;
 };

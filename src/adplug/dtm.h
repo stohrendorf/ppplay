@@ -32,7 +32,7 @@ public:
     DtmPlayer() = default;
 
     bool load(const std::string &filename) override;
-    void rewind(int subsong) override;
+    void rewind(const boost::optional<size_t>& subsong) override;
     size_t framesUntilUpdate() const override;
 
     std::string type() const override;
@@ -44,7 +44,7 @@ public:
 
 private:
 
-    struct dtm_header
+    struct Header
     {
         char id[12] = "";
         uint8_t version = 0;
@@ -54,16 +54,16 @@ private:
         uint8_t numinst = 0;
     };
 
-    dtm_header m_header{};
+    Header m_header{};
 
     std::string m_description{};
 
-    struct dtm_instrument
+    struct Instrument
     {
         char name[13] = "";
         uint8_t data[12] = { 0,0,0,0,0,0,0,0,0,0,0,0 };
     };
-    dtm_instrument m_instruments[128];
+    Instrument m_instruments[128];
 
     static std::vector<uint8_t> unpack_pattern(const std::vector<uint8_t>& input);
 };

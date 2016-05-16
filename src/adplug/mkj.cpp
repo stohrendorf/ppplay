@@ -187,11 +187,9 @@ bool MkjPlayer::update()
     return !songend;
 }
 
-void MkjPlayer::rewind(int)
+void MkjPlayer::rewind(const boost::optional<size_t>&)
 {
-    int i;
-
-    for(i = 0; i < m_maxChannel; i++)
+    for(int i = 0; i < m_maxChannel; i++)
     {
         m_channels[i].pstat = 0;
         m_channels[i].speed = 0;

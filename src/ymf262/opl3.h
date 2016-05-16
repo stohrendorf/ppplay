@@ -80,7 +80,10 @@ private:
     Channel::Ptr m_channels4op[2][3];
     Channel::Ptr m_channels[2][9];
     Channel::Ptr m_disabledChannel;
-    MultiplexFilter<4, HighPassFilter<SampleRate, 2, 5>> m_filters{};
+    
+    // Cutoff frequencies have been chosen after comparing some unfiltered
+    // emulator outputs with their recordings from a real Sound Blaster.
+    MultiplexFilter<4, BandPassFilter<SampleRate, 24000, 12, 5>> m_filters{};
 
     bool m_nts = false;
     //! @brief Depth of amplitude

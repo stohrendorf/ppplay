@@ -34,7 +34,7 @@ public:
     virtual ~ModPlayer() = default;
 
     bool update() override;
-    void rewind(int) override;
+    void rewind(const boost::optional<size_t>& subsong) override;
     size_t framesUntilUpdate() const override;
 
     struct Instrument

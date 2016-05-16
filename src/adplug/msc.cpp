@@ -109,7 +109,7 @@ bool MscPlayer::update()
     return true;
 }
 
-void MscPlayer::rewind(int)
+void MscPlayer::rewind(const boost::optional<size_t>&)
 {
     // reset state
     m_decoderPrefix = 0;

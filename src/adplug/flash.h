@@ -40,15 +40,9 @@ protected:
         else
             return false;
     }
-    void xadplayer_rewind(int) override;
+    void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
     void xadplayer_update() override;
     size_t framesUntilUpdate() const override;
     std::string type() const override;
     size_t instrumentCount() const override;
-
-private:
-    static const unsigned char flash_adlib_registers[99];
-    static const unsigned short flash_notes_encoded[268];
-    static const unsigned short flash_notes[12];
-    static const unsigned char flash_default_instrument[8];
 };

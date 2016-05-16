@@ -87,7 +87,7 @@ bool SngPlayer::update()
     return !m_songEnd;
 }
 
-void SngPlayer::rewind(int)
+void SngPlayer::rewind(const boost::optional<size_t>&)
 {
     m_pos = m_header.start;
     m_del = m_header.delay;

@@ -36,7 +36,7 @@ public:
 
     bool load(const std::string &filename) override;
     bool update() override;
-    void rewind(int subsong = -1) override;
+    void rewind(const boost::optional<size_t>& subsong) override;
 
     // refresh rate is fixed at 72Hz
     size_t framesUntilUpdate() const override
@@ -44,8 +44,8 @@ public:
         return SampleRate / 72;
     }
 
-    unsigned int subSongCount() const override;
-    unsigned int currentSubSong() const override
+    size_t subSongCount() const override;
+    size_t currentSubSong() const override
     {
         return m_currentSubSong;
     }
@@ -56,8 +56,8 @@ public:
     }
 
 private:
-    int m_subSongCount = 0;
-    int m_currentSubSong = 0;
+    size_t m_subSongCount = 0;
+    size_t m_currentSubSong = 0;
 
     std::unique_ptr<AdlibDriver> m_driver;
 

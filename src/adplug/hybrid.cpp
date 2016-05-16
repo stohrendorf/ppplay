@@ -29,8 +29,11 @@
  */
 
 #include "hybrid.h"
+#include <stuff/stringutils.h>
 
-const unsigned char HybridPlayer::hyb_adlib_registers[99] = {
+namespace
+{
+const uint8_t hyb_adlib_registers[99] = {
     0xE0, 0x60, 0x80, 0x20, 0x40, 0xE3, 0x63, 0x83, 0x23, 0x43, 0xC0, 0xE1, 0x61,
     0x81, 0x21, 0x41, 0xE4, 0x64, 0x84, 0x24, 0x44, 0xC1, 0xE2, 0x62, 0x82, 0x22,
     0x42, 0xE5, 0x65, 0x85, 0x25, 0x45, 0xC2, 0xE8, 0x68, 0x88, 0x28, 0x48, 0xEB,
@@ -41,7 +44,7 @@ const unsigned char HybridPlayer::hyb_adlib_registers[99] = {
     0x32, 0x52, 0xF5, 0x75, 0x95, 0x35, 0x55, 0xC8
 };
 
-const unsigned short HybridPlayer::hyb_notes[98] = {
+const uint16_t hyb_notes[98] = {
     0x0000, 0x0000, 0x016B, 0x0181, 0x0198, 0x01B0, 0x01CA, 0x01E5, 0x0202,
     0x0220, 0x0241, 0x0263, 0x0287, 0x02AE, 0x056B, 0x0581, 0x0598, 0x05B0,
     0x05CA, 0x05E5, 0x0602, 0x0620, 0x0641, 0x0663, 0x0687, 0x06AE, 0x096B,
@@ -55,9 +58,10 @@ const unsigned short HybridPlayer::hyb_notes[98] = {
     0x1DCA, 0x1DE5, 0x1E02, 0x1E20, 0x1E41, 0x1E63, 0x1E87, 0x1EAE
 };
 
-const unsigned char HybridPlayer::hyb_default_instrument[11] = {
+const uint8_t hyb_default_instrument[11] = {
     0x00, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0x00
 };
+}
 
 Player* HybridPlayer::factory()
 {
@@ -70,7 +74,7 @@ bool HybridPlayer::xadplayer_load()
         return false;
 
     // load instruments
-    hyb.inst = reinterpret_cast<const hyb_instrument*>(&tune().front());
+    m_instruments = reinterpret_cast<const Instrument*>(&tune().front());
 
     // load order
     m_orderOffsets = &tune()[0x1D4];
@@ -78,19 +82,19 @@ bool HybridPlayer::xadplayer_load()
     return true;
 }
 
-void HybridPlayer::xadplayer_rewind(int)
+void HybridPlayer::xadplayer_rewind(const boost::optional<size_t>&)
 {
     setCurrentOrder(0);
     setCurrentRow(0);
     setCurrentSpeed(6);
 
-    hyb.speed_counter = 1;
+    m_speedCounter = 1;
 
     // init channel data
     for(int i = 0; i < 9; i++)
     {
-        hyb.channel[i].freq = 0x2000;
-        hyb.channel[i].freq_slide = 0x0000;
+        m_channels[i].freq = 0x2000;
+        m_channels[i].freq_slide = 0x0000;
     }
 
     // basic OPL init
@@ -112,12 +116,12 @@ void HybridPlayer::xadplayer_rewind(int)
 
 void HybridPlayer::xadplayer_update()
 {
-    hyb.speed_counter = currentSpeed();
+    m_speedCounter = currentSpeed();
 
     auto patpos = currentRow();
     auto ordpos = currentOrder();
 
-    if(--hyb.speed_counter)
+    if(--m_speedCounter)
         goto update_slides;
 
     // process channels
@@ -125,17 +129,12 @@ void HybridPlayer::xadplayer_update()
     {
         const uint8_t* pos = &tune()[0xADE + (m_orderOffsets[ordpos * 9 + i] * 64 * 2) + (patpos * 2)];
         // read event
-        unsigned short event = (pos[1] << 8) + pos[0];
-
-#ifdef DEBUG
-        AdPlug_LogWrite("track %02X, channel %02X, event %04X:\n",
-                        hyb.order[hyb.order_pos * 9 + i], i, event);
-#endif
+        uint16_t event = (pos[1] << 8) + pos[0];
 
         // calculate variables
-        unsigned char note = event >> 9;
-        unsigned char ins = ((event & 0x01F0) >> 4);
-        unsigned char slide = event & 0x000F;
+        uint8_t note = event >> 9;
+        uint8_t ins = ((event & 0x01F0) >> 4);
+        uint8_t slide = event & 0x000F;
 
         // play event
         switch(note)
@@ -162,38 +161,36 @@ void HybridPlayer::xadplayer_update()
                 {
                     for(int j = 0; j < 11; j++)
                     {
-                        const uint8_t* insData = reinterpret_cast<const uint8_t*>(&hyb.inst[ins - 1])
-                            + sizeof(hyb_instrument::name);
-                        getOpl()->writeReg(hyb_adlib_registers[i * 11 + j], insData[j]);
+                        getOpl()->writeReg(hyb_adlib_registers[i * 11 + j], m_instruments[ins - 1].data[j]);
                     }
                 }
 
                 // is note ?
                 if(note)
                 {
-                    hyb.channel[i].freq = hyb_notes[note];
-                    hyb.channel[i].freq_slide = 0;
+                    m_channels[i].freq = hyb_notes[note];
+                    m_channels[i].freq_slide = 0;
                 }
 
                 // is slide ?
                 if(slide)
                 {
-                    hyb.channel[i].freq_slide = (((slide >> 3) * -1) * (slide & 7)) << 1;
+                    m_channels[i].freq_slide = (((slide >> 3) * -1) * (slide & 7)) << 1;
 
                     //if (slide & 0x80)
                     //  slide = -(slide & 7);
                 }
 
                 // set frequency
-                if(!(hyb.channel[i].freq & 0x2000))
+                if(!(m_channels[i].freq & 0x2000))
                 {
-                    getOpl()->writeReg(0xA0 + i, hyb.channel[i].freq & 0xFF);
-                    getOpl()->writeReg(0xB0 + i, hyb.channel[i].freq >> 8);
+                    getOpl()->writeReg(0xA0 + i, m_channels[i].freq & 0xFF);
+                    getOpl()->writeReg(0xB0 + i, m_channels[i].freq >> 8);
 
-                    hyb.channel[i].freq |= 0x2000;
+                    m_channels[i].freq |= 0x2000;
 
-                    getOpl()->writeReg(0xA0 + i, hyb.channel[i].freq & 0xFF);
-                    getOpl()->writeReg(0xB0 + i, hyb.channel[i].freq >> 8);
+                    getOpl()->writeReg(0xA0 + i, m_channels[i].freq & 0xFF);
+                    getOpl()->writeReg(0xB0 + i, m_channels[i].freq >> 8);
                 }
 
                 break;
@@ -215,14 +212,14 @@ update_slides:
 #endif
     // update fine frequency slides
     for(int i = 0; i < 9; i++)
-        if(hyb.channel[i].freq_slide)
+        if(m_channels[i].freq_slide)
         {
-            hyb.channel[i].freq =
-                (((hyb.channel[i].freq & 0x1FFF) + hyb.channel[i].freq_slide) &
+            m_channels[i].freq =
+                (((m_channels[i].freq & 0x1FFF) + m_channels[i].freq_slide) &
                  0x1FFF) | 0x2000;
 
-            getOpl()->writeReg(0xA0 + i, hyb.channel[i].freq & 0xFF);
-            getOpl()->writeReg(0xB0 + i, hyb.channel[i].freq >> 8);
+            getOpl()->writeReg(0xA0 + i, m_channels[i].freq & 0xFF);
+            getOpl()->writeReg(0xB0 + i, m_channels[i].freq >> 8);
         }
 }
 
@@ -238,7 +235,7 @@ std::string HybridPlayer::type() const
 
 std::string HybridPlayer::instrumentTitle(size_t i) const
 {
-    return std::string(hyb.inst[i].name, 7);
+    return stringncpy(m_instruments[i].name, 7);
 }
 
 size_t HybridPlayer::instrumentCount() const

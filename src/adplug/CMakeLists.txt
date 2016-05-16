@@ -103,21 +103,10 @@ set(BADPLAY_SRCS
     mid/multichips.h
 )
 
-option(USE_BANKDB "Use MIDI bank database instead of hard-coded Duke Nukem 3D instruments" ON)
-if(NOT USE_BANKDB)
-    list(APPEND BADPLAY_SRCS mid/timbre.cpp)
-endif()
-
 add_executable(badplay ${BADPLAY_SRCS})
-target_link_libraries(badplay ${SDL_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ppplay_core ppplay_opl)
+target_link_libraries(badplay PUBLIC ${SDL_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ppplay_core ppplay_opl)
 
-if(USE_BANKDB)
-    target_compile_definitions(badplay PRIVATE -DUSE_BANKDB)
-
-    add_subdirectory(bankgen)
-
-    # add_dependencies(badplay ${CMAKE_SOURCE_DIR}/data/bankdb.txt)
-    target_link_libraries(badplay ppplay_bankdb)
-endif()
+add_subdirectory(bankgen)
+target_link_libraries(badplay PUBLIC ppplay_bankdb)
 
 install(TARGETS badplay DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT application)
