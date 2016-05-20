@@ -1,3 +1,5 @@
+#pragma once
+
 /*
     PPPlay - an old-fashioned module player
     Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
@@ -15,9 +17,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-#ifndef GENBASE_H
-#define GENBASE_H
 
 #include <genmod/ppplay_module_base_export.h>
 
@@ -57,7 +56,7 @@ public:
      * @brief Constructor
      * @param[in] val Initial value
      */
-    constexpr RememberByte( uint8_t val = 0 ) noexcept : m_value( val ) {
+    explicit constexpr RememberByte( uint8_t val = 0 ) noexcept : m_value( val ) {
     }
 
     /**
@@ -83,7 +82,7 @@ public:
      * @see operator=()
      * @see noNibbles()
      */
-    void force( uint8_t val ) const noexcept {
+    void force( uint8_t val ) noexcept {
         m_value = val;
     }
 
@@ -140,5 +139,3 @@ inline RememberByte<false>& RememberByte<false>::operator=( uint8_t val ) noexce
  */
 
 } // namespace ppp
-
-#endif

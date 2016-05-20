@@ -1,3 +1,5 @@
+#pragma once
+
 /*
     PPPlay - an old-fashioned module player
     Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
@@ -16,12 +18,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PPPLAY_BRESENINTER_H
-#define PPPLAY_BRESENINTER_H
-
 #include "ppplay_core_export.h"
 
-#include <stuff/utils.h>
 #include <output/audiotypes.h>
 
 #include <cstdint>
@@ -150,5 +148,3 @@ public:
  */
 
 }
-
-#endif // breseninterH

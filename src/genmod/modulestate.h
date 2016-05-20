@@ -1,3 +1,5 @@
+#pragma once
+
 /*
     PPPlay - an old-fashioned module player
     Copyright (C) 2012  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
@@ -16,63 +18,58 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PPPLAY_MODULESTATE_H
-#define PPPLAY_MODULESTATE_H
-
 #include <genmod/ppplay_module_base_export.h>
 
 #include <stream/iserializable.h>
 
 #include <cstdint>
-#include <cstddef>
 
 namespace ppp
 {
+    /**
+     * @ingroup GenMod
+     * @{
+     */
 
-/**
- * @ingroup GenMod
- * @{
- */
+    /**
+     * @struct ModuleState
+     * @brief Contains information about the a playback state
+     */
+    struct PPPLAY_MODULE_BASE_EXPORT ModuleState : public ISerializable
+    {
+        explicit ModuleState() noexcept :
+            speed(0),
+            tempo(0),
+            order(0),
+            row(0),
+            tick(0),
+            globalVolume(0x40),
+            playedFrames(0),
+            pattern(0)
+        {
+        }
 
-/**
- * @struct ModuleState
- * @brief Contains information about the a playback state
- */
-struct PPPLAY_MODULE_BASE_EXPORT ModuleState : public ISerializable {
-explicit ModuleState() noexcept :
-    speed( 0 ),
-           tempo( 0 ),
-           order( 0 ),
-           row( 0 ),
-           tick( 0 ),
-           globalVolume( 0x40 ),
-           playedFrames( 0 ),
-    pattern( 0 ) {
-    }
-    virtual AbstractArchive& serialize( AbstractArchive* data );
+        AbstractArchive& serialize(AbstractArchive* data) override;
 
-    //! @brief Speed
-    int16_t speed;
-    //! @brief Tempo
-    int16_t tempo;
-    //! @brief Order
-    size_t order;
-    //! @brief Row
-    int16_t row;
-    //! @brief Tick index
-    int16_t tick;
-    //! @brief Global volume
-    int16_t globalVolume;
-    //! @brief Played Sample frames
-    size_t playedFrames;
-    //! @brief Pattern index of order
-    size_t pattern;
-};
+        //! @brief Speed
+        int16_t speed;
+        //! @brief Tempo
+        int16_t tempo;
+        //! @brief Order
+        size_t order;
+        //! @brief Row
+        int16_t row;
+        //! @brief Tick index
+        int16_t tick;
+        //! @brief Global volume
+        int16_t globalVolume;
+        //! @brief Played Sample frames
+        size_t playedFrames;
+        //! @brief Pattern index of order
+        size_t pattern;
+    };
 
-/**
- * @}
- */
-
+    /**
+     * @}
+     */
 }
-
-#endif

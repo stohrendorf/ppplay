@@ -1,3 +1,5 @@
+#pragma once
+
 /*
     PPPlay - an old-fashioned module player
     Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
@@ -16,17 +18,17 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MODCHANNEL_H
-#define MODCHANNEL_H
-
 /**
  * @ingroup ModMod
  * @{
  */
-#include "genmod/breseninter.h"
-#include "genmod/genbase.h"
+#include <genmod/breseninter.h>
+#include <genmod/genbase.h>
 #include <genmod/channelstate.h>
+
 #include <stream/iserializable.h>
+
+#include <stuff/utils.h>
 
 namespace light4cxx
 {
@@ -125,5 +127,3 @@ protected:
 /**
  * @}
  */
-
-#endif

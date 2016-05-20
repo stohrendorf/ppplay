@@ -1,11 +1,9 @@
-#ifndef PPPLAY_CHANNELSTATE_H
-#define PPPLAY_CHANNELSTATE_H
+#pragma once
 
 #include <string>
 #include <cstdint>
 
 #include <stream/iserializable.h>
-#include "standardfxdesc.h"
 
 #include <genmod/ppplay_module_base_export.h>
 
@@ -73,8 +71,6 @@ struct PPPLAY_MODULE_BASE_EXPORT ChannelState : public ISerializable {
         , panning( 0 ), volume( 0 ), cell() {
     }
 
-    virtual AbstractArchive& serialize( AbstractArchive* archive );
+    AbstractArchive& serialize( AbstractArchive* archive ) override;
 };
 }
-
-#endif

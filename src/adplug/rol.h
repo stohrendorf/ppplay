@@ -24,7 +24,6 @@
  */
 
 #include <vector>
-#include <string>
 
 #include <boost/algorithm/string.hpp>
 

@@ -1,7 +1,9 @@
 #include "hscmodule.h"
+
 #include <genmod/orderentry.h>
 #include <genmod/genbase.h>
 #include <genmod/breseninter.h>
+#include <genmod/standardfxdesc.h>
 
 #include <boost/algorithm/string.hpp>
 

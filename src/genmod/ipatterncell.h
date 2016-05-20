@@ -1,3 +1,5 @@
+#pragma once
+
 /*
     PPPlay - an old-fashioned module player
     Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
@@ -16,15 +18,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PPPLAY_IPATTERNCELL_H
-#define PPPLAY_IPATTERNCELL_H
-
 #include <genmod/ppplay_module_base_export.h>
 
 #include <stream/iserializable.h>
 #include <light4cxx/logger.h>
-
-#include <string>
 
 namespace ppp
 {
@@ -68,5 +65,3 @@ protected:
  */
 
 } // namespace ppp
-
-#endif

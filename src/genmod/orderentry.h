@@ -73,7 +73,7 @@ public:
      * @param[in] rowCount Pattern row count
      */
     void setIndex( uint8_t index );
-    virtual AbstractArchive& serialize( AbstractArchive* data );
+    AbstractArchive& serialize( AbstractArchive* data ) override;
     /**
      * @brief Get the playback count of this order
      * @return m_playbackCount

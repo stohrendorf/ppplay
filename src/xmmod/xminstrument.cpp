@@ -26,7 +26,6 @@
 
 #include "stream/stream.h"
 
-#include <boost/assert.hpp>
 #include <boost/format.hpp>
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

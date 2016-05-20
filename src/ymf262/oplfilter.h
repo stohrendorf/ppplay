@@ -1,9 +1,7 @@
-#ifndef PPPLAY_OPL_FILTER_H
-#define PPPLAY_OPL_FILTER_H
+#pragma once
 
 #include <cmath>
 #include <array>
-#include <algorithm>
 #include <numeric>
 
 namespace opl
@@ -155,5 +153,3 @@ namespace opl
         }
     };
 }
-
-#endif

@@ -12,6 +12,16 @@ add_library(ppplay_module_base SHARED
 	ipatterncell.cpp
 	modulestate.cpp
 	standardfxdesc.cpp
+	abstractmodule.h
+	orderentry.h
+	breseninter.h
+	channelstate.h
+	genbase.h
+	ipatterncell.h
+	modulestate.h
+	sample.h
+	songinfo.h
+	standardfxdesc.h
 )
 set_target_properties(ppplay_module_base PROPERTIES SOVERSION 1)
 generate_export_header(ppplay_module_base)

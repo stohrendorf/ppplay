@@ -36,20 +36,9 @@ namespace ppp
 {
 namespace xm
 {
-XmChannel::XmChannel(ppp::xm::XmModule* module) :
-    m_baseVolume(0), m_currentVolume(0), m_realVolume(0), m_panning(0x80),
-    m_realPanning(0x80), m_basePeriod(0), m_currentPeriod(0), m_autoVibDeltaPeriod(0),
-    m_finetune(0), m_realNote(0), m_currentCell(new XmCell()), m_lastNote(0),
-    m_volumeEnvelope(), m_panningEnvelope(), m_volScale(0), m_volScaleRate(0), m_keyOn(false),
-    m_lastVolSlideFx(0), m_lastPortaUpFx(0), m_lastPortaDownFx(0), m_lastPanSlideFx(0),
-    m_lastOffsetFx(0), m_lastFinePortaUpFx(0), m_lastFinePortaDownFx(0), m_lastFineVolUpFx(0),
-    m_lastFineVolDownFx(0), m_lastXFinePortaUp(0), m_lastXFinePortaDown(0), m_lastGlobVolSlideFx(0),
-    m_lastTremorFx(0), m_portaSpeed(0), m_portaTargetPeriod(0), m_vibratoSpeed(0), m_vibratoDepth(0),
-    m_vibratoPhase(0), m_vibratoCtrl(0), m_glissandoCtrl(0), m_tremoloDepth(0),
-    m_tremoloSpeed(0), m_tremoloPhase(0), m_tremoloCtrl(0), m_tremorCountdown(0),
-    m_retriggerCounter(0), m_retriggerLength(0), m_retriggerVolumeType(0), m_patLoopCounter(0),
-    m_patLoopRow(0), m_autoVibType(0), m_autoVibSweep(0), m_autoVibSweepRate(0),
-    m_autoVibDepth(0), m_autoVibPhase(0), m_bres(1, 1), m_module(module), m_state()
+XmChannel::XmChannel(ppp::xm::XmModule* module)
+    : m_currentCell(new XmCell())
+    , m_module(module)
 {
     m_state.instrument = 0;
 }

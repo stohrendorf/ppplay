@@ -29,14 +29,14 @@
  * @{
  */
 
- /**
-  * @interface IAudioOutput
-  * @brief Abstract base class for sound output
-  */
+/**
+ * @class AbstractAudioOutput
+ * @brief Abstract base class for sound output
+ */
 class PPPLAY_CORE_EXPORT AbstractAudioOutput
 {
     DISABLE_COPY(AbstractAudioOutput)
-        AbstractAudioOutput() = delete;
+    AbstractAudioOutput() = delete;
 public:
     //! @brief Audio output device error codes
     enum ErrorCode
@@ -48,10 +48,12 @@ public:
         OutputDry, //!< @brief Output device needs more data than available
         OutputUnavailable //!< @brief Output device is unavailable
     };
+
     //! @brief Class pointer
     typedef std::shared_ptr<AbstractAudioOutput> Ptr;
     //! @brief Weak class pointer
     typedef std::weak_ptr<AbstractAudioOutput> WeakPtr;
+
     /**
      * @brief Constructor
      * @param[in] src Pointer to an audio data source
@@ -60,6 +62,7 @@ public:
         : m_source(src), m_errorCode(NoError), m_mutex()
     {
     }
+
     //! @brief Destructor
     virtual ~AbstractAudioOutput() = default;
     /**
