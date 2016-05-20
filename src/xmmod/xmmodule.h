@@ -101,7 +101,7 @@ private:
      * @param[in] estimateOnly Used when estimating track length
      * @return @c false when end of song is reached
      */
-    bool adjustPosition(bool estimateOnly);
+    bool adjustPosition();
     /**
      * @brief Get an instrument
      * @param[in] idx 1-based instrument index

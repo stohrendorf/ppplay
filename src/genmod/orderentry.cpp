@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "abstractorder.h"
+#include "orderentry.h"
 
 #include "stream/abstractarchive.h"
 
@@ -27,38 +27,18 @@
 
 namespace ppp
 {
-AbstractOrder::AbstractOrder(uint8_t idx) noexcept :
-m_index(idx), m_playbackCount(0), m_rowPlaybackCounter()
-{
-}
-
-uint8_t AbstractOrder::index() const noexcept
-{
-    return m_index;
-}
-
-void AbstractOrder::setIndex(uint8_t index)
+void OrderEntry::setIndex(uint8_t index)
 {
     m_index = index;
     m_rowPlaybackCounter.clear();
 }
 
-AbstractArchive& AbstractOrder::serialize(AbstractArchive* data)
+AbstractArchive& OrderEntry::serialize(AbstractArchive* data)
 {
     return *data % m_index % m_playbackCount;
 }
 
-int AbstractOrder::playbackCount() const noexcept
-{
-    return m_playbackCount;
-}
-
-int AbstractOrder::increasePlaybackCount() noexcept
-{
-    return ++m_playbackCount;
-}
-
-uint8_t AbstractOrder::increaseRowPlayback(std::size_t row)
+uint8_t OrderEntry::increaseRowPlayback(std::size_t row)
 {
     if(row >= m_rowPlaybackCounter.size())
     {
@@ -67,12 +47,7 @@ uint8_t AbstractOrder::increaseRowPlayback(std::size_t row)
     return ++m_rowPlaybackCounter[row];
 }
 
-void AbstractOrder::resetRowPlaybackCounter()
-{
-    m_rowPlaybackCounter.clear();
-}
-
-light4cxx::Logger* AbstractOrder::logger()
+light4cxx::Logger* OrderEntry::logger()
 {
     return light4cxx::Logger::get("order");
 }

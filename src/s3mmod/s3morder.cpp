@@ -26,7 +26,7 @@ namespace s3m
 {
 bool S3mOrder::isUnplayed() const
 {
-    return index() != s3mOrderEnd && index() != s3mOrderSkip && playbackCount() == 0;
+    return OrderEntry::isUnplayed() && index() != s3mOrderEnd && index() != s3mOrderSkip;
 }
 }
 }

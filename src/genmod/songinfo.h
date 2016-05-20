@@ -23,6 +23,7 @@
 
 #include <stuff/trackingcontainer.h>
 #include <stream/abstractarchive.h>
+#include <stream/memarchive.h>
 
 namespace ppp
 {
@@ -39,14 +40,13 @@ namespace ppp
 struct PPPLAY_CORE_EXPORT SongInfo {
     explicit SongInfo() = default;
 
-    explicit inline SongInfo( SongInfo && rhs ) : states( std::move( rhs.states ) ), length( rhs.length ) {
-        rhs.states.clear();
+    explicit inline SongInfo( SongInfo&& rhs )
+        : states( std::move( rhs.states ) )
+        , length( rhs.length ) {
         rhs.length = 0;
     }
 
-    ~SongInfo() {
-        deleteAll( states );
-    }
+    ~SongInfo() = default;
 
     inline SongInfo& operator=( SongInfo rhs ) {
         rhs.swap(*this);
@@ -59,9 +59,30 @@ struct PPPLAY_CORE_EXPORT SongInfo {
     }
 
     //! @brief States for seeking
-    TrackingContainer<AbstractArchive*> states{};
+    TrackingContainer < std::unique_ptr<AbstractArchive> > states{};
     //! @brief Length in sample frames
     size_t length = 0;
+
+    size_t storedSeconds() const noexcept
+    {
+        return m_storedSeconds;
+    }
+
+    bool storeIfNecessary(uint32_t secs, ISerializable* data)
+    {
+        if(m_storedSeconds + 15 > secs)
+        {
+            return false;
+        }
+
+        m_storedSeconds = secs;
+        states.emplace_back(std::make_unique<MemArchive>())->archive(data).finishSave();
+        states.next();
+        return true;
+    }
+
+private:
+    size_t m_storedSeconds = 0;
 };
 
 /**

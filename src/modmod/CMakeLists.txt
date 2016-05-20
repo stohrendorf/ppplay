@@ -13,14 +13,12 @@ add_library(ppplay_input_mod MODULE
 	modpattern.cpp
 	modchannel.cpp
 	modbase.cpp
-	modorder.cpp
 	modsample.h
 	modcell.h
 	modmodule.h
 	modpattern.h
 	modchannel.h
 	modbase.h
-	modorder.h
 	plugin.cpp
 )
 target_link_libraries(ppplay_input_mod ppplay_module_base ppplay_core)

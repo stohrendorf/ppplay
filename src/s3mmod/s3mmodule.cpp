@@ -98,7 +98,7 @@ m_amigaLimits(false), m_fastVolSlides(false), m_st2Vibrato(false), m_zeroVolOpt(
     {
         for(int i = 0; i < 256; i++)
         {
-            addOrder(new S3mOrder(s3mOrderEnd));
+            addOrder(std::make_unique<S3mOrder>(s3mOrderEnd));
         }
         for(S3mChannel*& chan : m_channels)
         {
@@ -469,7 +469,7 @@ void S3mModule::checkGlobalFx()
     }
 }
 
-bool S3mModule::adjustPosition(bool estimateOnly)
+bool S3mModule::adjustPosition()
 {
     BOOST_ASSERT(orderCount() != 0);
     bool orderChanged = false;
@@ -481,7 +481,7 @@ bool S3mModule::adjustPosition(bool estimateOnly)
         {
             if(m_breakOrder < orderCount())
             {
-                setOrder(m_breakOrder, estimateOnly);
+                setOrder(m_breakOrder);
                 orderChanged = true;
             }
             setRow(0);
@@ -498,7 +498,7 @@ bool S3mModule::adjustPosition(bool estimateOnly)
             {
                 if(m_patLoopCount == -1)
                 {
-                    setOrder(state().order + 1, estimateOnly);
+                    setOrder(state().order + 1);
                     orderChanged = true;
                 }
             }
@@ -509,7 +509,7 @@ bool S3mModule::adjustPosition(bool estimateOnly)
             rowChanged = true;
             if(state().row == 0)
             {
-                setOrder(state().order + 1, estimateOnly);
+                setOrder(state().order + 1);
                 orderChanged = true;
             }
         }
@@ -526,7 +526,7 @@ bool S3mModule::adjustPosition(bool estimateOnly)
             logger()->info(L4CXX_LOCATION, "Song end reached: End marker reached");
             return false;
         }
-        setOrder(state().order + 1, estimateOnly);
+        setOrder(state().order + 1);
         orderChanged = true;
         if(state().order >= orderCount())
         {
@@ -545,7 +545,7 @@ bool S3mModule::adjustPosition(bool estimateOnly)
         if(!orderAt(state().order)->increaseRowPlayback(state().row))
         {
             logger()->info(L4CXX_LOCATION, "Row playback counter reached limit");
-            setOrder(orderCount(), estimateOnly);
+            setOrder(orderCount());
             return false;
         }
     }
@@ -622,7 +622,7 @@ try
         }
     }
     nextTick();
-    if(!adjustPosition(!buf))
+    if(!adjustPosition())
     {
         logger()->info(L4CXX_LOCATION, "Song end reached: adjustPosition() failed");
         if(buf)

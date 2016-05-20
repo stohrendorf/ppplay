@@ -32,7 +32,7 @@ public:
     //! @brief API version
     enum
     {
-        Version = 4
+        Version = 5
     };
     /**
      * @brief Virtual empty base destructor

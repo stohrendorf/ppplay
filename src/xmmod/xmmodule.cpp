@@ -24,7 +24,6 @@
 #include <boost/exception/all.hpp>
 
 #include "xmmodule.h"
-#include "xmorder.h"
 #include "xmchannel.h"
 #include "xmcell.h"
 #include "xmpattern.h"
@@ -32,6 +31,7 @@
 
 #include "stream/stream.h"
 #include <genmod/channelstate.h>
+#include <genmod/orderentry.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -109,7 +109,7 @@ bool XmModule::load(Stream* stream)
     {
         uint8_t tmp;
         *stream >> tmp;
-        addOrder(new XmOrder(tmp));
+        addOrder(std::make_unique<OrderEntry>(tmp));
     }
     stream->seek(hdr.headerSize + offsetof(XmHeader, headerSize));
     noConstMetaInfo().title = boost::algorithm::trim_copy(stringncpy(hdr.title, 20));
@@ -241,7 +241,7 @@ size_t XmModule::internal_buildTick(AudioFrameBuffer* buffer)
         }
     }
     nextTick();
-    if(!adjustPosition(!buffer))
+    if(!adjustPosition())
     {
         logger()->debug(L4CXX_LOCATION, "adjustPosition(%s) failed", !buffer);
         if(buffer)
@@ -254,7 +254,7 @@ size_t XmModule::internal_buildTick(AudioFrameBuffer* buffer)
     return tickBufferLength();
 }
 
-bool XmModule::adjustPosition(bool estimateOnly)
+bool XmModule::adjustPosition()
 {
     bool orderChanged = false;
     bool rowChanged = false;
@@ -288,7 +288,7 @@ bool XmModule::adjustPosition(bool estimateOnly)
                 {
                     m_jumpOrder = m_restartPos;
                 }
-                setOrder(m_jumpOrder, estimateOnly);
+                setOrder(m_jumpOrder);
                 orderChanged = true;
             }
         }
@@ -301,7 +301,7 @@ bool XmModule::adjustPosition(bool estimateOnly)
                 rowChanged = true;
                 if(state().row == 0)
                 {
-                    setOrder(state().order + 1, estimateOnly);
+                    setOrder(state().order + 1);
                     orderChanged = true;
                 }
             }
@@ -317,7 +317,7 @@ bool XmModule::adjustPosition(bool estimateOnly)
     if(orderChanged)
     {
         state().pattern = orderAt(state().order)->index();
-        setOrder(state().order, estimateOnly);
+        setOrder(state().order);
     }
     if(orderAt(state().order)->playbackCount() >= maxRepeat())
     {
@@ -329,7 +329,7 @@ bool XmModule::adjustPosition(bool estimateOnly)
         if(!orderAt(state().order)->increaseRowPlayback(state().row))
         {
             logger()->info(L4CXX_LOCATION, "Row playback counter reached limit");
-            setOrder(orderCount(), estimateOnly);
+            setOrder(orderCount());
             return false;
         }
     }

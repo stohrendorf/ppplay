@@ -97,7 +97,7 @@ private:
      * @retval false if the end of the current song is reached
      * @retval true otherwise
      */
-    bool adjustPosition(bool estimateOnly);
+    bool adjustPosition();
     /**
      * @brief Load the module
      * @param[in] fn Filename of the module to load

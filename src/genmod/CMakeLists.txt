@@ -6,7 +6,7 @@ add_compiler_export_flags()
 add_library(ppplay_module_base SHARED
 	genbase.cpp
 	abstractmodule.cpp
-	abstractorder.cpp
+	orderentry.cpp
 	channelstate.cpp
 	sample.cpp
 	ipatterncell.cpp
@@ -19,7 +19,7 @@ target_link_libraries(ppplay_module_base ppplay_core)
 install(TARGETS ppplay_module_base DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ppplayExports)
 install(FILES
 	abstractmodule.h
-	abstractorder.h
+	orderentry.h
 	breseninter.h
 	channelstate.h
 	genbase.h

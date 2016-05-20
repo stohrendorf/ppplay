@@ -1,3 +1,5 @@
+#pragma once
+
 /*
     PPPlay - an old-fashioned module player
     Copyright (C) 2011  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
@@ -16,9 +18,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PPPLAY_ABSTRACTORDER_H
-#define PPPLAY_ABSTRACTORDER_H
-
 #include <genmod/ppplay_module_base_export.h>
 
 #include <stream/iserializable.h>
@@ -35,32 +34,39 @@ namespace ppp
  */
 
 /**
- * @class AbstractOrder
+ * @class OrderEntry
  * @brief An order list item
  */
-class PPPLAY_MODULE_BASE_EXPORT AbstractOrder : public ISerializable
+class PPPLAY_MODULE_BASE_EXPORT OrderEntry : public ISerializable
 {
-    DISABLE_COPY( AbstractOrder )
-    AbstractOrder() = delete;
+    DISABLE_COPY(OrderEntry)
+    OrderEntry() = delete;
 private:
     //! @brief Pattern index of this order
     uint8_t m_index;
     //! @brief Playback count of this order
-    int m_playbackCount;
+    int m_playbackCount = 0;
     //! @brief Row playback counter to avoid infinite loops
-    std::vector<uint8_t> m_rowPlaybackCounter;
+    std::vector<uint8_t> m_rowPlaybackCounter{};
 public:
     /**
      * @brief Constructor
      * @param[in] idx Order index
      * @param[in] rowCount Pattern row count
      */
-    AbstractOrder( uint8_t idx ) noexcept;
+    explicit OrderEntry::OrderEntry(uint8_t idx) noexcept
+        : m_index(idx)
+    {
+    }
     /**
      * @brief Return the pattern index associated with this order
      * @return m_index
      */
-    uint8_t index() const noexcept;
+    uint8_t index() const noexcept
+    {
+        return m_index;
+    }
+
     /**
      * @brief Set the pattern index and pattern row count
      * @param[in] index New index
@@ -72,12 +78,19 @@ public:
      * @brief Get the playback count of this order
      * @return m_playbackCount
      */
-    int playbackCount() const noexcept;
+    int playbackCount() const noexcept
+    {
+        return m_playbackCount;
+    }
+
     /**
      * @brief Increase the playback count
      * @return The new value of m_playbackCount
      */
-    int increasePlaybackCount() noexcept;
+    int increasePlaybackCount() noexcept
+    {
+        return ++m_playbackCount;
+    }
 
     /**
      * @brief Resets the row playback counter
@@ -90,9 +103,16 @@ public:
      * @brief Sets the row count for the row playback counter and resets the counter to 0
      * @param[in] count The row count
      */
-    void resetRowPlaybackCounter();
+    void resetRowPlaybackCounter()
+    {
+        m_rowPlaybackCounter.clear();
+    }
 
-    virtual bool isUnplayed() const = 0;
+    virtual bool isUnplayed() const
+    {
+        return playbackCount() == 0;
+    }
+
 protected:
     /**
      * @brief Get the logger
@@ -106,5 +126,3 @@ protected:
  */
 
 }
-
-#endif

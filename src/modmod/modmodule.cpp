@@ -1,5 +1,4 @@
 #include "modmodule.h"
-#include "modorder.h"
 #include "modsample.h"
 #include "modchannel.h"
 #include "modpattern.h"
@@ -8,6 +7,7 @@
 #include "stream/abstractarchive.h"
 #include "stream/stream.h"
 #include <genmod/channelstate.h>
+#include <genmod/orderentry.h>
 
 #include <boost/exception/all.hpp>
 
@@ -227,7 +227,7 @@ bool ModModule::load(Stream* stream, int loadMode)
                 maxPatNum = tmp;
             }
             logger()->trace(L4CXX_LOCATION, "Order %d index: %d", int(i), int(tmp));
-            addOrder(new ModOrder(tmp));
+            addOrder(std::make_unique<OrderEntry>(tmp));
         }
         if(loadMode != LoadingMode::Smp31Malformed)
         {
@@ -345,7 +345,7 @@ size_t ModModule::internal_buildTick(AudioFrameBuffer* buf)
             }
         }
         nextTick();
-        if(!adjustPosition(!buf))
+        if(!adjustPosition())
         {
             logger()->info(L4CXX_LOCATION, "Song end reached: adjustPosition() failed");
             if(buf)
@@ -363,7 +363,7 @@ size_t ModModule::internal_buildTick(AudioFrameBuffer* buf)
     }
 }
 
-bool ModModule::adjustPosition(bool estimateOnly)
+bool ModModule::adjustPosition()
 {
     bool orderChanged = false;
     bool rowChanged = false;
@@ -424,7 +424,7 @@ bool ModModule::adjustPosition(bool estimateOnly)
     if(newOrder >= orderCount())
     {
         logger()->debug(L4CXX_LOCATION, "state().order>=orderCount()");
-        setOrder(newOrder, estimateOnly);
+        setOrder(newOrder);
         return false;
     }
     if(orderChanged)
@@ -432,14 +432,14 @@ bool ModModule::adjustPosition(bool estimateOnly)
         m_patLoopRow = 0;
         m_patLoopCount = -1;
         state().pattern = orderAt(newOrder)->index();
-        setOrder(newOrder, estimateOnly, forceSave);
+        setOrder(newOrder);
     }
     if(rowChanged)
     {
         if(!orderAt(newOrder)->increaseRowPlayback(state().row))
         {
             logger()->info(L4CXX_LOCATION, "Row playback counter reached limit");
-            setOrder(orderCount(), estimateOnly);
+            setOrder(orderCount());
             return false;
         }
     }

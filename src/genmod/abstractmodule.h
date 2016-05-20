@@ -39,7 +39,8 @@ struct ChannelState;
  * @{
  */
 
-class AbstractOrder;
+class OrderEntry;
+
 /**
  * @class GenModule
  * @brief An abstract class for all module classes
@@ -73,12 +74,11 @@ explicit MetaInfo() noexcept :
 private:
     MetaInfo m_metaInfo;
     //! @brief Order list
-    std::vector<AbstractOrder*> m_orders;
+    std::vector<std::unique_ptr<OrderEntry>> m_orders;
     ModuleState m_state;
-    TrackingContainer<SongInfo*> m_songs;
+    TrackingContainer<std::unique_ptr<SongInfo>> m_songs;
     //! @brief Maximum module loops if module patterns are played multiple times
     const int m_maxRepeat;
-    AbstractArchive* m_initialState;
     bool m_isPreprocessing;
     mutable std::recursive_mutex m_mutex;
     Sample::Interpolation m_interpolation;
@@ -160,12 +160,12 @@ public:
      * @brief Jump to the next order if possible
      * @return @c false if the end of the current song is reached
      */
-    bool jumpNextOrder();
+    bool seekForward();
     /**
      * @brief Jump to the previous order if possible
      * @return @c false if the current order is already the first one
      */
-    bool jumpPrevOrder();
+    bool seekBackward();
     /**
      * @}
      */
@@ -211,13 +211,13 @@ protected:
      * @brief Adds an order to m_orders
      * @param[in] o The new order
      */
-    void addOrder( ppp::AbstractOrder* o );
+    void addOrder( std::unique_ptr<OrderEntry>&& o );
     /**
      * @brief Get an order pointer
      * @param[in] idx Index of requested order
      * @return Order pointer
      */
-    AbstractOrder* orderAt( size_t idx );
+    OrderEntry* orderAt( size_t idx );
     /**
      * @brief Get the number of orders
      * @return Number of orders
@@ -236,7 +236,7 @@ protected:
      * @param[in] forceSave Forces to save the state even if the order did not change
      * @retval true if the new order index is valid
      */
-    bool setOrder( size_t newOrder, bool estimateOnly, bool forceSave = false );
+    bool setOrder( size_t newOrder );
     /**
      * @brief Set the current row index
      * @param[in] r The new row index
@@ -259,14 +259,6 @@ protected:
      * @param[in] s The new speed
      */
     void setSpeed( uint8_t s ) noexcept;
-    /**
-     * @brief Saves the initial state
-     */
-    void saveInitialState();
-    /**
-     * @brief Restores the initial state
-     */
-    void loadInitialState();
     /**
      * @brief Get the logger
      * @return Logger with name "module"

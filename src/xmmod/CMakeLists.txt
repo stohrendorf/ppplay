@@ -9,7 +9,6 @@ add_library(ppplay_input_xm MODULE
 	xmchannel.cpp
 	xmenvelopeprocessor.cpp
 	xmcell.cpp
-	xmorder.cpp
 	xmmodule.h
 	xmpattern.h
 	xminstrument.h
@@ -17,7 +16,6 @@ add_library(ppplay_input_xm MODULE
 	xmchannel.h
 	xmenvelopeprocessor.h
 	xmcell.h
-	xmorder.h
 	plugin.cpp
 )
 target_link_libraries(ppplay_input_xm ppplay_module_base ppplay_core)

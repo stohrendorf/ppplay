@@ -57,7 +57,7 @@ private:
     int8_t m_breakRow;
     int m_patDelayCount;
     uint16_t m_breakOrder;
-    bool adjustPosition(bool estimateOnly);
+    bool adjustPosition();
     void checkGlobalFx();
     ModPattern* getPattern(size_t idx) const;
 protected:

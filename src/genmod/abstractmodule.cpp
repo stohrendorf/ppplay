@@ -23,12 +23,11 @@
 
 #include "abstractmodule.h"
 
-#include "abstractorder.h"
+#include "orderentry.h"
 #include "channelstate.h"
 #include "stream/memarchive.h"
 
 #include <boost/filesystem.hpp>
-#include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -40,7 +39,6 @@ AbstractModule::AbstractModule(int maxRpt, Sample::Interpolation inter) :
     m_state(),
     m_songs(),
     m_maxRepeat(maxRpt),
-    m_initialState(new MemArchive()),
     m_isPreprocessing(false),
     m_mutex(),
     m_interpolation(inter)
@@ -48,18 +46,14 @@ AbstractModule::AbstractModule(int maxRpt, Sample::Interpolation inter) :
     BOOST_ASSERT_MSG(maxRpt != 0, "Maximum repeat count may not be 0");
 }
 
-AbstractModule::~AbstractModule()
-{
-    deleteAll(m_orders);
-    deleteAll(m_songs);
-}
+AbstractModule::~AbstractModule() = default;
 
 AbstractArchive& AbstractModule::serialize(AbstractArchive* data)
 {
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
-    for(AbstractOrder * order : m_orders)
+    for(const std::unique_ptr<OrderEntry>& order : m_orders)
     {
-        data->archive(order);
+        data->archive(order.get());
     }
     data->archive(&m_state);
     return *data;
@@ -82,7 +76,6 @@ size_t AbstractModule::internal_getAudioData(AudioFrameBuffer& buffer, size_t si
     {
         buffer.reset(new AudioFrameBuffer::element_type);
     }
-    buffer->reserve(size);
     if(m_isPreprocessing)
     {
         buffer->clear();
@@ -109,13 +102,13 @@ size_t AbstractModule::internal_preferredBufferSize() const
     return tickBufferLength();
 }
 
-void AbstractModule::addOrder(AbstractOrder* o)
+void AbstractModule::addOrder(std::unique_ptr<OrderEntry>&& o)
 {
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
-    m_orders.push_back(o);
+    m_orders.emplace_back(std::move(o));
 }
 
-AbstractOrder* AbstractModule::orderAt(size_t idx)
+OrderEntry* AbstractModule::orderAt(size_t idx)
 {
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
     if(idx >= m_orders.size())
@@ -123,7 +116,7 @@ AbstractOrder* AbstractModule::orderAt(size_t idx)
         logger()->error(L4CXX_LOCATION, "Requested order index out of range: %d >= %d", idx, m_orders.size());
         BOOST_THROW_EXCEPTION(std::out_of_range("Requested order index out of range"));
     }
-    return m_orders[idx];
+    return m_orders[idx].get();
 }
 
 size_t AbstractModule::orderCount() const noexcept
@@ -137,10 +130,10 @@ int AbstractModule::maxRepeat() const noexcept
     return m_maxRepeat;
 }
 
-bool AbstractModule::setOrder(size_t newOrder, bool estimateOnly, bool forceSave)
+bool AbstractModule::setOrder(size_t newOrder)
 {
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
-    bool orderChanged = (newOrder != m_state.order);
+    const bool orderChanged = (newOrder != m_state.order);
     if(orderChanged && m_state.order < orderCount())
     {
         orderAt(m_state.order)->increasePlaybackCount();
@@ -155,33 +148,7 @@ bool AbstractModule::setOrder(size_t newOrder, bool estimateOnly, bool forceSave
         return false;
     }
     m_state.pattern = orderAt(m_state.order)->index();
-    if(orderChanged || forceSave)
-    {
-        logger()->info(L4CXX_LOCATION, "Order change%s to %d (pattern %d, playback count %d)",
-            (forceSave ? " (forced save)" : ""),
-                       m_state.order,
-                       m_state.pattern,
-                       orderAt(m_state.order)->playbackCount());
-        try
-        {
-            if(!estimateOnly)
-            {
-                if(!m_songs->states.atEnd())
-                {
-                    m_songs->states.next()->archive(this).finishLoad();
-                }
-                else
-                {
-                    m_songs->states.emplace_back(new MemArchive())->archive(this).finishSave();
-                    m_songs->states.next();
-                }
-            }
-        }
-        catch(...)
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error(boost::current_exception_diagnostic_information()));
-        }
-    }
+    m_songs->storeIfNecessary(timeElapsed(), this);
     return m_state.order < orderCount();
 }
 
@@ -235,21 +202,7 @@ light4cxx::Logger* AbstractModule::logger()
     return light4cxx::Logger::get("module");
 }
 
-void AbstractModule::loadInitialState()
-{
-    std::lock_guard<std::recursive_mutex> lock(m_mutex);
-    logger()->info(L4CXX_LOCATION, "Loading initial state");
-    m_initialState->archive(this).finishLoad();
-}
-
-void AbstractModule::saveInitialState()
-{
-    std::lock_guard<std::recursive_mutex> lock(m_mutex);
-    logger()->info(L4CXX_LOCATION, "Storing initial state");
-    m_initialState->archive(this).finishSave();
-}
-
-bool AbstractModule::jumpNextOrder()
+bool AbstractModule::seekForward()
 {
     std::unique_lock<std::recursive_mutex> lock(m_mutex);
     if(!m_songs->states.atEnd())
@@ -263,8 +216,8 @@ bool AbstractModule::jumpNextOrder()
     m_isPreprocessing = true;
     // maybe not processed yet, so try to jump to the next order...
     logger()->debug(L4CXX_LOCATION, "Not preprocessed yet");
-    size_t ord = m_state.order;
-    do
+    const size_t oldSize = m_songs->states.size();
+    while(oldSize == m_songs->states.size())
     {
         if(m_state.order >= orderCount())
         {
@@ -272,37 +225,37 @@ bool AbstractModule::jumpNextOrder()
             return false;
         }
         AudioFrameBuffer buf;
-        if(internal_buildTick(&buf) == 0 || !buf)
+        if(buildTick(&buf) == 0 || !buf)
         {
             m_isPreprocessing = false;
             return false;
         }
-    } while(ord == m_state.order);
+    };
     m_isPreprocessing = false;
     return true;
 }
 
-bool AbstractModule::jumpPrevOrder()
+bool AbstractModule::seekBackward()
 {
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
     if(!m_songs->states.atFront() && !m_songs->states.empty())
     {
-        logger()->debug(L4CXX_LOCATION, "Jumping to previous order");
+        logger()->debug(L4CXX_LOCATION, "Seeking backward");
         m_songs->states.prev()->archive(this).finishLoad();
         return true;
     }
     else if(!m_songs->states.empty())
     {
-        logger()->debug(L4CXX_LOCATION, "Resetting current order");
+        logger()->debug(L4CXX_LOCATION, "Resetting current seek position");
         m_songs->states->archive(this).finishLoad();
         return true;
     }
     else if(m_songs.atFront())
     {
-        loadInitialState();
+        m_songs->states->archive(this).finishLoad();
         return true;
     }
-    logger()->info(L4CXX_LOCATION, "Failed to jump to previous order");
+    logger()->info(L4CXX_LOCATION, "Failed to seek backward");
     return false;
 }
 
@@ -325,7 +278,7 @@ bool AbstractModule::jumpNextSong()
             ++m_songs;
             m_state.playedFrames = 0;
             m_state.pattern = orderAt(i)->index();
-            setOrder(i, false, true);
+            setOrder(i);
             m_isPreprocessing = false;
             return true;
         }
@@ -370,7 +323,6 @@ bool AbstractModule::internal_initialize(uint32_t)
     {
         return true;
     }
-    saveInitialState();
 
     logger()->info(L4CXX_LOCATION, "Calculating song lengths and preparing seek operations...");
     while(jumpNextSong())
@@ -383,14 +335,27 @@ bool AbstractModule::internal_initialize(uint32_t)
         logger()->info(L4CXX_LOCATION, "Song preprocessed, trying to jump to the next song.");
     }
     logger()->info(L4CXX_LOCATION, "Lengths calculated, resetting module.");
-    loadInitialState();
     m_songs.revert();
+    m_songs->states.revert();
+    m_songs->states->archive(this).finishLoad();
     return true;
 }
 
 size_t AbstractModule::buildTick(AudioFrameBuffer* buf)
 {
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
+
+    if(m_songs->states.empty())
+    {
+        logger()->info(L4CXX_LOCATION, "Storing initial song state");
+        m_songs->states.emplace_back(std::make_unique<MemArchive>())->archive(this).finishSave();
+    }
+
+    if(m_songs->storeIfNecessary(timeElapsed(), this))
+    {
+        logger()->debug(L4CXX_LOCATION, "Stored song state for %ds", m_songs->storedSeconds());
+    }
+
     return internal_buildTick(buf);
 }
 

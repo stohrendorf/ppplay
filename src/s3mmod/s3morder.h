@@ -19,18 +19,19 @@
 #ifndef S3MORDER_H
 #define S3MORDER_H
 
-#include "genmod/abstractorder.h"
+#include "genmod/orderentry.h"
 
 namespace ppp
 {
 namespace s3m
 {
-class S3mOrder : public AbstractOrder
+class S3mOrder : public OrderEntry
 {
     DISABLE_COPY(S3mOrder)
         S3mOrder() = delete;
 public:
-    explicit S3mOrder(uint8_t idx) : AbstractOrder(idx)
+    explicit S3mOrder(uint8_t idx)
+        : OrderEntry(idx)
     {
     }
     bool isUnplayed() const override;

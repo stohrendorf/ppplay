@@ -135,7 +135,7 @@ bool parseCmdLine(int argc, char* argv[])
         return false;
     }
 
-    light4cxx::Location::setFormat("[%T %<5t %>=7.3r] <%L> %m");
+    light4cxx::Location::setFormat("[%>4T %<5t %>=7.3r] <%L> %m");
     switch(config::loglevel)
     {
         case 0:
@@ -375,14 +375,14 @@ int main(int argc, char* argv[])
                             module->jumpPrevSong();
                             break;
                         case SDLK_PAGEDOWN:
-                            if(!module->jumpNextOrder())
+                            if(!module->seekForward())
                             {
                                 if(!module->jumpNextSong())
                                     output.reset();
                             }
                             break;
                         case SDLK_PAGEUP:
-                            module->jumpPrevOrder();
+                            module->seekBackward();
                             break;
                         default:
                             break;

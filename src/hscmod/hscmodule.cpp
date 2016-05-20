@@ -1,5 +1,5 @@
 #include "hscmodule.h"
-#include <genmod/abstractorder.h>
+#include <genmod/orderentry.h>
 #include <genmod/genbase.h>
 #include <genmod/breseninter.h>
 
@@ -91,20 +91,6 @@ ppp::ChannelState Module::internal_channelStatus(size_t idx) const
     return m_channels[idx].state;
 }
 
-class Order : public ppp::AbstractOrder
-{
-    DISABLE_COPY(Order)
-        Order() = delete;
-public:
-    explicit Order(uint8_t idx) : AbstractOrder(idx)
-    {
-    }
-    bool isUnplayed() const override
-    {
-        return playbackCount() == 0;
-    }
-};
-
 bool Module::load(Stream* stream)
 {
     if(!boost::ends_with(boost::to_lower_copy(stream->name()), ".hsc") || stream->size() > 59187)
@@ -129,7 +115,7 @@ bool Module::load(Stream* stream)
     stream->read(orders, 51);
     for(int i = 0; i < 51 && orders[i] != 0xff; i++)
     {
-        addOrder(new Order(orders[i]));
+        addOrder(std::make_unique<ppp::OrderEntry>(orders[i]));
     }
     stream->read(reinterpret_cast<char*>(m_patterns), stream->size() - stream->pos());
     m_opl.writeReg(1, 32);
@@ -395,7 +381,7 @@ bool Module::update(bool estimate)
             }
             order = pat;
         }
-        setOrder(order, estimate);
+        setOrder(order);
         if(order >= orderCount())
         {
             return false;
