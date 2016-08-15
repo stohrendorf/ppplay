@@ -87,51 +87,51 @@ bool D00Player::load(const std::string& filename)
     // load section
     auto filesize = f.size();
     f.seek(0);
-    filedata.resize(filesize + 1); // 1 byte is needed for old-style DataInfo block
-    f.read(filedata.data(), filesize);
+    m_fileData.resize(filesize + 1); // 1 byte is needed for old-style DataInfo block
+    f.read(m_fileData.data(), filesize);
     if(!ver1)
     { // version 2 and above
-        header = reinterpret_cast<d00header*>(filedata.data());
-        version = header->version;
-        datainfo = filedata.data() + LE_WORD(&header->infoptr);
-        inst = reinterpret_cast<const Sinsts *>(filedata.data() + LE_WORD(&header->instptr));
-        seqptr = reinterpret_cast<const uint16_t*>(filedata.data() + LE_WORD(&header->seqptr));
+        m_header = reinterpret_cast<d00header*>(m_fileData.data());
+        m_version = m_header->version;
+        m_description = m_fileData.data() + LE_WORD(&m_header->infoptr);
+        m_instruments = reinterpret_cast<const Instrument *>(m_fileData.data() + LE_WORD(&m_header->instrumentOfs));
+        m_orders = reinterpret_cast<const uint16_t*>(m_fileData.data() + LE_WORD(&m_header->orderListOfs));
         for(int i = 31; i >= 0; i--)
         { // erase whitespace
-            if(header->songname[i] == ' ')
-                header->songname[i] = '\0';
+            if(m_header->songname[i] == ' ')
+                m_header->songname[i] = '\0';
             else
                 break;
         }
         for(int i = 31; i >= 0; i--)
         {
-            if(header->author[i] == ' ')
-                header->author[i] = '\0';
+            if(m_header->author[i] == ' ')
+                m_header->author[i] = '\0';
             else
                 break;
         }
     }
     else
     { // version 1
-        header1 = reinterpret_cast<d00header1*>(filedata.data());
-        version = header1->version;
-        datainfo = filedata.data() + LE_WORD(&header1->infoptr);
-        inst = reinterpret_cast<const Sinsts*>(filedata.data() + LE_WORD(&header1->instptr));
-        seqptr = reinterpret_cast<const uint16_t*>(filedata.data() + LE_WORD(&header1->seqptr));
+        m_header1 = reinterpret_cast<d00header1*>(m_fileData.data());
+        m_version = m_header1->version;
+        m_description = m_fileData.data() + LE_WORD(&m_header1->infoptr);
+        m_instruments = reinterpret_cast<const Instrument*>(m_fileData.data() + LE_WORD(&m_header1->instrumentOfs));
+        m_orders = reinterpret_cast<const uint16_t*>(m_fileData.data() + LE_WORD(&m_header1->orderListOfs));
     }
-    switch(version)
+    switch(m_version)
     {
         case 0:
             levpuls = nullptr;
             spfx = nullptr;
-            header1->speed = 70; // v0 files default to 70Hz
+            m_header1->speed = 70; // v0 files default to 70Hz
             break;
         case 1:
-            levpuls = reinterpret_cast<const Slevpuls*>(filedata.data() + LE_WORD(&header1->lpulptr));
+            levpuls = reinterpret_cast<const Slevpuls*>(m_fileData.data() + LE_WORD(&m_header1->lpulptr));
             spfx = nullptr;
             break;
         case 2:
-            levpuls = reinterpret_cast<const Slevpuls*>(filedata.data() + LE_WORD(&header->spfxptr));
+            levpuls = reinterpret_cast<const Slevpuls*>(m_fileData.data() + LE_WORD(&m_header->spfxptr));
             spfx = nullptr;
             break;
         case 3:
@@ -139,20 +139,20 @@ bool D00Player::load(const std::string& filename)
             levpuls = nullptr;
             break;
         case 4:
-            spfx = reinterpret_cast<const Sspfx*>(filedata.data() + LE_WORD(&header->spfxptr));
+            spfx = reinterpret_cast<const Sspfx*>(m_fileData.data() + LE_WORD(&m_header->spfxptr));
             levpuls = nullptr;
             break;
     }
-    if(auto str = strstr(datainfo, "\xff\xff"))
+    if(auto str = strstr(m_description, "\xff\xff"))
     {
-        while((*str == '\xff' || *str == ' ') && str >= datainfo)
+        while((*str == '\xff' || *str == ' ') && str >= m_description)
         {
             *str = '\0';
             str--;
         }
     }
     else // old-style block
-        filedata.back() = 0;
+        m_fileData.back() = 0;
 
     addOrder(0);
 
@@ -165,57 +165,57 @@ bool D00Player::update()
     // effect handling (timer dependant)
     for(auto c = 0; c < 9; c++)
     {
-        channel[c].slideval += channel[c].slide;
+        m_channels[c].noteSlideValue += m_channels[c].noteSlideSpeed;
         setfreq(c); // sliding
         vibrato(c); // vibrato
 
-        if(channel[c].spfx != 0xffff)
+        if(m_channels[c].spfx != 0xffff)
         { // SpFX
-            if(channel[c].fxdel)
+            if(m_channels[c].fxDelay)
             {
-                channel[c].fxdel--;
+                m_channels[c].fxDelay--;
             }
             else
             {
-                channel[c].spfx = LE_WORD(&spfx[channel[c].spfx].ptr);
-                channel[c].fxdel = spfx[channel[c].spfx].duration;
-                channel[c].inst = LE_WORD(&spfx[channel[c].spfx].instnr) & 0xfff;
-                if(spfx[channel[c].spfx].modlev != 0xff)
-                    channel[c].modvol = spfx[channel[c].spfx].modlev;
+                m_channels[c].spfx = LE_WORD(&spfx[m_channels[c].spfx].ptr);
+                m_channels[c].fxDelay = spfx[m_channels[c].spfx].duration;
+                m_channels[c].instrument = LE_WORD(&spfx[m_channels[c].spfx].instnr) & 0xfff;
+                if(spfx[m_channels[c].spfx].modlev != 0xff)
+                    m_channels[c].modulatorVolume = spfx[m_channels[c].spfx].modlev;
                 setinst(c);
                 uint8_t note;
-                if(LE_WORD(&spfx[channel[c].spfx].instnr) & 0x8000) // locked frequency
-                    note = spfx[channel[c].spfx].halfnote;
+                if(LE_WORD(&spfx[m_channels[c].spfx].instnr) & 0x8000) // locked frequency
+                    note = spfx[m_channels[c].spfx].halfnote;
                 else // unlocked frequency
-                    note = spfx[channel[c].spfx].halfnote + channel[c].note;
-                channel[c].freq = notetable[note % 12] + ((note / 12) << 10);
+                    note = spfx[m_channels[c].spfx].halfnote + m_channels[c].note;
+                m_channels[c].frequency = notetable[note % 12] + ((note / 12) << 10);
                 setfreq(c);
             }
-            channel[c].modvol += spfx[channel[c].spfx].modlevadd;
-            channel[c].modvol &= 63;
+            m_channels[c].modulatorVolume += spfx[m_channels[c].spfx].modlevadd;
+            m_channels[c].modulatorVolume &= 63;
             setvolume(c);
         }
 
-        if(channel[c].levpuls != 0xff)
+        if(m_channels[c].levpuls != 0xff)
         { // Levelpuls
-            if(channel[c].frameskip)
+            if(m_channels[c].frameskip)
             {
-                channel[c].frameskip--;
+                m_channels[c].frameskip--;
             }
             else
             {
-                channel[c].frameskip = inst[channel[c].inst].timer;
-                if(channel[c].fxdel)
-                    channel[c].fxdel--;
+                m_channels[c].frameskip = m_instruments[m_channels[c].instrument].timer;
+                if(m_channels[c].fxDelay)
+                    m_channels[c].fxDelay--;
                 else
                 {
-                    channel[c].levpuls = levpuls[channel[c].levpuls].ptr - 1;
-                    channel[c].fxdel = levpuls[channel[c].levpuls].duration;
-                    if(levpuls[channel[c].levpuls].level != 0xff)
-                        channel[c].modvol = levpuls[channel[c].levpuls].level;
+                    m_channels[c].levpuls = levpuls[m_channels[c].levpuls].ptr - 1;
+                    m_channels[c].fxDelay = levpuls[m_channels[c].levpuls].duration;
+                    if(levpuls[m_channels[c].levpuls].level != 0xff)
+                        m_channels[c].modulatorVolume = levpuls[m_channels[c].levpuls].level;
                 }
-                channel[c].modvol += levpuls[channel[c].levpuls].voladd;
-                channel[c].modvol &= 63;
+                m_channels[c].modulatorVolume += levpuls[m_channels[c].levpuls].voladd;
+                m_channels[c].modulatorVolume &= 63;
                 setvolume(c);
             }
         }
@@ -223,151 +223,150 @@ bool D00Player::update()
 
     // song handling
     for(auto c = 0; c < 9; c++)
-        if(version < 3 ? channel[c].del : channel[c].del <= 0x7f)
+        if(m_version < 3 ? m_channels[c].delay : m_channels[c].delay <= 0x7f)
         {
-            if(version == 4) // v4: hard restart SR
-                if(channel[c].del == inst[channel[c].inst].timer)
-                    if(channel[c].nextnote)
-                        getOpl()->writeReg(0x83 + s_opTable[c], inst[channel[c].inst].sr);
-            if(version < 3)
-                channel[c].del--;
-            else if(channel[c].speed)
-                channel[c].del += channel[c].speed;
+            if(m_version == 4) // v4: hard restart SR
+                if(m_channels[c].delay == m_instruments[m_channels[c].instrument].timer)
+                    if(m_channels[c].nextNote)
+                        getOpl()->writeReg(0x83 + s_opTable[c], m_instruments[m_channels[c].instrument].sr);
+            if(m_version < 3)
+                m_channels[c].delay--;
+            else if(m_channels[c].speed)
+                m_channels[c].delay += m_channels[c].speed;
             else
             {
-                channel[c].seqend = 1;
+                m_channels[c].seqend = 1;
                 continue;
             }
         }
         else
         {
-            if(channel[c].speed)
+            if(m_channels[c].speed)
             {
-                if(version < 3)
-                    channel[c].del = channel[c].speed;
+                if(m_version < 3)
+                    m_channels[c].delay = m_channels[c].speed;
                 else
                 {
-                    channel[c].del &= 0x7f;
-                    channel[c].del += channel[c].speed;
+                    m_channels[c].delay &= 0x7f;
+                    m_channels[c].delay += m_channels[c].speed;
                 }
             }
             else
             {
-                channel[c].seqend = 1;
+                m_channels[c].seqend = 1;
                 continue;
             }
-            if(channel[c].rhcnt)
+            if(m_channels[c].restHoldDelay)
             { // process pending REST/HOLD events
-                channel[c].rhcnt--;
+                m_channels[c].restHoldDelay--;
                 continue;
             }
 readorder: // process arrangement (orderlist)
-            auto ord = LE_WORD(&channel[c].order[channel[c].ordpos]);
+            auto ord = LE_WORD(&m_channels[c].patternData[m_channels[c].orderPos]);
             const uint16_t* patt = nullptr;
             switch(ord)
             {
                 case 0xfffe:
-                    channel[c].seqend = 1;
+                    m_channels[c].seqend = 1;
                     continue; // end of arrangement stream
                 case 0xffff: // jump to order
-                    channel[c].ordpos = LE_WORD(&channel[c].order[channel[c].ordpos + 1]);
-                    channel[c].seqend = 1;
+                    m_channels[c].orderPos = LE_WORD(&m_channels[c].patternData[m_channels[c].orderPos + 1]);
+                    m_channels[c].seqend = 1;
                     goto readorder;
                 default:
                     if(ord >= 0x9000)
                     { // set speed
-                        channel[c].speed = ord & 0xff;
-                        ord = LE_WORD(&channel[c].order[channel[c].ordpos - 1]);
-                        channel[c].ordpos++;
+                        m_channels[c].speed = ord & 0xff;
+                        ord = LE_WORD(&m_channels[c].patternData[m_channels[c].orderPos - 1]);
+                        m_channels[c].orderPos++;
                     }
                     else if(ord >= 0x8000)
                     { // transpose track
-                        channel[c].transpose = ord & 0xff;
+                        m_channels[c].transpose = ord & 0xff;
                         if(ord & 0x100)
-                            channel[c].transpose = -channel[c].transpose;
-                        ord = LE_WORD(&channel[c].order[++channel[c].ordpos]);
+                            m_channels[c].transpose = -m_channels[c].transpose;
+                        ord = LE_WORD(&m_channels[c].patternData[++m_channels[c].orderPos]);
                     }
-                    patt = reinterpret_cast<const uint16_t*>(filedata.data() + LE_WORD(&seqptr[ord]));
+                    patt = reinterpret_cast<const uint16_t*>(m_fileData.data() + LE_WORD(&m_orders[ord]));
                     break;
             }
-            channel[c].fxflag = 0;
+            m_channels[c].fxflag = 0;
 readseq: // process sequence (pattern)
-            if(!version) // v0: always initialize rhcnt
-                channel[c].rhcnt = channel[c].irhcnt;
-            auto pattpos = LE_WORD(&patt[channel[c].pattpos]);
+            if(!m_version) // v0: always initialize restHoldDelay
+                m_channels[c].restHoldDelay = m_channels[c].irhcnt;
+            auto pattpos = LE_WORD(&patt[m_channels[c].patternPos]);
             if(pattpos == 0xffff)
             { // pattern ended?
-                channel[c].pattpos = 0;
-                channel[c].ordpos++;
+                m_channels[c].patternPos = 0;
+                m_channels[c].orderPos++;
                 goto readorder;
             }
             auto cnt = HIBYTE(pattpos);
             auto note = LOBYTE(pattpos);
             const auto fx = pattpos >> 12;
             const auto fxop = pattpos & 0x0fff;
-            channel[c].pattpos++;
-            pattpos = LE_WORD(&patt[channel[c].pattpos]);
-            channel[c].nextnote = LOBYTE(pattpos) & 0x7f;
-            if(version ? cnt < 0x40 : !fx)
+            m_channels[c].patternPos++;
+            pattpos = LE_WORD(&patt[m_channels[c].patternPos]);
+            m_channels[c].nextNote = LOBYTE(pattpos) & 0x7f;
+            if(m_version ? cnt < 0x40 : !fx)
             { // note event
                 switch(note)
                 {
                     case 0: // REST event
                     case 0x80:
-                        if(!note || version)
+                        if(!note || m_version)
                         {
-                            channel[c].key = 0;
+                            m_channels[c].key = 0;
                             setfreq(c);
                         }
                         // fall through...
                     case 0x7e: // HOLD event
-                        if(version)
-                            channel[c].rhcnt = cnt;
-                        channel[c].nextnote = 0;
+                        if(m_version)
+                            m_channels[c].restHoldDelay = cnt;
+                        m_channels[c].nextNote = 0;
                         break;
                     default: // play note
                         // restart fx
-                        if(!(channel[c].fxflag & 1))
-                            channel[c].vibdepth = 0;
-                        if(!(channel[c].fxflag & 2))
-                            channel[c].slideval = channel[c].slide = 0;
+                        if(!(m_channels[c].fxflag & 1))
+                            m_channels[c].vibratoDepth = 0;
+                        if(!(m_channels[c].fxflag & 2))
+                            m_channels[c].noteSlideValue = m_channels[c].noteSlideSpeed = 0;
 
-                        if(version)
+                        if(m_version)
                         { // note handling for v1 and above
                             if(note > 0x80) // locked note (no channel transpose)
                                 note -= 0x80;
                             else // unlocked note
-                                note += channel[c].transpose;
-                            channel[c].note = note; // remember note for SpFX
+                                note += m_channels[c].transpose;
+                            m_channels[c].note = note; // remember note for SpFX
 
-                            if(channel[c].ispfx != 0xffff && cnt < 0x20)
+                            if(m_channels[c].ispfx != 0xffff && cnt < 0x20)
                             { // reset SpFX
-                                channel[c].spfx = channel[c].ispfx;
-                                if(LE_WORD(&spfx[channel[c].spfx].instnr) &
-                                   0x8000) // locked frequency
-                                    note = spfx[channel[c].spfx].halfnote;
+                                m_channels[c].spfx = m_channels[c].ispfx;
+                                if(LE_WORD(&spfx[m_channels[c].spfx].instnr) & 0x8000) // locked frequency
+                                    note = spfx[m_channels[c].spfx].halfnote;
                                 else // unlocked frequency
-                                    note += spfx[channel[c].spfx].halfnote;
-                                channel[c].inst = LE_WORD(&spfx[channel[c].spfx].instnr) & 0xfff;
-                                channel[c].fxdel = spfx[channel[c].spfx].duration;
-                                if(spfx[channel[c].spfx].modlev != 0xff)
-                                    channel[c].modvol = spfx[channel[c].spfx].modlev;
+                                    note += spfx[m_channels[c].spfx].halfnote;
+                                m_channels[c].instrument = LE_WORD(&spfx[m_channels[c].spfx].instnr) & 0xfff;
+                                m_channels[c].fxDelay = spfx[m_channels[c].spfx].duration;
+                                if(spfx[m_channels[c].spfx].modlev != 0xff)
+                                    m_channels[c].modulatorVolume = spfx[m_channels[c].spfx].modlev;
                                 else
-                                    channel[c].modvol = inst[channel[c].inst].data[7] & 63;
+                                    m_channels[c].modulatorVolume = m_instruments[m_channels[c].instrument].data[7] & 63;
                             }
 
-                            if(channel[c].ilevpuls != 0xff && cnt < 0x20)
+                            if(m_channels[c].ilevpuls != 0xff && cnt < 0x20)
                             { // reset LevelPuls
-                                channel[c].levpuls = channel[c].ilevpuls;
-                                channel[c].fxdel = levpuls[channel[c].levpuls].duration;
-                                channel[c].frameskip = inst[channel[c].inst].timer;
-                                if(levpuls[channel[c].levpuls].level != 0xff)
-                                    channel[c].modvol = levpuls[channel[c].levpuls].level;
+                                m_channels[c].levpuls = m_channels[c].ilevpuls;
+                                m_channels[c].fxDelay = levpuls[m_channels[c].levpuls].duration;
+                                m_channels[c].frameskip = m_instruments[m_channels[c].instrument].timer;
+                                if(levpuls[m_channels[c].levpuls].level != 0xff)
+                                    m_channels[c].modulatorVolume = levpuls[m_channels[c].levpuls].level;
                                 else
-                                    channel[c].modvol = inst[channel[c].inst].data[7] & 63;
+                                    m_channels[c].modulatorVolume = m_instruments[m_channels[c].instrument].data[7] & 63;
                             }
 
-                            channel[c].freq = notetable[note % 12] + ((note / 12) << 10);
+                            m_channels[c].frequency = notetable[note % 12] + ((note / 12) << 10);
                             if(cnt < 0x20) // normal note
                                 playnote(c);
                             else
@@ -375,15 +374,15 @@ readseq: // process sequence (pattern)
                                 setfreq(c);
                                 cnt -= 0x20; // make count proper
                             }
-                            channel[c].rhcnt = cnt;
+                            m_channels[c].restHoldDelay = cnt;
                         }
                         else
                         { // note handling for v0
                             if(cnt < 2) // unlocked note
-                                note += channel[c].transpose;
-                            channel[c].note = note;
+                                note += m_channels[c].transpose;
+                            m_channels[c].note = note;
 
-                            channel[c].freq = notetable[note % 12] + ((note / 12) << 10);
+                            m_channels[c].frequency = notetable[note % 12] + ((note / 12) << 10);
                             if(cnt == 1) // tienote
                                 setfreq(c);
                             else // normal note
@@ -399,55 +398,55 @@ readseq: // process sequence (pattern)
                 {
                     case 6:
                     { // Cut/Stop Voice
-                        const auto buf = channel[c].inst;
-                        channel[c].inst = 0;
+                        const auto buf = m_channels[c].instrument;
+                        m_channels[c].instrument = 0;
                         playnote(c);
-                        channel[c].inst = buf;
-                        channel[c].rhcnt = fxop;
+                        m_channels[c].instrument = buf;
+                        m_channels[c].restHoldDelay = fxop;
                         continue; // no note follows this event
                     }
                     case 7: // Vibrato
-                        channel[c].vibspeed = fxop & 0xff;
-                        channel[c].vibdepth = fxop >> 8;
-                        channel[c].trigger = fxop >> 9;
-                        channel[c].fxflag |= 1;
+                        m_channels[c].vibratoSpeed = fxop & 0xff;
+                        m_channels[c].vibratoDepth = fxop >> 8;
+                        m_channels[c].trigger = fxop >> 9;
+                        m_channels[c].fxflag |= 1;
                         break;
                     case 8: // v0: Duration
-                        if(!version)
-                            channel[c].irhcnt = fxop;
+                        if(!m_version)
+                            m_channels[c].irhcnt = fxop;
                         break;
                     case 9: // New Level
-                        channel[c].vol = fxop & 63;
-                        if(channel[c].vol + channel[c].cvol < 63) // apply channel volume
-                            channel[c].vol += channel[c].cvol;
+                        m_channels[c].volume = fxop & 63;
+                        if(m_channels[c].volume + m_channels[c].carrierVolume < 63) // apply channel volume
+                            m_channels[c].volume += m_channels[c].carrierVolume;
                         else
-                            channel[c].vol = 63;
+                            m_channels[c].volume = 63;
                         setvolume(c);
                         break;
                     case 0xb: // v4: Set SpFX
-                        if(version == 4)
-                            channel[c].ispfx = fxop;
+                        if(m_version == 4)
+                            m_channels[c].ispfx = fxop;
                         break;
                     case 0xc: // Set Instrument
-                        channel[c].ispfx = 0xffff;
-                        channel[c].spfx = 0xffff;
-                        channel[c].inst = fxop;
-                        channel[c].modvol = inst[fxop].data[7] & 63;
-                        if(version < 3 && version && inst[fxop].tunelev) // Set LevelPuls
-                            channel[c].ilevpuls = inst[fxop].tunelev - 1;
+                        m_channels[c].ispfx = 0xffff;
+                        m_channels[c].spfx = 0xffff;
+                        m_channels[c].instrument = fxop;
+                        m_channels[c].modulatorVolume = m_instruments[fxop].data[7] & 63;
+                        if(m_version < 3 && m_version && m_instruments[fxop].finetune) // Set LevelPuls
+                            m_channels[c].ilevpuls = m_instruments[fxop].finetune - 1;
                         else
                         {
-                            channel[c].ilevpuls = 0xff;
-                            channel[c].levpuls = 0xff;
+                            m_channels[c].ilevpuls = 0xff;
+                            m_channels[c].levpuls = 0xff;
                         }
                         break;
                     case 0xd: // Slide up
-                        channel[c].slide = fxop;
-                        channel[c].fxflag |= 2;
+                        m_channels[c].noteSlideSpeed = fxop;
+                        m_channels[c].fxflag |= 2;
                         break;
                     case 0xe: // Slide down
-                        channel[c].slide = -fxop;
-                        channel[c].fxflag |= 2;
+                        m_channels[c].noteSlideSpeed = -fxop;
+                        m_channels[c].fxflag |= 2;
                         break;
                 }
                 goto readseq; // event is incomplete, note follows
@@ -456,82 +455,84 @@ readseq: // process sequence (pattern)
 
     int trackend = 0;
     for(auto c = 0; c < 9; c++)
-        if(channel[c].seqend)
+        if(m_channels[c].seqend)
             trackend++;
     if(trackend == 9)
-        songend = true;
+        m_songEnd = true;
 
-    return !songend;
+    return !m_songEnd;
 }
 
 void D00Player::rewind(const boost::optional<size_t>& subsong)
 {
-    struct Stpoin
+#pragma pack(push,1)
+    struct TrackPointer
     {
         uint16_t ptr[9];
         uint8_t volume[9], dummy[5];
     };
+#pragma pack(pop)
 
-    if(version > 1)
+    if(m_version > 1)
     { // do nothing if subsong > number of subsongs
-        if(subsong.get_value_or(cursubsong) >= header->subsongs)
+        if(subsong.get_value_or(m_currentSubSong) >= m_header->subsongs)
             return;
     }
-    else if(subsong.get_value_or(cursubsong) >= header1->subsongs)
+    else if(subsong.get_value_or(m_currentSubSong) >= m_header1->subsongs)
         return;
 
-    memset(channel, 0, sizeof(channel));
-    const Stpoin* tpoin;
-    if(version > 1)
-        tpoin = reinterpret_cast<const Stpoin*>(filedata.data() + LE_WORD(&header->tpoin));
+    memset(m_channels, 0, sizeof(m_channels));
+    const TrackPointer* tpoin;
+    if(m_version > 1)
+        tpoin = reinterpret_cast<const TrackPointer*>(m_fileData.data() + LE_WORD(&m_header->trackPointerOfs));
     else
-        tpoin = reinterpret_cast<const Stpoin*>(filedata.data() + LE_WORD(&header1->tpoin));
+        tpoin = reinterpret_cast<const TrackPointer*>(m_fileData.data() + LE_WORD(&m_header1->trackPointerOfs));
     for(int i = 0; i < 9; i++)
     {
-        if(LE_WORD(&tpoin[subsong.get_value_or(cursubsong)].ptr[i]))
+        if(LE_WORD(&tpoin[subsong.get_value_or(m_currentSubSong)].ptr[i]))
         { // track enabled
-            channel[i].speed = LE_WORD(reinterpret_cast<const uint16_t*>(filedata.data() + LE_WORD(&tpoin[subsong.get_value_or(cursubsong)].ptr[i])));
-            channel[i].order = reinterpret_cast<const uint16_t*>(filedata.data() + LE_WORD(&tpoin[subsong.get_value_or(cursubsong)].ptr[i]) + 2);
+            m_channels[i].speed = LE_WORD(reinterpret_cast<const uint16_t*>(m_fileData.data() + LE_WORD(&tpoin[subsong.get_value_or(m_currentSubSong)].ptr[i])));
+            m_channels[i].patternData = reinterpret_cast<const uint16_t*>(m_fileData.data() + LE_WORD(&tpoin[subsong.get_value_or(m_currentSubSong)].ptr[i]) + 2);
         }
         else
         { // track disabled
-            channel[i].speed = 0;
-            channel[i].order = nullptr;
+            m_channels[i].speed = 0;
+            m_channels[i].patternData = nullptr;
         }
-        channel[i].ispfx = 0xffff;
-        channel[i].spfx = 0xffff; // no SpFX
-        channel[i].ilevpuls = 0xff;
-        channel[i].levpuls = 0xff; // no LevelPuls
-        channel[i].cvol = tpoin[subsong.get_value_or(cursubsong)].volume[i] & 0x7f; // our player may savely ignore bit 7
-        channel[i].vol = channel[i].cvol; // initialize volume
+        m_channels[i].ispfx = 0xffff;
+        m_channels[i].spfx = 0xffff; // no SpFX
+        m_channels[i].ilevpuls = 0xff;
+        m_channels[i].levpuls = 0xff; // no LevelPuls
+        m_channels[i].carrierVolume = tpoin[subsong.get_value_or(m_currentSubSong)].volume[i] & 0x7f; // our player may savely ignore bit 7
+        m_channels[i].volume = m_channels[i].carrierVolume; // initialize volume
     }
-    songend = false;
+    m_songEnd = false;
     getOpl()->writeReg(1, 32); // reset OPL chip
-    cursubsong = subsong.get_value_or(cursubsong);
+    m_currentSubSong = subsong.get_value_or(m_currentSubSong);
 }
 
 std::string D00Player::type() const
 {
     char tmpstr[40];
 
-    sprintf(tmpstr, "EdLib packed (version %d)", version > 1 ? header->version : header1->version);
+    sprintf(tmpstr, "EdLib packed (version %d)", m_version > 1 ? m_header->version : m_header1->version);
     return tmpstr;
 }
 
 size_t D00Player::framesUntilUpdate() const
 {
-    if(version > 1)
-        return SampleRate / header->speed;
+    if(m_version > 1)
+        return SampleRate / m_header->speed;
     else
-        return SampleRate / header1->speed;
+        return SampleRate / m_header1->speed;
 }
 
 size_t D00Player::subSongCount() const
 {
-    if(version <= 1) // return number of subsongs
-        return header1->subsongs;
+    if(m_version <= 1) // return number of subsongs
+        return m_header1->subsongs;
     else
-        return header->subsongs;
+        return m_header->subsongs;
 }
 
 /*** private methods *************************************/
@@ -539,26 +540,26 @@ size_t D00Player::subSongCount() const
 void D00Player::setvolume(uint8_t chan)
 {
     const auto op = s_opTable[chan];
-    const auto insnr = channel[chan].inst;
+    const auto insnr = m_channels[chan].instrument;
 
-    getOpl()->writeReg(0x43 + op, static_cast<uint8_t>(63 - ((63 - (inst[insnr].data[2] & 63)) / 63.0) * (63 - channel[chan].vol)) +
-        (inst[insnr].data[2] & 192));
-    if(inst[insnr].data[10] & 1)
-        getOpl()->writeReg(0x40 + op, static_cast<uint8_t>(63 - ((63 - channel[chan].modvol) / 63.0) * (63 - channel[chan].vol)) + (inst[insnr].data[7] & 192));
+    getOpl()->writeReg(0x43 + op, static_cast<uint8_t>(63 - ((63 - (m_instruments[insnr].data[2] & 63)) / 63.0) * (63 - m_channels[chan].volume)) +
+        (m_instruments[insnr].data[2] & 192));
+    if(m_instruments[insnr].data[10] & 1)
+        getOpl()->writeReg(0x40 + op, static_cast<uint8_t>(63 - ((63 - m_channels[chan].modulatorVolume) / 63.0) * (63 - m_channels[chan].volume)) + (m_instruments[insnr].data[7] & 192));
     else
-        getOpl()->writeReg(0x40 + op, channel[chan].modvol + (inst[insnr].data[7] & 192));
+        getOpl()->writeReg(0x40 + op, m_channels[chan].modulatorVolume + (m_instruments[insnr].data[7] & 192));
 }
 
 void D00Player::setfreq(uint8_t chan)
 {
-    auto freq = channel[chan].freq;
+    auto freq = m_channels[chan].frequency;
 
-    if(version == 4) // v4: apply instrument finetune
-        freq += inst[channel[chan].inst].tunelev;
+    if(m_version == 4) // v4: apply instrument finetune
+        freq += m_instruments[m_channels[chan].instrument].finetune;
 
-    freq += channel[chan].slideval;
+    freq += m_channels[chan].noteSlideValue;
     getOpl()->writeReg(0xa0 + chan, freq & 255);
-    if(channel[chan].key)
+    if(m_channels[chan].key)
         getOpl()->writeReg(0xb0 + chan, ((freq >> 8) & 31) | 32);
     else
         getOpl()->writeReg(0xb0 + chan, (freq >> 8) & 31);
@@ -567,22 +568,22 @@ void D00Player::setfreq(uint8_t chan)
 void D00Player::setinst(uint8_t chan)
 {
     const auto op = s_opTable[chan];
-    const auto insnr = channel[chan].inst;
+    const auto insnr = m_channels[chan].instrument;
 
     // set instrument data
-    getOpl()->writeReg(0x63 + op, inst[insnr].data[0]);
-    getOpl()->writeReg(0x83 + op, inst[insnr].data[1]);
-    getOpl()->writeReg(0x23 + op, inst[insnr].data[3]);
-    getOpl()->writeReg(0xe3 + op, inst[insnr].data[4]);
-    getOpl()->writeReg(0x60 + op, inst[insnr].data[5]);
-    getOpl()->writeReg(0x80 + op, inst[insnr].data[6]);
-    getOpl()->writeReg(0x20 + op, inst[insnr].data[8]);
-    getOpl()->writeReg(0xe0 + op, inst[insnr].data[9]);
-    if(version)
-        getOpl()->writeReg(0xc0 + chan, inst[insnr].data[10]);
+    getOpl()->writeReg(0x63 + op, m_instruments[insnr].data[0]);
+    getOpl()->writeReg(0x83 + op, m_instruments[insnr].data[1]);
+    getOpl()->writeReg(0x23 + op, m_instruments[insnr].data[3]);
+    getOpl()->writeReg(0xe3 + op, m_instruments[insnr].data[4]);
+    getOpl()->writeReg(0x60 + op, m_instruments[insnr].data[5]);
+    getOpl()->writeReg(0x80 + op, m_instruments[insnr].data[6]);
+    getOpl()->writeReg(0x20 + op, m_instruments[insnr].data[8]);
+    getOpl()->writeReg(0xe0 + op, m_instruments[insnr].data[9]);
+    if(m_version)
+        getOpl()->writeReg(0xc0 + chan, m_instruments[insnr].data[10]);
     else
         getOpl()->writeReg(0xc0 + chan,
-        (inst[insnr].data[10] << 1) + (inst[insnr].tunelev & 1));
+        (m_instruments[insnr].data[10] << 1) + (m_instruments[insnr].finetune & 1));
 }
 
 void D00Player::playnote(uint8_t chan)
@@ -590,23 +591,23 @@ void D00Player::playnote(uint8_t chan)
     // set misc vars & play
     getOpl()->writeReg(0xb0 + chan, 0); // stop old note
     setinst(chan);
-    channel[chan].key = 1;
+    m_channels[chan].key = 1;
     setfreq(chan);
     setvolume(chan);
 }
 
 void D00Player::vibrato(uint8_t chan)
 {
-    if(!channel[chan].vibdepth)
+    if(!m_channels[chan].vibratoDepth)
         return;
 
-    if(channel[chan].trigger)
-        channel[chan].trigger--;
+    if(m_channels[chan].trigger)
+        m_channels[chan].trigger--;
     else
     {
-        channel[chan].trigger = channel[chan].vibdepth;
-        channel[chan].vibspeed = -channel[chan].vibspeed;
+        m_channels[chan].trigger = m_channels[chan].vibratoDepth;
+        m_channels[chan].vibratoSpeed = -m_channels[chan].vibratoSpeed;
     }
-    channel[chan].freq += channel[chan].vibspeed;
+    m_channels[chan].frequency += m_channels[chan].vibratoSpeed;
     setfreq(chan);
 }

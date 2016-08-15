@@ -41,22 +41,22 @@ public:
     std::string type() const override;
     std::string title() const override
     {
-        if(version > 1)
-            return header->songname;
+        if(m_version > 1)
+            return m_header->songname;
         else
             return std::string();
     }
     std::string author() const override
     {
-        if(version > 1)
-            return header->author;
+        if(m_version > 1)
+            return m_header->author;
         else
             return std::string();
     }
     std::string description() const override
     {
-        if(*datainfo)
-            return datainfo;
+        if(*m_description)
+            return m_description;
         else
             return std::string();
     }
@@ -69,31 +69,33 @@ private:
         char id[6];
         uint8_t type, version, speed, subsongs, soundcard;
         char songname[32], author[32], dummy[32];
-        uint16_t tpoin, seqptr, instptr, infoptr, spfxptr, endmark;
+        uint16_t trackPointerOfs, orderListOfs, instrumentOfs, infoptr, spfxptr, endmark;
     };
 
     struct d00header1
     {
         uint8_t version, speed, subsongs;
-        uint16_t tpoin, seqptr, instptr, infoptr, lpulptr, endmark;
+        uint16_t trackPointerOfs, orderListOfs, instrumentOfs, infoptr, lpulptr, endmark;
     };
 #pragma pack(pop)
 
-    struct
+    struct Channel
     {
-        const uint16_t *order;
-        uint16_t ordpos, pattpos, del, speed, rhcnt, key, freq, inst,
+        const uint16_t *patternData;
+        uint16_t orderPos, patternPos, delay, speed, restHoldDelay, key, frequency, instrument,
             spfx, ispfx, irhcnt;
-        signed short transpose, slide, slideval, vibspeed;
-        uint8_t seqend, vol, vibdepth, fxdel, modvol, cvol, levpuls,
-            frameskip, nextnote, note, ilevpuls, trigger, fxflag;
-    } channel[9];
-
-    struct Sinsts
-    {
-        uint8_t data[11], tunelev, timer, sr, dummy[2];
+        signed short transpose, noteSlideSpeed, noteSlideValue, vibratoSpeed;
+        uint8_t seqend, volume, vibratoDepth, fxDelay, modulatorVolume, carrierVolume, levpuls,
+            frameskip, nextNote, note, ilevpuls, trigger, fxflag;
     };
-    const Sinsts* inst = nullptr;
+
+    Channel m_channels[9];
+
+    struct Instrument
+    {
+        uint8_t data[11], finetune, timer, sr, dummy[2];
+    };
+    const Instrument* m_instruments = nullptr;
 
     struct Sspfx
     {
@@ -114,14 +116,14 @@ private:
     };
     const Slevpuls* levpuls = nullptr;
 
-    bool songend = false;
-    uint8_t version = 0;
-    size_t cursubsong = 0;
-    char *datainfo = nullptr;
-    const uint16_t *seqptr = nullptr;
-    d00header *header = nullptr;
-    d00header1 *header1 = nullptr;
-    std::vector<char> filedata{};
+    bool m_songEnd = false;
+    uint8_t m_version = 0;
+    size_t m_currentSubSong = 0;
+    char *m_description = nullptr;
+    const uint16_t *m_orders = nullptr;
+    d00header *m_header = nullptr;
+    d00header1 *m_header1 = nullptr;
+    std::vector<char> m_fileData{};
 
     void setvolume(uint8_t chan);
     void setfreq(uint8_t chan);
