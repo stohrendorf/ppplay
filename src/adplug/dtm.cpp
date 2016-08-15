@@ -108,7 +108,7 @@ bool DtmPlayer::load(const std::string& filename)
         uint8_t name_length;
         f >> name_length;
 
-        BOOST_ASSERT(name_length <= sizeof(dtm_instrument::name));
+        BOOST_ASSERT(name_length <= sizeof(Instrument::name));
         if(name_length)
             f.read(m_instruments[i].name, name_length);
 

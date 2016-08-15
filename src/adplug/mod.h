@@ -111,7 +111,8 @@ public:
         uint8_t hiNybble = 0;
         uint8_t loNybble = 0;
 
-        PatternCell() = default;
+        // Do not use "= default" here, see http://stackoverflow.com/a/17436088 for an explanation.
+        PatternCell() {}
     };
 
     const Instrument& instrument(size_t idx) const

@@ -367,7 +367,6 @@ bool ModModule::adjustPosition()
 {
     bool orderChanged = false;
     bool rowChanged = false;
-    bool forceSave = false;
     size_t newOrder = state().order;
     if(m_patDelayCount != -1)
     {
@@ -386,7 +385,6 @@ bool ModModule::adjustPosition()
                 }
                 orderChanged = true;
                 newOrder = m_breakOrder;
-                forceSave = true;
             }
             setRow(0);
             rowChanged = true;

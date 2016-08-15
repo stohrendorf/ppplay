@@ -20,8 +20,9 @@
 #define OGGAUDIOOUTPUT_H
 
 #include "abstractaudiooutput.h"
-
 #include "stream/stream.h"
+#include "ppplay_output_ogg_export.h"
+
 #include <vorbis/codec.h>
 
 /**
@@ -29,7 +30,7 @@
  * @{
  */
 
-class OggAudioOutput : public AbstractAudioOutput
+class PPPLAY_OUTPUT_OGG_EXPORT OggAudioOutput : public AbstractAudioOutput
 {
     DISABLE_COPY( OggAudioOutput )
     OggAudioOutput() = delete;

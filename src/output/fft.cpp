@@ -18,8 +18,10 @@
 
 #include "fft.h"
 
-#include <array>
 #include <boost/assert.hpp>
+
+#include <array>
+#include <cmath>
 
 /*
 copied and modified from: http://local.wasp.uwa.edu.au/~pbourke/miscellaneous/dft/fft_ms.c
@@ -89,7 +91,7 @@ struct SimpleComplex
 
     constexpr Type length() const noexcept
     {
-        return sqrt(real*real + imag*imag);
+        return std::sqrt(real*real + imag*imag);
     }
 };
 
@@ -126,12 +128,12 @@ void DFFT(std::array<SimpleComplex<float>, ppp::FFT::InputLength>& data)
             }
             expFac *= expFacMul;
         }
-        expFacMul.imag = sqrt((1.0f - expFacMul.real) / 2.0f);
+        expFacMul.imag = std::sqrt((1.0f - expFacMul.real) / 2.0f);
         if(!reverseFFT)
         {
             expFacMul.imag = -expFacMul.imag;
         }
-        expFacMul.real = sqrt((1.0f + expFacMul.real) / 2.0f);
+        expFacMul.real = std::sqrt((1.0f + expFacMul.real) / 2.0f);
     }
     /*	if (!reverseFFT)
         {
@@ -157,7 +159,7 @@ void fftToAmp(const std::array<SimpleComplex<float>, ppp::FFT::InputLength>& fft
     uint16_t* ampsPtr = &dest->front();
     for(size_t i = 0; i < ppp::FFT::InputLength / 2; i++)
     {
-        *(ampsPtr++) = static_cast<uint16_t>(fft[i].length() * sqrt(i));
+        *(ampsPtr++) = static_cast<uint16_t>(fft[i].length() * std::sqrt(i));
     }
 }
 } // anonymous namespace

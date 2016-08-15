@@ -54,10 +54,14 @@ light4cxx::Logger* logger()
 }
 }
 
-PluginRegistry::PluginRegistry() : m_handles(), m_searchPath(LIBEXECDIR)
+PluginRegistry::PluginRegistry()
+    : m_handles()
+    , m_searchPath(LIBEXECDIR)
 {
+#ifdef WIN32
     SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS | LOAD_LIBRARY_SEARCH_USER_DIRS | LOAD_LIBRARY_SEARCH_APPLICATION_DIR);
     AddDllDirectory(boost::filesystem::path(ppp::whereAmI()).parent_path().native().c_str());
+#endif
 }
 
 PluginRegistry::~PluginRegistry()

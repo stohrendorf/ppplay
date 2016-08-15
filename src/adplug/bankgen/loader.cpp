@@ -15,6 +15,8 @@
 
 #include <boost/range/adaptors.hpp>
 
+#include <boost/make_shared.hpp>
+
 namespace
 {
 boost::property_tree::ptree toPtree(const bankdb::SlotSettings& ss)
@@ -328,7 +330,7 @@ void BankDatabaseGen::loadBnk(const char* filename, const char* bankname, const 
         int gmno = (n + percussive * 128);
 
         bankdb::Instrument& instrument = addInstrument(prefix, gmno);
-        instrument.first = std::make_shared<bankdb::SlotSettings>();
+        instrument.first = boost::make_shared<bankdb::SlotSettings>();
 
         instrument.first->data[0] = (op1[9] << 7) // TREMOLO FLAG
             + (op1[10] << 6) // VIBRATO FLAG
@@ -420,14 +422,14 @@ void BankDatabaseGen::loadBnk2(const char* fn, const char* bankname, const char*
             instrument.noteOverride = 35;
         instrument.pseudo4op = false;
 
-        instrument.first = std::make_shared<bankdb::SlotSettings>(slotSettings[0]);
+        instrument.first = boost::make_shared<bankdb::SlotSettings>(slotSettings[0]);
         instrument.localName = name;
         instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno & 128) ? 'P' : 'M', int(gmno & 127));
 
         if(xxP24NNN & 8)
         {
             // dual-op
-            instrument.second = std::make_shared<bankdb::SlotSettings>(slotSettings[1]);
+            instrument.second = boost::make_shared<bankdb::SlotSettings>(slotSettings[1]);
         }
     }
 }
@@ -478,14 +480,14 @@ void BankDatabaseGen::loadDoom(const char* fn, const char* bankname, const char*
             slotSettings[0].finetune -= 12;
             slotSettings[1].finetune -= 12;
         }
-        instrument.first = std::make_shared<bankdb::SlotSettings>(slotSettings[0]);
+        instrument.first = boost::make_shared<bankdb::SlotSettings>(slotSettings[0]);
         instrument.localName = name;
         instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), int(gmno & 127));
 
         if((ins.flags & 4) != 0) // Double instrument
         {
             instrument.pseudo4op = true;
-            instrument.second = std::make_shared<bankdb::SlotSettings>(slotSettings[1]);
+            instrument.second = boost::make_shared<bankdb::SlotSettings>(slotSettings[1]);
         }
     }
 }
@@ -548,10 +550,10 @@ void BankDatabaseGen::loadMiles(const char* fn, const char* bankname, const char
         if(midi_index >= 0)
             instrument.localName = MidiInsName[midi_index];
 
-        instrument.first = std::make_shared<bankdb::SlotSettings>(slotSettings[0]);
+        instrument.first = boost::make_shared<bankdb::SlotSettings>(slotSettings[0]);
 
         if(inscount > 1)
-            instrument.second = std::make_shared<bankdb::SlotSettings>(slotSettings[1]);
+            instrument.second = boost::make_shared<bankdb::SlotSettings>(slotSettings[1]);
 
         instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), int(gmno & 127));
     }
@@ -594,7 +596,7 @@ void BankDatabaseGen::loadIBK(const char* fn, const char* bankname, const char* 
         if(gmno >= 128)
             instrument.noteOverride = 35;
         instrument.pseudo4op = false;
-        instrument.first = std::make_shared<bankdb::SlotSettings>(slotSettings);
+        instrument.first = boost::make_shared<bankdb::SlotSettings>(slotSettings);
         instrument.localName = name;
         instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), int(gmno & 127));
     }
@@ -655,10 +657,10 @@ void BankDatabaseGen::loadJunglevision(const char* fn, const char* bankname, con
 
         instrument.generatedName = stringFmt("%s%c%u", prefix, (gmno < 128 ? 'M' : 'P'), int(gmno & 127));
 
-        instrument.first = std::make_shared<bankdb::SlotSettings>(slotSettings[0]);
+        instrument.first = boost::make_shared<bankdb::SlotSettings>(slotSettings[0]);
         if(data[offset] != 0)
         {
-            instrument.second = std::make_shared<bankdb::SlotSettings>(slotSettings[1]);
+            instrument.second = boost::make_shared<bankdb::SlotSettings>(slotSettings[1]);
         }
     }
 }
@@ -681,7 +683,7 @@ void BankDatabaseGen::loadTMB(const char* fn, const char* bankname, const char* 
             : -1;
 
         bankdb::Instrument& instrument = addInstrument(prefix, gmno);
-        instrument.first = std::make_shared<bankdb::SlotSettings>();
+        instrument.first = boost::make_shared<bankdb::SlotSettings>();
         const uint8_t mapping[11] = { 0,1,4,5,6,7,8,9,2,3,10 };
         for(int m = 0; m < 11; ++m)
             instrument.first->data[m] = data[offset + mapping[m]];
@@ -717,10 +719,10 @@ void BankDatabaseGen::loadBisqwit(const char* fn, const char* bankname, const ch
         fp >> *instrument.noteOverride;
         instrument.pseudo4op = false;
 
-        instrument.first = std::make_shared<bankdb::SlotSettings>();
+        instrument.first = boost::make_shared<bankdb::SlotSettings>();
         fp >> instrument.first->finetune;
         fp.read(instrument.first->data.data(), 11);
-        instrument.second = std::make_shared<bankdb::SlotSettings>();
+        instrument.second = boost::make_shared<bankdb::SlotSettings>();
         fp >> instrument.second->finetune;
         fp.read(instrument.second->data.data(), 11);
 

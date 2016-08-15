@@ -25,6 +25,8 @@
 
 #include <boost/assert.hpp>
 
+#include <cmath>
+
 void AudioFifo::requestThread()
 {
     AudioFrameBuffer buffer;

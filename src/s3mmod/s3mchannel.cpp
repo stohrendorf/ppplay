@@ -25,6 +25,8 @@
 #include "s3msample.h"
 #include "s3mcell.h"
 
+#include <cmath>
+
 /**
  * @ingroup S3mMod
  * @{

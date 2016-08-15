@@ -1,14 +1,16 @@
 #pragma once
 
+#include <boost/array.hpp>
 #include <boost/optional.hpp>
+#include <boost/shared_ptr.hpp>
+
 #include <boost/serialization/tracking.hpp>
 #include <boost/serialization/nvp.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/version.hpp>
 
-#include <array>
 #include <iostream>
 #include <map>
-#include <memory>
 #include <string>
 
 namespace opl
@@ -21,9 +23,9 @@ namespace bankdb
 
 struct SlotSettings
 {
-    using Ptr = std::shared_ptr<SlotSettings>;
+    using Ptr = boost::shared_ptr<SlotSettings>;
 
-    std::array<uint8_t, 11> data{{}};
+    boost::array<uint8_t, 11> data{{}};
     int8_t finetune = 0;
 
     template<class Archive>

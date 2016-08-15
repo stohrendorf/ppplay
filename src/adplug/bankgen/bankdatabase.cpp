@@ -8,6 +8,7 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/optional.hpp>
 
+#include <cstring>
 #include <fstream>
 
 bool bankdb::SlotSettings::operator==(const bankdb::SlotSettings& b) const

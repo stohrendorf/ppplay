@@ -20,6 +20,7 @@
 #define MP3AUDIOOUTPUT_H
 
 #include "abstractaudiooutput.h"
+#include "ppplay_output_mp3_export.h"
 
 #include <fstream>
 
@@ -32,7 +33,7 @@
  * @class MP3AudioOutput
  * @brief MP3 writing IAudioOutput
  */
-class MP3AudioOutput : public AbstractAudioOutput
+class PPPLAY_OUTPUT_MP3_EXPORT MP3AudioOutput : public AbstractAudioOutput
 {
     DISABLE_COPY( MP3AudioOutput )
     MP3AudioOutput() = delete;

@@ -22,9 +22,9 @@
 #include <stuff/utils.h>
 #include <stream/ppplay_stream_export.h>
 
-#include <string>
+#include <iostream>
 #include <memory>
-
+#include <string>
 #include <type_traits>
 
 /**

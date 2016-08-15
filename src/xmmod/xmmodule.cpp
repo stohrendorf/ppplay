@@ -30,10 +30,12 @@
 #include "xminstrument.h"
 
 #include "stream/stream.h"
-#include <genmod/channelstate.h>
-#include <genmod/orderentry.h>
+#include "genmod/channelstate.h"
+#include "genmod/orderentry.h"
 
 #include <boost/algorithm/string.hpp>
+
+#include <cmath>
 
 namespace ppp
 {

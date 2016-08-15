@@ -23,6 +23,7 @@
 #include <stream/iserializable.h>
 
 #include <cstdint>
+#include <cstdlib>
 
 namespace ppp
 {

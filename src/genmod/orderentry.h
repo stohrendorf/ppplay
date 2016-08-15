@@ -54,7 +54,7 @@ public:
      * @param[in] idx Order index
      * @param[in] rowCount Pattern row count
      */
-    explicit OrderEntry::OrderEntry(uint8_t idx) noexcept
+    explicit OrderEntry(uint8_t idx) noexcept
         : m_index(idx)
     {
     }
