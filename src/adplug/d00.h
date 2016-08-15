@@ -82,11 +82,14 @@ private:
     struct Channel
     {
         const uint16_t *patternData;
-        uint16_t orderPos, patternPos, delay, speed, restHoldDelay, key, frequency, instrument,
-            spfx, ispfx, irhcnt;
+        uint16_t orderPos, patternPos, delay, speed, restHoldDelay, frequency, instrument,
+            spfx = 0xffff, ispfx, irhcnt;
         signed short transpose, noteSlideSpeed, noteSlideValue, vibratoSpeed;
-        uint8_t seqend, volume, vibratoDepth, fxDelay, modulatorVolume, carrierVolume, levpuls,
-            frameskip, nextNote, note, ilevpuls, trigger, fxflag;
+        uint8_t volume, vibratoDepth, fxDelay, modulatorVolume, carrierVolume, levpuls = 0xff,
+            frameskip, nextNote, note, ilevpuls = 0xff, trigger, fxflag;
+
+        bool keyOn = false;
+        bool seqend = false;
     };
 
     Channel m_channels[9];
@@ -106,7 +109,7 @@ private:
         uint8_t duration;
         uint16_t ptr;
     };
-    const Sspfx* spfx = nullptr;
+    const Sspfx* m_spfx = nullptr;
 
     struct Slevpuls
     {
@@ -114,7 +117,7 @@ private:
         int8_t voladd;
         uint8_t duration, ptr;
     };
-    const Slevpuls* levpuls = nullptr;
+    const Slevpuls* m_levPuls = nullptr;
 
     bool m_songEnd = false;
     uint8_t m_version = 0;
