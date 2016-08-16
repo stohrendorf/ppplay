@@ -165,6 +165,7 @@ bool MscPlayer::decode_octet(uint8_t* output)
         return false;
 
     const std::vector<uint8_t>* blkData = &m_mscData[m_mscDataIndex];
+    uint8_t lengthCorrection = 0;
     while(true)
     {
         // advance to next block if necessary
@@ -177,6 +178,7 @@ bool MscPlayer::decode_octet(uint8_t* output)
             blkData = &m_mscData[m_mscDataIndex];
             m_blockPos = 0;
             m_rawDataPos = 0;
+            lengthCorrection = 0;
         }
 
         // decode the compressed music data
@@ -197,7 +199,7 @@ bool MscPlayer::decode_octet(uint8_t* output)
 
                 // isolate length and distance
                 m_prefixLength = (octet & 0x0F);
-                // len_corr = 2;
+                lengthCorrection = 2;
 
                 m_prefixDistance = (octet & 0xF0) >> 4;
                 if(m_decoderPrefix == 155)
@@ -207,32 +209,34 @@ bool MscPlayer::decode_octet(uint8_t* output)
                 m_decoderPrefix++;
                 continue;
 
-                // check for extended length
             case 156:
+                // check for extended length
                 if(m_prefixLength == 15)
                     m_prefixLength += (*blkData)[m_blockPos++];
 
                 // add length correction and go for copy mode
+                m_prefixLength += lengthCorrection;
                 m_decoderPrefix = 255;
                 continue;
 
-                // get extended distance
             case 176:
+                // get extended distance
                 m_prefixDistance += 17 + 16 * (*blkData)[m_blockPos++];
-                // len_corr = 3;
+                lengthCorrection = 3;
 
                 // check for extended length
                 m_decoderPrefix = 156;
                 continue;
 
-                // prefix copy mode
             case 255:
+                // prefix copy mode
                 if(m_rawDataPos >= m_prefixDistance)
-                    octet = m_rawData.at(m_rawDataPos - m_prefixDistance);
-                else
                 {
-                    octet = 0;
+                    BOOST_ASSERT(m_rawDataPos - m_prefixDistance < m_rawData.size());
+                    octet = m_rawData.at(m_rawDataPos - m_prefixDistance);
                 }
+                else
+                    octet = 0;
 
                 m_prefixLength--;
                 if(m_prefixLength == 0)
@@ -243,8 +247,8 @@ bool MscPlayer::decode_octet(uint8_t* output)
 
                 break;
 
-                // normal mode
             default:
+                // normal mode
                 octet = (*blkData)[m_blockPos++];
                 if(octet == 155 || octet == 175)
                 {
@@ -258,6 +262,7 @@ bool MscPlayer::decode_octet(uint8_t* output)
         if(output != nullptr)
             *output = octet;
 
+        BOOST_ASSERT(m_rawDataPos < m_rawData.size());
         m_rawData.at(m_rawDataPos++) = octet;
         break;
     }; // decode pass

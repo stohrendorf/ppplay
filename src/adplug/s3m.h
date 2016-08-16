@@ -110,6 +110,8 @@ protected:
     void setHeader(const S3mHeader& header)
     {
         m_header = header;
+        setInitialSpeed(m_header.initialSpeed);
+        setInitialTempo(m_header.initialTempo ? m_header.initialTempo : 125);
     }
 
 private:

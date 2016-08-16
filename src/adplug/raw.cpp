@@ -48,6 +48,10 @@ bool RawPlayer::load(const std::string& filename)
     uint16_t clock;
     f >> clock;
     setInitialSpeed(clock);
+    setCurrentSpeed(clock);
+
+    BOOST_ASSERT(f.pos() == 10);
+    static_assert(sizeof(TrackData) == 2, "Ooops");
     m_data.resize((f.size() - 10) / 2);
     f.read(m_data.data(), m_data.size());
 
@@ -62,25 +66,26 @@ bool RawPlayer::update()
     if(m_dataPosition >= m_data.size())
         return false;
 
-    if(m_delay)
+    if(m_delay > 0)
     {
-        m_delay--;
+        --m_delay;
         return !m_songend;
     }
 
-    do
+    while(m_dataPosition < m_data.size())
     {
+        const auto& d = m_data[m_dataPosition++];
         bool setspeed = false;
-        switch(m_data[m_dataPosition].command)
+        switch(d.command)
         {
             case 0:
-                m_delay = m_data[m_dataPosition].param - 1;
+                BOOST_ASSERT(d.param > 0);
+                m_delay = d.param - 1;
                 break;
             case 2:
-                if(!m_data[m_dataPosition].param)
+                if(d.param != 0)
                 {
-                    m_dataPosition++;
-                    setCurrentSpeed(m_data[m_dataPosition].param + (m_data[m_dataPosition].command << 8));
+                    setCurrentSpeed(d.param + (d.command * 256));
                     setspeed = true;
                 }
                 else
@@ -89,7 +94,7 @@ bool RawPlayer::update()
                 }
                 break;
             case 0xff:
-                if(m_data[m_dataPosition].param == 0xff)
+                if(d.param == 0xff)
                 {
                     rewind(0); // auto-rewind song
                     m_songend = true;
@@ -97,12 +102,12 @@ bool RawPlayer::update()
                 }
                 break;
             default:
-                getOpl()->writeReg(m_data[m_dataPosition].command, m_data[m_dataPosition].param);
+                getOpl()->writeReg(d.command, d.param);
                 break;
         }
-        if(!setspeed)
+        if(!setspeed && d.command == 0)
             break;
-    } while(m_data[m_dataPosition++].command);
+    }
 
     return !m_songend;
 }

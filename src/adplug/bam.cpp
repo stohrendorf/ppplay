@@ -88,6 +88,8 @@ bool BamPlayer::load(const std::string& filename)
     m_song.resize(f.size() - 4);
     f.read(m_song.data(), m_song.size());
 
+    addOrder(0); // dummy
+
     rewind(0);
     return true;
 }

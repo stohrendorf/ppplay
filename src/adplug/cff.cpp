@@ -284,12 +284,12 @@ std::string CffPlayer::type() const
 
 std::string CffPlayer::title() const
 {
-    return std::string(song_title, 20);
+    return song_title;
 }
 
 std::string CffPlayer::author() const
 {
-    return std::string(song_author, 20);
+    return song_author;
 }
 
 std::string CffPlayer::instrumentTitle(size_t n) const
