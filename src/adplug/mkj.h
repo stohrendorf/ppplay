@@ -43,15 +43,17 @@ public:
     }
 
 private:
-    int16_t m_maxChannel = 0;
+    int16_t m_channelCount = 0;
     int16_t m_maxNotes = 0;
     std::vector<int16_t> m_songBuf{};
-    bool songend = true;
+    bool m_songEnd = true;
 
     struct Channel
     {
-        int16_t defined;
-        short songptr, octave, waveform, pstat, speed, delay;
+        int16_t defined = 0;
+        uint16_t dataOfs = 0;
+        int16_t octave = 4, waveform = 0, delay = 0, speed = 1;
     };
+
     Channel m_channels[9];
 };

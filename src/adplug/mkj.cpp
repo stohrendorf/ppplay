@@ -50,9 +50,9 @@ bool MkjPlayer::load(const std::string& filename)
     }
 
     // load
-    f >> m_maxChannel;
+    f >> m_channelCount;
     getOpl()->writeReg(1, 32);
-    for(auto i = 0; i < m_maxChannel; i++)
+    for(auto i = 0; i < m_channelCount; i++)
     {
         int16_t inst[8];
         f.read(inst, 8);
@@ -66,39 +66,38 @@ bool MkjPlayer::load(const std::string& filename)
         getOpl()->writeReg(0x83 + s_opTable[i], inst[3]);
     }
     f >> m_maxNotes;
-    for(auto i = 0; i < m_maxChannel; i++)
+    for(auto i = 0; i < m_channelCount; i++)
         f >> m_channels[i].defined;
-    m_songBuf.resize((m_maxChannel + 1) * m_maxNotes);
+    m_songBuf.resize((m_channelCount + 1) * m_maxNotes);
     f.read(m_songBuf.data(), m_songBuf.size());
 
+    addOrder(0);
     rewind(0);
     return true;
 }
 
 bool MkjPlayer::update()
 {
-    int c, i;
-    short note;
-
-    for(c = 0; c < m_maxChannel; c++)
+    for(int16_t c = 0; c < m_channelCount; c++)
     {
-        if(!m_channels[c].defined) // skip if channel is disabled
+        if(m_channels[c].defined == 0) // skip if channel is disabled
             continue;
 
-        if(m_channels[c].pstat)
+        if(m_channels[c].delay)
         {
-            m_channels[c].pstat--;
+            m_channels[c].delay--;
             continue;
         }
 
         getOpl()->writeReg(0xb0 + c, 0); // key off
         do
         {
-            assert(m_channels[c].songptr < (m_maxChannel + 1) * m_maxNotes);
-            note = m_songBuf[m_channels[c].songptr];
-            if(m_channels[c].songptr - c > m_maxChannel)
-                if(note && note < 250)
-                    m_channels[c].pstat = m_channels[c].speed;
+            BOOST_ASSERT(m_channels[c].dataOfs < (m_channelCount + 1) * m_maxNotes);
+            BOOST_ASSERT(m_channels[c].dataOfs < m_songBuf.size());
+            const auto note = m_songBuf[m_channels[c].dataOfs];
+            if(m_channels[c].dataOfs - c > m_channelCount)
+                if(note > 0 && note < 250)
+                    m_channels[c].delay = m_channels[c].speed;
             switch(note)
             {
                 // normal notes
@@ -151,54 +150,54 @@ bool MkjPlayer::update()
                     getOpl()->writeReg(0xb0 + c, 0x22 + 4 * m_channels[c].octave);
                     break;
                 case 255: // delay
-                    m_channels[c].songptr += m_maxChannel;
-                    m_channels[c].pstat = m_songBuf[m_channels[c].songptr];
+                    m_channels[c].dataOfs += m_channelCount;
+                    m_channels[c].delay = m_songBuf[m_channels[c].dataOfs];
                     break;
                 case 254: // set octave
-                    m_channels[c].songptr += m_maxChannel;
-                    m_channels[c].octave = m_songBuf[m_channels[c].songptr];
+                    m_channels[c].dataOfs += m_channelCount;
+                    m_channels[c].octave = m_songBuf[m_channels[c].dataOfs];
                     break;
                 case 253: // set speed
-                    m_channels[c].songptr += m_maxChannel;
-                    m_channels[c].speed = m_songBuf[m_channels[c].songptr];
+                    m_channels[c].dataOfs += m_channelCount;
+                    m_channels[c].speed = m_songBuf[m_channels[c].dataOfs];
                     break;
                 case 252: // set waveform
-                    m_channels[c].songptr += m_maxChannel;
-                    m_channels[c].waveform = m_songBuf[m_channels[c].songptr] - 300;
+                    m_channels[c].dataOfs += m_channelCount;
+                    m_channels[c].waveform = m_songBuf[m_channels[c].dataOfs] - 300;
                     if(c > 2)
                         getOpl()->writeReg(0xe0 + c + (c + 6), m_channels[c].waveform);
                     else
                         getOpl()->writeReg(0xe0 + c, m_channels[c].waveform);
                     break;
                 case 251: // song end
-                    for(i = 0; i < m_maxChannel; i++)
-                        m_channels[i].songptr = i;
-                    songend = true;
+                    for(int16_t i = 0; i < m_channelCount; i++)
+                        m_channels[i].dataOfs = i;
+                    m_songEnd = true;
                     return false;
             }
 
-            if(m_channels[c].songptr - c < m_maxNotes)
-                m_channels[c].songptr += m_maxChannel;
+            if(m_channels[c].dataOfs - c < m_maxNotes)
+                m_channels[c].dataOfs += m_channelCount;
             else
-                m_channels[c].songptr = c;
-        } while(!m_channels[c].pstat);
+                m_channels[c].dataOfs = c;
+        } while(m_channels[c].delay == 0);
     }
 
-    return !songend;
+    return !m_songEnd;
 }
 
 void MkjPlayer::rewind(const boost::optional<size_t>&)
 {
-    for(int i = 0; i < m_maxChannel; i++)
+    for(int i = 0; i < m_channelCount; i++)
     {
-        m_channels[i].pstat = 0;
+        m_channels[i].delay = 0;
         m_channels[i].speed = 0;
         m_channels[i].waveform = 0;
-        m_channels[i].songptr = i;
+        m_channels[i].dataOfs = i;
         m_channels[i].octave = 4;
     }
 
-    songend = false;
+    m_songEnd = false;
 }
 
 size_t MkjPlayer::framesUntilUpdate() const

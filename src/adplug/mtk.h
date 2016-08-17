@@ -57,7 +57,7 @@ public:
     }
 
 private:
-    std::string m_title;
-    std::string m_composer;
+    std::string m_title{};
+    std::string m_composer{};
     std::string m_instrumentNames[0x80]{};
 };

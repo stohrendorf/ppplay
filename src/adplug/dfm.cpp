@@ -92,30 +92,33 @@ bool DfmPlayer::load(const std::string& filename)
         f >> inst.data[8];
         f >> inst.data[0];
     }
+
+    const auto orderListEnd = f.pos() + 128;
     for(uint8_t order; orderCount() < 128 && f >> order && order != 0x80; )
         addOrder(order);
     setRestartOrder(0);
 
-    f.seekrel(128 - orderCount());
-    uint8_t npats;
-    f >> npats;
-    for(auto i = 0; i < npats; i++)
+    f.seek(orderListEnd);
+    uint8_t patternCount;
+    f >> patternCount;
+    for(auto patternIdx = 0; patternIdx < patternCount; patternIdx++)
     {
-        uint8_t n;
-        f >> n;
-        for(auto r = 0; r < 64; r++)
+        uint8_t pattern;
+        f >> pattern;
+        for(auto row = 0; row < 64; row++)
         {
-            for(auto c = 0; c < 9; c++)
+            for(auto chan = 0; chan < 9; chan++)
             {
                 uint8_t note;
                 f >> note;
-                PatternCell& cell = patternCell(n * 9 + c, r);
-                if((note & 15) == 15)
-                    cell.note = 127; // key off
+                PatternCell& cell = patternCell(pattern * 9 + chan, row);
+                if((note & 0x0f) == 0x0f)
+                    cell.note = 0x7f; // key off
                 else
-                    cell.note = ((note & 127) >> 4) * 12 + (note & 15);
-                if(note & 128)
-                { // additional effect byte
+                    cell.note = ((note & 0x7f) >> 4) * 12 + (note & 0x0f);
+                if(note & 0x80)
+                {
+                    // additional effect byte
                     uint8_t fx;
                     f >> fx;
                     if((fx >> 5) == 1)
@@ -125,15 +128,15 @@ bool DfmPlayer::load(const std::string& filename)
                         cell.command = convfx[fx >> 5];
                         if(cell.command == Command::SetFineVolume2)
                         { // set volume
-                            auto param = fx & 31;
-                            param = 63 - param * 2;
+                            auto param = fx & 0x1f;
+                            param = 0x3f - param * 2;
                             cell.hiNybble = param >> 4;
-                            cell.loNybble = param & 15;
+                            cell.loNybble = param & 0x0f;
                         }
                         else
                         {
-                            cell.hiNybble = (fx & 31) >> 4;
-                            cell.loNybble = fx & 15;
+                            cell.hiNybble = (fx & 0x1f) >> 4;
+                            cell.loNybble = fx & 0x0f;
                         }
                     }
                 }
