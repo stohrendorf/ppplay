@@ -75,19 +75,17 @@ bool XsmPlayer::load(const std::string& filename)
 
 bool XsmPlayer::update()
 {
-    int c;
-
     if(m_currentRow >= m_music.size())
     {
         m_songEnd = true;
         m_currentRow = m_lastRow = 0;
     }
 
-    for(c = 0; c < 9; c++)
+    for(int c = 0; c < 9; c++)
         if(m_music[m_currentRow].data[c] != m_music[m_lastRow].data[c])
             getOpl()->writeReg(0xb0 + c, 0);
 
-    for(c = 0; c < 9; c++)
+    for(int c = 0; c < 9; c++)
     {
         if(m_music[m_currentRow].data[c])
             playNote(c, m_music[m_currentRow].data[c] % 12, m_music[m_currentRow].data[c] / 12);
@@ -118,5 +116,5 @@ void XsmPlayer::playNote(int c, int note, int octv)
     if(!note && !octv)
         freq = 0;
     getOpl()->writeReg(0xa0 + c, freq & 0xff);
-    getOpl()->writeReg(0xb0 + c, (freq / 0xff) | 32 | (octv * 4));
+    getOpl()->writeReg(0xb0 + c, (freq >> 8) | 0x20 | (octv << 2));
 }

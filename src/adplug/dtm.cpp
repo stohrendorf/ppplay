@@ -48,9 +48,9 @@ bool DtmPlayer::load(const std::string& filename)
     FileStream f(filename);
     if(!f)
         return false;
-    const std::array<uint16_t, 12> conv_note = { 0x16B, 0x181, 0x198, 0x1B0, 0x1CA,
+    const std::array<uint16_t, 12> conv_note{ {0x16B, 0x181, 0x198, 0x1B0, 0x1CA,
         0x1E5, 0x202, 0x220, 0x241, 0x263,
-        0x287, 0x2AE };
+        0x287, 0x2AE} };
     // read header
     f.read(m_header.id, 12);
     f >> m_header.version;
@@ -149,6 +149,7 @@ bool DtmPlayer::load(const std::string& filename)
     //m_maxUsedPattern = header.numpat;
 
     // load tracks
+    int channel = 0;
     for(int i = 0; i < m_header.numpat; i++)
     {
         uint16_t packed_length;
@@ -166,7 +167,6 @@ bool DtmPlayer::load(const std::string& filename)
         pattern.resize(0x480);
 
         // convert pattern
-        int channel = 0;
         for(int j = 0; j < 9; j++)
         {
             for(int row = 0; row < 64; row++)
