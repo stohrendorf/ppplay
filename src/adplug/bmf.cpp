@@ -83,9 +83,6 @@ bool BmfPlayer::xadplayer_load()
     if(xadHeader().fmt != BMF)
         return false;
 
-#ifdef DEBUG
-    AdPlug_LogWrite("\nbmf_load():\n\n");
-#endif
     if(!strncmp(reinterpret_cast<const char*>(&tune()[0]), "BMF1.2", 6))
     {
         m_bmfVersion = BMF1_2;
@@ -212,9 +209,6 @@ void BmfPlayer::xadplayer_rewind(const boost::optional<size_t>&)
     }
 
     setCurrentSpeed(initialSpeed());
-#ifdef DEBUG
-    AdPlug_LogWrite("speed: %x\n", plr.speed);
-#endif
 
     m_bmfActiveStreams = 9;
 
@@ -252,9 +246,6 @@ void BmfPlayer::xadplayer_update()
             }
             else
             {
-#ifdef DEBUG
-                AdPlug_LogWrite("channel %02X:\n", i);
-#endif
                 bmf_event event;
 
                 // process so-called cross-events
@@ -262,11 +253,6 @@ void BmfPlayer::xadplayer_update()
                 {
                     memcpy(&event, &m_bmfStreams[i][m_bmfChannels[i].stream_position],
                            sizeof(bmf_event));
-#ifdef DEBUG
-                    AdPlug_LogWrite("%02X %02X %02X %02X %02X %02X\n", event.note,
-                                    event.delay, event.volume, event.instrument,
-                                    event.cmd, event.cmd_data);
-#endif
 
                     if(event.cmd == 0xFF)
                     {
@@ -422,12 +408,6 @@ std::string BmfPlayer::instrumentTitle(size_t i) const
 
 int BmfPlayer::__bmf_convert_stream(const uint8_t* stream, int channel)
 {
-#ifdef DEBUG
-    AdPlug_LogWrite(
-        "channel %02X (note,delay,volume,instrument,command,command_data):\n",
-        channel);
-    unsigned char *last = stream;
-#endif
     const uint8_t* stream_start = stream;
 
     int pos = 0;
@@ -589,17 +569,6 @@ int BmfPlayer::__bmf_convert_stream(const uint8_t* stream, int channel)
             } // if ((0x20 <= *stream) && (*stream <= 0x3F))
         } // if (is_cmd)
 
-#ifdef DEBUG
-        AdPlug_LogWrite(
-            "%02X %02X %02X %02X %02X %02X  <----  ",
-            m_bmfStreams[channel][pos].note, m_bmfStreams[channel][pos].delay,
-            m_bmfStreams[channel][pos].volume, m_bmfStreams[channel][pos].instrument,
-            m_bmfStreams[channel][pos].cmd, m_bmfStreams[channel][pos].cmd_data);
-        for(int zz = 0; zz < (stream - last); zz++)
-            AdPlug_LogWrite("%02X ", last[zz]);
-        AdPlug_LogWrite("\n");
-        last = stream;
-#endif
         pos++;
     } // while (true)
 

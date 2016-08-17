@@ -65,13 +65,15 @@ protected:
 
     int m_bmfActiveStreams = 0;
 
-    struct
+    struct Channel
     {
         uint16_t stream_position;
         uint8_t delay;
         uint16_t loop_position;
         uint8_t loop_counter;
-    } m_bmfChannels[9];
+    };
+
+    Channel m_bmfChannels[9];
 
     bool xadplayer_load() override;
     void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
@@ -82,7 +84,7 @@ protected:
     std::string author() const override;
     std::string instrumentTitle(size_t i) const override;
     size_t instrumentCount() const override;
-    //
+
 private:
     static const uint8_t bmf_adlib_registers[117];
     static const uint16_t bmf_notes[12];
