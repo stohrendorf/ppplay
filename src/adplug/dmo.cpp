@@ -81,7 +81,7 @@ private:
     int16_t unpack_block(uint8_t *ibuf, size_t ilen, uint8_t *obuf) const;
 
     size_t bseed = 0;
-    uint8_t *oend = nullptr;
+    uint8_t* outputEnd = nullptr;
 };
 }
 
@@ -162,7 +162,9 @@ bool DmoPlayer::load(const std::string& filename)
         uint8_t tmp;
         uf >> tmp;
         addOrder(tmp);
+        std::cerr << "ORD=" << int(tmp) << "\n";
     }
+    addOrder(0xff);
     uf.seekrel(256 - header.orderCount);
 
     // load pattern lengths
@@ -333,7 +335,7 @@ int16_t DMOUnpacker::unpack_block(uint8_t* ibuf, size_t ilen, uint8_t* obuf) con
         {
             const uint16_t cx = (code & 0x3F) + 1;
 
-            if(opos + cx >= oend)
+            if(opos + cx >= outputEnd)
                 return -1;
 
             for(int i = 0; i < cx; i++)
@@ -350,7 +352,7 @@ int16_t DMOUnpacker::unpack_block(uint8_t* ibuf, size_t ilen, uint8_t* obuf) con
             const uint16_t ax = ((code & 0x3F) << 3) + ((par1 & 0xE0) >> 5) + 1;
             const uint16_t cx = (par1 & 0x1F) + 3;
 
-            if(opos + cx >= oend)
+            if(opos + cx >= outputEnd)
                 return -1;
 
             for(int i = 0; i < cx; i++)
@@ -371,7 +373,7 @@ int16_t DMOUnpacker::unpack_block(uint8_t* ibuf, size_t ilen, uint8_t* obuf) con
             const uint16_t cx = ((par1 & 0x70) >> 4) + 3;
             const uint16_t bx = par1 & 0x0F;
 
-            if(opos + bx + cx >= oend)
+            if(opos + bx + cx >= outputEnd)
                 return -1;
 
             for(int i = 0; i < cx; i++)
@@ -396,7 +398,7 @@ int16_t DMOUnpacker::unpack_block(uint8_t* ibuf, size_t ilen, uint8_t* obuf) con
             const uint16_t cx = ((par1 & 0x01) << 4) + (par2 >> 4) + 4;
             const uint16_t ax = par2 & 0x0F;
 
-            if(opos + ax + cx >= oend)
+            if(opos + ax + cx >= outputEnd)
                 return -1;
 
             for(int i = 0; i < cx; i++)
@@ -413,30 +415,30 @@ int16_t DMOUnpacker::unpack_block(uint8_t* ibuf, size_t ilen, uint8_t* obuf) con
     return opos - obuf;
 }
 
-size_t DMOUnpacker::unpack(uint8_t* ibuf, uint8_t* obuf, size_t outputsize)
+size_t DMOUnpacker::unpack(uint8_t* inputBuf, uint8_t* outputBuf, size_t outputSize)
 {
-    size_t olen = 0;
-    const uint16_t block_count = CHARP_AS_WORD(ibuf);
+    size_t outputLength = 0;
+    const uint16_t blockCount = CHARP_AS_WORD(inputBuf);
 
-    ibuf += 2;
-    uint8_t* block_length = ibuf;
-    ibuf += 2 * block_count;
+    inputBuf += 2;
+    uint8_t* blockLength = inputBuf;
+    inputBuf += 2 * blockCount;
 
-    oend = obuf + outputsize;
+    outputEnd = outputBuf + outputSize;
 
-    for(uint16_t i = 0; i < block_count; i++)
+    for(uint16_t i = 0; i < blockCount; i++)
     {
-        auto bul = CHARP_AS_WORD(ibuf);
+        auto bul = CHARP_AS_WORD(inputBuf);
 
-        if(unpack_block(ibuf + 2, CHARP_AS_WORD(block_length) - 2, obuf) != bul)
+        if(unpack_block(inputBuf + 2, CHARP_AS_WORD(blockLength) - 2, outputBuf) != bul)
             return 0;
 
-        obuf += bul;
-        olen += bul;
+        outputBuf += bul;
+        outputLength += bul;
 
-        ibuf += CHARP_AS_WORD(block_length);
-        block_length += 2;
+        inputBuf += CHARP_AS_WORD(blockLength);
+        blockLength += 2;
     }
 
-    return olen;
+    return outputLength;
 }

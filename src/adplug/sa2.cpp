@@ -323,7 +323,10 @@ std::string Sa2Player::title() const
     // parse instrument names for song name
     for(int i = 0; i < 29; i++)
     {
-        std::string tmp = m_instrumentNames[i].substr(1);
+        std::string tmp = m_instrumentNames[i];
+        if(!tmp.empty())
+            tmp = tmp.substr(1);
+
         while(!tmp.empty() && tmp.back() == ' ')
             tmp.pop_back();
 

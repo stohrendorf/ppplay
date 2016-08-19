@@ -50,8 +50,8 @@ bool CffPlayer::load(const std::string& filename)
         0x287, 0x2AE };
 
     // '<CUD-FM-File>' - signed ?
-    f >> header;
-    if(memcmp(header.id, "<CUD-FM-File>"
+    f >> m_header;
+    if(memcmp(m_header.id, "<CUD-FM-File>"
               "\x1A\xDE\xE0",
               16))
     {
@@ -61,16 +61,17 @@ bool CffPlayer::load(const std::string& filename)
     std::vector<uint8_t> module(0x10000);
 
     // packed ?
-    if(header.packed)
+    if(m_header.packed)
     {
         std::unique_ptr<cff_unpacker> unpacker{ new cff_unpacker() };
 
         std::vector<uint8_t> packedModule;
-        packedModule.resize(header.size + 4, 0);
+        packedModule.resize(m_header.size + 4, 0);
 
-        f.read(packedModule.data(), header.size);
+        f.read(packedModule.data(), m_header.size);
+        unpacker->unpack(packedModule, module);
 
-        if(!unpacker->unpack(packedModule.data(), module.data()))
+        if(module.empty())
         {
             return false;
         }
@@ -82,7 +83,7 @@ bool CffPlayer::load(const std::string& filename)
     }
     else
     {
-        f.read(module.data(), header.size);
+        f.read(module.data(), m_header.size);
     }
 
     // init CmodPlayer
@@ -93,54 +94,47 @@ bool CffPlayer::load(const std::string& filename)
     // load instruments
     for(int i = 0; i < 47; i++)
     {
-        memcpy(&instruments[i], &module[i * 32], sizeof(cff_instrument));
+        memcpy(&m_instruments[i], &module[i * 32], sizeof(cff_instrument));
 
         for(int j = 0; j < 11; j++)
-            addInstrument().data[conv_inst[j]] = instruments[i].data[j];
+            addInstrument().data[conv_inst[j]] = m_instruments[i].data[j];
 
-        instruments[i].name[20] = 0;
+        m_instruments[i].name[20] = 0;
     }
 
     // number of patterns
-    // m_maxUsedPattern = module[0x5E0];
-    const auto maxUsedPattern = module[0x5E0];
+    const auto patternCount = module[0x5E0];
 
     // load title & author
-    song_title = stringncpy(reinterpret_cast<const char*>(&module[0x614]), 20);
-    song_author = stringncpy(reinterpret_cast<const char*>(&module[0x600]), 20);
+    m_title = stringncpy(reinterpret_cast<const char*>(&module[0x614]), 20);
+    m_author = stringncpy(reinterpret_cast<const char*>(&module[0x600]), 20);
 
     // load orders
     {
         static constexpr auto OrderDataOffset = 0x628;
-        int orderCount = 0;
         for(int i = 0; i < 64; i++)
         {
             if(module[OrderDataOffset + i] & 0x80)
-            {
-                orderCount = i;
                 break;
-            }
-        }
-        for(int i = 0; i < orderCount; ++i)
-        {
+
             addOrder(module[OrderDataOffset + i]);
         }
     }
 
     // load tracks
     int t = 0;
-    for(int i = 0; i < maxUsedPattern; i++)
+    for(int i = 0; i < patternCount; i++)
     {
         uint8_t old_event_byte2[9];
 
         memset(old_event_byte2, 0, 9);
 
-        for(int j = 0; j < 9; j++)
+        for(int channel = 0; channel < 9; channel++)
         {
-            for(int k = 0; k < 64; k++)
+            for(int row = 0; row < 64; row++)
             {
-                const cff_event* event = reinterpret_cast<const cff_event *>(&module[0x669 + ((i * 64 + k) * 9 + j) * 3]);
-                PatternCell& cell = patternCell(t, k);
+                const cff_event* event = reinterpret_cast<const cff_event *>(&module[0x669 + ((i * 64 + row) * 9 + channel) * 3]);
+                PatternCell& cell = patternCell(t, row);
 
                 // convert note
                 if(event->byte0 == 0x6D)
@@ -149,7 +143,7 @@ bool CffPlayer::load(const std::string& filename)
                     cell.note = event->byte0;
 
                 if(event->byte2)
-                    old_event_byte2[j] = event->byte2;
+                    old_event_byte2[channel] = event->byte2;
 
                 // convert effect
                 switch(event->byte1)
@@ -212,34 +206,34 @@ bool CffPlayer::load(const std::string& filename)
 
                     case 'E': // fine frequency slide down
                         cell.command = Command::FineSlideDown;
-                        cell.hiNybble = old_event_byte2[j] >> 4;
-                        cell.loNybble = old_event_byte2[j] & 15;
+                        cell.hiNybble = old_event_byte2[channel] >> 4;
+                        cell.loNybble = old_event_byte2[channel] & 15;
                         break;
 
                     case 'F': // fine frequency slide up
                         cell.command = Command::FineSlideUp;
-                        cell.hiNybble = old_event_byte2[j] >> 4;
-                        cell.loNybble = old_event_byte2[j] & 15;
+                        cell.hiNybble = old_event_byte2[channel] >> 4;
+                        cell.loNybble = old_event_byte2[channel] & 15;
                         break;
 
                     case 'D': // fine volume slide
-                        if(old_event_byte2[j] & 15)
+                        if(old_event_byte2[channel] & 15)
                         {
                             // slide down
                             cell.command = Command::SFXFineVolumeDown;
-                            cell.loNybble = old_event_byte2[j] & 15;
+                            cell.loNybble = old_event_byte2[channel] & 15;
                         }
                         else
                         {
                             // slide up
                             cell.command = Command::SFXFineVolumeUp;
-                            cell.loNybble = old_event_byte2[j] >> 4;
+                            cell.loNybble = old_event_byte2[channel] >> 4;
                         }
                         break;
 
                     case 'J': // arpeggio
-                        cell.hiNybble = old_event_byte2[j] >> 4;
-                        cell.loNybble = old_event_byte2[j] & 15;
+                        cell.hiNybble = old_event_byte2[channel] >> 4;
+                        cell.loNybble = old_event_byte2[channel] & 15;
                         break;
                 }
             }
@@ -269,14 +263,14 @@ void CffPlayer::rewind(const boost::optional<size_t>& subsong)
         channel(i).instrument = i;
 
         const ModPlayer::Instrument& inst = instrument(i);
-        channel(i).carrierVolume = 63 - (inst.data[10] & 63);
-        channel(i).modulatorVolume = 63 - (inst.data[9] & 63);
+        channel(i).carrierVolume = 0x3f - (inst.data[10] & 0x3f);
+        channel(i).modulatorVolume = 0x3f - (inst.data[9] & 0x3f);
     }
 }
 
 std::string CffPlayer::type() const
 {
-    if(header.packed)
+    if(m_header.packed)
         return "BoomTracker 4, packed";
     else
         return "BoomTracker 4";
@@ -284,17 +278,17 @@ std::string CffPlayer::type() const
 
 std::string CffPlayer::title() const
 {
-    return song_title;
+    return m_title;
 }
 
 std::string CffPlayer::author() const
 {
-    return song_author;
+    return m_author;
 }
 
 std::string CffPlayer::instrumentTitle(size_t n) const
 {
-    return std::string(instruments[n].name);
+    return std::string(m_instruments[n].name);
 }
 
 size_t CffPlayer::instrumentCount() const
@@ -307,36 +301,34 @@ size_t CffPlayer::instrumentCount() const
 /*
   Lempel-Ziv-Tyr ;-)
 */
-size_t CffPlayer::cff_unpacker::unpack(uint8_t* ibuf,
-                                        uint8_t* obuf)
+void CffPlayer::cff_unpacker::unpack(const std::vector<uint8_t>& ibuf, std::vector<uint8_t>& obuf)
 {
-    if(memcmp(ibuf, "YsComp"
+    obuf.clear();
+
+    if(memcmp(ibuf.data(), "YsComp"
               "\x07"
               "CUD1997"
               "\x1A\x04",
               16))
-        return 0;
+        return;
 
-    m_input = ibuf + 16;
-    m_output = obuf;
-
-    m_outputLength = 0;
+    auto it = std::next(ibuf.begin(), 16);
 
     std::vector<std::vector<uint8_t>> dictionary;
     cleanup();
-    if(!startup(dictionary))
-        return m_outputLength;
+    if(!startup(dictionary, obuf, it))
+        return;
 
     // LZW
-    while(auto newCode = get_code())
+    while(auto newCode = get_code(it))
     {
         // 0x01: end of block
         if(newCode == 1)
         {
             cleanup();
             dictionary.clear();
-            if(!startup(dictionary))
-                return m_outputLength;
+            if(!startup(dictionary, obuf, it))
+                return;
 
             continue;
         }
@@ -356,28 +348,27 @@ size_t CffPlayer::cff_unpacker::unpack(uint8_t* ibuf,
 
             m_codeLength = 2;
 
-            uint8_t repeat_length = get_code() + 1;
+            uint8_t repeat_length = get_code(it) + 1;
 
-            m_codeLength = 4 << get_code();
+            m_codeLength = 4 << get_code(it);
 
-            unsigned long repeat_counter = get_code();
+            unsigned long repeat_counter = get_code(it);
 
-            if(m_outputLength + repeat_counter * repeat_length > 0x10000)
+            if(obuf.size() + repeat_counter * repeat_length)
             {
-                m_outputLength = 0;
-                return m_outputLength;
+                obuf.clear();
+                return;
             }
 
-            for(unsigned int i = 0; i < repeat_counter * repeat_length; i++)
+            for(auto i = 0; i < repeat_counter * repeat_length; i++)
             {
-                m_output[m_outputLength] = m_output[m_outputLength - repeat_length];
-                ++m_outputLength;
+                obuf.emplace_back(obuf[obuf.size() - repeat_length]);
             }
 
             m_codeLength = old_code_length;
 
-            if(!startup(dictionary))
-                return m_outputLength;
+            if(!startup(dictionary, obuf, it))
+                return;
 
             continue;
         }
@@ -402,24 +393,16 @@ size_t CffPlayer::cff_unpacker::unpack(uint8_t* ibuf,
         // output <- new.code.string
         translate_code(newCode, m_theString, dictionary);
 
-        if(m_outputLength + m_theString[0] > 0x10000)
-        {
-            m_outputLength = 0;
-            return m_outputLength;
-        }
-
         for(int i = 0; i < m_theString[0]; i++)
-            m_output[m_outputLength++] = m_theString[i + 1];
+            obuf.emplace_back(m_theString[i + 1]);
     }
-
-    return m_outputLength;
 }
 
-uint32_t CffPlayer::cff_unpacker::get_code()
+uint32_t CffPlayer::cff_unpacker::get_code(std::vector<uint8_t>::const_iterator& it)
 {
     while(m_bitsLeft < m_codeLength)
     {
-        m_bitsBuffer |= ((*m_input++) << m_bitsLeft);
+        m_bitsBuffer |= ((*it++) << m_bitsLeft);
         m_bitsLeft += 8;
     }
 
@@ -456,20 +439,14 @@ void CffPlayer::cff_unpacker::cleanup()
     m_bitsLeft = 0;
 }
 
-bool CffPlayer::cff_unpacker::startup(const std::vector<std::vector<uint8_t>>& dictionary)
+bool CffPlayer::cff_unpacker::startup(const std::vector<std::vector<uint8_t>>& dictionary, std::vector<uint8_t>& obuf, std::vector<uint8_t>::const_iterator& it)
 {
-    auto oldCode = get_code();
+    auto oldCode = get_code(it);
 
     translate_code(oldCode, m_theString, dictionary);
 
-    if(m_outputLength + m_theString[0] > 0x10000)
-    {
-        m_outputLength = 0;
-        return false;
-    }
-
     for(int i = 0; i < m_theString[0]; i++)
-        m_output[m_outputLength++] = m_theString[i + 1];
+        obuf.emplace_back( m_theString[i + 1] );
 
     return true;
 }

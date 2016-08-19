@@ -176,7 +176,7 @@ bool A2mPlayer::load(const std::string& filename)
     m_orgPos += 43;
     for(int i = 0; i < 250; ++i)
     {
-        m_songname.assign(&m_org[m_orgPos], &m_org[m_orgPos] + 32);
+        // m_songname.assign(&m_org[m_orgPos], &m_org[m_orgPos] + 32);
         m_orgPos += 33;
     }
 

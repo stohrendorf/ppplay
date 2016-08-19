@@ -46,22 +46,17 @@ private:
     {
     public:
 
-        size_t unpack(uint8_t *ibuf, uint8_t *obuf);
+        void unpack(const std::vector<uint8_t>& ibuf, std::vector<uint8_t>& obuf);
 
     private:
 
-        uint32_t get_code();
-        static void translate_code(unsigned long code, uint8_t *string, const std::vector<std::vector<uint8_t> > &dictionary);
+        uint32_t get_code(std::vector<uint8_t>::const_iterator& it);
+        static void translate_code(unsigned long code, uint8_t *string, const std::vector<std::vector<uint8_t>> &dictionary);
 
         void cleanup();
-        bool startup(const std::vector<std::vector<uint8_t> > &dictionary);
+        bool startup(const std::vector<std::vector<uint8_t> > &dictionary, std::vector<uint8_t>& obuf, std::vector<uint8_t>::const_iterator& it);
 
         static void expand_dictionary(uint8_t *string, std::vector<std::vector<uint8_t> > &dictionary);
-
-        uint8_t *m_input;
-        uint8_t *m_output;
-
-        size_t m_outputLength;
 
         uint8_t m_codeLength;
 
@@ -80,17 +75,12 @@ private:
         uint8_t packed = 0;
         uint8_t reserved[12] = { 0 };
     };
-    cff_header header{};
-#pragma pack(pop)
 
     struct cff_instrument
     {
         uint8_t data[12];
         char name[21];
-    } instruments[47];
-
-    std::string song_title;
-    std::string song_author;
+    };
 
     struct cff_event
     {
@@ -98,4 +88,11 @@ private:
         uint8_t byte1;
         uint8_t byte2;
     };
+#pragma pack(pop)
+
+    cff_header m_header{};
+    cff_instrument m_instruments[47];
+
+    std::string m_title;
+    std::string m_author;
 };

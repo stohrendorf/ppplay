@@ -423,7 +423,7 @@ bool ModPlayer::update()
                     setCurrentSpeed(info);
                 else if(info >= 0x32)
                     setCurrentTempo(info);
-                if(!info)
+                if(info == 0)
                     m_songEnd = true;
                 break;
 
@@ -444,7 +444,7 @@ bool ModPlayer::update()
             case Command::AMDSpeed: // AMD set speed
                 if(info <= 0x1f && info > 0)
                     setCurrentSpeed(info);
-                else if(info > 0x1f || !info)
+                else if(info > 0x1f || info == 0)
                     setCurrentTempo(info);
                 break;
 

@@ -275,7 +275,9 @@ public:
         uint8_t position = 0;
         uint8_t fnumL = 0;
         uint8_t konBlockFnumH = 0;
+
         typedef void (AdlibDriver::*Callback)(Channel&);
+
         Callback primaryEffect = nullptr;
         Callback secondaryEffect = nullptr;
         uint8_t fractionalSpacing = 0;

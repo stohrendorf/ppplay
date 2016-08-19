@@ -79,6 +79,8 @@ bool HybridPlayer::xadplayer_load()
     // load order
     m_orderOffsets = &tune()[0x1D4];
 
+    addOrder(0);
+
     return true;
 }
 

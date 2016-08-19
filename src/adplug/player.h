@@ -127,8 +127,8 @@ private:
     uint8_t m_currentRow = 0;
     uint16_t m_initialSpeed = 6;
     uint16_t m_currentSpeed = 6;
-    uint16_t m_initialTempo = 0;
-    uint16_t m_currentTempo = 0;
+    uint16_t m_initialTempo = 125;
+    uint16_t m_currentTempo = 125;
 
 protected:
     void addOrder(uint8_t order)
