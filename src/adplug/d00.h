@@ -23,47 +23,68 @@
 
 #include "player.h"
 
-class D00Player : public Player
+class D00Player
+    : public Player
 {
-    DISABLE_COPY(D00Player)
 public:
-    static Player *factory();
+    DISABLE_COPY(D00Player)
+
+    static Player* factory();
 
     D00Player() = default;
 
-    ~D00Player() = default;
+    ~D00Player() override = default;
 
-    bool load(const std::string &filename) override;
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override;
+
     std::string title() const override
     {
-        if(m_version > 1)
+        if( m_version > 1 )
+        {
             return m_header->songname;
+        }
         else
+        {
             return std::string();
+        }
     }
+
     std::string author() const override
     {
-        if(m_version > 1)
+        if( m_version > 1 )
+        {
             return m_header->author;
+        }
         else
+        {
             return std::string();
+        }
     }
+
     std::string description() const override
     {
-        if(*m_description)
+        if( *m_description )
+        {
             return m_description;
+        }
         else
+        {
             return std::string();
+        }
     }
+
     size_t subSongCount() const override;
 
 private:
-#pragma pack(push,1)
+#pragma pack(push, 1)
     struct d00header
     {
         char id[6];
@@ -77,11 +98,16 @@ private:
         uint8_t version, speed, subsongs;
         uint16_t trackPointerOfs, orderListOfs, instrumentOfs, infoptr, lpulptr, endmark;
     };
+
+    struct Instrument
+    {
+        uint8_t data[11], finetune, timer, sr, dummy[2];
+    };
 #pragma pack(pop)
 
     struct Channel
     {
-        const uint16_t *patternData;
+        const uint16_t* patternData;
         uint16_t orderPos, patternPos, delay, speed, restHoldDelay, frequency, instrument,
             spfx = 0xffff, ispfx, irhcnt;
         signed short transpose, noteSlideSpeed, noteSlideValue, vibratoSpeed;
@@ -94,10 +120,6 @@ private:
 
     Channel m_channels[9];
 
-    struct Instrument
-    {
-        uint8_t data[11], finetune, timer, sr, dummy[2];
-    };
     const Instrument* m_instruments = nullptr;
 
     struct Sspfx
@@ -122,15 +144,19 @@ private:
     bool m_songEnd = false;
     uint8_t m_version = 0;
     size_t m_currentSubSong = 0;
-    char *m_description = nullptr;
-    const uint16_t *m_orders = nullptr;
-    d00header *m_header = nullptr;
-    d00header1 *m_header1 = nullptr;
+    char* m_description = nullptr;
+    const uint16_t* m_orders = nullptr;
+    d00header* m_header = nullptr;
+    d00header1* m_header1 = nullptr;
     std::vector<char> m_fileData{};
 
     void setvolume(uint8_t chan);
+
     void setfreq(uint8_t chan);
+
     void setinst(uint8_t chan);
+
     void playnote(uint8_t chan);
+
     void vibrato(uint8_t chan);
 };

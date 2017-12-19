@@ -23,21 +23,27 @@
 
 #include "player.h"
 
-class XsmPlayer : public Player
+class XsmPlayer
+    : public Player
 {
-    DISABLE_COPY(XsmPlayer)
 public:
-    static Player *factory()
+    DISABLE_COPY(XsmPlayer)
+
+    static Player* factory()
     {
         return new XsmPlayer();
     }
 
     XsmPlayer() = default;
-    ~XsmPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    ~XsmPlayer() override = default;
+
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override
@@ -48,7 +54,7 @@ public:
 private:
     struct Row
     {
-        uint8_t data[9] = { 0,0,0,0,0,0,0,0,0 };
+        uint8_t data[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
     };
 
     std::vector<Row> m_music{};

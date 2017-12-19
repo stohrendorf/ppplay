@@ -23,18 +23,24 @@
 
 #include "player.h"
 
-class DroPlayer : public Player
+class DroPlayer
+    : public Player
 {
-    DISABLE_COPY(DroPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(DroPlayer)
+
+    static Player* factory();
 
     DroPlayer() = default;
-    ~DroPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    ~DroPlayer() override = default;
+
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override
@@ -47,5 +53,4 @@ private:
     uint32_t m_pos = 0;
     uint32_t m_msTotal = 0;
     uint16_t m_delay = 1;
-    uint8_t m_index = 0;
 };

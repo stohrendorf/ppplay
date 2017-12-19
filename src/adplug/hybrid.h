@@ -23,16 +23,18 @@
 
 #include "xad.h"
 
-class HybridPlayer : public XadPlayer
+class HybridPlayer
+    : public XadPlayer
 {
-    DISABLE_COPY(HybridPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(HybridPlayer)
+
+    static Player* factory();
 
     HybridPlayer() = default;
 
 protected:
-#pragma pack(push,1)
+#pragma pack(push, 1)
     struct Instrument
     {
         char name[7];
@@ -41,17 +43,23 @@ protected:
 #pragma pack(pop)
 
     bool xadplayer_load() override;
+
     void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
+
     void xadplayer_update() override;
+
     size_t framesUntilUpdate() const override;
+
     std::string type() const override;
+
     std::string instrumentTitle(size_t i) const override;
+
     size_t instrumentCount() const override;
 
 private:
     const uint8_t* m_orderOffsets = nullptr;
 
-    const Instrument *m_instruments = nullptr;
+    const Instrument* m_instruments = nullptr;
 
     struct Channel
     {

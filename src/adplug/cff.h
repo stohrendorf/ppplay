@@ -23,21 +23,28 @@
 
 #include "mod.h"
 
-class CffPlayer : public ModPlayer
+class CffPlayer
+    : public ModPlayer
 {
-    DISABLE_COPY(CffPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(CffPlayer)
+
+    static Player* factory();
 
     CffPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    bool load(const std::string& filename) override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
 
     std::string type() const override;
+
     std::string title() const override;
+
     std::string author() const override;
+
     std::string instrumentTitle(size_t n) const override;
+
     size_t instrumentCount() const override;
 
 private:
@@ -51,12 +58,14 @@ private:
     private:
 
         uint32_t get_code(std::vector<uint8_t>::const_iterator& it);
-        static void translate_code(unsigned long code, uint8_t *string, const std::vector<std::vector<uint8_t>> &dictionary);
+
+        static void translate_code(unsigned long code, uint8_t* string, const std::vector<std::vector<uint8_t>>& dictionary);
 
         void cleanup();
-        bool startup(const std::vector<std::vector<uint8_t> > &dictionary, std::vector<uint8_t>& obuf, std::vector<uint8_t>::const_iterator& it);
 
-        static void expand_dictionary(uint8_t *string, std::vector<std::vector<uint8_t> > &dictionary);
+        bool startup(const std::vector<std::vector<uint8_t>>& dictionary, std::vector<uint8_t>& obuf, std::vector<uint8_t>::const_iterator& it);
+
+        static void expand_dictionary(uint8_t* string, std::vector<std::vector<uint8_t>>& dictionary);
 
         uint8_t m_codeLength;
 
@@ -66,14 +75,14 @@ private:
         uint8_t m_theString[256];
     };
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
     struct cff_header
     {
         char id[16] = "";
         uint8_t version = 0;
         uint16_t size = 0;
         uint8_t packed = 0;
-        uint8_t reserved[12] = { 0 };
+        uint8_t reserved[12] = {0};
     };
 
     struct cff_instrument
@@ -91,7 +100,7 @@ private:
 #pragma pack(pop)
 
     cff_header m_header{};
-    cff_instrument m_instruments[47];
+    cff_instrument m_instruments[47]{};
 
     std::string m_title;
     std::string m_author;

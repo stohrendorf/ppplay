@@ -23,11 +23,13 @@
 
 #include "xad.h"
 
-class FlashPlayer : public XadPlayer
+class FlashPlayer
+    : public XadPlayer
 {
-    DISABLE_COPY(FlashPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(FlashPlayer)
+
+    static Player* factory();
 
     FlashPlayer() = default;
 
@@ -35,14 +37,16 @@ protected:
     //
     bool xadplayer_load() override
     {
-        if(xadHeader().fmt == FLASH)
-            return true;
-        else
-            return false;
+        return xadHeader().fmt == FLASH;
     }
+
     void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
+
     void xadplayer_update() override;
+
     size_t framesUntilUpdate() const override;
+
     std::string type() const override;
+
     size_t instrumentCount() const override;
 };

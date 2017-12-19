@@ -31,14 +31,16 @@ Player* SngPlayer::factory()
 bool SngPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
+    {
         return false;
+    }
 
     // load header
     f >> m_header;
 
     // file validation section
-    if(strncmp(m_header.id, "ObsM", 4))
+    if( strncmp(m_header.id, "ObsM", 4) != 0 )
     {
         return false;
     }
@@ -50,36 +52,40 @@ bool SngPlayer::load(const std::string& filename)
     m_data.resize(m_header.length);
     f.read(m_data.data(), m_data.size());
 
-    rewind(0);
+    rewind(size_t(0));
     return true;
 }
 
 bool SngPlayer::update()
 {
-    if(m_header.compressed && m_del)
+    if( m_header.compressed && m_del )
     {
         m_del--;
         return !m_songEnd;
     }
 
-    while(m_data[m_pos].reg)
+    while( m_data[m_pos].reg != 0 )
     {
         getOpl()->writeReg(m_data[m_pos].reg, m_data[m_pos].val);
         m_pos++;
-        if(m_pos >= m_header.length)
+        if( m_pos >= m_header.length )
         {
             m_songEnd = true;
             m_pos = m_header.loop;
         }
     }
 
-    if(!m_header.compressed)
+    if( !m_header.compressed )
+    {
         getOpl()->writeReg(m_data[m_pos].reg, m_data[m_pos].val);
+    }
 
-    if(m_data[m_pos].val)
-        m_del = m_data[m_pos].val - 1;
+    if( m_data[m_pos].val != 0 )
+    {
+        m_del = m_data[m_pos].val - 1u;
+    }
     m_pos++;
-    if(m_pos >= m_header.length)
+    if( m_pos >= m_header.length )
     {
         m_songEnd = true;
         m_pos = m_header.loop;

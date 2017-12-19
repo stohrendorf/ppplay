@@ -35,16 +35,18 @@ Player* DfmPlayer::factory()
 bool DfmPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
+    {
         return false;
-    const Command convfx[8] = { Command::Sentinel,
-        Command::Sentinel,
-        Command::SetFineVolume2,
-        Command::RADSpeed,
-        Command::FineSlideUp,
-        Command::FineSlideDown,
-        Command::Sentinel,
-        Command::PatternBreak };
+    }
+    const Command convfx[8] = {Command::Sentinel,
+                               Command::Sentinel,
+                               Command::SetFineVolume2,
+                               Command::RADSpeed,
+                               Command::FineSlideUp,
+                               Command::FineSlideDown,
+                               Command::Sentinel,
+                               Command::PatternBreak};
 
     // file validation
     char id[4];
@@ -53,7 +55,7 @@ bool DfmPlayer::load(const std::string& filename)
     uint8_t hiver, lover;
     f >> hiver >> lover;
 
-    if(strncmp(id, "DFM\x1a", 4) || hiver > 1)
+    if( strncmp(id, "DFM\x1a", 4) != 0 || hiver > 1 )
     {
         return false;
     }
@@ -66,18 +68,18 @@ bool DfmPlayer::load(const std::string& filename)
     {
         char songinfo[33];
         f.read(songinfo, 33);
-        m_songInfo.assign(songinfo, 1, songinfo[0]);
+        m_songInfo = stringncpy(songinfo, 33);
     }
     uint8_t initSpeed;
     f >> initSpeed;
     setInitialSpeed(initSpeed);
-    for(auto i = 0; i < 32; i++)
+    for( auto i = 0; i < 32; i++ )
     {
         char instname[12];
         f.read(instname, 12);
-        m_instName[i].assign(instname, 1, instname[0]);
+        m_instName[i] = stringncpy(instname, 12);
     }
-    for(auto i = 0; i < 32; i++)
+    for( auto i = 0; i < 32; i++ )
     {
         ModPlayer::Instrument& inst = addInstrument();
         f >> inst.data[1];
@@ -94,39 +96,47 @@ bool DfmPlayer::load(const std::string& filename)
     }
 
     const auto orderListEnd = f.pos() + 128;
-    for(uint8_t order; orderCount() < 128 && f >> order && order != 0x80; )
+    for( uint8_t order; orderCount() < 128 && f >> order && order != 0x80; )
+    {
         addOrder(order);
+    }
     setRestartOrder(0);
 
     f.seek(orderListEnd);
     uint8_t patternCount;
     f >> patternCount;
-    for(auto patternIdx = 0; patternIdx < patternCount; patternIdx++)
+    for( auto patternIdx = 0; patternIdx < patternCount; patternIdx++ )
     {
         uint8_t pattern;
         f >> pattern;
-        for(auto row = 0; row < 64; row++)
+        for( auto row = 0u; row < 64; row++ )
         {
-            for(auto chan = 0; chan < 9; chan++)
+            for( auto chan = 0u; chan < 9; chan++ )
             {
                 uint8_t note;
                 f >> note;
                 PatternCell& cell = patternCell(pattern * 9 + chan, row);
-                if((note & 0x0f) == 0x0f)
+                if( (note & 0x0f) == 0x0f )
+                {
                     cell.note = 0x7f; // key off
+                }
                 else
+                {
                     cell.note = ((note & 0x7f) >> 4) * 12 + (note & 0x0f);
-                if(note & 0x80)
+                }
+                if( note & 0x80 )
                 {
                     // additional effect byte
                     uint8_t fx;
                     f >> fx;
-                    if((fx >> 5) == 1)
+                    if( (fx >> 5) == 1 )
+                    {
                         cell.instrument = (fx & 31) + 1;
+                    }
                     else
                     {
                         cell.command = convfx[fx >> 5];
-                        if(cell.command == Command::SetFineVolume2)
+                        if( cell.command == Command::SetFineVolume2 )
                         { // set volume
                             auto param = fx & 0x1f;
                             param = 0x3f - param * 2;
@@ -144,7 +154,7 @@ bool DfmPlayer::load(const std::string& filename)
         }
     }
 
-    rewind(0);
+    rewind(size_t(0));
     return true;
 }
 

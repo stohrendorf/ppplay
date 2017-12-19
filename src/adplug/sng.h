@@ -23,16 +23,22 @@
 
 #include "player.h"
 
-class SngPlayer : public Player
+class SngPlayer
+    : public Player
 {
-    DISABLE_COPY(SngPlayer)
 public:
-    SngPlayer() = default;
-    static Player *factory();
+    DISABLE_COPY(SngPlayer)
 
-    bool load(const std::string &filename) override;
+    SngPlayer() = default;
+
+    static Player* factory();
+
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override
     {
         return SampleRate / 70;
@@ -44,13 +50,13 @@ public:
     }
 
 private:
-#pragma pack(push,1)
+#pragma pack(push, 1)
     struct SngHeader
     {
-        char id[4] = { 0, 0, 0, 0 };
+        char id[4] = {0, 0, 0, 0};
         uint16_t length = 0, start = 0, loop = 0;
         uint8_t delay = 0;
-        uint8_t compressed = false;
+        uint8_t compressed = 0;
     };
     struct Sdata
     {

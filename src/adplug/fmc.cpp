@@ -33,24 +33,26 @@ Player* FmcPlayer::factory()
 bool FmcPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
+    {
         return false;
-    const Command conv_fx[16] = { Command::None,
-        Command::SlideUp,
-        Command::SlideDown,
-        Command::Porta,
-        Command::Vibrato,
-        Command::NoteOff,
-        Command::Sentinel,
-        Command::Sentinel,
-        Command::Sentinel,
-        Command::Sentinel,
-        Command::VolSlide,
-        Command::OrderJump,
-        Command::SetFineVolume,
-        Command::PatternBreak,
-        Command::Special,
-        Command::SA2Speed };
+    }
+    const Command conv_fx[16] = {Command::None,
+                                 Command::SlideUp,
+                                 Command::SlideDown,
+                                 Command::Porta,
+                                 Command::Vibrato,
+                                 Command::NoteOff,
+                                 Command::Sentinel,
+                                 Command::Sentinel,
+                                 Command::Sentinel,
+                                 Command::Sentinel,
+                                 Command::VolSlide,
+                                 Command::OrderJump,
+                                 Command::SetFineVolume,
+                                 Command::PatternBreak,
+                                 Command::Special,
+                                 Command::SA2Speed};
 
     // read header
     f.read(header.id, 4);
@@ -58,7 +60,7 @@ bool FmcPlayer::load(const std::string& filename)
     f >> header.numchan;
 
     // 'FMC!' - signed ?
-    if(strncmp(header.id, "FMC!", 4))
+    if( strncmp(header.id, "FMC!", 4) != 0 )
     {
         return false;
     }
@@ -68,25 +70,27 @@ bool FmcPlayer::load(const std::string& filename)
     init_trackord();
 
     // load order
-    for(uint8_t order; orderCount() < 256 && f >> order && order < 0xFE; )
+    for( uint8_t order; orderCount() < 256 && f >> order && order < 0xFE; )
+    {
         addOrder(order);
+    }
     f.seekrel(256 - orderCount());
 
     f.seekrel(2);
 
     // load instruments
-    for(int i = 0; i < 32; i++)
+    for( auto& instrument : instruments )
     {
-        f >> instruments[i];
+        f >> instrument;
     }
 
     // load tracks
-    int t = 0;
-    for(int i = 0; i < 64 && f.pos() < f.size(); i++)
+    auto t = 0u;
+    for( auto i = 0u; i < 64 && f.pos() < f.size(); i++ )
     {
-        for(int j = 0; j < header.numchan; j++)
+        for( auto j = 0u; j < header.numchan; j++ )
         {
-            for(int k = 0; k < 64; k++)
+            for( auto k = 0u; k < 64; k++ )
             {
                 fmc_event event;
 
@@ -102,11 +106,13 @@ bool FmcPlayer::load(const std::string& filename)
                 cell.loNybble = event.byte2 & 0x0F;
 
                 // fix effects
-                if(cell.command == Command::Special) // 0x0E (14): Retrig
+                if( cell.command == Command::Special )
+                { // 0x0E (14): Retrig
                     cell.command = Command::SFXRetrigger;
-                if(cell.command == Command::VolSlide)
+                }
+                if( cell.command == Command::VolSlide )
                 { // 0x1A (26): Volume Slide
-                    if(cell.hiNybble > cell.loNybble)
+                    if( cell.hiNybble > cell.loNybble )
                     {
                         cell.hiNybble -= cell.loNybble;
                         cell.loNybble = 0;
@@ -124,21 +130,25 @@ bool FmcPlayer::load(const std::string& filename)
     }
 
     // convert instruments
-    for(int i = 0; i < 31; i++)
+    for( int i = 0; i < 31; i++ )
+    {
         addInstrument(instruments[i]);
+    }
 
     // data for Protracker
     BOOST_ASSERT(header.numchan <= 32);
     disableAllChannels();
-    for(uint8_t i = 0; i < header.numchan; ++i)
+    for( uint8_t i = 0; i < header.numchan; ++i )
+    {
         enableChannel(i);
+    }
     //m_maxUsedPattern = t / header.numchan;
     setRestartOrder(0);
 
     // flags
     setFaust();
 
-    rewind(0);
+    rewind(size_t(0));
 
     return true;
 }

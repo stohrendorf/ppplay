@@ -25,20 +25,26 @@
 
 class FileStream;
 
-class S3mPlayer : public Player
+class S3mPlayer
+    : public Player
 {
-    DISABLE_COPY(S3mPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(S3mPlayer)
+
+    static Player* factory();
 
     S3mPlayer();
 
-    bool load(const std::string &filename) override;
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override;
+
     std::string title() const override
     {
         return m_header.name;
@@ -48,13 +54,14 @@ public:
     {
         return m_header.instrumentCount;
     }
+
     std::string instrumentTitle(size_t n) const override
     {
         return m_instruments[n].name;
     }
 
 protected:
-#pragma pack(push,1)
+#pragma pack(push, 1)
     struct S3mHeader
     {
         char name[28] = ""; // song name
@@ -76,7 +83,7 @@ protected:
         uint8_t dp = 0;
         uint8_t dummy2[8];
         uint16_t special = 0;
-        std::array<uint8_t, 32> chanset{ {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0} };
+        std::array<uint8_t, 32> chanset{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
     };
 
     struct S3mInstrument
@@ -110,8 +117,8 @@ protected:
     void setHeader(const S3mHeader& header)
     {
         m_header = header;
-        setInitialSpeed(m_header.initialSpeed ? m_header.initialSpeed : 6);
-        setInitialTempo(m_header.initialTempo ? m_header.initialTempo : 125);
+        setInitialSpeed(m_header.initialSpeed ? m_header.initialSpeed : 6u);
+        setInitialTempo(m_header.initialTempo ? m_header.initialTempo : 125u);
     }
 
 private:
@@ -134,7 +141,7 @@ private:
         uint8_t trigger;
         uint8_t note;
     };
-    
+
     Channel m_channels[9];
 
     S3mHeader m_header{};
@@ -143,15 +150,21 @@ private:
     uint8_t m_loopStart = 0;
     uint8_t m_loopCounter = 0;
 
-    static const char chnresolv[];
-    static const unsigned short notetable[12];
-    static const unsigned char vibratotab[32];
+    static const int8_t chnresolv[];
+    static const uint16_t notetable[12];
+    static const uint8_t vibratotab[32];
 
-    void setvolume(unsigned char chan);
-    void setfreq(unsigned char chan);
-    void playnote(unsigned char chan);
-    void slide_down(unsigned char chan, unsigned char amount);
-    void slide_up(unsigned char chan, unsigned char amount);
-    void vibrato(unsigned char chan, unsigned char effectValue);
-    void tone_portamento(unsigned char chan, unsigned char effectValue);
+    void setvolume(uint8_t chan);
+
+    void setfreq(uint8_t chan);
+
+    void playnote(uint8_t chan);
+
+    void slide_down(uint8_t chan, uint8_t amount);
+
+    void slide_up(uint8_t chan, uint8_t amount);
+
+    void vibrato(uint8_t chan, uint8_t effectValue);
+
+    void tone_portamento(uint8_t chan, uint8_t effectValue);
 };

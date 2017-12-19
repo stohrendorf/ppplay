@@ -23,39 +23,51 @@
 
 #include "player.h"
 
-class XadPlayer : public Player
+class XadPlayer
+    : public Player
 {
-    DISABLE_COPY(XadPlayer)
 public:
-    XadPlayer() = default;
-    ~XadPlayer() = default;
+    DISABLE_COPY(XadPlayer)
 
-    bool load(const std::string &filename) override;
+    XadPlayer() = default;
+
+    ~XadPlayer() override = default;
+
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
 
 protected:
     virtual void xadplayer_rewind(const boost::optional<size_t>& subsong) = 0;
+
     virtual bool xadplayer_load() = 0;
+
     virtual void xadplayer_update() = 0;
+
     std::string title() const override
     {
         return m_xadHeader.title;
     }
+
     std::string author() const override
     {
         return m_xadHeader.author;
     }
+
     std::string instrumentTitle(size_t) const override
     {
         return std::string();
     }
+
     size_t instrumentCount() const override
     {
         return 0;
     }
 
-    enum Format : uint16_t
+    enum Format
+        : uint16_t
     {
         None,
         HYP = 1,
@@ -67,7 +79,7 @@ protected:
     };
 
 private:
-#pragma pack(push,1)
+#pragma pack(push, 1)
     struct Header
     {
         uint32_t id = 0;

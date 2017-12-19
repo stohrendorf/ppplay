@@ -23,20 +23,25 @@
 
 #include "player.h"
 
-class LdsPlayer : public Player
+class LdsPlayer
+    : public Player
 {
-    DISABLE_COPY(LdsPlayer)
 public:
-    static Player *factory()
+    DISABLE_COPY(LdsPlayer)
+
+    static Player* factory()
     {
         return new LdsPlayer();
     }
 
     LdsPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override
     {
         return SampleRate / 70;
@@ -46,6 +51,7 @@ public:
     {
         return "LOUDNESS Sound System";
     }
+
     size_t instrumentCount() const override
     {
         return m_soundbank.size();
@@ -120,7 +126,7 @@ private:
         uint8_t arp_pos = 0;
         uint8_t arp_count = 0;
         uint8_t packwait = 0;
-        std::array<uint8_t, 12> arp_tab{ {} };
+        std::array<uint8_t, 12> arp_tab{{}};
 
         Channel()
         {
@@ -145,15 +151,14 @@ private:
 #pragma pack(pop)
 
     std::vector<SoundBank> m_soundbank{};
-    std::array<Channel, 9> m_channels{ {} };
+    std::array<Channel, 9> m_channels{{}};
     std::vector<Position> m_positions{};
-    uint8_t m_jumping = 0;
     uint8_t m_fadeonoff = 0;
     uint8_t m_allvolume = 0;
     uint8_t m_hardfade = 0;
     uint8_t m_initialTempo = 0;
     uint8_t m_regbd = 0;
-    uint8_t m_chandelay[9];
+    uint8_t m_chandelay[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
     uint8_t m_mode = 0;
     uint8_t m_pattlen = 0;
     std::vector<uint16_t> m_patterns{};

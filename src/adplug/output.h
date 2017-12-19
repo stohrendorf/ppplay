@@ -24,15 +24,16 @@
 
 class PlayerHandler
 {
-    DISABLE_COPY(PlayerHandler)
 public:
+    DISABLE_COPY(PlayerHandler)
 
     PlayerHandler() = default;
+
     virtual ~PlayerHandler() = default;
 
     virtual void frame() = 0;
 
-    void setPlayer(std::shared_ptr<Player> &player)
+    void setPlayer(std::shared_ptr<Player>& player)
     {
         m_player = player;
     }
@@ -47,33 +48,34 @@ protected:
     {
         m_playing = value;
     }
-    Player *getPlayer()
+
+    Player* getPlayer()
     {
         return m_player.get();
     }
 
 private:
     bool m_playing = false;
-    std::shared_ptr<Player> m_player{}
-    ;
+    std::shared_ptr<Player> m_player{};
 };
 
-class EmuPlayer : public PlayerHandler
+class EmuPlayer
+    : public PlayerHandler
 {
-    DISABLE_COPY(EmuPlayer)
 private:
     std::vector<int16_t> m_audioBuf;
     unsigned long m_freq;
     ppp::BresenInterpolation m_oplInterp;
 
 public:
+    DISABLE_COPY(EmuPlayer)
+
     EmuPlayer(unsigned long nfreq, size_t nbufsize);
 
-    virtual void setBufferSize(size_t nbufsize);
-    virtual void frame() override;
+    void frame() override;
 
 protected:
-    virtual void output(const std::vector<int16_t> &buf) = 0;
+    virtual void output(const std::vector<int16_t>& buf) = 0;
     // The output buffer is always of the size requested through the constructor.
     // This time, size is measured in bytes, not samples!
 };

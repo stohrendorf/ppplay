@@ -30,34 +30,34 @@
 
 namespace
 {
-    constexpr int kSizeofDataRecord = 30;
-    constexpr int kMaxTickBeat = 60;
-    constexpr int kSilenceNote = -12;
-    constexpr int kNumMelodicVoices = 9;
-    constexpr int kNumPercussiveVoices = 11;
-    constexpr int kBassDrumChannel = 6;
-    constexpr int kSnareDrumChannel = 7;
-    constexpr int kTomtomChannel = 8;
-    constexpr int kTomtomFreq = 2; //4;
-    constexpr int kSnareDrumFreq = 2; //kTomtomFreq + 7;
-    constexpr float kPitchFactor = 400.0f;
+constexpr int kSizeofDataRecord = 30;
+constexpr int kMaxTickBeat = 60;
+constexpr int kSilenceNote = -12;
+constexpr int kNumMelodicVoices = 9;
+constexpr int kNumPercussiveVoices = 11;
+constexpr int kBassDrumChannel = 6;
+constexpr int kSnareDrumChannel = 7;
+constexpr int kTomtomChannel = 8;
+constexpr int kTomtomFreq = 2; //4;
+constexpr int kSnareDrumFreq = 2; //kTomtomFreq + 7;
+constexpr float kPitchFactor = 400.0f;
 
-    constexpr uint16_t kNoteTable[12] = {
-        340, // C
-        363, // C#
-        385, // D
-        408, // D#
-        432, // E
-        458, // F
-        485, // F#
-        514, // G
-        544, // G#
-        577, // A
-        611, // A#
-        647 // B
-    };
+constexpr uint16_t kNoteTable[12] = {
+    340, // C
+    363, // C#
+    385, // D
+    408, // D#
+    432, // E
+    458, // F
+    485, // F#
+    514, // G
+    544, // G#
+    577, // A
+    611, // A#
+    647 // B
+};
 
-    constexpr uint8_t drum_table[4] = {0x14, 0x12, 0x15, 0x11};
+constexpr uint8_t drum_table[4] = {0x14, 0x12, 0x15, 0x11};
 }
 
 /*** public methods **************************************/
@@ -72,7 +72,9 @@ bool RolPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
     if( !f )
+    {
         return false;
+    }
 
     std::string bnk_filename = (boost::filesystem::path(filename).remove_filename() / "standard.bnk").string();
 
@@ -109,7 +111,7 @@ bool RolPlayer::load(const std::string& filename)
         return false;
     }
 
-    rewind(0);
+    rewind(size_t(0));
     return true;
 }
 
@@ -294,11 +296,11 @@ void RolPlayer::SetNotePercussive(int voice, int note)
     {
         switch( voice )
         {
-        case kTomtomChannel:
-            SetFreq(kSnareDrumChannel, note + 7);
-        case kBassDrumChannel:
-            SetFreq(voice, note);
-            break;
+            case kTomtomChannel:
+                SetFreq(kSnareDrumChannel, note + 7);
+            case kBassDrumChannel:
+                SetFreq(voice, note);
+                break;
         }
 
         m_bdRegister |= 1 << bit_pos;
@@ -345,8 +347,8 @@ void RolPlayer::SetVolume(int voice, int volume)
     m_volumeCache[voice] = (m_volumeCache[voice] & 0xc0) | volume;
 
     const int op_offset = (voice < kSnareDrumChannel || m_rolHeader.mode)
-                              ? s_opTable[voice] + 3
-                              : drum_table[voice - kSnareDrumChannel];
+                          ? s_opTable[voice] + 3
+                          : drum_table[voice - kSnareDrumChannel];
 
     getOpl()->writeReg(0x40 + op_offset, m_volumeCache[voice]);
 }
@@ -422,7 +424,9 @@ bool RolPlayer::load_voice_data(FileStream& f, std::string const& bnk_filename)
     FileStream bnk_file(bnk_filename);
 
     if( !bnk_file )
+    {
         return false;
+    }
 
     load_bnk_info(bnk_file, bnk_header);
 
@@ -642,8 +646,8 @@ void RolPlayer::read_fm_operator(FileStream& f, OPL2Op& opl2_op)
     f >> fm_op;
 
     opl2_op.ammulti = fm_op.amplitude_vibrato << 7 |
-        fm_op.frequency_vibrato << 6 | fm_op.sustaining_sound << 5 |
-        fm_op.envelope_scaling << 4 | fm_op.freq_multiplier;
+                      fm_op.frequency_vibrato << 6 | fm_op.sustaining_sound << 5 |
+                      fm_op.envelope_scaling << 4 | fm_op.freq_multiplier;
     opl2_op.ksltl = fm_op.key_scale_level << 6 | fm_op.output_level;
     opl2_op.ardr = fm_op.attack_rate << 4 | fm_op.decay_rate;
     opl2_op.slrr = fm_op.sustain_level << 4 | fm_op.release_rate;

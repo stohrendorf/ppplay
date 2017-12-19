@@ -9,7 +9,7 @@
 
 int main(int argc, char** argv)
 {
-    if(argc < 2)
+    if( argc < 2 )
     {
         std::cout << "Missing output filename.\n";
         return EXIT_FAILURE;
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
         // db.dump();
         db.save(argv[1]);
     }
-    catch(std::runtime_error& ex)
+    catch( std::runtime_error& ex )
     {
         std::cout << "Failed to create " << argv[1] << ": " << ex.what() << "\n";
         return EXIT_FAILURE;

@@ -25,16 +25,22 @@
 
 class FileStream;
 
-class ImfPlayer : public Player
+class ImfPlayer
+    : public Player
 {
-    DISABLE_COPY(ImfPlayer)
 public:
-    ImfPlayer() = default;
-    static Player *factory();
+    DISABLE_COPY(ImfPlayer)
 
-    bool load(const std::string &filename) override;
+    ImfPlayer() = default;
+
+    static Player* factory();
+
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override
     {
         return static_cast<size_t>(SampleRate / m_timer);
@@ -44,11 +50,14 @@ public:
     {
         return "IMF File Format";
     }
+
     std::string title() const override;
+
     std::string author() const override
     {
         return m_authorName;
     }
+
     std::string description() const override;
 
 private:
@@ -60,12 +69,11 @@ private:
     std::string m_footer{};
 
     std::string m_trackName{}
-        , m_gameName{}
-        , m_authorName{}
-        , m_remarks{}
-    ;
+    , m_gameName{}
+    , m_authorName{}
+    , m_remarks{};
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
     struct Sdata
     {
         uint8_t reg = 0, val = 0;
@@ -74,5 +82,5 @@ private:
 #pragma pack(pop)
     std::vector<Sdata> m_data{};
 
-    static int getrate(const FileStream &file);
+    static int getrate(const FileStream& file);
 };

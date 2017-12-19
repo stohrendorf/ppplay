@@ -23,21 +23,25 @@
 
 #include "mod.h"
 
-class RadPlayer : public ModPlayer
+class RadPlayer
+    : public ModPlayer
 {
-    DISABLE_COPY(RadPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(RadPlayer)
+
+    static Player* factory();
 
     RadPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    bool load(const std::string& filename) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override
     {
         return "Reality ADlib Tracker";
     }
+
     std::string description() const override
     {
         return m_description;

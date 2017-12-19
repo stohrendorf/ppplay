@@ -23,23 +23,32 @@
 
 #include "mod.h"
 
-class DtmPlayer : public ModPlayer
+class DtmPlayer
+    : public ModPlayer
 {
-    DISABLE_COPY(DtmPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(DtmPlayer)
+
+    static Player* factory();
 
     DtmPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    bool load(const std::string& filename) override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override;
+
     std::string title() const override;
+
     std::string author() const override;
+
     std::string description() const override;
+
     std::string instrumentTitle(size_t n) const override;
+
     size_t instrumentCount() const override;
 
 private:
@@ -61,7 +70,7 @@ private:
     struct Instrument
     {
         char name[13] = "";
-        uint8_t data[12] = { 0,0,0,0,0,0,0,0,0,0,0,0 };
+        uint8_t data[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     };
     Instrument m_instruments[128];
 

@@ -19,14 +19,14 @@
  * [xad] HYP player, by Riven the Mage <riven@ok.ru>
  */
 
- /*
-     - discovery -
+/*
+    - discovery -
 
-   file(s) : HT-EF2.COM, HT-EF3.COM
-      type : Eiserne Front BBStro
-      tune : by Shadowdancer [Hypnosis]
-    player : by (?)Hetero [LKCC/SAC]
- */
+  file(s) : HT-EF2.COM, HT-EF3.COM
+     type : Eiserne Front BBStro
+     tune : by Shadowdancer [Hypnosis]
+   player : by (?)Hetero [LKCC/SAC]
+*/
 
 #include "hyp.h"
 
@@ -67,24 +67,30 @@ void HypPlayer::xadplayer_rewind(const boost::optional<size_t>&)
 
     getOpl()->writeReg(0xBD, 0xC0);
 
-    for(int i = 0; i < 9; i++)
+    for( int i = 0; i < 9; i++ )
+    {
         getOpl()->writeReg(0xB0 + i, 0);
+    }
 
     // define instruments
-    for(int i = 0; i < 99; i++)
+    for( int i = 0; i < 99; i++ )
+    {
         getOpl()->writeReg(hyp_adlib_registers[i], tune()[6 + i]);
+    }
 
     m_hypPointer = 0x69;
 }
 
 void HypPlayer::xadplayer_update()
 {
-    for(int i = 0; i < 9; i++)
+    for( int i = 0; i < 9; i++ )
     {
         const auto event = tune()[m_hypPointer++];
 
-        if(!event)
+        if( !event )
+        {
             continue;
+        }
 
         const auto freq = hyp_notes[event & 0x3F];
 
@@ -93,7 +99,7 @@ void HypPlayer::xadplayer_update()
 
         getOpl()->writeReg(0xB0 + i, getOpl()->readReg(0xB0 + i) & 0xDF);
 
-        if(!(event & 0x40))
+        if( !(event & 0x40) )
         {
             getOpl()->writeReg(0xA0 + i, lofreq);
             getOpl()->writeReg(0xB0 + i, hifreq | 0x20);
@@ -102,7 +108,7 @@ void HypPlayer::xadplayer_update()
 
     m_hypPointer += 3;
 
-    if(m_hypPointer >= tune().size())
+    if( m_hypPointer >= tune().size() )
     {
         m_hypPointer = 0x69;
         setXadLooping();

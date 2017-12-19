@@ -100,7 +100,7 @@ private:
         }
     };
 
-    std::vector<CharCell> chars;
+    std::vector<CharCell> chars{};
 
 public:
     /**

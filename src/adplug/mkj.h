@@ -23,18 +23,24 @@
 
 #include "player.h"
 
-class MkjPlayer : public Player
+class MkjPlayer
+    : public Player
 {
-    DISABLE_COPY(MkjPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(MkjPlayer)
+
+    static Player* factory();
 
     MkjPlayer() = default;
-    ~MkjPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    ~MkjPlayer() override = default;
+
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override

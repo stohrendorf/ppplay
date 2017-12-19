@@ -30,16 +30,20 @@
 
 class Player
 {
-    DISABLE_COPY(Player)
 public:
+    DISABLE_COPY(Player)
+
     static constexpr const auto SampleRate = opl::Opl3::SampleRate;
+
     Player();
+
     virtual ~Player() = default;
 
     /***** Operational methods *****/
-    virtual bool load(const std::string &filename) = 0;
+    virtual bool load(const std::string& filename) = 0;
+
     virtual bool update() = 0;                 // executes replay code for 1 tick
-    virtual void rewind(const boost::optional<size_t>& subsong = boost::none) = 0; // rewinds to specified subsong
+    virtual void rewind(const boost::optional<size_t>& subsong) = 0; // rewinds to specified subsong
     virtual size_t framesUntilUpdate() const = 0;
 
     /***** Informational methods *****/
@@ -48,48 +52,59 @@ public:
     {
         return std::string();
     }
+
     virtual std::string author() const // returns song author name
     {
         return std::string();
     }
+
     virtual std::string description() const // returns song description
     {
         return std::string();
     }
+
     uint8_t currentRow() const // returns currently playing row
     {
         return m_currentRow;
     }
+
     uint16_t initialSpeed() const // returns current song speed
     {
         return m_initialSpeed;
     }
+
     uint16_t currentSpeed() const // returns current song speed
     {
         return m_currentSpeed;
     }
+
     uint16_t currentTempo() const // returns current song speed
     {
         return m_currentTempo;
     }
+
     uint16_t initialTempo() const // returns current song speed
     {
         return m_initialTempo;
     }
+
     virtual size_t subSongCount() const
     // returns number of subsongs
     {
         return 1;
     }
+
     virtual size_t currentSubSong() const // returns current subsong
     {
         return 0;
     }
+
     // returns number of instruments
     virtual size_t instrumentCount() const
     {
         return 0;
     }
+
     virtual std::string instrumentTitle(size_t) const // returns n-th instrument name
     {
         return std::string();
@@ -111,11 +126,12 @@ public:
         return m_order[m_currentOrder];
     }
 
-    opl::Opl3 *getOpl()
+    opl::Opl3* getOpl()
     {
         return &m_oplChip;
     }
-    virtual void read(std::array<int16_t, 4> *data)
+
+    virtual void read(std::array<int16_t, 4>* data)
     {
         m_oplChip.read(data);
     }

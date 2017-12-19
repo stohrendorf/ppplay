@@ -25,7 +25,7 @@
 
 #include "msc.h"
 
- /*** public methods *************************************/
+/*** public methods *************************************/
 
 Player* MscPlayer::factory()
 {
@@ -36,11 +36,13 @@ bool MscPlayer::load(const std::string& filename)
 {
     // open and validate the file
     FileStream bf(filename);
-    if(!bf)
+    if( !bf )
+    {
         return false;
+    }
 
     msc_header hdr;
-    if(!load_header(bf, &hdr))
+    if( !load_header(bf, &hdr) )
     {
         return false;
     }
@@ -51,7 +53,7 @@ bool MscPlayer::load(const std::string& filename)
     setCurrentTempo(hdr.mh_timer);
     addOrder(0);
 
-    if(!hdr.mh_nr_blocks)
+    if( !hdr.mh_nr_blocks )
     {
         return false;
     }
@@ -59,7 +61,7 @@ bool MscPlayer::load(const std::string& filename)
     // load compressed data blocks
     m_rawData.resize(hdr.mh_block_len);
 
-    for(int blk_num = 0; blk_num < hdr.mh_nr_blocks; blk_num++)
+    for( int blk_num = 0; blk_num < hdr.mh_nr_blocks; blk_num++ )
     {
         m_mscData.emplace_back();
         uint16_t blockLength;
@@ -69,7 +71,7 @@ bool MscPlayer::load(const std::string& filename)
     }
 
     // clean up & initialize
-    rewind(0);
+    rewind(size_t(0));
 
     return true;
 }
@@ -77,19 +79,23 @@ bool MscPlayer::load(const std::string& filename)
 bool MscPlayer::update()
 {
     // output data
-    while(!m_delay)
+    while( !m_delay )
     {
         // decode data
         uint8_t cmnd;
-        if(!decode_octet(&cmnd))
+        if( !decode_octet(&cmnd) )
+        {
             return false;
+        }
 
         uint8_t data;
-        if(!decode_octet(&data))
+        if( !decode_octet(&data) )
+        {
             return false;
+        }
 
         // check for special commands
-        switch(cmnd)
+        switch( cmnd )
         {
             case 0xff:
                 // delay
@@ -103,8 +109,10 @@ bool MscPlayer::update()
     } // play pass
 
     // count delays
-    if(m_delay)
+    if( m_delay )
+    {
         m_delay--;
+    }
 
     return true;
 }
@@ -133,7 +141,7 @@ std::string MscPlayer::type() const
     char vstr[40];
 
     sprintf(vstr, "AdLib MSCplay (version %d)", m_version);
-    return vstr;
+    return std::string(vstr);
 }
 
 /*** private methods *************************************/
@@ -149,31 +157,34 @@ bool MscPlayer::load_header(FileStream& bf, msc_header* hdr)
     bf >> *hdr;
 
     // check signature
-    if(memcmp(msc_signature, hdr->mh_sign, MSC_SIGN_LEN) != 0)
+    if( memcmp(msc_signature, hdr->mh_sign, MSC_SIGN_LEN) != 0 )
+    {
         return false;
+    }
 
     // check version
-    if(hdr->mh_ver != 0)
-        return false;
-
-    return true;
+    return hdr->mh_ver == 0;
 }
 
 bool MscPlayer::decode_octet(uint8_t* output)
 {
-    if(m_mscDataIndex >= m_mscData.size())
+    if( m_mscDataIndex >= m_mscData.size() )
+    {
         return false;
+    }
 
     const std::vector<uint8_t>* blkData = &m_mscData[m_mscDataIndex];
     uint8_t lengthCorrection = 0;
-    while(true)
+    while( true )
     {
         // advance to next block if necessary
-        if(m_blockPos >= blkData->size() && m_prefixLength == 0)
+        if( m_blockPos >= blkData->size() && m_prefixLength == 0 )
         {
             m_mscDataIndex++;
-            if(m_mscDataIndex >= m_mscData.size())
+            if( m_mscDataIndex >= m_mscData.size() )
+            {
                 return false;
+            }
 
             blkData = &m_mscData[m_mscDataIndex];
             m_blockPos = 0;
@@ -183,13 +194,13 @@ bool MscPlayer::decode_octet(uint8_t* output)
 
         // decode the compressed music data
         uint8_t octet; // decoded octet
-        switch(m_decoderPrefix)
+        switch( m_decoderPrefix )
         {
             // decode prefix
             case 155:
             case 175:
                 octet = (*blkData)[m_blockPos++];
-                if(octet == 0)
+                if( octet == 0 )
                 {
                     // invalid prefix, output original
                     octet = m_decoderPrefix;
@@ -202,8 +213,10 @@ bool MscPlayer::decode_octet(uint8_t* output)
                 lengthCorrection = 2;
 
                 m_prefixDistance = (octet & 0xF0) >> 4;
-                if(m_decoderPrefix == 155)
+                if( m_decoderPrefix == 155 )
+                {
                     m_prefixDistance++;
+                }
 
                 // next decode step for respective prefix type
                 m_decoderPrefix++;
@@ -211,8 +224,10 @@ bool MscPlayer::decode_octet(uint8_t* output)
 
             case 156:
                 // check for extended length
-                if(m_prefixLength == 15)
+                if( m_prefixLength == 15 )
+                {
                     m_prefixLength += (*blkData)[m_blockPos++];
+                }
 
                 // add length correction and go for copy mode
                 m_prefixLength += lengthCorrection;
@@ -230,16 +245,18 @@ bool MscPlayer::decode_octet(uint8_t* output)
 
             case 255:
                 // prefix copy mode
-                if(m_rawDataPos >= m_prefixDistance)
+                if( m_rawDataPos >= m_prefixDistance )
                 {
                     BOOST_ASSERT(m_rawDataPos - m_prefixDistance < m_rawData.size());
                     octet = m_rawData.at(m_rawDataPos - m_prefixDistance);
                 }
                 else
+                {
                     octet = 0;
+                }
 
                 m_prefixLength--;
-                if(m_prefixLength == 0)
+                if( m_prefixLength == 0 )
                 {
                     // back to normal mode
                     m_decoderPrefix = 0;
@@ -250,7 +267,7 @@ bool MscPlayer::decode_octet(uint8_t* output)
             default:
                 // normal mode
                 octet = (*blkData)[m_blockPos++];
-                if(octet == 155 || octet == 175)
+                if( octet == 155 || octet == 175 )
                 {
                     // it's a prefix, restart
                     m_decoderPrefix = octet;
@@ -259,8 +276,10 @@ bool MscPlayer::decode_octet(uint8_t* output)
         } // prefix switch
 
         // output the octet
-        if(output != nullptr)
+        if( output != nullptr )
+        {
             *output = octet;
+        }
 
         BOOST_ASSERT(m_rawDataPos < m_rawData.size());
         m_rawData.at(m_rawDataPos++) = octet;

@@ -23,21 +23,25 @@
 
 #include "mod.h"
 
-class AdTrackPlayer : public ModPlayer
+class AdTrackPlayer
+    : public ModPlayer
 {
-    DISABLE_COPY(AdTrackPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(AdTrackPlayer)
+
+    static Player* factory();
 
     AdTrackPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    bool load(const std::string& filename) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override
     {
         return "Adlib Tracker 1.0";
     }
+
     size_t instrumentCount() const override
     {
         return 9;
@@ -50,7 +54,7 @@ private:
         Modulator = 0
     };
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
     struct Instrument
     {
         struct Operator
@@ -74,5 +78,6 @@ private:
 #pragma pack(pop)
 
     using ModPlayer::addInstrument;
-    void addInstrument(Instrument *i);
+
+    void addInstrument(Instrument* i);
 };

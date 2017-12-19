@@ -25,17 +25,22 @@
 
 class AdlibDriver;
 
-class AdlPlayer : public Player
+class AdlPlayer
+    : public Player
 {
-    DISABLE_COPY(AdlPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(AdlPlayer)
+
+    static Player* factory();
 
     AdlPlayer();
-    ~AdlPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    ~AdlPlayer() override = default;
+
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
 
     // refresh rate is fixed at 72Hz
@@ -45,6 +50,7 @@ public:
     }
 
     size_t subSongCount() const override;
+
     size_t currentSubSong() const override
     {
         return m_currentSubSong;
@@ -61,7 +67,7 @@ private:
 
     std::unique_ptr<AdlibDriver> m_driver;
 
-    std::array<uint8_t, 120> m_trackEntries{ {} };
+    std::array<uint8_t, 120> m_trackEntries{{}};
     std::vector<uint8_t> m_soundDataPtr{};
     int m_sfxPlayingSound = -1;
 
@@ -69,10 +75,16 @@ private:
     uint8_t m_sfxFourthByteOfSong = 0;
 
     bool init();
+
     void process();
+
     void playTrack(uint8_t track);
+
     void playSoundEffect(uint8_t track);
+
     void play(uint8_t track);
+
     void unk1();
+
     void unk2();
 };

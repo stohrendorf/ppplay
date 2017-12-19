@@ -19,21 +19,21 @@
  * [xad] PSI player, by Riven the Mage <riven@ok.ru>
  */
 
- /*
-     - discovery -
+/*
+    - discovery -
 
-   file(s) : 4BIDDEN.COM, PGRID.EXE
-      type : Forbidden Dreams BBStro
-             Power Grid BBStro
-      tune : by Friar Tuck [Shadow Faction/ICE]
-    player : by Psi [Future Crew]
-   comment : seems to me what 4bidden tune & player was ripped from pgrid
+  file(s) : 4BIDDEN.COM, PGRID.EXE
+     type : Forbidden Dreams BBStro
+            Power Grid BBStro
+     tune : by Friar Tuck [Shadow Faction/ICE]
+   player : by Psi [Future Crew]
+  comment : seems to me what 4bidden tune & player was ripped from pgrid
 
-   file(s) : MYSTRUNE.COM
-      type : Mystical Runes BBStro
-      tune : by ?
-    player : by Psi [Future Crew]
- */
+  file(s) : MYSTRUNE.COM
+     type : Mystical Runes BBStro
+     tune : by ?
+   player : by Psi [Future Crew]
+*/
 
 #include "psi.h"
 
@@ -74,9 +74,9 @@ void PsiPlayer::xadplayer_rewind(const boost::optional<size_t>&)
     // define instruments
     m_psi.instr_table = &tune()[m_header.instr_ptr];
 
-    for(int i = 0; i < 8; i++)
+    for( int i = 0; i < 8; i++ )
     {
-        for(int j = 0; j < 11; j++)
+        for( int j = 0; j < 11; j++ )
         {
             unsigned short inspos =
                 (m_psi.instr_table[i * 2 + 1] << 8) + m_psi.instr_table[i * 2];
@@ -98,13 +98,13 @@ void PsiPlayer::xadplayer_rewind(const boost::optional<size_t>&)
 
 void PsiPlayer::xadplayer_update()
 {
-    for(int i = 0; i < 8; i++)
+    for( int i = 0; i < 8; i++ )
     {
         auto ptr = (m_psi.seq_table[(i << 1) * 2 + 1] << 8) + m_psi.seq_table[(i << 1) * 2];
 
         m_psi.note_curdelay[i]--;
 
-        if(!m_psi.note_curdelay[i])
+        if( !m_psi.note_curdelay[i] )
         {
             getOpl()->writeReg(0xA0 + i, 0x00);
             getOpl()->writeReg(0xB0 + i, 0x00);
@@ -112,10 +112,10 @@ void PsiPlayer::xadplayer_update()
             auto event = tune()[ptr++];
 
             // end of sequence ?
-            if(!event)
+            if( !event )
             {
                 ptr = (m_psi.seq_table[(i << 1) * 2 + 3] << 8) +
-                    m_psi.seq_table[(i << 1) * 2 + 2];
+                      m_psi.seq_table[(i << 1) * 2 + 2];
 
                 event = tune()[ptr++];
 
@@ -123,12 +123,14 @@ void PsiPlayer::xadplayer_update()
                 m_psi.looping[i] = true;
 
                 // module loop ?
-                if(std::find(m_psi.looping.begin(), m_psi.looping.end(), false) == m_psi.looping.end())
+                if( std::find(m_psi.looping.begin(), m_psi.looping.end(), false) == m_psi.looping.end() )
+                {
                     setXadLooping();
+                }
             }
 
             // new note delay ?
-            if(event & 0x80)
+            if( event & 0x80 )
             {
                 m_psi.note_delay[i] = (event & 0x7F);
 

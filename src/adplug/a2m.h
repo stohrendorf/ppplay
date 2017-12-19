@@ -23,32 +23,40 @@
 
 #include "mod.h"
 
-class A2mPlayer : public ModPlayer
+class A2mPlayer
+    : public ModPlayer
 {
-    DISABLE_COPY(A2mPlayer)
 public:
-    A2mPlayer() = default;
-    static Player *factory();
+    DISABLE_COPY(A2mPlayer)
 
-    bool load(const std::string &filename) override;
+    A2mPlayer() = default;
+
+    static Player* factory();
+
+    bool load(const std::string& filename) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override
     {
         return "AdLib Tracker 2";
     }
+
     std::string title() const override
     {
         return m_songname;
     }
+
     std::string author() const override
     {
         return m_author;
     }
+
     size_t instrumentCount() const override
     {
         return 250;
     }
+
     std::string instrumentTitle(size_t n) const override
     {
         return m_instname[n];
@@ -70,25 +78,30 @@ private:
     static constexpr auto ROOT = 1;
     static constexpr auto MAXBUF = 42 * 1024;
     static constexpr auto MAXDISTANCE = 21389;
-    static constexpr auto MAXSIZE = 21389 + MAXCOPY;
+    static constexpr auto MAXSIZE = MAXDISTANCE + MAXCOPY;
 
     void initTree();
+
     void updateFreq(uint16_t a, uint16_t b);
+
     void updateModel(uint16_t code);
+
     uint16_t inputCode(uint16_t bits);
+
     uint16_t uncompress();
+
     void decode();
-    size_t sixDepak(uint16_t *source, uint8_t *dest, size_t size);
+
+    size_t sixDepak(uint16_t* source, uint8_t* dest, size_t size);
 
     std::string m_songname{};
     std::string m_author{};
-    std::array<std::string, 250> m_instname{ {} };
+    std::array<std::string, 250> m_instname{{}};
 
     uint16_t m_bitcount = 0;
     uint16_t m_bitbuffer = 0;
     uint16_t m_bufcount = 0;
     uint16_t m_obufcount = 0;
-    size_t m_inputSize = 0;
     size_t m_outputSize = 0;
     uint16_t m_leftc[MAXCHAR + 1];
     uint16_t m_rightc[MAXCHAR + 1];

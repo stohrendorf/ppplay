@@ -23,42 +23,19 @@
 
 #include "players.h"
 
- /***** CPlayerDesc *****/
+/***** CPlayerDesc *****/
 
 PlayerDesc::PlayerDesc(Factory f, const std::string& type, const std::vector<std::string>& ext)
     : factory(f), filetype(type), extensions(ext)
 {
 }
 
-void PlayerDesc::add_extension(const std::string& ext)
-{
-    extensions.emplace_back(ext);
-}
-
 std::string PlayerDesc::get_extension(size_t n) const
 {
-    if(n >= extensions.size())
+    if( n >= extensions.size() )
+    {
         return std::string();
+    }
     return extensions[n];
 }
 
-/***** CPlayers *****/
-
-const PlayerDesc* Players::lookup_filetype(const std::string& ftype) const
-{
-    for(auto it = m_descriptions.begin(); it != m_descriptions.end(); ++it)
-        if((*it)->filetype == ftype)
-            return *it;
-
-    return nullptr;
-}
-
-const PlayerDesc* Players::lookup_extension(const std::string& extension) const
-{
-    for(auto it = m_descriptions.begin(); it != m_descriptions.end(); ++it)
-        for(auto j = 0; !(*it)->get_extension(j).empty(); j++)
-            if(boost::iequals(extension, (*it)->get_extension(j)))
-                return *it;
-
-    return nullptr;
-}

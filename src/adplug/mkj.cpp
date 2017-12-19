@@ -33,18 +33,20 @@ Player* MkjPlayer::factory()
 bool MkjPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
+    {
         return false;
+    }
     // file validation
     char id[6];
     f.read(id, 6);
-    if(strncmp(id, "MKJamz", 6))
+    if( strncmp(id, "MKJamz", 6) != 0 )
     {
         return false;
     }
     float ver;
     f >> ver;
-    if(ver > 1.12)
+    if( ver > 1.12 )
     {
         return false;
     }
@@ -52,7 +54,7 @@ bool MkjPlayer::load(const std::string& filename)
     // load
     f >> m_channelCount;
     getOpl()->writeReg(1, 32);
-    for(auto i = 0; i < m_channelCount; i++)
+    for( auto i = 0; i < m_channelCount; i++ )
     {
         int16_t inst[8];
         f.read(inst, 8);
@@ -66,24 +68,28 @@ bool MkjPlayer::load(const std::string& filename)
         getOpl()->writeReg(0x83 + s_opTable[i], inst[3]);
     }
     f >> m_maxNotes;
-    for(auto i = 0; i < m_channelCount; i++)
+    for( auto i = 0; i < m_channelCount; i++ )
+    {
         f >> m_channels[i].defined;
+    }
     m_songBuf.resize((m_channelCount + 1) * m_maxNotes);
     f.read(m_songBuf.data(), m_songBuf.size());
 
     addOrder(0);
-    rewind(0);
+    rewind(size_t(0));
     return true;
 }
 
 bool MkjPlayer::update()
 {
-    for(int16_t c = 0; c < m_channelCount; c++)
+    for( int16_t c = 0; c < m_channelCount; c++ )
     {
-        if(m_channels[c].defined == 0) // skip if channel is disabled
+        if( m_channels[c].defined == 0 )
+        { // skip if channel is disabled
             continue;
+        }
 
-        if(m_channels[c].delay)
+        if( m_channels[c].delay )
         {
             m_channels[c].delay--;
             continue;
@@ -95,10 +101,14 @@ bool MkjPlayer::update()
             BOOST_ASSERT(m_channels[c].dataOfs < (m_channelCount + 1) * m_maxNotes);
             BOOST_ASSERT(m_channels[c].dataOfs < m_songBuf.size());
             const auto note = m_songBuf[m_channels[c].dataOfs];
-            if(m_channels[c].dataOfs - c > m_channelCount)
-                if(note > 0 && note < 250)
+            if( m_channels[c].dataOfs - c > m_channelCount )
+            {
+                if( note > 0 && note < 250 )
+                {
                     m_channels[c].delay = m_channels[c].speed;
-            switch(note)
+                }
+            }
+            switch( note )
             {
                 // normal notes
                 case 68:
@@ -164,23 +174,33 @@ bool MkjPlayer::update()
                 case 252: // set waveform
                     m_channels[c].dataOfs += m_channelCount;
                     m_channels[c].waveform = m_songBuf[m_channels[c].dataOfs] - 300;
-                    if(c > 2)
+                    if( c > 2 )
+                    {
                         getOpl()->writeReg(0xe0 + c + (c + 6), m_channels[c].waveform);
+                    }
                     else
+                    {
                         getOpl()->writeReg(0xe0 + c, m_channels[c].waveform);
+                    }
                     break;
                 case 251: // song end
-                    for(int16_t i = 0; i < m_channelCount; i++)
+                    for( int16_t i = 0; i < m_channelCount; i++ )
+                    {
                         m_channels[i].dataOfs = i;
+                    }
                     m_songEnd = true;
                     return false;
             }
 
-            if(m_channels[c].dataOfs - c < m_maxNotes)
+            if( m_channels[c].dataOfs - c < m_maxNotes )
+            {
                 m_channels[c].dataOfs += m_channelCount;
+            }
             else
+            {
                 m_channels[c].dataOfs = c;
-        } while(m_channels[c].delay == 0);
+            }
+        } while( m_channels[c].delay == 0 );
     }
 
     return !m_songEnd;
@@ -188,7 +208,7 @@ bool MkjPlayer::update()
 
 void MkjPlayer::rewind(const boost::optional<size_t>&)
 {
-    for(int i = 0; i < m_channelCount; i++)
+    for( int i = 0; i < m_channelCount; i++ )
     {
         m_channels[i].delay = 0;
         m_channels[i].speed = 0;

@@ -73,12 +73,14 @@ constexpr inline uint16_t CHARP_AS_WORD(const uint8_t* data)
 class DMOUnpacker
 {
 public:
-    bool decrypt(uint8_t *buf, size_t len);
-    size_t unpack(uint8_t *ibuf, uint8_t *obuf, size_t outputsize);
+    bool decrypt(uint8_t* buf, size_t len);
+
+    size_t unpack(uint8_t* ibuf, uint8_t* obuf, size_t outputsize);
 
 private:
     uint16_t brand(uint16_t range);
-    int16_t unpack_block(uint8_t *ibuf, size_t ilen, uint8_t *obuf) const;
+
+    int16_t unpack_block(uint8_t* ibuf, size_t ilen, uint8_t* obuf) const;
 
     size_t bseed = 0;
     uint8_t* outputEnd = nullptr;
@@ -95,14 +97,16 @@ Player* DmoPlayer::factory()
 bool DmoPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f || f.extension() != ".dmo")
+    if( !f || f.extension() != ".dmo" )
+    {
         return false;
+    }
 
     unsigned char chkhdr[16];
     f.read(chkhdr, 16);
 
     DMOUnpacker unpacker;
-    if(!unpacker.decrypt(chkhdr, 16))
+    if( !unpacker.decrypt(chkhdr, 16) )
     {
         return false;
     }
@@ -121,15 +125,15 @@ bool DmoPlayer::load(const std::string& filename)
     std::vector<uint8_t> module(unpacked_length);
 
     // unpack
-    if(!unpacker.unpack(packed_module.data() + 12, module.data(), unpacked_length))
+    if( !unpacker.unpack(packed_module.data() + 12, module.data(), unpacked_length) )
     {
         return false;
     }
 
     // "TwinTeam" - signed ?
-    if(memcmp(module.data(), "TwinTeam Module File"
-              "\x0D\x0A",
-              22))
+    if( memcmp(module.data(), "TwinTeam Module File"
+                   "\x0D\x0A",
+               22) )
     {
         return false;
     }
@@ -151,13 +155,15 @@ bool DmoPlayer::load(const std::string& filename)
 
     header.chanset.fill(0xff);
 
-    for(int i = 0; i < 9; i++)
+    for( int i = 0; i < 9; i++ )
+    {
         header.chanset[i] = 0x10 + i;
+    }
 
     uf.seekrel(32); // ignore panning settings for all 32 channels
 
     // load orders
-    for(int i = 0; i < header.orderCount; ++i)
+    for( int i = 0; i < header.orderCount; ++i )
     {
         uint8_t tmp;
         uf >> tmp;
@@ -172,7 +178,7 @@ bool DmoPlayer::load(const std::string& filename)
     uf.read(my_patlen, 100);
 
     // load instruments
-    for(int i = 0; i < header.instrumentCount; i++)
+    for( int i = 0; i < header.instrumentCount; i++ )
     {
         S3mInstrument instrument;
 
@@ -203,26 +209,28 @@ bool DmoPlayer::load(const std::string& filename)
     }
 
     // load patterns
-    for(int pattern = 0; pattern < header.patternCount; pattern++)
+    for( int pattern = 0; pattern < header.patternCount; pattern++ )
     {
         const auto cur_pos = uf.pos();
 
-        for(int row = 0; row < 64; row++)
+        for( int row = 0; row < 64; row++ )
         {
             S3mCell* currentChannel = patternChannel(pattern, row);
 
-            while(true)
+            while( true )
             {
                 uint8_t token;
                 uf >> token;
 
-                if(!token)
+                if( !token )
+                {
                     break;
+                }
 
                 const auto chan = token & 31;
 
                 // note + instrument ?
-                if(token & 32)
+                if( token & 32 )
                 {
                     uint8_t bufbyte;
                     uf >> bufbyte;
@@ -233,11 +241,13 @@ bool DmoPlayer::load(const std::string& filename)
                 }
 
                 // volume ?
-                if(token & 64)
+                if( token & 64 )
+                {
                     uf >> currentChannel[chan].volume;
+                }
 
                 // command ?
-                if(token & 128)
+                if( token & 128 )
                 {
                     uf >> currentChannel[chan].effect;
                     uf >> currentChannel[chan].effectValue;
@@ -250,7 +260,7 @@ bool DmoPlayer::load(const std::string& filename)
 
     setHeader(header);
 
-    rewind(0);
+    rewind(size_t(0));
     return true;
 }
 
@@ -288,8 +298,10 @@ uint16_t DMOUnpacker::brand(uint16_t range)
     bx <<= 5;
     dx = (((HIBYTE(dx) + LOBYTE(bx)) & 0xFF) << 8) + LOBYTE(dx);
     ax += 1;
-    if(!ax)
+    if( !ax )
+    {
         dx += 1;
+    }
 
     // leave it that way or amd64 might get it wrong
     bseed = dx;
@@ -304,16 +316,22 @@ bool DMOUnpacker::decrypt(uint8_t* buf, size_t len)
     bseed = ARRAY_AS_DWORD(buf, 0);
 
     uint32_t seed = 0;
-    for(int i = 0; i < ARRAY_AS_WORD(buf, 4) + 1; i++)
+    for( int i = 0; i < ARRAY_AS_WORD(buf, 4) + 1; i++ )
+    {
         seed += brand(0xffff);
+    }
 
     bseed = seed ^ ARRAY_AS_DWORD(buf, 6);
 
-    if(ARRAY_AS_WORD(buf, 10) != brand(0xffff))
+    if( ARRAY_AS_WORD(buf, 10) != brand(0xffff) )
+    {
         return false;
+    }
 
-    for(int i = 0; i < (len - 12); i++)
+    for( int i = 0; i < (len - 12); i++ )
+    {
         buf[12 + i] ^= brand(0x100);
+    }
 
     buf[len - 2] = buf[len - 1] = 0;
 
@@ -326,36 +344,42 @@ int16_t DMOUnpacker::unpack_block(uint8_t* ibuf, size_t ilen, uint8_t* obuf) con
     uint8_t* opos = obuf;
 
     // LZ77 child
-    while(ipos - ibuf < ilen)
+    while( ipos - ibuf < ilen )
     {
         const auto code = *ipos++;
 
         // 00xxxxxx: copy (xxxxxx + 1) bytes
-        if((code >> 6) == 0)
+        if( (code >> 6) == 0 )
         {
             const uint16_t cx = (code & 0x3F) + 1;
 
-            if(opos + cx >= outputEnd)
+            if( opos + cx >= outputEnd )
+            {
                 return -1;
+            }
 
-            for(int i = 0; i < cx; i++)
+            for( int i = 0; i < cx; i++ )
+            {
                 *opos++ = *ipos++;
+            }
 
             continue;
         }
 
         // 01xxxxxx xxxyyyyy: copy (Y + 3) bytes from (X + 1)
-        if((code >> 6) == 1)
+        if( (code >> 6) == 1 )
         {
             const auto par1 = *ipos++;
 
             const uint16_t ax = ((code & 0x3F) << 3) + ((par1 & 0xE0) >> 5) + 1;
             const uint16_t cx = (par1 & 0x1F) + 3;
 
-            if(opos + cx >= outputEnd)
+            if( opos + cx >= outputEnd )
+            {
                 return -1;
+            }
 
-            for(int i = 0; i < cx; i++)
+            for( int i = 0; i < cx; i++ )
             {
                 *opos = *(opos - ax);
                 ++opos;
@@ -365,7 +389,7 @@ int16_t DMOUnpacker::unpack_block(uint8_t* ibuf, size_t ilen, uint8_t* obuf) con
         }
 
         // 10xxxxxx xyyyzzzz: copy (Y + 3) bytes from (X + 1); copy Z bytes
-        if((code >> 6) == 2)
+        if( (code >> 6) == 2 )
         {
             const auto par1 = *ipos++;
 
@@ -373,23 +397,27 @@ int16_t DMOUnpacker::unpack_block(uint8_t* ibuf, size_t ilen, uint8_t* obuf) con
             const uint16_t cx = ((par1 & 0x70) >> 4) + 3;
             const uint16_t bx = par1 & 0x0F;
 
-            if(opos + bx + cx >= outputEnd)
+            if( opos + bx + cx >= outputEnd )
+            {
                 return -1;
+            }
 
-            for(int i = 0; i < cx; i++)
+            for( int i = 0; i < cx; i++ )
             {
                 *opos = *(opos - ax);
                 ++opos;
             }
 
-            for(int i = 0; i < bx; i++)
+            for( int i = 0; i < bx; i++ )
+            {
                 *opos++ = *ipos++;
+            }
 
             continue;
         }
 
         // 11xxxxxx xxxxxxxy yyyyzzzz: copy (Y + 4) from X; copy Z bytes
-        if((code >> 6) == 3)
+        if( (code >> 6) == 3 )
         {
             const auto par1 = *ipos++;
             const auto par2 = *ipos++;
@@ -398,17 +426,21 @@ int16_t DMOUnpacker::unpack_block(uint8_t* ibuf, size_t ilen, uint8_t* obuf) con
             const uint16_t cx = ((par1 & 0x01) << 4) + (par2 >> 4) + 4;
             const uint16_t ax = par2 & 0x0F;
 
-            if(opos + ax + cx >= outputEnd)
+            if( opos + ax + cx >= outputEnd )
+            {
                 return -1;
+            }
 
-            for(int i = 0; i < cx; i++)
+            for( int i = 0; i < cx; i++ )
             {
                 *opos = *(opos - bx);
                 ++opos;
             }
 
-            for(int i = 0; i < ax; i++)
+            for( int i = 0; i < ax; i++ )
+            {
                 *opos++ = *ipos++;
+            }
         }
     }
 
@@ -426,12 +458,14 @@ size_t DMOUnpacker::unpack(uint8_t* inputBuf, uint8_t* outputBuf, size_t outputS
 
     outputEnd = outputBuf + outputSize;
 
-    for(uint16_t i = 0; i < blockCount; i++)
+    for( uint16_t i = 0; i < blockCount; i++ )
     {
         auto bul = CHARP_AS_WORD(inputBuf);
 
-        if(unpack_block(inputBuf + 2, CHARP_AS_WORD(blockLength) - 2, outputBuf) != bul)
+        if( unpack_block(inputBuf + 2, CHARP_AS_WORD(blockLength) - 2, outputBuf) != bul )
+        {
             return 0;
+        }
 
         outputBuf += bul;
         outputLength += bul;

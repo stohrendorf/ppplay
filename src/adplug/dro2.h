@@ -24,10 +24,9 @@
 #include <cstdint>
 #include "player.h"
 
-class Dro2Player : public Player
+class Dro2Player
+    : public Player
 {
-    DISABLE_COPY(Dro2Player)
-
     uint8_t m_commandDelayS = 0;
     uint8_t m_commandDelay = 0;
     std::vector<uint8_t> m_convTable{};
@@ -38,14 +37,20 @@ class Dro2Player : public Player
     int m_chipSelector = 0;
 
 public:
+    DISABLE_COPY(Dro2Player)
+
     static Player* factory();
 
     Dro2Player() = default;
-    ~Dro2Player() = default;
+
+    ~Dro2Player() override = default;
 
     bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override

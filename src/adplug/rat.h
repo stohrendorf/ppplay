@@ -23,16 +23,18 @@
 
 #include "xad.h"
 
-class RatPlayer : public XadPlayer
+class RatPlayer
+    : public XadPlayer
 {
-    DISABLE_COPY(RatPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(RatPlayer)
+
+    static Player* factory();
 
     RatPlayer() = default;
 
 private:
-#pragma pack(push,1)
+#pragma pack(push, 1)
     struct Header
     {
         char id[3] = "";
@@ -53,7 +55,7 @@ private:
         uint8_t volume = 0;
         uint8_t speed = 0;
         uint8_t reserved_32[12] = "";
-        uint8_t patseg[2] = { 0,0 };
+        uint8_t patseg[2] = {0, 0};
     };
 
     struct Event
@@ -88,11 +90,17 @@ private:
 #pragma pack(pop)
 
     bool xadplayer_load() override;
+
     void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
+
     void xadplayer_update() override;
+
     size_t framesUntilUpdate() const override;
+
     std::string type() const override;
+
     std::string title() const override;
+
     size_t instrumentCount() const override;
 
     const uint8_t* m_trackdataByOrder = nullptr;
@@ -100,9 +108,9 @@ private:
 
     uint8_t m_volume = 0;
 
-    const Instrument *m_instruments = nullptr;
+    const Instrument* m_instruments = nullptr;
 
-    std::array<std::array<std::array<Event, 9>, 64>, 256> m_tracks{ {} };
+    std::array<std::array<std::array<Event, 9>, 64>, 256> m_tracks{{}};
 
     struct Channel
     {
@@ -112,7 +120,7 @@ private:
         uint8_t fxp = 0;
     };
 
-    std::array<Channel, 9> m_channels{ {} };
+    std::array<Channel, 9> m_channels{{}};
 
     static uint8_t calculateVolume(uint8_t ivol, uint8_t cvol, uint8_t gvol);
 };

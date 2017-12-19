@@ -24,19 +24,26 @@
 
 #include "player.h"
 
-class RixPlayer : public Player
+class RixPlayer
+    : public Player
 {
-    DISABLE_COPY(RixPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(RixPlayer)
+
+    static Player* factory();
 
     RixPlayer();
-    ~RixPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    ~RixPlayer() override = default;
+
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override;
+
     size_t subSongCount() const override;
 
     std::string type() const override
@@ -52,32 +59,29 @@ private:
             v.fill(0);
         }
 
-        std::array<uint8_t, 14> v{ {} };
+        std::array<uint8_t, 14> v{{}};
     };
 
     bool m_flagMkf = false;
     std::vector<uint8_t> m_fileBuffer{};
     const uint8_t* m_bufAddr = nullptr;      /* rix files' f_buffer */
-    std::array<uint16_t, 300> m_fBuffer{ {} }; //9C0h-C18h
-    std::array<uint16_t, 11> m_a0b0Data2{ {} };
-    std::array<uint8_t, 18> m_a0b0Data3{ {} };
-    std::array<uint8_t, 18> m_a0b0Data4{ {} };
-    std::array<uint8_t, 96> m_a0b0Data5{ {} };
-    std::array<uint8_t, 96> m_addrsHead{ {} };
-    std::array<uint16_t, 28> m_insBuf{ {} };
-    std::array<uint16_t, 11> m_displace{ {} };
-    std::array<ADDT, 18> m_regBufs{ {} };
-    size_t m_pos = 0;
+    std::array<uint16_t, 300> m_fBuffer{{}}; //9C0h-C18h
+    std::array<uint16_t, 11> m_a0b0Data2{{}};
+    std::array<uint8_t, 18> m_a0b0Data3{{}};
+    std::array<uint8_t, 18> m_a0b0Data4{{}};
+    std::array<uint8_t, 96> m_a0b0Data5{{}};
+    std::array<uint8_t, 96> m_addrsHead{{}};
+    std::array<uint16_t, 28> m_insBuf{{}};
+    std::array<uint16_t, 11> m_displace{{}};
+    std::array<ADDT, 18> m_regBufs{{}};
     size_t m_length = 0;
-    uint8_t m_index = 0;
 
     uint32_t m_i = 0;
-    uint32_t m_t = 0;
     uint16_t m_musBlock = 0;
     uint16_t m_insBlock = 0;
     uint8_t m_rhythm = 0;
     bool m_musicOn = false;
-    uint8_t m_pauseFlag = 0;
+    bool m_pauseFlag = false;
     uint16_t m_band = 0;
     uint8_t m_bandLow = 0;
     uint16_t m_e0RegFlag = 0;
@@ -85,34 +89,54 @@ private:
     int m_sustain = 0;
     bool m_playEnd = false;
 
-    std::array<uint8_t, 18> m_for40reg{ {} };
+    std::array<uint8_t, 18> m_for40reg{{}};
 
-#define ad_08_reg() ad_bop(8, 0)
     inline void ad_20_reg(uint16_t);
+
     inline void ad_40_reg(uint16_t);
+
     inline void ad_60_reg(uint16_t);
+
     inline void ad_80_reg(uint16_t);
-    inline void ad_a0b0_reg(uint16_t);
+
     inline void ad_a0b0l_reg(uint16_t, uint16_t, uint16_t);
+
     inline void ad_a0b0l_reg_(uint16_t, uint16_t, uint16_t);
+
     /**/
     inline void ad_bd_reg();
-    inline void ad_bop(uint16_t, uint16_t);
+
+    inline void writeRegister(uint16_t, uint16_t);
+
     inline void ad_C0_reg(uint16_t);
+
     inline void ad_E0_reg(uint16_t);
+
     inline uint16_t ad_initial();
+
     inline void data_initial();
-    inline void ins_to_reg(uint16_t, const uint16_t *, uint16_t);
+
+    inline void ins_to_reg(uint16_t, const uint16_t*, uint16_t);
+
     inline void int_08h_entry();
+
     inline void music_ctrl();
-    inline void Pause();
+
     inline void prepare_a0b0(uint16_t, uint16_t);
+
     inline void rix_90_pro(uint16_t);
+
     inline void rix_A0_pro(uint16_t, uint16_t);
+
     inline void rix_B0_pro(uint16_t, uint16_t);
+
     inline void rix_C0_pro(uint16_t, uint16_t);
+
     inline void rix_get_ins();
+
     inline uint16_t rix_proc();
+
     inline void set_new_int();
+
     inline void switch_ad_bd(uint16_t);
 };

@@ -21,7 +21,7 @@
 
 #include "adplug.h"
 
- /***** Replayer includes *****/
+/***** Replayer includes *****/
 
 #include "hsc.h"
 #include "amd.h"
@@ -67,7 +67,6 @@
 #include "light4cxx/logger.h"
 
 #include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
 
 namespace
 {
@@ -124,8 +123,10 @@ const Players& AdPlug::init_players(const PlayerDesc pd[])
 {
     static Players initplayers;
 
-    for(size_t i = 0; pd[i].factory; i++)
+    for( size_t i = 0; pd[i].factory; i++ )
+    {
         initplayers.addPlayerDescription(&pd[i]);
+    }
 
     return initplayers;
 }
@@ -138,15 +139,15 @@ std::shared_ptr<Player> AdPlug::factory(const std::string& fn, const Players& pl
 
     // Try a direct hit by file extension
     const auto ext = boost::to_lower_copy(boost::filesystem::path(fn).extension().string());
-    for(auto i = pl.begin(); i != pl.end(); ++i)
+    for( auto i = pl.begin(); i != pl.end(); ++i )
     {
-        for(auto j = 0; !(*i)->get_extension(j).empty(); j++)
+        for( auto j = 0u; !(*i)->get_extension(j).empty(); j++ )
         {
-            if(ext == boost::to_lower_copy((*i)->get_extension(j)))
+            if( ext == boost::to_lower_copy((*i)->get_extension(j)) )
             {
                 logger->debug(L4CXX_LOCATION, "Trying direct hit: %s\n", (*i)->filetype);
-                std::shared_ptr<Player> p{ (*i)->factory() };
-                if(p && p->load(fn))
+                std::shared_ptr<Player> p{(*i)->factory()};
+                if( p && p->load(fn) )
                 {
                     return p;
                 }
@@ -155,11 +156,11 @@ std::shared_ptr<Player> AdPlug::factory(const std::string& fn, const Players& pl
     }
 
     // Try all players, one by one
-    for(auto i = pl.begin(); i != pl.end(); ++i)
+    for( auto i = pl.begin(); i != pl.end(); ++i )
     {
         logger->debug(L4CXX_LOCATION, "Trying: %s\n", (*i)->filetype);
-        std::shared_ptr<Player> p{ (*i)->factory() };
-        if(p && p->load(fn))
+        std::shared_ptr<Player> p{(*i)->factory()};
+        if( p && p->load(fn) )
         {
             return p;
         }
@@ -169,7 +170,3 @@ std::shared_ptr<Player> AdPlug::factory(const std::string& fn, const Players& pl
     return nullptr;
 }
 
-std::string AdPlug::get_version()
-{
-    return "0.1";
-}

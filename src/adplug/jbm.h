@@ -25,8 +25,8 @@
 
 class JbmPlayer : public Player
 {
-    DISABLE_COPY(JbmPlayer)
 public:
+    DISABLE_COPY(JbmPlayer)
     JbmPlayer() = default;
     static Player *factory();
 
@@ -70,8 +70,6 @@ private:
         int16_t delay = 0;
         int16_t instr = 0;
         uint8_t frq[2] = { 0, 0 };
-        uint8_t ivol = 0;
-        uint8_t dummy = 0;
     };
 
     JBMVoice m_voices[11];

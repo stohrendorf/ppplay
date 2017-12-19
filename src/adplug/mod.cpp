@@ -32,15 +32,15 @@ namespace
 constexpr auto JUMPMARKER = 0x80; // Orderlist jump marker
 
 // SA2 compatible adlib note table
-const std::array<uint16_t, 12> sa2_notetable = { 340, 363, 385, 408, 432,
-    458, 485, 514, 544, 577,
-    611, 647 };
+const std::array<uint16_t, 12> sa2_notetable = {340, 363, 385, 408, 432,
+                                                458, 485, 514, 544, 577,
+                                                611, 647};
 
 // SA2 compatible vibrato rate table
-const std::array<uint8_t, 32> vibratotab = { 1, 2, 3, 4, 5, 6, 7, 8, 9,
-    10, 11, 12, 13, 14, 15, 16,
-    16, 15, 14, 13, 12, 11, 10,
-    9, 8, 7, 6, 5, 4, 3, 2, 1 };
+const std::array<uint8_t, 32> vibratotab = {1, 2, 3, 4, 5, 6, 7, 8, 9,
+                                            10, 11, 12, 13, 14, 15, 16,
+                                            16, 15, 14, 13, 12, 11, 10,
+                                            9, 8, 7, 6, 5, 4, 3, 2, 1};
 }
 
 /*** public methods *************************************/
@@ -56,16 +56,18 @@ bool ModPlayer::update()
 {
     bool pattbreak = false;
 
-    if(currentSpeed() == 0) // song full stop
+    if( currentSpeed() == 0 )
+    { // song full stop
         return !m_songEnd;
+    }
 
     // effect handling (timer dependant)
-    for(size_t channelIdx = 0; channelIdx < m_channels.size(); ++channelIdx)
+    for( size_t channelIdx = 0; channelIdx < m_channels.size(); ++channelIdx )
     {
         auto oplchan = setOplChip(channelIdx);
         Channel& chan = m_channels[channelIdx];
 
-        if(m_arpeggioList.is_initialized() && m_arpeggioCommands.is_initialized() && m_instruments[chan.instrument].arpeggioStart)
+        if( m_arpeggioList.is_initialized() && m_arpeggioCommands.is_initialized() && m_instruments[chan.instrument].arpeggioStart )
         { // special arpeggio
             auto command = (*m_arpeggioCommands)[chan.arppos];
             auto data = (*m_arpeggioList)[chan.arppos];
@@ -74,13 +76,13 @@ bool ModPlayer::update()
             static constexpr auto ReleaseNote = 253;
             static constexpr auto SetPosition = 254;
             static constexpr auto NoCommand = 255;
-            if(chan.arpspdcnt)
+            if( chan.arpspdcnt )
             {
                 chan.arpspdcnt--;
             }
-            else if(command != NoCommand)
+            else if( command != NoCommand )
             {
-                switch(command)
+                switch( command )
                 {
                     case DoNothing:
                         break;
@@ -99,20 +101,30 @@ bool ModPlayer::update()
                         command = (*m_arpeggioCommands)[chan.arppos];
                         break; // arpeggio loop
                     default:
-                        if(command / 10)
+                        if( command / 10 )
+                        {
                             getOpl()->writeReg(0xe3 + s_opTable[oplchan], command / 10 - 1);
-                        if(command % 10)
+                        }
+                        if( command % 10 )
+                        {
                             getOpl()->writeReg(0xe0 + s_opTable[oplchan], (command % 10) - 1);
-                        if(command < 10) // ?????
+                        }
+                        if( command < 10 )
+                        { // ?????
                             getOpl()->writeReg(0xe0 + s_opTable[oplchan], command - 1);
+                        }
                 }
 
-                if(command != SetVolume)
+                if( command != SetVolume )
                 {
-                    if(data <= 96)
+                    if( data <= 96 )
+                    {
                         setNote(channelIdx, chan.note + data);
-                    else if(data > 100)
+                    }
+                    else if( data > 100 )
+                    {
                         setNote(channelIdx, data - 100);
+                    }
                 }
                 else
                 {
@@ -120,8 +132,10 @@ bool ModPlayer::update()
                 }
 
                 setFreq(channelIdx);
-                if(command != NoCommand)
+                if( command != NoCommand )
+                {
                     chan.arppos++;
+                }
                 chan.arpspdcnt = m_instruments[chan.instrument].arpeggioSpeed - 1;
             }
         }
@@ -129,21 +143,29 @@ bool ModPlayer::update()
         const auto hiNybble = chan.hiNybble;
         const auto loNybble = chan.loNybble;
         int info;
-        if(m_decimalValues)
+        if( m_decimalValues )
+        {
             info = chan.hiNybble * 10 + chan.loNybble;
+        }
         else
+        {
             info = (chan.hiNybble << 4) + chan.loNybble;
+        }
 
-        switch(chan.fx)
+        switch( chan.fx )
         {
             case Command::None:
-                if(info)
+                if( info )
                 { // arpeggio
-                    if(chan.trigger < 2)
+                    if( chan.trigger < 2 )
+                    {
                         chan.trigger++;
+                    }
                     else
+                    {
                         chan.trigger = 0;
-                    switch(chan.trigger)
+                    }
+                    switch( chan.trigger )
                     {
                         case 0:
                             setNote(channelIdx, chan.note);
@@ -173,53 +195,79 @@ bool ModPlayer::update()
                 break; // vibrato
             case Command::PortaVolSlide: // tone portamento & volume slide
             case Command::VibVolSlide:
-                if(chan.fx == Command::PortaVolSlide) // vibrato & volume slide
+                if( chan.fx == Command::PortaVolSlide )
+                { // vibrato & volume slide
                     tonePortamento(channelIdx, chan.portaSpeed);
+                }
                 else
+                {
                     vibrato(channelIdx, chan.vibratoSpeed, chan.vibratoDepth);
+                }
             case Command::SA2VolSlide:
-                if(m_patternDelay % 4) // SA2 volume slide
+                if( m_patternDelay % 4 )
+                { // SA2 volume slide
                     break;
-                if(hiNybble)
+                }
+                if( hiNybble )
+                {
                     chan.volumeUp(hiNybble);
+                }
                 else
+                {
                     chan.volumeDown(loNybble);
+                }
                 setVolume(channelIdx);
                 break;
             case Command::SFXRetrigger:
-                if(!(m_patternDelay % (loNybble + 1)))
+                if( !(m_patternDelay % (loNybble + 1)) )
+                {
                     playNote(channelIdx);
+                }
                 break;
             case Command::AMDVolSlide:
-                if(m_patternDelay % 4) // AMD volume slide
+                if( m_patternDelay % 4 )
+                { // AMD volume slide
                     break;
-                if(hiNybble)
+                }
+                if( hiNybble )
+                {
                     chan.distinctVolumeUp(hiNybble, m_instruments);
+                }
                 else
+                {
                     chan.distinctVolumeDown(loNybble, m_instruments);
+                }
                 setVolume(channelIdx);
                 break;
             case Command::RADVolSlide: // RAD volume slide
-                if(info < 50)
+                if( info < 50 )
+                {
                     chan.distinctVolumeDown(info, m_instruments);
+                }
                 else
+                {
                     chan.distinctVolumeUp(info - 50, m_instruments);
+                }
                 setVolume(channelIdx);
                 break;
             case Command::VolSlide: // volume slide
-                if(hiNybble)
+                if( hiNybble )
+                {
                     chan.volumeUp(hiNybble);
+                }
                 else
+                {
                     chan.volumeDown(loNybble);
+                }
                 setVolume(channelIdx);
                 break;
             case Command::SlideUpDown:
-                if(hiNybble)
+                if( hiNybble )
                 {
                     chan.slideUp(1);
                     chan.hiNybble--;
                 }
-                if(loNybble)
+                if( loNybble )
                 {
                     chan.slideDown(1);
                     chan.loNybble--;
@@ -229,14 +277,14 @@ bool ModPlayer::update()
         }
     }
 
-    if(m_patternDelay)
+    if( m_patternDelay )
     { // speed compensation
         m_patternDelay--;
         return !m_songEnd;
     }
 
     // arrangement handling
-    if(!resolveOrder())
+    if( !resolveOrder() )
     {
         return !m_songEnd;
     }
@@ -245,17 +293,17 @@ bool ModPlayer::update()
     // play row
     auto pattern_delay = 0;
     auto row = currentRow();
-    for(size_t channelIdx = 0; channelIdx < m_channels.size(); ++channelIdx)
+    for( size_t channelIdx = 0; channelIdx < m_channels.size(); ++channelIdx )
     {
         auto oplchan = setOplChip(channelIdx);
         Channel& chan = m_channels[channelIdx];
 
-        if((m_activechan & (1 << channelIdx)) == 0)
+        if( (m_activechan & (1 << channelIdx)) == 0 )
         { // channel active?
             continue;
         }
         auto track = m_cellColumnMapping.at(pattnr, channelIdx);
-        if(track == 0)
+        if( track == 0 )
         { // resolve track
             continue;
         }
@@ -265,10 +313,10 @@ bool ModPlayer::update()
         }
 
         bool donote = false;
-        if(m_patternCells.at(track, row).instrument != 0)
+        if( m_patternCells.at(track, row).instrument != 0 )
         {
             chan.instrument = m_patternCells.at(track, row).instrument - 1;
-            if(!m_faust)
+            if( !m_faust )
             {
                 chan.carrierVolume = 63 - (m_instruments[chan.instrument].data[10] & 63);
                 chan.modulatorVolume = 63 - (m_instruments[chan.instrument].data[9] & 63);
@@ -276,7 +324,7 @@ bool ModPlayer::update()
             }
         }
 
-        if(m_patternCells.at(track, row).note && m_patternCells.at(track, row).command != Command::Porta)
+        if( m_patternCells.at(track, row).note && m_patternCells.at(track, row).command != Command::Porta )
         { // no tone portamento
             chan.note = m_patternCells.at(track, row).note;
             setNote(channelIdx, m_patternCells.at(track, row).note);
@@ -284,14 +332,16 @@ bool ModPlayer::update()
             chan.portaTargetOctave = chan.octave;
             chan.arppos = m_instruments[chan.instrument].arpeggioStart;
             chan.arpspdcnt = 0;
-            if(m_patternCells.at(track, row).note != 127) // handle key off
+            if( m_patternCells.at(track, row).note != 127 )
+            { // handle key off
                 donote = true;
+            }
         }
         chan.fx = m_patternCells.at(track, row).command;
         chan.hiNybble = m_patternCells.at(track, row).hiNybble;
         chan.loNybble = m_patternCells.at(track, row).loNybble;
 
-        if(donote)
+        if( donote )
         {
             playNote(channelIdx);
         }
@@ -300,34 +350,46 @@ bool ModPlayer::update()
         const auto hiNybble = chan.hiNybble;
         const auto loNybble = chan.loNybble;
         uint32_t info;
-        if(m_decimalValues)
+        if( m_decimalValues )
+        {
             info = chan.hiNybble * 10 + chan.loNybble;
+        }
         else
+        {
             info = (chan.hiNybble << 4) + chan.loNybble;
-        switch(chan.fx)
+        }
+        switch( chan.fx )
         {
             case Command::Porta: // tone portamento
-                if(m_patternCells.at(track, row).note)
+                if( m_patternCells.at(track, row).note )
                 {
-                    if(m_patternCells.at(track, row).note < 13)
+                    if( m_patternCells.at(track, row).note < 13 )
+                    {
                         chan.portaTargetFrequency = m_noteTable[m_patternCells.at(track, row).note - 1];
-                    else if(m_patternCells.at(track, row).note % 12 > 0)
+                    }
+                    else if( m_patternCells.at(track, row).note % 12 > 0 )
+                    {
                         chan.portaTargetFrequency = m_noteTable[(m_patternCells.at(track, row).note % 12) - 1];
+                    }
                     else
+                    {
                         chan.portaTargetFrequency = m_noteTable[11];
+                    }
                     chan.portaTargetOctave = (m_patternCells.at(track, row).note - 1) / 12;
-                    if(m_patternCells.at(track, row).note == 127)
+                    if( m_patternCells.at(track, row).note == 127 )
                     { // handle key off
                         chan.portaTargetFrequency = chan.frequency;
                         chan.portaTargetOctave = chan.octave;
                     }
                 }
-                if(info) // remember vars
+                if( info )
+                { // remember vars
                     chan.portaSpeed = info;
+                }
                 break;
 
             case Command::Vibrato: // vibrato (remember vars)
-                if(info)
+                if( info )
                 {
                     chan.vibratoSpeed = hiNybble;
                     chan.vibratoDepth = loNybble;
@@ -344,33 +406,43 @@ bool ModPlayer::update()
                 break; // release sustaining note
 
             case Command::SetVolume: // set carrier/modulator volume
-                if(hiNybble)
+                if( hiNybble )
+                {
                     chan.carrierVolume = hiNybble * 7;
+                }
                 else
+                {
                     chan.modulatorVolume = loNybble * 7;
+                }
                 setVolume(channelIdx);
                 break;
 
             case Command::OrderJump: // position jump
                 pattbreak = true;
                 setCurrentRow(0);
-                if(info < currentOrder())
+                if( info < currentOrder() )
+                {
                     m_songEnd = true;
+                }
                 setCurrentOrder(info);
                 break;
 
             case Command::SetFineVolume: // set volume
                 chan.carrierVolume = info;
                 chan.modulatorVolume = info;
-                if(chan.carrierVolume > 63)
+                if( chan.carrierVolume > 63 )
+                {
                     chan.carrierVolume = 63;
-                if(chan.modulatorVolume > 63)
+                }
+                if( chan.modulatorVolume > 63 )
+                {
                     chan.modulatorVolume = 63;
+                }
                 setVolume(channelIdx);
                 break;
 
             case Command::PatternBreak: // pattern break
-                if(!pattbreak)
+                if( !pattbreak )
                 {
                     pattbreak = true;
                     setCurrentRow(info);
@@ -379,18 +451,26 @@ bool ModPlayer::update()
                 break;
 
             case Command::SFXTremolo: // define cell-tremolo
-                if(loNybble)
+                if( loNybble )
+                {
                     m_oplBdRegister |= 128;
+                }
                 else
+                {
                     m_oplBdRegister &= 127;
+                }
                 getOpl()->writeReg(0xbd, m_oplBdRegister);
                 break;
 
             case Command::SFXVibrato: // define cell-vibrato
-                if(loNybble)
+                if( loNybble )
+                {
                     m_oplBdRegister |= 64;
+                }
                 else
+                {
                     m_oplBdRegister &= 191;
+                }
                 getOpl()->writeReg(0xbd, m_oplBdRegister);
                 break;
 
@@ -419,33 +499,47 @@ bool ModPlayer::update()
                 break;
 
             case Command::SA2Speed: // SA2 set speed
-                if(info <= 0x1f)
+                if( info <= 0x1f )
+                {
                     setCurrentSpeed(info);
-                else if(info >= 0x32)
+                }
+                else if( info >= 0x32 )
+                {
                     setCurrentTempo(info);
-                if(info == 0)
+                }
+                if( info == 0 )
+                {
                     m_songEnd = true;
+                }
                 break;
 
             case Command::SetFineVolume2: // alternate set volume
                 chan.carrierVolume = info;
-                if(chan.carrierVolume > 63)
+                if( chan.carrierVolume > 63 )
+                {
                     chan.carrierVolume = 63;
-                if(m_instruments[chan.instrument].data[0] & 1)
+                }
+                if( m_instruments[chan.instrument].data[0] & 1 )
                 {
                     chan.modulatorVolume = info;
-                    if(chan.modulatorVolume > 63)
+                    if( chan.modulatorVolume > 63 )
+                    {
                         chan.modulatorVolume = 63;
+                    }
                 }
 
                 setVolume(channelIdx);
                 break;
 
             case Command::AMDSpeed: // AMD set speed
-                if(info <= 0x1f && info > 0)
+                if( info <= 0x1f && info > 0 )
+                {
                     setCurrentSpeed(info);
-                else if(info > 0x1f || info == 0)
+                }
+                else if( info > 0x1f || info == 0 )
+                {
                     setCurrentTempo(info);
+                }
                 break;
 
             case Command::RADSpeed: // RAD/A2M set speed
@@ -453,18 +547,26 @@ bool ModPlayer::update()
                 break;
 
             case Command::ModulatorVolume: // set modulator volume
-                if(info <= 63)
+                if( info <= 63 )
+                {
                     chan.modulatorVolume = info;
+                }
                 else
+                {
                     chan.modulatorVolume = 63;
+                }
                 setVolume(channelIdx);
                 break;
 
             case Command::CarrierVolume: // set carrier volume
-                if(info <= 63)
+                if( info <= 63 )
+                {
                     chan.carrierVolume = info;
+                }
                 else
+                {
                     chan.carrierVolume = 63;
+                }
                 setVolume(channelIdx);
                 break;
 
@@ -479,21 +581,33 @@ bool ModPlayer::update()
                 break;
 
             case Command::WaveForm: // set carrier/modulator waveform
-                if(hiNybble != 0x0f)
+                if( hiNybble != 0x0f )
+                {
                     getOpl()->writeReg(0xe3 + s_opTable[oplchan], hiNybble);
-                if(loNybble != 0x0f)
+                }
+                if( loNybble != 0x0f )
+                {
                     getOpl()->writeReg(0xe0 + s_opTable[oplchan], loNybble);
+                }
                 break;
 
             case Command::OplTremoloVibrato: // set chip tremolo/vibrato
-                if(hiNybble)
+                if( hiNybble )
+                {
                     m_oplBdRegister |= 128;
+                }
                 else
+                {
                     m_oplBdRegister &= 127;
-                if(loNybble)
+                }
+                if( loNybble )
+                {
                     m_oplBdRegister |= 64;
+                }
                 else
+                {
                     m_oplBdRegister &= 191;
+                }
                 getOpl()->writeReg(0xbd, m_oplBdRegister);
                 break;
 
@@ -506,10 +620,10 @@ bool ModPlayer::update()
     // speed compensation
     m_patternDelay = currentSpeed() - 1 + pattern_delay;
 
-    if(!pattbreak)
+    if( !pattbreak )
     { // next row (only if no manual advance)
         setCurrentRow(currentRow() + 1);
-        if(currentRow() >= m_patternCells.height())
+        if( currentRow() >= m_patternCells.height() )
         {
             setCurrentRow(0);
             setCurrentOrder(currentOrder() + 1);
@@ -540,16 +654,20 @@ bool ModPlayer::resolveOrder() /*
                      * has been detected.
                      */
 {
-    if(currentOrder() < orderCount())
+    if( currentOrder() < orderCount() )
     {
-        while(currentPattern() >= JUMPMARKER)
+        while( currentPattern() >= JUMPMARKER )
         { // jump to order
             const int neword = currentPattern() - JUMPMARKER;
 
-            if(neword <= static_cast<int>(currentOrder()))
+            if( neword <= static_cast<int>(currentOrder()) )
+            {
                 m_songEnd = true;
-            else if(neword == static_cast<int>(currentOrder()))
+            }
+            else if( neword == static_cast<int>(currentOrder()) )
+            {
                 return false;
+            }
             setCurrentOrder(neword);
         }
     }
@@ -582,7 +700,7 @@ void ModPlayer::rewind(const boost::optional<size_t>&)
     getOpl()->writeReg(1, 32); // Go to ym3812 mode
 
     // Enable OPL3 extensions if flagged
-    if(m_opl3Mode)
+    if( m_opl3Mode )
     {
         //FIXME sto opl->setchip(1);
         //FIXME sto opl->writeReg(1, 32);
@@ -591,12 +709,18 @@ void ModPlayer::rewind(const boost::optional<size_t>&)
     }
 
     // Enable tremolo/vibrato depth if flagged
-    if(m_tremolo)
+    if( m_tremolo )
+    {
         m_oplBdRegister |= 128;
-    if(m_vibrato)
+    }
+    if( m_vibrato )
+    {
         m_oplBdRegister |= 64;
-    if(m_oplBdRegister)
+    }
+    if( m_oplBdRegister )
+    {
         getOpl()->writeReg(0xbd, m_oplBdRegister);
+    }
 }
 
 size_t ModPlayer::framesUntilUpdate() const
@@ -607,9 +731,13 @@ size_t ModPlayer::framesUntilUpdate() const
 void ModPlayer::init_trackord()
 {
     m_cellColumnMapping.reset(m_cellColumnMapping.width(), m_channels.size());
-    for(size_t i = 0; i < m_cellColumnMapping.width(); ++i)
-        for(size_t j = 0; j < m_channels.size(); ++j)
+    for( size_t i = 0; i < m_cellColumnMapping.width(); ++i )
+    {
+        for( size_t j = 0; j < m_channels.size(); ++j )
+        {
             m_cellColumnMapping.at(i, j) = i * m_channels.size() + j + 1;
+        }
+    }
 }
 
 void ModPlayer::init_notetable(const std::array<uint16_t, 12>& newnotetable)
@@ -642,7 +770,7 @@ void ModPlayer::setVolume(size_t chan)
 {
     const auto oplchan = setOplChip(chan);
 
-    if(m_faust)
+    if( m_faust )
     {
         setAverageVolume(chan);
     }
@@ -665,14 +793,14 @@ void ModPlayer::setAverageVolume(size_t chan)
     const auto modulatorVolume = 63 - (m_channels[chan].modulatorVolume & 0x3f);
     const auto instrFlagsModulator = m_instruments[m_channels[chan].instrument].data[9] & 0xc0;
     getOpl()->writeReg(0x40 + s_opTable[oplchan],
-        ((modulatorVolume + instrVolumeModulator) >> 1) +
+                       ((modulatorVolume + instrVolumeModulator) >> 1) +
                        instrFlagsModulator);
 
     const auto instrVolumeCarrier = m_instruments[m_channels[chan].instrument].data[10] & 0x3f;
     const auto carrierVolume = 63 - (m_channels[chan].carrierVolume & 0x3f);
     const auto instrFlagsCarrier = m_instruments[m_channels[chan].instrument].data[10] & 0xc0;
     getOpl()->writeReg(0x43 + s_opTable[oplchan],
-        ((carrierVolume + instrVolumeCarrier) >> 1) +
+                       ((carrierVolume + instrVolumeCarrier) >> 1) +
                        instrFlagsCarrier);
 }
 
@@ -681,18 +809,24 @@ void ModPlayer::setFreq(size_t chan)
     unsigned char oplchan = setOplChip(chan);
 
     getOpl()->writeReg(0xa0 + oplchan, m_channels[chan].frequency & 0xff);
-    if(m_channels[chan].key)
+    if( m_channels[chan].key )
+    {
         getOpl()->writeReg(0xb0 + oplchan, ((m_channels[chan].frequency & 0x300) >> 8) | (m_channels[chan].octave << 2) | 0x20);
+    }
     else
+    {
         getOpl()->writeReg(0xb0 + oplchan, ((m_channels[chan].frequency & 0x300) >> 8) | (m_channels[chan].octave << 2));
+    }
 }
 
 void ModPlayer::playNote(size_t chan)
 {
     unsigned char oplchan = setOplChip(chan);
 
-    if(!m_noKeyOn)
-        getOpl()->writeReg(0xb0 + oplchan, 0); // stop old note
+    if( !m_noKeyOn )
+    {
+        getOpl()->writeReg(0xb0 + oplchan, 0);
+    } // stop old note
 
     // set instrument data
     const auto op = s_opTable[oplchan];
@@ -712,7 +846,7 @@ void ModPlayer::playNote(size_t chan)
     m_channels[chan].key = 1;
     setFreq(chan);
 
-    if(m_faust)
+    if( m_faust )
     {
         m_channels[chan].modulatorVolume = 63;
         m_channels[chan].carrierVolume = 63;
@@ -724,26 +858,32 @@ void ModPlayer::setNote(size_t chan, int note)
 {
     BOOST_ASSERT(note > 0);
 
-    if(note > 96)
+    if( note > 96 )
     {
-        if(note == 127)
+        if( note == 127 )
         { // key off
             m_channels[chan].key = 0;
             setFreq(chan);
             return;
         }
         else
+        {
             note = 96;
+        }
     }
 
-    if(note < 13)
+    if( note < 13 )
     {
         m_channels[chan].frequency = m_noteTable[note - 1];
     }
-    else if(note % 12 > 0)
+    else if( note % 12 > 0 )
+    {
         m_channels[chan].frequency = m_noteTable[(note % 12) - 1];
+    }
     else
+    {
         m_channels[chan].frequency = m_noteTable[11];
+    }
     m_channels[chan].octave = (note - 1) / 12;
     m_channels[chan].frequency += m_instruments[m_channels[chan].instrument].slide; // apply pre-slide
 }
@@ -756,23 +896,33 @@ void ModPlayer::tonePortamento(size_t chan, uint8_t speed)
 
 void ModPlayer::vibrato(size_t chan, uint8_t speed, uint8_t depth)
 {
-    if(!speed || !depth)
+    if( !speed || !depth )
+    {
         return;
+    }
 
-    if(depth > 14)
+    if( depth > 14 )
+    {
         depth = 14;
+    }
     depth = 16 - depth;
 
-    for(int i = 0; i < speed; i++)
+    for( int i = 0; i < speed; i++ )
     {
         m_channels[chan].trigger = (m_channels[chan].trigger + 1) % 64;
         const auto trigger = m_channels[chan].trigger;
-        if(trigger >= 16 && trigger < 48)
+        if( trigger >= 16 && trigger < 48 )
+        {
             m_channels[chan].slideDown(vibratotab[trigger - 16] / depth);
-        else if(trigger < 16)
+        }
+        else if( trigger < 16 )
+        {
             m_channels[chan].slideUp(vibratotab[trigger + 16] / depth);
-        else if(trigger >= 48)
+        }
+        else if( trigger >= 48 )
+        {
             m_channels[chan].slideUp(vibratotab[trigger - 48] / depth);
+        }
     }
     setFreq(chan);
 }

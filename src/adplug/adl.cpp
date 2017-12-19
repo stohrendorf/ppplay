@@ -56,137 +56,135 @@
 
 #include "adl.h"
 
-#include <algorithm>
-
 namespace
 {
-    // This table holds the register offset for operator 1 for each of the nine
-    // channels. To get the register offset for operator 2, simply add 3.
+// This table holds the register offset for operator 1 for each of the nine
+// channels. To get the register offset for operator 2, simply add 3.
 
-    const uint8_t operatorRegisterOffsets[] = {0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12};
+const uint8_t operatorRegisterOffsets[] = {0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12};
 
-    // Given the size of this table, and the range of its values, it's probably the
-    // F-Numbers (10 bits) for the notes of the 12-tone scale. However, it does not
-    // match the table in the Adlib documentation I've seen.
+// Given the size of this table, and the range of its values, it's probably the
+// F-Numbers (10 bits) for the notes of the 12-tone scale. However, it does not
+// match the table in the Adlib documentation I've seen.
 
-    const uint16_t _unkTable[] = {0x0134, 0x0147, 0x015A, 0x016F,
-        0x0184, 0x019C, 0x01B4, 0x01CE,
-        0x01E9, 0x0207, 0x0225, 0x0246};
+const uint16_t _unkTable[] = {0x0134, 0x0147, 0x015A, 0x016F,
+                              0x0184, 0x019C, 0x01B4, 0x01CE,
+                              0x01E9, 0x0207, 0x0225, 0x0246};
 
-    // These tables are currently only used by updateCallback46(), which only ever
-    // uses the first element of one of the sub-tables.
+// These tables are currently only used by updateCallback46(), which only ever
+// uses the first element of one of the sub-tables.
 
-    const uint8_t _unkTable2_1[] = {
-        0x50, 0x50, 0x4F, 0x4F, 0x4E, 0x4E, 0x4D, 0x4D, 0x4C, 0x4C, 0x4B, 0x4B, 0x4A,
-        0x4A, 0x49, 0x49, 0x48, 0x48, 0x47, 0x47, 0x46, 0x46, 0x45, 0x45, 0x44, 0x44,
-        0x43, 0x43, 0x42, 0x42, 0x41, 0x41, 0x40, 0x40, 0x3F, 0x3F, 0x3E, 0x3E, 0x3D,
-        0x3D, 0x3C, 0x3C, 0x3B, 0x3B, 0x3A, 0x3A, 0x39, 0x39, 0x38, 0x38, 0x37, 0x37,
-        0x36, 0x36, 0x35, 0x35, 0x34, 0x34, 0x33, 0x33, 0x32, 0x32, 0x31, 0x31, 0x30,
-        0x30, 0x2F, 0x2F, 0x2E, 0x2E, 0x2D, 0x2D, 0x2C, 0x2C, 0x2B, 0x2B, 0x2A, 0x2A,
-        0x29, 0x29, 0x28, 0x28, 0x27, 0x27, 0x26, 0x26, 0x25, 0x25, 0x24, 0x24, 0x23,
-        0x23, 0x22, 0x22, 0x21, 0x21, 0x20, 0x20, 0x1F, 0x1F, 0x1E, 0x1E, 0x1D, 0x1D,
-        0x1C, 0x1C, 0x1B, 0x1B, 0x1A, 0x1A, 0x19, 0x19, 0x18, 0x18, 0x17, 0x17, 0x16,
-        0x16, 0x15, 0x15, 0x14, 0x14, 0x13, 0x13, 0x12, 0x12, 0x11, 0x11, 0x10, 0x10
-    };
+const uint8_t _unkTable2_1[] = {
+    0x50, 0x50, 0x4F, 0x4F, 0x4E, 0x4E, 0x4D, 0x4D, 0x4C, 0x4C, 0x4B, 0x4B, 0x4A,
+    0x4A, 0x49, 0x49, 0x48, 0x48, 0x47, 0x47, 0x46, 0x46, 0x45, 0x45, 0x44, 0x44,
+    0x43, 0x43, 0x42, 0x42, 0x41, 0x41, 0x40, 0x40, 0x3F, 0x3F, 0x3E, 0x3E, 0x3D,
+    0x3D, 0x3C, 0x3C, 0x3B, 0x3B, 0x3A, 0x3A, 0x39, 0x39, 0x38, 0x38, 0x37, 0x37,
+    0x36, 0x36, 0x35, 0x35, 0x34, 0x34, 0x33, 0x33, 0x32, 0x32, 0x31, 0x31, 0x30,
+    0x30, 0x2F, 0x2F, 0x2E, 0x2E, 0x2D, 0x2D, 0x2C, 0x2C, 0x2B, 0x2B, 0x2A, 0x2A,
+    0x29, 0x29, 0x28, 0x28, 0x27, 0x27, 0x26, 0x26, 0x25, 0x25, 0x24, 0x24, 0x23,
+    0x23, 0x22, 0x22, 0x21, 0x21, 0x20, 0x20, 0x1F, 0x1F, 0x1E, 0x1E, 0x1D, 0x1D,
+    0x1C, 0x1C, 0x1B, 0x1B, 0x1A, 0x1A, 0x19, 0x19, 0x18, 0x18, 0x17, 0x17, 0x16,
+    0x16, 0x15, 0x15, 0x14, 0x14, 0x13, 0x13, 0x12, 0x12, 0x11, 0x11, 0x10, 0x10
+};
 
-    // no don't ask me WHY this table exsits!
-    const uint8_t _unkTable2_2[] = {
-        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
-        0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
-        0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26,
-        0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31, 0x32, 0x33,
-        0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F, 0x40,
-        0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D,
-        0x4E, 0x4F, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5A,
-        0x5B, 0x5C, 0x5D, 0x5E, 0x6F, 0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,
-        0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
-        0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F
-    };
+// no don't ask me WHY this table exsits!
+const uint8_t _unkTable2_2[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
+    0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
+    0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26,
+    0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31, 0x32, 0x33,
+    0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F, 0x40,
+    0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D,
+    0x4E, 0x4F, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5A,
+    0x5B, 0x5C, 0x5D, 0x5E, 0x6F, 0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,
+    0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
+    0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F
+};
 
-    const uint8_t _unkTable2_3[] = {
-        0x40, 0x40, 0x40, 0x3F, 0x3F, 0x3F, 0x3E, 0x3E, 0x3E, 0x3D, 0x3D, 0x3D, 0x3C,
-        0x3C, 0x3C, 0x3B, 0x3B, 0x3B, 0x3A, 0x3A, 0x3A, 0x39, 0x39, 0x39, 0x38, 0x38,
-        0x38, 0x37, 0x37, 0x37, 0x36, 0x36, 0x36, 0x35, 0x35, 0x35, 0x34, 0x34, 0x34,
-        0x33, 0x33, 0x33, 0x32, 0x32, 0x32, 0x31, 0x31, 0x31, 0x30, 0x30, 0x30, 0x2F,
-        0x2F, 0x2F, 0x2E, 0x2E, 0x2E, 0x2D, 0x2D, 0x2D, 0x2C, 0x2C, 0x2C, 0x2B, 0x2B,
-        0x2B, 0x2A, 0x2A, 0x2A, 0x29, 0x29, 0x29, 0x28, 0x28, 0x28, 0x27, 0x27, 0x27,
-        0x26, 0x26, 0x26, 0x25, 0x25, 0x25, 0x24, 0x24, 0x24, 0x23, 0x23, 0x23, 0x22,
-        0x22, 0x22, 0x21, 0x21, 0x21, 0x20, 0x20, 0x20, 0x1F, 0x1F, 0x1F, 0x1E, 0x1E,
-        0x1E, 0x1D, 0x1D, 0x1D, 0x1C, 0x1C, 0x1C, 0x1B, 0x1B, 0x1B, 0x1A, 0x1A, 0x1A,
-        0x19, 0x19, 0x19, 0x18, 0x18, 0x18, 0x17, 0x17, 0x17, 0x16, 0x16, 0x16, 0x15
-    };
+const uint8_t _unkTable2_3[] = {
+    0x40, 0x40, 0x40, 0x3F, 0x3F, 0x3F, 0x3E, 0x3E, 0x3E, 0x3D, 0x3D, 0x3D, 0x3C,
+    0x3C, 0x3C, 0x3B, 0x3B, 0x3B, 0x3A, 0x3A, 0x3A, 0x39, 0x39, 0x39, 0x38, 0x38,
+    0x38, 0x37, 0x37, 0x37, 0x36, 0x36, 0x36, 0x35, 0x35, 0x35, 0x34, 0x34, 0x34,
+    0x33, 0x33, 0x33, 0x32, 0x32, 0x32, 0x31, 0x31, 0x31, 0x30, 0x30, 0x30, 0x2F,
+    0x2F, 0x2F, 0x2E, 0x2E, 0x2E, 0x2D, 0x2D, 0x2D, 0x2C, 0x2C, 0x2C, 0x2B, 0x2B,
+    0x2B, 0x2A, 0x2A, 0x2A, 0x29, 0x29, 0x29, 0x28, 0x28, 0x28, 0x27, 0x27, 0x27,
+    0x26, 0x26, 0x26, 0x25, 0x25, 0x25, 0x24, 0x24, 0x24, 0x23, 0x23, 0x23, 0x22,
+    0x22, 0x22, 0x21, 0x21, 0x21, 0x20, 0x20, 0x20, 0x1F, 0x1F, 0x1F, 0x1E, 0x1E,
+    0x1E, 0x1D, 0x1D, 0x1D, 0x1C, 0x1C, 0x1C, 0x1B, 0x1B, 0x1B, 0x1A, 0x1A, 0x1A,
+    0x19, 0x19, 0x19, 0x18, 0x18, 0x18, 0x17, 0x17, 0x17, 0x16, 0x16, 0x16, 0x15
+};
 
-    // This table is used to modify the frequency of the notes, depending on the
-    // note value and unk16. In theory, we could very well try to access memory
-    // outside this table, but in reality that probably won't happen.
-    //
-    // This could be some sort of pitch bend, but I have yet to see it used for
-    // anything so it's hard to say.
+// This table is used to modify the frequency of the notes, depending on the
+// note value and unk16. In theory, we could very well try to access memory
+// outside this table, but in reality that probably won't happen.
+//
+// This could be some sort of pitch bend, but I have yet to see it used for
+// anything so it's hard to say.
 
-    const std::array<std::array<uint8_t, 32>, 14> _unkTables{{
-        // 0
-        {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
-            0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x19,
-            0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x21},
-        // 1
-        {0x00, 0x01, 0x02, 0x03, 0x04, 0x06, 0x07, 0x09, 0x0A, 0x0B, 0x0C, 0x0D,
-            0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x1A,
-            0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x22, 0x24},
-        // 2
-        {0x00, 0x01, 0x02, 0x03, 0x04, 0x06, 0x08, 0x09, 0x0A, 0x0C, 0x0D, 0x0E,
-            0x0F, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x19, 0x1A, 0x1C, 0x1D,
-            0x1E, 0x1F, 0x20, 0x21, 0x22, 0x24, 0x25, 0x26},
-        // 3
-        {0x00, 0x01, 0x02, 0x03, 0x04, 0x06, 0x08, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E,
-            0x0F, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x1A, 0x1C, 0x1D,
-            0x1E, 0x1F, 0x20, 0x21, 0x23, 0x25, 0x27, 0x28},
-        // 4
-        {0x00, 0x01, 0x02, 0x03, 0x04, 0x06, 0x08, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E,
-            0x0F, 0x11, 0x13, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1B, 0x1D, 0x1F, 0x20,
-            0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x28, 0x2A},
-        // 5
-        {0x00, 0x01, 0x02, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
-            0x10, 0x11, 0x13, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1B, 0x1D, 0x1F, 0x20,
-            0x21, 0x22, 0x23, 0x25, 0x27, 0x29, 0x2B, 0x2D},
-        // 6
-        {0x00, 0x01, 0x02, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
-            0x10, 0x11, 0x13, 0x15, 0x16, 0x17, 0x18, 0x1A, 0x1C, 0x1E, 0x21, 0x24,
-            0x25, 0x26, 0x27, 0x29, 0x2B, 0x2D, 0x2F, 0x30},
-        // 7
-        {0x00, 0x01, 0x02, 0x04, 0x06, 0x08, 0x0A, 0x0C, 0x0D, 0x0E, 0x0F, 0x10,
-            0x11, 0x13, 0x15, 0x18, 0x19, 0x1A, 0x1C, 0x1D, 0x1F, 0x21, 0x23, 0x25,
-            0x26, 0x27, 0x29, 0x2B, 0x2D, 0x2F, 0x30, 0x32},
-        // 8
-        {0x00, 0x01, 0x02, 0x04, 0x06, 0x08, 0x0A, 0x0D, 0x0E, 0x0F, 0x10, 0x11,
-            0x12, 0x14, 0x17, 0x1A, 0x19, 0x1A, 0x1C, 0x1E, 0x20, 0x22, 0x25, 0x28,
-            0x29, 0x2A, 0x2B, 0x2D, 0x2F, 0x31, 0x33, 0x35},
-        // 9
-        {0x00, 0x01, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0E, 0x0F, 0x10, 0x12, 0x14,
-            0x16, 0x18, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x20, 0x22, 0x24, 0x26, 0x29,
-            0x2A, 0x2C, 0x2E, 0x30, 0x32, 0x34, 0x36, 0x39},
-        // 10
-        {0x00, 0x01, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0E, 0x0F, 0x10, 0x12, 0x14,
-            0x16, 0x19, 0x1B, 0x1E, 0x1F, 0x21, 0x23, 0x25, 0x27, 0x29, 0x2B, 0x2D,
-            0x2E, 0x2F, 0x31, 0x32, 0x34, 0x36, 0x39, 0x3C},
-        // 11
-        {0x00, 0x01, 0x03, 0x05, 0x07, 0x0A, 0x0C, 0x0F, 0x10, 0x11, 0x13, 0x15,
-            0x17, 0x19, 0x1B, 0x1E, 0x1F, 0x20, 0x22, 0x24, 0x26, 0x28, 0x2B, 0x2E,
-            0x2F, 0x30, 0x32, 0x34, 0x36, 0x39, 0x3C, 0x3F},
-        // 12
-        {0x00, 0x02, 0x04, 0x06, 0x08, 0x0B, 0x0D, 0x10, 0x11, 0x12, 0x14, 0x16,
-            0x18, 0x1B, 0x1E, 0x21, 0x22, 0x23, 0x25, 0x27, 0x29, 0x2C, 0x2F, 0x32,
-            0x33, 0x34, 0x36, 0x38, 0x3B, 0x34, 0x41, 0x44},
-        // 13
-        {0x00, 0x02, 0x04, 0x06, 0x08, 0x0B, 0x0D, 0x11, 0x12, 0x13, 0x15, 0x17,
-            0x1A, 0x1D, 0x20, 0x23, 0x24, 0x25, 0x27, 0x29, 0x2C, 0x2F, 0x32, 0x35,
-            0x36, 0x37, 0x39, 0x3B, 0x3E, 0x41, 0x44, 0x47}
-    }};
+const std::array<std::array<uint8_t, 32>, 14> _unkTables{{
+                                                             // 0
+                                                             {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
+                                                                 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x19,
+                                                                 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x21},
+                                                             // 1
+                                                             {0x00, 0x01, 0x02, 0x03, 0x04, 0x06, 0x07, 0x09, 0x0A, 0x0B, 0x0C, 0x0D,
+                                                                 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x1A,
+                                                                 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x22, 0x24},
+                                                             // 2
+                                                             {0x00, 0x01, 0x02, 0x03, 0x04, 0x06, 0x08, 0x09, 0x0A, 0x0C, 0x0D, 0x0E,
+                                                                 0x0F, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x19, 0x1A, 0x1C, 0x1D,
+                                                                 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x24, 0x25, 0x26},
+                                                             // 3
+                                                             {0x00, 0x01, 0x02, 0x03, 0x04, 0x06, 0x08, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E,
+                                                                 0x0F, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x1A, 0x1C, 0x1D,
+                                                                 0x1E, 0x1F, 0x20, 0x21, 0x23, 0x25, 0x27, 0x28},
+                                                             // 4
+                                                             {0x00, 0x01, 0x02, 0x03, 0x04, 0x06, 0x08, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E,
+                                                                 0x0F, 0x11, 0x13, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1B, 0x1D, 0x1F, 0x20,
+                                                                 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x28, 0x2A},
+                                                             // 5
+                                                             {0x00, 0x01, 0x02, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+                                                                 0x10, 0x11, 0x13, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1B, 0x1D, 0x1F, 0x20,
+                                                                 0x21, 0x22, 0x23, 0x25, 0x27, 0x29, 0x2B, 0x2D},
+                                                             // 6
+                                                             {0x00, 0x01, 0x02, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+                                                                 0x10, 0x11, 0x13, 0x15, 0x16, 0x17, 0x18, 0x1A, 0x1C, 0x1E, 0x21, 0x24,
+                                                                 0x25, 0x26, 0x27, 0x29, 0x2B, 0x2D, 0x2F, 0x30},
+                                                             // 7
+                                                             {0x00, 0x01, 0x02, 0x04, 0x06, 0x08, 0x0A, 0x0C, 0x0D, 0x0E, 0x0F, 0x10,
+                                                                 0x11, 0x13, 0x15, 0x18, 0x19, 0x1A, 0x1C, 0x1D, 0x1F, 0x21, 0x23, 0x25,
+                                                                 0x26, 0x27, 0x29, 0x2B, 0x2D, 0x2F, 0x30, 0x32},
+                                                             // 8
+                                                             {0x00, 0x01, 0x02, 0x04, 0x06, 0x08, 0x0A, 0x0D, 0x0E, 0x0F, 0x10, 0x11,
+                                                                 0x12, 0x14, 0x17, 0x1A, 0x19, 0x1A, 0x1C, 0x1E, 0x20, 0x22, 0x25, 0x28,
+                                                                 0x29, 0x2A, 0x2B, 0x2D, 0x2F, 0x31, 0x33, 0x35},
+                                                             // 9
+                                                             {0x00, 0x01, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0E, 0x0F, 0x10, 0x12, 0x14,
+                                                                 0x16, 0x18, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x20, 0x22, 0x24, 0x26, 0x29,
+                                                                 0x2A, 0x2C, 0x2E, 0x30, 0x32, 0x34, 0x36, 0x39},
+                                                             // 10
+                                                             {0x00, 0x01, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0E, 0x0F, 0x10, 0x12, 0x14,
+                                                                 0x16, 0x19, 0x1B, 0x1E, 0x1F, 0x21, 0x23, 0x25, 0x27, 0x29, 0x2B, 0x2D,
+                                                                 0x2E, 0x2F, 0x31, 0x32, 0x34, 0x36, 0x39, 0x3C},
+                                                             // 11
+                                                             {0x00, 0x01, 0x03, 0x05, 0x07, 0x0A, 0x0C, 0x0F, 0x10, 0x11, 0x13, 0x15,
+                                                                 0x17, 0x19, 0x1B, 0x1E, 0x1F, 0x20, 0x22, 0x24, 0x26, 0x28, 0x2B, 0x2E,
+                                                                 0x2F, 0x30, 0x32, 0x34, 0x36, 0x39, 0x3C, 0x3F},
+                                                             // 12
+                                                             {0x00, 0x02, 0x04, 0x06, 0x08, 0x0B, 0x0D, 0x10, 0x11, 0x12, 0x14, 0x16,
+                                                                 0x18, 0x1B, 0x1E, 0x21, 0x22, 0x23, 0x25, 0x27, 0x29, 0x2C, 0x2F, 0x32,
+                                                                 0x33, 0x34, 0x36, 0x38, 0x3B, 0x34, 0x41, 0x44},
+                                                             // 13
+                                                             {0x00, 0x02, 0x04, 0x06, 0x08, 0x0B, 0x0D, 0x11, 0x12, 0x13, 0x15, 0x17,
+                                                                 0x1A, 0x1D, 0x20, 0x23, 0x24, 0x25, 0x27, 0x29, 0x2C, 0x2F, 0x32, 0x35,
+                                                                 0x36, 0x37, 0x39, 0x3B, 0x3E, 0x41, 0x44, 0x47}
+                                                         }};
 
-    const uint8_t* _unkTable2[] = {
-        _unkTable2_1, _unkTable2_2,
-        _unkTable2_1, _unkTable2_2,
-        _unkTable2_3, _unkTable2_2
-    };
+const uint8_t* _unkTable2[] = {
+    _unkTable2_1, _unkTable2_2,
+    _unkTable2_1, _unkTable2_2,
+    _unkTable2_3, _unkTable2_2
+};
 }
 
 // Basic Adlib Programming:
@@ -194,33 +192,42 @@ namespace
 
 namespace
 {
-    inline uint16_t READ_LE_UINT16(const uint8_t* b)
-    {
-        return (b[1] << 8) + b[0];
-    }
+inline uint16_t READ_LE_UINT16(const uint8_t* b)
+{
+    return (b[1] << 8) + b[0];
+}
 
-    inline uint16_t READ_BE_UINT16(const uint8_t* b)
-    {
-        return (b[0] << 8) + b[1];
-    }
+inline uint16_t READ_BE_UINT16(const uint8_t* b)
+{
+    return (b[0] << 8) + b[1];
+}
 }
 
 class AdlibDriver
 {
-    DISABLE_COPY(AdlibDriver)
 public:
+    DISABLE_COPY(AdlibDriver)
+
     AdlibDriver() = default;
+
     ~AdlibDriver() = default;
 
     void callback();
 
     void snd_initDriver();
+
     void snd_setSoundData(const uint8_t* data);
+
     void snd_startSong(int songId);
-    void snd_unkOpcode3(int a);
+
+    void snd_unkOpcode3(int value);
+
     uint8_t snd_readByte(int progId, int ofs) const;
+
     void snd_writeByte(int progId, int ofs, uint8_t val);
+
     uint8_t snd_getSoundTrigger() const;
+
     void snd_setFlag(int flg);
 
     // These variables have not yet been named, but some of them are partly
@@ -301,33 +308,47 @@ public:
     };
 
     void primaryEffect1(Channel& channel);
+
     void primaryEffect2(Channel& channel);
+
     void secondaryEffect1(Channel& channel);
 
     void resetAdlibState();
+
     void writeOPL(uint8_t reg, uint8_t val);
+
     static void initChannel(Channel& channel);
+
     void noteOff(Channel& channel);
-    void unkOutput2(uint8_t num);
+
+    void unkOutput2(uint8_t chan);
 
     uint16_t getRandomNr();
+
     void setupDuration(uint8_t duration, Channel& channel);
 
     void setupNote(uint8_t rawNote, Channel& channel, bool flag = false);
+
     void setupInstrument(uint8_t regOffset, const uint8_t* dataptr, Channel& channel);
+
     void noteOn(Channel& channel);
 
     void adjustVolume(Channel& channel);
 
     static uint8_t calculateOpLevel1(Channel& channel);
+
     static uint8_t calculateOpLevel2(Channel& channel);
 
     static uint8_t clampTotalLevel(int16_t val)
     {
         if( val < 0 )
+        {
             return 0;
+        }
         else if( val > 0x3F )
+        {
             return 0x3F;
+        }
         return static_cast<uint8_t>(val);
     }
 
@@ -347,75 +368,132 @@ public:
     }
 
     void setupPrograms();
+
     void executePrograms();
 
     struct ParserOpcode
     {
         typedef int (AdlibDriver::*POpcode)(const uint8_t*& dataptr, Channel& channel,
                                             uint8_t value);
+
         POpcode function;
         const char* name;
     };
 
     int update_setRepeat(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_checkRepeat(const uint8_t*& dataptr, Channel& channel, uint8_t);
+
     int update_setupProgram(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_setNoteSpacing(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_jump(const uint8_t*& dataptr, Channel&, uint8_t);
+
     int update_jumpToSubroutine(const uint8_t*& dataptr, Channel& channel, uint8_t);
+
     int update_returnFromSubroutine(const uint8_t*& dataptr, Channel& channel, uint8_t);
+
     int update_setBaseOctave(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_stopChannel(const uint8_t*& dataptr, Channel& channel, uint8_t);
+
     int update_playRest(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_writeAdlib(const uint8_t*& dataptr, Channel&, uint8_t value);
+
     int update_setupNoteAndDuration(const uint8_t*& dataptr, Channel& channel,
                                     uint8_t value);
+
     int update_setBaseNote(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_setupSecondaryEffect1(const uint8_t*& dataptr, Channel& channel,
                                      uint8_t value);
+
     int update_stopOtherChannel(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_waitForEndOfProgram(const uint8_t*& dataptr, Channel&, uint8_t value);
+
     int update_setupInstrument(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_setupPrimaryEffect1(const uint8_t*& dataptr, Channel& channel,
                                    uint8_t value);
+
     int update_removePrimaryEffect1(const uint8_t*& dataptr, Channel& channel, uint8_t);
+
     int update_setBaseFreq(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_setupPrimaryEffect2(const uint8_t*& dataptr, Channel& channel,
                                    uint8_t value);
+
     int update_setPriority(const uint8_t*&, Channel& channel, uint8_t value);
+
     int updateCallback23(const uint8_t*&, Channel&, uint8_t value);
+
     int updateCallback24(const uint8_t*& dataptr, Channel& channel, uint8_t value);
+
     int update_setExtraLevel1(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_setupDuration(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_playNote(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_setFractionalNoteSpacing(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_setTempo(const uint8_t*&, Channel&, uint8_t value);
+
     int update_removeSecondaryEffect1(const uint8_t*& dataptr, Channel& channel, uint8_t);
+
     int update_setChannelTempo(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_setExtraLevel3(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_setExtraLevel2(const uint8_t*& dataptr, Channel&, uint8_t value);
+
     int update_changeExtraLevel2(const uint8_t*& dataptr, Channel&, uint8_t value);
+
     int update_setAMDepth(const uint8_t*&, Channel&, uint8_t value);
+
     int update_setVibratoDepth(const uint8_t*&, Channel&, uint8_t value);
+
     int update_changeExtraLevel1(const uint8_t*&, Channel& channel, uint8_t value);
+
     int updateCallback38(const uint8_t*&, Channel&, uint8_t value);
+
     int updateCallback39(const uint8_t*& dataptr, Channel& channel, uint8_t value);
+
     int update_removePrimaryEffect2(const uint8_t*& dataptr, Channel& channel, uint8_t);
+
     int setFinetune(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_resetToGlobalTempo(const uint8_t*& dataptr, Channel& channel, uint8_t);
+
     int update_nop1(const uint8_t*& dataptr, Channel&, uint8_t);
+
     int update_setDurationRandomness(const uint8_t*&, Channel& channel, uint8_t value);
+
     int update_changeChannelTempo(const uint8_t*&, Channel& channel, uint8_t value);
+
     int updateCallback46(const uint8_t*& dataptr, Channel&, uint8_t value);
+
     int update_nop2(const uint8_t*& dataptr, Channel&, uint8_t);
+
     int update_setupRhythmSection(const uint8_t*& dataptr, Channel& channel, uint8_t value);
+
     int update_playRhythmSection(const uint8_t*&, Channel&, uint8_t value);
+
     int update_removeRhythmSection(const uint8_t*& dataptr, Channel&, uint8_t value);
+
     int updateCallback51(const uint8_t*& dataptr, Channel&, uint8_t value);
+
     int updateCallback52(const uint8_t*& dataptr, Channel&, uint8_t value);
+
     int updateCallback53(const uint8_t*& dataptr, Channel&, uint8_t value);
+
     int update_setSoundTrigger(const uint8_t*&, Channel&, uint8_t value);
+
     int update_setTempoReset(const uint8_t*&, Channel& channel, uint8_t value);
+
     int updateCallback56(const uint8_t*& dataptr, Channel& channel, uint8_t value);
 
     // These variables have not yet been named, but some of them are partly
@@ -446,11 +524,6 @@ public:
     // _unkTable2_1[]  - One of the tables in _unkTable2[]
     // _unkTable2_2[]  - One of the tables in _unkTable2[]
     // _unkTable2_3[]  - One of the tables in _unkTable2[]
-
-    int32_t _samplesPerCallback = 0;
-    int32_t _samplesPerCallbackRemainder = 0;
-    int32_t _samplesTillCallback = 0;
-    int32_t _samplesTillCallbackRemainder = 0;
 
     int _lastProcessed = 0;
     int8_t m_flagTrigger = 0;
@@ -494,7 +567,6 @@ public:
     uint8_t m_operatorRegisterOffset = 0;
     uint8_t m_tempo = 0;
 
-    const uint8_t* _tablePtr1 = nullptr;
     const uint8_t* _tablePtr2 = nullptr;
 
     opl::Opl3 m_opl{};
@@ -526,12 +598,16 @@ void AdlibDriver::snd_startSong(int songId)
         if( chan == 9 )
         {
             if( m_flags & 2 )
+            {
                 return;
+            }
         }
         else
         {
             if( m_flags & 1 )
+            {
                 return;
+            }
         }
     }
 
@@ -571,7 +647,7 @@ uint8_t AdlibDriver::snd_readByte(int progId, int ofs) const
 
 void AdlibDriver::snd_writeByte(int progId, int ofs, uint8_t val)
 {
-    const_cast<uint8_t&>(getProgram(progId)[ofs]) = val;
+    *const_cast<uint8_t*>(&getProgram(progId)[ofs]) = val;
 }
 
 uint8_t AdlibDriver::snd_getSoundTrigger() const
@@ -591,7 +667,9 @@ void AdlibDriver::callback()
     // 	lock();
     --m_flagTrigger;
     if( m_flagTrigger < 0 )
+    {
         m_flags &= ~8;
+    }
     setupPrograms();
     executePrograms();
 
@@ -701,9 +779,13 @@ void AdlibDriver::executePrograms()
             if( --channel.duration )
             {
                 if( channel.duration == channel.spacing2 )
+                {
                     noteOff(channel);
+                }
                 if( channel.duration == channel.spacing1 && m_oplChannel != 9 )
+                {
                     noteOff(channel);
+                }
             }
             else
             {
@@ -820,11 +902,15 @@ void AdlibDriver::executePrograms()
                     {
                         opcode &= 0x7F;
                         if( opcode >= parserOpcodeTable.size() )
+                        {
                             opcode = static_cast<uint8_t>(parserOpcodeTable.size() - 1);
-                        result = (this ->* (parserOpcodeTable[opcode].function))(dataptr, channel, param);
+                        }
+                        result = (this->*(parserOpcodeTable[opcode].function))(dataptr, channel, param);
                         channel.dataptr = dataptr;
                         if( result )
+                        {
                             break;
+                        }
                     }
                     else
                     {
@@ -844,9 +930,13 @@ void AdlibDriver::executePrograms()
         if( result == 1 )
         {
             if( channel.primaryEffect )
-                (this ->* (channel.primaryEffect))(channel);
+            {
+                (this->*(channel.primaryEffect))(channel);
+            }
             if( channel.secondaryEffect )
-                (this ->* (channel.secondaryEffect))(channel);
+            {
+                (this->*(channel.secondaryEffect))(channel);
+            }
         }
     }
 }
@@ -891,7 +981,7 @@ void AdlibDriver::writeOPL(uint8_t reg, uint8_t val)
 void AdlibDriver::initChannel(Channel& channel)
 {
     memset(&channel.dataptr, 0,
-           sizeof(Channel) - (reinterpret_cast<char*>(&channel.dataptr) - reinterpret_cast<char *>(&channel)));
+           sizeof(Channel) - (reinterpret_cast<char*>(&channel.dataptr) - reinterpret_cast<char*>(&channel)));
 
     channel.tempo = 0xFF;
     channel.priority = 0;
@@ -906,12 +996,16 @@ void AdlibDriver::noteOff(Channel& channel)
     // The control channel has no corresponding Adlib channel
 
     if( m_oplChannel >= 9 )
+    {
         return;
+    }
 
     // When the rhythm section is enabled, channels 6, 7 and 8 are special.
 
     if( _rhythmSectionBits && m_oplChannel >= 6 )
+    {
         return;
+    }
 
     // This means the "Key On" bit will always be 0
     channel.konBlockFnumH &= 0xDF;
@@ -925,13 +1019,17 @@ void AdlibDriver::unkOutput2(uint8_t chan)
     // The control channel has no corresponding Adlib channel
 
     if( chan >= 9 )
+    {
         return;
+    }
 
     // I believe this has to do with channels 6, 7, and 8 being special
     // when Adlib's rhythm section is enabled.
 
     if( _rhythmSectionBits && chan >= 6 )
+    {
         return;
+    }
 
     uint8_t offset = operatorRegisterOffsets[chan];
 
@@ -1119,7 +1217,9 @@ void AdlibDriver::adjustVolume(Channel& channel)
 
     writeOPL(0x43 + operatorRegisterOffsets[m_oplChannel], calculateOpLevel2(channel));
     if( channel.cnt )
+    {
         writeOPL(0x40 + operatorRegisterOffsets[m_oplChannel], calculateOpLevel1(channel));
+    }
 }
 
 // This is presumably only used for some sound effects, e.g. Malcolm blowing up
@@ -1143,7 +1243,9 @@ void AdlibDriver::primaryEffect1(Channel& channel)
     uint8_t temp = channel.unk31;
     channel.unk31 += channel.unk29;
     if( channel.unk31 >= temp )
+    {
         return;
+    }
 
     uint16_t frq = ((channel.konBlockFnumH & 3) << 8) | channel.fnumL;
 
@@ -1162,7 +1264,9 @@ void AdlibDriver::primaryEffect1(Channel& channel)
             // up one octave.
             frq >>= 1;
             if( (frq & 0x3FF) == 0 )
+            {
                 ++frq;
+            }
             konFnumH = (konFnumH & 0xFF00) | ((konFnumH + 4) & 0xFF);
             konFnumH &= 0xFF1C;
         }
@@ -1175,7 +1279,9 @@ void AdlibDriver::primaryEffect1(Channel& channel)
             // down one octave.
             frq <<= 1;
             if( (frq & 0x3FF) == 0 )
+            {
                 --frq;
+            }
             konFnumH = (konFnumH & 0xFF00) | ((konFnumH - 4) & 0xFF);
             konFnumH &= 0xFF1C;
         }
@@ -1235,7 +1341,9 @@ void AdlibDriver::primaryEffect2(Channel& channel)
     uint8_t temp = channel.unk41;
     channel.unk41 += channel.unk32;
     if( channel.unk41 >= temp )
+    {
         return;
+    }
 
     if( --channel.vibratoCountdown == 0 )
     {
@@ -1284,7 +1392,9 @@ void AdlibDriver::secondaryEffect1(Channel& channel)
     uint8_t temp = channel.unk18;
     channel.unk18 += channel.unk19;
     if( channel.unk18 >= temp )
+    {
         return;
+    }
 
     if( --channel.rawRegisterDataOffset < 0 )
     {
@@ -1345,7 +1455,9 @@ int AdlibDriver::update_checkRepeat(const uint8_t*& dataptr, Channel& channel, u
 int AdlibDriver::update_setupProgram(const uint8_t*&, Channel&, uint8_t value)
 {
     if( value == 0xFF )
+    {
         return 0;
+    }
 
     const uint8_t* ptr = getProgram(value);
     uint8_t chan = *ptr++;
@@ -1658,9 +1770,13 @@ int AdlibDriver::update_changeExtraLevel2(const uint8_t*& dataptr, Channel&,
 int AdlibDriver::update_setAMDepth(const uint8_t*&, Channel&, uint8_t value)
 {
     if( value & 1 )
+    {
         m_vibratoAndAMDepthBits |= 0x80;
+    }
     else
+    {
         m_vibratoAndAMDepthBits &= 0x7F;
+    }
 
     writeOPL(0xBD, m_vibratoAndAMDepthBits);
     return 0;
@@ -1669,9 +1785,13 @@ int AdlibDriver::update_setAMDepth(const uint8_t*&, Channel&, uint8_t value)
 int AdlibDriver::update_setVibratoDepth(const uint8_t*&, Channel&, uint8_t value)
 {
     if( value & 1 )
+    {
         m_vibratoAndAMDepthBits |= 0x40;
+    }
     else
+    {
         m_vibratoAndAMDepthBits &= 0xBF;
+    }
 
     writeOPL(0xBD, m_vibratoAndAMDepthBits);
     return 0;
@@ -1778,9 +1898,13 @@ int AdlibDriver::update_changeChannelTempo(const uint8_t*&, Channel& channel,
     int tempo = channel.tempo + static_cast<int8_t>(value);
 
     if( tempo <= 0 )
+    {
         tempo = 1;
+    }
     else if( tempo > 255 )
+    {
         tempo = 255;
+    }
 
     channel.tempo = tempo;
     return 0;
@@ -1789,7 +1913,7 @@ int AdlibDriver::update_changeChannelTempo(const uint8_t*&, Channel& channel,
 int AdlibDriver::updateCallback46(const uint8_t*& dataptr, Channel&, uint8_t value)
 {
     uint8_t entry = *dataptr++;
-    _tablePtr1 = _unkTable2[entry++];
+    _unkTable2[entry++];
     _tablePtr2 = _unkTable2[entry];
     if( value == 2 )
     {
@@ -2101,7 +2225,9 @@ void AdlPlayer::play(uint8_t track)
 {
     uint8_t soundId = m_trackEntries[track];
     if( static_cast<int8_t>(soundId) == -1 || m_soundDataPtr.empty() )
+    {
         return;
+    }
     soundId &= 0xFF;
     m_driver->snd_setFlag(0);
     // 	while ((_driver->callback(16, 0) & 8)) {
@@ -2177,10 +2303,9 @@ bool AdlPlayer::load(const std::string& filename)
     // 	_soundFileLoaded = file;
 
     // find last subsong
-    auto it = std::find_if(m_trackEntries.rbegin(), m_trackEntries.rend(), [](uint8_t x)
-                           {
-                               return x != 0xff;
-                           });
+    auto it = std::find_if(m_trackEntries.rbegin(), m_trackEntries.rend(), [](uint8_t x) {
+        return x != 0xff;
+    });
     m_subSongCount = m_trackEntries.size() - std::distance(m_trackEntries.rbegin(), it);
 
     m_currentSubSong = 2;
@@ -2213,8 +2338,12 @@ bool AdlPlayer::update()
     m_driver->callback();
 
     for( int i = 0; i < 10; i++ )
+    {
         if( m_driver->m_channels[i].dataptr != nullptr )
+        {
             songend = false;
+        }
+    }
 
     return !songend;
 }

@@ -23,17 +23,22 @@
 
 #include "player.h"
 
-class BamPlayer : public Player
+class BamPlayer
+    : public Player
 {
-    DISABLE_COPY(BamPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(BamPlayer)
+
+    static Player* factory();
 
     BamPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override
     {
         return SampleRate / 25;
@@ -58,5 +63,5 @@ private:
         bool defined = true;
         uint8_t count = 0xff;
     };
-    std::array<Label, 16> m_labels{ {} };
+    std::array<Label, 16> m_labels{{}};
 };

@@ -23,19 +23,24 @@
 
 #include "player.h"
 
-class RawPlayer : public Player
+class RawPlayer
+    : public Player
 {
-    DISABLE_COPY(RawPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(RawPlayer)
+
+    static Player* factory();
 
     RawPlayer() = default;
 
-    ~RawPlayer() = default;
+    ~RawPlayer() override = default;
 
-    bool load(const std::string &filename) override;
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override
@@ -44,7 +49,7 @@ public:
     }
 
 private:
-#pragma pack(push,1)
+#pragma pack(push, 1)
     struct TrackData
     {
         uint8_t param, command;

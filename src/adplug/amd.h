@@ -23,33 +23,40 @@
 
 #include "mod.h"
 
-class AmdPlayer : public ModPlayer
+class AmdPlayer
+    : public ModPlayer
 {
-    DISABLE_COPY(AmdPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(AmdPlayer)
+
+    static Player* factory();
 
     AmdPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    bool load(const std::string& filename) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override
     {
         return "AMUSIC Adlib Tracker";
     }
+
     std::string title() const override
     {
         return m_amdSongname;
     }
+
     std::string author() const override
     {
         return m_author;
     }
+
     size_t instrumentCount() const override
     {
         return 26;
     }
+
     std::string instrumentTitle(size_t n) const override
     {
         return m_instrumentNames[n];

@@ -26,29 +26,34 @@
 
 #include <boost/optional.hpp>
 
-class ModPlayer : public Player
+class ModPlayer
+    : public Player
 {
-    DISABLE_COPY(ModPlayer)
 public:
+    DISABLE_COPY(ModPlayer)
+
     ModPlayer();
-    virtual ~ModPlayer() = default;
+
+    ~ModPlayer() override = default;
 
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override;
 
     struct Instrument
     {
         using Data = std::array<uint8_t, 11>;
-        Data data = { {0,0,0,0,0,0,0,0,0,0,0} };
+        Data data = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
         uint8_t arpeggioStart = 0;
         uint8_t arpeggioSpeed = 0;
-        uint8_t arpeggioPos = 0;
         uint8_t misc = 0;
         int8_t slide = 0;
     };
 
-    enum class Command : uint8_t
+    enum class Command
+        : uint8_t
     {
         None,
         SlideUp,
@@ -145,7 +150,7 @@ protected:
         void distinctVolumeDown(int amount, const std::vector<Instrument>& instruments)
         {
             carrierVolume = std::max(0, carrierVolume - amount);
-            if(instruments[instrument].data[0] & 1)
+            if( instruments[instrument].data[0] & 1 )
             {
                 modulatorVolume = std::max(0, modulatorVolume - amount);
             }
@@ -160,7 +165,7 @@ protected:
         void distinctVolumeUp(int amount, const std::vector<Instrument>& instruments)
         {
             carrierVolume = std::min(63, carrierVolume + amount);
-            if(instruments[instrument].data[0] & 1)
+            if( instruments[instrument].data[0] & 1 )
             {
                 modulatorVolume = std::min(63, modulatorVolume + amount);
             }
@@ -175,9 +180,9 @@ protected:
         void slideDown(int amount)
         {
             frequency -= amount;
-            if(frequency <= 342)
+            if( frequency <= 342 )
             {
-                if(octave)
+                if( octave )
                 {
                     octave--;
                     frequency <<= 1;
@@ -192,9 +197,9 @@ protected:
         void slideUp(int amount)
         {
             frequency += amount;
-            if(frequency >= 686)
+            if( frequency >= 686 )
             {
-                if(octave < 7)
+                if( octave < 7 )
                 {
                     octave++;
                     frequency >>= 1;
@@ -208,19 +213,19 @@ protected:
 
         void porta(uint8_t speed)
         {
-            if(frequency + (octave << 10) < portaTargetFrequency + (portaTargetOctave << 10))
+            if( frequency + (octave << 10) < portaTargetFrequency + (portaTargetOctave << 10) )
             {
                 slideUp(speed);
-                if(frequency + (octave << 10) > portaTargetFrequency + (portaTargetOctave << 10))
+                if( frequency + (octave << 10) > portaTargetFrequency + (portaTargetOctave << 10) )
                 {
                     frequency = portaTargetFrequency;
                     octave = portaTargetOctave;
                 }
             }
-            if(frequency + (octave << 10) > portaTargetFrequency + (portaTargetOctave << 10))
+            if( frequency + (octave << 10) > portaTargetFrequency + (portaTargetOctave << 10) )
             {
                 slideDown(speed);
-                if(frequency + (octave << 10) < portaTargetFrequency + (portaTargetOctave << 10))
+                if( frequency + (octave << 10) < portaTargetFrequency + (portaTargetOctave << 10) )
                 {
                     frequency = portaTargetFrequency;
                     octave = portaTargetOctave;
@@ -230,7 +235,9 @@ protected:
     };
 
     void init_trackord();
-    void init_notetable(const std::array<uint16_t, 12> &newnotetable);
+
+    void init_notetable(const std::array<uint16_t, 12>& newnotetable);
+
     void realloc_patterns(size_t pats, size_t rows, size_t chans);
 
     Instrument& addInstrument()
@@ -264,12 +271,6 @@ protected:
     {
         BOOST_ASSERT(index < 32);
         m_activechan |= (1 << index);
-    }
-
-    void disableChannel(uint8_t index)
-    {
-        BOOST_ASSERT(index < 32);
-        m_activechan &= ~(1 << index);
     }
 
     void disableAllChannels()
@@ -328,7 +329,7 @@ private:
     uint8_t m_patternDelay = 0;
     bool m_songEnd = false;
     uint8_t m_oplBdRegister = 0;
-    std::array<uint16_t, 12> m_noteTable{ {0,0,0,0,0,0,0,0,0,0,0,0} };
+    std::array<uint16_t, 12> m_noteTable{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
     std::vector<Instrument> m_instruments{};
     Field<PatternCell> m_patternCells{};
     std::vector<Channel> m_channels{};
@@ -346,14 +347,22 @@ private:
     boost::optional<ArpeggioData> m_arpeggioCommands{};
 
     void setVolume(size_t chan);
+
     void setAverageVolume(size_t chan);
+
     void setFreq(size_t chan);
+
     void playNote(size_t chan);
+
     void setNote(size_t chan, int note);
+
     void tonePortamento(size_t chan, uint8_t info);
+
     void vibrato(size_t chan, uint8_t speed, uint8_t depth);
 
     void deallocPatterns();
+
     bool resolveOrder();
+
     uint8_t setOplChip(size_t chan);
 };

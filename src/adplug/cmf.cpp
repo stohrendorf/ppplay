@@ -72,21 +72,21 @@ light4cxx::Logger* logger = light4cxx::Logger::get("badplay.cmf");
 // patches.  The Word Rescue CMFs are good examples of songs that rely on these
 // default patches.
 uint8_t cDefaultPatches[] = "\x01\x11\x4F\x00\xF1\xD2\x53\x74\x00\x00\x06"
-"\x07\x12\x4F\x00\xF2\xF2\x60\x72\x00\x00\x08"
-"\x31\xA1\x1C\x80\x51\x54\x03\x67\x00\x00\x0E"
-"\x31\xA1\x1C\x80\x41\x92\x0B\x3B\x00\x00\x0E"
-"\x31\x16\x87\x80\xA1\x7D\x11\x43\x00\x00\x08"
-"\x30\xB1\xC8\x80\xD5\x61\x19\x1B\x00\x00\x0C"
-"\xF1\x21\x01\x00\x97\xF1\x17\x18\x00\x00\x08"
-"\x32\x16\x87\x80\xA1\x7D\x10\x33\x00\x00\x08"
-"\x01\x12\x4F\x00\x71\x52\x53\x7C\x00\x00\x0A"
-"\x02\x03\x8D\x00\xD7\xF5\x37\x18\x00\x00\x04"
-"\x21\x21\xD1\x00\xA3\xA4\x46\x25\x00\x00\x0A"
-"\x22\x22\x0F\x00\xF6\xF6\x95\x36\x00\x00\x0A"
-"\xE1\xE1\x00\x00\x44\x54\x24\x34\x02\x02\x07"
-"\xA5\xB1\xD2\x80\x81\xF1\x03\x05\x00\x00\x02"
-"\x71\x22\xC5\x00\x6E\x8B\x17\x0E\x00\x00\x02"
-"\x32\x21\x16\x80\x73\x75\x24\x57\x00\x00\x0E";
+    "\x07\x12\x4F\x00\xF2\xF2\x60\x72\x00\x00\x08"
+    "\x31\xA1\x1C\x80\x51\x54\x03\x67\x00\x00\x0E"
+    "\x31\xA1\x1C\x80\x41\x92\x0B\x3B\x00\x00\x0E"
+    "\x31\x16\x87\x80\xA1\x7D\x11\x43\x00\x00\x08"
+    "\x30\xB1\xC8\x80\xD5\x61\x19\x1B\x00\x00\x0C"
+    "\xF1\x21\x01\x00\x97\xF1\x17\x18\x00\x00\x08"
+    "\x32\x16\x87\x80\xA1\x7D\x10\x33\x00\x00\x08"
+    "\x01\x12\x4F\x00\x71\x52\x53\x7C\x00\x00\x0A"
+    "\x02\x03\x8D\x00\xD7\xF5\x37\x18\x00\x00\x04"
+    "\x21\x21\xD1\x00\xA3\xA4\x46\x25\x00\x00\x0A"
+    "\x22\x22\x0F\x00\xF6\xF6\x95\x36\x00\x00\x0A"
+    "\xE1\xE1\x00\x00\x44\x54\x24\x34\x02\x02\x07"
+    "\xA5\xB1\xD2\x80\x81\xF1\x03\x05\x00\x00\x02"
+    "\x71\x22\xC5\x00\x6E\x8B\x17\x0E\x00\x00\x02"
+    "\x32\x21\x16\x80\x73\x75\x24\x57\x00\x00\x0E";
 
 Player* CmfPlayer::factory()
 {
@@ -104,19 +104,21 @@ CmfPlayer::CmfPlayer()
 bool CmfPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
+    {
         return false;
+    }
 
     char cSig[4];
     f.read(cSig, 4);
-    if((cSig[0] != 'C') || (cSig[1] != 'T') || (cSig[2] != 'M') || (cSig[3] != 'F'))
+    if( (cSig[0] != 'C') || (cSig[1] != 'T') || (cSig[2] != 'M') || (cSig[3] != 'F') )
     {
         // Not a CMF file
         return false;
     }
     uint16_t iVer;
     f >> iVer;
-    if((iVer != 0x0101) && (iVer != 0x0100))
+    if( (iVer != 0x0101) && (iVer != 0x0100) )
     {
         logger->warn(L4CXX_LOCATION, "CMF file is not v1.0 or v1.1 (reports %d.%d)", iVer >> 8, iVer & 0xFF);
         return false;
@@ -130,7 +132,7 @@ bool CmfPlayer::load(const std::string& filename)
     f >> this->cmfHeader.iTagOffsetComposer;
     f >> this->cmfHeader.iTagOffsetRemarks;
     f.read(this->cmfHeader.iChannelsInUse, 16);
-    if(iVer == 0x0100)
+    if( iVer == 0x0100 )
     {
         uint8_t tmp;
         f >> tmp;
@@ -148,9 +150,9 @@ bool CmfPlayer::load(const std::string& filename)
     f.seek(this->cmfHeader.iInstrumentBlockOffset);
     this->pInstruments.resize(
         std::max(uint16_t(128), this->cmfHeader.iNumInstruments)
-    ); // Always at least 128 available for use
+                             ); // Always at least 128 available for use
 
-    for(int i = 0; i < this->cmfHeader.iNumInstruments; i++)
+    for( int i = 0; i < this->cmfHeader.iNumInstruments; i++ )
     {
         f >> this->pInstruments[i].op[0].iCharMult;
         f >> this->pInstruments[i].op[1].iCharMult;
@@ -167,7 +169,7 @@ bool CmfPlayer::load(const std::string& filename)
     }
 
     // Set the rest of the instruments to the CMF defaults
-    for(int i = this->cmfHeader.iNumInstruments; i < 128; i++)
+    for( int i = this->cmfHeader.iNumInstruments; i < 128; i++ )
     {
         this->pInstruments[i].op[0].iCharMult = cDefaultPatches[(i % 16) * 11 + 0];
         this->pInstruments[i].op[1].iCharMult = cDefaultPatches[(i % 16) * 11 + 1];
@@ -182,29 +184,29 @@ bool CmfPlayer::load(const std::string& filename)
         this->pInstruments[i].iConnection = cDefaultPatches[(i % 16) * 11 + 10];
     }
 
-    if(this->cmfHeader.iTagOffsetTitle)
+    if( this->cmfHeader.iTagOffsetTitle )
     {
         f.seek(this->cmfHeader.iTagOffsetTitle);
         char c;
-        while(f >> c && c != '\0')
+        while( f >> c && c != '\0' )
         {
             this->strTitle += c;
         }
     }
-    if(this->cmfHeader.iTagOffsetComposer)
+    if( this->cmfHeader.iTagOffsetComposer )
     {
         f.seek(this->cmfHeader.iTagOffsetComposer);
         char c;
-        while(f >> c && c != '\0')
+        while( f >> c && c != '\0' )
         {
             this->strComposer += c;
         }
     }
-    if(this->cmfHeader.iTagOffsetRemarks)
+    if( this->cmfHeader.iTagOffsetRemarks )
     {
         f.seek(this->cmfHeader.iTagOffsetRemarks);
         char c;
-        while(f >> c && c != '\0')
+        while( f >> c && c != '\0' )
         {
             this->strRemarks += c;
         }
@@ -216,7 +218,7 @@ bool CmfPlayer::load(const std::string& filename)
     this->data.resize(this->iSongLen);
     f.read(this->data.data(), this->iSongLen);
 
-    rewind(0);
+    rewind(size_t(0));
 
     return true;
 }
@@ -227,10 +229,10 @@ bool CmfPlayer::update()
     this->iDelayRemaining = 0;
 
     // Read in the next event
-    while(!this->iDelayRemaining)
+    while( !this->iDelayRemaining )
     {
         uint8_t iCommand = this->data[this->iPlayPointer++];
-        if((iCommand & 0x80) == 0)
+        if( (iCommand & 0x80) == 0 )
         {
             // Running status, use previous command
             this->iPlayPointer--;
@@ -241,7 +243,7 @@ bool CmfPlayer::update()
             this->iPrevCommand = iCommand;
         }
         uint8_t iChannel = iCommand & 0x0F;
-        switch(iCommand & 0xF0)
+        switch( iCommand & 0xF0 )
         {
             case 0x80:
             { // Note off (two data bytes)
@@ -254,7 +256,7 @@ bool CmfPlayer::update()
             { // Note on (two data bytes)
                 uint8_t iNote = this->data[this->iPlayPointer++];
                 uint8_t iVelocity = this->data[this->iPlayPointer++]; // attack velocity
-                if(iVelocity)
+                if( iVelocity )
                 {
                     this->cmfNoteOn(iChannel, iNote, iVelocity);
                 }
@@ -309,7 +311,7 @@ bool CmfPlayer::update()
                 break;
             }
             case 0xF0: // System message (arbitrary data bytes)
-                switch(iCommand)
+                switch( iCommand )
                 {
                     case 0xF0:
                     { // Sysex
@@ -319,7 +321,7 @@ bool CmfPlayer::update()
                         {
                             iNextByte = this->data[this->iPlayPointer++];
                             logger->debug(L4CXX_LOCATION, "%02X", iNextByte);
-                        } while((iNextByte & 0x80) == 0);
+                        } while( (iNextByte & 0x80) == 0 );
                         // This will have read in the terminating EOX (0xF7) message too
                         break;
                     }
@@ -358,7 +360,7 @@ bool CmfPlayer::update()
                     case 0xFF:
                     { // System reset, used as meta-events in a MIDI file
                         uint8_t iEvent = this->data[this->iPlayPointer++];
-                        switch(iEvent)
+                        switch( iEvent )
                         {
                             case 0x2F: // end of track
                                 logger->debug(L4CXX_LOCATION, "CMF: End-of-track, stopping playback");
@@ -381,7 +383,7 @@ bool CmfPlayer::update()
                 break;
         }
 
-        if(this->iPlayPointer >= this->iSongLen)
+        if( this->iPlayPointer >= this->iSongLen )
         {
             this->bSongEnd = true;
             this->iPlayPointer = 0; // for repeat in endless-play mode
@@ -440,7 +442,7 @@ void CmfPlayer::rewind(const boost::optional<size_t>&)
     // results in the state variables below matching the end of the song.  When
     // the real OPL synth is activated for playback, it no longer matches the
     // state variables and the instruments are not set correctly!
-    for(int i = 0; i < 9; i++)
+    for( int i = 0; i < 9; i++ )
     {
         this->chOPL[i].iNoteStart = 0; // no note playing atm
         this->chOPL[i].iMIDINote = -1;
@@ -450,7 +452,7 @@ void CmfPlayer::rewind(const boost::optional<size_t>&)
         this->chMIDI[i].iPatch = -2;
         this->chMIDI[i].iPitchbend = 8192;
     }
-    for(int i = 9; i < 16; i++)
+    for( int i = 9; i < 16; i++ )
     {
         this->chMIDI[i].iPatch = -2;
         this->chMIDI[i].iPitchbend = 8192;
@@ -462,7 +464,7 @@ void CmfPlayer::rewind(const boost::optional<size_t>&)
 // Return value: 1 == 1 second, 2 == 0.5 seconds
 size_t CmfPlayer::framesUntilUpdate() const
 {
-    if(this->iDelayRemaining)
+    if( this->iDelayRemaining )
     {
         return SampleRate * iDelayRemaining / cmfHeader.iTicksPerSecond;
     }
@@ -496,13 +498,15 @@ std::string CmfPlayer::description() const
 uint32_t CmfPlayer::readMIDINumber()
 {
     uint32_t iValue = 0;
-    for(int i = 0; i < 4; i++)
+    for( int i = 0; i < 4; i++ )
     {
         uint8_t iNext = this->data[this->iPlayPointer++];
         iValue <<= 7;
         iValue |= (iNext & 0x7F); // ignore the MSB
-        if((iNext & 0x80) == 0)
-            break; // last byte has the MSB unset
+        if( (iNext & 0x80) == 0 )
+        {
+            break;
+        } // last byte has the MSB unset
     }
     return iValue;
 }
@@ -513,15 +517,17 @@ uint32_t CmfPlayer::readMIDINumber()
 //   Dest - destination operator on OPL chip
 // iInstrument: Index into this->pInstruments array of CMF instruments
 void CmfPlayer::writeInstrumentSettings(uint8_t iChannel,
-                                         uint8_t iOperatorSource,
-                                         uint8_t iOperatorDest,
-                                         uint8_t iInstrument)
+                                        uint8_t iOperatorSource,
+                                        uint8_t iOperatorDest,
+                                        uint8_t iInstrument)
 {
     assert(iChannel <= 8);
 
     uint8_t iOPLOffset = OPLOFFSET(iChannel);
-    if(iOperatorDest)
-        iOPLOffset += 3; // Carrier if iOperator == 1 (else Modulator)
+    if( iOperatorDest )
+    {
+        iOPLOffset += 3;
+    } // Carrier if iOperator == 1 (else Modulator)
 
     this->writeOPL(BASE_CHAR_MULT + iOPLOffset,
                    this->pInstruments[iInstrument].op[iOperatorSource].iCharMult);
@@ -554,20 +560,22 @@ void CmfPlayer::writeOPL(uint8_t iRegister, uint8_t iValue)
 void CmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity)
 {
     uint8_t iBlock = iNote / 12;
-    if(iBlock > 1)
-        iBlock--; // keep in the same range as the Creative player
+    if( iBlock > 1 )
+    {
+        iBlock--;
+    } // keep in the same range as the Creative player
     //if (iBlock > 7) iBlock = 7; // don't want to go out of range
 
     double d =
         pow(2, (iNote + ((this->chMIDI[iChannel].iPitchbend - 8192) /
                          8192.0) + (this->iTranspose / 128) - 9) / 12.0 -
-                         (iBlock - 20)) * 440.0 / 32.0 / 50000.0;
+               (iBlock - 20)) * 440.0 / 32.0 / 50000.0;
     uint16_t iOPLFNum = static_cast<uint16_t>(d + 0.5);
-    if(iOPLFNum > 1023)
+    if( iOPLFNum > 1023 )
         logger->error(L4CXX_LOCATION, "CMF: This note is out of range! (send this song to malvineous@shikadi.net!)");
 
     // See if we're playing a rhythm mode percussive instrument
-    if((iChannel > 10) && (this->bPercussive))
+    if( (iChannel > 10) && (this->bPercussive) )
     {
         uint8_t iPercChannel = this->getPercChannel(iChannel);
 
@@ -609,21 +617,21 @@ void CmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity)
         // so good...)
         int iLevel =
             0x25 - sqrt(iVelocity * 16 /*6*/); //(127 - iVelocity) * 0x20 / 127;
-        if(iVelocity > 0x7b)
+        if( iVelocity > 0x7b )
             iLevel = 0; // full volume
-        if(iLevel < 0)
+        if( iLevel < 0 )
             iLevel = 0;
-        if(iLevel > 0x3F)
+        if( iLevel > 0x3F )
             iLevel = 0x3F;
         //if (iVelocity < 0x40) iLevel = 0x10;
 
         int iOPLOffset = BASE_SCAL_LEVL + OPLOFFSET(iPercChannel);
         //if ((iChannel == 11) || (iChannel == 12) || (iChannel == 14)) {
-        if(iChannel == 11)
+        if( iChannel == 11 )
             iOPLOffset += 3; // only do bassdrum carrier for volume control
         //iOPLOffset += 3; // carrier
         this->writeOPL(iOPLOffset, (this->iCurrentRegs[iOPLOffset] & ~0x3F) |
-                       iLevel); //(iVelocity * 0x3F / 127));
+                                   iLevel); //(iVelocity * 0x3F / 127));
         //}
         // Bass drum (ch11) uses both operators
         //if (iChannel == 11) this->writeOPL(iOPLOffset + 3,
@@ -642,17 +650,17 @@ void CmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity)
     iLevel);//(iVelocity * 0x3F / 127));
             #endif*/
 
-            // Apparently you can't set the frequency for the cymbal or hihat?
-            // Vinyl requires you don't set it, Kiloblaster requires you do!
+        // Apparently you can't set the frequency for the cymbal or hihat?
+        // Vinyl requires you don't set it, Kiloblaster requires you do!
         this->writeOPL(BASE_FNUM_L + iPercChannel, iOPLFNum & 0xFF);
         this->writeOPL(BASE_KEYON_FREQ + iPercChannel,
-            (iBlock << 2) | ((iOPLFNum >> 8) & 0x03));
+                       (iBlock << 2) | ((iOPLFNum >> 8) & 0x03));
 
         uint8_t iBit = 1 << (15 - iChannel);
 
         // Turn the perc instrument off if it's already playing (OPL can't do
         // polyphonic notes w/ percussion)
-        if(this->iCurrentRegs[BASE_RHYTHM] & iBit)
+        if( this->iCurrentRegs[BASE_RHYTHM] & iBit )
             this->writeOPL(BASE_RHYTHM, this->iCurrentRegs[BASE_RHYTHM] & ~iBit);
 
         // I wonder whether we need to delay or anything here?
@@ -674,28 +682,28 @@ void CmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity)
         // Figure out which OPL channel to play this note on
         int iOPLChannel = -1;
         int iNumChannels = this->bPercussive ? 6 : 9;
-        for(int i = iNumChannels - 1; i >= 0; i--)
+        for( int i = iNumChannels - 1; i >= 0; i-- )
         {
             // If there's no note playing on this OPL channel, use that
-            if(this->chOPL[i].iNoteStart == 0)
+            if( this->chOPL[i].iNoteStart == 0 )
             {
                 iOPLChannel = i;
                 // See if this channel is already set to the instrument we want.
-                if(this->chOPL[i].iMIDIPatch == this->chMIDI[iChannel].iPatch)
+                if( this->chOPL[i].iMIDIPatch == this->chMIDI[iChannel].iPatch )
                 {
                     // It is, so stop searching
                     break;
                 } // else keep searching just in case there's a better match
             }
         }
-        if(iOPLChannel == -1)
+        if( iOPLChannel == -1 )
         {
             // All channels were in use, find the one with the longest note
             iOPLChannel = 0;
             int iEarliest = this->chOPL[0].iNoteStart;
-            for(int i = 1; i < iNumChannels; i++)
+            for( int i = 1; i < iNumChannels; i++ )
             {
-                if(this->chOPL[i].iNoteStart < iEarliest)
+                if( this->chOPL[i].iNoteStart < iEarliest )
                 {
                     // Found a channel with a note being played for longer
                     iOPLChannel = i;
@@ -716,7 +724,7 @@ void CmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity)
         // Now the new note should be played on iOPLChannel, but see if the
         // instrument
         // is right first.
-        if(this->chOPL[iOPLChannel].iMIDIPatch != this->chMIDI[iChannel].iPatch)
+        if( this->chOPL[iOPLChannel].iMIDIPatch != this->chMIDI[iChannel].iPatch )
         {
             this->MIDIchangeInstrument(iOPLChannel, iChannel,
                                        this->chMIDI[iChannel].iPatch);
@@ -746,11 +754,13 @@ void CmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity)
 
 void CmfPlayer::cmfNoteOff(uint8_t iChannel, uint8_t iNote, uint8_t)
 {
-    if((iChannel > 10) && (this->bPercussive))
+    if( (iChannel > 10) && (this->bPercussive) )
     {
         int iOPLChannel = this->getPercChannel(iChannel);
-        if(this->chOPL[iOPLChannel].iMIDINote != iNote)
-            return; // there's a different note playing now
+        if( this->chOPL[iOPLChannel].iMIDINote != iNote )
+        {
+            return;
+        } // there's a different note playing now
         this->writeOPL(BASE_RHYTHM,
                        this->iCurrentRegs[BASE_RHYTHM] & ~(1 << (15 - iChannel)));
         this->chOPL[iOPLChannel].iNoteStart = 0; // channel free
@@ -759,11 +769,11 @@ void CmfPlayer::cmfNoteOff(uint8_t iChannel, uint8_t iNote, uint8_t)
     { // Non rhythm-mode or a normal instrument channel
         int iOPLChannel = -1;
         int iNumChannels = this->bPercussive ? 6 : 9;
-        for(int i = 0; i < iNumChannels; i++)
+        for( int i = 0; i < iNumChannels; i++ )
         {
-            if((this->chOPL[i].iMIDIChannel == iChannel) &&
+            if( (this->chOPL[i].iMIDIChannel == iChannel) &&
                 (this->chOPL[i].iMIDINote == iNote) &&
-               (this->chOPL[i].iNoteStart != 0))
+                (this->chOPL[i].iNoteStart != 0) )
             {
                 // Found the note, switch it off
                 this->chOPL[i].iNoteStart = 0;
@@ -771,8 +781,10 @@ void CmfPlayer::cmfNoteOff(uint8_t iChannel, uint8_t iNote, uint8_t)
                 break;
             }
         }
-        if(iOPLChannel == -1)
+        if( iOPLChannel == -1 )
+        {
             return;
+        }
 
         this->writeOPL(
             BASE_KEYON_FREQ + iOPLChannel,
@@ -782,7 +794,7 @@ void CmfPlayer::cmfNoteOff(uint8_t iChannel, uint8_t iNote, uint8_t)
 
 uint8_t CmfPlayer::getPercChannel(uint8_t iChannel)
 {
-    switch(iChannel)
+    switch( iChannel )
     {
         case 11:
             return 7 - 1; // Bass drum
@@ -801,11 +813,11 @@ uint8_t CmfPlayer::getPercChannel(uint8_t iChannel)
 }
 
 void CmfPlayer::MIDIchangeInstrument(uint8_t iOPLChannel, uint8_t iMIDIChannel,
-                                      uint8_t iNewInstrument)
+                                     uint8_t iNewInstrument)
 {
-    if((iMIDIChannel > 10) && (this->bPercussive))
+    if( (iMIDIChannel > 10) && (this->bPercussive) )
     {
-        switch(iMIDIChannel)
+        switch( iMIDIChannel )
         {
             case 11: // Bass drum (operator 13+16 == channel 7 modulator+carrier)
                 this->writeInstrumentSettings(7 - 1, 0, 0, iNewInstrument);
@@ -849,7 +861,7 @@ void CmfPlayer::MIDIchangeInstrument(uint8_t iOPLChannel, uint8_t iMIDIChannel,
 
 void CmfPlayer::MIDIcontroller(uint8_t, uint8_t iController, uint8_t iValue)
 {
-    switch(iController)
+    switch( iController )
     {
         case 0x63:
             // Custom extension to allow CMF files to switch the AM+VIB depth on and
@@ -859,19 +871,19 @@ void CmfPlayer::MIDIcontroller(uint8_t, uint8_t iController, uint8_t iValue)
             //   1 == VIB on
             //   2 == AM on
             //   3 == AM+VIB on
-            if(iValue)
+            if( iValue )
             {
                 this->writeOPL(BASE_RHYTHM,
-                    (this->iCurrentRegs[BASE_RHYTHM] & ~0xC0) |
+                               (this->iCurrentRegs[BASE_RHYTHM] & ~0xC0) |
                                (iValue << 6)); // switch AM+VIB extension on
             }
             else
             {
                 this->writeOPL(BASE_RHYTHM, this->iCurrentRegs[BASE_RHYTHM] &
-                               ~0xC0); // switch AM+VIB extension off
+                                            ~0xC0); // switch AM+VIB extension off
             }
             logger->debug(L4CXX_LOCATION, "CMF: AM+VIB depth change - AM %s, VIB %s",
-                (this->iCurrentRegs[BASE_RHYTHM] & 0x80) ? "on" : "off",
+                          (this->iCurrentRegs[BASE_RHYTHM] & 0x80) ? "on" : "off",
                           (this->iCurrentRegs[BASE_RHYTHM] & 0x40) ? "on" : "off");
             break;
         case 0x66:
@@ -879,15 +891,15 @@ void CmfPlayer::MIDIcontroller(uint8_t, uint8_t iController, uint8_t iValue)
             break;
         case 0x67:
             this->bPercussive = (iValue != 0);
-            if(this->bPercussive)
+            if( this->bPercussive )
             {
                 this->writeOPL(BASE_RHYTHM, this->iCurrentRegs[BASE_RHYTHM] |
-                               0x20); // switch rhythm-mode on
+                                            0x20); // switch rhythm-mode on
             }
             else
             {
                 this->writeOPL(BASE_RHYTHM, this->iCurrentRegs[BASE_RHYTHM] &
-                               ~0x20); // switch rhythm-mode off
+                                            ~0x20); // switch rhythm-mode off
             }
             logger->debug(L4CXX_LOCATION, "CMF: Percussive/rhythm mode %s",
                           this->bPercussive ? "enabled" : "disabled");

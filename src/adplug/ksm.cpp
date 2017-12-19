@@ -48,7 +48,7 @@ bool KsmPlayer::load(const std::string& filename)
     FileStream f(filename);
 
     // file validation section
-    if(!f || f.extension() != ".ksm")
+    if( !f || f.extension() != ".ksm" )
     {
         return false;
     }
@@ -58,7 +58,7 @@ bool KsmPlayer::load(const std::string& filename)
     fn.remove_filename() /= "insts.dat";
 
     FileStream insts(fn.string());
-    if(!f)
+    if( !f )
     {
         return false;
     }
@@ -74,7 +74,7 @@ bool KsmPlayer::load(const std::string& filename)
     m_notes.resize(numnotes);
     f.read(m_notes.data(), m_notes.size());
 
-    if(!m_channelFlags[11])
+    if( !m_channelFlags[11] )
     {
         m_bdRegister = 0;
         m_channelCount = 9;
@@ -85,27 +85,31 @@ bool KsmPlayer::load(const std::string& filename)
         m_channelCount = 6;
     }
 
-    rewind(0);
+    rewind(size_t(0));
     return true;
 }
 
 bool KsmPlayer::update()
 {
     m_updateCounter++;
-    if(m_updateCounter < m_nextUpdate)
+    if( m_updateCounter < m_nextUpdate )
+    {
         return !m_songEnd;
+    }
 
-    while(m_updateCounter >= m_nextUpdate)
+    while( m_updateCounter >= m_nextUpdate )
     {
         auto templong = m_notes[m_notesOffset];
         const auto track = ((templong >> 8) & 0x0f);
-        if((templong & 192) == 0)
+        if( (templong & 192) == 0 )
         {
             size_t i = 0;
 
-            while((i < m_channelCount) && ((m_channelNotes[i] != (templong & 63)) || (m_slotToTrack[i] != ((templong >> 8) & 15))))
+            while( (i < m_channelCount) && ((m_channelNotes[i] != (templong & 63)) || (m_slotToTrack[i] != ((templong >> 8) & 15))) )
+            {
                 i++;
-            if(i < m_channelCount)
+            }
+            if( i < m_channelCount )
             {
                 getOpl()->writeReg(0xb0 + i, (adlibfreq[templong & 63] >> 8) & 223);
                 m_channelNotes[i] = 0;
@@ -115,29 +119,35 @@ bool KsmPlayer::update()
         else
         {
             int volevel = m_channelVolumes[track];
-            if((templong & 192) == 128)
+            if( (templong & 192) == 128 )
             {
                 volevel -= 4;
-                if(volevel < 0)
+                if( volevel < 0 )
+                {
                     volevel = 0;
+                }
             }
-            if((templong & 192) == 192)
+            if( (templong & 192) == 192 )
             {
                 volevel += 4;
-                if(volevel > 63)
+                if( volevel > 63 )
+                {
                     volevel = 63;
+                }
             }
-            if(track < 11)
+            if( track < 11 )
             {
                 size_t temp = 0;
                 size_t i = m_channelCount;
-                for(size_t j = 0; j < m_channelCount; j++)
-                    if((m_nextUpdate - m_slotAges[j] >= temp) && (m_slotToTrack[j] == track))
+                for( size_t j = 0; j < m_channelCount; j++ )
+                {
+                    if( (m_nextUpdate - m_slotAges[j] >= temp) && (m_slotToTrack[j] == track) )
                     {
                         temp = m_nextUpdate - m_slotAges[j];
                         i = j;
                     }
-                if(i < m_channelCount)
+                }
+                if( i < m_channelCount )
                 {
                     getOpl()->writeReg(0xb0 + i, 0);
                     const auto volval = (m_instruments[m_channelInstruments[track]][1] & 192) + (volevel ^ 63);
@@ -148,44 +158,44 @@ bool KsmPlayer::update()
                     m_slotAges[i] = m_nextUpdate;
                 }
             }
-            else if((m_bdRegister & 0x20) > 0)
+            else if( (m_bdRegister & 0x20) > 0 )
             {
                 auto freq = adlibfreq[templong & 63];
                 uint8_t slotIdx;
                 uint8_t drumnum;
-                switch(track)
+                switch( track )
                 {
-                case 11:
-                    drumnum = 0x10;
-                    slotIdx = 6;
-                    freq -= 2048;
-                    break;
-                case 12:
-                    drumnum = 0x08;
-                    slotIdx = 7;
-                    freq -= 2048;
-                    break;
-                case 13:
-                    drumnum = 0x04;
-                    slotIdx = 8;
-                    break;
-                case 14:
-                    drumnum = 0x02;
-                    slotIdx = 8;
-                    break;
-                case 15:
-                    drumnum = 0x01;
-                    slotIdx = 7;
-                    freq -= 2048;
-                    break;
-                default:
-                    BOOST_THROW_EXCEPTION(std::runtime_error("Unexpected track number"));
+                    case 11:
+                        drumnum = 0x10;
+                        slotIdx = 6;
+                        freq -= 2048;
+                        break;
+                    case 12:
+                        drumnum = 0x08;
+                        slotIdx = 7;
+                        freq -= 2048;
+                        break;
+                    case 13:
+                        drumnum = 0x04;
+                        slotIdx = 8;
+                        break;
+                    case 14:
+                        drumnum = 0x02;
+                        slotIdx = 8;
+                        break;
+                    case 15:
+                        drumnum = 0x01;
+                        slotIdx = 7;
+                        freq -= 2048;
+                        break;
+                    default:
+                        BOOST_THROW_EXCEPTION(std::runtime_error("Unexpected track number"));
                 }
                 getOpl()->writeReg(0xa0 + slotIdx, freq & 0xff);
                 getOpl()->writeReg(0xb0 + slotIdx, (freq >> 8) & 223);
                 getOpl()->writeReg(0xbd, m_bdRegister & (0xff - drumnum));
                 m_bdRegister |= drumnum;
-                if(track == 11 || track == 12 || track == 14)
+                if( track == 11 || track == 12 || track == 14 )
                 {
                     const auto volval = (m_instruments[m_channelInstruments[track]][1] & 192) + (volevel ^ 63);
                     getOpl()->writeReg(0x40 + s_opTable[slotIdx] + 3, volval);
@@ -199,14 +209,16 @@ bool KsmPlayer::update()
             }
         }
         m_notesOffset++;
-        if(m_notesOffset >= m_notes.size())
+        if( m_notesOffset >= m_notes.size() )
         {
             m_notesOffset = 0;
             m_songEnd = true;
         }
         templong = m_notes[m_notesOffset];
-        if(m_notesOffset == 0)
+        if( m_notesOffset == 0 )
+        {
             m_updateCounter = (templong >> 12) - 1;
+        }
         const auto quanter = (240 / m_quanters[(templong >> 8) & 15]);
         m_nextUpdate = (((templong >> 12) + (quanter >> 1)) / quanter) * quanter;
     }
@@ -222,45 +234,55 @@ void KsmPlayer::rewind(const boost::optional<size_t>&)
     getOpl()->writeReg(8, 0);
     getOpl()->writeReg(0xbd, m_bdRegister);
 
-    if(m_channelFlags[11] == 1)
+    if( m_channelFlags[11] == 1 )
     {
         auto instbuf = m_instruments[m_channelInstruments[11]];
         instbuf[1] = ((instbuf[1] & 192) | (m_channelVolumes[11] ^ 63));
         storeInstrument(6, instbuf);
-        for(int i = 0; i < 5; i++)
+        for( int i = 0; i < 5; i++ )
+        {
             instbuf[i] = m_instruments[m_channelInstruments[12]][i];
-        for(int i = 5; i < 11; i++)
+        }
+        for( int i = 5; i < 11; i++ )
+        {
             instbuf[i] = m_instruments[m_channelInstruments[15]][i];
+        }
         instbuf[1] = ((instbuf[1] & 192) | (m_channelVolumes[12] ^ 63));
         instbuf[6] = ((instbuf[6] & 192) | (m_channelVolumes[15] ^ 63));
         storeInstrument(7, instbuf);
-        for(int i = 0; i < 5; i++)
+        for( int i = 0; i < 5; i++ )
+        {
             instbuf[i] = m_instruments[m_channelInstruments[14]][i];
-        for(int i = 5; i < 11; i++)
+        }
+        for( int i = 5; i < 11; i++ )
+        {
             instbuf[i] = m_instruments[m_channelInstruments[13]][i];
+        }
         instbuf[1] = ((instbuf[1] & 192) | (m_channelVolumes[14] ^ 63));
         instbuf[6] = ((instbuf[6] & 192) | (m_channelVolumes[13] ^ 63));
         storeInstrument(8, instbuf);
     }
 
-    for(size_t i = 0; i < m_channelCount; i++)
+    for( size_t i = 0; i < m_channelCount; i++ )
     {
         m_slotToTrack[i] = 0;
         m_slotAges[i] = 0;
     }
     size_t j = 0;
-    for(int i = 0; i < 16; i++)
-        if((m_channelFlags[i] > 0) && (j < m_channelCount))
+    for( int i = 0; i < 16; i++ )
+    {
+        if( (m_channelFlags[i] > 0) && (j < m_channelCount) )
         {
             auto k = m_channelFlags[i];
-            while((j < m_channelCount) && (k > 0))
+            while( (j < m_channelCount) && (k > 0) )
             {
                 m_slotToTrack[j] = i;
                 k--;
                 j++;
             }
         }
-    for(size_t i = 0; i < m_channelCount; i++)
+    }
+    for( size_t i = 0; i < m_channelCount; i++ )
     {
         auto instbuf = m_instruments[m_channelInstruments[m_slotToTrack[i]]];
         instbuf[1] = ((instbuf[1] & 192) | (63 - m_channelVolumes[m_slotToTrack[i]]));
@@ -275,17 +297,21 @@ void KsmPlayer::rewind(const boost::optional<size_t>&)
 
 std::string KsmPlayer::instrumentTitle(size_t n) const
 {
-    if(m_channelFlags[n])
+    if( m_channelFlags[n] )
+    {
         return m_instrumentNames[m_channelInstruments[n]];
+    }
     else
+    {
         return std::string();
+    }
 }
 
 /*** private methods *************************************/
 
 void KsmPlayer::loadInstruments(FileStream& f)
 {
-    for(int i = 0; i < 256; i++)
+    for( int i = 0; i < 256; i++ )
     {
         f.read(m_instrumentNames[i], 20);
         f.read(m_instruments[i].data(), 11);

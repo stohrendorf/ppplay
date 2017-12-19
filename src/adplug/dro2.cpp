@@ -25,7 +25,6 @@
 #include "stream/filestream.h"
 
 #include "dro2.h"
-#include <iostream>
 
 Player* Dro2Player::factory()
 {
@@ -36,11 +35,13 @@ bool Dro2Player::load(const std::string& filename)
 {
     FileStream f(filename);
     if( !f )
+    {
         return false;
+    }
 
     char id[8];
     f.read(id, 8);
-    if( strncmp(id, "DBRAWOPL", 8) )
+    if( strncmp(id, "DBRAWOPL", 8) != 0 )
     {
         return false;
     }
@@ -77,7 +78,7 @@ bool Dro2Player::load(const std::string& filename)
     m_data.resize(length);
     f.read(m_data.data(), length);
 
-    rewind(0);
+    rewind(size_t(0));
 
     return true;
 }
@@ -139,7 +140,11 @@ void Dro2Player::rewind(const boost::optional<size_t>&)
 size_t Dro2Player::framesUntilUpdate() const
 {
     if( m_delay > 0 )
+    {
         return SampleRate * m_delay / 1000;
+    }
     else
+    {
         return SampleRate / 1000;
+    }
 }

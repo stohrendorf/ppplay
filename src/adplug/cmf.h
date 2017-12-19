@@ -33,7 +33,7 @@ struct CMFHEADER
     uint16_t iTagOffsetTitle = 0;
     uint16_t iTagOffsetComposer = 0;
     uint16_t iTagOffsetRemarks = 0;
-    uint8_t iChannelsInUse[16] = { 0 };
+    uint8_t iChannelsInUse[16] = {0};
     uint16_t iNumInstruments = 0;
     uint16_t iTempo = 0;
 };
@@ -68,9 +68,9 @@ struct OPLCHANNEL
     int iMIDIPatch;   // Current MIDI patch set on this OPL channel
 };
 
-class CmfPlayer : public Player
+class CmfPlayer
+    : public Player
 {
-    DISABLE_COPY(CmfPlayer)
 private:
     std::vector<uint8_t> data{};    // song data (CMF music block)
     int iPlayPointer = 0; // Current location of playback pointer
@@ -78,7 +78,7 @@ private:
     CMFHEADER cmfHeader{};
     std::vector<SBI> pInstruments{};
     bool bPercussive = false;          // are rhythm-mode instruments enabled?
-    uint8_t iCurrentRegs[256] = { 0 }; // Current values in the OPL chip
+    uint8_t iCurrentRegs[256] = {0}; // Current values in the OPL chip
     int iTranspose = 0; // Transpose amount for entire song (between -128 and +128)
     uint8_t iPrevCommand = 0; // Previous command (used for repeated MIDI commands,
     // as the seek and playback code need to share this)
@@ -95,31 +95,47 @@ private:
     std::string strRemarks{};
 
 public:
-    static Player *factory();
+    DISABLE_COPY(CmfPlayer)
+
+    static Player* factory();
 
     CmfPlayer();
-    ~CmfPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    ~CmfPlayer() override = default;
+
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override
     {
         return "Creative Music File (CMF)";
     }
+
     std::string title() const override;
+
     std::string author() const override;
+
     std::string description() const override;
 
 private:
     uint32_t readMIDINumber();
+
     void writeInstrumentSettings(uint8_t iChannel, uint8_t iOperatorSource, uint8_t iOperatorDest, uint8_t iInstrument);
+
     void writeOPL(uint8_t iRegister, uint8_t iValue);
+
     void cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity);
+
     void cmfNoteOff(uint8_t iChannel, uint8_t iNote, uint8_t);
+
     static uint8_t getPercChannel(uint8_t iChannel);
+
     void MIDIchangeInstrument(uint8_t iOPLChannel, uint8_t iMIDIChannel, uint8_t iNewInstrument);
+
     void MIDIcontroller(uint8_t, uint8_t iController, uint8_t iValue);
 };

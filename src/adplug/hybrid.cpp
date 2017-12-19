@@ -19,14 +19,14 @@
  * [xad] HYBRID player, by Riven the Mage <riven@ok.ru>
  */
 
- /*
-     - discovery -
+/*
+    - discovery -
 
-   file(s) : HYBRID.EXE
-      type : Hybrid cracktro for Apache Longbow CD-RIP
-      tune : from 'Mig-29 Super Fulcrum' game by Domark
-    player : from 'Mig-29 Super Fulcrum' game by Domark
- */
+  file(s) : HYBRID.EXE
+     type : Hybrid cracktro for Apache Longbow CD-RIP
+     tune : from 'Mig-29 Super Fulcrum' game by Domark
+   player : from 'Mig-29 Super Fulcrum' game by Domark
+*/
 
 #include "hybrid.h"
 #include <stuff/stringutils.h>
@@ -57,10 +57,6 @@ const uint16_t hyb_notes[98] = {
     0x1A20, 0x1A41, 0x1A63, 0x1A87, 0x1AAE, 0x1D6B, 0x1D81, 0x1D98, 0x1DB0,
     0x1DCA, 0x1DE5, 0x1E02, 0x1E20, 0x1E41, 0x1E63, 0x1E87, 0x1EAE
 };
-
-const uint8_t hyb_default_instrument[11] = {
-    0x00, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0xFF, 0x00, 0xFF, 0x00
-};
 }
 
 Player* HybridPlayer::factory()
@@ -70,8 +66,10 @@ Player* HybridPlayer::factory()
 
 bool HybridPlayer::xadplayer_load()
 {
-    if(xadHeader().fmt != HYBRID)
+    if( xadHeader().fmt != HYBRID )
+    {
         return false;
+    }
 
     // load instruments
     m_instruments = reinterpret_cast<const Instrument*>(&tune().front());
@@ -93,10 +91,10 @@ void HybridPlayer::xadplayer_rewind(const boost::optional<size_t>&)
     m_speedCounter = 1;
 
     // init channel data
-    for(int i = 0; i < 9; i++)
+    for( auto& channel : m_channels )
     {
-        m_channels[i].freq = 0x2000;
-        m_channels[i].freq_slide = 0x0000;
+        channel.freq = 0x2000;
+        channel.freq_slide = 0x0000;
     }
 
     // basic OPL init
@@ -105,11 +103,12 @@ void HybridPlayer::xadplayer_rewind(const boost::optional<size_t>&)
     getOpl()->writeReg(0x08, 0x00);
 
     // init OPL channels
-    for(int i = 0; i < 9; i++)
+    for( int i = 0; i < 9; i++ )
     {
-        for(int j = 0; j < 11; j++)
-            getOpl()->writeReg(hyb_adlib_registers[i * 11 + j],
-                               0x00 /* hyb_default_instrument[j] */);
+        for( int j = 0; j < 11; j++ )
+        {
+            getOpl()->writeReg(hyb_adlib_registers[i * 11 + j], 0x00);
+        }
 
         getOpl()->writeReg(0xA0 + i, 0x00);
         getOpl()->writeReg(0xB0 + i, 0x20);
@@ -123,11 +122,13 @@ void HybridPlayer::xadplayer_update()
     auto patpos = currentRow();
     auto ordpos = currentOrder();
 
-    if(--m_speedCounter)
+    if( --m_speedCounter )
+    {
         goto update_slides;
+    }
 
     // process channels
-    for(int i = 0; i < 9; i++)
+    for( int i = 0; i < 9; i++ )
     {
         const uint8_t* pos = &tune()[0xADE + (m_orderOffsets[ordpos * 9 + i] * 64 * 2) + (patpos * 2)];
         // read event
@@ -139,7 +140,7 @@ void HybridPlayer::xadplayer_update()
         uint8_t slide = event & 0x000F;
 
         // play event
-        switch(note)
+        switch( note )
         {
             case 0x7D: // 0x7D: Set Speed
                 setCurrentSpeed(event & 0xFF);
@@ -149,8 +150,10 @@ void HybridPlayer::xadplayer_update()
                 setCurrentRow(0x3F);
 
                 // jumpback ?
-                if(currentOrder() <= ordpos)
+                if( currentOrder() <= ordpos )
+                {
                     setXadLooping();
+                }
 
                 break;
             case 0x7F: // 0x7F: Pattern Break
@@ -159,23 +162,23 @@ void HybridPlayer::xadplayer_update()
             default:
 
                 // is instrument ?
-                if(ins)
+                if( ins )
                 {
-                    for(int j = 0; j < 11; j++)
+                    for( int j = 0; j < 11; j++ )
                     {
                         getOpl()->writeReg(hyb_adlib_registers[i * 11 + j], m_instruments[ins - 1].data[j]);
                     }
                 }
 
                 // is note ?
-                if(note)
+                if( note )
                 {
                     m_channels[i].freq = hyb_notes[note];
                     m_channels[i].freq_slide = 0;
                 }
 
                 // is slide ?
-                if(slide)
+                if( slide )
                 {
                     m_channels[i].freq_slide = (((slide >> 3) * -1) * (slide & 7)) << 1;
 
@@ -184,7 +187,7 @@ void HybridPlayer::xadplayer_update()
                 }
 
                 // set frequency
-                if(!(m_channels[i].freq & 0x2000))
+                if( !(m_channels[i].freq & 0x2000) )
                 {
                     getOpl()->writeReg(0xA0 + i, m_channels[i].freq & 0xFF);
                     getOpl()->writeReg(0xB0 + i, m_channels[i].freq >> 8);
@@ -199,10 +202,10 @@ void HybridPlayer::xadplayer_update()
         }
     }
 
-    setCurrentRow(currentRow() + 1);
+    setCurrentRow(currentRow() + 1u);
 
     // end of pattern ?
-    if(currentRow() >= 0x40)
+    if( currentRow() >= 0x40 )
     {
         setCurrentRow(0);
         setCurrentOrder(currentOrder() + 1);
@@ -213,8 +216,9 @@ update_slides:
     AdPlug_LogWrite("slides:\n");
 #endif
     // update fine frequency slides
-    for(int i = 0; i < 9; i++)
-        if(m_channels[i].freq_slide)
+    for( int i = 0; i < 9; i++ )
+    {
+        if( m_channels[i].freq_slide )
         {
             m_channels[i].freq =
                 (((m_channels[i].freq & 0x1FFF) + m_channels[i].freq_slide) &
@@ -223,6 +227,7 @@ update_slides:
             getOpl()->writeReg(0xA0 + i, m_channels[i].freq & 0xFF);
             getOpl()->writeReg(0xB0 + i, m_channels[i].freq >> 8);
         }
+    }
 }
 
 size_t HybridPlayer::framesUntilUpdate() const

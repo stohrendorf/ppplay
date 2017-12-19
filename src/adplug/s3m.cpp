@@ -26,18 +26,18 @@
 
 #include "s3m.h"
 
-const char S3mPlayer::chnresolv[] = // S3M -> adlib channel conversion
-{ -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1,
-    0, 1, 2, 3, 4, 5, 6, 7,
-    8, -1, -1, -1, -1, -1, -1, -1 };
+const int8_t S3mPlayer::chnresolv[] = // S3M -> adlib channel conversion
+    {-1, -1, -1, -1, -1, -1, -1, -1,
+     -1, -1, -1, -1, -1, -1, -1, -1,
+     0, 1, 2, 3, 4, 5, 6, 7,
+     8, -1, -1, -1, -1, -1, -1, -1};
 
-const unsigned short S3mPlayer::notetable[12] = // S3M adlib note table
-{ 340, 363, 385, 408, 432, 458, 485, 514, 544, 577, 611, 647 };
+const uint16_t S3mPlayer::notetable[12] = // S3M adlib note table
+    {340, 363, 385, 408, 432, 458, 485, 514, 544, 577, 611, 647};
 
-const unsigned char S3mPlayer::vibratotab[32] = // vibrato rate table
-{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16, 15, 14, 13, 12,
-    11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 };
+const uint8_t S3mPlayer::vibratotab[32] = // vibrato rate table
+    {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16, 15, 14, 13, 12,
+     11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
 
 /*** public methods *************************************/
 
@@ -46,34 +46,41 @@ Player* S3mPlayer::factory()
     return new S3mPlayer();
 }
 
-S3mPlayer::S3mPlayer() : Player()
+S3mPlayer::S3mPlayer()
+    : Player()
 {
     memset(m_patterns, 255, sizeof(m_patterns));
     //memset(m_orders, 255, sizeof(m_orders));
 
-    for(int i = 0; i < 99; i++) // setup pattern
-        for(int j = 0; j < 64; j++)
-            for(int k = 0; k < 32; k++)
+    for( auto& pattern : m_patterns )
+    { // setup pattern
+        for( auto& j : pattern )
+        {
+            for( auto& k : j )
             {
-                m_patterns[i][j][k].instrument = 0;
-                m_patterns[i][j][k].effectValue = 0;
+                k.instrument = 0;
+                k.effectValue = 0;
             }
+        }
+    }
 }
 
 bool S3mPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
+    {
         return false;
+    }
 
     // file validation section
     f >> m_header;
     bool adlibins = false;
-    if(m_header.endOfFile != 0x1a || m_header.type != 16 || m_header.instrumentCount > 99)
+    if( m_header.endOfFile != 0x1a || m_header.type != 16 || m_header.instrumentCount > 99 )
     {
         return false;
     }
-    else if(strncmp(m_header.scrm, "SCRM", 4))
+    else if( strncmp(m_header.scrm, "SCRM", 4) != 0 )
     {
         return false;
     }
@@ -82,18 +89,18 @@ bool S3mPlayer::load(const std::string& filename)
         f.seekrel(m_header.orderCount);
         uint16_t insptr[99];
         f.read(insptr, m_header.instrumentCount);
-        for(int i = 0; i < m_header.instrumentCount; i++)
+        for( int i = 0; i < m_header.instrumentCount; i++ )
         {
             f.seek(insptr[i] * 16);
             uint8_t tmp;
             f >> tmp;
-            if(tmp >= 2)
+            if( tmp >= 2 )
             {
                 adlibins = true;
                 break;
             }
         }
-        if(!adlibins)
+        if( !adlibins )
         {
             return false;
         }
@@ -103,12 +110,12 @@ bool S3mPlayer::load(const std::string& filename)
     f.seek(sizeof(S3mHeader)); // rewind for load
 
     // security check
-    if(m_header.orderCount > 256 || m_header.instrumentCount > 99 || m_header.patternCount > 99)
+    if( m_header.orderCount > 256 || m_header.instrumentCount > 99 || m_header.patternCount > 99 )
     {
         return false;
     }
 
-    for(int i = 0; i < m_header.orderCount; ++i)
+    for( int i = 0; i < m_header.orderCount; ++i )
     {
         uint8_t tmp;
         f >> tmp;
@@ -119,25 +126,25 @@ bool S3mPlayer::load(const std::string& filename)
     uint16_t pattptr[99];
     f.read(pattptr, m_header.patternCount);
 
-    for(int i = 0; i < m_header.instrumentCount; i++)
+    for( int i = 0; i < m_header.instrumentCount; i++ )
     { // load instruments
         f.seek(insptr[i] * 16);
         f >> m_instruments[i];
     }
 
-    for(int i = 0; i < m_header.patternCount; i++)
+    for( int i = 0; i < m_header.patternCount; i++ )
     { // depack patterns
         f.seek(pattptr[i] * 16);
         uint16_t ppatlen;
         f >> ppatlen;
         auto pattpos = f.pos();
-        for(int row = 0; (row < 64) && (pattpos - pattptr[i] * 16 <= ppatlen); row++)
+        for( int row = 0; (row < 64) && (pattpos - pattptr[i] * 16 <= ppatlen); row++ )
         {
             uint8_t bufval;
             do
             {
                 f >> bufval;
-                if(bufval & 32)
+                if( bufval & 32 )
                 {
                     uint8_t bufval2;
                     f >> bufval2;
@@ -145,61 +152,75 @@ bool S3mPlayer::load(const std::string& filename)
                     m_patterns[i][row][bufval & 31].octave = (bufval2 & 240) >> 4;
                     f >> m_patterns[i][row][bufval & 31].instrument;
                 }
-                if(bufval & 64)
+                if( bufval & 64 )
+                {
                     f >> m_patterns[i][row][bufval & 31].volume;
-                if(bufval & 128)
+                }
+                if( bufval & 128 )
                 {
                     f >> m_patterns[i][row][bufval & 31].effect;
                     f >> m_patterns[i][row][bufval & 31].effectValue;
                 }
-            } while(bufval);
+            } while( bufval );
         }
     }
 
-    rewind(0);
+    rewind(size_t(0));
     return true; // done
 }
 
 bool S3mPlayer::update()
 {
     // effect handling (timer dependant)
-    for(int8_t realchan = 0; realchan < 9; realchan++)
+    for( uint8_t realchan = 0; realchan < 9; realchan++ )
     {
         auto effectValue = m_channels[realchan].effectValue; // fill infobyte cache
-        switch(m_channels[realchan].effect)
+        switch( m_channels[realchan].effect )
         {
             case 11:
             case 12:
-                if(m_channels[realchan].effect == 11) // dual command: H00 and Dxy
+                if( m_channels[realchan].effect == 11 )
+                { // dual command: H00 and Dxy
                     vibrato(realchan, m_channels[realchan].dualInfo);
-                else // dual command: G00 and Dxy
-                    tone_portamento(realchan, m_channels[realchan].dualInfo);
-            case 4:
-                if(effectValue <= 0x0f)
-                { // volume slide down
-                    if(m_channels[realchan].volume - effectValue >= 0)
-                        m_channels[realchan].volume -= effectValue;
-                    else
-                        m_channels[realchan].volume = 0;
                 }
-                if((effectValue & 0x0f) == 0)
-                { // volume slide up
-                    if(m_channels[realchan].volume + (effectValue >> 4) <= 63)
-                        m_channels[realchan].volume += effectValue >> 4;
+                else
+                { // dual command: G00 and Dxy
+                    tone_portamento(realchan, m_channels[realchan].dualInfo);
+                }
+            case 4:
+                if( effectValue <= 0x0f )
+                { // volume slide down
+                    if( m_channels[realchan].volume - effectValue >= 0 )
+                    {
+                        m_channels[realchan].volume -= effectValue;
+                    }
                     else
+                    {
+                        m_channels[realchan].volume = 0;
+                    }
+                }
+                if( (effectValue & 0x0f) == 0 )
+                { // volume slide up
+                    if( m_channels[realchan].volume + (effectValue >> 4) <= 63 )
+                    {
+                        m_channels[realchan].volume += effectValue >> 4;
+                    }
+                    else
+                    {
                         m_channels[realchan].volume = 63;
+                    }
                 }
                 setvolume(realchan);
                 break;
             case 5:
-                if(effectValue == 0xf0 || effectValue <= 0xe0)
+                if( effectValue == 0xf0 || effectValue <= 0xe0 )
                 { // slide down
                     slide_down(realchan, effectValue);
                     setfreq(realchan);
                 }
                 break;
             case 6:
-                if(effectValue == 0xf0 || effectValue <= 0xe0)
+                if( effectValue == 0xf0 || effectValue <= 0xe0 )
                 { // slide up
                     slide_up(realchan, effectValue);
                     setfreq(realchan);
@@ -214,15 +235,17 @@ bool S3mPlayer::update()
             case 10:
                 m_channels[realchan].nextFrequency = m_channels[realchan].frequency; // arpeggio
                 m_channels[realchan].nextOctave = m_channels[realchan].octave;
-                switch(m_channels[realchan].trigger)
+                switch( m_channels[realchan].trigger )
                 {
                     case 0:
                         m_channels[realchan].frequency = notetable[m_channels[realchan].note];
                         break;
                     case 1:
-                        if(m_channels[realchan].note + ((effectValue & 0xf0) >> 4) < 12)
+                        if( m_channels[realchan].note + ((effectValue & 0xf0) >> 4) < 12 )
+                        {
                             m_channels[realchan].frequency =
-                            notetable[m_channels[realchan].note + ((effectValue & 0xf0) >> 4)];
+                                notetable[m_channels[realchan].note + ((effectValue & 0xf0) >> 4)];
+                        }
                         else
                         {
                             m_channels[realchan].frequency =
@@ -231,9 +254,11 @@ bool S3mPlayer::update()
                         }
                         break;
                     case 2:
-                        if(m_channels[realchan].note + (effectValue & 0x0f) < 12)
+                        if( m_channels[realchan].note + (effectValue & 0x0f) < 12 )
+                        {
                             m_channels[realchan].frequency =
-                            notetable[m_channels[realchan].note + (effectValue & 0x0f)];
+                                notetable[m_channels[realchan].note + (effectValue & 0x0f)];
+                        }
                         else
                         {
                             m_channels[realchan].frequency =
@@ -242,21 +267,25 @@ bool S3mPlayer::update()
                         }
                         break;
                 }
-                if(m_channels[realchan].trigger < 2)
+                if( m_channels[realchan].trigger < 2 )
+                {
                     m_channels[realchan].trigger++;
+                }
                 else
+                {
                     m_channels[realchan].trigger = 0;
+                }
                 setfreq(realchan);
                 m_channels[realchan].frequency = m_channels[realchan].nextFrequency;
                 m_channels[realchan].octave = m_channels[realchan].nextOctave;
                 break;
             case 21:
-                vibrato(realchan, effectValue / 4);
+                vibrato(realchan, effectValue / 4u);
                 break; // fine vibrato
         }
     }
 
-    if(m_patternDelay)
+    if( m_patternDelay )
     { // speed compensation
         m_patternDelay--;
         return !m_songend;
@@ -264,15 +293,17 @@ bool S3mPlayer::update()
 
     // arrangement handling
     auto pattnr = currentPattern();
-    if(pattnr == 0xff || currentOrder() > orderCount())
+    if( pattnr == 0xff || currentOrder() > orderCount() )
     { // "--" end of song
         m_songend = true; // set end-flag
         setCurrentOrder(0);
         pattnr = currentPattern();
-        if(pattnr == 0xff)
+        if( pattnr == 0xff )
+        {
             return !m_songend;
+        }
     }
-    if(pattnr == 0xfe)
+    if( pattnr == 0xfe )
     { // "++" skip marker
         setCurrentOrder(currentOrder() + 1);
         pattnr = currentPattern();
@@ -281,18 +312,20 @@ bool S3mPlayer::update()
     // play row
     auto row = currentRow(); // fill row cache
     bool pattbreak = false;
-    for(int chan = 0; chan < 32; chan++)
+    for( int chan = 0; chan < 32; chan++ )
     {
-        if(m_header.chanset[chan] & 128) // resolve S3M -> AdLib channels
+        if( m_header.chanset[chan] & 128 )
+        { // resolve S3M -> AdLib channels
             continue;
-        const int realchan = chnresolv[m_header.chanset[chan] & 127];
+        }
+        const auto realchan = chnresolv[m_header.chanset[chan] & 127];
         // set channel values
         bool donote = false;
-        if(m_patterns[pattnr][row][chan].note < 14)
+        if( m_patterns[pattnr][row][chan].note < 14 )
         {
             // tone portamento
-            if(m_patterns[pattnr][row][chan].effect == 7 ||
-               m_patterns[pattnr][row][chan].effect == 12)
+            if( m_patterns[pattnr][row][chan].effect == 7 ||
+                m_patterns[pattnr][row][chan].effect == 12 )
             {
                 m_channels[realchan].nextFrequency =
                     notetable[m_patterns[pattnr][row][chan].note];
@@ -307,53 +340,67 @@ bool S3mPlayer::update()
                 donote = true;
             }
         }
-        if(m_patterns[pattnr][row][chan].note ==
-           14)
+        if( m_patterns[pattnr][row][chan].note ==
+            14 )
         { // key off (is 14 here, cause note is only first 4 bits)
             m_channels[realchan].key = 0;
             setfreq(realchan);
         }
-        if((m_channels[realchan].effect != 8 &&
-            m_channels[realchan].effect != 11) && // vibrato begins
+        if( (m_channels[realchan].effect != 8 &&
+             m_channels[realchan].effect != 11) && // vibrato begins
             (m_patterns[pattnr][row][chan].effect == 8 ||
-             m_patterns[pattnr][row][chan].effect == 11))
+             m_patterns[pattnr][row][chan].effect == 11) )
         {
             m_channels[realchan].nextFrequency = m_channels[realchan].frequency;
             m_channels[realchan].nextOctave = m_channels[realchan].octave;
         }
-        if(m_patterns[pattnr][row][chan].note >= 14)
-            if((m_channels[realchan].effect == 8 ||
-                m_channels[realchan].effect == 11) && // vibrato ends
+        if( m_patterns[pattnr][row][chan].note >= 14 )
+        {
+            if( (m_channels[realchan].effect == 8 ||
+                 m_channels[realchan].effect == 11) && // vibrato ends
                 (m_patterns[pattnr][row][chan].effect != 8 &&
-                 m_patterns[pattnr][row][chan].effect != 11))
+                 m_patterns[pattnr][row][chan].effect != 11) )
             {
                 m_channels[realchan].frequency = m_channels[realchan].nextFrequency;
                 m_channels[realchan].octave = m_channels[realchan].nextOctave;
                 setfreq(realchan);
             }
-        if(m_patterns[pattnr][row][chan].instrument)
+        }
+        if( m_patterns[pattnr][row][chan].instrument )
         { // set instrument
             m_channels[realchan].instrument = m_patterns[pattnr][row][chan].instrument - 1;
-            if(m_instruments[m_channels[realchan].instrument].volume < 64)
+            if( m_instruments[m_channels[realchan].instrument].volume < 64 )
+            {
                 m_channels[realchan].volume = m_instruments[m_channels[realchan].instrument].volume;
+            }
             else
+            {
                 m_channels[realchan].volume = 63;
-            if(m_patterns[pattnr][row][chan].effect != 7)
+            }
+            if( m_patterns[pattnr][row][chan].effect != 7 )
+            {
                 donote = true;
+            }
         }
-        if(m_patterns[pattnr][row][chan].volume != 255)
+        if( m_patterns[pattnr][row][chan].volume != 255 )
         {
-            if(m_patterns[pattnr][row][chan].volume < 64) // set volume
+            if( m_patterns[pattnr][row][chan].volume < 64 )
+            { // set volume
                 m_channels[realchan].volume = m_patterns[pattnr][row][chan].volume;
+            }
             else
+            {
                 m_channels[realchan].volume = 63;
+            }
         }
         m_channels[realchan].effect = m_patterns[pattnr][row][chan].effect; // set command
-        if(m_patterns[pattnr][row][chan].effectValue) // set infobyte
+        if( m_patterns[pattnr][row][chan].effectValue )
+        { // set infobyte
             m_channels[realchan].effectValue = m_patterns[pattnr][row][chan].effectValue;
+        }
 
         // some commands reset the infobyte memory
-        switch(m_channels[realchan].effect)
+        switch( m_channels[realchan].effect )
         {
             case 1:
             case 2:
@@ -364,27 +411,33 @@ bool S3mPlayer::update()
         }
 
         // play note
-        if(donote)
+        if( donote )
+        {
             playnote(realchan);
-        if(m_patterns[pattnr][row][chan].volume != 255) // set volume
+        }
+        if( m_patterns[pattnr][row][chan].volume != 255 )
+        { // set volume
             setvolume(realchan);
+        }
 
         // command handling (row dependant)
         auto info = m_channels[realchan].effectValue; // fill infobyte cache
-        switch(m_channels[realchan].effect)
+        switch( m_channels[realchan].effect )
         {
             case 1:
                 setCurrentSpeed(info);
                 break; // set speed
             case 2:
-                if(info <= currentOrder())
+                if( info <= currentOrder() )
+                {
                     m_songend = true;
+                }
                 setCurrentOrder(info);
                 setCurrentRow(0);
                 pattbreak = true;
                 break; // jump to order
             case 3:
-                if(!pattbreak)
+                if( !pattbreak )
                 {
                     setCurrentRow(info);
                     setCurrentOrder(currentOrder() + 1);
@@ -392,41 +445,49 @@ bool S3mPlayer::update()
                 }
                 break; // pattern break
             case 4:
-                if(info > 0xf0)
+                if( info > 0xf0 )
                 { // fine volume down
-                    if(m_channels[realchan].volume - (info & 0x0f) >= 0)
+                    if( m_channels[realchan].volume - (info & 0x0f) >= 0 )
+                    {
                         m_channels[realchan].volume -= info & 0x0f;
+                    }
                     else
+                    {
                         m_channels[realchan].volume = 0;
+                    }
                 }
-                if((info & 0x0f) == 0x0f && info >= 0x1f)
+                if( (info & 0x0f) == 0x0f && info >= 0x1f )
                 { // fine volume up
-                    if(m_channels[realchan].volume + ((info & 0xf0) >> 4) <= 63)
+                    if( m_channels[realchan].volume + ((info & 0xf0) >> 4) <= 63 )
+                    {
                         m_channels[realchan].volume += (info & 0xf0) >> 4;
+                    }
                     else
+                    {
                         m_channels[realchan].volume = 63;
+                    }
                 }
                 setvolume(realchan);
                 break;
             case 5:
-                if(info > 0xf0)
+                if( info > 0xf0 )
                 { // fine slide down
                     slide_down(realchan, info & 0x0f);
                     setfreq(realchan);
                 }
-                if(info > 0xe0 && info < 0xf0)
+                if( info > 0xe0 && info < 0xf0 )
                 { // extra fine slide down
                     slide_down(realchan, (info & 0x0f) / 4);
                     setfreq(realchan);
                 }
                 break;
             case 6:
-                if(info > 0xf0)
+                if( info > 0xf0 )
                 { // fine slide up
                     slide_up(realchan, info & 0x0f);
                     setfreq(realchan);
                 }
-                if(info > 0xe0 && info < 0xf0)
+                if( info > 0xe0 && info < 0xf0 )
                 { // extra fine slide up
                     slide_up(realchan, (info & 0x0f) / 4);
                     setfreq(realchan);
@@ -434,33 +495,39 @@ bool S3mPlayer::update()
                 break;
             case 7: // tone portamento
             case 8:
-                if((m_channels[realchan].effect ==
-                    7 || // vibrato (remember info for dual commands)
-                    m_channels[realchan].effect == 8) && m_patterns[pattnr][row][chan].effectValue)
+                if( (m_channels[realchan].effect ==
+                     7 || // vibrato (remember info for dual commands)
+                     m_channels[realchan].effect == 8) && m_patterns[pattnr][row][chan].effectValue )
+                {
                     m_channels[realchan].dualInfo = info;
+                }
                 break;
             case 10:
                 m_channels[realchan].trigger = 0;
                 break; // arpeggio (set trigger)
             case 19:
-                if(info == 0xb0) // set loop start
+                if( info == 0xb0 )
+                { // set loop start
                     m_loopStart = row;
-                if(info > 0xb0 && info <= 0xbf)
+                }
+                if( info > 0xb0 && info <= 0xbf )
                 { // pattern loop
-                    if(!m_loopCounter)
+                    if( !m_loopCounter )
                     {
                         m_loopCounter = info & 0x0f;
                         setCurrentRow(m_loopStart);
                         pattbreak = true;
                     }
-                    else if(--m_loopCounter > 0)
+                    else if( --m_loopCounter > 0 )
                     {
                         setCurrentRow(m_loopStart);
                         pattbreak = true;
                     }
                 }
-                if((info & 0xf0) == 0xe0) // patterndelay
+                if( (info & 0xf0) == 0xe0 )
+                { // patterndelay
                     m_patternDelay = currentSpeed() * (info & 0x0f) - 1;
+                }
                 break;
             case 20:
                 setCurrentTempo(info);
@@ -468,12 +535,14 @@ bool S3mPlayer::update()
         }
     }
 
-    if(!m_patternDelay)
-        m_patternDelay = currentSpeed() - 1; // speed compensation
-    if(!pattbreak)
+    if( !m_patternDelay )
+    {
+        m_patternDelay = currentSpeed() - 1;
+    } // speed compensation
+    if( !pattbreak )
     { // next row (only if no manual advance)
         setCurrentRow((currentRow() + 1) & 0x3f);
-        if(currentRow() == 0)
+        if( currentRow() == 0 )
         {
             setCurrentOrder(currentOrder() + 1);
             m_loopStart = 0;
@@ -504,7 +573,7 @@ std::string S3mPlayer::type() const
 {
     std::string filever;
 
-    switch(m_header.trackerVersion)
+    switch( m_header.trackerVersion )
     { // determine version number
         case 0x1300:
             filever = "3.00";
@@ -532,33 +601,39 @@ size_t S3mPlayer::framesUntilUpdate() const
 
 /*** private methods *************************************/
 
-void S3mPlayer::setvolume(unsigned char chan)
+void S3mPlayer::setvolume(uint8_t chan)
 {
-    unsigned char op = s_opTable[chan], insnr = m_channels[chan].instrument;
+    uint8_t op = s_opTable[chan], insnr = m_channels[chan].instrument;
 
     getOpl()->writeReg(
         0x43 + op, static_cast<uint8_t>(63 - ((63 - (m_instruments[insnr].d03 & 63)) / 63.0) *
-                                        m_channels[chan].volume) + (m_instruments[insnr].d03 & 192));
-    if(m_instruments[insnr].d0a & 1)
+                                             m_channels[chan].volume) + (m_instruments[insnr].d03 & 192));
+    if( m_instruments[insnr].d0a & 1 )
+    {
         getOpl()->writeReg(
             0x40 + op, static_cast<uint8_t>(63 - ((63 - (m_instruments[insnr].d02 & 63)) / 63.0) *
-                                            m_channels[chan].volume) + (m_instruments[insnr].d02 & 192));
+                                                 m_channels[chan].volume) + (m_instruments[insnr].d02 & 192));
+    }
 }
 
-void S3mPlayer::setfreq(unsigned char chan)
+void S3mPlayer::setfreq(uint8_t chan)
 {
     getOpl()->writeReg(0xa0 + chan, m_channels[chan].frequency & 255);
-    if(m_channels[chan].key)
+    if( m_channels[chan].key )
+    {
         getOpl()->writeReg(0xb0 + chan, (((m_channels[chan].frequency & 768) >> 8) +
-        (m_channels[chan].octave << 2)) | 32);
+                                         (m_channels[chan].octave << 2)) | 32);
+    }
     else
+    {
         getOpl()->writeReg(0xb0 + chan, ((m_channels[chan].frequency & 768) >> 8) +
-        (m_channels[chan].octave << 2));
+                                        (m_channels[chan].octave << 2));
+    }
 }
 
-void S3mPlayer::playnote(unsigned char chan)
+void S3mPlayer::playnote(uint8_t chan)
 {
-    unsigned char op = s_opTable[chan], insnr = m_channels[chan].instrument;
+    uint8_t op = s_opTable[chan], insnr = m_channels[chan].instrument;
 
     getOpl()->writeReg(0xb0 + chan, 0); // stop old note
 
@@ -580,64 +655,84 @@ void S3mPlayer::playnote(unsigned char chan)
     setfreq(chan);
 }
 
-void S3mPlayer::slide_down(unsigned char chan, unsigned char amount)
+void S3mPlayer::slide_down(uint8_t chan, uint8_t amount)
 {
-    if(m_channels[chan].frequency - amount > 340)
+    if( m_channels[chan].frequency - amount > 340 )
+    {
         m_channels[chan].frequency -= amount;
-    else if(m_channels[chan].octave > 0)
+    }
+    else if( m_channels[chan].octave > 0 )
     {
         m_channels[chan].octave--;
         m_channels[chan].frequency = 684;
     }
     else
+    {
         m_channels[chan].frequency = 340;
+    }
 }
 
-void S3mPlayer::slide_up(unsigned char chan, unsigned char amount)
+void S3mPlayer::slide_up(uint8_t chan, uint8_t amount)
 {
-    if(m_channels[chan].frequency + amount < 686)
+    if( m_channels[chan].frequency + amount < 686 )
+    {
         m_channels[chan].frequency += amount;
-    else if(m_channels[chan].octave < 7)
+    }
+    else if( m_channels[chan].octave < 7 )
     {
         m_channels[chan].octave++;
         m_channels[chan].frequency = 341;
     }
     else
+    {
         m_channels[chan].frequency = 686;
+    }
 }
 
-void S3mPlayer::vibrato(unsigned char chan, unsigned char info)
+void S3mPlayer::vibrato(uint8_t chan, uint8_t info)
 {
-    unsigned char i, speed, depth;
+    uint8_t i, speed, depth;
 
     speed = info >> 4;
     depth = (info & 0x0f) / 2;
 
-    for(i = 0; i < speed; i++)
+    for( i = 0; i < speed; i++ )
     {
         m_channels[chan].trigger++;
-        while(m_channels[chan].trigger >= 64)
+        while( m_channels[chan].trigger >= 64 )
+        {
             m_channels[chan].trigger -= 64;
-        if(m_channels[chan].trigger >= 16 && m_channels[chan].trigger < 48)
+        }
+        if( m_channels[chan].trigger >= 16 && m_channels[chan].trigger < 48 )
+        {
             slide_down(chan, static_cast<uint8_t>(vibratotab[m_channels[chan].trigger - 16] /
-            (16 - depth)));
-        if(m_channels[chan].trigger < 16)
+                                                  (16 - depth)));
+        }
+        if( m_channels[chan].trigger < 16 )
+        {
             slide_up(chan, static_cast<uint8_t>(vibratotab[m_channels[chan].trigger + 16] /
-            (16 - depth)));
-        if(m_channels[chan].trigger >= 48)
+                                                (16 - depth)));
+        }
+        if( m_channels[chan].trigger >= 48 )
+        {
             slide_up(chan, static_cast<uint8_t>(vibratotab[m_channels[chan].trigger - 48] /
-            (16 - depth)));
+                                                (16 - depth)));
+        }
     }
     setfreq(chan);
 }
 
-void S3mPlayer::tone_portamento(unsigned char chan, unsigned char info)
+void S3mPlayer::tone_portamento(uint8_t chan, uint8_t info)
 {
-    if(m_channels[chan].frequency + (m_channels[chan].octave << 10) <
-       m_channels[chan].nextFrequency + (m_channels[chan].nextOctave << 10))
+    if( m_channels[chan].frequency + (m_channels[chan].octave << 10) <
+        m_channels[chan].nextFrequency + (m_channels[chan].nextOctave << 10) )
+    {
         slide_up(chan, info);
-    if(m_channels[chan].frequency + (m_channels[chan].octave << 10) >
-       m_channels[chan].nextFrequency + (m_channels[chan].nextOctave << 10))
+    }
+    if( m_channels[chan].frequency + (m_channels[chan].octave << 10) >
+        m_channels[chan].nextFrequency + (m_channels[chan].nextOctave << 10) )
+    {
         slide_down(chan, info);
+    }
     setfreq(chan);
 }

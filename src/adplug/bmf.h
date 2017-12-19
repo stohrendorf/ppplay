@@ -23,14 +23,17 @@
 
 #include "xad.h"
 
-class BmfPlayer : public XadPlayer
+class BmfPlayer
+    : public XadPlayer
 {
-    DISABLE_COPY(BmfPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(BmfPlayer)
+
+    static Player* factory();
 
     BmfPlayer() = default;
-    ~BmfPlayer() = default;
+
+    ~BmfPlayer() override = default;
 
 protected:
     enum BmfVersion
@@ -58,10 +61,10 @@ protected:
     struct
     {
         char name[11] = "";
-        uint8_t data[13];
+        std::array<uint8_t, 13> data;
     } m_bmfInstruments[32];
 
-    bmf_event m_bmfStreams[9][1024];
+    bmf_event m_bmfStreams[9][1024]{};
 
     int m_bmfActiveStreams = 0;
 
@@ -73,23 +76,31 @@ protected:
         uint8_t loop_counter;
     };
 
-    Channel m_bmfChannels[9];
+    Channel m_bmfChannels[9]{};
 
     bool xadplayer_load() override;
+
     void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
+
     void xadplayer_update() override;
+
     size_t framesUntilUpdate() const override;
+
     std::string type() const override;
+
     std::string title() const override;
+
     std::string author() const override;
+
     std::string instrumentTitle(size_t i) const override;
+
     size_t instrumentCount() const override;
 
 private:
     static const uint8_t bmf_adlib_registers[117];
     static const uint16_t bmf_notes[12];
     static const uint16_t bmf_notes_2[12];
-    static const uint8_t bmf_default_instrument[13];
+    static const std::array<uint8_t, 13> bmf_default_instrument;
 
-    int __bmf_convert_stream(const uint8_t *stream, int channel);
+    int __bmf_convert_stream(const uint8_t* stream, int channel);
 };

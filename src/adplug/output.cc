@@ -17,25 +17,16 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include <stdio.h>
-
 #include "output.h"
 
- /***** EmuPlayer *****/
+/***** EmuPlayer *****/
 
 EmuPlayer::EmuPlayer(unsigned long nfreq, size_t nbufsize)
     : PlayerHandler()
-    , m_audioBuf(nbufsize * 2, 0)
-    , m_freq(nfreq)
-    , m_oplInterp(m_freq, opl::Opl3::SampleRate)
+      , m_audioBuf(nbufsize * 2, 0)
+      , m_freq(nfreq)
+      , m_oplInterp(m_freq, opl::Opl3::SampleRate)
 {
-}
-
-// Some output plugins (ALSA) need to change the buffer size mid-init
-void EmuPlayer::setBufferSize(size_t nbufsize)
-{
-    m_audioBuf.clear();
-    m_audioBuf.resize(nbufsize * 2, 0);
 }
 
 void EmuPlayer::frame()
@@ -45,9 +36,9 @@ void EmuPlayer::frame()
     int16_t* pos = m_audioBuf.data();
 
     // Prepare audiobuf with emulator output
-    while(towrite > 0)
+    while( towrite > 0 )
     {
-        while(framesUntilUpdate < 0)
+        while( framesUntilUpdate < 0 )
         {
             setIsPlaying(getPlayer()->update());
             framesUntilUpdate += getPlayer()->framesUntilUpdate();
@@ -59,7 +50,7 @@ void EmuPlayer::frame()
         pos[1] = samples[2] + samples[3];
         pos += 2;
 
-        if(m_oplInterp.next() == 2)
+        if( m_oplInterp.next() == 2 )
         {
             getPlayer()->read(nullptr); // skip a sample
             --framesUntilUpdate;

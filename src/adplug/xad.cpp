@@ -28,14 +28,16 @@
 bool XadPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
+    {
         return false;
+    }
 
     // load header
     f >> m_xadHeader;
 
     // 'XAD!' - signed ?
-    if(m_xadHeader.id != 0x21444158)
+    if( m_xadHeader.id != 0x21444158 )
     {
         return false;
     }
@@ -43,12 +45,14 @@ bool XadPlayer::load(const std::string& filename)
     m_tune.resize(f.size() - 80);
     f.read(m_tune.data(), m_tune.size());
 
-    bool ret = xadplayer_load();
+    bool result = xadplayer_load();
 
-    if(ret)
-        rewind(0);
+    if( result )
+    {
+        rewind(size_t(0));
+    }
 
-    return ret;
+    return result;
 }
 
 void XadPlayer::rewind(const boost::optional<size_t>& subsong)
@@ -68,7 +72,7 @@ void XadPlayer::rewind(const boost::optional<size_t>& subsong)
 
 bool XadPlayer::update()
 {
-    if(--m_xadSpeedCounter == 0)
+    if( --m_xadSpeedCounter == 0 )
     {
         m_xadSpeedCounter = currentSpeed();
 

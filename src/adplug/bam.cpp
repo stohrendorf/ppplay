@@ -75,65 +75,71 @@ Player* BamPlayer::factory()
 bool BamPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
-        return false;
-
-    char id[4];
-    f.read(id, 4);
-    if(!std::equal(id, id + 4, "CBMF"))
+    if( !f )
     {
         return false;
     }
 
-    m_song.resize(f.size() - 4);
+    char id[4];
+    f.read(id, 4);
+    if( !std::equal(id, id + 4, "CBMF") )
+    {
+        return false;
+    }
+
+    m_song.resize(f.size() - 4u);
     f.read(m_song.data(), m_song.size());
 
     addOrder(0); // dummy
 
-    rewind(0);
+    rewind(size_t(0));
     return true;
 }
 
 bool BamPlayer::update()
 {
-    if(m_delay)
+    if( m_delay )
     {
         m_delay--;
         return !m_songEnd;
     }
 
-    if(m_position >= m_song.size())
+    if( m_position >= m_song.size() )
     { // EOF detection
         m_position = 0;
         m_songEnd = true;
     }
 
-    while(m_song[m_position] < 128)
+    while( m_song[m_position] < 128 )
     {
         const auto effectValue = m_song[m_position] & 0x0f;
-        switch(m_song[m_position] & 0xf0)
+        switch( m_song[m_position] & 0xf0 )
         {
             case 0x00: // stop song
                 m_position = 0;
                 m_songEnd = true;
                 break;
             case 0x10: // start note
-                if(effectValue < 9)
+                if( effectValue < 9 )
                 {
                     getOpl()->writeReg(0xa0 + effectValue, s_frequencies[m_song[++m_position]] & 255);
                     getOpl()->writeReg(0xb0 + effectValue, (s_frequencies[m_song[m_position]] >> 8) + 32);
                 }
                 else
+                {
                     m_position++;
+                }
                 m_position++;
                 break;
             case 0x20: // stop note
-                if(effectValue < 9)
+                if( effectValue < 9 )
+                {
                     getOpl()->writeReg(0xb0 + effectValue, 0);
+                }
                 m_position++;
                 break;
             case 0x30: // define instrument
-                if(effectValue < 9)
+                if( effectValue < 9 )
                 {
                     getOpl()->writeReg(0x20 + s_opTable[effectValue], m_song[m_position + 1]);
                     getOpl()->writeReg(0x23 + s_opTable[effectValue], m_song[m_position + 2]);
@@ -154,11 +160,12 @@ bool BamPlayer::update()
                 m_labels[effectValue].defined = true;
                 break;
             case 0x60: // jump
-                if(m_labels[effectValue].defined)
-                    switch(m_song[m_position + 1])
+                if( m_labels[effectValue].defined )
+                {
+                    switch( m_song[m_position + 1] )
                     {
                         case 0xfe: // infinite loop
-                            if(m_labels[effectValue].defined)
+                            if( m_labels[effectValue].defined )
                             {
                                 m_position = m_labels[effectValue].target;
                                 m_songEnd = true;
@@ -166,7 +173,7 @@ bool BamPlayer::update()
                             }
                             // fall through...
                         case 0xff: // chorus
-                            if(!m_chorus && m_labels[effectValue].defined)
+                            if( !m_chorus && m_labels[effectValue].defined )
                             {
                                 m_chorus = true;
                                 m_goSub = m_position + 2;
@@ -178,35 +185,42 @@ bool BamPlayer::update()
                             m_position += 2;
                             break;
                         default: // finite loop
-                            if(!m_labels[effectValue].count)
+                            if( !m_labels[effectValue].count )
                             { // loop elapsed
                                 m_labels[effectValue].count = 255;
                                 m_position += 2;
                                 break;
                             }
-                            if(m_labels[effectValue].count < 255) // loop defined
+                            if( m_labels[effectValue].count < 255 )
+                            { // loop defined
                                 m_labels[effectValue].count--;
-                            else // loop undefined
+                            }
+                            else
+                            { // loop undefined
                                 m_labels[effectValue].count = m_song[m_position + 1] - 1;
+                            }
                             m_position = m_labels[effectValue].target;
                             break;
                     }
+                }
                 break;
             case 0x70: // end of chorus
-                if(m_chorus)
+                if( m_chorus )
                 {
                     m_position = m_goSub;
                     m_chorus = false;
                 }
                 else
+                {
                     m_position++;
+                }
                 break;
             default: // reserved command (skip)
                 m_position++;
                 break;
         }
     }
-    if(m_song[m_position] >= 0x80)
+    if( m_song[m_position] >= 0x80 )
     { // wait
         m_delay = m_song[m_position] - 0x7f;
         m_position++;

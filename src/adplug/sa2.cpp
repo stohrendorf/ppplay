@@ -35,32 +35,34 @@ Player* Sa2Player::factory()
 bool Sa2Player::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
+    {
         return false;
+    }
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
     struct InstrumentData
     {
         uint8_t data[11], arpstart, arpspeed, arppos, arpspdcnt;
     };
 #pragma pack(pop)
 
-    const Command convfx[16] = { Command::None,
-        Command::SlideUp,
-        Command::SlideDown,
-        Command::Porta,
-        Command::Vibrato,
-        Command::PortaVolSlide,
-        Command::VibVolSlide,
-        Command::Sentinel,
-        Command::NoteOff,
-        Command::Sentinel,
-        Command::SA2VolSlide,
-        Command::OrderJump,
-        Command::SetFineVolume,
-        Command::PatternBreak,
-        Command::Sentinel,
-        Command::SA2Speed };
+    const Command convfx[16] = {Command::None,
+                                Command::SlideUp,
+                                Command::SlideDown,
+                                Command::Porta,
+                                Command::Vibrato,
+                                Command::PortaVolSlide,
+                                Command::VibVolSlide,
+                                Command::Sentinel,
+                                Command::NoteOff,
+                                Command::Sentinel,
+                                Command::SA2VolSlide,
+                                Command::OrderJump,
+                                Command::SetFineVolume,
+                                Command::PatternBreak,
+                                Command::Sentinel,
+                                Command::SA2Speed};
     unsigned char sat_type;
     enum SAT_TYPE
     {
@@ -79,12 +81,12 @@ bool Sa2Player::load(const std::string& filename)
     f >> m_header.version;
 
     // file validation section
-    if(strncmp(m_header.sadt, "SAdT", 4))
+    if( strncmp(m_header.sadt, "SAdT", 4) != 0 )
     {
         return false;
     }
     int notedis = 0;
-    switch(m_header.version)
+    switch( m_header.version )
     {
         case 1:
             notedis = +0x18;
@@ -124,24 +126,22 @@ bool Sa2Player::load(const std::string& filename)
 
     // load section
     // instruments
-    for(int i = 0; i < 31; i++)
+    for( int i = 0; i < 31; i++ )
     {
         InstrumentData sa2Instr;
         ModPlayer::Instrument& inst = addInstrument();
-        if(sat_type & HAS_ARPEGIO)
+        if( sat_type & HAS_ARPEGIO )
         {
             f >> sa2Instr;
 
             inst.arpeggioStart = sa2Instr.arpstart;
             inst.arpeggioSpeed = sa2Instr.arpspeed;
-            inst.arpeggioPos = sa2Instr.arppos;
         }
         else
         {
             f.read(sa2Instr.data, 11);
             inst.arpeggioStart = 0;
             inst.arpeggioSpeed = 0;
-            inst.arpeggioPos = 0;
         }
         std::copy_n(sa2Instr.data, 11, inst.data.begin());
         inst.misc = 0;
@@ -149,7 +149,7 @@ bool Sa2Player::load(const std::string& filename)
     }
 
     // instrument names
-    for(int i = 0; i < 29; i++)
+    for( int i = 0; i < 29; i++ )
     {
         char tmp[17];
         f.read(tmp, 17);
@@ -161,17 +161,23 @@ bool Sa2Player::load(const std::string& filename)
     {
         uint8_t orderData[128];
         f.read(orderData, 128);
-        if(sat_type & HAS_UNKNOWN127)
+        if( sat_type & HAS_UNKNOWN127 )
+        {
             f.seekrel(127);
+        }
         //f >> m_maxUsedPattern;
         f.seekrel(2);
 
         uint8_t orderCount;
         f >> orderCount;
-        if(orderCount > 128)
+        if( orderCount > 128 )
+        {
             orderCount = 128;
-        for(uint8_t i = 0; i < orderCount; ++i)
+        }
+        for( uint8_t i = 0; i < orderCount; ++i )
+        {
             addOrder(orderData[i]);
+        }
 
         uint8_t restartPos;
         f >> restartPos;
@@ -181,16 +187,16 @@ bool Sa2Player::load(const std::string& filename)
     // bpm
     uint16_t initialTempo;
     f >> initialTempo;
-    if(sat_type & HAS_OLDBPM)
+    if( sat_type & HAS_OLDBPM )
     {
-        setInitialTempo(initialTempo * 125 / 50);
+        setInitialTempo(initialTempo * 125u / 50u);
     }
     else
     {
         setInitialTempo(initialTempo);
     }
 
-    if(sat_type & HAS_ARPEGIOLIST)
+    if( sat_type & HAS_ARPEGIOLIST )
     {
         ArpeggioData data;
         f.read(data.data(), 256);
@@ -199,11 +205,11 @@ bool Sa2Player::load(const std::string& filename)
         setArpeggioCommands(data);
     }
 
-    for(int i = 0; i < 64; i++)
+    for( uint32_t i = 0; i < 64; i++ )
     { // track orders
-        for(int j = 0; j < 9; j++)
+        for( uint32_t j = 0; j < 9; j++ )
         {
-            if(sat_type & HAS_TRACKORDER)
+            if( sat_type & HAS_TRACKORDER )
             {
                 uint8_t tmp;
                 f >> tmp;
@@ -211,30 +217,34 @@ bool Sa2Player::load(const std::string& filename)
             }
             else
             {
-                setCellColumnMapping(i, j, i * 9 + j);
+                setCellColumnMapping(i, j, i * 9u + j);
             }
         }
     }
 
-    if(sat_type & HAS_ACTIVECHANNELS)
+    if( sat_type & HAS_ACTIVECHANNELS )
     {
         disableAllChannels();
         uint16_t tmp;
         f >> tmp;
-        for(auto i = 0; i < 16; ++i)
-            if(tmp & (0x8000 >> i))
+        for( uint8_t i = 0; i < 16; ++i )
+        {
+            if( tmp & (0x8000 >> i) )
+            {
                 enableChannel(i);
+            }
+        }
     }
 
     // track data
-    if(sat_type & HAS_OLDPATTERNS)
+    if( sat_type & HAS_OLDPATTERNS )
     {
         int i = 0;
-        while(f.pos() < f.size())
+        while( f.pos() < f.size() )
         {
-            for(int j = 0; j < 64; j++)
+            for( size_t j = 0; j < 64; j++ )
             {
-                for(int k = 0; k < 9; k++)
+                for( size_t k = 0; k < 9; k++ )
                 {
                     uint8_t buf;
                     f >> buf;
@@ -253,14 +263,14 @@ bool Sa2Player::load(const std::string& filename)
             i += 9;
         }
     }
-    else if(sat_type & HAS_V7PATTERNS)
+    else if( sat_type & HAS_V7PATTERNS )
     {
         int i = 0;
-        while(f.pos() < f.size())
+        while( f.pos() < f.size() )
         {
-            for(int j = 0; j < 64; j++)
+            for( size_t j = 0; j < 64; j++ )
             {
-                for(int k = 0; k < 9; k++)
+                for( size_t k = 0; k < 9; k++ )
                 {
                     uint8_t buf;
                     f >> buf;
@@ -280,10 +290,10 @@ bool Sa2Player::load(const std::string& filename)
     }
     else
     {
-        int i = 0;
-        while(f && f.pos() < f.size())
+        size_t i = 0;
+        while( f && f.pos() < f.size() )
         {
-            for(int j = 0; j < 64; j++)
+            for( size_t j = 0; j < 64; j++ )
             {
                 uint8_t buf;
                 f >> buf;
@@ -302,12 +312,18 @@ bool Sa2Player::load(const std::string& filename)
     }
 
     // fix instrument names
-    for(int i = 0; i < 29; i++)
-        for(int j = 0; j < 17; j++)
-            if(!m_instrumentNames[i][j])
+    for( int i = 0; i < 29; i++ )
+    {
+        for( int j = 0; j < 17; j++ )
+        {
+            if( !m_instrumentNames[i][j] )
+            {
                 m_instrumentNames[i][j] = ' ';
+            }
+        }
+    }
 
-    rewind(0); // rewind module
+    rewind(size_t(0)); // rewind module
     return true;
 }
 
@@ -321,22 +337,32 @@ std::string Sa2Player::title() const
     std::string bufInst;
 
     // parse instrument names for song name
-    for(int i = 0; i < 29; i++)
+    for( int i = 0; i < 29; i++ )
     {
         std::string tmp = m_instrumentNames[i];
-        if(!tmp.empty())
+        if( !tmp.empty() )
+        {
             tmp = tmp.substr(1);
+        }
 
-        while(!tmp.empty() && tmp.back() == ' ')
+        while( !tmp.empty() && tmp.back() == ' ' )
+        {
             tmp.pop_back();
+        }
 
-        if(!tmp.empty() && tmp.length() < 16)
+        if( !tmp.empty() && tmp.length() < 16 )
+        {
             tmp.back() += ' ';
+        }
         bufInst += tmp;
     }
 
-    if(bufInst.find('"') != std::string::npos)
+    if( bufInst.find('"') != std::string::npos )
+    {
         return bufInst.substr(bufInst.find('"') + 1);
+    }
     else
+    {
         return std::string();
+    }
 }

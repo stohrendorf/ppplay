@@ -28,18 +28,15 @@
 
 class AdPlug
 {
-    DISABLE_COPY(AdPlug)
-        friend Player::Player();
-
 public:
+    DISABLE_COPY(AdPlug)
+
     static const Players s_players;
 
-    static std::shared_ptr<Player> factory(const std::string &fn, const Players &pl = s_players);
-
-    static std::string get_version();
+    static std::shared_ptr<Player> factory(const std::string& fn, const Players& pl = s_players);
 
 private:
     static const PlayerDesc allplayers[];
 
-    static const Players &init_players(const PlayerDesc pd[]);
+    static const Players& init_players(const PlayerDesc pd[]);
 };

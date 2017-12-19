@@ -30,10 +30,10 @@ constexpr const size_t BufferSize = 512;
 
 DiskWriter::DiskWriter(const char* filename, uint32_t nfreq)
     : EmuPlayer(nfreq, BufferSize)
-    , m_file(filename, FileStream::Mode::Write)
-    , m_bytesWritten(0)
+      , m_file(filename, FileStream::Mode::Write)
+      , m_bytesWritten(0)
 {
-    if(!m_file)
+    if( !m_file )
     {
         logger->fatal(L4CXX_LOCATION, "cannot open file for output -- %s", filename);
         BOOST_THROW_EXCEPTION(std::runtime_error("cannot open file for output"));
@@ -68,10 +68,12 @@ DiskWriter::DiskWriter(const char* filename, uint32_t nfreq)
 
 DiskWriter::~DiskWriter()
 {
-    if(!m_file)
+    if( !m_file )
+    {
         return;
+    }
 
-    if(m_bytesWritten % 2)
+    if( m_bytesWritten % 2 )
     { // Wave data must end on an even byte boundary
         uint8_t tmp = 0;
         m_file << tmp;

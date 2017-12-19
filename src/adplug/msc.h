@@ -25,18 +25,24 @@
 
 class FileStream;
 
-class MscPlayer : public Player
+class MscPlayer
+    : public Player
 {
-    DISABLE_COPY(MscPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(MscPlayer)
+
+    static Player* factory();
 
     MscPlayer() = default;
-    ~MscPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    ~MscPlayer() override = default;
+
+    bool load(const std::string& filename) override;
+
     bool update() override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override;
@@ -45,7 +51,7 @@ public:
     static constexpr auto MSC_DESC_LEN = 64;
 
 private:
-#pragma pack(push,1)
+#pragma pack(push, 1)
     struct msc_header
     {
         uint8_t mh_sign[MSC_SIGN_LEN];
@@ -57,10 +63,8 @@ private:
     };
 #pragma pack(pop)
 
-    // file data
-    std::string m_description{};               // song desctiption
     uint16_t m_version = 0;   // file version
-    std::vector<std::vector<uint8_t>> m_mscData{ {} };      // compressed music data
+    std::vector<std::vector<uint8_t>> m_mscData{{}};      // compressed music data
 
     // decoder state
     size_t m_mscDataIndex = 0; // active block
@@ -75,6 +79,7 @@ private:
     // player state
     uint8_t m_delay = 0;    // active delay
 
-    static bool load_header(FileStream& bf, msc_header *hdr);
-    bool decode_octet(uint8_t *output);
+    static bool load_header(FileStream& bf, msc_header* hdr);
+
+    bool decode_octet(uint8_t* output);
 };

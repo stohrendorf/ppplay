@@ -23,28 +23,34 @@
 
 #include "mod.h"
 
-class MadPlayer : public ModPlayer
+class MadPlayer
+    : public ModPlayer
 {
-    DISABLE_COPY(MadPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(MadPlayer)
+
+    static Player* factory();
 
     MadPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    bool load(const std::string& filename) override;
+
     void rewind(const boost::optional<size_t>& subsong) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override;
+
     std::string instrumentTitle(size_t n) const override;
+
     size_t instrumentCount() const override;
 
 private:
 
     struct mad_instrument
     {
-        char name[8]{ 0 };
-        unsigned char data[12]{ 0 }; // last two unused
+        char name[8]{0};
+        unsigned char data[12]{0}; // last two unused
     };
     mad_instrument instruments[9]{};
 };

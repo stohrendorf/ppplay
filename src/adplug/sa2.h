@@ -24,26 +24,33 @@
 
 #include "mod.h"
 
-class Sa2Player : public ModPlayer
+class Sa2Player
+    : public ModPlayer
 {
-    DISABLE_COPY(Sa2Player)
 public:
-    static Player *factory();
+    DISABLE_COPY(Sa2Player)
+
+    static Player* factory();
 
     Sa2Player() = default;
 
-    bool load(const std::string &filename) override;
+    bool load(const std::string& filename) override;
 
     std::string type() const override;
+
     std::string title() const override;
+
     size_t instrumentCount() const override
     {
         return 29;
     }
+
     std::string instrumentTitle(size_t n) const override
     {
-        if(n < m_instrumentNames.size())
+        if( n < m_instrumentNames.size() )
+        {
             return m_instrumentNames[n].substr(1);
+        }
 
         return {};
     }

@@ -49,10 +49,10 @@ constexpr uint16_t notetable[96] = {
     0x1de7, 0x1e04, 0x1e23, 0x1e44, 0x1e66, 0x1e8b
 };
 
-constexpr uint8_t percmx_tab[4] = { 0x14, 0x12, 0x15, 0x11 };
-constexpr uint8_t perchn_tab[5] = { 6, 7, 8, 8, 7 };
-constexpr uint8_t percmaskoff[5] = { 0xef, 0xf7, 0xfb, 0xfd, 0xfe };
-constexpr uint8_t percmaskon[5] = { 0x10, 0x08, 0x04, 0x02, 0x01 };
+constexpr uint8_t percmx_tab[4] = {0x14, 0x12, 0x15, 0x11};
+constexpr uint8_t perchn_tab[5] = {6, 7, 8, 8, 7};
+constexpr uint8_t percmaskoff[5] = {0xef, 0xf7, 0xfb, 0xfd, 0xfe};
+constexpr uint8_t percmaskon[5] = {0x10, 0x08, 0x04, 0x02, 0x01};
 
 inline uint16_t getWord(const std::vector<uint8_t>& data, int pos)
 {
@@ -70,11 +70,13 @@ Player* JbmPlayer::factory()
 bool JbmPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
+    {
         return false;
+    }
     auto filelen = f.size();
 
-    if(!filelen || f.extension() != ".jbm")
+    if( !filelen || f.extension() != ".jbm" )
     {
         return false;
     }
@@ -86,8 +88,10 @@ bool JbmPlayer::load(const std::string& filename)
 
     // The known .jbm files always seem to start with the number 0x0002
 
-    if(getWord(m_fileData, 0) != 0x0002)
+    if( getWord(m_fileData, 0) != 0x0002 )
+    {
         return false;
+    }
 
     // Song tempo
 
@@ -109,19 +113,23 @@ bool JbmPlayer::load(const std::string& filename)
     // Voice' and sequence pointers
 
     m_seqCount = 0xffff;
-    for(int i = 0; i < 11; i++)
+    for( int i = 0; i < 11; i++ )
     {
         m_voices[i].trkpos = m_voices[i].trkstart =
             getWord(m_fileData, 10 + (i << 1));
-        if(m_voices[i].trkpos && m_voices[i].trkpos < m_seqCount)
+        if( m_voices[i].trkpos && m_voices[i].trkpos < m_seqCount )
+        {
             m_seqCount = m_voices[i].trkpos;
+        }
     }
     m_seqCount = (m_seqCount - m_seqTable) >> 1;
     m_sequences.resize(m_seqCount);
-    for(int i = 0; i < m_seqCount; i++)
+    for( int i = 0; i < m_seqCount; i++ )
+    {
         m_sequences[i] = getWord(m_fileData, m_seqTable + (i << 1));
+    }
 
-    rewind(0);
+    rewind(size_t(0));
     return true;
 }
 
@@ -129,25 +137,31 @@ bool JbmPlayer::update()
 {
     short c, spos, frq;
 
-    for(c = 0; c < 11; c++)
+    for( c = 0; c < 11; c++ )
     {
-        if(!m_voices[c].trkpos) // Unused channel
+        if( !m_voices[c].trkpos )
+        { // Unused channel
             continue;
+        }
 
-        if(--m_voices[c].delay)
+        if( --m_voices[c].delay )
+        {
             continue;
+        }
 
         // Turn current note/percussion off
 
-        if(m_voices[c].note & 0x7f)
-            opl_noteonoff(c, 0);
+        if( m_voices[c].note & 0x7f )
+        {
+            opl_noteonoff(c, false);
+        }
 
         // Process events until we have a note
 
         spos = m_voices[c].seqpos;
-        while(!m_voices[c].delay)
+        while( !m_voices[c].delay )
         {
-            switch(m_fileData[spos])
+            switch( m_fileData[spos] )
             {
                 case 0xFD: // Set Instrument
                     m_voices[c].instr = m_fileData[spos + 1];
@@ -156,7 +170,7 @@ bool JbmPlayer::update()
                     break;
                 case 0xFF: // End of Sequence
                     m_voices[c].seqno = m_fileData[++m_voices[c].trkpos];
-                    if(m_voices[c].seqno == 0xff)
+                    if( m_voices[c].seqno == 0xff )
                     {
                         m_voices[c].trkpos = m_voices[c].trkstart;
                         m_voices[c].seqno = m_fileData[m_voices[c].trkpos];
@@ -166,8 +180,10 @@ bool JbmPlayer::update()
                     spos = m_voices[c].seqpos = m_sequences[m_voices[c].seqno];
                     break;
                 default: // Note Event
-                    if((m_fileData[spos] & 127) > 95)
-                        return 0;
+                    if( (m_fileData[spos] & 127) > 95 )
+                    {
+                        return false;
+                    }
 
                     m_voices[c].note = m_fileData[spos];
                     m_voices[c].vol = m_fileData[spos + 1];
@@ -184,28 +200,34 @@ bool JbmPlayer::update()
 
         // Write new volume to the carrier operator, or percussion
 
-        if(m_flags & 1 && c > 6)
+        if( m_flags & 1 && c > 6 )
+        {
             getOpl()->writeReg(0x40 + percmx_tab[c - 7], m_voices[c].vol ^ 0x3f);
+        }
         else
+        {
             getOpl()->writeReg(0x43 + s_opTable[c], m_voices[c].vol ^ 0x3f);
+        }
 
         // Write new frequencies and Gate bit
 
         opl_noteonoff(c, !(m_voices[c].note & 0x80));
     }
-    return (m_voicemask);
+    return m_voicemask != 0;
 }
 
 void JbmPlayer::rewind(const boost::optional<size_t>&)
 {
     m_voicemask = 0;
 
-    for(int c = 0; c < 11; c++)
+    for( int c = 0; c < 11; c++ )
     {
         m_voices[c].trkpos = m_voices[c].trkstart;
 
-        if(!m_voices[c].trkpos)
+        if( !m_voices[c].trkpos )
+        {
             continue;
+        }
 
         m_voicemask |= (1 << c);
 
@@ -239,7 +261,7 @@ void JbmPlayer::rewind(const boost::optional<size_t>&)
 
 void JbmPlayer::opl_noteonoff(int channel, bool state)
 {
-    if(m_flags & 1 && channel > 5)
+    if( m_flags & 1 && channel > 5 )
     {
         // Percussion
         getOpl()->writeReg(0xa0 + perchn_tab[channel - 6],
@@ -248,14 +270,14 @@ void JbmPlayer::opl_noteonoff(int channel, bool state)
                            m_voices[channel].frq[1]);
         getOpl()->writeReg(
             0xbd, state ? getOpl()->readReg(0xbd) | percmaskon[channel - 6]
-            : getOpl()->readReg(0xbd) & percmaskoff[channel - 6]);
+                        : getOpl()->readReg(0xbd) & percmaskoff[channel - 6]);
     }
     else
     {
         // Melodic mode or Rhythm mode melodic channels
         getOpl()->writeReg(0xa0 + channel, m_voices[channel].frq[0]);
         getOpl()->writeReg(0xb0 + channel, state ? m_voices[channel].frq[1] | 0x20
-                           : m_voices[channel].frq[1] & 0x1f);
+                                                 : m_voices[channel].frq[1] & 0x1f);
     }
 }
 
@@ -265,11 +287,13 @@ void JbmPlayer::set_opl_instrument(int channel, JBMVoice* voice)
 
     // Sanity check on instr number - or we'll be reading outside m[] !
 
-    if(voice->instr >= m_insCount)
+    if( voice->instr >= m_insCount )
+    {
         return;
+    }
 
     // For rhythm mode, multiplexed drums. I don't care about waveforms!
-    if((m_flags & 1) && (channel > 6))
+    if( (m_flags & 1) && (channel > 6) )
     {
         getOpl()->writeReg(0x20 + percmx_tab[channel - 7], m_fileData[filePos + 0]);
         getOpl()->writeReg(0x40 + percmx_tab[channel - 7],
@@ -296,9 +320,9 @@ void JbmPlayer::set_opl_instrument(int channel, JBMVoice* voice)
 
     // WAVEFORM for operators
     getOpl()->writeReg(0xe0 + s_opTable[channel],
-        (m_fileData[filePos + 8] >> 4) & 3);
+                       (m_fileData[filePos + 8] >> 4) & 3);
     getOpl()->writeReg(0xe3 + s_opTable[channel],
-        (m_fileData[filePos + 8] >> 6) & 3);
+                       (m_fileData[filePos + 8] >> 6) & 3);
 
     // FEEDBACK/FM mode
     getOpl()->writeReg(0xc0 + channel, m_fileData[filePos + 8] & 15);

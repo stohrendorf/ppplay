@@ -23,7 +23,7 @@
 
 #include "raw.h"
 
- /*** public methods *************************************/
+/*** public methods *************************************/
 
 Player* RawPlayer::factory()
 {
@@ -33,13 +33,15 @@ Player* RawPlayer::factory()
 bool RawPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
+    {
         return false;
+    }
 
     // file validation section
     char id[8];
     f.read(id, 8);
-    if(!std::equal(id, id + 8, "RAWADATA"))
+    if( !std::equal(id, id + 8, "RAWADATA") )
     {
         return false;
     }
@@ -52,51 +54,52 @@ bool RawPlayer::load(const std::string& filename)
 
     BOOST_ASSERT(f.pos() == 10);
     static_assert(sizeof(TrackData) == 2, "Ooops");
-    m_data.resize((f.size() - 10) / 2);
+    m_data.resize((f.size() - 10u) / 2u);
     f.read(m_data.data(), m_data.size());
 
     addOrder(0);
 
-    rewind(0);
+    rewind(size_t(0));
     return true;
 }
 
 bool RawPlayer::update()
 {
-    if(m_dataPosition >= m_data.size())
+    if( m_dataPosition >= m_data.size() )
+    {
         return false;
+    }
 
-    if(m_delay > 0)
+    if( m_delay > 0 )
     {
         --m_delay;
         return !m_songend;
     }
 
-    while(m_dataPosition < m_data.size())
+    while( m_dataPosition < m_data.size() )
     {
         const auto& d = m_data[m_dataPosition++];
         bool setspeed = false;
-        switch(d.command)
+        switch( d.command )
         {
             case 0:
                 BOOST_ASSERT(d.param > 0);
                 m_delay = d.param - 1;
                 break;
             case 2:
-                if(d.param != 0)
+                if( d.param != 0 )
                 {
                     setCurrentSpeed(d.param + (d.command * 256));
                     setspeed = true;
                 }
                 else
-                {
-                    ; //FIXME sto opl->setchip(data[pos].param - 1);
+                { ; //FIXME sto opl->setchip(data[pos].param - 1);
                 }
                 break;
             case 0xff:
-                if(d.param == 0xff)
+                if( d.param == 0xff )
                 {
-                    rewind(0); // auto-rewind song
+                    rewind(size_t(0)); // auto-rewind song
                     m_songend = true;
                     return !m_songend;
                 }
@@ -105,8 +108,10 @@ bool RawPlayer::update()
                 getOpl()->writeReg(d.command, d.param);
                 break;
         }
-        if(!setspeed && d.command == 0)
+        if( !setspeed && d.command == 0 )
+        {
             break;
+        }
     }
 
     return !m_songend;
@@ -123,6 +128,6 @@ void RawPlayer::rewind(const boost::optional<size_t>&)
 size_t RawPlayer::framesUntilUpdate() const
 {
     return SampleRate * (currentSpeed() ? currentSpeed() : 0xffff) /
-        1193180; // timer oscillator speed / wait register = clock
+           1193180; // timer oscillator speed / wait register = clock
     // frequency
 }

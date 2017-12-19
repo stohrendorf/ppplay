@@ -23,25 +23,31 @@
 
 #include "mod.h"
 
-class FmcPlayer : public ModPlayer
+class FmcPlayer
+    : public ModPlayer
 {
-    DISABLE_COPY(FmcPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(FmcPlayer)
+
+    static Player* factory();
 
     FmcPlayer() = default;
 
-    bool load(const std::string &filename) override;
+    bool load(const std::string& filename) override;
+
     size_t framesUntilUpdate() const override;
 
     std::string type() const override;
+
     std::string title() const override;
+
     std::string instrumentTitle(size_t n) const override;
+
     size_t instrumentCount() const override;
 
 private:
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
     struct fmc_event
     {
         uint8_t byte0;
@@ -58,7 +64,7 @@ private:
     };
     fmc_header header{};
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
     struct Instrument
     {
         uint8_t synthesis;
@@ -95,8 +101,9 @@ private:
     };
 #pragma pack(pop)
 
-    Instrument instruments[32];
+    Instrument instruments[32]{};
 
     using ModPlayer::addInstrument;
-    void addInstrument(const Instrument &instrument);
+
+    void addInstrument(const Instrument& instrument);
 };

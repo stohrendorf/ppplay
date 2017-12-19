@@ -23,11 +23,13 @@
 
 #include "xad.h"
 
-class PsiPlayer : public XadPlayer
+class PsiPlayer
+    : public XadPlayer
 {
-    DISABLE_COPY(PsiPlayer)
 public:
-    static Player *factory();
+    DISABLE_COPY(PsiPlayer)
+
+    static Player* factory();
 
     PsiPlayer() = default;
 
@@ -44,23 +46,26 @@ private:
     {
         const uint8_t* instr_table = nullptr;
         const uint8_t* seq_table = nullptr;
-        uint8_t note_delay[9] = { 0,0,0,0,0,0,0,0,0 };
-        uint8_t note_curdelay[9] = { 0,0,0,0,0,0,0,0,0 };
-        std::array<bool, 9> looping{ {} };
+        uint8_t note_delay[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+        uint8_t note_curdelay[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+        std::array<bool, 9> looping{{}};
     };
 
     PsiData m_psi{};
+
     //
     bool xadplayer_load() override
     {
-        if(xadHeader().fmt == PSI)
-            return true;
-        else
-            return false;
+        return xadHeader().fmt == PSI;
     }
+
     void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
+
     void xadplayer_update() override;
+
     size_t framesUntilUpdate() const override;
+
     std::string type() const override;
+
     size_t instrumentCount() const override;
 };

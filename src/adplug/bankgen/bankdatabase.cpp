@@ -13,8 +13,10 @@
 
 bool bankdb::SlotSettings::operator==(const bankdb::SlotSettings& b) const
 {
-    if(!std::equal(data.begin(), data.end(), b.data.begin()))
+    if( !std::equal(data.begin(), data.end(), b.data.begin()) )
+    {
         return false;
+    }
     return finetune == b.finetune;
 }
 
@@ -25,8 +27,10 @@ bool bankdb::SlotSettings::operator!=(const bankdb::SlotSettings& b) const
 
 bool bankdb::SlotSettings::operator<(const bankdb::SlotSettings& b) const
 {
-    if(int c = std::memcmp(data.data(), b.data.data(), 11))
+    if( int c = std::memcmp(data.data(), b.data.data(), 11) )
+    {
         return c < 0;
+    }
     return finetune < b.finetune;
 }
 
@@ -81,23 +85,35 @@ void bankdb::SlotSettings::apply(opl::SlotView& slot) const
 
 bool bankdb::Instrument::operator==(const bankdb::Instrument& b) const
 {
-    if(first != b.first || *first != *b.first)
+    if( first != b.first || *first != *b.first )
+    {
         return false;
-    if(second != b.second || *second != *b.second)
+    }
+    if( second != b.second || *second != *b.second )
+    {
         return false;
-    if(noteOverride != b.noteOverride)
+    }
+    if( noteOverride != b.noteOverride )
+    {
         return false;
+    }
     return pseudo4op == b.pseudo4op;
 }
 
 bool bankdb::Instrument::operator<(const bankdb::Instrument& b) const
 {
-    if(first != b.first)
+    if( first != b.first )
+    {
         return SlotSettings::ptrLess(first, b.first);
-    if(second != b.second)
+    }
+    if( second != b.second )
+    {
         return SlotSettings::ptrLess(second, b.second);
-    if(noteOverride != b.noteOverride)
+    }
+    if( noteOverride != b.noteOverride )
+    {
         return noteOverride < b.noteOverride;
+    }
     return pseudo4op < b.pseudo4op;
 }
 

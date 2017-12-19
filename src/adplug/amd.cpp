@@ -32,14 +32,16 @@ Player* AmdPlayer::factory()
 bool AmdPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
+    {
         return false;
-#pragma pack(push,1)
+    }
+#pragma pack(push, 1)
     struct
     {
-        char id[9];
-        uint8_t version;
-    } header;
+        char id[9] = "";
+        uint8_t version = 0;
+    } header{};
 #pragma pack(pop)
     const Command convfx[10] = {
         Command::None,
@@ -51,7 +53,7 @@ bool AmdPlayer::load(const std::string& filename)
         Command::PatternBreak,
         Command::AMDSpeed,
         Command::Porta,
-        Command::Special };
+        Command::Special};
     const unsigned char convvol[64] = {
         0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 9, 9, 0xa, 0xa, 0xb,
         0xc, 0xc, 0xd, 0xe, 0xe, 0xf, 0x10, 0x10, 0x11, 0x12, 0x13, 0x14, 0x14,
@@ -61,13 +63,13 @@ bool AmdPlayer::load(const std::string& filename)
     };
 
     // file validation section
-    if(f.size() < 1072)
+    if( f.size() < 1072 )
     {
         return false;
     }
     f.seek(1062);
     f >> header;
-    if(strncmp(header.id, "<o\xefQU\xeeRoR", 9) && strncmp(header.id, "MaDoKaN96", 9))
+    if( strncmp(header.id, "<o\xefQU\xeeRoR", 9) != 0 && strncmp(header.id, "MaDoKaN96", 9) != 0 )
     {
         return false;
     }
@@ -82,7 +84,7 @@ bool AmdPlayer::load(const std::string& filename)
     m_amdSongname = stringncpy(str, StringLength);
     f.read(str, StringLength);
     m_author = stringncpy(str, StringLength);
-    for(int i = 0; i < 26; i++)
+    for( int i = 0; i < 26; i++ )
     {
         f.read(str, StringLength - 1);
         m_instrumentNames[i] = stringncpy(str, StringLength - 1);
@@ -91,20 +93,24 @@ bool AmdPlayer::load(const std::string& filename)
         Instrument::Data data;
         f.read(data.data(), 11);
 
-        static const uint8_t mapping[11] = { 10, 0, 5, 2, 7, 3, 8, 4, 9, 1, 6 };
+        static const uint8_t mapping[11] = {10, 0, 5, 2, 7, 3, 8, 4, 9, 1, 6};
         ModPlayer::Instrument& inst = addInstrument();
-        for(int j = 0; j < 11; ++j)
+        for( int j = 0; j < 11; ++j )
+        {
             inst.data[j] = data[mapping[j]];
+        }
     }
     uint8_t orderCount;
     f >> orderCount;
-    if(orderCount > 128)
+    if( orderCount > 128 )
+    {
         orderCount = 128;
+    }
     uint8_t tmp8;
     f >> tmp8;
     //m_maxUsedPattern = tmp8 + 1;
     const auto maxUsedPattern = tmp8 + 1;
-    for(uint8_t i = 0; i < orderCount; ++i)
+    for( uint8_t i = 0; i < orderCount; ++i )
     {
         f >> tmp8;
         addOrder(tmp8);
@@ -112,17 +118,22 @@ bool AmdPlayer::load(const std::string& filename)
     f.seekrel(128 - orderCount);
     f.seekrel(10);
     int maxi = 0;
-    if(header.version == 0x10)
+    if( header.version == 0x10 )
     { // unpacked module
         maxi = maxUsedPattern * 9;
-        for(int i = 0; i < 64; i++)
-            for(int j = 0; j < 9; ++j)
-                setCellColumnMapping(i, j, i * 9 + j + 1);
-        int t = 0;
-        while(f.pos() != f.size())
+        for( auto i = 0u; i < 64; i++ )
         {
-            for(int j = 0; j < 64; j++)
-                for(int i = t; i < t + 9; i++)
+            for( auto j = 0u; j < 9; ++j )
+            {
+                setCellColumnMapping(i, j, i * 9u + j + 1u);
+            }
+        }
+        auto t = 0u;
+        while( f.pos() != f.size() )
+        {
+            for( auto j = 0u; j < 64; j++ )
+            {
+                for( auto i = t; i < t + 9; i++ )
                 {
                     uint8_t buf;
                     f >> buf;
@@ -133,43 +144,50 @@ bool AmdPlayer::load(const std::string& filename)
                     cell.instrument = buf >> 4;
                     cell.command = convfx[buf & 0x0f];
                     f >> buf;
-                    if(buf >> 4) // fix bug in AMD save routine
+                    if( buf >> 4 )
+                    { // fix bug in AMD save routine
                         cell.note = ((buf & 14) >> 1) * 12 + (buf >> 4);
+                    }
                     else
+                    {
                         cell.note = 0;
+                    }
                     cell.instrument += (buf & 1) << 4;
                 }
+            }
             t += 9;
         }
     }
     else
     { // packed module
-        for(int i = 0; i < maxUsedPattern; i++)
+        for( auto i = 0u; i < maxUsedPattern; i++ )
         {
-            for(int j = 0; j < 9; j++)
+            for( auto j = 0u; j < 9; j++ )
             {
                 uint16_t tmp16;
                 f >> tmp16;
-                setCellColumnMapping(i, j, tmp16 + 1);
+                setCellColumnMapping(i, j, tmp16 + 1u);
             }
         }
         uint16_t numtrax;
         f >> numtrax;
-        for(int k = 0; k < numtrax; k++)
+        for( int k = 0; k < numtrax; k++ )
         {
             uint16_t i;
             f >> i;
-            if(i > 575)
-                i = 575; // fix corrupted modules
+            if( i > 575 )
+            {
+                i = 575;
+            } // fix corrupted modules
             maxi = (i + 1 > maxi ? i + 1 : maxi);
-            int j = 0;
+            auto j = 0u;
             do
             {
                 uint8_t buf;
                 f >> buf;
-                if(buf & 128)
+                if( buf & 128 )
                 {
-                    for(int t = j; t < j + (buf & 127) && t < 64; t++)
+                    for( auto t = j; t < j + (buf & 127) && t < 64; t++ )
                     {
                         PatternCell& cell = patternCell(i, t);
                         cell.command = Command::None;
@@ -188,13 +206,13 @@ bool AmdPlayer::load(const std::string& filename)
                 cell.instrument = buf >> 4;
                 cell.command = convfx[buf & 0x0f];
                 f >> buf;
-                if(buf >> 4) // fix bug in AMD save routine
+                if( buf >> 4 ) // fix bug in AMD save routine
                     cell.note = ((buf & 14) >> 1) * 12 + (buf >> 4);
                 else
                     cell.note = 0;
                 cell.instrument += (buf & 1) << 4;
                 j++;
-            } while(j < 64);
+            } while( j < 64 );
         }
     }
 
@@ -202,22 +220,22 @@ bool AmdPlayer::load(const std::string& filename)
     setInitialTempo(50);
     setRestartOrder(0);
     setDecimalValues();
-    for(int i = 0; i < maxi; i++)
+    for( auto i = 0u; i < maxi; i++ )
     { // convert patterns
-        for(int j = 0; j < 64; j++)
+        for( auto j = 0u; j < 64; j++ )
         {
             PatternCell& cell = patternCell(i, j);
             // extended command
-            if(cell.command == Command::Special)
+            if( cell.command == Command::Special )
             {
-                if(cell.hiNybble == 2)
+                if( cell.hiNybble == 2 )
                 {
                     cell.command = Command::SA2VolSlide;
                     cell.hiNybble = cell.loNybble;
                     cell.loNybble = 0;
                 }
 
-                if(cell.hiNybble == 3)
+                if( cell.hiNybble == 3 )
                 {
                     cell.command = Command::SA2VolSlide;
                     cell.hiNybble = 0;
@@ -225,26 +243,32 @@ bool AmdPlayer::load(const std::string& filename)
             }
 
             // fix volume
-            if(cell.command == Command::SetFineVolume2)
+            if( cell.command == Command::SetFineVolume2 )
             {
                 int vol = convvol[cell.hiNybble * 10 + cell.loNybble];
 
-                if(vol > 63)
+                if( vol > 63 )
+                {
                     vol = 63;
+                }
                 cell.hiNybble = vol / 10;
                 cell.loNybble = vol % 10;
             }
         }
     }
 
-    rewind(0);
+    rewind(size_t(0));
     return true;
 }
 
 size_t AmdPlayer::framesUntilUpdate() const
 {
-    if(currentTempo())
+    if( currentTempo() )
+    {
         return SampleRate / currentTempo();
+    }
     else
+    {
         return static_cast<size_t>(SampleRate / 18.2);
+    }
 }

@@ -15,7 +15,7 @@
 
 namespace opl
 {
-    class SlotView;
+class SlotView;
 }
 
 namespace bankdb
@@ -45,14 +45,22 @@ struct SlotSettings
 
     static bool ptrLess(const SlotSettings::Ptr& a, const SlotSettings::Ptr& b)
     {
-        if(a == nullptr && b == nullptr)
+        if( a == nullptr && b == nullptr )
+        {
             return false;
-        else if(a == nullptr && b != nullptr)
+        }
+        else if( a == nullptr && b != nullptr )
+        {
             return true;
-        else if(a != nullptr && b == nullptr)
+        }
+        else if( a != nullptr && b == nullptr )
+        {
             return false;
+        }
         else
+        {
             return *a < *b;
+        }
     }
 };
 
@@ -96,7 +104,6 @@ struct Bank
         ar & BOOST_SERIALIZATION_NVP(instruments);
         ar & BOOST_SERIALIZATION_NVP(uses4op);
     }
-
 };
 
 class BankDatabase
@@ -115,10 +122,14 @@ public:
     const Bank* bank(const std::string& name) const
     {
         auto it = m_banks.find(name);
-        if(it == m_banks.end())
+        if( it == m_banks.end() )
+        {
             return nullptr;
+        }
         else
+        {
             return &it->second;
+        }
     }
 
     const std::map<std::string, Bank>& banks() const noexcept
@@ -132,8 +143,10 @@ private:
 protected:
     void registerBank(const std::string& id, const std::string& description)
     {
-        if(m_banks.find(id) != m_banks.end())
+        if( m_banks.find(id) != m_banks.end() )
+        {
             throw std::runtime_error("Bank ID already registered");
+        }
 
         std::cout << "New bank registered: " << id << " (" << description << ")\n";
         m_banks[id].description = description;
@@ -141,8 +154,10 @@ protected:
 
     Instrument& addInstrument(const std::string& bankId, size_t index)
     {
-        if(m_banks.find(bankId) == m_banks.end())
+        if( m_banks.find(bankId) == m_banks.end() )
+        {
             throw std::runtime_error("Bank ID not registered");
+        }
 
         return m_banks[bankId].instruments[index];
     }
@@ -152,7 +167,6 @@ protected:
         return m_banks;
     }
 };
-
 } // namespace bankdb
 
 BOOST_CLASS_TRACKING(bankdb::SlotSettings, boost::serialization::track_always)

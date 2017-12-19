@@ -35,15 +35,15 @@
 
 namespace
 {
-    constexpr uint8_t rat_adlib_bases[18] = {
-        0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12, 0x03, 0x04, 0x05, 0x0B,
-        0x0C, 0x0D, 0x13, 0x14, 0x15
-    };
+constexpr uint8_t rat_adlib_bases[18] = {
+    0x00, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x10, 0x11, 0x12, 0x03, 0x04, 0x05, 0x0B,
+    0x0C, 0x0D, 0x13, 0x14, 0x15
+};
 
-    constexpr uint16_t rat_notes[16] = {
-        0x157, 0x16B, 0x181, 0x198, 0x1B0, 0x1CA, 0x1E5, 0x202, 0x220, 0x241, 0x263,
-        0x287, 0x000, 0x000, 0x000, 0x000 // by riven
-    };
+constexpr uint16_t rat_notes[16] = {
+    0x157, 0x16B, 0x181, 0x198, 0x1B0, 0x1CA, 0x1E5, 0x202, 0x220, 0x241, 0x263,
+    0x287, 0x000, 0x000, 0x000, 0x000 // by riven
+};
 }
 
 Player* RatPlayer::factory()
@@ -54,36 +54,46 @@ Player* RatPlayer::factory()
 bool RatPlayer::xadplayer_load()
 {
     if( xadHeader().fmt != RAT )
+    {
         return false;
+    }
 
     // load header
     std::copy_n(tune().begin(), sizeof(Header), reinterpret_cast<uint8_t*>(&m_ratHeader));
 
     // is 'RAT'-signed ?
     if( !std::equal(m_ratHeader.id, m_ratHeader.id + 3, "RAT") )
+    {
         return false;
+    }
 
     // is version 1.0 ?
     if( m_ratHeader.version != 0x10 )
+    {
         return false;
+    }
 
     // load order
     m_trackdataByOrder = &tune()[0x40];
 
     // load instruments
-    m_instruments = reinterpret_cast<const Instrument *>(&tune()[0x140]);
+    m_instruments = reinterpret_cast<const Instrument*>(&tune()[0x140]);
 
     // load pattern data
-    unsigned short patseg = (m_ratHeader.patseg[1] << 8) + m_ratHeader.patseg[0];
-    const Event* event_ptr = reinterpret_cast<const Event*>(&tune()[patseg << 4]);
+    uint16_t patseg = (m_ratHeader.patseg[1] << 8) + m_ratHeader.patseg[0];
+    const auto* event_ptr = reinterpret_cast<const Event*>(&tune()[patseg << 4]);
 
     for( int i = 0; i < m_ratHeader.numpat; i++ )
+    {
         for( int j = 0; j < 64; j++ )
+        {
             for( int k = 0; k < m_ratHeader.numchan; k++ )
             {
                 m_tracks[i][j][k] = *event_ptr;
                 ++event_ptr;
             }
+        }
+    }
 
     return true;
 }
@@ -115,7 +125,9 @@ void RatPlayer::xadplayer_rewind(const boost::optional<size_t>&)
 
     // set default volumes
     for( int i = 0; i < 0x1F; i++ )
+    {
         getOpl()->writeReg(0x40 + i, 0x3F);
+    }
 }
 
 void RatPlayer::xadplayer_update()
@@ -123,7 +135,7 @@ void RatPlayer::xadplayer_update()
     // process events
     for( int i = 0; i < m_ratHeader.numchan; i++ )
     {
-        const Event& event = reinterpret_cast<const Event&>(m_tracks[m_trackdataByOrder[currentOrder()]][currentRow()][i]);
+        const auto& event = reinterpret_cast<const Event&>(m_tracks[m_trackdataByOrder[currentOrder()]][currentRow()][i]);
 
         // is instrument ?
         if( event.instrument != 0xFF )
@@ -134,7 +146,9 @@ void RatPlayer::xadplayer_update()
 
         // is volume ?
         if( event.volume != 0xFF )
+        {
             m_channels[i].volume = event.volume;
+        }
 
         // is note ?
         if( event.note != 0xFF )
@@ -176,9 +190,8 @@ void RatPlayer::xadplayer_update()
                 getOpl()->writeReg(0xE0 + rat_adlib_bases[i + 9], m_instruments[ins].car_wave);
 
                 // octave/frequency
-                unsigned short insfreq =
-                    (m_instruments[ins].freq[1] << 8) + m_instruments[ins].freq[0];
-                unsigned short freq = insfreq * rat_notes[event.note & 0x0F] / 0x20AB;
+                uint16_t insfreq = (m_instruments[ins].freq[1] << 8) + m_instruments[ins].freq[0];
+                uint16_t freq = insfreq * rat_notes[event.note & 0x0F] / 0x20AB;
 
                 getOpl()->writeReg(0xA0 + i, freq & 0xFF);
                 getOpl()->writeReg(0xB0 + i, (freq >> 8) | ((event.note & 0xF0) >> 2) | 0x20);
@@ -194,7 +207,7 @@ void RatPlayer::xadplayer_update()
     }
 
     // next row
-    setCurrentRow(currentRow() + 1);
+    setCurrentRow(currentRow() + 1u);
 
     // process effects
     for( int i = 0; i < m_ratHeader.numchan; i++ )
@@ -203,24 +216,30 @@ void RatPlayer::xadplayer_update()
 
         switch( m_channels[i].fx )
         {
-        case 0x01: // 0x01: Set Speed
-            setCurrentSpeed(m_channels[i].fxp);
-            break;
-        case 0x02: // 0x02: Position Jump
-            if( m_channels[i].fxp < m_ratHeader.order_end )
-                setCurrentOrder(m_channels[i].fxp);
-            else
-                setCurrentOrder(0);
+            case 0x01: // 0x01: Set Speed
+                setCurrentSpeed(m_channels[i].fxp);
+                break;
+            case 0x02: // 0x02: Position Jump
+                if( m_channels[i].fxp < m_ratHeader.order_end )
+                {
+                    setCurrentOrder(m_channels[i].fxp);
+                }
+                else
+                {
+                    setCurrentOrder(0);
+                }
 
-            // jumpback ?
-            if( currentOrder() <= old_order_pos )
-                setXadLooping();
+                // jumpback ?
+                if( currentOrder() <= old_order_pos )
+                {
+                    setXadLooping();
+                }
 
-            setCurrentRow(0);
-            break;
-        case 0x03: // 0x03: Pattern Break (?)
-            setCurrentRow(0x40);
-            break;
+                setCurrentRow(0);
+                break;
+            case 0x03: // 0x03: Pattern Break (?)
+                setCurrentRow(0x40);
+                break;
         }
 
         m_channels[i].fx = 0;

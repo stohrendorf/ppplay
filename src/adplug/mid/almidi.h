@@ -7,7 +7,6 @@ namespace ppp
 {
 class EMidi
 {
-    DISABLE_COPY(EMidi)
 private:
     struct Track;
 
@@ -22,28 +21,26 @@ private:
 
     struct Timing
     {
-        int  tick = 0;
-        int  beat = 1;
-        int  measure = 1;
-        int  beatsPerMeasure = 4;
-        int  ticksPerBeat = 0;
-        int  timeBase = 4;
+        int tick = 0;
+        int beat = 1;
+        int measure = 1;
+        int beatsPerMeasure = 4;
+        int ticksPerBeat = 0;
+        int timeBase = 4;
     };
 
     Timing m_timing{};
 
     unsigned long m_positionInTicks = 0;
 
-    int  m_context = 0;
+    int m_context = 0;
 
     int m_activeTracks = 0;
     int m_totalVolume = 255;
 
-    int m_tempo = 120;
-
     size_t m_ticksPerSecond = 0;
 
-    std::array<int, 16> m_channelVolume{ {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0} };
+    std::array<int, 16> m_channelVolume{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 
     enum class Format
     {
@@ -53,33 +50,48 @@ private:
 
     Format m_format = Format::PlainMidi;
 
-    uint8_t m_channelPrefix = 0;
-
     void resetTracks();
+
     void advanceTick();
+
     void metaEvent(Track& track);
+
     bool interpretControllerInfo(Track& track, bool timeSet, int channel, uint8_t c1, uint8_t c2);
+
     void setChannelVolume(int channel, int volume);
+
     void allNotesOff();
+
     void sendChannelVolumes();
+
     void reset();
-    void setVolume(int volume);
+
     void setTempo(int tempo);
+
     void initEmidi();
-    bool tryLoadMidi(Stream &stream);
-    bool tryLoadMus(Stream &stream);
+
+    bool tryLoadMidi(Stream& stream);
+
+    bool tryLoadMus(Stream& stream);
+
     bool serviceRoutineMidi();
+
     bool serviceRoutineMus();
 
 public:
+    DISABLE_COPY(EMidi)
+
     EMidi(Stream& stream, size_t chipCount, bool stereo);
+
     ~EMidi();
 
     bool serviceRoutine();
+
     size_t ticksPerSecond() const noexcept
     {
         return m_ticksPerSecond;
     }
+
     void read(std::array<int16_t, 4>* data)
     {
         m_chips.read(data);
@@ -87,7 +99,7 @@ public:
 
     const char* shortFormatName() const
     {
-        switch(m_format)
+        switch( m_format )
         {
             case Format::PlainMidi:
                 return "MIDI";

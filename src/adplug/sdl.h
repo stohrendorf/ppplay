@@ -22,17 +22,20 @@
 
 #include "output.h"
 
-class SDLPlayer : public PlayerHandler
+class SDLPlayer
+    : public PlayerHandler
 {
-    DISABLE_COPY(SDLPlayer)
 private:
     SDL_AudioSpec m_spec;
     ppp::BresenInterpolation m_interp;
 
-    static void callback(void *, Uint8 *, int byteLen);
+    static void callback(void*, Uint8*, int byteLen);
 
 public:
+    DISABLE_COPY(SDLPlayer)
+
     SDLPlayer(int freq, size_t bufsize);
+
     virtual ~SDLPlayer();
 
     void frame() override;

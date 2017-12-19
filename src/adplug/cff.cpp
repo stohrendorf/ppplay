@@ -42,18 +42,20 @@ Player* CffPlayer::factory()
 bool CffPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
+    {
         return false;
-    const uint8_t conv_inst[11] = { 2, 1, 10, 9, 4, 3, 6, 5, 0, 8, 7 };
-    const std::array<uint16_t, 12> conv_note = { 0x16B, 0x181, 0x198, 0x1B0, 0x1CA,
-        0x1E5, 0x202, 0x220, 0x241, 0x263,
-        0x287, 0x2AE };
+    }
+    const uint8_t conv_inst[11] = {2, 1, 10, 9, 4, 3, 6, 5, 0, 8, 7};
+    const std::array<uint16_t, 12> conv_note = {0x16B, 0x181, 0x198, 0x1B0, 0x1CA,
+                                                0x1E5, 0x202, 0x220, 0x241, 0x263,
+                                                0x287, 0x2AE};
 
     // '<CUD-FM-File>' - signed ?
     f >> m_header;
-    if(memcmp(m_header.id, "<CUD-FM-File>"
-              "\x1A\xDE\xE0",
-              16))
+    if( memcmp(m_header.id, "<CUD-FM-File>"
+                   "\x1A\xDE\xE0",
+               16) != 0 )
     {
         return false;
     }
@@ -61,9 +63,9 @@ bool CffPlayer::load(const std::string& filename)
     std::vector<uint8_t> module(0x10000);
 
     // packed ?
-    if(m_header.packed)
+    if( m_header.packed )
     {
-        std::unique_ptr<cff_unpacker> unpacker{ new cff_unpacker() };
+        std::unique_ptr<cff_unpacker> unpacker{new cff_unpacker()};
 
         std::vector<uint8_t> packedModule;
         packedModule.resize(m_header.size + 4, 0);
@@ -71,12 +73,12 @@ bool CffPlayer::load(const std::string& filename)
         f.read(packedModule.data(), m_header.size);
         unpacker->unpack(packedModule, module);
 
-        if(module.empty())
+        if( module.empty() )
         {
             return false;
         }
 
-        if(memcmp(&module[0x5E1], "CUD-FM-File - SEND A POSTCARD -", 31))
+        if( memcmp(&module[0x5E1], "CUD-FM-File - SEND A POSTCARD -", 31) != 0 )
         {
             return false;
         }
@@ -92,12 +94,14 @@ bool CffPlayer::load(const std::string& filename)
     init_trackord();
 
     // load instruments
-    for(int i = 0; i < 47; i++)
+    for( int i = 0; i < 47; i++ )
     {
         memcpy(&m_instruments[i], &module[i * 32], sizeof(cff_instrument));
 
-        for(int j = 0; j < 11; j++)
+        for( int j = 0; j < 11; j++ )
+        {
             addInstrument().data[conv_inst[j]] = m_instruments[i].data[j];
+        }
 
         m_instruments[i].name[20] = 0;
     }
@@ -112,41 +116,49 @@ bool CffPlayer::load(const std::string& filename)
     // load orders
     {
         static constexpr auto OrderDataOffset = 0x628;
-        for(int i = 0; i < 64; i++)
+        for( int i = 0; i < 64; i++ )
         {
-            if(module[OrderDataOffset + i] & 0x80)
+            if( module[OrderDataOffset + i] & 0x80 )
+            {
                 break;
+            }
 
             addOrder(module[OrderDataOffset + i]);
         }
     }
 
     // load tracks
-    int t = 0;
-    for(int i = 0; i < patternCount; i++)
+    auto t = 0u;
+    for( int i = 0; i < patternCount; i++ )
     {
         uint8_t old_event_byte2[9];
 
         memset(old_event_byte2, 0, 9);
 
-        for(int channel = 0; channel < 9; channel++)
+        for( auto channel = 0u; channel < 9; channel++ )
         {
-            for(int row = 0; row < 64; row++)
+            for( auto row = 0u; row < 64; row++ )
             {
-                const cff_event* event = reinterpret_cast<const cff_event *>(&module[0x669 + ((i * 64 + row) * 9 + channel) * 3]);
+                const auto* event = reinterpret_cast<const cff_event*>(&module[0x669 + ((i * 64 + row) * 9 + channel) * 3]);
                 PatternCell& cell = patternCell(t, row);
 
                 // convert note
-                if(event->byte0 == 0x6D)
+                if( event->byte0 == 0x6D )
+                {
                     cell.note = 127;
-                else if(event->byte0)
+                }
+                else if( event->byte0 )
+                {
                     cell.note = event->byte0;
+                }
 
-                if(event->byte2)
+                if( event->byte2 )
+                {
                     old_event_byte2[channel] = event->byte2;
+                }
 
                 // convert effect
-                switch(event->byte1)
+                switch( event->byte1 )
                 {
                     case 'I': // set instrument
                         cell.instrument = event->byte2 + 1;
@@ -155,7 +167,7 @@ bool CffPlayer::load(const std::string& filename)
 
                     case 'H': // set tempo
                         cell.command = Command::SetTempo;
-                        if(event->byte2 < 16)
+                        if( event->byte2 < 16 )
                         {
                             cell.hiNybble = 0x07;
                             cell.loNybble = 0x0D;
@@ -217,7 +229,7 @@ bool CffPlayer::load(const std::string& filename)
                         break;
 
                     case 'D': // fine volume slide
-                        if(old_event_byte2[channel] & 15)
+                        if( old_event_byte2[channel] & 15 )
                         {
                             // slide down
                             cell.command = Command::SFXFineVolumeDown;
@@ -248,7 +260,7 @@ bool CffPlayer::load(const std::string& filename)
     // default tempo
     setInitialTempo(0x7D);
 
-    rewind(0);
+    rewind(size_t(0));
 
     return true;
 }
@@ -258,7 +270,7 @@ void CffPlayer::rewind(const boost::optional<size_t>& subsong)
     ModPlayer::rewind(subsong);
 
     // default instruments
-    for(int i = 0; i < 9; i++)
+    for( auto i = 0u; i < 9; i++ )
     {
         channel(i).instrument = i;
 
@@ -270,10 +282,14 @@ void CffPlayer::rewind(const boost::optional<size_t>& subsong)
 
 std::string CffPlayer::type() const
 {
-    if(m_header.packed)
+    if( m_header.packed )
+    {
         return "BoomTracker 4, packed";
+    }
     else
+    {
         return "BoomTracker 4";
+    }
 }
 
 std::string CffPlayer::title() const
@@ -305,36 +321,42 @@ void CffPlayer::cff_unpacker::unpack(const std::vector<uint8_t>& ibuf, std::vect
 {
     obuf.clear();
 
-    if(memcmp(ibuf.data(), "YsComp"
-              "\x07"
-              "CUD1997"
-              "\x1A\x04",
-              16))
+    if( memcmp(ibuf.data(), "YsComp"
+                   "\x07"
+                   "CUD1997"
+                   "\x1A\x04",
+               16) != 0 )
+    {
         return;
+    }
 
     auto it = std::next(ibuf.begin(), 16);
 
     std::vector<std::vector<uint8_t>> dictionary;
     cleanup();
-    if(!startup(dictionary, obuf, it))
+    if( !startup(dictionary, obuf, it) )
+    {
         return;
+    }
 
     // LZW
-    while(auto newCode = get_code(it))
+    while( auto newCode = get_code(it) )
     {
         // 0x01: end of block
-        if(newCode == 1)
+        if( newCode == 1 )
         {
             cleanup();
             dictionary.clear();
-            if(!startup(dictionary, obuf, it))
+            if( !startup(dictionary, obuf, it) )
+            {
                 return;
+            }
 
             continue;
         }
 
         // 0x02: expand code length
-        if(newCode == 2)
+        if( newCode == 2 )
         {
             m_codeLength++;
 
@@ -342,7 +364,7 @@ void CffPlayer::cff_unpacker::unpack(const std::vector<uint8_t>& ibuf, std::vect
         }
 
         // 0x03: RLE
-        if(newCode == 3)
+        if( newCode == 3 )
         {
             uint8_t old_code_length = m_codeLength;
 
@@ -354,26 +376,28 @@ void CffPlayer::cff_unpacker::unpack(const std::vector<uint8_t>& ibuf, std::vect
 
             unsigned long repeat_counter = get_code(it);
 
-            if(obuf.size() + repeat_counter * repeat_length)
+            if( obuf.size() + repeat_counter * repeat_length )
             {
                 obuf.clear();
                 return;
             }
 
-            for(auto i = 0; i < repeat_counter * repeat_length; i++)
+            for( auto i = 0; i < repeat_counter * repeat_length; i++ )
             {
                 obuf.emplace_back(obuf[obuf.size() - repeat_length]);
             }
 
             m_codeLength = old_code_length;
 
-            if(!startup(dictionary, obuf, it))
+            if( !startup(dictionary, obuf, it) )
+            {
                 return;
+            }
 
             continue;
         }
 
-        if(newCode >= (0x104 + dictionary.size()))
+        if( newCode >= (0x104 + dictionary.size()) )
         {
             // dictionary <- old.code.string + old.code.char
             m_theString[++m_theString[0]] = m_theString[1];
@@ -393,14 +417,16 @@ void CffPlayer::cff_unpacker::unpack(const std::vector<uint8_t>& ibuf, std::vect
         // output <- new.code.string
         translate_code(newCode, m_theString, dictionary);
 
-        for(int i = 0; i < m_theString[0]; i++)
+        for( int i = 0; i < m_theString[0]; i++ )
+        {
             obuf.emplace_back(m_theString[i + 1]);
+        }
     }
 }
 
 uint32_t CffPlayer::cff_unpacker::get_code(std::vector<uint8_t>::const_iterator& it)
 {
-    while(m_bitsLeft < m_codeLength)
+    while( m_bitsLeft < m_codeLength )
     {
         m_bitsBuffer |= ((*it++) << m_bitsLeft);
         m_bitsLeft += 8;
@@ -418,7 +444,7 @@ void CffPlayer::cff_unpacker::translate_code(unsigned long code, uint8_t* string
 {
     uint8_t translated_string[256];
 
-    if(code >= 0x104)
+    if( code >= 0x104 )
     {
         std::copy_n(dictionary[code - 0x104].begin(), dictionary[code - 0x104].size(), translated_string);
     }
@@ -445,16 +471,20 @@ bool CffPlayer::cff_unpacker::startup(const std::vector<std::vector<uint8_t>>& d
 
     translate_code(oldCode, m_theString, dictionary);
 
-    for(int i = 0; i < m_theString[0]; i++)
-        obuf.emplace_back( m_theString[i + 1] );
+    for( int i = 0; i < m_theString[0]; i++ )
+    {
+        obuf.emplace_back(m_theString[i + 1]);
+    }
 
     return true;
 }
 
 void CffPlayer::cff_unpacker::expand_dictionary(uint8_t* string, std::vector<std::vector<uint8_t>>& dictionary)
 {
-    if(string[0] >= 0xF0)
+    if( string[0] >= 0xF0 )
+    {
         return;
+    }
 
     std::vector<uint8_t> stringData;
     stringData.assign(string, string + string[0] + 1);

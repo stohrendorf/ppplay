@@ -34,15 +34,17 @@ Player* RadPlayer::factory()
 bool RadPlayer::load(const std::string& filename)
 {
     FileStream f(filename);
-    if(!f)
+    if( !f )
+    {
         return false;
+    }
 
     // file validation section
     char id[16];
     f.read(id, 16);
     uint8_t version;
     f >> version;
-    if(strncmp(id, "RAD by REALiTY!!", 16) || version != 0x10)
+    if( strncmp(id, "RAD by REALiTY!!", 16) != 0 || version != 0x10 )
     {
         return false;
     }
@@ -50,17 +52,17 @@ bool RadPlayer::load(const std::string& filename)
     // load section
     uint8_t flags;
     f >> flags;
-    if(flags & 0x80)
+    if( flags & 0x80 )
     { // description
         m_description.clear();
         uint8_t buf;
-        while(f >> buf && buf)
+        while( f >> buf && buf )
         {
-            if(buf == 1)
+            if( buf == 1 )
             {
                 m_description += "\n";
             }
-            else if(buf >= 2 && buf <= 0x1f)
+            else if( buf >= 2 && buf <= 0x1f )
             {
                 m_description.append(buf, ' ');
             }
@@ -73,22 +75,28 @@ bool RadPlayer::load(const std::string& filename)
     {
         uint8_t buf;
         std::vector<ModPlayer::Instrument::Data> instruments;
-        while(f >> buf && buf != 0)
+        while( f >> buf && buf != 0 )
         {
             buf--;
-            if(buf >= instruments.size())
+            if( buf >= instruments.size() )
+            {
                 instruments.resize(buf + 1);
+            }
             ModPlayer::Instrument::Data& inst = instruments[buf];
-            for(auto index : { 2, 1, 10, 9, 4, 3, 6, 5, 0, 8, 7 })
+            for( auto index : {2, 1, 10, 9, 4, 3, 6, 5, 0, 8, 7} )
+            {
                 f >> inst[index];
+            }
         }
-        for(const ModPlayer::Instrument::Data& inst : instruments)
+        for( const ModPlayer::Instrument::Data& inst : instruments )
+        {
             addInstrument().data = inst;
+        }
     }
     {
         uint8_t length;
         f >> length;
-        while(orderCount() < length)
+        while( orderCount() < length )
         {
             uint8_t order;
             f >> order;
@@ -98,22 +106,24 @@ bool RadPlayer::load(const std::string& filename)
     uint16_t patofs[32];
     f.read(patofs, 32);
     init_trackord(); // patterns
-    for(int patternIdx = 0; patternIdx < 32; patternIdx++)
+    for( auto patternIdx = 0u; patternIdx < 32; patternIdx++ )
     {
-        if(patofs[patternIdx] == 0)
+        if( patofs[patternIdx] == 0 )
         {
-            for(int j = 0; j < 9; ++j)
+            for( auto j = 0u; j < 9; ++j )
+            {
                 setCellColumnMapping(patternIdx, j, 0);
+            }
             continue;
         }
 
         f.seek(patofs[patternIdx]);
-        while(true)
+        while( true )
         { // for each row
             uint8_t buf;
             f >> buf;
             const uint8_t row = buf & 0x7f;
-            while(true)
+            while( true )
             {
                 uint8_t channelData;
                 f >> channelData;
@@ -125,11 +135,11 @@ bool RadPlayer::load(const std::string& filename)
                 cell.note = insAndNote & 127; // 6..4 octave, 3..0 note (1..12)
                 cell.instrument = (insAndNote & 0x80) >> 3;
 
-                if((insAndNote & 0x0f) == 0x0f)
+                if( (insAndNote & 0x0f) == 0x0f )
                 {
                     cell.note = ModPlayer::PatternCell::KeyOff;
                 }
-                else if((insAndNote & 0x0f) == 0)
+                else if( (insAndNote & 0x0f) == 0 )
                 {
                     cell.note = ModPlayer::PatternCell::NoNote;
                 }
@@ -141,24 +151,24 @@ bool RadPlayer::load(const std::string& filename)
                 uint8_t insAndFx;
                 f >> insAndFx;
                 cell.instrument |= insAndFx >> 4;
-                static constexpr Command convfx[16] = { Command::Sentinel,
-                    Command::SlideUp,
-                    Command::SlideDown,
-                    Command::Porta,
-                    Command::Sentinel,
-                    Command::PortaVolSlide,
-                    Command::Sentinel,
-                    Command::Sentinel,
-                    Command::Sentinel,
-                    Command::Sentinel,
-                    Command::RADVolSlide,
-                    Command::Sentinel,
-                    Command::SetFineVolume2,
-                    Command::PatternBreak,
-                    Command::Sentinel,
-                    Command::RADSpeed };
+                static constexpr Command convfx[16] = {Command::Sentinel,
+                                                       Command::SlideUp,
+                                                       Command::SlideDown,
+                                                       Command::Porta,
+                                                       Command::Sentinel,
+                                                       Command::PortaVolSlide,
+                                                       Command::Sentinel,
+                                                       Command::Sentinel,
+                                                       Command::Sentinel,
+                                                       Command::Sentinel,
+                                                       Command::RADVolSlide,
+                                                       Command::Sentinel,
+                                                       Command::SetFineVolume2,
+                                                       Command::PatternBreak,
+                                                       Command::Sentinel,
+                                                       Command::RADSpeed};
                 cell.command = convfx[insAndFx & 0x0f];
-                if(cell.command != Command::Sentinel)
+                if( cell.command != Command::Sentinel )
                 {
                     // FX is present, read parameter
                     f >> insAndFx;
@@ -166,11 +176,15 @@ bool RadPlayer::load(const std::string& filename)
                     cell.hiNybble = insAndFx >> 4;
                     cell.loNybble = insAndFx & 0x0f;
                 }
-                if(channelData & 0x80) // last column in row
+                if( channelData & 0x80 )
+                { // last column in row
                     break;
+                }
             }
-            if(buf & 0x80) // last row
+            if( buf & 0x80 )
+            { // last row
                 break;
+            }
         }
     }
 
@@ -178,14 +192,18 @@ bool RadPlayer::load(const std::string& filename)
     setInitialSpeed(flags & 0x1f);
     setInitialTempo((flags & 0x40) ? 0 : 50);
 
-    rewind(0);
+    rewind(size_t(0));
     return true;
 }
 
 size_t RadPlayer::framesUntilUpdate() const
 {
-    if(currentTempo() != 0)
+    if( currentTempo() != 0 )
+    {
         return SampleRate / currentTempo();
+    }
     else
+    {
         return static_cast<size_t>(SampleRate / 18.2);
+    }
 }

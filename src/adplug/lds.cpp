@@ -73,12 +73,14 @@ bool LdsPlayer::load(const std::string& filename)
 {
     // file validation section (actually just an extension check)
     FileStream fs(filename);
-    if(!fs || fs.extension() != ".lds")
+    if( !fs || fs.extension() != ".lds" )
+    {
         return false;
+    }
 
     // file load section (header)
     fs >> m_mode;
-    if(m_mode > 2)
+    if( m_mode > 2 )
     {
         return false;
     }
@@ -97,9 +99,10 @@ bool LdsPlayer::load(const std::string& filename)
     // load positions
     uint16_t orderCount;
     fs >> orderCount;
-    m_positions.resize(9 * orderCount);
-    for(size_t i = 0; i < orderCount; i++)
-        for(size_t j = 0; j < 9; j++)
+    m_positions.resize(9u * orderCount);
+    for( size_t i = 0; i < orderCount; i++ )
+    {
+        for( size_t j = 0; j < 9; j++ )
         {
             fs >> m_positions[i * 9 + j];
             /*
@@ -109,27 +112,30 @@ bool LdsPlayer::load(const std::string& filename)
              */
             m_positions[i * 9 + j].patnum >>= 1;
         }
+    }
 
     // load patterns
     fs.seekrel(2); // ignore # of digital sounds (not played by this player)
-    m_patterns.resize((fs.size() - fs.pos()) / 2 + 1);
+    m_patterns.resize((fs.size() - fs.pos()) / 2u + 1u);
     fs.read(m_patterns.data(), m_patterns.size());
 
-    rewind(0);
+    rewind(size_t(0));
     return true;
 }
 
 bool LdsPlayer::update()
 {
-    if(!m_playing)
+    if( !m_playing )
+    {
         return false;
+    }
 
     // handle fading
-    if(m_fadeonoff)
+    if( m_fadeonoff )
     {
-        if(m_fadeonoff <= 128)
+        if( m_fadeonoff <= 128 )
         {
-            if(m_allvolume > m_fadeonoff || m_allvolume == 0)
+            if( m_allvolume > m_fadeonoff || m_allvolume == 0 )
             {
                 m_allvolume -= m_fadeonoff;
             }
@@ -137,16 +143,18 @@ bool LdsPlayer::update()
             {
                 m_allvolume = 1;
                 m_fadeonoff = 0;
-                if(m_hardfade != 0)
+                if( m_hardfade != 0 )
                 {
                     m_playing = false;
                     m_hardfade = 0;
-                    for(int i = 0; i < 9; i++)
+                    for( int i = 0; i < 9; i++ )
+                    {
                         m_channels[i].keycount = 1;
+                    }
                 }
             }
         }
-        else if(((m_allvolume + (0x100 - m_fadeonoff)) & 0xff) <= m_mainvolume)
+        else if( ((m_allvolume + (0x100 - m_fadeonoff)) & 0xff) <= m_mainvolume )
         {
             m_allvolume += 0x100 - m_fadeonoff;
         }
@@ -157,25 +165,27 @@ bool LdsPlayer::update()
         }
     }
     // handle channel delay
-    for(int chan = 0; chan < 9; chan++)
+    for( int chan = 0; chan < 9; chan++ )
     {
         Channel* c = &m_channels[chan];
-        if(c->chancheat.chandelay)
+        if( c->chancheat.chandelay )
         {
             --c->chancheat.chandelay;
-            if(c->chancheat.chandelay == 0)
+            if( c->chancheat.chandelay == 0 )
+            {
                 playsound(c->chancheat.sound, chan, c->chancheat.high);
+            }
         }
     }
 
     // handle notes
-    if(!currentTempo())
+    if( !currentTempo() )
     {
         bool vbreak = false;
-        for(int chan = 0; chan < 9; chan++)
+        for( int chan = 0; chan < 9; chan++ )
         {
             Channel* c = &m_channels[chan];
-            if(c->packwait)
+            if( c->packwait )
             {
                 --c->packwait;
                 continue;
@@ -184,7 +194,7 @@ bool LdsPlayer::update()
             const uint32_t transpose = m_positions[currentOrder() * 9 + chan].transpose;
 
             const auto comword = m_patterns[patnum + c->packpos];
-            if(comword == 0)
+            if( comword == 0 )
             {
                 c->packpos++;
                 continue;
@@ -192,18 +202,20 @@ bool LdsPlayer::update()
 
             const auto comhi = comword >> 8;
             const auto comlo = comword & 0xff;
-            if(comhi == 0x80)
+            if( comhi == 0x80 )
             {
                 c->packwait = comlo;
             }
-            else if(comhi >= 0x80)
+            else if( comhi >= 0x80 )
             {
-                switch(comhi)
+                switch( comhi )
                 {
                     case 0xff:
                         c->volcar = (((c->volcar & 0x3f) * comlo) >> 6) & 0x3f;
-                        if(getOpl()->readReg(0xc0 + chan) & 1)
+                        if( getOpl()->readReg(0xc0 + chan) & 1 )
+                        {
                             c->volmod = (((c->volmod & 0x3f) * comlo) >> 6) & 0x3f;
+                        }
                         break;
                     case 0xfe:
                         m_initialTempo = comword & 0x3f;
@@ -226,9 +238,10 @@ bool LdsPlayer::update()
                     case 0xf9:
                         vbreak = true;
                         m_jumppos = comlo & maxpos;
-                        m_jumping = 1;
-                        if(m_jumppos < currentOrder())
+                        if( m_jumppos < currentOrder() )
+                        {
                             m_songlooped = true;
+                        }
                         break;
                     case 0xf8:
                         c->lasttune = 0;
@@ -246,15 +259,17 @@ bool LdsPlayer::update()
                         c->finetune = comlo;
                         break;
                     case 0xf4:
-                        if(!m_hardfade)
+                        if( !m_hardfade )
                         {
                             m_allvolume = m_mainvolume = comlo;
                             m_fadeonoff = 0;
                         }
                         break;
                     case 0xf3:
-                        if(!m_hardfade)
+                        if( !m_hardfade )
+                        {
                             m_fadeonoff = comlo;
+                        }
                         break;
                     case 0xf2:
                         c->trmstay = comlo;
@@ -264,8 +279,10 @@ bool LdsPlayer::update()
                         // MIDI commands (unhandled)
                         break;
                     default:
-                        if(comhi < 0xa0)
+                        if( comhi < 0xa0 )
+                        {
                             c->glideto = comhi & 0x1f;
+                        }
                         break;
                 }
             }
@@ -281,12 +298,14 @@ bool LdsPlayer::update()
                  */
 
                 int8_t transp = transpose & 127;
-                if(transpose & 0x40)
+                if( transpose & 0x40 )
+                {
                     transp |= 0x80;
+                }
 
                 uint8_t sound;
                 uint16_t high;
-                if(transpose & 0x80)
+                if( transpose & 0x80 )
                 {
                     sound = (comlo + transp) & maxsound;
                     high = comhi << 4;
@@ -303,8 +322,10 @@ bool LdsPlayer::update()
                   high = (comhi + (((transpose + 0x24) & 0xff) - 0x24)) << 4;
                 */
 
-                if(!m_chandelay[chan])
+                if( !m_chandelay[chan] )
+                {
                     playsound(sound, chan, high);
+                }
                 else
                 {
                     c->chancheat.chandelay = m_chandelay[chan];
@@ -329,84 +350,110 @@ bool LdsPlayer::update()
             conttab[speed & maxcont].tempo = tempo;
           }
         */
-        setCurrentRow(currentRow() + 1);
-        if(vbreak)
+        setCurrentRow(currentRow() + 1u);
+        if( vbreak )
         {
             setCurrentRow(0);
-            for(int i = 0; i < 9; i++)
+            for( int i = 0; i < 9; i++ )
+            {
                 m_channels[i].packpos = m_channels[i].packwait = 0;
+            }
             setCurrentOrder(m_jumppos);
         }
-        else if(currentRow() >= m_pattlen)
+        else if( currentRow() >= m_pattlen )
         {
             setCurrentRow(0);
-            for(int i = 0; i < 9; i++)
+            for( int i = 0; i < 9; i++ )
+            {
                 m_channels[i].packpos = m_channels[i].packwait = 0;
+            }
             setCurrentOrder((currentOrder() + 1) & maxpos);
         }
     }
     else
-        setCurrentTempo(currentTempo() - 1);
+    {
+        setCurrentTempo(currentTempo() - 1u);
+    }
 
     // make effects
-    for(int chan = 0; chan < 9; chan++)
+    for( int chan = 0; chan < 9; chan++ )
     {
         opl::SlotView slotView = getOpl()->getSlotView(chan);
         Channel* c = &m_channels[chan];
-        if(c->keycount > 0)
+        if( c->keycount > 0 )
         {
-            if(c->keycount == 1)
+            if( c->keycount == 1 )
+            {
                 slotView.setKeyOn(false);
+            }
             c->keycount--;
         }
 
         // arpeggio
         uint16_t arpreg = 0;
-        if(c->arp_size != 0)
+        if( c->arp_size != 0 )
         {
             arpreg = c->arp_tab[c->arp_pos] << 4;
-            if(arpreg == 0x800)
+            if( arpreg == 0x800 )
             {
-                if(c->arp_pos > 0)
+                if( c->arp_pos > 0 )
+                {
                     c->arp_tab[0] = c->arp_tab[c->arp_pos - 1];
+                }
                 c->arp_size = 1;
                 c->arp_pos = 0;
                 arpreg = c->arp_tab[0] << 4;
             }
 
-            if(c->arp_count == c->arp_speed)
+            if( c->arp_count == c->arp_speed )
             {
                 c->arp_pos++;
-                if(c->arp_pos >= c->arp_size)
+                if( c->arp_pos >= c->arp_size )
+                {
                     c->arp_pos = 0;
+                }
                 c->arp_count = 0;
             }
             else
+            {
                 c->arp_count++;
+            }
         }
 
         // glide & portamento
-        if(c->lasttune && (c->lasttune != c->gototune))
+        if( c->lasttune && (c->lasttune != c->gototune) )
         {
-            if(c->lasttune > c->gototune)
+            if( c->lasttune > c->gototune )
             {
-                if(c->lasttune - c->gototune < c->portspeed)
+                if( c->lasttune - c->gototune < c->portspeed )
+                {
                     c->lasttune = c->gototune;
+                }
                 else
+                {
                     c->lasttune -= c->portspeed;
+                }
             }
             else
             {
-                if(c->gototune - c->lasttune < c->portspeed)
+                if( c->gototune - c->lasttune < c->portspeed )
+                {
                     c->lasttune = c->gototune;
+                }
                 else
+                {
                     c->lasttune += c->portspeed;
+                }
             }
 
-            if(arpreg >= 0x800)
+            if( arpreg >= 0x800 )
+            {
                 arpreg = c->lasttune - (arpreg ^ 0xff0) - 16;
+            }
             else
+            {
                 arpreg += c->lasttune;
+            }
 
             slotView.setBlock(arpreg / (12 * 16) - 1);
             slotView.setFnum(frequencies[arpreg % (12 * 16)]);
@@ -414,34 +461,46 @@ bool LdsPlayer::update()
         else
         {
             // vibrato
-            if(!c->vibwait)
+            if( !c->vibwait )
             {
-                if(c->vibrate)
+                if( c->vibrate )
                 {
                     auto wibc = vibratoTable[c->vibcount & 0x3f] * c->vibrate;
 
                     auto tune = c->lasttune;
-                    if((c->vibcount & 0x40) == 0)
+                    if( (c->vibcount & 0x40) == 0 )
+                    {
                         tune += (wibc >> 8);
+                    }
                     else
+                    {
                         tune -= (wibc >> 8);
+                    }
 
-                    if(arpreg >= 0x800)
+                    if( arpreg >= 0x800 )
+                    {
                         tune -= (arpreg ^ 0xff0) + 16;
+                    }
                     else
+                    {
                         tune += arpreg;
+                    }
 
                     slotView.setBlock(tune / (12 * 16) - 1);
                     slotView.setFnum(frequencies[tune % (12 * 16)]);
                     c->vibcount += c->vibspeed;
                 }
-                else if(c->arp_size != 0)
+                else if( c->arp_size != 0 )
                 { // no vibrato, just arpeggio
                     auto tune = c->lasttune;
-                    if(arpreg >= 0x800)
+                    if( arpreg >= 0x800 )
+                    {
                         tune -= (arpreg ^ 0xff0) + 16;
+                    }
                     else
+                    {
                         tune += arpreg;
+                    }
 
                     slotView.setBlock(tune / (12 * 16) - 1);
                     slotView.setFnum(frequencies[tune % (12 * 16)]);
@@ -451,13 +510,17 @@ bool LdsPlayer::update()
             { // no vibrato, just arpeggio
                 c->vibwait--;
 
-                if(c->arp_size != 0)
+                if( c->arp_size != 0 )
                 {
                     auto tune = c->lasttune;
-                    if(arpreg >= 0x800)
+                    if( arpreg >= 0x800 )
+                    {
                         tune -= (arpreg ^ 0xff0) + 16;
+                    }
                     else
+                    {
                         tune += arpreg;
+                    }
 
                     slotView.setBlock(tune / (12 * 16) - 1);
                     slotView.setFnum(frequencies[tune % (12 * 16)]);
@@ -466,60 +529,84 @@ bool LdsPlayer::update()
         }
 
         // tremolo (modulator)
-        if(!c->trmwait)
+        if( !c->trmwait )
         {
-            if(c->trmrate)
+            if( c->trmrate )
             {
                 auto tremc = tremoloTable[c->trmcount & 0x7f] * c->trmrate;
                 int level = 0;
-                if((tremc >> 8) <= (c->volmod & 0x3f))
+                if( (tremc >> 8) <= (c->volmod & 0x3f) )
+                {
                     level = (c->volmod & 0x3f) - (tremc >> 8);
+                }
 
-                if(m_allvolume != 0 && (getOpl()->readReg(0xc0 + chan) & 1))
+                if( m_allvolume != 0 && (getOpl()->readReg(0xc0 + chan) & 1) )
+                {
                     slotView.modulator().setTotalLevel(((level * m_allvolume) >> 8) ^ 0x3f);
+                }
                 else
+                {
                     slotView.modulator().setTotalLevel(level ^ 0x3f);
+                }
 
                 c->trmcount += c->trmspeed;
             }
-            else if(m_allvolume != 0 && (getOpl()->readReg(0xc0 + chan) & 1))
+            else if( m_allvolume != 0 && (getOpl()->readReg(0xc0 + chan) & 1) )
+            {
                 slotView.modulator().setTotalLevel(((((c->volmod & 0x3f) * m_allvolume) >> 8) ^ 0x3f) & 0x3f);
+            }
             else
+            {
                 slotView.modulator().setTotalLevel((c->volmod ^ 0x3f) & 0x3f);
+            }
         }
         else
         {
             c->trmwait--;
-            if(m_allvolume != 0 && (getOpl()->readReg(0xc0 + chan) & 1))
+            if( m_allvolume != 0 && (getOpl()->readReg(0xc0 + chan) & 1) )
+            {
                 slotView.modulator().setTotalLevel(((((c->volmod & 0x3f) * m_allvolume) >> 8) ^ 0x3f) & 0x3f);
+            }
         }
 
         // tremolo (carrier)
-        if(!c->trcwait)
+        if( !c->trcwait )
         {
-            if(c->trcrate)
+            if( c->trcrate )
             {
                 auto tremc = tremoloTable[c->trccount & 0x7f] * c->trcrate;
                 int level = 0;
-                if((tremc >> 8) <= (c->volcar & 0x3f))
+                if( (tremc >> 8) <= (c->volcar & 0x3f) )
+                {
                     level = (c->volcar & 0x3f) - (tremc >> 8);
+                }
 
-                if(m_allvolume != 0)
+                if( m_allvolume != 0 )
+                {
                     slotView.carrier().setTotalLevel(((level * m_allvolume) >> 8) ^ 0x3f);
+                }
                 else
+                {
                     slotView.carrier().setTotalLevel(level ^ 0x3f);
+                }
                 c->trccount += c->trcspeed;
             }
-            else if(m_allvolume != 0)
+            else if( m_allvolume != 0 )
+            {
                 slotView.carrier().setTotalLevel(((((c->volcar & 0x3f) * m_allvolume) >> 8) ^ 0x3f) & 0x3f);
+            }
             else
+            {
                 slotView.carrier().setTotalLevel((c->volcar ^ 0x3f) & 0x3f);
+            }
         }
         else
         {
             c->trcwait--;
-            if(m_allvolume != 0)
+            if( m_allvolume != 0 )
+            {
                 slotView.carrier().setTotalLevel(((((c->volcar & 0x3f) * m_allvolume) >> 8) ^ 0x3f) & 0x3f);
+            }
         }
     }
 
@@ -532,7 +619,7 @@ void LdsPlayer::rewind(const boost::optional<size_t>&)
     setCurrentTempo(3);
     m_playing = true;
     m_songlooped = false;
-    m_jumping = m_fadeonoff = m_allvolume = m_hardfade = m_jumppos = m_mainvolume = 0;
+    m_fadeonoff = m_allvolume = m_hardfade = m_jumppos = m_mainvolume = 0;
     setCurrentOrder(0);
     setCurrentRow(0);
     m_channels.fill(Channel());
@@ -542,7 +629,7 @@ void LdsPlayer::rewind(const boost::optional<size_t>&)
     getOpl()->writeReg(8, 0);
     getOpl()->writeReg(0xbd, m_regbd);
 
-    for(int i = 0; i < 9; i++)
+    for( int i = 0; i < 9; i++ )
     {
         getOpl()->writeReg(0x20 + s_opTable[i], 0);
         getOpl()->writeReg(0x23 + s_opTable[i], 0);
@@ -570,18 +657,22 @@ void LdsPlayer::playsound(int inst_number, int channel_number, int tunehigh)
     tunehigh += ((i->finetune + c->finetune + 0x80) & 0xff) - 0x80;
 
     // arpeggio handling
-    if(!i->arpeggio)
+    if( !i->arpeggio )
     {
         unsigned short arpcalc = i->arp_tab[0] << 4;
 
-        if(arpcalc > 0x800)
+        if( arpcalc > 0x800 )
+        {
             tunehigh -= (arpcalc ^ 0xff0) + 16;
+        }
         else
+        {
             tunehigh += arpcalc;
+        }
     }
 
     // glide handling
-    if(c->glideto != 0)
+    if( c->glideto != 0 )
     {
         c->gototune = tunehigh;
         c->portspeed = c->glideto;
@@ -597,12 +688,16 @@ void LdsPlayer::playsound(int inst_number, int channel_number, int tunehigh)
     slotView.modulator().setKsr(i->mod_misc & 0x10);
     slotView.modulator().setMult(i->mod_misc & 0x0f);
     auto volcalc = i->mod_vol;
-    if(!c->nextvol || !(i->feedback & 1))
+    if( !c->nextvol || !(i->feedback & 1) )
+    {
         c->volmod = volcalc;
+    }
     else
+    {
         c->volmod = (volcalc & 0xc0) | ((((volcalc & 0x3f) * c->nextvol) >> 6));
+    }
 
-    if((i->feedback & 1) == 1 && m_allvolume != 0)
+    if( (i->feedback & 1) == 1 && m_allvolume != 0 )
     {
         slotView.modulator().setTotalLevel(((c->volmod & 0x3f) * m_allvolume / 256) ^ 0x3f);
         slotView.modulator().setKsl(c->volmod >> 6);
@@ -625,12 +720,16 @@ void LdsPlayer::playsound(int inst_number, int channel_number, int tunehigh)
     slotView.carrier().setKsr(i->car_misc & 0x10);
     slotView.carrier().setMult(i->car_misc & 0x0f);
     volcalc = i->car_vol;
-    if(!c->nextvol)
+    if( !c->nextvol )
+    {
         c->volcar = volcalc;
+    }
     else
+    {
         c->volcar = (volcalc & 0xc0) | ((((volcalc & 0x3f) * c->nextvol) >> 6));
+    }
 
-    if(m_allvolume != 0)
+    if( m_allvolume != 0 )
     {
         slotView.carrier()
             .setTotalLevel((((c->volcar & 0x3f) * m_allvolume) >> 8) ^ 0x3f);
@@ -655,9 +754,9 @@ void LdsPlayer::playsound(int inst_number, int channel_number, int tunehigh)
 
     auto freq = frequencies[tunehigh % (12 * 16)];
     auto octave = tunehigh / (12 * 16) - 1;
-    if(!i->glide)
+    if( !i->glide )
     {
-        if(!i->portamento || !c->lasttune)
+        if( !i->portamento || !c->lasttune )
         {
             slotView.setBlock(octave);
             slotView.setFnum(freq);
@@ -680,8 +779,10 @@ void LdsPlayer::playsound(int inst_number, int channel_number, int tunehigh)
     }
     slotView.setKeyOn(true);
 
-    if(!i->vibrato)
+    if( !i->vibrato )
+    {
         c->vibwait = c->vibspeed = c->vibrate = 0;
+    }
     else
     {
         c->vibwait = i->vibdelay;
@@ -690,7 +791,7 @@ void LdsPlayer::playsound(int inst_number, int channel_number, int tunehigh)
         c->vibrate = (i->vibrato & 15) + 1;
     }
 
-    if(!(c->trmstay & 0xf0))
+    if( !(c->trmstay & 0xf0) )
     {
         c->trmwait = (i->tremwait & 0xf0) >> 3;
         // PASCAL:    c->trmspeed = (i->mod_trem >> 4) & 15;
@@ -699,7 +800,7 @@ void LdsPlayer::playsound(int inst_number, int channel_number, int tunehigh)
         c->trmcount = 0;
     }
 
-    if(!(c->trmstay & 0x0f))
+    if( !(c->trmstay & 0x0f) )
     {
         c->trcwait = (i->tremwait & 15) << 1;
         // PASCAL:    c->trcspeed = (i->car_trem >> 4) & 15;

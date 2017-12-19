@@ -19,7 +19,6 @@
 
 #include "sdl.h"
 
-#include "genmod/breseninter.h"
 #include "light4cxx/logger.h"
 
 namespace
@@ -32,7 +31,7 @@ SDLPlayer::SDLPlayer(int freq, size_t bufsize)
 {
     memset(&m_spec, 0x00, sizeof(SDL_AudioSpec));
 
-    if(SDL_Init(SDL_INIT_AUDIO) < 0)
+    if( SDL_Init(SDL_INIT_AUDIO) < 0 )
     {
         logger->fatal(L4CXX_LOCATION, "unable to initialize SDL -- %s", SDL_GetError());
         exit(EXIT_FAILURE);
@@ -46,7 +45,7 @@ SDLPlayer::SDLPlayer(int freq, size_t bufsize)
     m_spec.callback = &SDLPlayer::callback;
     m_spec.userdata = this;
 
-    if(SDL_OpenAudio(&m_spec, &m_spec) < 0)
+    if( SDL_OpenAudio(&m_spec, &m_spec) < 0 )
     {
         logger->fatal(L4CXX_LOCATION, "unable to open audio -- %s", SDL_GetError());
         exit(EXIT_FAILURE);
@@ -57,8 +56,10 @@ SDLPlayer::SDLPlayer(int freq, size_t bufsize)
 
 SDLPlayer::~SDLPlayer()
 {
-    if(!SDL_WasInit(SDL_INIT_AUDIO))
+    if( !SDL_WasInit(SDL_INIT_AUDIO) )
+    {
         return;
+    }
 
     SDL_CloseAudio();
     SDL_Quit();
@@ -74,12 +75,12 @@ void SDLPlayer::callback(void* userdata, Uint8* audiobuf, int byteLen)
 {
     SDLPlayer* self = reinterpret_cast<SDLPlayer*>(userdata);
     static long framesUntilUpdate = 0;
-    size_t framesToWrite = byteLen / 4;
+    size_t framesToWrite = byteLen / 4u;
     int16_t* bufPtr = reinterpret_cast<int16_t*>(audiobuf);
     // Prepare audiobuf with emulator output
-    while(framesToWrite > 0)
+    while( framesToWrite > 0 )
     {
-        while(framesUntilUpdate <= 0)
+        while( framesUntilUpdate <= 0 )
         {
             self->setIsPlaying(self->getPlayer()->update());
             framesUntilUpdate += self->getPlayer()->framesUntilUpdate();
@@ -91,7 +92,7 @@ void SDLPlayer::callback(void* userdata, Uint8* audiobuf, int byteLen)
         bufPtr[1] = ppp::clip(samples[1] + samples[3], -32768, 32767);
         bufPtr += 2;
 
-        if(self->m_interp.next() == 2)
+        if( self->m_interp.next() == 2 )
         {
             self->getPlayer()->read(nullptr); // skip a sample
             --framesUntilUpdate;
