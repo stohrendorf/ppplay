@@ -38,15 +38,18 @@ namespace s3m
  * @class S3mSample
  * @brief Sample class for S3M Samples
  */
-class S3mSample : public Sample
+class S3mSample
+    : public Sample
 {
-    DISABLE_COPY(S3mSample)
 private:
     //! @brief Whether this is a 16-bit sample
     bool m_highQuality;
 public:
+    DISABLE_COPY(S3mSample)
+
     //! @brief Constructor
     S3mSample();
+
     /**
      * @brief Load from a stream
      * @param[in] str The stream to load this sample from
@@ -55,11 +58,13 @@ public:
      * @return @c true on success
      */
     bool load(Stream* str, size_t pos, bool imagoLoopEnd);
+
     /**
      * @brief Whether this is a 16-bit sample
      * @return m_highQuality
      */
     bool isHighQuality() const;
+
 protected:
     /**
      * @brief Get the logger

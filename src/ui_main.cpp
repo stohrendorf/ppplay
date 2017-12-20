@@ -112,36 +112,36 @@ UIMain::UIMain(ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, cons
 {
     logger()->trace(L4CXX_LOCATION, "Initializing");
     UIMain::setSize(parent->area().size());
-    UIMain::setPosition(0, 0);
+    UIMain::setPosition(0, 0, false);
     show();
     m_position = new ppg::Label(this);
     m_position->setWidth(parent->area().width() - 4);
-    m_position->setPosition(2, 2);
+    m_position->setPosition(2, 2, false);
     /*	m_position->setFgColorRange( 0, ppg::Color::BrightWhite, 0 );
         m_position->setFgColorRange( 3, ppg::Color::White, 5 );*/
     m_position->show();
     m_screenSep1 = new ppg::Label(this, " \xc4 \xc4\xc4  \xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4  \xc4\xc4 \xc4 ");
-    m_screenSep1->setPosition(0, 1);
+    m_screenSep1->setPosition(0, 1, false);
     m_screenSep1->setFgColorRange(0, ppg::Color::BrightWhite, 0);
     m_screenSep1->show();
     m_screenSep2 = new ppg::Label(this, " \xc4 \xc4\xc4  \xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4  \xc4\xc4 \xc4 ");
-    m_screenSep2->setPosition(0, 3);
+    m_screenSep2->setPosition(0, 3, false);
     m_screenSep2->setFgColorRange(0, ppg::Color::BrightWhite, 0);
     m_screenSep2->show();
     m_playbackInfo = new ppg::Label(this);
     m_playbackInfo->setWidth(area().width() - 4);
-    m_playbackInfo->setPosition(2, 2);
+    m_playbackInfo->setPosition(2, 2, false);
     m_playbackInfo->alignment = ppg::Label::Alignment::Right;
     // 	m_playbackInfo->setFgColorRange( 0, ppg::Color::BrightWhite, 0 );
     m_playbackInfo->show();
     m_volBar = new ppg::StereoPeakBar(this, 16, 256, 1, true);
-    m_volBar->setPosition((area().width() - m_volBar->length()) / 2, 4);
+    m_volBar->setPosition((area().width() - m_volBar->length()) / 2, 4, false);
     m_volBar->show();
     for(size_t i = 0; i < m_chanInfos.size(); i++)
     {
         m_chanInfos.at(i) = new ppg::Label(this);
         m_chanInfos.at(i)->setWidth(area().width() - 4);
-        m_chanInfos.at(i)->setPosition(2, 5 + i);
+        m_chanInfos.at(i)->setPosition(2, 5 + i, false);
         // note triggered
         m_chanInfos.at(i)->setFgColorRange(3, ppg::Color::LightRed);
         // note
@@ -155,20 +155,20 @@ UIMain::UIMain(ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, cons
     {
         m_chanCells.at(i) = new ppg::Label(this);
         m_chanCells.at(i)->setWidth(area().width() - 4);
-        m_chanCells.at(i)->setPosition(2, 5 + i);
+        m_chanCells.at(i)->setPosition(2, 5 + i, false);
         m_chanCells.at(i)->alignment = ppg::Label::Alignment::Right;
         m_chanCells.at(i)->setFgColorRange(0, ppg::Color::White, 0);
         m_chanCells.at(i)->show();
     }
     m_trackerInfo = new ppg::Label(this);
-    m_trackerInfo->setPosition(2, area().height() - 2);
+    m_trackerInfo->setPosition(2, area().height() - 2, false);
     m_trackerInfo->setWidth(area().width() - 4);
     m_trackerInfo->alignment = ppg::Label::Alignment::Center;
     m_trackerInfo->setFgColorRange(0, ppg::Color::Aqua, 0);
     m_trackerInfo->show();
     m_modTitle = new ppg::Label(this);
     m_modTitle->setWidth(area().width() - 4);
-    m_modTitle->setPosition(2, 0);
+    m_modTitle->setPosition(2, 0, false);
     m_modTitle->alignment = ppg::Label::Alignment::Center;
     m_modTitle->setFgColorRange(0, ppg::Color::BrightWhite, 0);
     m_modTitle->show();
@@ -192,7 +192,7 @@ UIMain::UIMain(ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, cons
         m_modTitle->setText(std::string(" -=\xf0[ ") + fname + " ]\xf0=- ");
     }
     m_progress = new ppg::ProgressBar(this, 0, 40);
-    m_progress->setPosition((area().width() - 40) / 2, 3);
+    m_progress->setPosition((area().width() - 40) / 2, 3, false);
     m_progress->setFgColor(ppg::Color::BrightWhite);
     m_progress->show();
     UIMain::toTop(m_progress);

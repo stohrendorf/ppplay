@@ -11,14 +11,14 @@ namespace hsc
 {
 namespace
 {
-constexpr uint8_t ChanToCarrier[9] = { 3, 4, 5, 11, 12, 13, 19, 20, 21 };
-constexpr uint16_t NoteToFnum[12] = { 8555, 8577, 8600, 8624, 8650, 8677, 8706, 8736, 8769, 8803, 8839, 8878 };
+constexpr uint8_t ChanToCarrier[9] = {3, 4, 5, 11, 12, 13, 19, 20, 21};
+constexpr uint16_t NoteToFnum[12] = {8555, 8577, 8600, 8624, 8650, 8677, 8706, 8736, 8769, 8803, 8839, 8878};
 }
 
 ppp::AbstractModule* Module::factory(Stream* stream, uint32_t frequency, int maxRpt, ppp::Sample::Interpolation inter)
 {
-    Module* res = new Module(maxRpt, inter);
-    if(!res->load(stream))
+    auto res = new Module(maxRpt, inter);
+    if( !res->load(stream) )
     {
         delete res;
         return nullptr;
@@ -29,50 +29,50 @@ ppp::AbstractModule* Module::factory(Stream* stream, uint32_t frequency, int max
 
 size_t Module::internal_buildTick(AudioFrameBuffer* buf)
 {
-    if(!update(buf == nullptr))
+    if( !update(buf == nullptr) )
     {
         logger()->info(L4CXX_LOCATION, "Update failed, song end reached");
-        if(buf)
+        if( buf )
         {
             buf->reset();
         }
         return 0;
     }
-    if(state().order >= orderCount())
+    if( state().order >= orderCount() )
     {
         logger()->info(L4CXX_LOCATION, "Song end reached");
-        if(buf)
+        if( buf )
         {
             buf->reset();
         }
         return 0;
     }
-    if(orderAt(state().order)->playbackCount() >= maxRepeat())
+    if( orderAt(state().order)->playbackCount() >= maxRepeat() )
     {
         logger()->info(L4CXX_LOCATION, "Song end reached: Maximum repeat count reached");
-        if(buf)
+        if( buf )
         {
             buf->reset();
         }
         return 0;
     }
-    const size_t BufferSize = static_cast<size_t>(frequency() / 18.20676);
-    if(buf)
+    const auto BufferSize = static_cast<size_t>(frequency() / 18.20676);
+    if( buf )
     {
-        if(!buf->get())
+        if( !buf->get() )
         {
             buf->reset(new AudioFrameBuffer::element_type);
         }
         buf->get()->resize(BufferSize);
         ppp::BresenInterpolation interp(frequency(), opl::Opl3::SampleRate);
-        for(size_t i = 0; i < BufferSize; i++)
+        for( size_t i = 0; i < BufferSize; i++ )
         {
             // TODO panning?
             std::array<int16_t, 4> data;
             m_opl.read(&data);
             (**buf)[i].left = data[0] + data[1];
             (**buf)[i].right = data[2] + data[3];
-            if(interp.next() == 2)
+            if( interp.next() == 2 )
             {
                 m_opl.read(nullptr); // skip a sample
             }
@@ -95,7 +95,7 @@ ppp::ChannelState Module::internal_channelStatus(size_t idx) const
 
 bool Module::load(Stream* stream)
 {
-    if(!boost::ends_with(boost::to_lower_copy(stream->name()), ".hsc") || stream->size() > 59187)
+    if( !boost::ends_with(boost::to_lower_copy(stream->name()), ".hsc") || stream->size() > 59187 )
     {
         logger()->debug(L4CXX_LOCATION, "Invalid filename or size mismatch (size=%d)", stream->size());
         return false;
@@ -107,15 +107,15 @@ bool Module::load(Stream* stream)
 
     stream->seek(0);
     stream->read(reinterpret_cast<char*>(m_instr), 128 * 12);
-    for(int i = 0; i < 128; i++)
+    for( auto& i : m_instr )
     {
-        m_instr[i][2] ^= (m_instr[i][2] & 0x40) << 1;
-        m_instr[i][3] ^= (m_instr[i][3] & 0x40) << 1;
-        m_instr[i][11] >>= 4;
+        i[2] ^= (i[2] & 0x40) << 1;
+        i[3] ^= (i[3] & 0x40) << 1;
+        i[11] >>= 4;
     }
     uint8_t orders[51];
     stream->read(orders, 51);
-    for(int i = 0; i < 51 && orders[i] != 0xff; i++)
+    for( int i = 0; i < 51 && orders[i] != 0xff; i++ )
     {
         addOrder(std::make_unique<ppp::OrderEntry>(orders[i]));
     }
@@ -124,53 +124,51 @@ bool Module::load(Stream* stream)
     m_opl.writeReg(8, 128);
     m_opl.writeReg(0xbd, 0);
 
-    for(int i = 0; i < 9; i++)
+    for( int i = 0; i < 9; i++ )
     {
         storeInstr(i, i);
     }
     return true;
 }
 
-Module::Module(int maxRpt, ppp::Sample::Interpolation inter) : ppp::AbstractModule(maxRpt, inter), m_opl(),
-m_instr{ {0} }, m_patterns(), m_channels(), m_speedCountdown(1), m_fnum()
+Module::Module(int maxRpt, ppp::Sample::Interpolation inter)
+    : ppp::AbstractModule(maxRpt, inter), m_opl(), m_instr{{0}}, m_patterns(), m_channels(), m_speedCountdown(1), m_fnum()
 {
 }
 
-Module::~Module()
-{
-}
+Module::~Module() = default;
 
 AbstractArchive& Module::Channel::serialize(AbstractArchive* archive)
 {
     *archive
-        % instr
-        % fnum
-        % updateFnum
-        % tlCarrier
-        % updateTlCarrier
-        % tlModulator
-        % updateTlModulator
-        % slide
-        % state;
+    % instr
+    % fnum
+    % updateFnum
+    % tlCarrier
+    % updateTlCarrier
+    % tlModulator
+    % updateTlModulator
+    % slide
+    % state;
     return *archive;
 }
 
 AbstractArchive& Module::serialize(AbstractArchive* data)
 {
     ppp::AbstractModule::serialize(data);
-    for(int i = 0; i < 9; i++)
+    for( int i = 0; i < 9; i++ )
     {
         data->archive(m_channels + i);
     }
     data->array(m_fnum, 9)
-        % m_speedCountdown
-        % m_opl;
+    % m_speedCountdown
+    % m_opl;
     return *data;
 }
 
 void Module::storeInstr(uint8_t chan, uint8_t instr)
 {
-    if(m_channels[chan].instr == instr)
+    if( m_channels[chan].instr == instr )
     {
         return;
     }
@@ -201,7 +199,7 @@ void Module::storeInstr(uint8_t chan, uint8_t instr)
 void Module::setNote(uint8_t chan, uint8_t note)
 {
     BOOST_ASSERT(note != 0);
-    if(note == 0x7f)
+    if( note == 0x7f )
     {
         m_channels[chan].state.note = ppp::ChannelState::KeyOff;
         // key off
@@ -221,34 +219,36 @@ void Module::setNote(uint8_t chan, uint8_t note)
 bool Module::update(bool estimate)
 {
     m_speedCountdown--;
-    if(m_speedCountdown)
+    if( m_speedCountdown )
+    {
         return true;
+    }
     m_speedCountdown = state().speed;
 
     //BEGIN handleEffects
-    for(uint_fast8_t chan = 0; chan < 9; chan++)
+    for( uint_fast8_t chan = 0; chan < 9; chan++ )
     {
         uint32_t pattoff = state().row * 9 + chan;
         const uint8_t note = m_patterns[state().pattern][pattoff].note;
         const uint8_t effect = m_patterns[state().pattern][pattoff].effect;
 
-        if(estimate)
+        if( estimate )
         {
-            if(note & 0x80)
+            if( note & 0x80 )
             {
                 continue;
             }
-            if(effect == 0)
+            if( effect == 0 )
             {
                 continue;
             }
-            else if(effect == 1)
+            else if( effect == 1 )
             {
                 // next pattern
                 state().row = 0x3f;
                 continue;
             }
-            switch(effect >> 4)
+            switch( effect >> 4 )
             {
                 case 0x01:
                 case 0x02:
@@ -262,27 +262,27 @@ bool Module::update(bool estimate)
             continue;
         }
 
-        if(m_speedCountdown == state().speed)
+        if( m_speedCountdown == state().speed )
         {
             m_channels[chan].state.noteTriggered = false;
             m_channels[chan].state.fxDesc = ppp::fxdesc::NullFx;
-            if(m_channels[chan].state.note == ppp::ChannelState::KeyOff)
+            if( m_channels[chan].state.note == ppp::ChannelState::KeyOff )
             {
                 m_channels[chan].state.note = ppp::ChannelState::NoNote;
             }
         }
 
-        if(note == 0x80)
+        if( note == 0x80 )
         {
             storeInstr(chan, effect & 0x7f);
             m_channels[chan].state.cell = stringFmt("III %02X", (effect & 0x7f) + 0);
             continue;
         }
 
-        if(note != 0)
+        if( note != 0 )
         {
             setNote(chan, note & 0x7f);
-            if((note & 0x7f) == 0x7f)
+            if( (note & 0x7f) == 0x7f )
             {
                 m_channels[chan].state.cell = "Pau ";
             }
@@ -297,11 +297,11 @@ bool Module::update(bool estimate)
         }
         m_channels[chan].state.cell += stringFmt("%02X", effect + 0);
 
-        if(effect == 0)
+        if( effect == 0 )
         {
             continue;
         }
-        else if(effect == 1)
+        else if( effect == 1 )
         {
             m_channels[chan].state.fxDesc = ppp::fxdesc::PatternBreak;
             // next pattern
@@ -309,7 +309,7 @@ bool Module::update(bool estimate)
             continue;
         }
 
-        switch(effect >> 4)
+        switch( effect >> 4 )
         {
             case 0x01:
             {
@@ -320,7 +320,7 @@ bool Module::update(bool estimate)
                 m_channels[chan].fnum = (m_channels[chan].fnum & 0xff00) | val;
                 m_channels[chan].updateFnum = true;
             }
-            break;
+                break;
             case 0x02:
             {
                 m_channels[chan].state.fxDesc = ppp::fxdesc::PitchSlideDown;
@@ -330,7 +330,7 @@ bool Module::update(bool estimate)
                 m_channels[chan].fnum = (m_channels[chan].fnum & 0xff00) | val;
                 m_channels[chan].updateFnum = true;
             }
-            break;
+                break;
             case 0x0a:
                 m_channels[chan].state.fxDesc = ppp::fxdesc::SetVolume;
                 // set carrier volume
@@ -349,13 +349,13 @@ bool Module::update(bool estimate)
                 uint8_t val = (effect & 0x0f) << 2;
                 m_channels[chan].tlCarrier = val;
                 m_channels[chan].updateTlCarrier = true;
-                if(m_instr[m_channels[chan].instr][8] & 1)
+                if( m_instr[m_channels[chan].instr][8] & 1 )
                 {
                     m_channels[chan].tlModulator = val;
                     m_channels[chan].updateTlModulator = true;
                 }
             }
-            break;
+                break;
             default:
                 m_channels[chan].state.fxDesc = ppp::fxdesc::SetSpeed;
                 // set speed
@@ -365,37 +365,37 @@ bool Module::update(bool estimate)
     //END
 
     state().row++;
-    if(0x40 == state().row)
+    if( 0x40 == state().row )
     {
         state().row = 0;
         uint8_t order = state().order + 1;
         uint8_t pat = state().pattern;
-        if(pat & 0x80)
+        if( pat & 0x80 )
         {
-            if(pat == 0xff)
+            if( pat == 0xff )
             {
                 pat = 0x80;
             }
             pat &= 0x7f;
-            if(pat >= 49)
+            if( pat >= 49 )
             {
                 pat = 0;
             }
             order = pat;
         }
         setOrder(order);
-        if(order >= orderCount())
+        if( order >= orderCount() )
         {
             return false;
         }
     }
 
-    if(!estimate)
+    if( !estimate )
     {
         //BEGIN updateChanData
-        for(int i = 0; i < 9; i++)
+        for( int i = 0; i < 9; i++ )
         {
-            if(m_channels[i].slide != 0 || m_channels[i].updateFnum)
+            if( m_channels[i].slide != 0 || m_channels[i].updateFnum )
             {
                 m_channels[i].updateFnum = false;
                 m_opl.writeReg(0xa0 + i, m_channels[i].fnum & 0xff);
@@ -403,13 +403,13 @@ bool Module::update(bool estimate)
             }
             const uint8_t carrierSlot = ChanToCarrier[i];
             const uint8_t modSlot = carrierSlot - 3;
-            if(m_channels[i].updateTlCarrier)
+            if( m_channels[i].updateTlCarrier )
             {
                 m_channels[i].updateTlCarrier = false;
                 m_opl.writeReg(0x40 + carrierSlot, m_channels[i].tlCarrier);
                 m_channels[i].state.volume = 100 - (m_channels[i].tlCarrier & 0x3f) * 100 / 0x3f;
             }
-            if(m_channels[i].updateTlModulator)
+            if( m_channels[i].updateTlModulator )
             {
                 m_channels[i].updateTlModulator = false;
                 m_opl.writeReg(0x40 + modSlot, m_channels[i].tlModulator);

@@ -26,15 +26,19 @@
  * @ingroup Common
  * @brief Class derived from MemoryStream for an archive file
  */
-class PPPLAY_STREAM_EXPORT ArchiveFileStream : public MemoryStream
+class PPPLAY_STREAM_EXPORT ArchiveFileStream
+    : public MemoryStream
 {
-    DISABLE_COPY(ArchiveFileStream)
 public:
+    DISABLE_COPY(ArchiveFileStream)
+
     explicit ArchiveFileStream(const std::string& filename);
+
     bool isOpen() const
     {
         return m_isOpen;
     }
+
 private:
     bool m_isOpen;
 };

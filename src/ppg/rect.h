@@ -183,7 +183,7 @@ public:
      */
     constexpr Point size() const noexcept
     {
-        return Point(width(), height());
+        return {width(), height()};
     }
     /**
      * @brief Check if this rect contains a point

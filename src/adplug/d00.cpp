@@ -53,7 +53,7 @@ static const unsigned short notetable[12] = // D00 note table
 
 static inline uint16_t LE_WORD(const uint16_t* val)
 {
-    const uint8_t* b = reinterpret_cast<const uint8_t*>(val);
+    const auto* b = reinterpret_cast<const uint8_t*>(val);
     return (b[1] << 8) + b[0];
 }
 
@@ -78,7 +78,7 @@ bool D00Player::load(const std::string& filename)
 
     bool ver1 = false;
     // Check for version 2-4 header
-    if( strncmp(checkhead.id, "JCH\x26\x02\x66", 6) || checkhead.type || !checkhead.subsongs || checkhead.soundcard )
+    if( strncmp(checkhead.id, "JCH\x26\x02\x66", 6) != 0 || checkhead.type || !checkhead.subsongs || checkhead.soundcard )
     {
         // Check for version 0 or 1 header (and .d00 file extension)
         if( f.extension() != ".d00" )
@@ -545,9 +545,9 @@ readseq: // process sequence (pattern)
     }
 
     int trackend = 0;
-    for( auto c = 0; c < 9; c++ )
+    for( auto& channel : m_channels )
     {
-        if( m_channels[c].seqend )
+        if( channel.seqend )
         {
             trackend++;
         }

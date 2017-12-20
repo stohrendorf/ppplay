@@ -36,7 +36,7 @@ bool XsmPlayer::load(const std::string& filename)
     f.read(id, 6);
     uint16_t songlen;
     f >> songlen;
-    if( strncmp(id, "ofTAZ!", 6) || songlen > 3200 )
+    if( strncmp(id, "ofTAZ!", 6) != 0 || songlen > 3200 )
     {
         return false;
     }

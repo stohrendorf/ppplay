@@ -34,9 +34,11 @@
  */
 class PPPLAY_STREAM_EXPORT Stream
 {
-    DISABLE_COPY(Stream)
-        Stream() = delete;
 public:
+    DISABLE_COPY(Stream)
+
+    Stream() = delete;
+
     typedef std::shared_ptr<Stream> Ptr; //!< @brief Class pointer
 private:
     std::iostream* m_stream; //!< @brief The IO Stream associated with this BinStream
@@ -47,10 +49,12 @@ public:
      * @param[in] stream Shared pointer to the IO Stream to associate with this BinStream
      */
     explicit Stream(std::iostream* stream, const std::string& name = "Stream");
+
     /**
      * @brief Destructor
      */
     virtual ~Stream();
+
     /**
      * @brief Read data from the stream
      * @tparam TR Data type
@@ -66,6 +70,7 @@ public:
         m_stream->read(reinterpret_cast<char*>(data), count * sizeof(T));
         return *this;
     }
+
     /**
      * @brief Write data to the stream
      * @tparam T Data type
@@ -81,53 +86,62 @@ public:
         m_stream->write(reinterpret_cast<const char*>(data), count * sizeof(T));
         return *this;
     }
+
     /**
      * @brief Clear the failbits of the IO Stream
      */
     void clear();
+
     /**
      * @brief Seek to a stream position
      * @param[in] pos Position to seek to
      */
     void seek(std::streamoff pos);
+
     /**
      * @brief Seek to a relative stream position
      * @param[in] delta Relative seek position
      */
     void seekrel(std::streamoff delta);
+
     /**
      * @brief Get the stream position
      * @return The IO Stream position
      */
     std::streamoff pos() const;
+
     /**
      * @brief Const access to the internal stream
      * @return BinStream::m_stream
      */
     const std::iostream* stream() const;
+
     /**
      * @brief Access to the internal stream
      * @return BinStream::m_stream
      */
     std::iostream* stream();
+
     /**
      * @brief Returns the size of the underlying stream
      * @return The stream size
      */
     virtual std::streamsize size() const = 0;
+
     virtual std::string name() const;
 
     inline operator bool() const
     {
         return good();
     }
+
     inline bool good() const
     {
         return m_stream && m_stream->good();
     }
 
     template<class T>
-    friend inline Stream& operator >> (Stream& str, T& data)
+    friend inline Stream& operator>>(Stream& str, T& data)
     {
         return str.read(&data);
     }

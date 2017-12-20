@@ -31,7 +31,8 @@ namespace ppp
 {
 namespace xm
 {
-XmPattern::XmPattern(int16_t chans) : Field<XmCell>(chans, 1)
+XmPattern::XmPattern(int16_t chans)
+    : Field<XmCell>(chans, 1)
 {
 }
 
@@ -43,21 +44,21 @@ bool XmPattern::load(Stream* str)
     logger()->trace(L4CXX_LOCATION, "hdrLen=%d", hdrLen);
     uint8_t packType;
     *str >> packType;
-    if(packType != 0)
+    if( packType != 0 )
     {
         logger()->error(L4CXX_LOCATION, "Unsupported Pattern pack type: %d", int(packType));
         return false;
     }
     uint16_t rows;
     *str >> rows;
-    if(rows == 0)
+    if( rows == 0 )
     {
         // create a 64-row default pattern
         logger()->debug(L4CXX_LOCATION, "Number of rows = 0, creating 64-rows default pattern.");
         reset(width(), 64);
         return true;
     }
-    else if(rows < 1 || rows > 256)
+    else if( rows < 1 || rows > 256 )
     {
         logger()->warn(L4CXX_LOCATION, "Number of rows out of range: %d", rows);
         return false;
@@ -67,15 +68,15 @@ bool XmPattern::load(Stream* str)
     *str >> packedSize;
     logger()->trace(L4CXX_LOCATION, "Header end: %#x", str->pos());
     str->seekrel(hdrLen - 9); // copied from schismtracker
-    if(packedSize == 0)
+    if( packedSize == 0 )
     {
         return true;
     }
-    for(uint16_t row = 0; row < rows; row++)
+    for( uint16_t row = 0; row < rows; row++ )
     {
-        for(uint16_t chan = 0; chan < width(); chan++)
+        for( uint16_t chan = 0; chan < width(); chan++ )
         {
-            if(!at(chan, row).load(str))
+            if( !at(chan, row).load(str) )
             {
                 return false;
             }
@@ -86,7 +87,7 @@ bool XmPattern::load(Stream* str)
 
 XmPattern* XmPattern::createDefaultPattern(int16_t chans)
 {
-    XmPattern* result = new XmPattern(1);
+    auto result = new XmPattern(1);
     result->reset(chans, 64);
     return result;
 }

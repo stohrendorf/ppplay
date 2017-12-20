@@ -25,7 +25,8 @@
 
 namespace detail
 {
-template<typename T> struct PointerTraits
+template<typename T>
+struct PointerTraits
 {
     using Type = typename std::remove_reference<T>::type;
 
@@ -35,7 +36,8 @@ template<typename T> struct PointerTraits
     }
 };
 
-template<typename T> struct PointerTraits<T*>
+template<typename T>
+struct PointerTraits<T*>
 {
     using Type = typename std::remove_reference<T>::type;
 
@@ -45,7 +47,8 @@ template<typename T> struct PointerTraits<T*>
     }
 };
 
-template<typename T> struct PointerTraits<std::unique_ptr<T>>
+template<typename T>
+struct PointerTraits<std::unique_ptr<T>>
 {
     using Type = typename std::remove_reference<T>::type;
 
@@ -55,7 +58,8 @@ template<typename T> struct PointerTraits<std::unique_ptr<T>>
     }
 };
 
-template<typename T> struct PointerTraits<std::shared_ptr<T>>
+template<typename T>
+struct PointerTraits<std::shared_ptr<T>>
 {
     using Type = typename std::remove_reference<T>::type;
 
@@ -92,28 +96,29 @@ public:
      * @{
      */
     typename detail::PointerTraits<Type>::Type*
-        operator->()
+    operator->()
     {
         return detail::PointerTraits<Type>::getAddress(current());
     }
 
     const typename detail::PointerTraits<Type>::Type*
-        operator->() const
+    operator->() const
     {
         return detail::PointerTraits<Type>::getAddress(current());
     }
 
     typename detail::PointerTraits<Type>::Type&
-        operator*()
+    operator*()
     {
         return *detail::PointerTraits<Type>::getAddress(current());
     }
 
     const typename detail::PointerTraits<Type>::Type&
-        operator*() const
+    operator*() const
     {
         return *detail::PointerTraits<Type>::getAddress(current());
     }
+
     /**
      * @}
      */
@@ -121,15 +126,15 @@ public:
 
     TrackingContainer(const TrackingContainer<Type>&) = delete;
 
-    TrackingContainer(TrackingContainer<Type>&& rhs)
+    TrackingContainer(TrackingContainer<Type>&& rhs) noexcept
         : m_container(std::move(rhs.m_container))
-        , m_cursor(std::move(rhs.m_cursor))
+          , m_cursor(std::move(rhs.m_cursor))
     {
     }
 
     TrackingContainer<Type>& operator=(const TrackingContainer<Type>&) = delete;
 
-    TrackingContainer<Type>& operator=(TrackingContainer<Type>&& rhs)
+    TrackingContainer<Type>& operator=(TrackingContainer<Type>&& rhs) noexcept
     {
         m_container = std::move(rhs.m_container);
         m_cursor = std::move(rhs.m_cursor);
@@ -171,7 +176,7 @@ public:
         return m_container.end();
     }
 
-    inline typename std::vector<Type>::const_iterator begin()  const noexcept
+    inline typename std::vector<Type>::const_iterator begin() const noexcept
     {
         return m_container.begin();
     }
@@ -184,9 +189,9 @@ public:
      * @}
      */
 
-     /**
-      * @brief Index of the current element
-      */
+    /**
+     * @brief Index of the current element
+     */
     inline size_t where() const
     {
         return *m_cursor;
@@ -215,7 +220,7 @@ public:
      */
     inline void revert() noexcept
     {
-        if(!isDangling())
+        if( !isDangling() )
         {
             m_cursor = 0;
         }
@@ -267,20 +272,21 @@ public:
      */
     inline Reference next()
     {
-        if(!m_cursor)
+        if( !m_cursor )
         {
-            if(m_container.empty())
+            if( m_container.empty() )
                 BOOST_THROW_EXCEPTION(std::out_of_range("No more items at end"));
 
             m_cursor = 0;
             return current();
         }
 
-        if(*m_cursor + 1 >= m_container.size())
+        if( *m_cursor + 1 >= m_container.size() )
             BOOST_THROW_EXCEPTION(std::out_of_range("No more items at end"));
         ++*m_cursor;
         return current();
     }
+
     /**
      * @brief Go the the previous element if possible
      * @return Reference to the previous element
@@ -288,23 +294,26 @@ public:
      */
     inline Reference prev()
     {
-        if(isDangling())
+        if( isDangling() )
             BOOST_THROW_EXCEPTION(std::out_of_range("Container has dangling position"));
-        if(*m_cursor == 0)
+        if( *m_cursor == 0 )
             BOOST_THROW_EXCEPTION(std::out_of_range("No more items at front"));
         --*m_cursor;
         return current();
     }
+
     inline TrackingContainer& operator++()
     {
         next();
         return *this;
     }
+
     inline TrackingContainer& operator--()
     {
         prev();
         return *this;
     }
+
 private:
     std::vector<Type> m_container{};
     boost::optional<size_t> m_cursor = boost::none;

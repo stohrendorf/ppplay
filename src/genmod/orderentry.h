@@ -37,10 +37,9 @@ namespace ppp
  * @class OrderEntry
  * @brief An order list item
  */
-class PPPLAY_MODULE_BASE_EXPORT OrderEntry : public ISerializable
+class PPPLAY_MODULE_BASE_EXPORT OrderEntry
+    : public ISerializable
 {
-    DISABLE_COPY(OrderEntry)
-    OrderEntry() = delete;
 private:
     //! @brief Pattern index of this order
     uint8_t m_index;
@@ -49,6 +48,10 @@ private:
     //! @brief Row playback counter to avoid infinite loops
     std::vector<uint8_t> m_rowPlaybackCounter{};
 public:
+    DISABLE_COPY(OrderEntry)
+
+    OrderEntry() = delete;
+
     /**
      * @brief Constructor
      * @param[in] idx Order index
@@ -58,6 +61,7 @@ public:
         : m_index(idx)
     {
     }
+
     /**
      * @brief Return the pattern index associated with this order
      * @return m_index
@@ -72,8 +76,10 @@ public:
      * @param[in] index New index
      * @param[in] rowCount Pattern row count
      */
-    void setIndex( uint8_t index );
-    AbstractArchive& serialize( AbstractArchive* data ) override;
+    void setIndex(uint8_t index);
+
+    AbstractArchive& serialize(AbstractArchive* data) override;
+
     /**
      * @brief Get the playback count of this order
      * @return m_playbackCount
@@ -97,7 +103,7 @@ public:
      * @param[in] row Row for which the playback counter should be increased
      * @return The new counter
      */
-    uint8_t increaseRowPlayback( std::size_t row );
+    uint8_t increaseRowPlayback(std::size_t row);
 
     /**
      * @brief Sets the row count for the row playback counter and resets the counter to 0

@@ -33,31 +33,39 @@
  * @{
  */
 
- /**
-  * @class SDLAudioOutput
-  * @brief Output class for SDL
-  */
-class PPPLAY_OUTPUT_SDL_EXPORT SDLAudioOutput : public AbstractAudioOutput
+/**
+ * @class SDLAudioOutput
+ * @brief Output class for SDL
+ */
+class PPPLAY_OUTPUT_SDL_EXPORT SDLAudioOutput
+    : public AbstractAudioOutput
 {
-    DISABLE_COPY(SDLAudioOutput)
-        SDLAudioOutput() = delete;
 public:
+    DISABLE_COPY(SDLAudioOutput)
+
+    SDLAudioOutput() = delete;
+
     //! @copydoc IAudioOutput::IAudioOutput(const IAudioSource::WeakPtr&)
     explicit SDLAudioOutput(const AbstractAudioSource::WeakPtr& src);
-    virtual ~SDLAudioOutput();
+
+    ~SDLAudioOutput() override;
+
     const std::vector<uint16_t>& leftFft() const
     {
         return m_fftObserver.left();
     }
+
     const std::vector<uint16_t>& rightFft() const
     {
         return m_fftObserver.right();
     }
+
 private:
     std::mutex m_mutex;
     AudioFifo m_fifo;
     VolumeObserver m_volObserver;
     FftObserver m_fftObserver;
+
     /**
      * @brief SDL Audio callback handler
      * @param[in] userdata Pointer to SDLAudioOutput
@@ -66,14 +74,23 @@ private:
      * @note Declared here to get access to m_fifo
      */
     static void sdlAudioCallback(void* userdata, uint8_t* stream, int len_bytes);
+
     size_t getSdlData(BasicSampleFrame* data, size_t numFrames);
+
     int internal_init(int desiredFrq) override;
+
     bool internal_playing() const override;
+
     bool internal_paused() const override;
+
     void internal_play() override;
+
     void internal_pause() override;
+
     uint16_t internal_volumeLeft() const override;
+
     uint16_t internal_volumeRight() const override;
+
 protected:
     /**
      * @brief Get the logger

@@ -29,7 +29,7 @@
 #include <boost/format.hpp>
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-#pragma pack(push,1)
+#pragma pack(push, 1)
 struct InstrumentHeader
 {
     uint32_t size;
@@ -67,15 +67,11 @@ namespace ppp
 {
 namespace xm
 {
-XmInstrument::XmInstrument() :
-    m_samples(), m_map(), m_title(),
-    m_panEnvFlags(), m_volEnvFlags(),
-    m_panPoints(), m_volPoints(),
-    m_numVolPoints(0), m_numPanPoints(0),
-    m_volLoopStart(0), m_panLoopStart(0),
-    m_volLoopEnd(0), m_panLoopEnd(0),
-    m_volSustainPoint(0), m_panSustainPoint(0),
-    m_fadeout(0), m_vibRate(0), m_vibDepth(0), m_vibSweep(0), m_vibType(0)
+XmInstrument::XmInstrument()
+    :
+    m_samples(), m_map(), m_title(), m_panEnvFlags(), m_volEnvFlags(), m_panPoints(), m_volPoints(), m_numVolPoints(0), m_numPanPoints(0), m_volLoopStart(0)
+    , m_panLoopStart(0), m_volLoopEnd(0), m_panLoopEnd(0), m_volSustainPoint(0), m_panSustainPoint(0), m_fadeout(0), m_vibRate(0), m_vibDepth(0), m_vibSweep(0)
+    , m_vibType(0)
 {
     std::fill_n(m_map, 96, 0);
 }
@@ -94,12 +90,12 @@ bool XmInstrument::load(Stream* str)
                 LOG_WARNING("Instrument header type error @ 0x%.8x", str->pos()-sizeof(hdr));
                 return false;
         }*/
-    if(hdr.numSamples == 0)
+    if( hdr.numSamples == 0 )
     {
         str->seek(startPos + hdr.size);
         return true;
     }
-    if(hdr.numSamples > 255)
+    if( hdr.numSamples > 255 )
     {
         return false;
     }
@@ -108,19 +104,19 @@ bool XmInstrument::load(Stream* str)
     *str >> hdr2;
     std::copy(hdr2.indices, hdr2.indices + 96, m_map);
     str->seek(startPos + hdr.size);
-    for(uint_fast16_t i = 0; i < hdr.numSamples; i++)
+    for( uint_fast16_t i = 0; i < hdr.numSamples; i++ )
     {
-        XmSample* smp = new XmSample();
+        auto* smp = new XmSample();
         m_samples[i] = smp;
         smp->load(str);
     }
-    for(uint_fast16_t i = 0; i < hdr.numSamples; i++)
+    for( uint_fast16_t i = 0; i < hdr.numSamples; i++ )
     {
         m_samples[i]->loadData(str);
     }
     m_title = stringncpy(hdr.name, 22);
     m_panEnvFlags = static_cast<XmEnvelopeProcessor::EnvelopeFlags>(hdr2.panType);
-    for(size_t i = 0; i < m_panPoints.size(); i++)
+    for( size_t i = 0; i < m_panPoints.size(); i++ )
     {
         m_panPoints[i].position = hdr2.panEnvelope[i].x;
         m_panPoints[i].value = hdr2.panEnvelope[i].y;
@@ -135,7 +131,7 @@ bool XmInstrument::load(Stream* str)
     m_volSustainPoint = hdr2.volSustainPoint;
     m_panSustainPoint = hdr2.panSustainPoint;
     m_fadeout = hdr2.volFadeout;
-    for(size_t i = 0; i < m_volPoints.size(); i++)
+    for( size_t i = 0; i < m_volPoints.size(); i++ )
     {
         m_volPoints[i].position = hdr2.volEnvelope[i].x;
         m_volPoints[i].value = hdr2.volEnvelope[i].y;
@@ -149,19 +145,21 @@ bool XmInstrument::load(Stream* str)
 
 uint8_t XmInstrument::mapNoteIndex(uint8_t note) const
 {
-    if(note >= 96)
+    if( note >= 96 )
+    {
         return 0xff;
+    }
     return m_map[note] & 15;
 }
 
 XmSample* XmInstrument::mapNoteSample(uint8_t note) const
 {
-    if(note >= 96)
+    if( note >= 96 )
     {
         return nullptr;
     }
     uint8_t mapped = mapNoteIndex(note);
-    if(mapped >= m_samples.size())
+    if( mapped >= m_samples.size() )
     {
         return nullptr;
     }

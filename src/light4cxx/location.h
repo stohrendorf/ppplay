@@ -24,6 +24,7 @@
 #include "level.h"
 
 #include <thread>
+#include <utility>
 
 namespace light4cxx
 {
@@ -45,8 +46,9 @@ private:
     const std::string m_file; //!< @brief The file
     const std::string m_function; //!< @brief The function within m_file
     const std::thread::id m_threadId; //!< @brief The thread ID
-    Location() = delete;
 public:
+    Location() = delete;
+
     /**
      * @brief Inline constructor
      * @param[in] line Line of the location within @a file
@@ -54,10 +56,11 @@ public:
      * @param[in] function Function name of the location
      * @param[in] id Thread ID of the location
      */
-    inline Location(int line, const std::string& file, const std::string& function, const std::thread::id& id)
-        : m_line(line), m_file(file), m_function(function), m_threadId(id)
+    inline Location(int line, std::string file, std::string function, const std::thread::id& id)
+        : m_line(line), m_file(std::move(file)), m_function(std::move(function)), m_threadId(id)
     {
     }
+
     /**
      * @brief Get m_line
      * @return m_line
@@ -66,6 +69,7 @@ public:
     {
         return m_line;
     }
+
     /**
      * @brief Get m_function
      * @return m_function
@@ -74,6 +78,7 @@ public:
     {
         return m_function;
     }
+
     /**
      * @brief Get m_file
      * @return m_file
@@ -82,6 +87,7 @@ public:
     {
         return m_file;
     }
+
     /**
      * @brief Get m_threadId
      * @return m_threadId
@@ -90,6 +96,7 @@ public:
     {
         return m_threadId;
     }
+
     /**
      * @brief Convert a logging message to a string
      * @param[in] l The logging level of the message
@@ -99,6 +106,7 @@ public:
      * @see toString()
      */
     std::string toString(Level l, const Logger& logger, const std::string& msg) const;
+
     /**
      * @brief Sets the format of the output of toString()
      * @param[in] fmt The format string
@@ -176,9 +184,9 @@ public:
  */
 #define L4CXX_LOCATION ::light4cxx::Location(__LINE__, __FILE__, BOOST_CURRENT_FUNCTION, ::std::this_thread::get_id())
 
- /**
-  * @}
-  */
+/**
+ * @}
+ */
 }
 
 #endif

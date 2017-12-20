@@ -46,7 +46,6 @@ namespace ppp
  */
 class PPPLAY_CORE_EXPORT BresenInterpolation
 {
-    BresenInterpolation() = delete;
 private:
     //! @brief Width of the line
     int_fast32_t m_dx;
@@ -56,6 +55,8 @@ private:
     int_fast32_t m_err;
     std::streamoff m_position;
 public:
+    BresenInterpolation() = delete;
+
     static constexpr std::streamoff InvalidPosition = std::numeric_limits<std::streamoff>::max();
 
     /**
@@ -65,19 +66,19 @@ public:
      * @pre dx>1
      * @pre dy>0
      */
-    constexpr BresenInterpolation( int dx, int dy ) noexcept :
-        m_dx( dx ),
-        m_dy( dy ),
-        m_err( dx - 1 ),
-        m_position( 0 )
+    constexpr BresenInterpolation(int dx, int dy) noexcept
+        :
+        m_dx(dx), m_dy(dy), m_err(dx - 1), m_position(0)
     {
     }
 
-    inline operator std::streamoff() const noexcept {
+    inline operator std::streamoff() const noexcept
+    {
         return m_position;
     }
 
-    inline BresenInterpolation& operator=( uint_fast32_t val ) noexcept {
+    inline BresenInterpolation& operator=(uint_fast32_t val) noexcept
+    {
         m_position = val;
         return *this;
     }
@@ -87,15 +88,18 @@ public:
      * @param[in,out] pos Interpolation Y point to adjust
      * @post 0 <= m_err < m_dx
      */
-    inline uint_fast32_t next() {
-        BOOST_ASSERT( m_dx > 0 && m_dy >= 0 && m_err >= 0 && m_err < m_dx );
-        for( m_err -= m_dy; m_err < 0; m_err += m_dx ) {
+    inline uint_fast32_t next()
+    {
+        BOOST_ASSERT(m_dx > 0 && m_dy >= 0 && m_err >= 0 && m_err < m_dx);
+        for( m_err -= m_dy; m_err < 0; m_err += m_dx )
+        {
             m_position++;
         }
         return static_cast<uint_fast32_t>(m_position);
     }
 
-    BresenInterpolation& operator++() {
+    BresenInterpolation& operator++()
+    {
         next();
         return *this;
     }
@@ -105,40 +109,45 @@ public:
      * @param[in] dx New value for m_dx
      * @param[in] dy New value for m_dy
      */
-    inline void reset( int dx, int dy ) {
+    inline void reset(int dx, int dy)
+    {
         m_dx = dx;
         m_dy = dy;
         // m_err = dx-1;
-        BOOST_ASSERT( dx > 0 && dy >= 0 );
+        BOOST_ASSERT(dx > 0 && dy >= 0);
     }
 
     /**
      * @brief Get the normalized fractional part
      * @return Fractional part, normalized to be within 0 and 255
      */
-    inline int bias() const {
-        BOOST_ASSERT( m_err >= 0 && m_err < m_dx );
-        return ( m_err << 8 ) / m_dx;
+    inline int bias() const
+    {
+        BOOST_ASSERT(m_err >= 0 && m_err < m_dx);
+        return (m_err << 8) / m_dx;
     }
 
     /**
      * @brief Mix two values using the fractional part m_err
      * @return Mixed value
      */
-    inline int16_t biased( int16_t v1, int16_t v2 ) const noexcept {
+    inline int16_t biased(int16_t v1, int16_t v2) const noexcept
+    {
         int v1b = v1 * m_err;
-        int v2b = v2 * ( m_dx - m_err );
-        return ppp::clip<int>( ( v1b + v2b ) / m_dx, -32768, 32767 );
+        int v2b = v2 * (m_dx - m_err);
+        return ppp::clip<int>((v1b + v2b) / m_dx, -32768, 32767);
     }
 
-    inline BasicSampleFrame biased( const BasicSampleFrame& a, const BasicSampleFrame& b ) const noexcept {
-        return BasicSampleFrame(
-                   biased( a.left, b.left ),
-                   biased( a.right, b.right )
-               );
+    inline BasicSampleFrame biased(const BasicSampleFrame& a, const BasicSampleFrame& b) const noexcept
+    {
+        return {
+            biased(a.left, b.left),
+            biased(a.right, b.right)
+        };
     }
 
-    inline bool isValid() const noexcept {
+    inline bool isValid() const noexcept
+    {
         return m_position != InvalidPosition;
     }
 };

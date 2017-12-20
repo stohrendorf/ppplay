@@ -34,12 +34,12 @@ namespace ppp
 {
 class PPPLAY_CORE_EXPORT PluginRegistry
 {
-    DISABLE_COPY(PluginRegistry)
 private:
     /**
      * @brief Default constructor
      */
     PluginRegistry();
+
     /**
      * @brief Frees the plugin handles
      */
@@ -53,16 +53,21 @@ private:
     std::list<void*> m_handles;
 #endif
     boost::filesystem::path m_searchPath;
+
     /**
      * @brief Looks for plugins in @c m_searchPath that start with "libppplay_input_"
      */
     static void findPlugins();
+
 public:
+    DISABLE_COPY(PluginRegistry)
+
     /**
      * @brief Singleton design pattern
      * @return Single registry instance
      */
     static PluginRegistry& instance();
+
     /**
      * @brief Try to load a module file
      * @param[in] filename Filename of the module file to load
@@ -72,6 +77,7 @@ public:
      * @return The loaded file or a nullptr if an error occured
      */
     static AbstractModule::Ptr tryLoad(const std::string& filename, uint32_t frq, int maxRpt, Sample::Interpolation inter);
+
     void setSearchPath(const boost::filesystem::path& path);
 };
 }

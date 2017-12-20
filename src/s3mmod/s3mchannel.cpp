@@ -96,7 +96,8 @@ constexpr std::array<const uint16_t, 16> S3mFinetunes = {
 /**
  * @brief Note periodic table for frequency calculations
  */
-constexpr uint16_t Periods[12] = { 1712 << 4, 1616 << 4, 1524 << 4, 1440 << 4, 1356 << 4, 1280 << 4, 1208 << 4, 1140 << 4, 1076 << 4, 1016 << 4,  960 << 4,  907 << 4 };
+constexpr uint16_t Periods[12] = {1712 << 4, 1616 << 4, 1524 << 4, 1440 << 4, 1356 << 4, 1280 << 4, 1208 << 4, 1140 << 4, 1076 << 4, 1016 << 4, 960 << 4,
+                                  907 << 4};
 
 /**
  * @brief Calculate the period for a given note, octave and base frequency
@@ -110,6 +111,7 @@ inline constexpr uint16_t st3PeriodEx(uint8_t note, uint8_t oct, uint16_t c4spd,
 {
     return (Periods[note] >> oct) * finetune / (c4spd == 0 ? 8363 : c4spd);
 }
+
 /**
  * @brief Calculate the period for a given note and base frequency
  * @param[in] note Note value (including octave)
@@ -154,7 +156,7 @@ inline uint8_t deltaNote(uint8_t note, int8_t delta)
  */
 uint16_t clipPeriod(bool amiga, uint16_t period)
 {
-    if(amiga)
+    if( amiga )
     {
         return clip<uint16_t>(period, 0x15c, 0xd60);
     }
@@ -168,41 +170,18 @@ uint16_t clipPeriod(bool amiga, uint16_t period)
 void S3mChannel::setSampleIndex(int32_t idx)
 {
     m_state.instrument = idx;
-    if(!currentSample() || currentSample()->frequency() == 0)
+    if( !currentSample() || currentSample()->frequency() == 0 )
     {
         m_state.active = false;
     }
 }
 
-S3mChannel::S3mChannel(S3mModule* const module) :
-    m_note(0xff),
-    m_lastFxByte(0),
-    m_lastVibratoData(0),
-    m_lastPortaSpeed(0),
-    m_tremorVolume(0),
-    m_currentVolume(0),
-    m_realVolume(0),
-    m_baseVolume(0),
-    m_tremorMute(false),
-    m_retrigCount(0),
-    m_zeroVolCounter(3),
-    m_module(module),
-    m_basePeriod(0),
-    m_realPeriod(0),
-    m_portaTargetPeriod(0),
-    m_vibratoPhase(0),
-    m_vibratoWaveform(0),
-    m_tremoloPhase(0),
-    m_tremoloWaveform(0),
-    m_countdown(0),
-    m_tremorCounter(0),
-    m_c2spd(0),
-    m_glissando(false),
-    m_currentCell(new S3mCell()),
-    m_bresen(1, 1),
-    m_panning(0x20),
-    m_isEnabled(false),
-    m_state()
+S3mChannel::S3mChannel(S3mModule* const module)
+    :
+    m_note(0xff), m_lastFxByte(0), m_lastVibratoData(0), m_lastPortaSpeed(0), m_tremorVolume(0), m_currentVolume(0), m_realVolume(0), m_baseVolume(0)
+    , m_tremorMute(false), m_retrigCount(0), m_zeroVolCounter(3), m_module(module), m_basePeriod(0), m_realPeriod(0), m_portaTargetPeriod(0), m_vibratoPhase(0)
+    , m_vibratoWaveform(0), m_tremoloPhase(0), m_tremoloWaveform(0), m_countdown(0), m_tremorCounter(0), m_c2spd(0), m_glissando(false), m_currentCell(
+    new S3mCell()), m_bresen(1, 1), m_panning(0x20), m_isEnabled(false), m_state()
 {
     m_state.instrument = 101;
 }
@@ -219,7 +198,7 @@ ChannelState S3mChannel::status() const
 
 const S3mSample* S3mChannel::currentSample() const
 {
-    if(!between<int>(m_state.instrument, 0, m_module->numSamples() - 1))
+    if( !between<int>(m_state.instrument, 0, m_module->numSamples() - 1) )
     {
         return nullptr;
     }
@@ -228,15 +207,15 @@ const S3mSample* S3mChannel::currentSample() const
 
 void S3mChannel::update(const S3mCell& cell, bool patDelay, bool estimateOnly)
 {
-    if(!m_isEnabled)
+    if( !m_isEnabled )
     {
         return;
     }
-    if(m_module->state().tick == 0)
+    if( m_module->state().tick == 0 )
     {
-        if(estimateOnly)
+        if( estimateOnly )
         {
-            switch(static_cast<S3mEffects>(cell.effect()))
+            switch( static_cast<S3mEffects>(cell.effect()) )
             {
                 case s3mFxSpeed:
                     fxSpeed(cell.effectValue());
@@ -253,21 +232,21 @@ void S3mChannel::update(const S3mCell& cell, bool patDelay, bool estimateOnly)
         m_state.noteTriggered = false;
         m_state.fxDesc = fxdesc::NullFx;
         m_currentCell->clear();
-        if(!patDelay)
+        if( !patDelay )
         {
             *m_currentCell = cell;
         }
 
         m_state.cell = m_currentCell->trackerString();
         m_state.fxParam = m_currentCell->effectValue();
-        if(m_currentCell->effect() == s3mEmptyCommand)
+        if( m_currentCell->effect() == s3mEmptyCommand )
         {
             m_state.fx = 0;
         }
         else
         {
             uint8_t fx = m_currentCell->effect();
-            if(between<int>(fx, 1, 27))
+            if( between<int>(fx, 1, 27) )
             {
                 m_state.fx = char(fx - 1 + 'A');
             }
@@ -278,21 +257,22 @@ void S3mChannel::update(const S3mCell& cell, bool patDelay, bool estimateOnly)
             }
         }
 
-        if(m_currentCell->note() != s3mEmptyNote || m_currentCell->instrument() != s3mEmptyInstr || m_currentCell->volume() != s3mEmptyVolume || m_currentCell->effect() != s3mEmptyCommand)
+        if( m_currentCell->note() != s3mEmptyNote || m_currentCell->instrument() != s3mEmptyInstr || m_currentCell->volume() != s3mEmptyVolume ||
+            m_currentCell->effect() != s3mEmptyCommand )
         {
             triggerNote();
         }
 
-        if(m_currentCell->effect() != 0)
+        if( m_currentCell->effect() != 0 )
         {
             m_zeroVolCounter = 3;
         }
-        else if(m_module->hasZeroVolOpt())
+        else if( m_module->hasZeroVolOpt() )
         {
-            if(m_currentVolume == 0 && m_currentCell->volume() == 0 && m_currentCell->instrument() == s3mEmptyInstr && m_currentCell->note() == s3mEmptyNote)
+            if( m_currentVolume == 0 && m_currentCell->volume() == 0 && m_currentCell->instrument() == s3mEmptyInstr && m_currentCell->note() == s3mEmptyNote )
             {
                 m_zeroVolCounter--;
-                if(m_zeroVolCounter == 0)
+                if( m_zeroVolCounter == 0 )
                 {
                     m_state.active = false;
                     return;
@@ -305,28 +285,28 @@ void S3mChannel::update(const S3mCell& cell, bool patDelay, bool estimateOnly)
         }
 
         m_lastFxByte.noNibbles(m_currentCell->effectValue());
-        if(m_currentCell->effect() == s3mEmptyCommand)
+        if( m_currentCell->effect() == s3mEmptyCommand )
         {
-            if(m_module->hasAmigaLimits())
+            if( m_module->hasAmigaLimits() )
             {
                 m_countdown = 0;
             }
-            if(m_basePeriod != m_realPeriod)
+            if( m_basePeriod != m_realPeriod )
             {
                 m_realPeriod = m_basePeriod;
                 recalcFrequency();
             }
         }
-        else if(m_currentCell->effect() == s3mFxVolSlide)
+        else if( m_currentCell->effect() == s3mFxVolSlide )
         {
             m_countdown = 0;
-            if(m_basePeriod != m_realPeriod)
+            if( m_basePeriod != m_realPeriod )
             {
                 m_realPeriod = m_basePeriod;
                 recalcFrequency();
             }
         }
-        else if(m_currentCell->effect() != s3mFxTremor)
+        else if( m_currentCell->effect() != s3mFxTremor )
         {
             m_tremorCounter = 0;
             m_tremorMute = false;
@@ -334,7 +314,7 @@ void S3mChannel::update(const S3mCell& cell, bool patDelay, bool estimateOnly)
         else
         {
             // better readable than an if-expression
-            switch(m_currentCell->effect())
+            switch( m_currentCell->effect() )
             {
                 case s3mFxVibrato:
                 case s3mFxFineVibrato:
@@ -344,7 +324,7 @@ void S3mChannel::update(const S3mCell& cell, bool patDelay, bool estimateOnly)
             }
         }
 
-        switch(static_cast<S3mEffects>(m_currentCell->effect()))
+        switch( static_cast<S3mEffects>(m_currentCell->effect()) )
         {
             case s3mFxSpeed:
                 fxSpeed(m_currentCell->effectValue());
@@ -382,11 +362,11 @@ void S3mChannel::update(const S3mCell& cell, bool patDelay, bool estimateOnly)
             case s3mFxSetPanning:
                 // this is a non-standard effect, so we ignore the fx byte
                 m_state.fxDesc = fxdesc::SetPanPos;
-                if(m_currentCell->effectValue() <= 0x80)
+                if( m_currentCell->effectValue() <= 0x80 )
                 {
                     m_panning = m_currentCell->effectValue() >> 1;
                 }
-                else if(m_currentCell->effectValue() == 0xa4)
+                else if( m_currentCell->effectValue() == 0xa4 )
                 {
                     m_panning = m_currentCell->effectValue();
                 }
@@ -417,9 +397,9 @@ void S3mChannel::update(const S3mCell& cell, bool patDelay, bool estimateOnly)
                 break;
         }
     } // endif(tick==0)
-    else if(m_currentCell->effect() != 0 && !estimateOnly)
+    else if( m_currentCell->effect() != 0 && !estimateOnly )
     { // if(tick!=0)
-        switch(static_cast<S3mEffects>(m_currentCell->effect()))
+        switch( static_cast<S3mEffects>(m_currentCell->effect()) )
         {
             case s3mFxVolSlide:
                 fxVolSlide(m_currentCell->effectValue());
@@ -482,22 +462,22 @@ void S3mChannel::update(const S3mCell& cell, bool patDelay, bool estimateOnly)
 
 void S3mChannel::mixTick(MixerFrameBuffer* mixBuffer)
 {
-    if(!mixBuffer)
+    if( !mixBuffer )
     {
         return;
     }
-    if(!m_isEnabled)
+    if( !m_isEnabled )
     {
         return;
     }
-    if(!m_state.active || !currentSample() || m_basePeriod == 0)
+    if( !m_state.active || !currentSample() || m_basePeriod == 0 )
     {
         m_state.active = false;
         return;
     }
-    if(m_module->state().tick == 0 && m_zeroVolCounter != -1 && m_state.active)
+    if( m_module->state().tick == 0 && m_zeroVolCounter != -1 && m_state.active )
     {
-        if(m_currentVolume == 0)
+        if( m_currentVolume == 0 )
         {
             m_zeroVolCounter++;
         }
@@ -505,7 +485,7 @@ void S3mChannel::mixTick(MixerFrameBuffer* mixBuffer)
         {
             m_zeroVolCounter = 0;
         }
-        if(m_zeroVolCounter == 3)
+        if( m_zeroVolCounter == 3 )
         {
             m_zeroVolCounter = 0;
             m_state.active = false;
@@ -513,11 +493,11 @@ void S3mChannel::mixTick(MixerFrameBuffer* mixBuffer)
             return;
         }
     }
-    if(!m_state.active)
+    if( !m_state.active )
     {
         return;
     }
-    if(m_module->frequency() * (*mixBuffer)->size() == 0)
+    if( m_module->frequency() * (*mixBuffer)->size() == 0 )
     {
         m_state.active = false;
         return;
@@ -528,15 +508,15 @@ void S3mChannel::mixTick(MixerFrameBuffer* mixBuffer)
     const S3mSample* currSmp = currentSample();
     int volL = 0x20;
     int volR = 0x20;
-    if(m_panning > 0x20 && m_panning != 0xa4)
+    if( m_panning > 0x20 && m_panning != 0xa4 )
     {
         volL = 0x40 - m_panning;
     }
-    if(m_panning < 0x20)
+    if( m_panning < 0x20 )
     {
         volR = m_panning;
     }
-    else if(m_panning == 0xa4)
+    else if( m_panning == 0xa4 )
     {
         volR *= -1;
     }
@@ -547,7 +527,7 @@ void S3mChannel::mixTick(MixerFrameBuffer* mixBuffer)
 
 void S3mChannel::updateStatus()
 {
-    if(m_panning == 0xa4)
+    if( m_panning == 0xa4 )
     {
         m_state.panning = ChannelState::Surround;
     }
@@ -558,11 +538,11 @@ void S3mChannel::updateStatus()
 
     m_state.volume = clip<int>(m_currentVolume, 0, 0x3f) * 100 / 0x3f;
 
-    if(m_note == s3mKeyOffNote || m_currentCell->note() == s3mKeyOffNote)
+    if( m_note == s3mKeyOffNote || m_currentCell->note() == s3mKeyOffNote )
     {
         m_state.note = ChannelState::NoteCut;
     }
-    else if(!currentSample())
+    else if( !currentSample() )
     {
         m_state.note = ChannelState::NoNote;
         m_state.instrumentName.clear();
@@ -578,52 +558,52 @@ void S3mChannel::updateStatus()
 AbstractArchive& S3mChannel::serialize(AbstractArchive* data)
 {
     *data
-        % m_note
-        % m_lastFxByte
-        % m_lastVibratoData
-        % m_lastPortaSpeed
-        % m_tremorVolume
-        % m_currentVolume
-        % m_realVolume
-        % m_baseVolume
-        % m_tremorMute
-        % m_retrigCount
-        % m_zeroVolCounter
-        % m_basePeriod
-        % m_realPeriod
-        % m_portaTargetPeriod
-        % m_vibratoPhase
-        % m_vibratoWaveform
-        % m_tremoloPhase
-        % m_tremoloWaveform
-        % m_countdown
-        % m_tremorCounter
-        % m_c2spd
-        % m_glissando
-        % m_bresen
-        % m_currentCell
-        % m_isEnabled
-        % m_panning
-        % m_state;
+    % m_note
+    % m_lastFxByte
+    % m_lastVibratoData
+    % m_lastPortaSpeed
+    % m_tremorVolume
+    % m_currentVolume
+    % m_realVolume
+    % m_baseVolume
+    % m_tremorMute
+    % m_retrigCount
+    % m_zeroVolCounter
+    % m_basePeriod
+    % m_realPeriod
+    % m_portaTargetPeriod
+    % m_vibratoPhase
+    % m_vibratoWaveform
+    % m_tremoloPhase
+    % m_tremoloWaveform
+    % m_countdown
+    % m_tremorCounter
+    % m_c2spd
+    % m_glissando
+    % m_bresen
+    % m_currentCell
+    % m_isEnabled
+    % m_panning
+    % m_state;
     return *data;
 }
 
 void S3mChannel::fxPitchSlideUp(uint8_t fxByte)
 {
-    if(m_basePeriod == 0)
+    if( m_basePeriod == 0 )
     {
         return;
     }
     m_lastFxByte.noNibbles(fxByte);
     uint16_t delta = 0;
-    if(m_module->state().tick == 0)
+    if( m_module->state().tick == 0 )
     {
-        if(m_lastFxByte <= 0xe0)
+        if( m_lastFxByte <= 0xe0 )
         {
             m_state.fxDesc = fxdesc::FastPitchSlideUp;
             return;
         }
-        if(m_lastFxByte <= 0xf0)
+        if( m_lastFxByte <= 0xf0 )
         {
             m_state.fxDesc = fxdesc::SlowPitchSlideUp;
             delta = m_lastFxByte.lo();
@@ -636,7 +616,7 @@ void S3mChannel::fxPitchSlideUp(uint8_t fxByte)
     }
     else
     {
-        if(m_lastFxByte >= 0xe0)
+        if( m_lastFxByte >= 0xe0 )
         {
             return;
         }
@@ -649,20 +629,20 @@ void S3mChannel::fxPitchSlideUp(uint8_t fxByte)
 
 void S3mChannel::fxPitchSlideDown(uint8_t fxByte)
 {
-    if(m_basePeriod == 0)
+    if( m_basePeriod == 0 )
     {
         return;
     }
     m_lastFxByte.noNibbles(fxByte);
     uint16_t delta = 0;
-    if(m_module->state().tick == 0)
+    if( m_module->state().tick == 0 )
     {
-        if(m_lastFxByte <= 0xe0)
+        if( m_lastFxByte <= 0xe0 )
         {
             m_state.fxDesc = fxdesc::FastPitchSlideDown;
             return;
         }
-        if(m_lastFxByte <= 0xf0)
+        if( m_lastFxByte <= 0xf0 )
         {
             m_state.fxDesc = fxdesc::SlowPitchSlideDown;
             delta = m_lastFxByte.lo();
@@ -675,7 +655,7 @@ void S3mChannel::fxPitchSlideDown(uint8_t fxByte)
     }
     else
     {
-        if(m_lastFxByte >= 0xe0)
+        if( m_lastFxByte >= 0xe0 )
         {
             return;
         }
@@ -689,9 +669,9 @@ void S3mChannel::fxPitchSlideDown(uint8_t fxByte)
 void S3mChannel::fxVolSlide(uint8_t fxByte)
 {
     m_lastFxByte.noNibbles(fxByte);
-    if(m_lastFxByte.lo() == 0x0f)
+    if( m_lastFxByte.lo() == 0x0f )
     {
-        if(m_lastFxByte.hi() == 0)
+        if( m_lastFxByte.hi() == 0 )
         {
             m_state.fxDesc = fxdesc::VolSlideDown;
             m_currentVolume = std::max(0, m_currentVolume - m_lastFxByte.lo());
@@ -699,15 +679,15 @@ void S3mChannel::fxVolSlide(uint8_t fxByte)
         else
         {
             m_state.fxDesc = fxdesc::SlowVolSlideUp;
-            if(m_module->state().tick == 0)
+            if( m_module->state().tick == 0 )
             {
                 m_currentVolume = std::min(63, m_currentVolume + m_lastFxByte.hi());
             }
         }
     }
-    else if(m_lastFxByte.hi() == 0x0f)
+    else if( m_lastFxByte.hi() == 0x0f )
     {
-        if(m_lastFxByte.lo() == 0)
+        if( m_lastFxByte.lo() == 0 )
         {
             m_state.fxDesc = fxdesc::VolSlideUp;
             m_currentVolume = std::min(63, m_currentVolume + m_lastFxByte.hi());
@@ -715,7 +695,7 @@ void S3mChannel::fxVolSlide(uint8_t fxByte)
         else
         {
             m_state.fxDesc = fxdesc::SlowVolSlideDown;
-            if(m_module->state().tick == 0)
+            if( m_module->state().tick == 0 )
             {
                 m_currentVolume = std::max(0, m_currentVolume - m_lastFxByte.lo());
             }
@@ -723,10 +703,10 @@ void S3mChannel::fxVolSlide(uint8_t fxByte)
     }
     else
     {
-        if(m_lastFxByte.lo() == 0)
+        if( m_lastFxByte.lo() == 0 )
         {
             m_state.fxDesc = fxdesc::VolSlideUp;
-            if(m_module->hasFastVolSlides() || m_module->state().tick != 0)
+            if( m_module->hasFastVolSlides() || m_module->state().tick != 0 )
             {
                 m_currentVolume = std::min(63, m_currentVolume + m_lastFxByte.hi());
             }
@@ -734,7 +714,7 @@ void S3mChannel::fxVolSlide(uint8_t fxByte)
         else
         {
             m_state.fxDesc = fxdesc::VolSlideDown;
-            if(m_module->hasFastVolSlides() || m_module->state().tick != 0)
+            if( m_module->hasFastVolSlides() || m_module->state().tick != 0 )
             {
                 m_currentVolume = std::max(0, m_currentVolume - m_lastFxByte.lo());
             }
@@ -745,12 +725,12 @@ void S3mChannel::fxVolSlide(uint8_t fxByte)
 
 void S3mChannel::recalcFrequency()
 {
-    if(m_module->hasAmigaLimits())
+    if( m_module->hasAmigaLimits() )
     {
         m_basePeriod = clipPeriod(true, m_basePeriod);
     }
     uint16_t per = m_realPeriod;
-    if(per == 0)
+    if( per == 0 )
     {
         per = m_basePeriod;
     }
@@ -765,41 +745,53 @@ void S3mChannel::recalcVolume()
 void S3mChannel::fxPorta(uint8_t fxByte, bool noReuse)
 {
     m_state.fxDesc = fxdesc::Porta;
-    if(m_module->state().tick == 0)
+    if( m_module->state().tick == 0 )
     {
         return;
     }
-    if(m_basePeriod == 0)
+    if( m_basePeriod == 0 )
     {
-        if(m_portaTargetPeriod == 0)
+        if( m_portaTargetPeriod == 0 )
+        {
             return;
+        }
         m_realPeriod = m_basePeriod = m_portaTargetPeriod;
         fxByte = m_portaTargetPeriod & 0xff;
     }
-    if(!noReuse)
+    if( !noReuse )
     {
         m_lastPortaSpeed = fxByte;
         fxByte = m_lastPortaSpeed;
     }
-    if(m_basePeriod == m_portaTargetPeriod)
+    if( m_basePeriod == m_portaTargetPeriod )
+    {
         return;
-    if(m_basePeriod > m_portaTargetPeriod)
+    }
+    if( m_basePeriod > m_portaTargetPeriod )
     {
         int tmp = m_basePeriod - (fxByte << 2);
-        if(tmp < m_portaTargetPeriod)
+        if( tmp < m_portaTargetPeriod )
+        {
             tmp = m_portaTargetPeriod;
-        if(m_glissando)
+        }
+        if( m_glissando )
+        {
             tmp = glissando(tmp);
+        }
         m_realPeriod = m_basePeriod = tmp;
         recalcFrequency();
     }
     else
     {
         int tmp = m_basePeriod + (fxByte << 2);
-        if(tmp > m_portaTargetPeriod)
+        if( tmp > m_portaTargetPeriod )
+        {
             tmp = m_portaTargetPeriod;
-        if(m_glissando)
+        }
+        if( m_glissando )
+        {
             tmp = glissando(tmp);
+        }
         m_realPeriod = m_basePeriod = tmp;
         recalcFrequency();
     }
@@ -813,22 +805,28 @@ void S3mChannel::fxPorta(uint8_t fxByte, bool noReuse)
  */
 static int16_t waveValue(uint8_t waveform, uint8_t phase)
 {
-    switch(waveform & 7)
+    switch( waveform & 7 )
     {
         case 1:
-            if(phase & 0x40)
+            if( phase & 0x40 )
+            {
                 return S3mWaveRamp[0];
+            }
         case 5:
             return S3mWaveRamp[phase & 0x3f];
         case 2:
-            if(phase & 0x40)
+            if( phase & 0x40 )
+            {
                 return S3mWaveSquare[0];
+            }
         case 6:
             return S3mWaveSquare[phase & 0x3f];
         case 0:
         case 3:
-            if(phase & 0x40)
+            if( phase & 0x40 )
+            {
                 return S3mWaveSine[0];
+            }
         case 4:
         case 7:
             return S3mWaveSine[phase & 0x3f];
@@ -839,7 +837,7 @@ static int16_t waveValue(uint8_t waveform, uint8_t phase)
 
 void S3mChannel::fxVibrato(uint8_t fxByte, bool fine, bool noReuse)
 {
-    if(!fine)
+    if( !fine )
     {
         m_state.fxDesc = fxdesc::Vibrato;
     }
@@ -847,25 +845,29 @@ void S3mChannel::fxVibrato(uint8_t fxByte, bool fine, bool noReuse)
     {
         m_state.fxDesc = fxdesc::FineVibrato;
     }
-    if(!noReuse)
+    if( !noReuse )
     {
         m_lastVibratoData = fxByte;
     }
-    if(m_basePeriod == 0)
+    if( m_basePeriod == 0 )
     {
         return;
     }
     int val = waveValue(m_vibratoWaveform, m_vibratoPhase);
-    if((m_vibratoWaveform & 3) == 3)
+    if( (m_vibratoWaveform & 3) == 3 )
     { // random vibrato
         m_vibratoPhase = (m_vibratoPhase + (std::rand() & 0x0f)) & 0x3f;
     }
     m_vibratoPhase = (m_vibratoPhase + m_lastVibratoData.hi()) & 0x3f;
     val = (val * m_lastVibratoData.lo()) >> 4;
-    if(m_module->st2Vibrato())
+    if( m_module->st2Vibrato() )
+    {
         val >>= 1;
-    if(fine)
+    }
+    if( fine )
+    {
         val >>= 2;
+    }
     m_realPeriod = m_basePeriod + val;
     recalcFrequency();
 }
@@ -874,15 +876,17 @@ void S3mChannel::fxNoteCut(uint8_t fxByte)
 {
     m_state.fxDesc = fxdesc::NoteCut;
     fxByte &= 0x0f;
-    if(m_module->state().tick == 0)
+    if( m_module->state().tick == 0 )
     {
         m_countdown = fxByte;
         return;
     }
-    if(m_countdown == 0)
+    if( m_countdown == 0 )
+    {
         return;
+    }
     m_countdown--;
-    if(m_countdown == 0)
+    if( m_countdown == 0 )
     {
         m_state.active = false;
     }
@@ -892,15 +896,17 @@ void S3mChannel::fxNoteDelay(uint8_t fxByte)
 {
     m_state.fxDesc = fxdesc::NoteDelay;
     fxByte &= 0x0f;
-    if(m_module->state().tick == 0)
+    if( m_module->state().tick == 0 )
     {
         m_countdown = fxByte;
         return;
     }
-    if(m_countdown == 0)
+    if( m_countdown == 0 )
+    {
         return;
+    }
     m_countdown--;
-    if(m_countdown == 0)
+    if( m_countdown == 0 )
     {
         m_state.active = true;
         playNote();
@@ -910,15 +916,19 @@ void S3mChannel::fxNoteDelay(uint8_t fxByte)
 void S3mChannel::fxGlobalVolume(uint8_t fxByte)
 {
     m_state.fxDesc = fxdesc::GlobalVolume;
-    if(fxByte <= 64)
+    if( fxByte <= 64 )
+    {
         m_module->state().globalVolume = fxByte;
+    }
 }
 
 void S3mChannel::fxFineTune(uint8_t fxByte)
 {
     m_state.fxDesc = fxdesc::SetFinetune;
-    if(m_module->state().tick != 0)
+    if( m_module->state().tick != 0 )
+    {
         return;
+    }
     fxByte &= 0x0f;
     m_c2spd = m_basePeriod = m_realPeriod = S3mFinetunes[fxByte];
     recalcFrequency();
@@ -940,7 +950,7 @@ void S3mChannel::fxRetrigger(uint8_t fxByte)
 {
     m_state.fxDesc = fxdesc::Retrigger;
     m_lastFxByte.noNibbles(fxByte);
-    if(m_lastFxByte.lo() == 0 || m_lastFxByte.lo() > m_countdown)
+    if( m_lastFxByte.lo() == 0 || m_lastFxByte.lo() > m_countdown )
     {
         m_countdown++;
         return;
@@ -948,7 +958,7 @@ void S3mChannel::fxRetrigger(uint8_t fxByte)
     m_countdown = 0;
     m_bresen = 0;
     int nvol = m_currentVolume;
-    switch(m_lastFxByte.hi())
+    switch( m_lastFxByte.hi() )
     {
         case 0x0:
             break;
@@ -1011,12 +1021,12 @@ void S3mChannel::fxTremor(uint8_t fxByte)
 {
     m_state.fxDesc = fxdesc::Tremor;
     m_lastFxByte.noNibbles(fxByte);
-    if(m_tremorCounter != 0)
+    if( m_tremorCounter != 0 )
     {
         m_tremorCounter--;
         return;
     }
-    if(m_tremorMute)
+    if( m_tremorMute )
     {
         m_tremorMute = false;
         m_currentVolume = 0;
@@ -1035,7 +1045,7 @@ void S3mChannel::fxTremor(uint8_t fxByte)
 void S3mChannel::fxTempo(uint8_t fxByte)
 {
     m_state.fxDesc = fxdesc::SetTempo;
-    if(fxByte <= 0x20)
+    if( fxByte <= 0x20 )
     {
         return;
     }
@@ -1045,20 +1055,22 @@ void S3mChannel::fxTempo(uint8_t fxByte)
 void S3mChannel::fxSpeed(uint8_t fxByte)
 {
     m_state.fxDesc = fxdesc::SetSpeed;
-    if(fxByte == 0)
+    if( fxByte == 0 )
+    {
         return;
+    }
     m_module->setSpeed(fxByte);
 }
 
 void S3mChannel::fxArpeggio(uint8_t fxByte)
 {
     m_state.fxDesc = fxdesc::Arpeggio;
-    if(!currentSample())
+    if( !currentSample() )
     {
         return;
     }
     m_lastFxByte.noNibbles(fxByte);
-    switch(m_module->state().tick % 3)
+    switch( m_module->state().tick % 3 )
     {
         case 0: // normal note
             m_realPeriod = st3Period(m_note, currentSample()->frequency());
@@ -1076,7 +1088,7 @@ void S3mChannel::fxArpeggio(uint8_t fxByte)
 void S3mChannel::fxSpecial(uint8_t fxByte)
 {
     m_lastFxByte.noNibbles(fxByte);
-    switch(static_cast<S3mSpecialEffects>(m_lastFxByte.hi()))
+    switch( static_cast<S3mSpecialEffects>(m_lastFxByte.hi()) )
     {
         case s3mSFxNoteDelay:
             fxNoteDelay(m_lastFxByte);
@@ -1103,10 +1115,14 @@ void S3mChannel::fxSpecial(uint8_t fxByte)
             break;
         case s3mSFxStereoCtrl:
             m_state.fxDesc = fxdesc::StereoControl;
-            if(m_lastFxByte.lo() <= 7)
+            if( m_lastFxByte.lo() <= 7 )
+            {
                 m_panning = (m_lastFxByte.lo() + 8) * 0x40 / 0x0f;
+            }
             else
+            {
                 m_panning = (m_lastFxByte.lo() - 8) * 0x40 / 0x0f;
+            }
             break;
         case s3mSFxPatLoop:
         case s3mSFxPatDelay:
@@ -1119,10 +1135,12 @@ void S3mChannel::fxTremolo(uint8_t fxByte)
 {
     m_state.fxDesc = fxdesc::Tremolo;
     m_lastFxByte = fxByte;
-    if(m_baseVolume == 0)
+    if( m_baseVolume == 0 )
+    {
         return;
+    }
     const int vol = m_baseVolume + ((m_lastFxByte.lo() * waveValue(m_tremoloWaveform, m_tremoloPhase)) >> 7);
-    if((m_tremoloWaveform & 3) == 3)
+    if( (m_tremoloWaveform & 3) == 3 )
     { // random vibrato
         m_tremoloPhase = (m_tremoloPhase + (std::rand() & 0x0f)) & 0x3f;
     }
@@ -1139,7 +1157,7 @@ uint16_t S3mChannel::glissando(uint16_t period)
 
 void S3mChannel::triggerNote()
 {
-    if(m_currentCell->effect() == s3mFxSpecial && (m_currentCell->effectValue() >> 4) == s3mSFxNoteDelay)
+    if( m_currentCell->effect() == s3mFxSpecial && (m_currentCell->effectValue() >> 4) == s3mSFxNoteDelay )
     {
         return;
     }
@@ -1148,14 +1166,14 @@ void S3mChannel::triggerNote()
 
 void S3mChannel::playNote()
 {
-    if(m_currentCell->instrument() >= 101)
+    if( m_currentCell->instrument() >= 101 )
     {
         setSampleIndex(-1);
     }
-    else if(m_currentCell->instrument() != s3mEmptyInstr)
+    else if( m_currentCell->instrument() != s3mEmptyInstr )
     {
         setSampleIndex(m_currentCell->instrument() - 1);
-        if(currentSample())
+        if( currentSample() )
         {
             m_baseVolume = m_currentVolume = std::min<uint8_t>(currentSample()->volume(), 63);
             m_c2spd = currentSample()->frequency();
@@ -1168,9 +1186,9 @@ void S3mChannel::playNote()
         }
     }
 
-    if(m_currentCell->note() != s3mEmptyNote)
+    if( m_currentCell->note() != s3mEmptyNote )
     {
-        if(m_currentCell->note() == s3mKeyOffNote)
+        if( m_currentCell->note() == s3mKeyOffNote )
         {
             m_realPeriod = 0;
             recalcFrequency();
@@ -1178,16 +1196,16 @@ void S3mChannel::playNote()
             recalcVolume();
             m_state.active = false;
         }
-        else if(currentSample())
+        else if( currentSample() )
         {
             m_state.active = true;
             m_portaTargetPeriod = st3Period(m_currentCell->note(), m_c2spd);
-            if((m_basePeriod == 0 || m_portaTargetPeriod == 0) || (m_currentCell->effect() != s3mFxPorta && m_currentCell->effect() != s3mFxPortaVolSlide))
+            if( (m_basePeriod == 0 || m_portaTargetPeriod == 0) || (m_currentCell->effect() != s3mFxPorta && m_currentCell->effect() != s3mFxPortaVolSlide) )
             {
                 m_realPeriod = m_basePeriod = m_portaTargetPeriod;
                 m_tremoloPhase = m_vibratoPhase = 0;
                 recalcFrequency();
-                if(m_currentCell->effect() == s3mFxOffset)
+                if( m_currentCell->effect() == s3mFxOffset )
                 {
                     fxOffset(m_currentCell->effectValue());
                 }
@@ -1201,7 +1219,7 @@ void S3mChannel::playNote()
         }
     }
     uint8_t vol = m_currentCell->volume();
-    if(vol != s3mEmptyVolume)
+    if( vol != s3mEmptyVolume )
     {
         vol = std::min<uint8_t>(vol, 63);
         m_currentVolume = vol;
@@ -1212,7 +1230,7 @@ void S3mChannel::playNote()
 
 void S3mChannel::setPanning(uint8_t pan)
 {
-    if(pan > 0x40 && pan != 0xa4)
+    if( pan > 0x40 && pan != 0xa4 )
     {
         return;
     }

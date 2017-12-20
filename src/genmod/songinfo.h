@@ -37,29 +37,33 @@ namespace ppp
  * @struct SongInfo
  * @brief Information about a sub-song within a module
  */
-struct PPPLAY_CORE_EXPORT SongInfo {
+struct PPPLAY_CORE_EXPORT SongInfo
+{
     explicit SongInfo() = default;
 
-    explicit inline SongInfo( SongInfo&& rhs )
-        : states( std::move( rhs.states ) )
-        , length( rhs.length ) {
+    inline SongInfo(SongInfo&& rhs) noexcept
+        : states(std::move(rhs.states))
+          , length(rhs.length)
+    {
         rhs.length = 0;
     }
 
     ~SongInfo() = default;
 
-    inline SongInfo& operator=( SongInfo rhs ) {
+    inline SongInfo& operator=(SongInfo rhs)
+    {
         rhs.swap(*this);
         return *this;
     }
-    
-    void swap(SongInfo& rhs) {
+
+    void swap(SongInfo& rhs)
+    {
         std::swap(states, rhs.states);
         std::swap(length, rhs.length);
     }
 
     //! @brief States for seeking
-    TrackingContainer < std::unique_ptr<AbstractArchive> > states{};
+    TrackingContainer<std::unique_ptr<AbstractArchive>> states{};
     //! @brief Length in sample frames
     size_t length = 0;
 
@@ -70,7 +74,7 @@ struct PPPLAY_CORE_EXPORT SongInfo {
 
     bool storeIfNecessary(uint32_t secs, ISerializable* data)
     {
-        if(m_storedSeconds + 15 > secs)
+        if( m_storedSeconds + 15 > secs )
         {
             return false;
         }

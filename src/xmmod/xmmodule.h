@@ -33,16 +33,20 @@ namespace ppp
 namespace xm
 {
 class XmChannel;
+
 class XmPattern;
+
 class XmInstrument;
+
 /**
  * @class XmModule
  * @brief XM module class
  */
-class XmModule : public AbstractModule
+class XmModule
+    : public AbstractModule
 {
-    DISABLE_COPY(XmModule)
-        friend class XmChannel;
+    friend class XmChannel;
+
 private:
     //! @brief @c true if amiga period table is used
     bool m_amiga;
@@ -69,6 +73,8 @@ private:
     //! @brief The requested pattern delay countdown, 0 if unused
     uint8_t m_requestedPatternDelay;
 public:
+    DISABLE_COPY(XmModule)
+
     /**
      * @brief Factory method
      * @param[in] filename Filename of the module
@@ -79,16 +85,22 @@ public:
      * Loads and initializes the module if possible
      */
     static AbstractModule* factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter);
-    virtual ~XmModule();
+
+    ~XmModule() override;
+
 private:
     size_t internal_buildTick(AudioFrameBuffer* buffer) override;
+
     ChannelState internal_channelStatus(size_t) const override;
+
     int internal_channelCount() const override;
+
     /**
      * @brief Constructor
      * @param[in] maxRpt maximum repeat count per order
      */
     XmModule(int maxRpt, Sample::Interpolation inter);
+
     /**
      * @brief Try to load a XM module
      * @param[in] filename Filename of the module to load
@@ -96,18 +108,21 @@ private:
      * @retval false on error
      */
     bool load(Stream* stream);
+
     /**
      * @brief Processes jumps
      * @param[in] estimateOnly Used when estimating track length
      * @return @c false when end of song is reached
      */
     bool adjustPosition();
+
     /**
      * @brief Get an instrument
      * @param[in] idx 1-based instrument index
      * @return Instrument pointer or nullptr
      */
     const XmInstrument* getInstrument(int idx) const;
+
     /**
      * @brief Map a note and finetune to its base period
      * @param[in] note Note
@@ -115,12 +130,14 @@ private:
      * @return Period
      */
     uint16_t noteToPeriod(uint8_t note, int8_t finetune) const;
+
     /**
      * @brief Calculate the frequency from a period
      * @param[in] period The period
      * @return The calculated frequency
      */
     uint32_t periodToFrequency(uint16_t period) const;
+
     /**
      * @brief Apply glissando to a period
      * @param[in] period Input period
@@ -129,6 +146,7 @@ private:
      * @return Quantisized period
      */
     uint16_t glissando(uint16_t period, int8_t finetune, uint8_t deltaNote = 0) const;
+
     /**
      * @brief Reverse calculates a period to its fine note index
      * @param[in] period The period to reverse calculate
@@ -137,33 +155,40 @@ private:
      * @return The fine note index. It is 16 times finer than the real note index.
      */
     uint16_t periodToFineNoteIndex(uint16_t period, int8_t finetune, uint8_t deltaNote = 0) const;
+
     /**
      * @brief Request pattern break
      * @param[in] next Row to break to
      */
     void doPatternBreak(int16_t next);
+
     /**
      * @brief Request order jump
      * @param[in] next Order to jump to
      */
     void doJumpPos(int16_t next);
+
     /**
      * @brief Request pattern loop
      * @param[in] next Row to jump to
      */
     void doPatLoop(int16_t next);
+
     AbstractArchive& serialize(AbstractArchive* data) override;
+
     /**
      * @brief Check if there is a running pattern delay
      * @retval true if there is a running pattern delay
      */
     bool isRunningPatDelay() const;
+
     /**
      * @brief Request a pattern delay
      * @param[in] counter The number of rows the pattern should be delayed
      * @note Ignored if there is already a running pattern delay
      */
     void doPatDelay(uint8_t counter);
+
     /**
      * @brief Get the logger
      * @return Child logger with attached ".xm"

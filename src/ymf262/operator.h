@@ -37,10 +37,13 @@
 namespace opl
 {
 class Opl3;
-class Operator : public ISerializable
+
+class Operator
+    : public ISerializable
 {
-    DISABLE_COPY(Operator)
 public:
+    DISABLE_COPY(Operator)
+
     typedef std::shared_ptr<Operator> Ptr;
 
     static constexpr int
@@ -73,7 +76,9 @@ private:
     uint8_t m_block = 0;
 
     int16_t handleTopCymbal(uint8_t ws);
+
     int16_t handleHighHat(uint8_t ws);
+
     int16_t handleSnareDrum(uint8_t ws);
 
 public:
@@ -81,14 +86,17 @@ public:
     {
         return &m_envelopeGenerator;
     }
+
     EnvelopeGenerator* envelopeGenerator()
     {
         return &m_envelopeGenerator;
     }
+
     const PhaseGenerator* phaseGenerator() const
     {
         return &m_phaseGenerator;
     }
+
     PhaseGenerator* phaseGenerator()
     {
         return &m_phaseGenerator;
@@ -137,7 +145,9 @@ public:
     int16_t getOutput(uint16_t outputPhase, uint8_t ws);
 
     void keyOn();
+
     void keyOff();
+
     void updateOperator(uint16_t f_num, uint8_t blk);
 
     AbstractArchive& serialize(AbstractArchive* archive) override;

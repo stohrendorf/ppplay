@@ -25,9 +25,9 @@ namespace ppp
  * @{
  */
 
-Sample::Sample() noexcept :
-m_loopStart(0), m_loopEnd(0), m_volume(0),
-m_frequency(0), m_data(), m_filename(), m_title(), m_looptype(LoopType::None)
+Sample::Sample() noexcept
+    :
+    m_loopStart(0), m_loopEnd(0), m_volume(0), m_frequency(0), m_data(), m_filename(), m_title(), m_looptype(LoopType::None)
 {
 }
 
@@ -69,10 +69,10 @@ light4cxx::Logger* Sample::logger()
 bool Sample::mixNonInterpolated(BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift) const
 {
     BOOST_ASSERT(bresen != nullptr && buffer != nullptr && rightShift >= 0);
-    for(MixerSampleFrame & frame : ** buffer)
+    for( MixerSampleFrame& frame : **buffer )
     {
         *bresen = adjustPosition(*bresen);
-        if(!bresen->isValid())
+        if( !bresen->isValid() )
         {
             return false;
         }
@@ -87,10 +87,10 @@ bool Sample::mixNonInterpolated(BresenInterpolation* bresen, MixerFrameBuffer* b
 bool Sample::mixLinearInterpolated(BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift) const
 {
     BOOST_ASSERT(bresen != nullptr && buffer != nullptr && rightShift >= 0);
-    for(MixerSampleFrame & frame : ** buffer)
+    for( MixerSampleFrame& frame : **buffer )
     {
         *bresen = adjustPosition(*bresen);
-        if(!bresen->isValid())
+        if( !bresen->isValid() )
         {
             return false;
         }
@@ -109,10 +109,12 @@ constexpr inline int interpolateCubicLevel0(int p0, int p1, int p2, int p3, int 
 {
     return (bias * (3 * (p1 - p2) + p3 - p0)) >> 8;
 }
+
 constexpr inline int interpolateCubicLevel1(int p0, int p1, int p2, int p3, int bias)
 {
     return (bias * ((p0 << 1) - 5 * p1 + (p2 << 2) - p3 + interpolateCubicLevel0(p0, p1, p2, p3, bias))) >> 8;
 }
+
 constexpr inline MixerSample interpolateCubic(int p0, int p1, int p2, int p3, int bias)
 {
     return p1 + ((bias * (p2 - p0 + interpolateCubicLevel1(p0, p1, p2, p3, bias))) >> 9);
@@ -122,20 +124,20 @@ constexpr inline MixerSample interpolateCubic(int p0, int p1, int p2, int p3, in
 bool Sample::mixCubicInterpolated(BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift) const
 {
     BOOST_ASSERT(bresen != nullptr && buffer != nullptr && rightShift >= 0);
-    for(MixerSampleFrame & frame : ** buffer)
+    for( MixerSampleFrame& frame : **buffer )
     {
         *bresen = adjustPosition(*bresen);
-        if(!bresen->isValid())
+        if( !bresen->isValid() )
         {
             return false;
         }
 
         BasicSampleFrame samples[4];
-        for(int i = 0; i < 4; i++)
+        for( int i = 0; i < 4; i++ )
         {
             samples[i] = sampleAt(adjustPosition(i + *bresen - 1));
         }
-        frame.left += (factorLeft  * interpolateCubic(samples[0].left, samples[1].left, samples[2].left, samples[3].left, bresen->bias())) >> rightShift;
+        frame.left += (factorLeft * interpolateCubic(samples[0].left, samples[1].left, samples[2].left, samples[3].left, bresen->bias())) >> rightShift;
         frame.right += (factorRight * interpolateCubic(samples[0].right, samples[1].right, samples[2].right, samples[3].right, bresen->bias())) >> rightShift;
 
         bresen->next();
@@ -145,7 +147,7 @@ bool Sample::mixCubicInterpolated(BresenInterpolation* bresen, MixerFrameBuffer*
 
 bool Sample::mix(Sample::Interpolation inter, BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift) const
 {
-    switch(inter)
+    switch( inter )
     {
         case Interpolation::None:
             return mixNonInterpolated(bresen, buffer, factorLeft, factorRight, rightShift);
@@ -160,21 +162,23 @@ bool Sample::mix(Sample::Interpolation inter, BresenInterpolation* bresen, Mixer
 
 inline BasicSampleFrame Sample::sampleAt(std::streamoff pos) const noexcept
 {
-    if(pos == BresenInterpolation::InvalidPosition || pos < 0)
+    if( pos == BresenInterpolation::InvalidPosition || pos < 0 )
     {
-        return BasicSampleFrame();
+        return {};
     }
     pos = makeRealPos(pos);
-    if(pos >= m_data.size())
-        return{ 0,0 };
+    if( pos >= m_data.size() )
+    {
+        return {0, 0};
+    }
     return m_data[pos];
 }
 
 inline std::streamoff Sample::makeRealPos(std::streamoff pos) const noexcept
 {
-    if(m_looptype == LoopType::Pingpong)
+    if( m_looptype == LoopType::Pingpong )
     {
-        if(pos >= m_loopEnd)
+        if( pos >= m_loopEnd )
         {
             pos = 2 * m_loopEnd - pos;
         }

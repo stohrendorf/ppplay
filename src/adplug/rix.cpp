@@ -403,7 +403,7 @@ inline void RixPlayer::ad_a0b0l_reg(uint16_t index, uint16_t p2, uint16_t p3)
     uint16_t i = p2 + m_a0b0Data2[index];
     m_a0b0Data4[index] = p3;
     m_a0b0Data3[index] = p2;
-    int16_t i2 = static_cast<int16_t>(i);
+    auto i2 = static_cast<int16_t>(i);
     i2 = (i2 <= 0x5F ? i2 : 0x5F);
     i2 = (i2 >= 0 ? i2 : 0);
     uint16_t data = m_fBuffer[m_addrsHead[i2] + m_displace[index] / 2];

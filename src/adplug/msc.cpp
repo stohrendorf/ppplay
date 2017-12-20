@@ -156,14 +156,7 @@ bool MscPlayer::load_header(FileStream& bf, msc_header* hdr)
     BOOST_ASSERT(hdr != nullptr);
     bf >> *hdr;
 
-    // check signature
-    if( memcmp(msc_signature, hdr->mh_sign, MSC_SIGN_LEN) != 0 )
-    {
-        return false;
-    }
-
-    // check version
-    return hdr->mh_ver == 0;
+    return memcmp(msc_signature, hdr->mh_sign, MSC_SIGN_LEN) == 0 && hdr->mh_ver == 0;
 }
 
 bool MscPlayer::decode_octet(uint8_t* output)

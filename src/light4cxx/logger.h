@@ -32,31 +32,36 @@ namespace light4cxx
  * @{
  */
 
- /**
-  * @class Logger
-  * @brief The logger class
-  */
+/**
+ * @class Logger
+ * @brief The logger class
+ */
 class PPPLAY_LIGHT4CXX_EXPORT Logger
 {
-    DISABLE_COPY(Logger)
-        Logger() = delete;
 public:
+    DISABLE_COPY(Logger)
+
+    Logger() = delete;
+
     /**
      * @brief Create a new or get an existing logger
      * @param[in] name The name of the new logger
      * @return Shared pointer to the new logger
      */
     static Logger* get(const std::string& name);
+
     /**
      * @brief Get the root logger
      * @return Shared pointer to the root logger
      * @note The root logger will always be named "root"
      */
     static Logger* root();
+
     static void setOutput(std::ostream* stream)
     {
         s_output = stream;
     }
+
     /**
      * @brief Get the logger's name
      * @return m_name
@@ -65,6 +70,7 @@ public:
     {
         return m_name;
     }
+
     /**
      * @brief Log a message
      * @param[in] l The level of the message, except Level::Off or Level::All
@@ -73,6 +79,7 @@ public:
      * @see L4CXX_LOCATION
      */
     void log(Level l, const Location& loc, const std::string& str) const;
+
     /**
      * @brief Log a message with Level::Trace
      * @param[in] loc The location
@@ -81,12 +88,13 @@ public:
     template<class ...Args>
     void trace(Location&& loc, std::string&& fmt, Args&& ...args)
     {
-        if(Level::Trace < s_level || s_level == Level::Off)
+        if( Level::Trace < s_level || s_level == Level::Off )
         {
             return;
         }
         log(Level::Trace, std::forward<Location>(loc), stringFmt(std::forward<std::string>(fmt), std::forward<Args>(args)...));
     }
+
     /**
      * @brief Log a message with Level::Debug
      * @param[in] loc The location
@@ -95,12 +103,13 @@ public:
     template<class ...Args>
     void debug(Location&& loc, std::string&& fmt, Args&& ...args)
     {
-        if(Level::Debug < s_level || s_level == Level::Off)
+        if( Level::Debug < s_level || s_level == Level::Off )
         {
             return;
         }
         log(Level::Debug, std::forward<Location>(loc), stringFmt(std::forward<std::string>(fmt), std::forward<Args>(args)...));
     }
+
     /**
      * @brief Log a message with Level::Info
      * @param[in] loc The location
@@ -109,12 +118,13 @@ public:
     template<class ...Args>
     void info(Location&& loc, std::string&& fmt, Args&& ...args)
     {
-        if(Level::Info < s_level || s_level == Level::Off)
+        if( Level::Info < s_level || s_level == Level::Off )
         {
             return;
         }
         log(Level::Info, std::forward<Location>(loc), stringFmt(std::forward<std::string>(fmt), std::forward<Args>(args)...));
     }
+
     /**
      * @brief Log a message with Level::Warn
      * @param[in] loc The location
@@ -123,12 +133,13 @@ public:
     template<class ...Args>
     void warn(Location&& loc, std::string&& fmt, Args&& ...args)
     {
-        if(Level::Warn < s_level || s_level == Level::Off)
+        if( Level::Warn < s_level || s_level == Level::Off )
         {
             return;
         }
         log(Level::Warn, std::forward<Location>(loc), stringFmt(std::forward<std::string>(fmt), std::forward<Args>(args)...));
     }
+
     /**
      * @brief Log a message with Level::Error
      * @param[in] loc The location
@@ -137,12 +148,13 @@ public:
     template<class ...Args>
     void error(Location&& loc, std::string&& fmt, Args&& ...args)
     {
-        if(Level::Error < s_level || s_level == Level::Off)
+        if( Level::Error < s_level || s_level == Level::Off )
         {
             return;
         }
         log(Level::Error, std::forward<Location>(loc), stringFmt(std::forward<std::string>(fmt), std::forward<Args>(args)...));
     }
+
     /**
      * @brief Log a message with Level::Fatal
      * @param[in] loc The location
@@ -151,12 +163,13 @@ public:
     template<class ...Args>
     void fatal(Location&& loc, std::string&& fmt, Args&& ...args)
     {
-        if(Level::Fatal < s_level || s_level == Level::Off)
+        if( Level::Fatal < s_level || s_level == Level::Off )
         {
             return;
         }
         log(Level::Fatal, std::forward<Location>(loc), stringFmt(std::forward<std::string>(fmt), std::forward<Args>(args)...));
     }
+
     /**
      * @brief Get the current log level filter
      * @return The log level filter, including Level::Off and Level::All
@@ -165,6 +178,7 @@ public:
     {
         return s_level;
     }
+
     /**
      * @brief Sets the log level filter
      * @param[in] l The log level filter, including Level::Off and Level::All
@@ -173,12 +187,14 @@ public:
     {
         s_level = l;
     }
+
 private:
     /**
      * @brief Private constructor
      * @param[in] name The logger's name
      */
     explicit Logger(const std::string& name);
+
     /**
      * @brief The logger's name
      */

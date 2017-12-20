@@ -555,7 +555,7 @@ bool S3mPlayer::update()
 void S3mPlayer::rewind(const boost::optional<size_t>&)
 {
     // set basic variables
-    m_songend = 0;
+    m_songend = false;
     setCurrentOrder(0);
     setCurrentRow(0);
     setCurrentTempo(m_header.initialTempo);

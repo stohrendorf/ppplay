@@ -30,10 +30,9 @@
  * @{
  */
 
-class PPPLAY_OUTPUT_OGG_EXPORT OggAudioOutput : public AbstractAudioOutput
+class PPPLAY_OUTPUT_OGG_EXPORT OggAudioOutput
+    : public AbstractAudioOutput
 {
-    DISABLE_COPY( OggAudioOutput )
-    OggAudioOutput() = delete;
 private:
     std::string m_filename;
     //! @brief Whether the output is paused
@@ -54,21 +53,34 @@ private:
 
     void encodeThread();
 
-    virtual uint16_t internal_volumeRight() const;
-    virtual uint16_t internal_volumeLeft() const;
-    virtual void internal_pause();
-    virtual void internal_play();
-    virtual bool internal_paused() const;
-    virtual bool internal_playing() const;
-    virtual int internal_init( int desiredFrq );
+    uint16_t internal_volumeRight() const override;
+
+    uint16_t internal_volumeLeft() const override;
+
+    void internal_pause() override;
+
+    void internal_play() override;
+
+    bool internal_paused() const override;
+
+    bool internal_playing() const override;
+
+    int internal_init(int desiredFrq) override;
+
 public:
+    DISABLE_COPY(OggAudioOutput)
+
+    OggAudioOutput() = delete;
+
     /**
      * @brief Constructor
      * @param[in] src Source of audio data
      * @param[in] filename Output filename of the MP3 data
      */
-    explicit OggAudioOutput( const AbstractAudioSource::WeakPtr& src, const std::string& filename );
-    virtual ~OggAudioOutput();
+    explicit OggAudioOutput(const AbstractAudioSource::WeakPtr& src, const std::string& filename);
+
+    ~OggAudioOutput() override;
+
     /**
      * @brief Set the meta tags of the output file
      * @param[in] title Title tag
@@ -76,7 +88,8 @@ public:
      * @param[in] artist Artist tag
      * @pre Should be called before init(int).
      */
-    void setMeta( const std::string& title, const std::string& album, const std::string& artist );
+    void setMeta(const std::string& title, const std::string& album, const std::string& artist);
+
 protected:
     /**
      * @brief Get the logger

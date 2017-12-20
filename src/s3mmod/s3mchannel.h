@@ -43,7 +43,9 @@ namespace ppp
 namespace s3m
 {
 class S3mModule;
+
 class S3mCell;
+
 class S3mSample;
 
 /**
@@ -53,10 +55,9 @@ class S3mSample;
  * @note Please note that even the S3M tech spec allows the cell volume to be
  * 64, it effectively is clipped to a value between 0 and <b>64</b>.
  */
-class S3mChannel : public ISerializable
+class S3mChannel
+    : public ISerializable
 {
-    S3mChannel() = delete; //!< @brief No default constructor
-    DISABLE_COPY(S3mChannel)
 private:
     uint8_t m_note;          //!< @brief Currently playing note
     RememberByte<true> m_lastFxByte;        //!< @brief Last FX Value
@@ -92,6 +93,7 @@ private:
      * @return Pointer to current sample or nullptr
      */
     const S3mSample* currentSample() const;
+
     /**
      * @brief Set the current sample index
      * @param[in] idx New sample index
@@ -100,39 +102,69 @@ private:
 
     // new implementation
     void fxPitchSlideUp(uint8_t fxByte);
+
     void fxPitchSlideDown(uint8_t fxByte);
+
     void fxVolSlide(uint8_t fxByte);
+
     void fxPorta(uint8_t fxByte, bool noReuse);
+
     void fxVibrato(uint8_t fxByte, bool fine, bool noReuse);
+
     void fxNoteCut(uint8_t fxByte);
+
     void fxNoteDelay(uint8_t fxByte);
+
     void fxGlobalVolume(uint8_t fxByte);
+
     void fxFineTune(uint8_t fxByte);
+
     void fxSetVibWaveform(uint8_t fxByte);
+
     void fxSetTremWaveform(uint8_t fxByte);
+
     void fxRetrigger(uint8_t fxByte);
+
     void fxOffset(uint8_t fxByte);
+
     void fxTremor(uint8_t fxByte);
+
     void fxTempo(uint8_t fxByte);
+
     void fxSpeed(uint8_t fxByte);
+
     void fxArpeggio(uint8_t fxByte);
+
     void fxSpecial(uint8_t fxByte);
+
     void fxTremolo(uint8_t fxByte);
 
     void triggerNote();
+
     void playNote();
+
     void recalcFrequency();
+
     uint16_t glissando(uint16_t period);
+
 public:
+    S3mChannel() = delete; //!< @brief No default constructor
+    DISABLE_COPY(S3mChannel)
+
     /**
      * @brief Constructor
      * @param[in] module Owning module
      */
     explicit S3mChannel(S3mModule* module);
-    ~S3mChannel();
+
+    ~S3mChannel() override;
+
     void mixTick(MixerFrameBuffer* mixBuffer);
+
     void updateStatus();
+
     AbstractArchive& serialize(AbstractArchive* data) override;
+
     /**
      * @brief Update the channel
      * @param[in] cell Pointer to a note cell
@@ -140,10 +172,12 @@ public:
      * @param[in] estimateOnly Used when estimating track length
      */
     void update(const S3mCell& cell, bool patDelay, bool estimateOnly);
+
     /**
      * @brief Recalculates the real output volume
      */
     void recalcVolume();
+
     /**
      * @brief Set the panning with range check
      * @param[in] pan Panning value
@@ -152,14 +186,17 @@ public:
     void setPanning(uint8_t pan);
 
     ChannelState status() const;
+
     void disable()
     {
         m_isEnabled = false;
     }
+
     void enable()
     {
         m_isEnabled = true;
     }
+
 protected:
     /**
      * @brief Get the logger

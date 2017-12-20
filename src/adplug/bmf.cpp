@@ -170,9 +170,9 @@ bool BmfPlayer::xadplayer_load()
     {
         ptr = &tune().front() + 6;
 
-        for( int i = 0; i < 32; i++ )
+        for( auto& instr : m_bmfInstruments )
         {
-            m_bmfInstruments[i].name[0] = 0;
+            instr.name[0] = 0;
             memcpy(m_bmfInstruments[*ptr].data.data(), ptr + 2, 13); // bug no.1 (no instrument-table-end detection)
             ptr += 15;
         }

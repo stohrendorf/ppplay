@@ -29,13 +29,13 @@
  * @{
  */
 
- /**
-  * @class SDLTimer
-  * @brief ITimer specialization for SDL
-  */
-class PPPLAY_CORE_EXPORT SDLTimer : public ITimer
+/**
+ * @class SDLTimer
+ * @brief ITimer specialization for SDL
+ */
+class PPPLAY_CORE_EXPORT SDLTimer
+    : public ITimer
 {
-    DISABLE_COPY(SDLTimer)
 private:
     /**
      * @brief Timer interval for this timer
@@ -46,6 +46,7 @@ private:
      */
     int m_id;
     std::mutex m_callbackMutex;
+
     /**
      * @brief SDL Timer callback handler
      * @param[in] interval Timer interval
@@ -55,13 +56,18 @@ private:
      * Calls ITimer::onTimer()
      */
     static uint32_t callback(uint32_t interval, void* userdata);
+
 public:
+    DISABLE_COPY(SDLTimer)
+
     /**
      * @brief Constructor
      * @param[in] interval Desired timer interval in milliseconds
      */
     explicit SDLTimer(uint32_t interval);
-    virtual ~SDLTimer();
+
+    ~SDLTimer() override;
+
     uint32_t interval() const override;
 };
 

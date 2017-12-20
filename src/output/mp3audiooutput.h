@@ -35,8 +35,6 @@
  */
 class PPPLAY_OUTPUT_MP3_EXPORT MP3AudioOutput : public AbstractAudioOutput
 {
-    DISABLE_COPY( MP3AudioOutput )
-    MP3AudioOutput() = delete;
 private:
     //! @brief Internal lame flags struct
     struct lame_global_struct* m_lameGlobalFlags;
@@ -65,6 +63,8 @@ private:
     virtual bool internal_playing() const;
     virtual int internal_init( int desiredFrq );
 public:
+    DISABLE_COPY( MP3AudioOutput )
+    MP3AudioOutput() = delete;
     /**
      * @brief Constructor
      * @param[in] src Source of audio data

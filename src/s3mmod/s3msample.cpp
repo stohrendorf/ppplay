@@ -31,14 +31,15 @@ namespace ppp
 namespace s3m
 {
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-enum : uint8_t
+enum
+    : uint8_t
 {
     s3mFlagSmpLooped = 0x01, //!< @brief Sample is looped
     s3mFlagSmpStereo = 0x02, //!< @brief Sample is stereo
     s3mFlagSmp16bit = 0x04  //!< @brief Sample has 16-bit samples
 };
 
-#pragma pack(push,1)
+#pragma pack(push, 1)
 struct S3mSampleHeader
 {
     uint8_t type;         //!< @brief Sample type, only type 1 supported
@@ -63,7 +64,8 @@ struct S3mSampleHeader
 #pragma pack(pop)
 #endif
 
-S3mSample::S3mSample() : Sample(), m_highQuality(false)
+S3mSample::S3mSample()
+    : Sample(), m_highQuality(false)
 {
 }
 
@@ -74,19 +76,21 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
         str->seek(pos);
         S3mSampleHeader smpHdr;
         *str >> smpHdr;
-        if((smpHdr.length == 0) || ((smpHdr.memSeg[0] == 0) && (smpHdr.memSeg[1] == 0) && (smpHdr.memSeg[2] == 0)))
+        if( (smpHdr.length == 0) || ((smpHdr.memSeg[0] == 0) && (smpHdr.memSeg[1] == 0) && (smpHdr.memSeg[2] == 0)) )
+        {
             return true;
-        if(!std::equal(smpHdr.ID, smpHdr.ID + 4, "SCRS"))
+        }
+        if( !std::equal(smpHdr.ID, smpHdr.ID + 4, "SCRS") )
         {
             logger()->warn(L4CXX_LOCATION, "Sample ID not 'SCRS', assuming empty.");
             return true;
         }
-        if(smpHdr.pack != 0)
+        if( smpHdr.pack != 0 )
         {
             logger()->error(L4CXX_LOCATION, "DP30ADPCM packed sample, not supported.");
             return false;
         }
-        if(smpHdr.type != 1)
+        if( smpHdr.type != 1 )
         {
             logger()->warn(L4CXX_LOCATION, "Sample Type not 0x01 (is %#.2x), assuming empty.", int(smpHdr.type));
             return true;
@@ -96,15 +100,19 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
         //	aLength = (aLength>64000) ? 64000 : aLength;
         setLoopStart((smpHdr.hiLoopStart << 16) | smpHdr.loopStart);
         //	aLoopStart = (aLoopStart>64000) ? 64000 : aLoopStart;
-        if(!imagoLoopEnd)
+        if( !imagoLoopEnd )
+        {
             setLoopEnd((smpHdr.hiLoopEnd << 16) | smpHdr.loopEnd);
+        }
         else
+        {
             setLoopEnd(((smpHdr.hiLoopEnd << 16) | smpHdr.loopEnd) + 1);
+        }
         //	aLoopEnd = (aLoopEnd>64000) ? 64000 : aLoopEnd;
         setVolume(smpHdr.volume);
         setFrequency(smpHdr.c2spd);
         bool loadStereo = (smpHdr.flags & static_cast<uint8_t>(s3mFlagSmpStereo)) != 0;
-        if(smpHdr.hiLoopStart == smpHdr.hiLoopEnd && smpHdr.loopStart == smpHdr.loopEnd)
+        if( smpHdr.hiLoopStart == smpHdr.hiLoopEnd && smpHdr.loopStart == smpHdr.loopEnd )
         {
             setLoopType(Sample::LoopType::None);
         }
@@ -117,21 +125,21 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
         // ok, header loaded, now load the sample data
         str->seek(((smpHdr.memSeg[0] << 16) | (smpHdr.memSeg[2] << 8) | smpHdr.memSeg[1]) * 16);
         BOOST_ASSERT(length() != 0);
-        if(!str->good())
+        if( !str->good() )
         {
             setFrequency(0);
             logger()->warn(L4CXX_LOCATION, "Seek failed or length is zero, assuming empty.");
             return true;
         }
-        if(smpHdr.flags & static_cast<uint8_t>(s3mFlagSmp16bit))
+        if( smpHdr.flags & static_cast<uint8_t>(s3mFlagSmp16bit) )
         {
             logger()->info(L4CXX_LOCATION, "Loading 16-bit sample");
             m_highQuality = true;
             uint16_t smp16;
             auto smpPtr = beginIterator();
-            for(std::streamoff i = 0; i < length(); i++)
+            for( std::streamoff i = 0; i < length(); i++ )
             {
-                if(!(*str >> smp16))
+                if( !(*str >> smp16) )
                 {
                     logger()->warn(L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes.");
                     return true;
@@ -139,13 +147,13 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
                 smpPtr->left = smpPtr->right = clip(smp16 - 32768, -32767, 32767);   // negating -32768 fails otherwise in surround mode
                 ++smpPtr;
             }
-            if(loadStereo)
+            if( loadStereo )
             {
                 logger()->info(L4CXX_LOCATION, "Loading Stereo...");
                 smpPtr = beginIterator();
-                for(std::streamoff i = 0; i < length(); i++)
+                for( std::streamoff i = 0; i < length(); i++ )
                 {
-                    if(!(*str >> smp16))
+                    if( !(*str >> smp16) )
                     {
                         logger()->warn(L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes.");
                         return true;
@@ -160,9 +168,9 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
             logger()->info(L4CXX_LOCATION, "Loading 8-bit sample");
             uint8_t smp8;
             auto smpPtr = beginIterator();
-            for(std::streamoff i = 0; i < length(); i++)
+            for( std::streamoff i = 0; i < length(); i++ )
             {
-                if(!(*str >> smp8))
+                if( !(*str >> smp8) )
                 {
                     logger()->warn(L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes.");
                     return true;
@@ -170,13 +178,13 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
                 smpPtr->left = smpPtr->right = clip((smp8 - 128) << 8, -32767, 32767);   // negating -32768 fails otherwise in surround mode
                 ++smpPtr;
             }
-            if(loadStereo)
+            if( loadStereo )
             {
                 logger()->info(L4CXX_LOCATION, "Loading Stereo...");
                 smpPtr = beginIterator();
-                for(std::streamoff i = 0; i < length(); i++)
+                for( std::streamoff i = 0; i < length(); i++ )
                 {
-                    if(!(*str >> smp8))
+                    if( !(*str >> smp8) )
                     {
                         logger()->warn(L4CXX_LOCATION, "EOF reached before Sample Data read completely, assuming zeroes.");
                         return true;
@@ -188,7 +196,7 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
         }
         return true;
     }
-    catch(...)
+    catch( ... )
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(boost::current_exception_diagnostic_information()));
     }

@@ -1,4 +1,5 @@
 #define BOOST_TEST_MODULE Field
+
 #include <boost/test/unit_test.hpp>
 
 #include "../field.h"
@@ -37,11 +38,11 @@ BOOST_AUTO_TEST_CASE(AtRangeException)
 BOOST_AUTO_TEST_CASE(ValuesAtAccess)
 {
     Field<int> f(3, 5);
-    for(size_t i = 0; i < f.width()*f.height(); i++)
+    for( size_t i = 0; i < f.width() * f.height(); i++ )
     {
         BOOST_REQUIRE_NO_THROW(f.at(i % f.width(), i / f.width()) = i);
     }
-    for(size_t i = 0; i < f.width()*f.height(); i++)
+    for( size_t i = 0; i < f.width() * f.height(); i++ )
     {
         BOOST_REQUIRE_EQUAL(f.at(i % f.width(), i / f.width()), i);
     }
@@ -56,11 +57,11 @@ BOOST_AUTO_TEST_CASE(ArrayRangeException)
 BOOST_AUTO_TEST_CASE(ValuesArrayAccess)
 {
     Field<int> f(3, 5);
-    for(size_t i = 0; i < f.width()*f.height(); i++)
+    for( size_t i = 0; i < f.width() * f.height(); i++ )
     {
         BOOST_REQUIRE_NO_THROW(f[i / f.width()][i % f.width()] = i);
     }
-    for(size_t i = 0; i < f.width()*f.height(); i++)
+    for( size_t i = 0; i < f.width() * f.height(); i++ )
     {
         BOOST_REQUIRE_EQUAL(f[i / f.width()][i % f.width()], i);
     }

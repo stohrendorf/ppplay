@@ -40,12 +40,15 @@ class S3mCell;
  * @class S3mPattern
  * @brief Pattern class for S3M Patterns
  */
-class S3mPattern : public Field<S3mCell>
+class S3mPattern
+    : public Field<S3mCell>
 {
-    DISABLE_COPY(S3mPattern)
 public:
+    DISABLE_COPY(S3mPattern)
+
     //! @brief Constructor
     explicit S3mPattern();
+
     /**
      * @brief Load the cell from a stream
      * @param[in] str The stream to load from
@@ -53,6 +56,7 @@ public:
      * @return @c true on success
      */
     bool load(Stream* str, size_t pos);
+
 protected:
     /**
      * @brief Get the logger

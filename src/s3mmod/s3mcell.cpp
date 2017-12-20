@@ -96,7 +96,7 @@ void S3mCell::clear()
 
 std::string S3mCell::trackerString() const
 {
-    std::string xmsg = "";
+    std::string xmsg;
     if(m_note == s3mEmptyNote)
     {
         xmsg += "... ";

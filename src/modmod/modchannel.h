@@ -40,12 +40,14 @@ namespace ppp
 namespace mod
 {
 class ModModule;
+
 class ModCell;
+
 class ModSample;
 
-class ModChannel : public ISerializable
+class ModChannel
+    : public ISerializable
 {
-    DISABLE_COPY(ModChannel)
 private:
     ModModule* m_module;
     ModCell* m_currentCell;
@@ -73,47 +75,89 @@ private:
     ChannelState m_state;
 
     void setCellPeriod();
+
     void setTonePortaTarget();
+
 public:
+    DISABLE_COPY(ModChannel)
+
     explicit ModChannel(ModModule* parent, bool isLeftChan);
-    ~ModChannel();
+
+    ~ModChannel() override;
+
     AbstractArchive& serialize(AbstractArchive* data) override;
+
     void update(const ModCell& cell, bool patDelay);
+
     ChannelState status() const;
+
     void mixTick(MixerFrameBuffer* mixBuffer);
+
     void updateStatus();
+
 private:
     void fxArpeggio(uint8_t fxByte);
+
     void fxPortaUp(uint8_t fxByte);
+
     void fxPortaDown(uint8_t fxByte);
+
     void fxPorta(uint8_t fxByte);
+
     void fxVibrato(uint8_t fxByte);
+
     void fxPortaVolSlide(uint8_t fxByte);
+
     void fxVibVolSlide(uint8_t fxByte);
+
     void fxTremolo(uint8_t fxByte);
+
     void fxSetFinePan(uint8_t fxByte);
+
     void fxOffset(uint8_t fxByte);
+
     void fxVolSlide(uint8_t fxByte);
+
     void fxPosJmp(uint8_t fxByte);
+
     void fxSetVolume(uint8_t fxByte);
+
     void fxPatBreak(uint8_t fxByte);
+
     void efxFineSlideUp(uint8_t fxByte);
+
     void efxFineSlideDown(uint8_t fxByte);
+
     void efxGlissando(uint8_t fxByte);
+
     void efxSetVibWaveform(uint8_t fxByte);
+
     void efxSetFinetune(uint8_t fxByte);
+
     void efxPatLoop(uint8_t fxByte);
+
     void efxSetTremoloWaveform(uint8_t fxByte);
+
     void efxSetPanning(uint8_t fxByte);
+
     void efxRetrigger(uint8_t fxByte);
+
     void efxFineVolSlideUp(uint8_t fxByte);
+
     void efxFineVolSlideDown(uint8_t fxByte);
+
     void efxNoteCut(uint8_t fxByte);
+
     void efxNoteDelay(uint8_t fxByte);
+
     void efxPatDelay(uint8_t fxByte);
+
     void fxSetSpeed(uint8_t fxByte);
+
     const ModSample* currentSample() const;
+
     void applyGlissando();
+
 protected:
     /**
      * @brief Get the logger

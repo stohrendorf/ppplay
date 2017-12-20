@@ -31,13 +31,12 @@ class AudioFifo;
  * @{
  */
 
- /**
-  * @class VolumeObserver
-  * @brief Observer for calculating the output peaks of an AudioFifo
-  */
+/**
+ * @class VolumeObserver
+ * @brief Observer for calculating the output peaks of an AudioFifo
+ */
 class PPPLAY_CORE_EXPORT VolumeObserver
 {
-    DISABLE_COPY(VolumeObserver)
 private:
     //! @brief Sum of all left absolute sample values
     uint64_t m_volLeftSum;
@@ -54,13 +53,17 @@ private:
     boost::signals2::scoped_connection m_dataPushedConnection;
     boost::signals2::scoped_connection m_dataPulledConnection;
 public:
+    DISABLE_COPY(VolumeObserver)
+
     explicit VolumeObserver(AudioFifo* fifo);
+
     ~VolumeObserver() = default;
 
     inline uint16_t leftVol() const
     {
         return m_volLeftLog;
     }
+
     inline uint16_t rightVol() const
     {
         return m_volRightLog;
@@ -68,6 +71,7 @@ public:
 
 private:
     void dataPulled(const AudioFrameBuffer& buffer);
+
     void dataPushed(const AudioFrameBuffer& buffer);
 };
 

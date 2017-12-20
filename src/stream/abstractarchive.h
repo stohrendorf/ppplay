@@ -35,9 +35,11 @@ class ISerializable;
  */
 class PPPLAY_STREAM_EXPORT AbstractArchive
 {
-    DISABLE_COPY(AbstractArchive)
-        AbstractArchive() = delete;
 public:
+    DISABLE_COPY(AbstractArchive)
+
+    AbstractArchive() = delete;
+
     typedef std::shared_ptr<AbstractArchive> Ptr; //!< @brief Class pointer
     typedef std::vector<Ptr> Vector; //!< @brief Vector of class pointers
 private:
@@ -49,35 +51,40 @@ public:
      * @param[in] stream The storage stream
      */
     explicit AbstractArchive(const Stream::Ptr& stream);
-    virtual ~AbstractArchive()
-    {
-    }
+
+    virtual ~AbstractArchive() = default;
+
     /**
      * @brief Whether this archive is read-only
      * @return m_loading
      * @see isSaving()
      */
     bool isLoading() const;
+
     /**
      * @brief Whether this archive is write-only
      * @return !m_loading
      * @see isLoading()
      */
     bool isSaving() const;
+
 #ifndef _MSC_VER
     // the pragma is used to get rid of the following annoying GCC message:
     // warning: ‘AbstractArchive& AbstractArchive::operator%(T&)’ should return by value [-Weffc++]
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
 #endif
+
     inline AbstractArchive& operator%(ISerializable* data)
     {
         return archive(data);
     }
+
     inline AbstractArchive& operator%(ISerializable& data)
     {
         return archive(&data);
     }
+
     /**
      * @brief Serialization operator
      * @tparam T Data type
@@ -87,14 +94,14 @@ public:
      */
     template<class T>
     inline
-        // This neat piece of template meta-programming is necessary so that this operator
-        // does not overwrite the above overloads for ISerializable.
-        typename std::enable_if < !std::is_base_of<ISerializable, typename std::remove_pointer<T>::type >::value, AbstractArchive& >::type
-        operator%(T& data)
+    // This neat piece of template meta-programming is necessary so that this operator
+    // does not overwrite the above overloads for ISerializable.
+    typename std::enable_if<!std::is_base_of<ISerializable, typename std::remove_pointer<T>::type>::value, AbstractArchive&>::type
+    operator%(T& data)
     {
         static_assert(std::is_trivially_copy_assignable<T>::value, "Data to serialize must be trivially copyable");
         static_assert(!std::is_pointer<T>::value, "Data to serialize must not be a pointer");
-        if(m_loading)
+        if( m_loading )
         {
             *m_stream >> data;
         }
@@ -104,9 +111,11 @@ public:
         }
         return *this;
     }
+
 #ifndef _MSC_VER
 #pragma GCC diagnostic pop
 #endif
+
     /**
      * @brief Serialization operator for arrays
      * @tparam T Data type
@@ -121,7 +130,7 @@ public:
         static_assert(std::is_trivially_copy_assignable<T>::value, "Array to serialize must be trivially copyable");
         static_assert(!std::is_pointer<T>::value, "Array to serialize must not be a pointer");
         BOOST_ASSERT(data != nullptr);
-        if(m_loading)
+        if( m_loading )
         {
             m_stream->read(data, count);
         }
@@ -131,6 +140,7 @@ public:
         }
         return *this;
     }
+
     /**
      * @brief Serialization operator for other archives
      * @param[in,out] data Archive to save or load
@@ -138,6 +148,7 @@ public:
      * @note Operation depends on m_loading
      */
     AbstractArchive& archive(ISerializable* data);
+
     /**
      * @brief Finish saving operation
      * @details
@@ -145,6 +156,7 @@ public:
      * @see finishLoad()
      */
     void finishSave();
+
     /**
      * @brief Finish loading operation
      * @details
@@ -158,10 +170,11 @@ public:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++"
 #endif
+
 template<>
 inline AbstractArchive& AbstractArchive::operator%(std::string& str)
 {
-    if(!m_loading)
+    if( !m_loading )
     {
         size_t len = str.length();
         m_stream->write(&len);
@@ -172,11 +185,14 @@ inline AbstractArchive& AbstractArchive::operator%(std::string& str)
         size_t len = 0;
         m_stream->read(&len);
         str.resize(len);
-        if(!str.empty())
+        if( !str.empty() )
+        {
             m_stream->read(&str.front(), len);
+        }
     }
     return *this;
 }
+
 #ifndef _MSC_VER
 #pragma GCC diagnostic pop
 #endif

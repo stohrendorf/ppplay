@@ -31,15 +31,21 @@ namespace ppp
 namespace mod
 {
 class ModPattern;
+
 class ModSample;
+
 class ModChannel;
 
-class ModModule : public AbstractModule
+class ModModule
+    : public AbstractModule
 {
-    DISABLE_COPY(ModModule)
-        ModModule() = delete;
     friend class ModChannel;
+
 public:
+    DISABLE_COPY(ModModule)
+
+    ModModule() = delete;
+
     /**
      * @brief Factory method
      * @param[in] filename Module filename
@@ -48,6 +54,7 @@ public:
      * @return Module pointer or nullptr
      */
     static AbstractModule* factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter);
+
 private:
     std::vector<ModSample*> m_samples; //!< @brief Samples
     std::vector<ModPattern*> m_patterns; //!< @brief Patterns
@@ -57,21 +64,34 @@ private:
     int8_t m_breakRow;
     int m_patDelayCount;
     uint16_t m_breakOrder;
+
     bool adjustPosition();
+
     void checkGlobalFx();
+
     ModPattern* getPattern(size_t idx) const;
+
 protected:
     AbstractArchive& serialize(AbstractArchive* data) override;
+
 public:
     ModModule(int maxRpt, Sample::Interpolation inter);
-    virtual ~ModModule();
+
+    ~ModModule() override;
+
     bool load(Stream* stream, int loadMode);
+
 private:
     size_t internal_buildTick(AudioFrameBuffer* buf) override;
+
     ChannelState internal_channelStatus(size_t idx) const override;
+
     int internal_channelCount() const override;
+
     ModSample* sampleAt(size_t idx) const;
+
     bool existsSample(size_t idx) const;
+
     /**
      * @brief Get the logger
      * @return Child logger with attached ".mod"

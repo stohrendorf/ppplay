@@ -73,10 +73,10 @@ void SDLPlayer::frame()
 
 void SDLPlayer::callback(void* userdata, Uint8* audiobuf, int byteLen)
 {
-    SDLPlayer* self = reinterpret_cast<SDLPlayer*>(userdata);
+    auto self = reinterpret_cast<SDLPlayer*>(userdata);
     static long framesUntilUpdate = 0;
     size_t framesToWrite = byteLen / 4u;
-    int16_t* bufPtr = reinterpret_cast<int16_t*>(audiobuf);
+    auto* bufPtr = reinterpret_cast<int16_t*>(audiobuf);
     // Prepare audiobuf with emulator output
     while( framesToWrite > 0 )
     {

@@ -75,7 +75,7 @@ class DMOUnpacker
 public:
     bool decrypt(uint8_t* buf, size_t len);
 
-    size_t unpack(uint8_t* ibuf, uint8_t* obuf, size_t outputsize);
+    size_t unpack(uint8_t* inputBuf, uint8_t* outputBuf, size_t outputSize);
 
 private:
     uint16_t brand(uint16_t range);
@@ -131,9 +131,7 @@ bool DmoPlayer::load(const std::string& filename)
     }
 
     // "TwinTeam" - signed ?
-    if( memcmp(module.data(), "TwinTeam Module File"
-                   "\x0D\x0A",
-               22) )
+    if( memcmp(module.data(), "TwinTeam Module File\x0D\x0A", 22) != 0 )
     {
         return false;
     }

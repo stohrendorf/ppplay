@@ -29,6 +29,7 @@
 #include <boost/circular_buffer.hpp>
 
 #undef  BOOST_NO_CXX11_HDR_TUPLE
+
 #include <boost/signals2.hpp>
 
 #include <thread>
@@ -40,18 +41,16 @@
  * @{
  */
 
- /**
-  * @class AudioFifo
-  * @brief Audio FIFO buffer
-  *
-  * @details
-  * A simple thread is created that continuously requests data from the connected
-  * AbstractAudioSource.
-  */
+/**
+ * @class AudioFifo
+ * @brief Audio FIFO buffer
+ *
+ * @details
+ * A simple thread is created that continuously requests data from the connected
+ * AbstractAudioSource.
+ */
 class PPPLAY_CORE_EXPORT AudioFifo
 {
-    DISABLE_COPY(AudioFifo)
-        AudioFifo() = delete;
 private:
     //! @brief Buffered audio frames
     boost::circular_buffer<BasicSampleFrame> m_buffer;
@@ -84,12 +83,17 @@ private:
     void pushData(const AudioFrameBuffer& buf);
 
 public:
+    DISABLE_COPY(AudioFifo)
+
+    AudioFifo() = delete;
+
     /**
      * @brief Initialize the buffer
      * @param[in] source The audio source that should be buffered
      * @param[in] threshold Initial value for m_threshold (minimum 256)
      */
     AudioFifo(const AbstractAudioSource::WeakPtr& source, size_t threshold);
+
     ~AudioFifo();
 
     /**
@@ -128,15 +132,16 @@ public:
     // These are needed to replace boost::mutex (or boost::signals2::mutex) with std::mutex,
     // otherwise boost::thread would become a dependency.
     typedef void DataSignalSignature(const AudioFrameBuffer&);
-    typedef boost::signals2::signal <
+
+    typedef boost::signals2::signal<
         DataSignalSignature,
         boost::signals2::optional_last_value<void>,
         int,
-        std::less<int>,
+        std::less<>,
         boost::function<DataSignalSignature>,
         boost::signals2::detail::extended_signature<0, DataSignalSignature>::function_type,
         std::mutex
-    > DataSignal;
+                                   > DataSignal;
 
     DataSignal dataPushed;
     DataSignal dataPulled;

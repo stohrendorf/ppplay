@@ -32,7 +32,8 @@ namespace ppg
  * @class StereoPeakBar
  * @brief A stereo bar with peaks
  */
-class PPPLAY_PPG_EXPORT StereoPeakBar : public Label
+class PPPLAY_PPG_EXPORT StereoPeakBar
+    : public Label
 {
 private:
     std::vector<int> m_interArrL; //!< @brief Left bar interpolation array
@@ -56,16 +57,19 @@ public:
      * @pre @c interLen>=1
      */
     StereoPeakBar(Widget* parent, int width, int max, int interLen, bool showPeak);
+
     /**
      * @brief Destructor
      */
-    virtual ~StereoPeakBar();
+    ~StereoPeakBar() override;
+
     /**
      * @brief Shift values into the interpolation array
      * @param[in] lval Left value
      * @param[in] rval Right value
      */
     void shift(int lval, int rval);
+
     /**
      * @brief Shift fractional values into the interpolation array
      * @param[in] lval Left value
@@ -73,11 +77,13 @@ public:
      * @pre @code (0<=lval<=1)&&(0<=rval<=1) @endcode
      */
     void shiftFrac(float lval, float rval);
+
     /**
      * @brief Get the left value
      * @return The left value
      */
     int valueLeft() const;
+
     /**
      * @brief Get the right value
      * @return The right value

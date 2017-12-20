@@ -42,7 +42,6 @@ class XmSample;
  */
 class XmInstrument
 {
-    DISABLE_COPY(XmInstrument)
 private:
     //! @brief Samples this instrument contains
     std::vector<XmSample*> m_samples;
@@ -85,15 +84,20 @@ private:
     //! @brief Auto vibrato type
     uint8_t m_vibType;
 public:
+    DISABLE_COPY(XmInstrument)
+
     //! @brief Constructor
     XmInstrument();
+
     ~XmInstrument();
+
     /**
      * @brief Load this instrument from a stream
      * @param[in] str The stream to load from
      * @return @c true on success
      */
     bool load(Stream* str);
+
     /**
      * @brief Map a note index into its sample index
      * @param[in] note Note to map
@@ -101,6 +105,7 @@ public:
      * @note @a note is zero-based!
      */
     uint8_t mapNoteIndex(uint8_t note) const;
+
     /**
      * @brief Map a note index into its sample
      * @param[in] note Note to map
@@ -108,46 +113,55 @@ public:
      * @note @a note is zero-based!
      */
     XmSample* mapNoteSample(uint8_t note) const;
+
     /**
      * @brief Get the instrument's title
      * @return m_title
      */
     std::string title() const;
+
     /**
      * @brief Get the volume fadeout value
      * @return m_fadeout
      */
     uint16_t fadeout() const;
+
     /**
      * @brief Create the volume envelope processor
      * @return Volume envelope processor
      */
     XmEnvelopeProcessor volumeProcessor() const;
+
     /**
      * @brief Create the panning envelope processor
      * @return Volume envelope processor
      */
     XmEnvelopeProcessor panningProcessor() const;
+
     /**
      * @brief Get the auto vibrato rate
      * @return m_vibRate
      */
     uint8_t vibRate() const;
+
     /**
      * @brief Get the auto vibrato depth
      * @return m_vibDepth
      */
     uint8_t vibDepth() const;
+
     /**
      * @brief Get the auto vibrato sweep value
      * @return m_vibSweep
      */
     uint8_t vibSweep() const;
+
     /**
      * @brief Get the auto vibrato type
      * @return m_vibType
      */
     uint8_t vibType() const;
+
 protected:
     /**
      * @brief Get the logger

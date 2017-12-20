@@ -32,15 +32,22 @@ namespace ppp
 {
 namespace mod
 {
-class ModSample : public Sample
+class ModSample
+    : public Sample
 {
-    DISABLE_COPY(ModSample)
 public:
+    DISABLE_COPY(ModSample)
+
     ModSample();
+
     bool loadHeader(Stream* stream);
+
     bool loadData(Stream* stream);
+
     bool loadAdpcmData(Stream* stream);
+
     uint8_t finetune() const;
+
 private:
     uint8_t m_finetune;
 protected:

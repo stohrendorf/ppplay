@@ -22,13 +22,14 @@
 
 #include <sstream>
 
-MemoryStream::MemoryStream(const std::string& name) : Stream(new std::stringstream(std::ios::in | std::ios::out | std::ios::binary), name)
+MemoryStream::MemoryStream(const std::string& name)
+    : Stream(new std::stringstream(std::ios::in | std::ios::out | std::ios::binary), name)
 {
 }
 
 std::streamsize MemoryStream::size() const
 {
-    const std::stringstream* ss = dynamic_cast<const std::stringstream*>(stream());
+    const auto* ss = dynamic_cast<const std::stringstream*>(stream());
     BOOST_ASSERT_MSG(ss != nullptr, "Stream is not a stringstream");
     return ss->str().size();
 }

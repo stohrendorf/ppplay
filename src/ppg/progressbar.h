@@ -32,16 +32,19 @@ namespace ppg
  * @class ProgressBar
  * @brief A one-line widget showing a progress
  */
-class PPPLAY_PPG_EXPORT ProgressBar : public Widget
+class PPPLAY_PPG_EXPORT ProgressBar
+    : public Widget
 {
-    DISABLE_COPY(ProgressBar)
 private:
     size_t m_maxVal; //!< @brief The maximum value
     size_t m_value; //!< @brief Position value (must be <= m_maxVal)
     Color m_fgColor; //!< @brief Foreground color
     Color m_bgColor; //!< @brief Background color
     void drawThis() override;
+
 public:
+    DISABLE_COPY(ProgressBar)
+
     /**
      * @brief Constructor
      * @param[in] parent Parent widget
@@ -49,39 +52,47 @@ public:
      * @param[in] width The width of the widget (must be >2)
      */
     ProgressBar(Widget* parent, size_t maxVal, int width);
+
     //! @copydoc ppg::Widget::~Widget
-    virtual ~ProgressBar();
+    ~ProgressBar() override;
+
     /**
      * @brief Maximum value
      * @return m_maxVal
      */
     size_t max() const;
+
     /**
      * @brief Sets the maximum value
      * @param[in] maxVal The new maximum value
      * @note If value() is greater than maxVal, it will be set to maxVal
      */
     void setMax(size_t maxVal);
+
     /**
      * @brief Gets the current value
      * @return m_value
      */
     size_t value() const;
+
     /**
      * @brief Sets the current value
      * @param[in] val The new value
      * @note If @a val is greater than max(), it will be ignored
      */
     void setValue(size_t val);
+
     /**
      * @brief Overriden: Will not change the height
      */
     int setHeight(int h) override;
+
     /**
      * @brief Sets the foreground color
      * @param[in] c The new foreground color
      */
     void setFgColor(Color c);
+
     /**
      * @brief Sets the background color
      * @param[in] c The new background color

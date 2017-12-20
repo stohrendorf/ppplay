@@ -796,7 +796,7 @@ void BankDatabaseGen::dump()
         {
             boost::property_tree::ptree jsonInstr = toPtree(instrument.second);
             jsonInstr.put("index", instrument.first);
-            jsonBank.add_child(boost::lexical_cast<std::string>(instrId++), jsonInstr);
+            jsonBank.add_child(std::to_string(instrId++), jsonInstr);
         }
 
         jsonBanks.add_child(bank.first, jsonBank);

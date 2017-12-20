@@ -139,14 +139,14 @@ std::shared_ptr<Player> AdPlug::factory(const std::string& fn, const Players& pl
 
     // Try a direct hit by file extension
     const auto ext = boost::to_lower_copy(boost::filesystem::path(fn).extension().string());
-    for( auto i = pl.begin(); i != pl.end(); ++i )
+    for( auto i : pl )
     {
-        for( auto j = 0u; !(*i)->get_extension(j).empty(); j++ )
+        for( auto j = 0u; !i->get_extension(j).empty(); j++ )
         {
-            if( ext == boost::to_lower_copy((*i)->get_extension(j)) )
+            if( ext == boost::to_lower_copy(i->get_extension(j)) )
             {
-                logger->debug(L4CXX_LOCATION, "Trying direct hit: %s\n", (*i)->filetype);
-                std::shared_ptr<Player> p{(*i)->factory()};
+                logger->debug(L4CXX_LOCATION, "Trying direct hit: %s\n", i->filetype);
+                std::shared_ptr<Player> p{i->factory()};
                 if( p && p->load(fn) )
                 {
                     return p;
@@ -156,10 +156,10 @@ std::shared_ptr<Player> AdPlug::factory(const std::string& fn, const Players& pl
     }
 
     // Try all players, one by one
-    for( auto i = pl.begin(); i != pl.end(); ++i )
+    for( auto i : pl )
     {
-        logger->debug(L4CXX_LOCATION, "Trying: %s\n", (*i)->filetype);
-        std::shared_ptr<Player> p{(*i)->factory()};
+        logger->debug(L4CXX_LOCATION, "Trying: %s\n", i->filetype);
+        std::shared_ptr<Player> p{i->factory()};
         if( p && p->load(fn) )
         {
             return p;

@@ -26,11 +26,14 @@
  * @ingroup Common
  * @brief Class derived from Stream for a std::stringstream
  */
-class PPPLAY_STREAM_EXPORT MemoryStream : public Stream
+class PPPLAY_STREAM_EXPORT MemoryStream
+    : public Stream
 {
-    DISABLE_COPY(MemoryStream)
 public:
+    DISABLE_COPY(MemoryStream)
+
     explicit MemoryStream(const std::string& name = "MemoryStream");
+
     std::streamsize size() const override;
 };
 

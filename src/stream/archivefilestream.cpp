@@ -70,7 +70,7 @@ ArchiveFileStream::ArchiveFileStream(const std::string& filename) : MemoryStream
             if(zipFilePath == "." || current == zipFilePath)
             {
                 setName(current.string());
-                std::stringstream* str = static_cast<std::stringstream*>(stream());
+                auto str = static_cast<std::stringstream*>(stream());
                 auto size = archive_entry_size(entry);
                 std::vector<char> data(size);
                 archive_read_data(arch, data.data(), size);

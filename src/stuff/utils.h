@@ -24,28 +24,28 @@
  * @{
  */
 
- /**
-  * @def DISABLE_COPY(classname)
-  * @brief Disables copy/move operators and constructors of @a classname
-  * @param[in] classname Class name to disable copy functions of
-  */
+/**
+ * @def DISABLE_COPY(classname)
+ * @brief Disables copy/move operators and constructors of @a classname
+ * @param[in] classname Class name to disable copy functions of
+ */
 #define DISABLE_COPY(classname) \
     classname(const classname&) = delete; \
     classname(classname&&) = delete; \
     classname& operator=(const classname&) = delete; \
     classname& operator=(classname&&) = delete;
 
-  /**
-   * @brief Checked delete for all elements in a container
-   * @tparam T Container type
-   * @param[in,out] container Reference to the container
-   * @note All elements within @a container will be set to @c nullptr, but the size will not change.
-   */
+/**
+ * @brief Checked delete for all elements in a container
+ * @tparam T Container type
+ * @param[in,out] container Reference to the container
+ * @note All elements within @a container will be set to @c nullptr, but the size will not change.
+ */
 template<class T>
 inline void deleteAll(T& container)
 {
     static_assert(sizeof(**container.begin()) > 0, "Cannot delete an incomplete type");
-    for(auto & val : container)
+    for( auto& val : container )
     {
         delete val;
         val = nullptr;

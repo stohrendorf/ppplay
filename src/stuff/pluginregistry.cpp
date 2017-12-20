@@ -104,7 +104,7 @@ AbstractModule::Ptr PluginRegistry::tryLoad(const std::string& filename, uint32_
 #ifdef WIN32
                 InputPlugin* plugin = reinterpret_cast<InputPlugin*>(GetProcAddress(handle, "plugin"));
 #else
-                InputPlugin* plugin = static_cast<InputPlugin*>(dlsym(handle, "plugin"));
+                auto plugin = static_cast<InputPlugin*>(dlsym(handle, "plugin"));
 #endif
                 file.clear();
                 file.seek(0);
@@ -125,7 +125,7 @@ AbstractModule::Ptr PluginRegistry::tryLoad(const std::string& filename, uint32_
 #ifdef WIN32
                 InputPlugin* plugin = reinterpret_cast<InputPlugin*>(GetProcAddress(handle, "plugin"));
 #else
-                InputPlugin* plugin = static_cast<InputPlugin*>(dlsym(handle, "plugin"));
+                auto* plugin = static_cast<InputPlugin*>(dlsym(handle, "plugin"));
 #endif
                 file.clear();
                 file.seek(0);
@@ -185,7 +185,7 @@ void PluginRegistry::findPlugins()
 #ifdef WIN32
         InputPlugin* plugin = reinterpret_cast<InputPlugin*>(GetProcAddress(handle, "plugin"));
 #else
-        InputPlugin* plugin = static_cast<InputPlugin*>(dlsym(handle, "plugin"));
+        auto* plugin = static_cast<InputPlugin*>(dlsym(handle, "plugin"));
 #endif
         if(!plugin)
         {

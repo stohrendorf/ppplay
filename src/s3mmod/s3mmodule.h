@@ -33,19 +33,25 @@ namespace ppp
 namespace s3m
 {
 class S3mSample;
+
 class S3mPattern;
+
 class S3mChannel;
 
 /**
  * @class S3mModule
  * @brief Module class for S3M Modules
  */
-class S3mModule : public AbstractModule
+class S3mModule
+    : public AbstractModule
 {
-    DISABLE_COPY(S3mModule)
-        S3mModule() = delete;
     friend class S3mChannel;
+
 public:
+    DISABLE_COPY(S3mModule)
+
+    S3mModule() = delete;
+
     /**
      * @brief Factory method
      * @param[in] filename Module filename
@@ -54,6 +60,7 @@ public:
      * @return Module pointer or nullptr
      */
     static AbstractModule* factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter);
+
 private:
     uint16_t m_breakRow;      //!< @brief Row to break to, ~0 if unused
     uint16_t m_breakOrder;    //!< @brief Order to break to, ~0 if unused
@@ -75,22 +82,30 @@ private:
      * @return Pattern pointer or nullptr
      */
     S3mPattern* getPattern(size_t idx) const;
+
 protected:
     AbstractArchive& serialize(AbstractArchive* data) override;
+
 public:
-    virtual ~S3mModule();
+    ~S3mModule() override;
+
 private:
     int internal_channelCount() const override;
+
     size_t internal_buildTick(AudioFrameBuffer* buf) override;
+
     ChannelState internal_channelStatus(size_t idx) const override;
+
     /**
      * @copydoc ppp::GenModule::GenModule(uint8_t)
      */
     S3mModule(int maxRpt, Sample::Interpolation inter);
+
     /**
      * @brief Apply global effects
      */
     void checkGlobalFx();
+
     /**
      * @brief Adjust the playback position
      * @param[in] estimateOnly Used when estimating track length
@@ -98,12 +113,14 @@ private:
      * @retval true otherwise
      */
     bool adjustPosition();
+
     /**
      * @brief Load the module
      * @param[in] fn Filename of the module to load
      * @return @c true on success
      */
     bool load(Stream* stream);
+
     /**
      * @brief Check if a sample exists
      * @param[in] idx Sample index to check
@@ -111,37 +128,44 @@ private:
      * @retval false otherwise
      */
     bool existsSample(int16_t idx);
+
     /**
      * @brief Check if amiga limits are present
      * @return m_amigaLimits
      */
     bool hasAmigaLimits() const;
+
     /**
      * @brief Check if fast volume slides are present
      * @return m_fastVolSlides
      */
     bool hasFastVolSlides() const;
+
     /**
      * @brief Check if ScreamTracker v2 Vibrato is present
      * @return m_st2Vibrato
      */
     bool st2Vibrato() const;
+
     /**
      * @brief Get the maximum sample number
      * @return Maximum sample number
      */
     size_t numSamples() const;
+
     /**
      * @brief Get a sample
      * @param[in] idx Sample index
      * @return Sample pointer or nullptr
      */
     const S3mSample* sampleAt(size_t idx) const;
+
     /**
      * @brief Check if zero volume optimizations are present
      * @return m_zeroVolOpt
      */
     bool hasZeroVolOpt() const;
+
     /**
      * @brief Get the logger
      * @return Child logger with attached ".s3m"

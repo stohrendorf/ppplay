@@ -1,10 +1,12 @@
 #define BOOST_TEST_MODULE PPG
+
 #include <boost/test/unit_test.hpp>
 
 #include "../point.h"
 #include "../rect.h"
 
 BOOST_AUTO_TEST_SUITE(Point)
+
 BOOST_AUTO_TEST_CASE(PointArithmetic)
 {
     ppg::Point p;
@@ -25,9 +27,11 @@ BOOST_AUTO_TEST_CASE(PointArithmetic)
     BOOST_CHECK_EQUAL(p.x(), -1);
     BOOST_CHECK_EQUAL(p.y(), 0);
 }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Rect)
+
 BOOST_AUTO_TEST_CASE(RectDims)
 {
     ppg::Rect r(1, 1, 1, 1);
@@ -64,4 +68,5 @@ BOOST_AUTO_TEST_CASE(RectDims)
     BOOST_CHECK_EQUAL(r.width(), 3);
     BOOST_CHECK_EQUAL(r.height(), 4);
 }
+
 BOOST_AUTO_TEST_SUITE_END()

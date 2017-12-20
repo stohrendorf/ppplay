@@ -43,7 +43,7 @@ namespace xm
 {
 namespace
 {
-#pragma pack(push,1)
+#pragma pack(push, 1)
 struct XmHeader
 {
     char id[17]; // "Extended Module: "
@@ -65,23 +65,21 @@ struct XmHeader
 };
 #pragma pack(pop)
 
-constexpr std::array<const uint16_t, 12 * 8> g_PeriodTable = { {
-        907, 900, 894, 887, 881, 875, 868, 862, 856, 850, 844, 838, 832, 826, 820, 814,
-        808, 802, 796, 791, 785, 779, 774, 768, 762, 757, 752, 746, 741, 736, 730, 725,
-        720, 715, 709, 704, 699, 694, 689, 684, 678, 675, 670, 665, 660, 655, 651, 646,
-        640, 636, 632, 628, 623, 619, 614, 610, 604, 601, 597, 592, 588, 584, 580, 575,
-        570, 567, 563, 559, 555, 551, 547, 543, 538, 535, 532, 528, 524, 520, 516, 513,
-        508, 505, 502, 498, 494, 491, 487, 484, 480, 477, 474, 470, 467, 463, 460, 457
-    }
+constexpr std::array<const uint16_t, 12 * 8> g_PeriodTable = {{
+                                                                  907, 900, 894, 887, 881, 875, 868, 862, 856, 850, 844, 838, 832, 826, 820, 814,
+                                                                  808, 802, 796, 791, 785, 779, 774, 768, 762, 757, 752, 746, 741, 736, 730, 725,
+                                                                  720, 715, 709, 704, 699, 694, 689, 684, 678, 675, 670, 665, 660, 655, 651, 646,
+                                                                  640, 636, 632, 628, 623, 619, 614, 610, 604, 601, 597, 592, 588, 584, 580, 575,
+                                                                  570, 567, 563, 559, 555, 551, 547, 543, 538, 535, 532, 528, 524, 520, 516, 513,
+                                                                  508, 505, 502, 498, 494, 491, 487, 484, 480, 477, 474, 470, 467, 463, 460, 457
+                                                              }
 };
 } // anonymous namespace
 
-XmModule::XmModule(int maxRpt, Sample::Interpolation inter) :
-    AbstractModule(maxRpt, inter),
-    m_amiga(false), m_patterns(), m_instruments(), m_channels(),
-    m_noteToPeriod(), m_jumpRow(~0), m_jumpOrder(~0),
-    m_isPatLoop(false), m_doPatJump(false), m_restartPos(0),
-    m_currentPatternDelay(0), m_requestedPatternDelay(0)
+XmModule::XmModule(int maxRpt, Sample::Interpolation inter)
+    :
+    AbstractModule(maxRpt, inter), m_amiga(false), m_patterns(), m_instruments(), m_channels(), m_noteToPeriod(), m_jumpRow(~0), m_jumpOrder(~0), m_isPatLoop(
+    false), m_doPatJump(false), m_restartPos(0), m_currentPatternDelay(0), m_requestedPatternDelay(0)
 {
 }
 
@@ -94,20 +92,20 @@ XmModule::~XmModule()
 
 bool XmModule::load(Stream* stream)
 {
-    XmHeader hdr;
     noConstMetaInfo().filename = stream->name();
+    XmHeader hdr;
     *stream >> hdr;
-    if(!std::equal(hdr.id, hdr.id + 17, "Extended Module: ") || hdr.endOfFile != 0x1a /*|| hdr.numChannels > 32*/)
+    if( !std::equal(hdr.id, hdr.id + 17, "Extended Module: ") || hdr.endOfFile != 0x1a /*|| hdr.numChannels > 32*/)
     {
         logger()->warn(L4CXX_LOCATION, "XM Header invalid");
         return false;
     }
-    if(hdr.version != 0x0104)
+    if( hdr.version != 0x0104 )
     {
         logger()->warn(L4CXX_LOCATION, "Unsupported XM Version %#x", hdr.version);
         return false;
     }
-    for(int i = 0; i < (hdr.songLength & 0xff); i++)
+    for( int i = 0; i < (hdr.songLength & 0xff); i++ )
     {
         uint8_t tmp;
         *stream >> tmp;
@@ -118,7 +116,7 @@ bool XmModule::load(Stream* stream)
     m_restartPos = hdr.restartPos;
     {
         std::string tmp = boost::algorithm::trim_copy(stringncpy(hdr.trackerName, 20));
-        if(!tmp.empty())
+        if( !tmp.empty() )
         {
             noConstMetaInfo().trackerInfo = tmp;
         }
@@ -132,49 +130,49 @@ bool XmModule::load(Stream* stream)
     state().globalVolume = 0x40;
     m_amiga = (hdr.flags & 1) == 0;
     m_channels.clear();
-    for(int i = 0; i < hdr.numChannels; i++)
+    for( int i = 0; i < hdr.numChannels; i++ )
     {
         m_channels.emplace_back(new XmChannel(this));
     }
-    for(uint_fast16_t i = 0; i < hdr.numPatterns; i++)
+    for( uint_fast16_t i = 0; i < hdr.numPatterns; i++ )
     {
-        XmPattern* pat = new XmPattern(hdr.numChannels);
+        auto pat = new XmPattern(hdr.numChannels);
         m_patterns.push_back(pat);
-        if(!pat->load(stream))
+        if( !pat->load(stream) )
         {
             logger()->error(L4CXX_LOCATION, "Pattern loading error");
             return false;
         }
     }
-    while(m_patterns.size() < 256)
+    while( m_patterns.size() < 256 )
     {
         m_patterns.emplace_back(XmPattern::createDefaultPattern(hdr.numChannels));
     }
-    for(uint_fast16_t i = 0; i < hdr.numInstruments; i++)
+    for( uint_fast16_t i = 0; i < hdr.numInstruments; i++ )
     {
-        XmInstrument* ins = new XmInstrument();
+        auto* ins = new XmInstrument();
         m_instruments.push_back(ins);
-        if(!ins->load(stream))
+        if( !ins->load(stream) )
         {
             logger()->error(L4CXX_LOCATION, "Instrument loading error");
             return false;
         }
     }
-    if(m_amiga)
+    if( m_amiga )
     {
         logger()->debug(L4CXX_LOCATION, "Initializing Amiga period table");
         uint16_t destOfs = 0;
-        for(int octave = 10; octave > 0; octave--)
+        for( int octave = 10; octave > 0; octave-- )
         {
             uint16_t octaveMask = ~(0xffff << (10 - octave));
-            for(uint16_t amigaVal : g_PeriodTable)
+            for( uint16_t amigaVal : g_PeriodTable )
             {
                 amigaVal = ((amigaVal << 6) + octaveMask) >> (11 - octave);
                 m_noteToPeriod.at(destOfs) = m_noteToPeriod.at(destOfs + 1) = amigaVal;
                 destOfs += 2;
             }
         }
-        for(size_t i = 0; i < (m_noteToPeriod.size() - 1) / 2; i++)
+        for( size_t i = 0; i < (m_noteToPeriod.size() - 1) / 2; i++ )
         {
             m_noteToPeriod.at(i * 2 + 1) = (m_noteToPeriod.at(i * 2 + 0) + m_noteToPeriod.at(i * 2 + 2)) >> 1;
         }
@@ -183,9 +181,9 @@ bool XmModule::load(Stream* stream)
     {
         logger()->debug(L4CXX_LOCATION, "Initializing linear period table");
         uint16_t val = 121 * 16;
-        for(size_t i = 0; i < m_noteToPeriod.size(); i++)
+        for( unsigned short& i : m_noteToPeriod )
         {
-            m_noteToPeriod[i] = val * 4;
+            i = val * 4;
             val--;
         }
     }
@@ -195,24 +193,24 @@ bool XmModule::load(Stream* stream)
 
 size_t XmModule::internal_buildTick(AudioFrameBuffer* buffer)
 {
-    if(state().order >= orderCount())
+    if( state().order >= orderCount() )
     {
         logger()->debug(L4CXX_LOCATION, "End of order list reached");
-        if(buffer)
+        if( buffer )
         {
             buffer->reset();
         }
         return 0;
     }
-    if(buffer)
+    if( buffer )
     {
-        if(!buffer->get())
+        if( !buffer->get() )
         {
             buffer->reset(new AudioFrameBuffer::element_type);
         }
         MixerFrameBuffer mixerBuffer(new MixerFrameBuffer::element_type(tickBufferLength()));
         XmPattern* currPat = m_patterns.at(state().pattern);
-        for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++)
+        for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ )
         {
             XmChannel* chan = m_channels[currTrack];
             BOOST_ASSERT(chan != nullptr);
@@ -223,7 +221,7 @@ size_t XmModule::internal_buildTick(AudioFrameBuffer* buffer)
         buffer->get()->resize(mixerBuffer->size());
         MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
         BasicSampleFrame* bufPtr = &buffer->get()->front();
-        for(size_t i = 0; i < mixerBuffer->size(); i++)
+        for( size_t i = 0; i < mixerBuffer->size(); i++ )
         {  // postprocess...
             *bufPtr = mixerBufferPtr->rightShiftClip(2);
             bufPtr++;
@@ -233,7 +231,7 @@ size_t XmModule::internal_buildTick(AudioFrameBuffer* buffer)
     else
     {
         XmPattern* currPat = m_patterns.at(state().pattern);
-        for(uint8_t currTrack = 0; currTrack < channelCount(); currTrack++)
+        for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ )
         {
             XmChannel* chan = m_channels[currTrack];
             BOOST_ASSERT(chan != nullptr);
@@ -243,10 +241,10 @@ size_t XmModule::internal_buildTick(AudioFrameBuffer* buffer)
         }
     }
     nextTick();
-    if(!adjustPosition())
+    if( !adjustPosition() )
     {
         logger()->debug(L4CXX_LOCATION, "adjustPosition(%s) failed", !buffer);
-        if(buffer)
+        if( buffer )
         {
             buffer->reset();
         }
@@ -260,33 +258,33 @@ bool XmModule::adjustPosition()
 {
     bool orderChanged = false;
     bool rowChanged = false;
-    if(state().tick == 0)
+    if( state().tick == 0 )
     {
-        if(m_requestedPatternDelay != 0)
+        if( m_requestedPatternDelay != 0 )
         {
             m_currentPatternDelay = m_requestedPatternDelay;
             m_requestedPatternDelay = 0;
         }
-        if(m_currentPatternDelay != 0)
+        if( m_currentPatternDelay != 0 )
         {
             m_currentPatternDelay--;
         }
-        if(m_isPatLoop || m_doPatJump)
+        if( m_isPatLoop || m_doPatJump )
         {
-            if(m_isPatLoop)
+            if( m_isPatLoop )
             {
                 m_isPatLoop = false;
                 setRow(m_jumpRow);
                 rowChanged = true;
             }
-            if(m_doPatJump)
+            if( m_doPatJump )
             {
                 setRow(m_jumpRow);
                 rowChanged = true;
                 m_jumpRow = 0;
                 m_doPatJump = false;
                 m_jumpOrder++;
-                if(m_jumpOrder >= orderCount())
+                if( m_jumpOrder >= orderCount() )
                 {
                     m_jumpOrder = m_restartPos;
                 }
@@ -296,12 +294,12 @@ bool XmModule::adjustPosition()
         }
         else
         {
-            if(!isRunningPatDelay())
+            if( !isRunningPatDelay() )
             {
                 XmPattern* currPat = m_patterns.at(state().pattern);
                 setRow((state().row + 1) % currPat->height());
                 rowChanged = true;
-                if(state().row == 0)
+                if( state().row == 0 )
                 {
                     setOrder(state().order + 1);
                     orderChanged = true;
@@ -311,24 +309,24 @@ bool XmModule::adjustPosition()
         m_jumpOrder = m_jumpRow = 0;
         m_doPatJump = m_isPatLoop = false;
     }
-    if(state().order >= orderCount())
+    if( state().order >= orderCount() )
     {
         logger()->debug(L4CXX_LOCATION, "End of order list");
         return false;
     }
-    if(orderChanged)
+    if( orderChanged )
     {
         state().pattern = orderAt(state().order)->index();
         setOrder(state().order);
     }
-    if(orderAt(state().order)->playbackCount() >= maxRepeat())
+    if( orderAt(state().order)->playbackCount() >= maxRepeat() )
     {
         logger()->debug(L4CXX_LOCATION, "Maximum playback count reached");
         return false;
     }
-    if(rowChanged)
+    if( rowChanged )
     {
-        if(!orderAt(state().order)->increaseRowPlayback(state().row))
+        if( !orderAt(state().order)->increaseRowPlayback(state().row) )
         {
             logger()->info(L4CXX_LOCATION, "Row playback counter reached limit");
             setOrder(orderCount());
@@ -350,7 +348,7 @@ int XmModule::internal_channelCount() const
 
 const XmInstrument* XmModule::getInstrument(int idx) const
 {
-    if(!between<int>(idx, 1, m_instruments.size()))
+    if( !between<int>(idx, 1, m_instruments.size()) )
     {
         return nullptr;
     }
@@ -360,7 +358,7 @@ const XmInstrument* XmModule::getInstrument(int idx) const
 uint16_t XmModule::noteToPeriod(uint8_t note, int8_t finetune) const
 {
     uint16_t tuned = (note << 4) + (finetune >> 3) + 16;
-    if(tuned >= m_noteToPeriod.size())
+    if( tuned >= m_noteToPeriod.size() )
     {
         return 0;
     }
@@ -371,7 +369,7 @@ uint32_t XmModule::periodToFrequency(uint16_t period) const
 {
     float pbFrq = frequency();
     static const float adjFac = pow(2, -7.0f / 12);
-    if(m_amiga)
+    if( m_amiga )
     {
         /*
         Period = (PeriodTab[((Note%12)*8 + FineTune/16]*(1-Frac(FineTune/16)) +
@@ -401,11 +399,11 @@ uint16_t XmModule::periodToFineNoteIndex(uint16_t period, int8_t finetune, uint8
     const int tuned = clip(finetune / 8 + 16, 8, 24);
     uint16_t ofsLo = 0;
     uint16_t ofsHi = 1536;
-    for(int i = 0; i < 8; i++)
+    for( int i = 0; i < 8; i++ )
     {
         uint16_t ofsMid = (ofsLo + ofsHi) / 2;
         ofsMid &= 0xfff0;
-        if(period < m_noteToPeriod.at(ofsMid + tuned - 8))
+        if( period < m_noteToPeriod.at(ofsMid + tuned - 8) )
         {
             ofsLo = ofsMid;
         }
@@ -415,11 +413,11 @@ uint16_t XmModule::periodToFineNoteIndex(uint16_t period, int8_t finetune, uint8
         }
     }
     int ofs = ofsLo + tuned + (deltaNote << 1);
-    if(ofs >= 1550)
+    if( ofs >= 1550 )
     {
         ofs = 1551;
     }
-    else if(ofs < 0)
+    else if( ofs < 0 )
     {
         ofs = 0;
     }
@@ -433,7 +431,7 @@ uint16_t XmModule::glissando(uint16_t period, int8_t finetune, uint8_t deltaNote
 
 void XmModule::doPatternBreak(int16_t next)
 {
-    if(next <= 0x3f)
+    if( next <= 0x3f )
     {
         m_jumpRow = next;
     }
@@ -459,39 +457,39 @@ void XmModule::doPatLoop(int16_t next)
 AbstractArchive& XmModule::serialize(AbstractArchive* data)
 {
     AbstractModule::serialize(data);
-    for(XmChannel*& chan : m_channels)
+    for( XmChannel*& chan : m_channels )
     {
-        if(!chan)
+        if( !chan )
         {
             continue;
         }
         data->archive(chan);
     }
     *data
-        % m_jumpRow
-        % m_jumpOrder
-        % m_isPatLoop
-        % m_doPatJump
-        % m_restartPos
-        % m_requestedPatternDelay
-        % m_currentPatternDelay;
+    % m_jumpRow
+    % m_jumpOrder
+    % m_isPatLoop
+    % m_doPatJump
+    % m_restartPos
+    % m_requestedPatternDelay
+    % m_currentPatternDelay;
     return *data;
 }
 
 AbstractModule* XmModule::factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter)
 {
-    XmModule* result(new XmModule(maxRpt, inter));
-    if(!result)
+    auto* result(new XmModule(maxRpt, inter));
+    if( !result )
     {
         delete result;
         return nullptr;
     }
-    if(!result->load(stream))
+    if( !result->load(stream) )
     {
         delete result;
         return nullptr;
     }
-    if(!result->initialize(frequency))
+    if( !result->initialize(frequency) )
     {
         delete result;
         return nullptr;
@@ -506,7 +504,7 @@ bool XmModule::isRunningPatDelay() const
 
 void XmModule::doPatDelay(uint8_t counter)
 {
-    if(isRunningPatDelay())
+    if( isRunningPatDelay() )
     {
         return;
     }

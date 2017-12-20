@@ -35,14 +35,17 @@ namespace ppp
 {
 namespace mod
 {
-class ModPattern : public Field<ModCell>
+class ModPattern
+    : public Field<ModCell>
 {
-    DISABLE_COPY(ModPattern)
 public:
+    DISABLE_COPY(ModPattern)
+
     /**
      * @brief Constructor
      */
     ModPattern();
+
     /**
      * @brief Load the pattern from a stream
      * @param[in] str The stream to load from

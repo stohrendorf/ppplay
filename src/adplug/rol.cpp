@@ -106,7 +106,7 @@ bool RolPlayer::load(const std::string& filename)
 
     m_timeOfLastNote = 0;
 
-    if( load_voice_data(f, bnk_filename) != true )
+    if( !load_voice_data(f, bnk_filename) )
     {
         return false;
     }
@@ -134,13 +134,7 @@ bool RolPlayer::update()
 
     ++m_currTick;
 
-    if( m_currTick > m_timeOfLastNote )
-    {
-        return false;
-    }
-
-    return true;
-    //return ( mCurrTick > mTimeOfLastNote ) ? false : true;
+    return m_currTick <= m_timeOfLastNote;
 }
 
 //---------------------------------------------------------
@@ -217,7 +211,7 @@ void RolPlayer::UpdateVoice(int voice, VoiceData& voiceData)
 
         if( voiceData.next_volume_event < voiceData.volume_events.size() )
         {
-            int const volume = static_cast<int>(63.0f * (1.0f - volumeEvent.multiplier));
+            const auto volume = static_cast<int>(63.0f * (1.0f - volumeEvent.multiplier));
 
             SetVolume(voice, volume);
 

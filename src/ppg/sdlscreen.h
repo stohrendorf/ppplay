@@ -33,17 +33,22 @@ namespace ppg
  * @class SDLScreen
  * @brief The virtual DOS screen (SDL implementation)
  */
-class PPPLAY_PPG_EXPORT SDLScreen final : public Widget, public SDLTimer
+class PPPLAY_PPG_EXPORT SDLScreen final
+    : public Widget, public SDLTimer
 {
-    DISABLE_COPY(SDLScreen)
 private:
     void drawThis() override;
+
     int m_cursorX; //!< @brief Cursor X position
     int m_cursorY; //!< @brief Cursor Y position
 
     void onTimer() override;
+
 public:
+    DISABLE_COPY(SDLScreen)
+
     static SDLScreen* instance();
+
     /**
      * @brief Create a new virtual DOS screen
      * @param[in] w Width in characters
@@ -51,7 +56,9 @@ public:
      * @param[in] title Title of the screen
      */
     SDLScreen(int w, int h, const std::string& title);
-    virtual ~SDLScreen();
+
+    ~SDLScreen() override;
+
     /**
      * @brief Clear the screen
      * @param[in] c Character to overwrite the screen with
@@ -59,14 +66,23 @@ public:
      * @param[in] background Background color
      */
     void clear(uint8_t c, Color foreground, Color background);
+
     void drawChar(int x, int y, char c) override;
+
     void drawPixel(int x, int y, Color c);
+
     void lockPixels();
+
     void unlockPixels();
+
     void clearPixels(Color c = Color::None);
+
     void setFgColorAt(int x, int y, Color c) override;
+
     void setBgColorAt(int x, int y, Color c) override;
+
     bool onMouseMove(int x, int y) override;
+
     /**
      * @brief Whether the screen has the mouse focus
      * @retval true if the screen has the mouse focus

@@ -22,11 +22,11 @@
 
 #include <fstream>
 
-FileStream::FileStream(const std::string& filename, Mode mode) :
-    Stream(new std::fstream(filename.c_str(), (mode == Mode::Read ? std::ios::in : std::ios::out) | std::ios::binary), filename),
-    m_size(0)
+FileStream::FileStream(const std::string& filename, Mode mode)
+    :
+    Stream(new std::fstream(filename.c_str(), (mode == Mode::Read ? std::ios::in : std::ios::out) | std::ios::binary), filename), m_size(0)
 {
-    if(mode == Mode::Read)
+    if( mode == Mode::Read )
     {
         stream()->seekg(0, std::ios::end);
         m_size = stream()->tellg();
@@ -36,7 +36,7 @@ FileStream::FileStream(const std::string& filename, Mode mode) :
 
 bool FileStream::isOpen() const
 {
-    const std::fstream* fs = dynamic_cast<const std::fstream*>(stream());
+    const auto* fs = dynamic_cast<const std::fstream*>(stream());
     BOOST_ASSERT_MSG(fs != nullptr, "Stream is not a file stream");
     return fs->is_open();
 }

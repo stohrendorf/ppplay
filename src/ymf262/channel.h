@@ -40,15 +40,17 @@ class Operator;
 
 class Opl3;
 
-class Channel : public ISerializable
+class Channel
+    : public ISerializable
 {
-    DISABLE_COPY(Channel)
 public:
+    DISABLE_COPY(Channel)
+
     typedef std::shared_ptr<Channel> Ptr;
 
     static constexpr int _2_KON1_BLOCK3_FNUMH2_Offset = 0xB0;
-    static constexpr int  FNUML8_Offset = 0xA0;
-    static constexpr int  CH4_FB3_CNT1_Offset = 0xC0;
+    static constexpr int FNUML8_Offset = 0xA0;
+    static constexpr int CH4_FB3_CNT1_Offset = 0xC0;
 private:
     Opl3* m_opl;
     int m_channelBaseAddress;
@@ -77,7 +79,7 @@ private:
     uint8_t m_fb = 0;
 
     //! @brief Feedback sample values
-    int32_t m_feedback[2] = { 0, 0 };
+    int32_t m_feedback[2] = {0, 0};
 
     //! @brief Connection
     bool m_cnt = false;
@@ -98,7 +100,7 @@ public:
      */
     int16_t feedback() const
     {
-        if(m_fb == 0)
+        if( m_fb == 0 )
         {
             return 0;
         }
@@ -107,6 +109,7 @@ public:
         const int16_t d = 1 << (9 - m_fb);
         return (m_feedback[0] + m_feedback[1]) / d;
     }
+
     /**
      * @brief Push feedback into the queue
      * @param[in] fb 13 bit feedback from channel output
@@ -118,7 +121,9 @@ public:
     }
 
     Channel(Opl3* opl, int baseAddress);
+
     Channel(Opl3* opl, int baseAddress, Operator* op1, Operator* op2);
+
     Channel(Opl3* opl, int baseAddress, Operator* op1, Operator* op2, Operator* op3, Operator* op4);
 
     /**
@@ -138,8 +143,11 @@ public:
     void getInFourChannels(std::array<int16_t, 4>* dest, int16_t channelOutput);
 
     void nextSample(std::array<int16_t, 4>* dest);
+
     void keyOn();
+
     void keyOff();
+
     void updateOperators();
 
     int baseAddress() const
@@ -151,7 +159,9 @@ public:
 
 private:
     void nextSample2Op(std::array<int16_t, 4>* dest);
+
     void nextSample4Op(std::array<int16_t, 4>* dest);
+
     bool isRhythmChannel() const;
 };
 }

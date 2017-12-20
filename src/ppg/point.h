@@ -42,15 +42,18 @@ public:
      * @brief Default constructor, sets m_x and m_y to 0
      */
     constexpr Point() noexcept = default;
+
     /**
      * @overload
      * @brief Initializing constructor
      * @param[in] x Value for m_x
      * @param[in] y Value for m_y
      */
-    constexpr Point(int x, int y) noexcept : m_x(x), m_y(y)
+    constexpr Point(int x, int y) noexcept
+        : m_x(x), m_y(y)
     {
     }
+
     /**
      * @brief Adds the coordinates of @a rhs to this
      * @param[in] rhs The coordinates to add
@@ -62,6 +65,7 @@ public:
         m_y += rhs.m_y;
         return *this;
     }
+
     /**
      * @brief Add two points
      * @param[in] rhs The coordinates to add
@@ -69,8 +73,9 @@ public:
      */
     constexpr Point operator+(const Point& rhs) const noexcept
     {
-        return Point(m_x + rhs.m_x, m_y + rhs.m_y);
+        return {m_x + rhs.m_x, m_y + rhs.m_y};
     }
+
     /**
      * @brief Subtracts the coordinates of @a rhs from this
      * @param[in] rhs The coordinates to subtract
@@ -82,6 +87,7 @@ public:
         m_y -= rhs.m_y;
         return *this;
     }
+
     /**
      * @brief Subtract two points
      * @param[in] rhs The coordinates to subtract
@@ -89,8 +95,9 @@ public:
      */
     constexpr Point operator-(const Point& rhs) const noexcept
     {
-        return Point(m_x - rhs.m_x, m_y - rhs.m_y);
+        return {m_x - rhs.m_x, m_y - rhs.m_y};
     }
+
     /**
      * @brief Get the X coordinate
      * @return The X coordinate
@@ -99,6 +106,7 @@ public:
     {
         return m_x;
     }
+
     /**
      * @brief Get the Y coordinate
      * @return The Y coordinate
@@ -107,6 +115,7 @@ public:
     {
         return m_y;
     }
+
     /**
      * @brief Set the X coordinate
      * @param[in] x The new X coordinate
@@ -115,6 +124,7 @@ public:
     {
         m_x = x;
     }
+
     /**
      * @brief Set the Y coordinate
      * @param[in] y The new Y coordinate

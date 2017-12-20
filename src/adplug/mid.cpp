@@ -338,9 +338,13 @@ void MidPlayer::midi_fm_instrument(int voice, unsigned char* inst)
     {
         getOpl()->writeReg(0x43 + adlib_opadd[voice], 0x3f);
         if( (inst[10] & 1) == 0 )
+        {
             getOpl()->writeReg(0x40 + adlib_opadd[voice], inst[2]);
+        }
         else
+        {
             getOpl()->writeReg(0x40 + adlib_opadd[voice], 0x3f);
+        }
     }
     else if( (m_adlibStyle & SIERRA_STYLE) || (m_adlibStyle & CMF_STYLE) )
     {
@@ -351,9 +355,13 @@ void MidPlayer::midi_fm_instrument(int voice, unsigned char* inst)
     {
         getOpl()->writeReg(0x40 + adlib_opadd[voice], inst[2]);
         if( (inst[10] & 1) == 0 )
+        {
             getOpl()->writeReg(0x43 + adlib_opadd[voice], inst[3]);
+        }
         else
+        {
             getOpl()->writeReg(0x43 + adlib_opadd[voice], 0);
+        }
     }
 
     getOpl()->writeReg(0x60 + adlib_opadd[voice], inst[4]);
@@ -394,30 +402,15 @@ void MidPlayer::midi_fm_volume(int voice, int volume)
         vol >>= 2;
     }
 
-    if( (m_adlibStyle & LUCAS_STYLE) != 0 )
+    if( (getOpl()->readReg(0xc0 + voice) & 1) == 1 )
     {
-        if( (getOpl()->readReg(0xc0 + voice) & 1) == 1 )
-        {
-            getOpl()->writeReg(
-                0x40 + adlib_opadd[voice],
-                (63 - vol) | (getOpl()->readReg(0x40 + adlib_opadd[voice]) & 0xc0));
-        }
         getOpl()->writeReg(
-            0x43 + adlib_opadd[voice],
-            (63 - vol) | (getOpl()->readReg(0x43 + adlib_opadd[voice]) & 0xc0));
+            0x40 + adlib_opadd[voice],
+            (63 - vol) | (getOpl()->readReg(0x40 + adlib_opadd[voice]) & 0xc0));
     }
-    else
-    {
-        if( (getOpl()->readReg(0xc0 + voice) & 1) == 1 )
-        {
-            getOpl()->writeReg(
-                0x40 + adlib_opadd[voice],
-                (63 - vol) | (getOpl()->readReg(0x40 + adlib_opadd[voice]) & 0xc0));
-        }
-        getOpl()->writeReg(
-            0x43 + adlib_opadd[voice],
-            (63 - vol) | (getOpl()->readReg(0x43 + adlib_opadd[voice]) & 0xc0));
-    }
+    getOpl()->writeReg(
+        0x43 + adlib_opadd[voice],
+        (63 - vol) | (getOpl()->readReg(0x43 + adlib_opadd[voice]) & 0xc0));
 }
 
 void MidPlayer::midi_fm_playnote(int voice, int note, int volume)
@@ -472,7 +465,6 @@ bool MidPlayer::update()
     long w, v, note, vel, ctrl, nv, x, l, lnum;
     int i = 0, j, c;
     int on, onl, numchan;
-    int ret;
 
     if( m_doing )
     {
@@ -497,9 +489,9 @@ bool MidPlayer::update()
     }
 
     m_iwait = 0;
-    ret = 1;
+    bool ret = true;
 
-    while( m_iwait == 0 && ret == 1 )
+    while( m_iwait == 0 && ret )
     {
         for( m_currentTrack = 0; m_currentTrack < 16; m_currentTrack++ )
         {
@@ -900,29 +892,33 @@ bool MidPlayer::update()
             }
         }
 
-        ret = 0; //end of song.
+        ret = false; //end of song.
         m_iwait = 0;
         for( m_currentTrack = 0; m_currentTrack < 16; m_currentTrack++ )
         {
             if( m_tracks[m_currentTrack].on == 1 &&
                 m_tracks[m_currentTrack].pos < m_tracks[m_currentTrack].tend )
             {
-                ret = 1;
+                ret = true;
             }
         } //not yet..
 
-        if( ret == 1 )
+        if( ret )
         {
             m_iwait = 0xffffff; // bigger than any wait can be!
             for( m_currentTrack = 0; m_currentTrack < 16; m_currentTrack++ )
+            {
                 if( m_tracks[m_currentTrack].on == 1 &&
                     m_tracks[m_currentTrack].pos < m_tracks[m_currentTrack].tend &&
                     m_tracks[m_currentTrack].iwait < m_iwait )
+                {
                     m_iwait = m_tracks[m_currentTrack].iwait;
+                }
+            }
         }
     }
 
-    if( m_iwait != 0 && ret == 1 )
+    if( m_iwait != 0 && ret )
     {
         for( m_currentTrack = 0; m_currentTrack < 16; m_currentTrack++ )
         {
@@ -941,10 +937,7 @@ bool MidPlayer::update()
 
     logger->trace(L4CXX_LOCATION, "end update");
 
-    if( ret )
-        return true;
-    else
-        return false;
+    return ret;
 }
 
 size_t MidPlayer::framesUntilUpdate() const
@@ -954,23 +947,23 @@ size_t MidPlayer::framesUntilUpdate() const
 
 void MidPlayer::rewind(const boost::optional<size_t>& subsong)
 {
-    unsigned char ins[16];
+    uint8_t ins[16];
 
     m_dataPos = 0;
     m_tins = 0;
     m_adlibStyle = MIDI_STYLE | CMF_STYLE;
     m_melodicMode = true;
     m_myInsBank = midi_fm_instruments;
-    for( int i = 0; i < 16; i++ )
+    for( auto& i : m_ch )
     {
-        m_ch[i].inum = 0;
+        i.inum = 0;
         for( int j = 0; j < 11; j++ )
         {
-            m_ch[i].ins[j] = m_myInsBank[m_ch[i].inum][j];
+            i.ins[j] = m_myInsBank[i.inum][j];
         }
-        m_ch[i].vol = 127;
-        m_ch[i].nshift = -12;
-        m_ch[i].on = 1;
+        i.vol = 127;
+        i.nshift = -12;
+        i.on = 1;
     }
 
     /* General init */
@@ -1073,7 +1066,9 @@ void MidPlayer::rewind(const boost::optional<size_t>& subsong)
             }
 
             for( i = 0; i < 16; i++ )
+            {
                 m_ch[i].nshift = 0;
+            }
 
             m_adlibStyle = CMF_STYLE;
 
@@ -1095,9 +1090,9 @@ void MidPlayer::rewind(const boost::optional<size_t>& subsong)
             for( auto j = 0u; j < m_tins; j++ )
             {
                 logger->trace(L4CXX_LOCATION, "%d: ", j);
-                for( int l = 0; l < 16; l++ )
+                for( uint8_t& in : ins )
                 {
-                    ins[l] = getnext(1);
+                    in = getnext(1);
                 }
 
                 m_myInsBank[j][10] = ins[2];
@@ -1200,13 +1195,13 @@ void MidPlayer::rewind(const boost::optional<size_t>& subsong)
     /*        sprintf(info,"%s\r\nTicks/Quarter Note: %ld\r\n",info,deltas);
       sprintf(info,"%sms/Quarter Note: %ld",info,msqtr); */
 
-    for( auto i = 0; i < 16; i++ )
+    for( auto& m_track : m_tracks )
     {
-        if( m_tracks[i].on )
+        if( m_track.on )
         {
-            m_tracks[i].pos = m_tracks[i].spos;
-            m_tracks[i].pv = 0;
-            m_tracks[i].iwait = 0;
+            m_track.pos = m_track.spos;
+            m_track.pv = 0;
+            m_track.iwait = 0;
         }
     }
 
@@ -1245,7 +1240,7 @@ bool DukePlayer::load(const std::string& filename)
 
     try
     {
-        m_emidi.reset(new ppp::EMidi(fs, 4, false));
+        m_emidi = std::make_unique<ppp::EMidi>(fs, 4, false);
     }
     catch( ... )
     {

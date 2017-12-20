@@ -23,15 +23,11 @@
 
 namespace ppg
 {
-Widget::Widget(Widget* parent) :
-    m_mutex(),
-    m_visible(false),
-    m_parent(parent),
-    m_area(0, 0, 0, 0),
-    m_children(),
-    m_autodelete(true)
+Widget::Widget(Widget* parent)
+    :
+    m_mutex(), m_visible(false), m_parent(parent), m_area(0, 0, 0, 0), m_children(), m_autodelete(true)
 {
-    if(parent)
+    if( parent )
     {
         parent->m_children.push_back(this);
     }
@@ -42,9 +38,9 @@ Widget::~Widget()
     LockGuard guard(this);
     // delete the children
     List backup = m_children;
-    for(Widget * tmp : backup)
+    for( Widget* tmp : backup )
     {
-        if(tmp->m_autodelete)
+        if( tmp->m_autodelete )
         {
             delete tmp;
         }
@@ -59,10 +55,10 @@ Widget::~Widget()
     // the children remove themselves
     BOOST_ASSERT_MSG(m_children.empty(), stringFmt("Widget expected to have no children, but %d are left", m_children.size()).c_str());
     // remove this widget from the parent's children list
-    if(m_parent)
+    if( m_parent )
     {
 #ifndef NDEBUG
-        if(m_parent->m_children.cend() == std::find(m_parent->m_children.cbegin(), m_parent->m_children.cend(), this))
+        if( m_parent->m_children.cend() == std::find(m_parent->m_children.cbegin(), m_parent->m_children.cend(), this) )
         {
             light4cxx::Logger::get("ppg.widget")->error(L4CXX_LOCATION, "The parent of the widget does not contain the widget itself");
         }
@@ -74,7 +70,7 @@ Widget::~Widget()
 int Widget::setLeft(int x, bool absolute)
 {
     LockGuard guard(this);
-    if(absolute)
+    if( absolute )
     {
         mapToAbsolute(&x, nullptr);
     }
@@ -87,7 +83,7 @@ int Widget::setLeft(int x, bool absolute)
 int Widget::setTop(int y, bool absolute)
 {
     LockGuard guard(this);
-    if(absolute)
+    if( absolute )
     {
         mapToAbsolute(nullptr, &y);
     }
@@ -114,7 +110,7 @@ bool Widget::setPosition(const Point& pos, bool absolute)
 int Widget::setWidth(int w)
 {
     LockGuard guard(this);
-    if(w > 0)
+    if( w > 0 )
     {
         m_area.setWidth(w);
     }
@@ -124,7 +120,7 @@ int Widget::setWidth(int w)
 int Widget::setHeight(int h)
 {
     LockGuard guard(this);
-    if(h > 0)
+    if( h > 0 )
     {
         m_area.setHeight(h);
     }
@@ -138,6 +134,7 @@ bool Widget::setSize(int w, int h)
     setHeight(h);
     return (m_area.width() != w) || (m_area.height() != h);
 }
+
 bool Widget::setSize(const Point& pt)
 {
     LockGuard guard(this);
@@ -147,13 +144,15 @@ bool Widget::setSize(const Point& pt)
 void Widget::draw()
 {
     LockGuard guard(this);
-    if(!isVisible())
+    if( !isVisible() )
+    {
         return;
+    }
     // draw from bottom to top so that top elements are drawn over bottom ones
-    for(auto revIt = m_children.rbegin(); revIt != m_children.rend(); ++revIt)
+    for( auto revIt = m_children.rbegin(); revIt != m_children.rend(); ++revIt )
     {
         Widget* w = *revIt;
-        if(!w || !w->isVisible())
+        if( !w || !w->isVisible() )
         {
             continue;
         }
@@ -189,12 +188,12 @@ void Widget::hide() noexcept
 void Widget::drawChar(int x, int y, char c)
 {
     LockGuard guard(this);
-    if(!m_parent)
+    if( !m_parent )
     {
         return;
     }
     mapToParent(&x, &y);
-    if(!m_area.contains(x, y))
+    if( !m_area.contains(x, y) )
     {
         return;
     }
@@ -204,12 +203,12 @@ void Widget::drawChar(int x, int y, char c)
 void Widget::setFgColorAt(int x, int y, Color c)
 {
     LockGuard guard(this);
-    if(!m_parent)
+    if( !m_parent )
     {
         return;
     }
     mapToParent(&x, &y);
-    if(!m_area.contains(x, y))
+    if( !m_area.contains(x, y) )
     {
         return;
     }
@@ -219,12 +218,12 @@ void Widget::setFgColorAt(int x, int y, Color c)
 void Widget::setBgColorAt(int x, int y, Color c)
 {
     LockGuard guard(this);
-    if(!m_parent)
+    if( !m_parent )
     {
         return;
     }
     mapToParent(&x, &y);
-    if(!m_area.contains(x, y))
+    if( !m_area.contains(x, y) )
     {
         return;
     }
@@ -234,23 +233,24 @@ void Widget::setBgColorAt(int x, int y, Color c)
 void Widget::mapToParent(int* x, int* y) const
 {
     LockGuard guard(this);
-    if(!m_parent)
+    if( !m_parent )
     {
         return;
     }
-    if(x != nullptr)
+    if( x != nullptr )
     {
         *x += m_area.left();
     }
-    if(y != nullptr)
+    if( y != nullptr )
     {
         *y += m_area.top();
     }
 }
+
 void Widget::mapToParent(ppg::Point* pt) const
 {
     LockGuard guard(this);
-    if(!m_parent || !pt)
+    if( !m_parent || !pt )
     {
         return;
     }
@@ -260,21 +260,22 @@ void Widget::mapToParent(ppg::Point* pt) const
 void Widget::mapToAbsolute(int* x, int* y) const
 {
     LockGuard guard(this);
-    if(!m_parent)
+    if( !m_parent )
     {
         return;
     }
     m_parent->mapToAbsolute(x, y);
 }
+
 void Widget::mapToAbsolute(ppg::Point* pt) const
 {
     LockGuard guard(this);
-    if(!m_parent || !pt)
+    if( !m_parent || !pt )
     {
         return;
     }
     mapToParent(pt);
-    if(!m_parent)
+    if( !m_parent )
     {
         return;
     }
@@ -284,7 +285,7 @@ void Widget::mapToAbsolute(ppg::Point* pt) const
 Widget* Widget::getTopParent() const
 {
     LockGuard guard(this);
-    if(!m_parent)
+    if( !m_parent )
     {
         return nullptr;
     }
@@ -294,8 +295,10 @@ Widget* Widget::getTopParent() const
 void Widget::toTop(Widget* vp)
 {
     LockGuard guard(this);
-    if(std::find(m_children.begin(), m_children.end(), vp) == m_children.end())
+    if( std::find(m_children.begin(), m_children.end(), vp) == m_children.end() )
+    {
         return;
+    }
     m_children.remove(vp);
     m_children.push_front(vp);
 }
@@ -303,14 +306,14 @@ void Widget::toTop(Widget* vp)
 bool Widget::onMouseMove(int x, int y)
 {
     // 	LockGuard guard(this);
-    for(Widget * current : m_children)
+    for( Widget* current : m_children )
     {
-        if(!current)
+        if( !current )
         {
             continue;
         }
         Rect currentArea = current->area();
-        if(current->onMouseMove(x - currentArea.left(), y - currentArea.top()))
+        if( current->onMouseMove(x - currentArea.left(), y - currentArea.top()) )
         {
             return true;
         }

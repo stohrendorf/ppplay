@@ -45,22 +45,23 @@ Logger* Logger::get(const std::string& name)
     std::lock_guard<std::mutex> lockGuard(lockMutex);
 
     RepoMap::const_iterator elem = s_repository.find(name);
-    if(elem != s_repository.end())
+    if( elem != s_repository.end() )
     {
         return elem->second.get();
     }
-    Logger* res = new Logger(name);
+    auto* res = new Logger(name);
     s_repository.insert(std::make_pair(name, std::unique_ptr<Logger>(res)));
     return res;
 }
 
-Logger::Logger(const std::string& name) : m_name(name)
+Logger::Logger(const std::string& name)
+    : m_name(name)
 {
 }
 
 void Logger::log(light4cxx::Level l, const light4cxx::Location& loc, const std::string& str) const
 {
-    if(l < s_level || s_level == Level::Off)
+    if( l < s_level || s_level == Level::Off )
     {
         return;
     }

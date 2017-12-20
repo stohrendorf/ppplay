@@ -1253,7 +1253,7 @@ void AdlibDriver::primaryEffect1(Channel& channel)
     // that it won't be affected by any of the calculations below.
     uint16_t konFnumH = ((channel.konBlockFnumH & 0x20) << 8) | (channel.konBlockFnumH & 0x1C);
 
-    int16_t unk3 = static_cast<int16_t>(channel.unk30);
+    auto unk3 = static_cast<int16_t>(channel.unk30);
 
     frq += unk3;
     if( unk3 >= 0 )
@@ -1913,7 +1913,7 @@ int AdlibDriver::update_changeChannelTempo(const uint8_t*&, Channel& channel,
 int AdlibDriver::updateCallback46(const uint8_t*& dataptr, Channel&, uint8_t value)
 {
     uint8_t entry = *dataptr++;
-    _unkTable2[entry++];
+    ++entry;
     _tablePtr2 = _unkTable2[entry];
     if( value == 2 )
     {

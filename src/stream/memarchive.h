@@ -26,15 +26,18 @@
  * @ingroup Common
  * @brief Specialization of AbstractArchive for memory storage
  */
-class PPPLAY_STREAM_EXPORT MemArchive : public AbstractArchive
+class PPPLAY_STREAM_EXPORT MemArchive
+    : public AbstractArchive
 {
-    DISABLE_COPY(MemArchive)
 public:
+    DISABLE_COPY(MemArchive)
+
     /**
      * @brief Constructs this archive using a SBinStream
      */
     MemArchive();
-    virtual ~MemArchive();
+
+    ~MemArchive() override;
 };
 
 #endif

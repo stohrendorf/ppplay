@@ -96,9 +96,9 @@ Player* CmfPlayer::factory()
 CmfPlayer::CmfPlayer()
     : Player()
 {
-    assert(OPLOFFSET(1 - 1) == 0x00);
-    assert(OPLOFFSET(5 - 1) == 0x09);
-    assert(OPLOFFSET(9 - 1) == 0x12);
+    static_assert(OPLOFFSET(1 - 1) == 0x00, "");
+    static_assert(OPLOFFSET(5 - 1) == 0x09, "");
+    static_assert(OPLOFFSET(9 - 1) == 0x12, "");
 }
 
 bool CmfPlayer::load(const std::string& filename)
@@ -570,7 +570,7 @@ void CmfPlayer::cmfNoteOn(uint8_t iChannel, uint8_t iNote, uint8_t iVelocity)
         pow(2, (iNote + ((this->chMIDI[iChannel].iPitchbend - 8192) /
                          8192.0) + (this->iTranspose / 128) - 9) / 12.0 -
                (iBlock - 20)) * 440.0 / 32.0 / 50000.0;
-    uint16_t iOPLFNum = static_cast<uint16_t>(d + 0.5);
+    auto iOPLFNum = static_cast<uint16_t>(d + 0.5);
     if( iOPLFNum > 1023 )
         logger->error(L4CXX_LOCATION, "CMF: This note is out of range! (send this song to malvineous@shikadi.net!)");
 

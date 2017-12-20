@@ -69,7 +69,7 @@ std::string s_format = "[%T %<5t %r] %L (in %F:%l): %m";
  */
 const char* levelString(Level l)
 {
-    switch(l)
+    switch( l )
     {
         case Level::Off:
             return "";
@@ -103,14 +103,14 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
     std::ostringstream oss;
     // 	const std::ios_base::fmtflags clearFlags = oss.flags();
     int state = 0;
-    for(size_t i = 0; i < s_format.length(); i++)
+    for( size_t i = 0; i < s_format.length(); i++ )
     {
         char c = s_format[i];
-        switch(state)
+        switch( state )
         {
             case 0:
                 // scan for %
-                if(c == '%')
+                if( c == '%' )
                 {
                     state = 1;
                     break;
@@ -119,7 +119,7 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
                 break;
             case 1:
                 // flags
-                switch(c)
+                switch( c )
                 {
                     case '#':
                         oss << std::showbase;
@@ -159,7 +159,7 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
                 break;
             case 2:
                 // field width
-                if(isdigit(c))
+                if( isdigit(c) )
                 {
                     oss.width(c - '0');
                 }
@@ -171,7 +171,7 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
                 break;
             case 3:
                 // precision dot
-                if(c == '.')
+                if( c == '.' )
                 {
                     state = 4;
                 }
@@ -184,7 +184,7 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
                 break;
             case 4:
                 // precision value
-                if(isdigit(c))
+                if( isdigit(c) )
                 {
                     oss.precision(c - '0');
                 }
@@ -197,7 +197,7 @@ std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logg
                 break;
             case 5:
                 // format specifier
-                switch(c)
+                switch( c )
                 {
                     case '%':
                         oss << '%';

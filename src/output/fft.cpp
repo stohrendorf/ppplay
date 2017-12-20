@@ -45,20 +45,23 @@ struct SimpleComplex
     typedef T Type;
     Type real;
     Type imag;
-    explicit constexpr SimpleComplex(Type r = 0, Type i = 0) noexcept : real(r), imag(i)
+
+    explicit constexpr SimpleComplex(Type r = 0, Type i = 0) noexcept
+        : real(r), imag(i)
     {
     }
 
     template<typename U>
     constexpr SimpleComplex<Type> operator*(const SimpleComplex<U>& rhs) const noexcept
     {
-        return SimpleComplex<Type>(real*rhs.real - imag*rhs.imag, real*rhs.imag + imag*rhs.real);
+        return SimpleComplex<Type>(real * rhs.real - imag * rhs.imag, real * rhs.imag + imag * rhs.real);
     }
+
     template<typename U>
     const SimpleComplex<Type>& operator*=(const SimpleComplex<U>& rhs) noexcept
     {
-        Type r = real*rhs.real - imag*rhs.imag;
-        imag = real*rhs.imag + imag*rhs.real;
+        Type r = real * rhs.real - imag * rhs.imag;
+        imag = real * rhs.imag + imag * rhs.real;
         real = r;
         return *this;
     }
@@ -68,6 +71,7 @@ struct SimpleComplex
     {
         return SimpleComplex<Type>(real + rhs.real, imag + rhs.imag);
     }
+
     template<typename U>
     const SimpleComplex<Type>& operator+=(const SimpleComplex<U>& rhs) noexcept
     {
@@ -81,6 +85,7 @@ struct SimpleComplex
     {
         return SimpleComplex<Type>(real - rhs.real, imag - rhs.imag);
     }
+
     template<typename U>
     const SimpleComplex<Type>& operator-=(const SimpleComplex<U>& rhs) noexcept
     {
@@ -91,21 +96,21 @@ struct SimpleComplex
 
     constexpr Type length() const noexcept
     {
-        return std::sqrt(real*real + imag*imag);
+        return std::sqrt(real * real + imag * imag);
     }
 };
 
 void DFFT(std::array<SimpleComplex<float>, ppp::FFT::InputLength>& data)
 {
     // re-sort values by inverting the index bits
-    for(uint_fast16_t i = 0, j = 0; i < ppp::FFT::InputLength - 1; i++)
+    for( uint_fast16_t i = 0, j = 0; i < ppp::FFT::InputLength - 1; i++ )
     {
-        if(i < j)
+        if( i < j )
         {
             std::swap(data[i], data[j]);
         }
         uint_fast16_t k = ppp::FFT::InputLength / 2;
-        while(k <= j)
+        while( k <= j )
         {
             j -= k;
             k >>= 1;
@@ -114,12 +119,12 @@ void DFFT(std::array<SimpleComplex<float>, ppp::FFT::InputLength>& data)
     }
     SimpleComplex<float> expFacMul(-1, 0);
     // recursive level loop
-    for(uint_fast8_t level = 0; level < ppp::FFT::InputBits; level++)
+    for( uint_fast8_t level = 0; level < ppp::FFT::InputBits; level++ )
     {
         SimpleComplex<float> expFac(1, 0);
-        for(uint_fast16_t section = 0; section < uint16_t(1 << level); section++)
+        for( uint_fast16_t section = 0; section < uint16_t(1 << level); section++ )
         {
-            for(uint_fast16_t left = section; left < ppp::FFT::InputLength; left += 2 << level)
+            for( uint_fast16_t left = section; left < ppp::FFT::InputLength; left += 2 << level )
             {
                 const uint_fast16_t right = left + (1 << level);
                 SimpleComplex<float> deltaRight = expFac * data[right];
@@ -129,7 +134,7 @@ void DFFT(std::array<SimpleComplex<float>, ppp::FFT::InputLength>& data)
             expFac *= expFacMul;
         }
         expFacMul.imag = std::sqrt((1.0f - expFacMul.real) / 2.0f);
-        if(!reverseFFT)
+        if( !reverseFFT )
         {
             expFacMul.imag = -expFacMul.imag;
         }
@@ -146,7 +151,7 @@ void samplesToComplex(const BasicSample* smpPtr, std::array<SimpleComplex<float>
 {
     BOOST_ASSERT(smpPtr != nullptr);
     BOOST_ASSERT(dest != nullptr);
-    for(size_t i = 0; i < ppp::FFT::InputLength; i++)
+    for( size_t i = 0; i < ppp::FFT::InputLength; i++ )
     {
         (*dest)[i] = SimpleComplex<float>(*smpPtr / 32768.0f, 0);
         smpPtr += 2;
@@ -157,7 +162,7 @@ void fftToAmp(const std::array<SimpleComplex<float>, ppp::FFT::InputLength>& fft
 {
     dest->resize(ppp::FFT::InputLength / 2);
     uint16_t* ampsPtr = &dest->front();
-    for(size_t i = 0; i < ppp::FFT::InputLength / 2; i++)
+    for( size_t i = 0; i < ppp::FFT::InputLength / 2; i++ )
     {
         *(ampsPtr++) = static_cast<uint16_t>(fft[i].length() * std::sqrt(i));
     }
@@ -168,7 +173,7 @@ namespace ppp
 {
 namespace FFT
 {
-void doFFT(const AudioFrameBuffer& samples, std::vector< uint16_t >* L, std::vector< uint16_t >* R)
+void doFFT(const AudioFrameBuffer& samples, std::vector<uint16_t>* L, std::vector<uint16_t>* R)
 {
     BOOST_ASSERT(L != nullptr);
     BOOST_ASSERT(R != nullptr);

@@ -22,7 +22,7 @@ namespace ppp
 {
 void swapEndian(char data[], size_t size)
 {
-    for(size_t i = 0; i < size / 2; i++)
+    for( size_t i = 0; i < size / 2; i++ )
     {
         std::swap(data[i], data[size - i - 1]);
     }

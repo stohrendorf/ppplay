@@ -22,7 +22,7 @@
 
 void SDLAudioOutput::sdlAudioCallback(void* userdata, uint8_t* stream, int len_bytes)
 {
-    SDLAudioOutput* outpSdl = static_cast<SDLAudioOutput*>(userdata);
+    auto* outpSdl = static_cast<SDLAudioOutput*>(userdata);
     logger()->trace(L4CXX_LOCATION, "Requested %d bytes of data", len_bytes);
     size_t copiedBytes = sizeof(BasicSampleFrame) * outpSdl->getSdlData(reinterpret_cast<BasicSampleFrame*>(stream), len_bytes / sizeof(BasicSampleFrame));
     std::fill_n(stream + copiedBytes, len_bytes - copiedBytes, 0);
@@ -31,16 +31,18 @@ void SDLAudioOutput::sdlAudioCallback(void* userdata, uint8_t* stream, int len_b
 size_t SDLAudioOutput::getSdlData(BasicSampleFrame* data, size_t numFrames)
 {
     std::unique_lock<std::mutex> lock(m_mutex, std::try_to_lock);
-    if(!lock.owns_lock())
+    if( !lock.owns_lock() )
     {
         logger()->warn(L4CXX_LOCATION, "Failed to lock mutex");
         return 0;
     }
-    if(paused() || m_fifo.isSourcePaused())
+    if( paused() || m_fifo.isSourcePaused() )
+    {
         return 0;
+    }
     AudioFrameBuffer buffer;
     size_t copied = m_fifo.pullData(buffer, numFrames);
-    if(copied == 0)
+    if( copied == 0 )
     {
         logger()->trace(L4CXX_LOCATION, "Source did not return any data - input is dry");
         setErrorCode(InputDry);
@@ -49,7 +51,7 @@ size_t SDLAudioOutput::getSdlData(BasicSampleFrame* data, size_t numFrames)
     }
     setErrorCode(NoError);
     numFrames -= copied;
-    if(numFrames != 0)
+    if( numFrames != 0 )
     {
         logger()->trace(L4CXX_LOCATION, "Source provided not enough data: %d frames missing", numFrames);
     }
@@ -57,12 +59,9 @@ size_t SDLAudioOutput::getSdlData(BasicSampleFrame* data, size_t numFrames)
     return copied;
 }
 
-SDLAudioOutput::SDLAudioOutput(const AbstractAudioSource::WeakPtr& src) :
-    AbstractAudioOutput(src),
-    m_mutex(),
-    m_fifo(src, 4096),
-    m_volObserver(&m_fifo),
-    m_fftObserver(&m_fifo)
+SDLAudioOutput::SDLAudioOutput(const AbstractAudioSource::WeakPtr& src)
+    :
+    AbstractAudioOutput(src), m_mutex(), m_fifo(src, 4096), m_volObserver(&m_fifo), m_fftObserver(&m_fifo)
 {
     logger()->trace(L4CXX_LOCATION, "Created");
 }
@@ -77,10 +76,10 @@ SDLAudioOutput::~SDLAudioOutput()
 int SDLAudioOutput::internal_init(int desiredFrq)
 {
     logger()->trace(L4CXX_LOCATION, "Initializing");
-    if(!SDL_WasInit(SDL_INIT_AUDIO))
+    if( !SDL_WasInit(SDL_INIT_AUDIO) )
     {
         logger()->trace(L4CXX_LOCATION, "Initializing SDL Audio component");
-        if(-1 == SDL_Init(SDL_INIT_AUDIO))
+        if( -1 == SDL_Init(SDL_INIT_AUDIO) )
         {
             logger()->fatal(L4CXX_LOCATION, "SDL Audio component initialization failed. SDL Error: '%s'", SDL_GetError());
             setErrorCode(OutputError);
@@ -100,14 +99,14 @@ int SDLAudioOutput::internal_init(int desiredFrq)
     desired->samples = 2048;
     desired->callback = sdlAudioCallback;
     desired->userdata = this;
-    if(SDL_OpenAudio(desired.get(), obtained.get()) < 0)
+    if( SDL_OpenAudio(desired.get(), obtained.get()) < 0 )
     {
         logger()->fatal(L4CXX_LOCATION, "Couldn't open audio. SDL Error: '%s'", SDL_GetError());
         setErrorCode(OutputError);
         return 0;
     }
     desiredFrq = desired->freq;
-    if(const char* driverName = SDL_GetCurrentAudioDriver())
+    if( const char* driverName = SDL_GetCurrentAudioDriver() )
     {
         logger()->info(L4CXX_LOCATION, "Using audio driver '%s'", driverName);
     }
@@ -130,7 +129,7 @@ void SDLAudioOutput::internal_play()
 {
     SDL_PauseAudio(0);
     // only wait at most 1 sec until playing
-    for(int n = 0; n < 100 && SDL_GetAudioStatus() != SDL_AUDIO_PLAYING; ++n)
+    for( int n = 0; n < 100 && SDL_GetAudioStatus() != SDL_AUDIO_PLAYING; ++n )
     {
         std::this_thread::yield();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -142,7 +141,7 @@ void SDLAudioOutput::internal_pause()
 {
     SDL_PauseAudio(1);
     // only wait at most 1 sec until not playing anymore
-    for(int n = 0; n < 100 && SDL_GetAudioStatus() == SDL_AUDIO_PLAYING; ++n)
+    for( int n = 0; n < 100 && SDL_GetAudioStatus() == SDL_AUDIO_PLAYING; ++n )
     {
         std::this_thread::yield();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
