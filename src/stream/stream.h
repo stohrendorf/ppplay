@@ -1,3 +1,5 @@
+#pragma once
+
 /*
     PPPlay - an old-fashioned module player
     Copyright (C) 2010  Steffen Ohrendorf <steffen.ohrendorf@gmx.de>
@@ -16,9 +18,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PPPLAY_STREAM_H
-#define PPPLAY_STREAM_H
-
 #include <stuff/utils.h>
 #include <stream/ppplay_stream_export.h>
 
@@ -26,6 +25,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 /**
  * @class Stream
@@ -69,6 +69,15 @@ public:
         static_assert(!std::is_pointer<T>::value, "Data to read must not be a pointer");
         m_stream->read(reinterpret_cast<char*>(data), count * sizeof(T));
         return *this;
+    }
+
+    template<typename T>
+    inline std::vector<T> readVector(size_t size)
+    {
+        std::vector<T> result;
+        result.resize(size);
+        read(result.data(), size);
+        return result;
     }
 
     /**
@@ -155,5 +164,3 @@ public:
 protected:
     void setName(const std::string& name);
 };
-
-#endif // binstreamH

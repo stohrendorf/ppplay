@@ -1,3 +1,5 @@
+add_subdirectory(compression)
+
 set(BADPLAY_SRCS
     a2m.cpp
     adl.cpp
@@ -107,6 +109,6 @@ add_executable(badplay ${BADPLAY_SRCS})
 target_link_libraries(badplay PUBLIC ${SDL_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ppplay_core ppplay_opl)
 
 add_subdirectory(bankgen)
-target_link_libraries(badplay PUBLIC ppplay_bankdb)
+target_link_libraries(badplay PUBLIC ppplay_bankdb badplay_compression)
 
 install(TARGETS badplay DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT application)

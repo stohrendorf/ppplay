@@ -23,6 +23,8 @@
 
 #include "mod.h"
 
+class FileStream;
+
 class A2mPlayer
     : public ModPlayer
 {
@@ -63,51 +65,9 @@ public:
     }
 
 private:
-
-    static constexpr auto COPYRANGES = 6;
-    static constexpr auto FIRSTCODE = 257;
-    static constexpr auto MINCOPY = 3;
-    static constexpr auto MAXCOPY = 255;
-    static constexpr auto CODESPERRANGE = (MAXCOPY - MINCOPY + 1);
-    static constexpr auto MAXCHAR = (FIRSTCODE + COPYRANGES * CODESPERRANGE - 1);
-    static constexpr auto TWICEMAX = (2 * MAXCHAR + 1);
-
-    static constexpr auto MAXFREQ = 2000;
-    static constexpr auto TERMINATE = 256;
-    static constexpr auto SUCCMAX = MAXCHAR + 1;
-    static constexpr auto ROOT = 1;
-    static constexpr auto MAXBUF = 42 * 1024;
-    static constexpr auto MAXDISTANCE = 21389;
-    static constexpr auto MAXSIZE = MAXDISTANCE + MAXCOPY;
-
-    void initTree();
-
-    void updateFreq(uint16_t a, uint16_t b);
-
-    void updateModel(uint16_t code);
-
-    uint16_t inputCode(uint16_t bits);
-
-    uint16_t uncompress();
-
-    void decode();
-
-    size_t sixDepak(uint16_t* source, uint8_t* dest, size_t size);
-
     std::string m_songname{};
     std::string m_author{};
     std::array<std::string, 250> m_instname{{}};
 
-    uint16_t m_bitcount = 0;
-    uint16_t m_bitbuffer = 0;
-    uint16_t m_bufcount = 0;
-    uint16_t m_obufcount = 0;
-    size_t m_outputSize = 0;
-    uint16_t m_leftc[MAXCHAR + 1];
-    uint16_t m_rightc[MAXCHAR + 1];
-    uint16_t m_dad[TWICEMAX + 1];
-    uint16_t m_freq[TWICEMAX + 1];
-    uint16_t* m_wdbuf = nullptr;
-    uint8_t* m_obuf = nullptr;
-    std::vector<uint8_t> m_buf{};
+    void readHeader(FileStream& f, uint8_t version, uint16_t* lengths);
 };

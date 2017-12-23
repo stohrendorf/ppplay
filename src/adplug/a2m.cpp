@@ -32,12 +32,7 @@
 #include "stream/filestream.h"
 #include "a2m.h"
 
-namespace
-{
-const std::array<int16_t, 6> copybits = {{4, 6, 8, 10, 12, 14}};
-
-const std::array<int16_t, 6> copymin = {{0, 16, 80, 336, 1360, 5456}};
-}
+#include "compression/sixpack.h"
 
 Player* A2mPlayer::factory()
 {
@@ -51,7 +46,7 @@ bool A2mPlayer::load(const std::string& filename)
     {
         return false;
     }
-    const Command convfx[16] = {
+    static const Command basicCommands[16] = {
         Command::None,
         Command::SlideUp,
         Command::SlideDown,
@@ -69,7 +64,7 @@ bool A2mPlayer::load(const std::string& filename)
         Command::SetTempo,
         Command::Special
     };
-    const Command convinf1[16] = {
+    static const Command specialCommands[16] = {
         Command::SFXTremolo,
         Command::SFXVibrato,
         Command::SFXWaveForm,
@@ -87,7 +82,7 @@ bool A2mPlayer::load(const std::string& filename)
         Command::Sentinel,
         Command::SFXKeyOff
     };
-    const Command newconvfx[] = {
+    static const Command newCommands[] = {
         Command::None,
         Command::SlideUp,
         Command::SlideDown,
@@ -144,193 +139,109 @@ bool A2mPlayer::load(const std::string& filename)
 
     // load, depack & convert section
     //m_maxUsedPattern = numpats;
-    uint16_t len[9];
-    int t;
+    uint16_t lengths[9];
+    uint32_t channelCount;
     if( version < 5 )
     {
-        f.read(len, 5);
-        t = 9;
+        f.read(lengths, 5);
+        channelCount = 9;
     }
     else
     { // version >= 5
-        f.read(len, 9);
-        t = 18;
+        f.read(lengths, 9);
+        channelCount = 18;
     }
 
     // block 0
-    std::vector<uint16_t> m_secData;
-    m_secData.resize(len[0] / 2u);
-    std::vector<uint8_t> org;
-    size_t orgPos = 0;
-    if( version == 1 || version == 5 )
-    {
-        f.read(m_secData.data(), len[0] / 2u);
-        org.resize(MAXBUF);
-        sixDepak(m_secData.data(), org.data(), len[0]);
-    }
-    else
-    {
-        f.read(org.data(), len[0]);
-    }
-    m_songname.assign(&org[orgPos], &org[orgPos] + 42);
-    orgPos += 43;
-    m_author.assign(&org[orgPos], &org[orgPos] + 42);
-    orgPos += 43;
-    for( int i = 0; i < 250; ++i )
-    {
-        // m_songname.assign(&org[orgPos], &org[orgPos] + 32);
-        orgPos += 33;
-    }
-
-    for( int i = 0; i < 250; i++ )
-    { // instruments
-        ModPlayer::Instrument& inst = addInstrument();
-        inst.data[0] = org[orgPos + 10];
-        inst.data[1] = org[orgPos + 0];
-        inst.data[2] = org[orgPos + 1];
-        inst.data[3] = org[orgPos + 4];
-        inst.data[4] = org[orgPos + 5];
-        inst.data[5] = org[orgPos + 6];
-        inst.data[6] = org[orgPos + 7];
-        inst.data[7] = org[orgPos + 8];
-        inst.data[8] = org[orgPos + 9];
-        inst.data[9] = org[orgPos + 2];
-        inst.data[10] = org[orgPos + 3];
-
-        if( version < 5 )
-        {
-            inst.misc = org[orgPos + 11];
-        }
-        else
-        { // version >= 5 -> OPL3 format
-            int pan = org[orgPos + 11];
-
-            if( pan )
-            {
-                inst.data[0] |= (pan & 3) << 4; // set pan
-            }
-            else
-            {
-                inst.data[0] |= 48;
-            } // enable both speakers
-        }
-
-        inst.slide = org[orgPos + 12];
-        orgPos += 13;
-    }
-
-    for( int i = 0; i < 128; ++i )
-    {
-        addOrder(org[orgPos++]);
-    }
-    setRestartOrder(0);
-    setInitialTempo(org[orgPos++]);
-    setInitialSpeed(org[orgPos++]);
-    uint8_t flags = 0;
-    if( version >= 5 )
-    {
-        flags = org[orgPos];
-    }
-    if( version == 1 || version == 5 )
-    {
-        org.clear();
-    }
-    m_secData.clear();
+    readHeader(f, version, lengths);
 
     // blocks 1-4 or 1-8
-    size_t alength = len[1];
-    for( int i = 0; i < (version < 5 ? numpats / 16 : numpats / 8); i++ )
-    {
-        alength += len[i + 2];
-    }
 
-    m_secData.resize(alength / 2);
+    std::vector<uint8_t> data;
+    auto decompressAppend = [&data, &f](size_t len) {
+        const auto input = f.readVector<uint16_t>(len / 2u);
+        const auto tmp = compression::SixPack(input).get();
+        std::copy(tmp.begin(), tmp.end(), std::back_inserter(data));
+    };
+    
     if( version == 1 || version == 5 )
     {
-        f.read(m_secData.data(), alength / 2);
-        org.resize(MAXBUF * (numpats / (version == 1 ? 16 : 8) + 1));
-        orgPos = 0;
-        size_t secPos = 0;
-        orgPos += sixDepak(&m_secData[secPos], &org[orgPos], len[1]);
-        secPos += len[1] / 2;
+        decompressAppend(lengths[1]);
+
         if( version == 1 )
         {
             if( numpats > 16 )
             {
-                orgPos += sixDepak(&m_secData[secPos], &org[orgPos], len[2]);
+                decompressAppend(lengths[2]);
             }
-            secPos += len[2] / 2;
             if( numpats > 32 )
             {
-                orgPos += sixDepak(&m_secData[secPos], &org[orgPos], len[3]);
+                decompressAppend(lengths[3]);
             }
-            secPos += len[3] / 2;
             if( numpats > 48 )
             {
-                sixDepak(&m_secData[secPos], &org[orgPos], len[4]);
+                decompressAppend(lengths[4]);
             }
         }
         else
         {
             if( numpats > 8 )
             {
-                orgPos += sixDepak(&m_secData[secPos], &org[orgPos], len[2]);
+                decompressAppend(lengths[2]);
             }
-            secPos += len[2] / 2;
             if( numpats > 16 )
             {
-                orgPos += sixDepak(&m_secData[secPos], &org[orgPos], len[3]);
+                decompressAppend(lengths[3]);
             }
-            secPos += len[3] / 2;
             if( numpats > 24 )
             {
-                orgPos += sixDepak(&m_secData[secPos], &org[orgPos], len[4]);
+                decompressAppend(lengths[4]);
             }
-            secPos += len[4] / 2;
             if( numpats > 32 )
             {
-                orgPos += sixDepak(&m_secData[secPos], &org[orgPos], len[5]);
+                decompressAppend(lengths[5]);
             }
-            secPos += len[5] / 2;
             if( numpats > 40 )
             {
-                orgPos += sixDepak(&m_secData[secPos], &org[orgPos], len[6]);
+                decompressAppend(lengths[6]);
             }
-            secPos += len[6] / 2;
             if( numpats > 48 )
             {
-                orgPos += sixDepak(&m_secData[secPos], &org[orgPos], len[7]);
+                decompressAppend(lengths[7]);
             }
-            secPos += len[7] / 2;
             if( numpats > 56 )
             {
-                sixDepak(&m_secData[secPos], &org[orgPos], len[8]);
+                decompressAppend(lengths[8]);
             }
         }
-        m_secData.clear();
     }
     else
     {
-        org.assign(
-            reinterpret_cast<const uint8_t*>(m_secData.data()),
-            reinterpret_cast<const uint8_t*>(m_secData.data() + m_secData.size()));
-        f.read(org.data(), alength);
+        size_t total = lengths[1];
+        for( int i = 0; i < (version < 5 ? numpats / 16 : numpats / 8); i++ )
+        {
+            total += lengths[i + 2];
+        }
+
+        data = f.readVector<uint8_t>(total);
     }
+
+    realloc_patterns(numpats, 64, channelCount);
 
     if( version < 5 )
     {
-        for( auto i = 0u; i < numpats; i++ )
+        for( auto pattern = 0u; pattern < numpats; pattern++ )
         {
-            for( auto j = 0u; j < 64; j++ )
+            for( auto row = 0u; row < 64; row++ )
             {
-                for( auto k = 0u; k < 9; k++ )
+                for( auto channel = 0u; channel < channelCount; channel++ )
                 {
-                    PatternCell& cell = patternCell(i * 9 + k, j);
-                    unsigned char* o = &org[i * 64 * t * 4 + j * t * 4 + k * 4];
+                    PatternCell& cell = patternCell(pattern * channelCount + channel, row);
+                    const uint8_t* o = &data[pattern * 64 * channelCount * 4 + row * channelCount * 4 + channel * 4];
 
-                    cell.note = o[0] == 255 ? 127 : o[0];
+                    cell.note = o[0] == 255 ? PatternCell::KeyOff : o[0];
                     cell.instrument = o[1];
-                    cell.command = convfx[o[2]];
+                    cell.command = basicCommands[o[2]];
                     cell.loNybble = o[3] & 0x0f;
                     if( cell.command != Command::Special )
                     {
@@ -338,7 +249,7 @@ bool A2mPlayer::load(const std::string& filename)
                     }
                     else
                     {
-                        cell.command = convinf1[o[3] >> 4];
+                        cell.command = specialCommands[o[3] >> 4];
                         if( cell.command == Command::SFXKeyOff && !cell.loNybble )
                         { // convert key-off
                             cell.command = Command::NoteOff;
@@ -369,20 +280,18 @@ bool A2mPlayer::load(const std::string& filename)
     }
     else
     { // version >= 5
-        realloc_patterns(64, 64, 18);
-
-        for( auto i = 0u; i < numpats; i++ )
+        for( auto pattern = 0u; pattern < numpats; pattern++ )
         {
-            for( auto j = 0u; j < 18; j++ )
+            for( auto channel = 0u; channel < channelCount; channel++ )
             {
-                for( auto k = 0u; k < 64; k++ )
+                for( auto row = 0u; row < 64; row++ )
                 {
-                    PatternCell& cell = patternCell(i * 18 + j, k);
-                    unsigned char* o = &org[i * 64 * t * 4 + j * 64 * 4 + k * 4];
+                    PatternCell& cell = patternCell(pattern * channelCount + channel, row);
+                    const uint8_t* o = &data[pattern * 64 * channelCount * 4 + channel * 64 * 4 + row * 4];
 
-                    cell.note = o[0] == 255 ? 127 : o[0];
+                    cell.note = o[0] == 255 ? PatternCell::KeyOff : o[0];
                     cell.instrument = o[1];
-                    cell.command = newconvfx[o[2]];
+                    cell.command = newCommands[o[2]];
                     cell.hiNybble = o[3] >> 4;
                     cell.loNybble = o[3] & 0x0f;
 
@@ -411,29 +320,6 @@ bool A2mPlayer::load(const std::string& filename)
 
     init_trackord();
 
-    if( version == 1 || version == 5 )
-    {
-        org.clear();
-    }
-    else
-    {
-        m_secData.clear();
-    }
-
-    // Process flags
-    if( version >= 5 )
-    {
-        setOpl3Mode(); // All versions >= 5 are OPL3
-        if( flags & 8 )
-        {
-            setTremolo();
-        } // Tremolo depth
-        if( flags & 16 )
-        {
-            setVibrato();
-        } // Vibrato depth
-    }
-
     rewind(size_t(0));
     return true;
 }
@@ -450,272 +336,87 @@ size_t A2mPlayer::framesUntilUpdate() const
     }
 }
 
-/*** private methods *************************************/
-
-void A2mPlayer::initTree()
+void A2mPlayer::readHeader(FileStream& f, uint8_t version, uint16_t* lengths)
 {
-    for( int i = 2; i <= TWICEMAX; i++ )
+    std::vector<uint16_t> compressed;
+    compressed.resize(lengths[0] / 2u);
+    std::vector<uint8_t> data;
+    size_t dataPos = 0;
+    if( version == 1 || version == 5 )
     {
-        m_dad[i] = i / 2;
-        m_freq[i] = 1;
+        f.read(compressed.data(), lengths[0] / 2u);
+        data = compression::SixPack(compressed).get();
+    }
+    else
+    {
+        f.read(data.data(), lengths[0]);
+    }
+    m_songname.assign(&data[dataPos], &data[dataPos] + 42);
+    dataPos += 43;
+    m_author.assign(&data[dataPos], &data[dataPos] + 42);
+    dataPos += 43;
+    for( int i = 0; i < 250; ++i )
+    {
+        dataPos += 33;
     }
 
-    for( int i = 1; i <= MAXCHAR; i++ )
-    {
-        m_leftc[i] = 2 * i;
-        m_rightc[i] = 2 * i + 1;
-    }
-}
+    for( int i = 0; i < 250; i++ )
+    { // instruments
+        ModPlayer::Instrument& inst = addInstrument();
+        inst.data[0] = data[dataPos + 10];
+        inst.data[1] = data[dataPos + 0];
+        inst.data[2] = data[dataPos + 1];
+        inst.data[3] = data[dataPos + 4];
+        inst.data[4] = data[dataPos + 5];
+        inst.data[5] = data[dataPos + 6];
+        inst.data[6] = data[dataPos + 7];
+        inst.data[7] = data[dataPos + 8];
+        inst.data[8] = data[dataPos + 9];
+        inst.data[9] = data[dataPos + 2];
+        inst.data[10] = data[dataPos + 3];
 
-void A2mPlayer::updateFreq(uint16_t a, uint16_t b)
-{
-    do
-    {
-        m_freq[m_dad[a]] = m_freq[a] + m_freq[b];
-        a = m_dad[a];
-        if( a != ROOT )
+        if( version < 5 )
         {
-            if( m_leftc[m_dad[a]] == a )
+            inst.misc = data[dataPos + 11];
+        }
+        else
+        { // version >= 5 -> OPL3 format
+            int pan = data[dataPos + 11];
+
+            if( pan )
             {
-                b = m_rightc[m_dad[a]];
+                inst.data[0] |= (pan & 3) << 4; // set pan
             }
             else
             {
-                b = m_leftc[m_dad[a]];
-            }
-        }
-    } while( a != ROOT );
-
-    if( m_freq[ROOT] == MAXFREQ )
-    {
-        for( a = 1; a <= TWICEMAX; a++ )
-        {
-            m_freq[a] >>= 1;
-        }
-    }
-}
-
-void A2mPlayer::updateModel(uint16_t code)
-{
-    uint16_t a = code + SUCCMAX;
-
-    m_freq[a]++;
-    if( m_dad[a] != ROOT )
-    {
-        auto code1 = m_dad[a];
-        if( m_leftc[code1] == a )
-        {
-            updateFreq(a, m_rightc[code1]);
-        }
-        else
-        {
-            updateFreq(a, m_leftc[code1]);
+                inst.data[0] |= 48;
+            } // enable both speakers
         }
 
-        do
-        {
-            const auto code2 = m_dad[code1];
-            uint16_t b;
-            if( m_leftc[code2] == code1 )
-            {
-                b = m_rightc[code2];
-            }
-            else
-            {
-                b = m_leftc[code2];
-            }
-
-            if( m_freq[a] > m_freq[b] )
-            {
-                if( m_leftc[code2] == code1 )
-                {
-                    m_rightc[code2] = a;
-                }
-                else
-                {
-                    m_leftc[code2] = a;
-                }
-
-                uint16_t c;
-                if( m_leftc[code1] == a )
-                {
-                    m_leftc[code1] = b;
-                    c = m_rightc[code1];
-                }
-                else
-                {
-                    m_rightc[code1] = b;
-                    c = m_leftc[code1];
-                }
-
-                m_dad[b] = code1;
-                m_dad[a] = code2;
-                updateFreq(b, c);
-                a = b;
-            }
-
-            a = m_dad[a];
-            code1 = m_dad[a];
-        } while( code1 != ROOT );
-    }
-}
-
-uint16_t A2mPlayer::inputCode(uint16_t bits)
-{
-    uint16_t code = 0;
-
-    for( int i = 1; i <= bits; i++ )
-    {
-        if( !m_bitcount )
-        {
-            if( m_bitcount == MAXBUF )
-            {
-                m_bufcount = 0;
-            }
-            m_bitbuffer = m_wdbuf[m_bufcount];
-            m_bufcount++;
-            m_bitcount = 15;
-        }
-        else
-        {
-            m_bitcount--;
-        }
-
-        if( m_bitbuffer > 0x7fff )
-        {
-            code |= 1u << (i - 1);
-        }
-        m_bitbuffer <<= 1;
+        inst.slide = data[dataPos + 12];
+        dataPos += 13;
     }
 
-    return code;
-}
-
-uint16_t A2mPlayer::uncompress()
-{
-    uint16_t a = 1;
-
-    do
+    for( int i = 0; i < 128; ++i )
     {
-        if( !m_bitcount )
-        {
-            if( m_bufcount == MAXBUF )
-            {
-                m_bufcount = 0;
-            }
-            m_bitbuffer = m_wdbuf[m_bufcount];
-            m_bufcount++;
-            m_bitcount = 15;
-        }
-        else
-        {
-            m_bitcount--;
-        }
+        addOrder(data[dataPos++]);
+    }
+    setRestartOrder(0);
+    setInitialTempo(data[dataPos++]);
+    setInitialSpeed(data[dataPos++]);
 
-        if( m_bitbuffer > 0x7fff )
-        {
-            a = m_rightc[a];
-        }
-        else
-        {
-            a = m_leftc[a];
-        }
-        m_bitbuffer <<= 1;
-    } while( a <= MAXCHAR );
-
-    a -= SUCCMAX;
-    updateModel(a);
-    return a;
-}
-
-void A2mPlayer::decode()
-{
-    uint16_t count = 0;
-
-    initTree();
-
-    for( auto c = uncompress(); c != TERMINATE; c = uncompress() )
+    if( version >= 5 )
     {
-        if( c < 256 )
-        {
-            m_obuf[m_obufcount] = static_cast<uint8_t>(c);
-            m_obufcount++;
-            if( m_obufcount == MAXBUF )
-            {
-                m_outputSize = MAXBUF;
-                m_obufcount = 0;
-            }
+        const auto flags = data[dataPos];
 
-            m_buf[count] = static_cast<uint8_t>(c);
-            count++;
-            if( count == MAXSIZE )
-            {
-                count = 0;
-            }
+        setOpl3Mode(); // All versions >= 5 are OPL3
+        if( flags & 8 )
+        {
+            setTremolo();
         }
-        else
+        if( flags & 16 )
         {
-            const auto t = c - FIRSTCODE;
-            const auto index = t / CODESPERRANGE;
-            const auto len = t + MINCOPY - index * CODESPERRANGE;
-            const auto dist = inputCode(copybits[index]) + len + copymin[index];
-
-            auto j = count;
-            auto k = count - dist;
-            if( count < dist )
-            {
-                k += MAXSIZE;
-            }
-
-            for( auto i = 0; i <= len - 1; i++ )
-            {
-                m_obuf[m_obufcount] = m_buf[k];
-                m_obufcount++;
-                if( m_obufcount == MAXBUF )
-                {
-                    m_outputSize = MAXBUF;
-                    m_obufcount = 0;
-                }
-
-                m_buf[j] = m_buf[k];
-                j++;
-                k++;
-                if( j == MAXSIZE )
-                {
-                    j = 0;
-                }
-                if( k == MAXSIZE )
-                {
-                    k = 0;
-                }
-            }
-
-            count += len;
-            if( count >= MAXSIZE )
-            {
-                count -= MAXSIZE;
-            }
+            setVibrato();
         }
     }
-    m_outputSize = m_obufcount;
-}
-
-size_t A2mPlayer::sixDepak(uint16_t* source, uint8_t* dest, size_t size)
-{
-    if( size + 4096 > MAXBUF )
-    {
-        return 0;
-    }
-
-    m_buf.resize(MAXSIZE);
-    m_bitcount = 0;
-    m_bitbuffer = 0;
-    m_obufcount = 0;
-    m_bufcount = 0;
-    m_wdbuf = source;
-    m_obuf = dest;
-
-    decode();
-    m_buf.clear();
-    return m_outputSize;
 }
