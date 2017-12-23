@@ -161,7 +161,7 @@ bool parseCmdLine(int argc, char* argv[])
     }
 
 #ifndef WIN32
-    ppp::PluginRegistry::instance().setSearchPath(boost::filesystem::path(ppp::whereAmI()).parent_path() / ".." / LIBEXECDIR);
+    ppp::PluginRegistry::instance().setSearchPath(boost::filesystem::path(ppp::whereAmI()).parent_path() / LIBEXECDIR);
 #else
     ppp::PluginRegistry::instance().setSearchPath(boost::filesystem::path(ppp::whereAmI()).parent_path() / LIBEXECDIR);
 #endif

@@ -247,6 +247,8 @@ public:
 private:
     void clearTexture(SDL_Texture* texture, Color c) const
     {
+        BOOST_ASSERT(texture != nullptr);
+
         Uint32 fmt;
         int access, w, h;
         SDL_QueryTexture(texture, &fmt, &access, &w, &h);
@@ -309,7 +311,7 @@ bool InstanceData::init(int charWidth, int charHeight, const std::string& title)
     }
     if( !SDL_WasInit(SDL_INIT_VIDEO) )
     {
-        if( SDL_Init(SDL_INIT_VIDEO) == -1 )
+        if( SDL_Init(SDL_INIT_VIDEO) < 0 )
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("Initialization of SDL Video surface failed"));
         }
@@ -319,19 +321,21 @@ bool InstanceData::init(int charWidth, int charHeight, const std::string& title)
     this->charWidth = charWidth;
     this->charHeight = charHeight;
 
-    if( SDL_CreateWindowAndRenderer(windowWidth, windowHeight, 0, &mainWindow, &mainRenderer) != 0 )
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Screen Initialization failed"));
-    }
-    SDL_SetWindowTitle(mainWindow, title.c_str());
+    mainWindow = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, SDL_WINDOW_SHOWN);
     if( !mainWindow )
     {
+        logger->fatal(L4CXX_LOCATION, "SDL error: %s", SDL_GetError());
         BOOST_THROW_EXCEPTION(std::runtime_error("Window Initialization failed"));
     }
+
+    mainRenderer = SDL_CreateRenderer(mainWindow, -1, SDL_RENDERER_SOFTWARE);
     if( !mainRenderer )
     {
+        logger->fatal(L4CXX_LOCATION, "SDL error: %s", SDL_GetError());
         BOOST_THROW_EXCEPTION(std::runtime_error("Renderer Initialization failed"));
     }
+
+    SDL_SetWindowTitle(mainWindow, title.c_str());
 
     if( const char* videoDrv = SDL_GetCurrentVideoDriver() )
     {
@@ -339,14 +343,43 @@ bool InstanceData::init(int charWidth, int charHeight, const std::string& title)
     }
 
     backgroundLayer = SDL_CreateTexture(mainRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, windowWidth, windowHeight);
+    if( backgroundLayer == nullptr )
+    {
+        logger->fatal(L4CXX_LOCATION, "SDL error: %s", SDL_GetError());
+        BOOST_THROW_EXCEPTION(std::runtime_error("Background Layer Initialization failed"));
+    }
     clearTexture(backgroundLayer, Color::Black);
-    SDL_SetTextureBlendMode(backgroundLayer, SDL_BLENDMODE_NONE);
+    if( SDL_SetTextureBlendMode(backgroundLayer, SDL_BLENDMODE_NONE) < 0 )
+    {
+        logger->fatal(L4CXX_LOCATION, "SDL error: %s", SDL_GetError());
+        BOOST_THROW_EXCEPTION(std::runtime_error("Background Layer Initialization failed"));
+    }
+
     pixelLayer = SDL_CreateTexture(mainRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, windowWidth, windowHeight);
+    if( pixelLayer == nullptr )
+    {
+        logger->fatal(L4CXX_LOCATION, "SDL error: %s", SDL_GetError());
+        BOOST_THROW_EXCEPTION(std::runtime_error("Pixel Layer Initialization failed"));
+    }
     clearTexture(pixelLayer, Color::None);
-    SDL_SetTextureBlendMode(pixelLayer, SDL_BLENDMODE_BLEND);
+    if( SDL_SetTextureBlendMode(pixelLayer, SDL_BLENDMODE_BLEND) != 0 )
+    {
+        logger->fatal(L4CXX_LOCATION, "SDL error: %s", SDL_GetError());
+        BOOST_THROW_EXCEPTION(std::runtime_error("Pixel Layer Initialization failed"));
+    }
+
     foregroundLayer = SDL_CreateTexture(mainRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, windowWidth, windowHeight);
+    if( foregroundLayer == nullptr )
+    {
+        logger->fatal(L4CXX_LOCATION, "SDL error: %s", SDL_GetError());
+        BOOST_THROW_EXCEPTION(std::runtime_error("Foreground Layer Initialization failed"));
+    }
     clearTexture(foregroundLayer, Color::Black);
-    SDL_SetTextureBlendMode(foregroundLayer, SDL_BLENDMODE_BLEND);
+    if( SDL_SetTextureBlendMode(foregroundLayer, SDL_BLENDMODE_BLEND) != 0 )
+    {
+        logger->fatal(L4CXX_LOCATION, "SDL error: %s", SDL_GetError());
+        BOOST_THROW_EXCEPTION(std::runtime_error("Foreground Layer Initialization failed"));
+    }
 
     dosColors[static_cast<int>(Color::None)] = 0x00000000; // transparent
     dosColors[static_cast<int>(Color::Black)] = 0x000000ff; // black
@@ -426,12 +459,32 @@ void InstanceData::redraw(bool showMouse, int cursorX, int cursorY)
     SDL_UnlockTexture(backgroundLayer);
 
     // now blit the background, pixels, and foreground (in that order) to the screen
-    SDL_SetRenderDrawColor(mainRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(mainRenderer);
+    if( SDL_SetRenderDrawColor(mainRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE) != 0 )
+    {
+        logger->fatal(L4CXX_LOCATION, "SDL error: %s", SDL_GetError());
+        BOOST_THROW_EXCEPTION(std::runtime_error("Rendering failed"));
+    }
+    if( SDL_RenderClear(mainRenderer) != 0 )
+    {
+        logger->fatal(L4CXX_LOCATION, "SDL error: %s", SDL_GetError());
+        BOOST_THROW_EXCEPTION(std::runtime_error("Rendering failed"));
+    }
 
-    SDL_RenderCopy(mainRenderer, backgroundLayer, nullptr, nullptr);
-    SDL_RenderCopy(mainRenderer, pixelLayer, nullptr, nullptr);
-    SDL_RenderCopy(mainRenderer, foregroundLayer, nullptr, nullptr);
+    if( SDL_RenderCopy(mainRenderer, backgroundLayer, nullptr, nullptr) != 0 )
+    {
+        logger->fatal(L4CXX_LOCATION, "SDL error: %s", SDL_GetError());
+        BOOST_THROW_EXCEPTION(std::runtime_error("Rendering failed"));
+    }
+    if( SDL_RenderCopy(mainRenderer, pixelLayer, nullptr, nullptr) != 0 )
+    {
+        logger->fatal(L4CXX_LOCATION, "SDL error: %s", SDL_GetError());
+        BOOST_THROW_EXCEPTION(std::runtime_error("Rendering failed"));
+    }
+    if( SDL_RenderCopy(mainRenderer, foregroundLayer, nullptr, nullptr) != 0 )
+    {
+        logger->fatal(L4CXX_LOCATION, "SDL error: %s", SDL_GetError());
+        BOOST_THROW_EXCEPTION(std::runtime_error("Rendering failed"));
+    }
 
     SDL_RenderPresent(mainRenderer);
 }
