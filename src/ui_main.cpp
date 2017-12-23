@@ -31,31 +31,32 @@ light4cxx::Logger* logger()
 {
     return light4cxx::Logger::get("ui.main");
 }
+
 std::string stateToString(size_t idx, const ppp::ChannelState& state)
 {
     std::string res = stringFmt("%02d ", idx + 1);
-    if(!state.active)
+    if( !state.active )
     {
         return res;
     }
     res += state.noteTriggered ? '*' : ' ';
-    if(state.note == ppp::ChannelState::NoNote)
+    if( state.note == ppp::ChannelState::NoNote )
     {
         res += "... ";
     }
-    else if(state.note == ppp::ChannelState::NoteCut)
+    else if( state.note == ppp::ChannelState::NoteCut )
     {
         res += "^^^ ";
     }
-    else if(state.note == ppp::ChannelState::KeyOff)
+    else if( state.note == ppp::ChannelState::KeyOff )
     {
         res += "=== ";
     }
-    else if(state.note == ppp::ChannelState::TooLow)
+    else if( state.note == ppp::ChannelState::TooLow )
     {
         res += "___ ";
     }
-    else if(state.note == ppp::ChannelState::TooHigh)
+    else if( state.note == ppp::ChannelState::TooHigh )
     {
         res += "+++ ";
     }
@@ -68,19 +69,19 @@ std::string stateToString(size_t idx, const ppp::ChannelState& state)
 
     res += state.fxDesc;
     res += stringFmt(" V:%3d%%", int(state.volume));
-    if(state.panning == -100)
+    if( state.panning == -100 )
     {
         res += " P:Left  ";
     }
-    else if(state.panning == 0)
+    else if( state.panning == 0 )
     {
         res += " P:Centr ";
     }
-    else if(state.panning == 100)
+    else if( state.panning == 100 )
     {
         res += " P:Right ";
     }
-    else if(state.panning == ppp::ChannelState::Surround)
+    else if( state.panning == ppp::ChannelState::Surround )
     {
         res += " P:Srnd  ";
     }
@@ -93,22 +94,10 @@ std::string stateToString(size_t idx, const ppp::ChannelState& state)
 }
 }
 
-UIMain::UIMain(ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, const AbstractAudioOutput::Ptr& output) :
-    Widget(parent),
-    m_position(nullptr),
-    m_screenSep1(nullptr),
-    m_screenSep2(nullptr),
-    m_playbackInfo(nullptr),
-    m_volBar(nullptr),
-    m_chanInfos(),
-    m_chanCells(),
-    m_trackerInfo(nullptr),
-    m_modTitle(nullptr),
-    m_progress(nullptr),
-    m_module(module),
-    m_output(output),
-    m_fftLeft(),
-    m_fftRight()
+UIMain::UIMain(ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, const AbstractAudioOutput::Ptr& output)
+    :
+    Widget(parent), m_position(nullptr), m_screenSep1(nullptr), m_screenSep2(nullptr), m_playbackInfo(nullptr), m_volBar(nullptr), m_chanInfos(), m_chanCells()
+    , m_trackerInfo(nullptr), m_modTitle(nullptr), m_progress(nullptr), m_module(module), m_output(output), m_fftLeft(), m_fftRight()
 {
     logger()->trace(L4CXX_LOCATION, "Initializing");
     UIMain::setSize(parent->area().size());
@@ -120,11 +109,13 @@ UIMain::UIMain(ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, cons
     /*	m_position->setFgColorRange( 0, ppg::Color::BrightWhite, 0 );
         m_position->setFgColorRange( 3, ppg::Color::White, 5 );*/
     m_position->show();
-    m_screenSep1 = new ppg::Label(this, " \xc4 \xc4\xc4  \xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4  \xc4\xc4 \xc4 ");
+    m_screenSep1 = new ppg::Label(this,
+                                  " \xc4 \xc4\xc4  \xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4  \xc4\xc4 \xc4 ");
     m_screenSep1->setPosition(0, 1, false);
     m_screenSep1->setFgColorRange(0, ppg::Color::BrightWhite, 0);
     m_screenSep1->show();
-    m_screenSep2 = new ppg::Label(this, " \xc4 \xc4\xc4  \xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4  \xc4\xc4 \xc4 ");
+    m_screenSep2 = new ppg::Label(this,
+                                  " \xc4 \xc4\xc4  \xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4\xc4   \xc4\xc4\xc4\xc4   \xc4\xc4\xc4  \xc4\xc4 \xc4 ");
     m_screenSep2->setPosition(0, 3, false);
     m_screenSep2->setFgColorRange(0, ppg::Color::BrightWhite, 0);
     m_screenSep2->show();
@@ -137,7 +128,7 @@ UIMain::UIMain(ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, cons
     m_volBar = new ppg::StereoPeakBar(this, 16, 256, 1, true);
     m_volBar->setPosition((area().width() - m_volBar->length()) / 2, 4, false);
     m_volBar->show();
-    for(size_t i = 0; i < m_chanInfos.size(); i++)
+    for( size_t i = 0; i < m_chanInfos.size(); i++ )
     {
         m_chanInfos.at(i) = new ppg::Label(this);
         m_chanInfos.at(i)->setWidth(area().width() - 4);
@@ -151,7 +142,7 @@ UIMain::UIMain(ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, cons
         m_chanInfos.at(i)->setFgColorRange(15, ppg::Color::BrightWhite, 0);
         m_chanInfos.at(i)->show();
     }
-    for(size_t i = 0; i < m_chanCells.size(); i++)
+    for( size_t i = 0; i < m_chanCells.size(); i++ )
     {
         m_chanCells.at(i) = new ppg::Label(this);
         m_chanCells.at(i)->setWidth(area().width() - 4);
@@ -172,8 +163,9 @@ UIMain::UIMain(ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, cons
     m_modTitle->alignment = ppg::Label::Alignment::Center;
     m_modTitle->setFgColorRange(0, ppg::Color::BrightWhite, 0);
     m_modTitle->show();
-    m_trackerInfo->setText(stringFmt("Tracker: %s - Channels: %d", std::const_pointer_cast<const ppp::AbstractModule>(module)->metaInfo().trackerInfo, int(module->channelCount())));
-    if(module->songCount() > 1)
+    m_trackerInfo->setText(stringFmt("Tracker: %s - Channels: %d", std::const_pointer_cast<const ppp::AbstractModule>(module)->metaInfo().trackerInfo,
+                                     int(module->channelCount())));
+    if( module->songCount() > 1 )
     {
         m_trackerInfo->setText(m_trackerInfo->text() + " - Multi-song");
     }
@@ -183,7 +175,7 @@ UIMain::UIMain(ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, cons
 #else
     auto fname = boost::filesystem::path(module->metaInfo().filename).filename().native();
 #endif
-    if(!boost::trim_copy(module->metaInfo().title).empty())
+    if( !boost::trim_copy(module->metaInfo().title).empty() )
     {
         m_modTitle->setText(std::string(" -=\xf0[ ") + fname + " : " + boost::trim_copy(module->metaInfo().title) + " ]\xf0=- ");
     }
@@ -203,7 +195,7 @@ void UIMain::drawThis()
 {
     AbstractAudioOutput::Ptr outLock(m_output.lock());
     const std::shared_ptr<const ppp::AbstractModule> modLock = std::const_pointer_cast<const ppp::AbstractModule>(m_module.lock());
-    if(m_module.expired() || m_output.expired())
+    if( m_module.expired() || m_output.expired() )
     {
         logger()->trace(L4CXX_LOCATION, "Module or Output Device expired");
         return;
@@ -223,15 +215,16 @@ void UIMain::drawThis()
                                    msecslen / 6000,
                                    msecslen / 100 % 60,
                                    msecslen % 100);
-    if(modLock->songCount() > 1)
+    if( modLock->songCount() > 1 )
     {
         posStr += stringFmt(" \xf9 Song %d/%d", modLock->currentSongIndex() + 1, modLock->songCount());
     }
     m_position->setEscapedText(posStr);
-    m_playbackInfo->setEscapedText(stringFmt("{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", state.speed, state.tempo, state.globalVolume * 100 / 0x40));
-    for(int i = 0; i < modLock->channelCount(); i++)
+    m_playbackInfo->setEscapedText(
+        stringFmt("{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", state.speed, state.tempo, state.globalVolume * 100 / 0x40));
+    for( int i = 0; i < modLock->channelCount(); i++ )
     {
-        if(i >= 16)
+        if( i >= 16 )
         {
             break;
         }
@@ -243,20 +236,24 @@ void UIMain::drawThis()
     m_progress->setValue(modLock->state().playedFrames);
     logger()->trace(L4CXX_LOCATION, "Drawing");
 
-    const int width2 = ppg::SDLScreen::instance()->area().width() * 4;
+    const int width2 = ppg::SDLScreen::instance()->area().width() * 8;
     const int height = ppg::SDLScreen::instance()->area().height() * 16;
     const float scale = m_fftLeft.size() * 1.0f / width2;
 
     ppg::SDLScreen::instance()->lockPixels();
-    for(size_t i = 0; i < m_fftLeft.size(); i++)
+    for( size_t i = 0; i < m_fftLeft.size(); i++ )
     {
-        for(size_t y = 1; y <= m_fftLeft[i] / 4; y++)
+        auto y1 = std::min(m_fftLeft[i], m_fftRight[i]) / 4u;
+        auto y2 = std::max(m_fftLeft[i], m_fftRight[i]) / 4u;
+
+        for( auto y = 1u; y < y1; ++y )
         {
-            ppg::SDLScreen::instance()->drawPixel(i / scale, height - y - 1, ppg::Color::LightGreen);
+            ppg::SDLScreen::instance()->drawPixel(i / scale, height - y + 1, ppg::SDLScreen::fromRgb(60, 60, 180));
         }
-        for(size_t y = 1; y <= m_fftRight[i] / 4; y++)
+
+        for( auto y = y1; y < y2; ++y )
         {
-            ppg::SDLScreen::instance()->drawPixel(i / scale + width2, height - y - 1, ppg::Color::LightRed);
+            ppg::SDLScreen::instance()->drawPixel(i / scale, height - y + 1, ppg::SDLScreen::fromRgb(20, 20, 100));
         }
     }
     ppg::SDLScreen::instance()->unlockPixels();

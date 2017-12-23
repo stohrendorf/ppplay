@@ -218,7 +218,12 @@ public:
         clearTexture(pixelLayer, c);
     }
 
-    void setPixel(int x, int y, Color color)
+    inline void setPixel(int x, int y, Color color)
+    {
+        setPixel(x, y, mapColor(color));
+    }
+
+    void setPixel(int x, int y, Uint32 color)
     {
         if( !contains(x, y) )
         {
@@ -228,7 +233,7 @@ public:
         if( pixelLockPitch < 0 || pixelLockPixels == nullptr )
             BOOST_THROW_EXCEPTION(std::runtime_error("Pixel data must be locked before updating"));
 
-        setPixel(x, y, mapColor(color), pixelLockPixels, pixelLockPitch);
+        setPixel(x, y, color, pixelLockPixels, pixelLockPitch);
     }
 
     void lockPixels()
@@ -575,6 +580,12 @@ bool SDLScreen::hasMouseFocus() const
 }
 
 void SDLScreen::drawPixel(int x, int y, Color c)
+{
+    LockGuard guard(this);
+    instanceData.setPixel(x, y, c);
+}
+
+void SDLScreen::drawPixel(int x, int y, uint32_t c)
 {
     LockGuard guard(this);
     instanceData.setPixel(x, y, c);

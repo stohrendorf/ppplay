@@ -71,6 +71,13 @@ public:
 
     void drawPixel(int x, int y, Color c);
 
+    void drawPixel(int x, int y, uint32_t c);
+
+    static constexpr inline uint32_t fromRgb(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 0xff)
+    {
+        return (uint32_t(r) << 24) | (uint32_t(g) << 16) | (uint32_t(b) << 8) | a;
+    }
+
     void lockPixels();
 
     void unlockPixels();
