@@ -191,6 +191,11 @@ UIMain::UIMain(ppg::Widget* parent, const ppp::AbstractModule::Ptr& module, cons
     logger()->trace(L4CXX_LOCATION, "Initialized");
 }
 
+namespace
+{
+const std::chrono::high_resolution_clock::duration updateSpeed = std::chrono::milliseconds(10);
+}
+
 void UIMain::drawThis()
 {
     AbstractAudioOutput::Ptr outLock(m_output.lock());
@@ -236,25 +241,65 @@ void UIMain::drawThis()
     m_progress->setValue(modLock->state().playedFrames);
     logger()->trace(L4CXX_LOCATION, "Drawing");
 
-    const int width2 = ppg::SDLScreen::instance()->area().width() * 8;
+    const int width = ppg::SDLScreen::instance()->area().width() * 8;
     const int height = ppg::SDLScreen::instance()->area().height() * 16;
-    const float scale = m_fftLeft.size() * 1.0f / width2;
+
+    if( m_fftPicture.empty() )
+    {
+        while( m_fftPicture.size() < height )
+        {
+            m_fftPicture.emplace_back(std::vector<uint32_t>(width, 0));
+        }
+        m_nextShift = std::chrono::high_resolution_clock::now() + updateSpeed;
+    }
+
+    const float scale = m_fftLeft.size() * 1.0f / width;
 
     ppg::SDLScreen::instance()->lockPixels();
+
+    {
+        BOOST_ASSERT(m_fftPicture.size() == height);
+        auto y = 0;
+        for( auto it = m_fftPicture.begin(); it != m_fftPicture.end(); ++it, ++y )
+        {
+            BOOST_ASSERT(it->size() == width);
+
+            for( int x = 0; x < width; ++x )
+            {
+                const auto value = (*it)[x];
+                const auto rg = ppp::clip(60 * value / height, 0u, 255u);
+                const auto b = ppp::clip(180 * value / height, 0u, 255u);
+                ppg::SDLScreen::instance()->drawPixel(x, y, ppg::SDLScreen::fromRgb(rg, rg, b));
+            }
+        }
+    }
+
+    auto& line = m_fftPicture.back();
     for( size_t i = 0; i < m_fftLeft.size(); i++ )
     {
         auto y1 = std::min(m_fftLeft[i], m_fftRight[i]) / 4u;
         auto y2 = std::max(m_fftLeft[i], m_fftRight[i]) / 4u;
 
+        const auto x = i / scale;
+
         for( auto y = 1u; y < y1; ++y )
         {
-            ppg::SDLScreen::instance()->drawPixel(i / scale, height - y + 1, ppg::SDLScreen::fromRgb(60, 60, 180));
+            ppg::SDLScreen::instance()->drawPixel(x, height - y + 1, ppg::SDLScreen::fromRgb(60, 60, 180));
         }
 
         for( auto y = y1; y < y2; ++y )
         {
-            ppg::SDLScreen::instance()->drawPixel(i / scale, height - y + 1, ppg::SDLScreen::fromRgb(20, 20, 100));
+            ppg::SDLScreen::instance()->drawPixel(x, height - y + 1, ppg::SDLScreen::fromRgb(20, 20, 100));
         }
+
+        line[x] = (line[x] + m_fftLeft[i] + m_fftRight[i]) / 2;
     }
     ppg::SDLScreen::instance()->unlockPixels();
+
+    if( std::chrono::high_resolution_clock::now() >= m_nextShift )
+    {
+        m_nextShift = std::chrono::high_resolution_clock::now() + updateSpeed;
+        m_fftPicture.pop_front();
+        m_fftPicture.emplace_back(std::vector<uint32_t>(width, 0));
+    }
 }

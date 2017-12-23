@@ -27,9 +27,9 @@
 
 #include <array>
 
-class UIMain : public ppg::Widget
+class UIMain
+    : public ppg::Widget
 {
-    DISABLE_COPY( UIMain )
 private:
     ppg::Label* m_position;
     ppg::Label* m_screenSep1;
@@ -45,11 +45,20 @@ private:
     AbstractAudioOutput::WeakPtr m_output;
     std::vector<uint16_t> m_fftLeft;
     std::vector<uint16_t> m_fftRight;
-    virtual void drawThis();
+    std::list<std::vector<uint32_t>> m_fftPicture;
+    std::chrono::high_resolution_clock::time_point m_nextShift = std::chrono::high_resolution_clock::now();
+
+    void drawThis() override;
+
 public:
-    UIMain( Widget* parent, const ppp::AbstractModule::Ptr& module, const AbstractAudioOutput::Ptr& output );
-    virtual ~UIMain() = default;
-    void setFft( const std::vector<uint16_t>& left, const std::vector<uint16_t>& right ) {
+    DISABLE_COPY(UIMain)
+
+    UIMain(Widget* parent, const ppp::AbstractModule::Ptr& module, const AbstractAudioOutput::Ptr& output);
+
+    ~UIMain() override = default;
+
+    void setFft(const std::vector<uint16_t>& left, const std::vector<uint16_t>& right)
+    {
         m_fftLeft = left;
         m_fftRight = right;
     }
