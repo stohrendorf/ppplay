@@ -166,6 +166,27 @@ AbstractArchive& Module::serialize(AbstractArchive* data)
     return *data;
 }
 
+namespace
+{
+std::string makeInstrumentName(const uint8_t* data, uint8_t tlCarrier, uint8_t tlModulator)
+{
+    // auto tmp = boost::format("FB:%02x FLG:%02x/%02x ADSR:%02x%02x/%02x%02x WS:%02x/%02x TL:%02x/%02x")
+    auto tmp = boost::format("%02x %02x/%02x %02x%02x/%02x%02x %02x/%02x %02x/%02x")
+               % int(data[8])
+               % int(data[0])
+               % int(data[1])
+               % int(data[4])
+               % int(data[6])
+               % int(data[5])
+               % int(data[7])
+               % int(data[9])
+               % int(data[10])
+               % int(tlCarrier)
+               % int(tlModulator);
+    return tmp.str();
+}
+}
+
 void Module::storeInstr(uint8_t chan, uint8_t instr)
 {
     if( m_channels[chan].instr == instr )
@@ -173,12 +194,11 @@ void Module::storeInstr(uint8_t chan, uint8_t instr)
         return;
     }
     m_channels[chan].instr = instr;
-    m_channels[chan].state.instrumentName = stringFmt("Instrument %d", instr + 0);
     const InsData& data = m_instr[instr];
     m_opl.writeReg(0xb0 + chan, 0);
     m_opl.writeReg(0xc0 + chan, data[8]);
     uint8_t slotC = ChanToCarrier[chan];
-    uint8_t slotM = ChanToCarrier[chan] - 3;
+    uint8_t slotM = ChanToCarrier[chan] - 3u;
     m_opl.writeReg(0x20 + slotC, data[0]);
     m_opl.writeReg(0x20 + slotM, data[1]);
     m_opl.writeReg(0x60 + slotC, data[4]);
@@ -194,6 +214,7 @@ void Module::storeInstr(uint8_t chan, uint8_t instr)
     m_channels[chan].tlModulator = data[3];
     m_channels[chan].updateTlModulator = true;
     m_channels[chan].slide = data[11] >> 4;
+    m_channels[chan].state.instrumentName = makeInstrumentName(data, data[2], data[3]);
 }
 
 void Module::setNote(uint8_t chan, uint8_t note)
@@ -336,11 +357,17 @@ bool Module::update(bool estimate)
                 // set carrier volume
                 m_channels[chan].tlCarrier = (effect & 0x0f) << 2;
                 m_channels[chan].updateTlCarrier = true;
+                m_channels[chan].state.instrumentName = makeInstrumentName(m_instr[m_channels[chan].instr],
+                                                                           m_channels[chan].tlCarrier,
+                                                                           m_channels[chan].tlModulator);
                 break;
             case 0x0b:
                 // set modulator volume
                 m_channels[chan].tlModulator = (effect & 0x0f) << 2;
                 m_channels[chan].updateTlModulator = true;
+                m_channels[chan].state.instrumentName = makeInstrumentName(m_instr[m_channels[chan].instr],
+                                                                           m_channels[chan].tlCarrier,
+                                                                           m_channels[chan].tlModulator);
                 break;
             case 0x0c:
                 // set volume
@@ -354,6 +381,9 @@ bool Module::update(bool estimate)
                     m_channels[chan].tlModulator = val;
                     m_channels[chan].updateTlModulator = true;
                 }
+                m_channels[chan].state.instrumentName = makeInstrumentName(m_instr[m_channels[chan].instr],
+                                                                           m_channels[chan].tlCarrier,
+                                                                           m_channels[chan].tlModulator);
             }
                 break;
             default:
