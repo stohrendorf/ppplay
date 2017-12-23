@@ -148,7 +148,7 @@ void Opl3::read(std::array<int16_t, 4>* dest)
     {
         for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ )
         {
-            outputBuffer[outputChannelNumber] = yac512(outputBuffer[outputChannelNumber]);
+            outputBuffer[outputChannelNumber] = yac512(outputBuffer[outputChannelNumber] / 2);
         }
         m_filters.filter(outputBuffer);
         for( int outputChannelNumber = 0; outputChannelNumber < 4; outputChannelNumber++ )
