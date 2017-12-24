@@ -266,10 +266,14 @@ void UIMain::drawThis()
 
             for( int x = 0; x < width; ++x )
             {
-                const auto value = (*it)[x];
+                const auto value = (*it)[x] * 2;
                 const auto rg = ppp::clip(60 * value / height, 0u, 255u);
-                const auto b = ppp::clip(180 * value / height, 0u, 255u);
-                ppg::SDLScreen::instance()->drawPixel(x, y, ppg::SDLScreen::fromRgb(rg, rg, b));
+                const auto b = ppp::clip(255 * value / height, 0u, 255u);
+
+                auto yInv = height - y;
+                yInv *= (255 - 255*value/height) / 192;
+
+                ppg::SDLScreen::instance()->drawPixel(x, y - yInv, ppg::SDLScreen::fromRgb(rg, rg, b));
             }
         }
     }
