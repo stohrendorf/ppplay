@@ -59,9 +59,9 @@ public:
     };
 private:
     //! @brief Loop start sample
-    std::streamoff m_loopStart;
+    uint_fast32_t m_loopStart;
     //! @brief Loop end sample (points to 1 frame @e after the loop end)
-    std::streamoff m_loopEnd;
+    uint_fast32_t m_loopEnd;
     //! @brief Default volume of the sample
     uint8_t m_volume;
     //! @brief Base frequency of the sample
@@ -81,7 +81,7 @@ private:
      * @return Real position
      * @note Time-critical
      */
-    inline std::streamoff makeRealPos(std::streamoff pos) const noexcept;
+    inline uint_fast32_t makeRealPos(uint_fast32_t pos) const noexcept;
 
     /**
      * @brief Adjust the playback position so it doesn't fall out of the sample data. Returns EndOfSample if it does
@@ -89,14 +89,14 @@ private:
      * @return Adjusted position
      * @note Time-critical
      */
-    inline std::streamoff adjustPosition(std::streamoff pos) const noexcept;
+    inline uint_fast32_t adjustPosition(uint_fast32_t pos) const noexcept;
 
     /**
      * @brief Get a sample
      * @param[in,out] pos Position of the requested sample
      * @return Sample value, 0 if invalid value for @a pos
      */
-    inline BasicSampleFrame sampleAt(std::streamoff pos) const noexcept;
+    inline BasicSampleFrame sampleAt(uint_fast32_t pos) const noexcept;
 
     bool mixNonInterpolated(BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift) const;
 
@@ -152,7 +152,7 @@ public:
      * @brief Get the sample's length
      * @return The sample's length
      */
-    std::streamsize length() const noexcept
+    size_t length() const noexcept
     {
         return m_data.size();
     }
@@ -209,24 +209,6 @@ protected:
     }
 
     /**
-     * @brief Get data start iterator
-     * @return Data start iterator
-     */
-    inline ConstIterator beginIterator() const noexcept
-    {
-        return m_data.begin();
-    }
-
-    /**
-     * @brief Get data end iterator
-     * @return Data end iterator
-     */
-    inline ConstIterator endIterator() const noexcept
-    {
-        return m_data.cend();
-    }
-
-    /**
      * @brief Set the sample's name
      * @param[in] t The new name
      */
@@ -242,13 +224,13 @@ protected:
      * @brief Set the sample's loop start
      * @param[in] s The new loop start
      */
-    void setLoopStart(std::streamoff s) noexcept;
+    void setLoopStart(uint_fast32_t s) noexcept;
 
     /**
      * @brief Set the sample's loop end
      * @param[in] e The new loop end
      */
-    void setLoopEnd(std::streamoff e) noexcept;
+    void setLoopEnd(uint_fast32_t e) noexcept;
 
     /**
      * @brief Set the sample's default volume
@@ -260,7 +242,7 @@ protected:
      * @brief Resize the data
      * @param[in] size New size
      */
-    inline void resizeData(std::streamsize size)
+    inline void resizeData(size_t size)
     {
         m_data.resize(size);
     }
@@ -272,9 +254,9 @@ protected:
     static light4cxx::Logger* logger();
 };
 
-inline std::streamoff Sample::adjustPosition(std::streamoff pos) const noexcept
+inline uint_fast32_t Sample::adjustPosition(uint_fast32_t pos) const noexcept
 {
-    if( pos < 0 || pos == BresenInterpolation::InvalidPosition )
+    if( pos == BresenInterpolation::InvalidPosition )
     {
         return BresenInterpolation::InvalidPosition;
     }
@@ -286,8 +268,8 @@ inline std::streamoff Sample::adjustPosition(std::streamoff pos) const noexcept
         }
         return pos;
     }
-    std::streamoff vLoopLen = m_loopEnd - m_loopStart;
-    std::streamoff vLoopEnd = m_loopEnd;
+    auto vLoopLen = m_loopEnd - m_loopStart;
+    auto vLoopEnd = m_loopEnd;
     if( m_looptype == LoopType::Pingpong )
     {
         vLoopLen *= 2;

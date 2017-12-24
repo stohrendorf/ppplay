@@ -44,52 +44,46 @@ typedef int16_t BasicSample;
  * Combination of two BasicSample's for stereo storage
  */
 #pragma pack(push, 1)
-struct BasicSampleFrame {
+
+struct BasicSampleFrame
+{
     //! @brief Vector of BasicSampleFrame's
     typedef std::vector<BasicSampleFrame> Vector;
     //! @brief Left sample value
     BasicSample left = 0;
     //! @brief Right sample value
     BasicSample right = 0;
-    /**
-     * @brief Multiply and shift right
-     * @param[in] mul Factor
-     * @param[in] shift Amount to shift right
-     */
-    inline void mulRShift( int mul, int shift ) noexcept {
-        mulRShift( mul, mul, shift );
-    }
-    /**
-     * @overload
-     * @brief Multiply and shift right
-     * @param[in] mulLeft Factor for left data
-     * @param[in] mulRight Factor for right data
-     * @param[in] shift Amount to shift right
-     */
-    inline void mulRShift( int mulLeft, int mulRight, int shift ) noexcept {
-        left = ( left * mulLeft ) >> shift;
-        right = ( right * mulRight ) >> shift;
-    }
 
     constexpr BasicSampleFrame() noexcept = default;
-    constexpr BasicSampleFrame( int16_t l, int16_t r ) noexcept : left( l ), right( r ) {
+
+    constexpr BasicSampleFrame(int16_t l, int16_t r) noexcept
+        : left(l), right(r)
+    {
     }
 
-    constexpr BasicSampleFrame operator-( const BasicSampleFrame& rhs ) const noexcept {
-        return BasicSampleFrame( left - rhs.left, right - rhs.right );
+    constexpr BasicSampleFrame operator-(const BasicSampleFrame& rhs) const noexcept
+    {
+        return BasicSampleFrame(left - rhs.left, right - rhs.right);
     }
-    constexpr BasicSampleFrame operator*( int value ) const noexcept {
-        return BasicSampleFrame( left * value, right * value );
+
+    constexpr BasicSampleFrame operator*(int value) const noexcept
+    {
+        return BasicSampleFrame(left * value, right * value);
     }
-    constexpr BasicSampleFrame operator>>( int shift ) const noexcept {
-        return BasicSampleFrame( left >> shift, right >> shift );
+
+    constexpr BasicSampleFrame operator>>(int shift) const noexcept
+    {
+        return BasicSampleFrame(left >> shift, right >> shift);
     }
-    inline BasicSampleFrame& operator+=( const BasicSampleFrame& rhs ) noexcept {
+
+    inline BasicSampleFrame& operator+=(const BasicSampleFrame& rhs) noexcept
+    {
         left += rhs.left;
         right += rhs.right;
         return *this;
     }
 };
+
 #pragma pack(pop)
 
 /**
@@ -105,36 +99,49 @@ typedef int32_t MixerSample;
  * @details
  * Combination of two MixerSample's for stereo storage
  */
-#pragma pack(push,1)
-struct MixerSampleFrame {
+#pragma pack(push, 1)
+
+struct MixerSampleFrame
+{
     //! @brief Left sample value
     MixerSample left = 0;
     //! @brief Right sample value
     MixerSample right = 0;
+
     /**
      * @brief Add a BasicSampleFrame
      * @param[in] rhs BasicSampleFrame to add
      * @return Copy of *this
      */
-    inline MixerSampleFrame operator+=( const BasicSampleFrame& rhs ) noexcept {
+    inline MixerSampleFrame operator+=(const BasicSampleFrame& rhs) noexcept
+    {
         left += rhs.left;
         right += rhs.right;
         return *this;
     }
+
     /**
      * @brief Shift data right and clip
      * @param[in] shift Amount to shift right
      * @return Clipped BasicSampleFrame
      */
-    inline BasicSampleFrame rightShiftClip( uint8_t shift ) const noexcept {
+    inline BasicSampleFrame rightShiftClip(uint8_t shift) const noexcept
+    {
         BasicSampleFrame result;
-        result.left = ppp::clip( left >> shift, -32768, 32767 );
-        result.right = ppp::clip( right >> shift, -32768, 32767 );
+        result.left = ppp::clip(left >> shift, -32768, 32767);
+        result.right = ppp::clip(right >> shift, -32768, 32767);
         return result;
     }
 
     constexpr MixerSampleFrame() noexcept = default;
+
+    void add(const BasicSampleFrame& frame, int mulL, int mulR, int shift)
+    {
+        left += (static_cast<MixerSample>(frame.left) * mulL) >> shift;
+        right += (static_cast<MixerSample>(frame.right) * mulR) >> shift;
+    }
 };
+
 #pragma pack(pop)
 
 /**
@@ -144,7 +151,7 @@ struct MixerSampleFrame {
  * this allows for easy iteration over the frames by grabbing a pointer to
  * the front element.
  */
-typedef std::shared_ptr< std::vector<BasicSampleFrame> > AudioFrameBuffer;
+typedef std::shared_ptr<std::vector<BasicSampleFrame>> AudioFrameBuffer;
 
 /**
  * @brief Shared pointer to a vector of MixerSampleFrame's
@@ -153,7 +160,7 @@ typedef std::shared_ptr< std::vector<BasicSampleFrame> > AudioFrameBuffer;
  * this allows for easy iteration over the frames by grabbing a pointer to
  * the front element.
  */
-typedef std::shared_ptr< std::vector<MixerSampleFrame> > MixerFrameBuffer;
+typedef std::shared_ptr<std::vector<MixerSampleFrame>> MixerFrameBuffer;
 
 /**
  * @}

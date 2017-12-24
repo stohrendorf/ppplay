@@ -46,12 +46,12 @@ void Sample::setFilename(const std::string& f)
     m_filename = f;
 }
 
-void Sample::setLoopStart(std::streamoff s) noexcept
+void Sample::setLoopStart(uint_fast32_t s) noexcept
 {
     m_loopStart = s;
 }
 
-void Sample::setLoopEnd(std::streamoff e) noexcept
+void Sample::setLoopEnd(uint_fast32_t e) noexcept
 {
     m_loopEnd = e;
 }
@@ -77,8 +77,7 @@ bool Sample::mixNonInterpolated(BresenInterpolation* bresen, MixerFrameBuffer* b
             return false;
         }
         BasicSampleFrame sampleVal = sampleAt(*bresen);
-        sampleVal.mulRShift(factorLeft, factorRight, rightShift);
-        frame += sampleVal;
+        frame.add(sampleVal, factorLeft, factorRight, rightShift);
         bresen->next();
     }
     return true;
@@ -95,9 +94,8 @@ bool Sample::mixLinearInterpolated(BresenInterpolation* bresen, MixerFrameBuffer
             return false;
         }
         BasicSampleFrame sampleVal = sampleAt(*bresen);
-        sampleVal = bresen->biased(sampleVal, sampleAt(adjustPosition(1 + *bresen)));
-        sampleVal.mulRShift(factorLeft, factorRight, rightShift);
-        frame += sampleVal;
+        sampleVal = bresen->biased(sampleVal, sampleAt(adjustPosition(1u + *bresen)));
+        frame.add(sampleVal, factorLeft, factorRight, rightShift);
         bresen->next();
     }
     return true;
@@ -133,9 +131,9 @@ bool Sample::mixCubicInterpolated(BresenInterpolation* bresen, MixerFrameBuffer*
         }
 
         BasicSampleFrame samples[4];
-        for( int i = 0; i < 4; i++ )
+        for( int i = 0u; i < 4; i++ )
         {
-            samples[i] = sampleAt(adjustPosition(i + *bresen - 1));
+            samples[i] = sampleAt(adjustPosition(i + *bresen - 1u));
         }
         frame.left += (factorLeft * interpolateCubic(samples[0].left, samples[1].left, samples[2].left, samples[3].left, bresen->bias())) >> rightShift;
         frame.right += (factorRight * interpolateCubic(samples[0].right, samples[1].right, samples[2].right, samples[3].right, bresen->bias())) >> rightShift;
@@ -160,9 +158,9 @@ bool Sample::mix(Sample::Interpolation inter, BresenInterpolation* bresen, Mixer
     }
 }
 
-inline BasicSampleFrame Sample::sampleAt(std::streamoff pos) const noexcept
+inline BasicSampleFrame Sample::sampleAt(uint_fast32_t pos) const noexcept
 {
-    if( pos == BresenInterpolation::InvalidPosition || pos < 0 )
+    if( pos == BresenInterpolation::InvalidPosition )
     {
         return {};
     }
@@ -174,7 +172,7 @@ inline BasicSampleFrame Sample::sampleAt(std::streamoff pos) const noexcept
     return m_data[pos];
 }
 
-inline std::streamoff Sample::makeRealPos(std::streamoff pos) const noexcept
+inline uint_fast32_t Sample::makeRealPos(uint_fast32_t pos) const noexcept
 {
     if( m_looptype == LoopType::Pingpong )
     {

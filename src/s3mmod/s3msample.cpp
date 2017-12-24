@@ -137,7 +137,7 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
             m_highQuality = true;
             uint16_t smp16;
             auto smpPtr = beginIterator();
-            for( std::streamoff i = 0; i < length(); i++ )
+            for( size_t i = 0; i < length(); i++ )
             {
                 if( !(*str >> smp16) )
                 {
@@ -151,7 +151,7 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
             {
                 logger()->info(L4CXX_LOCATION, "Loading Stereo...");
                 smpPtr = beginIterator();
-                for( std::streamoff i = 0; i < length(); i++ )
+                for( size_t i = 0; i < length(); i++ )
                 {
                     if( !(*str >> smp16) )
                     {
@@ -168,7 +168,7 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
             logger()->info(L4CXX_LOCATION, "Loading 8-bit sample");
             uint8_t smp8;
             auto smpPtr = beginIterator();
-            for( std::streamoff i = 0; i < length(); i++ )
+            for( size_t i = 0; i < length(); i++ )
             {
                 if( !(*str >> smp8) )
                 {
@@ -182,7 +182,7 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
             {
                 logger()->info(L4CXX_LOCATION, "Loading Stereo...");
                 smpPtr = beginIterator();
-                for( std::streamoff i = 0; i < length(); i++ )
+                for( size_t i = 0; i < length(); i++ )
                 {
                     if( !(*str >> smp8) )
                     {

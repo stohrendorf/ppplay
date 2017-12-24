@@ -48,16 +48,16 @@ class PPPLAY_CORE_EXPORT BresenInterpolation
 {
 private:
     //! @brief Width of the line
-    int_fast32_t m_dx;
+    uint_fast32_t m_dx;
     //! @brief Height of the line
-    int_fast32_t m_dy;
+    uint_fast32_t m_dy;
     //! @brief Error variable (or fractional part). Range is [0, m_dx-1]
     int_fast32_t m_err;
-    std::streamoff m_position;
+    uint_fast32_t m_position;
 public:
     BresenInterpolation() = delete;
 
-    static constexpr std::streamoff InvalidPosition = std::numeric_limits<std::streamoff>::max();
+    static constexpr uint_fast32_t InvalidPosition = std::numeric_limits<uint_fast32_t>::max();
 
     /**
      * @brief Constructor
@@ -66,13 +66,12 @@ public:
      * @pre dx>1
      * @pre dy>0
      */
-    constexpr BresenInterpolation(int dx, int dy) noexcept
-        :
-        m_dx(dx), m_dy(dy), m_err(dx - 1), m_position(0)
+    constexpr BresenInterpolation(uint_fast32_t dx, uint_fast32_t dy) noexcept
+        : m_dx(dx), m_dy(dy), m_err(dx - 1), m_position(0)
     {
     }
 
-    inline operator std::streamoff() const noexcept
+    inline operator uint_fast32_t() const noexcept
     {
         return m_position;
     }
@@ -90,7 +89,7 @@ public:
      */
     inline uint_fast32_t next()
     {
-        BOOST_ASSERT(m_dx > 0 && m_dy >= 0 && m_err >= 0 && m_err < m_dx);
+        BOOST_ASSERT(m_dx > 0 && m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
         for( m_err -= m_dy; m_err < 0; m_err += m_dx )
         {
             m_position++;
@@ -109,21 +108,21 @@ public:
      * @param[in] dx New value for m_dx
      * @param[in] dy New value for m_dy
      */
-    inline void reset(int dx, int dy)
+    inline void reset(uint_fast32_t dx, uint_fast32_t dy)
     {
+        BOOST_ASSERT(dx > 0);
         m_dx = dx;
         m_dy = dy;
         // m_err = dx-1;
-        BOOST_ASSERT(dx > 0 && dy >= 0);
     }
 
     /**
      * @brief Get the normalized fractional part
      * @return Fractional part, normalized to be within 0 and 255
      */
-    inline int bias() const
+    inline uint_fast32_t bias() const
     {
-        BOOST_ASSERT(m_err >= 0 && m_err < m_dx);
+        BOOST_ASSERT(m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
         return (m_err << 8) / m_dx;
     }
 
@@ -133,8 +132,8 @@ public:
      */
     inline int16_t biased(int16_t v1, int16_t v2) const noexcept
     {
-        int v1b = v1 * m_err;
-        int v2b = v2 * (m_dx - m_err);
+        int_fast32_t v1b = v1 * m_err;
+        int_fast32_t v2b = v2 * (m_dx - m_err);
         return ppp::clip<int>((v1b + v2b) / m_dx, -32768, 32767);
     }
 
