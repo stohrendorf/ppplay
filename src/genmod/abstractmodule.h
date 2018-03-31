@@ -302,7 +302,7 @@ protected:
 
 private:
     //! @copydoc internal_buildTick
-    size_t buildTick(AudioFrameBuffer* buf);
+    size_t buildTick(AudioFrameBufferPtr* buf);
 
     bool internal_initialize(uint32_t frq) override;
 
@@ -333,14 +333,14 @@ private:
      * @li speed and tempo changes
      * @li pattern loops and delays
      */
-    virtual size_t internal_buildTick(AudioFrameBuffer* buf) = 0;
+    virtual size_t internal_buildTick(AudioFrameBufferPtr* buf) = 0;
 
     /**
      * @copydoc IAudioSource::getAudioData()
      * @note The buffer will contain full ticks, so the buffer will generally
      * have a different size as requested with @a requestedFrames.
      */
-    size_t internal_getAudioData(AudioFrameBuffer& buffer, size_t requestedFrames) override;
+    size_t internal_getAudioData(AudioFrameBufferPtr& buffer, size_t requestedFrames) override;
 
     /**
      * @copydoc IAudioSource::preferredBufferSize()

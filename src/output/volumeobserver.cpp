@@ -31,7 +31,7 @@ uint16_t logify(uint16_t value)
  * @param[out] left Sum of absolute left sample values
  * @param[out] right Sum of absolute right sample values
  */
-void sumAbsValues(const AudioFrameBuffer& buf, uint64_t& left, uint64_t& right)
+void sumAbsValues(const AudioFrameBufferPtr& buf, uint64_t& left, uint64_t& right)
 {
     left = right = 0;
     for(const BasicSampleFrame & frame : *buf)
@@ -51,7 +51,7 @@ VolumeObserver::VolumeObserver(AudioFifo* fifo)
     m_dataPulledConnection = m_fifo->dataPulled.connect(boost::bind(&VolumeObserver::dataPulled, this, _1));
 }
 
-void VolumeObserver::dataPulled(const AudioFrameBuffer& buffer)
+void VolumeObserver::dataPulled(const AudioFrameBufferPtr& buffer)
 {
     uint64_t left = 0, right = 0;
     sumAbsValues(buffer, left, right);
@@ -68,7 +68,7 @@ void VolumeObserver::dataPulled(const AudioFrameBuffer& buffer)
     }
 }
 
-void VolumeObserver::dataPushed(const AudioFrameBuffer& buffer)
+void VolumeObserver::dataPushed(const AudioFrameBufferPtr& buffer)
 {
     uint64_t left = 0, right = 0;
     sumAbsValues(buffer, left, right);

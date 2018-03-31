@@ -159,7 +159,7 @@ public:
 
     ~S3mChannel() override;
 
-    void mixTick(MixerFrameBuffer* mixBuffer);
+    void mixTick(const MixerFrameBufferPtr& mixBuffer);
 
     void updateStatus();
 

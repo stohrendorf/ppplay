@@ -40,7 +40,7 @@ size_t SDLAudioOutput::getSdlData(BasicSampleFrame* data, size_t numFrames)
     {
         return 0;
     }
-    AudioFrameBuffer buffer;
+    AudioFrameBufferPtr buffer;
     size_t copied = m_fifo.pullData(buffer, numFrames);
     if( copied == 0 )
     {

@@ -314,6 +314,7 @@ void XmChannel::updateTick0(const XmCell& cell, bool estimateOnly)
     if( between<uint8_t>(m_currentCell->instrument(), 1, 0x80) )
     {
         m_state.instrument = m_currentCell->instrument();
+        m_reverse = false;
     }
 
     if( m_currentCell->effect() == Effect::Extended && (m_currentCell->effectValue() >> 4) == EfxNoteDelay && (m_currentCell->effectValue() & 0x0f) != 0 )
@@ -829,7 +830,7 @@ void XmChannel::update(const XmCell& cell, bool estimateOnly)
     }
 }
 
-void XmChannel::mixTick(MixerFrameBuffer* mixBuffer)
+void XmChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
 {
     if( !m_state.active || !mixBuffer )
     {
@@ -842,24 +843,9 @@ void XmChannel::mixTick(MixerFrameBuffer* mixBuffer)
         m_state.active = false;
         return;
     }
-#if 0
-    int volLeft = 0x80;
-    if(m_realPanning > 0x80)
-    {
-        volLeft = 0xff - m_realPanning;
-    }
-    int volRight = 0x80;
-    if(m_realPanning < 0x80)
-    {
-        volRight = m_realPanning;
-    }
-    volLeft *= m_realVolume;
-    volRight *= m_realVolume;
-#else
     int volLeft = std::round(std::sqrt(m_realPanning / 256.0f) * 65536) * m_realVolume / 256;
     int volRight = std::round(std::sqrt((256 - m_realPanning) / 256.0f) * 65536) * m_realVolume / 256;
-#endif
-    m_state.active = currSmp->mix(m_module->interpolation(), m_bres, *mixBuffer, volLeft, volRight, 13);
+    m_state.active = mix(*currSmp, m_module->interpolation(), m_bres, *mixBuffer, m_reverse, volLeft, volRight, 13) != 0;
 }
 
 void XmChannel::updateStatus()
@@ -1548,7 +1534,8 @@ AbstractArchive& XmChannel::serialize(AbstractArchive* data)
     % m_autoVibPhase
     % m_lastNote
     % m_bres
-    % m_state;
+    % m_state
+    % m_reverse;
     return *data;
 }
 }

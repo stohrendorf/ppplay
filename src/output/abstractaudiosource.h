@@ -61,7 +61,7 @@ private:
      * @see preferredBufferSize()
      * @see isBusy()
      */
-    virtual size_t internal_getAudioData(AudioFrameBuffer& buffer, size_t requestedFrames) = 0;
+    virtual size_t internal_getAudioData(AudioFrameBufferPtr& buffer, size_t requestedFrames) = 0;
     /**
      * @brief Get the preferred buffer size to prevent unnecessary calls to getAudioData()
      * @retval 0 if no size is specified
@@ -105,7 +105,7 @@ public:
     inline bool paused() const noexcept;
     inline void setPaused(bool p = true) noexcept;
     //! @copydoc internal_getAudioData
-    size_t getAudioData(AudioFrameBuffer& buffer, size_t requestedFrames);
+    size_t getAudioData(AudioFrameBufferPtr& buffer, size_t requestedFrames);
     //! @copydoc internal_preferredBufferSize
     size_t preferredBufferSize() const;
     //! @copydoc internal_initialize

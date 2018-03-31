@@ -70,11 +70,11 @@ size_t AbstractModule::length() const
     return m_songs->length;
 }
 
-size_t AbstractModule::internal_getAudioData(AudioFrameBuffer& buffer, size_t size)
+size_t AbstractModule::internal_getAudioData(AudioFrameBufferPtr& buffer, size_t size)
 {
     if(!buffer)
     {
-        buffer.reset(new AudioFrameBuffer::element_type);
+        buffer = std::make_shared<AudioFrameBuffer>();
     }
     if(m_isPreprocessing)
     {
@@ -83,7 +83,7 @@ size_t AbstractModule::internal_getAudioData(AudioFrameBuffer& buffer, size_t si
         return tickBufferLength();
     }
     buffer->resize(0);
-    AudioFrameBuffer tmpBuf;
+    AudioFrameBufferPtr tmpBuf;
     while(buffer->size() < size)
     {
         size_t size = buildTick(&tmpBuf);
@@ -224,7 +224,7 @@ bool AbstractModule::seekForward()
             m_isPreprocessing = false;
             return false;
         }
-        AudioFrameBuffer buf;
+        AudioFrameBufferPtr buf;
         if(buildTick(&buf) == 0 || !buf)
         {
             m_isPreprocessing = false;
@@ -341,7 +341,7 @@ bool AbstractModule::internal_initialize(uint32_t)
     return true;
 }
 
-size_t AbstractModule::buildTick(AudioFrameBuffer* buf)
+size_t AbstractModule::buildTick(AudioFrameBufferPtr* buf)
 {
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
 

@@ -27,7 +27,7 @@ ppp::AbstractModule* Module::factory(Stream* stream, uint32_t frequency, int max
     return res;
 }
 
-size_t Module::internal_buildTick(AudioFrameBuffer* buf)
+size_t Module::internal_buildTick(AudioFrameBufferPtr* buf)
 {
     if( !update(buf == nullptr) )
     {
@@ -61,7 +61,7 @@ size_t Module::internal_buildTick(AudioFrameBuffer* buf)
     {
         if( !buf->get() )
         {
-            buf->reset(new AudioFrameBuffer::element_type);
+            *buf = std::make_shared<AudioFrameBuffer>();
         }
         buf->get()->resize(BufferSize);
         ppp::BresenInterpolation interp(frequency(), opl::Opl3::SampleRate);

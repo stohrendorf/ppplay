@@ -246,19 +246,19 @@ AbstractArchive& ModChannel::serialize(AbstractArchive* data)
            % m_bresen;
 }
 
-void ModChannel::mixTick(MixerFrameBuffer* mixBuffer)
+void ModChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
 {
     if( !m_state.active || !currentSample() || m_physPeriod == 0 )
     {
         m_state.active = false;
         return;
     }
-    if( mixBuffer && mixBuffer->get()->empty() )
+    if( mixBuffer && mixBuffer->empty() )
     {
         logger()->error(L4CXX_LOCATION, "mixBuffer is empty");
         return;
     }
-    if( mixBuffer && m_module->frequency() * mixBuffer->get()->size() == 0 )
+    if( mixBuffer && m_module->frequency() * mixBuffer->size() == 0 )
     {
         m_state.active = false;
         return;
@@ -285,7 +285,7 @@ void ModChannel::mixTick(MixerFrameBuffer* mixBuffer)
         }
         volL *= m_physVolume;
         volR *= m_physVolume;
-        m_state.active = currSmp->mix(m_module->interpolation(), m_bresen, *mixBuffer, volL, volR, 13);
+        m_state.active = mix(*currSmp, m_module->interpolation(), m_bresen, *mixBuffer, volL, volR, 13) != 0;
     }
 }
 

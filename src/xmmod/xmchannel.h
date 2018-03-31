@@ -179,6 +179,8 @@ private:
     //! @brief Module this channel belongs to
     XmModule* m_module;
 
+    bool m_reverse = false;
+
     ChannelState m_state{};
 
     /**
@@ -220,7 +222,7 @@ public:
 
     ChannelState status() const;
 
-    void mixTick(MixerFrameBuffer* mixBuffer);
+    void mixTick(const MixerFrameBufferPtr& mixBuffer);
 
     void updateStatus();
 

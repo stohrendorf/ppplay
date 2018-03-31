@@ -92,7 +92,7 @@ size_t AbstractAudioSource::preferredBufferSize() const
     return internal_preferredBufferSize();
 }
 
-size_t AbstractAudioSource::getAudioData(AudioFrameBuffer& buffer, size_t requestedFrames)
+size_t AbstractAudioSource::getAudioData(AudioFrameBufferPtr& buffer, size_t requestedFrames)
 {
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
     return internal_getAudioData(buffer, requestedFrames);

@@ -460,7 +460,7 @@ void S3mChannel::update(const S3mCell& cell, bool patDelay, bool estimateOnly)
     updateStatus();
 }
 
-void S3mChannel::mixTick(MixerFrameBuffer* mixBuffer)
+void S3mChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
 {
     if( !mixBuffer )
     {
@@ -497,7 +497,7 @@ void S3mChannel::mixTick(MixerFrameBuffer* mixBuffer)
     {
         return;
     }
-    if( m_module->frequency() * (*mixBuffer)->size() == 0 )
+    if( m_module->frequency() * mixBuffer->size() == 0 )
     {
         m_state.active = false;
         return;
@@ -522,7 +522,7 @@ void S3mChannel::mixTick(MixerFrameBuffer* mixBuffer)
     }
     volL *= currVol;
     volR *= currVol;
-    m_state.active = currSmp->mix(m_module->interpolation(), m_bresen, *mixBuffer, volL, volR, 11);
+    m_state.active = mix(*currSmp, m_module->interpolation(), m_bresen, *mixBuffer, volL, volR, 11) != 0;
 }
 
 void S3mChannel::updateStatus()

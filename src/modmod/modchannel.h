@@ -91,7 +91,7 @@ public:
 
     ChannelState status() const;
 
-    void mixTick(MixerFrameBuffer* mixBuffer);
+    void mixTick(const MixerFrameBufferPtr& mixBuffer);
 
     void updateStatus();
 

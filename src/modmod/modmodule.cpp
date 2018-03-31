@@ -278,7 +278,7 @@ bool ModModule::load(Stream* stream, int loadMode)
     return stream->good() && stream->size() - stream->pos() < 0x100;
 }
 
-size_t ModModule::internal_buildTick(AudioFrameBuffer* buf)
+size_t ModModule::internal_buildTick(AudioFrameBufferPtr* buf)
 {
     if( state().tick == 0 && state().order >= orderCount() )
     {
@@ -292,7 +292,7 @@ size_t ModModule::internal_buildTick(AudioFrameBuffer* buf)
     {
         if( buf && !buf->get() )
         {
-            buf->reset(new AudioFrameBuffer::element_type);
+            *buf = std::make_shared<AudioFrameBuffer>();
         }
         if( state().tick == 0 )
         {
@@ -316,13 +316,13 @@ size_t ModModule::internal_buildTick(AudioFrameBuffer* buf)
         }
         if( buf )
         {
-            MixerFrameBuffer mixerBuffer(new MixerFrameBuffer::element_type(tickBufferLength()));
+            MixerFrameBufferPtr mixerBuffer = std::make_shared<MixerFrameBuffer>(tickBufferLength());
             for( int currTrack = 0; currTrack < channelCount(); currTrack++ )
             {
                 ModChannel* chan = m_channels[currTrack];
                 const ModCell& cell = currPat->at(currTrack, state().row);
                 chan->update(cell, false); // m_patDelayCount != -1);
-                chan->mixTick(&mixerBuffer);
+                chan->mixTick(mixerBuffer);
             }
             buf->get()->resize(mixerBuffer->size());
             MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();

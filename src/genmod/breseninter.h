@@ -53,11 +53,11 @@ private:
     uint_fast32_t m_dy;
     //! @brief Error variable (or fractional part). Range is [0, m_dx-1]
     int_fast32_t m_err;
-    uint_fast32_t m_position;
+    int_fast32_t m_position;
 public:
     BresenInterpolation() = delete;
 
-    static constexpr uint_fast32_t InvalidPosition = std::numeric_limits<uint_fast32_t>::max();
+    static constexpr int_fast32_t InvalidPosition = std::numeric_limits<int_fast32_t>::max();
 
     /**
      * @brief Constructor
@@ -71,12 +71,12 @@ public:
     {
     }
 
-    inline operator uint_fast32_t() const noexcept
+    inline operator int_fast32_t() const noexcept
     {
         return m_position;
     }
 
-    inline BresenInterpolation& operator=(uint_fast32_t val) noexcept
+    inline BresenInterpolation& operator=(int_fast32_t val) noexcept
     {
         m_position = val;
         return *this;
@@ -87,19 +87,37 @@ public:
      * @param[in,out] pos Interpolation Y point to adjust
      * @post 0 <= m_err < m_dx
      */
-    inline uint_fast32_t next()
+    inline int_fast32_t next()
     {
         BOOST_ASSERT(m_dx > 0 && m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
         for( m_err -= m_dy; m_err < 0; m_err += m_dx )
         {
             m_position++;
         }
-        return static_cast<uint_fast32_t>(m_position);
+        BOOST_ASSERT(m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
+        return static_cast<int_fast32_t>(m_position);
+    }
+
+    inline int_fast32_t prev()
+    {
+        BOOST_ASSERT(m_dx > 0 && m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
+        for( m_err += m_dy; m_err >= static_cast<int_fast32_t>(m_dx); m_err -= m_dx )
+        {
+            m_position--;
+        }
+        BOOST_ASSERT(m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
+        return static_cast<int_fast32_t>(m_position);
     }
 
     BresenInterpolation& operator++()
     {
         next();
+        return *this;
+    }
+
+    BresenInterpolation& operator--()
+    {
+        prev();
         return *this;
     }
 
@@ -111,19 +129,27 @@ public:
     inline void reset(uint_fast32_t dx, uint_fast32_t dy)
     {
         BOOST_ASSERT(dx > 0);
+        m_err = m_err * m_dx / dx;
         m_dx = dx;
         m_dy = dy;
         // m_err = dx-1;
+        BOOST_ASSERT(m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
     }
 
     /**
      * @brief Get the normalized fractional part
      * @return Fractional part, normalized to be within 0 and 255
      */
-    inline uint_fast32_t bias() const
+    inline uint_fast32_t stepSize() const
     {
         BOOST_ASSERT(m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
-        return (m_err << 8) / m_dx;
+        return (m_err * 256) / m_dx;
+    }
+
+    inline float floatStepSize() const
+    {
+        BOOST_ASSERT(m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
+        return float(m_err) / m_dx;
     }
 
     /**
@@ -148,6 +174,11 @@ public:
     inline bool isValid() const noexcept
     {
         return m_position != InvalidPosition;
+    }
+
+    inline void setPosition(int_fast32_t p)
+    {
+        m_position = p;
     }
 };
 

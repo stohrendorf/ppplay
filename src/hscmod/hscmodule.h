@@ -73,7 +73,7 @@ public:
     bool load(Stream* stream);
 
 private:
-    size_t internal_buildTick(AudioFrameBuffer* buf) override;
+    size_t internal_buildTick(AudioFrameBufferPtr* buf) override;
 
     ppp::ChannelState internal_channelStatus(size_t idx) const override;
 

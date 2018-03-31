@@ -40,7 +40,7 @@ class PPPLAY_CORE_EXPORT FftObserver
 private:
     //! @brief Observed FIFO
     AudioFifo* m_fifo;
-    AudioFrameBuffer m_buffer;
+    AudioFrameBufferPtr m_buffer;
     size_t m_filled;
     std::vector<uint16_t> m_left;
     std::vector<uint16_t> m_right;
@@ -63,7 +63,7 @@ public:
     }
 
 private:
-    void dataPushed(const AudioFrameBuffer& buffer);
+    void dataPushed(const AudioFrameBufferPtr& buffer);
 };
 
 /**

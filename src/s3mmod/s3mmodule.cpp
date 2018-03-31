@@ -574,7 +574,7 @@ bool S3mModule::adjustPosition()
     return true;
 }
 
-size_t S3mModule::internal_buildTick(AudioFrameBuffer* buf)
+size_t S3mModule::internal_buildTick(AudioFrameBufferPtr* buf)
 try
 {
     if( state().order >= orderCount() )
@@ -600,7 +600,7 @@ try
     }
     if( buf && !buf->get() )
     {
-        buf->reset(new AudioFrameBuffer::element_type);
+        *buf = std::make_shared<AudioFrameBuffer>();
     }
     // update channels...
     state().pattern = orderAt(state().order)->index();
@@ -616,14 +616,14 @@ try
     }
     if( buf )
     {
-        MixerFrameBuffer mixerBuffer(new MixerFrameBuffer::element_type(tickBufferLength()));
+        MixerFrameBufferPtr mixerBuffer = std::make_shared<MixerFrameBuffer>(tickBufferLength());
         for( int currTrack = 0; currTrack < channelCount(); currTrack++ )
         {
             S3mChannel* chan = m_channels[currTrack];
             BOOST_ASSERT(chan != nullptr);
             const S3mCell& cell = currPat->at(currTrack, state().row);
             chan->update(cell, m_patDelayCount != -1, false);
-            chan->mixTick(&mixerBuffer);
+            chan->mixTick(mixerBuffer);
         }
         (*buf)->resize(mixerBuffer->size());
         MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();

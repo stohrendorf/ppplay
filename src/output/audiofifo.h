@@ -80,7 +80,7 @@ private:
      * @brief Adds a buffer to the internal queue by copying its contents
      * @param[in] buf The buffer to add
      */
-    void pushData(const AudioFrameBuffer& buf);
+    void pushData(const AudioFrameBufferPtr& buf);
 
 public:
     DISABLE_COPY(AudioFifo)
@@ -121,7 +121,7 @@ public:
      */
     bool isEmpty() const;
 
-    size_t pullData(AudioFrameBuffer& buffer, size_t requestedFrames);
+    size_t pullData(AudioFrameBufferPtr& buffer, size_t requestedFrames);
 
     bool isSourcePaused() const
     {
@@ -131,7 +131,7 @@ public:
 
     // These are needed to replace boost::mutex (or boost::signals2::mutex) with std::mutex,
     // otherwise boost::thread would become a dependency.
-    typedef void DataSignalSignature(const AudioFrameBuffer&);
+    typedef void DataSignalSignature(const AudioFrameBufferPtr&);
 
     typedef boost::signals2::signal<
         DataSignalSignature,

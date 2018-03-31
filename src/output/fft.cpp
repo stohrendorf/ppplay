@@ -173,7 +173,7 @@ namespace ppp
 {
 namespace FFT
 {
-void doFFT(const AudioFrameBuffer& samples, std::vector<uint16_t>* L, std::vector<uint16_t>* R)
+void doFFT(const AudioFrameBufferPtr& samples, std::vector<uint16_t>* L, std::vector<uint16_t>* R)
 {
     BOOST_ASSERT(L != nullptr);
     BOOST_ASSERT(R != nullptr);

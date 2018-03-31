@@ -36,7 +36,7 @@ void WavAudioOutput::encodeThread()
             std::this_thread::yield();
             continue;
         }
-        AudioFrameBuffer buffer;
+        AudioFrameBufferPtr buffer;
         size_t size = lockedSrc->getAudioData(buffer, lockedSrc->preferredBufferSize());
         if(size == 0 || !buffer || buffer->empty())
         {

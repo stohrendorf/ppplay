@@ -151,7 +151,8 @@ struct MixerSampleFrame
  * this allows for easy iteration over the frames by grabbing a pointer to
  * the front element.
  */
-typedef std::shared_ptr<std::vector<BasicSampleFrame>> AudioFrameBuffer;
+using AudioFrameBuffer = std::vector<BasicSampleFrame>;
+using AudioFrameBufferPtr = std::shared_ptr<AudioFrameBuffer>;
 
 /**
  * @brief Shared pointer to a vector of MixerSampleFrame's
@@ -160,7 +161,8 @@ typedef std::shared_ptr<std::vector<BasicSampleFrame>> AudioFrameBuffer;
  * this allows for easy iteration over the frames by grabbing a pointer to
  * the front element.
  */
-typedef std::shared_ptr<std::vector<MixerSampleFrame>> MixerFrameBuffer;
+using MixerFrameBuffer = std::vector<MixerSampleFrame>;
+using MixerFrameBufferPtr = std::shared_ptr<MixerFrameBuffer>;
 
 /**
  * @}

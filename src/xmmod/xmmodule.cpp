@@ -191,7 +191,7 @@ bool XmModule::load(Stream* stream)
     return true;
 }
 
-size_t XmModule::internal_buildTick(AudioFrameBuffer* buffer)
+size_t XmModule::internal_buildTick(AudioFrameBufferPtr* buffer)
 {
     if( state().order >= orderCount() )
     {
@@ -206,9 +206,9 @@ size_t XmModule::internal_buildTick(AudioFrameBuffer* buffer)
     {
         if( !buffer->get() )
         {
-            buffer->reset(new AudioFrameBuffer::element_type);
+            *buffer = std::make_shared<AudioFrameBuffer>();
         }
-        MixerFrameBuffer mixerBuffer(new MixerFrameBuffer::element_type(tickBufferLength()));
+        MixerFrameBufferPtr mixerBuffer = std::make_shared<MixerFrameBuffer>(tickBufferLength());
         XmPattern* currPat = m_patterns.at(state().pattern);
         for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ )
         {
@@ -216,7 +216,7 @@ size_t XmModule::internal_buildTick(AudioFrameBuffer* buffer)
             BOOST_ASSERT(chan != nullptr);
             const XmCell& cell = currPat->at(currTrack, state().row);
             chan->update(cell, false);
-            chan->mixTick(&mixerBuffer);
+            chan->mixTick(mixerBuffer);
         }
         buffer->get()->resize(mixerBuffer->size());
         MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();

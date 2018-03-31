@@ -70,9 +70,9 @@ public:
     }
 
 private:
-    void dataPulled(const AudioFrameBuffer& buffer);
+    void dataPulled(const AudioFrameBufferPtr& buffer);
 
-    void dataPushed(const AudioFrameBuffer& buffer);
+    void dataPushed(const AudioFrameBufferPtr& buffer);
 };
 
 /**

@@ -29,7 +29,7 @@
 
 void AudioFifo::requestThread()
 {
-    AudioFrameBuffer buffer;
+    AudioFrameBufferPtr buffer;
     while(AbstractAudioSource::Ptr src = m_source.lock())
     {
         if(m_stopping)
@@ -94,7 +94,7 @@ AudioFifo::~AudioFifo()
     logger()->trace(L4CXX_LOCATION, "Destroyed");
 }
 
-void AudioFifo::pushData(const AudioFrameBuffer& buf)
+void AudioFifo::pushData(const AudioFrameBufferPtr& buf)
 {
     if(!buf)
     {
@@ -113,7 +113,7 @@ void AudioFifo::pushData(const AudioFrameBuffer& buf)
     dataPushed(buf);
 }
 
-size_t AudioFifo::pullData(AudioFrameBuffer& data, size_t size)
+size_t AudioFifo::pullData(AudioFrameBufferPtr& data, size_t size)
 {
     std::unique_lock<std::mutex> lock(m_bufferMutex);
     if(size > m_buffer.size())
@@ -123,7 +123,7 @@ size_t AudioFifo::pullData(AudioFrameBuffer& data, size_t size)
     }
     if(!data)
     {
-        data = std::make_shared<AudioFrameBuffer::element_type>(size);
+        data = std::make_shared<AudioFrameBuffer>(size);
     }
     else if(size > data->size())
     {

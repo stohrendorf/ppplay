@@ -76,33 +76,20 @@ private:
     LoopType m_looptype = LoopType::None;
 
     /**
-     * @brief Wraps a virtual position of ping-pong looped samples to the real position
-     * @param[in] pos Virtual position
-     * @return Real position
-     * @note Time-critical
-     */
-    inline uint_fast32_t makeRealPos(uint_fast32_t pos) const noexcept;
-
-    /**
-     * @brief Adjust the playback position so it doesn't fall out of the sample data. Returns EndOfSample if it does
-     * @param[in,out] pos Reference to the variable that should be adjusted
-     * @return Adjusted position
-     * @note Time-critical
-     */
-    inline uint_fast32_t adjustPosition(uint_fast32_t pos) const noexcept;
-
-    /**
      * @brief Get a sample
      * @param[in,out] pos Position of the requested sample
      * @return Sample value, 0 if invalid value for @a pos
      */
-    inline BasicSampleFrame sampleAt(uint_fast32_t pos) const noexcept;
+    inline BasicSampleFrame sampleAt(size_t pos) const noexcept;
 
-    bool mixNonInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, int factorLeft, int factorRight, int rightShift) const;
+    size_t mixNonInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft, int factorRight,
+                              int rightShift) const;
 
-    bool mixLinearInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, int factorLeft, int factorRight, int rightShift) const;
+    size_t mixLinearInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft,
+                                 int factorRight, int rightShift) const;
 
-    bool mixCubicInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, int factorLeft, int factorRight, int rightShift) const;
+    size_t mixCubicInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft, int factorRight,
+                                int rightShift) const;
 
 public:
     /**
@@ -169,7 +156,18 @@ public:
         return m_looptype;
     }
 
-    bool mix(Interpolation inter, BresenInterpolation& bresen, MixerFrameBuffer& buffer, int factorLeft, int factorRight, int rightShift) const;
+    size_t mix(Interpolation inter, BresenInterpolation& stepper, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft,
+               int factorRight, int rightShift) const;
+
+    uint_fast32_t loopStart() const noexcept
+    {
+        return m_loopStart;
+    }
+
+    uint_fast32_t loopEnd() const noexcept
+    {
+        return m_loopEnd;
+    }
 
 protected:
     typedef BasicSampleFrame::Vector::iterator Iterator;
@@ -272,32 +270,148 @@ protected:
     static light4cxx::Logger* logger();
 };
 
-inline uint_fast32_t Sample::adjustPosition(uint_fast32_t pos) const noexcept
+inline bool mix(
+    const Sample& smp,
+    Sample::LoopType loopType,
+    Sample::Interpolation inter,
+    BresenInterpolation& stepper,
+    MixerFrameBuffer& buffer,
+    bool& reverse,
+    size_t loopStart,
+    size_t loopEnd,
+    int factorLeft,
+    int factorRight,
+    int rightShift)
 {
-    if( pos == BresenInterpolation::InvalidPosition )
+    // sanitize
+    if( loopStart > smp.length() )
     {
-        return BresenInterpolation::InvalidPosition;
+        loopStart = smp.length();
     }
-    if( m_looptype == LoopType::None )
+    if( loopEnd > smp.length() )
     {
-        if( pos >= length() )
+        loopEnd = smp.length();
+    }
+
+    if(stepper < loopStart)
+        stepper = loopStart;
+    else if(stepper >= loopEnd)
+        stepper = loopEnd - 1;
+    if(stepper < loopStart || stepper >= loopEnd)
+        return false;
+
+    size_t offset = 0;
+    while( offset < buffer.size() )
+    {
+        size_t canRead;
+        if( !reverse )
         {
-            return BresenInterpolation::InvalidPosition;
+            canRead = loopEnd - stepper;
         }
-        return pos;
+        else
+        {
+            canRead = stepper - loopStart;
+        }
+
+        const size_t canWrite = buffer.size() - offset;
+        BOOST_ASSERT(canWrite > 0);
+        auto mustRead = static_cast<size_t>(canWrite * stepper.floatStepSize());
+        if( mustRead > canRead )
+        {
+            mustRead = canRead;
+        }
+        auto mustMix = static_cast<size_t>(mustRead / stepper.floatStepSize());
+        if(mustMix <= 0)
+            mustMix = 1;
+
+        offset += smp.mix(inter, stepper, buffer, offset, mustMix, reverse, factorLeft, factorRight, rightShift);
+
+        switch( loopType )
+        {
+            case Sample::LoopType::None:
+                if( stepper >= loopEnd )
+                {
+                    return false;
+                }
+                break;
+            case Sample::LoopType::Forward:
+                if( stepper >= loopEnd )
+                {
+                    stepper.setPosition(loopStart + (stepper - loopEnd));
+                }
+                break;
+            case Sample::LoopType::Pingpong:
+                if( reverse && stepper <= loopStart )
+                {
+                    stepper.setPosition(loopStart + (loopStart - stepper));
+                    reverse = false;
+                }
+                else if( !reverse && stepper >= loopEnd )
+                {
+                    stepper.setPosition(loopEnd - (stepper - loopEnd));
+                    reverse = true;
+                }
+
+                break;
+        }
     }
-    auto vLoopLen = m_loopEnd - m_loopStart;
-    auto vLoopEnd = m_loopEnd;
-    if( m_looptype == LoopType::Pingpong )
-    {
-        vLoopLen *= 2;
-        vLoopEnd = m_loopStart + vLoopLen;
-    }
-    while( pos >= vLoopEnd )
-    {
-        pos -= vLoopLen;
-    }
-    return pos;
+
+    return true;
+}
+
+inline bool mix(
+    const Sample& smp,
+    Sample::Interpolation inter,
+    BresenInterpolation& stepper,
+    MixerFrameBuffer& buffer,
+    bool& reverse,
+    int factorLeft,
+    int factorRight,
+    int rightShift)
+{
+    size_t loopStart = smp.loopType() == Sample::LoopType::None ? 0 : smp.loopStart();
+    size_t loopEnd = smp.loopType() == Sample::LoopType::None ? smp.length() : smp.loopEnd();
+
+    return mix(
+        smp,
+        smp.loopType(),
+        inter,
+        stepper,
+        buffer,
+        reverse,
+        loopStart,
+        loopEnd,
+        factorLeft,
+        factorRight,
+        rightShift);
+}
+
+inline bool mix(
+    const Sample& smp,
+    Sample::Interpolation inter,
+    BresenInterpolation& stepper,
+    MixerFrameBuffer& buffer,
+    int factorLeft,
+    int factorRight,
+    int rightShift)
+{
+    bool tmp = false;
+
+    size_t loopStart = smp.loopType() == Sample::LoopType::None ? 0 : smp.loopStart();
+    size_t loopEnd = smp.loopType() == Sample::LoopType::None ? smp.length() : smp.loopEnd();
+
+    return mix(
+        smp,
+        smp.loopType(),
+        inter,
+        stepper,
+        buffer,
+        tmp,
+        loopStart,
+        loopEnd,
+        factorLeft,
+        factorRight,
+        rightShift);
 }
 
 /**

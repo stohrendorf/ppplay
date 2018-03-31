@@ -89,7 +89,7 @@ public:
     ~XmModule() override;
 
 private:
-    size_t internal_buildTick(AudioFrameBuffer* buffer) override;
+    size_t internal_buildTick(AudioFrameBufferPtr* buffer) override;
 
     ChannelState internal_channelStatus(size_t) const override;
 
