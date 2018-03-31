@@ -128,8 +128,8 @@ bool SDLAudioOutput::internal_paused() const
 void SDLAudioOutput::internal_play()
 {
     SDL_PauseAudio(0);
-    // only wait at most 1 sec until playing
-    for( int n = 0; n < 100 && SDL_GetAudioStatus() != SDL_AUDIO_PLAYING; ++n )
+    // only wait at most 5 secs until playing
+    for( int n = 0; n < 500 && SDL_GetAudioStatus() != SDL_AUDIO_PLAYING; ++n )
     {
         std::this_thread::yield();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));

@@ -27,8 +27,6 @@
 
 namespace ppp
 {
-
-class Stepper;
 /**
  * @ingroup GenMod
  * @{
@@ -274,30 +272,30 @@ inline bool mix(
         switch( loopType )
         {
             case Sample::LoopType::None:
-                if( stepper >= loopEnd )
+                if( stepper >= 0 && static_cast<size_t>(stepper) >= loopEnd )
                 {
                     return false;
                 }
                 break;
             case Sample::LoopType::Forward:
-                if( stepper >= loopEnd )
+                if( stepper >= 0 && static_cast<size_t>(stepper) >= loopEnd )
                 {
-                    stepper.setPosition(loopStart + (stepper - loopEnd));
-                    BOOST_ASSERT(stepper >= loopStart && stepper < loopEnd);
+                    stepper = loopStart + (stepper - loopEnd);
+                    BOOST_ASSERT(stepper >= 0 && static_cast<size_t>(stepper) >= loopStart && static_cast<size_t>(stepper) < loopEnd);
                 }
                 break;
             case Sample::LoopType::Pingpong:
-                if( reverse && stepper <= static_cast<long>(loopStart) )
+                if( reverse && (stepper < 0 || static_cast<size_t>(stepper) < loopStart) )
                 {
-                    stepper.setPosition(loopStart + (loopStart - stepper));
+                    stepper = loopStart + (loopStart - stepper);
                     reverse = false;
-                    BOOST_ASSERT(stepper >= loopStart && stepper < loopEnd);
+                    BOOST_ASSERT(stepper >= 0 && static_cast<size_t>(stepper) >= loopStart && static_cast<size_t>(stepper) < loopEnd);
                 }
-                else if( !reverse && stepper >= static_cast<long>(loopEnd) )
+                else if( !reverse && (stepper > 0 && static_cast<size_t>(stepper) >= loopEnd) )
                 {
-                    stepper.setPosition(loopEnd - (stepper - loopEnd) - 1);
+                    stepper = loopEnd - (stepper - loopEnd) - 1;
                     reverse = true;
-                    BOOST_ASSERT(stepper >= loopStart && stepper < loopEnd);
+                    BOOST_ASSERT(stepper >= 0 && static_cast<size_t>(stepper) >= loopStart && static_cast<size_t>(stepper) < loopEnd);
                 }
 
                 break;

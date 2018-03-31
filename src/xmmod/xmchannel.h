@@ -187,13 +187,13 @@ private:
      * @brief Get the current sample
      * @return Pointer to the current sample or nullptr
      */
-    const XmSample* currentSample() const;
+    const std::unique_ptr<XmSample>& currentSample() const;
 
     /**
      * @brief Get the current instrument
      * @return Pointer to the current instrument or nullptr
      */
-    const XmInstrument* currentInstrument() const;
+    const std::unique_ptr<XmInstrument>& currentInstrument() const;
 
     void updateTick0(const XmCell& cell, bool estimateOnly);
 

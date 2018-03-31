@@ -53,17 +53,18 @@ ChannelState XmChannel::status() const
     return m_state;
 }
 
-const XmSample* XmChannel::currentSample() const
+const std::unique_ptr<XmSample>& XmChannel::currentSample() const
 {
-    const XmInstrument* instr = currentInstrument();
+    const auto& instr = currentInstrument();
     if( instr && m_lastNote > 0 )
     {
         return instr->mapNoteSample(m_lastNote - 1);
     }
-    return nullptr;
+    static const std::unique_ptr<XmSample> none;
+    return none;
 }
 
-const XmInstrument* XmChannel::currentInstrument() const
+const std::unique_ptr<XmInstrument>& XmChannel::currentInstrument() const
 {
     return m_module->getInstrument(m_state.instrument);
 }
@@ -136,7 +137,7 @@ void XmChannel::triggerNote(uint8_t note)
         return;
     }
 
-    const XmInstrument* instr = currentInstrument();
+    const auto& instr = currentInstrument();
     if( instr )
     {
         m_panningEnvelope = instr->panningProcessor();
@@ -837,7 +838,7 @@ void XmChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
         return;
     }
     m_bres.reset(m_module->frequency(), m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod));
-    const XmSample* currSmp = currentSample();
+    const auto& currSmp = currentSample();
     if( !currSmp )
     {
         m_state.active = false;
@@ -888,7 +889,7 @@ void XmChannel::updateStatus()
         }
     }
 
-    if( const XmInstrument* ins = currentInstrument() )
+    if( const auto& ins = currentInstrument() )
     {
         m_state.instrumentName = ins->title();
     }
@@ -1125,7 +1126,7 @@ void XmChannel::fxExtended(uint8_t fxByte, bool estimateOnly)
 
 void XmChannel::applySampleDefaults()
 {
-    const XmSample* smp = currentSample();
+    const auto& smp = currentSample();
     if( m_currentCell->instrument() != 0 && smp )
     {
         m_baseVolume = m_currentVolume = smp->volume();

@@ -218,7 +218,7 @@ void ModChannel::update(const ModCell& cell, bool patDelay)
     updateStatus();
 }
 
-const ModSample* ModChannel::currentSample() const
+const std::unique_ptr<ModSample>& ModChannel::currentSample() const
 {
     return m_module->sampleAt(m_sampleIndex);
 }
@@ -265,7 +265,7 @@ void ModChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
     }
     m_stepper.reset(m_module->frequency(), FrequencyBase / m_physPeriod);
     // TODO glissando
-    const ModSample* currSmp = currentSample();
+    const auto& currSmp = currentSample();
     if( mixBuffer )
     {
         int volL = 0x80;

@@ -154,7 +154,7 @@ private:
 
     void fxSetSpeed(uint8_t fxByte);
 
-    const ModSample* currentSample() const;
+    const std::unique_ptr<ModSample>& currentSample() const;
 
     void applyGlissando();
 

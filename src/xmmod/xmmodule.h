@@ -51,11 +51,11 @@ private:
     //! @brief @c true if amiga period table is used
     bool m_amiga;
     //! @brief Module patterns
-    std::vector<XmPattern*> m_patterns;
+    std::vector<std::unique_ptr<XmPattern>> m_patterns;
     //! @brief Module instruments
-    std::vector<XmInstrument*> m_instruments;
+    std::vector<std::unique_ptr<XmInstrument>> m_instruments;
     //! @brief Module channels
-    std::vector<XmChannel*> m_channels;
+    std::vector<std::unique_ptr<XmChannel>> m_channels;
     //! @brief Maps notes including finetune to their periods
     std::array<uint16_t, 121 * 16> m_noteToPeriod;
     //! @brief Contains the row to break to
@@ -121,7 +121,7 @@ private:
      * @param[in] idx 1-based instrument index
      * @return Instrument pointer or nullptr
      */
-    const XmInstrument* getInstrument(int idx) const;
+    const std::unique_ptr<XmInstrument>& getInstrument(int idx) const;
 
     /**
      * @brief Map a note and finetune to its base period

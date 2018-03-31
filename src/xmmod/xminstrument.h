@@ -44,7 +44,7 @@ class XmInstrument
 {
 private:
     //! @brief Samples this instrument contains
-    std::vector<XmSample*> m_samples;
+    std::vector<std::unique_ptr<XmSample>> m_samples;
     //! @brief Note map that maps notes to the samples
     uint8_t m_map[96];
     //! @brief This instrument's title
@@ -112,7 +112,7 @@ public:
      * @return Mapped sample
      * @note @a note is zero-based!
      */
-    XmSample* mapNoteSample(uint8_t note) const;
+    const std::unique_ptr<XmSample>& mapNoteSample(uint8_t note) const;
 
     /**
      * @brief Get the instrument's title

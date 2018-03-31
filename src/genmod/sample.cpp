@@ -43,7 +43,7 @@ size_t Sample::mixNonInterpolated(ppp::Stepper& stepper,
     size_t mixed = 0;
     for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
     {
-        if( !reverse && stepper >= m_data.size() )
+        if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= m_data.size() )
         {
             return mixed;
         }
@@ -80,7 +80,7 @@ size_t Sample::mixLinearInterpolated(ppp::Stepper& stepper,
     size_t mixed = 0;
     for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
     {
-        if( !reverse && stepper >= m_data.size() )
+        if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= m_data.size() )
         {
             return mixed;
         }
@@ -138,7 +138,7 @@ size_t Sample::mixCubicInterpolated(ppp::Stepper& stepper,
     size_t mixed = 0;
     for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
     {
-        if( !reverse && stepper >= m_data.size() )
+        if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= m_data.size() )
         {
             return mixed;
         }
@@ -183,7 +183,7 @@ size_t Sample::mixHermiteInterpolated(ppp::Stepper& stepper,
     size_t mixed = 0;
     for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
     {
-        if( !reverse && stepper >= m_data.size() )
+        if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= m_data.size() )
         {
             return mixed;
         }

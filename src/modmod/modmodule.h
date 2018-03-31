@@ -56,9 +56,9 @@ public:
     static AbstractModule* factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter);
 
 private:
-    std::vector<ModSample*> m_samples; //!< @brief Samples
-    std::vector<ModPattern*> m_patterns; //!< @brief Patterns
-    std::vector<ModChannel*> m_channels; //!< @brief Channels
+    std::vector<std::unique_ptr<ModSample>> m_samples; //!< @brief Samples
+    std::vector<std::unique_ptr<ModPattern>> m_patterns; //!< @brief Patterns
+    std::vector<std::unique_ptr<ModChannel>> m_channels; //!< @brief Channels
     int8_t m_patLoopRow;
     int m_patLoopCount;
     int8_t m_breakRow;
@@ -69,7 +69,7 @@ private:
 
     void checkGlobalFx();
 
-    ModPattern* getPattern(size_t idx) const;
+    const std::unique_ptr<ModPattern>& getPattern(size_t idx) const;
 
 protected:
     AbstractArchive& serialize(AbstractArchive* data) override;
@@ -88,7 +88,7 @@ private:
 
     int internal_channelCount() const override;
 
-    ModSample* sampleAt(size_t idx) const;
+    const std::unique_ptr<ModSample>& sampleAt(size_t idx) const;
 
     bool existsSample(size_t idx) const;
 

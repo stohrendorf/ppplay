@@ -83,12 +83,7 @@ XmModule::XmModule(int maxRpt, Sample::Interpolation inter)
 {
 }
 
-XmModule::~XmModule()
-{
-    deleteAll(m_channels);
-    deleteAll(m_patterns);
-    deleteAll(m_instruments);
-}
+XmModule::~XmModule() = default;
 
 bool XmModule::load(Stream* stream)
 {
@@ -132,13 +127,12 @@ bool XmModule::load(Stream* stream)
     m_channels.clear();
     for( int i = 0; i < hdr.numChannels; i++ )
     {
-        m_channels.emplace_back(new XmChannel(this));
+        m_channels.emplace_back(std::make_unique<XmChannel>(this));
     }
     for( uint_fast16_t i = 0; i < hdr.numPatterns; i++ )
     {
-        auto pat = new XmPattern(hdr.numChannels);
-        m_patterns.push_back(pat);
-        if( !pat->load(stream) )
+        m_patterns.emplace_back(std::make_unique<XmPattern>(hdr.numChannels));
+        if( !m_patterns.back()->load(stream) )
         {
             logger()->error(L4CXX_LOCATION, "Pattern loading error");
             return false;
@@ -150,9 +144,8 @@ bool XmModule::load(Stream* stream)
     }
     for( uint_fast16_t i = 0; i < hdr.numInstruments; i++ )
     {
-        auto* ins = new XmInstrument();
-        m_instruments.push_back(ins);
-        if( !ins->load(stream) )
+        m_instruments.emplace_back(std::make_unique<XmInstrument>());
+        if( !m_instruments.back()->load(stream) )
         {
             logger()->error(L4CXX_LOCATION, "Instrument loading error");
             return false;
@@ -201,10 +194,10 @@ size_t XmModule::internal_buildTick(const AudioFrameBufferPtr& buffer)
     if( buffer )
     {
         MixerFrameBufferPtr mixerBuffer = std::make_shared<MixerFrameBuffer>(tickBufferLength());
-        XmPattern* currPat = m_patterns.at(state().pattern);
+        const auto& currPat = m_patterns.at(state().pattern);
         for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ )
         {
-            XmChannel* chan = m_channels[currTrack];
+            const auto& chan = m_channels[currTrack];
             BOOST_ASSERT(chan != nullptr);
             const XmCell& cell = currPat->at(currTrack, state().row);
             chan->update(cell, false);
@@ -222,10 +215,10 @@ size_t XmModule::internal_buildTick(const AudioFrameBufferPtr& buffer)
     }
     else
     {
-        XmPattern* currPat = m_patterns.at(state().pattern);
+        const auto& currPat = m_patterns.at(state().pattern);
         for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ )
         {
-            XmChannel* chan = m_channels[currTrack];
+            const auto& chan = m_channels[currTrack];
             BOOST_ASSERT(chan != nullptr);
             const XmCell& cell = currPat->at(currTrack, state().row);
             chan->update(cell, true);
@@ -284,7 +277,7 @@ bool XmModule::adjustPosition()
         {
             if( !isRunningPatDelay() )
             {
-                XmPattern* currPat = m_patterns.at(state().pattern);
+                const auto& currPat = m_patterns.at(state().pattern);
                 setRow((state().row + 1) % currPat->height());
                 rowChanged = true;
                 if( state().row == 0 )
@@ -334,11 +327,12 @@ int XmModule::internal_channelCount() const
     return m_channels.size();
 }
 
-const XmInstrument* XmModule::getInstrument(int idx) const
+const std::unique_ptr<XmInstrument>& XmModule::getInstrument(int idx) const
 {
     if( !between<int>(idx, 1, m_instruments.size()) )
     {
-        return nullptr;
+        static const std::unique_ptr<XmInstrument> none;
+        return none;
     }
     return m_instruments[idx - 1];
 }
@@ -445,13 +439,13 @@ void XmModule::doPatLoop(int16_t next)
 AbstractArchive& XmModule::serialize(AbstractArchive* data)
 {
     AbstractModule::serialize(data);
-    for( XmChannel*& chan : m_channels )
+    for( const auto& chan : m_channels )
     {
         if( !chan )
         {
             continue;
         }
-        data->archive(chan);
+        data->archive(chan.get());
     }
     *data
     % m_jumpRow

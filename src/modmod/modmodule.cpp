@@ -66,23 +66,19 @@ ModModule::ModModule(int maxRpt, Sample::Interpolation inter)
 {
 }
 
-ModModule::~ModModule()
-{
-    deleteAll(m_samples);
-    deleteAll(m_patterns);
-    deleteAll(m_channels);
-}
+ModModule::~ModModule() = default;
 
-ModSample* ModModule::sampleAt(size_t idx) const
+const std::unique_ptr<ModSample>& ModModule::sampleAt(size_t idx) const
 {
+    static const std::unique_ptr<ModSample> none;
     if( idx == 0 )
     {
-        return nullptr;
+        return none;
     }
     idx--;
     if( idx >= m_samples.size() )
     {
-        return nullptr;
+        return none;
     }
     return m_samples[idx];
 }
@@ -189,15 +185,14 @@ bool ModModule::load(Stream* stream, int loadMode)
     noConstMetaInfo().trackerInfo = meta->tracker;
     for( int i = 0; i < meta->channels; i++ )
     {
-        m_channels.emplace_back(new ModChannel(this, ((i + 1) & 2) == 0));
+        m_channels.emplace_back(std::make_unique<ModChannel>(this, ((i + 1) & 2) == 0));
     }
     stream->seek(20);
     const int numSamples = loadMode == LoadingMode::Smp15 ? 15 : 31;
     for( int i = 0; i < numSamples; i++ )
     {
-        auto smp = new ModSample();
-        m_samples.push_back(smp);
-        if( !smp->loadHeader(stream) )
+        m_samples.emplace_back(std::make_unique<ModSample>());
+        if( !m_samples.back()->loadHeader(stream) )
         {
             logger()->warn(L4CXX_LOCATION, "Sample header could not be loaded");
             return false;
@@ -256,17 +251,16 @@ bool ModModule::load(Stream* stream, int loadMode)
     logger()->debug(L4CXX_LOCATION, "%d patterns @ %#x", int(maxPatNum), stream->pos());
     for( uint_fast8_t i = 0; i <= maxPatNum; i++ )
     {
-        auto* pat = new ModPattern();
-        m_patterns.push_back(pat);
+        m_patterns.emplace_back(std::make_unique<ModPattern>());
         logger()->debug(L4CXX_LOCATION, "Loading pattern %u", int(i));
-        if( !pat->load(stream, meta->channels) )
+        if( !m_patterns.back()->load(stream, meta->channels) )
         {
             logger()->warn(L4CXX_LOCATION, "Could not load pattern");
             return false;
         }
     }
     logger()->debug(L4CXX_LOCATION, "Sample start @ %#x", stream->pos());
-    for( auto& smp : m_samples )
+    for( const auto& smp : m_samples )
     {
         if( !smp->loadData(stream) )
         {
@@ -297,7 +291,7 @@ size_t ModModule::internal_buildTick(const AudioFrameBufferPtr& buffer)
         }
         // update channels...
         state().pattern = orderAt(state().order)->index();
-        ModPattern* currPat = getPattern(state().pattern);
+        const auto& currPat = getPattern(state().pattern);
         if( !currPat )
         {
             return 0;
@@ -307,7 +301,7 @@ size_t ModModule::internal_buildTick(const AudioFrameBufferPtr& buffer)
             MixerFrameBufferPtr mixerBuffer = std::make_shared<MixerFrameBuffer>(tickBufferLength());
             for( int currTrack = 0; currTrack < channelCount(); currTrack++ )
             {
-                ModChannel* chan = m_channels[currTrack];
+                const auto& chan = m_channels[currTrack];
                 const ModCell& cell = currPat->at(currTrack, state().row);
                 chan->update(cell, false); // m_patDelayCount != -1);
                 chan->mixTick(mixerBuffer);
@@ -326,7 +320,7 @@ size_t ModModule::internal_buildTick(const AudioFrameBufferPtr& buffer)
         {
             for( int currTrack = 0; currTrack < channelCount(); currTrack++ )
             {
-                ModChannel* chan = m_channels[currTrack];
+                const auto& chan = m_channels[currTrack];
                 const ModCell& cell = currPat->at(currTrack, state().row);
                 chan->update(cell, false); // m_patDelayCount != -1);
                 chan->mixTick(nullptr);
@@ -445,13 +439,13 @@ AbstractArchive& ModModule::serialize(AbstractArchive* data)
     % m_patLoopRow
     % m_patLoopCount
     % m_patDelayCount;
-    for( auto& chan : m_channels )
+    for( const auto& chan : m_channels )
     {
         if( !chan )
         {
             continue;
         }
-        data->archive(chan);
+        data->archive(chan.get());
     }
     return *data;
 }
@@ -475,7 +469,7 @@ void ModModule::checkGlobalFx()
     try
     {
         state().pattern = orderAt(state().order)->index();
-        const ModPattern* currPat = getPattern(state().pattern);
+        const auto& currPat = getPattern(state().pattern);
         if( !currPat )
         {
             return;
@@ -584,11 +578,12 @@ void ModModule::checkGlobalFx()
     }
 }
 
-ModPattern* ModModule::getPattern(size_t idx) const
+const std::unique_ptr<ModPattern>& ModModule::getPattern(size_t idx) const
 {
     if( idx >= m_patterns.size() )
     {
-        return nullptr;
+        static const std::unique_ptr<ModPattern> none;
+        return none;
     }
     return m_patterns[idx];
 }

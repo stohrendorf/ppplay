@@ -92,7 +92,7 @@ private:
      * @brief Get the current sample
      * @return Pointer to current sample or nullptr
      */
-    const S3mSample* currentSample() const;
+    const std::unique_ptr<S3mSample>& currentSample() const;
 
     /**
      * @brief Set the current sample index

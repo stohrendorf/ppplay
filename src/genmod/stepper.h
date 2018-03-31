@@ -34,16 +34,15 @@ namespace ppp
  */
 
 /**
- * @brief Discrete linear interpolation
- * @note Time-critical
- * @note Please note that all methods are inline.
+ * @brief Some sort of "scaled increment"
  * @details
  * Thanks to Mr. Bresenham for giving me the idea for this discrete linear interpolation algorithm... @n
  * Instead of using an interpolation formula like @code dy*n/dx @endcode this is an incremental
  * algorithm that uses only additions and substractions instead of divisions and multiplications, it's a
  * heavy speed-up.
  */
-class PPPLAY_CORE_EXPORT Stepper
+template<typename T = int_fast32_t>
+class PPPLAY_CORE_EXPORT StepperBase
 {
 private:
     //! @brief Width of the line
@@ -51,10 +50,10 @@ private:
     //! @brief Height of the line
     uint_fast32_t m_nominator;
     //! @brief Error variable (or fractional part). Range is [0, m_denominator-1]
-    int_fast32_t m_fraction;
-    int_fast32_t m_position;
+    int_fast32_t m_fraction{0};
+    T m_position{0};
 public:
-    Stepper() = delete;
+    StepperBase() = delete;
 
     /**
      * @brief Constructor
@@ -63,17 +62,17 @@ public:
      * @pre denominator>1
      * @pre nominator>0
      */
-    constexpr Stepper(uint_fast32_t denominator, uint_fast32_t nominator) noexcept
-        : m_denominator(denominator), m_nominator(nominator), m_fraction(denominator - 1), m_position(0)
+    constexpr StepperBase(uint_fast32_t denominator, uint_fast32_t nominator) noexcept
+        : m_denominator(denominator), m_nominator(nominator)
     {
     }
 
-    inline operator int_fast32_t() const noexcept
+    constexpr operator T() const noexcept
     {
         return m_position;
     }
 
-    inline Stepper& operator=(int_fast32_t val) noexcept
+    constexpr StepperBase<T>& operator=(T val) noexcept
     {
         m_position = val;
         return *this;
@@ -84,35 +83,35 @@ public:
      * @param[in,out] pos Interpolation Y point to adjust
      * @post 0 <= m_fraction < m_denominator
      */
-    inline int_fast32_t next()
+    constexpr T next()
     {
         BOOST_ASSERT(m_denominator > 0 && m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
         for( m_fraction -= m_nominator; m_fraction < 0; m_fraction += m_denominator )
         {
-            m_position++;
+            ++m_position;
         }
         BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
-        return static_cast<int_fast32_t>(m_position);
+        return m_position;
     }
 
-    inline int_fast32_t prev()
+    constexpr T prev()
     {
         BOOST_ASSERT(m_denominator > 0 && m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
         for( m_fraction += m_nominator; m_fraction >= static_cast<int_fast32_t>(m_denominator); m_fraction -= m_denominator )
         {
-            m_position--;
+            --m_position;
         }
         BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
-        return static_cast<int_fast32_t>(m_position);
+        return m_position;
     }
 
-    Stepper& operator++()
+    constexpr StepperBase<T>& operator++()
     {
         next();
         return *this;
     }
 
-    Stepper& operator--()
+    constexpr StepperBase<T>& operator--()
     {
         prev();
         return *this;
@@ -123,7 +122,7 @@ public:
      * @param[in] denominator New value for m_denominator
      * @param[in] nominator New value for m_nominator
      */
-    inline void reset(uint_fast32_t denominator, uint_fast32_t nominator)
+    constexpr void reset(uint_fast32_t denominator, uint_fast32_t nominator)
     {
         BOOST_ASSERT(denominator > 0);
         m_fraction = m_fraction * m_denominator / denominator;
@@ -133,17 +132,7 @@ public:
         BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
     }
 
-    /**
-     * @brief Get the normalized fractional part
-     * @return Fractional part, normalized to be within 0 and 255
-     */
-    inline uint_fast32_t stepSize() const
-    {
-        BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
-        return (m_fraction * 256) / m_denominator;
-    }
-
-    inline float floatStepSize() const
+    constexpr float floatStepSize() const
     {
         BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
         return float(m_fraction) / m_denominator;
@@ -153,27 +142,24 @@ public:
      * @brief Mix two values using the fractional part m_fraction
      * @return Mixed value
      */
-    inline int16_t biased(int16_t v1, int16_t v2) const noexcept
+    constexpr int16_t biased(int16_t v1, int16_t v2) const noexcept
     {
         float b = floatStepSize();
         auto v1b = v1 * b;
-        auto v2b = v2 * (1-b);
+        auto v2b = v2 * (1 - b);
         return ppp::clip<int>(v1b + v2b, -32768, 32767);
     }
 
-    inline BasicSampleFrame biased(const BasicSampleFrame& a, const BasicSampleFrame& b) const noexcept
+    constexpr BasicSampleFrame biased(const BasicSampleFrame& a, const BasicSampleFrame& b) const noexcept
     {
         return {
             biased(a.left, b.left),
             biased(a.right, b.right)
         };
     }
-
-    inline void setPosition(int_fast32_t p)
-    {
-        m_position = p;
-    }
 };
+
+using Stepper = StepperBase<int_fast32_t>;
 
 /**
  * @}

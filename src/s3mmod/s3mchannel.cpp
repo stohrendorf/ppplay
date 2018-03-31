@@ -196,11 +196,12 @@ ChannelState S3mChannel::status() const
     return m_state;
 }
 
-const S3mSample* S3mChannel::currentSample() const
+const std::unique_ptr<S3mSample>& S3mChannel::currentSample() const
 {
     if( !between<int>(m_state.instrument, 0, m_module->numSamples() - 1) )
     {
-        return nullptr;
+        static const std::unique_ptr<S3mSample> none;
+        return none;
     }
     return m_module->sampleAt(m_state.instrument);
 }
@@ -505,7 +506,7 @@ void S3mChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
     m_stepper.reset(m_module->frequency(), 8363 * 1712 / m_realPeriod);
     recalcVolume();
     uint16_t currVol = m_realVolume;
-    const S3mSample* currSmp = currentSample();
+    const auto& currSmp = currentSample();
     int volL = 0x20;
     int volR = 0x20;
     if( m_panning > 0x20 && m_panning != 0xa4 )
@@ -549,7 +550,7 @@ void S3mChannel::updateStatus()
     }
     else
     {
-        const S3mSample* smp = currentSample();
+        const auto& smp = currentSample();
         m_state.note = periodToNoteOffset(m_realPeriod, smp->frequency());
         m_state.instrumentName = smp->title();
     }

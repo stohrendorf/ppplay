@@ -40,7 +40,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/filesystem.hpp>
-
+#include <memory>
 #include "light4cxx/logger.h"
 
 #include "src/stuff/pluginregistry.h"
@@ -305,14 +305,14 @@ int main(int argc, char* argv[])
         if(!config::noGUI)
         {
             light4cxx::Logger::root()->debug(L4CXX_LOCATION, "Initializing SDL Screen: %s", PACKAGE_STRING);
-            dosScreen.reset(new ppg::SDLScreen(80, 25, PACKAGE_STRING));
+            dosScreen = std::make_unique<ppg::SDLScreen>(80, 25, PACKAGE_STRING);
             dosScreen->setAutoDelete(false);
             dosScreen->show();
         }
         if(config::outputFilename.empty())
         {
             light4cxx::Logger::root()->info(L4CXX_LOCATION, "Init Audio");
-            output.reset(new SDLAudioOutput(module));
+            output = std::make_shared<SDLAudioOutput>(module);
             if(!output->init(44100))
             {
                 light4cxx::Logger::root()->fatal(L4CXX_LOCATION, "Audio Init failed");

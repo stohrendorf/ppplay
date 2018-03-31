@@ -76,10 +76,7 @@ XmInstrument::XmInstrument()
     std::fill_n(m_map, 96, 0);
 }
 
-XmInstrument::~XmInstrument()
-{
-    deleteAll(m_samples);
-}
+XmInstrument::~XmInstrument() = default;
 
 bool XmInstrument::load(Stream* str)
 {
@@ -106,9 +103,8 @@ bool XmInstrument::load(Stream* str)
     str->seek(startPos + hdr.size);
     for( uint_fast16_t i = 0; i < hdr.numSamples; i++ )
     {
-        auto* smp = new XmSample();
-        m_samples[i] = smp;
-        smp->load(str);
+        m_samples[i] = std::make_unique<XmSample>();
+        m_samples[i]->load(str);
     }
     for( uint_fast16_t i = 0; i < hdr.numSamples; i++ )
     {
@@ -152,16 +148,17 @@ uint8_t XmInstrument::mapNoteIndex(uint8_t note) const
     return m_map[note] & 15;
 }
 
-XmSample* XmInstrument::mapNoteSample(uint8_t note) const
+const std::unique_ptr<XmSample>& XmInstrument::mapNoteSample(uint8_t note) const
 {
+    static const std::unique_ptr<XmSample> none;
     if( note >= 96 )
     {
-        return nullptr;
+        return none;
     }
     uint8_t mapped = mapNoteIndex(note);
     if( mapped >= m_samples.size() )
     {
-        return nullptr;
+        return none;
     }
     return m_samples[mapped];
 }

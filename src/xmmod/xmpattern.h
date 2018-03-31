@@ -58,7 +58,7 @@ public:
      */
     bool load(Stream* str);
 
-    static XmPattern* createDefaultPattern(int16_t chans);
+    static std::unique_ptr<XmPattern> createDefaultPattern(int16_t chans);
 
 protected:
     /**

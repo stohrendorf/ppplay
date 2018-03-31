@@ -36,23 +36,6 @@
     classname& operator=(classname&&) = delete;
 
 /**
- * @brief Checked delete for all elements in a container
- * @tparam T Container type
- * @param[in,out] container Reference to the container
- * @note All elements within @a container will be set to @c nullptr, but the size will not change.
- */
-template<class T>
-inline void deleteAll(T& container)
-{
-    static_assert(sizeof(**container.begin()) > 0, "Cannot delete an incomplete type");
-    for( auto& val : container )
-    {
-        delete val;
-        val = nullptr;
-    }
-}
-
-/**
  * @}
  */
 

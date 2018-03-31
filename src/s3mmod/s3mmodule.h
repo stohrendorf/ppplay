@@ -68,9 +68,9 @@ private:
     int16_t m_patLoopCount;  //!< @brief Loop counter for pattern loop, -1 if unused
     int16_t m_patDelayCount; //!< @brief Delay counter for Pattern Delay, -1 if unused
     bool m_customData;     //!< @brief @c true if module contains special custom data
-    std::vector<S3mSample*> m_samples; //!< @brief Samples
-    std::vector<S3mPattern*> m_patterns; //!< @brief Patterns
-    std::array<S3mChannel*, 32> m_channels; //!< @brief Channels
+    std::vector<std::unique_ptr<S3mSample>> m_samples; //!< @brief Samples
+    std::vector<std::unique_ptr<S3mPattern>> m_patterns; //!< @brief Patterns
+    std::array<std::unique_ptr<S3mChannel>, 32> m_channels; //!< @brief Channels
     uint8_t m_usedChannels; //!< @brief Number of used channels
     bool m_amigaLimits; //!< @brief @c true if amiga limits are present
     bool m_fastVolSlides; //!< @brief @c true if fast volume slides are present
@@ -81,7 +81,7 @@ private:
      * @param[in] idx Pattern index of the requested pattern
      * @return Pattern pointer or nullptr
      */
-    S3mPattern* getPattern(size_t idx) const;
+    const std::unique_ptr<S3mPattern>& getPattern(size_t idx) const;
 
 protected:
     AbstractArchive& serialize(AbstractArchive* data) override;
@@ -158,7 +158,7 @@ private:
      * @param[in] idx Sample index
      * @return Sample pointer or nullptr
      */
-    const S3mSample* sampleAt(size_t idx) const;
+    const std::unique_ptr<S3mSample>& sampleAt(size_t idx) const;
 
     /**
      * @brief Check if zero volume optimizations are present

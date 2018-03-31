@@ -85,9 +85,9 @@ bool XmPattern::load(Stream* str)
     return str->good();
 }
 
-XmPattern* XmPattern::createDefaultPattern(int16_t chans)
+std::unique_ptr<XmPattern> XmPattern::createDefaultPattern(int16_t chans)
 {
-    auto result = new XmPattern(1);
+    auto result = std::make_unique<XmPattern>(1);
     result->reset(chans, 64);
     return result;
 }
