@@ -98,11 +98,11 @@ private:
      */
     inline BasicSampleFrame sampleAt(uint_fast32_t pos) const noexcept;
 
-    bool mixNonInterpolated(BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift) const;
+    bool mixNonInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, int factorLeft, int factorRight, int rightShift) const;
 
-    bool mixLinearInterpolated(BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift) const;
+    bool mixLinearInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, int factorLeft, int factorRight, int rightShift) const;
 
-    bool mixCubicInterpolated(BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift) const;
+    bool mixCubicInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, int factorLeft, int factorRight, int rightShift) const;
 
 public:
     /**
@@ -169,7 +169,7 @@ public:
         return m_looptype;
     }
 
-    bool mix(Interpolation inter, BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift) const;
+    bool mix(Interpolation inter, BresenInterpolation& bresen, MixerFrameBuffer& buffer, int factorLeft, int factorRight, int rightShift) const;
 
 protected:
     typedef BasicSampleFrame::Vector::iterator Iterator;

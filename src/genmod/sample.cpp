@@ -29,37 +29,37 @@ light4cxx::Logger* Sample::logger()
     return light4cxx::Logger::get("sample");
 }
 
-bool Sample::mixNonInterpolated(BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift) const
+bool Sample::mixNonInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, int factorLeft, int factorRight, int rightShift) const
 {
-    BOOST_ASSERT(bresen != nullptr && buffer != nullptr && rightShift >= 0);
-    for( MixerSampleFrame& frame : **buffer )
+    BOOST_ASSERT(rightShift >= 0);
+    for( MixerSampleFrame& frame : *buffer )
     {
-        *bresen = adjustPosition(*bresen);
-        if( !bresen->isValid() )
+        bresen = adjustPosition(bresen);
+        if( !bresen.isValid() )
         {
             return false;
         }
-        BasicSampleFrame sampleVal = sampleAt(*bresen);
+        BasicSampleFrame sampleVal = sampleAt(bresen);
         frame.add(sampleVal, factorLeft, factorRight, rightShift);
-        bresen->next();
+        bresen.next();
     }
     return true;
 }
 
-bool Sample::mixLinearInterpolated(BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift) const
+bool Sample::mixLinearInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, int factorLeft, int factorRight, int rightShift) const
 {
-    BOOST_ASSERT(bresen != nullptr && buffer != nullptr && rightShift >= 0);
-    for( MixerSampleFrame& frame : **buffer )
+    BOOST_ASSERT(rightShift >= 0);
+    for( MixerSampleFrame& frame : *buffer )
     {
-        *bresen = adjustPosition(*bresen);
-        if( !bresen->isValid() )
+        bresen = adjustPosition(bresen);
+        if( !bresen.isValid() )
         {
             return false;
         }
-        BasicSampleFrame sampleVal = sampleAt(*bresen);
-        sampleVal = bresen->biased(sampleVal, sampleAt(adjustPosition(1u + *bresen)));
+        BasicSampleFrame sampleVal = sampleAt(bresen);
+        sampleVal = bresen.biased(sampleVal, sampleAt(adjustPosition(1u + bresen)));
         frame.add(sampleVal, factorLeft, factorRight, rightShift);
-        bresen->next();
+        bresen.next();
     }
     return true;
 }
@@ -82,13 +82,13 @@ constexpr inline MixerSample interpolateCubic(int p0, int p1, int p2, int p3, in
 }
 }
 
-bool Sample::mixCubicInterpolated(BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift) const
+bool Sample::mixCubicInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, int factorLeft, int factorRight, int rightShift) const
 {
-    BOOST_ASSERT(bresen != nullptr && buffer != nullptr && rightShift >= 0);
-    for( MixerSampleFrame& frame : **buffer )
+    BOOST_ASSERT(rightShift >= 0);
+    for( MixerSampleFrame& frame : *buffer )
     {
-        *bresen = adjustPosition(*bresen);
-        if( !bresen->isValid() )
+        bresen = adjustPosition(bresen);
+        if( !bresen.isValid() )
         {
             return false;
         }
@@ -96,17 +96,17 @@ bool Sample::mixCubicInterpolated(BresenInterpolation* bresen, MixerFrameBuffer*
         BasicSampleFrame samples[4];
         for( int i = 0u; i < 4; i++ )
         {
-            samples[i] = sampleAt(adjustPosition(i + *bresen - 1u));
+            samples[i] = sampleAt(adjustPosition(i + bresen - 1u));
         }
-        frame.left += (factorLeft * interpolateCubic(samples[0].left, samples[1].left, samples[2].left, samples[3].left, bresen->bias())) >> rightShift;
-        frame.right += (factorRight * interpolateCubic(samples[0].right, samples[1].right, samples[2].right, samples[3].right, bresen->bias())) >> rightShift;
+        frame.left += (factorLeft * interpolateCubic(samples[0].left, samples[1].left, samples[2].left, samples[3].left, bresen.bias())) >> rightShift;
+        frame.right += (factorRight * interpolateCubic(samples[0].right, samples[1].right, samples[2].right, samples[3].right, bresen.bias())) >> rightShift;
 
-        bresen->next();
+        bresen.next();
     }
     return true;
 }
 
-bool Sample::mix(Sample::Interpolation inter, BresenInterpolation* bresen, MixerFrameBuffer* buffer, int factorLeft, int factorRight, int rightShift) const
+bool Sample::mix(Sample::Interpolation inter, BresenInterpolation& bresen, MixerFrameBuffer& buffer, int factorLeft, int factorRight, int rightShift) const
 {
     switch( inter )
     {

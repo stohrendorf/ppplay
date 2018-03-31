@@ -285,7 +285,7 @@ void ModChannel::mixTick(MixerFrameBuffer* mixBuffer)
         }
         volL *= m_physVolume;
         volR *= m_physVolume;
-        m_state.active = currSmp->mix(m_module->interpolation(), &m_bresen, mixBuffer, volL, volR, 13);
+        m_state.active = currSmp->mix(m_module->interpolation(), m_bresen, *mixBuffer, volL, volR, 13);
     }
 }
 
