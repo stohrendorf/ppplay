@@ -283,18 +283,21 @@ inline bool mix(
                 if( stepper >= loopEnd )
                 {
                     stepper.setPosition(loopStart + (stepper - loopEnd));
+                    BOOST_ASSERT(stepper >= loopStart && stepper < loopEnd);
                 }
                 break;
             case Sample::LoopType::Pingpong:
-                if( reverse && stepper <= loopStart )
+                if( reverse && stepper <= static_cast<long>(loopStart) )
                 {
                     stepper.setPosition(loopStart + (loopStart - stepper));
                     reverse = false;
+                    BOOST_ASSERT(stepper >= loopStart && stepper < loopEnd);
                 }
-                else if( !reverse && stepper >= loopEnd )
+                else if( !reverse && stepper >= static_cast<long>(loopEnd) )
                 {
-                    stepper.setPosition(loopEnd - (stepper - loopEnd));
+                    stepper.setPosition(loopEnd - (stepper - loopEnd) - 1);
                     reverse = true;
+                    BOOST_ASSERT(stepper >= loopStart && stepper < loopEnd);
                 }
 
                 break;
