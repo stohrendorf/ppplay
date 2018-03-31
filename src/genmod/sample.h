@@ -283,13 +283,6 @@ inline bool mix(
         loopEnd = smp.length();
     }
 
-    if(stepper < loopStart)
-        stepper = loopStart;
-    else if(stepper >= loopEnd)
-        stepper = loopEnd - 1;
-    if(stepper < loopStart || stepper >= loopEnd)
-        return false;
-
     size_t offset = 0;
     while( offset < buffer.size() )
     {
