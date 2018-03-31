@@ -24,43 +24,6 @@ namespace ppp
  * @ingroup GenMod
  * @{
  */
-
-Sample::Sample() noexcept
-    :
-    m_loopStart(0), m_loopEnd(0), m_volume(0), m_frequency(0), m_data(), m_filename(), m_title(), m_looptype(LoopType::None)
-{
-}
-
-std::string Sample::title() const
-{
-    return m_title;
-}
-
-void Sample::setTitle(const std::string& t)
-{
-    m_title = t;
-}
-
-void Sample::setFilename(const std::string& f)
-{
-    m_filename = f;
-}
-
-void Sample::setLoopStart(uint_fast32_t s) noexcept
-{
-    m_loopStart = s;
-}
-
-void Sample::setLoopEnd(uint_fast32_t e) noexcept
-{
-    m_loopEnd = e;
-}
-
-void Sample::setVolume(uint8_t v) noexcept
-{
-    m_volume = v;
-}
-
 light4cxx::Logger* Sample::logger()
 {
     return light4cxx::Logger::get("sample");
@@ -105,17 +68,17 @@ namespace
 {
 constexpr inline int interpolateCubicLevel0(int p0, int p1, int p2, int p3, int bias)
 {
-    return (bias * (3 * (p1 - p2) + p3 - p0)) >> 8;
+    return (bias * (3 * (p1 - p2) + p3 - p0)) / 256;
 }
 
 constexpr inline int interpolateCubicLevel1(int p0, int p1, int p2, int p3, int bias)
 {
-    return (bias * ((p0 << 1) - 5 * p1 + (p2 << 2) - p3 + interpolateCubicLevel0(p0, p1, p2, p3, bias))) >> 8;
+    return (bias * ((p0 * 2) - 5 * p1 + (p2 * 4) - p3 + interpolateCubicLevel0(p0, p1, p2, p3, bias))) / 256;
 }
 
 constexpr inline MixerSample interpolateCubic(int p0, int p1, int p2, int p3, int bias)
 {
-    return p1 + ((bias * (p2 - p0 + interpolateCubicLevel1(p0, p1, p2, p3, bias))) >> 9);
+    return p1 + ((bias * (p2 - p0 + interpolateCubicLevel1(p0, p1, p2, p3, bias))) / 512);
 }
 }
 

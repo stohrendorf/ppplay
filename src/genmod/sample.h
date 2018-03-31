@@ -59,21 +59,21 @@ public:
     };
 private:
     //! @brief Loop start sample
-    uint_fast32_t m_loopStart;
+    uint_fast32_t m_loopStart = 0;
     //! @brief Loop end sample (points to 1 frame @e after the loop end)
-    uint_fast32_t m_loopEnd;
+    uint_fast32_t m_loopEnd = 0;
     //! @brief Default volume of the sample
-    uint8_t m_volume;
+    uint8_t m_volume = 0;
     //! @brief Base frequency of the sample
-    uint16_t m_frequency;
+    uint16_t m_frequency = 0;
     //! @brief Sample data
-    BasicSampleFrame::Vector m_data;
+    BasicSampleFrame::Vector m_data{};
     //! @brief Sample filename
-    std::string m_filename;
+    std::string m_filename{};
     //! @brief Sample title
-    std::string m_title;
+    std::string m_title{};
     //! @brief Loop type
-    LoopType m_looptype;
+    LoopType m_looptype = LoopType::None;
 
     /**
      * @brief Wraps a virtual position of ping-pong looped samples to the real position
@@ -108,7 +108,7 @@ public:
     /**
      * @brief Constructor
      */
-    Sample() noexcept;
+    Sample() = default;
 
     /**
      * @brief Destructor
@@ -137,7 +137,10 @@ public:
      * @brief Get the sample's name
      * @return Sample's name
      */
-    std::string title() const;
+    std::string title() const
+    {
+        return m_title;
+    }
 
     /**
      * @brief Is the sample looped?
@@ -212,31 +215,46 @@ protected:
      * @brief Set the sample's name
      * @param[in] t The new name
      */
-    void setTitle(const std::string& t);
+    void setTitle(const std::string& t)
+    {
+        m_title = t;
+    }
 
     /**
      * @brief Set the sample's filename
      * @param[in] f The new filename
      */
-    void setFilename(const std::string& f);
+    void setFilename(const std::string& f)
+    {
+        m_filename = f;
+    }
 
     /**
      * @brief Set the sample's loop start
      * @param[in] s The new loop start
      */
-    void setLoopStart(uint_fast32_t s) noexcept;
+    void setLoopStart(uint_fast32_t s) noexcept
+    {
+        m_loopStart = s;
+    }
 
     /**
      * @brief Set the sample's loop end
      * @param[in] e The new loop end
      */
-    void setLoopEnd(uint_fast32_t e) noexcept;
+    void setLoopEnd(uint_fast32_t e) noexcept
+    {
+        m_loopEnd = e;
+    }
 
     /**
      * @brief Set the sample's default volume
      * @param[in] v The new volume
      */
-    void setVolume(uint8_t v) noexcept;
+    void setVolume(uint8_t v) noexcept
+    {
+        m_volume = v;
+    }
 
     /**
      * @brief Resize the data
