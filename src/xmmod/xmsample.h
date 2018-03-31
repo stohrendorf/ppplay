@@ -48,6 +48,9 @@ private:
     int8_t m_relativeNote;
     //! @brief Whether the sample is a 16-bit one
     bool m_16bit;
+    size_t m_loopStart = 0;
+    size_t m_loopEnd = std::numeric_limits<size_t>::max();
+    LoopType m_loopType = LoopType::None;
 public:
     DISABLE_COPY(XmSample)
 
@@ -92,6 +95,21 @@ public:
      * @return @c true when the sample is a 16-bit one, else @c false when it's an 8-bit one
      */
     bool is16bit() const;
+
+    size_t loopStart() const
+    {
+        return m_loopStart;
+    }
+
+    size_t loopEnd() const
+    {
+        return m_loopEnd;
+    }
+
+    LoopType loopType() const
+    {
+        return m_loopType;
+    }
 };
 }
 }

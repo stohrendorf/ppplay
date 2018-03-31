@@ -61,7 +61,7 @@ bool noGUI = false;
 uint16_t maxRepeat = 2;
 std::string filename;
 std::string outputFilename;
-ppp::Sample::Interpolation interpolation = ppp::Sample::Interpolation::Cubic;
+ppp::Sample::Interpolation interpolation = ppp::Sample::Interpolation::Hermite;
 int loglevel = 1;
 }
 
@@ -244,6 +244,10 @@ bool parseCmdLine(int argc, char* argv[])
         case 2:
             light4cxx::Logger::root()->info(L4CXX_LOCATION, "Sample interpolation: cubic");
             config::interpolation = ppp::Sample::Interpolation::Cubic;
+            break;
+        case 3:
+            light4cxx::Logger::root()->info(L4CXX_LOCATION, "Sample interpolation: hermite");
+            config::interpolation = ppp::Sample::Interpolation::Hermite;
             break;
         default:
             light4cxx::Logger::root()->warn(L4CXX_LOCATION, "Invalid interpolation mode requested");

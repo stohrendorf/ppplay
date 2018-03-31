@@ -50,10 +50,6 @@ struct Header
 };
 #pragma pack(pop)
 
-ModSample::ModSample() : m_finetune(0)
-{
-}
-
 bool ModSample::loadHeader(Stream* stream)
 {
     Header hdr;
@@ -75,12 +71,12 @@ bool ModSample::loadHeader(Stream* stream)
     }
     if(hdr.loopLength > 1 && (hdr.loopLength + hdr.loopStart <= hdr.length))
     {
-        setLoopStart(hdr.loopStart * 2);
-        setLoopEnd((hdr.loopStart + hdr.loopLength) * 2);
-        setLoopType(LoopType::Forward);
+        m_loopStart = hdr.loopStart * 2;
+        m_loopEnd = (hdr.loopStart + hdr.loopLength) * 2;
+        m_loopType = LoopType::Forward;
     }
     setTitle(stringncpy(hdr.name, 22));
-    logger()->debug(L4CXX_LOCATION, "Length=%u, loop=%u+%u=%u, name='%s'", length(), hdr.loopStart << 1, hdr.loopLength << 1, (hdr.loopStart + hdr.loopLength) << 1, title());
+    logger()->debug(L4CXX_LOCATION, "Length=%u, loop=%u+%u=%u, name='%s'", length(), hdr.loopStart * 2, hdr.loopLength * 2, (hdr.loopStart + hdr.loopLength) * 2, title());
     setVolume(std::min<uint8_t>(hdr.volume, 0x40));
     m_finetune = hdr.finetune & 0x0f;
     return *stream;

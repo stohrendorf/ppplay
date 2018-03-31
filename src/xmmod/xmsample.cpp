@@ -47,36 +47,36 @@ bool XmSample::load(Stream* str)
     if(loopStart + loopLen > dataSize)
     {
         loopStart = loopLen = 0;
-        setLoopType(LoopType::None);
+        m_loopType = LoopType::None;
     }
     else
     {
         switch(type & 3)
         {
             case 0:
-                setLoopType(LoopType::None);
+                m_loopType = LoopType::None;
                 break;
             case 1:
-                setLoopType(LoopType::Forward);
+                m_loopType = LoopType::Forward;
                 break;
             case 2:
             case 3:
-                setLoopType(LoopType::Pingpong);
+                m_loopType = LoopType::Pingpong;
                 break;
         }
     }
     m_16bit = (type & 0x10) != 0;
     if(m_16bit)
     {
-        resizeData(dataSize / 2);
-        setLoopStart(loopStart / 2);
-        setLoopEnd((loopStart + loopLen) / 2);
+        resizeData(dataSize / 2u);
+        m_loopStart = loopStart / 2u;
+        m_loopEnd = (loopStart + loopLen) / 2u;
     }
     else
     {
         resizeData(dataSize);
-        setLoopStart(loopStart);
-        setLoopEnd(loopStart + loopLen);
+        m_loopStart = loopStart;
+        m_loopEnd = loopStart + loopLen;
     }
     *str >> m_panning >> m_relativeNote;
     str->seekrel(1);

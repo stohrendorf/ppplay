@@ -155,9 +155,10 @@ public:
      */
     inline int16_t biased(int16_t v1, int16_t v2) const noexcept
     {
-        int_fast32_t v1b = v1 * m_fraction;
-        int_fast32_t v2b = v2 * (m_denominator - m_fraction);
-        return ppp::clip<int>((v1b + v2b) / m_denominator, -32768, 32767);
+        float b = floatStepSize();
+        auto v1b = v1 * b;
+        auto v2b = v2 * (1-b);
+        return ppp::clip<int>(v1b + v2b, -32768, 32767);
     }
 
     inline BasicSampleFrame biased(const BasicSampleFrame& a, const BasicSampleFrame& b) const noexcept

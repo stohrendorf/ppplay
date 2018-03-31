@@ -64,11 +64,6 @@ struct S3mSampleHeader
 #pragma pack(pop)
 #endif
 
-S3mSample::S3mSample()
-    : Sample(), m_highQuality(false)
-{
-}
-
 bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
 {
     try
@@ -98,15 +93,15 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
         /// @warning This could be a much too high value...
         resizeData((smpHdr.hiLength << 16) | smpHdr.length);
         //	aLength = (aLength>64000) ? 64000 : aLength;
-        setLoopStart((smpHdr.hiLoopStart << 16) | smpHdr.loopStart);
+        m_loopStart = (smpHdr.hiLoopStart << 16) | smpHdr.loopStart;
         //	aLoopStart = (aLoopStart>64000) ? 64000 : aLoopStart;
         if( !imagoLoopEnd )
         {
-            setLoopEnd((smpHdr.hiLoopEnd << 16) | smpHdr.loopEnd);
+            m_loopEnd = (smpHdr.hiLoopEnd << 16) | smpHdr.loopEnd;
         }
         else
         {
-            setLoopEnd(((smpHdr.hiLoopEnd << 16) | smpHdr.loopEnd) + 1);
+            m_loopEnd = ((smpHdr.hiLoopEnd << 16) | smpHdr.loopEnd) + 1;
         }
         //	aLoopEnd = (aLoopEnd>64000) ? 64000 : aLoopEnd;
         setVolume(smpHdr.volume);
@@ -114,11 +109,11 @@ bool S3mSample::load(Stream* str, size_t pos, bool imagoLoopEnd)
         bool loadStereo = (smpHdr.flags & static_cast<uint8_t>(s3mFlagSmpStereo)) != 0;
         if( smpHdr.hiLoopStart == smpHdr.hiLoopEnd && smpHdr.loopStart == smpHdr.loopEnd )
         {
-            setLoopType(Sample::LoopType::None);
+            m_loopType = Sample::LoopType::None;
         }
         else
         {
-            setLoopType((smpHdr.flags & static_cast<uint8_t>(s3mFlagSmpLooped)) == 0 ? Sample::LoopType::None : Sample::LoopType::Forward);
+            m_loopType = (smpHdr.flags & static_cast<uint8_t>(s3mFlagSmpLooped)) == 0 ? Sample::LoopType::None : Sample::LoopType::Forward;
         }
         setTitle(stringncpy(smpHdr.sampleName, 28));
         setFilename(stringncpy(smpHdr.filename, 12));

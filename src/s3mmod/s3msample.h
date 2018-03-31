@@ -43,12 +43,15 @@ class S3mSample
 {
 private:
     //! @brief Whether this is a 16-bit sample
-    bool m_highQuality;
+    bool m_highQuality = false;
+    size_t m_loopStart = 0;
+    size_t m_loopEnd = std::numeric_limits<size_t>::max();
+    LoopType m_loopType = LoopType::None;
 public:
     DISABLE_COPY(S3mSample)
 
     //! @brief Constructor
-    S3mSample();
+    S3mSample() = default;
 
     /**
      * @brief Load from a stream
@@ -64,6 +67,21 @@ public:
      * @return m_highQuality
      */
     bool isHighQuality() const;
+
+    size_t loopStart() const
+    {
+        return m_loopStart;
+    }
+
+    size_t loopEnd() const
+    {
+        return m_loopEnd;
+    }
+
+    LoopType loopType() const
+    {
+        return m_loopType;
+    }
 
 protected:
     /**

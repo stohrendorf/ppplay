@@ -43,69 +43,30 @@ size_t Sample::mixNonInterpolated(ppp::Stepper& stepper,
     size_t mixed = 0;
     for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
     {
-        if(!reverse && stepper >= m_data.size())
+        if( !reverse && stepper >= m_data.size() )
+        {
             return mixed;
-        else if(reverse && stepper < 0)
+        }
+        else if( reverse && stepper < 0 )
+        {
             return mixed;
+        }
 
         const auto& sampleVal = sampleAt(stepper);
         buffer[offset].add(sampleVal, factorLeft, factorRight, rightShift);
-        if(!reverse)
+        if( !reverse )
+        {
             stepper.next();
+        }
         else
+        {
             stepper.prev();
+        }
     }
     return mixed;
 }
 
 size_t Sample::mixLinearInterpolated(ppp::Stepper& stepper,
-                                  MixerFrameBuffer& buffer,
-                                  size_t offset,
-                                  size_t len,
-                                  bool reverse,
-                                  int factorLeft,
-                                  int factorRight,
-                                  int rightShift) const
-{
-    BOOST_ASSERT(rightShift >= 0);
-
-    size_t mixed = 0;
-    for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
-    {
-        if(!reverse && stepper >= m_data.size())
-            return mixed;
-        else if(reverse && stepper < 0)
-            return mixed;
-
-        auto sampleVal = stepper.biased(sampleAt(stepper), sampleAt(1u + stepper));
-        buffer[offset].add(sampleVal, factorLeft, factorRight, rightShift);
-        if(!reverse)
-            stepper.next();
-        else
-            stepper.prev();
-    }
-    return mixed;
-}
-
-namespace
-{
-constexpr inline int interpolateCubicLevel0(int p0, int p1, int p2, int p3, int bias)
-{
-    return (bias * (3 * (p1 - p2) + p3 - p0)) / 256;
-}
-
-constexpr inline int interpolateCubicLevel1(int p0, int p1, int p2, int p3, int bias)
-{
-    return (bias * ((p0 * 2) - 5 * p1 + (p2 * 4) - p3 + interpolateCubicLevel0(p0, p1, p2, p3, bias))) / 256;
-}
-
-constexpr inline MixerSample interpolateCubic(int p0, int p1, int p2, int p3, int bias)
-{
-    return p1 + ((bias * (p2 - p0 + interpolateCubicLevel1(p0, p1, p2, p3, bias))) / 512);
-}
-}
-
-size_t Sample::mixCubicInterpolated(ppp::Stepper& stepper,
                                      MixerFrameBuffer& buffer,
                                      size_t offset,
                                      size_t len,
@@ -119,10 +80,72 @@ size_t Sample::mixCubicInterpolated(ppp::Stepper& stepper,
     size_t mixed = 0;
     for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
     {
-        if(!reverse && stepper >= m_data.size())
+        if( !reverse && stepper >= m_data.size() )
+        {
             return mixed;
-        else if(reverse && stepper < 0)
+        }
+        else if( reverse && stepper < 0 )
+        {
             return mixed;
+        }
+
+        auto sampleVal = stepper.biased(sampleAt(stepper), sampleAt(1u + stepper));
+        buffer[offset].add(sampleVal, factorLeft, factorRight, rightShift);
+        if( !reverse )
+        {
+            stepper.next();
+        }
+        else
+        {
+            stepper.prev();
+        }
+    }
+    return mixed;
+}
+
+namespace
+{
+constexpr inline float interpolateCubic(float x0, float x1, float x2, float x3, float t)
+{
+    const auto a0 = x3 - x2 - x0 + x1;
+    const auto a1 = x0 - x1 - a0;
+    const auto a2 = x2 - x0;
+    const auto a3 = x1;
+    return a0 * t * t * t + a1 * t * t + a2 * t + a3;
+}
+
+constexpr inline float interpolateHermite4pt3oX(float x0, float x1, float x2, float x3, float t)
+{
+    float c0 = x1;
+    float c1 = (x2 - x0) / 2;
+    float c2 = x0 - 2.5f * x1 + 2 * x2 - x3 / 2;
+    float c3 = (x3 - x0) / 2 + 1.5f * (x1 - x2);
+    return ((c3 * t + c2) * t + c1) * t + c0;
+}
+}
+
+size_t Sample::mixCubicInterpolated(ppp::Stepper& stepper,
+                                    MixerFrameBuffer& buffer,
+                                    size_t offset,
+                                    size_t len,
+                                    bool reverse,
+                                    int factorLeft,
+                                    int factorRight,
+                                    int rightShift) const
+{
+    BOOST_ASSERT(rightShift >= 0);
+
+    size_t mixed = 0;
+    for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
+    {
+        if( !reverse && stepper >= m_data.size() )
+        {
+            return mixed;
+        }
+        else if( reverse && stepper < 0 )
+        {
+            return mixed;
+        }
 
         BasicSampleFrame samples[4];
         for( int i = 0u; i < 4; i++ )
@@ -130,12 +153,65 @@ size_t Sample::mixCubicInterpolated(ppp::Stepper& stepper,
             samples[i] = sampleAt(i + stepper - 1u);
         }
 
-        buffer[offset].left += (factorLeft * interpolateCubic(samples[0].left, samples[1].left, samples[2].left, samples[3].left, stepper.stepSize())) >> rightShift;
-        buffer[offset].right += (factorRight * interpolateCubic(samples[0].right, samples[1].right, samples[2].right, samples[3].right, stepper.stepSize())) >> rightShift;
-        if(!reverse)
+        buffer[offset].left +=
+            factorLeft * interpolateCubic(samples[0].left, samples[1].left, samples[2].left, samples[3].left, stepper.floatStepSize()) / (1 << rightShift);
+        buffer[offset].right +=
+            factorRight * interpolateCubic(samples[0].right, samples[1].right, samples[2].right, samples[3].right, stepper.floatStepSize()) / (1 << rightShift);
+        if( !reverse )
+        {
             stepper.next();
+        }
         else
+        {
             stepper.prev();
+        }
+    }
+    return mixed;
+}
+
+size_t Sample::mixHermiteInterpolated(ppp::Stepper& stepper,
+                                      MixerFrameBuffer& buffer,
+                                      size_t offset,
+                                      size_t len,
+                                      bool reverse,
+                                      int factorLeft,
+                                      int factorRight,
+                                      int rightShift) const
+{
+    BOOST_ASSERT(rightShift >= 0);
+
+    size_t mixed = 0;
+    for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
+    {
+        if( !reverse && stepper >= m_data.size() )
+        {
+            return mixed;
+        }
+        else if( reverse && stepper < 0 )
+        {
+            return mixed;
+        }
+
+        BasicSampleFrame samples[4];
+        for( int i = 0u; i < 4; i++ )
+        {
+            samples[i] = sampleAt(i + stepper - 1u);
+        }
+
+        buffer[offset].left +=
+            factorLeft * interpolateHermite4pt3oX(samples[0].left, samples[1].left, samples[2].left, samples[3].left, stepper.floatStepSize()) /
+            (1 << rightShift);
+        buffer[offset].right +=
+            factorRight * interpolateHermite4pt3oX(samples[0].right, samples[1].right, samples[2].right, samples[3].right, stepper.floatStepSize()) /
+            (1 << rightShift);
+        if( !reverse )
+        {
+            stepper.next();
+        }
+        else
+        {
+            stepper.prev();
+        }
     }
     return mixed;
 }
@@ -158,6 +234,8 @@ size_t Sample::mix(ppp::Sample::Interpolation inter,
             return mixLinearInterpolated(stepper, buffer, offset, len, reverse, factorLeft, factorRight, rightShift);
         case Interpolation::Cubic:
             return mixCubicInterpolated(stepper, buffer, offset, len, reverse, factorLeft, factorRight, rightShift);
+        case Interpolation::Hermite:
+            return mixHermiteInterpolated(stepper, buffer, offset, len, reverse, factorLeft, factorRight, rightShift);
         default:
             return 0;
     }

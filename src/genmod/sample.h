@@ -55,13 +55,10 @@ public:
     {
         None,
         Linear,
-        Cubic
+        Cubic,
+        Hermite
     };
 private:
-    //! @brief Loop start sample
-    uint_fast32_t m_loopStart = 0;
-    //! @brief Loop end sample (points to 1 frame @e after the loop end)
-    uint_fast32_t m_loopEnd = 0;
     //! @brief Default volume of the sample
     uint8_t m_volume = 0;
     //! @brief Base frequency of the sample
@@ -72,8 +69,6 @@ private:
     std::string m_filename{};
     //! @brief Sample title
     std::string m_title{};
-    //! @brief Loop type
-    LoopType m_looptype = LoopType::None;
 
     /**
      * @brief Get a sample
@@ -90,6 +85,9 @@ private:
 
     size_t mixCubicInterpolated(Stepper& stepper, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft, int factorRight,
                                 int rightShift) const;
+
+    size_t mixHermiteInterpolated(Stepper& stepper, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft, int factorRight,
+                                  int rightShift) const;
 
 public:
     /**
@@ -138,27 +136,8 @@ public:
         return m_data.size();
     }
 
-    /**
-     * @brief Get the loop type
-     * @return The loop type
-     */
-    LoopType loopType() const noexcept
-    {
-        return m_looptype;
-    }
-
     size_t mix(Interpolation inter, Stepper& stepper, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft,
                int factorRight, int rightShift) const;
-
-    uint_fast32_t loopStart() const noexcept
-    {
-        return m_loopStart;
-    }
-
-    uint_fast32_t loopEnd() const noexcept
-    {
-        return m_loopEnd;
-    }
 
 protected:
     typedef BasicSampleFrame::Vector::iterator Iterator;
@@ -170,15 +149,6 @@ protected:
     void setFrequency(uint16_t f) noexcept
     {
         m_frequency = f;
-    }
-
-    /**
-     * @brief Set m_looptype
-     * @param[in] l The new loop type value
-     */
-    void setLoopType(LoopType l) noexcept
-    {
-        m_looptype = l;
     }
 
     /**
@@ -215,24 +185,6 @@ protected:
     void setFilename(const std::string& f)
     {
         m_filename = f;
-    }
-
-    /**
-     * @brief Set the sample's loop start
-     * @param[in] s The new loop start
-     */
-    void setLoopStart(uint_fast32_t s) noexcept
-    {
-        m_loopStart = s;
-    }
-
-    /**
-     * @brief Set the sample's loop end
-     * @param[in] e The new loop end
-     */
-    void setLoopEnd(uint_fast32_t e) noexcept
-    {
-        m_loopEnd = e;
     }
 
     /**
@@ -274,13 +226,21 @@ inline bool mix(
     int rightShift)
 {
     // sanitize
-    if( loopStart > smp.length() )
+    if( loopType == Sample::LoopType::None )
     {
-        loopStart = smp.length();
-    }
-    if( loopEnd > smp.length() )
-    {
+        loopStart = 0;
         loopEnd = smp.length();
+    }
+    else
+    {
+        if( loopStart > smp.length() )
+        {
+            loopStart = smp.length();
+        }
+        if( loopEnd > smp.length() )
+        {
+            loopEnd = smp.length();
+        }
     }
 
     size_t offset = 0;
@@ -304,8 +264,10 @@ inline bool mix(
             mustRead = canRead;
         }
         auto mustMix = static_cast<size_t>(mustRead / stepper.floatStepSize());
-        if(mustMix <= 0)
+        if( mustMix <= 0 )
+        {
             mustMix = 1;
+        }
 
         offset += smp.mix(inter, stepper, buffer, offset, mustMix, reverse, factorLeft, factorRight, rightShift);
 
@@ -342,6 +304,37 @@ inline bool mix(
     return true;
 }
 
+inline bool mix(
+    const Sample& smp,
+    Sample::LoopType loopType,
+    Sample::Interpolation inter,
+    Stepper& stepper,
+    MixerFrameBuffer& buffer,
+    size_t loopStart,
+    size_t loopEnd,
+    int factorLeft,
+    int factorRight,
+    int rightShift)
+{
+    BOOST_ASSERT(loopType != Sample::LoopType::Pingpong);
+
+    bool tmp = false;
+
+    return mix(
+        smp,
+        loopType,
+        inter,
+        stepper,
+        buffer,
+        tmp,
+        loopStart,
+        loopEnd,
+        factorLeft,
+        factorRight,
+        rightShift);
+}
+
+#if 0
 inline bool mix(
     const Sample& smp,
     Sample::Interpolation inter,
@@ -396,6 +389,7 @@ inline bool mix(
         factorRight,
         rightShift);
 }
+#endif
 
 /**
  * @}

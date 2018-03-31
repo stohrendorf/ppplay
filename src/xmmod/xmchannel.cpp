@@ -845,7 +845,7 @@ void XmChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
     }
     int volLeft = std::round(std::sqrt(m_realPanning / 256.0f) * 65536) * m_realVolume / 256;
     int volRight = std::round(std::sqrt((256 - m_realPanning) / 256.0f) * 65536) * m_realVolume / 256;
-    m_state.active = mix(*currSmp, m_module->interpolation(), m_bres, *mixBuffer, m_reverse, volLeft, volRight, 13) != 0;
+    m_state.active = mix(*currSmp, currSmp->loopType(), m_module->interpolation(), m_bres, *mixBuffer, m_reverse, currSmp->loopStart(), currSmp->loopEnd(), volLeft, volRight, 13) != 0;
 }
 
 void XmChannel::updateStatus()
