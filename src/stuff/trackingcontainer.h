@@ -220,7 +220,7 @@ public:
      */
     inline void revert() noexcept
     {
-        if( !isDangling() )
+        if( !m_container.empty() )
         {
             m_cursor = 0;
         }
