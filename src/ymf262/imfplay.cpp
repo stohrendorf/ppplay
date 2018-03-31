@@ -9,7 +9,7 @@
 #include <SDL.h>
 
 #include "opl3.h"
-#include <genmod/breseninter.h>
+#include <genmod/stepper.h>
 
 constexpr int SampleRate = 44100;
 std::ifstream imfFile;
@@ -26,7 +26,7 @@ void sdlAudioCallback(void* userdata, uint8_t* stream, int len_bytes)
     auto* dest = reinterpret_cast<int16_t*>(stream);
     auto* chip = reinterpret_cast<opl::Opl3*>(userdata);
     int numSamples = len_bytes / sizeof(int16_t) / 2;
-    ppp::BresenInterpolation interp(SampleRate, opl::Opl3::SampleRate);
+    ppp::Stepper interp(SampleRate, opl::Opl3::SampleRate);
     while( numSamples-- > 0 )
     {
         if( delayCounter-- <= 0 )
@@ -147,7 +147,7 @@ int main(int argc, char** argv)
     else
     {
         progress = std::make_unique<boost::progress_display>(songLength / 4);
-        ppp::BresenInterpolation interp(SampleRate, opl::Opl3::SampleRate);
+        ppp::Stepper interp(SampleRate, opl::Opl3::SampleRate);
         while( !stopped )
         {
             if( delayCounter-- <= 0 )

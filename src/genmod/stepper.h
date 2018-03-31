@@ -34,7 +34,6 @@ namespace ppp
  */
 
 /**
- * @class BresenInterpolation
  * @brief Discrete linear interpolation
  * @note Time-critical
  * @note Please note that all methods are inline.
@@ -44,30 +43,28 @@ namespace ppp
  * algorithm that uses only additions and substractions instead of divisions and multiplications, it's a
  * heavy speed-up.
  */
-class PPPLAY_CORE_EXPORT BresenInterpolation
+class PPPLAY_CORE_EXPORT Stepper
 {
 private:
     //! @brief Width of the line
-    uint_fast32_t m_dx;
+    uint_fast32_t m_denominator;
     //! @brief Height of the line
-    uint_fast32_t m_dy;
-    //! @brief Error variable (or fractional part). Range is [0, m_dx-1]
-    int_fast32_t m_err;
+    uint_fast32_t m_nominator;
+    //! @brief Error variable (or fractional part). Range is [0, m_denominator-1]
+    int_fast32_t m_fraction;
     int_fast32_t m_position;
 public:
-    BresenInterpolation() = delete;
-
-    static constexpr int_fast32_t InvalidPosition = std::numeric_limits<int_fast32_t>::max();
+    Stepper() = delete;
 
     /**
      * @brief Constructor
-     * @param[in] dx Width of the interpolation line
-     * @param[in] dy Height of the interpolation line
-     * @pre dx>1
-     * @pre dy>0
+     * @param[in] denominator Width of the interpolation line
+     * @param[in] nominator Height of the interpolation line
+     * @pre denominator>1
+     * @pre nominator>0
      */
-    constexpr BresenInterpolation(uint_fast32_t dx, uint_fast32_t dy) noexcept
-        : m_dx(dx), m_dy(dy), m_err(dx - 1), m_position(0)
+    constexpr Stepper(uint_fast32_t denominator, uint_fast32_t nominator) noexcept
+        : m_denominator(denominator), m_nominator(nominator), m_fraction(denominator - 1), m_position(0)
     {
     }
 
@@ -76,7 +73,7 @@ public:
         return m_position;
     }
 
-    inline BresenInterpolation& operator=(int_fast32_t val) noexcept
+    inline Stepper& operator=(int_fast32_t val) noexcept
     {
         m_position = val;
         return *this;
@@ -85,37 +82,37 @@ public:
     /**
      * @brief Calculates the next interpolation step
      * @param[in,out] pos Interpolation Y point to adjust
-     * @post 0 <= m_err < m_dx
+     * @post 0 <= m_fraction < m_denominator
      */
     inline int_fast32_t next()
     {
-        BOOST_ASSERT(m_dx > 0 && m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
-        for( m_err -= m_dy; m_err < 0; m_err += m_dx )
+        BOOST_ASSERT(m_denominator > 0 && m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
+        for( m_fraction -= m_nominator; m_fraction < 0; m_fraction += m_denominator )
         {
             m_position++;
         }
-        BOOST_ASSERT(m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
+        BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
         return static_cast<int_fast32_t>(m_position);
     }
 
     inline int_fast32_t prev()
     {
-        BOOST_ASSERT(m_dx > 0 && m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
-        for( m_err += m_dy; m_err >= static_cast<int_fast32_t>(m_dx); m_err -= m_dx )
+        BOOST_ASSERT(m_denominator > 0 && m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
+        for( m_fraction += m_nominator; m_fraction >= static_cast<int_fast32_t>(m_denominator); m_fraction -= m_denominator )
         {
             m_position--;
         }
-        BOOST_ASSERT(m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
+        BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
         return static_cast<int_fast32_t>(m_position);
     }
 
-    BresenInterpolation& operator++()
+    Stepper& operator++()
     {
         next();
         return *this;
     }
 
-    BresenInterpolation& operator--()
+    Stepper& operator--()
     {
         prev();
         return *this;
@@ -123,17 +120,17 @@ public:
 
     /**
      * @brief Sets width and height of the interpolation line
-     * @param[in] dx New value for m_dx
-     * @param[in] dy New value for m_dy
+     * @param[in] denominator New value for m_denominator
+     * @param[in] nominator New value for m_nominator
      */
-    inline void reset(uint_fast32_t dx, uint_fast32_t dy)
+    inline void reset(uint_fast32_t denominator, uint_fast32_t nominator)
     {
-        BOOST_ASSERT(dx > 0);
-        m_err = m_err * m_dx / dx;
-        m_dx = dx;
-        m_dy = dy;
-        // m_err = dx-1;
-        BOOST_ASSERT(m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
+        BOOST_ASSERT(denominator > 0);
+        m_fraction = m_fraction * m_denominator / denominator;
+        m_denominator = denominator;
+        m_nominator = nominator;
+        // m_fraction = denominator-1;
+        BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
     }
 
     /**
@@ -142,25 +139,25 @@ public:
      */
     inline uint_fast32_t stepSize() const
     {
-        BOOST_ASSERT(m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
-        return (m_err * 256) / m_dx;
+        BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
+        return (m_fraction * 256) / m_denominator;
     }
 
     inline float floatStepSize() const
     {
-        BOOST_ASSERT(m_err >= 0 && static_cast<uint_fast32_t>(m_err) < m_dx);
-        return float(m_err) / m_dx;
+        BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
+        return float(m_fraction) / m_denominator;
     }
 
     /**
-     * @brief Mix two values using the fractional part m_err
+     * @brief Mix two values using the fractional part m_fraction
      * @return Mixed value
      */
     inline int16_t biased(int16_t v1, int16_t v2) const noexcept
     {
-        int_fast32_t v1b = v1 * m_err;
-        int_fast32_t v2b = v2 * (m_dx - m_err);
-        return ppp::clip<int>((v1b + v2b) / m_dx, -32768, 32767);
+        int_fast32_t v1b = v1 * m_fraction;
+        int_fast32_t v2b = v2 * (m_denominator - m_fraction);
+        return ppp::clip<int>((v1b + v2b) / m_denominator, -32768, 32767);
     }
 
     inline BasicSampleFrame biased(const BasicSampleFrame& a, const BasicSampleFrame& b) const noexcept
@@ -169,11 +166,6 @@ public:
             biased(a.left, b.left),
             biased(a.right, b.right)
         };
-    }
-
-    inline bool isValid() const noexcept
-    {
-        return m_position != InvalidPosition;
     }
 
     inline void setPosition(int_fast32_t p)

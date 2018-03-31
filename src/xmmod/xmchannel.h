@@ -18,7 +18,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <genmod/breseninter.h>
+#include <genmod/stepper.h>
 #include <genmod/genbase.h>
 #include <genmod/channelstate.h>
 
@@ -175,7 +175,7 @@ private:
     /** @} */
 
     //! @brief Output rate controller
-    BresenInterpolation m_bres{1, 1};
+    Stepper m_bres{1, 1};
     //! @brief Module this channel belongs to
     XmModule* m_module;
 

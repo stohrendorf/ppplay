@@ -29,7 +29,7 @@ light4cxx::Logger* Sample::logger()
     return light4cxx::Logger::get("sample");
 }
 
-size_t Sample::mixNonInterpolated(ppp::BresenInterpolation& bresen,
+size_t Sample::mixNonInterpolated(ppp::Stepper& stepper,
                                   MixerFrameBuffer& buffer,
                                   size_t offset,
                                   size_t len,
@@ -43,25 +43,22 @@ size_t Sample::mixNonInterpolated(ppp::BresenInterpolation& bresen,
     size_t mixed = 0;
     for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
     {
-        if( !bresen.isValid() )
+        if(!reverse && stepper >= m_data.size())
+            return mixed;
+        else if(reverse && stepper < 0)
             return mixed;
 
-        if(!reverse && bresen >= m_data.size())
-            return mixed;
-        else if(reverse && bresen < 0)
-            return mixed;
-
-        const auto& sampleVal = sampleAt(bresen);
+        const auto& sampleVal = sampleAt(stepper);
         buffer[offset].add(sampleVal, factorLeft, factorRight, rightShift);
         if(!reverse)
-            bresen.next();
+            stepper.next();
         else
-            bresen.prev();
+            stepper.prev();
     }
     return mixed;
 }
 
-size_t Sample::mixLinearInterpolated(ppp::BresenInterpolation& bresen,
+size_t Sample::mixLinearInterpolated(ppp::Stepper& stepper,
                                   MixerFrameBuffer& buffer,
                                   size_t offset,
                                   size_t len,
@@ -75,20 +72,17 @@ size_t Sample::mixLinearInterpolated(ppp::BresenInterpolation& bresen,
     size_t mixed = 0;
     for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
     {
-        if( !bresen.isValid() )
+        if(!reverse && stepper >= m_data.size())
+            return mixed;
+        else if(reverse && stepper < 0)
             return mixed;
 
-        if(!reverse && bresen >= m_data.size())
-            return mixed;
-        else if(reverse && bresen < 0)
-            return mixed;
-
-        auto sampleVal = bresen.biased(sampleAt(bresen), sampleAt(1u + bresen));
+        auto sampleVal = stepper.biased(sampleAt(stepper), sampleAt(1u + stepper));
         buffer[offset].add(sampleVal, factorLeft, factorRight, rightShift);
         if(!reverse)
-            bresen.next();
+            stepper.next();
         else
-            bresen.prev();
+            stepper.prev();
     }
     return mixed;
 }
@@ -111,7 +105,7 @@ constexpr inline MixerSample interpolateCubic(int p0, int p1, int p2, int p3, in
 }
 }
 
-size_t Sample::mixCubicInterpolated(ppp::BresenInterpolation& bresen,
+size_t Sample::mixCubicInterpolated(ppp::Stepper& stepper,
                                      MixerFrameBuffer& buffer,
                                      size_t offset,
                                      size_t len,
@@ -125,32 +119,29 @@ size_t Sample::mixCubicInterpolated(ppp::BresenInterpolation& bresen,
     size_t mixed = 0;
     for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
     {
-        if( !bresen.isValid() )
+        if(!reverse && stepper >= m_data.size())
             return mixed;
-
-        if(!reverse && bresen >= m_data.size())
-            return mixed;
-        else if(reverse && bresen < 0)
+        else if(reverse && stepper < 0)
             return mixed;
 
         BasicSampleFrame samples[4];
         for( int i = 0u; i < 4; i++ )
         {
-            samples[i] = sampleAt(i + bresen - 1u);
+            samples[i] = sampleAt(i + stepper - 1u);
         }
 
-        buffer[offset].left += (factorLeft * interpolateCubic(samples[0].left, samples[1].left, samples[2].left, samples[3].left, bresen.stepSize())) >> rightShift;
-        buffer[offset].right += (factorRight * interpolateCubic(samples[0].right, samples[1].right, samples[2].right, samples[3].right, bresen.stepSize())) >> rightShift;
+        buffer[offset].left += (factorLeft * interpolateCubic(samples[0].left, samples[1].left, samples[2].left, samples[3].left, stepper.stepSize())) >> rightShift;
+        buffer[offset].right += (factorRight * interpolateCubic(samples[0].right, samples[1].right, samples[2].right, samples[3].right, stepper.stepSize())) >> rightShift;
         if(!reverse)
-            bresen.next();
+            stepper.next();
         else
-            bresen.prev();
+            stepper.prev();
     }
     return mixed;
 }
 
 size_t Sample::mix(ppp::Sample::Interpolation inter,
-                   ppp::BresenInterpolation& stepper,
+                   ppp::Stepper& stepper,
                    MixerFrameBuffer& buffer,
                    size_t offset,
                    size_t len,

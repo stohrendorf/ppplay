@@ -23,12 +23,12 @@
 
 #include <output/audiotypes.h>
 #include <light4cxx/logger.h>
-#include "breseninter.h"
+#include "stepper.h"
 
 namespace ppp
 {
 
-class BresenInterpolation;
+class Stepper;
 /**
  * @ingroup GenMod
  * @{
@@ -82,13 +82,13 @@ private:
      */
     inline BasicSampleFrame sampleAt(size_t pos) const noexcept;
 
-    size_t mixNonInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft, int factorRight,
+    size_t mixNonInterpolated(Stepper& stepper, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft, int factorRight,
                               int rightShift) const;
 
-    size_t mixLinearInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft,
+    size_t mixLinearInterpolated(Stepper& stepper, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft,
                                  int factorRight, int rightShift) const;
 
-    size_t mixCubicInterpolated(BresenInterpolation& bresen, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft, int factorRight,
+    size_t mixCubicInterpolated(Stepper& stepper, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft, int factorRight,
                                 int rightShift) const;
 
 public:
@@ -130,15 +130,6 @@ public:
     }
 
     /**
-     * @brief Is the sample looped?
-     * @return @c true if the sample is looped
-     */
-    bool isLooped() const noexcept
-    {
-        return m_looptype != LoopType::None;
-    }
-
-    /**
      * @brief Get the sample's length
      * @return The sample's length
      */
@@ -156,7 +147,7 @@ public:
         return m_looptype;
     }
 
-    size_t mix(Interpolation inter, BresenInterpolation& stepper, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft,
+    size_t mix(Interpolation inter, Stepper& stepper, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft,
                int factorRight, int rightShift) const;
 
     uint_fast32_t loopStart() const noexcept
@@ -171,7 +162,6 @@ public:
 
 protected:
     typedef BasicSampleFrame::Vector::iterator Iterator;
-    typedef BasicSampleFrame::Vector::const_iterator ConstIterator;
 
     /**
      * @brief Set m_frequency
@@ -274,7 +264,7 @@ inline bool mix(
     const Sample& smp,
     Sample::LoopType loopType,
     Sample::Interpolation inter,
-    BresenInterpolation& stepper,
+    Stepper& stepper,
     MixerFrameBuffer& buffer,
     bool& reverse,
     size_t loopStart,
@@ -362,7 +352,7 @@ inline bool mix(
 inline bool mix(
     const Sample& smp,
     Sample::Interpolation inter,
-    BresenInterpolation& stepper,
+    Stepper& stepper,
     MixerFrameBuffer& buffer,
     bool& reverse,
     int factorLeft,
@@ -389,7 +379,7 @@ inline bool mix(
 inline bool mix(
     const Sample& smp,
     Sample::Interpolation inter,
-    BresenInterpolation& stepper,
+    Stepper& stepper,
     MixerFrameBuffer& buffer,
     int factorLeft,
     int factorRight,

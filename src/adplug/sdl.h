@@ -27,7 +27,7 @@ class SDLPlayer
 {
 private:
     SDL_AudioSpec m_spec;
-    ppp::BresenInterpolation m_interp;
+    ppp::Stepper m_interp;
 
     static void callback(void*, Uint8*, int byteLen);
 

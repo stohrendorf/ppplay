@@ -57,7 +57,7 @@ ModChannel::ModChannel(ppp::mod::ModModule* parent, bool isLeftChan)
     :
     m_module(parent), m_currentCell(new ModCell()), m_volume(0), m_physVolume(0), m_finetune(0), m_tremoloWaveform(0), m_tremoloPhase(0), m_vibratoWaveform(0)
     , m_vibratoPhase(0), m_glissando(false), m_period(0), m_physPeriod(0), m_portaTarget(0), m_lastVibratoFx(0), m_lastTremoloFx(0), m_portaSpeed(0)
-    , m_lastOffsetFx(0), m_sampleIndex(0), m_lowMask(0), m_portaDirUp(false), m_bresen(1, 1), m_panning(isLeftChan ? 0 : 0xff), m_state()
+    , m_lastOffsetFx(0), m_sampleIndex(0), m_lowMask(0), m_portaDirUp(false), m_stepper(1, 1), m_panning(isLeftChan ? 0 : 0xff), m_state()
 {
     BOOST_ASSERT_MSG(parent != nullptr, "ModChannel may not have a nullptr as a parent");
 }
@@ -102,7 +102,7 @@ void ModChannel::update(const ModCell& cell, bool patDelay)
             if( m_period == 0 || (m_currentCell->effect() != 3 && m_currentCell->effect() != 5) )
             {
                 setCellPeriod();
-                m_bresen = 0;
+                m_stepper = 0;
                 m_state.active = true;
             }
             setTonePortaTarget();
@@ -243,7 +243,7 @@ AbstractArchive& ModChannel::serialize(AbstractArchive* data)
            % m_portaSpeed
            % m_lastOffsetFx
            % m_sampleIndex
-           % m_bresen;
+           % m_stepper;
 }
 
 void ModChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
@@ -263,14 +263,9 @@ void ModChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
         m_state.active = false;
         return;
     }
-    m_bresen.reset(m_module->frequency(), FrequencyBase / m_physPeriod);
+    m_stepper.reset(m_module->frequency(), FrequencyBase / m_physPeriod);
     // TODO glissando
     const ModSample* currSmp = currentSample();
-    if( !m_bresen.isValid() )
-    {
-        m_state.active = false;
-        return;
-    }
     if( mixBuffer )
     {
         int volL = 0x80;
@@ -285,7 +280,7 @@ void ModChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
         }
         volL *= m_physVolume;
         volR *= m_physVolume;
-        m_state.active = mix(*currSmp, m_module->interpolation(), m_bresen, *mixBuffer, volL, volR, 13) != 0;
+        m_state.active = mix(*currSmp, m_module->interpolation(), m_stepper, *mixBuffer, volL, volR, 13) != 0;
     }
 }
 
@@ -467,7 +462,7 @@ void ModChannel::fxOffset(uint8_t fxByte)
     }
     if( currentSample() && currentSample()->length() > m_lastOffsetFx * 256 )
     {
-        m_bresen = m_lastOffsetFx * 256;
+        m_stepper = m_lastOffsetFx * 256;
     }
 }
 
@@ -736,7 +731,7 @@ void ModChannel::efxRetrigger(uint8_t fxByte)
     {
         return;
     }
-    m_bresen = 0;
+    m_stepper = 0;
 }
 
 void ModChannel::applyGlissando()

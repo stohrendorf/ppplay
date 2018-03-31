@@ -22,7 +22,7 @@
  * @ingroup ModMod
  * @{
  */
-#include <genmod/breseninter.h>
+#include <genmod/stepper.h>
 #include <genmod/genbase.h>
 #include <genmod/channelstate.h>
 
@@ -69,7 +69,7 @@ private:
     uint8_t m_sampleIndex;
     uint8_t m_lowMask;
     bool m_portaDirUp;
-    BresenInterpolation m_bresen;
+    Stepper m_stepper;
     uint8_t m_panning;
 
     ChannelState m_state;

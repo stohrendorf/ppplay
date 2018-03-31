@@ -2,7 +2,7 @@
 
 #include <genmod/orderentry.h>
 #include <genmod/genbase.h>
-#include <genmod/breseninter.h>
+#include <genmod/stepper.h>
 #include <genmod/standardfxdesc.h>
 
 #include <boost/algorithm/string.hpp>
@@ -64,7 +64,7 @@ size_t Module::internal_buildTick(AudioFrameBufferPtr* buf)
             *buf = std::make_shared<AudioFrameBuffer>();
         }
         buf->get()->resize(BufferSize);
-        ppp::BresenInterpolation interp(frequency(), opl::Opl3::SampleRate);
+        ppp::Stepper interp(frequency(), opl::Opl3::SampleRate);
         for( size_t i = 0; i < BufferSize; i++ )
         {
             // TODO panning?

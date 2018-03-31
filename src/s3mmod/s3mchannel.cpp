@@ -181,7 +181,7 @@ S3mChannel::S3mChannel(S3mModule* const module)
     m_note(0xff), m_lastFxByte(0), m_lastVibratoData(0), m_lastPortaSpeed(0), m_tremorVolume(0), m_currentVolume(0), m_realVolume(0), m_baseVolume(0)
     , m_tremorMute(false), m_retrigCount(0), m_zeroVolCounter(3), m_module(module), m_basePeriod(0), m_realPeriod(0), m_portaTargetPeriod(0), m_vibratoPhase(0)
     , m_vibratoWaveform(0), m_tremoloPhase(0), m_tremoloWaveform(0), m_countdown(0), m_tremorCounter(0), m_c2spd(0), m_glissando(false), m_currentCell(
-    new S3mCell()), m_bresen(1, 1), m_panning(0x20), m_isEnabled(false), m_state()
+    new S3mCell()), m_stepper(1, 1), m_panning(0x20), m_isEnabled(false), m_state()
 {
     m_state.instrument = 101;
 }
@@ -502,7 +502,7 @@ void S3mChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
         m_state.active = false;
         return;
     }
-    m_bresen.reset(m_module->frequency(), 8363 * 1712 / m_realPeriod);
+    m_stepper.reset(m_module->frequency(), 8363 * 1712 / m_realPeriod);
     recalcVolume();
     uint16_t currVol = m_realVolume;
     const S3mSample* currSmp = currentSample();
@@ -522,7 +522,7 @@ void S3mChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
     }
     volL *= currVol;
     volR *= currVol;
-    m_state.active = mix(*currSmp, m_module->interpolation(), m_bresen, *mixBuffer, volL, volR, 11) != 0;
+    m_state.active = mix(*currSmp, m_module->interpolation(), m_stepper, *mixBuffer, volL, volR, 11) != 0;
 }
 
 void S3mChannel::updateStatus()
@@ -580,7 +580,7 @@ AbstractArchive& S3mChannel::serialize(AbstractArchive* data)
     % m_tremorCounter
     % m_c2spd
     % m_glissando
-    % m_bresen
+    % m_stepper
     % m_currentCell
     % m_isEnabled
     % m_panning
@@ -956,7 +956,7 @@ void S3mChannel::fxRetrigger(uint8_t fxByte)
         return;
     }
     m_countdown = 0;
-    m_bresen = 0;
+    m_stepper = 0;
     int nvol = m_currentVolume;
     switch( m_lastFxByte.hi() )
     {
@@ -1014,7 +1014,7 @@ void S3mChannel::fxRetrigger(uint8_t fxByte)
 void S3mChannel::fxOffset(uint8_t fxByte)
 {
     m_state.fxDesc = fxdesc::Offset;
-    m_bresen = fxByte << 8;
+    m_stepper = fxByte << 8;
 }
 
 void S3mChannel::fxTremor(uint8_t fxByte)
@@ -1211,7 +1211,7 @@ void S3mChannel::playNote()
                 }
                 else
                 {
-                    m_bresen = 0;
+                    m_stepper = 0;
                 }
                 m_note = m_currentCell->note();
                 m_state.noteTriggered = true;

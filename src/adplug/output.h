@@ -20,7 +20,7 @@
  */
 
 #include "adplug/player.h"
-#include "genmod/breseninter.h"
+#include "genmod/stepper.h"
 
 class PlayerHandler
 {
@@ -65,7 +65,7 @@ class EmuPlayer
 private:
     std::vector<int16_t> m_audioBuf;
     unsigned long m_freq;
-    ppp::BresenInterpolation m_oplInterp;
+    ppp::Stepper m_oplInterp;
 
 public:
     DISABLE_COPY(EmuPlayer)

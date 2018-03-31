@@ -23,7 +23,7 @@
  * @{
  */
 
-#include <genmod/breseninter.h>
+#include <genmod/stepper.h>
 #include <genmod/genbase.h>
 #include <genmod/channelstate.h>
 
@@ -83,7 +83,7 @@ private:
     uint16_t m_c2spd; //!< @brief Current C2 frequency
     bool m_glissando; //!< @brief @c true if Glissando control is enabled
     S3mCell* m_currentCell; //!< @brief Current note cell
-    BresenInterpolation m_bresen; //!< @brief Output rate controller
+    Stepper m_stepper; //!< @brief Output rate controller
     uint8_t m_panning; //!< @brief Current panning (0..64, 0xa4 for surround)
     bool m_isEnabled;
     ChannelState m_state;
