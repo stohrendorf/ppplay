@@ -278,22 +278,14 @@ bool ModModule::load(Stream* stream, int loadMode)
     return stream->good() && stream->size() - stream->pos() < 0x100;
 }
 
-size_t ModModule::internal_buildTick(AudioFrameBufferPtr* buf)
+size_t ModModule::internal_buildTick(const AudioFrameBufferPtr& buffer)
 {
     if( state().tick == 0 && state().order >= orderCount() )
     {
-        if( buf )
-        {
-            buf->reset();
-        }
         return 0;
     }
     try
     {
-        if( buf && !buf->get() )
-        {
-            *buf = std::make_shared<AudioFrameBuffer>();
-        }
         if( state().tick == 0 )
         {
             checkGlobalFx();
@@ -301,10 +293,6 @@ size_t ModModule::internal_buildTick(AudioFrameBufferPtr* buf)
         if( orderAt(state().order)->playbackCount() >= maxRepeat() )
         {
             //logger()->info( L4CXX_LOCATION, "Song end reached: Maximum repeat count reached" );
-            if( buf )
-            {
-                buf->reset();
-            }
             return 0;
         }
         // update channels...
@@ -314,7 +302,7 @@ size_t ModModule::internal_buildTick(AudioFrameBufferPtr* buf)
         {
             return 0;
         }
-        if( buf )
+        if( buffer )
         {
             MixerFrameBufferPtr mixerBuffer = std::make_shared<MixerFrameBuffer>(tickBufferLength());
             for( int currTrack = 0; currTrack < channelCount(); currTrack++ )
@@ -324,9 +312,9 @@ size_t ModModule::internal_buildTick(AudioFrameBufferPtr* buf)
                 chan->update(cell, false); // m_patDelayCount != -1);
                 chan->mixTick(mixerBuffer);
             }
-            buf->get()->resize(mixerBuffer->size());
+            buffer->resize(mixerBuffer->size());
             MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
-            BasicSampleFrame* bufPtr = &buf->get()->front();
+            BasicSampleFrame* bufPtr = &buffer->front();
             for( size_t i = 0; i < mixerBuffer->size(); i++ )
             {  // postprocess...
                 *bufPtr = mixerBufferPtr->rightShiftClip(2);
@@ -348,10 +336,6 @@ size_t ModModule::internal_buildTick(AudioFrameBufferPtr* buf)
         if( !adjustPosition() )
         {
             logger()->info(L4CXX_LOCATION, "Song end reached: adjustPosition() failed");
-            if( buf )
-            {
-                buf->reset();
-            }
             return 0;
         }
         state().playedFrames += tickBufferLength();

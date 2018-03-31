@@ -27,51 +27,35 @@ ppp::AbstractModule* Module::factory(Stream* stream, uint32_t frequency, int max
     return res;
 }
 
-size_t Module::internal_buildTick(AudioFrameBufferPtr* buf)
+size_t Module::internal_buildTick(const AudioFrameBufferPtr& buffer)
 {
-    if( !update(buf == nullptr) )
+    if( !update(buffer == nullptr) )
     {
         logger()->info(L4CXX_LOCATION, "Update failed, song end reached");
-        if( buf )
-        {
-            buf->reset();
-        }
         return 0;
     }
     if( state().order >= orderCount() )
     {
         logger()->info(L4CXX_LOCATION, "Song end reached");
-        if( buf )
-        {
-            buf->reset();
-        }
         return 0;
     }
     if( orderAt(state().order)->playbackCount() >= maxRepeat() )
     {
         logger()->info(L4CXX_LOCATION, "Song end reached: Maximum repeat count reached");
-        if( buf )
-        {
-            buf->reset();
-        }
         return 0;
     }
     const auto BufferSize = static_cast<size_t>(frequency() / 18.20676);
-    if( buf )
+    if( buffer )
     {
-        if( !buf->get() )
-        {
-            *buf = std::make_shared<AudioFrameBuffer>();
-        }
-        buf->get()->resize(BufferSize);
+        buffer->resize(BufferSize);
         ppp::Stepper interp(frequency(), opl::Opl3::SampleRate);
         for( size_t i = 0; i < BufferSize; i++ )
         {
             // TODO panning?
             std::array<int16_t, 4> data;
             m_opl.read(&data);
-            (**buf)[i].left = data[0] + data[1];
-            (**buf)[i].right = data[2] + data[3];
+            (*buffer)[i].left = data[0] + data[1];
+            (*buffer)[i].right = data[2] + data[3];
             if( interp.next() == 2 )
             {
                 m_opl.read(nullptr); // skip a sample

@@ -83,11 +83,10 @@ size_t AbstractModule::internal_getAudioData(AudioFrameBufferPtr& buffer, size_t
         return tickBufferLength();
     }
     buffer->resize(0);
-    AudioFrameBufferPtr tmpBuf;
+    AudioFrameBufferPtr tmpBuf = std::make_shared<AudioFrameBuffer>();
     while(buffer->size() < size)
     {
-        size_t size = buildTick(&tmpBuf);
-        if(!tmpBuf || tmpBuf->empty() || size == 0)
+        if(buildTick(tmpBuf) == 0 || tmpBuf->empty())
         {
             // logger()->debug( L4CXX_LOCATION, "buildTick() returned 0" );
             return 0;
@@ -217,6 +216,7 @@ bool AbstractModule::seekForward()
     // maybe not processed yet, so try to jump to the next order...
     logger()->debug(L4CXX_LOCATION, "Not preprocessed yet");
     const size_t oldSize = m_songs->states.size();
+    AudioFrameBufferPtr buffer = std::make_shared<AudioFrameBuffer>();
     while(oldSize == m_songs->states.size())
     {
         if(m_state.order >= orderCount())
@@ -224,8 +224,7 @@ bool AbstractModule::seekForward()
             m_isPreprocessing = false;
             return false;
         }
-        AudioFrameBufferPtr buf;
-        if(buildTick(&buf) == 0 || !buf)
+        if(buildTick(buffer) == 0 || buffer->empty())
         {
             m_isPreprocessing = false;
             return false;
@@ -341,7 +340,7 @@ bool AbstractModule::internal_initialize(uint32_t)
     return true;
 }
 
-size_t AbstractModule::buildTick(AudioFrameBufferPtr* buf)
+size_t AbstractModule::buildTick(const AudioFrameBufferPtr& buffer)
 {
     std::lock_guard<std::recursive_mutex> lock(m_mutex);
 
@@ -356,7 +355,7 @@ size_t AbstractModule::buildTick(AudioFrameBufferPtr* buf)
         logger()->debug(L4CXX_LOCATION, "Stored song state for %ds", m_songs->storedSeconds());
     }
 
-    return internal_buildTick(buf);
+    return internal_buildTick(buffer);
 }
 
 int AbstractModule::channelCount() const

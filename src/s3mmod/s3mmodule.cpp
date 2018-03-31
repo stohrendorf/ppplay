@@ -574,15 +574,11 @@ bool S3mModule::adjustPosition()
     return true;
 }
 
-size_t S3mModule::internal_buildTick(AudioFrameBufferPtr* buf)
+size_t S3mModule::internal_buildTick(const AudioFrameBufferPtr& buffer)
 try
 {
     if( state().order >= orderCount() )
     {
-        if( buf )
-        {
-            buf->reset();
-        }
         return 0;
     }
     if( state().tick == 0 )
@@ -592,15 +588,7 @@ try
     if( orderAt(state().order)->playbackCount() >= maxRepeat() )
     {
         logger()->info(L4CXX_LOCATION, "Song end reached: Maximum repeat count reached");
-        if( buf )
-        {
-            buf->reset();
-        }
         return 0;
-    }
-    if( buf && !buf->get() )
-    {
-        *buf = std::make_shared<AudioFrameBuffer>();
     }
     // update channels...
     state().pattern = orderAt(state().order)->index();
@@ -608,13 +596,9 @@ try
     if( !currPat )
     {
         logger()->error(L4CXX_LOCATION, "Did not find a pattern for current order");
-        if( buf )
-        {
-            buf->reset();
-        }
         return 0;
     }
-    if( buf )
+    if( buffer )
     {
         MixerFrameBufferPtr mixerBuffer = std::make_shared<MixerFrameBuffer>(tickBufferLength());
         for( int currTrack = 0; currTrack < channelCount(); currTrack++ )
@@ -625,9 +609,9 @@ try
             chan->update(cell, m_patDelayCount != -1, false);
             chan->mixTick(mixerBuffer);
         }
-        (*buf)->resize(mixerBuffer->size());
+        buffer->resize(mixerBuffer->size());
         MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
-        BasicSampleFrame* bufPtr = &(*buf)->front();
+        BasicSampleFrame* bufPtr = &buffer->front();
         for( size_t i = 0; i < mixerBuffer->size(); i++ )
         {  // postprocess...
             *bufPtr = mixerBufferPtr->rightShiftClip(2);
@@ -649,10 +633,6 @@ try
     if( !adjustPosition() )
     {
         logger()->info(L4CXX_LOCATION, "Song end reached: adjustPosition() failed");
-        if( buf )
-        {
-            buf->reset();
-        }
         return 0;
     }
     state().playedFrames += tickBufferLength();

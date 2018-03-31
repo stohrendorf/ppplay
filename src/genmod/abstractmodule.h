@@ -302,7 +302,7 @@ protected:
 
 private:
     //! @copydoc internal_buildTick
-    size_t buildTick(AudioFrameBufferPtr* buf);
+    size_t buildTick(const AudioFrameBufferPtr& buffer);
 
     bool internal_initialize(uint32_t frq) override;
 
@@ -321,7 +321,7 @@ private:
 
     /**
      * @brief Get a tick
-     * @param[out] buf Pointer to the destination buffer or @c NULL to to only length estimation
+     * @param[out] buffer Pointer to the destination buffer or @c NULL to to only length estimation
      * @return Length of the current tick, or 0 when end of song is reached.
      * @note Time-critical
      * @see AbstractChannel::mixTick()
@@ -333,7 +333,7 @@ private:
      * @li speed and tempo changes
      * @li pattern loops and delays
      */
-    virtual size_t internal_buildTick(AudioFrameBufferPtr* buf) = 0;
+    virtual size_t internal_buildTick(const AudioFrameBufferPtr& buffer) = 0;
 
     /**
      * @copydoc IAudioSource::getAudioData()

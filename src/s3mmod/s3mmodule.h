@@ -92,7 +92,7 @@ public:
 private:
     int internal_channelCount() const override;
 
-    size_t internal_buildTick(AudioFrameBufferPtr* buf) override;
+    size_t internal_buildTick(const AudioFrameBufferPtr& buffer) override;
 
     ChannelState internal_channelStatus(size_t idx) const override;
 

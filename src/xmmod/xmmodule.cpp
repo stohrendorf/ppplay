@@ -191,23 +191,15 @@ bool XmModule::load(Stream* stream)
     return true;
 }
 
-size_t XmModule::internal_buildTick(AudioFrameBufferPtr* buffer)
+size_t XmModule::internal_buildTick(const AudioFrameBufferPtr& buffer)
 {
     if( state().order >= orderCount() )
     {
         logger()->debug(L4CXX_LOCATION, "End of order list reached");
-        if( buffer )
-        {
-            buffer->reset();
-        }
         return 0;
     }
     if( buffer )
     {
-        if( !buffer->get() )
-        {
-            *buffer = std::make_shared<AudioFrameBuffer>();
-        }
         MixerFrameBufferPtr mixerBuffer = std::make_shared<MixerFrameBuffer>(tickBufferLength());
         XmPattern* currPat = m_patterns.at(state().pattern);
         for( uint8_t currTrack = 0; currTrack < channelCount(); currTrack++ )
@@ -218,9 +210,9 @@ size_t XmModule::internal_buildTick(AudioFrameBufferPtr* buffer)
             chan->update(cell, false);
             chan->mixTick(mixerBuffer);
         }
-        buffer->get()->resize(mixerBuffer->size());
+        buffer->resize(mixerBuffer->size());
         MixerSampleFrame* mixerBufferPtr = &mixerBuffer->front();
-        BasicSampleFrame* bufPtr = &buffer->get()->front();
+        BasicSampleFrame* bufPtr = &buffer->front();
         for( size_t i = 0; i < mixerBuffer->size(); i++ )
         {  // postprocess...
             *bufPtr = mixerBufferPtr->rightShiftClip(2);
@@ -244,10 +236,6 @@ size_t XmModule::internal_buildTick(AudioFrameBufferPtr* buffer)
     if( !adjustPosition() )
     {
         logger()->debug(L4CXX_LOCATION, "adjustPosition(%s) failed", !buffer);
-        if( buffer )
-        {
-            buffer->reset();
-        }
         return 0;
     }
     state().playedFrames += tickBufferLength();
