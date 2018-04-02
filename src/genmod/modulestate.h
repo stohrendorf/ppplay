@@ -38,36 +38,27 @@ namespace ppp
      */
     struct PPPLAY_MODULE_BASE_EXPORT ModuleState : public ISerializable
     {
-        explicit ModuleState() noexcept :
-            speed(0),
-            tempo(0),
-            order(0),
-            row(0),
-            tick(0),
-            globalVolume(0x40),
-            playedFrames(0),
-            pattern(0)
-        {
-        }
+        explicit ModuleState() = default;
 
         AbstractArchive& serialize(AbstractArchive* data) override;
 
         //! @brief Speed
-        int16_t speed;
+        int16_t speed = 0;
         //! @brief Tempo
-        int16_t tempo;
+        int16_t tempo = 0;
         //! @brief Order
-        size_t order;
+        size_t order = 0;
         //! @brief Row
-        int16_t row;
+        int16_t row = 0;
         //! @brief Tick index
-        int16_t tick;
+        int16_t tick = 0;
         //! @brief Global volume
-        int16_t globalVolume;
+        int16_t globalVolume = 0x40;
+        int16_t globalVolumeLimit = 0x40;
         //! @brief Played Sample frames
-        size_t playedFrames;
+        size_t playedFrames = 0;
         //! @brief Pattern index of order
-        size_t pattern;
+        size_t pattern = 0;
     };
 
     /**

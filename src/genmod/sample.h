@@ -203,6 +203,16 @@ protected:
         m_data.resize(size);
     }
 
+    void setData(const BasicSampleFrame::Vector& data)
+    {
+        m_data = data;
+    }
+
+    void setData(BasicSampleFrame::Vector&& data)
+    {
+        m_data = std::move(data);
+    }
+
     /**
      * @brief Get the logger
      * @return Logger with name "sample"
@@ -241,10 +251,15 @@ inline bool mix(
         }
     }
 
+    if( stepper < 0 )
+    {
+        stepper = 0;
+    }
+
     size_t offset = 0;
     while( offset < buffer.size() )
     {
-        size_t canRead;
+        long canRead;
         if( !reverse )
         {
             canRead = loopEnd - stepper;
@@ -252,6 +267,10 @@ inline bool mix(
         else
         {
             canRead = stepper - loopStart;
+        }
+        if( canRead < 0 )
+        {
+            canRead = 0;
         }
 
         const size_t canWrite = buffer.size() - offset;
@@ -276,12 +295,20 @@ inline bool mix(
                 {
                     return false;
                 }
+                else if(stepper < 0)
+                {
+                    stepper = 0;
+                }
                 break;
             case Sample::LoopType::Forward:
                 if( stepper >= 0 && static_cast<size_t>(stepper) >= loopEnd )
                 {
                     stepper = loopStart + (stepper - loopEnd);
                     BOOST_ASSERT(stepper >= 0 && static_cast<size_t>(stepper) >= loopStart && static_cast<size_t>(stepper) < loopEnd);
+                }
+                else if(stepper < 0)
+                {
+                    stepper = 0;
                 }
                 break;
             case Sample::LoopType::Pingpong:

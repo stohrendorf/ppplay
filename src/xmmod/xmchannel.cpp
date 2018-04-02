@@ -349,11 +349,11 @@ void XmChannel::updateTick0(const XmCell& cell, bool estimateOnly)
             nextCheck = KeyOnCheck;
         }
     }
-    else if( (m_currentCell->volume() >> 4) == VfxPorta )
+    else if( (m_currentCell->volume() >> 4u) == VfxPorta )
     {
-        if( (m_currentCell->volume() & 0x0f) != 0 )
+        if( (m_currentCell->volume() & 0x0fu) != 0 )
         {
-            m_portaSpeed = (m_currentCell->volume() & 0x0f) << 6;
+            m_portaSpeed = (m_currentCell->volume() & 0x0fu) * 64u;
         }
         if( m_currentCell->note() == KeyOffNote )
         {
@@ -372,7 +372,7 @@ void XmChannel::updateTick0(const XmCell& cell, bool estimateOnly)
     {
         if( m_currentCell->effect() != Effect::PortaVolSlide && m_currentCell->effectValue() != 0 )
         {
-            m_portaSpeed = m_currentCell->effectValue() << 2;
+            m_portaSpeed = m_currentCell->effectValue() * 4u;
         }
         if( m_currentCell->note() == KeyOffNote )
         {
@@ -400,7 +400,6 @@ void XmChannel::updateTick0(const XmCell& cell, bool estimateOnly)
         nextCheck = TriggerCheck;
     }
 
-    BOOST_ASSERT(nextCheck != Nothing);
     if( nextCheck == TriggerCheck )
     {
         if( m_lastNote == KeyOffNote )
@@ -434,7 +433,7 @@ void XmChannel::updateTick0(const XmCell& cell, bool estimateOnly)
     BOOST_ASSERT(nextCheck == Nothing);
 
     m_state.fxDesc = fxdesc::NullFx;
-    switch( m_currentCell->volume() >> 4 )
+    switch( m_currentCell->volume() >> 4u )
     {
         case 0x01:
         case 0x02:

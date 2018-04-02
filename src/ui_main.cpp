@@ -226,7 +226,7 @@ void UIMain::drawThis()
     }
     m_position->setEscapedText(posStr);
     m_playbackInfo->setEscapedText(
-        stringFmt("{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", state.speed, state.tempo, state.globalVolume * 100 / 0x40));
+        stringFmt("{BrightWhite;}Speed:%2d \xf9 Tempo:%3d \xf9 Vol:%3d%%", state.speed, state.tempo, state.globalVolume * 100 / state.globalVolumeLimit));
     for( int i = 0; i < modLock->channelCount(); i++ )
     {
         if( i >= 16 )

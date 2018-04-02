@@ -304,7 +304,7 @@ private:
     //! @copydoc internal_buildTick
     size_t buildTick(const AudioFrameBufferPtr& buffer);
 
-    bool internal_initialize(uint32_t frq) override;
+    bool internal_initialize(uint32_t frq) override final;
 
     /**
      * @brief Returns the channel status string for a channel

@@ -125,7 +125,7 @@ public:
     constexpr void reset(uint_fast32_t denominator, uint_fast32_t nominator)
     {
         BOOST_ASSERT(denominator > 0);
-        m_fraction = m_fraction * m_denominator / denominator;
+        m_fraction = m_fraction * denominator / m_denominator;
         m_denominator = denominator;
         m_nominator = nominator;
         // m_fraction = denominator-1;

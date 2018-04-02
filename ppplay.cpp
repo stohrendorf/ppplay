@@ -296,7 +296,7 @@ int main(int argc, char* argv[])
             std::cout << std::flush;
             std::cerr << "The message above means that PPPlay encountered a severe problem it\n"
                 << "could not handle gracefully. Please report this problem to the developers at:\n"
-                << "    http://sourceforge.net/p/peepeeplayer/tickets/\n"
+                << "    https://github.com/stohrendorf/ppplay/issues\n"
                 << "If possible, please add the file you tried to play, as this seems to be the\n"
                 << "root of all evil, as well as the message above. Thank you!"
                 << std::endl;

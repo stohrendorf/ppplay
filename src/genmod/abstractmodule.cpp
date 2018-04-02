@@ -273,7 +273,7 @@ bool AbstractModule::jumpNextSong()
                 continue;
             }
             logger()->debug(L4CXX_LOCATION, "Found unplayed order %d pattern %d", i, int(orderAt(i)->index()));
-            m_songs.emplace_back(new SongInfo);
+            m_songs.emplace_back(std::make_unique<SongInfo>());
             ++m_songs;
             m_state.playedFrames = 0;
             m_state.pattern = orderAt(i)->index();
