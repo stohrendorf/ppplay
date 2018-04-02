@@ -104,7 +104,6 @@ void SlaveChannel::setInstrument(const ItModule& module, const ItInstrument& ins
         this->mch = this->getHost()->mch;
         this->midiProgram = this->getHost()->midiProgram;
         this->midiBank = ins.midibnk;
-        this->loopDirBackward = this->getHost()->patternNote != 0; // FIXME ??? IT Bug?
     }
 
     this->channelVolume = this->getHost()->channelVolume;

@@ -253,4 +253,105 @@ inline BasicSampleFrame Sample::sampleAt(size_t pos) const noexcept
 /**
  * @}
  */
+bool mix(const Sample& smp, Sample::LoopType loopType, Sample::Interpolation inter, Stepper& stepper, MixerFrameBuffer& buffer, bool& reverse, size_t loopStart,
+         size_t loopEnd, int factorLeft, int factorRight, int rightShift)
+{
+    BOOST_ASSERT(stepper >= 0);
+
+    // sanitize
+    if( loopType == Sample::LoopType::None )
+    {
+        loopStart = 0;
+        loopEnd = smp.length();
+    }
+    else
+    {
+        if( loopStart > smp.length() )
+        {
+            loopStart = smp.length();
+        }
+        if( loopEnd > smp.length() )
+        {
+            loopEnd = smp.length();
+        }
+    }
+
+    size_t offset = 0;
+    while( offset < buffer.size() )
+    {
+        long canRead;
+        if( stepper < loopStart )
+        {
+            // special case: loop not yet entered
+            BOOST_ASSERT(!reverse);
+            canRead = loopEnd - stepper;
+        }
+        else
+        {
+            if( !reverse )
+            {
+                canRead = loopEnd - stepper;
+            }
+            else
+            {
+                canRead = stepper - loopStart;
+            }
+        }
+
+        if( canRead < 0 )
+        {
+            canRead = 0;
+        }
+
+        const size_t canWrite = buffer.size() - offset;
+        BOOST_ASSERT(canWrite > 0);
+        auto mustRead = static_cast<long>(canWrite * stepper.floatStepSize());
+        BOOST_ASSERT(mustRead >= 0);
+        if( mustRead > canRead )
+        {
+            mustRead = canRead;
+        }
+        auto mustMix = static_cast<size_t>(mustRead / stepper.floatStepSize());
+        if( mustMix <= 0 )
+        {
+            mustMix = 1;
+        }
+
+        offset += smp.mix(inter, stepper, buffer, offset, mustMix, reverse, factorLeft, factorRight, rightShift);
+
+        switch( loopType )
+        {
+            case Sample::LoopType::None:
+                if( stepper >= 0 && static_cast<size_t>(stepper) >= loopEnd )
+                {
+                    return false;
+                }
+                break;
+            case Sample::LoopType::Forward:
+                if( stepper >= 0 && static_cast<size_t>(stepper) >= loopEnd )
+                {
+                    stepper = loopStart + (stepper - loopEnd);
+                    BOOST_ASSERT(stepper >= 0 && static_cast<size_t>(stepper) >= loopStart && static_cast<size_t>(stepper) < loopEnd);
+                }
+                break;
+            case Sample::LoopType::Pingpong:
+                if( reverse && (stepper < 0 || static_cast<size_t>(stepper) < loopStart) )
+                {
+                    stepper = loopStart + (loopStart - stepper);
+                    reverse = false;
+                    BOOST_ASSERT(stepper >= 0 && static_cast<size_t>(stepper) >= loopStart && static_cast<size_t>(stepper) < loopEnd);
+                }
+                else if( !reverse && (stepper > 0 && static_cast<size_t>(stepper) >= loopEnd) )
+                {
+                    stepper = loopEnd - (stepper - loopEnd) - 1;
+                    reverse = true;
+                    BOOST_ASSERT(stepper >= 0 && static_cast<size_t>(stepper) >= loopStart && static_cast<size_t>(stepper) < loopEnd);
+                }
+
+                break;
+        }
+    }
+
+    return true;
+}
 }

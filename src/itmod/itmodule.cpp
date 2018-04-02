@@ -1,5 +1,7 @@
 #include <cmath>
 #include <map>
+#include <genmod/standardfxdesc.h>
+#include <genmod/genbase.h>
 #include "itmodule.h"
 
 #include "genmod/orderentry.h"
@@ -408,8 +410,8 @@ bool ItModule::applySample(HostChannel& host, SlaveChannel* slave)
     slave->smpOffs = m_samples[slave->smp].get();
 
     slave->viDepth = 0;
-    slave->loopDirBackward = false;
     slave->sampleOffset = 0;
+    slave->loopDirBackward = false;
 
     slave->sampleVolume = slave->smpOffs->header.gvl * 2;
     BOOST_ASSERT(slave->sampleVolume <= 128);
@@ -665,12 +667,17 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
     result->state().globalVolumeLimit = 0x80;
     result->state().globalVolume = result->m_header.gv;
 
-    for (size_t i = 0; i < result->m_hosts.size(); ++i) {
+    for( size_t i = 0; i < result->m_hosts.size(); ++i )
+    {
         result->m_hosts[i].cp = result->m_header.chnPan[i];
         result->m_hosts[i].channelVolume = result->m_header.chnVol[i];
         result->m_hosts[i].setSlave(&result->m_slaves[i]);
         result->m_slaves[i].setHost(&result->m_hosts[i]);
     }
+
+    result->noConstMetaInfo().trackerInfo = stringFmt("Impulse Tracker %X.%02X", result->m_header.cwtV>>8, result->m_header.cwtV&0xff);
+    result->noConstMetaInfo().filename = stream->name();
+    result->noConstMetaInfo().title = stringncpy(result->m_header.name, 26);
 
     if( !result->initialize(frequency) )
     {
@@ -689,8 +696,10 @@ size_t ItModule::internal_buildTick(const AudioFrameBufferPtr& buffer)
         return 0;
     }
 
-    if(state().order >= orderCount())
+    if( state().order >= orderCount() )
+    {
         return 0;
+    }
 
     if( orderAt(state().order)->playbackCount() >= maxRepeat() )
     {
@@ -801,8 +810,10 @@ bool ItModule::updateData()
         return true;
     }
 
-    if(state().order >= orderCount() || state().pattern >= m_patterns.size())
+    if( state().order >= orderCount() || state().pattern >= m_patterns.size() )
+    {
         return false;
+    }
 
     m_tickCountdown = state().speed;
     state().tick = 0;
@@ -904,6 +915,9 @@ void ItModule::loadRow()
     {
         BOOST_ASSERT((cellHeader & 0x7fu) > 0 && (cellHeader & 0x7fu) <= m_hosts.size());
         auto host = &m_hosts[(cellHeader & 0x7fu) - 1];
+
+        host->channelState.cell.clear();
+
         if( (cellHeader & 0x80u) != 0 )
         {
             host->cellMask = *m_patternDataPtr++;
@@ -913,34 +927,108 @@ void ItModule::loadRow()
         {
             host->patternNote = *m_patternDataPtr++;
         }
+        if( (host->cellMask & HCFLG_MSK_NOTE_2) != 0 )
+        {
+            if( host->patternNote == PATTERN_NOTE_CUT )
+            {
+                host->channelState.noteTriggered = true;
+                host->channelState.cell += "^^^ ";
+                host->channelState.note = ChannelState::NoteCut;
+            }
+            else if( host->patternNote == PATTERN_NOTE_OFF )
+            {
+                host->channelState.noteTriggered = true;
+                host->channelState.cell += "=== ";
+                host->channelState.note = ChannelState::KeyOff;
+            }
+            else if( host->patternNote > PATTERN_MAX_NOTE )
+            {
+                host->channelState.noteTriggered = false;
+                host->channelState.cell += "... ";
+                host->channelState.note = ChannelState::TooHigh;
+            }
+            else
+            {
+                host->channelState.noteTriggered = true;
+                host->channelState.cell += stringFmt("%s%d ", ppp::NoteNames[host->patternNote % 12], host->patternNote / 12 + 0);
+                host->channelState.note = host->patternNote;
+            }
+        }
+        else
+        {
+            host->channelState.noteTriggered = false;
+            host->channelState.cell += "... ";
+            host->channelState.note = ChannelState::NoNote;
+        }
 
         if( (host->cellMask & HCFLG_MSK_INS_1) != 0 )
         {
             host->patternInstrument = *m_patternDataPtr++;
+        }
+        if( (host->cellMask & HCFLG_MSK_INS_2) != 0 )
+        {
+            host->channelState.cell += stringFmt("%02d ", int(host->patternInstrument));
+        }
+        else
+        {
+            host->channelState.cell += ".. ";
         }
 
         if( (host->cellMask & HCFLG_MSK_VOL_1) != 0 )
         {
             host->patternVolume = *m_patternDataPtr++;
         }
+        if( (host->cellMask & HCFLG_MSK_VOL_2) != 0 )
+        {
+            host->channelState.cell += stringFmt("%02X ", int(host->patternVolume));
+        }
+        else
+        {
+            host->channelState.cell += ".. ";
+        }
 
         if( (host->cellMask & HCFLG_MSK_CMD_1) != 0 )
         {
             host->patternFx = host->lastPatternFx = *m_patternDataPtr++;
             host->patternFxParam = host->lastPatternFxParam = *m_patternDataPtr++;
+
+            if( host->patternFx != 0 )
+            {
+                host->channelState.cell += stringFmt("%c%02X", char('A' + (host->patternFx & 0x1f) - 1), int(host->patternFxParam));
+            }
+            else
+            {
+                host->channelState.cell += "...";
+            }
         }
         else if( (host->cellMask & HCFLG_MSK_CMD_2) != 0 )
         {
             host->patternFx = host->lastPatternFx;
             host->patternFxParam = host->lastPatternFxParam;
+            host->channelState.cell += "...";
         }
         else
         {
-            host->patternFx = 0;
-            host->patternFxParam = 0;
+            host->channelState.cell += "...";
         }
 
         onCellLoaded(*host);
+
+        host->channelState.active = (host->flags & HCFLG_ON) != 0;
+        host->channelState.volume = host->vse * 100 / 64;
+        if( host->cp != 100 )
+        {
+            host->channelState.panning = (host->cp - 32) * 100 / 32;
+        }
+        else
+        {
+            host->channelState.panning = ChannelState::Surround;
+        }
+        if( (host->cellMask & HCFLG_MSK_CMD_1) == 0 )
+        {
+            host->channelState.fx = 0;
+            host->channelState.fxDesc = ppp::fxdesc::NullFx;
+        }
     }
 }
 
@@ -1684,9 +1772,9 @@ void ItModule::midiTranslate(HostChannel* host, SlaveChannel* slave, uint16_t cm
 
 // Output pitch change
 
-    midiSendFilter((slave->mch - 1) | 0xe0);
-    midiSendFilter(midiPitch[slave->mch - 1] & 0x7f);
-    midiSendFilter((midiPitch[slave->mch - 1] >> 7) & 0x7f);
+    midiSendFilter((slave->mch - 1u) | 0xe0u);
+    midiSendFilter(midiPitch[slave->mch - 1u] & 0x7fu);
+    midiSendFilter((midiPitch[slave->mch - 1u] >> 7u) & 0x7fu);
 }
 
 void ItModule::updateMidi()
@@ -1731,6 +1819,7 @@ void ItModule::updateMidi()
         }
 
         slave.sampleOffset = 1;
+        slave.loopDirBackward = false;
         BOOST_ASSERT(
             slave.sampleOffset >= 0 && slave.sampleOffset < m_samples[slave.smp]->length() && slave.sampleOffset < slave.loopEnd);
 
@@ -1768,7 +1857,7 @@ void ItModule::updateMidi()
             if( (m_header.flags & ITHeader::FlgMidiPitch) != 0 && midiPitch[slave.mch - 1] != 0x2000 )
             {
                 midiPitch[slave.mch - 1] = 0x2000;
-                midiSendFilter(uint8_t(slave.mch - 1) | 0xe0);
+                midiSendFilter(uint8_t(slave.mch - 1u) | 0xe0u);
                 midiSendFilter(0);
                 midiSendFilter(0x40);
             }
@@ -1792,6 +1881,9 @@ void ItModule::updateMidi()
 
 void ItModule::initNoCommand(HostChannel& host)
 {
+    host.channelState.fx = 0;
+    host.channelState.fxDesc = ppp::fxdesc::NullFx;
+
     if( (host.cellMask & (HCFLG_MSK_NOTE | HCFLG_MSK_INS)) != 0 )
     {
         if( host.effectiveNote > PATTERN_MAX_NOTE )
@@ -1836,12 +1928,13 @@ void ItModule::initNoCommand(HostChannel& host)
 
             if( (m_header.flags & ITHeader::FlgInstrumentMode) == 0 && (host.getSlave()->smpOffs->header.dfp & 0x80u) != 0 )
             {
-                host.cp = host.getSlave()->smpOffs->header.dfp & 0x7f;
+                host.cp = host.getSlave()->smpOffs->header.dfp & 0x7fu;
                 host.getSlave()->pan = host.cp;
                 host.getSlave()->ps = host.cp;
             }
 
             host.getSlave()->sampleOffset = 0;
+            host.getSlave()->loopDirBackward = false;
             host.getSlave()->frequency = host.getSlave()->smpOffs->header.c5speed
                                          * std::pow(2.0f, (host.effectiveNote - 5 * 12) / 12.0f);
             host.getSlave()->frequencySet = host.getSlave()->frequency;
@@ -1885,6 +1978,20 @@ NoOldEffect:
 
     if( (host.cellMask & HCFLG_MSK_INS) != 0 && host.sampleIndex != 0 )
     {
+        host.channelState.instrument = host.sampleIndex;
+        if( (m_header.flags & ITHeader::FlgInstrumentMode) == 0 && host.patternInstrument <= m_samples.size() )
+        {
+            host.channelState.instrumentName = m_samples[host.patternInstrument - 1u]->title();
+        }
+        else if( (m_header.flags & ITHeader::FlgInstrumentMode) != 0 && host.patternInstrument <= m_instruments.size() )
+        {
+            host.channelState.instrumentName = stringncpy(m_instruments[host.patternInstrument - 1u].name, 26);
+        }
+        else
+        {
+            host.channelState.instrumentName.clear();
+        }
+
         host.vse = m_samples[host.sampleIndex - 1]->header.vol;
         BOOST_ASSERT(host.vse >= 0 && host.vse <= 64);
     }
@@ -1913,6 +2020,9 @@ LBL_volFx:
 
 void ItModule::initCommandA(HostChannel& host)
 {
+    host.channelState.fx = 'A';
+    host.channelState.fxDesc = ppp::fxdesc::SetTempo;
+
     int newSpeed = host.patternFxParam;
     if( newSpeed != 0 )
     {
@@ -1926,6 +2036,9 @@ void ItModule::initCommandA(HostChannel& host)
 
 void ItModule::initCommandB(HostChannel& host)
 {
+    host.channelState.fx = 'B';
+    host.channelState.fxDesc = ppp::fxdesc::JumpOrder;
+
     if( host.patternFxParam <= state().order )
     {
         // FIXME
@@ -1941,6 +2054,9 @@ void ItModule::initCommandB(HostChannel& host)
 
 void ItModule::initCommandC(HostChannel& host)
 {
+    host.channelState.fx = 'C';
+    host.channelState.fxDesc = ppp::fxdesc::PatternBreak;
+
     if( !m_patternLooping )
     {
         m_breakRow = host.patternFxParam;
@@ -1959,6 +2075,8 @@ void ItModule::initCommandDKL(HostChannel& host)
 
     if( loNybble == 0 )
     {
+        host.channelState.fxDesc = ppp::fxdesc::VolSlideUp;
+
         host.vch = hiNybble;
         host.flags |= HCFLG_UPD_IF_ON;
         if( hiNybble == 0x0f )
@@ -1970,6 +2088,8 @@ void ItModule::initCommandDKL(HostChannel& host)
     }
     else if( hiNybble == 0 )
     {
+        host.channelState.fxDesc = ppp::fxdesc::VolSlideDown;
+
         host.vch = -int8_t(loNybble);
         host.flags |= HCFLG_UPD_IF_ON;
         if( loNybble == 0x0f )
@@ -1983,6 +2103,8 @@ void ItModule::initCommandDKL(HostChannel& host)
     int volume = host.getSlave()->effectiveBaseVolume;
     if( loNybble == 0x0f )
     {
+        host.channelState.fxDesc = ppp::fxdesc::SlowVolSlideUp;
+
         host.vch = 0;
         volume += hiNybble;
         if( volume > 64 )
@@ -1992,6 +2114,8 @@ void ItModule::initCommandDKL(HostChannel& host)
     }
     else if( hiNybble == 0x0f )
     {
+        host.channelState.fxDesc = ppp::fxdesc::SlowVolSlideDown;
+
         host.vch = 0;
         volume -= loNybble;
         if( volume < 0 )
@@ -2010,6 +2134,8 @@ void ItModule::initCommandD(HostChannel& host)
 {
     initNoCommand(host);
 
+    host.channelState.fx = 'D';
+
     if( host.patternFxParam != 0 )
     {
         host.dkl = host.patternFxParam;
@@ -2027,6 +2153,8 @@ void ItModule::initCommandE(HostChannel& host)
 {
     initNoCommand(host);
 
+    host.channelState.fx = 'E';
+
     if( host.patternFxParam != 0 )
     {
         host.efg = host.patternFxParam;
@@ -2045,6 +2173,7 @@ void ItModule::initCommandE(HostChannel& host)
     const auto hiNybble = host.efg & 0xf0u;
     if( hiNybble < 0xe0 )
     {
+        host.channelState.fxDesc = ppp::fxdesc::FastPitchSlideDown;
         host.slideSpeed = int16_t(host.efg * 4);
         host.flags |= HCFLG_UPD_IF_ON;
         return;
@@ -2058,7 +2187,12 @@ void ItModule::initCommandE(HostChannel& host)
 
     if( hiNybble != 0xe0 )
     {
+        host.channelState.fxDesc = ppp::fxdesc::PitchSlideDown;
         value *= 4;
+    }
+    else
+    {
+        host.channelState.fxDesc = ppp::fxdesc::SlowPitchSlideDown;
     }
 
     pitchSlideDown(*host.getSlave(), value);
@@ -2069,6 +2203,8 @@ void ItModule::initCommandE(HostChannel& host)
 void ItModule::initCommandF(HostChannel& host)
 {
     initNoCommand(host);
+
+    host.channelState.fx = 'F';
 
     if( host.patternFxParam != 0 )
     {
@@ -2088,6 +2224,7 @@ void ItModule::initCommandF(HostChannel& host)
     const auto hiNybble = host.efg & 0xf0u;
     if( hiNybble < 0xe0 )
     {
+        host.channelState.fxDesc = ppp::fxdesc::FastPitchSlideUp;
         // regular slide
         host.slideSpeed = int16_t(host.efg * 4);
         host.flags |= HCFLG_UPD_IF_ON;
@@ -2102,7 +2239,12 @@ void ItModule::initCommandF(HostChannel& host)
 
     if( hiNybble != 0xe0 )
     { // fine slide
+        host.channelState.fxDesc = ppp::fxdesc::PitchSlideUp;
         value *= 4;
+    }
+    else
+    {
+        host.channelState.fxDesc = ppp::fxdesc::SlowPitchSlideUp;
     }
 
     pitchSlideUp(host, value);
@@ -2128,10 +2270,16 @@ void ItModule::initCommandG(HostChannel& host)
     if( !host.isEnabled() )
     {
         initNoCommand(host);
+
+        host.channelState.fx = 'G';
+        host.channelState.fxDesc = ppp::fxdesc::Porta;
         return;
     }
 
     initCommandGL(host);
+
+    host.channelState.fx = 'G';
+    host.channelState.fxDesc = ppp::fxdesc::Porta;
 }
 
 // InitcommandG11
@@ -2304,6 +2452,9 @@ void ItModule::initCommandH(HostChannel& host)
 
     initNoCommand(host);
 
+    host.channelState.fx = 'H';
+    host.channelState.fxDesc = ppp::fxdesc::Vibrato;
+
     if( !host.isEnabled() )
     {
         return;
@@ -2317,6 +2468,10 @@ void ItModule::initCommandH(HostChannel& host)
 void ItModule::initCommandI(HostChannel& host)
 {
     initNoCommand(host);
+
+    host.channelState.fx = 'I';
+    host.channelState.fxDesc = ppp::fxdesc::Tremor;
+
     if( host.patternFxParam != 0 )
     {
         host.i00 = host.patternFxParam;
@@ -2348,6 +2503,9 @@ void ItModule::initCommandJ(HostChannel& host)
 {
     initNoCommand(host);
 
+    host.channelState.fx = 'J';
+    host.channelState.fxDesc = ppp::fxdesc::Arpeggio;
+
     host.arpeggioStage = 0;
 
     if( host.patternFxParam != 0 )
@@ -2375,6 +2533,9 @@ void ItModule::initCommandK(HostChannel& host)
 
     initNoCommand(host);
 
+    host.channelState.fx = 'K';
+    host.channelState.fxDesc = ppp::fxdesc::VibVolSlide;
+
     if( !host.isEnabled() )
     {
         return;
@@ -2387,6 +2548,9 @@ void ItModule::initCommandK(HostChannel& host)
 
 void ItModule::initCommandL(HostChannel& host)
 {
+    host.channelState.fx = 'L';
+    host.channelState.fxDesc = ppp::fxdesc::PortaVolSlide;
+
     if( host.patternFxParam != 0 )
     {
         host.dkl = host.patternFxParam;
@@ -2405,6 +2569,9 @@ void ItModule::initCommandL(HostChannel& host)
 void ItModule::initCommandM(HostChannel& host)
 {
     initNoCommand(host);
+
+    host.channelState.fx = 'M';
+    host.channelState.fxDesc = ppp::fxdesc::ChannelVolume;
 
     if( host.patternFxParam > 64 )
     {
@@ -2430,8 +2597,11 @@ void ItModule::initCommandN(HostChannel& host)
 
     initNoCommand(host);
 
+    host.channelState.fx = 'N';
+
     if( (host.n00 & 0x0fu) == 0 )
     {
+        host.channelState.fxDesc = ppp::fxdesc::ChannelVolSlideUp;
         host.channelVolumeChange = host.n00 >> 4u;
         host.flags |= HCFLG_UPD_ALWAYS;
         return;
@@ -2439,6 +2609,7 @@ void ItModule::initCommandN(HostChannel& host)
 
     if( (host.n00 & 0xf0u) == 0 )
     {
+        host.channelState.fxDesc = ppp::fxdesc::ChannelVolSlideDown;
         host.channelVolumeChange = -int(host.n00);
         host.flags |= HCFLG_UPD_ALWAYS;
         return;
@@ -2450,6 +2621,7 @@ void ItModule::initCommandN(HostChannel& host)
     int volume;
     if( loNybble == 0x0f )
     {
+        host.channelState.fxDesc = ppp::fxdesc::ChannelVolSlideUp;
         volume = host.channelVolume + hiNybble;
         if( volume > 64 )
         {
@@ -2458,6 +2630,7 @@ void ItModule::initCommandN(HostChannel& host)
     }
     else if( hiNybble == 0x0f )
     {
+        host.channelState.fxDesc = ppp::fxdesc::ChannelVolSlideDown;
         volume = host.channelVolume - loNybble;
         if( volume < 0 )
         {
@@ -2484,12 +2657,15 @@ void ItModule::initCommandO(HostChannel& host)
 
     initNoCommand(host);
 
+    host.channelState.fx = 'O';
+    host.channelState.fxDesc = ppp::fxdesc::Offset;
+
     if( (host.cellMask & (HCFLG_MSK_NOTE | HCFLG_MSK_INS)) == 0 )
     {
         return;
     }
 
-    if( host.effectiveNote >= 120 )
+    if( host.effectiveNote > PATTERN_MAX_NOTE )
     {
         return;
     }
@@ -2513,6 +2689,7 @@ void ItModule::initCommandO(HostChannel& host)
     }
 
     slave->sampleOffset = offset;
+    slave->loopDirBackward = false;
     BOOST_ASSERT(slave->sampleOffset >= 0 && slave->sampleOffset < m_samples[slave->smp]->length()
                  && slave->sampleOffset < slave->loopEnd);
 }
@@ -2525,6 +2702,9 @@ void ItModule::initCommandP(HostChannel& host)
     }
 
     initNoCommand(host);
+
+    host.channelState.fx = 'P';
+    host.channelState.fxDesc = ppp::fxdesc::SetPanPos;
 
     auto pan = host.cp;
     if( host.isEnabled() )
@@ -2539,12 +2719,14 @@ void ItModule::initCommandP(HostChannel& host)
 
     if( (host.p00 & 0x0fu) == 0 )
     {
+        host.channelState.fxDesc = ppp::fxdesc::PanSlideLeft;
         host.panbrelloChange = -int(host.p00 >> 4u);
         host.flags |= HCFLG_UPD_ALWAYS;
         return;
     }
     if( (host.p00 & 0xf0u) == 0 )
     {
+        host.channelState.fxDesc = ppp::fxdesc::PanSlideRight;
         host.panbrelloChange = host.p00;
         host.flags |= HCFLG_UPD_ALWAYS;
         return;
@@ -2553,6 +2735,7 @@ void ItModule::initCommandP(HostChannel& host)
     auto hiNybble = host.p00 & 0xf0u;
     if( loNybble == 0x0f )
     {
+        host.channelState.fxDesc = ppp::fxdesc::PanSlideLeft;
         hiNybble >>= 4;
         auto p = pan - int(hiNybble);
         if( p < 0 )
@@ -2563,6 +2746,7 @@ void ItModule::initCommandP(HostChannel& host)
     }
     else if( hiNybble == 0xf0 )
     {
+        host.channelState.fxDesc = ppp::fxdesc::PanSlideRight;
         auto p = pan + loNybble;
         if( p > 64 )
         {
@@ -2575,6 +2759,9 @@ void ItModule::initCommandP(HostChannel& host)
 void ItModule::initCommandQ(HostChannel& host)
 {
     initNoCommand(host);
+
+    host.channelState.fx = 'Q';
+    host.channelState.fxDesc = ppp::fxdesc::Retrigger;
 
     if( host.patternFxParam != 0 )
     {
@@ -2615,6 +2802,10 @@ void ItModule::initCommandR(HostChannel& host)
     }
 
     initNoCommand(host);
+
+    host.channelState.fx = 'R';
+    host.channelState.fxDesc = ppp::fxdesc::Tremolo;
+
     if( !host.isEnabled() )
     {
         return;
@@ -2659,6 +2850,8 @@ void ItModule::initCommandS(HostChannel& host)
                 host.vwf = fxData;
             }
             initNoCommand(host);
+            host.channelState.fx = 'S';
+            host.channelState.fxDesc = ppp::fxdesc::SetVibWaveform;
             return;
         case 0x04:
             if( fxData <= 3 )
@@ -2666,6 +2859,8 @@ void ItModule::initCommandS(HostChannel& host)
                 host.tremoloWaveForm = fxData;
             }
             initNoCommand(host);
+            host.channelState.fx = 'S';
+            host.channelState.fxDesc = ppp::fxdesc::SetTremWaveform;
             return;
         case 0x05:
             if( fxData <= 3 )
@@ -2674,16 +2869,22 @@ void ItModule::initCommandS(HostChannel& host)
                 host.panbrelloOffset = 0;
             }
             initNoCommand(host);
+            host.channelState.fx = 'S';
+            host.channelState.fxDesc = ppp::fxdesc::SetPanbrelloWaveform;
             return;
         case 0x06:
             m_tickCountdown = fxData;
             initNoCommand(host);
+            host.channelState.fx = 'S';
+            host.channelState.fxDesc = ppp::fxdesc::PatternDelay;
             return;
         case 0x07:
             switch( fxData )
             {
                 case 0x00:
                     initNoCommand(host);
+                    host.channelState.fx = 'S';
+                    host.channelState.fxDesc = ppp::fxdesc::NoteCut;
                     for( auto& slave : m_slaves )
                     {
                         if( host.getSlave() != nullptr && &host == host.getSlave()->getHost() && host.getSlave()->disowned )
@@ -2694,6 +2895,8 @@ void ItModule::initCommandS(HostChannel& host)
                     return;
                 case 0x01:
                     initNoCommand(host);
+                    host.channelState.fx = 'S';
+                    host.channelState.fxDesc = ppp::fxdesc::KeyOff;
                     for( auto& slave : m_slaves )
                     {
                         if( &host == slave.getHost() && slave.disowned )
@@ -2705,6 +2908,8 @@ void ItModule::initCommandS(HostChannel& host)
                     return;
                 case 0x02:
                     initNoCommand(host);
+                    host.channelState.fx = 'S';
+                    host.channelState.fxDesc = ppp::fxdesc::Fadeout;
                     for( auto& slave : m_slaves )
                     {
                         if( &host == slave.getHost() && slave.disowned )
@@ -2716,6 +2921,8 @@ void ItModule::initCommandS(HostChannel& host)
                     return;
                 case 0x03:
                     initNoCommand(host);
+                    host.channelState.fx = 'S';
+                    host.channelState.fxDesc = ppp::fxdesc::NNA;
                     if( host.isEnabled() )
                     {
                         host.getSlave()->nna = NNA_CUT;
@@ -2723,6 +2930,8 @@ void ItModule::initCommandS(HostChannel& host)
                     return;
                 case 0x04:
                     initNoCommand(host);
+                    host.channelState.fx = 'S';
+                    host.channelState.fxDesc = ppp::fxdesc::NNA;
                     if( host.isEnabled() )
                     {
                         host.getSlave()->nna = NNA_CONTINUE;
@@ -2730,6 +2939,8 @@ void ItModule::initCommandS(HostChannel& host)
                     return;
                 case 0x05:
                     initNoCommand(host);
+                    host.channelState.fx = 'S';
+                    host.channelState.fxDesc = ppp::fxdesc::NNA;
                     if( host.isEnabled() )
                     {
                         host.getSlave()->nna = NNA_NOTE_OFF;
@@ -2737,6 +2948,8 @@ void ItModule::initCommandS(HostChannel& host)
                     return;
                 case 0x06:
                     initNoCommand(host);
+                    host.channelState.fx = 'S';
+                    host.channelState.fxDesc = ppp::fxdesc::NNA;
                     if( host.isEnabled() )
                     {
                         host.getSlave()->nna = NNA_NOTE_FADE;
@@ -2744,6 +2957,8 @@ void ItModule::initCommandS(HostChannel& host)
                     return;
                 case 0x07:
                     initNoCommand(host);
+                    host.channelState.fx = 'S';
+                    host.channelState.fxDesc = ppp::fxdesc::EnvelopDisable;
                     if( host.isEnabled() )
                     {
                         host.getSlave()->flags &= ~SCFLG_VOL_ENV;
@@ -2751,6 +2966,8 @@ void ItModule::initCommandS(HostChannel& host)
                     return;
                 case 0x08:
                     initNoCommand(host);
+                    host.channelState.fx = 'S';
+                    host.channelState.fxDesc = ppp::fxdesc::EnvelopEnable;
                     if( host.isEnabled() )
                     {
                         host.getSlave()->flags |= SCFLG_VOL_ENV;
@@ -2758,6 +2975,8 @@ void ItModule::initCommandS(HostChannel& host)
                     return;
                 case 0x09:
                     initNoCommand(host);
+                    host.channelState.fx = 'S';
+                    host.channelState.fxDesc = ppp::fxdesc::EnvelopDisable;
                     if( host.isEnabled() )
                     {
                         host.getSlave()->flags &= ~SCFLG_PAN_ENV;
@@ -2765,6 +2984,8 @@ void ItModule::initCommandS(HostChannel& host)
                     return;
                 case 0x0a:
                     initNoCommand(host);
+                    host.channelState.fx = 'S';
+                    host.channelState.fxDesc = ppp::fxdesc::EnvelopEnable;
                     if( host.isEnabled() )
                     {
                         host.getSlave()->flags |= SCFLG_PAN_ENV;
@@ -2772,6 +2993,8 @@ void ItModule::initCommandS(HostChannel& host)
                     return;
                 case 0x0b:
                     initNoCommand(host);
+                    host.channelState.fx = 'S';
+                    host.channelState.fxDesc = ppp::fxdesc::EnvelopDisable;
                     if( host.isEnabled() )
                     {
                         host.getSlave()->flags &= ~SCFLG_PITCH_ENV;
@@ -2779,6 +3002,8 @@ void ItModule::initCommandS(HostChannel& host)
                     return;
                 case 0x0c:
                     initNoCommand(host);
+                    host.channelState.fx = 'S';
+                    host.channelState.fxDesc = ppp::fxdesc::EnvelopEnable;
                     if( host.isEnabled() )
                     {
                         host.getSlave()->flags |= SCFLG_PITCH_ENV;
@@ -2792,6 +3017,8 @@ void ItModule::initCommandS(HostChannel& host)
             }
         case 0x08:
             initNoCommand(host);
+            host.channelState.fx = 'S';
+            host.channelState.fxDesc = ppp::fxdesc::SetPanPos;
             setPan(host, static_cast<uint8_t>(((fxData * 16) + 2) / 4));
             break;
 
@@ -2799,17 +3026,25 @@ void ItModule::initCommandS(HostChannel& host)
             if( fxData == 1 )
             {
                 initNoCommand(host);
+                host.channelState.fx = 'S';
+                host.channelState.fxDesc = ppp::fxdesc::SetPanPos;
                 setPan(host, 100);
                 return;
             }
             initNoCommand(host);
+            host.channelState.fx = 'S';
+            host.channelState.fxDesc = ppp::fxdesc::SetPanPos;
             return;
         case 0x0a:
             host.oxh = fxData;
             initNoCommand(host);
+            host.channelState.fx = 'S';
+            host.channelState.fxDesc = ppp::fxdesc::Offset;
             return;
         case 0x0b:
             initNoCommand(host);
+            host.channelState.fx = 'S';
+            host.channelState.fxDesc = ppp::fxdesc::PatternLoop;
             if( fxData == 0 )
             {
                 host.plr = state().row;
@@ -2838,9 +3073,13 @@ void ItModule::initCommandS(HostChannel& host)
 
             return;
         case 0x0c:
+            host.channelState.fx = 'S';
+            host.channelState.fxDesc = ppp::fxdesc::NoteCut;
             host.flags |= HCFLG_UPD_IF_ON;
             return;
         case 0x0d:
+            host.channelState.fx = 'S';
+            host.channelState.fxDesc = ppp::fxdesc::NoteDelay;
             host.flags |= HCFLG_UPD_ALWAYS;
             return;
         case 0x0e:
@@ -2850,6 +3089,8 @@ void ItModule::initCommandS(HostChannel& host)
                 m_rowDelayActive = true;
             }
             initNoCommand(host);
+            host.channelState.fx = 'S';
+            host.channelState.fxDesc = ppp::fxdesc::PatternDelay;
             return;
         case 0x0f:
             host.sfx = fxData;
@@ -2869,11 +3110,15 @@ void ItModule::initCommandT(HostChannel& host)
     {
         initNoCommand(host);
         host.flags |= HCFLG_UPD_ALWAYS;
+        host.channelState.fx = 'T';
+        host.channelState.fxDesc = ppp::fxdesc::SetTempo;
         return;
     }
 
     setTempo(host.t00);
     initNoCommand(host);
+    host.channelState.fx = 'T';
+    host.channelState.fxDesc = ppp::fxdesc::SetTempo;
 }
 
 void ItModule::initCommandU(HostChannel& host)
@@ -2901,6 +3146,8 @@ void ItModule::initCommandU(HostChannel& host)
     }
 
     initNoCommand(host);
+    host.channelState.fx = 'U';
+    host.channelState.fxDesc = ppp::fxdesc::FineVibrato;
     if( !host.isEnabled() )
     {
         return;
@@ -2919,11 +3166,18 @@ void ItModule::initCommandV(HostChannel& host)
     }
 
     initNoCommand(host);
+
+    host.channelState.fx = 'V';
+    host.channelState.fxDesc = ppp::fxdesc::GlobalVolume;
 }
 
 void ItModule::initCommandW(HostChannel& host)
 {
     initNoCommand(host);
+
+    host.channelState.fx = 'W';
+    host.channelState.fxDesc = ppp::fxdesc::GlobalVolume;
+
     if( host.patternFxParam != 0 )
     {
         host.w00 = host.patternFxParam;
@@ -2939,16 +3193,19 @@ void ItModule::initCommandW(HostChannel& host)
 
     if( hiNybble == 0 )
     {
+        host.channelState.fxDesc = ppp::fxdesc::GlobalVolSlideDown;
         host.globalVolumeChange = -loNybble;
         host.flags |= HCFLG_UPD_ALWAYS;
     }
     else if( loNybble == 0 )
     {
+        host.channelState.fxDesc = ppp::fxdesc::GlobalVolSlideUp;
         host.globalVolumeChange = hiNybble >> 4;
         host.flags |= HCFLG_UPD_ALWAYS;
     }
     else if( hiNybble == 0xf0 )
     {
+        host.channelState.fxDesc = ppp::fxdesc::GlobalVolSlideDown;
         if( state().globalVolume < loNybble )
         {
             state().globalVolume = 0;
@@ -2962,6 +3219,7 @@ void ItModule::initCommandW(HostChannel& host)
     }
     else if( loNybble == 0x0f )
     {
+        host.channelState.fxDesc = ppp::fxdesc::GlobalVolSlideUp;
         hiNybble >>= 4;
         state().globalVolume += hiNybble;
         if( state().globalVolume > 0x80 )
@@ -2976,6 +3234,8 @@ void ItModule::initCommandW(HostChannel& host)
 void ItModule::initCommandX(HostChannel& host)
 {
     initNoCommand(host);
+    host.channelState.fx = 'W';
+    host.channelState.fxDesc = ppp::fxdesc::SetPanPos;
     setPan(host, (int(host.patternFxParam) + 2) / 4);
 }
 
@@ -2983,20 +3243,24 @@ void ItModule::initCommandY(HostChannel& host)
 {
     if( host.patternFxParam != 0 )
     {
-        auto AL = (host.patternFxParam & 0xf0u) >> 4u;
-        if( AL != 0 )
+        auto speed = (host.patternFxParam & 0xf0u) >> 4u;
+        if( speed != 0 )
         {
-            host.panbrelloSpeed = AL;
+            host.panbrelloSpeed = speed;
         }
 
-        auto AH = (host.patternFxParam & 0x0fu) << 1u;
-        if( AH != 0 )
+        auto depth = (host.patternFxParam & 0x0fu) << 1u;
+        if( depth != 0 )
         {
-            host.panbrelloDepth = AH;
+            host.panbrelloDepth = depth;
         }
     }
 
     initNoCommand(host);
+
+    host.channelState.fx = 'Y';
+    host.channelState.fxDesc = ppp::fxdesc::Panbrello;
+
     if( host.isEnabled() )
     {
         host.flags |= HCFLG_UPD_IF_ON;
@@ -3007,6 +3271,9 @@ void ItModule::initCommandY(HostChannel& host)
 void ItModule::initCommandZ(HostChannel& host)
 {
     initNoCommand(host);
+
+    host.channelState.fx = 'Z';
+    host.channelState.fxDesc = "MIDI  ";
 
     if( (host.patternFxParam & 0x80u) == 0 )
     {
@@ -3258,6 +3525,7 @@ void ItModule::commandQ(HostChannel& host)
     }
 
     host.getSlave()->sampleOffset = 0;
+    host.getSlave()->loopDirBackward = false;
 
     host.getSlave()->flags |= SCFLG_LOOP_CHANGE | SCFLG_NEW_NOTE | SCFLG_RECALC_FINAL_VOL;
 
@@ -3962,7 +4230,7 @@ SlaveChannel* ItModule::allocateChannelInstrument(SlaveChannel* slave, HostChann
         return nullptr;
     }
 
-    slave->sampleVolume = slave->smpOffs->header.gvl * slave->sampleVolume / 64;
+    slave->sampleVolume = slave->smpOffs->header.gvl * slave->sampleVolume / 64u;
     BOOST_ASSERT(slave->sampleVolume >= 0 && slave->sampleVolume <= 128);
 
     return slave;
@@ -4134,7 +4402,7 @@ void ItModule::M32MixHandler(MixerFrameBuffer& mixBuffer)
                 continue;
             }
 
-            slave.sampleOffset.reset(frequency(), slave.frequency);
+            slave.sampleOffset.setStepSize(frequency(), slave.frequency);
         }
 
         // M32MixHandler3
@@ -4212,52 +4480,7 @@ ChannelState ItModule::internal_channelStatus(size_t idx) const
         BOOST_THROW_EXCEPTION(std::out_of_range("Requested channel index out of range"));
     }
 
-    const auto& host = m_hosts[idx];
-    ChannelState result;
-    result.active = (host.flags & HCFLG_ON) != 0;
-    result.volume = host.vse * 100 / 64;
-    if( host.cellMask & HCFLG_MSK_CMD )
-    {
-        result.fx = 'A' + host.patternFx;
-    }
-    else
-    {
-        result.fx = '.';
-    }
-    result.fxParam = host.patternFxParam;
-    result.fxDesc = "xxxxxS";
-    result.instrument = host.sampleIndex;
-    result.instrumentName = "";
-    result.noteTriggered = (host.cellMask & HCFLG_MSK_NOTE) != 0;
-    if( host.cellMask & HCFLG_MSK_NOTE )
-    {
-        if( host.patternNote == PATTERN_NOTE_OFF )
-        {
-            result.note = ChannelState::KeyOff;
-        }
-        else if( host.patternNote == PATTERN_NOTE_CUT )
-        {
-            result.note = ChannelState::NoteCut;
-        }
-        else
-        {
-            result.note = host.patternNote;
-        }
-    }
-    else
-    {
-        result.note = ChannelState::NoNote;
-    }
-    if( host.cp == 100 )
-    {
-        result.panning = ChannelState::Surround;
-    }
-    else
-    {
-        result.panning = (host.cp - 32) * 100 / 32;
-    }
-
-    return result;
+    return m_hosts[idx].channelState;
 }
 
 int ItModule::internal_channelCount() const

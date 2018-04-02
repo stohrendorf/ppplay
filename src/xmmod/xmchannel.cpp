@@ -739,8 +739,6 @@ void XmChannel::update(const XmCell& cell, bool estimateOnly)
             m_state.fx = 'A' + uint8_t(cell.effect()) - 0x0a;
         }
     }
-    m_state.fxParam = cell.effectValue();
-
     if( m_module->state().tick == 0 && !m_module->isRunningPatDelay() )
     {
         updateTick0(cell, estimateOnly);
@@ -836,7 +834,7 @@ void XmChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
     {
         return;
     }
-    m_bres.reset(m_module->frequency(), m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod));
+    m_bres.setStepSize(m_module->frequency(), m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod));
     const auto& currSmp = currentSample();
     if( !currSmp )
     {

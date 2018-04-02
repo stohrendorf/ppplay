@@ -263,7 +263,7 @@ void ModChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
         m_state.active = false;
         return;
     }
-    m_stepper.reset(m_module->frequency(), FrequencyBase / m_physPeriod);
+    m_stepper.setStepSize(m_module->frequency(), FrequencyBase / m_physPeriod);
     // TODO glissando
     const auto& currSmp = currentSample();
     if( mixBuffer )

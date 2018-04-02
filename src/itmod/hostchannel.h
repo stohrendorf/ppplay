@@ -1,5 +1,7 @@
 #pragma once
 
+#include "genmod/channelstate.h"
+
 #include <cstdint>
 #include <boost/assert.hpp>
 
@@ -35,7 +37,8 @@ constexpr uint16_t HCFLG_NO_IRQ = 0x8000;
 
 struct SlaveChannel;
 
-struct HostChannel
+struct HostChannel final
+    : public ISerializable
 {
     uint16_t flags = 0;
     uint8_t cellMask = 0; //!< msk
@@ -104,7 +107,7 @@ public:
     int8_t lvi = 0;
 
     //ofs:0x3e
-    int8_t cp = 32; // init from header, 0..64
+    uint8_t cp = 32; // init from header, 0..64
     uint8_t channelVolume = 64; //!< 0..64
     int8_t vch = 0; //!< volume change?
     int8_t tremorCountdown = 0;
@@ -148,6 +151,84 @@ public:
     bool isEnabled() const noexcept
     {
         return (flags & HCFLG_ON) != 0;
+    }
+
+    ChannelState channelState;
+
+    AbstractArchive& serialize(AbstractArchive* archive) override
+    {
+        return *archive
+               % flags
+               % cellMask
+               % patternNote
+               % patternInstrument
+               % patternVolume
+               % patternFx
+               % patternFxParam
+               % lastPatternFx
+               % lastPatternFxParam
+               % volumeFx
+               % volumeFxParam
+               % mch
+               % midiProgram
+               % effectiveNote
+               % sampleIndex
+               % dkl
+               % efg
+               % o00
+               % i00
+               % j00
+               % m00
+               % n00
+               % p00
+               % q00
+               % t00
+               % s00
+               % oxh
+               % w00
+               % vce
+               % goe
+               % sfx
+               % cuc
+               % vse
+               % ltr
+               % *reinterpret_cast<uintptr_t*>(&m_scOffst)
+               % plr
+               % plc
+               % panbrelloWaveform
+               % panbrelloOffset
+               % panbrelloDepth
+               % panbrelloSpeed
+               % lastRandomPanbrelloValue
+               % lvi
+               % cp
+               % channelVolume
+               % vch
+               % tremorCountdown
+               % tremorOn
+               % retriggerCountdown
+               % portaTargetFrequency
+               % vwf
+               % vibratoPosition
+               % vdp
+               % vsp
+               % tremoloWaveForm
+               % tremoloPosition
+               % tremoloDepth
+               % tremoloSpeed
+               % portaSlideUp
+               % slideSpeed
+               % tremorOnTime
+               % tremorOffTime
+               % arpeggioStage
+               % arpeggioStage1
+               % arpeggioStage2
+               % channelVolumeChange
+               % panbrelloChange
+               % globalVolumeChange
+               % sfxData
+               % sfxType
+               % channelState;
     }
 };
 }

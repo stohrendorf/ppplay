@@ -122,13 +122,12 @@ public:
      * @param[in] denominator New value for m_denominator
      * @param[in] nominator New value for m_nominator
      */
-    constexpr void reset(uint_fast32_t denominator, uint_fast32_t nominator)
+    constexpr void setStepSize(uint_fast32_t denominator, uint_fast32_t nominator)
     {
         BOOST_ASSERT(denominator > 0);
         m_fraction = m_fraction * denominator / m_denominator;
         m_denominator = denominator;
         m_nominator = nominator;
-        // m_fraction = denominator-1;
         BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
     }
 

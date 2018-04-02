@@ -220,7 +220,7 @@ protected:
     static light4cxx::Logger* logger();
 };
 
-inline bool mix(
+PPPLAY_MODULE_BASE_EXPORT bool mix(
     const Sample& smp,
     Sample::LoopType loopType,
     Sample::Interpolation inter,
@@ -231,106 +231,7 @@ inline bool mix(
     size_t loopEnd,
     int factorLeft,
     int factorRight,
-    int rightShift)
-{
-    // sanitize
-    if( loopType == Sample::LoopType::None )
-    {
-        loopStart = 0;
-        loopEnd = smp.length();
-    }
-    else
-    {
-        if( loopStart > smp.length() )
-        {
-            loopStart = smp.length();
-        }
-        if( loopEnd > smp.length() )
-        {
-            loopEnd = smp.length();
-        }
-    }
-
-    if( stepper < 0 )
-    {
-        stepper = 0;
-    }
-
-    size_t offset = 0;
-    while( offset < buffer.size() )
-    {
-        long canRead;
-        if( !reverse )
-        {
-            canRead = loopEnd - stepper;
-        }
-        else
-        {
-            canRead = stepper - loopStart;
-        }
-        if( canRead < 0 )
-        {
-            canRead = 0;
-        }
-
-        const size_t canWrite = buffer.size() - offset;
-        BOOST_ASSERT(canWrite > 0);
-        auto mustRead = static_cast<size_t>(canWrite * stepper.floatStepSize());
-        if( mustRead > canRead )
-        {
-            mustRead = canRead;
-        }
-        auto mustMix = static_cast<size_t>(mustRead / stepper.floatStepSize());
-        if( mustMix <= 0 )
-        {
-            mustMix = 1;
-        }
-
-        offset += smp.mix(inter, stepper, buffer, offset, mustMix, reverse, factorLeft, factorRight, rightShift);
-
-        switch( loopType )
-        {
-            case Sample::LoopType::None:
-                if( stepper >= 0 && static_cast<size_t>(stepper) >= loopEnd )
-                {
-                    return false;
-                }
-                else if(stepper < 0)
-                {
-                    stepper = 0;
-                }
-                break;
-            case Sample::LoopType::Forward:
-                if( stepper >= 0 && static_cast<size_t>(stepper) >= loopEnd )
-                {
-                    stepper = loopStart + (stepper - loopEnd);
-                    BOOST_ASSERT(stepper >= 0 && static_cast<size_t>(stepper) >= loopStart && static_cast<size_t>(stepper) < loopEnd);
-                }
-                else if(stepper < 0)
-                {
-                    stepper = 0;
-                }
-                break;
-            case Sample::LoopType::Pingpong:
-                if( reverse && (stepper < 0 || static_cast<size_t>(stepper) < loopStart) )
-                {
-                    stepper = loopStart + (loopStart - stepper);
-                    reverse = false;
-                    BOOST_ASSERT(stepper >= 0 && static_cast<size_t>(stepper) >= loopStart && static_cast<size_t>(stepper) < loopEnd);
-                }
-                else if( !reverse && (stepper > 0 && static_cast<size_t>(stepper) >= loopEnd) )
-                {
-                    stepper = loopEnd - (stepper - loopEnd) - 1;
-                    reverse = true;
-                    BOOST_ASSERT(stepper >= 0 && static_cast<size_t>(stepper) >= loopStart && static_cast<size_t>(stepper) < loopEnd);
-                }
-
-                break;
-        }
-    }
-
-    return true;
-}
+    int rightShift);
 
 inline bool mix(
     const Sample& smp,
@@ -361,63 +262,6 @@ inline bool mix(
         factorRight,
         rightShift);
 }
-
-#if 0
-inline bool mix(
-    const Sample& smp,
-    Sample::Interpolation inter,
-    Stepper& stepper,
-    MixerFrameBuffer& buffer,
-    bool& reverse,
-    int factorLeft,
-    int factorRight,
-    int rightShift)
-{
-    size_t loopStart = smp.loopType() == Sample::LoopType::None ? 0 : smp.loopStart();
-    size_t loopEnd = smp.loopType() == Sample::LoopType::None ? smp.length() : smp.loopEnd();
-
-    return mix(
-        smp,
-        smp.loopType(),
-        inter,
-        stepper,
-        buffer,
-        reverse,
-        loopStart,
-        loopEnd,
-        factorLeft,
-        factorRight,
-        rightShift);
-}
-
-inline bool mix(
-    const Sample& smp,
-    Sample::Interpolation inter,
-    Stepper& stepper,
-    MixerFrameBuffer& buffer,
-    int factorLeft,
-    int factorRight,
-    int rightShift)
-{
-    bool tmp = false;
-
-    size_t loopStart = smp.loopType() == Sample::LoopType::None ? 0 : smp.loopStart();
-    size_t loopEnd = smp.loopType() == Sample::LoopType::None ? smp.length() : smp.loopEnd();
-
-    return mix(
-        smp,
-        smp.loopType(),
-        inter,
-        stepper,
-        buffer,
-        tmp,
-        loopStart,
-        loopEnd,
-        factorLeft,
-        factorRight,
-        rightShift);
-}
-#endif
 
 /**
  * @}

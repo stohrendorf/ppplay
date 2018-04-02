@@ -239,7 +239,6 @@ void S3mChannel::update(const S3mCell& cell, bool patDelay, bool estimateOnly)
         }
 
         m_state.cell = m_currentCell->trackerString();
-        m_state.fxParam = m_currentCell->effectValue();
         if( m_currentCell->effect() == s3mEmptyCommand )
         {
             m_state.fx = 0;
@@ -503,7 +502,7 @@ void S3mChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
         m_state.active = false;
         return;
     }
-    m_stepper.reset(m_module->frequency(), 8363 * 1712 / m_realPeriod);
+    m_stepper.setStepSize(m_module->frequency(), 8363 * 1712 / m_realPeriod);
     recalcVolume();
     uint16_t currVol = m_realVolume;
     const auto& currSmp = currentSample();

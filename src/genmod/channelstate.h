@@ -14,35 +14,35 @@ namespace ppp
  * @ingroup GenMod
  * @brief Contains data to display to the user
  */
-struct PPPLAY_MODULE_BASE_EXPORT ChannelState : public ISerializable {
+struct PPPLAY_MODULE_BASE_EXPORT ChannelState
+    : public ISerializable
+{
     //! @brief Indicates that the channel is active
-    bool active;
+    bool active = false;
     //! @brief Is @c true to indicate that a note was triggered
-    bool noteTriggered;
+    bool noteTriggered = false;
     //! @brief Current instrument number
-    uint8_t instrument;
+    uint8_t instrument = 0;
     //! @brief Current instrument title
-    std::string instrumentName;
+    std::string instrumentName{};
     /**
      * @brief Currently played note index
      * @see KeyOff NoteCut TooLow TooHigh NoNote MaxNote
      */
-    uint8_t note;
+    uint8_t note = NoNote;
     //! @brief Current effect display character
-    char fx;
-    //! @brief Current effect parameter
-    uint8_t fxParam;
+    char fx = 0;
     /**
      * @brief The current effect in the format @c xxxx[xS]S, where @c x is a short description and @c S is a symbol
      * @see ppp::fxdesc
      */
-    std::string fxDesc;
+    std::string fxDesc{};
     //! @brief Panning position (-100..100), or @c Surround
-    int8_t panning;
+    int8_t panning = 0;
     //! @brief Volume, 0..100
-    uint8_t volume;
+    uint8_t volume = 0;
     //! @brief Current pattern cell string
-    std::string cell;
+    std::string cell{};
 
     /**
      * @brief Special note values
@@ -66,11 +66,8 @@ struct PPPLAY_MODULE_BASE_EXPORT ChannelState : public ISerializable {
     //! @brief Panning is virtual surround
     static constexpr int8_t Surround = -128;
 
-    ChannelState() : active( false ), noteTriggered( false ), instrument( 0 )
-        , instrumentName(), note( NoNote ), fx( 0 ), fxParam( 0 ), fxDesc()
-        , panning( 0 ), volume( 0 ), cell() {
-    }
+    ChannelState() = default;
 
-    AbstractArchive& serialize( AbstractArchive* archive ) override;
+    AbstractArchive& serialize(AbstractArchive* archive) override;
 };
 }

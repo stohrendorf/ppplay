@@ -12,7 +12,6 @@ AbstractArchive& ChannelState::serialize(AbstractArchive* archive)
         % instrumentName
         % note
         % fx
-        % fxParam
         % fxDesc
         % panning
         % volume
