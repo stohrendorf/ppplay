@@ -280,7 +280,7 @@ void ModChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
         }
         volL *= m_physVolume;
         volR *= m_physVolume;
-        m_state.active = mix(*currSmp, currSmp->loopType(), m_module->interpolation(), m_stepper, *mixBuffer, currSmp->loopStart(), currSmp->loopEnd(), volL, volR, 13) != 0;
+        m_state.active = mix(*currSmp, currSmp->loopType(), m_module->interpolation(), m_stepper, *mixBuffer, currSmp->loopStart(), currSmp->loopEnd(), volL, volR, 13, false) != 0;
     }
 }
 

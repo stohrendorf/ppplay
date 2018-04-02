@@ -117,9 +117,9 @@ protected:
         % m_rowDelayActive
         % m_breakRow
         % m_patternLooping
-        % reinterpret_cast<uintptr_t&>(m_patternDataPtr)
+        % *reinterpret_cast<uintptr_t*>(&m_patternDataPtr)
         % m_patternRows
-        % reinterpret_cast<uintptr_t&>(m_lastSlaveChannel);
+        % *reinterpret_cast<uintptr_t*>(&m_lastSlaveChannel);
 
         for( auto& channel : m_slaves )
         {
@@ -172,7 +172,7 @@ private:
 
     void midiTranslateParametrized(HostChannel* host, SlaveChannel* slave, uint16_t cmd);
 
-    void M32MixHandler(MixerFrameBuffer& buffer);
+    void M32MixHandler(MixerFrameBuffer& buffer, bool preprocess);
 
 public:
     std::vector<std::unique_ptr<ItSample>> m_samples{};

@@ -675,7 +675,7 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
         result->m_slaves[i].setHost(&result->m_hosts[i]);
     }
 
-    result->noConstMetaInfo().trackerInfo = stringFmt("Impulse Tracker %X.%02X", result->m_header.cwtV>>8, result->m_header.cwtV&0xff);
+    result->noConstMetaInfo().trackerInfo = stringFmt("Impulse Tracker %X.%02X", result->m_header.cwtV >> 8, result->m_header.cwtV & 0xff);
     result->noConstMetaInfo().filename = stream->name();
     result->noConstMetaInfo().title = stringncpy(result->m_header.name, 26);
 
@@ -714,12 +714,13 @@ size_t ItModule::internal_buildTick(const AudioFrameBufferPtr& buffer)
         return 0;
     }
 
+    MixerFrameBuffer mixBuffer;
+    mixBuffer.resize(tickBufferLength());
+    M32MixHandler(mixBuffer, buffer == nullptr);
+    BOOST_ASSERT(mixBuffer.size() == tickBufferLength());
+
     if( buffer != nullptr )
     {
-        MixerFrameBuffer mixBuffer;
-        mixBuffer.resize(tickBufferLength());
-        M32MixHandler(mixBuffer);
-        BOOST_ASSERT(mixBuffer.size() == tickBufferLength());
         buffer->clear();
 
         for( const auto& f : mixBuffer )
@@ -1009,6 +1010,8 @@ void ItModule::loadRow()
         }
         else
         {
+            host->patternFx = 0;
+            host->patternFxParam = 0;
             host->channelState.cell += "...";
         }
 
@@ -4362,7 +4365,7 @@ Retry:
     }
 }
 
-void ItModule::M32MixHandler(MixerFrameBuffer& mixBuffer)
+void ItModule::M32MixHandler(MixerFrameBuffer& mixBuffer, bool preprocess)
 {
     static constexpr int MixVolume = 0x80; //!< 0..128
 
@@ -4370,10 +4373,8 @@ void ItModule::M32MixHandler(MixerFrameBuffer& mixBuffer)
     // Prepare mixing stuff
 
     // Work backwards
-    for( auto it = m_slaves.rbegin(); it != m_slaves.rend(); ++it )
+    for( auto& slave : m_slaves )
     {
-        auto& slave = *it;
-
         if( (slave.flags & SCFLG_ON) == 0 || slave.smp == MIDI_SAMPLE )
         {
             continue;
@@ -4432,8 +4433,8 @@ void ItModule::M32MixHandler(MixerFrameBuffer& mixBuffer)
             if( (slaveFlags & SCFLG_MUTED) != 0 )
             {
                 // Zero volume
-//                slave.mixVolumeL = 0;
-//                slave.mixVolumeR = 0;
+                slave.mixVolumeL = 0;
+                slave.mixVolumeR = 0;
             }
             else if( slave.finalPan == 100 )
             {
@@ -4451,7 +4452,7 @@ void ItModule::M32MixHandler(MixerFrameBuffer& mixBuffer)
             }
         }
 
-        mix(
+        bool mixed = mix(
             *slave.smpOffs,
             slave.lpm,
             interpolation(),
@@ -4462,10 +4463,18 @@ void ItModule::M32MixHandler(MixerFrameBuffer& mixBuffer)
             slave.loopEnd,
             slave.mixVolumeL,
             slave.mixVolumeR,
-            0
-           );
+            0,
+            preprocess);
 
-        // Store filter data
+        if( !mixed )
+        {
+            slave.flags = SCFLG_NOTE_CUT;
+            if( !slave.disowned )
+            {
+                slave.getHost()->disable();
+            }
+        }
+
         slave.flags &=
             SCFLG_ON | SCFLG_NOTE_OFF | SCFLG_FADEOUT | SCFLG_CTR_PAN | SCFLG_MUTED | SCFLG_VOL_ENV |
             SCFLG_PAN_ENV |

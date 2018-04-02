@@ -522,7 +522,7 @@ void S3mChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
     }
     volL *= currVol;
     volR *= currVol;
-    m_state.active = mix(*currSmp, currSmp->loopType(), m_module->interpolation(), m_stepper, *mixBuffer, currSmp->loopStart(), currSmp->loopEnd(), volL, volR, 11) != 0;
+    m_state.active = mix(*currSmp, currSmp->loopType(), m_module->interpolation(), m_stepper, *mixBuffer, currSmp->loopStart(), currSmp->loopEnd(), volL, volR, 11, false) != 0;
 }
 
 void S3mChannel::updateStatus()

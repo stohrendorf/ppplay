@@ -254,7 +254,7 @@ inline BasicSampleFrame Sample::sampleAt(size_t pos) const noexcept
  * @}
  */
 bool mix(const Sample& smp, Sample::LoopType loopType, Sample::Interpolation inter, Stepper& stepper, MixerFrameBuffer& buffer, bool& reverse, size_t loopStart,
-         size_t loopEnd, int factorLeft, int factorRight, int rightShift)
+         size_t loopEnd, int factorLeft, int factorRight, int rightShift, bool preprocess)
 {
     BOOST_ASSERT(stepper >= 0);
 
@@ -317,7 +317,34 @@ bool mix(const Sample& smp, Sample::LoopType loopType, Sample::Interpolation int
             mustMix = 1;
         }
 
-        offset += smp.mix(inter, stepper, buffer, offset, mustMix, reverse, factorLeft, factorRight, rightShift);
+        if( !preprocess )
+        {
+            offset += smp.mix(inter, stepper, buffer, offset, mustMix, reverse, factorLeft, factorRight, rightShift);
+        }
+        else
+        {
+            size_t mixed = 0;
+            for( ; offset < buffer.size() && mixed < mustMix; ++offset, ++mixed, ++offset )
+            {
+                if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= smp.length() )
+                {
+                    break;
+                }
+                else if( reverse && stepper < 0 )
+                {
+                    break;
+                }
+
+                if( !reverse )
+                {
+                    stepper.next();
+                }
+                else
+                {
+                    stepper.prev();
+                }
+            }
+        }
 
         switch( loopType )
         {

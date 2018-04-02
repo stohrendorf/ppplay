@@ -231,7 +231,8 @@ PPPLAY_MODULE_BASE_EXPORT bool mix(
     size_t loopEnd,
     int factorLeft,
     int factorRight,
-    int rightShift);
+    int rightShift,
+    bool preprocess);
 
 inline bool mix(
     const Sample& smp,
@@ -243,7 +244,8 @@ inline bool mix(
     size_t loopEnd,
     int factorLeft,
     int factorRight,
-    int rightShift)
+    int rightShift,
+    bool preprocess)
 {
     BOOST_ASSERT(loopType != Sample::LoopType::Pingpong);
 
@@ -260,7 +262,8 @@ inline bool mix(
         loopEnd,
         factorLeft,
         factorRight,
-        rightShift);
+        rightShift,
+        preprocess);
 }
 
 /**
