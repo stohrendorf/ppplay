@@ -134,7 +134,7 @@ public:
     constexpr float floatStepSize() const
     {
         BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
-        return float(m_fraction) / m_denominator;
+        return 1 - float(m_fraction) / m_denominator;
     }
 
     /**

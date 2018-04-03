@@ -11,6 +11,25 @@ namespace ppp
 {
 namespace it
 {
+class ItOrder
+    : public OrderEntry
+{
+public:
+    DISABLE_COPY(ItOrder)
+
+    ItOrder() = delete;
+
+    explicit ItOrder(uint8_t idx)
+        : OrderEntry(idx)
+    {
+    }
+
+    bool isUnplayed() const override
+    {
+        return OrderEntry::isUnplayed() && index() < 254;
+    }
+};
+
 typedef void (ItModule::*InitCommand)(HostChannel&);
 
 typedef void (ItModule::*Command)(HostChannel&);
@@ -597,7 +616,7 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
 
     for( const auto& o : orders )
     {
-        result->addOrder(std::make_unique<OrderEntry>(o));
+        result->addOrder(std::make_unique<ItOrder>(o));
     }
 
     result->m_patterns.resize(result->m_header.patNum);
@@ -911,6 +930,53 @@ void ItModule::loadRow()
         host.flags &= ~(HCFLG_UPD_MODE | HCFLG_ROW_UPDATED | HCFLG_UPD_VOL_IF_ON);
     }
 
+    // first clear all states for the case there's no pattern data
+    for( auto& host : m_hosts )
+    {
+        host.channelState.noteTriggered = false;
+        host.channelState.fx = 0;
+        host.channelState.fxDesc = ppp::fxdesc::NullFx;
+        if( host.getSlave() != nullptr && (host.getSlave()->flags & SCFLG_ON) != 0 )
+        {
+            auto slave = host.getSlave();
+            auto smp = slave->smpOffs;
+            BOOST_ASSERT(smp != nullptr);
+            auto exp = std::log2(double(host.getSlave()->frequency) / smp->header.c5speed);
+            auto note = std::lround((exp * 12) + 5 * 12);
+            if( note < 0 )
+            {
+                host.channelState.note = ChannelState::TooLow;
+            }
+            else if( note > PATTERN_MAX_NOTE )
+            {
+                host.channelState.note = ChannelState::TooHigh;
+            }
+            else
+            {
+                host.channelState.note = static_cast<uint8_t>(note);
+            }
+
+            host.channelState.note = host.patternNote;
+        }
+        else
+        {
+            host.channelState.note = ChannelState::NoNote;
+        }
+
+        host.channelState.cell = "... .. .. ...";
+
+        host.channelState.active = (host.flags & HCFLG_ON) != 0;
+        host.channelState.volume = host.vse * 100 / 64;
+        if( host.cp != 100 )
+        {
+            host.channelState.panning = (host.cp - 32) * 100 / 32;
+        }
+        else
+        {
+            host.channelState.panning = ChannelState::Surround;
+        }
+    }
+
     BOOST_ASSERT(m_patternDataPtr != nullptr);
     while( uint8_t cellHeader = *m_patternDataPtr++ )
     {
@@ -928,7 +994,14 @@ void ItModule::loadRow()
         {
             host->patternNote = *m_patternDataPtr++;
         }
-        if( (host->cellMask & HCFLG_MSK_NOTE_2) != 0 )
+
+        if( (host->cellMask & HCFLG_MSK_NOTE) == 0 )
+        {
+            host->channelState.noteTriggered = false;
+            host->channelState.cell += "... ";
+            host->channelState.note = ChannelState::NoNote;
+        }
+        else
         {
             if( host->patternNote == PATTERN_NOTE_CUT )
             {
@@ -936,83 +1009,95 @@ void ItModule::loadRow()
                 host->channelState.cell += "^^^ ";
                 host->channelState.note = ChannelState::NoteCut;
             }
-            else if( host->patternNote == PATTERN_NOTE_OFF )
+            else if( host->patternNote > PATTERN_MAX_NOTE )
             {
                 host->channelState.noteTriggered = true;
                 host->channelState.cell += "=== ";
                 host->channelState.note = ChannelState::KeyOff;
             }
-            else if( host->patternNote > PATTERN_MAX_NOTE )
+            else if( host->getSlave() != nullptr && (host->getSlave()->flags & SCFLG_ON) != 0 )
             {
-                host->channelState.noteTriggered = false;
-                host->channelState.cell += "... ";
-                host->channelState.note = ChannelState::TooHigh;
-            }
-            else
-            {
+                auto slave = host->getSlave();
+                auto smp = slave->smpOffs;
+                BOOST_ASSERT(smp != nullptr);
+                auto exp = std::log2(double(host->getSlave()->frequency) / smp->header.c5speed);
+                auto note = std::lround((exp * 12) + 5 * 12);
+                if( note < 0 )
+                {
+                    host->channelState.note = ChannelState::TooLow;
+                }
+                else if( note > PATTERN_MAX_NOTE )
+                {
+                    host->channelState.note = ChannelState::TooHigh;
+                }
+                else
+                {
+                    host->channelState.note = static_cast<uint8_t>(note);
+                }
+
                 host->channelState.noteTriggered = true;
                 host->channelState.cell += stringFmt("%s%d ", ppp::NoteNames[host->patternNote % 12], host->patternNote / 12 + 0);
                 host->channelState.note = host->patternNote;
             }
-        }
-        else
-        {
-            host->channelState.noteTriggered = false;
-            host->channelState.cell += "... ";
-            host->channelState.note = ChannelState::NoNote;
+            else
+            {
+                host->channelState.noteTriggered = false;
+                host->channelState.cell += "... ";
+                host->channelState.note = ChannelState::NoNote;
+            }
         }
 
         if( (host->cellMask & HCFLG_MSK_INS_1) != 0 )
         {
             host->patternInstrument = *m_patternDataPtr++;
         }
-        if( (host->cellMask & HCFLG_MSK_INS_2) != 0 )
+
+        if( (host->cellMask & HCFLG_MSK_INS) == 0 )
         {
-            host->channelState.cell += stringFmt("%02d ", int(host->patternInstrument));
+            host->channelState.cell += ".. ";
         }
         else
         {
-            host->channelState.cell += ".. ";
+            host->channelState.cell += stringFmt("%02d ", int(host->patternInstrument));
         }
 
         if( (host->cellMask & HCFLG_MSK_VOL_1) != 0 )
         {
             host->patternVolume = *m_patternDataPtr++;
         }
-        if( (host->cellMask & HCFLG_MSK_VOL_2) != 0 )
+
+        if( (host->cellMask & HCFLG_MSK_VOL) == 0 )
         {
-            host->channelState.cell += stringFmt("%02X ", int(host->patternVolume));
+            host->channelState.cell += ".. ";
         }
         else
         {
-            host->channelState.cell += ".. ";
+            host->channelState.cell += stringFmt("%02X ", int(host->patternVolume));
         }
 
         if( (host->cellMask & HCFLG_MSK_CMD_1) != 0 )
         {
             host->patternFx = host->lastPatternFx = *m_patternDataPtr++;
             host->patternFxParam = host->lastPatternFxParam = *m_patternDataPtr++;
-
-            if( host->patternFx != 0 )
-            {
-                host->channelState.cell += stringFmt("%c%02X", char('A' + (host->patternFx & 0x1f) - 1), int(host->patternFxParam));
-            }
-            else
-            {
-                host->channelState.cell += "...";
-            }
         }
         else if( (host->cellMask & HCFLG_MSK_CMD_2) != 0 )
         {
             host->patternFx = host->lastPatternFx;
             host->patternFxParam = host->lastPatternFxParam;
-            host->channelState.cell += "...";
         }
         else
         {
             host->patternFx = 0;
             host->patternFxParam = 0;
+        }
+
+        if( (host->cellMask & HCFLG_MSK_CMD) == 0 || host->patternFx == 0 )
+        {
             host->channelState.cell += "...";
+        }
+        else
+        {
+            host->channelState.cell += stringFmt("%c%02X", char('A' + (host->patternFx & 0x1f) - 1), int(host->patternFxParam));
         }
 
         onCellLoaded(*host);
@@ -1026,11 +1111,6 @@ void ItModule::loadRow()
         else
         {
             host->channelState.panning = ChannelState::Surround;
-        }
-        if( (host->cellMask & HCFLG_MSK_CMD_1) == 0 )
-        {
-            host->channelState.fx = 0;
-            host->channelState.fxDesc = ppp::fxdesc::NullFx;
         }
     }
 }
@@ -2425,7 +2505,7 @@ void ItModule::initCommandGL(HostChannel& host)
 
 void ItModule::initCommandH(HostChannel& host)
 {
-    if( (host.cellMask & HCFLG_MSK_NOTE) != 0 && host.patternNote <= 119 )
+    if( (host.cellMask & HCFLG_MSK_NOTE) != 0 && host.patternNote <= PATTERN_MAX_NOTE )
     {
         host.vibratoPosition = 0;
         host.lvi = 0;
@@ -3276,7 +3356,7 @@ void ItModule::initCommandZ(HostChannel& host)
     initNoCommand(host);
 
     host.channelState.fx = 'Z';
-    host.channelState.fxDesc = "MIDI  ";
+    host.channelState.fxDesc = "Macro ";
 
     if( (host.patternFxParam & 0x80u) == 0 )
     {
