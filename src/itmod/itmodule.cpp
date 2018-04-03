@@ -1010,45 +1010,8 @@ void ItModule::loadRow()
         host.channelState.noteTriggered = false;
         host.channelState.fx = 0;
         host.channelState.fxDesc = ppp::fxdesc::NullFx;
-        if( host.getSlave() != nullptr && (host.getSlave()->flags & SCFLG_ON) != 0 )
-        {
-            auto slave = host.getSlave();
-            auto smp = slave->smpOffs;
-            BOOST_ASSERT(smp != nullptr);
-            auto exp = std::log2(double(host.getSlave()->frequency) / smp->header.c5speed);
-            auto note = std::lround((exp * 12) + 5 * 12);
-            if( note < 0 )
-            {
-                host.channelState.note = ChannelState::TooLow;
-            }
-            else if( note > PATTERN_MAX_NOTE )
-            {
-                host.channelState.note = ChannelState::TooHigh;
-            }
-            else
-            {
-                host.channelState.note = static_cast<uint8_t>(note);
-            }
-
-            host.channelState.note = host.patternNote;
-        }
-        else
-        {
-            host.channelState.note = ChannelState::NoNote;
-        }
 
         host.channelState.cell = "... .. .. ...";
-
-        host.channelState.active = (host.flags & HCFLG_ON) != 0;
-        host.channelState.volume = host.vse * 100 / 64;
-        if( host.cp != 100 )
-        {
-            host.channelState.panning = (host.cp - 32) * 100 / 32;
-        }
-        else
-        {
-            host.channelState.panning = ChannelState::Surround;
-        }
     }
 
     BOOST_ASSERT(m_patternDataPtr != nullptr);
@@ -1073,7 +1036,6 @@ void ItModule::loadRow()
         {
             host->channelState.noteTriggered = false;
             host->channelState.cell += "... ";
-            host->channelState.note = ChannelState::NoNote;
         }
         else
         {
@@ -1091,33 +1053,13 @@ void ItModule::loadRow()
             }
             else if( host->getSlave() != nullptr && (host->getSlave()->flags & SCFLG_ON) != 0 )
             {
-                auto slave = host->getSlave();
-                auto smp = slave->smpOffs;
-                BOOST_ASSERT(smp != nullptr);
-                auto exp = std::log2(double(host->getSlave()->frequency) / smp->header.c5speed);
-                auto note = std::lround((exp * 12) + 5 * 12);
-                if( note < 0 )
-                {
-                    host->channelState.note = ChannelState::TooLow;
-                }
-                else if( note > PATTERN_MAX_NOTE )
-                {
-                    host->channelState.note = ChannelState::TooHigh;
-                }
-                else
-                {
-                    host->channelState.note = static_cast<uint8_t>(note);
-                }
-
                 host->channelState.noteTriggered = true;
                 host->channelState.cell += stringFmt("%s%d ", ppp::NoteNames[host->patternNote % 12], host->patternNote / 12 + 0);
-                host->channelState.note = host->patternNote;
             }
             else
             {
                 host->channelState.noteTriggered = false;
                 host->channelState.cell += "... ";
-                host->channelState.note = ChannelState::NoNote;
             }
         }
 
@@ -1185,6 +1127,51 @@ void ItModule::loadRow()
         else
         {
             host->channelState.panning = ChannelState::Surround;
+        }
+    }
+
+    for( auto& host : m_hosts )
+    {
+        if( host.getSlave() != nullptr && (host.getSlave()->flags & SCFLG_ON) != 0 )
+        {
+            auto slave = host.getSlave();
+            auto smp = slave->smpOffs;
+            BOOST_ASSERT(smp != nullptr);
+
+            /*
+                         host.getSlave()->frequency = host.getSlave()->smpOffs->header.c5speed
+                                         * std::pow(2.0f, (host.effectiveNote - 5 * 12) / 12.0f);
+             */
+
+            auto exp = std::log2(double(host.getSlave()->frequency) / smp->header.c5speed);
+            auto note = std::lround((exp * 12) + 5 * 12);
+            if( note < 0 )
+            {
+                host.channelState.note = ChannelState::TooLow;
+            }
+            else if( note > PATTERN_MAX_NOTE )
+            {
+                host.channelState.note = ChannelState::TooHigh;
+            }
+            else
+            {
+                host.channelState.note = static_cast<uint8_t>(note);
+            }
+        }
+        else
+        {
+            host.channelState.note = ChannelState::NoNote;
+        }
+
+        host.channelState.active = (host.flags & HCFLG_ON) != 0;
+        host.channelState.volume = host.vse * 100 / 64;
+        if( host.cp != 100 )
+        {
+            host.channelState.panning = (host.cp - 32) * 100 / 32;
+        }
+        else
+        {
+            host.channelState.panning = ChannelState::Surround;
         }
     }
 }
