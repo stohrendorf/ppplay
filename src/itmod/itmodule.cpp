@@ -694,7 +694,81 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
         result->m_slaves[i].setHost(&result->m_hosts[i]);
     }
 
-    result->noConstMetaInfo().trackerInfo = stringFmt("Impulse Tracker %X.%02X", result->m_header.cwtV >> 8, result->m_header.cwtV & 0xff);
+    const uint16_t cwtV = result->m_header.cwtV;
+    switch( cwtV & 0xf000u )
+    {
+        case 0x0000:
+            result->noConstMetaInfo().trackerInfo = stringFmt("Impulse Tracker %X.%02X", (cwtV >> 8) & 0xf, cwtV & 0xff);
+            break;
+        case 0x1000:
+        {
+            auto schismVersion = cwtV & 0xfff;
+            if( schismVersion <= 0x50 )
+            {
+                result->noConstMetaInfo().trackerInfo = stringFmt("Schism Tracker %X.%02X", (cwtV >> 8) & 0xf, cwtV & 0xff);
+            }
+            else
+            {
+                // > 0x50: the number of days since 2009-10-31
+
+                tm epoch{};
+                epoch.tm_year = 109;
+                epoch.tm_mon = 9;
+                epoch.tm_mday = 31;
+                auto epochSec = mktime(&epoch);
+
+                auto versionSec = ((schismVersion - 0x50) * 86400) + epochSec;
+                tm version{};
+                if( localtime_r(&versionSec, &version) )
+                {
+                    result->noConstMetaInfo().trackerInfo = stringFmt("Schism Tracker %04d-%02d-%02d", version.tm_year + 1900, version.tm_mon + 1,
+                                                                      version.tm_mday);
+                }
+                else
+                {
+                    result->noConstMetaInfo().trackerInfo = stringFmt("Schism Tracker 0x%03x", schismVersion);
+                }
+            }
+        }
+            break;
+        case 0x4000:
+            result->noConstMetaInfo().trackerInfo = stringFmt("pyIT %X.%02X", (cwtV >> 8) & 0xf, cwtV & 0xff);
+            break;
+        case 0x5000:
+            result->noConstMetaInfo().trackerInfo = stringFmt("OpenMPT %X.%02X", (cwtV >> 8) & 0xf, cwtV & 0xff);
+            break;
+        case 0x6000:
+            result->noConstMetaInfo().trackerInfo = stringFmt("BeRoTracker %X.%02X", (cwtV >> 8) & 0xf, cwtV & 0xff);
+            break;
+        case 0x7000:
+            if( cwtV == 0x7fff )
+            {
+                result->noConstMetaInfo().trackerInfo = "munch.py";
+            }
+            else
+            {
+                result->noConstMetaInfo().trackerInfo = stringFmt("ITMCK %d.%d.%d", (cwtV >> 8) & 0xf, (cwtV >> 4) & 0xf, cwtV & 0xf);
+            }
+            break;
+        case 0x8000:
+            result->noConstMetaInfo().trackerInfo = stringFmt("Tralala %X.%02X", (cwtV >> 8) & 0xf, cwtV & 0xff);
+            break;
+        case 0xc000:
+            result->noConstMetaInfo().trackerInfo = stringFmt("ChickDune ChipTune Tracker %X.%02X", (cwtV >> 8) & 0xf, cwtV & 0xff);
+            break;
+        case 0xd000:
+            if( cwtV == 0xdaeb )
+            {
+                result->noConstMetaInfo().trackerInfo = "spc2it";
+            }
+            else
+            {
+                result->noConstMetaInfo().trackerInfo = stringFmt("Unknown (0x%04x)", cwtV);
+            }
+            break;
+        default:
+            result->noConstMetaInfo().trackerInfo = stringFmt("Unknown (0x%04x)", cwtV);
+    }
     result->noConstMetaInfo().filename = stream->name();
     result->noConstMetaInfo().title = stringncpy(result->m_header.name, 26);
 
