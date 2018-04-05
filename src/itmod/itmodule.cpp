@@ -621,7 +621,7 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
 
     result->m_patterns.resize(result->m_header.patNum);
 
-    result->m_instruments.resize(result->m_header.insNum);
+    result->m_instruments.resize(std::max(uint16_t(99), result->m_header.insNum));
 
     for( int i = 0; i < result->m_header.insNum; ++i )
     {
