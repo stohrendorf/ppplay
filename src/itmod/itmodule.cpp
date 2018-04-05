@@ -276,14 +276,14 @@ void pitchSlideDownLinear(SlaveChannel& slave, uint16_t val)
 {
     slave.flags |= SCFLG_FREQ_CHANGE;
 
-    slave.frequency = slave.frequency * std::pow(2, val / -768.0);
+    slave.frequency = std::lround(slave.frequency * std::pow(2, val / -768.0));
 }
 
 void pitchSlideUpLinear(SlaveChannel& slave, uint16_t val)
 {
     slave.flags |= SCFLG_FREQ_CHANGE;
 
-    slave.frequency = slave.frequency * std::pow(2, val / 768.0f);
+    slave.frequency = std::lround(slave.frequency * std::pow(2, val / 768.0f));
 }
 
 void pitchSlideDownAmiga(SlaveChannel& slave, uint16_t val)

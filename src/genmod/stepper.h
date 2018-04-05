@@ -63,8 +63,10 @@ public:
      * @pre nominator>0
      */
     constexpr StepperBase(uint_fast32_t denominator, uint_fast32_t nominator) noexcept
-        : m_denominator(denominator), m_nominator(nominator)
+        : m_denominator{denominator}, m_nominator{nominator}
     {
+        BOOST_ASSERT(m_nominator > 0);
+        BOOST_ASSERT(m_denominator > 0);
     }
 
     constexpr operator T() const noexcept
@@ -86,7 +88,7 @@ public:
     constexpr T next()
     {
         BOOST_ASSERT(m_denominator > 0 && m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
-        for( m_fraction -= m_nominator; m_fraction < 0; m_fraction += m_denominator )
+        for( m_fraction += m_nominator; m_fraction >= static_cast<int_fast32_t>(m_denominator); m_fraction -= m_denominator )
         {
             ++m_position;
         }
@@ -97,7 +99,7 @@ public:
     constexpr T prev()
     {
         BOOST_ASSERT(m_denominator > 0 && m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
-        for( m_fraction += m_nominator; m_fraction >= static_cast<int_fast32_t>(m_denominator); m_fraction -= m_denominator )
+        for( m_fraction -= m_nominator; m_fraction < 0; m_fraction += m_denominator )
         {
             --m_position;
         }
@@ -134,7 +136,7 @@ public:
     constexpr float floatStepSize() const
     {
         BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
-        return 1 - float(m_fraction) / m_denominator;
+        return float(m_fraction) / m_denominator;
     }
 
     /**
