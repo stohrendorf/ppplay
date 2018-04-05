@@ -691,7 +691,6 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
     for( size_t i = 0; i < result->m_hosts.size(); ++i )
     {
         result->m_hosts[i].cp = result->m_header.chnPan[i] & 0x7f;
-        BOOST_ASSERT(result->m_hosts[i].cp == 100 || result->m_hosts[i].cp <= 64);
         result->m_hosts[i].channelVolume = result->m_header.chnVol[i];
         result->m_hosts[i].setSlave(&result->m_slaves[i]);
         result->m_slaves[i].setHost(&result->m_hosts[i]);
