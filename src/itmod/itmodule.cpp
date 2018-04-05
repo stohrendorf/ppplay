@@ -2506,14 +2506,14 @@ void ItModule::initPorta(HostChannel& host)
     bool volumeAppliedFromCell = false;
     if( (host.cellMask & HCFLG_MSK_VOL) != 0 )
     {
-        if( host.volumeFx <= 64 )
+        if( host.patternVolume <= 64 )
         {
-            setVolume(host, host.volumeFx);
+            setVolume(host, host.patternVolume);
             volumeAppliedFromCell = true;
         }
-        else if( (host.volumeFx & 0x7f) <= 64 )
+        else if( (host.patternVolume & 0x7f) <= 64 )
         {
-            setPan(host, host.volumeFx & 0x7f);
+            setPan(host, host.patternVolume & 0x7f);
         }
     }
 
