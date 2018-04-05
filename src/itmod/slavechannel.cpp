@@ -144,6 +144,7 @@ void SlaveChannel::setInstrument(const ItModule& module, const ItInstrument& ins
         }
     }
 
+    BOOST_ASSERT(newPan <= 64 || newPan == 100);
     this->pan = newPan;
     this->ps = newPan;
     this->vEnvelope.value = 64;

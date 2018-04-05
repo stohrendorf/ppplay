@@ -63,7 +63,7 @@ struct SlaveChannel
     int8_t midiFinalPan = 0; //!< fp, pan + pan-envelope, 0..64
     int16_t fadeOut = 0; //!< 0..1024
     uint8_t dca = 0;
-    int8_t pan = 0; //!< 0..64, 100 = Surround, >= 128 = muted.
+    uint8_t pan = 32; //!< 0..64, 100 = Surround, >= 128 = muted.
     uint8_t ps = 0; //!< 0..64
     const ItInstrument* insOffs = nullptr;
     uint8_t effectiveNote = 0; //!< nte

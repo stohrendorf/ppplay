@@ -357,6 +357,7 @@ void setPan(HostChannel& host, uint8_t pan)
         host.getSlave()->flags |= SCFLG_RECALC_FINAL_VOL | SCFLG_RECALC_PAN;
     }
     host.cp = pan;
+    BOOST_ASSERT(host.cp <= 64 || host.cp == 100);
 }
 
 void applyRandomValues(HostChannel& host)
@@ -398,6 +399,7 @@ void applyRandomValues(HostChannel& host)
         {
             host.getSlave()->pan = static_cast<uint8_t>(pan);
             host.getSlave()->ps = static_cast<uint8_t>(pan);
+            BOOST_ASSERT(host.getSlave()->pan <= 64 || host.getSlave()->pan == 100);
         }
     }
 }
@@ -688,7 +690,8 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
 
     for( size_t i = 0; i < result->m_hosts.size(); ++i )
     {
-        result->m_hosts[i].cp = result->m_header.chnPan[i];
+        result->m_hosts[i].cp = result->m_header.chnPan[i] & 0x7f;
+        BOOST_ASSERT(result->m_hosts[i].cp == 100 || result->m_hosts[i].cp <= 64);
         result->m_hosts[i].channelVolume = result->m_header.chnVol[i];
         result->m_hosts[i].setSlave(&result->m_slaves[i]);
         result->m_slaves[i].setHost(&result->m_hosts[i]);
@@ -2073,6 +2076,7 @@ void ItModule::initNoCommand(HostChannel& host)
             if( (m_header.flags & ITHeader::FlgInstrumentMode) == 0 && (host.getSlave()->smpOffs->header.dfp & 0x80u) != 0 )
             {
                 host.cp = host.getSlave()->smpOffs->header.dfp & 0x7fu;
+                BOOST_ASSERT(host.cp <= 64 || host.cp == 100);
                 host.getSlave()->pan = host.cp;
                 host.getSlave()->ps = host.cp;
             }
@@ -3848,7 +3852,7 @@ void ItModule::commandY(HostChannel& host)
         return;
     }
 
-    auto SI = host.getSlave();
+    auto slave = host.getSlave();
 
     int8_t value;
     switch( host.panbrelloWaveform )
@@ -3881,12 +3885,12 @@ void ItModule::commandY(HostChannel& host)
             }
     }
 
-    if( SI->ps == 100 )
+    if( slave->ps == 100 )
     {
         return;
     }
 
-    auto pan = SI->ps + ((value * host.panbrelloDepth * 4) + 128) / 256;
+    auto pan = slave->ps + ((value * host.panbrelloDepth * 4) + 128) / 256;
     if( pan < 0 )
     {
         pan = 0;
@@ -3896,8 +3900,9 @@ void ItModule::commandY(HostChannel& host)
         pan = 64;
     }
 
-    SI->flags |= SCFLG_RECALC_PAN;
-    SI->pan = pan;
+    slave->flags |= SCFLG_RECALC_PAN;
+    slave->pan = pan;
+    BOOST_ASSERT(slave->pan <= 64 || slave->pan == 100);
 }
 
 void ItModule::volumeCommandC(HostChannel& host)
@@ -4205,6 +4210,7 @@ SlaveChannel* ItModule::allocateSampleChannel(HostChannel& host)
 
     slave->channelVolume = host.channelVolume;
     slave->pan = host.cp;
+    BOOST_ASSERT(slave->pan <= 64 || slave->pan == 100);
     slave->ps = host.cp;
 
     // Get sample offset.
