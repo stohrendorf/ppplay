@@ -1119,21 +1119,21 @@ void ItModule::loadRow()
         }
 
         onCellLoaded(*host);
-
-        host->channelState.active = (host->flags & HCFLG_ON) != 0;
-        host->channelState.volume = host->vse * 100 / 64;
-        if( host->cp != 100 )
-        {
-            host->channelState.panning = (host->cp - 32) * 100 / 32;
-        }
-        else
-        {
-            host->channelState.panning = ChannelState::Surround;
-        }
     }
 
     for( auto& host : m_hosts )
     {
+        host.channelState.active = (host.flags & HCFLG_ON) != 0;
+        host.channelState.volume = host.vse * 100 / 64;
+        if( host.cp != 100 )
+        {
+            host.channelState.panning = (host.cp - 32) * 100 / 32;
+        }
+        else
+        {
+            host.channelState.panning = ChannelState::Surround;
+        }
+
         if( host.getSlave() != nullptr && (host.getSlave()->flags & SCFLG_ON) != 0 )
         {
             auto slave = host.getSlave();
@@ -2118,7 +2118,6 @@ NoOldEffect:
         }
         else if( (host.patternVolume & 0x7fu) <= 64 )
         {
-            // TODO host.flags &= 0xff00;
             setPan(host, host.patternVolume & 0x7fu);
         }
     }
@@ -3471,6 +3470,8 @@ void ItModule::commandG(HostChannel& host)
     {
         return;
     }
+
+    BOOST_ASSERT(host.portaTargetFrequency != 0);
 
     if( !host.portaSlideUp )
     {

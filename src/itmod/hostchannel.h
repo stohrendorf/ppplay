@@ -124,7 +124,7 @@ public:
     uint8_t tremoloSpeed = 0;
 
     bool portaSlideUp = false;
-    int16_t slideSpeed = 0;
+    uint16_t slideSpeed = 0;
 
     uint8_t tremorOnTime = 0;
     uint8_t tremorOffTime = 0;
