@@ -195,7 +195,7 @@ public:
 
     void initCommandG(HostChannel& host);
 
-    void initCommandGL(HostChannel& host);
+    void initPorta(HostChannel& host);
 
     void initCommandH(HostChannel& host);
 

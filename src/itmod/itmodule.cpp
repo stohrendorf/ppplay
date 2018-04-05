@@ -554,7 +554,7 @@ void ItModule::initVolumeEffect(HostChannel& host)
         }
         else if( host.volumeFx == VFX_PORTA )
         {
-            initCommandGL(host);
+            initPorta(host);
         }
     }
     else if( host.volumeFx == VFX_FINE_VOL_DOWN )
@@ -2420,14 +2420,14 @@ void ItModule::initCommandG(HostChannel& host)
         return;
     }
 
-    initCommandGL(host);
+    initPorta(host);
 
     host.channelState.fx = 'G';
     host.channelState.fxDesc = ppp::fxdesc::Porta;
 }
 
 // InitcommandG11
-void ItModule::initCommandGL(HostChannel& host)
+void ItModule::initPorta(HostChannel& host)
 {
     auto slave = host.getSlave();
     if( (host.cellMask & HCFLG_MSK_INS) != 0 && host.sampleIndex != 0 )
@@ -2465,7 +2465,7 @@ void ItModule::initCommandGL(HostChannel& host)
                 slave->flags &= ~SCFLG_NEW_NOTE;
             }
 
-            slave->sampleVolume = (instrument->gbv * slave->sampleVolume) / 128;
+            slave->sampleVolume = (uint32_t(instrument->gbv) * slave->sampleVolume) / 128u;
             BOOST_ASSERT(slave->sampleVolume <= 128);
         }
     }
@@ -2705,7 +2705,7 @@ void ItModule::initCommandL(HostChannel& host)
         return;
     }
 
-    initCommandGL(host);
+    initPorta(host);
     initCommandDKL(host);
     host.flags |= HCFLG_UPD_ALWAYS;
 }
