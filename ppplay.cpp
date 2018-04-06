@@ -388,6 +388,9 @@ int main(int argc, char* argv[])
                         case SDLK_PAGEUP:
                             module->seekBackward();
                             break;
+                        case SDLK_x:
+                            uiMain->toggleInfoVisibility();
+                            break;
                         default:
                             break;
                     }

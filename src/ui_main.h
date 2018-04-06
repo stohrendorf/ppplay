@@ -62,6 +62,44 @@ public:
         m_fftLeft = left;
         m_fftRight = right;
     }
+
+    void toggleInfoVisibility()
+    {
+        const bool makeVisible = !m_chanInfos[0]->isVisible();
+
+        for( ppg::Label* lbl : m_chanInfos )
+        {
+            if( makeVisible )
+            {
+                lbl->show();
+            }
+            else
+            {
+                lbl->hide();
+            }
+        }
+
+        for( ppg::Label* lbl : m_chanCells )
+        {
+            if( makeVisible )
+            {
+                lbl->show();
+            }
+            else
+            {
+                lbl->hide();
+            }
+        }
+
+        if( makeVisible )
+        {
+            m_trackerInfo->show();
+        }
+        else
+        {
+            m_trackerInfo->hide();
+        }
+    }
 };
 
 #endif // UI_MAIN_H
