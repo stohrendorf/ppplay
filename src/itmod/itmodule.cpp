@@ -3424,7 +3424,6 @@ void ItModule::initCommandZ(HostChannel& host)
     if( (host.patternFxParam & 0x80u) == 0 )
     {
         midiTranslate(&host, host.getSlave(), ((host.sfx & 0x0f) << 5) + 0x120);
-        return;
     }
     else
     {
