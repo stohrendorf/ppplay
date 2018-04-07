@@ -180,7 +180,6 @@ void SlaveChannel::setInstrument(const ItModule& module, const ItInstrument& ins
         {
             // Transfer volume data
             this->vEnvelope.value = lastSlaveChannel->vEnvelope.value;
-            this->vEnvelope.delta = lastSlaveChannel->vEnvelope.delta;
             this->vEnvelope.tick = lastSlaveChannel->vEnvelope.tick;
             this->vEnvelope.nextPointIndex = lastSlaveChannel->vEnvelope.nextPointIndex;
             this->vEnvelope.nextPointTick = lastSlaveChannel->vEnvelope.nextPointTick;
@@ -190,7 +189,6 @@ void SlaveChannel::setInstrument(const ItModule& module, const ItInstrument& ins
         {
             // Transfer pan data
             this->pEnvelope.value = lastSlaveChannel->pEnvelope.value;
-            this->pEnvelope.delta = lastSlaveChannel->pEnvelope.delta;
             this->pEnvelope.tick = lastSlaveChannel->pEnvelope.tick;
             this->pEnvelope.nextPointIndex = lastSlaveChannel->pEnvelope.nextPointIndex;
             this->pEnvelope.nextPointTick = lastSlaveChannel->pEnvelope.nextPointTick;
@@ -200,7 +198,6 @@ void SlaveChannel::setInstrument(const ItModule& module, const ItInstrument& ins
         {
             // Transfer pitch data
             this->ptEnvelope.value = lastSlaveChannel->ptEnvelope.value;
-            this->ptEnvelope.delta = lastSlaveChannel->ptEnvelope.delta;
             this->ptEnvelope.tick = lastSlaveChannel->ptEnvelope.tick;
             this->ptEnvelope.nextPointIndex = lastSlaveChannel->ptEnvelope.nextPointIndex;
             this->ptEnvelope.nextPointTick = lastSlaveChannel->ptEnvelope.nextPointTick;

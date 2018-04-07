@@ -202,7 +202,7 @@ bool updateEnvelope(SEnvelope& slaveEnvelope, const Envelope& insEnvelope, bool 
     if( slaveEnvelope.tick < slaveEnvelope.nextPointTick )
     {
         ++slaveEnvelope.tick;
-        slaveEnvelope.value += slaveEnvelope.delta;
+        slaveEnvelope.value.next();
         return true;
     }
 
@@ -249,25 +249,27 @@ bool updateEnvelope(SEnvelope& slaveEnvelope, const Envelope& insEnvelope, bool 
         }
     }
 
+    ++slaveEnvelope.nextPointIndex;
+
     if( slaveEnvelope.nextPointIndex >= insEnvelope.num )
     {
         return false;
     }
 
-    BOOST_ASSERT(slaveEnvelope.nextPointIndex + 1 < 25);
-    slaveEnvelope.nextPointTick = insEnvelope.points[slaveEnvelope.nextPointIndex + 1].tick;
-    slaveEnvelope.tick = insEnvelope.points[slaveEnvelope.nextPointIndex].tick + 1;
-    ++slaveEnvelope.nextPointIndex;
+    BOOST_ASSERT(slaveEnvelope.nextPointIndex < 25);
+    slaveEnvelope.nextPointTick = insEnvelope.points[slaveEnvelope.nextPointIndex].tick;
+    slaveEnvelope.tick = insEnvelope.points[slaveEnvelope.nextPointIndex - 1].tick + 1;
 
     const auto dt = insEnvelope.points[slaveEnvelope.nextPointIndex].tick - insEnvelope.points[slaveEnvelope.nextPointIndex - 1].tick;
-    const FixedPoint dy{insEnvelope.points[slaveEnvelope.nextPointIndex].y - insEnvelope.points[slaveEnvelope.nextPointIndex - 1].y};
+    BOOST_ASSERT(dt >= 0);
+    const auto dy = insEnvelope.points[slaveEnvelope.nextPointIndex].y - insEnvelope.points[slaveEnvelope.nextPointIndex - 1].y;
     if( dt == 0 )
     {
-        slaveEnvelope.delta = dy;
+        slaveEnvelope.value.setStepSize(1, dy);
     }
     else
     {
-        slaveEnvelope.delta = dy / dt;
+        slaveEnvelope.value.setStepSize(dt, dy);
     }
     return true;
 }
@@ -1423,14 +1425,14 @@ void ItModule::updateInstruments()
                 if( slave.smp != MIDI_SAMPLE )
                 {
                     auto value = slave.ptEnvelope.value / 256 / 64 + 128; // Range 0 -> 256
-                    BOOST_ASSERT(value.trunc() >= 0 && value.trunc() <= 256);
-                    if( value.trunc() >= 256 )
+                    BOOST_ASSERT(value >= 0 && value <= 256);
+                    if( value >= 256 )
                     {
                         slave.filterCutoff = 255;
                     }
                     else
                     {
-                        slave.filterCutoff = value.trunc();
+                        slave.filterCutoff = value;
                     }
                     slaveFlags |= SCFLG_RECALC_FINAL_VOL;
                 }
@@ -1442,16 +1444,15 @@ void ItModule::updateInstruments()
 
             {
                 auto delta = slave.ptEnvelope.value / 256 / 8;
-                BOOST_ASSERT(delta.trunc() >= -1024 && delta.trunc() <= 1024);
-                if( delta.trunc() < 0 )
+                BOOST_ASSERT(delta >= -1024 && delta <= 1024);
+                if( delta < 0 )
                 {
-                    delta = -delta;
-                    pitchSlideDownLinear(slave, delta.trunc());
+                    pitchSlideDownLinear(slave, -delta);
                     slaveFlags |= SCFLG_FREQ_CHANGE;
                 }
-                else if( delta.trunc() > 0 )
+                else if( delta > 0 )
                 {
-                    pitchSlideUpLinear(slave, delta.trunc());
+                    pitchSlideUpLinear(slave, delta);
                     slaveFlags |= SCFLG_FREQ_CHANGE;
                 }
             }
@@ -1484,7 +1485,7 @@ UpdatePanEnvelope:
                 // Envelope turned off...
                 slaveFlags &= ~SCFLG_VOL_ENV;
 
-                if( slave.vEnvelope.value.trunc() == 0 )
+                if( slave.vEnvelope.value == 0 )
                 {
                     if( !slave.disowned )
                     {
@@ -1552,7 +1553,7 @@ UpdateInstruments5_recalcVol:
             volume /= 128; // AX = 0->32768
             BOOST_ASSERT(volume >= 0 && volume <= 64 * 64 * 8);
 
-            volume *= slave.vEnvelope.value.trunc(); // DX:AX = 0->536870912
+            volume *= slave.vEnvelope.value; // DX:AX = 0->536870912
             BOOST_ASSERT(volume >= 0 && volume <= 64 * 64 * 8 * 16384);
 
             volume /= (1 << 7);
@@ -1579,7 +1580,7 @@ UpdateInstruments5_recalcVol:
             {
                 auto value = 32 - std::abs(32 - slave.pan);
                 BOOST_ASSERT(value >= -32 && value <= 32);
-                value = value * slave.pEnvelope.value.trunc() / 32;
+                value = value * slave.pEnvelope.value / 32;
                 BOOST_ASSERT(value >= -32 && value <= 32);
                 value += slave.pan;
                 BOOST_ASSERT(value >= 0 && value <= 64);

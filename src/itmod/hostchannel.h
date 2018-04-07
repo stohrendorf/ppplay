@@ -153,7 +153,7 @@ public:
         return (flags & HCFLG_ON) != 0;
     }
 
-    ChannelState channelState;
+    ChannelState channelState{};
 
     AbstractArchive& serialize(AbstractArchive* archive) override
     {

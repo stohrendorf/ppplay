@@ -26,7 +26,7 @@ class SDLPlayer
     : public PlayerHandler
 {
 private:
-    SDL_AudioSpec m_spec;
+    SDL_AudioSpec m_spec{};
     ppp::Stepper m_interp;
 
     static void callback(void*, Uint8*, int byteLen);

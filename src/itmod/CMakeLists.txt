@@ -7,7 +7,6 @@ add_library(ppplay_input_it MODULE
         itmodule.cpp
         instrument.h
         sample.h
-        fixedpoint.h
         slavechannel.h
         slavechannel.cpp
         hostchannel.h

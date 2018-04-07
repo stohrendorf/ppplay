@@ -48,10 +48,10 @@ private:
     //! @brief Width of the line
     uint_fast32_t m_denominator;
     //! @brief Height of the line
-    uint_fast32_t m_nominator;
+    int_fast32_t m_nominator;
     //! @brief Error variable (or fractional part). Range is [0, m_denominator-1]
-    int_fast32_t m_fraction{0};
-    T m_position{0};
+    int_fast32_t m_fractionPart{0};
+    T m_intPart{0};
 public:
     StepperBase() = delete;
 
@@ -62,21 +62,21 @@ public:
      * @pre denominator>1
      * @pre nominator>0
      */
-    constexpr StepperBase(uint_fast32_t denominator, uint_fast32_t nominator) noexcept
+    constexpr StepperBase(uint_fast32_t denominator, int_fast32_t nominator) noexcept
         : m_denominator{denominator}, m_nominator{nominator}
     {
-        BOOST_ASSERT(m_nominator > 0);
         BOOST_ASSERT(m_denominator > 0);
     }
 
     constexpr operator T() const noexcept
     {
-        return m_position;
+        return m_intPart;
     }
 
     constexpr StepperBase<T>& operator=(T val) noexcept
     {
-        m_position = val;
+        m_intPart = val;
+        m_fractionPart = 0;
         return *this;
     }
 
@@ -87,24 +87,44 @@ public:
      */
     constexpr T next()
     {
-        BOOST_ASSERT(m_denominator > 0 && m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
-        for( m_fraction += m_nominator; m_fraction >= static_cast<int_fast32_t>(m_denominator); m_fraction -= m_denominator )
+        BOOST_ASSERT(m_denominator > 0 && m_fractionPart >= 0 && static_cast<uint_fast32_t>(m_fractionPart) < m_denominator);
+        if( m_nominator > 0 )
         {
-            ++m_position;
+            for( m_fractionPart += m_nominator; m_fractionPart >= static_cast<int_fast32_t>(m_denominator); m_fractionPart -= m_denominator )
+            {
+                ++m_intPart;
+            }
         }
-        BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
-        return m_position;
+        else
+        {
+            for( m_fractionPart += m_nominator; m_fractionPart < 0; m_fractionPart += m_denominator )
+            {
+                --m_intPart;
+            }
+        }
+        BOOST_ASSERT(m_fractionPart >= 0 && static_cast<uint_fast32_t>(m_fractionPart) < m_denominator);
+        return m_intPart;
     }
 
     constexpr T prev()
     {
-        BOOST_ASSERT(m_denominator > 0 && m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
-        for( m_fraction -= m_nominator; m_fraction < 0; m_fraction += m_denominator )
+        BOOST_ASSERT(m_denominator > 0 && m_fractionPart >= 0 && static_cast<uint_fast32_t>(m_fractionPart) < m_denominator);
+        if( m_nominator > 0 )
         {
-            --m_position;
+            for( m_fractionPart -= m_nominator; m_fractionPart < 0; m_fractionPart += m_denominator )
+            {
+                --m_intPart;
+            }
         }
-        BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
-        return m_position;
+        else
+        {
+            for( m_fractionPart -= m_nominator; m_fractionPart >= static_cast<int_fast32_t>(m_denominator); m_fractionPart -= m_denominator )
+            {
+                ++m_intPart;
+            }
+        }
+        BOOST_ASSERT(m_fractionPart >= 0 && static_cast<uint_fast32_t>(m_fractionPart) < m_denominator);
+        return m_intPart;
     }
 
     constexpr StepperBase<T>& operator++()
@@ -124,19 +144,19 @@ public:
      * @param[in] denominator New value for m_denominator
      * @param[in] nominator New value for m_nominator
      */
-    constexpr void setStepSize(uint_fast32_t denominator, uint_fast32_t nominator)
+    constexpr void setStepSize(uint_fast32_t denominator, int_fast32_t nominator)
     {
         BOOST_ASSERT(denominator > 0);
-        m_fraction = m_fraction * denominator / m_denominator;
+        m_fractionPart = m_fractionPart * denominator / m_denominator;
         m_denominator = denominator;
         m_nominator = nominator;
-        BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
+        BOOST_ASSERT(m_fractionPart >= 0 && static_cast<uint_fast32_t>(m_fractionPart) < m_denominator);
     }
 
     constexpr float floatStepSize() const
     {
-        BOOST_ASSERT(m_fraction >= 0 && static_cast<uint_fast32_t>(m_fraction) < m_denominator);
-        return float(m_fraction) / m_denominator;
+        BOOST_ASSERT(m_fractionPart >= 0 && static_cast<uint_fast32_t>(m_fractionPart) < m_denominator);
+        return float(m_fractionPart) / m_denominator;
     }
 
     /**

@@ -280,7 +280,7 @@ bool mix(const Sample& smp, Sample::LoopType loopType, Sample::Interpolation int
     while( offset < buffer.size() )
     {
         long canRead;
-        if( stepper < loopStart )
+        if( stepper < 0 || static_cast<size_t>(stepper) < loopStart )
         {
             // special case: loop not yet entered
             BOOST_ASSERT(!reverse);

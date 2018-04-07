@@ -1,6 +1,5 @@
 #pragma once
 
-#include "fixedpoint.h"
 #include "genmod/stepper.h"
 #include "genmod/sample.h"
 
@@ -35,8 +34,7 @@ struct HostChannel;
 
 struct SEnvelope final
 {
-    FixedPoint value{0};
-    FixedPoint delta{0};
+    Stepper value{1, 1};
     int16_t tick = 0; //!< pos
     uint16_t nextPointIndex = 0; //!< curEnN, current envelope node
     int16_t nextPointTick = 0; //!< nextET
