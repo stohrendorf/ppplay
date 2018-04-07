@@ -75,16 +75,44 @@ private:
      */
     inline BasicSampleFrame sampleAt(size_t pos) const noexcept;
 
-    size_t mixNonInterpolated(Stepper& stepper, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft, int factorRight,
+    size_t mixNonInterpolated(Stepper& stepper,
+                              MixerFrameBuffer& buffer,
+                              size_t offset,
+                              size_t limitMin,
+                              size_t limitMax,
+                              bool reverse,
+                              int factorLeft,
+                              int factorRight,
                               int rightShift) const;
 
-    size_t mixLinearInterpolated(Stepper& stepper, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft,
-                                 int factorRight, int rightShift) const;
+    size_t mixLinearInterpolated(Stepper& stepper,
+                                 MixerFrameBuffer& buffer,
+                                 size_t offset,
+                                 size_t limitMin,
+                                 size_t limitMax,
+                                 bool reverse,
+                                 int factorLeft,
+                                 int factorRight,
+                                 int rightShift) const;
 
-    size_t mixCubicInterpolated(Stepper& stepper, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft, int factorRight,
+    size_t mixCubicInterpolated(Stepper& stepper,
+                                MixerFrameBuffer& buffer,
+                                size_t offset,
+                                size_t limitMin,
+                                size_t limitMax,
+                                bool reverse,
+                                int factorLeft,
+                                int factorRight,
                                 int rightShift) const;
 
-    size_t mixHermiteInterpolated(Stepper& stepper, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft, int factorRight,
+    size_t mixHermiteInterpolated(Stepper& stepper,
+                                  MixerFrameBuffer& buffer,
+                                  size_t offset,
+                                  size_t limitMin,
+                                  size_t limitMax,
+                                  bool reverse,
+                                  int factorLeft,
+                                  int factorRight,
                                   int rightShift) const;
 
 public:
@@ -134,8 +162,16 @@ public:
         return m_data.size();
     }
 
-    size_t mix(Interpolation inter, Stepper& stepper, MixerFrameBuffer& buffer, size_t offset, size_t len, bool reverse, int factorLeft,
-               int factorRight, int rightShift) const;
+    size_t mix(Interpolation inter,
+               Stepper& stepper,
+               MixerFrameBuffer& buffer,
+               size_t offset,
+               size_t limitMin,
+               size_t limitMax,
+               bool reverse,
+               int factorLeft,
+               int factorRight,
+               int rightShift) const;
 
 protected:
     typedef BasicSampleFrame::Vector::iterator Iterator;

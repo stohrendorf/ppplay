@@ -32,7 +32,8 @@ light4cxx::Logger* Sample::logger()
 size_t Sample::mixNonInterpolated(ppp::Stepper& stepper,
                                   MixerFrameBuffer& buffer,
                                   size_t offset,
-                                  size_t len,
+                                  size_t limitMin,
+                                  size_t limitMax,
                                   bool reverse,
                                   int factorLeft,
                                   int factorRight,
@@ -41,13 +42,13 @@ size_t Sample::mixNonInterpolated(ppp::Stepper& stepper,
     BOOST_ASSERT(rightShift >= 0);
 
     size_t mixed = 0;
-    for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
+    for( ; offset < buffer.size(); ++offset, ++mixed )
     {
-        if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= m_data.size() )
+        if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= limitMax )
         {
             return mixed;
         }
-        else if( reverse && stepper < 0 )
+        else if( reverse && (stepper < 0 || static_cast<size_t>(stepper) < limitMin) )
         {
             return mixed;
         }
@@ -69,7 +70,8 @@ size_t Sample::mixNonInterpolated(ppp::Stepper& stepper,
 size_t Sample::mixLinearInterpolated(ppp::Stepper& stepper,
                                      MixerFrameBuffer& buffer,
                                      size_t offset,
-                                     size_t len,
+                                     size_t limitMin,
+                                     size_t limitMax,
                                      bool reverse,
                                      int factorLeft,
                                      int factorRight,
@@ -78,13 +80,13 @@ size_t Sample::mixLinearInterpolated(ppp::Stepper& stepper,
     BOOST_ASSERT(rightShift >= 0);
 
     size_t mixed = 0;
-    for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
+    for( ; offset < buffer.size(); ++offset, ++mixed )
     {
-        if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= m_data.size() )
+        if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= limitMax )
         {
             return mixed;
         }
-        else if( reverse && stepper < 0 )
+        else if( reverse && (stepper < 0 || static_cast<size_t>(stepper) < limitMin) )
         {
             return mixed;
         }
@@ -127,7 +129,8 @@ constexpr inline float interpolateHermite4pt3oX(float x0, float x1, float x2, fl
 size_t Sample::mixCubicInterpolated(ppp::Stepper& stepper,
                                     MixerFrameBuffer& buffer,
                                     size_t offset,
-                                    size_t len,
+                                    size_t limitMin,
+                                    size_t limitMax,
                                     bool reverse,
                                     int factorLeft,
                                     int factorRight,
@@ -136,13 +139,13 @@ size_t Sample::mixCubicInterpolated(ppp::Stepper& stepper,
     BOOST_ASSERT(rightShift >= 0);
 
     size_t mixed = 0;
-    for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
+    for( ; offset < buffer.size(); ++offset, ++mixed )
     {
-        if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= m_data.size() )
+        if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= limitMax )
         {
             return mixed;
         }
-        else if( reverse && stepper < 0 )
+        else if( reverse && (stepper < 0 || static_cast<size_t>(stepper) < limitMin) )
         {
             return mixed;
         }
@@ -172,7 +175,8 @@ size_t Sample::mixCubicInterpolated(ppp::Stepper& stepper,
 size_t Sample::mixHermiteInterpolated(ppp::Stepper& stepper,
                                       MixerFrameBuffer& buffer,
                                       size_t offset,
-                                      size_t len,
+                                      size_t limitMin,
+                                      size_t limitMax,
                                       bool reverse,
                                       int factorLeft,
                                       int factorRight,
@@ -181,13 +185,13 @@ size_t Sample::mixHermiteInterpolated(ppp::Stepper& stepper,
     BOOST_ASSERT(rightShift >= 0);
 
     size_t mixed = 0;
-    for( ; offset < buffer.size() && mixed < len; ++offset, ++mixed )
+    for( ; offset < buffer.size(); ++offset, ++mixed )
     {
-        if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= m_data.size() )
+        if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= limitMax )
         {
             return mixed;
         }
-        else if( reverse && stepper < 0 )
+        else if( reverse && (stepper < 0 || static_cast<size_t>(stepper) < limitMin) )
         {
             return mixed;
         }
@@ -220,7 +224,8 @@ size_t Sample::mix(ppp::Sample::Interpolation inter,
                    ppp::Stepper& stepper,
                    MixerFrameBuffer& buffer,
                    size_t offset,
-                   size_t len,
+                   size_t limitMin,
+                   size_t limitMax,
                    bool reverse,
                    int factorLeft,
                    int factorRight,
@@ -229,13 +234,13 @@ size_t Sample::mix(ppp::Sample::Interpolation inter,
     switch( inter )
     {
         case Interpolation::None:
-            return mixNonInterpolated(stepper, buffer, offset, len, reverse, factorLeft, factorRight, rightShift);
+            return mixNonInterpolated(stepper, buffer, offset, limitMin, limitMax, reverse, factorLeft, factorRight, rightShift);
         case Interpolation::Linear:
-            return mixLinearInterpolated(stepper, buffer, offset, len, reverse, factorLeft, factorRight, rightShift);
+            return mixLinearInterpolated(stepper, buffer, offset, limitMin, limitMax, reverse, factorLeft, factorRight, rightShift);
         case Interpolation::Cubic:
-            return mixCubicInterpolated(stepper, buffer, offset, len, reverse, factorLeft, factorRight, rightShift);
+            return mixCubicInterpolated(stepper, buffer, offset, limitMin, limitMax, reverse, factorLeft, factorRight, rightShift);
         case Interpolation::Hermite:
-            return mixHermiteInterpolated(stepper, buffer, offset, len, reverse, factorLeft, factorRight, rightShift);
+            return mixHermiteInterpolated(stepper, buffer, offset, limitMin, limitMax, reverse, factorLeft, factorRight, rightShift);
         default:
             return 0;
     }
@@ -279,58 +284,20 @@ bool mix(const Sample& smp, Sample::LoopType loopType, Sample::Interpolation int
     size_t offset = 0;
     while( offset < buffer.size() )
     {
-        long canRead;
-        if( stepper < 0 || static_cast<size_t>(stepper) < loopStart )
-        {
-            // special case: loop not yet entered
-            BOOST_ASSERT(!reverse);
-            canRead = loopEnd - stepper;
-        }
-        else
-        {
-            if( !reverse )
-            {
-                canRead = loopEnd - stepper;
-            }
-            else
-            {
-                canRead = stepper - loopStart;
-            }
-        }
-
-        if( canRead < 0 )
-        {
-            canRead = 0;
-        }
-
-        const size_t canWrite = buffer.size() - offset;
-        BOOST_ASSERT(canWrite > 0);
-        auto mustRead = static_cast<long>(canWrite * stepper.floatStepSize());
-        BOOST_ASSERT(mustRead >= 0);
-        if( mustRead > canRead )
-        {
-            mustRead = canRead;
-        }
-        auto mustMix = static_cast<size_t>(mustRead / stepper.floatStepSize());
-        if( mustMix <= 0 )
-        {
-            mustMix = 1;
-        }
-
         if( !preprocess )
         {
-            offset += smp.mix(inter, stepper, buffer, offset, mustMix, reverse, factorLeft, factorRight, rightShift);
+            offset += smp.mix(inter, stepper, buffer, offset, loopStart, loopEnd, reverse, factorLeft, factorRight, rightShift);
         }
         else
         {
             size_t mixed = 0;
-            for( ; offset < buffer.size() && mixed < mustMix; ++offset, ++mixed, ++offset )
+            for( ; offset < buffer.size(); ++offset, ++mixed, ++offset )
             {
-                if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= smp.length() )
+                if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= loopEnd )
                 {
                     break;
                 }
-                else if( reverse && stepper < 0 )
+                else if( reverse && (stepper < 0 || static_cast<size_t>(stepper) < loopStart) )
                 {
                     break;
                 }
