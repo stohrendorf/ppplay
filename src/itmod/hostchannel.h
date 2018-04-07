@@ -51,7 +51,7 @@ struct HostChannel final
     uint8_t lastPatternFxParam = 0; //!< ocmVal2
     uint8_t volumeFx = 0; //!< vcmVal1
     uint8_t volumeFxParam = 0; //!< vcmVal2
-    uint8_t mch = 0;
+    uint8_t midiChannel = 0;
     uint8_t midiProgram = 0; //!< mpr
     uint8_t effectiveNote = 0; //!< nt2, effective sample note after translation
     uint8_t sampleIndex = 0; //!< smp, sample index (1-based)
@@ -60,7 +60,6 @@ struct HostChannel final
     uint8_t o00 = 0;
     uint8_t i00 = 0;
     uint8_t j00 = 0;
-    uint8_t m00 = 0;
     uint8_t n00 = 0;
     uint8_t p00 = 0;
     uint8_t q00 = 0;
@@ -69,11 +68,8 @@ struct HostChannel final
     uint8_t oxh = 0;
     uint8_t w00 = 0;
     uint8_t vce = 0;
-    uint8_t goe = 0;
+    uint8_t linkedPortaFxValue = 0;
     uint8_t sfx = 0;
-
-    //ofs:0x20
-    uint8_t cuc = 0;
     uint8_t vse = 0; //!< 0..64
     int8_t ltr = 0; //!< Last tremolo
 
@@ -168,7 +164,7 @@ public:
                % lastPatternFxParam
                % volumeFx
                % volumeFxParam
-               % mch
+               % midiChannel
                % midiProgram
                % effectiveNote
                % sampleIndex
@@ -177,7 +173,6 @@ public:
                % o00
                % i00
                % j00
-               % m00
                % n00
                % p00
                % q00
@@ -186,9 +181,8 @@ public:
                % oxh
                % w00
                % vce
-               % goe
+               % linkedPortaFxValue
                % sfx
-               % cuc
                % vse
                % ltr
                % *reinterpret_cast<uintptr_t*>(&m_scOffst)

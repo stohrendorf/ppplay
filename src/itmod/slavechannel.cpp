@@ -13,8 +13,8 @@ namespace it
 {
 void SlaveChannel::applySampleLoop()
 {
-    int32_t loopBeg = 0;
-    int32_t loopEnd = 0;
+    uint32_t loopBeg = 0;
+    uint32_t loopEnd = 0;
     auto lpm = Sample::LoopType::None;
     if( (smpOffs->header.flg & (ItSampleHeader::FlgLooped | ItSampleHeader::FlgSusLooped)) == 0 )
     {
@@ -99,9 +99,9 @@ void SlaveChannel::setInstrument(const ItModule& module, const ItInstrument& ins
     this->insOffs = &ins;
     this->nna = ins.nna;
     this->dca = ins.dca;
-    if( this->getHost()->mch != 0 )
+    if( this->getHost()->midiChannel != 0 )
     {
-        this->mch = this->getHost()->mch;
+        this->mch = this->getHost()->midiChannel;
         this->midiProgram = this->getHost()->midiProgram;
         this->midiBank = ins.midibnk;
     }
@@ -205,7 +205,7 @@ void SlaveChannel::setInstrument(const ItModule& module, const ItInstrument& ins
     }
 
     this->getHost()->flags |= HCFLG_RANDOM; // Apply random volume/pan
-    if( this->getHost()->mch == 0 )
+    if( this->getHost()->midiChannel == 0 )
     {
         // If IFC bit 7 == 1, then set filter cutoff
         this->filterCutoff = 0xff;

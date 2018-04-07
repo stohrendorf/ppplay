@@ -508,7 +508,7 @@ void ItModule::initVolumeEffect(HostChannel& host)
         {
             if( (m_header.flags & ITHeader::FlgLinkedEffects) == 0 )
             {
-                host.goe = slideTable[param - 1];
+                host.linkedPortaFxValue = slideTable[param - 1];
             }
             else
             {
@@ -1271,11 +1271,11 @@ void ItModule::onCellLoaded(HostChannel& host)
             {
                 if( instrument.mch == 17 )
                 {
-                    host.mch = (std::distance(&m_hosts[0], &host) & 0x0fu) + 1u;
+                    host.midiChannel = (std::distance(&m_hosts[0], &host) & 0x0fu) + 1u;
                 }
                 else
                 {
-                    host.mch = instrument.mch;
+                    host.midiChannel = instrument.mch;
                 }
                 host.midiProgram = instrument.mpr;
             }
@@ -1325,7 +1325,7 @@ void ItModule::updateSamples()
 
             auto totalVolume =
                 uint32_t(slave.effectiveVolume) * slave.channelVolume * slave.sampleVolume / 16u * state().globalVolume / 128u;
-            BOOST_ASSERT(totalVolume >= 0 && totalVolume <= 32768);
+            BOOST_ASSERT(totalVolume <= 32768);
             slave._16bVol = static_cast<uint16_t>(totalVolume);
         }
 
@@ -1968,7 +1968,7 @@ void ItModule::updateMidi()
         slave.sampleOffset = 1;
         slave.loopDirBackward = false;
         BOOST_ASSERT(
-            slave.sampleOffset >= 0 && slave.sampleOffset < m_samples[slave.smp]->length() && slave.sampleOffset < slave.loopEnd);
+            slave.sampleOffset >= 0 && static_cast<uint32_t>(slave.sampleOffset) < m_samples[slave.smp]->length() && slave.sampleOffset < slave.loopEnd);
 
         if( (slave.flags & SCFLG_MUTED) != 0 )
         {
@@ -2109,7 +2109,6 @@ InitNoCommand11:
         }
     }
 
-NoOldEffect:
     if( (host.cellMask & HCFLG_MSK_VOL) != 0 )
     {
         if( host.patternVolume <= 64 )
@@ -2406,7 +2405,7 @@ void ItModule::initCommandG(HostChannel& host)
     {
         if( (m_header.flags & ITHeader::FlgLinkedEffects) == 0 )
         {
-            host.goe = host.patternFxParam;
+            host.linkedPortaFxValue = host.patternFxParam;
         }
         else
         {
@@ -2530,7 +2529,7 @@ void ItModule::initPorta(HostChannel& host)
         uint16_t value;
         if( (m_header.flags & ITHeader::FlgLinkedEffects) == 0 )
         {
-            value = host.goe;
+            value = host.linkedPortaFxValue;
         }
         else
         {
@@ -3944,7 +3943,7 @@ void ItModule::volumeCommandG(HostChannel& host)
     uint16_t value;
     if( (m_header.flags & ITHeader::FlgLinkedEffects) == 0 )
     {
-        value = host.goe;
+        value = host.linkedPortaFxValue;
     }
     else
     {
@@ -4164,7 +4163,7 @@ AllocateChannel6_search:
             goto AllocateHandleNNA;
         }
 
-        if( slave.smp != MIDI_SAMPLE || host.mch != slave.mch )
+        if( slave.smp != MIDI_SAMPLE || host.midiChannel != slave.mch )
         {
             continue;
         }

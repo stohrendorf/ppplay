@@ -52,7 +52,7 @@ struct SlaveChannel
     // uint8_t bit; //!< 2 = 16, 0 = 8.
     uint8_t vip = 0; //!< Vibrato Speed
     uint16_t viDepth = 0; //!< Vibrato Depth
-    uint32_t midiFset;
+    uint32_t midiFset = 0;
     // uint8_t fv; -> _16bVol
     uint8_t effectiveVolume = 0; //!< vol, 0..64
     uint8_t effectiveBaseVolume = 0; //!< vs, 0..64
@@ -107,13 +107,13 @@ public:
             uint8_t filterResonance;
         };
     };
-    int32_t loopBeg = 0;
-    int32_t loopEnd = 0;
+    uint32_t loopBeg = 0;
+    uint32_t loopEnd = 0;
     uint16_t _16bVol = 0; //!< fv, 0..32768
     Stepper sampleOffset{1, 1};
-    SEnvelope vEnvelope;
-    SEnvelope pEnvelope;
-    SEnvelope ptEnvelope;
+    SEnvelope vEnvelope{};
+    SEnvelope pEnvelope{};
+    SEnvelope ptEnvelope{};
 
     void applySampleLoop();
 

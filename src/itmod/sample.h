@@ -22,9 +22,9 @@ struct ItSampleHeader
     char name[26] = "";
     uint8_t cvt = 0;
     uint8_t dfp = 0;
-    int32_t length = 0;
-    int32_t loopBeg = 0;
-    int32_t loopEnd = 0;
+    uint32_t length = 0;
+    uint32_t loopBeg = 0;
+    uint32_t loopEnd = 0;
     uint32_t c5speed = 8363;
     uint32_t susLoopBeg = 0;
     uint32_t susLoopEnd = 0;
