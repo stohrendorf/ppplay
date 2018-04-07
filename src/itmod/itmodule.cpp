@@ -2541,7 +2541,7 @@ void ItModule::initPorta(HostChannel& host)
         {
             host.slideSpeed = uint16_t(value * 4);
 
-            if( host.portaTargetFrequency != slave->frequency )
+            if( host.portaTargetFrequency != slave->frequencySet )
             {
                 if( (host.flags & HCFLG_UPD_VOL_IF_ON) == 0 )
                 {
@@ -3464,7 +3464,7 @@ void ItModule::commandG(HostChannel& host)
 
     BOOST_ASSERT(host.portaTargetFrequency != 0);
 
-    if( host.portaTargetFrequency > host.getSlave()->frequency )
+    if( host.portaTargetFrequency > host.getSlave()->frequencySet )
     {
         pitchSlideUp(host, host.slideSpeed);
         if( (host.getSlave()->flags & SCFLG_NOTE_CUT) == 0 )
@@ -3481,7 +3481,6 @@ void ItModule::commandG(HostChannel& host)
     }
     else
     {
-        BOOST_ASSERT(host.portaTargetFrequency != host.getSlave()->frequency);
         pitchSlideDown(*host.getSlave(), host.slideSpeed);
         if( host.getSlave()->frequency > host.portaTargetFrequency )
         {
@@ -3958,7 +3957,7 @@ void ItModule::volumeCommandG(HostChannel& host)
     }
 
     value <<= 2;
-    if( host.portaTargetFrequency > host.getSlave()->frequency )
+    if( host.portaTargetFrequency > host.getSlave()->frequencySet )
     {
         pitchSlideUp(host, value);
 
@@ -3980,7 +3979,6 @@ void ItModule::volumeCommandG(HostChannel& host)
     }
     else
     {
-        BOOST_ASSERT(host.portaTargetFrequency != host.getSlave()->frequency);
         pitchSlideDown(*host.getSlave(), value);
 
         if( host.getSlave()->frequency > host.portaTargetFrequency )
