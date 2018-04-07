@@ -123,7 +123,6 @@ public:
     uint8_t tremoloDepth = 0;
     uint8_t tremoloSpeed = 0;
 
-    bool portaSlideUp = false;
     uint16_t slideSpeed = 0;
 
     uint8_t tremorOnTime = 0;
@@ -216,7 +215,6 @@ public:
                % tremoloPosition
                % tremoloDepth
                % tremoloSpeed
-               % portaSlideUp
                % slideSpeed
                % tremorOnTime
                % tremorOffTime

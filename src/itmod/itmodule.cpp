@@ -278,7 +278,7 @@ void pitchSlideDownLinear(SlaveChannel& slave, uint16_t val)
 {
     slave.flags |= SCFLG_FREQ_CHANGE;
 
-    slave.frequency = std::lround(slave.frequency * std::pow(2, val / -768.0));
+    slave.frequency = std::lround(slave.frequency / std::pow(2, val / 768.0));
 }
 
 void pitchSlideUpLinear(SlaveChannel& slave, uint16_t val)
@@ -292,7 +292,7 @@ void pitchSlideDownAmiga(SlaveChannel& slave, uint16_t val)
 {
     slave.flags |= SCFLG_FREQ_CHANGE;
 
-    static constexpr auto F = 1712 * 8363;
+    static constexpr auto F = 1712ul * 8363ul;
 
     auto sf = uint64_t(slave.frequency) * val;
 
@@ -315,7 +315,7 @@ void pitchSlideUpAmiga(HostChannel& host, uint16_t val)
 {
     host.getSlave()->flags |= SCFLG_FREQ_CHANGE;
 
-    static constexpr auto F = 1712 * 8363;
+    static constexpr auto F = 1712ul * 8363ul;
 
     auto sf = uint64_t(host.getSlave()->frequency) * val;
     if( sf >= F )
@@ -423,7 +423,7 @@ void initTremolo(HostChannel& host, int8_t value)
 
 bool ItModule::applySample(HostChannel& host, SlaveChannel* slave)
 {
-    slave->flags &= 0x00ff;
+    // slave->flags &= 0x00ff;
     slave->flags |= SCFLG_NEW_NOTE;
 
     BOOST_ASSERT(host.sampleIndex >= 1 && host.sampleIndex <= m_samples.size());
@@ -508,11 +508,11 @@ void ItModule::initVolumeEffect(HostChannel& host)
         {
             if( (m_header.flags & ITHeader::FlgLinkedEffects) == 0 )
             {
-                host.efg = slideTable[param - 1];
+                host.goe = slideTable[param - 1];
             }
             else
             {
-                host.goe = slideTable[param - 1];
+                host.efg = slideTable[param - 1];
             }
         }
     }
@@ -2321,7 +2321,7 @@ void ItModule::initCommandE(HostChannel& host)
     if( hiNybble < 0xe0 )
     {
         host.channelState.fxDesc = ppp::fxdesc::FastPitchSlideDown;
-        host.slideSpeed = int16_t(host.efg * 4);
+        host.slideSpeed = uint16_t(host.efg * 4);
         host.flags |= HCFLG_UPD_IF_ON;
         return;
     }
@@ -2373,7 +2373,7 @@ void ItModule::initCommandF(HostChannel& host)
     {
         host.channelState.fxDesc = ppp::fxdesc::FastPitchSlideUp;
         // regular slide
-        host.slideSpeed = int16_t(host.efg * 4);
+        host.slideSpeed = uint16_t(host.efg * 4);
         host.flags |= HCFLG_UPD_IF_ON;
         return;
     }
@@ -2406,11 +2406,11 @@ void ItModule::initCommandG(HostChannel& host)
     {
         if( (m_header.flags & ITHeader::FlgLinkedEffects) == 0 )
         {
-            host.efg = host.patternFxParam;
+            host.goe = host.patternFxParam;
         }
         else
         {
-            host.goe = host.patternFxParam;
+            host.efg = host.patternFxParam;
         }
     }
 
@@ -2528,7 +2528,7 @@ void ItModule::initPorta(HostChannel& host)
     if( (host.flags & HCFLG_SLIDE) != 0 )
     {
         uint16_t value;
-        if( (m_header.flags & ITHeader::FlgLinkedEffects) != 0 )
+        if( (m_header.flags & ITHeader::FlgLinkedEffects) == 0 )
         {
             value = host.goe;
         }
@@ -2539,19 +2539,10 @@ void ItModule::initPorta(HostChannel& host)
 
         if( value != 0 )
         {
-            host.slideSpeed = value * 4;
+            host.slideSpeed = uint16_t(value * 4);
 
-            if( host.portaTargetFrequency > slave->frequencySet )
+            if( host.portaTargetFrequency != slave->frequency )
             {
-                host.portaSlideUp = true;
-                if( (host.flags & HCFLG_UPD_VOL_IF_ON) == 0 )
-                {
-                    host.flags |= HCFLG_UPD_IF_ON;
-                }
-            }
-            else if( host.portaTargetFrequency < slave->frequencySet )
-            {
-                host.portaSlideUp = false;
                 if( (host.flags & HCFLG_UPD_VOL_IF_ON) == 0 )
                 {
                     host.flags |= HCFLG_UPD_IF_ON;
@@ -3473,16 +3464,7 @@ void ItModule::commandG(HostChannel& host)
 
     BOOST_ASSERT(host.portaTargetFrequency != 0);
 
-    if( !host.portaSlideUp )
-    {
-        pitchSlideDown(*host.getSlave(), host.slideSpeed);
-        if( host.getSlave()->frequency > host.portaTargetFrequency )
-        {
-            host.getSlave()->frequencySet = host.getSlave()->frequency;
-            return;
-        }
-    }
-    else
+    if( host.portaTargetFrequency > host.getSlave()->frequency )
     {
         pitchSlideUp(host, host.slideSpeed);
         if( (host.getSlave()->flags & SCFLG_NOTE_CUT) == 0 )
@@ -3496,6 +3478,16 @@ void ItModule::commandG(HostChannel& host)
 
         host.getSlave()->flags &= ~SCFLG_NOTE_CUT;
         host.enable();
+    }
+    else
+    {
+        BOOST_ASSERT(host.portaTargetFrequency != host.getSlave()->frequency);
+        pitchSlideDown(*host.getSlave(), host.slideSpeed);
+        if( host.getSlave()->frequency > host.portaTargetFrequency )
+        {
+            host.getSlave()->frequencySet = host.getSlave()->frequency;
+            return;
+        }
     }
 
     host.flags &= ~(HCFLG_UPD_MODE | HCFLG_SLIDE);
@@ -3951,7 +3943,7 @@ void ItModule::volumeCommandG(HostChannel& host)
     }
 
     uint16_t value;
-    if( (m_header.flags & ITHeader::FlgLinkedEffects) != 0 )
+    if( (m_header.flags & ITHeader::FlgLinkedEffects) == 0 )
     {
         value = host.goe;
     }
@@ -3966,7 +3958,7 @@ void ItModule::volumeCommandG(HostChannel& host)
     }
 
     value <<= 2;
-    if( host.portaSlideUp )
+    if( host.portaTargetFrequency > host.getSlave()->frequency )
     {
         pitchSlideUp(host, value);
 
@@ -3988,6 +3980,7 @@ void ItModule::volumeCommandG(HostChannel& host)
     }
     else
     {
+        BOOST_ASSERT(host.portaTargetFrequency != host.getSlave()->frequency);
         pitchSlideDown(*host.getSlave(), value);
 
         if( host.getSlave()->frequency > host.portaTargetFrequency )
