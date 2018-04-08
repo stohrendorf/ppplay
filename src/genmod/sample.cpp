@@ -29,32 +29,25 @@ light4cxx::Logger* Sample::logger()
     return light4cxx::Logger::get("sample");
 }
 
-size_t Sample::mixNonInterpolated(ppp::Stepper& stepper,
-                                  MixerFrameBuffer& buffer,
-                                  size_t offset,
-                                  size_t limitMin,
-                                  size_t limitMax,
-                                  bool reverse,
-                                  int factorLeft,
-                                  int factorRight,
-                                  int rightShift) const
+AudioFrameBuffer Sample::readNonInterpolated(ppp::Stepper& stepper,
+                                             size_t requestedLen,
+                                             size_t limitMin,
+                                             size_t limitMax,
+                                             bool reverse) const
 {
-    BOOST_ASSERT(rightShift >= 0);
-
-    size_t mixed = 0;
-    for( ; offset < buffer.size(); ++offset, ++mixed )
+    AudioFrameBuffer result;
+    while( requestedLen-- )
     {
         if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= limitMax )
         {
-            return mixed;
+            return result;
         }
         else if( reverse && (stepper < 0 || static_cast<size_t>(stepper) < limitMin) )
         {
-            return mixed;
+            return result;
         }
 
-        const auto& sampleVal = sampleAt(stepper);
-        buffer[offset].add(sampleVal, factorLeft, factorRight, rightShift);
+        result.emplace_back(sampleAt(stepper));
         if( !reverse )
         {
             stepper.next();
@@ -64,35 +57,28 @@ size_t Sample::mixNonInterpolated(ppp::Stepper& stepper,
             stepper.prev();
         }
     }
-    return mixed;
+    return result;
 }
 
-size_t Sample::mixLinearInterpolated(ppp::Stepper& stepper,
-                                     MixerFrameBuffer& buffer,
-                                     size_t offset,
-                                     size_t limitMin,
-                                     size_t limitMax,
-                                     bool reverse,
-                                     int factorLeft,
-                                     int factorRight,
-                                     int rightShift) const
+AudioFrameBuffer Sample::readLinearInterpolated(ppp::Stepper& stepper,
+                                                size_t requestedLen,
+                                                size_t limitMin,
+                                                size_t limitMax,
+                                                bool reverse) const
 {
-    BOOST_ASSERT(rightShift >= 0);
-
-    size_t mixed = 0;
-    for( ; offset < buffer.size(); ++offset, ++mixed )
+    AudioFrameBuffer result;
+    while( requestedLen-- )
     {
         if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= limitMax )
         {
-            return mixed;
+            return result;
         }
         else if( reverse && (stepper < 0 || static_cast<size_t>(stepper) < limitMin) )
         {
-            return mixed;
+            return result;
         }
 
-        auto sampleVal = stepper.biased(sampleAt(stepper), sampleAt(1u + stepper));
-        buffer[offset].add(sampleVal, factorLeft, factorRight, rightShift);
+        result.emplace_back(stepper.biased(sampleAt(stepper), sampleAt(1u + stepper)));
         if( !reverse )
         {
             stepper.next();
@@ -102,7 +88,7 @@ size_t Sample::mixLinearInterpolated(ppp::Stepper& stepper,
             stepper.prev();
         }
     }
-    return mixed;
+    return result;
 }
 
 namespace
@@ -126,28 +112,22 @@ constexpr inline float interpolateHermite4pt3oX(float x0, float x1, float x2, fl
 }
 }
 
-size_t Sample::mixCubicInterpolated(ppp::Stepper& stepper,
-                                    MixerFrameBuffer& buffer,
-                                    size_t offset,
-                                    size_t limitMin,
-                                    size_t limitMax,
-                                    bool reverse,
-                                    int factorLeft,
-                                    int factorRight,
-                                    int rightShift) const
+AudioFrameBuffer Sample::readCubicInterpolated(ppp::Stepper& stepper,
+                                               size_t requestedLen,
+                                               size_t limitMin,
+                                               size_t limitMax,
+                                               bool reverse) const
 {
-    BOOST_ASSERT(rightShift >= 0);
-
-    size_t mixed = 0;
-    for( ; offset < buffer.size(); ++offset, ++mixed )
+    AudioFrameBuffer result;
+    while( requestedLen-- )
     {
         if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= limitMax )
         {
-            return mixed;
+            return result;
         }
         else if( reverse && (stepper < 0 || static_cast<size_t>(stepper) < limitMin) )
         {
-            return mixed;
+            return result;
         }
 
         BasicSampleFrame samples[4];
@@ -156,10 +136,11 @@ size_t Sample::mixCubicInterpolated(ppp::Stepper& stepper,
             samples[i] = sampleAt(i + stepper - 1u);
         }
 
-        buffer[offset].left +=
-            factorLeft * interpolateCubic(samples[0].left, samples[1].left, samples[2].left, samples[3].left, stepper.floatStepSize()) / (1 << rightShift);
-        buffer[offset].right +=
-            factorRight * interpolateCubic(samples[0].right, samples[1].right, samples[2].right, samples[3].right, stepper.floatStepSize()) / (1 << rightShift);
+        const auto l = ppp::clip<int>(interpolateCubic(samples[0].left, samples[1].left, samples[2].left, samples[3].left, stepper.floatFraction()), -32768,
+                                      32767);
+        const auto r = ppp::clip<int>(interpolateCubic(samples[0].right, samples[1].right, samples[2].right, samples[3].right, stepper.floatFraction()), -32768,
+                                      32767);
+        result.emplace_back(l, r);
         if( !reverse )
         {
             stepper.next();
@@ -169,31 +150,25 @@ size_t Sample::mixCubicInterpolated(ppp::Stepper& stepper,
             stepper.prev();
         }
     }
-    return mixed;
+    return result;
 }
 
-size_t Sample::mixHermiteInterpolated(ppp::Stepper& stepper,
-                                      MixerFrameBuffer& buffer,
-                                      size_t offset,
-                                      size_t limitMin,
-                                      size_t limitMax,
-                                      bool reverse,
-                                      int factorLeft,
-                                      int factorRight,
-                                      int rightShift) const
+AudioFrameBuffer Sample::readHermiteInterpolated(ppp::Stepper& stepper,
+                                                 size_t requestedLen,
+                                                 size_t limitMin,
+                                                 size_t limitMax,
+                                                 bool reverse) const
 {
-    BOOST_ASSERT(rightShift >= 0);
-
-    size_t mixed = 0;
-    for( ; offset < buffer.size(); ++offset, ++mixed )
+    AudioFrameBuffer result;
+    while( requestedLen-- )
     {
         if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= limitMax )
         {
-            return mixed;
+            return result;
         }
         else if( reverse && (stepper < 0 || static_cast<size_t>(stepper) < limitMin) )
         {
-            return mixed;
+            return result;
         }
 
         BasicSampleFrame samples[4];
@@ -202,12 +177,11 @@ size_t Sample::mixHermiteInterpolated(ppp::Stepper& stepper,
             samples[i] = sampleAt(i + stepper - 1u);
         }
 
-        buffer[offset].left +=
-            factorLeft * interpolateHermite4pt3oX(samples[0].left, samples[1].left, samples[2].left, samples[3].left, stepper.floatStepSize()) /
-            (1 << rightShift);
-        buffer[offset].right +=
-            factorRight * interpolateHermite4pt3oX(samples[0].right, samples[1].right, samples[2].right, samples[3].right, stepper.floatStepSize()) /
-            (1 << rightShift);
+        const auto l = ppp::clip<int>(interpolateHermite4pt3oX(samples[0].left, samples[1].left, samples[2].left, samples[3].left, stepper.floatFraction()),
+                                      -32768, 32767);
+        const auto r = ppp::clip<int>(interpolateHermite4pt3oX(samples[0].right, samples[1].right, samples[2].right, samples[3].right, stepper.floatFraction()),
+                                      -32768, 32767);
+        result.emplace_back(l, r);
         if( !reverse )
         {
             stepper.next();
@@ -217,32 +191,28 @@ size_t Sample::mixHermiteInterpolated(ppp::Stepper& stepper,
             stepper.prev();
         }
     }
-    return mixed;
+    return result;
 }
 
-size_t Sample::mix(ppp::Sample::Interpolation inter,
-                   ppp::Stepper& stepper,
-                   MixerFrameBuffer& buffer,
-                   size_t offset,
-                   size_t limitMin,
-                   size_t limitMax,
-                   bool reverse,
-                   int factorLeft,
-                   int factorRight,
-                   int rightShift) const
+AudioFrameBuffer Sample::read(ppp::Sample::Interpolation inter,
+                              ppp::Stepper& stepper,
+                              size_t requestedLen,
+                              size_t limitMin,
+                              size_t limitMax,
+                              bool reverse) const
 {
     switch( inter )
     {
         case Interpolation::None:
-            return mixNonInterpolated(stepper, buffer, offset, limitMin, limitMax, reverse, factorLeft, factorRight, rightShift);
+            return readNonInterpolated(stepper, requestedLen, limitMin, limitMax, reverse);
         case Interpolation::Linear:
-            return mixLinearInterpolated(stepper, buffer, offset, limitMin, limitMax, reverse, factorLeft, factorRight, rightShift);
+            return readLinearInterpolated(stepper, requestedLen, limitMin, limitMax, reverse);
         case Interpolation::Cubic:
-            return mixCubicInterpolated(stepper, buffer, offset, limitMin, limitMax, reverse, factorLeft, factorRight, rightShift);
+            return readCubicInterpolated(stepper, requestedLen, limitMin, limitMax, reverse);
         case Interpolation::Hermite:
-            return mixHermiteInterpolated(stepper, buffer, offset, limitMin, limitMax, reverse, factorLeft, factorRight, rightShift);
+            return readHermiteInterpolated(stepper, requestedLen, limitMin, limitMax, reverse);
         default:
-            return 0;
+            return {};
     }
 }
 
@@ -258,8 +228,15 @@ inline BasicSampleFrame Sample::sampleAt(size_t pos) const noexcept
 /**
  * @}
  */
-bool mix(const Sample& smp, Sample::LoopType loopType, Sample::Interpolation inter, Stepper& stepper, MixerFrameBuffer& buffer, bool& reverse, size_t loopStart,
-         size_t loopEnd, int factorLeft, int factorRight, int rightShift, bool preprocess)
+AudioFrameBuffer read(const Sample& smp,
+                      Sample::LoopType loopType,
+                      Sample::Interpolation inter,
+                      Stepper& stepper,
+                      size_t requestedLen,
+                      bool& reverse,
+                      size_t loopStart,
+                      size_t loopEnd,
+                      bool preprocess)
 {
     BOOST_ASSERT(stepper >= 0);
 
@@ -281,17 +258,20 @@ bool mix(const Sample& smp, Sample::LoopType loopType, Sample::Interpolation int
         }
     }
 
-    size_t offset = 0;
-    while( offset < buffer.size() )
+    AudioFrameBuffer result;
+    result.reserve(requestedLen);
+
+    while( result.size() < requestedLen )
     {
         if( !preprocess )
         {
-            offset += smp.mix(inter, stepper, buffer, offset, loopStart, loopEnd, reverse, factorLeft, factorRight, rightShift);
+            auto tmp = smp.read(inter, stepper, requestedLen - result.size(), loopStart, loopEnd, reverse);
+            BOOST_ASSERT(tmp.size() <= requestedLen);
+            std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
         }
         else
         {
-            size_t mixed = 0;
-            for( ; offset < buffer.size(); ++offset, ++mixed, ++offset )
+            while( result.size() < requestedLen )
             {
                 if( !reverse && stepper >= 0 && static_cast<size_t>(stepper) >= loopEnd )
                 {
@@ -301,6 +281,8 @@ bool mix(const Sample& smp, Sample::LoopType loopType, Sample::Interpolation int
                 {
                     break;
                 }
+
+                result.emplace_back();
 
                 if( !reverse )
                 {
@@ -318,7 +300,8 @@ bool mix(const Sample& smp, Sample::LoopType loopType, Sample::Interpolation int
             case Sample::LoopType::None:
                 if( stepper >= 0 && static_cast<size_t>(stepper) >= loopEnd )
                 {
-                    return false;
+                    BOOST_ASSERT(result.size() <= requestedLen);
+                    return result;
                 }
                 break;
             case Sample::LoopType::Forward:
@@ -346,6 +329,8 @@ bool mix(const Sample& smp, Sample::LoopType loopType, Sample::Interpolation int
         }
     }
 
-    return true;
+    BOOST_ASSERT(result.size() <= requestedLen);
+
+    return result;
 }
 }

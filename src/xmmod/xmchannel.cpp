@@ -179,7 +179,7 @@ void XmChannel::triggerNote(uint8_t note)
     }
     else
     {
-        m_bres = 0;
+        m_stepper = 0;
     }
 }
 
@@ -834,7 +834,7 @@ void XmChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
     {
         return;
     }
-    m_bres.setStepSize(m_module->frequency(), m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod));
+    m_stepper.setStepSize(m_module->frequency(), m_module->periodToFrequency(m_currentPeriod + m_autoVibDeltaPeriod));
     const auto& currSmp = currentSample();
     if( !currSmp )
     {
@@ -843,7 +843,19 @@ void XmChannel::mixTick(const MixerFrameBufferPtr& mixBuffer)
     }
     int volLeft = std::round(std::sqrt(m_realPanning / 256.0f) * 65536) * m_realVolume / 256;
     int volRight = std::round(std::sqrt((256 - m_realPanning) / 256.0f) * 65536) * m_realVolume / 256;
-    m_state.active = mix(*currSmp, currSmp->loopType(), m_module->interpolation(), m_bres, *mixBuffer, m_reverse, currSmp->loopStart(), currSmp->loopEnd(), volLeft, volRight, 13, false) != 0;
+    m_state.active =
+        mix(*currSmp,
+            currSmp->loopType(),
+            m_module->interpolation(),
+            m_stepper,
+            *mixBuffer,
+            m_reverse,
+            currSmp->loopStart(),
+            currSmp->loopEnd(),
+            volLeft,
+             volRight,
+            13,
+            false) != 0;
 }
 
 void XmChannel::updateStatus()
@@ -938,8 +950,8 @@ void XmChannel::vfxSetPan(uint8_t fxByte)
 void XmChannel::fxOffset(uint8_t fxByte)
 {
     m_lastOffsetFx = fxByte;
-    m_bres = m_lastOffsetFx << 8;
-    if( !currentSample() || (currentSample() && m_bres >= currentSample()->length()) )
+    m_stepper = m_lastOffsetFx << 8;
+    if( !currentSample() || (currentSample() && m_stepper >= currentSample()->length()) )
     {
         m_state.active = false;
     }
@@ -1531,7 +1543,7 @@ AbstractArchive& XmChannel::serialize(AbstractArchive* data)
     % m_autoVibDepth
     % m_autoVibPhase
     % m_lastNote
-    % m_bres
+    % m_stepper
     % m_state
     % m_reverse;
     return *data;

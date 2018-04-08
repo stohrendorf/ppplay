@@ -153,7 +153,7 @@ public:
         BOOST_ASSERT(m_fractionPart >= 0 && static_cast<uint_fast32_t>(m_fractionPart) < m_denominator);
     }
 
-    constexpr float floatStepSize() const
+    constexpr float floatFraction() const
     {
         BOOST_ASSERT(m_fractionPart >= 0 && static_cast<uint_fast32_t>(m_fractionPart) < m_denominator);
         return float(m_fractionPart) / m_denominator;
@@ -165,7 +165,7 @@ public:
      */
     constexpr int16_t biased(int16_t v1, int16_t v2) const noexcept
     {
-        float b = floatStepSize();
+        float b = floatFraction();
         auto v1b = v1 * b;
         auto v2b = v2 * (1 - b);
         return ppp::clip<int>(v1b + v2b, -32768, 32767);

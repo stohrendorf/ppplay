@@ -175,7 +175,7 @@ private:
     /** @} */
 
     //! @brief Output rate controller
-    Stepper m_bres{1, 1};
+    Stepper m_stepper{1, 1};
     //! @brief Module this channel belongs to
     XmModule* m_module;
 

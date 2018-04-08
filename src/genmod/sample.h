@@ -75,45 +75,29 @@ private:
      */
     inline BasicSampleFrame sampleAt(size_t pos) const noexcept;
 
-    size_t mixNonInterpolated(Stepper& stepper,
-                              MixerFrameBuffer& buffer,
-                              size_t offset,
-                              size_t limitMin,
-                              size_t limitMax,
-                              bool reverse,
-                              int factorLeft,
-                              int factorRight,
-                              int rightShift) const;
+    AudioFrameBuffer readNonInterpolated(Stepper& stepper,
+                                         size_t requestedLen,
+                                         size_t limitMin,
+                                         size_t limitMax,
+                                         bool reverse) const;
 
-    size_t mixLinearInterpolated(Stepper& stepper,
-                                 MixerFrameBuffer& buffer,
-                                 size_t offset,
-                                 size_t limitMin,
-                                 size_t limitMax,
-                                 bool reverse,
-                                 int factorLeft,
-                                 int factorRight,
-                                 int rightShift) const;
+    AudioFrameBuffer readLinearInterpolated(Stepper& stepper,
+                                            size_t requestedLen,
+                                            size_t limitMin,
+                                            size_t limitMax,
+                                            bool reverse) const;
 
-    size_t mixCubicInterpolated(Stepper& stepper,
-                                MixerFrameBuffer& buffer,
-                                size_t offset,
-                                size_t limitMin,
-                                size_t limitMax,
-                                bool reverse,
-                                int factorLeft,
-                                int factorRight,
-                                int rightShift) const;
+    AudioFrameBuffer readCubicInterpolated(Stepper& stepper,
+                                           size_t requestedLen,
+                                           size_t limitMin,
+                                           size_t limitMax,
+                                           bool reverse) const;
 
-    size_t mixHermiteInterpolated(Stepper& stepper,
-                                  MixerFrameBuffer& buffer,
-                                  size_t offset,
-                                  size_t limitMin,
-                                  size_t limitMax,
-                                  bool reverse,
-                                  int factorLeft,
-                                  int factorRight,
-                                  int rightShift) const;
+    AudioFrameBuffer readHermiteInterpolated(Stepper& stepper,
+                                             size_t requestedLen,
+                                             size_t limitMin,
+                                             size_t limitMax,
+                                             bool reverse) const;
 
 public:
     /**
@@ -162,16 +146,12 @@ public:
         return m_data.size();
     }
 
-    size_t mix(Interpolation inter,
-               Stepper& stepper,
-               MixerFrameBuffer& buffer,
-               size_t offset,
-               size_t limitMin,
-               size_t limitMax,
-               bool reverse,
-               int factorLeft,
-               int factorRight,
-               int rightShift) const;
+    AudioFrameBuffer read(Interpolation inter,
+                          Stepper& stepper,
+                          size_t requestedLen,
+                          size_t limitMin,
+                          size_t limitMax,
+                          bool reverse) const;
 
 protected:
     typedef BasicSampleFrame::Vector::iterator Iterator;
@@ -256,7 +236,18 @@ protected:
     static light4cxx::Logger* logger();
 };
 
-PPPLAY_MODULE_BASE_EXPORT bool mix(
+PPPLAY_MODULE_BASE_EXPORT AudioFrameBuffer read(
+    const Sample& smp,
+    Sample::LoopType loopType,
+    Sample::Interpolation inter,
+    Stepper& stepper,
+    size_t requestedLen,
+    bool& reverse,
+    size_t loopStart,
+    size_t loopEnd,
+    bool preprocess);
+
+inline bool mix(
     const Sample& smp,
     Sample::LoopType loopType,
     Sample::Interpolation inter,
@@ -268,7 +259,28 @@ PPPLAY_MODULE_BASE_EXPORT bool mix(
     int factorLeft,
     int factorRight,
     int rightShift,
-    bool preprocess);
+    bool preprocess)
+{
+    auto tmpBuf = read(
+        smp,
+        loopType,
+        inter,
+        stepper,
+        buffer.size(),
+        reverse,
+        loopStart,
+        loopEnd,
+        preprocess);
+
+    BOOST_ASSERT(tmpBuf.size() <= buffer.size());
+
+    for( size_t i = 0; i < tmpBuf.size(); ++i )
+    {
+        buffer[i].add(tmpBuf[i], factorLeft, factorRight, rightShift);
+    }
+
+    return buffer.size() == tmpBuf.size();
+}
 
 inline bool mix(
     const Sample& smp,
@@ -285,21 +297,21 @@ inline bool mix(
 {
     BOOST_ASSERT(loopType != Sample::LoopType::Pingpong);
 
-    bool tmp = false;
-
+    bool reverseTmp = false;
     return mix(
         smp,
         loopType,
         inter,
         stepper,
         buffer,
-        tmp,
+        reverseTmp,
         loopStart,
         loopEnd,
         factorLeft,
         factorRight,
         rightShift,
-        preprocess);
+        preprocess
+              );
 }
 
 /**
