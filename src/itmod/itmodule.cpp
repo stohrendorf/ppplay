@@ -7,6 +7,7 @@
 
 #include "genmod/orderentry.h"
 #include "genmod/channelstate.h"
+#include "filters.h"
 
 namespace ppp
 {
@@ -715,6 +716,8 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
         result->m_hosts[i].channelVolume = result->m_header.chnVol[i];
         result->m_hosts[i].setSlave(&result->m_slaves[i]);
         result->m_slaves[i].setHost(&result->m_hosts[i]);
+        result->m_slaves[i].filterL.update(frequency, 0xff, 0);
+        result->m_slaves[i].filterR.update(frequency, 0xff, 0);
     }
 
     const uint16_t cwtV = result->m_header.cwtV;
@@ -4573,16 +4576,15 @@ void ItModule::M32MixHandler(MixerFrameBuffer& mixBuffer, bool preprocess)
         // M32MixHandler12
         if( (slaveFlags & (SCFLG_PAN_CHANGE | SCFLG_LOOP_CHANGE | SCFLG_RECALC_FINAL_VOL)) != 0 )
         {
-            uint8_t resonance = 0; // BL
             if( slave.disowned )
             {
-                // M32MixHandlerFilter1
-                resonance = slave.filterResonance;
+                slave.filterL.update(frequency(), slave.filterCutoff, slave.filterResonance & 0x7f);
+                slave.filterR.update(frequency(), slave.filterCutoff, slave.filterResonance & 0x7f);
             }
             else
             {
-                // slave.vEnvelope.nextPointIndex = 0x7f; // FIXME ????
-                slave.filterResonance = 0;
+                slave.filterL.update(frequency(), 0x7f, 0);
+                slave.filterR.update(frequency(), 0x7f, 0);
             }
 
             // M32MixHandlerNoFilter
@@ -4609,26 +4611,53 @@ void ItModule::M32MixHandler(MixerFrameBuffer& mixBuffer, bool preprocess)
             }
         }
 
-        bool mixed = mix(
-            *slave.smpOffs,
-            slave.lpm,
-            interpolation(),
-            slave.sampleOffset,
-            mixBuffer,
-            slave.loopDirBackward,
-            slave.loopBeg,
-            slave.loopEnd,
-            slave.mixVolumeL,
-            slave.mixVolumeR,
-            0,
-            preprocess);
-
-        if( !mixed )
         {
-            slave.flags = SCFLG_NOTE_CUT;
-            if( !slave.disowned )
+            auto tmpBuf = ppp::read(
+                *slave.smpOffs,
+                slave.lpm,
+                interpolation(),
+                slave.sampleOffset,
+                mixBuffer.size(),
+                slave.loopDirBackward,
+                slave.loopBeg,
+                slave.loopEnd,
+                preprocess);
+
+            BOOST_ASSERT(tmpBuf.size() <= mixBuffer.size());
+
+            if(!preprocess)
             {
-                slave.getHost()->disable();
+                if(slave.filterResonance != 0x7f)
+                {
+                    for( size_t i = 0; i < tmpBuf.size(); ++i )
+                    {
+                        const auto l = slave.filterL.filter(static_cast<MixerSample>(tmpBuf[i].left) * slave.mixVolumeL);
+                        const auto r = slave.filterR.filter(static_cast<MixerSample>(tmpBuf[i].right) * slave.mixVolumeR);
+
+                        mixBuffer[i].left += l;
+                        mixBuffer[i].right += r;
+                    }
+                }
+                else
+                {
+                    for( size_t i = 0; i < tmpBuf.size(); ++i )
+                    {
+                        const auto l = static_cast<MixerSample>(tmpBuf[i].left) * slave.mixVolumeL;
+                        const auto r = static_cast<MixerSample>(tmpBuf[i].right) * slave.mixVolumeR;
+
+                        mixBuffer[i].left += l;
+                        mixBuffer[i].right += r;
+                    }
+                }
+            }
+
+            if( mixBuffer.size() != tmpBuf.size() )
+            {
+                slave.flags = SCFLG_NOTE_CUT;
+                if( !slave.disowned )
+                {
+                    slave.getHost()->disable();
+                }
             }
         }
 

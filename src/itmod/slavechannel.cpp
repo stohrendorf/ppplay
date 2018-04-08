@@ -207,19 +207,23 @@ void SlaveChannel::setInstrument(const ItModule& module, const ItInstrument& ins
     this->getHost()->flags |= HCFLG_RANDOM; // Apply random volume/pan
     if( this->getHost()->midiChannel == 0 )
     {
-        // If IFC bit 7 == 1, then set filter cutoff
         this->filterCutoff = 0xff;
         this->filterResonance = 0;
+
+        // If IFC bit 7 == 1, then set filter cutoff
         if( (ins.ifc & 0x80u) != 0 )
         {
-            setFilterCutoff(*this, ins.ifc & 0x7fu);
+            this->filterCutoff = ins.ifc & 0x7fu;
+            filterL.update(module.frequency(), this->filterCutoff, this->filterResonance);
+            filterR.update(module.frequency(), this->filterCutoff, this->filterResonance);
         }
 
         // If IFR bit 7 == 1, then set filter resonance
         if( (ins.ifr & 0x80u) != 0 )
         {
-            this->filterResonance = ins.ifr;
-            setFilterResonance(*this, ins.ifr & 0x7fu);
+            this->filterResonance = ins.ifr & 0x7fu;
+            filterL.update(module.frequency(), this->filterCutoff, this->filterResonance);
+            filterR.update(module.frequency(), this->filterCutoff, this->filterResonance);
         }
     }
 }

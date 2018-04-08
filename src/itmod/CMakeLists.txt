@@ -10,6 +10,7 @@ add_library(ppplay_input_it MODULE
         slavechannel.h
         slavechannel.cpp
         hostchannel.h
+        filters.h
         )
 target_link_libraries(ppplay_input_it ppplay_module_base ppplay_core)
 install(TARGETS ppplay_input_it LIBRARY DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} COMPONENT Plugins OPTIONAL)

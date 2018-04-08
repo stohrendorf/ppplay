@@ -2,6 +2,7 @@
 
 #include "genmod/stepper.h"
 #include "genmod/sample.h"
+#include "filters.h"
 
 namespace ppp
 {
@@ -118,6 +119,9 @@ public:
     void applySampleLoop();
 
     void setInstrument(const ItModule& module, const ItInstrument& ins, SlaveChannel* lastSlaveChannel);
+
+    Filter filterL{};
+    Filter filterR{};
 };
 
 // TODO constexpr uint8_t MIDI_SAMPLE = 100;
