@@ -2,6 +2,7 @@
 #include <map>
 #include <genmod/standardfxdesc.h>
 #include <genmod/genbase.h>
+#include <cstring>
 #include "itmodule.h"
 
 #include "genmod/orderentry.h"
@@ -602,6 +603,12 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
     auto result = std::make_unique<ItModule>(maxRpt, inter);
     *stream >> result->m_header;
 
+    if(std::strncmp(result->m_header.id, "IMPM", 4) != 0)
+    {
+        logger()->warn(L4CXX_LOCATION, "Header ID mismatch");
+        return nullptr;
+    }
+
     if( result->m_header.flags & ITHeader::FlgInstrumentMode )
     {
         logger()->info(L4CXX_LOCATION, "Instrument mode");
@@ -632,6 +639,12 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
         stream->seek(instrumentOffsets[i]);
         *stream >> result->m_instruments[i];
 
+        if(std::strncmp(result->m_instruments[i].id, "IMPI", 4) != 0)
+        {
+            logger()->warn(L4CXX_LOCATION, "Instrument Header ID mismatch");
+            return nullptr;
+        }
+
         if( result->m_header.cmwt < 0x0200 )
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("old instruments not yet supported"));
@@ -649,6 +662,11 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
     {
         stream->seek(sampleOffsets[i]);
         result->m_samples[i]->loadHeader(*stream);
+        if(std::strncmp(result->m_samples[i]->header.id, "IMPS", 4) != 0)
+        {
+            logger()->warn(L4CXX_LOCATION, "Sample Header ID mismatch");
+            return nullptr;
+        }
     }
 
     for( int i = 0; i < result->m_header.smpNum; ++i )
@@ -672,6 +690,7 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
         uint16_t patLen;
         *stream >> patLen;
         result->m_patterns[i] = stream->readVector<uint8_t>(patLen + 6);
+        BOOST_ASSERT(stream->good());
     }
 
     if( (result->m_header.flags & ITHeader::FlgInstrumentMode) == 0 )
@@ -1246,6 +1265,7 @@ void ItModule::goToProcessRow()
             }
         }
     }
+    BOOST_ASSERT(m_patternDataPtr <= &patternData[patternData.size()]);
 }
 
 void ItModule::onCellLoaded(HostChannel& host)

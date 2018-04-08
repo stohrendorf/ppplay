@@ -87,7 +87,7 @@ public:
         const bool mono = (header.flg & ItSampleHeader::FlgStereo) == 0;
         if( (header.flg & ItSampleHeader::FlgCompressed) != 0 )
         {
-            bool fixedCompression = (header.cvt & 4u) != 0 || cmwt >= 0x0215;
+            bool fixedCompression = (header.cvt & 4u) != 0;
 
             // no compressed stereo
             std::vector<int16_t> data;
