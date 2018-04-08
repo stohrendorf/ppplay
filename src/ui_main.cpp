@@ -269,7 +269,7 @@ void UIMain::drawThis()
                 const auto b = ppp::clip(255 * value / height, 0u, 255u);
 
                 auto yInv = height - y;
-                yInv *= (255 - 255*value/height) / 192;
+                yInv *= (255 - 255.0*value/height) / 192.0;
 
                 ppg::SDLScreen::instance()->drawPixel(x, y - yInv, ppg::SDLScreen::fromRgb(rg, rg, b));
             }
