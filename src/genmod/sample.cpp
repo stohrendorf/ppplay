@@ -295,38 +295,44 @@ AudioFrameBuffer read(const Sample& smp,
             }
         }
 
-        switch( loopType )
+        bool stepperChanged;
+        do
         {
-            case Sample::LoopType::None:
-                if( stepper >= 0 && static_cast<size_t>(stepper) >= loopEnd )
-                {
-                    BOOST_ASSERT(result.size() <= requestedLen);
-                    return result;
-                }
-                break;
-            case Sample::LoopType::Forward:
-                if( stepper >= 0 && static_cast<size_t>(stepper) >= loopEnd )
-                {
-                    stepper = loopStart + (stepper - loopEnd);
-                    BOOST_ASSERT(stepper >= 0 && static_cast<size_t>(stepper) >= loopStart && static_cast<size_t>(stepper) < loopEnd);
-                }
-                break;
-            case Sample::LoopType::Pingpong:
-                if( reverse && (stepper < 0 || static_cast<size_t>(stepper) < loopStart) )
-                {
-                    stepper = loopStart + (loopStart - stepper);
-                    reverse = false;
-                    BOOST_ASSERT(stepper >= 0 && static_cast<size_t>(stepper) >= loopStart && static_cast<size_t>(stepper) < loopEnd);
-                }
-                else if( !reverse && (stepper > 0 && static_cast<size_t>(stepper) >= loopEnd) )
-                {
-                    stepper = loopEnd - (stepper - loopEnd) - 1;
-                    reverse = true;
-                    BOOST_ASSERT(stepper >= 0 && static_cast<size_t>(stepper) >= loopStart && static_cast<size_t>(stepper) < loopEnd);
-                }
+            stepperChanged = false;
 
-                break;
-        }
+            switch( loopType )
+            {
+                case Sample::LoopType::None:
+                    if( stepper >= 0 && static_cast<size_t>(stepper) >= loopEnd )
+                    {
+                        BOOST_ASSERT(result.size() <= requestedLen);
+                        return result;
+                    }
+                    break;
+                case Sample::LoopType::Forward:
+                    if( stepper >= 0 && static_cast<size_t>(stepper) >= loopEnd )
+                    {
+                        stepper = loopStart + (stepper - loopEnd);
+                        stepperChanged = true;
+                    }
+                    break;
+                case Sample::LoopType::Pingpong:
+                    if( reverse && (stepper < 0 || static_cast<size_t>(stepper) < loopStart) )
+                    {
+                        stepper = loopStart + (loopStart - stepper);
+                        reverse = false;
+                        stepperChanged = true;
+                    }
+                    else if( !reverse && (stepper > 0 && static_cast<size_t>(stepper) >= loopEnd) )
+                    {
+                        stepper = loopEnd - (stepper - loopEnd) - 1;
+                        reverse = true;
+                        stepperChanged = true;
+                    }
+
+                    break;
+            }
+        } while( stepperChanged );
     }
 
     BOOST_ASSERT(result.size() <= requestedLen);
