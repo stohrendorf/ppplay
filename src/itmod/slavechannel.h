@@ -36,9 +36,9 @@ struct HostChannel;
 struct SEnvelope final
 {
     Stepper value{1, 1};
-    int16_t tick = 0; //!< pos
+    uint16_t tick = 0; //!< pos
     uint16_t nextPointIndex = 0; //!< curEnN, current envelope node
-    int16_t nextPointTick = 0; //!< nextET
+    uint16_t nextPointTick = 0; //!< nextET
     uint16_t filter = 0;
 };
 

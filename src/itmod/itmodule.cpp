@@ -218,31 +218,32 @@ bool updateEnvelope(SEnvelope& slaveEnvelope, const Envelope& insEnvelope, bool 
     BOOST_ASSERT(slaveEnvelope.nextPointIndex < 25);
 
     slaveEnvelope.value = insEnvelope.points[slaveEnvelope.nextPointIndex].y;
+
+    ++slaveEnvelope.nextPointIndex;
+
     if( insEnvelope.hasAnyLoop() )
     {
         uint8_t lpb = 0;
         uint8_t lpe = 0;
 
-        bool checkLoop = false;
-
         if( insEnvelope.hasSusLoop() && !noteOff )
         {
             lpb = insEnvelope.slb;
             lpe = insEnvelope.sle;
-            checkLoop = true;
         }
-        else if( insEnvelope.hasGlobalLoop() )
+        else
         {
             lpb = insEnvelope.lpb;
             lpe = insEnvelope.lpe;
-            checkLoop = true;
         }
 
         BOOST_ASSERT(lpb < 25);
         BOOST_ASSERT(lpe < 25);
+        BOOST_ASSERT(lpb <= insEnvelope.num);
+        BOOST_ASSERT(lpe <= insEnvelope.num);
 
         // UpdateEnvelope3
-        if( checkLoop && slaveEnvelope.nextPointIndex >= lpe )
+        if( slaveEnvelope.nextPointIndex >= lpe )
         {
             slaveEnvelope.nextPointIndex = lpb;
             slaveEnvelope.tick = insEnvelope.points[lpb].tick;
@@ -251,8 +252,6 @@ bool updateEnvelope(SEnvelope& slaveEnvelope, const Envelope& insEnvelope, bool 
         }
     }
 
-    ++slaveEnvelope.nextPointIndex;
-
     if( slaveEnvelope.nextPointIndex >= insEnvelope.num )
     {
         return false;
@@ -260,11 +259,11 @@ bool updateEnvelope(SEnvelope& slaveEnvelope, const Envelope& insEnvelope, bool 
 
     BOOST_ASSERT(slaveEnvelope.nextPointIndex < 25);
     slaveEnvelope.nextPointTick = insEnvelope.points[slaveEnvelope.nextPointIndex].tick;
-    slaveEnvelope.tick = insEnvelope.points[slaveEnvelope.nextPointIndex - 1].tick + 1;
+    slaveEnvelope.tick = insEnvelope.points[slaveEnvelope.nextPointIndex - 1].tick + 1u;
 
-    const auto dt = insEnvelope.points[slaveEnvelope.nextPointIndex].tick - insEnvelope.points[slaveEnvelope.nextPointIndex - 1].tick;
+    const auto dt = int(insEnvelope.points[slaveEnvelope.nextPointIndex].tick) - insEnvelope.points[slaveEnvelope.nextPointIndex - 1].tick;
     BOOST_ASSERT(dt >= 0);
-    const auto dy = insEnvelope.points[slaveEnvelope.nextPointIndex].y - insEnvelope.points[slaveEnvelope.nextPointIndex - 1].y;
+    const auto dy = int(insEnvelope.points[slaveEnvelope.nextPointIndex].y) - insEnvelope.points[slaveEnvelope.nextPointIndex - 1].y;
     if( dt == 0 )
     {
         slaveEnvelope.value.setStepSize(1, dy);

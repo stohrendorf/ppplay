@@ -13,7 +13,7 @@ struct Envelope
     struct Point
     {
         int8_t y = 0;
-        int16_t tick = 0;
+        uint16_t tick = 0;
     };
 
     explicit Envelope(uint8_t y)
