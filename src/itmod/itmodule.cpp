@@ -223,32 +223,36 @@ bool updateEnvelope(SEnvelope& slaveEnvelope, const Envelope& insEnvelope, bool 
 
     if( insEnvelope.hasAnyLoop() )
     {
-        uint8_t lpb = 0;
-        uint8_t lpe = 0;
+        uint8_t lpb = insEnvelope.lpb;
+        uint8_t lpe = insEnvelope.lpe;
 
+        bool isLooped = false;
         if( insEnvelope.hasSusLoop() && !noteOff )
         {
             lpb = insEnvelope.slb;
             lpe = insEnvelope.sle;
+            isLooped = true;
         }
-        else
+        else if( insEnvelope.hasGlobalLoop() )
         {
-            lpb = insEnvelope.lpb;
-            lpe = insEnvelope.lpe;
+            isLooped = true;
         }
 
-        BOOST_ASSERT(lpb < 25);
-        BOOST_ASSERT(lpe < 25);
-        BOOST_ASSERT(lpb <= insEnvelope.num);
-        BOOST_ASSERT(lpe <= insEnvelope.num);
-
-        // UpdateEnvelope3
-        if( slaveEnvelope.nextPointIndex >= lpe )
+        if( isLooped )
         {
-            slaveEnvelope.nextPointIndex = lpb;
-            slaveEnvelope.tick = insEnvelope.points[lpb].tick;
-            slaveEnvelope.nextPointTick = insEnvelope.points[lpb].tick;
-            return true;
+            BOOST_ASSERT(lpb < 25);
+            BOOST_ASSERT(lpe < 25);
+            BOOST_ASSERT(lpb <= insEnvelope.num);
+            BOOST_ASSERT(lpe <= insEnvelope.num);
+
+            // UpdateEnvelope3
+            if( slaveEnvelope.nextPointIndex >= lpe )
+            {
+                slaveEnvelope.nextPointIndex = lpb;
+                slaveEnvelope.tick = insEnvelope.points[lpb].tick;
+                slaveEnvelope.nextPointTick = insEnvelope.points[lpb].tick;
+                return true;
+            }
         }
     }
 
@@ -603,7 +607,7 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
     auto result = std::make_unique<ItModule>(maxRpt, inter);
     *stream >> result->m_header;
 
-    if(std::strncmp(result->m_header.id, "IMPM", 4) != 0)
+    if( std::strncmp(result->m_header.id, "IMPM", 4) != 0 )
     {
         logger()->warn(L4CXX_LOCATION, "Header ID mismatch");
         return nullptr;
@@ -639,7 +643,7 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
         stream->seek(instrumentOffsets[i]);
         *stream >> result->m_instruments[i];
 
-        if(std::strncmp(result->m_instruments[i].id, "IMPI", 4) != 0)
+        if( std::strncmp(result->m_instruments[i].id, "IMPI", 4) != 0 )
         {
             logger()->warn(L4CXX_LOCATION, "Instrument Header ID mismatch");
             return nullptr;
@@ -662,7 +666,7 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
     {
         stream->seek(sampleOffsets[i]);
         result->m_samples[i]->loadHeader(*stream);
-        if(std::strncmp(result->m_samples[i]->header.id, "IMPS", 4) != 0)
+        if( std::strncmp(result->m_samples[i]->header.id, "IMPS", 4) != 0 )
         {
             logger()->warn(L4CXX_LOCATION, "Sample Header ID mismatch");
             return nullptr;
@@ -4624,9 +4628,9 @@ void ItModule::M32MixHandler(MixerFrameBuffer& mixBuffer, bool preprocess)
 
             BOOST_ASSERT(tmpBuf.size() <= mixBuffer.size());
 
-            if(!preprocess)
+            if( !preprocess )
             {
-                if(slave.filterResonance != 0x7f)
+                if( slave.filterResonance != 0x7f )
                 {
                     for( size_t i = 0; i < tmpBuf.size(); ++i )
                     {
