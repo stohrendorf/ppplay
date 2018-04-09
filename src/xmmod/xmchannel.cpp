@@ -41,6 +41,7 @@ XmChannel::XmChannel(ppp::xm::XmModule* module)
       , m_module(module)
 {
     m_state.instrument = 0;
+    m_reverse = false;
 }
 
 XmChannel::~XmChannel()
@@ -131,6 +132,7 @@ void XmChannel::triggerNote(uint8_t note)
         return;
     }
     m_lastNote = note;
+    m_reverse = false;
 
     if( m_lastNote == 0 )
     {
