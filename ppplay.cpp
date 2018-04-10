@@ -318,11 +318,11 @@ int main(int argc, char* argv[])
                 light4cxx::Logger::root()->fatal(L4CXX_LOCATION, "Audio Init failed");
                 return EXIT_FAILURE;
             }
-            output->play();
             if(dosScreen)
             {
                 uiMain = new UIMain(dosScreen.get(), module, output);
             }
+            output->play();
             SDL_Event event;
             while(output)
             {
