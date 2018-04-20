@@ -1151,67 +1151,50 @@ void ItModule::loadRow()
     for( auto& host : m_hosts )
     {
         host.channelState.active = (host.flags & HCFLG_ON) != 0;
-        host.channelState.volume = host.vse * 100 / 64;
-        if( host.cp != 100 )
-        {
-            host.channelState.panning = (host.cp - 32) * 100 / 32;
-        }
-        else
-        {
-            host.channelState.panning = ChannelState::Surround;
-        }
-
-        if( host.getSlave() != nullptr && (host.getSlave()->flags & SCFLG_ON) != 0 )
-        {
-            auto slave = host.getSlave();
-            auto smp = slave->smpOffs;
-            BOOST_ASSERT(smp != nullptr);
-
-            /*
-                         host.getSlave()->frequency = host.getSlave()->smpOffs->header.c5speed
-                                         * std::pow(2.0f, (host.effectiveNote - 5 * 12) / 12.0f);
-             */
-
-            auto exp = std::log2(double(host.getSlave()->frequency) / smp->header.c5speed);
-            auto note = std::lround((exp * 12) + 5 * 12);
-            if( note < 0 )
-            {
-                host.channelState.note = ChannelState::TooLow;
-            }
-            else if( note > PATTERN_MAX_NOTE )
-            {
-                host.channelState.note = ChannelState::TooHigh;
-            }
-            else
-            {
-                host.channelState.note = static_cast<uint8_t>(note);
-            }
-
-            if( (m_header.flags & ITHeader::FlgInstrumentMode) == 0 && host.getSlave()->smpOffs != nullptr )
-            {
-                host.channelState.instrument = host.getSlave()->smp;
-                host.channelState.instrumentName = host.getSlave()->smpOffs->title();
-            }
-            else if( (m_header.flags & ITHeader::FlgInstrumentMode) != 0 && host.getSlave()->insOffs != nullptr )
-            {
-                host.channelState.instrument = host.getSlave()->ins;
-                host.channelState.instrumentName = stringncpy(host.getSlave()->insOffs->name, 26);
-            }
-            else
-            {
-                host.channelState.instrumentName.clear();
-            }
-        }
-        else
+        if( host.getSlave() == nullptr || !host.channelState.active )
         {
             host.channelState.note = ChannelState::NoNote;
+            continue;
         }
 
-        host.channelState.active = (host.flags & HCFLG_ON) != 0;
-        host.channelState.volume = host.vse * 100 / 64;
-        if( host.cp != 100 )
+        auto slave = host.getSlave();
+        auto smp = slave->smpOffs;
+        BOOST_ASSERT(smp != nullptr);
+
+        auto exp = std::log2(double(host.getSlave()->frequency) / smp->header.c5speed);
+        auto note = std::lround((exp * 12) + 5 * 12);
+        if( note < 0 )
         {
-            host.channelState.panning = (host.cp - 32) * 100 / 32;
+            host.channelState.note = ChannelState::TooLow;
+        }
+        else if( note > PATTERN_MAX_NOTE )
+        {
+            host.channelState.note = ChannelState::TooHigh;
+        }
+        else
+        {
+            host.channelState.note = static_cast<uint8_t>(note);
+        }
+
+        if( (m_header.flags & ITHeader::FlgInstrumentMode) == 0 )
+        {
+            host.channelState.instrument = slave->smp;
+            host.channelState.instrumentName = smp->title();
+        }
+        else if( (m_header.flags & ITHeader::FlgInstrumentMode) != 0 && slave->insOffs != nullptr )
+        {
+            host.channelState.instrument = slave->ins;
+            host.channelState.instrumentName = stringncpy(slave->insOffs->name, 26);
+        }
+        else
+        {
+            host.channelState.instrumentName.clear();
+        }
+
+        host.channelState.volume = slave->_16bVol * 100 / 32768;
+        if( slave->finalPan != 100 )
+        {
+            host.channelState.panning = (slave->finalPan - 32) * 100 / 32;
         }
         else
         {
@@ -1589,18 +1572,15 @@ UpdateInstruments5_recalcVol:
             BOOST_ASSERT(volume >= 0 && volume <= 64 * 64 * 8);
 
             volume *= slave.sampleVolume; // DX:AX = 0->4194304
-            BOOST_ASSERT(volume >= 0 && volume <= 64 * 64 * 8 * 128);
-
             volume /= 128; // AX = 0->32768
             BOOST_ASSERT(volume >= 0 && volume <= 64 * 64 * 8);
 
-            volume *= slave.vEnvelope.value; // DX:AX = 0->536870912
-            BOOST_ASSERT(volume >= 0 && volume <= 64 * 64 * 8 * 16384);
+            BOOST_ASSERT(slave.vEnvelope.value >= 0 && slave.vEnvelope.value <= 64);
+            volume *= slave.vEnvelope.value;
+            volume /= 64;
+            BOOST_ASSERT(volume >= 0 && volume <= 64 * 64 * 8);
 
-            volume /= (1 << 7);
-            volume *= state().globalVolume; // DX:AX = 0->4194304
-            BOOST_ASSERT(volume >= 0 && volume <= 64 * 4 * 16384);
-
+            volume *= state().globalVolume;
             volume /= 128;
             BOOST_ASSERT(volume >= 0 && volume <= 32768);
 
