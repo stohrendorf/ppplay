@@ -55,6 +55,9 @@ public:
     void loadHeader(Stream& stream)
     {
         stream >> header;
+
+        setTitle(stringncpy(header.name, 26));
+        setFilename(stringncpy(header.filename, 12));
     }
 
     void loadData(Stream& stream, uint16_t cmwt)

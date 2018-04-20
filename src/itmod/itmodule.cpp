@@ -1186,6 +1186,21 @@ void ItModule::loadRow()
             {
                 host.channelState.note = static_cast<uint8_t>(note);
             }
+
+            if( (m_header.flags & ITHeader::FlgInstrumentMode) == 0 && host.getSlave()->smpOffs != nullptr )
+            {
+                host.channelState.instrument = host.getSlave()->smp;
+                host.channelState.instrumentName = host.getSlave()->smpOffs->title();
+            }
+            else if( (m_header.flags & ITHeader::FlgInstrumentMode) != 0 && host.getSlave()->insOffs != nullptr )
+            {
+                host.channelState.instrument = host.getSlave()->ins;
+                host.channelState.instrumentName = stringncpy(host.getSlave()->insOffs->name, 26);
+            }
+            else
+            {
+                host.channelState.instrumentName.clear();
+            }
         }
         else
         {
@@ -2150,20 +2165,6 @@ InitNoCommand11:
 
     if( (host.cellMask & HCFLG_MSK_INS) != 0 && host.sampleIndex != 0 )
     {
-        host.channelState.instrument = host.sampleIndex;
-        if( (m_header.flags & ITHeader::FlgInstrumentMode) == 0 && host.patternInstrument <= m_samples.size() )
-        {
-            host.channelState.instrumentName = m_samples[host.patternInstrument - 1u]->title();
-        }
-        else if( (m_header.flags & ITHeader::FlgInstrumentMode) != 0 && host.patternInstrument <= m_instruments.size() )
-        {
-            host.channelState.instrumentName = stringncpy(m_instruments[host.patternInstrument - 1u].name, 26);
-        }
-        else
-        {
-            host.channelState.instrumentName.clear();
-        }
-
         host.vse = m_samples[host.sampleIndex - 1]->header.vol;
         BOOST_ASSERT(host.vse >= 0 && host.vse <= 64);
     }
