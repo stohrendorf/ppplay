@@ -127,7 +127,7 @@ public:
     float arpeggioStage1 = 0;
     float arpeggioStage2 = 0;
     int8_t channelVolumeChange = 0;
-    int8_t panbrelloChange = 0;
+    int8_t panSlideChange = 0;
     int8_t globalVolumeChange = 0;
 
     int8_t sfxData = 0;
@@ -216,7 +216,7 @@ public:
                % arpeggioStage1
                % arpeggioStage2
                % channelVolumeChange
-               % panbrelloChange
+               % panSlideChange
                % globalVolumeChange
                % sfxData
                % sfxType

@@ -2864,14 +2864,14 @@ void ItModule::initCommandP(HostChannel& host)
     if( (host.p00 & 0x0fu) == 0 )
     {
         host.channelState.fxDesc = ppp::fxdesc::PanSlideLeft;
-        host.panbrelloChange = -int(host.p00 >> 4u);
+        host.panSlideChange = -int(host.p00 >> 4u);
         host.flags |= HCFLG_UPD_ALWAYS;
         return;
     }
     if( (host.p00 & 0xf0u) == 0 )
     {
         host.channelState.fxDesc = ppp::fxdesc::PanSlideRight;
-        host.panbrelloChange = host.p00;
+        host.panSlideChange = host.p00;
         host.flags |= HCFLG_UPD_ALWAYS;
         return;
     }
@@ -3393,7 +3393,7 @@ void ItModule::initCommandY(HostChannel& host)
             host.panbrelloSpeed = speed;
         }
 
-        auto depth = (host.patternFxParam & 0x0fu) << 1u;
+        auto depth = (host.patternFxParam & 0x0fu) * 2u;
         if( depth != 0 )
         {
             host.panbrelloDepth = depth;
@@ -3622,7 +3622,7 @@ void ItModule::commandP(HostChannel& host)
         pan = host.cp;
     }
 
-    pan += host.panbrelloChange;
+    pan += host.panSlideChange;
     if( pan < 0 )
     {
         pan = 0;
