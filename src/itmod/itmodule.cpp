@@ -176,28 +176,7 @@ const std::array<int8_t, 256> fineSquareWave = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-constexpr uint16_t MIDICOMMAND_START = 0x00;
-constexpr uint16_t MIDICOMMAND_STOP = 0x20;
-constexpr uint16_t MIDICOMMAND_TICK = 0x40;
-constexpr uint16_t MIDICOMMAND_PLAYNOTE = 0x60;
-constexpr uint16_t MIDICOMMAND_STOPNOTE = 0x80;
-constexpr uint16_t MIDICOMMAND_CHANGEVOLUME = 0xA0;
-constexpr uint16_t MIDICOMMAND_CHANGEPAN = 0xC0;
-constexpr uint16_t MIDICOMMAND_BANKSELECT = 0xE0;
-constexpr uint16_t MIDICOMMAND_PROGRAMSELECT = 0x100;
-constexpr uint16_t MIDICOMMAND_CHANGEPITCH = 0xFFFF;
-
-std::array<int8_t, 16> midiPrograms{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-std::array<int16_t, 16> midiBanks{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-std::array<int8_t, 16> midiPan{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
-
-std::array<uint16_t, 16> midiPitch{0x2000, 0x2000, 0x2000, 0x2000, 0x2000, 0x2000, 0x2000, 0x2000, 0x2000, 0x2000,
-                                   0x2000, 0x2000, 0x2000, 0x2000, 0x2000, 0x2000};
 std::array<char, 32 * (128 + 16 + 9)> midiDataArea;
-
-uint8_t LastMIDIByte = 0xff;
-
-uint16_t midiPitchDepthSent = 0;
 
 bool updateEnvelope(SEnvelope& slaveEnvelope, const Envelope& insEnvelope, bool noteOff)
 {
@@ -656,7 +635,7 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
         }
     }
 
-    result->m_samples.resize(std::max<size_t>(MIDI_SAMPLE + 1, result->m_header.smpNum));
+    result->m_samples.resize(result->m_header.smpNum);
     for( auto& smp : result->m_samples )
     {
         smp = std::make_unique<ItSample>();
@@ -857,7 +836,6 @@ size_t ItModule::internal_buildTick(const AudioFrameBufferPtr& buffer)
 
 bool ItModule::update()
 {
-    midiTranslate(nullptr, nullptr, MIDICOMMAND_TICK);
     for( auto& slave : m_slaves )
     {
         if( (slave.flags & SCFLG_ON) == 0 )
@@ -1423,7 +1401,6 @@ void ItModule::updateVibrato(SlaveChannel& slave)
 
 void ItModule::updateInstruments()
 {
-    bool doMIDICycle = false;
     for( auto& slave : m_slaves )
     {
         if( (slave.flags & SCFLG_ON) == 0 )
@@ -1446,24 +1423,17 @@ void ItModule::updateInstruments()
 
             if( slave.insOffs->pitchEnv.hasFilter() )
             {
-                if( slave.smp != MIDI_SAMPLE )
+                auto value = slave.ptEnvelope.value / 256 / 64 + 128; // Range 0 -> 256
+                BOOST_ASSERT(value >= 0 && value <= 256);
+                if( value >= 256 )
                 {
-                    auto value = slave.ptEnvelope.value / 256 / 64 + 128; // Range 0 -> 256
-                    BOOST_ASSERT(value >= 0 && value <= 256);
-                    if( value >= 256 )
-                    {
-                        slave.filterCutoff = 255;
-                    }
-                    else
-                    {
-                        slave.filterCutoff = value;
-                    }
-                    slaveFlags |= SCFLG_RECALC_FINAL_VOL;
+                    slave.filterCutoff = 255;
                 }
                 else
                 {
-                    goto UpdatePanEnvelope;
+                    slave.filterCutoff = value;
                 }
+                slaveFlags |= SCFLG_RECALC_FINAL_VOL;
             }
 
             {
@@ -1621,43 +1591,13 @@ UpdateInstruments5_recalcVol:
         slave.flags = slaveFlags;
 
         updateVibrato(slave);
-
-        if( slave.smp == MIDI_SAMPLE )
-        {
-            doMIDICycle = true;
-        }
     }
-    if( doMIDICycle )
-    {
-        updateMidi();
-    }
-}
-
-void driverMIDIOut(uint8_t value)
-{
-    // TODO
-    // std::cout << "MIDIOut=" << int(value) << "\n";
-}
-
-void midiSendFilter(uint8_t value)
-{
-    if( (value & 0x80u) == 0 || value >= 0xf0 )
-    {
-        driverMIDIOut(value);
-        return;
-    }
-
-    if( value == LastMIDIByte )
-    {
-        return;
-    }
-
-    LastMIDIByte = value;
-    driverMIDIOut(value);
 }
 
 void ItModule::midiTranslateParametrized(HostChannel* host, SlaveChannel* slave, uint16_t cmd)
 {
+    const auto send = [](uint8_t val){};
+
     // Now for user input MIDI stuff.
     uint8_t data = 0;
     uint8_t chrOffset = 0;
@@ -1724,7 +1664,7 @@ void ItModule::midiTranslateParametrized(HostChannel* host, SlaveChannel* slave,
 
         if( chrOffset != 0 )
         {
-            midiSendFilter(data);
+            send(data);
             chrOffset = 0;
         }
 
@@ -1856,7 +1796,7 @@ MIDITranslateValueEnd:
         }
 
 MIDITranslateSend:
-        midiSendFilter(data);
+        send(data);
         data = 0;
         chrOffset = 0;
 
@@ -1865,185 +1805,7 @@ MIDITranslateSend:
             return;
         }
 
-        midiSendFilter(data);
-    }
-}
-
-void ItModule::midiTranslate(HostChannel* host, SlaveChannel* slave, uint16_t cmd)
-{
-    if( cmd < 0xf000 )
-    {
-        midiTranslateParametrized(host, slave, cmd);
-        return;
-    }
-
-    // Internal MIDI commands.
-
-    if( (m_header.flags & ITHeader::FlgMidiPitch) == 0 )
-    {
-        return;
-    }
-
-    // Pitch wheel
-    // Formula is: Depth = 16384*12 / PitchWheelDepth * log2(Freq / OldFreq)
-    // Do calculation, check whether pitch needs to be sent.
-
-    if( m_header.pwd == 0 )
-    {
-        return;
-    }
-
-    // TODO: check
-    auto wheelData = static_cast<int32_t>(8192 * 12.0f / m_header.pwd * std::log2(float(slave->frequency) / slave->midiFset));
-
-    // Have to check:
-    //  a) Within ranges?
-    //  b) Comparison to old pitch for this channel
-    if( slave->mch == 0 )
-    {
-        return;
-    }
-
-    if( wheelData != 0 && (midiPitchDepthSent & (1u << (slave->mch - 1))) == 0 )
-    {
-        midiPitchDepthSent |= 1u << (slave->mch - 1);
-
-        // Send MIDI Pitch depth stuff
-
-        midiSendFilter(static_cast<uint8_t>(0xb0 | (slave->mch - 1)));
-
-        static const std::array<uint8_t, 5> midiPitchSendString{0x65, 0x00, 0x64, 0x00, 0x06};
-
-        for( auto b : midiPitchSendString )
-        {
-            midiSendFilter(b);
-        }
-        midiSendFilter(m_header.pwd);
-    }
-
-    wheelData += 0x2000;
-    if( wheelData < 0 )
-    {
-        wheelData = 0;
-    }
-    else if( wheelData >= 0x4000 )
-    {
-        wheelData = 0x3fff;
-    }
-
-    if( midiPitch[slave->mch - 1] == wheelData )
-    {
-        return;
-    }
-
-    midiPitch[slave->mch - 1] = static_cast<uint16_t>(wheelData);
-
-// Output pitch change
-
-    midiSendFilter((slave->mch - 1u) | 0xe0u);
-    midiSendFilter(midiPitch[slave->mch - 1u] & 0x7fu);
-    midiSendFilter((midiPitch[slave->mch - 1u] >> 7u) & 0x7fu);
-}
-
-void ItModule::updateMidi()
-{
-    for( auto& slave : m_slaves )
-    {
-        if( (slave.flags & SCFLG_NOTE_CUT) == 0 )
-        {
-            continue;
-        }
-        if( slave.smp != MIDI_SAMPLE )
-        {
-            continue;
-        }
-        if( (slave.flags & SCFLG_ON) == 0 )
-        {
-            continue;
-        }
-
-        slave.flags = 0;
-        midiTranslate(slave.getHost(), &slave, MIDICOMMAND_STOPNOTE);
-
-        if( slave.disowned )
-        {
-            continue;
-        }
-
-        slave.disowned = true;
-        slave.getHost()->disable();
-    }
-
-    for( auto& slave : m_slaves )
-    {
-        if( slave.smp != MIDI_SAMPLE )
-        {
-            continue;
-        }
-
-        if( (slave.flags & SCFLG_ON) == 0 )
-        {
-            continue;
-        }
-
-        slave.sampleOffset = 1;
-        slave.loopDirBackward = false;
-        BOOST_ASSERT(
-            slave.sampleOffset >= 0 && static_cast<uint32_t>(slave.sampleOffset) < m_samples[slave.smp]->length() && slave.sampleOffset < slave.loopEnd);
-
-        if( (slave.flags & SCFLG_MUTED) != 0 )
-        {
-            continue;
-        }
-
-        const auto oldFlags = slave.flags;
-        slave.flags &= ~(SCFLG_RECALC_PAN | SCFLG_RECALC_VOL | SCFLG_FREQ_CHANGE | SCFLG_RECALC_FINAL_VOL
-                         | SCFLG_NEW_NOTE | SCFLG_NOTE_CUT | SCFLG_LOOP_CHANGE | SCFLG_PAN_CHANGE);
-
-        if( (oldFlags & SCFLG_NEW_NOTE) == 0 )
-        {
-            if( (oldFlags & SCFLG_RECALC_FINAL_VOL) != 0 )
-            {
-                midiTranslate(slave.getHost(), &slave, MIDICOMMAND_CHANGEVOLUME);
-            }
-        }
-        else
-        {
-            if( slave.midiBank != 0xffff && midiBanks[slave.mch - 1] != slave.midiBank )
-            {
-                midiBanks[slave.mch - 1] = slave.midiBank;
-                midiPrograms[slave.mch - 1] = -1;
-                midiTranslate(slave.getHost(), &slave, MIDICOMMAND_BANKSELECT);
-            }
-
-            if( slave.midiProgram >= 0 && midiPrograms[slave.mch - 1] != slave.midiProgram )
-            {
-                midiPrograms[slave.mch - 1] = slave.midiProgram;
-                midiTranslate(slave.getHost(), &slave, MIDICOMMAND_PROGRAMSELECT);
-            }
-
-            if( (m_header.flags & ITHeader::FlgMidiPitch) != 0 && midiPitch[slave.mch - 1] != 0x2000 )
-            {
-                midiPitch[slave.mch - 1] = 0x2000;
-                midiSendFilter(uint8_t(slave.mch - 1u) | 0xe0u);
-                midiSendFilter(0);
-                midiSendFilter(0x40);
-            }
-
-            slave.midiFset = slave.frequencySet;
-            midiTranslate(slave.getHost(), &slave, MIDICOMMAND_PLAYNOTE);
-        }
-
-        if( (oldFlags & SCFLG_PAN_CHANGE) != 0 && midiPan[slave.mch - 1] != slave.finalPan )
-        {
-            midiPan[slave.mch - 1] = slave.finalPan;
-            midiTranslate(slave.getHost(), &slave, MIDICOMMAND_CHANGEPAN);
-        }
-
-        if( (oldFlags & SCFLG_FREQ_CHANGE) != 0 )
-        {
-            midiTranslate(slave.getHost(), &slave, MIDICOMMAND_CHANGEPITCH);
-        }
+        send(data);
     }
 }
 
@@ -2447,7 +2209,7 @@ void ItModule::initPorta(HostChannel& host)
             slave->sampleVolume = m_samples[slave->smp]->header.gvl * 2;
             BOOST_ASSERT(slave->sampleVolume <= 128);
         }
-        else if( host.sampleIndex != MIDI_SAMPLE + 1 ) // Don't overwrite note if MIDI!
+        else
         {
             slave->effectiveNote = host.patternNote;
             if( slave->ins != std::exchange(slave->ins, host.patternInstrument)
@@ -2483,11 +2245,7 @@ void ItModule::initPorta(HostChannel& host)
     {
         if( host.effectiveNote <= PATTERN_MAX_NOTE )
         {
-            // Don't overwrite note if MIDI!
-            if( host.sampleIndex != MIDI_SAMPLE + 1 )
-            {
-                slave->effectiveNote = host.effectiveNote;
-            }
+            slave->effectiveNote = host.effectiveNote;
 
             host.portaTargetFrequency = slave->smpOffs->header.c5speed
                                         * std::pow(2.0f, (host.effectiveNote - 5 * 12) / 12.0f);
@@ -3421,11 +3179,11 @@ void ItModule::initCommandZ(HostChannel& host)
 
     if( (host.patternFxParam & 0x80u) == 0 )
     {
-        midiTranslate(&host, host.getSlave(), ((host.sfx & 0x0f) << 5) + 0x120);
+        midiTranslateParametrized(&host, host.getSlave(), ((host.sfx & 0x0f) << 5) + 0x120);
     }
     else
     {
-        midiTranslate(&host, host.getSlave(), ((host.patternFxParam & 0x7f) << 5) + 0x320);
+        midiTranslateParametrized(&host, host.getSlave(), ((host.patternFxParam & 0x7f) << 5) + 0x320);
     }
 }
 
@@ -3739,11 +3497,6 @@ void ItModule::commandQ(HostChannel& host)
     host.getSlave()->effectiveBaseVolume = static_cast<uint8_t>(vol);
     host.vse = static_cast<uint8_t>(vol);
     host.getSlave()->flags |= SCFLG_RECALC_VOL;
-
-    if( host.sampleIndex == MIDI_SAMPLE )
-    {
-        midiTranslate(&host, host.getSlave(), MIDICOMMAND_STOPNOTE);
-    }
 }
 
 void ItModule::commandR(HostChannel& host)
@@ -4064,56 +3817,39 @@ AllocateHandleNNA:
         host.getSlave()->flags |= SCFLG_NOTE_CUT;
         host.getSlave()->disowned = true;
 
-        if( host.getSlave()->smp != MIDI_SAMPLE || host.sampleIndex != MIDI_SAMPLE + 1 )
-        {
-            return allocateSampleSearch(host, *hostIntrument);
-        }
-
-        refValue = host.effectiveNote;
-        testeeMember = &SlaveChannel::effectiveNote;
-        refDca = host.getSlave()->insOffs->dca;
-        goto AllocateChannel6_search;
+        return allocateSampleSearch(host, *hostIntrument);
     }
 
 AllocateChannel8_initSearch:
-    if( host.sampleIndex == MIDI_SAMPLE + 1 )
+    if( host.getSlave() == nullptr || host.getSlave()->insOffs == nullptr || host.getSlave()->insOffs->dct == DCT_OFF )
     {
-        refValue = host.effectiveNote;
-        testeeMember = &SlaveChannel::effectiveNote;
-        refDca = host.getSlave() == nullptr ? DCA_CUT : host.getSlave()->insOffs->dca;
+        return allocateSampleSearch(host, *hostIntrument);
     }
-    else
+
+    // Duplicate check...
+    switch( host.getSlave()->insOffs->dct )
     {
-        if( host.getSlave() == nullptr || host.getSlave()->insOffs == nullptr || host.getSlave()->insOffs->dct == DCT_OFF )
-        {
-            return allocateSampleSearch(host, *hostIntrument);
-        }
-
-        // Duplicate check...
-        switch( host.getSlave()->insOffs->dct )
-        {
-            case DCT_NOTE:
-                refValue = host.patternNote;
-                testeeMember = &SlaveChannel::effectiveNote;
-                break;
-            case DCT_INSTRUMENT:
-                refValue = host.patternInstrument;
-                testeeMember = &SlaveChannel::ins; // Duplicate instrument
-                break;
-            case DCT_SAMPLE:
-            default:
-                if( host.sampleIndex < 1 )
-                {
-                    return allocateSampleSearch(host, *hostIntrument);
-                }
-                refValue = host.sampleIndex - 1;
-                testeeMember = &SlaveChannel::smp; // Duplicate sample
-                break;
-        }
-
-        refHostChan = &host;
-        refDca = hostIntrument->dca;
+        case DCT_NOTE:
+            refValue = host.patternNote;
+            testeeMember = &SlaveChannel::effectiveNote;
+            break;
+        case DCT_INSTRUMENT:
+            refValue = host.patternInstrument;
+            testeeMember = &SlaveChannel::ins; // Duplicate instrument
+            break;
+        case DCT_SAMPLE:
+        default:
+            if( host.sampleIndex < 1 )
+            {
+                return allocateSampleSearch(host, *hostIntrument);
+            }
+            refValue = host.sampleIndex - 1;
+            testeeMember = &SlaveChannel::smp; // Duplicate sample
+            break;
     }
+
+    refHostChan = &host;
+    refDca = hostIntrument->dca;
 
 AllocateChannel6_search:
     for( auto& slave : m_slaves )
@@ -4123,13 +3859,10 @@ AllocateChannel6_search:
             continue;
         }
 
-        if( host.sampleIndex != MIDI_SAMPLE + 1 )
+        BOOST_ASSERT(refHostChan != nullptr);
+        if( refHostChan != slave.getHost() || !slave.disowned )
         {
-            BOOST_ASSERT(refHostChan != nullptr);
-            if( refHostChan != slave.getHost() || !slave.disowned )
-            {
-                continue;
-            }
+            continue;
         }
 
         // OK. same channel... now..
@@ -4143,46 +3876,29 @@ AllocateChannel6_search:
             continue;
         }
 
-        if( host.sampleIndex != MIDI_SAMPLE + 1 )
-        {
-            if( refDca != slave.dca )
-            {
-                continue;
-            }
-
-            switch( refDca )
-            {
-                case DCA_CUT:
-                    slave.flags |= SCFLG_NOTE_CUT;
-                    slave.disowned = true;
-                    return allocateSampleSearch(host, *hostIntrument);
-                case DCA_NOTE_OFF:
-                    slave.dca = DCA_CUT;
-                    refNna = NNA_NOTE_OFF;
-                    break;
-                case DCA_NOTE_FADE:
-                    slave.dca = DCA_CUT;
-                    refNna = NNA_NOTE_FADE;
-                    break;
-                default:
-                    BOOST_ASSERT(false);
-            }
-            goto AllocateHandleNNA;
-        }
-
-        if( slave.smp != MIDI_SAMPLE || host.midiChannel != slave.mch )
+        if( refDca != slave.dca )
         {
             continue;
         }
 
-        slave.flags |= SCFLG_NOTE_CUT;
-        if( slave.disowned )
+        switch( refDca )
         {
-            continue;
+            case DCA_CUT:
+                slave.flags |= SCFLG_NOTE_CUT;
+                slave.disowned = true;
+                return allocateSampleSearch(host, *hostIntrument);
+            case DCA_NOTE_OFF:
+                slave.dca = DCA_CUT;
+                refNna = NNA_NOTE_OFF;
+                break;
+            case DCA_NOTE_FADE:
+                slave.dca = DCA_CUT;
+                refNna = NNA_NOTE_FADE;
+                break;
+            default:
+                BOOST_ASSERT(false);
         }
-
-        slave.disowned = true;
-        slave.getHost()->disable();
+        goto AllocateHandleNNA;
     }
 
     return allocateSampleSearch(host, *hostIntrument);
@@ -4251,29 +3967,11 @@ SlaveChannel* ItModule::allocateSampleChannel(HostChannel& host)
 
 SlaveChannel* ItModule::allocateSampleSearch(HostChannel& host, const ItInstrument& instrument)
 {
-    if( host.sampleIndex != MIDI_SAMPLE + 1 )
+    for( auto& slave : m_slaves )
     {
-        for( auto& slave : m_slaves )
+        if( (slave.flags & SCFLG_ON) == 0 )
         {
-            if( (slave.flags & SCFLG_ON) == 0 )
-            {
-                return allocateChannelInstrument(&slave, host, instrument);
-            }
-        }
-    }
-    else
-    {
-        // MIDI 'slave channels' have to be maintained if still referenced
-        for( auto& slave : m_slaves )
-        {
-            if( (slave.flags & SCFLG_ON) == 0 )
-            {
-                // Have a channel.. check that it's host's slave isn't SI
-                if( slave.getHost() == nullptr || &slave != host.getSlave() )
-                {
-                    return allocateChannelInstrument(&slave, host, instrument);
-                }
-            }
+            return allocateChannelInstrument(&slave, host, instrument);
         }
     }
 
@@ -4350,14 +4048,7 @@ SlaveChannel* ItModule::allocateChannelInstrument(SlaveChannel* slave, HostChann
     slave->sampleVolume = instrument.gbv;
 
     slave->fadeOut = 0x400;
-    if( host.sampleIndex == MIDI_SAMPLE + 1 )
-    {
-        slave->effectiveNote = host.effectiveNote;
-    }
-    else
-    {
-        slave->effectiveNote = host.patternNote;
-    }
+    slave->effectiveNote = host.patternNote;
     slave->ins = host.patternInstrument;
 
     if( host.sampleIndex == 0 )
@@ -4519,7 +4210,7 @@ void ItModule::M32MixHandler(MixerFrameBuffer& mixBuffer, bool preprocess)
     // Work backwards
     for( auto& slave : m_slaves )
     {
-        if( (slave.flags & SCFLG_ON) == 0 || slave.smp == MIDI_SAMPLE )
+        if( (slave.flags & SCFLG_ON) == 0 )
         {
             continue;
         }

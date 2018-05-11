@@ -123,8 +123,5 @@ public:
     Filter filterL{};
     Filter filterR{};
 };
-
-// TODO constexpr uint8_t MIDI_SAMPLE = 100;
-constexpr uint8_t MIDI_SAMPLE = 254;
 }
 }

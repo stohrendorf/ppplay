@@ -166,10 +166,6 @@ private:
 
     void updateInstruments();
 
-    void updateMidi();
-
-    void midiTranslate(HostChannel* host, SlaveChannel* slave, uint16_t cmd);
-
     void midiTranslateParametrized(HostChannel* host, SlaveChannel* slave, uint16_t cmd);
 
     void M32MixHandler(MixerFrameBuffer& buffer, bool preprocess);
