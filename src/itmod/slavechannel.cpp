@@ -72,28 +72,6 @@ void SlaveChannel::applySampleLoop()
     }
 }
 
-void setFilterCutoff(SlaveChannel& slave, uint8_t value)
-{
-#if 0
-    // FIXME
-    midiSendFilter(0xf0);
-    midiSendFilter(0xf0);
-    midiSendFilter(0x00);
-    midiSendFilter(value);
-#endif
-}
-
-void setFilterResonance(SlaveChannel& slave, uint8_t value)
-{
-#if 0
-    // FIXME
-    midiSendFilter(0xf0);
-    midiSendFilter(0xf0);
-    midiSendFilter(0x01);
-    midiSendFilter(value);
-#endif
-}
-
 void SlaveChannel::setInstrument(const ItModule& module, const ItInstrument& ins, SlaveChannel* lastSlaveChannel)
 {
     this->insOffs = &ins;
@@ -207,23 +185,19 @@ void SlaveChannel::setInstrument(const ItModule& module, const ItInstrument& ins
     this->getHost()->flags |= HCFLG_RANDOM; // Apply random volume/pan
     if( this->getHost()->midiChannel == 0 )
     {
-        this->filterCutoff = 0xff;
+        this->filterCutoff = 0x7f;
         this->filterResonance = 0;
 
         // If IFC bit 7 == 1, then set filter cutoff
         if( (ins.ifc & 0x80u) != 0 )
         {
             this->filterCutoff = ins.ifc & 0x7fu;
-            filterL.update(module.frequency(), this->filterCutoff, this->filterResonance);
-            filterR.update(module.frequency(), this->filterCutoff, this->filterResonance);
         }
 
         // If IFR bit 7 == 1, then set filter resonance
         if( (ins.ifr & 0x80u) != 0 )
         {
             this->filterResonance = ins.ifr & 0x7fu;
-            filterL.update(module.frequency(), this->filterCutoff, this->filterResonance);
-            filterR.update(module.frequency(), this->filterCutoff, this->filterResonance);
         }
     }
 }

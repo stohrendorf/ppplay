@@ -15,16 +15,19 @@ class Filter
     float m_r = 0;
     float m_p = 0;
 
+    bool m_active = false;
+
 public:
     void update(uint32_t outputFrequency, float cutoff, float resonance)
     {
+        m_active = (cutoff < 127*256);
+
         BOOST_ASSERT(resonance >= 0 && resonance <= 127);
-        BOOST_ASSERT(cutoff >= 0 && cutoff <= 255);
 
-        static const auto FreqMultiplier = 2.0f * M_PI * 110.0f * std::pow(2.0f, 0.25f);
+        static const auto FreqMultiplier = 1 / (2.0f * M_PI * 110.0f * std::pow(2.0f, 0.25f));
+        static const auto FreqParameterMultiplier = -1 / (24.0f * 256.0f);
 
-        cutoff /= 256;
-        m_r = static_cast<float>(outputFrequency / FreqMultiplier * std::pow(2.0f, cutoff / 24.0f));
+        m_r = static_cast<float>(outputFrequency * FreqMultiplier * std::pow(2.0f, cutoff * FreqParameterMultiplier));
         m_p = std::pow(10.0f, (-resonance * 24.0f) / (128.0f * 20.0f));
     }
 
@@ -35,7 +38,8 @@ public:
 
     float filter(float value)
     {
-        return value; // TODO: enable when macro parsing is implemented
+        if(!m_active)
+            return value;
 
         const auto e = m_r * m_r;
 

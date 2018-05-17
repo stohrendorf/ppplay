@@ -176,7 +176,39 @@ const std::array<int8_t, 256> fineSquareWave = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-std::array<char, 32 * (128 + 16 + 9)> midiDataArea;
+struct MidiDataArea
+{
+    MidiMacro specials[9]{};
+    MidiMacro m00[16]{};
+    MidiMacro m80[128]{};
+
+    MidiDataArea()
+    {
+        for( auto& special : specials )
+        {
+            special.fill(0);
+        }
+
+        for( auto& i : m00 )
+        {
+            i.fill(0);
+        }
+        std::strncpy(m00[0].data(), "F0F000z", m00[0].size());
+
+        for( auto& i : m80 )
+        {
+            i.fill(0);
+        }
+        for( int i = 0; i < 16; ++i )
+        {
+            std::snprintf(m80[i].data(), m80[i].size(), "F0F001%02x", i * 8);
+        }
+    }
+};
+
+static_assert(sizeof(MidiDataArea) == 32 * (128 + 16 + 9), "oops");
+
+MidiDataArea midiDataArea{};
 
 bool updateEnvelope(SEnvelope& slaveEnvelope, const Envelope& insEnvelope, bool noteOff)
 {
@@ -635,7 +667,7 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
         }
     }
 
-    result->m_samples.resize(result->m_header.smpNum);
+    result->m_samples.resize(256);
     for( auto& smp : result->m_samples )
     {
         smp = std::make_unique<ItSample>();
@@ -657,7 +689,7 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
         if( (result->m_samples[i]->header.flg & ItSampleHeader::FlgWithHeader) != 0 && result->m_samples[i]->header.samplePointer != 0 )
         {
             stream->seek(result->m_samples[i]->header.samplePointer);
-            result->m_samples[i]->loadData(*stream, result->m_header.cmwt);
+            result->m_samples[i]->loadData(*stream);
         }
     }
 
@@ -698,8 +730,6 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
         result->m_hosts[i].channelVolume = result->m_header.chnVol[i];
         result->m_hosts[i].setSlave(&result->m_slaves[i]);
         result->m_slaves[i].setHost(&result->m_hosts[i]);
-        result->m_slaves[i].filterL.update(frequency, 0xff, 0);
-        result->m_slaves[i].filterR.update(frequency, 0xff, 0);
     }
 
     const uint16_t cwtV = result->m_header.cwtV;
@@ -1408,6 +1438,8 @@ void ItModule::updateInstruments()
             continue;
         }
 
+        slave.envFilterCutoff = 256;
+
         auto slaveFlags = slave.flags;
         if( slave.ins != 0 )
         {
@@ -1423,21 +1455,13 @@ void ItModule::updateInstruments()
 
             if( slave.insOffs->pitchEnv.hasFilter() )
             {
-                auto value = slave.ptEnvelope.value / 256 / 64 + 128; // Range 0 -> 256
-                BOOST_ASSERT(value >= 0 && value <= 256);
-                if( value >= 256 )
-                {
-                    slave.filterCutoff = 255;
-                }
-                else
-                {
-                    slave.filterCutoff = value;
-                }
+                slave.envFilterCutoff = slave.ptEnvelope.value * 256 / 64 + 128; // Range 0 -> 256
+                BOOST_ASSERT(slave.envFilterCutoff >= 0 && slave.envFilterCutoff <= 256);
                 slaveFlags |= SCFLG_RECALC_FINAL_VOL;
             }
-
+            else
             {
-                auto delta = slave.ptEnvelope.value / 256 / 8;
+                auto delta = slave.ptEnvelope.value * 256 / 8;
                 BOOST_ASSERT(delta >= -1024 && delta <= 1024);
                 if( delta < 0 )
                 {
@@ -1451,7 +1475,6 @@ void ItModule::updateInstruments()
                 }
             }
 
-UpdatePanEnvelope:
             if( (slaveFlags & SCFLG_PAN_ENV) != 0 )
             {
                 slaveFlags |= SCFLG_RECALC_PAN;
@@ -1594,90 +1617,88 @@ UpdateInstruments5_recalcVol:
     }
 }
 
-void ItModule::midiTranslateParametrized(HostChannel* host, SlaveChannel* slave, uint16_t cmd)
+void ItModule::midiTranslateParametrized(HostChannel* host, SlaveChannel* slave, const MidiMacro& macro)
 {
-    const auto send = [](uint8_t val){};
-
-    // Now for user input MIDI stuff.
     uint8_t data = 0;
-    uint8_t chrOffset = 0;
-    while( char chr = midiDataArea.at(cmd++) )
+    bool inNybble = false;
+    std::vector<uint8_t> sendBuffer;
+    BOOST_ASSERT(macro.back() == 0);
+    for( const char chr : macro )
     {
-        if( chr == ' ' )
+        if( chr == ' ' || chr == 0 )
         {
-            if( chrOffset == 0 )
+            if( inNybble )
             {
-                continue;
+                sendBuffer.emplace_back(std::exchange(data, 0));
+                inNybble = false;
             }
-            goto MIDITranslateSend;
-        }
-
-        chr -= '0';
-        if( chr < 0 )
-        {
             continue;
         }
-
-        if( chr <= 9 )
+        else if( chr >= '0' && chr <= '9' )
         {
-            data = (data << 4u) | chr;
-            ++chrOffset;
-            goto MIDITranslateValueEnd;
-        }
-
-        chr -= 'A' - '0';
-        if( chr < 0 )
-        {
+            data <<= 4u;
+            data |= (chr - '0');
+            if( inNybble )
+            {
+                sendBuffer.emplace_back(std::exchange(data, 0));
+                inNybble = false;
+            }
+            else
+            {
+                inNybble = true;
+            }
             continue;
         }
-        if( chr <= 'F' - 'A' )
+        else if( chr >= 'A' && chr <= 'F' )
         {
-            // A..F
-            data = static_cast<uint8_t>((data << 4u) | (chr + 10));
-            ++chrOffset;
-            goto MIDITranslateValueEnd;
-        }
-
-        chr -= 'a' - 'A';
-        if( chr < 0 )
-        {
+            data <<= 4u;
+            data |= (chr - 'A' + 10);
+            if( inNybble )
+            {
+                sendBuffer.emplace_back(std::exchange(data, 0));
+                inNybble = false;
+            }
+            else
+            {
+                inNybble = true;
+            }
             continue;
         }
-        if( chr > 'z' - 'a' )
-        {
-            continue;
-        }
-
-        if( chr == 'c' - 'a' )
+        else if( chr == 'c' )
         {
             if( slave == nullptr )
             {
                 continue;
             }
 
-            // Parameter: c
-            chr = static_cast<char>(slave->mch - 1);
-            data = (data << 4u) | chr;
-            ++chrOffset;
-            goto MIDITranslateValueEnd;
+            data <<= 4u;
+            data |= (slave->mch - 1);
+
+            if( inNybble )
+            {
+                sendBuffer.emplace_back(std::exchange(data, 0));
+                inNybble = false;
+            }
+            else
+            {
+                inNybble = true;
+            }
+            continue;
         }
 
-        if( chrOffset != 0 )
+        if( inNybble )
         {
-            send(data);
-            chrOffset = 0;
+            sendBuffer.emplace_back(std::exchange(data, 0));
+            inNybble = false;
         }
 
-        data = host->patternFxParam;
-        if( chr == 'z' - 'a' )
-        { // macro data
-            goto MIDITranslateSend;
+        if( chr == 'z' )
+        {
+            sendBuffer.emplace_back(host->patternFxParam);
         }
-
-        data = host->o00;
-        if( chr == 'o' - 'a' )
-        { // offset parameter
-            goto MIDITranslateSend;
+        else if( chr == 'o' )
+        {
+            sendBuffer.emplace_back(host->o00);
         }
 
         if( slave == nullptr )
@@ -1685,127 +1706,110 @@ void ItModule::midiTranslateParametrized(HostChannel* host, SlaveChannel* slave,
             continue;
         }
 
-        data = slave->effectiveNote;
-        if( chr == 'n' - 'a' )
-        { // note after translation
-            goto MIDITranslateSend;
-        }
-
-        data = static_cast<uint8_t>(slave->loopDirBackward ? 1 : 0);
-        if( chr == 'm' - 'a' )
-        { // note before translation
-            goto MIDITranslateSend;
-        }
-
-        if( chr == 'v' - 'a' )
+        if( chr == 'n' )
         {
-            // velocity (without envelope/fadeout)
-            data = 0;
+            sendBuffer.emplace_back(slave->effectiveNote);
+        }
+        else if( chr == 'm' )
+        {
+            sendBuffer.emplace_back(slave->loopDirBackward ? 1 : 0);
+        }
+        else if( chr == 'v' )
+        {
             if( (slave->flags & SCFLG_MUTED) != 0 )
             {
-                goto MIDITranslateSend;
+                sendBuffer.emplace_back(0);
             }
-
-            data = static_cast<uint8_t>(uint32_t(slave->effectiveBaseVolume) * state().globalVolume * slave->channelVolume / 16 * slave->sampleVolume
-                                        / 32768);
-
-            if( data == 0 )
+            else
             {
-                data = 1;
+                auto tmp = static_cast<uint8_t>(uint32_t(slave->effectiveBaseVolume) * state().globalVolume * slave->channelVolume / 16 * slave->sampleVolume
+                                                / 32768);
+
+                if( tmp == 0 )
+                {
+                    tmp = 1;
+                }
+                else if( data >= 0x80 )
+                {
+                    tmp = 0x7f;
+                }
+                sendBuffer.emplace_back(tmp);
             }
-            else if( data >= 0x80 )
-            {
-                data = 0x7f;
-            }
-            goto MIDITranslateSend;
         }
-
-        if( chr == 'u' - 'a' )
+        else if( chr == 'u' )
         {
-            data = 0;
             if( (slave->flags & SCFLG_MUTED) != 0 )
             {
-                goto MIDITranslateSend;
+                sendBuffer.emplace_back(0);
             }
+            else
+            {
+                auto tmp = static_cast<uint8_t>(slave->_16bVol / 256u);
 
-            data = static_cast<uint8_t>(slave->_16bVol / 256u);
-            if( data == 0 )
-            {
-                data = 1;
+                if( tmp == 0 )
+                {
+                    tmp = 1;
+                }
+                else if( data >= 0x80 )
+                {
+                    tmp = 0x7f;
+                }
+                sendBuffer.emplace_back(tmp);
             }
-            else if( data >= 0x80 )
-            {
-                data = 0x7f;
-            }
-            goto MIDITranslateSend;
         }
-
-        data = static_cast<uint8_t>(std::distance(&m_hosts[0], slave->getHost()));
-        if( chr == 'h' - 'a' )
-        { // host channel
-            goto MIDITranslateSend;
-        }
-
-        data = slave->pan;
-        if( chr == 'x' - 'a' )
-        { // pan
-            goto MIDITranslatePanValue;
-
-            data = slave->midiFinalPan;
-            if( chr == 'y' - 'a' )
-            { // pan + pan-envelope
-                goto MIDITranslatePanValue;
-            }
-
-            data = slave->midiProgram;
-            if( chr == 'p' - 'a' )
-            { // program
-                goto MIDITranslateSend;
-            }
-
-            if( chr == 'b' - 'a' )
-            { // low byte bank select
-                data = slave->midiBank & 0xff;
-                goto MIDITranslateSend;
-            }
-            else if( chr == 'a' - 'a' )
-            {
-                data = slave->midiBank >> 8;
-                goto MIDITranslateSend;
-            }
-            data = 0;
-            continue;
-
-MIDITranslatePanValue:
-            data *= 2;
-            if( data == 0x80 )
-            {
-                data = 0x7f;
-            }
-            else if( data > 0x80 )
-            {
-                data = 0x40;
-            }
-            goto MIDITranslateSend;
-        }
-
-MIDITranslateValueEnd:
-        if( chrOffset < 2 )
+        else if( chr == 'h' )
         {
-            continue;
+            sendBuffer.emplace_back(static_cast<uint8_t>(std::distance(&m_hosts[0], slave->getHost())));
         }
-
-MIDITranslateSend:
-        send(data);
-        data = 0;
-        chrOffset = 0;
-
-        if( chrOffset == 0 )
+        else if( chr == 'x' || chr == 'y' )
         {
-            return;
+            auto tmp = 0;
+            switch( chr )
+            {
+                case 'x':
+                    tmp = slave->pan;
+                    break;
+                case 'y':
+                    tmp = slave->midiFinalPan;
+                    break;
+                default:
+                    BOOST_ASSERT(false);
+            }
+            tmp *= 2;
+            if( tmp == 0x80 )
+            {
+                tmp = 0x7f;
+            }
+            else if( tmp > 0x80 )
+            {
+                tmp = 0x40;
+            }
+            sendBuffer.emplace_back(tmp);
         }
+        else if( chr == 'p' )
+        {
+            sendBuffer.emplace_back(slave->midiProgram);
+        }
+        else if( chr == 'b' )
+        {
+            sendBuffer.emplace_back(slave->midiBank & 0xff);
+        }
+        else if( chr == 'a' )
+        {
+            sendBuffer.emplace_back(slave->midiBank >> 8u);
+        }
+    }
 
-        send(data);
+    if( slave != nullptr && sendBuffer.size() >= 4 && sendBuffer[0] == 0xf0 && sendBuffer[1] == 0xf0 )
+    {
+        if( sendBuffer[2] == 0 )
+        {
+            slave->filterCutoff = sendBuffer[3] & 0x7fu;
+        }
+        else if( sendBuffer[2] == 1 )
+        {
+            slave->filterResonance = sendBuffer[3] & 0x7fu;
+        }
     }
 }
 
@@ -3179,11 +3183,11 @@ void ItModule::initCommandZ(HostChannel& host)
 
     if( (host.patternFxParam & 0x80u) == 0 )
     {
-        midiTranslateParametrized(&host, host.getSlave(), ((host.sfx & 0x0f) << 5) + 0x120);
+        midiTranslateParametrized(&host, host.getSlave(), midiDataArea.m00[host.sfx & 0x0f]);
     }
     else
     {
-        midiTranslateParametrized(&host, host.getSlave(), ((host.patternFxParam & 0x7f) << 5) + 0x320);
+        midiTranslateParametrized(&host, host.getSlave(), midiDataArea.m80[host.patternFxParam & 0x7f]);
     }
 }
 
@@ -3851,7 +3855,6 @@ AllocateChannel8_initSearch:
     refHostChan = &host;
     refDca = hostIntrument->dca;
 
-AllocateChannel6_search:
     for( auto& slave : m_slaves )
     {
         if( (slave.flags & SCFLG_ON) == 0 )
@@ -3930,8 +3933,8 @@ SlaveChannel* ItModule::allocateSampleChannel(HostChannel& host)
     // General stuff.
     slave->fadeOut = 0x400;
     slave->vEnvelope.value = 64;
-    slave->filterCutoff = 0xff;
-    slave->filterResonance = 0; // TODO?
+    slave->filterCutoff = 0x7f;
+    slave->filterResonance = 0;
 
     slave->effectiveNote = host.patternNote;
     slave->ins = host.patternInstrument;
@@ -4251,17 +4254,6 @@ void ItModule::M32MixHandler(MixerFrameBuffer& mixBuffer, bool preprocess)
         // M32MixHandler12
         if( (slaveFlags & (SCFLG_PAN_CHANGE | SCFLG_LOOP_CHANGE | SCFLG_RECALC_FINAL_VOL)) != 0 )
         {
-            if( slave.disowned )
-            {
-                slave.filterL.update(frequency(), slave.filterCutoff, slave.filterResonance & 0x7f);
-                slave.filterR.update(frequency(), slave.filterCutoff, slave.filterResonance & 0x7f);
-            }
-            else
-            {
-                slave.filterL.update(frequency(), 0x7f, 0);
-                slave.filterR.update(frequency(), 0x7f, 0);
-            }
-
             // M32MixHandlerNoFilter
 
             if( (slaveFlags & SCFLG_MUTED) != 0 )
@@ -4302,27 +4294,16 @@ void ItModule::M32MixHandler(MixerFrameBuffer& mixBuffer, bool preprocess)
 
             if( !preprocess )
             {
-                if( slave.filterResonance != 0x7f )
-                {
-                    for( size_t i = 0; i < tmpBuf.size(); ++i )
-                    {
-                        const auto l = slave.filterL.filter(static_cast<MixerSample>(tmpBuf[i].left) * slave.mixVolumeL);
-                        const auto r = slave.filterR.filter(static_cast<MixerSample>(tmpBuf[i].right) * slave.mixVolumeR);
+                slave.filterL.update(frequency(), (slave.filterCutoff & 0x7fu) * slave.envFilterCutoff, slave.filterResonance);
+                slave.filterR.update(frequency(), (slave.filterCutoff & 0x7fu) * slave.envFilterCutoff, slave.filterResonance);
 
-                        mixBuffer[i].left += l;
-                        mixBuffer[i].right += r;
-                    }
-                }
-                else
+                for( size_t i = 0; i < tmpBuf.size(); ++i )
                 {
-                    for( size_t i = 0; i < tmpBuf.size(); ++i )
-                    {
-                        const auto l = static_cast<MixerSample>(tmpBuf[i].left) * slave.mixVolumeL;
-                        const auto r = static_cast<MixerSample>(tmpBuf[i].right) * slave.mixVolumeR;
+                    const auto l = slave.filterL.filter(static_cast<MixerSample>(tmpBuf[i].left) * slave.mixVolumeL);
+                    const auto r = slave.filterR.filter(static_cast<MixerSample>(tmpBuf[i].right) * slave.mixVolumeR);
 
-                        mixBuffer[i].left += l;
-                        mixBuffer[i].right += r;
-                    }
+                    mixBuffer[i].left += l;
+                    mixBuffer[i].right += r;
                 }
             }
 

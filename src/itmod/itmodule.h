@@ -69,6 +69,8 @@ constexpr uint8_t VFX_PITCH_UP = 5;
 constexpr uint8_t VFX_PORTA = 6;
 constexpr uint8_t VFX_VIBRATO = 7;
 
+using MidiMacro = std::array<char, 32>;
+
 class ItModule final
     : public AbstractModule
 {
@@ -166,7 +168,7 @@ private:
 
     void updateInstruments();
 
-    void midiTranslateParametrized(HostChannel* host, SlaveChannel* slave, uint16_t cmd);
+    void midiTranslateParametrized(HostChannel* host, SlaveChannel* slave, const MidiMacro& macro);
 
     void M32MixHandler(MixerFrameBuffer& buffer, bool preprocess);
 

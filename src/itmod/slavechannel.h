@@ -99,15 +99,10 @@ public:
     uint8_t nna = 0;
     uint8_t mch = 0;
     int8_t midiProgram = 0; //!< mpr
-    union
-    {
-        uint16_t midiBank = 0; //!< mbank
-        struct
-        {
-            uint8_t filterCutoff;
-            uint8_t filterResonance;
-        };
-    };
+    uint16_t midiBank = 0; //!< mbank
+    uint8_t filterCutoff = 0x7f;
+    uint16_t envFilterCutoff = 256; //!< 0..256
+    uint8_t filterResonance = 0;
     uint32_t loopBeg = 0;
     uint32_t loopEnd = 0;
     uint16_t _16bVol = 0; //!< fv, 0..32768

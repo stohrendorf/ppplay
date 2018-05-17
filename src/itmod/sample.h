@@ -60,7 +60,7 @@ public:
         setFilename(stringncpy(header.filename, 12));
     }
 
-    void loadData(Stream& stream, uint16_t cmwt)
+    void loadData(Stream& stream)
     {
         if( header.length == 0 )
         {
