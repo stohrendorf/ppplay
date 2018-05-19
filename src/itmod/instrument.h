@@ -16,7 +16,7 @@ struct Envelope
         uint16_t tick = 0;
     };
 
-    explicit Envelope(uint8_t y)
+    explicit Envelope(int8_t y)
         : points{{y, 0},
                  {y, 100 << 8},
                  {0, 0}}

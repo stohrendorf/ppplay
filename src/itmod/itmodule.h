@@ -7,6 +7,8 @@
 #include "sample.h"
 #include "instrument.h"
 
+#include <cstring>
+
 namespace ppp
 {
 namespace it
@@ -50,7 +52,7 @@ struct ITHeader
     static constexpr uint16_t FlgMidiEmbedded = 0x80;
 
     static constexpr uint16_t SFlgSngMessage = 0x01;
-    static constexpr uint16_t SFlgMidiEmbedded = 0x80;
+    static constexpr uint16_t SFlgMidiEmbedded = 0x08;
 };
 static_assert(sizeof(ITHeader) == 0xc0, "Ooops");
 #pragma clang diagnostic pop
@@ -70,6 +72,38 @@ constexpr uint8_t VFX_PORTA = 6;
 constexpr uint8_t VFX_VIBRATO = 7;
 
 using MidiMacro = std::array<char, 32>;
+
+struct MidiDataArea
+{
+    MidiMacro specials[9]{};
+    MidiMacro m00[16]{};
+    MidiMacro m80[128]{};
+
+    MidiDataArea()
+    {
+        for( auto& special : specials )
+        {
+            special.fill(0);
+        }
+
+        for( auto& i : m00 )
+        {
+            i.fill(0);
+        }
+        std::strncpy(m00[0].data(), "F0F000z", m00[0].size());
+
+        for( auto& i : m80 )
+        {
+            i.fill(0);
+        }
+        for( int i = 0; i < 16; ++i )
+        {
+            std::snprintf(m80[i].data(), m80[i].size(), "F0F001%02x", i * 8);
+        }
+    }
+};
+
+static_assert(sizeof(MidiDataArea) == 32 * (128 + 16 + 9), "oops");
 
 class ItModule final
     : public AbstractModule
@@ -105,6 +139,8 @@ private:
     uint16_t m_patternRows = 0;
 
     SlaveChannel* m_lastSlaveChannel = nullptr;
+
+    MidiDataArea m_midiDataArea{};
 
 protected:
     AbstractArchive& serialize(AbstractArchive* data) override

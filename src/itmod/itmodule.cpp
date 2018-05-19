@@ -176,40 +176,6 @@ const std::array<int8_t, 256> fineSquareWave = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-struct MidiDataArea
-{
-    MidiMacro specials[9]{};
-    MidiMacro m00[16]{};
-    MidiMacro m80[128]{};
-
-    MidiDataArea()
-    {
-        for( auto& special : specials )
-        {
-            special.fill(0);
-        }
-
-        for( auto& i : m00 )
-        {
-            i.fill(0);
-        }
-        std::strncpy(m00[0].data(), "F0F000z", m00[0].size());
-
-        for( auto& i : m80 )
-        {
-            i.fill(0);
-        }
-        for( int i = 0; i < 16; ++i )
-        {
-            std::snprintf(m80[i].data(), m80[i].size(), "F0F001%02x", i * 8);
-        }
-    }
-};
-
-static_assert(sizeof(MidiDataArea) == 32 * (128 + 16 + 9), "oops");
-
-MidiDataArea midiDataArea{};
-
 bool updateEnvelope(SEnvelope& slaveEnvelope, const Envelope& insEnvelope, bool noteOff)
 {
     if( slaveEnvelope.tick < slaveEnvelope.nextPointTick )
@@ -639,6 +605,11 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
     const auto instrumentOffsets = stream->readVector<uint32_t>(result->m_header.insNum);
     const auto sampleOffsets = stream->readVector<uint32_t>(result->m_header.smpNum);
     const auto patternOffsets = stream->readVector<uint32_t>(result->m_header.patNum);
+
+    if( (result->m_header.special & ITHeader::SFlgMidiEmbedded) != 0 )
+    {
+        *stream >> result->m_midiDataArea;
+    }
 
     for( const auto& o : orders )
     {
@@ -3183,11 +3154,11 @@ void ItModule::initCommandZ(HostChannel& host)
 
     if( (host.patternFxParam & 0x80u) == 0 )
     {
-        midiTranslateParametrized(&host, host.getSlave(), midiDataArea.m00[host.sfx & 0x0f]);
+        midiTranslateParametrized(&host, host.getSlave(), m_midiDataArea.m00[host.sfx & 0x0f]);
     }
     else
     {
-        midiTranslateParametrized(&host, host.getSlave(), midiDataArea.m80[host.patternFxParam & 0x7f]);
+        midiTranslateParametrized(&host, host.getSlave(), m_midiDataArea.m80[host.patternFxParam & 0x7f]);
     }
 }
 
