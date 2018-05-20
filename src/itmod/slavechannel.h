@@ -42,6 +42,8 @@ struct SEnvelope final
     uint16_t filter = 0;
 };
 
+constexpr uint8_t SurroundPan = 100;
+
 struct SlaveChannel
 {
     uint16_t flags = SCFLG_NOTE_CUT;

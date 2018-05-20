@@ -332,7 +332,7 @@ void setVolume(HostChannel& host, uint8_t volume)
 
 void setPan(HostChannel& host, uint8_t pan)
 {
-    BOOST_ASSERT(pan <= 64 || pan == 100);
+    BOOST_ASSERT(pan <= 64 || pan == SurroundPan);
 
     if( host.isEnabled() )
     {
@@ -341,7 +341,6 @@ void setPan(HostChannel& host, uint8_t pan)
         host.getSlave()->flags |= SCFLG_RECALC_FINAL_VOL | SCFLG_RECALC_PAN;
     }
     host.cp = pan;
-    BOOST_ASSERT(host.cp <= 64 || host.cp == 100);
 }
 
 void applyRandomValues(HostChannel& host)
@@ -366,7 +365,7 @@ void applyRandomValues(HostChannel& host)
         }
     }
 
-    if( host.getSlave()->insOffs->rp != 0 && host.getSlave()->pan != 100 )
+    if( host.getSlave()->insOffs->rp != 0 && host.getSlave()->pan != SurroundPan )
     {
         auto pan = host.getSlave()->pan + host.getSlave()->insOffs->rp * ((std::rand() & 0xff) - 128) / 128;
         if( pan < 0 )
@@ -383,7 +382,7 @@ void applyRandomValues(HostChannel& host)
         {
             host.getSlave()->pan = static_cast<uint8_t>(pan);
             host.getSlave()->ps = static_cast<uint8_t>(pan);
-            BOOST_ASSERT(host.getSlave()->pan <= 64 || host.getSlave()->pan == 100);
+            BOOST_ASSERT(host.getSlave()->pan <= 64 || host.getSlave()->pan == SurroundPan);
         }
     }
 }
@@ -1171,7 +1170,7 @@ void ItModule::loadRow()
         }
 
         host.channelState.volume = slave->_16bVol * 100 / 32768;
-        if( slave->finalPan != 100 )
+        if( slave->finalPan != SurroundPan )
         {
             host.channelState.panning = (slave->finalPan - 32) * 100 / 32;
         }
@@ -1338,7 +1337,7 @@ void ItModule::updateSamples()
             slave.flags |= SCFLG_PAN_CHANGE;
 
             slave.midiFinalPan = slave.pan;
-            if( slave.pan != 100 )
+            if( slave.pan != SurroundPan )
             {
                 int tmp = (slave.pan - 32) * m_header.sep / 128 + 32;
                 slave.finalPan = static_cast<uint8_t>(tmp);
@@ -1346,7 +1345,7 @@ void ItModule::updateSamples()
             }
             else
             {
-                slave.finalPan = 100;
+                slave.finalPan = SurroundPan;
             }
         }
 
@@ -1556,10 +1555,10 @@ UpdateInstruments5_recalcVol:
             slaveFlags &= ~SCFLG_RECALC_PAN;
             slaveFlags |= SCFLG_PAN_CHANGE;
 
-            if( slave.pan == 100 )
+            if( slave.pan == SurroundPan )
             {
-                slave.midiFinalPan = 100;
-                slave.finalPan = 100;
+                slave.midiFinalPan = SurroundPan;
+                slave.finalPan = SurroundPan;
             }
             else
             {
@@ -1834,7 +1833,7 @@ void ItModule::initNoCommand(HostChannel& host)
             if( (m_header.flags & ITHeader::FlgInstrumentMode) == 0 && (host.getSlave()->smpOffs->header.dfp & 0x80u) != 0 )
             {
                 host.cp = host.getSlave()->smpOffs->header.dfp & 0x7fu;
-                BOOST_ASSERT(host.cp <= 64 || host.cp == 100);
+                BOOST_ASSERT(host.cp <= 64 || host.cp == SurroundPan);
                 host.getSlave()->pan = host.cp;
                 host.getSlave()->ps = host.cp;
             }
@@ -2589,7 +2588,7 @@ void ItModule::initCommandP(HostChannel& host)
         pan = host.getSlave()->ps;
     }
 
-    if( pan == 100 )
+    if( pan == SurroundPan )
     {
         return;
     }
@@ -2905,7 +2904,7 @@ void ItModule::initCommandS(HostChannel& host)
                 initNoCommand(host);
                 host.channelState.fx = 'S';
                 host.channelState.fxDesc = ppp::fxdesc::SetPanPos;
-                setPan(host, 100);
+                setPan(host, SurroundPan);
                 return;
             }
             initNoCommand(host);
@@ -3610,7 +3609,7 @@ void ItModule::commandY(HostChannel& host)
             }
     }
 
-    if( slave->ps == 100 )
+    if( slave->ps == SurroundPan )
     {
         return;
     }
@@ -3628,7 +3627,7 @@ void ItModule::commandY(HostChannel& host)
 
     slave->flags |= SCFLG_RECALC_PAN;
     slave->pan = pan;
-    BOOST_ASSERT(slave->pan <= 64 || slave->pan == 100);
+    BOOST_ASSERT(slave->pan <= 64 || slave->pan == SurroundPan);
 }
 
 void ItModule::volumeCommandC(HostChannel& host)
@@ -3898,7 +3897,7 @@ SlaveChannel* ItModule::allocateSampleChannel(HostChannel& host)
 
     slave->channelVolume = host.channelVolume;
     slave->pan = host.cp;
-    BOOST_ASSERT(slave->pan <= 64 || slave->pan == 100);
+    BOOST_ASSERT(slave->pan <= 64 || slave->pan == SurroundPan);
     slave->ps = host.cp;
 
     // Get sample offset.
@@ -4234,7 +4233,7 @@ void ItModule::M32MixHandler(MixerFrameBuffer& mixBuffer, bool preprocess)
                 slave.mixVolumeL = 0;
                 slave.mixVolumeR = 0;
             }
-            else if( slave.finalPan == 100 )
+            else if( slave.finalPan == SurroundPan )
             {
                 // M32MixHandler6
                 auto volume = static_cast<uint16_t>(slave._16bVol * MixVolume / 2 / 256);
