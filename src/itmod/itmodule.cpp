@@ -1172,7 +1172,7 @@ void ItModule::loadRow()
         host.channelState.volume = slave->_16bVol * 100 / 32768;
         if( slave->finalPan != SurroundPan )
         {
-            host.channelState.panning = (slave->finalPan - 32) * 100 / 32;
+            host.channelState.panning = (32 - slave->finalPan) * 100 / 32;
         }
         else
         {
