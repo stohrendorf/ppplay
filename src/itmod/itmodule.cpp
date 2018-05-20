@@ -3579,20 +3579,20 @@ void ItModule::commandY(HostChannel& host)
 
     auto slave = host.getSlave();
 
-    int8_t value;
+    int value;
     switch( host.panbrelloWaveform )
     {
         case 0:
             host.panbrelloOffset += host.panbrelloSpeed;
-            value = fineSineData[host.tremoloPosition];
+            value = fineSineData[host.panbrelloOffset];
             break;
         case 1:
             host.panbrelloOffset += host.panbrelloSpeed;
-            value = fineRampDownData[host.tremoloPosition];
+            value = fineRampDownData[host.panbrelloOffset];
             break;
         case 2:
             host.panbrelloOffset += host.panbrelloSpeed;
-            value = fineSquareWave[host.tremoloPosition];
+            value = fineSquareWave[host.panbrelloOffset];
             break;
         case 3:
         default:
@@ -3615,6 +3615,7 @@ void ItModule::commandY(HostChannel& host)
         return;
     }
 
+    BOOST_ASSERT(value >= -64 && value <= 64);
     auto pan = slave->ps + ((value * host.panbrelloDepth * 4) + 128) / 256;
     if( pan < 0 )
     {
