@@ -33,15 +33,13 @@
 #include "oplfilter.h"
 #include <stream/iserializable.h>
 
-#include <ymf262/ppplay_opl_export.h>
-
 namespace opl
 {
 class OperatorView;
 
 class SlotView;
 
-class PPPLAY_OPL_EXPORT Opl3
+class Opl3
     : public ISerializable
 {
     friend class OperatorView;
@@ -217,7 +215,7 @@ private:
     }
 };
 
-class PPPLAY_OPL_EXPORT OperatorView
+class OperatorView
 {
 private:
     friend class Opl3;
@@ -320,7 +318,7 @@ public:
     }
 };
 
-class PPPLAY_OPL_EXPORT SlotView
+class SlotView
 {
     friend class Opl3;
 

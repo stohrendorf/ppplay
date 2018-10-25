@@ -19,8 +19,6 @@
 #ifndef PPPLAY_AUDIOFIFO_H
 #define PPPLAY_AUDIOFIFO_H
 
-#include "ppplay_core_export.h"
-
 #include <stuff/utils.h>
 #include "audiotypes.h"
 #include "abstractaudiosource.h"
@@ -49,7 +47,7 @@
  * A simple thread is created that continuously requests data from the connected
  * AbstractAudioSource.
  */
-class PPPLAY_CORE_EXPORT AudioFifo
+class AudioFifo
 {
 private:
     //! @brief Buffered audio frames

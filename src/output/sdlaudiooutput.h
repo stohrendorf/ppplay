@@ -24,8 +24,6 @@
 #include "volumeobserver.h"
 #include "fftobserver.h"
 
-#include "ppplay_output_sdl_export.h"
-
 #include <mutex>
 
 /**
@@ -37,7 +35,7 @@
  * @class SDLAudioOutput
  * @brief Output class for SDL
  */
-class PPPLAY_OUTPUT_SDL_EXPORT SDLAudioOutput
+class SDLAudioOutput
     : public AbstractAudioOutput
 {
 public:

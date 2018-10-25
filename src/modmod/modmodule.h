@@ -53,7 +53,7 @@ public:
      * @param[in] maxRpt Maximum repeat count
      * @return Module pointer or nullptr
      */
-    static AbstractModule* factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter);
+    static std::shared_ptr<AbstractModule> factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter);
 
 private:
     std::vector<std::unique_ptr<ModSample>> m_samples; //!< @brief Samples

@@ -19,7 +19,6 @@
 #ifndef PPPLAY_VOLUMEOBSERVER_H
 #define PPPLAY_VOLUMEOBSERVER_H
 
-#include "ppplay_core_export.h"
 #include "audiotypes.h"
 #include <stuff/utils.h>
 #include <boost/signals2/connection.hpp>
@@ -35,7 +34,7 @@ class AudioFifo;
  * @class VolumeObserver
  * @brief Observer for calculating the output peaks of an AudioFifo
  */
-class PPPLAY_CORE_EXPORT VolumeObserver
+class VolumeObserver
 {
 private:
     //! @brief Sum of all left absolute sample values

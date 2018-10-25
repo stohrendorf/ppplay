@@ -1,9 +1,4 @@
-include(GenerateExportHeader)
-add_compiler_export_flags()
-
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
-add_library(ppplay_ppg SHARED
+add_library(ppplay_ppg STATIC
 	widget.cpp
 	label.cpp
 	sdlscreen.cpp
@@ -20,23 +15,6 @@ add_library(ppplay_ppg SHARED
 	rect.h
 	fonts.h
 )
-set_target_properties(ppplay_ppg PROPERTIES SOVERSION 1)
-generate_export_header(ppplay_ppg)
-target_link_libraries(ppplay_ppg ppplay_core)
-install(TARGETS ppplay_ppg DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ppplayExports)
-
-install(FILES
-	color.h
-	label.h
-	point.h
-	progressbar.h
-	rect.h
-	sdlscreen.h
-	stereopeakbar.h
-	widget.h
-	${CMAKE_CURRENT_BINARY_DIR}/ppplay_ppg_export.h
-	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/ppg
-	COMPONENT Devel
-)
+target_link_libraries(ppplay_ppg PUBLIC ppplay_core)
 
 add_subdirectory(tests)

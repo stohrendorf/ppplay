@@ -36,7 +36,7 @@ namespace light4cxx
  * @class Logger
  * @brief The logger class
  */
-class PPPLAY_LIGHT4CXX_EXPORT Logger
+class Logger
 {
 public:
     DISABLE_COPY(Logger)

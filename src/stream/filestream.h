@@ -30,7 +30,7 @@
  * @brief Class derived from Stream for files
  * @note This is a read-only stream
  */
-class PPPLAY_STREAM_EXPORT FileStream
+class FileStream
     : public Stream
 {
 private:

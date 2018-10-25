@@ -19,7 +19,6 @@
 */
 
 #include <stuff/utils.h>
-#include <stream/ppplay_stream_export.h>
 
 #include <iostream>
 #include <memory>
@@ -32,7 +31,7 @@
  * @ingroup Common
  * @brief A binary stream helper
  */
-class PPPLAY_STREAM_EXPORT Stream
+class Stream
 {
 public:
     DISABLE_COPY(Stream)

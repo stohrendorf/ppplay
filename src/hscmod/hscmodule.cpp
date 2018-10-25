@@ -15,12 +15,11 @@ constexpr uint8_t ChanToCarrier[9] = {3, 4, 5, 11, 12, 13, 19, 20, 21};
 constexpr uint16_t NoteToFnum[12] = {8555, 8577, 8600, 8624, 8650, 8677, 8706, 8736, 8769, 8803, 8839, 8878};
 }
 
-ppp::AbstractModule* Module::factory(Stream* stream, uint32_t frequency, int maxRpt, ppp::Sample::Interpolation inter)
+std::shared_ptr<ppp::AbstractModule> Module::factory(Stream* stream, uint32_t frequency, int maxRpt, ppp::Sample::Interpolation inter)
 {
-    auto res = new Module(maxRpt, inter);
+    auto res = std::make_shared<Module>(maxRpt, inter);
     if( !res->load(stream) )
     {
-        delete res;
         return nullptr;
     }
     res->initialize(frequency);

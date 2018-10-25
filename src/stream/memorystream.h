@@ -26,7 +26,7 @@
  * @ingroup Common
  * @brief Class derived from Stream for a std::stringstream
  */
-class PPPLAY_STREAM_EXPORT MemoryStream
+class MemoryStream
     : public Stream
 {
 public:

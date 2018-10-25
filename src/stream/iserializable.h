@@ -19,8 +19,6 @@
 #ifndef PPPLAY_ISERIALIZABLE_H
 #define PPPLAY_ISERIALIZABLE_H
 
-#include <stream/ppplay_stream_export.h>
-
 class AbstractArchive;
 
 /**
@@ -28,7 +26,7 @@ class AbstractArchive;
  * @ingroup Common
  * @brief Interface for serialisable classes
  */
-class PPPLAY_STREAM_EXPORT ISerializable
+class ISerializable
 {
 public:
     /**

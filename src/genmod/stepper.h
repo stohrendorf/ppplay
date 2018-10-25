@@ -18,8 +18,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "ppplay_core_export.h"
-
 #include <output/audiotypes.h>
 
 #include <cstdint>
@@ -42,7 +40,7 @@ namespace ppp
  * heavy speed-up.
  */
 template<typename T = int_fast32_t>
-class PPPLAY_CORE_EXPORT StepperBase
+class StepperBase
 {
 private:
     //! @brief Width of the line

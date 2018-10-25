@@ -1,8 +1,6 @@
 #ifndef PPPLAY_STANDARDFXDESC_H
 #define PPPLAY_STANDARDFXDESC_H
 
-#include <genmod/ppplay_module_base_export.h>
-
 namespace ppp
 {
 /**
@@ -13,67 +11,67 @@ namespace ppp
  */
 namespace fxdesc
 {
-extern PPPLAY_MODULE_BASE_EXPORT const char* NullFx;
+extern const char* NullFx;
 
-extern PPPLAY_MODULE_BASE_EXPORT const char* SetVolume;
-extern PPPLAY_MODULE_BASE_EXPORT const char* SetEnvelopePos;
+extern const char* SetVolume;
+extern const char* SetEnvelopePos;
 
-extern PPPLAY_MODULE_BASE_EXPORT const char* SlowVolSlideDown;
-extern PPPLAY_MODULE_BASE_EXPORT const char* VolSlideDown;
-extern PPPLAY_MODULE_BASE_EXPORT const char* FastVolSlideDown;
+extern const char* SlowVolSlideDown;
+extern const char* VolSlideDown;
+extern const char* FastVolSlideDown;
 
-extern PPPLAY_MODULE_BASE_EXPORT const char* SlowVolSlideUp;
-extern PPPLAY_MODULE_BASE_EXPORT const char* VolSlideUp;
-extern PPPLAY_MODULE_BASE_EXPORT const char* FastVolSlideUp;
+extern const char* SlowVolSlideUp;
+extern const char* VolSlideUp;
+extern const char* FastVolSlideUp;
 
-extern PPPLAY_MODULE_BASE_EXPORT const char* SlowPitchSlideDown;
-extern PPPLAY_MODULE_BASE_EXPORT const char* PitchSlideDown;
-extern PPPLAY_MODULE_BASE_EXPORT const char* FastPitchSlideDown;
+extern const char* SlowPitchSlideDown;
+extern const char* PitchSlideDown;
+extern const char* FastPitchSlideDown;
 
-extern PPPLAY_MODULE_BASE_EXPORT const char* SlowPitchSlideUp;
-extern PPPLAY_MODULE_BASE_EXPORT const char* PitchSlideUp;
-extern PPPLAY_MODULE_BASE_EXPORT const char* FastPitchSlideUp;
+extern const char* SlowPitchSlideUp;
+extern const char* PitchSlideUp;
+extern const char* FastPitchSlideUp;
 
-extern PPPLAY_MODULE_BASE_EXPORT const char* PortaVolSlide;
-extern PPPLAY_MODULE_BASE_EXPORT const char* VibVolSlide;
-extern PPPLAY_MODULE_BASE_EXPORT const char* Porta;
-extern PPPLAY_MODULE_BASE_EXPORT const char* Vibrato;
-extern PPPLAY_MODULE_BASE_EXPORT const char* FineVibrato;
-extern PPPLAY_MODULE_BASE_EXPORT const char* Tremolo;
-extern PPPLAY_MODULE_BASE_EXPORT const char* NoteCut;
-extern PPPLAY_MODULE_BASE_EXPORT const char* NoteDelay;
-extern PPPLAY_MODULE_BASE_EXPORT const char* KeyOff;
-extern PPPLAY_MODULE_BASE_EXPORT const char* Fadeout;
-extern PPPLAY_MODULE_BASE_EXPORT const char* SetFinetune;
-extern PPPLAY_MODULE_BASE_EXPORT const char* SetVibWaveform;
-extern PPPLAY_MODULE_BASE_EXPORT const char* SetTremWaveform;
-extern PPPLAY_MODULE_BASE_EXPORT const char* SetPanbrelloWaveform;
-extern PPPLAY_MODULE_BASE_EXPORT const char* Retrigger;
-extern PPPLAY_MODULE_BASE_EXPORT const char* Offset;
-extern PPPLAY_MODULE_BASE_EXPORT const char* Tremor;
-extern PPPLAY_MODULE_BASE_EXPORT const char* SetTempo;
-extern PPPLAY_MODULE_BASE_EXPORT const char* SetSpeed;
-extern PPPLAY_MODULE_BASE_EXPORT const char* Arpeggio;
-extern PPPLAY_MODULE_BASE_EXPORT const char* Glissando;
-extern PPPLAY_MODULE_BASE_EXPORT const char* StereoControl;
-extern PPPLAY_MODULE_BASE_EXPORT const char* GlobalVolume;
-extern PPPLAY_MODULE_BASE_EXPORT const char* GlobalVolSlideDown;
-extern PPPLAY_MODULE_BASE_EXPORT const char* GlobalVolSlideUp;
-extern PPPLAY_MODULE_BASE_EXPORT const char* ChannelVolume;
-extern PPPLAY_MODULE_BASE_EXPORT const char* ChannelVolSlideUp;
-extern PPPLAY_MODULE_BASE_EXPORT const char* ChannelVolSlideDown;
+extern const char* PortaVolSlide;
+extern const char* VibVolSlide;
+extern const char* Porta;
+extern const char* Vibrato;
+extern const char* FineVibrato;
+extern const char* Tremolo;
+extern const char* NoteCut;
+extern const char* NoteDelay;
+extern const char* KeyOff;
+extern const char* Fadeout;
+extern const char* SetFinetune;
+extern const char* SetVibWaveform;
+extern const char* SetTremWaveform;
+extern const char* SetPanbrelloWaveform;
+extern const char* Retrigger;
+extern const char* Offset;
+extern const char* Tremor;
+extern const char* SetTempo;
+extern const char* SetSpeed;
+extern const char* Arpeggio;
+extern const char* Glissando;
+extern const char* StereoControl;
+extern const char* GlobalVolume;
+extern const char* GlobalVolSlideDown;
+extern const char* GlobalVolSlideUp;
+extern const char* ChannelVolume;
+extern const char* ChannelVolSlideUp;
+extern const char* ChannelVolSlideDown;
 
-extern PPPLAY_MODULE_BASE_EXPORT const char* JumpOrder;
-extern PPPLAY_MODULE_BASE_EXPORT const char* NNA;
-extern PPPLAY_MODULE_BASE_EXPORT const char* EnvelopEnable;
-extern PPPLAY_MODULE_BASE_EXPORT const char* EnvelopDisable;
-extern PPPLAY_MODULE_BASE_EXPORT const char* PatternBreak;
-extern PPPLAY_MODULE_BASE_EXPORT const char* PatternLoop;
-extern PPPLAY_MODULE_BASE_EXPORT const char* PatternDelay;
-extern PPPLAY_MODULE_BASE_EXPORT const char* SetPanPos;
-extern PPPLAY_MODULE_BASE_EXPORT const char* Panbrello;
-extern PPPLAY_MODULE_BASE_EXPORT const char* PanSlideLeft;
-extern PPPLAY_MODULE_BASE_EXPORT const char* PanSlideRight;
+extern const char* JumpOrder;
+extern const char* NNA;
+extern const char* EnvelopEnable;
+extern const char* EnvelopDisable;
+extern const char* PatternBreak;
+extern const char* PatternLoop;
+extern const char* PatternDelay;
+extern const char* SetPanPos;
+extern const char* Panbrello;
+extern const char* PanSlideLeft;
+extern const char* PanSlideRight;
 }
 }
 

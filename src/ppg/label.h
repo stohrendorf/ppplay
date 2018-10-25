@@ -34,7 +34,7 @@ namespace ppg
  * @class Label
  * @brief A colored text label
  */
-class PPPLAY_PPG_EXPORT Label
+class Label
     : public Widget
 {
 private:

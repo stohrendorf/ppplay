@@ -19,8 +19,6 @@
 #ifndef PPPLAY_NUMBERUTILS_H
 #define PPPLAY_NUMBERUTILS_H
 
-#include "ppplay_core_export.h"
-
 #include <algorithm>
 
 namespace ppp
@@ -67,7 +65,7 @@ inline constexpr bool between(T v, T a, T b)
  * @details
  * Reverts the bytes in @a data
  */
-extern PPPLAY_CORE_EXPORT void swapEndian(char data[], size_t size);
+extern void swapEndian(char data[], size_t size);
 
 /**
  * @overload

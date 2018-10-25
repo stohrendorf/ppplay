@@ -5,6 +5,10 @@
 #include <array>
 #include <cmath>
 
+#ifndef M_PI
+#define M_PI 3.14159388
+#endif
+
 namespace ppp
 {
 // See https://wiki.multimedia.cx/index.php/Impulse_Tracker#Resonant_filters

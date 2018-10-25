@@ -53,13 +53,18 @@ public:
     S3mModule() = delete;
 
     /**
+     * @copydoc ppp::GenModule::GenModule(uint8_t)
+     */
+    S3mModule(int maxRpt, Sample::Interpolation inter);
+
+    /**
      * @brief Factory method
      * @param[in] filename Module filename
      * @param[in] frequency Rendering frequency
      * @param[in] maxRpt Maximum repeat count
      * @return Module pointer or nullptr
      */
-    static AbstractModule* factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter);
+    static std::shared_ptr<AbstractModule> factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter);
 
 private:
     uint16_t m_breakRow;      //!< @brief Row to break to, ~0 if unused
@@ -95,11 +100,6 @@ private:
     size_t internal_buildTick(const AudioFrameBufferPtr& buffer) override;
 
     ChannelState internal_channelStatus(size_t idx) const override;
-
-    /**
-     * @copydoc ppp::GenModule::GenModule(uint8_t)
-     */
-    S3mModule(int maxRpt, Sample::Interpolation inter);
 
     /**
      * @brief Apply global effects

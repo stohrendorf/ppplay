@@ -60,7 +60,7 @@ private:
 public:
     DISABLE_COPY(Module)
 
-    static AbstractModule* factory(Stream* stream, uint32_t frequency, int maxRpt, ppp::Sample::Interpolation inter);
+    static std::shared_ptr<AbstractModule> factory(Stream* stream, uint32_t frequency, int maxRpt, ppp::Sample::Interpolation inter);
 
 protected:
     AbstractArchive& serialize(AbstractArchive* data) override;

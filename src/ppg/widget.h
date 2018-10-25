@@ -24,7 +24,6 @@
  * @{
  */
 
-#include <ppg/ppplay_ppg_export.h>
 #include <stuff/utils.h>
 #include "rect.h"
 #include "color.h"
@@ -46,7 +45,7 @@ namespace ppg
  * Every widget "owns" its children, so that it @c deletes them when it gets destructed. You may prevent
  * auto-deletion by the procedure described above.
  */
-class PPPLAY_PPG_EXPORT Widget
+class Widget
 {
 public:
     DISABLE_COPY(Widget)

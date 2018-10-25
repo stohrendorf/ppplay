@@ -458,22 +458,15 @@ AbstractArchive& XmModule::serialize(AbstractArchive* data)
     return *data;
 }
 
-AbstractModule* XmModule::factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter)
+std::shared_ptr<AbstractModule> XmModule::factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter)
 {
-    auto* result(new XmModule(maxRpt, inter));
-    if( !result )
-    {
-        delete result;
-        return nullptr;
-    }
+    auto result = std::make_shared<XmModule>(maxRpt, inter);
     if( !result->load(stream) )
     {
-        delete result;
         return nullptr;
     }
     if( !result->initialize(frequency) )
     {
-        delete result;
         return nullptr;
     }
     return result;

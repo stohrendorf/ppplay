@@ -18,8 +18,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <genmod/ppplay_module_base_export.h>
-
 #include "modulestate.h"
 #include <output/abstractaudiosource.h>
 #include <stuff/trackingcontainer.h>
@@ -45,7 +43,7 @@ class OrderEntry;
  * @todo Create a function to retrieve only the module's title without loading the whole module
  * @todo Multi-song: Reset module/channels on each new song?
  */
-class PPPLAY_MODULE_BASE_EXPORT AbstractModule
+class AbstractModule
     : public ISerializable, public AbstractAudioSource
 {
 public:

@@ -8,10 +8,7 @@ set_package_info(LibArchive "LibArchive" "http://www.libarchive.org" "LibArchive
 
 include_directories(${LibArchive_INCLUDE_DIR})
 
-include(GenerateExportHeader)
-add_compiler_export_flags()
-
-add_library(ppplay_stream SHARED
+add_library(ppplay_stream STATIC
 	stream.cpp
 	filestream.cpp
 	abstractarchive.cpp
@@ -25,20 +22,5 @@ add_library(ppplay_stream SHARED
 	memorystream.h
 	archivefilestream.h
 )
-set_target_properties(ppplay_stream PROPERTIES SOVERSION 1)
 
-generate_export_header(ppplay_stream)
-
-target_link_libraries(ppplay_stream ppplay_light4cxx ${LibArchive_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
-install(TARGETS ppplay_stream DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ppplayExports)
-install(FILES
-	abstractarchive.h
-	archivefilestream.h
-	filestream.h
-	iserializable.h
-	memarchive.h
-	memorystream.h
-	stream.h
-	${CMAKE_CURRENT_BINARY_DIR}/ppplay_stream_export.h
-	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/stream
-)
+target_link_libraries(ppplay_stream PUBLIC ppplay_light4cxx ${LibArchive_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})

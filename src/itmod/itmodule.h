@@ -111,7 +111,7 @@ class ItModule final
 public:
     DISABLE_COPY(ItModule)
 
-    static AbstractModule* factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter);
+    static std::shared_ptr<AbstractModule> factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter);
 
 private:
     ITHeader m_header{};

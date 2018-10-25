@@ -18,8 +18,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <genmod/ppplay_module_base_export.h>
-
 #include <stream/iserializable.h>
 #include <light4cxx/logger.h>
 
@@ -36,7 +34,7 @@ namespace ppp
  * @ingroup GenMod
  * @brief General interface for pattern note cells
  */
-class PPPLAY_MODULE_BASE_EXPORT IPatternCell
+class IPatternCell
     : public ISerializable
 {
 public:

@@ -18,8 +18,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <genmod/ppplay_module_base_export.h>
-
 #include <stream/iserializable.h>
 
 #include <cstdint>
@@ -36,7 +34,7 @@ namespace ppp
      * @struct ModuleState
      * @brief Contains information about the a playback state
      */
-    struct PPPLAY_MODULE_BASE_EXPORT ModuleState : public ISerializable
+    struct ModuleState : public ISerializable
     {
         explicit ModuleState() = default;
 

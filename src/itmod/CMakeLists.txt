@@ -1,8 +1,5 @@
-if (NOT WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
-endif ()
-add_library(ppplay_input_it MODULE
-        plugin.cpp
+add_library(ppplay_input_it STATIC
+            plugin.h
         itmodule.h
         itmodule.cpp
         instrument.h
@@ -12,5 +9,4 @@ add_library(ppplay_input_it MODULE
         hostchannel.h
         filters.h
         )
-target_link_libraries(ppplay_input_it ppplay_module_base ppplay_core)
-install(TARGETS ppplay_input_it LIBRARY DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} COMPONENT Plugins OPTIONAL)
+target_link_libraries(ppplay_input_it PUBLIC ppplay_module_base ppplay_core)

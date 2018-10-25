@@ -29,8 +29,8 @@
 
 namespace light4cxx
 {
-PPPLAY_LIGHT4CXX_EXPORT Level Logger::s_level = Level::Debug;
-PPPLAY_LIGHT4CXX_EXPORT std::ostream* Logger::s_output = &std::cout;
+Level Logger::s_level = Level::Debug;
+std::ostream* Logger::s_output = &std::cout;
 
 Logger* Logger::root()
 {

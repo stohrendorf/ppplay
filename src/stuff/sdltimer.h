@@ -19,7 +19,6 @@
 #ifndef PPPLAY_SDLTIMER_H
 #define PPPLAY_SDLTIMER_H
 
-#include "ppplay_core_export.h"
 #include "itimer.h"
 
 #include <mutex>
@@ -33,7 +32,7 @@
  * @class SDLTimer
  * @brief ITimer specialization for SDL
  */
-class PPPLAY_CORE_EXPORT SDLTimer
+class SDLTimer
     : public ITimer
 {
 private:

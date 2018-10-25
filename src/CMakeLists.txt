@@ -1,5 +1,3 @@
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
 add_subdirectory(light4cxx)
 add_subdirectory(output)
 
@@ -30,12 +28,7 @@ configure_file(
 
 set_source_files_properties(Mainpage.dox PROPERTIES GENERATED TRUE)
 
-include(GenerateExportHeader)
-add_compiler_export_flags()
-
-set_source_files_properties(stuff/pluginregistry.cpp PROPERTIES COMPILE_DEFINITIONS "${COMPILE_DEFINITIONS};LIBEXECDIR=\"${CMAKE_INSTALL_FULL_LIBEXECDIR}\"")
-
-add_library(ppplay_core SHARED
+add_library(ppplay_core STATIC
     stuff/pluginregistry.cpp
     stuff/numberutils.cpp
     stuff/sdltimer.cpp
@@ -45,7 +38,6 @@ add_library(ppplay_core SHARED
     stuff/sdltimer.h
     stuff/system.h
     stuff/field.h
-    stuff/inputplugin.h
     stuff/itimer.h
     stuff/numberutils.h
     stuff/stringutils.h
@@ -64,32 +56,8 @@ add_library(ppplay_core SHARED
     output/fftobserver.h
     output/volumeobserver.h
 )
-generate_export_header(ppplay_core)
-set_target_properties(ppplay_core PROPERTIES SOVERSION 1)
 
-target_link_libraries(ppplay_core ppplay_stream ${SDL2_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+target_link_libraries(ppplay_core PUBLIC ppplay_stream ${SDL2_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 if(WITH_MP3LAME)
-	target_link_libraries(ppplay_core ${mp3lame_LIB})
+	target_link_libraries(ppplay_core PUBLIC ${mp3lame_LIB})
 endif()
-install(TARGETS ppplay_core DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT ppplayExports)
-install(FILES
-	stuff/field.h
-	stuff/inputplugin.h
-	stuff/itimer.h
-	stuff/numberutils.h
-	stuff/stringutils.h
-	stuff/trackingcontainer.h
-	stuff/utils.h
-	${CMAKE_CURRENT_BINARY_DIR}/ppplay_core_export.h
-	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/stuff
-	COMPONENT Devel
-)
-install(FILES
-	output/abstractaudiooutput.h
-	output/abstractaudiosource.h
-	output/audiofifo.h
-	output/audiotypes.h
-	${CMAKE_CURRENT_BINARY_DIR}/ppplay_core_export.h
-	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ppplay/output
-	COMPONENT Devel
-)

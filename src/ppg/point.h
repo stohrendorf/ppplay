@@ -19,8 +19,6 @@
 #ifndef PPG_POINT_H
 #define PPG_POINT_H
 
-#include <ppg/ppplay_ppg_export.h>
-
 /**
  * @ingroup Ppg
  * @{
@@ -32,7 +30,7 @@ namespace ppg
  * @class Point
  * @brief Represents a point on screen or in a widget
  */
-class PPPLAY_PPG_EXPORT Point
+class Point
 {
 private:
     int m_x = 0; //!< @brief X position

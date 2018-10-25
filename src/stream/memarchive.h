@@ -26,7 +26,7 @@
  * @ingroup Common
  * @brief Specialization of AbstractArchive for memory storage
  */
-class PPPLAY_STREAM_EXPORT MemArchive
+class MemArchive
     : public AbstractArchive
 {
 public:

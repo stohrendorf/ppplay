@@ -19,7 +19,6 @@
 #ifndef PPPLAY_ABSTRACTAUDIOSOURCE_H
 #define PPPLAY_ABSTRACTAUDIOSOURCE_H
 
-#include "ppplay_core_export.h"
 #include "audiotypes.h"
 
 #include <light4cxx/logger.h>
@@ -36,7 +35,7 @@
   * @brief Audio source for IAudioOutput
   */
 
-class PPPLAY_CORE_EXPORT AbstractAudioSource
+class AbstractAudioSource
 {
 private:
     //! @brief @c true when this source was successfully inited

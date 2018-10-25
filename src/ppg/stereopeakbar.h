@@ -32,7 +32,7 @@ namespace ppg
  * @class StereoPeakBar
  * @brief A stereo bar with peaks
  */
-class PPPLAY_PPG_EXPORT StereoPeakBar
+class StereoPeakBar
     : public Label
 {
 private:

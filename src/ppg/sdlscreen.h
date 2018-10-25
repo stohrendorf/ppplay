@@ -33,7 +33,7 @@ namespace ppg
  * @class SDLScreen
  * @brief The virtual DOS screen (SDL implementation)
  */
-class PPPLAY_PPG_EXPORT SDLScreen final
+class SDLScreen final
     : public Widget, public SDLTimer
 {
 private:

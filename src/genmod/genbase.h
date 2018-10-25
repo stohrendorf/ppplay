@@ -18,8 +18,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <genmod/ppplay_module_base_export.h>
-
 #include <array>
 #include <cstdint>
 
@@ -34,7 +32,7 @@ namespace ppp
 /**
  * @brief General note names
  */
-extern PPPLAY_MODULE_BASE_EXPORT const std::array<const char*, 12> NoteNames;
+extern const std::array<const char*, 12> NoteNames;
 
 /**
  * @class RememberByte

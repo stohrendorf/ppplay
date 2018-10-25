@@ -19,8 +19,6 @@
 #ifndef SONGINFO_H
 #define SONGINFO_H
 
-#include "ppplay_core_export.h"
-
 #include <stuff/trackingcontainer.h>
 #include <stream/abstractarchive.h>
 #include <stream/memarchive.h>
@@ -37,7 +35,7 @@ namespace ppp
  * @struct SongInfo
  * @brief Information about a sub-song within a module
  */
-struct PPPLAY_CORE_EXPORT SongInfo
+struct SongInfo
 {
     explicit SongInfo() = default;
 

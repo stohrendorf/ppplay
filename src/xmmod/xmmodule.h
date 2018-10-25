@@ -76,6 +76,12 @@ public:
     DISABLE_COPY(XmModule)
 
     /**
+     * @brief Constructor
+     * @param[in] maxRpt maximum repeat count per order
+     */
+    XmModule(int maxRpt, Sample::Interpolation inter);
+
+    /**
      * @brief Factory method
      * @param[in] filename Filename of the module
      * @param[in] frequency Rendering frequency
@@ -84,7 +90,7 @@ public:
      * @details
      * Loads and initializes the module if possible
      */
-    static AbstractModule* factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter);
+    static std::shared_ptr<AbstractModule> factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter);
 
     ~XmModule() override;
 
@@ -94,12 +100,6 @@ private:
     ChannelState internal_channelStatus(size_t) const override;
 
     int internal_channelCount() const override;
-
-    /**
-     * @brief Constructor
-     * @param[in] maxRpt maximum repeat count per order
-     */
-    XmModule(int maxRpt, Sample::Interpolation inter);
 
     /**
      * @brief Try to load a XM module

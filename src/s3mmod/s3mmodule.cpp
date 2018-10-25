@@ -668,17 +668,15 @@ AbstractArchive& S3mModule::serialize(AbstractArchive* data)
     return *data;
 }
 
-AbstractModule* S3mModule::factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter)
+std::shared_ptr<AbstractModule> S3mModule::factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter)
 {
-    auto* result(new S3mModule(maxRpt, inter));
+    auto result = std::make_shared<S3mModule>(maxRpt, inter);
     if( !result->load(stream) )
     {
-        delete result;
         return nullptr;
     }
     if( !result->initialize(frequency) )
     {
-        delete result;
         return nullptr;
     }
     return result;

@@ -33,7 +33,7 @@ class ISerializable;
  * @ingroup Common
  * @brief Interface for archives used by ISerializable inherited classes
  */
-class PPPLAY_STREAM_EXPORT AbstractArchive
+class AbstractArchive
 {
 public:
     DISABLE_COPY(AbstractArchive)

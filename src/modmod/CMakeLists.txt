@@ -3,10 +3,7 @@ if(MOD_USE_NTSC_FREQUENCY)
 	add_definitions(-DMOD_USE_NTSC_FREQUENCY)
 endif()
 
-if(NOT WIN32)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
-endif()
-add_library(ppplay_input_mod MODULE
+add_library(ppplay_input_mod STATIC
 	modsample.cpp
 	modcell.cpp
 	modmodule.cpp
@@ -19,7 +16,6 @@ add_library(ppplay_input_mod MODULE
 	modpattern.h
 	modchannel.h
 	modbase.h
-	plugin.cpp
+	    plugin.h
 )
-target_link_libraries(ppplay_input_mod ppplay_module_base ppplay_core)
-install(TARGETS ppplay_input_mod LIBRARY DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} COMPONENT Plugins OPTIONAL)
+target_link_libraries(ppplay_input_mod PUBLIC ppplay_module_base ppplay_core)

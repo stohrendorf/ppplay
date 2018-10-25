@@ -26,7 +26,7 @@
  * @ingroup Common
  * @brief Class derived from MemoryStream for an archive file
  */
-class PPPLAY_STREAM_EXPORT ArchiveFileStream
+class ArchiveFileStream
     : public MemoryStream
 {
 public:

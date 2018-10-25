@@ -19,7 +19,6 @@
 #ifndef PPPLAY_ABSTRACTAUDIOOUTPUT_H
 #define PPPLAY_ABSTRACTAUDIOOUTPUT_H
 
-#include "ppplay_core_export.h"
 #include "abstractaudiosource.h"
 
 #include <mutex>
@@ -34,7 +33,7 @@
  * @class AbstractAudioOutput
  * @brief Abstract base class for sound output
  */
-class PPPLAY_CORE_EXPORT AbstractAudioOutput
+class AbstractAudioOutput
 {
 public:
     DISABLE_COPY(AbstractAudioOutput)

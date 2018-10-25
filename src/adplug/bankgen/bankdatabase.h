@@ -5,6 +5,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <boost/serialization/tracking.hpp>
+#include <boost/serialization/array.hpp>
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/version.hpp>
@@ -23,9 +24,9 @@ namespace bankdb
 
 struct SlotSettings
 {
-    using Ptr = boost::shared_ptr<SlotSettings>;
+    using Ptr = std::shared_ptr<SlotSettings>;
 
-    boost::array<uint8_t, 11> data{{}};
+    std::array<uint8_t, 11> data{{}};
     int8_t finetune = 0;
 
     template<class Archive>

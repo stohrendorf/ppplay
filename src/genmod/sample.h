@@ -19,8 +19,6 @@
 #ifndef PPPLAY_SAMPLE_H
 #define PPPLAY_SAMPLE_H
 
-#include <genmod/ppplay_module_base_export.h>
-
 #include <output/audiotypes.h>
 #include <light4cxx/logger.h>
 #include "stepper.h"
@@ -36,7 +34,7 @@ namespace ppp
  * @class GenSample
  * @brief An abstract sample class
  */
-class PPPLAY_MODULE_BASE_EXPORT Sample
+class Sample
 {
 public:
     DISABLE_COPY(Sample)
@@ -236,7 +234,7 @@ protected:
     static light4cxx::Logger* logger();
 };
 
-PPPLAY_MODULE_BASE_EXPORT AudioFrameBuffer read(
+AudioFrameBuffer read(
     const Sample& smp,
     Sample::LoopType loopType,
     Sample::Interpolation inter,

@@ -575,12 +575,12 @@ void ItModule::initVibrato(HostChannel& host)
     setVibrato(host);
 }
 
-AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt, ppp::Sample::Interpolation inter)
+std::shared_ptr<AbstractModule> ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt, ppp::Sample::Interpolation inter)
 {
     BOOST_ASSERT(stream != nullptr);
     stream->seek(0);
 
-    auto result = std::make_unique<ItModule>(maxRpt, inter);
+    auto result = std::make_shared<ItModule>(maxRpt, inter);
     *stream >> result->m_header;
 
     if( std::strncmp(result->m_header.id, "IMPM", 4) != 0 )
@@ -727,7 +727,11 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
 
                 auto versionSec = ((schismVersion - 0x50) * 86400) + epochSec;
                 tm version{};
+#ifndef _MSC_VER
                 if( localtime_r(&versionSec, &version) )
+#else
+                if( localtime_s(&version, &versionSec) )
+#endif
                 {
                     result->noConstMetaInfo().trackerInfo = stringFmt("Schism Tracker %04d-%02d-%02d", version.tm_year + 1900, version.tm_mon + 1,
                                                                       version.tm_mday);
@@ -785,7 +789,7 @@ AbstractModule* ItModule::factory(Stream* stream, uint32_t frequency, int maxRpt
         return nullptr;
     }
 
-    return result.release();
+    return result;
 }
 
 size_t ItModule::internal_buildTick(const AudioFrameBufferPtr& buffer)

@@ -20,66 +20,14 @@
 #define PPPLAY_PLUGINREGISTRY_H
 
 #include <genmod/abstractmodule.h>
-#include "ppplay_core_export.h"
 
 #include <list>
-
-#ifdef WIN32
-#include <windows.h>
-#endif
 
 #include <boost/filesystem.hpp>
 
 namespace ppp
 {
-class PPPLAY_CORE_EXPORT PluginRegistry
-{
-private:
-    /**
-     * @brief Default constructor
-     */
-    PluginRegistry();
-
-    /**
-     * @brief Frees the plugin handles
-     */
-    ~PluginRegistry();
-    /**
-     * @brief The plugins found by findPlugins()
-     */
-#ifdef WIN32
-    std::list<HMODULE> m_handles;
-#else
-    std::list<void*> m_handles;
-#endif
-    boost::filesystem::path m_searchPath;
-
-    /**
-     * @brief Looks for plugins in @c m_searchPath that start with "libppplay_input_"
-     */
-    static void findPlugins();
-
-public:
-    DISABLE_COPY(PluginRegistry)
-
-    /**
-     * @brief Singleton design pattern
-     * @return Single registry instance
-     */
-    static PluginRegistry& instance();
-
-    /**
-     * @brief Try to load a module file
-     * @param[in] filename Filename of the module file to load
-     * @param[in] frq Desired rendering frequency
-     * @param[in] maxRpt Maximum repeat count (for length calculation)
-     * @param[in] inter Sample interpolation type
-     * @return The loaded file or a nullptr if an error occured
-     */
-    static AbstractModule::Ptr tryLoad(const std::string& filename, uint32_t frq, int maxRpt, Sample::Interpolation inter);
-
-    void setSearchPath(const boost::filesystem::path& path);
-};
+AbstractModule::Ptr tryLoad(const std::string& filename, uint32_t frq, int maxRpt, Sample::Interpolation inter);
 }
 
 #endif

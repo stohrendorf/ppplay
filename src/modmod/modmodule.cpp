@@ -31,21 +31,20 @@ struct LoadingMode
 };
 }
 
-AbstractModule* ModModule::factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter)
+std::shared_ptr<AbstractModule> ModModule::factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter)
 {
-    auto result = new ModModule(maxRpt, inter);
+    auto result = std::make_shared<ModModule>(maxRpt, inter);
     for( int i = 0; i < LoadingMode::Count; i++ )
     {
         stream->seek(0);
         stream->clear();
         if( !result->load(stream, i) )
         {
-            delete result;
             if( i == LoadingMode::Count - 1 )
             {
                 return nullptr;
             }
-            result = new ModModule(maxRpt, inter);
+            result = std::make_shared<ModModule>(maxRpt, inter);
         }
         else
         {
@@ -54,7 +53,6 @@ AbstractModule* ModModule::factory(Stream* stream, uint32_t frequency, int maxRp
     }
     if( !result->initialize(frequency) )
     {
-        delete result;
         return nullptr;
     }
     return result;

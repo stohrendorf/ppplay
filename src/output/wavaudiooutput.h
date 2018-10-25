@@ -21,8 +21,6 @@
 
 #include "abstractaudiooutput.h"
 
-#include "ppplay_output_wav_export.h"
-
 #include <fstream>
 
 /**
@@ -30,7 +28,7 @@
  * @{
  */
 
-class PPPLAY_OUTPUT_WAV_EXPORT WavAudioOutput
+class WavAudioOutput
     : public AbstractAudioOutput
 {
 private:

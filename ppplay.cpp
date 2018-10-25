@@ -160,12 +160,6 @@ bool parseCmdLine(int argc, char* argv[])
             light4cxx::Logger::setLevel(light4cxx::Level::All);
     }
 
-#ifndef WIN32
-    ppp::PluginRegistry::instance().setSearchPath(boost::filesystem::path(ppp::whereAmI()).parent_path() / LIBEXECDIR);
-#else
-    ppp::PluginRegistry::instance().setSearchPath(boost::filesystem::path(ppp::whereAmI()).parent_path() / LIBEXECDIR);
-#endif
-
     using std::cout;
     using std::endl;
     if(vm.count("warranty"))
@@ -271,6 +265,10 @@ void terminateHandler()
 
 int main(int argc, char* argv[])
 {
+#ifdef _MSC_VER
+    _putenv_s("SDL_AUDIODRIVER", "directsound");
+#endif
+
     std::set_terminate(&terminateHandler);
     try
     {
@@ -283,7 +281,7 @@ int main(int argc, char* argv[])
         ppp::AbstractModule::Ptr module;
         try
         {
-            module = ppp::PluginRegistry::tryLoad(config::filename, 44100, config::maxRepeat, config::interpolation);
+            module = ppp::tryLoad(config::filename, 44100, config::maxRepeat, config::interpolation);
             if(!module)
             {
                 light4cxx::Logger::root()->error(L4CXX_LOCATION, "Failed to load '%s'", config::filename);

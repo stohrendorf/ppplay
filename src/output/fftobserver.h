@@ -19,7 +19,6 @@
 #ifndef PPPLAY_FFTOBSERVER_H
 #define PPPLAY_FFTOBSERVER_H
 
-#include "ppplay_core_export.h"
 #include "audiotypes.h"
 #include <stuff/utils.h>
 #include <boost/signals2/connection.hpp>
@@ -35,7 +34,7 @@ class AudioFifo;
  * @class FftObserver
  * @brief Observer for calculating the DFFT
  */
-class PPPLAY_CORE_EXPORT FftObserver
+class FftObserver
 {
 private:
     //! @brief Observed FIFO

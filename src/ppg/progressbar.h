@@ -32,7 +32,7 @@ namespace ppg
  * @class ProgressBar
  * @brief A one-line widget showing a progress
  */
-class PPPLAY_PPG_EXPORT ProgressBar
+class ProgressBar
     : public Widget
 {
 private:

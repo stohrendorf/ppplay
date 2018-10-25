@@ -1,7 +1,4 @@
-if(NOT WIN32)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
-endif()
-add_library(ppplay_input_xm MODULE
+add_library(ppplay_input_xm STATIC
 	xmmodule.cpp
 	xmpattern.cpp
 	xminstrument.cpp
@@ -16,7 +13,6 @@ add_library(ppplay_input_xm MODULE
 	xmchannel.h
 	xmenvelopeprocessor.h
 	xmcell.h
-	plugin.cpp
+	    plugin.h
 )
-target_link_libraries(ppplay_input_xm ppplay_module_base ppplay_core)
-install(TARGETS ppplay_input_xm LIBRARY DESTINATION ${CMAKE_INSTALL_LIBEXECDIR} COMPONENT Plugins OPTIONAL)
+target_link_libraries(ppplay_input_xm PUBLIC ppplay_module_base ppplay_core)
