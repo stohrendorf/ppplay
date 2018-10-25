@@ -1251,7 +1251,7 @@ void ItModule::goToProcessRow()
             }
         }
     }
-    BOOST_ASSERT(m_patternDataPtr <= &patternData[patternData.size()]);
+    BOOST_ASSERT(m_patternDataPtr <= patternData.data() + patternData.size());
 }
 
 void ItModule::onCellLoaded(HostChannel& host)
