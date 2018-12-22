@@ -18,7 +18,7 @@
 
 #include "sdlaudiooutput.h"
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 void SDLAudioOutput::sdlAudioCallback(void* userdata, uint8_t* stream, int len_bytes)
 {

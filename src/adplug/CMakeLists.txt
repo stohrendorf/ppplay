@@ -106,9 +106,8 @@ set(BADPLAY_SRCS
 )
 
 add_executable(badplay ${BADPLAY_SRCS})
-target_link_libraries(badplay PUBLIC ${SDL2_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ppplay_core ppplay_opl)
-
 add_subdirectory(bankgen)
-target_link_libraries(badplay PUBLIC ppplay_bankdb badplay_compression)
+
+target_link_libraries(badplay PUBLIC ${Boost_PROGRAM_OPTIONS_LIBRARY} ppplay_core ppplay_opl ppplay_bankdb badplay_compression SDL2::SDL2 SDL2::SDL2main)
 
 install(TARGETS badplay DESTINATION bin COMPONENT application)

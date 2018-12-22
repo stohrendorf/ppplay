@@ -2,8 +2,6 @@ cmake_minimum_required( VERSION 2.8 )
 cmake_policy( SET CMP0003 NEW )
 cmake_policy( SET CMP0015 NEW )
 
-list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" )
-
 if( MINGW )
     set( CMAKE_RC_COMPILER_INIT windres )
     ENABLE_LANGUAGE( RC )
@@ -148,11 +146,6 @@ endif()
 # add SDL
 #########
 find_package( SDL2 REQUIRED )
-if( NOT SDL2_FOUND )
-    message( FATAL_ERROR "SDL not found" )
-endif()
-set_package_info( SDL2 "Simple DirectMedia Layer" "http://www.libsdl.org" "The SDL library is used for audio and video output." )
-include_directories( ${SDL2_INCLUDE_DIR} )
 
 #set(Boost_USE_STATIC_LIBS FALSE)
 set( Boost_USE_MULTITHREADED TRUE )
@@ -187,12 +180,12 @@ elseif( COMPILER_IS_CLANG )
     target_link_libraries( ppplay stdc++ )
 endif()
 
-target_link_libraries( ppplay ppplay_core ppplay_module_base ppplay_ppg ppplay_output_sdl ppplay_output_wav ${Boost_PROGRAM_OPTIONS_LIBRARY} ${SDL2_LIBRARY} )
+target_link_libraries( ppplay ppplay_core ppplay_module_base ppplay_ppg ppplay_output_sdl ppplay_output_wav ${Boost_PROGRAM_OPTIONS_LIBRARY} SDL2::SDL2 SDL2::SDL2main )
 
 #########
 # link libraries
 #########
-function( trylinklib LIBNAME ATTRIBS )
+function( trylinklib LIBNAME )
     find_library(
             "${LIBNAME}_LIB"
             NAMES "${LIBNAME}"
@@ -205,12 +198,13 @@ function( trylinklib LIBNAME ATTRIBS )
             /opt
     )
     if( ${LIBNAME}_LIB )
-        add_library( "${LIBNAME}" ${ATTRIBS} IMPORTED )
+        add_library( "${LIBNAME}" INTERFACE )
+        target_link_libraries( "${LIBNAME}" INTERFACE "${${LIBNAME}_LIB}" )
     endif()
     mark_as_advanced( FORCE "${LIBNAME}_LIB" )
 endfunction( trylinklib )
 
-trylinklib( "mp3lame" SHARED )
+trylinklib( "mp3lame" )
 if( mp3lame_LIB )
     option( WITH_MP3LAME "Whether to include MP3Lame support." ON )
 endif()
@@ -219,9 +213,10 @@ if( WITH_MP3LAME )
     target_link_libraries( ppplay ppplay_output_mp3 )
 endif()
 
-trylinklib( "vorbis" SHARED )
-trylinklib( "vorbisenc" SHARED )
-if( vorbis_LIB AND vorbisenc_LIB )
+trylinklib( "vorbis" )
+trylinklib( "vorbisenc" )
+trylinklib( "ogg" )
+if( vorbis_LIB AND vorbisenc_LIB AND ogg_LIB )
     option( WITH_OGG "Whether to include OGG support." ON )
 endif()
 add_feature_info( "OGG Export" WITH_OGG "OGG Export using libvorbis and libvorbisenc" )

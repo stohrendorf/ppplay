@@ -157,24 +157,24 @@ bool XmModule::load(Stream* stream)
         uint16_t destOfs = 0;
         for( int octave = 10; octave > 0; octave-- )
         {
-            uint16_t octaveMask = ~(0xffff << (10 - octave));
+            const auto octaveMask = (1 << (10 - octave)) - 1;
             for( uint16_t amigaVal : g_PeriodTable )
             {
-                amigaVal = ((amigaVal << 6) + octaveMask) >> (11 - octave);
-                m_noteToPeriod.at(destOfs) = m_noteToPeriod.at(destOfs + 1) = amigaVal;
+                auto tmp = (amigaVal * 64 + octaveMask) >> (11 - octave);
+                m_noteToPeriod.at(destOfs) = m_noteToPeriod.at(destOfs + 1) = tmp;
                 destOfs += 2;
             }
         }
         for( size_t i = 0; i < (m_noteToPeriod.size() - 1) / 2; i++ )
         {
-            m_noteToPeriod.at(i * 2 + 1) = (m_noteToPeriod.at(i * 2 + 0) + m_noteToPeriod.at(i * 2 + 2)) >> 1;
+            m_noteToPeriod.at(i * 2 + 1) = (m_noteToPeriod.at(i * 2 + 0) + m_noteToPeriod.at(i * 2 + 2)) / 2;
         }
     }
     else
     {
         logger()->debug(L4CXX_LOCATION, "Initializing linear period table");
         uint16_t val = 121 * 16;
-        for( unsigned short& i : m_noteToPeriod )
+        for( auto& i : m_noteToPeriod )
         {
             i = val * 4;
             val--;
@@ -359,7 +359,7 @@ uint32_t XmModule::periodToFrequency(uint16_t period) const
             *16/2^(Note/12);
          FRQ = 8363*1712/Period
          */
-        return ((8363ul * 1712) << 16) / pbFrq / period * adjFac;
+        return ((8363ul * 1712) << 16) / pbFrq / period * 12*8*4;
     }
     else
     {

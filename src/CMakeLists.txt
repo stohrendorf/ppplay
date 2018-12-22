@@ -57,7 +57,7 @@ add_library(ppplay_core STATIC
     output/volumeobserver.h
 )
 
-target_link_libraries(ppplay_core PUBLIC ppplay_stream ${SDL2_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+target_link_libraries(ppplay_core PUBLIC ppplay_stream ${SDL2_LIBRARY} ${Boost_SYSTEM_LIBRARY} SDL2::SDL2)
 if(WITH_MP3LAME)
 	target_link_libraries(ppplay_core PUBLIC ${mp3lame_LIB})
 endif()

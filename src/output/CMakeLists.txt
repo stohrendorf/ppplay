@@ -5,7 +5,7 @@ endif()
 
 if(WITH_OGG)
     add_library(ppplay_output_ogg STATIC oggaudiooutput.cpp oggaudiooutput.h)
-    target_link_libraries(ppplay_output_ogg PUBLIC ppplay_core)
+    target_link_libraries(ppplay_output_ogg PUBLIC ppplay_core vorbis vorbisenc ogg)
 endif()
 
 add_library(ppplay_output_sdl STATIC sdlaudiooutput.cpp sdlaudiooutput.h)
