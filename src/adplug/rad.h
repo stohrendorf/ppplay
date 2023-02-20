@@ -24,29 +24,29 @@
 #include "mod.h"
 
 class RadPlayer
-    : public ModPlayer
+  : public ModPlayer
 {
 public:
-    DISABLE_COPY(RadPlayer)
+  DISABLE_COPY( RadPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    RadPlayer() = default;
+  RadPlayer() = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override
-    {
-        return "Reality ADlib Tracker";
-    }
+  std::string type() const override
+  {
+    return "Reality ADlib Tracker";
+  }
 
-    std::string description() const override
-    {
-        return m_description;
-    }
+  std::string description() const override
+  {
+    return m_description;
+  }
 
 private:
-    std::string m_description{};
+  std::string m_description{};
 };

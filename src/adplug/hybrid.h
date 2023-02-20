@@ -24,50 +24,50 @@
 #include "xad.h"
 
 class HybridPlayer
-    : public XadPlayer
+  : public XadPlayer
 {
 public:
-    DISABLE_COPY(HybridPlayer)
+  DISABLE_COPY( HybridPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    HybridPlayer() = default;
+  HybridPlayer() = default;
 
 protected:
 #pragma pack(push, 1)
-    struct Instrument
-    {
-        char name[7];
-        uint8_t data[11];
-    };
+  struct Instrument
+  {
+    char name[7];
+    uint8_t data[11];
+  };
 #pragma pack(pop)
 
-    bool xadplayer_load() override;
+  bool xadplayer_load() override;
 
-    void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
+  void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
 
-    void xadplayer_update() override;
+  void xadplayer_update() override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override;
+  std::string type() const override;
 
-    std::string instrumentTitle(size_t i) const override;
+  std::string instrumentTitle(size_t i) const override;
 
-    size_t instrumentCount() const override;
+  size_t instrumentCount() const override;
 
 private:
-    const uint8_t* m_orderOffsets = nullptr;
+  const uint8_t* m_orderOffsets = nullptr;
 
-    const Instrument* m_instruments = nullptr;
+  const Instrument* m_instruments = nullptr;
 
-    struct Channel
-    {
-        uint16_t freq = 0;
-        uint16_t freq_slide = 0;
-    };
+  struct Channel
+  {
+    uint16_t freq = 0;
+    uint16_t freq_slide = 0;
+  };
 
-    Channel m_channels[9];
+  Channel m_channels[9];
 
-    uint8_t m_speedCounter = 0;
+  uint8_t m_speedCounter = 0;
 };

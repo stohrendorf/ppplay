@@ -50,105 +50,104 @@
 class AudioFifo
 {
 private:
-    //! @brief Buffered audio frames
-    boost::circular_buffer<BasicSampleFrame> m_buffer;
-    //! @brief Threshold to tell when the buffer needs data
-    boost::circular_buffer<BasicSampleFrame>::size_type m_threshold;
-    //! @brief The requester thread that pulls the audio data from the source
-    std::thread m_requestThread;
-    //! @brief The audio source to pull the data from
-    AbstractAudioSource::WeakPtr m_source;
+  //! @brief Buffered audio frames
+  boost::circular_buffer<BasicSampleFrame> m_buffer;
+  //! @brief Threshold to tell when the buffer needs data
+  boost::circular_buffer<BasicSampleFrame>::size_type m_threshold;
+  //! @brief The requester thread that pulls the audio data from the source
+  std::thread m_requestThread;
+  //! @brief The audio source to pull the data from
+  AbstractAudioSource::WeakPtr m_source;
 
-    //! @brief @c true when the destructor is running, stops the thread
-    bool m_stopping;
-    //! @brief Buffer modification mutex
-    mutable std::mutex m_bufferMutex;
-    //! @brief Buffer modification notifier
-    std::condition_variable m_bufferChanged;
+  //! @brief @c true when the destructor is running, stops the thread
+  bool m_stopping;
+  //! @brief Buffer modification mutex
+  mutable std::mutex m_bufferMutex;
+  //! @brief Buffer modification notifier
+  std::condition_variable m_bufferChanged;
 
-    /**
-     * @brief Audio data pulling thread function
-     * @param[in] fifo The FIFO that owns the thread
-     * @note Declared here to get access to private members of the AudioFifo
-     * @see m_requestThread
-     */
-    void requestThread();
+  /**
+   * @brief Audio data pulling thread function
+   * @param[in] fifo The FIFO that owns the thread
+   * @note Declared here to get access to private members of the AudioFifo
+   * @see m_requestThread
+   */
+  void requestThread();
 
-    /**
-     * @brief Adds a buffer to the internal queue by copying its contents
-     * @param[in] buf The buffer to add
-     */
-    void pushData(const AudioFrameBufferPtr& buf);
+  /**
+   * @brief Adds a buffer to the internal queue by copying its contents
+   * @param[in] buf The buffer to add
+   */
+  void pushData(const AudioFrameBufferPtr& buf);
 
 public:
-    DISABLE_COPY(AudioFifo)
+  DISABLE_COPY( AudioFifo )
 
-    AudioFifo() = delete;
+  AudioFifo() = delete;
 
-    /**
-     * @brief Initialize the buffer
-     * @param[in] source The audio source that should be buffered
-     * @param[in] threshold Initial value for m_threshold (minimum 256)
-     */
-    AudioFifo(const AbstractAudioSource::WeakPtr& source, size_t threshold);
+  /**
+   * @brief Initialize the buffer
+   * @param[in] source The audio source that should be buffered
+   * @param[in] threshold Initial value for m_threshold (minimum 256)
+   */
+  AudioFifo(const AbstractAudioSource::WeakPtr& source, size_t threshold);
 
-    ~AudioFifo();
+  ~AudioFifo();
 
-    /**
-     * @brief Get the number of buffered frames
-     * @return Number of buffered frames
-     */
-    size_t queuedLength() const;
+  /**
+   * @brief Get the number of buffered frames
+   * @return Number of buffered frames
+   */
+  size_t queuedLength() const;
 
-    /**
-     * @brief Get the minimum number of frames that should be queued
-     * @return m_minFrameCount
-     */
-    size_t capacity() const;
+  /**
+   * @brief Get the minimum number of frames that should be queued
+   * @return m_minFrameCount
+   */
+  size_t capacity() const;
 
-    /**
-     * @brief Set the FIFO buffer length
-     * @param[in] len The requested buffer length (minimum 256)
-     */
-    void setCapacity(size_t len);
+  /**
+   * @brief Set the FIFO buffer length
+   * @param[in] len The requested buffer length (minimum 256)
+   */
+  void setCapacity(size_t len);
 
-    /**
-     * @brief Check if the FIFO is empty
-     * @retval true FIFO is empty
-     * @retval false FIFO is not empty
-     */
-    bool isEmpty() const;
+  /**
+   * @brief Check if the FIFO is empty
+   * @retval true FIFO is empty
+   * @retval false FIFO is not empty
+   */
+  bool isEmpty() const;
 
-    size_t pullData(AudioFrameBufferPtr& buffer, size_t requestedFrames);
+  size_t pullData(AudioFrameBufferPtr& buffer, size_t requestedFrames);
 
-    bool isSourcePaused() const
-    {
-        auto src = m_source.lock();
-        return !src || src->paused();
-    }
+  bool isSourcePaused() const
+  {
+    auto src = m_source.lock();
+    return !src || src->paused();
+  }
 
-    // These are needed to replace boost::mutex (or boost::signals2::mutex) with std::mutex,
-    // otherwise boost::thread would become a dependency.
-    typedef void DataSignalSignature(const AudioFrameBufferPtr&);
+  // These are needed to replace boost::mutex (or boost::signals2::mutex) with std::mutex,
+  // otherwise boost::thread would become a dependency.
+  using DataSignalSignature = void(const AudioFrameBufferPtr&);
 
-    typedef boost::signals2::signal<
-        DataSignalSignature,
-        boost::signals2::optional_last_value<void>,
-        int,
-        std::less<>,
-        boost::function<DataSignalSignature>,
-        boost::signals2::detail::extended_signature<0, DataSignalSignature>::function_type,
-        std::mutex
-                                   > DataSignal;
+  using DataSignal = boost::signals2::signal<DataSignalSignature,
+                                             boost::signals2::optional_last_value<void>,
+                                             int,
+                                             std::less<>,
+                                             boost::function<DataSignalSignature>,
+                                             boost::signals2::detail::extended_signature<0,
+                                                                                         DataSignalSignature>::function_type,
+                                             std::mutex>;
 
-    DataSignal dataPushed;
-    DataSignal dataPulled;
+  DataSignal dataPushed;
+  DataSignal dataPulled;
 protected:
-    /**
-     * @brief Get the logger
-     * @return Logger with name "audio.fifo"
-     */
-    static light4cxx::Logger* logger();
+  /**
+   * @brief Get the logger
+   * @return Logger with name "audio.fifo"
+   */
+  static light4cxx::Logger* logger();
 };
 
 /**

@@ -30,71 +30,71 @@
  */
 
 class OggAudioOutput
-    : public AbstractAudioOutput
+  : public AbstractAudioOutput
 {
 private:
-    std::string m_filename;
-    //! @brief Whether the output is paused
-    bool m_paused;
-    mutable std::mutex m_mutex;
+  std::string m_filename;
+  //! @brief Whether the output is paused
+  bool m_paused;
+  mutable std::mutex m_mutex;
 
-    vorbis_info* m_vi;
-    vorbis_dsp_state* m_ds;
-    vorbis_block* m_vb;
-    ogg_stream_state* m_os;
-    ogg_page* m_op;
+  vorbis_info* m_vi;
+  vorbis_dsp_state* m_ds;
+  vorbis_block* m_vb;
+  ogg_stream_state* m_os;
+  ogg_page* m_op;
 
-    Stream* m_stream;
-    std::string m_title;
-    std::string m_artist;
-    std::string m_album;
-    std::thread m_thread;
+  Stream* m_stream;
+  std::string m_title;
+  std::string m_artist;
+  std::string m_album;
+  std::thread m_thread;
 
-    void encodeThread();
+  void encodeThread();
 
-    uint16_t internal_volumeRight() const override;
+  uint16_t internal_volumeRight() const override;
 
-    uint16_t internal_volumeLeft() const override;
+  uint16_t internal_volumeLeft() const override;
 
-    void internal_pause() override;
+  void internal_pause() override;
 
-    void internal_play() override;
+  void internal_play() override;
 
-    bool internal_paused() const override;
+  bool internal_paused() const override;
 
-    bool internal_playing() const override;
+  bool internal_playing() const override;
 
-    int internal_init(int desiredFrq) override;
+  int internal_init(int desiredFrq) override;
 
 public:
-    DISABLE_COPY(OggAudioOutput)
+  DISABLE_COPY( OggAudioOutput )
 
-    OggAudioOutput() = delete;
+  OggAudioOutput() = delete;
 
-    /**
-     * @brief Constructor
-     * @param[in] src Source of audio data
-     * @param[in] filename Output filename of the MP3 data
-     */
-    explicit OggAudioOutput(const AbstractAudioSource::WeakPtr& src, const std::string& filename);
+  /**
+   * @brief Constructor
+   * @param[in] src Source of audio data
+   * @param[in] filename Output filename of the MP3 data
+   */
+  explicit OggAudioOutput(const AbstractAudioSource::WeakPtr& src, const std::string& filename);
 
-    ~OggAudioOutput() override;
+  ~OggAudioOutput() override;
 
-    /**
-     * @brief Set the meta tags of the output file
-     * @param[in] title Title tag
-     * @param[in] album Album tag
-     * @param[in] artist Artist tag
-     * @pre Should be called before init(int).
-     */
-    void setMeta(const std::string& title, const std::string& album, const std::string& artist);
+  /**
+   * @brief Set the meta tags of the output file
+   * @param[in] title Title tag
+   * @param[in] album Album tag
+   * @param[in] artist Artist tag
+   * @pre Should be called before init(int).
+   */
+  void setMeta(const std::string& title, const std::string& album, const std::string& artist);
 
 protected:
-    /**
-     * @brief Get the logger
-     * @return Child logger with attached ".mp3"
-     */
-    static light4cxx::Logger* logger();
+  /**
+   * @brief Get the logger
+   * @return Child logger with attached ".mp3"
+   */
+  static light4cxx::Logger* logger();
 };
 
 /**

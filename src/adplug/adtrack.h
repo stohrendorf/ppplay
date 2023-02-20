@@ -24,60 +24,60 @@
 #include "mod.h"
 
 class AdTrackPlayer
-    : public ModPlayer
+  : public ModPlayer
 {
 public:
-    DISABLE_COPY(AdTrackPlayer)
+  DISABLE_COPY( AdTrackPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    AdTrackPlayer() = default;
+  AdTrackPlayer() = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override
-    {
-        return "Adlib Tracker 1.0";
-    }
+  std::string type() const override
+  {
+    return "Adlib Tracker 1.0";
+  }
 
-    size_t instrumentCount() const override
-    {
-        return 9;
-    }
+  size_t instrumentCount() const override
+  {
+    return 9;
+  }
 
 private:
-    enum Operators
-    {
-        Carrier = 1,
-        Modulator = 0
-    };
+  enum Operators
+  {
+    Carrier = 1,
+    Modulator = 0
+  };
 
 #pragma pack(push, 1)
-    struct Instrument
+  struct Instrument
+  {
+    struct Operator
     {
-        struct Operator
-        {
-            uint16_t appampmod;
-            uint16_t appvib;
-            uint16_t maintsuslvl;
-            uint16_t keybscale;
-            uint16_t octave;
-            uint16_t freqrisevollvldn;
-            uint16_t softness;
-            uint16_t attack;
-            uint16_t decay;
-            uint16_t release;
-            uint16_t sustain;
-            uint16_t feedback;
-            uint16_t waveform;
-        };
-        Operator op[2];
+      uint16_t appampmod;
+      uint16_t appvib;
+      uint16_t maintsuslvl;
+      uint16_t keybscale;
+      uint16_t octave;
+      uint16_t freqrisevollvldn;
+      uint16_t softness;
+      uint16_t attack;
+      uint16_t decay;
+      uint16_t release;
+      uint16_t sustain;
+      uint16_t feedback;
+      uint16_t waveform;
     };
+    Operator op[2];
+  };
 #pragma pack(pop)
 
-    using ModPlayer::addInstrument;
+  using ModPlayer::addInstrument;
 
-    void addInstrument(Instrument* i);
+  void addInstrument(Instrument* i);
 };

@@ -37,54 +37,54 @@ namespace ppp
  */
 struct SongInfo
 {
-    explicit SongInfo() = default;
+  explicit SongInfo() = default;
 
-    inline SongInfo(SongInfo&& rhs) noexcept
-        : states(std::move(rhs.states))
-          , length(rhs.length)
+  inline SongInfo(SongInfo&& rhs) noexcept
+    : states( std::move( rhs.states ) )
+    , length( rhs.length )
+  {
+    rhs.length = 0;
+  }
+
+  ~SongInfo() = default;
+
+  inline SongInfo& operator=(SongInfo rhs)
+  {
+    rhs.swap( *this );
+    return *this;
+  }
+
+  void swap(SongInfo& rhs)
+  {
+    std::swap( states, rhs.states );
+    std::swap( length, rhs.length );
+  }
+
+  //! @brief States for seeking
+  TrackingContainer<std::unique_ptr<AbstractArchive>> states{};
+  //! @brief Length in sample frames
+  size_t length = 0;
+
+  size_t storedSeconds() const noexcept
+  {
+    return m_storedSeconds;
+  }
+
+  bool storeIfNecessary(uint32_t secs, ISerializable* data)
+  {
+    if( m_storedSeconds + 15 > secs )
     {
-        rhs.length = 0;
+      return false;
     }
 
-    ~SongInfo() = default;
-
-    inline SongInfo& operator=(SongInfo rhs)
-    {
-        rhs.swap(*this);
-        return *this;
-    }
-
-    void swap(SongInfo& rhs)
-    {
-        std::swap(states, rhs.states);
-        std::swap(length, rhs.length);
-    }
-
-    //! @brief States for seeking
-    TrackingContainer<std::unique_ptr<AbstractArchive>> states{};
-    //! @brief Length in sample frames
-    size_t length = 0;
-
-    size_t storedSeconds() const noexcept
-    {
-        return m_storedSeconds;
-    }
-
-    bool storeIfNecessary(uint32_t secs, ISerializable* data)
-    {
-        if( m_storedSeconds + 15 > secs )
-        {
-            return false;
-        }
-
-        m_storedSeconds = secs;
-        states.emplace_back(std::make_unique<MemArchive>())->archive(data).finishSave();
-        states.next();
-        return true;
-    }
+    m_storedSeconds = secs;
+    states.emplace_back( std::make_unique<MemArchive>() )->archive( data ).finishSave();
+    states.next();
+    return true;
+  }
 
 private:
-    size_t m_storedSeconds = 0;
+  size_t m_storedSeconds = 0;
 };
 
 /**

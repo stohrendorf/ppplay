@@ -36,65 +36,65 @@
  * @brief Output class for SDL
  */
 class SDLAudioOutput
-    : public AbstractAudioOutput
+  : public AbstractAudioOutput
 {
 public:
-    DISABLE_COPY(SDLAudioOutput)
+  DISABLE_COPY( SDLAudioOutput )
 
-    SDLAudioOutput() = delete;
+  SDLAudioOutput() = delete;
 
-    //! @copydoc IAudioOutput::IAudioOutput(const IAudioSource::WeakPtr&)
-    explicit SDLAudioOutput(const AbstractAudioSource::WeakPtr& src);
+  //! @copydoc IAudioOutput::IAudioOutput(const IAudioSource::WeakPtr&)
+  explicit SDLAudioOutput(const AbstractAudioSource::WeakPtr& src);
 
-    ~SDLAudioOutput() override;
+  ~SDLAudioOutput() override;
 
-    const std::vector<uint16_t>& leftFft() const
-    {
-        return m_fftObserver.left();
-    }
+  const std::vector<uint16_t>& leftFft() const
+  {
+    return m_fftObserver.left();
+  }
 
-    const std::vector<uint16_t>& rightFft() const
-    {
-        return m_fftObserver.right();
-    }
+  const std::vector<uint16_t>& rightFft() const
+  {
+    return m_fftObserver.right();
+  }
 
 private:
-    std::mutex m_mutex;
-    AudioFifo m_fifo;
-    VolumeObserver m_volObserver;
-    FftObserver m_fftObserver;
+  std::mutex m_mutex;
+  AudioFifo m_fifo;
+  VolumeObserver m_volObserver;
+  FftObserver m_fftObserver;
 
-    /**
-     * @brief SDL Audio callback handler
-     * @param[in] userdata Pointer to SDLAudioOutput
-     * @param[out] stream Audio buffer pointer
-     * @param[in] len_bytes Byte length of @a stream
-     * @note Declared here to get access to m_fifo
-     */
-    static void sdlAudioCallback(void* userdata, uint8_t* stream, int len_bytes);
+  /**
+   * @brief SDL Audio callback handler
+   * @param[in] userdata Pointer to SDLAudioOutput
+   * @param[out] stream Audio buffer pointer
+   * @param[in] len_bytes Byte length of @a stream
+   * @note Declared here to get access to m_fifo
+   */
+  static void sdlAudioCallback(void* userdata, uint8_t* stream, int len_bytes);
 
-    size_t getSdlData(BasicSampleFrame* data, size_t numFrames);
+  size_t getSdlData(BasicSampleFrame* data, size_t numFrames);
 
-    int internal_init(int desiredFrq) override;
+  int internal_init(int desiredFrq) override;
 
-    bool internal_playing() const override;
+  bool internal_playing() const override;
 
-    bool internal_paused() const override;
+  bool internal_paused() const override;
 
-    void internal_play() override;
+  void internal_play() override;
 
-    void internal_pause() override;
+  void internal_pause() override;
 
-    uint16_t internal_volumeLeft() const override;
+  uint16_t internal_volumeLeft() const override;
 
-    uint16_t internal_volumeRight() const override;
+  uint16_t internal_volumeRight() const override;
 
 protected:
-    /**
-     * @brief Get the logger
-     * @return Child logger with attached ".sdl"
-     */
-    static light4cxx::Logger* logger();
+  /**
+   * @brief Get the logger
+   * @return Child logger with attached ".sdl"
+   */
+  static light4cxx::Logger* logger();
 };
 
 /**

@@ -29,17 +29,16 @@ namespace ppp
 {
 AbstractArchive& ModuleState::serialize(AbstractArchive* data)
 {
-    *data
-        % speed
-        % tempo
-        % order
-        % row
-        % tick
-        % globalVolume
-        % playedFrames
-        % pattern
-        ;
-    return *data;
+  *data
+    % speed
+    % tempo
+    % order
+    % row
+    % tick
+    % globalVolume
+    % playedFrames
+    % pattern;
+  return *data;
 }
 }
 

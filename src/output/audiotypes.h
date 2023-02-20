@@ -21,9 +21,9 @@
 
 #include <stuff/numberutils.h>
 
-#include <queue>
 #include <cstdint>
 #include <memory>
+#include <queue>
 #include <vector>
 
 /**
@@ -47,41 +47,41 @@ typedef int16_t BasicSample;
 
 struct BasicSampleFrame
 {
-    //! @brief Vector of BasicSampleFrame's
-    typedef std::vector<BasicSampleFrame> Vector;
-    //! @brief Left sample value
-    BasicSample left = 0;
-    //! @brief Right sample value
-    BasicSample right = 0;
+  //! @brief Vector of BasicSampleFrame's
+  typedef std::vector<BasicSampleFrame> Vector;
+  //! @brief Left sample value
+  BasicSample left = 0;
+  //! @brief Right sample value
+  BasicSample right = 0;
 
-    constexpr BasicSampleFrame() noexcept = default;
+  constexpr BasicSampleFrame() noexcept = default;
 
-    constexpr BasicSampleFrame(int16_t l, int16_t r) noexcept
-        : left(l), right(r)
-    {
-    }
+  constexpr BasicSampleFrame(int16_t l, int16_t r) noexcept
+    : left( l ), right( r )
+  {}
 
-    constexpr BasicSampleFrame operator-(const BasicSampleFrame& rhs) const noexcept
-    {
-        return BasicSampleFrame(left - rhs.left, right - rhs.right);
-    }
+  constexpr BasicSampleFrame operator-(const BasicSampleFrame& rhs) const
+  noexcept
+  {
+    return BasicSampleFrame( left - rhs.left, right - rhs.right );
+  }
 
-    constexpr BasicSampleFrame operator*(int value) const noexcept
-    {
-        return BasicSampleFrame(left * value, right * value);
-    }
+  constexpr BasicSampleFrame operator*(int value) const noexcept
+  {
+    return BasicSampleFrame( left * value, right * value );
+  }
 
-    constexpr BasicSampleFrame operator>>(int shift) const noexcept
-    {
-        return BasicSampleFrame(left >> shift, right >> shift);
-    }
+  constexpr BasicSampleFrame operator>>(int shift) const noexcept
+  {
+    return BasicSampleFrame( left >> shift, right >> shift );
+  }
 
-    inline BasicSampleFrame& operator+=(const BasicSampleFrame& rhs) noexcept
-    {
-        left += rhs.left;
-        right += rhs.right;
-        return *this;
-    }
+  inline BasicSampleFrame& operator+=(const BasicSampleFrame& rhs) noexcept
+  {
+    left += rhs.left;
+    right += rhs.right;
+    return *this;
+  }
 };
 
 #pragma pack(pop)
@@ -90,7 +90,8 @@ struct BasicSampleFrame
  * @brief Mixer sample
  * @details
  * Used for mixing BasicSample's so that there is no loss of sample data.
- * Operation should be to sum all BasicSample's into one MixerSample and @e then apply division.
+ * Operation should be to sum all BasicSample's into one MixerSample and @e then
+ * apply division.
  */
 typedef int32_t MixerSample;
 
@@ -103,43 +104,94 @@ typedef int32_t MixerSample;
 
 struct MixerSampleFrame
 {
-    //! @brief Left sample value
-    MixerSample left = 0;
-    //! @brief Right sample value
-    MixerSample right = 0;
+  //! @brief Left sample value
+  MixerSample left = 0;
+  //! @brief Right sample value
+  MixerSample right = 0;
 
-    /**
-     * @brief Add a BasicSampleFrame
-     * @param[in] rhs BasicSampleFrame to add
-     * @return Copy of *this
-     */
-    inline MixerSampleFrame operator+=(const BasicSampleFrame& rhs) noexcept
-    {
-        left += rhs.left;
-        right += rhs.right;
-        return *this;
-    }
+  constexpr explicit MixerSampleFrame(const BasicSampleFrame& f) noexcept
+    : MixerSampleFrame{ f.left, f.right }
+  {}
 
-    /**
-     * @brief Shift data right and clip
-     * @param[in] shift Amount to shift right
-     * @return Clipped BasicSampleFrame
-     */
-    inline BasicSampleFrame rightShiftClip(uint8_t shift) const noexcept
-    {
-        BasicSampleFrame result;
-        result.left = ppp::clip(left >> shift, -32768, 32767);
-        result.right = ppp::clip(right >> shift, -32768, 32767);
-        return result;
-    }
+  constexpr explicit MixerSampleFrame(MixerSample left,
+                                      MixerSample right) noexcept
+    : left{ left }, right{ right }
+  {}
 
-    constexpr MixerSampleFrame() noexcept = default;
+  /**
+   * @brief Add a BasicSampleFrame
+   * @param[in] rhs BasicSampleFrame to add
+   * @return Copy of *this
+   */
+  inline MixerSampleFrame operator+=(const BasicSampleFrame& rhs) noexcept
+  {
+    left += rhs.left;
+    right += rhs.right;
+    return *this;
+  }
 
-    void add(const BasicSampleFrame& frame, int mulL, int mulR, int shift)
-    {
-        left += (static_cast<MixerSample>(frame.left) * mulL) >> shift;
-        right += (static_cast<MixerSample>(frame.right) * mulR) >> shift;
-    }
+  /**
+   * @brief Shift data right and clip
+   * @param[in] shift Amount to shift right
+   * @return Clipped BasicSampleFrame
+   */
+  inline BasicSampleFrame rightShiftClip(uint8_t shift) const noexcept
+  {
+    BasicSampleFrame result;
+    result.left = ppp::clip( left >> shift, -32768, 32767 );
+    result.right = ppp::clip( right >> shift, -32768, 32767 );
+    return result;
+  }
+
+  constexpr MixerSampleFrame() noexcept = default;
+
+  void add(const BasicSampleFrame& frame, int mulL, int mulR, int shift)
+  {
+    left += (static_cast<MixerSample>(frame.left) * mulL) >> shift;
+    right += (static_cast<MixerSample>(frame.right) * mulR) >> shift;
+  }
+
+  constexpr MixerSampleFrame operator-(const MixerSampleFrame& rhs) noexcept
+  {
+    return MixerSampleFrame{ left - rhs.left, right - rhs.right };
+  }
+
+  constexpr MixerSampleFrame operator+(const MixerSampleFrame& rhs) noexcept
+  {
+    return MixerSampleFrame{ left + rhs.left, right + rhs.right };
+  }
+
+  constexpr MixerSampleFrame operator*(const MixerSampleFrame& rhs) noexcept
+  {
+    return MixerSampleFrame{ left * rhs.left, right * rhs.right };
+  }
+
+  constexpr MixerSampleFrame operator*(const BasicSampleFrame& rhs) noexcept
+  {
+    return MixerSampleFrame{ left * rhs.left, right * rhs.right };
+  }
+
+  template<typename T>
+  constexpr MixerSampleFrame operator*(const T& rhs) noexcept
+  {
+    return MixerSampleFrame{ left * rhs, right * rhs };
+  }
+
+  template<typename T>
+  constexpr MixerSampleFrame operator/(const T& rhs) noexcept
+  {
+    return MixerSampleFrame{ left / rhs, right / rhs };
+  }
+
+  template<typename T> MixerSampleFrame clamped() const noexcept
+  {
+    return MixerSampleFrame{ ppp::clip<T>( left ), ppp::clip<T>( right ) };
+  }
+
+  BasicSampleFrame toBasicSampleFrame() const noexcept
+  {
+    return { ppp::clip<int16_t>( left ), ppp::clip<int16_t>( right ) };
+  }
 };
 
 #pragma pack(pop)

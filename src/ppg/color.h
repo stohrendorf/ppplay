@@ -31,9 +31,9 @@ namespace ppg
  */
 enum class Color : unsigned char
 {
-    Black, Blue, Green, Aqua, Red, Purple, Brown, White,
-    Gray, LightBlue, LightGreen, LightAqua, LightRed, LightPurple, Yellow, BrightWhite,
-    None
+  Black, Blue, Green, Aqua, Red, Purple, Brown, White,
+  Gray, LightBlue, LightGreen, LightAqua, LightRed, LightPurple, Yellow, BrightWhite,
+  None
 };
 
 /**
@@ -44,7 +44,7 @@ enum class Color : unsigned char
  */
 inline constexpr Color operator~(Color c) noexcept
 {
-    return static_cast<Color>((static_cast<int>(c) & 7) ^ 7);
+  return static_cast<Color>((static_cast<int>(c) & 7) ^ 7);
 }
 } // namespace ppg
 

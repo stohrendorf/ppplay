@@ -24,50 +24,50 @@
 #include "player.h"
 
 class SngPlayer
-    : public Player
+  : public Player
 {
 public:
-    DISABLE_COPY(SngPlayer)
+  DISABLE_COPY( SngPlayer )
 
-    SngPlayer() = default;
+  SngPlayer() = default;
 
-    static Player* factory();
+  static Player* factory();
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    bool update() override;
+  bool update() override;
 
-    void rewind(const boost::optional<size_t>& subsong) override;
+  void rewind(const boost::optional<size_t>& subsong) override;
 
-    size_t framesUntilUpdate() const override
-    {
-        return SampleRate / 70;
-    }
+  size_t framesUntilUpdate() const override
+  {
+    return SampleRate / 70;
+  }
 
-    std::string type() const override
-    {
-        return "SNG File Format";
-    }
+  std::string type() const override
+  {
+    return "SNG File Format";
+  }
 
 private:
 #pragma pack(push, 1)
-    struct SngHeader
-    {
-        char id[4] = {0, 0, 0, 0};
-        uint16_t length = 0, start = 0, loop = 0;
-        uint8_t delay = 0;
-        uint8_t compressed = 0;
-    };
-    struct Sdata
-    {
-        uint8_t val = 0, reg = 0;
-    };
+  struct SngHeader
+  {
+    char id[4] = { 0, 0, 0, 0 };
+    uint16_t length = 0, start = 0, loop = 0;
+    uint8_t delay = 0;
+    uint8_t compressed = 0;
+  };
+  struct Sdata
+  {
+    uint8_t val = 0, reg = 0;
+  };
 #pragma pack(pop)
-    SngHeader m_header{};
+  SngHeader m_header{};
 
-    std::vector<Sdata> m_data{};
+  std::vector<Sdata> m_data{};
 
-    uint8_t m_del = 0;
-    uint16_t m_pos = 0;
-    bool m_songEnd = false;
+  uint8_t m_del = 0;
+  uint16_t m_pos = 0;
+  bool m_songEnd = false;
 };

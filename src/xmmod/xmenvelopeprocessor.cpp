@@ -31,227 +31,235 @@ namespace ppp
 namespace xm
 {
 XmEnvelopeProcessor::XmEnvelopeProcessor()
-    : m_flags(), m_points(), m_numPoints(0), m_position(-1), m_nextIndex(0), m_sustainPoint(0), m_loopStart(0), m_loopEnd(0), m_currentRate(0), m_currentValue(0)
+  : m_flags(), m_points(), m_numPoints( 0 ), m_position( -1 ), m_nextIndex( 0 ), m_sustainPoint( 0 ), m_loopStart( 0 )
+  , m_loopEnd( 0 ), m_currentRate( 0 ), m_currentValue( 0 )
 {
 }
 
-XmEnvelopeProcessor::XmEnvelopeProcessor(XmEnvelopeProcessor::EnvelopeFlags flags, const std::array<EnvelopePoint, 12>& points, uint8_t numPoints, uint8_t sustainPt, uint8_t loopStart, uint8_t loopEnd)
-    : m_flags(flags), m_points(points), m_numPoints(numPoints), m_position(-1), m_nextIndex(0), m_sustainPoint(sustainPt), m_loopStart(loopStart), m_loopEnd(loopEnd), m_currentRate(0), m_currentValue(0)
+XmEnvelopeProcessor::XmEnvelopeProcessor(XmEnvelopeProcessor::EnvelopeFlags flags,
+                                         const std::array<EnvelopePoint, 12>& points,
+                                         uint8_t numPoints,
+                                         uint8_t sustainPt,
+                                         uint8_t loopStart,
+                                         uint8_t loopEnd)
+  : m_flags( flags ), m_points( points ), m_numPoints( numPoints ), m_position( -1 ), m_nextIndex( 0 ), m_sustainPoint(
+  sustainPt ), m_loopStart( loopStart ), m_loopEnd( loopEnd ), m_currentRate( 0 ), m_currentValue( 0 )
 {
 }
 
 bool XmEnvelopeProcessor::onSustain(uint8_t idx) const
 {
-    return m_flags & EnvelopeFlags::Sustain && idx == m_sustainPoint && m_position == m_points.at(m_sustainPoint).position;
+  return m_flags & EnvelopeFlags::Sustain && idx == m_sustainPoint
+    && m_position == m_points.at( m_sustainPoint ).position;
 }
 
 bool XmEnvelopeProcessor::atLoopEnd(uint8_t idx) const
 {
-    return m_flags & EnvelopeFlags::Loop && idx == m_loopEnd;
+  return m_flags & EnvelopeFlags::Loop && idx == m_loopEnd;
 }
 
 bool XmEnvelopeProcessor::enabled() const
 {
-    return m_flags & EnvelopeFlags::Enabled;
+  return m_flags & EnvelopeFlags::Enabled;
 }
 
 void XmEnvelopeProcessor::increasePosition(bool keyOn)
 {
-    if(!enabled() || m_nextIndex >= m_numPoints)
-    {
-        return;
-    }
-    if(keyOn && onSustain(m_nextIndex - 1))
-    {
-        return;
-    }
+  if( !enabled() || m_nextIndex >= m_numPoints )
+  {
+    return;
+  }
+  if( keyOn && onSustain( m_nextIndex - 1 ) )
+  {
+    return;
+  }
 
-    m_position++;
-    if(m_position == m_points.at(m_nextIndex).position)
+  m_position++;
+  if( m_position == m_points.at( m_nextIndex ).position )
+  {
+    if( atLoopEnd( m_nextIndex ) )
     {
-        if(atLoopEnd(m_nextIndex))
-        {
-            m_position = m_points.at(m_loopStart).position;
-            m_currentValue = m_points[m_loopStart].value << 8;
-            m_nextIndex = m_loopStart;
-        }
-        else
-        {
-            m_currentValue = m_points[m_nextIndex].value << 8;
-        }
-        m_nextIndex++;
-        if(m_nextIndex < m_numPoints)
-        {
-            int16_t dx = m_points.at(m_nextIndex).position - m_points.at(m_nextIndex - 1).position;
-            if(dx > 0)
-            {
-                int16_t dy = (m_points[m_nextIndex].value << 8) - (m_points[m_nextIndex - 1].value << 8);
-                m_currentRate = dy / dx;
-            }
-            else
-            {
-                m_currentRate = 0;
-            }
-        }
-        else
-        {
-            m_currentRate = 0;
-        }
+      m_position = m_points.at( m_loopStart ).position;
+      m_currentValue = m_points[m_loopStart].value << 8;
+      m_nextIndex = m_loopStart;
     }
     else
     {
-        m_currentValue = clip<int>(m_currentValue + m_currentRate, 0, 0xffff);
+      m_currentValue = m_points[m_nextIndex].value << 8;
     }
+    m_nextIndex++;
+    if( m_nextIndex < m_numPoints )
+    {
+      int16_t dx = m_points.at( m_nextIndex ).position - m_points.at( m_nextIndex - 1 ).position;
+      if( dx > 0 )
+      {
+        int16_t dy = (m_points[m_nextIndex].value << 8) - (m_points[m_nextIndex - 1].value << 8);
+        m_currentRate = dy / dx;
+      }
+      else
+      {
+        m_currentRate = 0;
+      }
+    }
+    else
+    {
+      m_currentRate = 0;
+    }
+  }
+  else
+  {
+    m_currentValue = clip<int>( m_currentValue + m_currentRate, 0, 0xffff );
+  }
 }
 
 uint8_t XmEnvelopeProcessor::realVolume(uint8_t volume, uint8_t globalVolume, uint16_t scale)
 {
-    if(volume == 0 || globalVolume == 0 || scale == 0)
+  if( volume == 0 || globalVolume == 0 || scale == 0 )
+  {
+    return 0;
+  }
+  if( !enabled() )
+  {
+    int tmp = (volume * scale) >> 12;
+    tmp = (tmp * globalVolume) >> 9;
+    return tmp;
+  }
+  else
+  {
+    int tmp = m_currentValue >> 8;
+    if( tmp > 0xa0 )
     {
-        return 0;
+      tmp = 0;
+      m_currentRate = 0;
     }
-    if(!enabled())
+    else if( tmp > 0x40 )
     {
-        int tmp = (volume * scale) >> 12;
-        tmp = (tmp * globalVolume) >> 9;
-        return tmp;
+      tmp = 0x40;
+      m_currentRate = 0;
     }
-    else
-    {
-        int tmp = m_currentValue >> 8;
-        if(tmp > 0xa0)
-        {
-            tmp = 0;
-            m_currentRate = 0;
-        }
-        else if(tmp > 0x40)
-        {
-            tmp = 0x40;
-            m_currentRate = 0;
-        }
-        tmp = (tmp * volume) >> 6;
-        tmp = (tmp * scale) >> 12;
-        tmp = (tmp * globalVolume) >> 9;
-        return tmp;
-    }
+    tmp = (tmp * volume) >> 6;
+    tmp = (tmp * scale) >> 12;
+    tmp = (tmp * globalVolume) >> 9;
+    return tmp;
+  }
 }
 
 uint8_t XmEnvelopeProcessor::realPanning(uint8_t panning)
 {
-    if(!enabled())
-    {
-        return panning;
-    }
-    uint8_t curVal = m_currentValue >> 8;
-    if(curVal > 0xa0)
-    {
-        curVal = 0;
-        m_currentRate = 0;
-    }
-    else if(curVal > 0x40)
-    {
-        curVal = 0x40;
-        m_currentRate = 0;
-    }
-    int16_t curPan;
-    if(panning > 0x80)
-    {
-        curPan = panning - 0x80;
-    }
-    else
-    {
-        curPan = 0x80 - panning;
-    }
-    curPan += 0x80;
-    curPan <<= 3;
-    curPan = (curPan * (curVal - 0x20)) >> 8;
-    return clip<int>(panning + curPan, 0, 0xff);
+  if( !enabled() )
+  {
+    return panning;
+  }
+  uint8_t curVal = m_currentValue >> 8;
+  if( curVal > 0xa0 )
+  {
+    curVal = 0;
+    m_currentRate = 0;
+  }
+  else if( curVal > 0x40 )
+  {
+    curVal = 0x40;
+    m_currentRate = 0;
+  }
+  int16_t curPan;
+  if( panning > 0x80 )
+  {
+    curPan = panning - 0x80;
+  }
+  else
+  {
+    curPan = 0x80 - panning;
+  }
+  curPan += 0x80;
+  curPan <<= 3;
+  curPan = (curPan * (curVal - 0x20)) >> 8;
+  return clip<int>( panning + curPan, 0, 0xff );
 }
 
 void XmEnvelopeProcessor::setPosition(uint8_t pos)
 {
-    if(!enabled())
+  if( !enabled() )
+  {
+    return;
+  }
+  m_position = pos - 1;
+  if( m_numPoints <= 1 )
+  {
+    m_currentRate = 0;
+    m_currentValue = m_points.front().value;
+  }
+  else
+  {
+    int foundPoint;
+    for( foundPoint = 1; foundPoint < m_numPoints; foundPoint++ )
     {
-        return;
+      if( pos < m_points.at( foundPoint ).position )
+      {
+        foundPoint--;
+        break;
+      }
     }
-    m_position = pos - 1;
-    if(m_numPoints <= 1)
+    if( foundPoint == m_numPoints )
     {
+      m_currentRate = 0;
+      m_currentValue = m_points.at( foundPoint - 1 ).value;
+    }
+    else if( m_points.at( foundPoint ).position == pos )
+    {
+      if( m_points.at( foundPoint + 1 ).position < m_points[foundPoint].position )
+      {
         m_currentRate = 0;
-        m_currentValue = m_points.front().value;
+        m_currentValue = m_points.at( foundPoint - 1 ).value;
+      }
     }
     else
     {
-        int foundPoint;
-        for(foundPoint = 1; foundPoint < m_numPoints; foundPoint++)
-        {
-            if(pos < m_points.at(foundPoint).position)
-            {
-                foundPoint--;
-                break;
-            }
-        }
-        if(foundPoint == m_numPoints)
-        {
-            m_currentRate = 0;
-            m_currentValue = m_points.at(foundPoint - 1).value;
-        }
-        else if(m_points.at(foundPoint).position == pos)
-        {
-            if(m_points.at(foundPoint + 1).position < m_points[foundPoint].position)
-            {
-                m_currentRate = 0;
-                m_currentValue = m_points.at(foundPoint - 1).value;
-            }
-        }
-        else
-        {
-            int16_t dx = m_points.at(foundPoint + 1).position - m_points.at(foundPoint).position;
-            int16_t dy = m_points[foundPoint + 1].value - m_points[foundPoint].value;
-            m_currentRate = (dy << 8) / dx;
-            m_currentValue = m_points[foundPoint].value;
-            m_currentValue += m_currentRate * (pos - m_points[foundPoint].position);
-            foundPoint++;
-        }
-        if(foundPoint >= m_numPoints)
-        {
-            foundPoint = m_numPoints - 1;
-        }
-        m_nextIndex = std::max(0, foundPoint);
+      int16_t dx = m_points.at( foundPoint + 1 ).position - m_points.at( foundPoint ).position;
+      int16_t dy = m_points[foundPoint + 1].value - m_points[foundPoint].value;
+      m_currentRate = (dy << 8) / dx;
+      m_currentValue = m_points[foundPoint].value;
+      m_currentValue += m_currentRate * (pos - m_points[foundPoint].position);
+      foundPoint++;
     }
+    if( foundPoint >= m_numPoints )
+    {
+      foundPoint = m_numPoints - 1;
+    }
+    m_nextIndex = std::max( 0, foundPoint );
+  }
 }
 
 void XmEnvelopeProcessor::doKeyOff()
 {
-    if(enabled() && m_nextIndex < m_numPoints && m_position >= m_points.at(m_nextIndex).position)
-    {
-        m_position = m_points[m_nextIndex].position - 1;
-    }
+  if( enabled() && m_nextIndex < m_numPoints && m_position >= m_points.at( m_nextIndex ).position )
+  {
+    m_position = m_points[m_nextIndex].position - 1;
+  }
 }
 
 void XmEnvelopeProcessor::retrigger()
 {
-    m_position = -1;
-    m_nextIndex = 0;
+  m_position = -1;
+  m_nextIndex = 0;
 }
 
 AbstractArchive& XmEnvelopeProcessor::serialize(AbstractArchive* data)
 {
-    *data % (*reinterpret_cast<uint8_t*>(&m_flags));
-    for(EnvelopePoint & pt : m_points)
-    {
-        *data % pt.position % pt.value;
-    }
-    *data
-        % m_numPoints
-        % m_position
-        % m_nextIndex
-        % m_sustainPoint
-        % m_loopStart
-        % m_loopEnd
-        % m_currentRate
-        % m_currentValue;
-    return *data;
+  *data % (*reinterpret_cast<uint8_t*>(&m_flags));
+  for( EnvelopePoint& pt: m_points )
+  {
+    *data % pt.position % pt.value;
+  }
+  *data
+    % m_numPoints
+    % m_position
+    % m_nextIndex
+    % m_sustainPoint
+    % m_loopStart
+    % m_loopEnd
+    % m_currentRate
+    % m_currentValue;
+  return *data;
 }
 }
 }

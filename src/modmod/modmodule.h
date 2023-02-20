@@ -37,66 +37,69 @@ class ModSample;
 class ModChannel;
 
 class ModModule
-    : public AbstractModule
+  : public AbstractModule
 {
-    friend class ModChannel;
+  friend class ModChannel;
 
 public:
-    DISABLE_COPY(ModModule)
+  DISABLE_COPY( ModModule )
 
-    ModModule() = delete;
+  ModModule() = delete;
 
-    /**
-     * @brief Factory method
-     * @param[in] filename Module filename
-     * @param[in] frequency Rendering frequency
-     * @param[in] maxRpt Maximum repeat count
-     * @return Module pointer or nullptr
-     */
-    static std::shared_ptr<AbstractModule> factory(Stream* stream, uint32_t frequency, int maxRpt, Sample::Interpolation inter);
+  /**
+   * @brief Factory method
+   * @param[in] filename Module filename
+   * @param[in] frequency Rendering frequency
+   * @param[in] maxRpt Maximum repeat count
+   * @return Module pointer or nullptr
+   */
+  static std::shared_ptr<AbstractModule> factory(Stream* stream,
+                                                 uint32_t frequency,
+                                                 int maxRpt,
+                                                 Sample::Interpolation inter);
 
 private:
-    std::vector<std::unique_ptr<ModSample>> m_samples; //!< @brief Samples
-    std::vector<std::unique_ptr<ModPattern>> m_patterns; //!< @brief Patterns
-    std::vector<std::unique_ptr<ModChannel>> m_channels; //!< @brief Channels
-    int8_t m_patLoopRow;
-    int m_patLoopCount;
-    int8_t m_breakRow;
-    int m_patDelayCount;
-    uint16_t m_breakOrder;
+  std::vector<std::unique_ptr<ModSample>> m_samples; //!< @brief Samples
+  std::vector<std::unique_ptr<ModPattern>> m_patterns; //!< @brief Patterns
+  std::vector<std::unique_ptr<ModChannel>> m_channels; //!< @brief Channels
+  int8_t m_patLoopRow;
+  int m_patLoopCount;
+  int8_t m_breakRow;
+  int m_patDelayCount;
+  uint16_t m_breakOrder;
 
-    bool adjustPosition();
+  bool adjustPosition();
 
-    void checkGlobalFx();
+  void checkGlobalFx();
 
-    const std::unique_ptr<ModPattern>& getPattern(size_t idx) const;
+  const std::unique_ptr<ModPattern>& getPattern(size_t idx) const;
 
 protected:
-    AbstractArchive& serialize(AbstractArchive* data) override;
+  AbstractArchive& serialize(AbstractArchive* data) override;
 
 public:
-    ModModule(int maxRpt, Sample::Interpolation inter);
+  ModModule(int maxRpt, Sample::Interpolation inter);
 
-    ~ModModule() override;
+  ~ModModule() override;
 
-    bool load(Stream* stream, int loadMode);
+  bool load(Stream* stream, int loadMode);
 
 private:
-    size_t internal_buildTick(const AudioFrameBufferPtr& buffer) override;
+  size_t internal_buildTick(const AudioFrameBufferPtr& buffer) override;
 
-    ChannelState internal_channelStatus(size_t idx) const override;
+  ChannelState internal_channelStatus(size_t idx) const override;
 
-    int internal_channelCount() const override;
+  int internal_channelCount() const override;
 
-    const std::unique_ptr<ModSample>& sampleAt(size_t idx) const;
+  const std::unique_ptr<ModSample>& sampleAt(size_t idx) const;
 
-    bool existsSample(size_t idx) const;
+  bool existsSample(size_t idx) const;
 
-    /**
-     * @brief Get the logger
-     * @return Child logger with attached ".mod"
-     */
-    static light4cxx::Logger* logger();
+  /**
+   * @brief Get the logger
+   * @return Child logger with attached ".mod"
+   */
+  static light4cxx::Logger* logger();
 };
 }
 }

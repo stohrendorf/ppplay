@@ -5,17 +5,17 @@ namespace ppp
 {
 AbstractArchive& ChannelState::serialize(AbstractArchive* archive)
 {
-    *archive
-        % active
-        % noteTriggered
-        % instrument
-        % instrumentName
-        % note
-        % fx
-        % fxDesc
-        % panning
-        % volume
-        % cell;
-    return *archive;
+  *archive
+    % active
+    % noteTriggered
+    % instrument
+    % instrumentName
+    % note
+    % fx
+    % fxDesc
+    % panning
+    % volume
+    % cell;
+  return *archive;
 }
 }

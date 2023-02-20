@@ -28,113 +28,114 @@ namespace ppp
 {
 namespace xm
 {
-XmSample::XmSample() : m_finetune(0), m_panning(0x80), m_relativeNote(0), m_16bit(false)
+XmSample::XmSample()
+  : m_finetune( 0 ), m_panning( 0x80 ), m_relativeNote( 0 ), m_16bit( false )
 {
 }
 
 bool XmSample::load(Stream* str)
 {
-    int32_t dataSize;
-    *str >> dataSize;
-    int32_t loopStart, loopLen;
-    *str >> loopStart >> loopLen;
-    uint8_t volume;
-    *str >> volume;
-    setVolume(clip<int>(volume, 0, 64));
-    *str >> m_finetune;
-    uint8_t type;
-    *str >> type;
-    if(loopStart + loopLen > dataSize)
+  int32_t dataSize;
+  *str >> dataSize;
+  int32_t loopStart, loopLen;
+  *str >> loopStart >> loopLen;
+  uint8_t volume;
+  *str >> volume;
+  setVolume( clip<int>( volume, 0, 64 ) );
+  *str >> m_finetune;
+  uint8_t type;
+  *str >> type;
+  if( loopStart + loopLen > dataSize )
+  {
+    loopStart = loopLen = 0;
+    m_loopType = LoopType::None;
+  }
+  else
+  {
+    switch( type & 3 )
     {
-        loopStart = loopLen = 0;
-        m_loopType = LoopType::None;
+    case 0:
+      m_loopType = LoopType::None;
+      break;
+    case 1:
+      m_loopType = LoopType::Forward;
+      break;
+    case 2:
+    case 3:
+      m_loopType = LoopType::Pingpong;
+      break;
     }
-    else
-    {
-        switch(type & 3)
-        {
-            case 0:
-                m_loopType = LoopType::None;
-                break;
-            case 1:
-                m_loopType = LoopType::Forward;
-                break;
-            case 2:
-            case 3:
-                m_loopType = LoopType::Pingpong;
-                break;
-        }
-    }
-    m_16bit = (type & 0x10) != 0;
-    if(m_16bit)
-    {
-        resizeData(dataSize / 2u);
-        m_loopStart = loopStart / 2u;
-        m_loopEnd = (loopStart + loopLen) / 2u;
-    }
-    else
-    {
-        resizeData(dataSize);
-        m_loopStart = loopStart;
-        m_loopEnd = loopStart + loopLen;
-    }
-    *str >> m_panning >> m_relativeNote;
-    str->seekrel(1);
-    {
-        char title[22];
-        str->read(title, 22);
-        setTitle(stringncpy(title, 22));
-    }
-    return str->good();
+  }
+  m_16bit = (type & 0x10) != 0;
+  if( m_16bit )
+  {
+    resizeData( dataSize / 2u );
+    m_loopStart = loopStart / 2u;
+    m_loopEnd = (loopStart + loopLen) / 2u;
+  }
+  else
+  {
+    resizeData( dataSize );
+    m_loopStart = loopStart;
+    m_loopEnd = loopStart + loopLen;
+  }
+  *str >> m_panning >> m_relativeNote;
+  str->seekrel( 1 );
+  {
+    char title[22];
+    str->read( title, 22 );
+    setTitle( stringncpy( title, 22 ) );
+  }
+  return str->good();
 }
 
 bool XmSample::loadData(Stream* str)
 {
-    if(length() == 0)
-        return true;
-    if(m_16bit)
-    { // 16 bit
-        int16_t smp16 = 0;
-        for(auto it = beginIterator(); it != endIterator(); ++it)
-        {
-            int16_t delta;
-            *str >> delta;
-            smp16 += delta;
-            it->left = it->right = smp16;
-        }
+  if( length() == 0 )
+    return true;
+  if( m_16bit )
+  { // 16 bit
+    int16_t smp16 = 0;
+    for( auto it = beginIterator(); it != endIterator(); ++it )
+    {
+      int16_t delta;
+      *str >> delta;
+      smp16 += delta;
+      it->left = it->right = smp16;
     }
-    else
-    { // 8 bit
-        int8_t smp8 = 0;
-        for(auto it = beginIterator(); it != endIterator(); ++it)
-        {
-            int8_t delta;
-            *str >> delta;
-            smp8 += delta;
-            it->left = it->right = smp8 << 8;
-        }
+  }
+  else
+  { // 8 bit
+    int8_t smp8 = 0;
+    for( auto it = beginIterator(); it != endIterator(); ++it )
+    {
+      int8_t delta;
+      *str >> delta;
+      smp8 += delta;
+      it->left = it->right = smp8 << 8;
     }
-    return str->good();
+  }
+  return str->good();
 }
 
 uint8_t XmSample::panning() const
 {
-    return m_panning;
+  return m_panning;
 }
 
 bool XmSample::is16bit() const
 {
-    return m_16bit;
+  return m_16bit;
 }
 
 int8_t XmSample::relativeNote() const
 {
-    return m_relativeNote;
+  return m_relativeNote;
 }
 
 int8_t XmSample::finetune() const
 {
-    return m_finetune;
+  return m_finetune;
 }
 }
 }

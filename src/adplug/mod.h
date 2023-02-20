@@ -27,342 +27,343 @@
 #include <boost/optional.hpp>
 
 class ModPlayer
-    : public Player
+  : public Player
 {
 public:
-    DISABLE_COPY(ModPlayer)
+  DISABLE_COPY( ModPlayer )
 
-    ModPlayer();
+  ModPlayer();
 
-    ~ModPlayer() override = default;
+  ~ModPlayer() override = default;
 
-    bool update() override;
+  bool update() override;
 
-    void rewind(const boost::optional<size_t>& subsong) override;
+  void rewind(const boost::optional<size_t>& subsong) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    struct Instrument
-    {
-        using Data = std::array<uint8_t, 11>;
-        Data data = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-        uint8_t arpeggioStart = 0;
-        uint8_t arpeggioSpeed = 0;
-        uint8_t misc = 0;
-        int8_t slide = 0;
-    };
+  struct Instrument
+  {
+    using Data = std::array<uint8_t, 11>;
+    Data data = { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
+    uint8_t arpeggioStart = 0;
+    uint8_t arpeggioSpeed = 0;
+    uint8_t misc = 0;
+    int8_t slide = 0;
+  };
 
-    enum class Command
-        : uint8_t
-    {
-        None,
-        SlideUp,
-        SlideDown,
-        Porta,
-        Vibrato,
-        PortaVolSlide,
-        VibVolSlide,
-        SetTempo,
-        NoteOff,
-        SetVolume,
-        SA2VolSlide,
-        OrderJump,
-        SetFineVolume,
-        PatternBreak,
-        Special,
-        SA2Speed,
-        AMDVolSlide,
-        SetFineVolume2,
-        AMDSpeed,
-        RADSpeed,
-        RADVolSlide,
-        ModulatorVolume,
-        CarrierVolume,
-        FineSlideUp,
-        FineSlideDown,
-        WaveForm,
-        VolSlide,
-        OplTremoloVibrato,
-        SlideUpDown,
-        PatternDelay,
+  enum class Command
+    : uint8_t
+  {
+    None,
+    SlideUp,
+    SlideDown,
+    Porta,
+    Vibrato,
+    PortaVolSlide,
+    VibVolSlide,
+    SetTempo,
+    NoteOff,
+    SetVolume,
+    SA2VolSlide,
+    OrderJump,
+    SetFineVolume,
+    PatternBreak,
+    Special,
+    SA2Speed,
+    AMDVolSlide,
+    SetFineVolume2,
+    AMDSpeed,
+    RADSpeed,
+    RADVolSlide,
+    ModulatorVolume,
+    CarrierVolume,
+    FineSlideUp,
+    FineSlideDown,
+    WaveForm,
+    VolSlide,
+    OplTremoloVibrato,
+    SlideUpDown,
+    PatternDelay,
 
-        SFXTremolo,
-        SFXVibrato,
-        SFXRetrigger,
-        SFXFineVolumeUp,
-        SFXFineVolumeDown,
-        SFXSlideUp,
-        SFXSlideDown,
-        SFXPatternDelay,
+    SFXTremolo,
+    SFXVibrato,
+    SFXRetrigger,
+    SFXFineVolumeUp,
+    SFXFineVolumeDown,
+    SFXSlideUp,
+    SFXSlideDown,
+    SFXPatternDelay,
 
-        SFXKeyOff,
-        SFXWaveForm,
-        SFXVolumeUp,
-        SFXVolumeDown,
+    SFXKeyOff,
+    SFXWaveForm,
+    SFXVolumeUp,
+    SFXVolumeDown,
 
-        Sentinel
-    };
+    Sentinel
+  };
 
-    struct PatternCell
-    {
-        static constexpr const uint8_t KeyOff = 127;
-        static constexpr const uint8_t NoNote = 0;
+  struct PatternCell
+  {
+    static constexpr const uint8_t KeyOff = 127;
+    static constexpr const uint8_t NoNote = 0;
 
-        uint8_t note = 0;
-        Command command = Command::None;
+    uint8_t note = 0;
+    Command command = Command::None;
 
-        uint8_t instrument = 0;
+    uint8_t instrument = 0;
 
-        uint8_t hiNybble = 0;
-        uint8_t loNybble = 0;
+    uint8_t hiNybble = 0;
+    uint8_t loNybble = 0;
 
-        // Do not use "= default" here, see http://stackoverflow.com/a/17436088 for an explanation.
-        PatternCell() {}
-    };
+    // Do not use "= default" here, see http://stackoverflow.com/a/17436088 for an explanation.
+    PatternCell()
+    {}
+  };
 
-    const Instrument& instrument(size_t idx) const
-    {
-        return m_instruments[idx];
-    }
+  const Instrument& instrument(size_t idx) const
+  {
+    return m_instruments[idx];
+  }
 
 protected:
-    struct Channel
-    {
-        uint16_t frequency = 0;
-        uint16_t portaTargetFrequency = 0;
-        uint8_t octave = 0;
-        uint8_t carrierVolume = 0;
-        uint8_t modulatorVolume = 0;
-        uint8_t instrument = 0;
-        Command fx = Command::None;
-        uint8_t hiNybble = 0;
-        uint8_t loNybble = 0;
-        uint8_t key = 0;
-        uint8_t portaTargetOctave = 0;
-        uint8_t note = 0;
-        uint8_t portaSpeed = 0;
-        uint8_t vibratoSpeed = 0;
-        uint8_t vibratoDepth = 0;
-        uint8_t arppos = 0;
-        uint8_t arpspdcnt = 0;
-        int8_t trigger = 0;
+  struct Channel
+  {
+    uint16_t frequency = 0;
+    uint16_t portaTargetFrequency = 0;
+    uint8_t octave = 0;
+    uint8_t carrierVolume = 0;
+    uint8_t modulatorVolume = 0;
+    uint8_t instrument = 0;
+    Command fx = Command::None;
+    uint8_t hiNybble = 0;
+    uint8_t loNybble = 0;
+    uint8_t key = 0;
+    uint8_t portaTargetOctave = 0;
+    uint8_t note = 0;
+    uint8_t portaSpeed = 0;
+    uint8_t vibratoSpeed = 0;
+    uint8_t vibratoDepth = 0;
+    uint8_t arppos = 0;
+    uint8_t arpspdcnt = 0;
+    int8_t trigger = 0;
 
-        void distinctVolumeDown(int amount, const std::vector<Instrument>& instruments)
+    void distinctVolumeDown(int amount, const std::vector<Instrument>& instruments)
+    {
+      carrierVolume = std::max( 0, carrierVolume - amount );
+      if( instruments[instrument].data[0] & 1 )
+      {
+        modulatorVolume = std::max( 0, modulatorVolume - amount );
+      }
+    }
+
+    void volumeDown(int amount)
+    {
+      carrierVolume = std::max( 0, carrierVolume - amount );
+      modulatorVolume = std::max( 0, modulatorVolume - amount );
+    }
+
+    void distinctVolumeUp(int amount, const std::vector<Instrument>& instruments)
+    {
+      carrierVolume = std::min( 63, carrierVolume + amount );
+      if( instruments[instrument].data[0] & 1 )
+      {
+        modulatorVolume = std::min( 63, modulatorVolume + amount );
+      }
+    }
+
+    void volumeUp(int amount)
+    {
+      carrierVolume = std::min( 63, carrierVolume + amount );
+      modulatorVolume = std::min( 63, modulatorVolume + amount );
+    }
+
+    void slideDown(int amount)
+    {
+      frequency -= amount;
+      if( frequency <= 342 )
+      {
+        if( octave )
         {
-            carrierVolume = std::max(0, carrierVolume - amount);
-            if( instruments[instrument].data[0] & 1 )
-            {
-                modulatorVolume = std::max(0, modulatorVolume - amount);
-            }
+          octave--;
+          frequency <<= 1;
         }
-
-        void volumeDown(int amount)
+        else
         {
-            carrierVolume = std::max(0, carrierVolume - amount);
-            modulatorVolume = std::max(0, modulatorVolume - amount);
+          frequency = 342;
         }
+      }
+    }
 
-        void distinctVolumeUp(int amount, const std::vector<Instrument>& instruments)
+    void slideUp(int amount)
+    {
+      frequency += amount;
+      if( frequency >= 686 )
+      {
+        if( octave < 7 )
         {
-            carrierVolume = std::min(63, carrierVolume + amount);
-            if( instruments[instrument].data[0] & 1 )
-            {
-                modulatorVolume = std::min(63, modulatorVolume + amount);
-            }
+          octave++;
+          frequency >>= 1;
         }
-
-        void volumeUp(int amount)
+        else
         {
-            carrierVolume = std::min(63, carrierVolume + amount);
-            modulatorVolume = std::min(63, modulatorVolume + amount);
+          frequency = 686;
         }
+      }
+    }
 
-        void slideDown(int amount)
+    void porta(uint8_t speed)
+    {
+      if( frequency + (octave << 10) < portaTargetFrequency + (portaTargetOctave << 10) )
+      {
+        slideUp( speed );
+        if( frequency + (octave << 10) > portaTargetFrequency + (portaTargetOctave << 10) )
         {
-            frequency -= amount;
-            if( frequency <= 342 )
-            {
-                if( octave )
-                {
-                    octave--;
-                    frequency <<= 1;
-                }
-                else
-                {
-                    frequency = 342;
-                }
-            }
+          frequency = portaTargetFrequency;
+          octave = portaTargetOctave;
         }
-
-        void slideUp(int amount)
+      }
+      if( frequency + (octave << 10) > portaTargetFrequency + (portaTargetOctave << 10) )
+      {
+        slideDown( speed );
+        if( frequency + (octave << 10) < portaTargetFrequency + (portaTargetOctave << 10) )
         {
-            frequency += amount;
-            if( frequency >= 686 )
-            {
-                if( octave < 7 )
-                {
-                    octave++;
-                    frequency >>= 1;
-                }
-                else
-                {
-                    frequency = 686;
-                }
-            }
+          frequency = portaTargetFrequency;
+          octave = portaTargetOctave;
         }
-
-        void porta(uint8_t speed)
-        {
-            if( frequency + (octave << 10) < portaTargetFrequency + (portaTargetOctave << 10) )
-            {
-                slideUp(speed);
-                if( frequency + (octave << 10) > portaTargetFrequency + (portaTargetOctave << 10) )
-                {
-                    frequency = portaTargetFrequency;
-                    octave = portaTargetOctave;
-                }
-            }
-            if( frequency + (octave << 10) > portaTargetFrequency + (portaTargetOctave << 10) )
-            {
-                slideDown(speed);
-                if( frequency + (octave << 10) < portaTargetFrequency + (portaTargetOctave << 10) )
-                {
-                    frequency = portaTargetFrequency;
-                    octave = portaTargetOctave;
-                }
-            }
-        }
-    };
-
-    void init_trackord();
-
-    void init_notetable(const std::array<uint16_t, 12>& newnotetable);
-
-    void realloc_patterns(size_t pats, size_t rows, size_t chans);
-
-    Instrument& addInstrument()
-    {
-        m_instruments.emplace_back();
-        return m_instruments.back();
+      }
     }
+  };
 
-    const PatternCell& patternCell(size_t channel, size_t row) const
-    {
-        return m_patternCells.at(channel, row);
-    }
+  void init_trackord();
 
-    PatternCell& patternCell(size_t channel, size_t row)
-    {
-        return m_patternCells.at(channel, row);
-    }
+  void init_notetable(const std::array<uint16_t, 12>& newnotetable);
 
-    Channel& channel(size_t idx)
-    {
-        return m_channels[idx];
-    }
+  void realloc_patterns(size_t pats, size_t rows, size_t chans);
 
-    void setRestartOrder(size_t order)
-    {
-        BOOST_ASSERT(order < orderCount());
-        m_restartOrder = order;
-    }
+  Instrument& addInstrument()
+  {
+    m_instruments.emplace_back();
+    return m_instruments.back();
+  }
 
-    void enableChannel(uint8_t index)
-    {
-        BOOST_ASSERT(index < 32);
-        m_activechan |= (1 << index);
-    }
+  const PatternCell& patternCell(size_t channel, size_t row) const
+  {
+    return m_patternCells.at( channel, row );
+  }
 
-    void disableAllChannels()
-    {
-        m_activechan = 0;
-    }
+  PatternCell& patternCell(size_t channel, size_t row)
+  {
+    return m_patternCells.at( channel, row );
+  }
 
-    void setOpl3Mode()
-    {
-        m_opl3Mode = true;
-    }
+  Channel& channel(size_t idx)
+  {
+    return m_channels[idx];
+  }
 
-    void setTremolo()
-    {
-        m_tremolo = true;
-    }
+  void setRestartOrder(size_t order)
+  {
+    BOOST_ASSERT( order < orderCount() );
+    m_restartOrder = order;
+  }
 
-    void setVibrato()
-    {
-        m_vibrato = true;
-    }
+  void enableChannel(uint8_t index)
+  {
+    BOOST_ASSERT( index < 32 );
+    m_activechan |= (1 << index);
+  }
 
-    void setNoKeyOn()
-    {
-        m_noKeyOn = true;
-    }
+  void disableAllChannels()
+  {
+    m_activechan = 0;
+  }
 
-    void setDecimalValues()
-    {
-        m_decimalValues = true;
-    }
+  void setOpl3Mode()
+  {
+    m_opl3Mode = true;
+  }
 
-    void setFaust()
-    {
-        m_faust = true;
-    }
+  void setTremolo()
+  {
+    m_tremolo = true;
+  }
 
-    void setCellColumnMapping(size_t pattern, size_t channel, uint16_t column)
-    {
-        m_cellColumnMapping.at(pattern, channel) = column;
-    }
+  void setVibrato()
+  {
+    m_vibrato = true;
+  }
 
-    using ArpeggioData = std::array<uint8_t, 256>;
+  void setNoKeyOn()
+  {
+    m_noKeyOn = true;
+  }
 
-    void setArpeggioList(const ArpeggioData& data)
-    {
-        m_arpeggioList = data;
-    }
+  void setDecimalValues()
+  {
+    m_decimalValues = true;
+  }
 
-    void setArpeggioCommands(const ArpeggioData& data)
-    {
-        m_arpeggioCommands = data;
-    }
+  void setFaust()
+  {
+    m_faust = true;
+  }
+
+  void setCellColumnMapping(size_t pattern, size_t channel, uint16_t column)
+  {
+    m_cellColumnMapping.at( pattern, channel ) = column;
+  }
+
+  using ArpeggioData = std::array<uint8_t, 256>;
+
+  void setArpeggioList(const ArpeggioData& data)
+  {
+    m_arpeggioList = data;
+  }
+
+  void setArpeggioCommands(const ArpeggioData& data)
+  {
+    m_arpeggioCommands = data;
+  }
 
 private:
-    uint8_t m_patternDelay = 0;
-    bool m_songEnd = false;
-    uint8_t m_oplBdRegister = 0;
-    std::array<uint16_t, 12> m_noteTable{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    std::vector<Instrument> m_instruments{};
-    Field<PatternCell> m_patternCells{};
-    std::vector<Channel> m_channels{};
-    size_t m_restartOrder = 0;
-    uint32_t m_activechan = 0xffffffff;
-    bool m_decimalValues = false;
-    bool m_faust = false;
-    bool m_noKeyOn = false;
-    bool m_opl3Mode = false;
-    bool m_tremolo = false;
-    bool m_vibrato = false;
-    bool m_percussion = false;
-    Field<uint16_t> m_cellColumnMapping{};
-    boost::optional<ArpeggioData> m_arpeggioList{};
-    boost::optional<ArpeggioData> m_arpeggioCommands{};
+  uint8_t m_patternDelay = 0;
+  bool m_songEnd = false;
+  uint8_t m_oplBdRegister = 0;
+  std::array<uint16_t, 12> m_noteTable{ { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
+  std::vector<Instrument> m_instruments{};
+  Field<PatternCell> m_patternCells{};
+  std::vector<Channel> m_channels{};
+  size_t m_restartOrder = 0;
+  uint32_t m_activechan = 0xffffffff;
+  bool m_decimalValues = false;
+  bool m_faust = false;
+  bool m_noKeyOn = false;
+  bool m_opl3Mode = false;
+  bool m_tremolo = false;
+  bool m_vibrato = false;
+  bool m_percussion = false;
+  Field<uint16_t> m_cellColumnMapping{};
+  boost::optional<ArpeggioData> m_arpeggioList{};
+  boost::optional<ArpeggioData> m_arpeggioCommands{};
 
-    void setVolume(size_t chan);
+  void setVolume(size_t chan);
 
-    void setAverageVolume(size_t chan);
+  void setAverageVolume(size_t chan);
 
-    void setFreq(size_t chan);
+  void setFreq(size_t chan);
 
-    void playNote(size_t chan);
+  void playNote(size_t chan);
 
-    void setNote(size_t chan, int note);
+  void setNote(size_t chan, int note);
 
-    void tonePortamento(size_t chan, uint8_t info);
+  void tonePortamento(size_t chan, uint8_t info);
 
-    void vibrato(size_t chan, uint8_t speed, uint8_t depth);
+  void vibrato(size_t chan, uint8_t speed, uint8_t depth);
 
-    void deallocPatterns();
+  void deallocPatterns();
 
-    bool resolveOrder();
+  bool resolveOrder();
 
-    uint8_t setOplChip(size_t chan);
+  uint8_t setOplChip(size_t chan);
 };

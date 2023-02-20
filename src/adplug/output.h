@@ -25,57 +25,57 @@
 class PlayerHandler
 {
 public:
-    DISABLE_COPY(PlayerHandler)
+  DISABLE_COPY( PlayerHandler )
 
-    PlayerHandler() = default;
+  PlayerHandler() = default;
 
-    virtual ~PlayerHandler() = default;
+  virtual ~PlayerHandler() = default;
 
-    virtual void frame() = 0;
+  virtual void frame() = 0;
 
-    void setPlayer(std::shared_ptr<Player>& player)
-    {
-        m_player = player;
-    }
+  void setPlayer(std::shared_ptr<Player>& player)
+  {
+    m_player = player;
+  }
 
-    bool isPlaying() const noexcept
-    {
-        return m_playing;
-    }
+  bool isPlaying() const noexcept
+  {
+    return m_playing;
+  }
 
 protected:
-    void setIsPlaying(bool value) noexcept
-    {
-        m_playing = value;
-    }
+  void setIsPlaying(bool value) noexcept
+  {
+    m_playing = value;
+  }
 
-    Player* getPlayer()
-    {
-        return m_player.get();
-    }
+  Player* getPlayer()
+  {
+    return m_player.get();
+  }
 
 private:
-    bool m_playing = false;
-    std::shared_ptr<Player> m_player{};
+  bool m_playing = false;
+  std::shared_ptr<Player> m_player{};
 };
 
 class EmuPlayer
-    : public PlayerHandler
+  : public PlayerHandler
 {
 private:
-    std::vector<int16_t> m_audioBuf;
-    unsigned long m_freq;
-    ppp::Stepper m_oplInterp;
+  std::vector<int16_t> m_audioBuf;
+  unsigned long m_freq;
+  ppp::Stepper m_oplInterp;
 
 public:
-    DISABLE_COPY(EmuPlayer)
+  DISABLE_COPY( EmuPlayer )
 
-    EmuPlayer(unsigned long nfreq, size_t nbufsize);
+  EmuPlayer(unsigned long nfreq, size_t nbufsize);
 
-    void frame() override;
+  void frame() override;
 
 protected:
-    virtual void output(const std::vector<int16_t>& buf) = 0;
-    // The output buffer is always of the size requested through the constructor.
-    // This time, size is measured in bytes, not samples!
+  virtual void output(const std::vector<int16_t>& buf) = 0;
+  // The output buffer is always of the size requested through the constructor.
+  // This time, size is measured in bytes, not samples!
 };

@@ -34,67 +34,67 @@ namespace ppg
  * @brief The virtual DOS screen (SDL implementation)
  */
 class SDLScreen final
-    : public Widget, public SDLTimer
+  : public Widget, public SDLTimer
 {
 private:
-    void drawThis() override;
+  void drawThis() override;
 
-    int m_cursorX; //!< @brief Cursor X position
-    int m_cursorY; //!< @brief Cursor Y position
+  int m_cursorX; //!< @brief Cursor X position
+  int m_cursorY; //!< @brief Cursor Y position
 
-    void onTimer() override;
+  void onTimer() override;
 
 public:
-    DISABLE_COPY(SDLScreen)
+  DISABLE_COPY( SDLScreen )
 
-    static SDLScreen* instance();
+  static SDLScreen* instance();
 
-    /**
-     * @brief Create a new virtual DOS screen
-     * @param[in] w Width in characters
-     * @param[in] h Height in characters
-     * @param[in] title Title of the screen
-     */
-    SDLScreen(int w, int h, const std::string& title);
+  /**
+   * @brief Create a new virtual DOS screen
+   * @param[in] w Width in characters
+   * @param[in] h Height in characters
+   * @param[in] title Title of the screen
+   */
+  SDLScreen(int w, int h, const std::string& title);
 
-    ~SDLScreen() override;
+  ~SDLScreen() override;
 
-    /**
-     * @brief Clear the screen
-     * @param[in] c Character to overwrite the screen with
-     * @param[in] foreground Foreground color
-     * @param[in] background Background color
-     */
-    void clear(uint8_t c, Color foreground, Color background);
+  /**
+   * @brief Clear the screen
+   * @param[in] c Character to overwrite the screen with
+   * @param[in] foreground Foreground color
+   * @param[in] background Background color
+   */
+  void clear(uint8_t c, Color foreground, Color background);
 
-    void drawChar(int x, int y, char c) override;
+  void drawChar(int x, int y, char c) override;
 
-    void drawPixel(int x, int y, Color c);
+  void drawPixel(int x, int y, Color c);
 
-    void drawPixel(int x, int y, uint32_t c);
+  void drawPixel(int x, int y, uint32_t c);
 
-    static constexpr inline uint32_t fromRgb(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 0xff)
-    {
-        return (uint32_t(r) << 24) | (uint32_t(g) << 16) | (uint32_t(b) << 8) | a;
-    }
+  static constexpr inline uint32_t fromRgb(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 0xff)
+  {
+    return (uint32_t( r ) << 24) | (uint32_t( g ) << 16) | (uint32_t( b ) << 8) | a;
+  }
 
-    void lockPixels();
+  void lockPixels();
 
-    void unlockPixels();
+  void unlockPixels();
 
-    void clearPixels(Color c = Color::None);
+  void clearPixels(Color c = Color::None);
 
-    void setFgColorAt(int x, int y, Color c) override;
+  void setFgColorAt(int x, int y, Color c) override;
 
-    void setBgColorAt(int x, int y, Color c) override;
+  void setBgColorAt(int x, int y, Color c) override;
 
-    bool onMouseMove(int x, int y) override;
+  bool onMouseMove(int x, int y) override;
 
-    /**
-     * @brief Whether the screen has the mouse focus
-     * @retval true if the screen has the mouse focus
-     */
-    bool hasMouseFocus() const;
+  /**
+   * @brief Whether the screen has the mouse focus
+   * @retval true if the screen has the mouse focus
+   */
+  bool hasMouseFocus() const;
 };
 } // namespace ppg
 

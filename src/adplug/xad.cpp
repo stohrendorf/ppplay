@@ -27,58 +27,58 @@
 
 bool XadPlayer::load(const std::string& filename)
 {
-    FileStream f(filename);
-    if( !f )
-    {
-        return false;
-    }
+  FileStream f( filename );
+  if( !f )
+  {
+    return false;
+  }
 
-    // load header
-    f >> m_xadHeader;
+  // load header
+  f >> m_xadHeader;
 
-    // 'XAD!' - signed ?
-    if( m_xadHeader.id != 0x21444158 )
-    {
-        return false;
-    }
+  // 'XAD!' - signed ?
+  if( m_xadHeader.id != 0x21444158 )
+  {
+    return false;
+  }
 
-    m_tune.resize(f.size() - 80);
-    f.read(m_tune.data(), m_tune.size());
+  m_tune.resize( f.size() - 80 );
+  f.read( m_tune.data(), m_tune.size() );
 
-    bool result = xadplayer_load();
+  bool result = xadplayer_load();
 
-    if( result )
-    {
-        rewind(size_t(0));
-    }
+  if( result )
+  {
+    rewind( size_t( 0 ) );
+  }
 
-    return result;
+  return result;
 }
 
 void XadPlayer::rewind(const boost::optional<size_t>& subsong)
 {
-    setCurrentSpeed(m_xadHeader.speed);
-    m_xadSpeedCounter = 1;
-    m_xadPlaying = true;
-    m_xadLooping = false;
+  setCurrentSpeed( m_xadHeader.speed );
+  m_xadSpeedCounter = 1;
+  m_xadPlaying = true;
+  m_xadLooping = false;
 
-    // rewind()
-    xadplayer_rewind(subsong);
+  // rewind()
+  xadplayer_rewind( subsong );
 
 #ifdef DEBUG
-    AdPlug_LogWrite("-----------\n");
+  AdPlug_LogWrite("-----------\n");
 #endif
 }
 
 bool XadPlayer::update()
 {
-    if( --m_xadSpeedCounter == 0 )
-    {
-        m_xadSpeedCounter = currentSpeed();
+  if( --m_xadSpeedCounter == 0 )
+  {
+    m_xadSpeedCounter = currentSpeed();
 
-        // update()
-        xadplayer_update();
-    }
+    // update()
+    xadplayer_update();
+  }
 
-    return m_xadPlaying && !m_xadLooping;
+  return m_xadPlaying && !m_xadLooping;
 }

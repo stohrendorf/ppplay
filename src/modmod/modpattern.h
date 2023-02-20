@@ -36,22 +36,22 @@ namespace ppp
 namespace mod
 {
 class ModPattern
-    : public Field<ModCell>
+  : public Field<ModCell>
 {
 public:
-    DISABLE_COPY(ModPattern)
+  DISABLE_COPY( ModPattern )
 
-    /**
-     * @brief Constructor
-     */
-    ModPattern();
+  /**
+   * @brief Constructor
+   */
+  ModPattern();
 
-    /**
-     * @brief Load the pattern from a stream
-     * @param[in] str The stream to load from
-     * @return @c true on success
-     */
-    bool load(Stream* str, uint8_t numChans);
+  /**
+   * @brief Load the pattern from a stream
+   * @param[in] str The stream to load from
+   * @return @c true on success
+   */
+  bool load(Stream* str, uint8_t numChans);
 };
 }
 }

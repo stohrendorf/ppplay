@@ -25,36 +25,36 @@
 #include "player.h"
 
 class Dro2Player
-    : public Player
+  : public Player
 {
-    uint8_t m_commandDelayS = 0;
-    uint8_t m_commandDelay = 0;
-    std::vector<uint8_t> m_convTable{};
+  uint8_t m_commandDelayS = 0;
+  uint8_t m_commandDelay = 0;
+  std::vector<uint8_t> m_convTable{};
 
-    std::vector<uint8_t> m_data{};
-    uint32_t m_pos = 0;
-    int m_delay = 0;
-    int m_chipSelector = 0;
+  std::vector<uint8_t> m_data{};
+  uint32_t m_pos = 0;
+  int m_delay = 0;
+  int m_chipSelector = 0;
 
 public:
-    DISABLE_COPY(Dro2Player)
+  DISABLE_COPY( Dro2Player )
 
-    static Player* factory();
+  static Player* factory();
 
-    Dro2Player() = default;
+  Dro2Player() = default;
 
-    ~Dro2Player() override = default;
+  ~Dro2Player() override = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    bool update() override;
+  bool update() override;
 
-    void rewind(const boost::optional<size_t>& subsong) override;
+  void rewind(const boost::optional<size_t>& subsong) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override
-    {
-        return "DOSBox Raw OPL v2.0";
-    }
+  std::string type() const override
+  {
+    return "DOSBox Raw OPL v2.0";
+  }
 };

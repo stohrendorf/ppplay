@@ -37,279 +37,279 @@ namespace ppp
 class Sample
 {
 public:
-    DISABLE_COPY(Sample)
+  DISABLE_COPY( Sample )
 
-    //! @brief Loop type definitions
-    enum class LoopType
-    {
-        None, //!< @brief not looped
-        Forward, //!< @brief Forward looped
-        Pingpong //!< @brief Ping pong looped
-    };
+  //! @brief Loop type definitions
+  enum class LoopType
+  {
+    None, //!< @brief not looped
+    Forward, //!< @brief Forward looped
+    Pingpong //!< @brief Ping pong looped
+  };
 
-    enum class Interpolation
-    {
-        None,
-        Linear,
-        Cubic,
-        Hermite
-    };
+  enum class Interpolation
+  {
+    None,
+    Linear,
+    Cubic,
+    Hermite
+  };
 private:
-    //! @brief Default volume of the sample
-    uint8_t m_volume = 0;
-    //! @brief Base frequency of the sample
-    uint16_t m_frequency = 0;
-    //! @brief Sample data
-    BasicSampleFrame::Vector m_data{};
-    //! @brief Sample filename
-    std::string m_filename{};
-    //! @brief Sample title
-    std::string m_title{};
+  //! @brief Default volume of the sample
+  uint8_t m_volume = 0;
+  //! @brief Base frequency of the sample
+  uint16_t m_frequency = 0;
+  //! @brief Sample data
+  BasicSampleFrame::Vector m_data{};
+  //! @brief Sample filename
+  std::string m_filename{};
+  //! @brief Sample title
+  std::string m_title{};
 
-    /**
-     * @brief Get a sample
-     * @param[in,out] pos Position of the requested sample
-     * @return Sample value, 0 if invalid value for @a pos
-     */
-    inline BasicSampleFrame sampleAt(size_t pos) const noexcept;
+  /**
+   * @brief Get a sample
+   * @param[in,out] pos Position of the requested sample
+   * @return Sample value, 0 if invalid value for @a pos
+   */
+  inline BasicSampleFrame sampleAt(size_t pos) const noexcept;
 
-    AudioFrameBuffer readNonInterpolated(Stepper& stepper,
+  AudioFrameBuffer readNonInterpolated(Stepper& stepper,
+                                       size_t requestedLen,
+                                       size_t limitMin,
+                                       size_t limitMax,
+                                       bool reverse) const;
+
+  AudioFrameBuffer readLinearInterpolated(Stepper& stepper,
+                                          size_t requestedLen,
+                                          size_t limitMin,
+                                          size_t limitMax,
+                                          bool reverse) const;
+
+  AudioFrameBuffer readCubicInterpolated(Stepper& stepper,
                                          size_t requestedLen,
                                          size_t limitMin,
                                          size_t limitMax,
                                          bool reverse) const;
 
-    AudioFrameBuffer readLinearInterpolated(Stepper& stepper,
-                                            size_t requestedLen,
-                                            size_t limitMin,
-                                            size_t limitMax,
-                                            bool reverse) const;
-
-    AudioFrameBuffer readCubicInterpolated(Stepper& stepper,
+  AudioFrameBuffer readHermiteInterpolated(Stepper& stepper,
                                            size_t requestedLen,
                                            size_t limitMin,
                                            size_t limitMax,
                                            bool reverse) const;
 
-    AudioFrameBuffer readHermiteInterpolated(Stepper& stepper,
-                                             size_t requestedLen,
-                                             size_t limitMin,
-                                             size_t limitMax,
-                                             bool reverse) const;
-
 public:
-    /**
-     * @brief Constructor
-     */
-    Sample() = default;
+  /**
+   * @brief Constructor
+   */
+  Sample() = default;
 
-    /**
-     * @brief Destructor
-     */
-    virtual ~Sample() noexcept = default;
+  /**
+   * @brief Destructor
+   */
+  virtual ~Sample() noexcept = default;
 
-    /**
-     * @brief Get the sample's Base Frequency
-     * @return Base frequency
-     */
-    uint16_t frequency() const noexcept
-    {
-        return m_frequency;
-    }
+  /**
+   * @brief Get the sample's Base Frequency
+   * @return Base frequency
+   */
+  uint16_t frequency() const noexcept
+  {
+    return m_frequency;
+  }
 
-    /**
-     * @brief Get the sample's default volume
-     * @return Default volume
-     */
-    uint8_t volume() const noexcept
-    {
-        return m_volume;
-    }
+  /**
+   * @brief Get the sample's default volume
+   * @return Default volume
+   */
+  uint8_t volume() const noexcept
+  {
+    return m_volume;
+  }
 
-    /**
-     * @brief Get the sample's name
-     * @return Sample's name
-     */
-    std::string title() const
-    {
-        return m_title;
-    }
+  /**
+   * @brief Get the sample's name
+   * @return Sample's name
+   */
+  std::string title() const
+  {
+    return m_title;
+  }
 
-    /**
-     * @brief Get the sample's length
-     * @return The sample's length
-     */
-    size_t length() const noexcept
-    {
-        return m_data.size();
-    }
+  /**
+   * @brief Get the sample's length
+   * @return The sample's length
+   */
+  size_t length() const noexcept
+  {
+    return m_data.size();
+  }
 
-    AudioFrameBuffer read(Interpolation inter,
-                          Stepper& stepper,
-                          size_t requestedLen,
-                          size_t limitMin,
-                          size_t limitMax,
-                          bool reverse) const;
+  AudioFrameBuffer read(Interpolation inter,
+                        Stepper& stepper,
+                        size_t requestedLen,
+                        size_t limitMin,
+                        size_t limitMax,
+                        bool reverse) const;
 
 protected:
-    typedef BasicSampleFrame::Vector::iterator Iterator;
+  typedef BasicSampleFrame::Vector::iterator Iterator;
 
-    /**
-     * @brief Set m_frequency
-     * @param[in] f The new frequency value
-     */
-    void setFrequency(uint16_t f) noexcept
-    {
-        m_frequency = f;
-    }
+  /**
+   * @brief Set m_frequency
+   * @param[in] f The new frequency value
+   */
+  void setFrequency(uint16_t f) noexcept
+  {
+    m_frequency = f;
+  }
 
-    /**
-     * @brief Get data start iterator
-     * @return Data start iterator
-     */
-    inline Iterator beginIterator() noexcept
-    {
-        return m_data.begin();
-    }
+  /**
+   * @brief Get data start iterator
+   * @return Data start iterator
+   */
+  inline Iterator beginIterator() noexcept
+  {
+    return m_data.begin();
+  }
 
-    /**
-     * @brief Get data end iterator
-     * @return Data end iterator
-     */
-    inline Iterator endIterator() noexcept
-    {
-        return m_data.end();
-    }
+  /**
+   * @brief Get data end iterator
+   * @return Data end iterator
+   */
+  inline Iterator endIterator() noexcept
+  {
+    return m_data.end();
+  }
 
-    /**
-     * @brief Set the sample's name
-     * @param[in] t The new name
-     */
-    void setTitle(const std::string& t)
-    {
-        m_title = t;
-    }
+  /**
+   * @brief Set the sample's name
+   * @param[in] t The new name
+   */
+  void setTitle(const std::string& t)
+  {
+    m_title = t;
+  }
 
-    /**
-     * @brief Set the sample's filename
-     * @param[in] f The new filename
-     */
-    void setFilename(const std::string& f)
-    {
-        m_filename = f;
-    }
+  /**
+   * @brief Set the sample's filename
+   * @param[in] f The new filename
+   */
+  void setFilename(const std::string& f)
+  {
+    m_filename = f;
+  }
 
-    /**
-     * @brief Set the sample's default volume
-     * @param[in] v The new volume
-     */
-    void setVolume(uint8_t v) noexcept
-    {
-        m_volume = v;
-    }
+  /**
+   * @brief Set the sample's default volume
+   * @param[in] v The new volume
+   */
+  void setVolume(uint8_t v) noexcept
+  {
+    m_volume = v;
+  }
 
-    /**
-     * @brief Resize the data
-     * @param[in] size New size
-     */
-    inline void resizeData(size_t size)
-    {
-        m_data.resize(size);
-    }
+  /**
+   * @brief Resize the data
+   * @param[in] size New size
+   */
+  inline void resizeData(size_t size)
+  {
+    m_data.resize( size );
+  }
 
-    void setData(const BasicSampleFrame::Vector& data)
-    {
-        m_data = data;
-    }
+  void setData(const BasicSampleFrame::Vector& data)
+  {
+    m_data = data;
+  }
 
-    void setData(BasicSampleFrame::Vector&& data)
-    {
-        m_data = std::move(data);
-    }
+  void setData(BasicSampleFrame::Vector&& data)
+  {
+    m_data = std::move( data );
+  }
 
-    /**
-     * @brief Get the logger
-     * @return Logger with name "sample"
-     */
-    static light4cxx::Logger* logger();
+  /**
+   * @brief Get the logger
+   * @return Logger with name "sample"
+   */
+  static light4cxx::Logger* logger();
 };
 
 AudioFrameBuffer read(
-    const Sample& smp,
-    Sample::LoopType loopType,
-    Sample::Interpolation inter,
-    Stepper& stepper,
-    size_t requestedLen,
-    bool& reverse,
-    size_t loopStart,
-    size_t loopEnd,
-    bool preprocess);
+  const Sample& smp,
+  Sample::LoopType loopType,
+  Sample::Interpolation inter,
+  Stepper& stepper,
+  size_t requestedLen,
+  bool& reverse,
+  size_t loopStart,
+  size_t loopEnd,
+  bool preprocess);
 
 inline bool mix(
-    const Sample& smp,
-    Sample::LoopType loopType,
-    Sample::Interpolation inter,
-    Stepper& stepper,
-    MixerFrameBuffer& buffer,
-    bool& reverse,
-    size_t loopStart,
-    size_t loopEnd,
-    int factorLeft,
-    int factorRight,
-    int rightShift,
-    bool preprocess)
+  const Sample& smp,
+  Sample::LoopType loopType,
+  Sample::Interpolation inter,
+  Stepper& stepper,
+  MixerFrameBuffer& buffer,
+  bool& reverse,
+  size_t loopStart,
+  size_t loopEnd,
+  int factorLeft,
+  int factorRight,
+  int rightShift,
+  bool preprocess)
 {
-    auto tmpBuf = read(
-        smp,
-        loopType,
-        inter,
-        stepper,
-        buffer.size(),
-        reverse,
-        loopStart,
-        loopEnd,
-        preprocess);
+  auto tmpBuf = read(
+    smp,
+    loopType,
+    inter,
+    stepper,
+    buffer.size(),
+    reverse,
+    loopStart,
+    loopEnd,
+    preprocess );
 
-    BOOST_ASSERT(tmpBuf.size() <= buffer.size());
+  BOOST_ASSERT( tmpBuf.size() <= buffer.size() );
 
-    for( size_t i = 0; i < tmpBuf.size(); ++i )
-    {
-        buffer[i].add(tmpBuf[i], factorLeft, factorRight, rightShift);
-    }
+  for( size_t i = 0; i < tmpBuf.size(); ++i )
+  {
+    buffer[i].add( tmpBuf[i], factorLeft, factorRight, rightShift );
+  }
 
-    return buffer.size() == tmpBuf.size();
+  return buffer.size() == tmpBuf.size();
 }
 
 inline bool mix(
-    const Sample& smp,
-    Sample::LoopType loopType,
-    Sample::Interpolation inter,
-    Stepper& stepper,
-    MixerFrameBuffer& buffer,
-    size_t loopStart,
-    size_t loopEnd,
-    int factorLeft,
-    int factorRight,
-    int rightShift,
-    bool preprocess)
+  const Sample& smp,
+  Sample::LoopType loopType,
+  Sample::Interpolation inter,
+  Stepper& stepper,
+  MixerFrameBuffer& buffer,
+  size_t loopStart,
+  size_t loopEnd,
+  int factorLeft,
+  int factorRight,
+  int rightShift,
+  bool preprocess)
 {
-    BOOST_ASSERT(loopType != Sample::LoopType::Pingpong);
+  BOOST_ASSERT( loopType != Sample::LoopType::Pingpong );
 
-    bool reverseTmp = false;
-    return mix(
-        smp,
-        loopType,
-        inter,
-        stepper,
-        buffer,
-        reverseTmp,
-        loopStart,
-        loopEnd,
-        factorLeft,
-        factorRight,
-        rightShift,
-        preprocess
-              );
+  bool reverseTmp = false;
+  return mix(
+    smp,
+    loopType,
+    inter,
+    stepper,
+    buffer,
+    reverseTmp,
+    loopStart,
+    loopEnd,
+    factorLeft,
+    factorRight,
+    rightShift,
+    preprocess
+            );
 }
 
 /**

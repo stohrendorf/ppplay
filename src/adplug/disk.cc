@@ -24,73 +24,73 @@
 
 namespace
 {
-light4cxx::Logger* logger = light4cxx::Logger::get("badplay.output.disk");
+light4cxx::Logger* logger = light4cxx::Logger::get( "badplay.output.disk" );
 constexpr const size_t BufferSize = 512;
 }
 
 DiskWriter::DiskWriter(const char* filename, uint32_t nfreq)
-    : EmuPlayer(nfreq, BufferSize)
-      , m_file(filename, FileStream::Mode::Write)
-      , m_bytesWritten(0)
+  : EmuPlayer( nfreq, BufferSize )
+  , m_file( filename, FileStream::Mode::Write )
+  , m_bytesWritten( 0 )
 {
-    if( !m_file )
-    {
-        logger->fatal(L4CXX_LOCATION, "cannot open file for output -- %s", filename);
-        BOOST_THROW_EXCEPTION(std::runtime_error("cannot open file for output"));
-    }
+  if( !m_file )
+  {
+    logger->fatal( L4CXX_LOCATION, "cannot open file for output -- %s", filename );
+    BOOST_THROW_EXCEPTION( std::runtime_error( "cannot open file for output" ) );
+  }
 
-    logger->info(L4CXX_LOCATION, "Outputting to %s", filename);
+  logger->info( L4CXX_LOCATION, "Outputting to %s", filename );
 
-    // Write Microsoft RIFF WAVE header
-    m_file.write("RIFF", 4);
-    uint32_t t32;
-    t32 = 36;
-    m_file << t32;
-    m_file.write("WAVEfmt ", 8);
-    t32 = 16;
-    m_file << t32;
-    uint16_t t16;
-    t16 = 1;
-    m_file << t16;
-    t16 = 2;
-    m_file << t16;
-    m_file << nfreq;
-    nfreq *= 4;
-    m_file << nfreq;
-    t16 = 4;
-    m_file << t16;
-    t16 = 16;
-    m_file << t16;
-    m_file.write("data", 4);
-    t32 = 0;
-    m_file << t32;
+  // Write Microsoft RIFF WAVE header
+  m_file.write( "RIFF", 4 );
+  uint32_t t32;
+  t32 = 36;
+  m_file << t32;
+  m_file.write( "WAVEfmt ", 8 );
+  t32 = 16;
+  m_file << t32;
+  uint16_t t16;
+  t16 = 1;
+  m_file << t16;
+  t16 = 2;
+  m_file << t16;
+  m_file << nfreq;
+  nfreq *= 4;
+  m_file << nfreq;
+  t16 = 4;
+  m_file << t16;
+  t16 = 16;
+  m_file << t16;
+  m_file.write( "data", 4 );
+  t32 = 0;
+  m_file << t32;
 }
 
 DiskWriter::~DiskWriter()
 {
-    if( !m_file )
-    {
-        return;
-    }
+  if( !m_file )
+  {
+    return;
+  }
 
-    if( m_bytesWritten % 2 )
-    { // Wave data must end on an even byte boundary
-        uint8_t tmp = 0;
-        m_file << tmp;
-        m_bytesWritten++;
-    }
+  if( m_bytesWritten % 2 )
+  { // Wave data must end on an even byte boundary
+    uint8_t tmp = 0;
+    m_file << tmp;
+    m_bytesWritten++;
+  }
 
-    // Write file sizes
-    m_file.seek(40);
-    m_file << m_bytesWritten;
-    m_bytesWritten += 36; // make absolute filesize (add header size)
-    m_file.seek(4);
-    m_file << m_bytesWritten;
+  // Write file sizes
+  m_file.seek( 40 );
+  m_file << m_bytesWritten;
+  m_bytesWritten += 36; // make absolute filesize (add header size)
+  m_file.seek( 4 );
+  m_file << m_bytesWritten;
 }
 
 void DiskWriter::output(const std::vector<int16_t>& buf)
 {
-    m_file.write(buf.data(), buf.size());
+  m_file.write( buf.data(), buf.size() );
 
-    m_bytesWritten += buf.size() * 2;
+  m_bytesWritten += buf.size() * 2;
 }

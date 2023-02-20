@@ -24,47 +24,47 @@
 #include "hsc.h"
 
 class MtkPlayer
-    : public HscPlayer
+  : public HscPlayer
 {
 public:
-    DISABLE_COPY(MtkPlayer)
+  DISABLE_COPY( MtkPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    MtkPlayer()
-        : HscPlayer(true)
-    {
-    }
+  MtkPlayer()
+    : HscPlayer( true )
+  {
+  }
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    std::string type() const override
-    {
-        return "MPU-401 Trakker";
-    }
+  std::string type() const override
+  {
+    return "MPU-401 Trakker";
+  }
 
-    std::string title() const override
-    {
-        return m_title;
-    }
+  std::string title() const override
+  {
+    return m_title;
+  }
 
-    std::string author() const override
-    {
-        return m_composer;
-    }
+  std::string author() const override
+  {
+    return m_composer;
+  }
 
-    size_t instrumentCount() const override
-    {
-        return 128;
-    }
+  size_t instrumentCount() const override
+  {
+    return 128;
+  }
 
-    std::string instrumentTitle(size_t n) const override
-    {
-        return m_instrumentNames[n];
-    }
+  std::string instrumentTitle(size_t n) const override
+  {
+    return m_instrumentNames[n];
+  }
 
 private:
-    std::string m_title{};
-    std::string m_composer{};
-    std::string m_instrumentNames[0x80]{};
+  std::string m_title{};
+  std::string m_composer{};
+  std::string m_instrumentNames[0x80]{};
 };

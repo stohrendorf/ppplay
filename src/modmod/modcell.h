@@ -34,34 +34,34 @@ namespace mod
 class ModCell : public IPatternCell
 {
 public:
-    ModCell();
-    /**
-     * @brief Load this cell from a stream
-     * @param[in,out] str Reference to the stream to load from
-     * @retval true on success
-     * @retval false if an error occured
-     */
-    bool load(Stream* str);
-    void clear() override;
-    std::string trackerString() const override;
-    uint8_t sampleNumber() const;
-    uint16_t period() const;
-    uint8_t effect() const;
-    uint8_t effectValue() const;
-    void reset();
-    AbstractArchive& serialize(AbstractArchive* data) override;
+  ModCell();
+  /**
+   * @brief Load this cell from a stream
+   * @param[in,out] str Reference to the stream to load from
+   * @retval true on success
+   * @retval false if an error occured
+   */
+  bool load(Stream* str);
+  void clear() override;
+  std::string trackerString() const override;
+  uint8_t sampleNumber() const;
+  uint16_t period() const;
+  uint8_t effect() const;
+  uint8_t effectValue() const;
+  void reset();
+  AbstractArchive& serialize(AbstractArchive* data) override;
 private:
-    uint8_t m_sampleNumber;
-    uint16_t m_period;
-    uint8_t m_effect;
-    uint8_t m_effectValue;
-    std::string m_note;
+  uint8_t m_sampleNumber;
+  uint16_t m_period;
+  uint8_t m_effect;
+  uint8_t m_effectValue;
+  std::string m_note;
 protected:
-    /**
-     * @brief Get the logger
-     * @return Child logger with attached ".mod"
-     */
-    static light4cxx::Logger* logger();
+  /**
+   * @brief Get the logger
+   * @return Child logger with attached ".mod"
+   */
+  static light4cxx::Logger* logger();
 };
 }
 }

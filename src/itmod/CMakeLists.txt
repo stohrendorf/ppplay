@@ -7,5 +7,7 @@ add_library( ppplay_input_it STATIC
              slavechannel.cpp
              hostchannel.h
              filters.h
+             itdata.h
+             itdata.cpp
              )
 target_link_libraries( ppplay_input_it PUBLIC ppplay_module_base ppplay_core )

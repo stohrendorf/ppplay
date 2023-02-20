@@ -28,40 +28,40 @@
 class PlayerDesc
 {
 public:
-    typedef Player* (* Factory)();
+  typedef Player* (* Factory)();
 
-    Factory factory = nullptr;
-    std::string filetype{};
+  Factory factory = nullptr;
+  std::string filetype{};
 
-    PlayerDesc() = default;
+  PlayerDesc() = default;
 
-    PlayerDesc(Factory f, const std::string& type, const std::vector<std::string>& ext);
+  PlayerDesc(Factory f, const std::string& type, const std::vector<std::string>& ext);
 
-    ~PlayerDesc() = default;
+  ~PlayerDesc() = default;
 
-    std::string get_extension(size_t n) const;
+  std::string get_extension(size_t n) const;
 
 private:
-    std::vector<std::string> extensions{};
+  std::vector<std::string> extensions{};
 };
 
 class Players
 {
 private:
-    std::list<const PlayerDesc*> m_descriptions{};
+  std::list<const PlayerDesc*> m_descriptions{};
 public:
-    void addPlayerDescription(const PlayerDesc* desc)
-    {
-        m_descriptions.push_back(desc);
-    }
+  void addPlayerDescription(const PlayerDesc* desc)
+  {
+    m_descriptions.push_back( desc );
+  }
 
-    std::list<const PlayerDesc*>::const_iterator begin() const
-    {
-        return m_descriptions.cbegin();
-    }
+  std::list<const PlayerDesc*>::const_iterator begin() const
+  {
+    return m_descriptions.cbegin();
+  }
 
-    std::list<const PlayerDesc*>::const_iterator end() const
-    {
-        return m_descriptions.cend();
-    }
+  std::list<const PlayerDesc*>::const_iterator end() const
+  {
+    return m_descriptions.cend();
+  }
 };

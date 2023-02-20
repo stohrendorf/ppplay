@@ -23,82 +23,82 @@
 
 namespace
 {
-light4cxx::Logger* logger = light4cxx::Logger::get("badplay.output.sdl");
+light4cxx::Logger* logger = light4cxx::Logger::get( "badplay.output.sdl" );
 }
 
 SDLPlayer::SDLPlayer(int freq, size_t bufsize)
-    : m_interp(freq, opl::Opl3::SampleRate)
+  : m_interp( opl::Opl3::SampleRate, freq )
 {
-    memset(&m_spec, 0x00, sizeof(SDL_AudioSpec));
+  memset( &m_spec, 0x00, sizeof(SDL_AudioSpec) );
 
-    if( SDL_Init(SDL_INIT_AUDIO) < 0 )
-    {
-        logger->fatal(L4CXX_LOCATION, "unable to initialize SDL -- %s", SDL_GetError());
-        exit(EXIT_FAILURE);
-    }
+  if( SDL_Init( SDL_INIT_AUDIO ) < 0 )
+  {
+    logger->fatal( L4CXX_LOCATION, "unable to initialize SDL -- %s", SDL_GetError() );
+    exit( EXIT_FAILURE );
+  }
 
-    m_spec.freq = freq;
-    m_spec.format = AUDIO_S16SYS;
-    m_spec.channels = 2;
-    BOOST_ASSERT(bufsize <= std::numeric_limits<Uint16>::max());
-    m_spec.samples = static_cast<Uint16>(bufsize);
-    m_spec.callback = &SDLPlayer::callback;
-    m_spec.userdata = this;
+  m_spec.freq = freq;
+  m_spec.format = AUDIO_S16SYS;
+  m_spec.channels = 2;
+  BOOST_ASSERT( bufsize <= std::numeric_limits<Uint16>::max() );
+  m_spec.samples = static_cast<Uint16>(bufsize);
+  m_spec.callback = &SDLPlayer::callback;
+  m_spec.userdata = this;
 
-    if( SDL_OpenAudio(&m_spec, &m_spec) < 0 )
-    {
-        logger->fatal(L4CXX_LOCATION, "unable to open audio -- %s", SDL_GetError());
-        exit(EXIT_FAILURE);
-    }
+  if( SDL_OpenAudio( &m_spec, &m_spec ) < 0 )
+  {
+    logger->fatal( L4CXX_LOCATION, "unable to open audio -- %s", SDL_GetError() );
+    exit( EXIT_FAILURE );
+  }
 
-    logger->debug(L4CXX_LOCATION, "got audio buffer size -- %d", m_spec.size);
+  logger->debug( L4CXX_LOCATION, "got audio buffer size -- %d", m_spec.size );
 }
 
 SDLPlayer::~SDLPlayer()
 {
-    if( !SDL_WasInit(SDL_INIT_AUDIO) )
-    {
-        return;
-    }
+  if( !SDL_WasInit( SDL_INIT_AUDIO ) )
+  {
+    return;
+  }
 
-    SDL_CloseAudio();
-    SDL_Quit();
+  SDL_CloseAudio();
+  SDL_Quit();
 }
 
 void SDLPlayer::frame()
 {
-    SDL_PauseAudio(0);
-    SDL_Delay(m_spec.freq / (m_spec.size / 4));
+  SDL_PauseAudio( 0 );
+  SDL_Delay( m_spec.freq / (m_spec.size / 4) );
 }
 
 void SDLPlayer::callback(void* userdata, Uint8* audiobuf, int byteLen)
 {
-    auto self = reinterpret_cast<SDLPlayer*>(userdata);
-    static long framesUntilUpdate = 0;
-    size_t framesToWrite = byteLen / 4u;
-    auto* bufPtr = reinterpret_cast<int16_t*>(audiobuf);
-    // Prepare audiobuf with emulator output
-    while( framesToWrite > 0 )
+  auto self = reinterpret_cast<SDLPlayer*>(userdata);
+  static long framesUntilUpdate = 0;
+  size_t framesToWrite = byteLen / 4u;
+  auto* bufPtr = reinterpret_cast<int16_t*>(audiobuf);
+  // Prepare audiobuf with emulator output
+  while( framesToWrite > 0 )
+  {
+    while( framesUntilUpdate <= 0 )
     {
-        while( framesUntilUpdate <= 0 )
-        {
-            self->setIsPlaying(self->getPlayer()->update());
-            framesUntilUpdate += self->getPlayer()->framesUntilUpdate();
-        }
-
-        std::array<int16_t, 4> samples;
-        self->getPlayer()->read(&samples);
-        bufPtr[0] = ppp::clip(samples[0] + samples[2], -32768, 32767);
-        bufPtr[1] = ppp::clip(samples[1] + samples[3], -32768, 32767);
-        bufPtr += 2;
-
-        if( self->m_interp.next() == 2 )
-        {
-            self->getPlayer()->read(nullptr); // skip a sample
-            --framesUntilUpdate;
-        }
-        self->m_interp = 0;
-        --framesUntilUpdate;
-        --framesToWrite;
+      self->setIsPlaying( self->getPlayer()->update() );
+      framesUntilUpdate += self->getPlayer()->framesUntilUpdate();
     }
+
+    std::array<int16_t, 4> samples;
+    self->getPlayer()->read( &samples );
+    bufPtr[0] = ppp::clip( samples[0] + samples[2], -32768, 32767 );
+    bufPtr[1] = ppp::clip( samples[1] + samples[3], -32768, 32767 );
+    bufPtr += 2;
+
+    if( self->m_interp.next() == 2 )
+    {
+      self->getPlayer()->read( nullptr ); // skip a sample
+      --framesUntilUpdate;
+    }
+    self->m_interp = 0;
+    --framesUntilUpdate;
+    --framesToWrite;
+  }
 }

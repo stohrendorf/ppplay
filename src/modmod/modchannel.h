@@ -46,124 +46,124 @@ class ModCell;
 class ModSample;
 
 class ModChannel
-    : public ISerializable
+  : public ISerializable
 {
 private:
-    ModModule* m_module;
-    ModCell* m_currentCell;
-    uint8_t m_volume;
-    uint8_t m_physVolume;
-    uint8_t m_finetune;
-    uint8_t m_tremoloWaveform;
-    uint8_t m_tremoloPhase;
-    uint8_t m_vibratoWaveform;
-    uint8_t m_vibratoPhase;
-    bool m_glissando;
-    uint16_t m_period;
-    uint16_t m_physPeriod;
-    uint16_t m_portaTarget;
-    RememberByte<true> m_lastVibratoFx;
-    RememberByte<true> m_lastTremoloFx;
-    RememberByte<false> m_portaSpeed;
-    RememberByte<false> m_lastOffsetFx;
-    uint8_t m_sampleIndex;
-    uint8_t m_lowMask;
-    bool m_portaDirUp;
-    Stepper m_stepper;
-    uint8_t m_panning;
+  ModModule* m_module;
+  ModCell* m_currentCell;
+  uint8_t m_volume;
+  uint8_t m_physVolume;
+  uint8_t m_finetune;
+  uint8_t m_tremoloWaveform;
+  uint8_t m_tremoloPhase;
+  uint8_t m_vibratoWaveform;
+  uint8_t m_vibratoPhase;
+  bool m_glissando;
+  uint16_t m_period;
+  uint16_t m_physPeriod;
+  uint16_t m_portaTarget;
+  RememberByte<true> m_lastVibratoFx;
+  RememberByte<true> m_lastTremoloFx;
+  RememberByte<false> m_portaSpeed;
+  RememberByte<false> m_lastOffsetFx;
+  uint8_t m_sampleIndex;
+  uint8_t m_lowMask;
+  bool m_portaDirUp;
+  Stepper m_stepper;
+  uint8_t m_panning;
 
-    ChannelState m_state;
+  ChannelState m_state;
 
-    void setCellPeriod();
+  void setCellPeriod();
 
-    void setTonePortaTarget();
+  void setTonePortaTarget();
 
 public:
-    DISABLE_COPY(ModChannel)
+  DISABLE_COPY( ModChannel )
 
-    explicit ModChannel(ModModule* parent, bool isLeftChan);
+  explicit ModChannel(ModModule* parent, bool isLeftChan);
 
-    ~ModChannel() override;
+  ~ModChannel() override;
 
-    AbstractArchive& serialize(AbstractArchive* data) override;
+  AbstractArchive& serialize(AbstractArchive* data) override;
 
-    void update(const ModCell& cell, bool patDelay);
+  void update(const ModCell& cell, bool patDelay);
 
-    ChannelState status() const;
+  ChannelState status() const;
 
-    void mixTick(const MixerFrameBufferPtr& mixBuffer);
+  void mixTick(const MixerFrameBufferPtr& mixBuffer);
 
-    void updateStatus();
+  void updateStatus();
 
 private:
-    void fxArpeggio(uint8_t fxByte);
+  void fxArpeggio(uint8_t fxByte);
 
-    void fxPortaUp(uint8_t fxByte);
+  void fxPortaUp(uint8_t fxByte);
 
-    void fxPortaDown(uint8_t fxByte);
+  void fxPortaDown(uint8_t fxByte);
 
-    void fxPorta(uint8_t fxByte);
+  void fxPorta(uint8_t fxByte);
 
-    void fxVibrato(uint8_t fxByte);
+  void fxVibrato(uint8_t fxByte);
 
-    void fxPortaVolSlide(uint8_t fxByte);
+  void fxPortaVolSlide(uint8_t fxByte);
 
-    void fxVibVolSlide(uint8_t fxByte);
+  void fxVibVolSlide(uint8_t fxByte);
 
-    void fxTremolo(uint8_t fxByte);
+  void fxTremolo(uint8_t fxByte);
 
-    void fxSetFinePan(uint8_t fxByte);
+  void fxSetFinePan(uint8_t fxByte);
 
-    void fxOffset(uint8_t fxByte);
+  void fxOffset(uint8_t fxByte);
 
-    void fxVolSlide(uint8_t fxByte);
+  void fxVolSlide(uint8_t fxByte);
 
-    void fxPosJmp(uint8_t fxByte);
+  void fxPosJmp(uint8_t fxByte);
 
-    void fxSetVolume(uint8_t fxByte);
+  void fxSetVolume(uint8_t fxByte);
 
-    void fxPatBreak(uint8_t fxByte);
+  void fxPatBreak(uint8_t fxByte);
 
-    void efxFineSlideUp(uint8_t fxByte);
+  void efxFineSlideUp(uint8_t fxByte);
 
-    void efxFineSlideDown(uint8_t fxByte);
+  void efxFineSlideDown(uint8_t fxByte);
 
-    void efxGlissando(uint8_t fxByte);
+  void efxGlissando(uint8_t fxByte);
 
-    void efxSetVibWaveform(uint8_t fxByte);
+  void efxSetVibWaveform(uint8_t fxByte);
 
-    void efxSetFinetune(uint8_t fxByte);
+  void efxSetFinetune(uint8_t fxByte);
 
-    void efxPatLoop(uint8_t fxByte);
+  void efxPatLoop(uint8_t fxByte);
 
-    void efxSetTremoloWaveform(uint8_t fxByte);
+  void efxSetTremoloWaveform(uint8_t fxByte);
 
-    void efxSetPanning(uint8_t fxByte);
+  void efxSetPanning(uint8_t fxByte);
 
-    void efxRetrigger(uint8_t fxByte);
+  void efxRetrigger(uint8_t fxByte);
 
-    void efxFineVolSlideUp(uint8_t fxByte);
+  void efxFineVolSlideUp(uint8_t fxByte);
 
-    void efxFineVolSlideDown(uint8_t fxByte);
+  void efxFineVolSlideDown(uint8_t fxByte);
 
-    void efxNoteCut(uint8_t fxByte);
+  void efxNoteCut(uint8_t fxByte);
 
-    void efxNoteDelay(uint8_t fxByte);
+  void efxNoteDelay(uint8_t fxByte);
 
-    void efxPatDelay(uint8_t fxByte);
+  void efxPatDelay(uint8_t fxByte);
 
-    void fxSetSpeed(uint8_t fxByte);
+  void fxSetSpeed(uint8_t fxByte);
 
-    const std::unique_ptr<ModSample>& currentSample() const;
+  const std::unique_ptr<ModSample>& currentSample() const;
 
-    void applyGlissando();
+  void applyGlissando();
 
 protected:
-    /**
-     * @brief Get the logger
-     * @return Child logger with attached ".mod"
-     */
-    static light4cxx::Logger* logger();
+  /**
+   * @brief Get the logger
+   * @return Child logger with attached ".mod"
+   */
+  static light4cxx::Logger* logger();
 };
 }
 }

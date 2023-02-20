@@ -23,20 +23,20 @@
 #include "output.h"
 
 class SDLPlayer
-    : public PlayerHandler
+  : public PlayerHandler
 {
 private:
-    SDL_AudioSpec m_spec{};
-    ppp::Stepper m_interp;
+  SDL_AudioSpec m_spec{};
+  ppp::Stepper m_interp;
 
-    static void callback(void*, Uint8*, int byteLen);
+  static void callback(void*, Uint8*, int byteLen);
 
 public:
-    DISABLE_COPY(SDLPlayer)
+  DISABLE_COPY( SDLPlayer )
 
-    SDLPlayer(int freq, size_t bufsize);
+  SDLPlayer(int freq, size_t bufsize);
 
-    ~SDLPlayer() override;
+  ~SDLPlayer() override;
 
-    void frame() override;
+  void frame() override;
 };

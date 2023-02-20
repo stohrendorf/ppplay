@@ -24,44 +24,44 @@
 #include "player.h"
 
 class BamPlayer
-    : public Player
+  : public Player
 {
 public:
-    DISABLE_COPY(BamPlayer)
+  DISABLE_COPY( BamPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    BamPlayer() = default;
+  BamPlayer() = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    bool update() override;
+  bool update() override;
 
-    void rewind(const boost::optional<size_t>& subsong) override;
+  void rewind(const boost::optional<size_t>& subsong) override;
 
-    size_t framesUntilUpdate() const override
-    {
-        return SampleRate / 25;
-    }
+  size_t framesUntilUpdate() const override
+  {
+    return SampleRate / 25;
+  }
 
-    std::string type() const override
-    {
-        return "Bob's Adlib Music";
-    }
+  std::string type() const override
+  {
+    return "Bob's Adlib Music";
+  }
 
 private:
-    std::vector<uint8_t> m_song{};
-    uint8_t m_delay = 0;
-    size_t m_position = 0;
-    size_t m_goSub = 0;
-    bool m_songEnd = false;
-    bool m_chorus = false;
+  std::vector<uint8_t> m_song{};
+  uint8_t m_delay = 0;
+  size_t m_position = 0;
+  size_t m_goSub = 0;
+  bool m_songEnd = false;
+  bool m_chorus = false;
 
-    struct Label
-    {
-        size_t target = 0;
-        bool defined = true;
-        uint8_t count = 0xff;
-    };
-    std::array<Label, 16> m_labels{{}};
+  struct Label
+  {
+    size_t target = 0;
+    bool defined = true;
+    uint8_t count = 0xff;
+  };
+  std::array<Label, 16> m_labels{ {} };
 };

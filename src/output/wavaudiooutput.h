@@ -29,43 +29,43 @@
  */
 
 class WavAudioOutput
-    : public AbstractAudioOutput
+  : public AbstractAudioOutput
 {
 private:
-    std::ofstream m_file;
-    std::string m_filename;
-    std::thread m_encoderThread;
-    //! @brief Whether the output is paused
-    bool m_paused;
-    mutable std::mutex m_mutex;
+  std::ofstream m_file;
+  std::string m_filename;
+  std::thread m_encoderThread;
+  //! @brief Whether the output is paused
+  bool m_paused;
+  mutable std::mutex m_mutex;
 
-    void encodeThread();
+  void encodeThread();
 
-    uint16_t internal_volumeRight() const override;
+  uint16_t internal_volumeRight() const override;
 
-    uint16_t internal_volumeLeft() const override;
+  uint16_t internal_volumeLeft() const override;
 
-    void internal_pause() override;
+  void internal_pause() override;
 
-    void internal_play() override;
+  void internal_play() override;
 
-    bool internal_paused() const override;
+  bool internal_paused() const override;
 
-    bool internal_playing() const override;
+  bool internal_playing() const override;
 
-    int internal_init(int desiredFrq) override;
+  int internal_init(int desiredFrq) override;
 
 public:
-    DISABLE_COPY(WavAudioOutput)
+  DISABLE_COPY( WavAudioOutput )
 
-    WavAudioOutput() = delete;
+  WavAudioOutput() = delete;
 
-    explicit WavAudioOutput(const AbstractAudioSource::WeakPtr& src, const std::string& filename);
+  explicit WavAudioOutput(const AbstractAudioSource::WeakPtr& src, const std::string& filename);
 
-    ~WavAudioOutput() override;
+  ~WavAudioOutput() override;
 
 protected:
-    static light4cxx::Logger* logger();
+  static light4cxx::Logger* logger();
 };
 
 /**

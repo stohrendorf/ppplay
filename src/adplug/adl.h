@@ -26,65 +26,65 @@
 class AdlibDriver;
 
 class AdlPlayer
-    : public Player
+  : public Player
 {
 public:
-    DISABLE_COPY(AdlPlayer)
+  DISABLE_COPY( AdlPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    AdlPlayer();
+  AdlPlayer();
 
-    ~AdlPlayer() override = default;
+  ~AdlPlayer() override = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    bool update() override;
+  bool update() override;
 
-    void rewind(const boost::optional<size_t>& subsong) override;
+  void rewind(const boost::optional<size_t>& subsong) override;
 
-    // refresh rate is fixed at 72Hz
-    size_t framesUntilUpdate() const override
-    {
-        return SampleRate / 72;
-    }
+  // refresh rate is fixed at 72Hz
+  size_t framesUntilUpdate() const override
+  {
+    return SampleRate / 72;
+  }
 
-    size_t subSongCount() const override;
+  size_t subSongCount() const override;
 
-    size_t currentSubSong() const override
-    {
-        return m_currentSubSong;
-    }
+  size_t currentSubSong() const override
+  {
+    return m_currentSubSong;
+  }
 
-    std::string type() const override
-    {
-        return "Westwood ADL";
-    }
+  std::string type() const override
+  {
+    return "Westwood ADL";
+  }
 
 private:
-    size_t m_subSongCount = 0;
-    size_t m_currentSubSong = 0;
+  size_t m_subSongCount = 0;
+  size_t m_currentSubSong = 0;
 
-    std::unique_ptr<AdlibDriver> m_driver;
+  std::unique_ptr<AdlibDriver> m_driver;
 
-    std::array<uint8_t, 120> m_trackEntries{{}};
-    std::vector<uint8_t> m_soundDataPtr{};
-    int m_sfxPlayingSound = -1;
+  std::array<uint8_t, 120> m_trackEntries{ {} };
+  std::vector<uint8_t> m_soundDataPtr{};
+  int m_sfxPlayingSound = -1;
 
-    uint8_t m_sfxPriority = 0;
-    uint8_t m_sfxFourthByteOfSong = 0;
+  uint8_t m_sfxPriority = 0;
+  uint8_t m_sfxFourthByteOfSong = 0;
 
-    bool init();
+  bool init();
 
-    void process();
+  void process();
 
-    void playTrack(uint8_t track);
+  void playTrack(uint8_t track);
 
-    void playSoundEffect(uint8_t track);
+  void playSoundEffect(uint8_t track);
 
-    void play(uint8_t track);
+  void play(uint8_t track);
 
-    void unk1();
+  void unk1();
 
-    void unk2();
+  void unk2();
 };

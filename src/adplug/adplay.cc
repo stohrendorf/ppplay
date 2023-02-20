@@ -36,7 +36,7 @@
 
 namespace
 {
-light4cxx::Logger* logger = light4cxx::Logger::get("badplay.main");
+light4cxx::Logger* logger = light4cxx::Logger::get( "badplay.main" );
 }
 
 static const char* program_name;
@@ -46,21 +46,21 @@ static std::unique_ptr<PlayerHandler> output; // global player object
 
 struct Configuration
 {
-    int buf_size;
-    int subsong;
-    std::string device;
-    bool playOnce, showinsts, songinfo, songmessage;
-    Outputs output;
-    int repeats;
+  int buf_size;
+  int subsong;
+  std::string device;
+  bool playOnce, showinsts, songinfo, songmessage;
+  Outputs output;
+  int repeats;
 };
 
 static Configuration cfg = {
-    2048,
-    -1,
-    std::string(),
-    true, false, false, false,
-    DEFAULT_DRIVER,
-    1
+  2048,
+  -1,
+  std::string(),
+  true, false, false, false,
+  DEFAULT_DRIVER,
+  1
 };
 
 /***** Local functions *****/
@@ -71,114 +71,120 @@ static std::string decode_switches(int argc, const char** argv)
  * Return the index of the first non-option argument.
  */
 {
-    boost::program_options::options_description options("General Options");
-    options.add_options()
-        ("buffer,b", boost::program_options::value<int>(&cfg.buf_size), "buffer size")
-        ("device,d", boost::program_options::value<std::string>(&cfg.device), "device file")
-        ("instruments,i", boost::program_options::bool_switch(&cfg.showinsts), "show instruments")
-        ("realtime,r", boost::program_options::bool_switch(&cfg.songinfo), "realtime song info")
-        ("message,m", boost::program_options::bool_switch(&cfg.songmessage), "song message")
-        ("subsong,s", boost::program_options::value<int>(&cfg.subsong)->default_value(0), "play subsong")
-        ("once,o", boost::program_options::bool_switch(&cfg.playOnce), "don't loop")
-        ("help,h", boost::program_options::bool_switch(), "display help")
-        ("version,V", boost::program_options::bool_switch(), "version information")
-        ("output,O", boost::program_options::value<std::string>(), "output mechanism")
-        ("quiet,q", boost::program_options::bool_switch(), "be more quiet")
-        ("verbose,v", boost::program_options::bool_switch(), "be more verbose")
-        ("repeats,R", boost::program_options::value<int>(&cfg.repeats))
-        ("melodic-bank", boost::program_options::value<std::string>()->default_value("HMIGM"), "Default melodic MIDI bank")
-        ("percussion-bank", boost::program_options::value<std::string>()->default_value("HMIGP"), "Default percussion MIDI bank")
-        ("list-banks", boost::program_options::bool_switch(), "List all MIDI banks")
-        ("file,f", boost::program_options::value<std::string>(), "File to play");
+  boost::program_options::options_description options( "General Options" );
+  options.add_options()
+           ( "buffer,b", boost::program_options::value<int>( &cfg.buf_size ), "buffer size" )
+           ( "device,d", boost::program_options::value<std::string>( &cfg.device ), "device file" )
+           ( "instruments,i", boost::program_options::bool_switch( &cfg.showinsts ), "show instruments" )
+           ( "realtime,r", boost::program_options::bool_switch( &cfg.songinfo ), "realtime song info" )
+           ( "message,m", boost::program_options::bool_switch( &cfg.songmessage ), "song message" )
+           ( "subsong,s", boost::program_options::value<int>( &cfg.subsong )->default_value( 0 ), "play subsong" )
+           ( "once,o", boost::program_options::bool_switch( &cfg.playOnce ), "don't loop" )
+           ( "help,h", boost::program_options::bool_switch(), "display help" )
+           ( "version,V", boost::program_options::bool_switch(), "version information" )
+           ( "output,O", boost::program_options::value<std::string>(), "output mechanism" )
+           ( "quiet,q", boost::program_options::bool_switch(), "be more quiet" )
+           ( "verbose,v", boost::program_options::bool_switch(), "be more verbose" )
+           ( "repeats,R", boost::program_options::value<int>( &cfg.repeats ) )
+           ( "melodic-bank",
+             boost::program_options::value<std::string>()->default_value( "HMIGM" ),
+             "Default melodic MIDI bank" )
+           ( "percussion-bank",
+             boost::program_options::value<std::string>()->default_value( "HMIGP" ),
+             "Default percussion MIDI bank" )
+           ( "list-banks", boost::program_options::bool_switch(), "List all MIDI banks" )
+           ( "file,f", boost::program_options::value<std::string>(), "File to play" );
 
-    boost::program_options::positional_options_description p;
-    p.add("file", 1);
+  boost::program_options::positional_options_description p;
+  p.add( "file", 1 );
 
-    boost::program_options::variables_map vm;
-    try
+  boost::program_options::variables_map vm;
+  try
+  {
+    boost::program_options::store( boost::program_options::command_line_parser( argc, argv ).options( options )
+                                                                                            .positional( p ).run(),
+                                   vm );
+    boost::program_options::notify( vm );
+  }
+  catch( std::exception& ex )
+  {
+    std::cerr << "Failed to parse command line: " << ex.what() << std::endl;
+    std::cerr << options << std::endl;
+    exit( EXIT_FAILURE );
+  }
+
+  if( vm["version"].as<bool>() )
+  {
+    std::cout << BADPLAY_VERSION << std::endl;
+    exit( EXIT_SUCCESS );
+  }
+
+  if( vm["list-banks"].as<bool>() )
+  {
+    std::cout << "Known MIDI banks:\n";
+    for( const auto& bank: ppp::MultiChips::bankDbInstance().banks() )
     {
-        boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(options).positional(p).run(), vm);
-        boost::program_options::notify(vm);
+      std::cout << bank.first << "\n";
+      std::cout << "    " << bank.second.description << "\n";
+      if( bank.second.onlyPercussion )
+      {
+        std::cout << "    ! Supports percussion instruments only.\n";
+      }
+      if( bank.second.uses4op )
+      {
+        std::cout << "    ! Contains 4-operator OPL3-only instruments.\n";
+      }
     }
-    catch( std::exception& ex )
+    exit( EXIT_SUCCESS );
+  }
+
+  if( vm["help"].as<bool>() || vm.count( "file" ) == 0 )
+  {
+    std::cout << program_name << " [options] <file>\n";
+    std::cout << options;
+    exit( EXIT_SUCCESS );
+  }
+
+  ppp::MultiChips::setDefaultMelodicBank( vm["melodic-bank"].as<std::string>() );
+  ppp::MultiChips::setDefaultPercussionBank( vm["percussion-bank"].as<std::string>() );
+
+  if( vm.count( "output" ) )
+  {
+    if( vm["output"].as<std::string>() == "disk" )
     {
-        std::cerr << "Failed to parse command line: " << ex.what() << std::endl;
-        std::cerr << options << std::endl;
-        exit(EXIT_FAILURE);
+      cfg.output = Outputs::disk;
+      cfg.playOnce = true;
     }
-
-    if( vm["version"].as<bool>() )
+    else if( vm["output"].as<std::string>() == "sdl" )
     {
-        std::cout << BADPLAY_VERSION << std::endl;
-        exit(EXIT_SUCCESS);
+      cfg.output = Outputs::sdl;
     }
-
-    if( vm["list-banks"].as<bool>() )
+    else
     {
-        std::cout << "Known MIDI banks:\n";
-        for( const auto& bank : ppp::MultiChips::bankDbInstance().banks() )
-        {
-            std::cout << bank.first << "\n";
-            std::cout << "    " << bank.second.description << "\n";
-            if( bank.second.onlyPercussion )
-            {
-                std::cout << "    ! Supports percussion instruments only.\n";
-            }
-            if( bank.second.uses4op )
-            {
-                std::cout << "    ! Contains 4-operator OPL3-only instruments.\n";
-            }
-        }
-        exit(EXIT_SUCCESS);
+      logger->fatal( L4CXX_LOCATION, "unknown output method -- %s", vm["output"].as<std::string>() );
+      exit( EXIT_FAILURE );
     }
+  }
 
-    if( vm["help"].as<bool>() || vm.count("file") == 0 )
-    {
-        std::cout << program_name << " [options] <file>\n";
-        std::cout << options;
-        exit(EXIT_SUCCESS);
-    }
+  light4cxx::Logger::setLevel( light4cxx::Level::Info );
 
-    ppp::MultiChips::setDefaultMelodicBank(vm["melodic-bank"].as<std::string>());
-    ppp::MultiChips::setDefaultPercussionBank(vm["percussion-bank"].as<std::string>());
+  if( vm["verbose"].as<bool>() )
+  {
+    light4cxx::Logger::setLevel( light4cxx::Level::Debug );
+  }
 
-    if( vm.count("output") )
-    {
-        if( vm["output"].as<std::string>() == "disk" )
-        {
-            cfg.output = Outputs::disk;
-            cfg.playOnce = true;
-        }
-        else if( vm["output"].as<std::string>() == "sdl" )
-        {
-            cfg.output = Outputs::sdl;
-        }
-        else
-        {
-            logger->fatal(L4CXX_LOCATION, "unknown output method -- %s", vm["output"].as<std::string>());
-            exit(EXIT_FAILURE);
-        }
-    }
+  if( vm["quiet"].as<bool>() )
+  {
+    light4cxx::Logger::setLevel( light4cxx::Level::Warn );
+  }
 
-    light4cxx::Logger::setLevel(light4cxx::Level::Info);
+  if( vm.count( "file" ) == 0 )
+  {
+    logger->fatal( L4CXX_LOCATION, "No file specified" );
+    exit( EXIT_FAILURE );
+  }
 
-    if( vm["verbose"].as<bool>() )
-    {
-        light4cxx::Logger::setLevel(light4cxx::Level::Debug);
-    }
-
-    if( vm["quiet"].as<bool>() )
-    {
-        light4cxx::Logger::setLevel(light4cxx::Level::Warn);
-    }
-
-    if( vm.count("file") == 0 )
-    {
-        logger->fatal(L4CXX_LOCATION, "No file specified");
-        exit(EXIT_FAILURE);
-    }
-
-    return vm["file"].as<std::string>();
+  return vm["file"].as<std::string>();
 }
 
 static void play(const char* fn, PlayerHandler* output, const boost::optional<size_t>& subsong)
@@ -188,105 +194,105 @@ static void play(const char* fn, PlayerHandler* output, const boost::optional<si
  * default subsong of file.
  */
 {
-    // initialize output & player
-    auto player = AdPlug::factory(fn);
+  // initialize output & player
+  auto player = AdPlug::factory( fn );
 
-    if( !player )
+  if( !player )
+  {
+    logger->warn( L4CXX_LOCATION, "unknown filetype -- %s", fn );
+    return;
+  }
+
+  size_t ss = subsong.get_value_or( player->currentSubSong() );
+
+  if( subsong.is_initialized() )
+  {
+    player->rewind( ss );
+  }
+
+  std::cerr << "Playing '" << fn << "'...\n"
+            << "Type  : " << player->type() << "\n"
+            << "Title : " << player->title() << "\n"
+            << "Author: " << player->author() << "\n\n";
+
+  if( cfg.showinsts )
+  { // display instruments
+    std::cerr << "Instrument names:\n";
+    for( size_t i = 0; i < player->instrumentCount(); i++ )
     {
-        logger->warn(L4CXX_LOCATION, "unknown filetype -- %s", fn);
-        return;
+      std::cerr << i << ": " << player->instrumentTitle( i ) << "\n";
+    }
+    std::cerr << "\n";
+  }
+
+  if( cfg.songmessage )
+  { // display song message
+    std::cerr << "Song message:\n" << player->description() << "\n\n";
+  }
+
+  output->setPlayer( player );
+
+  // play loop
+  do
+  {
+    if( cfg.songinfo )
+    { // display song info
+      std::cerr << "Subsong: " << ss + 1 << "/" << player->subSongCount() + 0 << ", Order: "
+                << player->currentOrder() + 0 << "/" << player->orderCount() + 0 << ", Pattern: "
+                << player->currentPattern() + 0 << ", Row: " << player->currentRow() + 0 << ", Speed: "
+                << player->currentSpeed() + 0 << ", Timer: "
+                << std::fixed << Player::SampleRate / float( player->framesUntilUpdate() ) << "Hz     \r";
     }
 
-    size_t ss = subsong.get_value_or(player->currentSubSong());
-
-    if( subsong.is_initialized() )
-    {
-        player->rewind(ss);
-    }
-
-    std::cerr << "Playing '" << fn << "'...\n"
-              << "Type  : " << player->type() << "\n"
-              << "Title : " << player->title() << "\n"
-              << "Author: " << player->author() << "\n\n";
-
-    if( cfg.showinsts )
-    { // display instruments
-        std::cerr << "Instrument names:\n";
-        for( size_t i = 0; i < player->instrumentCount(); i++ )
-        {
-            std::cerr << i << ": " << player->instrumentTitle(i) << "\n";
-        }
-        std::cerr << "\n";
-    }
-
-    if( cfg.songmessage )
-    { // display song message
-        std::cerr << "Song message:\n" << player->description() << "\n\n";
-    }
-
-    output->setPlayer(player);
-
-    // play loop
-    do
-    {
-        if( cfg.songinfo )
-        { // display song info
-            std::cerr << "Subsong: " << ss + 1 << "/" << player->subSongCount() + 0 << ", Order: "
-                      << player->currentOrder() + 0 << "/" << player->orderCount() + 0 << ", Pattern: "
-                      << player->currentPattern() + 0 << ", Row: " << player->currentRow() + 0 << ", Speed: "
-                      << player->currentSpeed() + 0 << ", Timer: "
-                      << std::fixed << Player::SampleRate / float(player->framesUntilUpdate()) << "Hz     \r";
-        }
-
-        output->frame();
-    } while( output->isPlaying() || !cfg.playOnce );
+    output->frame();
+  } while( output->isPlaying() || !cfg.playOnce );
 }
 
 static void sighandler(int signal)
 /* Handles all kinds of signals. */
 {
-    switch( signal )
-    {
-        case SIGINT:
-        case SIGTERM:
-            exit(EXIT_SUCCESS);
-    }
+  switch( signal )
+  {
+  case SIGINT:
+  case SIGTERM:
+    exit( EXIT_SUCCESS );
+  }
 }
 
 /***** Main program *****/
 
 int main(int argc, const char** argv)
 {
-    // init
-    program_name = argv[0];
-    signal(SIGINT, sighandler);
-    signal(SIGTERM, sighandler);
+  // init
+  program_name = argv[0];
+  signal( SIGINT, sighandler );
+  signal( SIGTERM, sighandler );
 
-    // parse commandline
-    auto fn = decode_switches(argc, argv);
+  // parse commandline
+  auto fn = decode_switches( argc, argv );
 
-    // init player
-    switch( cfg.output )
-    {
-        case Outputs::none:
-            logger->fatal(L4CXX_LOCATION, "no output methods compiled in");
-            exit(EXIT_FAILURE);
-        case Outputs::disk:
-            output = std::make_unique<DiskWriter>(cfg.device.c_str(), 44100);
-            break;
-        case Outputs::sdl:
-            output = std::make_unique<SDLPlayer>(44100, cfg.buf_size);
-            break;
-        default:
-            logger->error(L4CXX_LOCATION, "output method not available");
-            return EXIT_FAILURE;
-    }
-
-    // play all files from commandline
-    for( int r = 0; r < cfg.repeats; ++r )
-    {
-        play(fn.c_str(), output.get(), cfg.subsong);
-    }
-
+  // init player
+  switch( cfg.output )
+  {
+  case Outputs::none:
+    logger->fatal( L4CXX_LOCATION, "no output methods compiled in" );
+    exit( EXIT_FAILURE );
+  case Outputs::disk:
+    output = std::make_unique<DiskWriter>( cfg.device.c_str(), 44100 );
+    break;
+  case Outputs::sdl:
+    output = std::make_unique<SDLPlayer>( 44100, cfg.buf_size );
+    break;
+  default:
+    logger->error( L4CXX_LOCATION, "output method not available" );
     return EXIT_FAILURE;
+  }
+
+  // play all files from commandline
+  for( int r = 0; r < cfg.repeats; ++r )
+  {
+    play( fn.c_str(), output.get(), cfg.subsong );
+  }
+
+  return EXIT_FAILURE;
 }

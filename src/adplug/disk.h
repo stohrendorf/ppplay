@@ -23,19 +23,19 @@
 #include "stream/filestream.h"
 
 class DiskWriter
-    : public EmuPlayer
+  : public EmuPlayer
 {
 public:
-    DISABLE_COPY(DiskWriter)
+  DISABLE_COPY( DiskWriter )
 
-    DiskWriter(const char* filename, uint32_t nfreq);
+  DiskWriter(const char* filename, uint32_t nfreq);
 
-    ~DiskWriter() override;
+  ~DiskWriter() override;
 
 protected:
-    void output(const std::vector<int16_t>& buf) override;
+  void output(const std::vector<int16_t>& buf) override;
 
 private:
-    FileStream m_file;
-    uint32_t m_bytesWritten;
+  FileStream m_file;
+  uint32_t m_bytesWritten;
 };

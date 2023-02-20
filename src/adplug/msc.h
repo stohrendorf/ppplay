@@ -26,60 +26,60 @@
 class FileStream;
 
 class MscPlayer
-    : public Player
+  : public Player
 {
 public:
-    DISABLE_COPY(MscPlayer)
+  DISABLE_COPY( MscPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    MscPlayer() = default;
+  MscPlayer() = default;
 
-    ~MscPlayer() override = default;
+  ~MscPlayer() override = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    bool update() override;
+  bool update() override;
 
-    void rewind(const boost::optional<size_t>& subsong) override;
+  void rewind(const boost::optional<size_t>& subsong) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override;
+  std::string type() const override;
 
-    static constexpr auto MSC_SIGN_LEN = 16;
-    static constexpr auto MSC_DESC_LEN = 64;
+  static constexpr auto MSC_SIGN_LEN = 16;
+  static constexpr auto MSC_DESC_LEN = 64;
 
 private:
 #pragma pack(push, 1)
-    struct msc_header
-    {
-        uint8_t mh_sign[MSC_SIGN_LEN];
-        uint16_t mh_ver;
-        uint8_t mh_desc[MSC_DESC_LEN];
-        uint16_t mh_timer;
-        uint16_t mh_nr_blocks;
-        uint16_t mh_block_len;
-    };
+  struct msc_header
+  {
+    uint8_t mh_sign[MSC_SIGN_LEN];
+    uint16_t mh_ver;
+    uint8_t mh_desc[MSC_DESC_LEN];
+    uint16_t mh_timer;
+    uint16_t mh_nr_blocks;
+    uint16_t mh_block_len;
+  };
 #pragma pack(pop)
 
-    uint16_t m_version = 0;   // file version
-    std::vector<std::vector<uint8_t>> m_mscData{{}};      // compressed music data
+  uint16_t m_version = 0;   // file version
+  std::vector<std::vector<uint8_t>> m_mscData{ {} };      // compressed music data
 
-    // decoder state
-    size_t m_mscDataIndex = 0; // active block
-    size_t m_blockPos = 0; // position in block
-    size_t m_rawDataPos = 0;   // position in data buffer
-    std::vector<uint8_t> m_rawData{};            // decompression buffer
+  // decoder state
+  size_t m_mscDataIndex = 0; // active block
+  size_t m_blockPos = 0; // position in block
+  size_t m_rawDataPos = 0;   // position in data buffer
+  std::vector<uint8_t> m_rawData{};            // decompression buffer
 
-    uint8_t m_decoderPrefix = 0;        // prefix / state
-    size_t m_prefixDistance = 0;         // prefix distance
-    uint32_t m_prefixLength = 0; // prefix length
+  uint8_t m_decoderPrefix = 0;        // prefix / state
+  size_t m_prefixDistance = 0;         // prefix distance
+  uint32_t m_prefixLength = 0; // prefix length
 
-    // player state
-    uint8_t m_delay = 0;    // active delay
+  // player state
+  uint8_t m_delay = 0;    // active delay
 
-    static bool load_header(FileStream& bf, msc_header* hdr);
+  static bool load_header(FileStream& bf, msc_header* hdr);
 
-    bool decode_octet(uint8_t* output);
+  bool decode_octet(uint8_t* output);
 };

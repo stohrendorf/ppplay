@@ -24,28 +24,28 @@
 #include "xad.h"
 
 class HypPlayer
-    : public XadPlayer
+  : public XadPlayer
 {
 public:
-    DISABLE_COPY(HypPlayer)
+  DISABLE_COPY( HypPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    HypPlayer() = default;
+  HypPlayer() = default;
 
 protected:
-    uint16_t m_hypPointer = 0;
+  uint16_t m_hypPointer = 0;
 
-    bool xadplayer_load() override
-    {
-        return xadHeader().fmt == HYP;
-    }
+  bool xadplayer_load() override
+  {
+    return xadHeader().fmt == HYP;
+  }
 
-    void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
+  void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
 
-    void xadplayer_update() override;
+  void xadplayer_update() override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override;
+  std::string type() const override;
 };

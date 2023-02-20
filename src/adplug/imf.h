@@ -26,61 +26,61 @@
 class FileStream;
 
 class ImfPlayer
-    : public Player
+  : public Player
 {
 public:
-    DISABLE_COPY(ImfPlayer)
+  DISABLE_COPY( ImfPlayer )
 
-    ImfPlayer() = default;
+  ImfPlayer() = default;
 
-    static Player* factory();
+  static Player* factory();
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    bool update() override;
+  bool update() override;
 
-    void rewind(const boost::optional<size_t>& subsong) override;
+  void rewind(const boost::optional<size_t>& subsong) override;
 
-    size_t framesUntilUpdate() const override
-    {
-        return static_cast<size_t>(SampleRate / m_timer);
-    }
+  size_t framesUntilUpdate() const override
+  {
+    return static_cast<size_t>(SampleRate / m_timer);
+  }
 
-    std::string type() const override
-    {
-        return "IMF File Format";
-    }
+  std::string type() const override
+  {
+    return "IMF File Format";
+  }
 
-    std::string title() const override;
+  std::string title() const override;
 
-    std::string author() const override
-    {
-        return m_authorName;
-    }
+  std::string author() const override
+  {
+    return m_authorName;
+  }
 
-    std::string description() const override;
+  std::string description() const override;
 
 private:
-    unsigned long m_pos = 0;
-    unsigned short m_del = 0;
-    bool m_songend = false;
-    int m_rate = 0;
-    float m_timer = 0;
-    std::string m_footer{};
+  unsigned long m_pos = 0;
+  unsigned short m_del = 0;
+  bool m_songend = false;
+  int m_rate = 0;
+  float m_timer = 0;
+  std::string m_footer{};
 
-    std::string m_trackName{}
-    , m_gameName{}
-    , m_authorName{}
-    , m_remarks{};
+  std::string m_trackName{}
+  , m_gameName{}
+  , m_authorName{}
+  , m_remarks{};
 
 #pragma pack(push, 1)
-    struct Sdata
-    {
-        uint8_t reg = 0, val = 0;
-        uint16_t time = 0;
-    };
+  struct Sdata
+  {
+    uint8_t reg = 0, val = 0;
+    uint16_t time = 0;
+  };
 #pragma pack(pop)
-    std::vector<Sdata> m_data{};
+  std::vector<Sdata> m_data{};
 
-    static int getrate(const FileStream& file);
+  static int getrate(const FileStream& file);
 };

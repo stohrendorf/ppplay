@@ -4,7 +4,6 @@ if(LIBARCHIVE_ROOT)
 endif()
 include(FindLibArchive)
 find_package(LibArchive REQUIRED)
-set_package_info(LibArchive "LibArchive" "http://www.libarchive.org" "LibArchive enables loading modules from archives.")
 
 include_directories(${LibArchive_INCLUDE_DIR})
 
@@ -23,4 +22,4 @@ add_library(ppplay_stream STATIC
 	archivefilestream.h
 )
 
-target_link_libraries(ppplay_stream PUBLIC ppplay_light4cxx ${LibArchive_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
+target_link_libraries(ppplay_stream PUBLIC ppplay_light4cxx ${LibArchive_LIBRARY} Boost::filesystem)

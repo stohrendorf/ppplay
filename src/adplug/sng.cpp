@@ -25,78 +25,78 @@
 
 Player* SngPlayer::factory()
 {
-    return new SngPlayer();
+  return new SngPlayer();
 }
 
 bool SngPlayer::load(const std::string& filename)
 {
-    FileStream f(filename);
-    if( !f )
-    {
-        return false;
-    }
+  FileStream f( filename );
+  if( !f )
+  {
+    return false;
+  }
 
-    // load header
-    f >> m_header;
+  // load header
+  f >> m_header;
 
-    // file validation section
-    if( strncmp(m_header.id, "ObsM", 4) != 0 )
-    {
-        return false;
-    }
+  // file validation section
+  if( strncmp( m_header.id, "ObsM", 4 ) != 0 )
+  {
+    return false;
+  }
 
-    // load section
-    m_header.length /= 2;
-    m_header.start /= 2;
-    m_header.loop /= 2;
-    m_data.resize(m_header.length);
-    f.read(m_data.data(), m_data.size());
+  // load section
+  m_header.length /= 2;
+  m_header.start /= 2;
+  m_header.loop /= 2;
+  m_data.resize( m_header.length );
+  f.read( m_data.data(), m_data.size() );
 
-    rewind(size_t(0));
-    return true;
+  rewind( size_t( 0 ) );
+  return true;
 }
 
 bool SngPlayer::update()
 {
-    if( m_header.compressed && m_del )
-    {
-        m_del--;
-        return !m_songEnd;
-    }
+  if( m_header.compressed && m_del )
+  {
+    m_del--;
+    return !m_songEnd;
+  }
 
-    while( m_data[m_pos].reg != 0 )
-    {
-        getOpl()->writeReg(m_data[m_pos].reg, m_data[m_pos].val);
-        m_pos++;
-        if( m_pos >= m_header.length )
-        {
-            m_songEnd = true;
-            m_pos = m_header.loop;
-        }
-    }
-
-    if( !m_header.compressed )
-    {
-        getOpl()->writeReg(m_data[m_pos].reg, m_data[m_pos].val);
-    }
-
-    if( m_data[m_pos].val != 0 )
-    {
-        m_del = m_data[m_pos].val - 1u;
-    }
+  while( m_data[m_pos].reg != 0 )
+  {
+    getOpl()->writeReg( m_data[m_pos].reg, m_data[m_pos].val );
     m_pos++;
     if( m_pos >= m_header.length )
     {
-        m_songEnd = true;
-        m_pos = m_header.loop;
+      m_songEnd = true;
+      m_pos = m_header.loop;
     }
-    return !m_songEnd;
+  }
+
+  if( !m_header.compressed )
+  {
+    getOpl()->writeReg( m_data[m_pos].reg, m_data[m_pos].val );
+  }
+
+  if( m_data[m_pos].val != 0 )
+  {
+    m_del = m_data[m_pos].val - 1u;
+  }
+  m_pos++;
+  if( m_pos >= m_header.length )
+  {
+    m_songEnd = true;
+    m_pos = m_header.loop;
+  }
+  return !m_songEnd;
 }
 
 void SngPlayer::rewind(const boost::optional<size_t>&)
 {
-    m_pos = m_header.start;
-    m_del = m_header.delay;
-    m_songEnd = false;
-    getOpl()->writeReg(1, 32); // go to OPL2 mode
+  m_pos = m_header.start;
+  m_del = m_header.delay;
+  m_songEnd = false;
+  getOpl()->writeReg( 1, 32 ); // go to OPL2 mode
 }

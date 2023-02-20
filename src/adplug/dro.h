@@ -24,33 +24,33 @@
 #include "player.h"
 
 class DroPlayer
-    : public Player
+  : public Player
 {
 public:
-    DISABLE_COPY(DroPlayer)
+  DISABLE_COPY( DroPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    DroPlayer() = default;
+  DroPlayer() = default;
 
-    ~DroPlayer() override = default;
+  ~DroPlayer() override = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    bool update() override;
+  bool update() override;
 
-    void rewind(const boost::optional<size_t>& subsong) override;
+  void rewind(const boost::optional<size_t>& subsong) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override
-    {
-        return "DOSBox Raw OPL v0.1";
-    }
+  std::string type() const override
+  {
+    return "DOSBox Raw OPL v0.1";
+  }
 
 private:
-    std::vector<uint8_t> m_data{};
-    uint32_t m_pos = 0;
-    uint32_t m_msTotal = 0;
-    uint16_t m_delay = 1;
+  std::vector<uint8_t> m_data{};
+  uint32_t m_pos = 0;
+  uint32_t m_msTotal = 0;
+  uint16_t m_delay = 1;
 };

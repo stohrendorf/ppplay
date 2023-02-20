@@ -24,43 +24,43 @@
 #include "player.h"
 
 class XsmPlayer
-    : public Player
+  : public Player
 {
 public:
-    DISABLE_COPY(XsmPlayer)
+  DISABLE_COPY( XsmPlayer )
 
-    static Player* factory()
-    {
-        return new XsmPlayer();
-    }
+  static Player* factory()
+  {
+    return new XsmPlayer();
+  }
 
-    XsmPlayer() = default;
+  XsmPlayer() = default;
 
-    ~XsmPlayer() override = default;
+  ~XsmPlayer() override = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    bool update() override;
+  bool update() override;
 
-    void rewind(const boost::optional<size_t>& subsong) override;
+  void rewind(const boost::optional<size_t>& subsong) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override
-    {
-        return "eXtra Simple Music";
-    }
+  std::string type() const override
+  {
+    return "eXtra Simple Music";
+  }
 
 private:
-    struct Row
-    {
-        uint8_t data[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-    };
+  struct Row
+  {
+    uint8_t data[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  };
 
-    std::vector<Row> m_music{};
-    size_t m_lastRow = 0;
-    size_t m_currentRow = 0;
-    bool m_songEnd = false;
+  std::vector<Row> m_music{};
+  size_t m_lastRow = 0;
+  size_t m_currentRow = 0;
+  bool m_songEnd = false;
 
-    void playNote(int c, int note, int octv);
+  void playNote(int c, int note, int octv);
 };

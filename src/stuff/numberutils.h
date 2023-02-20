@@ -28,19 +28,24 @@ namespace ppp
  * @{
  */
 
- /**
-  * @brief Clip a value @a v in the range from @a a to @a b
-  * @tparam T Value's type
-  * @param[in] v Value to clip
-  * @param[in] a Lower border
-  * @param[in] b Upper border
-  * @return Clipped value @a v between @a a and @a b
-  * @note Time-critical
-  */
-template<typename T>
-inline constexpr T clip(T v, T a, T b)
+/**
+ * @brief Clip a value @a v in the range from @a a to @a b
+ * @tparam T Value's type
+ * @param[in] v Value to clip
+ * @param[in] a Lower border
+ * @param[in] b Upper border
+ * @return Clipped value @a v between @a a and @a b
+ * @note Time-critical
+ */
+template<typename T> inline constexpr T clip(T v, T a, T b)
 {
-    return std::min(b, std::max(v, a));
+  return std::min( b, std::max( v, a ) );
+}
+
+template<typename T, typename U> inline T clip(U v)
+{
+  return static_cast<T>(
+    clip<U>( v, std::numeric_limits<T>::min(), std::numeric_limits<T>::max() ));
 }
 
 /**
@@ -52,10 +57,9 @@ inline constexpr T clip(T v, T a, T b)
  * @return True if @a v is between @a a and @a b
  * @note Time-critical
  */
-template<typename T>
-inline constexpr bool between(T v, T a, T b)
+template<typename T> inline constexpr bool between(T v, T a, T b)
 {
-    return (v >= a) && (v <= b);
+  return (v >= a) && (v <= b);
 }
 
 /**
@@ -73,15 +77,14 @@ extern void swapEndian(char data[], size_t size);
  * @tparam T Type of @a data
  * @param[in,out] data Data to swap
  */
-template<class T>
-inline void swapEndian(T* data)
+template<class T> inline void swapEndian(T* data)
 {
-    swapEndian(reinterpret_cast<char*>(data), sizeof(T));
+  swapEndian( reinterpret_cast<char*>(data), sizeof( T ) );
 }
 
 /**
  * @}
  */
-}
+} // namespace ppp
 
 #endif

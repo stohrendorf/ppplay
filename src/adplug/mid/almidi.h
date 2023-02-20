@@ -8,106 +8,106 @@ namespace ppp
 class EMidi
 {
 private:
-    struct Track;
+  struct Track;
 
-    MultiChips m_chips;
-    std::vector<Track> m_tracks;
+  MultiChips m_chips;
+  std::vector<Track> m_tracks;
 
-    bool m_loop = false;
+  bool m_loop = false;
 
-    int16_t m_division = 96;
+  int16_t m_division = 96;
 
-    struct SongContext;
+  struct SongContext;
 
-    struct Timing
-    {
-        int tick = 0;
-        int beat = 1;
-        int measure = 1;
-        int beatsPerMeasure = 4;
-        int ticksPerBeat = 0;
-        int timeBase = 4;
-    };
+  struct Timing
+  {
+    int tick = 0;
+    int beat = 1;
+    int measure = 1;
+    int beatsPerMeasure = 4;
+    int ticksPerBeat = 0;
+    int timeBase = 4;
+  };
 
-    Timing m_timing{};
+  Timing m_timing{};
 
-    unsigned long m_positionInTicks = 0;
+  unsigned long m_positionInTicks = 0;
 
-    int m_context = 0;
+  int m_context = 0;
 
-    int m_activeTracks = 0;
-    int m_totalVolume = 255;
+  int m_activeTracks = 0;
+  int m_totalVolume = 255;
 
-    size_t m_ticksPerSecond = 0;
+  size_t m_ticksPerSecond = 0;
 
-    std::array<int, 16> m_channelVolume{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+  std::array<int, 16> m_channelVolume{ { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
 
-    enum class Format
-    {
-        PlainMidi,
-        IdMus
-    };
+  enum class Format
+  {
+    PlainMidi,
+    IdMus
+  };
 
-    Format m_format = Format::PlainMidi;
+  Format m_format = Format::PlainMidi;
 
-    void resetTracks();
+  void resetTracks();
 
-    void advanceTick();
+  void advanceTick();
 
-    void metaEvent(Track& track);
+  void metaEvent(Track& track);
 
-    bool interpretControllerInfo(Track& track, bool timeSet, int channel, uint8_t c1, uint8_t c2);
+  bool interpretControllerInfo(Track& track, bool timeSet, int channel, uint8_t c1, uint8_t c2);
 
-    void setChannelVolume(int channel, int volume);
+  void setChannelVolume(int channel, int volume);
 
-    void allNotesOff();
+  void allNotesOff();
 
-    void sendChannelVolumes();
+  void sendChannelVolumes();
 
-    void reset();
+  void reset();
 
-    void setTempo(int tempo);
+  void setTempo(int tempo);
 
-    void initEmidi();
+  void initEmidi();
 
-    bool tryLoadMidi(Stream& stream);
+  bool tryLoadMidi(Stream& stream);
 
-    bool tryLoadMus(Stream& stream);
+  bool tryLoadMus(Stream& stream);
 
-    bool serviceRoutineMidi();
+  bool serviceRoutineMidi();
 
-    bool serviceRoutineMus();
+  bool serviceRoutineMus();
 
 public:
-    DISABLE_COPY(EMidi)
+  DISABLE_COPY( EMidi )
 
-    EMidi(Stream& stream, size_t chipCount, bool stereo);
+  EMidi(Stream& stream, size_t chipCount, bool stereo);
 
-    ~EMidi();
+  ~EMidi();
 
-    bool serviceRoutine();
+  bool serviceRoutine();
 
-    size_t ticksPerSecond() const noexcept
+  size_t ticksPerSecond() const noexcept
+  {
+    return m_ticksPerSecond;
+  }
+
+  void read(std::array<int16_t, 4>* data)
+  {
+    m_chips.read( data );
+  }
+
+  const char* shortFormatName() const
+  {
+    switch( m_format )
     {
-        return m_ticksPerSecond;
+    case Format::PlainMidi:
+      return "MIDI";
+    case Format::IdMus:
+      return "MUS";
+    default:
+      return "";
     }
-
-    void read(std::array<int16_t, 4>* data)
-    {
-        m_chips.read(data);
-    }
-
-    const char* shortFormatName() const
-    {
-        switch( m_format )
-        {
-            case Format::PlainMidi:
-                return "MIDI";
-            case Format::IdMus:
-                return "MUS";
-            default:
-                return "";
-        }
-    }
+  }
 };
 }

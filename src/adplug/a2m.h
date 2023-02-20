@@ -26,48 +26,48 @@
 class FileStream;
 
 class A2mPlayer
-    : public ModPlayer
+  : public ModPlayer
 {
 public:
-    DISABLE_COPY(A2mPlayer)
+  DISABLE_COPY( A2mPlayer )
 
-    A2mPlayer() = default;
+  A2mPlayer() = default;
 
-    static Player* factory();
+  static Player* factory();
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override
-    {
-        return "AdLib Tracker 2";
-    }
+  std::string type() const override
+  {
+    return "AdLib Tracker 2";
+  }
 
-    std::string title() const override
-    {
-        return m_songname;
-    }
+  std::string title() const override
+  {
+    return m_songname;
+  }
 
-    std::string author() const override
-    {
-        return m_author;
-    }
+  std::string author() const override
+  {
+    return m_author;
+  }
 
-    size_t instrumentCount() const override
-    {
-        return 250;
-    }
+  size_t instrumentCount() const override
+  {
+    return 250;
+  }
 
-    std::string instrumentTitle(size_t n) const override
-    {
-        return m_instname[n];
-    }
+  std::string instrumentTitle(size_t n) const override
+  {
+    return m_instname[n];
+  }
 
 private:
-    std::string m_songname{};
-    std::string m_author{};
-    std::array<std::string, 250> m_instname{{}};
+  std::string m_songname{};
+  std::string m_author{};
+  std::array<std::string, 250> m_instname{ {} };
 
-    void readHeader(FileStream& f, uint8_t version, uint16_t* lengths);
+  void readHeader(FileStream& f, uint8_t version, uint16_t* lengths);
 };

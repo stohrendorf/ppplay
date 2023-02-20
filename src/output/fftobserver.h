@@ -37,32 +37,32 @@ class AudioFifo;
 class FftObserver
 {
 private:
-    //! @brief Observed FIFO
-    AudioFifo* m_fifo;
-    AudioFrameBufferPtr m_buffer;
-    size_t m_filled;
-    std::vector<uint16_t> m_left;
-    std::vector<uint16_t> m_right;
-    boost::signals2::scoped_connection m_dataPushedConnection;
+  //! @brief Observed FIFO
+  AudioFifo* m_fifo;
+  AudioFrameBufferPtr m_buffer;
+  size_t m_filled;
+  std::vector<uint16_t> m_left;
+  std::vector<uint16_t> m_right;
+  boost::signals2::scoped_connection m_dataPushedConnection;
 public:
-    DISABLE_COPY(FftObserver)
+  DISABLE_COPY( FftObserver )
 
-    explicit FftObserver(AudioFifo* fifo);
+  explicit FftObserver(AudioFifo* fifo);
 
-    ~FftObserver() = default;
+  ~FftObserver() = default;
 
-    const std::vector<uint16_t>& left() const
-    {
-        return m_left;
-    }
+  const std::vector<uint16_t>& left() const
+  {
+    return m_left;
+  }
 
-    const std::vector<uint16_t>& right() const
-    {
-        return m_right;
-    }
+  const std::vector<uint16_t>& right() const
+  {
+    return m_right;
+  }
 
 private:
-    void dataPushed(const AudioFrameBufferPtr& buffer);
+  void dataPushed(const AudioFrameBufferPtr& buffer);
 };
 
 /**

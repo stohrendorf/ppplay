@@ -1,6 +1,7 @@
-cmake_minimum_required( VERSION 2.8 )
-cmake_policy( SET CMP0003 NEW )
-cmake_policy( SET CMP0015 NEW )
+cmake_minimum_required( VERSION 3.12 )
+if( NOT VCPKG )
+    set( CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake;${CMAKE_MODULE_PATH}" )
+endif()
 
 if( MINGW )
     set( CMAKE_RC_COMPILER_INIT windres )
@@ -127,21 +128,6 @@ if( MINGW )
     set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows" )
 endif()
 
-message( STATUS "Build type is '${CMAKE_BUILD_TYPE}'" )
-
-message( STATUS "CXX Flags (Debug)       : ${CMAKE_CXX_FLAGS_DEBUG}" )
-message( STATUS "CXX Flags (Release)     : ${CMAKE_CXX_FLAGS_RELEASE}" )
-message( STATUS "CXX Flags (Min. Size)   : ${CMAKE_CXX_FLAGS_MINSIZEREL}" )
-message( STATUS "CXX Flags (Rel. w. Dbg.): ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}" )
-message( STATUS "CXX Flags (Additional)  : ${CMAKE_CXX_FLAGS}" )
-
-include( FeatureSummary )
-if( DEFINED SANITIZE_ADDRESS )
-    add_feature_info( "AddressSanitizer" SANITIZE_ADDRESS "Address Sanitization" )
-    add_feature_info( "ThreadSanitizer" SANITIZE_THREAD "Thread Sanitization" )
-endif()
-
-
 #########
 # add SDL
 #########
@@ -151,13 +137,6 @@ find_package( SDL2 REQUIRED )
 set( Boost_USE_MULTITHREADED TRUE )
 add_definitions( -DBOOST_ALL_NO_LIB -DBOOST_ALL_DYN_LINK )
 find_package( Boost COMPONENTS program_options filesystem system unit_test_framework serialization REQUIRED )
-include_directories( ${Boost_INCLUDE_DIRS} )
-
-set_package_info( Boost "Boost libraries" "http://www.boost.org" )
-set_package_info( program_options "Boost program_options library" "http://www.boost.org" "The Boost program_options library is used to parse command line arguments." )
-set_package_info( filesystem "Boost filesystem library" "http://www.boost.org" "The Boost filesystem library is used to handle file paths and information." )
-set_package_info( system "Boost system library" "http://www.boost.org" "The Boost system library handles system dependent things." )
-set_package_info( serialization "Boost serialization library" "http://www.boost.org" "The Boost serialization library is used for the midi bank database." )
 
 include_directories( src )
 enable_testing()
@@ -180,7 +159,7 @@ elseif( COMPILER_IS_CLANG )
     target_link_libraries( ppplay stdc++ )
 endif()
 
-target_link_libraries( ppplay ppplay_core ppplay_module_base ppplay_ppg ppplay_output_sdl ppplay_output_wav ${Boost_PROGRAM_OPTIONS_LIBRARY} SDL2::SDL2 SDL2::SDL2main )
+target_link_libraries( ppplay ppplay_core ppplay_module_base ppplay_ppg ppplay_output_sdl ppplay_output_wav Boost::program_options ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY} )
 
 #########
 # link libraries
@@ -208,7 +187,6 @@ trylinklib( "mp3lame" )
 if( mp3lame_LIB )
     option( WITH_MP3LAME "Whether to include MP3Lame support." ON )
 endif()
-add_feature_info( "MP3 Export" WITH_MP3LAME "MP3 Export using libmp3lame" )
 if( WITH_MP3LAME )
     target_link_libraries( ppplay ppplay_output_mp3 )
 endif()
@@ -219,7 +197,6 @@ trylinklib( "ogg" )
 if( vorbis_LIB AND vorbisenc_LIB AND ogg_LIB )
     option( WITH_OGG "Whether to include OGG support." ON )
 endif()
-add_feature_info( "OGG Export" WITH_OGG "OGG Export using libvorbis and libvorbisenc" )
 if( WITH_OGG )
     target_link_libraries( ppplay ppplay_output_ogg )
 endif()
@@ -238,36 +215,8 @@ if( LINUX OR UNIX )
     install( CODE "execute_process( COMMAND update-desktop-database -q )" )
 endif()
 
-#########
-# add docs target & configuration
-#########
-include( FindDoxygen )
-if( DOXYGEN_FOUND AND DOXYGEN_DOT_FOUND )
-    add_custom_target(
-            docs
-            COMMAND doxygen "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile"
-            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-            COMMENT "Building the Doxygen docs..."
-            SOURCES Doxyfile
-            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile"
-    )
-    configure_file(
-            "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in"
-            "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile"
-            ESCAPE_QUOTES
-    )
-endif()
-
-add_feature_info( Doxygen DOXYGEN_FOUND "Doxygen is used to generate the API documentation." )
-
 configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
         "${CMAKE_CURRENT_SOURCE_DIR}/config.h"
         ESCAPE_QUOTES
 )
-
-set_package_info( Threads "Threads library" )
-
-feature_summary( WHAT ENABLED_FEATURES DESCRIPTION "Enabled features:" )
-feature_summary( WHAT DISABLED_FEATURES DESCRIPTION "Disabled features:" )
-feature_summary( WHAT PACKAGES_FOUND DESCRIPTION "Found packages:" )

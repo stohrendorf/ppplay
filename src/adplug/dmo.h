@@ -24,18 +24,18 @@
 #include "s3m.h"
 
 class DmoPlayer
-    : public S3mPlayer
+  : public S3mPlayer
 {
 public:
-    DISABLE_COPY(DmoPlayer)
+  DISABLE_COPY( DmoPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    DmoPlayer() = default;
+  DmoPlayer() = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    std::string type() const override;
+  std::string type() const override;
 
-    std::string author() const override;
+  std::string author() const override;
 };

@@ -24,42 +24,42 @@
 #include "player.h"
 
 class MkjPlayer
-    : public Player
+  : public Player
 {
 public:
-    DISABLE_COPY(MkjPlayer)
+  DISABLE_COPY( MkjPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    MkjPlayer() = default;
+  MkjPlayer() = default;
 
-    ~MkjPlayer() override = default;
+  ~MkjPlayer() override = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    bool update() override;
+  bool update() override;
 
-    void rewind(const boost::optional<size_t>& subsong) override;
+  void rewind(const boost::optional<size_t>& subsong) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override
-    {
-        return "MKJamz Audio File";
-    }
+  std::string type() const override
+  {
+    return "MKJamz Audio File";
+  }
 
 private:
-    int16_t m_channelCount = 0;
-    int16_t m_maxNotes = 0;
-    std::vector<int16_t> m_songBuf{};
-    bool m_songEnd = true;
+  int16_t m_channelCount = 0;
+  int16_t m_maxNotes = 0;
+  std::vector<int16_t> m_songBuf{};
+  bool m_songEnd = true;
 
-    struct Channel
-    {
-        int16_t defined = 0;
-        uint16_t dataOfs = 0;
-        int16_t octave = 4, waveform = 0, delay = 0, speed = 1;
-    };
+  struct Channel
+  {
+    int16_t defined = 0;
+    uint16_t dataOfs = 0;
+    int16_t octave = 4, waveform = 0, delay = 0, speed = 1;
+  };
 
-    Channel m_channels[9];
+  Channel m_channels[9];
 };

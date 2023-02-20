@@ -38,190 +38,190 @@ constexpr uint16_t HCFLG_NO_IRQ = 0x8000;
 struct SlaveChannel;
 
 struct HostChannel final
-    : public ISerializable
+  : public ISerializable
 {
-    uint16_t flags = 0;
-    uint8_t cellMask = 0; //!< msk
-    uint8_t patternNote = 0; //!< nte
-    uint8_t patternInstrument = 0xff; //!< ins
-    uint8_t patternVolume = 0; //!< vol
-    uint8_t patternFx = 0; //!< cmdVal1
-    uint8_t patternFxParam = 0; //!< cmdVal2
-    uint8_t lastPatternFx = 0; //!< ocmVal1
-    uint8_t lastPatternFxParam = 0; //!< ocmVal2
-    uint8_t volumeFx = 0; //!< vcmVal1
-    uint8_t volumeFxParam = 0; //!< vcmVal2
-    uint8_t midiChannel = 0;
-    uint8_t midiProgram = 0; //!< mpr
-    uint8_t effectiveNote = 0; //!< nt2, effective sample note after translation
-    uint8_t sampleIndex = 0; //!< smp, sample index (1-based)
-    uint8_t dkl = 0;
-    uint8_t efg = 0;
-    uint8_t o00 = 0;
-    uint8_t i00 = 0;
-    uint8_t j00 = 0;
-    uint8_t n00 = 0;
-    uint8_t p00 = 0;
-    uint8_t q00 = 0;
-    uint8_t t00 = 0;
-    uint8_t s00 = 0;
-    uint8_t oxh = 0;
-    uint8_t w00 = 0;
-    uint8_t vce = 0;
-    uint8_t linkedPortaFxValue = 0;
-    uint8_t sfx = 0;
-    uint8_t vse = 0; //!< 0..64
-    int8_t ltr = 0; //!< Last tremolo
+  uint16_t flags = 0;
+  uint8_t cellMask = 0; //!< msk
+  uint8_t patternNote = 0; //!< nte
+  uint8_t patternInstrument = 0xff; //!< ins
+  uint8_t patternVolume = 0; //!< vol
+  uint8_t patternFx = 0; //!< cmdVal1
+  uint8_t patternFxParam = 0; //!< cmdVal2
+  uint8_t lastPatternFx = 0; //!< ocmVal1
+  uint8_t lastPatternFxParam = 0; //!< ocmVal2
+  uint8_t volumeFx = 0; //!< vcmVal1
+  uint8_t volumeFxParam = 0; //!< vcmVal2
+  uint8_t midiChannel = 0;
+  uint8_t midiProgram = 0; //!< mpr
+  uint8_t effectiveNote = 0; //!< nt2, effective sample note after translation
+  uint8_t sampleIndex = 0; //!< smp, sample index (1-based)
+  uint8_t dkl = 0;
+  uint8_t efg = 0;
+  uint8_t o00 = 0;
+  uint8_t i00 = 0;
+  uint8_t j00 = 0;
+  uint8_t n00 = 0;
+  uint8_t p00 = 0;
+  uint8_t q00 = 0;
+  uint8_t t00 = 0;
+  uint8_t s00 = 0;
+  uint8_t oxh = 0;
+  uint8_t w00 = 0;
+  uint8_t vce = 0;
+  uint8_t linkedPortaFxValue = 0;
+  uint8_t sfx = 0;
+  uint8_t vse = 0; //!< 0..64
+  int8_t ltr = 0; //!< Last tremolo
 
 private:
-    SlaveChannel* m_scOffst = nullptr;
+  SlaveChannel* m_scOffst = nullptr;
 
 public:
-    void setSlave(SlaveChannel* slave)
-    {
-        BOOST_ASSERT(slave != nullptr);
-        m_scOffst = slave;
-    }
+  void setSlave(SlaveChannel* slave)
+  {
+    BOOST_ASSERT( slave != nullptr );
+    m_scOffst = slave;
+  }
 
-    SlaveChannel* getSlave()
-    {
-        return m_scOffst;
-    }
+  SlaveChannel* getSlave()
+  {
+    return m_scOffst;
+  }
 
-    const SlaveChannel* getSlave() const
-    {
-        return m_scOffst;
-    }
+  const SlaveChannel* getSlave() const
+  {
+    return m_scOffst;
+  }
 
-    uint8_t plr = 0; //!< pattern loop row (1-based)
-    uint8_t plc = 0; //!< pattern loop count
-    uint8_t panbrelloWaveform = 0;
-    uint8_t panbrelloOffset = 0;
-    uint8_t panbrelloDepth = 0;
-    uint8_t panbrelloSpeed = 0;
-    uint8_t lastRandomPanbrelloValue = 0;
-    int8_t lvi = 0;
+  uint8_t plr = 0; //!< pattern loop row (1-based)
+  uint8_t plc = 0; //!< pattern loop count
+  uint8_t panbrelloWaveform = 0;
+  uint8_t panbrelloOffset = 0;
+  uint8_t panbrelloDepth = 0;
+  uint8_t panbrelloSpeed = 0;
+  uint8_t lastRandomPanbrelloValue = 0;
+  int8_t lvi = 0;
 
-    //ofs:0x3e
-    uint8_t cp = 32; // init from header, 0..64
-    uint8_t channelVolume = 64; //!< 0..64
-    int8_t vch = 0; //!< volume change?
-    int8_t tremorCountdown = 0;
-    bool tremorOn = false;
-    int8_t retriggerCountdown = 0; //!< rtc
-    uint32_t portaTargetFrequency = 0;
-    uint8_t vwf = 0;
-    uint8_t vibratoPosition = 0;
-    uint8_t vdp = 0;
-    uint8_t vsp = 0;
-    uint8_t tremoloWaveForm = 0;
-    uint8_t tremoloPosition = 0;
-    uint8_t tremoloDepth = 0;
-    uint8_t tremoloSpeed = 0;
+  //ofs:0x3e
+  uint8_t cp = 32; // init from header, 0..64
+  uint8_t channelVolume = 64; //!< 0..64
+  int8_t vch = 0; //!< volume change?
+  int8_t tremorCountdown = 0;
+  bool tremorOn = false;
+  int8_t retriggerCountdown = 0; //!< rtc
+  uint32_t portaTargetFrequency = 0;
+  uint8_t vwf = 0;
+  uint8_t vibratoPosition = 0;
+  uint8_t vdp = 0;
+  uint8_t vsp = 0;
+  uint8_t tremoloWaveForm = 0;
+  uint8_t tremoloPosition = 0;
+  uint8_t tremoloDepth = 0;
+  uint8_t tremoloSpeed = 0;
 
-    uint16_t slideSpeed = 0;
+  uint16_t slideSpeed = 0;
 
-    uint8_t tremorOnTime = 0;
-    uint8_t tremorOffTime = 0;
-    uint8_t arpeggioStage = 0;
-    float arpeggioStage1 = 0;
-    float arpeggioStage2 = 0;
-    int8_t channelVolumeChange = 0;
-    int8_t panSlideChange = 0;
-    int8_t globalVolumeChange = 0;
+  uint8_t tremorOnTime = 0;
+  uint8_t tremorOffTime = 0;
+  uint8_t arpeggioStage = 0;
+  float arpeggioStage1 = 0;
+  float arpeggioStage2 = 0;
+  int8_t channelVolumeChange = 0;
+  int8_t panSlideChange = 0;
+  int8_t globalVolumeChange = 0;
 
-    int8_t sfxData = 0;
-    uint8_t sfxType = 0;
+  int8_t sfxData = 0;
+  uint8_t sfxType = 0;
 
-    void enable()
-    {
-        flags |= HCFLG_ON;
-    }
+  void enable()
+  {
+    flags |= HCFLG_ON;
+  }
 
-    void disable()
-    {
-        flags &= ~HCFLG_ON;
-    }
+  void disable()
+  {
+    flags &= ~HCFLG_ON;
+  }
 
-    bool isEnabled() const noexcept
-    {
-        return (flags & HCFLG_ON) != 0;
-    }
+  bool isEnabled() const noexcept
+  {
+    return (flags & HCFLG_ON) != 0;
+  }
 
-    ChannelState channelState{};
+  ChannelState channelState{};
 
-    AbstractArchive& serialize(AbstractArchive* archive) override
-    {
-        return *archive
-               % flags
-               % cellMask
-               % patternNote
-               % patternInstrument
-               % patternVolume
-               % patternFx
-               % patternFxParam
-               % lastPatternFx
-               % lastPatternFxParam
-               % volumeFx
-               % volumeFxParam
-               % midiChannel
-               % midiProgram
-               % effectiveNote
-               % sampleIndex
-               % dkl
-               % efg
-               % o00
-               % i00
-               % j00
-               % n00
-               % p00
-               % q00
-               % t00
-               % s00
-               % oxh
-               % w00
-               % vce
-               % linkedPortaFxValue
-               % sfx
-               % vse
-               % ltr
-               % *reinterpret_cast<uintptr_t*>(&m_scOffst)
-               % plr
-               % plc
-               % panbrelloWaveform
-               % panbrelloOffset
-               % panbrelloDepth
-               % panbrelloSpeed
-               % lastRandomPanbrelloValue
-               % lvi
-               % cp
-               % channelVolume
-               % vch
-               % tremorCountdown
-               % tremorOn
-               % retriggerCountdown
-               % portaTargetFrequency
-               % vwf
-               % vibratoPosition
-               % vdp
-               % vsp
-               % tremoloWaveForm
-               % tremoloPosition
-               % tremoloDepth
-               % tremoloSpeed
-               % slideSpeed
-               % tremorOnTime
-               % tremorOffTime
-               % arpeggioStage
-               % arpeggioStage1
-               % arpeggioStage2
-               % channelVolumeChange
-               % panSlideChange
-               % globalVolumeChange
-               % sfxData
-               % sfxType
-               % channelState;
-    }
+  AbstractArchive& serialize(AbstractArchive* archive) override
+  {
+    return *archive
+      % flags
+      % cellMask
+      % patternNote
+      % patternInstrument
+      % patternVolume
+      % patternFx
+      % patternFxParam
+      % lastPatternFx
+      % lastPatternFxParam
+      % volumeFx
+      % volumeFxParam
+      % midiChannel
+      % midiProgram
+      % effectiveNote
+      % sampleIndex
+      % dkl
+      % efg
+      % o00
+      % i00
+      % j00
+      % n00
+      % p00
+      % q00
+      % t00
+      % s00
+      % oxh
+      % w00
+      % vce
+      % linkedPortaFxValue
+      % sfx
+      % vse
+      % ltr
+      % *reinterpret_cast<uintptr_t*>(&m_scOffst)
+      % plr
+      % plc
+      % panbrelloWaveform
+      % panbrelloOffset
+      % panbrelloDepth
+      % panbrelloSpeed
+      % lastRandomPanbrelloValue
+      % lvi
+      % cp
+      % channelVolume
+      % vch
+      % tremorCountdown
+      % tremorOn
+      % retriggerCountdown
+      % portaTargetFrequency
+      % vwf
+      % vibratoPosition
+      % vdp
+      % vsp
+      % tremoloWaveForm
+      % tremoloPosition
+      % tremoloDepth
+      % tremoloSpeed
+      % slideSpeed
+      % tremorOnTime
+      % tremorOffTime
+      % arpeggioStage
+      % arpeggioStage1
+      % arpeggioStage2
+      % channelVolumeChange
+      % panSlideChange
+      % globalVolumeChange
+      % sfxData
+      % sfxType
+      % channelState;
+  }
 };
 }
 }

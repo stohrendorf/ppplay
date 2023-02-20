@@ -28,31 +28,31 @@
  * @{
  */
 
- /**
-  * @interface ITimer
-  * @brief Timer interface
-  */
+/**
+ * @interface ITimer
+ * @brief Timer interface
+ */
 class ITimer
 {
-    DISABLE_COPY(ITimer)
+  DISABLE_COPY( ITimer )
 public:
-    /**
-     * @brief Default constructor
-     */
-    ITimer() = default;
-    /**
-     * @brief Virtual default destructor
-     */
-    virtual ~ITimer() = default;
-    /**
-     * @brief The timer interval in milliseconds
-     * @return The timer interval in milliseconds
-     */
-    virtual uint32_t interval() const = 0;
-    /**
-     * @brief Timer handler, called every interval() milliseconds
-     */
-    virtual void onTimer() = 0;
+  /**
+   * @brief Default constructor
+   */
+  ITimer() = default;
+  /**
+   * @brief Virtual default destructor
+   */
+  virtual ~ITimer() = default;
+  /**
+   * @brief The timer interval in milliseconds
+   * @return The timer interval in milliseconds
+   */
+  virtual uint32_t interval() const = 0;
+  /**
+   * @brief Timer handler, called every interval() milliseconds
+   */
+  virtual void onTimer() = 0;
 };
 
 /**

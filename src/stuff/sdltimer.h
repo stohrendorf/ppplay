@@ -33,41 +33,41 @@
  * @brief ITimer specialization for SDL
  */
 class SDLTimer
-    : public ITimer
+  : public ITimer
 {
 private:
-    /**
-     * @brief Timer interval for this timer
-     */
-    uint32_t m_interval;
-    /**
-     * @brief The internal SDL Timer ID
-     */
-    int m_id;
-    std::mutex m_callbackMutex;
+  /**
+   * @brief Timer interval for this timer
+   */
+  uint32_t m_interval;
+  /**
+   * @brief The internal SDL Timer ID
+   */
+  int m_id;
+  std::mutex m_callbackMutex;
 
-    /**
-     * @brief SDL Timer callback handler
-     * @param[in] interval Timer interval
-     * @param[in] userdata Pointer to the owning SDLTimer
-     * @return @a interval
-     * @details
-     * Calls ITimer::onTimer()
-     */
-    static uint32_t callback(uint32_t interval, void* userdata);
+  /**
+   * @brief SDL Timer callback handler
+   * @param[in] interval Timer interval
+   * @param[in] userdata Pointer to the owning SDLTimer
+   * @return @a interval
+   * @details
+   * Calls ITimer::onTimer()
+   */
+  static uint32_t callback(uint32_t interval, void* userdata);
 
 public:
-    DISABLE_COPY(SDLTimer)
+  DISABLE_COPY( SDLTimer )
 
-    /**
-     * @brief Constructor
-     * @param[in] interval Desired timer interval in milliseconds
-     */
-    explicit SDLTimer(uint32_t interval);
+  /**
+   * @brief Constructor
+   * @param[in] interval Desired timer interval in milliseconds
+   */
+  explicit SDLTimer(uint32_t interval);
 
-    ~SDLTimer() override;
+  ~SDLTimer() override;
 
-    uint32_t interval() const override;
+  uint32_t interval() const override;
 };
 
 /**

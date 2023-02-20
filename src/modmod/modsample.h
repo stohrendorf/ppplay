@@ -33,47 +33,47 @@ namespace ppp
 namespace mod
 {
 class ModSample
-    : public Sample
+  : public Sample
 {
 public:
-    DISABLE_COPY(ModSample)
+  DISABLE_COPY( ModSample )
 
-    ModSample() = default;
+  ModSample() = default;
 
-    bool loadHeader(Stream* stream);
+  bool loadHeader(Stream* stream);
 
-    bool loadData(Stream* stream);
+  bool loadData(Stream* stream);
 
-    bool loadAdpcmData(Stream* stream);
+  bool loadAdpcmData(Stream* stream);
 
-    uint8_t finetune() const;
+  uint8_t finetune() const;
 
-    size_t loopStart() const
-    {
-        return m_loopStart;
-    }
+  size_t loopStart() const
+  {
+    return m_loopStart;
+  }
 
-    size_t loopEnd() const
-    {
-        return m_loopEnd;
-    }
+  size_t loopEnd() const
+  {
+    return m_loopEnd;
+  }
 
-    LoopType loopType() const
-    {
-        return m_loopType;
-    }
+  LoopType loopType() const
+  {
+    return m_loopType;
+  }
 
 private:
-    uint8_t m_finetune = 0;
-    size_t m_loopStart = 0;
-    size_t m_loopEnd = std::numeric_limits<size_t>::max();
-    LoopType m_loopType = LoopType::None;
+  uint8_t m_finetune = 0;
+  size_t m_loopStart = 0;
+  size_t m_loopEnd = std::numeric_limits<size_t>::max();
+  LoopType m_loopType = LoopType::None;
 protected:
-    /**
-     * @brief Get the logger
-     * @return Child logger with attached ".mod"
-     */
-    static light4cxx::Logger* logger();
+  /**
+   * @brief Get the logger
+   * @return Child logger with attached ".mod"
+   */
+  static light4cxx::Logger* logger();
 };
 }
 }

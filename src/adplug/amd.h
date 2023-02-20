@@ -24,46 +24,46 @@
 #include "mod.h"
 
 class AmdPlayer
-    : public ModPlayer
+  : public ModPlayer
 {
 public:
-    DISABLE_COPY(AmdPlayer)
+  DISABLE_COPY( AmdPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    AmdPlayer() = default;
+  AmdPlayer() = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override
-    {
-        return "AMUSIC Adlib Tracker";
-    }
+  std::string type() const override
+  {
+    return "AMUSIC Adlib Tracker";
+  }
 
-    std::string title() const override
-    {
-        return m_amdSongname;
-    }
+  std::string title() const override
+  {
+    return m_amdSongname;
+  }
 
-    std::string author() const override
-    {
-        return m_author;
-    }
+  std::string author() const override
+  {
+    return m_author;
+  }
 
-    size_t instrumentCount() const override
-    {
-        return 26;
-    }
+  size_t instrumentCount() const override
+  {
+    return 26;
+  }
 
-    std::string instrumentTitle(size_t n) const override
-    {
-        return m_instrumentNames[n];
-    }
+  std::string instrumentTitle(size_t n) const override
+  {
+    return m_instrumentNames[n];
+  }
 
 private:
-    std::string m_amdSongname;
-    std::string m_author;
-    std::array<std::string, 26> m_instrumentNames;
+  std::string m_amdSongname;
+  std::string m_author;
+  std::array<std::string, 26> m_instrumentNames;
 };

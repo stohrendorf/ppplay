@@ -24,55 +24,55 @@
 #include "mod.h"
 
 class DtmPlayer
-    : public ModPlayer
+  : public ModPlayer
 {
 public:
-    DISABLE_COPY(DtmPlayer)
+  DISABLE_COPY( DtmPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    DtmPlayer() = default;
+  DtmPlayer() = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    void rewind(const boost::optional<size_t>& subsong) override;
+  void rewind(const boost::optional<size_t>& subsong) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override;
+  std::string type() const override;
 
-    std::string title() const override;
+  std::string title() const override;
 
-    std::string author() const override;
+  std::string author() const override;
 
-    std::string description() const override;
+  std::string description() const override;
 
-    std::string instrumentTitle(size_t n) const override;
+  std::string instrumentTitle(size_t n) const override;
 
-    size_t instrumentCount() const override;
+  size_t instrumentCount() const override;
 
 private:
 
-    struct Header
-    {
-        char id[12] = "";
-        uint8_t version = 0;
-        char title[20] = "";
-        char author[20] = "";
-        uint8_t numpat = 0;
-        uint8_t numinst = 0;
-    };
+  struct Header
+  {
+    char id[12] = "";
+    uint8_t version = 0;
+    char title[20] = "";
+    char author[20] = "";
+    uint8_t numpat = 0;
+    uint8_t numinst = 0;
+  };
 
-    Header m_header{};
+  Header m_header{};
 
-    std::string m_description{};
+  std::string m_description{};
 
-    struct Instrument
-    {
-        char name[13] = "";
-        uint8_t data[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    };
-    Instrument m_instruments[128];
+  struct Instrument
+  {
+    char name[13] = "";
+    uint8_t data[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  };
+  Instrument m_instruments[128];
 
-    static std::vector<uint8_t> unpack_pattern(const std::vector<uint8_t>& input);
+  static std::vector<uint8_t> unpack_pattern(const std::vector<uint8_t>& input);
 };

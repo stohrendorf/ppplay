@@ -1,4 +1,5 @@
 build/
+cmake-build-*/
 .kdev4/
 /config.h
 /Doxyfile

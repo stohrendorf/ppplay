@@ -24,8 +24,8 @@
 
 /***** CPlayer *****/
 
-const std::array<uint16_t, 12> Player::s_noteTable{{363, 385, 408, 432, 458, 485, 514, 544, 577, 611, 647, 686}};
+const std::array<uint16_t, 12> Player::s_noteTable{ { 363, 385, 408, 432, 458, 485, 514, 544, 577, 611, 647, 686 } };
 
-const std::array<uint8_t, 9> Player::s_opTable{{0x00, 0x01, 0x02, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12}};
+const std::array<uint8_t, 9> Player::s_opTable{ { 0x00, 0x01, 0x02, 0x08, 0x09, 0x0a, 0x10, 0x11, 0x12 } };
 
 Player::Player() = default;

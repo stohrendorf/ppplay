@@ -37,41 +37,41 @@ class AudioFifo;
 class VolumeObserver
 {
 private:
-    //! @brief Sum of all left absolute sample values
-    uint64_t m_volLeftSum;
-    //! @brief Sum of all left absolute sample values (logarithmic)
-    uint16_t m_volLeftLog;
+  //! @brief Sum of all left absolute sample values
+  uint64_t m_volLeftSum;
+  //! @brief Sum of all left absolute sample values (logarithmic)
+  uint16_t m_volLeftLog;
 
-    //! @brief Sum of all right absolute sample values
-    uint64_t m_volRightSum;
-    //! @brief Sum of all right absolute sample values (logarithmic)
-    uint16_t m_volRightLog;
+  //! @brief Sum of all right absolute sample values
+  uint64_t m_volRightSum;
+  //! @brief Sum of all right absolute sample values (logarithmic)
+  uint16_t m_volRightLog;
 
-    //! @brief Observed FIFO
-    AudioFifo* m_fifo;
-    boost::signals2::scoped_connection m_dataPushedConnection;
-    boost::signals2::scoped_connection m_dataPulledConnection;
+  //! @brief Observed FIFO
+  AudioFifo* m_fifo;
+  boost::signals2::scoped_connection m_dataPushedConnection;
+  boost::signals2::scoped_connection m_dataPulledConnection;
 public:
-    DISABLE_COPY(VolumeObserver)
+  DISABLE_COPY( VolumeObserver )
 
-    explicit VolumeObserver(AudioFifo* fifo);
+  explicit VolumeObserver(AudioFifo* fifo);
 
-    ~VolumeObserver() = default;
+  ~VolumeObserver() = default;
 
-    inline uint16_t leftVol() const
-    {
-        return m_volLeftLog;
-    }
+  inline uint16_t leftVol() const
+  {
+    return m_volLeftLog;
+  }
 
-    inline uint16_t rightVol() const
-    {
-        return m_volRightLog;
-    }
+  inline uint16_t rightVol() const
+  {
+    return m_volRightLog;
+  }
 
 private:
-    void dataPulled(const AudioFrameBufferPtr& buffer);
+  void dataPulled(const AudioFrameBufferPtr& buffer);
 
-    void dataPushed(const AudioFrameBufferPtr& buffer);
+  void dataPushed(const AudioFrameBufferPtr& buffer);
 };
 
 /**

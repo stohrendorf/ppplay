@@ -25,41 +25,41 @@
 
 namespace ppp
 {
-    /**
-     * @ingroup GenMod
-     * @{
-     */
+/**
+ * @ingroup GenMod
+ * @{
+ */
 
-    /**
-     * @struct ModuleState
-     * @brief Contains information about the a playback state
-     */
-    struct ModuleState : public ISerializable
-    {
-        explicit ModuleState() = default;
+/**
+ * @struct ModuleState
+ * @brief Contains information about the a playback state
+ */
+struct ModuleState : public ISerializable
+{
+  explicit ModuleState() = default;
 
-        AbstractArchive& serialize(AbstractArchive* data) override;
+  AbstractArchive& serialize(AbstractArchive* data) override;
 
-        //! @brief Speed
-        int16_t speed = 0;
-        //! @brief Tempo
-        int16_t tempo = 0;
-        //! @brief Order
-        size_t order = 0;
-        //! @brief Row
-        int16_t row = 0;
-        //! @brief Tick index
-        int16_t tick = 0;
-        //! @brief Global volume
-        int16_t globalVolume = 0x40;
-        int16_t globalVolumeLimit = 0x40;
-        //! @brief Played Sample frames
-        size_t playedFrames = 0;
-        //! @brief Pattern index of order
-        size_t pattern = 0;
-    };
+  //! @brief Speed
+  int16_t speed = 0;
+  //! @brief Tempo
+  int16_t tempo = 0;
+  //! @brief Order
+  size_t order = 0;
+  //! @brief Row
+  int16_t row = 0;
+  //! @brief Tick index
+  int16_t tick = 0;
+  //! @brief Global volume
+  int16_t globalVolume = 0x40;
+  int16_t globalVolumeLimit = 0x40;
+  //! @brief Played Sample frames
+  size_t playedFrames = 0;
+  //! @brief Pattern index of order
+  size_t pattern = 0;
+};
 
-    /**
-     * @}
-     */
+/**
+ * @}
+ */
 }

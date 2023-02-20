@@ -22,44 +22,44 @@
 /***** EmuPlayer *****/
 
 EmuPlayer::EmuPlayer(unsigned long nfreq, size_t nbufsize)
-    : PlayerHandler()
-      , m_audioBuf(nbufsize * 2, 0)
-      , m_freq(nfreq)
-      , m_oplInterp(m_freq, opl::Opl3::SampleRate)
+  : PlayerHandler()
+  , m_audioBuf( nbufsize * 2, 0 )
+  , m_freq( nfreq )
+  , m_oplInterp( opl::Opl3::SampleRate, m_freq )
 {
 }
 
 void EmuPlayer::frame()
 {
-    static long framesUntilUpdate = 0;
-    size_t towrite = m_audioBuf.size() / 2;
-    int16_t* pos = m_audioBuf.data();
+  static long framesUntilUpdate = 0;
+  size_t towrite = m_audioBuf.size() / 2;
+  int16_t* pos = m_audioBuf.data();
 
-    // Prepare audiobuf with emulator output
-    while( towrite > 0 )
+  // Prepare audiobuf with emulator output
+  while( towrite > 0 )
+  {
+    while( framesUntilUpdate < 0 )
     {
-        while( framesUntilUpdate < 0 )
-        {
-            setIsPlaying(getPlayer()->update());
-            framesUntilUpdate += getPlayer()->framesUntilUpdate();
-        }
-
-        std::array<int16_t, 4> samples;
-        getPlayer()->read(&samples);
-        pos[0] = samples[0] + samples[1];
-        pos[1] = samples[2] + samples[3];
-        pos += 2;
-
-        if( m_oplInterp.next() == 2 )
-        {
-            getPlayer()->read(nullptr); // skip a sample
-            --framesUntilUpdate;
-        }
-        m_oplInterp = 0;
-        --framesUntilUpdate;
-        --towrite;
+      setIsPlaying( getPlayer()->update() );
+      framesUntilUpdate += getPlayer()->framesUntilUpdate();
     }
 
-    // call output driver
-    output(m_audioBuf);
+    std::array<int16_t, 4> samples;
+    getPlayer()->read( &samples );
+    pos[0] = samples[0] + samples[1];
+    pos[1] = samples[2] + samples[3];
+    pos += 2;
+
+    if( m_oplInterp.next() == 2 )
+    {
+      getPlayer()->read( nullptr ); // skip a sample
+      --framesUntilUpdate;
+    }
+    m_oplInterp = 0;
+    --framesUntilUpdate;
+    --towrite;
+  }
+
+  // call output driver
+  output( m_audioBuf );
 }

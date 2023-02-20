@@ -40,32 +40,32 @@ namespace xm
  * @brief XM pattern storage class
  */
 class XmPattern
-    : public Field<XmCell>
+  : public Field<XmCell>
 {
 public:
-    DISABLE_COPY(XmPattern)
+  DISABLE_COPY( XmPattern )
 
-    /**
-     * @brief Constructor
-     * @param[in] chans Number of channels/columns needed
-     */
-    explicit XmPattern(int16_t chans);
+  /**
+   * @brief Constructor
+   * @param[in] chans Number of channels/columns needed
+   */
+  explicit XmPattern(int16_t chans);
 
-    /**
-     * @brief Load the pattern from a stream
-     * @param[in] str Stream to load from
-     * @return @c true on success
-     */
-    bool load(Stream* str);
+  /**
+   * @brief Load the pattern from a stream
+   * @param[in] str Stream to load from
+   * @return @c true on success
+   */
+  bool load(Stream* str);
 
-    static std::unique_ptr<XmPattern> createDefaultPattern(int16_t chans);
+  static std::unique_ptr<XmPattern> createDefaultPattern(int16_t chans);
 
 protected:
-    /**
-     * @brief Get the logger
-     * @return Child logger with attached ".xm"
-     */
-    static light4cxx::Logger* logger();
+  /**
+   * @brief Get the logger
+   * @return Child logger with attached ".xm"
+   */
+  static light4cxx::Logger* logger();
 };
 } // namespace xm
 } // namespace ppp

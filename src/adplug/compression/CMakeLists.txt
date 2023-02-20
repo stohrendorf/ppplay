@@ -1,4 +1,4 @@
-add_library(badplay_compression STATIC
-        sixpack.h
-        sixpack.cpp
-)
+add_library( badplay_compression STATIC
+             sixpack.h
+             sixpack.cpp
+             )

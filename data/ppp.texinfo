@@ -1,11 +1,11 @@
 \input texinfo   @c -*-texinfo-*-
 @c %**start of header
-@setfilename ppp.info
-@settitle PeePeePlayer manual 0.1.2
+@setfilename ppplay.info
+@settitle PPPlay manual 0.1.2
 @c %**end of header
 
 @copying
-This manual is for PeePeePlayer, version 0.1.2.
+This manual is for PPPlay, version 0.1.2.
 
 Copyright @copyright{} 2011 Steffen Ohrendorf.
 
@@ -20,7 +20,7 @@ Free Documentation License''.
 @end copying
 
 @titlepage
-@title PeePeePlayer manual
+@title PPPlay manual
 @subtitle for version 0.1.2
 @author Steffen Ohrendorf
 
@@ -36,28 +36,28 @@ Published by Steffen Ohrendorf.
 @ifnottex
 @dircategory Multimedia
 @direntry
-* PeePeePlayer (ppp).       The PeePeePlayer manual
+* PPPlay (ppplay).       The PPPlay manual
 @end direntry
 
 @node Top
-@top PeePeePlayer manual
+@top PPPlay manual
 
-This manual is for PeePeePlayer, version 0.1.2.
+This manual is for PPPlay, version 0.1.2.
 @end ifnottex
 
 @ifset man
 @c man begin SYNOPSIS
-ppp [@b{options}] @file{modfile}
+ppplay [@b{options}] @file{modfile}
 @c man end
 @end ifset
 
 @c man begin DESCRIPTION
-@command{ppp} plays ScreamTracker 3 and FastTracker 2 modules
+@command{ppplay} plays ScreamTracker 3 and FastTracker 2 modules
 and is able to convert them to @acronym{MP3, @acronym{MPEG, Motion Picture Experts Group} Layer 3} files.
 @c man end
 
 @menu
-* Invoking:: Invoking PeePeePlayer
+* Invoking:: Invoking PPPlay
 * Usage:: Using the @abbr{GUI}
 * GNU Free Documentation License:: Your rights and permissions
 * Index:: The complete index
@@ -65,28 +65,28 @@ and is able to convert them to @acronym{MP3, @acronym{MPEG, Motion Picture Exper
 
 @node Invoking
 @chapter Invoking
-@pindex ppp
-@cindex Invoking @command{ppp}
+@pindex ppplay
+@cindex Invoking @command{ppplay}
 
 @c man begin DESCRIPTION
-The @command{ppp} program can be invoked in the following ways.
+The @command{ppplay} program can be invoked in the following ways.
 
-The PeePeePlayer supports several options for configuring
+The PPPlay supports several options for configuring
 its behaviour.
 
 The simpliest way of invoking it is
 @smallexample
-ppp @file{modulefile}
+ppplay @file{modulefile}
 @end smallexample
 
-This tells @command{ppp} to try to load the file @file{modulefile},
+This tells @command{ppplay} to try to load the file @file{modulefile},
 to preprocess it, then to initialize its audio and video subsystems
 and finally start playing it.
 
-Another small example which instructs PeePeePlayer to convert a
+Another small example which instructs PPPlay to convert a
 module file to an @acronym{MP3} file without showing up a window:
 @smallexample
-ppp -nq @file{modulefile}
+ppplay -nq @file{modulefile}
 @end smallexample
 @c man end
 
@@ -115,7 +115,7 @@ be printed.
 @kindex --no-gui
 @item -n
 @itemx --no-gui
-This option disables the @abbr{GUI} window of @command{ppp}.
+This option disables the @abbr{GUI} window of @command{ppplay}.
 
 When using this option, you may also want to use @option{--very-verbose}.
 
@@ -129,7 +129,7 @@ by appending @file{.mp3} to the input filename.
 
 The command line
 @smallexample
-ppp -q ~/Music/module.s3m
+ppplay -q ~/Music/module.s3m
 @end smallexample
 would produce a file @file{~/Music/module.s3m.mp3}.
 
@@ -143,12 +143,12 @@ On Linux, you may convert a folder of @abbr{S3M} files with the
 following command line:
 
 @smallexample
-for FN in *.s3m; do ppp -Vnq $FN; done
+for FN in *.s3m; do ppplay -Vnq $FN; done
 @end smallexample
 
 The option @option{-V} is used here because the option
 @option{-n} disables the @abbr{GUI}, so you can see
-if PeePeePlayer may have encountered a bug that causes
+if PPPlay may have encountered a bug that causes
 it to hang.
 @c man end
 
@@ -175,7 +175,7 @@ Pauses or resumes playback.
 
 @item Esc
 @kindex Esc
-Exit PeePeePlayer.
+Exit PPPlay.
 
 @end table
 

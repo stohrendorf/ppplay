@@ -24,38 +24,38 @@
 #include "mod.h"
 
 class DfmPlayer
-    : public ModPlayer
+  : public ModPlayer
 {
 public:
-    DISABLE_COPY(DfmPlayer)
+  DISABLE_COPY( DfmPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    DfmPlayer() = default;
+  DfmPlayer() = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override;
+  std::string type() const override;
 
-    size_t instrumentCount() const override
-    {
-        return 32;
-    }
+  size_t instrumentCount() const override
+  {
+    return 32;
+  }
 
-    std::string instrumentTitle(size_t n) const override
-    {
-        return m_instName[n];
-    }
+  std::string instrumentTitle(size_t n) const override
+  {
+    return m_instName[n];
+  }
 
-    std::string description() const override
-    {
-        return m_songInfo;
-    }
+  std::string description() const override
+  {
+    return m_songInfo;
+  }
 
 private:
-    std::string m_songInfo{};
-    std::array<std::string, 32> m_instName{{}};
-    std::string m_type{};
+  std::string m_songInfo{};
+  std::array<std::string, 32> m_instName{ {} };
+  std::string m_type{};
 };

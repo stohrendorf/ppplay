@@ -26,16 +26,16 @@
 /***** CPlayerDesc *****/
 
 PlayerDesc::PlayerDesc(Factory f, const std::string& type, const std::vector<std::string>& ext)
-    : factory(f), filetype(type), extensions(ext)
+  : factory( f ), filetype( type ), extensions( ext )
 {
 }
 
 std::string PlayerDesc::get_extension(size_t n) const
 {
-    if( n >= extensions.size() )
-    {
-        return std::string();
-    }
-    return extensions[n];
+  if( n >= extensions.size() )
+  {
+    return std::string();
+  }
+  return extensions[n];
 }
 

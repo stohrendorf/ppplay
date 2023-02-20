@@ -6,4 +6,4 @@ add_library(ppplay_light4cxx STATIC
     level.h
 )
 
-target_link_libraries(ppplay_light4cxx PUBLIC ${Boost_SYSTEM_LIBRARY})
+target_link_libraries(ppplay_light4cxx PUBLIC Boost::system)

@@ -26,145 +26,147 @@
 class FileStream;
 
 class S3mPlayer
-    : public Player
+  : public Player
 {
 public:
-    DISABLE_COPY(S3mPlayer)
+  DISABLE_COPY( S3mPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    S3mPlayer();
+  S3mPlayer();
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    bool update() override;
+  bool update() override;
 
-    void rewind(const boost::optional<size_t>& subsong) override;
+  void rewind(const boost::optional<size_t>& subsong) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override;
+  std::string type() const override;
 
-    std::string title() const override
-    {
-        return m_header.name;
-    }
+  std::string title() const override
+  {
+    return m_header.name;
+  }
 
-    size_t instrumentCount() const override
-    {
-        return m_header.instrumentCount;
-    }
+  size_t instrumentCount() const override
+  {
+    return m_header.instrumentCount;
+  }
 
-    std::string instrumentTitle(size_t n) const override
-    {
-        return m_instruments[n].name;
-    }
+  std::string instrumentTitle(size_t n) const override
+  {
+    return m_instruments[n].name;
+  }
 
 protected:
 #pragma pack(push, 1)
-    struct S3mHeader
-    {
-        char name[28] = ""; // song name
-        uint8_t endOfFile = 0;
-        uint8_t type = 0;
-        uint8_t dummy[2];
-        uint16_t orderCount = 0;
-        uint16_t instrumentCount = 0;
-        uint16_t patternCount = 0;
-        uint16_t flags = 0;
-        uint16_t trackerVersion = 0;
-        uint16_t ffi = 0;
-        char scrm[4] = "";
-        uint8_t gv = 0;
-        uint8_t initialSpeed = 0;
-        uint8_t initialTempo = 0;
-        uint8_t mv = 0;
-        uint8_t uc = 0;
-        uint8_t dp = 0;
-        uint8_t dummy2[8];
-        uint16_t special = 0;
-        std::array<uint8_t, 32> chanset{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
-    };
+  struct S3mHeader
+  {
+    char name[28] = ""; // song name
+    uint8_t endOfFile = 0;
+    uint8_t type = 0;
+    uint8_t dummy[2];
+    uint16_t orderCount = 0;
+    uint16_t instrumentCount = 0;
+    uint16_t patternCount = 0;
+    uint16_t flags = 0;
+    uint16_t trackerVersion = 0;
+    uint16_t ffi = 0;
+    char scrm[4] = "";
+    uint8_t gv = 0;
+    uint8_t initialSpeed = 0;
+    uint8_t initialTempo = 0;
+    uint8_t mv = 0;
+    uint8_t uc = 0;
+    uint8_t dp = 0;
+    uint8_t dummy2[8];
+    uint16_t special = 0;
+    std::array<uint8_t, 32>
+      chanset{ { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
+  };
 
-    struct S3mInstrument
-    {
-        uint8_t type = 0;
-        char filename[15] = "";
-        uint8_t d00 = 0, d01 = 0, d02 = 0, d03 = 0, d04 = 0, d05 = 0, d06 = 0, d07 = 0, d08 = 0, d09 = 0, d0a = 0, d0b = 0, volume = 0, dsk = 0, dummy[2];
-        uint32_t c2spd = 0;
-        char dummy2[12], name[28] = "", scri[4] = "";
-    };
+  struct S3mInstrument
+  {
+    uint8_t type = 0;
+    char filename[15] = "";
+    uint8_t d00 = 0, d01 = 0, d02 = 0, d03 = 0, d04 = 0, d05 = 0, d06 = 0, d07 = 0, d08 = 0, d09 = 0, d0a = 0, d0b = 0,
+      volume = 0, dsk = 0, dummy[2];
+    uint32_t c2spd = 0;
+    char dummy2[12], name[28] = "", scri[4] = "";
+  };
 #pragma pack(pop)
 
-    void setInstrument(size_t i, const S3mInstrument& instrument)
-    {
-        BOOST_ASSERT(i < 99);
-        m_instruments[i] = instrument;
-    }
+  void setInstrument(size_t i, const S3mInstrument& instrument)
+  {
+    BOOST_ASSERT( i < 99 );
+    m_instruments[i] = instrument;
+  }
 
-    struct S3mCell
-    {
-        uint8_t note, octave, instrument, volume, effect, effectValue;
-    };
+  struct S3mCell
+  {
+    uint8_t note, octave, instrument, volume, effect, effectValue;
+  };
 
-    S3mCell* patternChannel(size_t pattern, size_t row)
-    {
-        BOOST_ASSERT(pattern < 99);
-        BOOST_ASSERT(row < 64);
-        return m_patterns[pattern][row];
-    }
+  S3mCell* patternChannel(size_t pattern, size_t row)
+  {
+    BOOST_ASSERT( pattern < 99 );
+    BOOST_ASSERT( row < 64 );
+    return m_patterns[pattern][row];
+  }
 
-    void setHeader(const S3mHeader& header)
-    {
-        m_header = header;
-        setInitialSpeed(m_header.initialSpeed ? m_header.initialSpeed : 6u);
-        setInitialTempo(m_header.initialTempo ? m_header.initialTempo : 125u);
-    }
+  void setHeader(const S3mHeader& header)
+  {
+    m_header = header;
+    setInitialSpeed( m_header.initialSpeed ? m_header.initialSpeed : 6u );
+    setInitialTempo( m_header.initialTempo ? m_header.initialTempo : 125u );
+  }
 
 private:
-    S3mInstrument m_instruments[99];
+  S3mInstrument m_instruments[99];
 
-    S3mCell m_patterns[99][64][32];
+  S3mCell m_patterns[99][64][32];
 
-    struct Channel
-    {
-        uint16_t frequency;
-        uint16_t nextFrequency;
-        uint8_t octave;
-        uint8_t volume;
-        uint8_t instrument;
-        uint8_t effect;
-        uint8_t effectValue;
-        uint8_t dualInfo;
-        uint8_t key;
-        uint8_t nextOctave;
-        uint8_t trigger;
-        uint8_t note;
-    };
+  struct Channel
+  {
+    uint16_t frequency;
+    uint16_t nextFrequency;
+    uint8_t octave;
+    uint8_t volume;
+    uint8_t instrument;
+    uint8_t effect;
+    uint8_t effectValue;
+    uint8_t dualInfo;
+    uint8_t key;
+    uint8_t nextOctave;
+    uint8_t trigger;
+    uint8_t note;
+  };
 
-    Channel m_channels[9];
+  Channel m_channels[9];
 
-    S3mHeader m_header{};
-    uint8_t m_patternDelay = 0;
-    bool m_songend = false;
-    uint8_t m_loopStart = 0;
-    uint8_t m_loopCounter = 0;
+  S3mHeader m_header{};
+  uint8_t m_patternDelay = 0;
+  bool m_songend = false;
+  uint8_t m_loopStart = 0;
+  uint8_t m_loopCounter = 0;
 
-    static const int8_t chnresolv[];
-    static const uint16_t notetable[12];
-    static const uint8_t vibratotab[32];
+  static const int8_t chnresolv[];
+  static const uint16_t notetable[12];
+  static const uint8_t vibratotab[32];
 
-    void setvolume(uint8_t chan);
+  void setvolume(uint8_t chan);
 
-    void setfreq(uint8_t chan);
+  void setfreq(uint8_t chan);
 
-    void playnote(uint8_t chan);
+  void playnote(uint8_t chan);
 
-    void slide_down(uint8_t chan, uint8_t amount);
+  void slide_down(uint8_t chan, uint8_t amount);
 
-    void slide_up(uint8_t chan, uint8_t amount);
+  void slide_up(uint8_t chan, uint8_t amount);
 
-    void vibrato(uint8_t chan, uint8_t effectValue);
+  void vibrato(uint8_t chan, uint8_t effectValue);
 
-    void tone_portamento(uint8_t chan, uint8_t effectValue);
+  void tone_portamento(uint8_t chan, uint8_t effectValue);
 };

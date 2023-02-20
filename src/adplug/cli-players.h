@@ -25,7 +25,8 @@
  */
 
 // Enumerate ALL outputs (regardless of availability)
-enum class Outputs {
+enum class Outputs
+{
   none, disk, sdl
 };
 

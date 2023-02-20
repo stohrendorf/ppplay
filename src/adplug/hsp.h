@@ -24,17 +24,17 @@
 #include "hsc.h"
 
 class HspPlayer
-    : public HscPlayer
+  : public HscPlayer
 {
 public:
-    DISABLE_COPY(HspPlayer)
+  DISABLE_COPY( HspPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    HspPlayer()
-        : HscPlayer(false)
-    {
-    }
+  HspPlayer()
+    : HscPlayer( false )
+  {
+  }
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 };

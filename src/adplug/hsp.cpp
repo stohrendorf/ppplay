@@ -25,54 +25,54 @@
 
 Player* HspPlayer::factory()
 {
-    return new HspPlayer();
+  return new HspPlayer();
 }
 
 bool HspPlayer::load(const std::string& filename)
 {
-    FileStream f(filename);
-    if( !f || f.extension() != ".hsp" )
+  FileStream f( filename );
+  if( !f || f.extension() != ".hsp" )
+  {
+    return false;
+  }
+
+  // file validation section
+  auto filesize = f.size();
+  uint16_t orgsize;
+  f >> orgsize;
+  if( orgsize > 59187 )
+  {
+    return false;
+  }
+
+  // load section
+  std::vector<uint8_t> cmp( filesize );
+  f.seek( 0 );
+  f.read( cmp.data(), cmp.size() );
+
+  std::vector<uint8_t> org( orgsize );
+  for( int i = 0, j = 0; i < filesize; j += cmp[i], i += 2 )
+  { // RLE decompress
+    if( j >= orgsize )
     {
-        return false;
-    }
+      break;
+    } // memory boundary check
+    std::fill_n( org.begin() + j, j + cmp[i] < orgsize ? cmp[i] : orgsize - j - 1, cmp[i + 1] );
+  }
 
-    // file validation section
-    auto filesize = f.size();
-    uint16_t orgsize;
-    f >> orgsize;
-    if( orgsize > 59187 )
-    {
-        return false;
-    }
+  memcpy( instrumentData(), org.data(), 128 * 12 ); // instruments
+  for( int i = 0; i < 128; i++ )
+  { // correct instruments
+    instrumentData()[i][2] ^= (instrumentData()[i][2] & 0x40) << 1;
+    instrumentData()[i][3] ^= (instrumentData()[i][3] & 0x40) << 1;
+    instrumentData()[i][11] >>= 4; // slide
+  }
+  for( int i = 0; i < 51; ++i )
+  {
+    addOrder( org[128 * 12 + i] );
+  }
+  memcpy( patternData(), org.data() + 128 * 12 + 51, orgsize - 128u * 12 - 51 ); // patterns
 
-    // load section
-    std::vector<uint8_t> cmp(filesize);
-    f.seek(0);
-    f.read(cmp.data(), cmp.size());
-
-    std::vector<uint8_t> org(orgsize);
-    for( int i = 0, j = 0; i < filesize; j += cmp[i], i += 2 )
-    { // RLE decompress
-        if( j >= orgsize )
-        {
-            break;
-        } // memory boundary check
-        std::fill_n(org.begin() + j, j + cmp[i] < orgsize ? cmp[i] : orgsize - j - 1, cmp[i + 1]);
-    }
-
-    memcpy(instrumentData(), org.data(), 128 * 12); // instruments
-    for( int i = 0; i < 128; i++ )
-    { // correct instruments
-        instrumentData()[i][2] ^= (instrumentData()[i][2] & 0x40) << 1;
-        instrumentData()[i][3] ^= (instrumentData()[i][3] & 0x40) << 1;
-        instrumentData()[i][11] >>= 4; // slide
-    }
-    for( int i = 0; i < 51; ++i )
-    {
-        addOrder(org[128 * 12 + i]);
-    }
-    memcpy(patternData(), org.data() + 128 * 12 + 51, orgsize - 128u * 12 - 51); // patterns
-
-    rewind(size_t(0));
-    return true;
+  rewind( size_t( 0 ) );
+  return true;
 }

@@ -33,116 +33,116 @@
 
 Player* DroPlayer::factory()
 {
-    return new DroPlayer();
+  return new DroPlayer();
 }
 
 bool DroPlayer::load(const std::string& filename)
 {
-    FileStream f(filename);
-    if( !f )
-    {
-        return false;
-    }
+  FileStream f( filename );
+  if( !f )
+  {
+    return false;
+  }
 
-    // file validation section
-    char id[8];
-    f.read(id, 8);
-    if( strncmp(id, "DBRAWOPL", 8) != 0 )
-    {
-        return false;
-    }
-    uint32_t version;
-    f >> version;
-    if( version != 0x10000 )
-    {
-        return false;
-    }
+  // file validation section
+  char id[8];
+  f.read( id, 8 );
+  if( strncmp( id, "DBRAWOPL", 8 ) != 0 )
+  {
+    return false;
+  }
+  uint32_t version;
+  f >> version;
+  if( version != 0x10000 )
+  {
+    return false;
+  }
 
-    // load section
-    f >> m_msTotal; // Total milliseconds in file
-    uint32_t length;
-    f >> length; // Total data bytes in file
-    m_data.resize(length);
+  // load section
+  f >> m_msTotal; // Total milliseconds in file
+  uint32_t length;
+  f >> length; // Total data bytes in file
+  m_data.resize( length );
 
-    f.seekrel(1); // Type of opl data this can contain - ignored
-    f.read(m_data.data(), 3);
+  f.seekrel( 1 ); // Type of opl data this can contain - ignored
+  f.read( m_data.data(), 3 );
 
-    if( (m_data[0] == 0) || (m_data[1] == 0) || (m_data[2] == 0) )
-    {
-        // Some early .DRO files only used one byte for the hardware type, then
-        // later changed to four bytes with no version number change.  If we're
-        // here then this is a later (more popular) file with the full four bytes
-        // for the hardware-type.
-        f.seekrel(-3);
-    }
-    f.read(m_data.data(), m_data.size());
-    rewind(size_t(0));
-    return true;
+  if( (m_data[0] == 0) || (m_data[1] == 0) || (m_data[2] == 0) )
+  {
+    // Some early .DRO files only used one byte for the hardware type, then
+    // later changed to four bytes with no version number change.  If we're
+    // here then this is a later (more popular) file with the full four bytes
+    // for the hardware-type.
+    f.seekrel( -3 );
+  }
+  f.read( m_data.data(), m_data.size() );
+  rewind( size_t( 0 ) );
+  return true;
 }
 
 bool DroPlayer::update()
 {
-    if( m_delay > 500 )
-    {
-        m_delay -= 500;
-        return true;
-    }
-    else
-    {
-        m_delay = 0;
-    }
+  if( m_delay > 500 )
+  {
+    m_delay -= 500;
+    return true;
+  }
+  else
+  {
+    m_delay = 0;
+  }
 
-    while( m_pos < m_data.size() )
+  while( m_pos < m_data.size() )
+  {
+    unsigned char cmd = m_data[m_pos++];
+    switch( cmd )
     {
-        unsigned char cmd = m_data[m_pos++];
-        switch( cmd )
-        {
-            case 0:
-                m_delay = 1u + m_data[m_pos++];
-                return true;
-            case 1:
-                m_delay = 1u + m_data[m_pos] + (m_data[m_pos + 1] << 8);
-                m_pos += 2;
-                return true;
-            case 2:;
-                break;
-            case 3:;
-                break;
-            default:
-                if( cmd == 4 )
-                {
-                    cmd = m_data[m_pos++];
-                } //data override
-                getOpl()->writeReg(cmd, m_data[m_pos++]);
-                break;
-        }
+    case 0:
+      m_delay = 1u + m_data[m_pos++];
+      return true;
+    case 1:
+      m_delay = 1u + m_data[m_pos] + (m_data[m_pos + 1] << 8);
+      m_pos += 2;
+      return true;
+    case 2:;
+      break;
+    case 3:;
+      break;
+    default:
+      if( cmd == 4 )
+      {
+        cmd = m_data[m_pos++];
+      } //data override
+      getOpl()->writeReg( cmd, m_data[m_pos++] );
+      break;
     }
+  }
 
-    return m_pos < m_data.size();
+  return m_pos < m_data.size();
 }
 
 void DroPlayer::rewind(const boost::optional<size_t>&)
 {
-    m_delay = 1;
-    m_pos = 0;
+  m_delay = 1;
+  m_pos = 0;
 
-    //dro assumes all registers are initialized to 0
-    //registers not initialized to 0 will be corrected
-    //in the data stream
-    for( auto i = 0u; i < 256; i++ )
-    {
-        getOpl()->writeReg(i, 0);
-    }
+  //dro assumes all registers are initialized to 0
+  //registers not initialized to 0 will be corrected
+  //in the data stream
+  for( auto i = 0u; i < 256; i++ )
+  {
+    getOpl()->writeReg( i, 0 );
+  }
 }
 
 size_t DroPlayer::framesUntilUpdate() const
 {
-    if( m_delay > 500 )
-    {
-        return SampleRate / 2;
-    }
-    else
-    {
-        return SampleRate * m_delay / 1000;
-    }
+  if( m_delay > 500 )
+  {
+    return SampleRate / 2;
+  }
+  else
+  {
+    return SampleRate * m_delay / 1000;
+  }
 }

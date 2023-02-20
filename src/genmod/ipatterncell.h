@@ -35,31 +35,31 @@ namespace ppp
  * @brief General interface for pattern note cells
  */
 class IPatternCell
-    : public ISerializable
+  : public ISerializable
 {
 public:
-    /**
-     * @brief Destructor
-     */
-    ~IPatternCell() noexcept override = default;
+  /**
+   * @brief Destructor
+   */
+  ~IPatternCell() noexcept override = default;
 
-    /**
-     * @brief Clears the cell's data
-     */
-    virtual void clear() = 0;
+  /**
+   * @brief Clears the cell's data
+   */
+  virtual void clear() = 0;
 
-    /**
-     * @brief Get the tracker-like string representation of this cell
-     * @return Tracker-like string
-     */
-    virtual std::string trackerString() const = 0;
+  /**
+   * @brief Get the tracker-like string representation of this cell
+   * @return Tracker-like string
+   */
+  virtual std::string trackerString() const = 0;
 
 protected:
-    /**
-     * @brief Get the logger
-     * @return Logger with name "cell"
-     */
-    static light4cxx::Logger* logger();
+  /**
+   * @brief Get the logger
+   * @return Logger with name "cell"
+   */
+  static light4cxx::Logger* logger();
 };
 
 /**

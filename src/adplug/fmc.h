@@ -24,86 +24,86 @@
 #include "mod.h"
 
 class FmcPlayer
-    : public ModPlayer
+  : public ModPlayer
 {
 public:
-    DISABLE_COPY(FmcPlayer)
+  DISABLE_COPY( FmcPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    FmcPlayer() = default;
+  FmcPlayer() = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override;
+  std::string type() const override;
 
-    std::string title() const override;
+  std::string title() const override;
 
-    std::string instrumentTitle(size_t n) const override;
+  std::string instrumentTitle(size_t n) const override;
 
-    size_t instrumentCount() const override;
+  size_t instrumentCount() const override;
 
 private:
 
 #pragma pack(push, 1)
-    struct fmc_event
-    {
-        uint8_t byte0;
-        uint8_t byte1;
-        uint8_t byte2;
-    };
+  struct fmc_event
+  {
+    uint8_t byte0;
+    uint8_t byte1;
+    uint8_t byte2;
+  };
 #pragma pack(pop)
 
-    struct fmc_header
-    {
-        char id[4] = "";
-        char title[21] = "";
-        uint8_t numchan = 0;
-    };
-    fmc_header header{};
+  struct fmc_header
+  {
+    char id[4] = "";
+    char title[21] = "";
+    uint8_t numchan = 0;
+  };
+  fmc_header header{};
 
 #pragma pack(push, 1)
-    struct Instrument
-    {
-        uint8_t synthesis;
-        uint8_t feedback;
+  struct Instrument
+  {
+    uint8_t synthesis;
+    uint8_t feedback;
 
-        uint8_t mod_attack;
-        uint8_t mod_decay;
-        uint8_t mod_sustain;
-        uint8_t mod_release;
-        uint8_t mod_volume;
-        uint8_t mod_ksl;
-        uint8_t mod_freq_multi;
-        uint8_t mod_waveform;
-        uint8_t mod_sustain_sound;
-        uint8_t mod_ksr;
-        uint8_t mod_vibrato;
-        uint8_t mod_tremolo;
-        uint8_t car_attack;
-        uint8_t car_decay;
-        uint8_t car_sustain;
-        uint8_t car_release;
-        uint8_t car_volume;
-        uint8_t car_ksl;
-        uint8_t car_freq_multi;
-        uint8_t car_waveform;
-        uint8_t car_sustain_sound;
-        uint8_t car_ksr;
-        uint8_t car_vibrato;
-        uint8_t car_tremolo;
+    uint8_t mod_attack;
+    uint8_t mod_decay;
+    uint8_t mod_sustain;
+    uint8_t mod_release;
+    uint8_t mod_volume;
+    uint8_t mod_ksl;
+    uint8_t mod_freq_multi;
+    uint8_t mod_waveform;
+    uint8_t mod_sustain_sound;
+    uint8_t mod_ksr;
+    uint8_t mod_vibrato;
+    uint8_t mod_tremolo;
+    uint8_t car_attack;
+    uint8_t car_decay;
+    uint8_t car_sustain;
+    uint8_t car_release;
+    uint8_t car_volume;
+    uint8_t car_ksl;
+    uint8_t car_freq_multi;
+    uint8_t car_waveform;
+    uint8_t car_sustain_sound;
+    uint8_t car_ksr;
+    uint8_t car_vibrato;
+    uint8_t car_tremolo;
 
-        int8_t pitch_shift;
+    int8_t pitch_shift;
 
-        char name[21];
-    };
+    char name[21];
+  };
 #pragma pack(pop)
 
-    Instrument instruments[32]{};
+  Instrument instruments[32]{};
 
-    using ModPlayer::addInstrument;
+  using ModPlayer::addInstrument;
 
-    void addInstrument(const Instrument& instrument);
+  void addInstrument(const Instrument& instrument);
 };

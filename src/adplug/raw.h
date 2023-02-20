@@ -24,40 +24,40 @@
 #include "player.h"
 
 class RawPlayer
-    : public Player
+  : public Player
 {
 public:
-    DISABLE_COPY(RawPlayer)
+  DISABLE_COPY( RawPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    RawPlayer() = default;
+  RawPlayer() = default;
 
-    ~RawPlayer() override = default;
+  ~RawPlayer() override = default;
 
-    bool load(const std::string& filename) override;
+  bool load(const std::string& filename) override;
 
-    bool update() override;
+  bool update() override;
 
-    void rewind(const boost::optional<size_t>& subsong) override;
+  void rewind(const boost::optional<size_t>& subsong) override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override
-    {
-        return "RdosPlay RAW";
-    }
+  std::string type() const override
+  {
+    return "RdosPlay RAW";
+  }
 
 private:
 #pragma pack(push, 1)
-    struct TrackData
-    {
-        uint8_t param, command;
-    };
+  struct TrackData
+  {
+    uint8_t param, command;
+  };
 #pragma pack(pop)
-    std::vector<TrackData> m_data{};
+  std::vector<TrackData> m_data{};
 
-    size_t m_dataPosition = 0;
-    uint8_t m_delay = 0;
-    bool m_songend = false;
+  size_t m_dataPosition = 0;
+  uint8_t m_delay = 0;
+  bool m_songend = false;
 };

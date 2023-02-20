@@ -24,48 +24,48 @@
 #include "xad.h"
 
 class PsiPlayer
-    : public XadPlayer
+  : public XadPlayer
 {
 public:
-    DISABLE_COPY(PsiPlayer)
+  DISABLE_COPY( PsiPlayer )
 
-    static Player* factory();
+  static Player* factory();
 
-    PsiPlayer() = default;
+  PsiPlayer() = default;
 
 private:
-    struct Header
-    {
-        uint16_t instr_ptr = 0;
-        uint16_t seq_ptr = 0;
-    };
+  struct Header
+  {
+    uint16_t instr_ptr = 0;
+    uint16_t seq_ptr = 0;
+  };
 
-    Header m_header{};
+  Header m_header{};
 
-    struct PsiData
-    {
-        const uint8_t* instr_table = nullptr;
-        const uint8_t* seq_table = nullptr;
-        uint8_t note_delay[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-        uint8_t note_curdelay[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-        std::array<bool, 9> looping{{}};
-    };
+  struct PsiData
+  {
+    const uint8_t* instr_table = nullptr;
+    const uint8_t* seq_table = nullptr;
+    uint8_t note_delay[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    uint8_t note_curdelay[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    std::array<bool, 9> looping{ {} };
+  };
 
-    PsiData m_psi{};
+  PsiData m_psi{};
 
-    //
-    bool xadplayer_load() override
-    {
-        return xadHeader().fmt == PSI;
-    }
+  //
+  bool xadplayer_load() override
+  {
+    return xadHeader().fmt == PSI;
+  }
 
-    void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
+  void xadplayer_rewind(const boost::optional<size_t>& subsong) override;
 
-    void xadplayer_update() override;
+  void xadplayer_update() override;
 
-    size_t framesUntilUpdate() const override;
+  size_t framesUntilUpdate() const override;
 
-    std::string type() const override;
+  std::string type() const override;
 
-    size_t instrumentCount() const override;
+  size_t instrumentCount() const override;
 };

@@ -31,45 +31,45 @@ namespace ppp
 {
 AbstractModule::Ptr tryLoad(const std::string& filename, uint32_t frq, int maxRpt, Sample::Interpolation inter)
 {
-    static const auto plugins = {
-            &xm::XmModule::factory,
-            &it::ItModule::factory,
-            &s3m::S3mModule::factory,
-            &mod::ModModule::factory,
-            &hsc::Module::factory
-    };
+  static const auto plugins = {
+    &xm::XmModule::factory,
+    &it::ItModule::factory,
+    &s3m::S3mModule::factory,
+    &mod::ModModule::factory,
+    &hsc::Module::factory
+  };
 
+  {
+    FileStream file( filename );
+    if( file.isOpen() )
     {
-        FileStream file( filename );
-        if( file.isOpen() )
+      for( auto plugin: plugins )
+      {
+        file.clear();
+        file.seek( 0 );
+        if( auto result = (*plugin)( &file, frq, maxRpt, inter ) )
         {
-            for( auto plugin : plugins )
-            {
-                file.clear();
-                file.seek( 0 );
-                if( auto result = (*plugin)( &file, frq, maxRpt, inter ) )
-                {
-                    return result;
-                }
-            }
+          return result;
         }
+      }
     }
+  }
 
+  {
+    ArchiveFileStream file( filename );
+    if( file.isOpen() )
     {
-        ArchiveFileStream file( filename );
-        if( file.isOpen() )
+      for( auto plugin: plugins )
+      {
+        file.clear();
+        file.seek( 0 );
+        if( auto result = (*plugin)( &file, frq, maxRpt, inter ) )
         {
-            for( auto plugin : plugins )
-            {
-                file.clear();
-                file.seek( 0 );
-                if( auto result = (*plugin)( &file, frq, maxRpt, inter ) )
-                {
-                    return result;
-                }
-            }
+          return result;
         }
+      }
     }
-    return nullptr;
+  }
+  return nullptr;
 }
 }

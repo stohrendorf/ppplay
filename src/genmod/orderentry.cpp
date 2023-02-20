@@ -29,27 +29,27 @@ namespace ppp
 {
 void OrderEntry::setIndex(uint8_t index)
 {
-    m_index = index;
-    m_rowPlaybackCounter.clear();
+  m_index = index;
+  m_rowPlaybackCounter.clear();
 }
 
 AbstractArchive& OrderEntry::serialize(AbstractArchive* data)
 {
-    return *data % m_index % m_playbackCount;
+  return *data % m_index % m_playbackCount;
 }
 
 uint8_t OrderEntry::increaseRowPlayback(std::size_t row)
 {
-    if(row >= m_rowPlaybackCounter.size())
-    {
-        m_rowPlaybackCounter.resize(row + 1, 0);
-    }
-    return ++m_rowPlaybackCounter[row];
+  if( row >= m_rowPlaybackCounter.size() )
+  {
+    m_rowPlaybackCounter.resize( row + 1, 0 );
+  }
+  return ++m_rowPlaybackCounter[row];
 }
 
 light4cxx::Logger* OrderEntry::logger()
 {
-    return light4cxx::Logger::get("order");
+  return light4cxx::Logger::get( "order" );
 }
 }
 

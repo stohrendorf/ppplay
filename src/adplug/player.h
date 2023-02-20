@@ -31,158 +31,158 @@
 class Player
 {
 public:
-    DISABLE_COPY(Player)
+  DISABLE_COPY( Player )
 
-    static constexpr const auto SampleRate = opl::Opl3::SampleRate;
+  static constexpr const auto SampleRate = opl::Opl3::SampleRate;
 
-    Player();
+  Player();
 
-    virtual ~Player() = default;
+  virtual ~Player() = default;
 
-    /***** Operational methods *****/
-    virtual bool load(const std::string& filename) = 0;
+  /***** Operational methods *****/
+  virtual bool load(const std::string& filename) = 0;
 
-    virtual bool update() = 0;                 // executes replay code for 1 tick
-    virtual void rewind(const boost::optional<size_t>& subsong) = 0; // rewinds to specified subsong
-    virtual size_t framesUntilUpdate() const = 0;
+  virtual bool update() = 0;                 // executes replay code for 1 tick
+  virtual void rewind(const boost::optional<size_t>& subsong) = 0; // rewinds to specified subsong
+  virtual size_t framesUntilUpdate() const = 0;
 
-    /***** Informational methods *****/
-    virtual std::string type() const = 0; // returns file type
-    virtual std::string title() const     // returns song title
-    {
-        return std::string();
-    }
+  /***** Informational methods *****/
+  virtual std::string type() const = 0; // returns file type
+  virtual std::string title() const     // returns song title
+  {
+    return std::string();
+  }
 
-    virtual std::string author() const // returns song author name
-    {
-        return std::string();
-    }
+  virtual std::string author() const // returns song author name
+  {
+    return std::string();
+  }
 
-    virtual std::string description() const // returns song description
-    {
-        return std::string();
-    }
+  virtual std::string description() const // returns song description
+  {
+    return std::string();
+  }
 
-    uint8_t currentRow() const // returns currently playing row
-    {
-        return m_currentRow;
-    }
+  uint8_t currentRow() const // returns currently playing row
+  {
+    return m_currentRow;
+  }
 
-    uint16_t initialSpeed() const // returns current song speed
-    {
-        return m_initialSpeed;
-    }
+  uint16_t initialSpeed() const // returns current song speed
+  {
+    return m_initialSpeed;
+  }
 
-    uint16_t currentSpeed() const // returns current song speed
-    {
-        return m_currentSpeed;
-    }
+  uint16_t currentSpeed() const // returns current song speed
+  {
+    return m_currentSpeed;
+  }
 
-    uint16_t currentTempo() const // returns current song speed
-    {
-        return m_currentTempo;
-    }
+  uint16_t currentTempo() const // returns current song speed
+  {
+    return m_currentTempo;
+  }
 
-    uint16_t initialTempo() const // returns current song speed
-    {
-        return m_initialTempo;
-    }
+  uint16_t initialTempo() const // returns current song speed
+  {
+    return m_initialTempo;
+  }
 
-    virtual size_t subSongCount() const
-    // returns number of subsongs
-    {
-        return 1;
-    }
+  virtual size_t subSongCount() const
+  // returns number of subsongs
+  {
+    return 1;
+  }
 
-    virtual size_t currentSubSong() const // returns current subsong
-    {
-        return 0;
-    }
+  virtual size_t currentSubSong() const // returns current subsong
+  {
+    return 0;
+  }
 
-    // returns number of instruments
-    virtual size_t instrumentCount() const
-    {
-        return 0;
-    }
+  // returns number of instruments
+  virtual size_t instrumentCount() const
+  {
+    return 0;
+  }
 
-    virtual std::string instrumentTitle(size_t) const // returns n-th instrument name
-    {
-        return std::string();
-    }
+  virtual std::string instrumentTitle(size_t) const // returns n-th instrument name
+  {
+    return std::string();
+  }
 
-    size_t orderCount() const
-    {
-        return m_order.size();
-    }
+  size_t orderCount() const
+  {
+    return m_order.size();
+  }
 
-    size_t currentOrder() const
-    {
-        return m_currentOrder;
-    }
+  size_t currentOrder() const
+  {
+    return m_currentOrder;
+  }
 
-    uint8_t currentPattern() const
-    {
-        BOOST_ASSERT(m_currentOrder < m_order.size());
-        return m_order[m_currentOrder];
-    }
+  uint8_t currentPattern() const
+  {
+    BOOST_ASSERT( m_currentOrder < m_order.size() );
+    return m_order[m_currentOrder];
+  }
 
-    opl::Opl3* getOpl()
-    {
-        return &m_oplChip;
-    }
+  opl::Opl3* getOpl()
+  {
+    return &m_oplChip;
+  }
 
-    virtual void read(std::array<int16_t, 4>* data)
-    {
-        m_oplChip.read(data);
-    }
+  virtual void read(std::array<int16_t, 4>* data)
+  {
+    m_oplChip.read( data );
+  }
 
 private:
-    opl::Opl3 m_oplChip{};
-    std::vector<uint8_t> m_order{};
-    size_t m_currentOrder = 0;
-    uint8_t m_currentRow = 0;
-    uint16_t m_initialSpeed = 6;
-    uint16_t m_currentSpeed = 6;
-    uint16_t m_initialTempo = 125;
-    uint16_t m_currentTempo = 125;
+  opl::Opl3 m_oplChip{};
+  std::vector<uint8_t> m_order{};
+  size_t m_currentOrder = 0;
+  uint8_t m_currentRow = 0;
+  uint16_t m_initialSpeed = 6;
+  uint16_t m_currentSpeed = 6;
+  uint16_t m_initialTempo = 125;
+  uint16_t m_currentTempo = 125;
 
 protected:
-    void addOrder(uint8_t order)
-    {
-        m_order.emplace_back(order);
-    }
+  void addOrder(uint8_t order)
+  {
+    m_order.emplace_back( order );
+  }
 
-    void setCurrentOrder(size_t idx)
-    {
-        //BOOST_ASSERT( idx < m_order.size() );
-        m_currentOrder = idx;
-    }
+  void setCurrentOrder(size_t idx)
+  {
+    //BOOST_ASSERT( idx < m_order.size() );
+    m_currentOrder = idx;
+  }
 
-    void setCurrentRow(uint8_t idx)
-    {
-        m_currentRow = idx;
-    }
+  void setCurrentRow(uint8_t idx)
+  {
+    m_currentRow = idx;
+  }
 
-    void setInitialSpeed(uint16_t spd)
-    {
-        m_initialSpeed = spd;
-    }
+  void setInitialSpeed(uint16_t spd)
+  {
+    m_initialSpeed = spd;
+  }
 
-    void setCurrentSpeed(uint16_t spd)
-    {
-        m_currentSpeed = spd;
-    }
+  void setCurrentSpeed(uint16_t spd)
+  {
+    m_currentSpeed = spd;
+  }
 
-    void setInitialTempo(uint16_t tempo)
-    {
-        m_initialTempo = tempo;
-    }
+  void setInitialTempo(uint16_t tempo)
+  {
+    m_initialTempo = tempo;
+  }
 
-    void setCurrentTempo(uint16_t tempo)
-    {
-        m_currentTempo = tempo;
-    }
+  void setCurrentTempo(uint16_t tempo)
+  {
+    m_currentTempo = tempo;
+  }
 
-    static const std::array<uint16_t, 12> s_noteTable; // standard adlib note table
-    static const std::array<uint8_t, 9> s_opTable; // the 9 operators as expected by the OPL
+  static const std::array<uint16_t, 12> s_noteTable; // standard adlib note table
+  static const std::array<uint8_t, 9> s_opTable; // the 9 operators as expected by the OPL
 };
