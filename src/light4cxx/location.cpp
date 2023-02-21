@@ -39,8 +39,8 @@ std::chrono::high_resolution_clock::time_point s_bootTime = std::chrono::high_re
  */
 long long timeSinceBootMs()
 {
-    std::chrono::high_resolution_clock::duration delta = std::chrono::high_resolution_clock::now() - s_bootTime;
-    return std::chrono::duration_cast<std::chrono::milliseconds>(delta).count();
+  std::chrono::high_resolution_clock::duration delta = std::chrono::high_resolution_clock::now() - s_bootTime;
+  return std::chrono::duration_cast<std::chrono::milliseconds>( delta ).count();
 }
 
 /**
@@ -69,176 +69,177 @@ std::string s_format = "[%T %<5t %r] %L (in %F:%l): %m";
  */
 const char* levelString(Level l)
 {
-    switch( l )
-    {
-        case Level::Off:
-            return "";
-        case Level::Trace:
-            return COLOR_CYAN "TRACE" COLOR_RESET;
-        case Level::Debug:
-            return COLOR_GREEN "DEBUG" COLOR_RESET;
-        case Level::Info:
-            return "INFO";
-        case Level::Warn:
-            return COLOR_YELLOW "WARN " COLOR_RESET;
-        case Level::Error:
-            return COLOR_RED "ERROR" COLOR_RESET;
-        case Level::Fatal:
-            return COLOR_RED "FATAL" COLOR_RESET;
-        case Level::All:
-            BOOST_THROW_EXCEPTION(std::runtime_error("Logging level invalid: Level::All should not be passed to levelString()"));
-        default:
-            BOOST_THROW_EXCEPTION(std::runtime_error("Logging level invalid: Unknown Level passed to levelString()"));
-    }
+  switch( l )
+  {
+  case Level::Off:
+    return "";
+  case Level::Trace:
+    return COLOR_CYAN "TRACE" COLOR_RESET;
+  case Level::Debug:
+    return COLOR_GREEN "DEBUG" COLOR_RESET;
+  case Level::Info:
+    return "INFO";
+  case Level::Warn:
+    return COLOR_YELLOW "WARN " COLOR_RESET;
+  case Level::Error:
+    return COLOR_RED "ERROR" COLOR_RESET;
+  case Level::Fatal:
+    return COLOR_RED "FATAL" COLOR_RESET;
+  case Level::All:
+    BOOST_THROW_EXCEPTION( std::runtime_error( "Logging level invalid: Level::All should not be passed to levelString()" ) );
+  default:
+    BOOST_THROW_EXCEPTION( std::runtime_error( "Logging level invalid: Unknown Level passed to levelString()" ) );
+  }
 }
 } // anonymous namespace
 
 void Location::setFormat(const std::string& fmt)
 {
-    s_format = fmt;
+  s_format = fmt;
 }
 
 std::string Location::toString(light4cxx::Level l, const light4cxx::Logger& logger, const std::string& msg) const
 {
-    std::ostringstream oss;
-    // 	const std::ios_base::fmtflags clearFlags = oss.flags();
-    int state = 0;
-    for( size_t i = 0; i < s_format.length(); i++ )
+  std::ostringstream oss;
+  // 	const std::ios_base::fmtflags clearFlags = oss.flags();
+  int state = 0;
+  for( size_t i = 0; i < s_format.length(); i++ )
+  {
+    char c = s_format[i];
+    switch( state )
     {
-        char c = s_format[i];
-        switch( state )
-        {
-            case 0:
-                // scan for %
-                if( c == '%' )
-                {
-                    state = 1;
-                    break;
-                }
-                oss << c;
-                break;
-            case 1:
-                // flags
-                switch( c )
-                {
-                    case '#':
-                        oss << std::showbase;
-                        break;
-                    case '+':
-                        oss << std::showpos;
-                        break;
-                    case ',':
-                        oss << std::showpoint;
-                        break;
-                    case '0':
-                        oss.fill('0');
-                        break;
-                    case ' ':
-                        oss.fill(' ');
-                        break;
-                    case '<':
-                        oss << std::left;
-                        break;
-                    case '|':
-                        oss << std::internal;
-                        break;
-                    case '>':
-                        oss << std::right;
-                        break;
-                    case '=':
-                        oss << std::fixed;
-                        break;
-                    case '~':
-                        oss << std::scientific;
-                        break;
-                    default:
-                        state = 2;
-                        i--;
-                        break;
-                }
-                break;
-            case 2:
-                // field width
-                if( isdigit(c) )
-                {
-                    oss.width(c - '0');
-                }
-                else
-                {
-                    i--;
-                }
-                state = 3;
-                break;
-            case 3:
-                // precision dot
-                if( c == '.' )
-                {
-                    state = 4;
-                }
-                else
-                {
-                    // no precision
-                    state = 5;
-                    i--;
-                }
-                break;
-            case 4:
-                // precision value
-                if( isdigit(c) )
-                {
-                    oss.precision(c - '0');
-                }
-                else
-                {
-                    oss.precision(0);
-                    i--;
-                }
-                state = 5;
-                break;
-            case 5:
-                // format specifier
-                switch( c )
-                {
-                    case '%':
-                        oss << '%';
-                        break;
-                    case 'f':
-                        oss << m_function;
-                        break;
-                    case 'F':
-                        oss << m_file;
-                        break;
-                    case 'l':
-                        oss << m_line;
-                        break;
-                    case 'L':
-                        oss << logger.name();
-                        break;
-                    case 'm':
-                        oss << msg;
-                        break;
-                    case 'r':
-                        oss << timeSinceBootMs() / 1000.0f;
-                        break;
-                    case 't':
-                        oss << levelString(l);
-                        break;
-                    case 'T':
-                        oss << std::hex << m_threadId;
-                        break;
-                    default:
-                        BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Unknown format specifier at: ") + s_format.substr(i)));
-                }
-                state = 0;
-                oss.copyfmt(std::ostringstream());
-                /*				oss.flags( clearFlags );
-                                                oss.fill(' ');
-                                                oss.width(0);*/
-                break;
-            default:
-                BOOST_THROW_EXCEPTION(std::runtime_error("Invalid format parsing state"));
-        }
+    case 0:
+      // scan for %
+      if( c == '%' )
+      {
+        state = 1;
+        break;
+      }
+      oss << c;
+      break;
+    case 1:
+      // flags
+      switch( c )
+      {
+      case '#':
+        oss << std::showbase;
+        break;
+      case '+':
+        oss << std::showpos;
+        break;
+      case ',':
+        oss << std::showpoint;
+        break;
+      case '0':
+        oss.fill( '0' );
+        break;
+      case ' ':
+        oss.fill( ' ' );
+        break;
+      case '<':
+        oss << std::left;
+        break;
+      case '|':
+        oss << std::internal;
+        break;
+      case '>':
+        oss << std::right;
+        break;
+      case '=':
+        oss << std::fixed;
+        break;
+      case '~':
+        oss << std::scientific;
+        break;
+      default:
+        state = 2;
+        i--;
+        break;
+      }
+      break;
+    case 2:
+      // field width
+      if( isdigit( c ) )
+      {
+        oss.width( c - '0' );
+      }
+      else
+      {
+        i--;
+      }
+      state = 3;
+      break;
+    case 3:
+      // precision dot
+      if( c == '.' )
+      {
+        state = 4;
+      }
+      else
+      {
+        // no precision
+        state = 5;
+        i--;
+      }
+      break;
+    case 4:
+      // precision value
+      if( isdigit( c ) )
+      {
+        oss.precision( c - '0' );
+      }
+      else
+      {
+        oss.precision( 0 );
+        i--;
+      }
+      state = 5;
+      break;
+    case 5:
+      // format specifier
+      switch( c )
+      {
+      case '%':
+        oss << '%';
+        break;
+      case 'f':
+        oss << m_function;
+        break;
+      case 'F':
+        oss << m_file;
+        break;
+      case 'l':
+        oss << m_line;
+        break;
+      case 'L':
+        oss << logger.name();
+        break;
+      case 'm':
+        oss << msg;
+        break;
+      case 'r':
+        oss << timeSinceBootMs() / 1000.0f;
+        break;
+      case 't':
+        oss << levelString( l );
+        break;
+      case 'T':
+        oss << std::hex << m_threadId;
+        break;
+      default:
+        BOOST_THROW_EXCEPTION( std::runtime_error(
+          std::string( "Unknown format specifier at: " ) + s_format.substr( i ) ) );
+      }
+      state = 0;
+      oss.copyfmt( std::ostringstream() );
+      /*				oss.flags( clearFlags );
+                                      oss.fill(' ');
+                                      oss.width(0);*/
+      break;
+    default:
+      BOOST_THROW_EXCEPTION( std::runtime_error( "Invalid format parsing state" ) );
     }
-    return oss.str();
+  }
+  return oss.str();
 }
 }

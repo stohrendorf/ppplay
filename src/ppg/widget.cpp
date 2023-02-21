@@ -59,9 +59,10 @@ Widget::~Widget()
   if( m_parent )
   {
 #ifndef NDEBUG
-    if( m_parent->m_children.cend() == std::find(m_parent->m_children.cbegin(), m_parent->m_children.cend(), this) )
+    if( m_parent->m_children.cend() == std::find( m_parent->m_children.cbegin(), m_parent->m_children.cend(), this ) )
     {
-        light4cxx::Logger::get("ppg.widget")->error(L4CXX_LOCATION, "The parent of the widget does not contain the widget itself");
+      light4cxx::Logger::get( "ppg.widget" )
+        ->error( L4CXX_LOCATION, "The parent of the widget does not contain the widget itself" );
     }
 #endif
     m_parent->m_children.remove( this );

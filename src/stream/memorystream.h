@@ -27,14 +27,14 @@
  * @brief Class derived from Stream for a std::stringstream
  */
 class MemoryStream
-    : public Stream
+  : public Stream
 {
 public:
-    DISABLE_COPY(MemoryStream)
+  DISABLE_COPY( MemoryStream )
 
-    explicit MemoryStream(const std::string& name = "MemoryStream");
+  explicit MemoryStream(const std::string& name = "MemoryStream");
 
-    std::streamsize size() const override;
+  std::streamsize size() const override;
 };
 
 #endif

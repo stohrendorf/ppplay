@@ -28,78 +28,78 @@
 #include <array>
 
 class UIMain
-    : public ppg::Widget
+  : public ppg::Widget
 {
 private:
-    ppg::Label* m_position;
-    ppg::Label* m_screenSep1;
-    ppg::Label* m_screenSep2;
-    ppg::Label* m_playbackInfo;
-    ppg::StereoPeakBar* m_volBar;
-    std::array<ppg::Label*, 16> m_chanInfos;
-    std::array<ppg::Label*, 16> m_chanCells;
-    ppg::Label* m_trackerInfo;
-    ppg::Label* m_modTitle;
-    ppg::ProgressBar* m_progress;
-    std::weak_ptr<ppp::AbstractModule> m_module;
-    AbstractAudioOutput::WeakPtr m_output;
-    std::vector<uint16_t> m_fftLeft;
-    std::vector<uint16_t> m_fftRight;
-    std::list<std::vector<uint32_t>> m_fftPicture;
-    std::chrono::high_resolution_clock::time_point m_nextShift = std::chrono::high_resolution_clock::now();
+  ppg::Label* m_position;
+  ppg::Label* m_screenSep1;
+  ppg::Label* m_screenSep2;
+  ppg::Label* m_playbackInfo;
+  ppg::StereoPeakBar* m_volBar;
+  std::array<ppg::Label*, 16> m_chanInfos;
+  std::array<ppg::Label*, 16> m_chanCells;
+  ppg::Label* m_trackerInfo;
+  ppg::Label* m_modTitle;
+  ppg::ProgressBar* m_progress;
+  std::weak_ptr<ppp::AbstractModule> m_module;
+  AbstractAudioOutput::WeakPtr m_output;
+  std::vector<uint16_t> m_fftLeft;
+  std::vector<uint16_t> m_fftRight;
+  std::list<std::vector<uint32_t>> m_fftPicture;
+  std::chrono::high_resolution_clock::time_point m_nextShift = std::chrono::high_resolution_clock::now();
 
-    void drawThis() override;
+  void drawThis() override;
 
 public:
-    DISABLE_COPY(UIMain)
+  DISABLE_COPY( UIMain )
 
-    UIMain(Widget* parent, const ppp::AbstractModule::Ptr& module, const AbstractAudioOutput::Ptr& output);
+  UIMain(Widget* parent, const ppp::AbstractModule::Ptr& module, const AbstractAudioOutput::Ptr& output);
 
-    ~UIMain() override = default;
+  ~UIMain() override = default;
 
-    void setFft(const std::vector<uint16_t>& left, const std::vector<uint16_t>& right)
+  void setFft(const std::vector<uint16_t>& left, const std::vector<uint16_t>& right)
+  {
+    m_fftLeft = left;
+    m_fftRight = right;
+  }
+
+  void toggleInfoVisibility()
+  {
+    const bool makeVisible = !m_chanInfos[0]->isVisible();
+
+    for( ppg::Label* lbl: m_chanInfos )
     {
-        m_fftLeft = left;
-        m_fftRight = right;
+      if( makeVisible )
+      {
+        lbl->show();
+      }
+      else
+      {
+        lbl->hide();
+      }
     }
 
-    void toggleInfoVisibility()
+    for( ppg::Label* lbl: m_chanCells )
     {
-        const bool makeVisible = !m_chanInfos[0]->isVisible();
-
-        for( ppg::Label* lbl : m_chanInfos )
-        {
-            if( makeVisible )
-            {
-                lbl->show();
-            }
-            else
-            {
-                lbl->hide();
-            }
-        }
-
-        for( ppg::Label* lbl : m_chanCells )
-        {
-            if( makeVisible )
-            {
-                lbl->show();
-            }
-            else
-            {
-                lbl->hide();
-            }
-        }
-
-        if( makeVisible )
-        {
-            m_trackerInfo->show();
-        }
-        else
-        {
-            m_trackerInfo->hide();
-        }
+      if( makeVisible )
+      {
+        lbl->show();
+      }
+      else
+      {
+        lbl->hide();
+      }
     }
+
+    if( makeVisible )
+    {
+      m_trackerInfo->show();
+    }
+    else
+    {
+      m_trackerInfo->hide();
+    }
+  }
 };
 
 #endif // UI_MAIN_H

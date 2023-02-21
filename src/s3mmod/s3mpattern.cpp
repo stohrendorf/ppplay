@@ -30,48 +30,49 @@ namespace ppp
 {
 namespace s3m
 {
-S3mPattern::S3mPattern() : Field<S3mCell>(32, 64)
+S3mPattern::S3mPattern()
+  : Field<S3mCell>( 32, 64 )
 {
 }
 
 bool S3mPattern::load(Stream* str, size_t pos)
 {
-    try
+  try
+  {
+    uint16_t patSize;
+    str->seek( pos );
+    *str >> patSize;
+    for( uint16_t currRow = 0; currRow < 64; /*nothing*/)
     {
-        uint16_t patSize;
-        str->seek(pos);
-        *str >> patSize;
-        for(uint16_t currRow = 0; currRow < 64; /*nothing*/)
-        {
-            uint8_t master;
-            *str >> master;
-            if(master == 0)
-            {
-                currRow++;
-                continue;
-            }
-            uint16_t currTrack = master & 31;
-            str->seekrel(-1);
-            if(!str->good())
-            {
-                return false;
-            }
-            if(!at(currTrack, currRow).load(str))
-            {
-                return false;
-            }
-        }
-        return str->good();
+      uint8_t master;
+      *str >> master;
+      if( master == 0 )
+      {
+        currRow++;
+        continue;
+      }
+      uint16_t currTrack = master & 31;
+      str->seekrel( -1 );
+      if( !str->good() )
+      {
+        return false;
+      }
+      if( !at( currTrack, currRow ).load( str ) )
+      {
+        return false;
+      }
     }
-    catch(...)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error(boost::current_exception_diagnostic_information()));
-    }
+    return str->good();
+  }
+  catch( ... )
+  {
+    BOOST_THROW_EXCEPTION( std::runtime_error( boost::current_exception_diagnostic_information() ) );
+  }
 }
 
 light4cxx::Logger* S3mPattern::logger()
 {
-    return light4cxx::Logger::get("pattern.s3m");
+  return light4cxx::Logger::get( "pattern.s3m" );
 }
 }
 }

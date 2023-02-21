@@ -41,28 +41,28 @@ class S3mCell;
  * @brief Pattern class for S3M Patterns
  */
 class S3mPattern
-    : public Field<S3mCell>
+  : public Field<S3mCell>
 {
 public:
-    DISABLE_COPY(S3mPattern)
+  DISABLE_COPY( S3mPattern )
 
-    //! @brief Constructor
-    explicit S3mPattern();
+  //! @brief Constructor
+  explicit S3mPattern();
 
-    /**
-     * @brief Load the cell from a stream
-     * @param[in] str The stream to load from
-     * @param[in] pos Position within @a str
-     * @return @c true on success
-     */
-    bool load(Stream* str, size_t pos);
+  /**
+   * @brief Load the cell from a stream
+   * @param[in] str The stream to load from
+   * @param[in] pos Position within @a str
+   * @return @c true on success
+   */
+  bool load(Stream* str, size_t pos);
 
 protected:
-    /**
-     * @brief Get the logger
-     * @return Child logger with attached ".s3m"
-     */
-    static light4cxx::Logger* logger();
+  /**
+   * @brief Get the logger
+   * @return Child logger with attached ".s3m"
+   */
+  static light4cxx::Logger* logger();
 };
 } // namespace s3m
 } // namespace ppp

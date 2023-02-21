@@ -26,20 +26,20 @@ namespace light4cxx
  * @{
  */
 
- /**
-  * @brief Logging levels
-  * @see light4cxx::Logger
-  */
+/**
+ * @brief Logging levels
+ * @see light4cxx::Logger
+ */
 enum class Level
 {
-    All, //!< @brief Everything will be logged
-    Trace, //!< @brief Trace messages and less verbose ones will be logged
-    Debug, //!< @brief Debug messages and less verbose ones will be logged
-    Info, //!< @brief Informational messages and less verbose ones will be logged
-    Warn, //!< @brief Warning messages and less verbose ones will be logged
-    Error, //!< @brief Error messages and less verbose ones will be logged
-    Fatal, //!< @brief Only fatal messages will be logged
-    Off //!< @brief Nothing will be logged
+  All, //!< @brief Everything will be logged
+  Trace, //!< @brief Trace messages and less verbose ones will be logged
+  Debug, //!< @brief Debug messages and less verbose ones will be logged
+  Info, //!< @brief Informational messages and less verbose ones will be logged
+  Warn, //!< @brief Warning messages and less verbose ones will be logged
+  Error, //!< @brief Error messages and less verbose ones will be logged
+  Fatal, //!< @brief Only fatal messages will be logged
+  Off //!< @brief Nothing will be logged
 };
 
 /**

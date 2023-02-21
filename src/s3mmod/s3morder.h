@@ -26,19 +26,19 @@ namespace ppp
 namespace s3m
 {
 class S3mOrder
-    : public OrderEntry
+  : public OrderEntry
 {
 public:
-    DISABLE_COPY(S3mOrder)
+  DISABLE_COPY( S3mOrder )
 
-    S3mOrder() = delete;
+  S3mOrder() = delete;
 
-    explicit S3mOrder(uint8_t idx)
-        : OrderEntry(idx)
-    {
-    }
+  explicit S3mOrder(uint8_t idx)
+    : OrderEntry( idx )
+  {
+  }
 
-    bool isUnplayed() const override;
+  bool isUnplayed() const override;
 };
 }
 }

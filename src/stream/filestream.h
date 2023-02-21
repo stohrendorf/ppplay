@@ -31,38 +31,38 @@
  * @note This is a read-only stream
  */
 class FileStream
-    : public Stream
+  : public Stream
 {
 private:
-    size_t m_size; //!< @brief Cached size of the file
+  size_t m_size; //!< @brief Cached size of the file
 public:
-    DISABLE_COPY(FileStream)
+  DISABLE_COPY( FileStream )
 
-    FileStream() = delete;
+  FileStream() = delete;
 
-    enum class Mode
-    {
-        Read, Write
-    };
+  enum class Mode
+  {
+    Read, Write
+  };
 
-    /**
-     * @brief Default contructor
-     * @param[in] filename Filename of the file to open
-     */
-    explicit FileStream(const std::string& filename, Mode mode = Mode::Read);
+  /**
+   * @brief Default contructor
+   * @param[in] filename Filename of the file to open
+   */
+  explicit FileStream(const std::string& filename, Mode mode = Mode::Read);
 
-    /**
-     * @brief Check if the file is opened
-     * @return @c true if the file is opened
-     */
-    bool isOpen() const;
+  /**
+   * @brief Check if the file is opened
+   * @return @c true if the file is opened
+   */
+  bool isOpen() const;
 
-    std::streamsize size() const override;
+  std::streamsize size() const override;
 
-    std::string extension() const
-    {
-        return boost::algorithm::to_lower_copy(boost::filesystem::path(name()).extension().string());
-    }
+  std::string extension() const
+  {
+    return boost::algorithm::to_lower_copy( boost::filesystem::path( name() ).extension().string() );
+  }
 };
 
 #endif

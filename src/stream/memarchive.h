@@ -27,17 +27,17 @@
  * @brief Specialization of AbstractArchive for memory storage
  */
 class MemArchive
-    : public AbstractArchive
+  : public AbstractArchive
 {
 public:
-    DISABLE_COPY(MemArchive)
+  DISABLE_COPY( MemArchive )
 
-    /**
-     * @brief Constructs this archive using a SBinStream
-     */
-    MemArchive();
+  /**
+   * @brief Constructs this archive using a SBinStream
+   */
+  MemArchive();
 
-    ~MemArchive() override;
+  ~MemArchive() override;
 };
 
 #endif

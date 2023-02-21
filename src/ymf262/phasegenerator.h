@@ -38,50 +38,51 @@ class Opl3;
  */
 class PhaseGenerator
 {
-    //! @brief Owning chip
-    Opl3* m_opl;
-    /**
-     * @brief Wave phase
-     * @invariant m_phase < 1024
-     */
-    uint32_t m_phase = 0;
-    /**
-     * @brief F-Number
-     * @invariant m_fNum < 1024
-     */
-    uint16_t m_fNum = 0;
-    /**
-     * @brief Block/octave
-     * @invariant m_block < 8
-     */
-    uint8_t m_block = 0;
-    /**
-     * @brief Speed multiplier
-     * @invariant m_mult < 16
-     */
-    uint8_t m_mult = 0;
+  //! @brief Owning chip
+  Opl3* m_opl;
+  /**
+   * @brief Wave phase
+   * @invariant m_phase < 1024
+   */
+  uint32_t m_phase = 0;
+  /**
+   * @brief F-Number
+   * @invariant m_fNum < 1024
+   */
+  uint16_t m_fNum = 0;
+  /**
+   * @brief Block/octave
+   * @invariant m_block < 8
+   */
+  uint8_t m_block = 0;
+  /**
+   * @brief Speed multiplier
+   * @invariant m_mult < 16
+   */
+  uint8_t m_mult = 0;
 public:
-    explicit PhaseGenerator(Opl3* opl) : m_opl(opl)
-    {
-        BOOST_ASSERT(opl != nullptr);
-    }
+  explicit PhaseGenerator(Opl3* opl)
+    : m_opl( opl )
+  {
+    BOOST_ASSERT( opl != nullptr );
+  }
 
-    /**
-     * @post m_fNum<1024 && m_block<8 && m_mult<16
-     */
-    void setFrequency(uint16_t f_number, uint8_t block, uint8_t mult);
+  /**
+   * @post m_fNum<1024 && m_block<8 && m_mult<16
+   */
+  void setFrequency(uint16_t f_number, uint8_t block, uint8_t mult);
 
-    /**
-     * @brief Advance phase
-     * @param[in] vib Use vibrato
-     * @return 10 bit phase
-     */
-    uint16_t advance(bool vib);
+  /**
+   * @brief Advance phase
+   * @param[in] vib Use vibrato
+   * @return 10 bit phase
+   */
+  uint16_t advance(bool vib);
 
-    void keyOn()
-    {
-        m_phase = 0;
-    }
+  void keyOn()
+  {
+    m_phase = 0;
+  }
 };
 }
 

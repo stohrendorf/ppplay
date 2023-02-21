@@ -19,7 +19,8 @@
 #include "memarchive.h"
 #include "memorystream.h"
 
-MemArchive::MemArchive() : AbstractArchive(std::make_shared<MemoryStream>())
+MemArchive::MemArchive()
+  : AbstractArchive( std::make_shared<MemoryStream>() )
 {
 }
 

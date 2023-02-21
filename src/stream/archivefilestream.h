@@ -27,20 +27,20 @@
  * @brief Class derived from MemoryStream for an archive file
  */
 class ArchiveFileStream
-    : public MemoryStream
+  : public MemoryStream
 {
 public:
-    DISABLE_COPY(ArchiveFileStream)
+  DISABLE_COPY( ArchiveFileStream )
 
-    explicit ArchiveFileStream(const std::string& filename);
+  explicit ArchiveFileStream(const std::string& filename);
 
-    bool isOpen() const
-    {
-        return m_isOpen;
-    }
+  bool isOpen() const
+  {
+    return m_isOpen;
+  }
 
 private:
-    bool m_isOpen;
+  bool m_isOpen;
 };
 
 #endif

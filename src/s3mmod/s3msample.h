@@ -39,56 +39,56 @@ namespace s3m
  * @brief Sample class for S3M Samples
  */
 class S3mSample
-    : public Sample
+  : public Sample
 {
 private:
-    //! @brief Whether this is a 16-bit sample
-    bool m_highQuality = false;
-    size_t m_loopStart = 0;
-    size_t m_loopEnd = std::numeric_limits<size_t>::max();
-    LoopType m_loopType = LoopType::None;
+  //! @brief Whether this is a 16-bit sample
+  bool m_highQuality = false;
+  size_t m_loopStart = 0;
+  size_t m_loopEnd = std::numeric_limits<size_t>::max();
+  LoopType m_loopType = LoopType::None;
 public:
-    DISABLE_COPY(S3mSample)
+  DISABLE_COPY( S3mSample )
 
-    //! @brief Constructor
-    S3mSample() = default;
+  //! @brief Constructor
+  S3mSample() = default;
 
-    /**
-     * @brief Load from a stream
-     * @param[in] str The stream to load this sample from
-     * @param[in] pos Position of the sample within @a str
-     * @param[in] imagoLoopEnd If @c true, the loop end is decreased by 1
-     * @return @c true on success
-     */
-    bool load(Stream* str, size_t pos, bool imagoLoopEnd);
+  /**
+   * @brief Load from a stream
+   * @param[in] str The stream to load this sample from
+   * @param[in] pos Position of the sample within @a str
+   * @param[in] imagoLoopEnd If @c true, the loop end is decreased by 1
+   * @return @c true on success
+   */
+  bool load(Stream* str, size_t pos, bool imagoLoopEnd);
 
-    /**
-     * @brief Whether this is a 16-bit sample
-     * @return m_highQuality
-     */
-    bool isHighQuality() const;
+  /**
+   * @brief Whether this is a 16-bit sample
+   * @return m_highQuality
+   */
+  bool isHighQuality() const;
 
-    size_t loopStart() const
-    {
-        return m_loopStart;
-    }
+  size_t loopStart() const
+  {
+    return m_loopStart;
+  }
 
-    size_t loopEnd() const
-    {
-        return m_loopEnd;
-    }
+  size_t loopEnd() const
+  {
+    return m_loopEnd;
+  }
 
-    LoopType loopType() const
-    {
-        return m_loopType;
-    }
+  LoopType loopType() const
+  {
+    return m_loopType;
+  }
 
 protected:
-    /**
-     * @brief Get the logger
-     * @return Child logger with attached ".s3m"
-     */
-    static light4cxx::Logger* logger();
+  /**
+   * @brief Get the logger
+   * @return Child logger with attached ".s3m"
+   */
+  static light4cxx::Logger* logger();
 };
 } // namespace ppp
 } // namespace s3m
