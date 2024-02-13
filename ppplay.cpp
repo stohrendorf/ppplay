@@ -35,7 +35,7 @@
 #endif
 
 #include <boost/program_options.hpp>
-#include <boost/progress.hpp>
+#include <boost/timer/progress_display.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
@@ -441,17 +441,17 @@ int main(int argc, char* argv[])
       }
       output->play();
       size_t secs = module->length() / module->frequency();
-      boost::progress_display progress( module->length(),
-                                        std::cout,
-                                        stringFmt( "QuickWAV: %s (%dm%02ds)\n",
-                                                   config::filename,
-                                                   secs / 60,
-                                                   secs % 60 ) );
+      boost::timer::progress_display display( module->length(),
+                                              std::cout,
+                                              stringFmt( "QuickWAV: %s (%dm%02ds)\n",
+                                                         config::filename,
+                                                         secs / 60,
+                                                         secs % 60 ) );
       while( output->playing() )
       {
         std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
-        progress +=
-          std::const_pointer_cast<const ppp::AbstractModule>( module )->state().playedFrames - progress.count();
+        display +=
+          std::const_pointer_cast<const ppp::AbstractModule>( module )->state().playedFrames - display.count();
       }
       output.reset();
     }

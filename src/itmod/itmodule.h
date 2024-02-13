@@ -16,8 +16,6 @@ namespace it
 using ItPattern = std::vector<uint8_t>;
 
 #pragma pack(push, 1)
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 struct ITHeader
 {
   char id[4]; // 'IMPM'
@@ -55,7 +53,6 @@ struct ITHeader
   static constexpr uint16_t SFlgMidiEmbedded = 0x08;
 };
 static_assert( sizeof( ITHeader ) == 0xc0, "Ooops" );
-#pragma clang diagnostic pop
 #pragma pack(pop)
 
 constexpr uint8_t PATTERN_MAX_NOTE = 12 * 10 - 1;

@@ -24,6 +24,7 @@
 #include <thread>
 #include <utility>
 #include <string>
+#include <boost/current_function.hpp>
 
 namespace light4cxx
 {

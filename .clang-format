@@ -92,7 +92,4 @@ SpacesInParentheses: false
 SpacesInSquareBrackets: false
 Standard: c++17
 TabWidth: 8
-TypenameMacros:
-  - QS_COMBINE_UNITS
-  - QS_DECLARE_QUANTITY
 UseTab: Never
